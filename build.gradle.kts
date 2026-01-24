@@ -1,0 +1,39 @@
+plugins {
+    kotlin("jvm") version "2.2.21"
+    application
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+}
+
+group = "com.example"
+version = "0.1.0"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+
+    implementation("org.slf4j:slf4j-simple:2.0.16")
+
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+}
+
+kotlin {
+    jvmToolchain(17)
+}
+
+application {
+    mainClass.set("dev.ambon.MainKt")
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+ktlint {
+    verbose.set(true)
+    android.set(false)
+}
