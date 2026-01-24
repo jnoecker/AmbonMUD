@@ -57,6 +57,18 @@ class GameEngine(
                         outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
                     }
 
+                    "ansi on" -> {
+                        outbound.send(OutboundEvent.SetAnsi(ev.sessionId, true))
+                        outbound.send(OutboundEvent.SendText(ev.sessionId, "ANSI enabled"))
+                        outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
+                    }
+
+                    "ansi off" -> {
+                        outbound.send(OutboundEvent.SetAnsi(ev.sessionId, false))
+                        outbound.send(OutboundEvent.SendText(ev.sessionId, "ANSI disabled"))
+                        outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
+                    }
+
                     else -> {
                         outbound.send(OutboundEvent.SendText(ev.sessionId, "You said: $line"))
                         outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
