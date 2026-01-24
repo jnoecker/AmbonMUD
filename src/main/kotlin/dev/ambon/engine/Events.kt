@@ -28,6 +28,11 @@ sealed interface OutboundEvent {
         val sessionId: SessionId,
     ) : OutboundEvent
 
+    data class SetAnsi(
+        val sessionId: SessionId,
+        val enabled: Boolean,
+    ) : OutboundEvent
+
     data class Close(
         val sessionId: SessionId,
         val reason: String,

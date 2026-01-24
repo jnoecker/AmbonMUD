@@ -4,6 +4,7 @@ import dev.ambon.domain.SessionId
 import dev.ambon.engine.OutboundEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -145,5 +146,33 @@ class OutboundRouterTest {
             job.cancel()
             engineOutbound.close()
             q.close()
+        }
+
+    @Test
+    fun `SetAnsi changes prompt rendering`() =
+        runTest {
+            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = OutboundRouter(engineOutbound, this)
+            val job = router.start()
+
+            val sid = SessionId(1)
+            val q = Channel<String>(10)
+            router.register(sid, q) { fail("should not close") }
+
+            engineOutbound.send(OutboundEvent.SendPrompt(sid))
+            runCurrent()
+            val plainPrompt = q.tryReceive().getOrNull()
+            assertEquals("> ", plainPrompt)
+
+            engineOutbound.send(OutboundEvent.SetAnsi(sid, true))
+            engineOutbound.send(OutboundEvent.SendPrompt(sid))
+            runCurrent()
+            val ansiPrompt = q.tryReceive().getOrNull()
+            assertNotNull(ansiPrompt)
+            assertTrue(ansiPrompt!!.contains("\u001B["), "Expected ANSI escape: $ansiPrompt")
+
+            job.cancel()
+            q.close()
+            engineOutbound.close()
         }
 }
