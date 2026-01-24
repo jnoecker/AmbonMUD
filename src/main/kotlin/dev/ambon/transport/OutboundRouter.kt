@@ -17,6 +17,7 @@ class OutboundRouter(
         val queue: Channel<String>,
         val close: (String) -> Unit,
         @Volatile var lastEnqueuedWasPrompt: Boolean = false,
+        @Volatile var renderer: TextRenderer = PlainRenderer(),
     )
 
     private val sinks = ConcurrentHashMap<SessionId, SessionSink>()
@@ -48,6 +49,10 @@ class OutboundRouter(
                         sendPrompt(ev.sessionId)
                     }
 
+                    is OutboundEvent.SetAnsi -> {
+                        setAnsi(ev.sessionId, ev.enabled)
+                    }
+
                     is OutboundEvent.Close -> {
                         // Best-effort goodbye text; then close.
                         sendText(ev.sessionId, ev.reason + "")
@@ -62,7 +67,7 @@ class OutboundRouter(
         text: String,
     ) {
         val sink = sinks[sessionId] ?: return
-        val framed = text + "\r\n"
+        val framed = sink.renderer.renderLine(text)
 
         val ok = sink.queue.trySend(framed).isSuccess
         if (ok) {
@@ -81,11 +86,19 @@ class OutboundRouter(
         // Coalesce prompts
         if (sink.lastEnqueuedWasPrompt) return
 
-        val ok = sink.queue.trySend(promptText).isSuccess
-        if (ok) {
-            sink.lastEnqueuedWasPrompt = true
-            return
-        }
+        val framed = sink.renderer.renderPrompt()
+        val ok = sink.queue.trySend(framed).isSuccess
+        if (ok) sink.lastEnqueuedWasPrompt = true
+
         // Queue full: prompts are disposable
+    }
+
+    private fun setAnsi(
+        sessionId: SessionId,
+        enabled: Boolean,
+    ) {
+        val sink = sinks[sessionId] ?: return
+        sink.renderer = if (enabled) AnsiRenderer() else PlainRenderer()
+        sink.lastEnqueuedWasPrompt = false // optional: keep coalescing predictable
     }
 }
