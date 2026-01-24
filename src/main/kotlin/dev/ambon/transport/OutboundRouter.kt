@@ -22,8 +22,7 @@ class OutboundRouter(
 
     private val sinks = ConcurrentHashMap<SessionId, SessionSink>()
 
-    // Keep prompt formatting transport-side
-    private val promptText = "> "
+    private val promptSpec = PromptSpec(text = "> ")
 
     fun register(
         sessionId: SessionId,
@@ -86,7 +85,7 @@ class OutboundRouter(
         // Coalesce prompts
         if (sink.lastEnqueuedWasPrompt) return
 
-        val framed = sink.renderer.renderPrompt()
+        val framed = sink.renderer.renderPrompt(promptSpec)
         val ok = sink.queue.trySend(framed).isSuccess
         if (ok) sink.lastEnqueuedWasPrompt = true
 

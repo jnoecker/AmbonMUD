@@ -57,7 +57,11 @@ Each session has a bounded outbound queue. If a client can't keep up:
 
 # Roadmap
 
-- ANSI color support (transport-side rendering; engine remains plain text)
+- ✅ ANSI color support (transport-side rendering; engine remains plain text)
+```bash
+ansi on
+ansi off
+```
 
 - Command router (look, movement, etc.)
 

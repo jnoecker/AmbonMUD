@@ -7,7 +7,7 @@ class AnsiRendererTest {
     @Test
     fun `prompt contains ansi escape codes`() {
         val r = AnsiRenderer()
-        val p = r.renderPrompt()
+        val p = r.renderPrompt(PromptSpec("> "))
         assertTrue(p.contains("\u001B["), "Expected ANSI escape in prompt: $p")
         assertTrue(p.contains("> "), "Prompt should include > : $p")
     }

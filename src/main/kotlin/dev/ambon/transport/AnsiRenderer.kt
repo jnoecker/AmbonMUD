@@ -10,8 +10,8 @@ class AnsiRenderer : TextRenderer {
         return "$reset$text$reset\r\n"
     }
 
-    override fun renderPrompt(): String {
+    override fun renderPrompt(prompt: PromptSpec): String {
         // Quick win: dim + bright green prompt
-        return "$dim$brightGreen> $reset"
+        return "$dim$brightGreen$prompt$reset"
     }
 }
