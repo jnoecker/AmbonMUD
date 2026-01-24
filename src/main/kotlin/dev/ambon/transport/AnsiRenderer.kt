@@ -12,6 +12,6 @@ class AnsiRenderer : TextRenderer {
 
     override fun renderPrompt(prompt: PromptSpec): String {
         // Quick win: dim + bright green prompt
-        return "$dim$brightGreen$prompt$reset"
+        return "$dim$brightGreen${prompt.text}$reset"
     }
 }
