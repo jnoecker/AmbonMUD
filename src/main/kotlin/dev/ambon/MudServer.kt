@@ -1,8 +1,8 @@
 package dev.ambon
 
 import dev.ambon.engine.GameEngine
-import dev.ambon.engine.InboundEvent
-import dev.ambon.engine.OutboundEvent
+import dev.ambon.engine.events.InboundEvent
+import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.OutboundRouter
 import kotlinx.coroutines.CoroutineScope

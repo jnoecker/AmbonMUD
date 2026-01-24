@@ -1,5 +1,7 @@
 package dev.ambon.engine
 
+import dev.ambon.engine.events.InboundEvent
+import dev.ambon.engine.events.OutboundEvent
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.coroutineScope
