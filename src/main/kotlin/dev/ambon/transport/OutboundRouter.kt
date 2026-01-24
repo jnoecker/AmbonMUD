@@ -1,7 +1,7 @@
 package dev.ambon.transport
 
 import dev.ambon.domain.SessionId
-import dev.ambon.engine.OutboundEvent
+import dev.ambon.engine.events.OutboundEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
