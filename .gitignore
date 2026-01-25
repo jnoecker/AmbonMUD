@@ -44,3 +44,5 @@ Thumbs.db
 
 # Logs
 *.log
+/data/players/players/
+/data/players/next_player_id.txt

@@ -1,8 +1,10 @@
 package dev.ambon.engine
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -21,8 +23,18 @@ class GameEngineIntegrationTest {
             val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
             val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
 
+            val world = WorldFactory.demoWorld()
+            val repo = InMemoryPlayerRepository()
+            val players = PlayerRegistry(world.startRoom, repo)
+
             // Make ticks fast for tests
-            val engine = GameEngine(inbound = inbound, outbound = outbound, tickMillis = 1L)
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    tickMillis = 1L,
+                )
             val engineJob = launch { engine.run() }
 
             val sid = SessionId(1L)
