@@ -1,7 +1,6 @@
 package dev.ambon.engine.commands
 
 import dev.ambon.domain.world.Direction
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -9,22 +8,22 @@ import org.junit.jupiter.api.Test
 class CommandParserTest {
     @Test
     fun `parses movement aliases`() {
-        Assertions.assertEquals(Command.Move(Direction.NORTH), CommandParser.parse("n"))
-        Assertions.assertEquals(Command.Move(Direction.NORTH), CommandParser.parse("north"))
-        Assertions.assertEquals(Command.Move(Direction.SOUTH), CommandParser.parse("s"))
-        Assertions.assertEquals(Command.Move(Direction.EAST), CommandParser.parse("e"))
-        Assertions.assertEquals(Command.Move(Direction.WEST), CommandParser.parse("west"))
+        assertEquals(Command.Move(Direction.NORTH), CommandParser.parse("n"))
+        assertEquals(Command.Move(Direction.NORTH), CommandParser.parse("north"))
+        assertEquals(Command.Move(Direction.SOUTH), CommandParser.parse("s"))
+        assertEquals(Command.Move(Direction.EAST), CommandParser.parse("e"))
+        assertEquals(Command.Move(Direction.WEST), CommandParser.parse("west"))
     }
 
     @Test
     fun `parses core commands and ignores whitespace`() {
-        Assertions.assertEquals(Command.Help, CommandParser.parse("help"))
-        Assertions.assertEquals(Command.Help, CommandParser.parse("  ?  "))
-        Assertions.assertEquals(Command.Look, CommandParser.parse("l"))
-        Assertions.assertEquals(Command.Look, CommandParser.parse(" look "))
-        Assertions.assertEquals(Command.Quit, CommandParser.parse("quit"))
-        Assertions.assertEquals(Command.Quit, CommandParser.parse(" exit "))
-        Assertions.assertEquals(Command.Noop, CommandParser.parse("   "))
+        assertEquals(Command.Help, CommandParser.parse("help"))
+        assertEquals(Command.Help, CommandParser.parse("  ?  "))
+        assertEquals(Command.Look, CommandParser.parse("l"))
+        assertEquals(Command.Look, CommandParser.parse(" look "))
+        assertEquals(Command.Quit, CommandParser.parse("quit"))
+        assertEquals(Command.Quit, CommandParser.parse(" exit "))
+        assertEquals(Command.Noop, CommandParser.parse("   "))
     }
 
     @Test
@@ -65,6 +64,22 @@ class CommandParserTest {
     @Test
     fun `unknown lines become Unknown`() {
         val cmd = CommandParser.parse("dance wildly")
-        Assertions.assertEquals(Command.Unknown("dance wildly"), cmd)
+        assertEquals(Command.Unknown("dance wildly"), cmd)
+    }
+
+    @Test
+    fun `parses ansi and other UI commands`() {
+        assertEquals(Command.AnsiOn, CommandParser.parse("ansi on"))
+        assertEquals(Command.AnsiOff, CommandParser.parse("ansi off"))
+        assertEquals(Command.Clear, CommandParser.parse("clear"))
+        assertEquals(Command.Colors, CommandParser.parse("colors"))
+        assertEquals(Command.Who, CommandParser.parse("who"))
+    }
+
+    @Test
+    fun `parses name command`() {
+        assertEquals(Command.Name("NewName"), CommandParser.parse("name NewName"))
+        assertTrue(CommandParser.parse("name") is Command.Invalid)
+        assertTrue(CommandParser.parse("name  ") is Command.Invalid)
     }
 }

@@ -8,8 +8,9 @@ import dev.ambon.engine.events.OutboundEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -32,19 +33,19 @@ class CommandRouterTest {
             val outs = drain(outbound)
 
             // Expected: SendText(title), SendText(desc), SendInfo(exits), SendPrompt
-            Assertions.assertTrue(
+            assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text == "The Foyer" },
                 "Missing title. got=$outs",
             )
-            Assertions.assertTrue(
+            assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("A small foyer") },
                 "Missing description. got=$outs",
             )
-            Assertions.assertTrue(
+            assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.startsWith("Exits:") },
                 "Missing exits. got=$outs",
             )
-            Assertions.assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
+            assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
         }
 
     @Test
@@ -64,11 +65,11 @@ class CommandRouterTest {
             val outs = drain(outbound)
 
             // After moving north, demo world room 2 title is "A Quiet Hallway"
-            Assertions.assertTrue(
+            assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text == "A Quiet Hallway" },
                 "Expected to see new room title after moving north. got=$outs",
             )
-            Assertions.assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
+            assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
         }
 
     @Test
@@ -88,11 +89,11 @@ class CommandRouterTest {
 
             val outs = drain(outbound)
 
-            Assertions.assertTrue(
+            assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("can't go that way", ignoreCase = true) },
                 "Expected blocked movement message. got=$outs",
             )
-            Assertions.assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
+            assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
         }
 
     @Test
@@ -205,6 +206,36 @@ class CommandRouterTest {
         }
 
     @Test
+    fun `say does not broadcast across rooms`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val a = SessionId(1)
+            val b = SessionId(2)
+            players.connect(a)
+            players.connect(b)
+
+            // Move b north into a different room
+            router.handle(b, Command.Move(Direction.NORTH))
+            drain(outbound)
+
+            router.handle(a, Command.Say("psst"))
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "You say: psst" },
+                "Sender should see self echo. got=$outs",
+            )
+            assertFalse(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == b && it.text.contains("psst") },
+                "Player in another room should not receive broadcast. got=$outs",
+            )
+        }
+
+    @Test
     fun `gossip broadcasts to all connected`() =
         runTest {
             val world = WorldFactory.demoWorld()
@@ -242,6 +273,59 @@ class CommandRouterTest {
         }
 
     @Test
+    fun `who lists connected players`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val a = SessionId(1)
+            val b = SessionId(2)
+            players.connect(a)
+            players.connect(b)
+
+            router.handle(a, Command.Who)
+            val outs = drain(outbound)
+
+            val msg =
+                outs
+                    .filterIsInstance<OutboundEvent.SendInfo>()
+                    .firstOrNull { it.sessionId == a }
+                    ?.text
+
+            assertNotNull(msg, "Expected SendInfo for who. got=$outs")
+            assertTrue(msg!!.contains("Player1"), "Expected Player1 in who output. got=$msg")
+            assertTrue(msg.contains("Player2"), "Expected Player2 in who output. got=$msg")
+        }
+
+    @Test
+    fun `name sets and who reflects new name`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val a = SessionId(1)
+            players.connect(a)
+
+            router.handle(a, Command.Name("Alice"))
+            router.handle(a, Command.Who)
+
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.sessionId == a && it.text.contains("Name set to Alice") },
+                "Expected confirmation. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.sessionId == a && it.text.contains("Alice") && it.text.contains("Online:") },
+                "Expected who to show Alice. got=$outs",
+            )
+        }
+
+    @Test
     fun `name uniqueness is case-insensitive`() =
         runTest {
             val world = WorldFactory.demoWorld()
@@ -263,6 +347,33 @@ class CommandRouterTest {
                 outs.any { it is OutboundEvent.SendError && it.sessionId == b && it.text.contains("taken", ignoreCase = true) },
                 "Expected taken error. got=$outs",
             )
+        }
+
+    @Test
+    fun `tell across rooms still works`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val a = SessionId(1)
+            val b = SessionId(2)
+            players.connect(a)
+            players.connect(b)
+
+            router.handle(a, Command.Name("Alice"))
+            router.handle(b, Command.Name("Bob"))
+            drain(outbound)
+
+            // Move Bob north so he is not in Alice's room
+            router.handle(b, Command.Move(Direction.NORTH))
+            drain(outbound)
+
+            router.handle(a, Command.Tell("Bob", "still works"))
+            val outs = drain(outbound)
+
+            assertTrue(outs.any { it is OutboundEvent.SendText && it.sessionId == b && it.text.contains("still works") })
         }
 
     private fun drain(ch: Channel<OutboundEvent>): List<OutboundEvent> {

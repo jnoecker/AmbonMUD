@@ -13,4 +13,6 @@ class SessionRegistry {
     fun onDisconnect(id: SessionId) {
         connected.remove(id)
     }
+
+    fun isConnected(id: SessionId): Boolean = connected.contains(id)
 }
