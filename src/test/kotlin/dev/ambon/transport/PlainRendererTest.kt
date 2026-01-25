@@ -24,7 +24,7 @@ class PlainRendererTest {
     @Test
     fun `renderLine appends CRLF`() {
         val r = PlainRenderer()
-        val line = r.renderLine("Hello")
+        val line = r.renderLine("Hello", TextKind.INFO)
         assertTrue(line.endsWith("\r\n"))
     }
 
