@@ -27,24 +27,29 @@ class CommandRouterTest {
             val sid = SessionId(1)
             players.connect(sid)
 
+            val startRoom = world.rooms.getValue(world.startRoom)
+
             router.handle(sid, Command.Look)
 
             val outs = drain(outbound)
 
             // Expected: SendText(title), SendText(desc), SendInfo(exits), SendPrompt
-            Assertions.assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text == "The Foyer" },
-                "Missing title. got=$outs",
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.text == startRoom.title },
+                "Missing title '${startRoom.title}'. got=$outs",
             )
-            Assertions.assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text.contains("A small foyer") },
-                "Missing description. got=$outs",
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.text.contains(startRoom.description.take(10)) },
+                "Missing description containing '${startRoom.description.take(10)}...'. got=$outs",
             )
-            Assertions.assertTrue(
+            assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.startsWith("Exits:") },
                 "Missing exits. got=$outs",
             )
-            Assertions.assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendPrompt },
+                "Missing prompt. got=$outs",
+            )
         }
 
     @Test
@@ -59,16 +64,29 @@ class CommandRouterTest {
             val sid = SessionId(2)
             players.connect(sid)
 
+            val startRoom = world.rooms.getValue(world.startRoom)
+            val northTargetId = startRoom.exits[Direction.NORTH]
+
+            // If the demo world doesn't have a north exit, that's a test setup issue; fail loudly.
+            Assertions.assertNotNull(
+                northTargetId,
+                "Demo world start room '${startRoom.id}' must have a NORTH exit for this test",
+            )
+
+            val northRoom = world.rooms.getValue(northTargetId!!)
+
             router.handle(sid, Command.Move(Direction.NORTH))
 
             val outs = drain(outbound)
 
-            // After moving north, demo world room 2 title is "A Quiet Hallway"
-            Assertions.assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text == "A Quiet Hallway" },
-                "Expected to see new room title after moving north. got=$outs",
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.text == northRoom.title },
+                "Expected to see new room title '${northRoom.title}' after moving north. got=$outs",
             )
-            Assertions.assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendPrompt },
+                "Missing prompt. got=$outs",
+            )
         }
 
     @Test
@@ -88,11 +106,11 @@ class CommandRouterTest {
 
             val outs = drain(outbound)
 
-            Assertions.assertTrue(
+            assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("can't go that way", ignoreCase = true) },
                 "Expected blocked movement message. got=$outs",
             )
-            Assertions.assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
+            assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
         }
 
     @Test

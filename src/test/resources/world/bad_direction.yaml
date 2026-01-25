@@ -1,0 +1,7 @@
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Oops."
+    exits:
+      sideways: a

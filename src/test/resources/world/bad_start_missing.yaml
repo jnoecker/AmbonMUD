@@ -1,0 +1,5 @@
+startRoom: missing
+rooms:
+  a:
+    title: "Room A"
+    description: "Still here."

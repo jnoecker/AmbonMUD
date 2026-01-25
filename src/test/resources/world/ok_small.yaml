@@ -1,0 +1,12 @@
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "The starting room."
+    exits:
+      north: b
+  b:
+    title: "Room B"
+    description: "The north room."
+    exits:
+      south: a
