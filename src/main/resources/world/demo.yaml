@@ -5,6 +5,7 @@
 # - a “cabin interior” cluster
 # - a sorceress NPC can live in: cabin_study
 
+zone: enchanted_forest
 startRoom: trailhead
 rooms:
   trailhead:
