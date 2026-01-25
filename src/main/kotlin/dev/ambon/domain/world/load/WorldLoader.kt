@@ -32,22 +32,42 @@ object WorldLoader {
     }
 
     private fun validate(file: WorldFile) {
-        val rooms = file.rooms
-        if (rooms.isEmpty()) throw WorldLoadException("World has no rooms")
+        val rawRooms = file.rooms
+        if (rawRooms.isEmpty()) throw WorldLoadException("World has no rooms")
 
-        if (!rooms.containsKey(file.startRoom)) {
-            throw WorldLoadException("startRoom '${file.startRoom}' does not exist")
+        val zone = file.zone.trim()
+        if (zone.isEmpty()) throw WorldLoadException("World zone cannot be blank")
+
+        // Normalize room keys once
+        val roomIds: Set<RoomId> = rawRooms.keys.map { normalizeId(zone, it) }.toSet()
+
+        val startId = normalizeId(zone, file.startRoom)
+        if (!roomIds.contains(startId)) {
+            throw WorldLoadException("startRoom '${file.startRoom}' does not exist (normalized as '${startId.value}')")
         }
 
-        for ((roomIdStr, room) in rooms) {
-            for ((dirStr, targetIdStr) in room.exits) {
+        // Validate exits
+        for ((roomKey, room) in rawRooms) {
+            val fromId = normalizeId(zone, roomKey)
+
+            for ((dirStr, targetRaw) in room.exits) {
                 val dir =
                     parseDirectionOrNull(dirStr)
-                        ?: throw WorldLoadException("Room '$roomIdStr' has invalid direction '$dirStr'")
+                        ?: throw WorldLoadException("Room '${fromId.value}' has invalid direction '$dirStr'")
 
-                if (!rooms.containsKey(targetIdStr)) {
+                val targetId = normalizeId(zone, targetRaw)
+
+                // For now: disallow cross-zone references until you support multi-zone loading
+                if (isCrossZone(zone, targetId)) {
                     throw WorldLoadException(
-                        "Room '$roomIdStr' exit '$dir' points to missing room '$targetIdStr'",
+                        "Room '${fromId.value}' exit '$dir' targets cross-zone room '${targetId.value}', " +
+                            "but multi-zone loading is not supported yet",
+                    )
+                }
+
+                if (!roomIds.contains(targetId)) {
+                    throw WorldLoadException(
+                        "Room '${fromId.value}' exit '$dir' points to missing room '${targetId.value}'",
                     )
                 }
             }
@@ -55,25 +75,26 @@ object WorldLoader {
     }
 
     private fun toDomain(file: WorldFile): World {
-        // First pass: create Room shells
+        val zone = file.zone.trim()
+
+        // First pass: create Room shells with normalized ids
         val rooms: MutableMap<RoomId, Room> =
             file.rooms
                 .map { (idStr, rf) ->
-                    val id = RoomId(idStr)
+                    val id = normalizeId(zone, idStr)
                     id to
                         Room(
                             id = id,
                             title = rf.title,
                             description = rf.description,
-                            // wire in second pass
                             exits = emptyMap(),
                         )
                 }.toMap()
                 .toMutableMap()
 
-        // Second pass: wire exits as Direction -> RoomId
+        // Second pass: wire exits as Direction -> RoomId (normalized)
         for ((idStr, rf) in file.rooms) {
-            val id = RoomId(idStr)
+            val id = normalizeId(zone, idStr)
             val room = rooms.getValue(id)
 
             val exits: Map<Direction, RoomId> =
@@ -81,8 +102,8 @@ object WorldLoader {
                     .map { (dirStr, targetIdStr) ->
                         val dir =
                             parseDirectionOrNull(dirStr)
-                                ?: throw WorldLoadException("Room '$idStr' has invalid direction '$dirStr'")
-                        dir to RoomId(targetIdStr)
+                                ?: throw WorldLoadException("Room '${id.value}' has invalid direction '$dirStr'")
+                        dir to normalizeId(zone, targetIdStr)
                     }.toMap()
 
             rooms[id] = room.copy(exits = exits)
@@ -90,7 +111,7 @@ object WorldLoader {
 
         return World(
             rooms = rooms,
-            startRoom = RoomId(file.startRoom),
+            startRoom = normalizeId(zone, file.startRoom),
         )
     }
 
@@ -104,4 +125,18 @@ object WorldLoader {
             "d", "down" -> Direction.DOWN
             else -> null
         }
+
+    private fun normalizeId(
+        zone: String,
+        raw: String,
+    ): RoomId {
+        val s = raw.trim()
+        require(s.isNotEmpty()) { "Room id cannot be blank" }
+        return if (':' in s) RoomId(s) else RoomId("$zone:$s")
+    }
+
+    private fun isCrossZone(
+        zone: String,
+        id: RoomId,
+    ): Boolean = id.zone != zone
 }
