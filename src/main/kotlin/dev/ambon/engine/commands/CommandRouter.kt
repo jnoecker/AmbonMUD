@@ -52,6 +52,7 @@ class CommandRouter(
             }
 
             Command.Quit -> {
+                players.disconnect(sessionId)
                 outbound.send(OutboundEvent.Close(sessionId, "Goodbye!"))
             }
 
@@ -126,17 +127,17 @@ class CommandRouter(
                         outbound.send(OutboundEvent.SendInfo(sessionId, "Name set to ${players.get(sessionId)!!.name}"))
                     }
 
-                    RenameResult.Taken -> {
-                        outbound.send(OutboundEvent.SendError(sessionId, "That name is already taken."))
-                    }
-
                     RenameResult.Invalid -> {
                         outbound.send(
                             OutboundEvent.SendError(
                                 sessionId,
-                                "Invalid name. Use 2-16 chars, letters/digits/_, cannot start with a digit.",
+                                "Invalid name. Use 2-16 chars: letters/digits/_ and cannot start with digit.",
                             ),
                         )
+                    }
+
+                    RenameResult.Taken -> {
+                        outbound.send(OutboundEvent.SendError(sessionId, "That name is already taken."))
                     }
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
