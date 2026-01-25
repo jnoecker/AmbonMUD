@@ -6,6 +6,7 @@ rooms:
     description: "A narrow trail slips beneath ancient boughs."
     exits:
       north: mossy_path
+      west: demo:trailhead
 
   mossy_path:
     title: "Mossy Path"
@@ -13,3 +14,4 @@ rooms:
     exits:
       south: trailhead
       east: swamp:edge
+
