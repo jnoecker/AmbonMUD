@@ -21,6 +21,12 @@ sealed interface Command {
         val dir: Direction,
     ) : Command
 
+    data class Say(
+        val message: String,
+    ) : Command
+
+    data object Who : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -30,10 +36,20 @@ sealed interface Command {
 
 object CommandParser {
     fun parse(input: String): Command {
-        val line = input.trim()
+        val line = input.trim().lowercase()
         if (line.isEmpty()) return Command.Noop
 
-        return when (line.lowercase()) {
+        // <say hello there> or <'hello there>
+        if (line.startsWith("say ")) {
+            val msg = line.drop(4).trim()
+            return if (msg.isEmpty()) Command.Unknown(line) else Command.Say(msg)
+        }
+        if (line.startsWith("'")) {
+            val msg = line.drop(1).trim()
+            return if (msg.isEmpty()) Command.Unknown(line) else Command.Say(msg)
+        }
+
+        return when (line) {
             "help", "?" -> Command.Help
             "look", "l" -> Command.Look
             "quit", "exit" -> Command.Quit
@@ -41,6 +57,7 @@ object CommandParser {
             "ansi off" -> Command.AnsiOff
             "clear" -> Command.Clear
             "colors" -> Command.Colors
+            "who" -> Command.Who
             "n", "north" -> Command.Move(Direction.NORTH)
             "s", "south" -> Command.Move(Direction.SOUTH)
             "e", "east" -> Command.Move(Direction.EAST)

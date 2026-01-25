@@ -53,6 +53,7 @@ class GameEngine(
             }
 
             is InboundEvent.Disconnected -> {
+                players.disconnect(ev.sessionId)
                 sessions.onDisconnect(ev.sessionId)
             }
 
