@@ -39,13 +39,22 @@ class CommandRouter(
             }
 
             is Command.Move -> {
-                val from = players.get(sessionId)?.roomId ?: world.startRoom
+                val me = players.get(sessionId) ?: return
+                val from = me.roomId
                 val room = world.rooms[from] ?: return
                 val to = room.exits[cmd.dir]
                 if (to == null) {
                     outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
                 } else {
+                    val oldMembers = players.membersInRoom(from).filter { it != sessionId }
+                    for (other in oldMembers) {
+                        outbound.send(OutboundEvent.SendText(other, "${me.name} leaves."))
+                    }
                     players.moveTo(sessionId, to)
+                    val newMembers = players.membersInRoom(to).filter { it != sessionId }
+                    for (other in newMembers) {
+                        outbound.send(OutboundEvent.SendText(other, "${me.name} enters."))
+                    }
                     sendLook(sessionId)
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -120,8 +129,6 @@ class CommandRouter(
             }
 
             is Command.Name -> {
-                val me = players.get(sessionId) ?: return
-                val old = me.name
                 when (players.rename(sessionId, cmd.newName)) {
                     RenameResult.Ok -> {
                         outbound.send(OutboundEvent.SendInfo(sessionId, "Name set to ${players.get(sessionId)!!.name}"))
@@ -215,6 +222,18 @@ class CommandRouter(
         outbound.send(OutboundEvent.SendText(sessionId, room.description))
         val exits = if (room.exits.isEmpty()) "none" else room.exits.keys.joinToString(", ") { it.name.lowercase() }
         outbound.send(OutboundEvent.SendInfo(sessionId, "Exits: $exits"))
+        val roomPlayers =
+            players
+                .playersInRoom(roomId)
+                .map { it.name }
+                .sorted()
+        val playersLine =
+            if (roomPlayers.isEmpty()) {
+                "Players here: none"
+            } else {
+                "Players here: " + roomPlayers.joinToString(", ")
+            }
+        outbound.send(OutboundEvent.SendInfo(sessionId, playersLine))
     }
 
     private fun currentRoomId(sessionId: SessionId): RoomId = players.get(sessionId)!!.roomId // or players.location(sessionId)

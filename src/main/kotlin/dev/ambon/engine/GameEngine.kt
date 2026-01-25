@@ -57,12 +57,18 @@ class GameEngine(
         when (ev) {
             is InboundEvent.Connected -> {
                 players.connect(ev.sessionId)
+                val ps = players.get(ev.sessionId) ?: return
+                broadcastToRoom(ps.roomId, ev.sessionId, "${ps.name} enters.")
                 outbound.send(OutboundEvent.SendInfo(ev.sessionId, "Welcome to QuickMUD"))
                 router.handle(ev.sessionId, Command.Look) // shows room + prompt
             }
 
             is InboundEvent.Disconnected -> {
-                players.disconnect(ev.sessionId)
+                val ps = players.get(ev.sessionId)
+                if (ps != null) {
+                    broadcastToRoom(ps.roomId, ev.sessionId, "${ps.name} leaves.")
+                    players.disconnect(ev.sessionId)
+                }
                 sessions.onDisconnect(ev.sessionId)
             }
 
@@ -70,6 +76,18 @@ class GameEngine(
                 val line = ev.line.trim()
                 router.handle(ev.sessionId, CommandParser.parse(line))
             }
+        }
+    }
+
+    private suspend fun broadcastToRoom(
+        roomId: dev.ambon.domain.ids.RoomId,
+        except: dev.ambon.domain.ids.SessionId,
+        text: String,
+    ) {
+        val members = players.membersInRoom(roomId)
+        for (member in members) {
+            if (member == except) continue
+            outbound.send(OutboundEvent.SendText(member, text))
         }
     }
 }

@@ -52,6 +52,12 @@ class PlayerRegistry(
 
     fun membersInRoom(roomId: RoomId): Set<SessionId> = roomMembers[roomId]?.toSet() ?: emptySet()
 
+    fun playersInRoom(roomId: RoomId): List<PlayerState> =
+        roomMembers[roomId]
+            ?.mapNotNull { sessionId -> players[sessionId] }
+            ?.toList()
+            ?: emptyList()
+
     suspend fun moveTo(
         sessionId: SessionId,
         newRoom: RoomId,
