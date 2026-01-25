@@ -1,6 +1,8 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.RenameResult
@@ -170,6 +172,24 @@ class CommandRouter(
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
+            Command.Exits -> {
+                val r = room(currentRoomId(sessionId))
+                outbound.send(OutboundEvent.SendInfo(sessionId, exitsLine(r)))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.LookDir -> {
+                val r = room(currentRoomId(sessionId))
+                val targetId = r.exits[cmd.dir]
+                if (targetId == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "You see nothing that way."))
+                } else {
+                    val target = room(targetId)
+                    outbound.send(OutboundEvent.SendText(sessionId, target.title))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
             is Command.Invalid -> {
                 outbound.send(OutboundEvent.SendText(sessionId, "Invalid command: ${cmd.command}"))
                 if (cmd.usage != null) {
@@ -195,4 +215,19 @@ class CommandRouter(
         val exits = if (room.exits.isEmpty()) "none" else room.exits.keys.joinToString(", ") { it.name.lowercase() }
         outbound.send(OutboundEvent.SendInfo(sessionId, "Exits: $exits"))
     }
+
+    private fun currentRoomId(sessionId: SessionId): RoomId = players.get(sessionId)!!.roomId // or players.location(sessionId)
+
+    private fun room(roomId: RoomId) = world.rooms.getValue(roomId)
+
+    private fun exitsLine(r: Room): String =
+        if (r.exits.isEmpty()) {
+            "Exits: none"
+        } else {
+            val names =
+                r.exits.keys
+                    .sortedBy { it.name } // stable order; adjust if you want N,E,S,W
+                    .joinToString(", ") { it.name.lowercase() }
+            "Exits: $names"
+        }
 }

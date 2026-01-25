@@ -21,6 +21,12 @@ sealed interface Command {
         val dir: Direction,
     ) : Command
 
+    data class LookDir(
+        val dir: Direction,
+    ) : Command
+
+    data object Exits : Command
+
     data class Say(
         val message: String,
     ) : Command
@@ -99,6 +105,18 @@ object CommandParser {
             if (msg.isEmpty()) Command.Unknown(line) else Command.Tell(target, msg)
         }?.let { return it }
 
+        // look <dir> / l <dir>
+        matchPrefix(
+            line = line,
+            aliases = listOf("look", "l"),
+        ) { rest ->
+            if (rest.isBlank()) return@matchPrefix null
+            val dir =
+                parseDirectionOrNull(rest.trim())
+                    ?: return@matchPrefix Command.Invalid(line, "Usage: look <direction> (e.g., look north)")
+            Command.LookDir(dir)
+        }?.let { return it }
+
         return when (lower) {
             "help", "?" -> Command.Help
             "look", "l" -> Command.Look
@@ -112,6 +130,7 @@ object CommandParser {
             "s", "south" -> Command.Move(Direction.SOUTH)
             "e", "east" -> Command.Move(Direction.EAST)
             "w", "west" -> Command.Move(Direction.WEST)
+            "exits", "ex" -> Command.Exits
             else -> Command.Unknown(line)
         }
     }
@@ -141,4 +160,15 @@ object CommandParser {
         }
         return null
     }
+
+    private fun parseDirectionOrNull(s: String): Direction? =
+        when (s.lowercase()) {
+            "n", "north" -> Direction.NORTH
+            "s", "south" -> Direction.SOUTH
+            "e", "east" -> Direction.EAST
+            "w", "west" -> Direction.WEST
+            "u", "up" -> Direction.UP
+            "d", "down" -> Direction.DOWN
+            else -> null
+        }
 }
