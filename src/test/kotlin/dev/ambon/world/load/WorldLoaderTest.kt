@@ -11,19 +11,23 @@ class WorldLoaderTest {
     @Test
     fun `loads a valid small world and wires exits`() {
         val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+        val zone = "ok_small"
 
-        assertEquals(RoomId("a"), world.startRoom)
-        assertTrue(world.rooms.containsKey(RoomId("a")))
-        assertTrue(world.rooms.containsKey(RoomId("b")))
+        val aId = RoomId("$zone:a")
+        val bId = RoomId("$zone:b")
 
-        val a = world.rooms.getValue(RoomId("a"))
-        val b = world.rooms.getValue(RoomId("b"))
+        assertEquals(aId, world.startRoom)
+        assertTrue(world.rooms.containsKey(aId))
+        assertTrue(world.rooms.containsKey(bId))
+
+        val a = world.rooms.getValue(aId)
+        val b = world.rooms.getValue(bId)
 
         assertEquals("Room A", a.title)
         assertEquals("Room B", b.title)
 
-        assertEquals(RoomId("b"), a.exits[Direction.NORTH])
-        assertEquals(RoomId("a"), b.exits[Direction.SOUTH])
+        assertEquals(bId, a.exits[Direction.NORTH])
+        assertEquals(aId, b.exits[Direction.SOUTH])
     }
 
     @Test
@@ -65,14 +69,16 @@ class WorldLoaderTest {
 
     @Test
     fun `accepts direction aliases`() {
-        // This test relies on your direction parsing supporting both short and long forms.
-        // We'll re-use ok_small.yaml and just assert that NORTH/SOUTH worked (already did),
-        // but you can expand with more rooms if you want.
         val world = WorldLoader.loadFromResource("world/ok_small.yaml")
-        val a = world.rooms.getValue(RoomId("a"))
-        val b = world.rooms.getValue(RoomId("b"))
+        val zone = "ok_small"
 
-        assertEquals(RoomId("b"), a.exits[Direction.NORTH])
-        assertEquals(RoomId("a"), b.exits[Direction.SOUTH])
+        val aId = RoomId("$zone:a")
+        val bId = RoomId("$zone:b")
+
+        val a = world.rooms.getValue(aId)
+        val b = world.rooms.getValue(bId)
+
+        assertEquals(bId, a.exits[Direction.NORTH])
+        assertEquals(aId, b.exits[Direction.SOUTH])
     }
 }

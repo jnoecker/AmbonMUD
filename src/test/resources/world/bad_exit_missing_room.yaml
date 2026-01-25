@@ -1,3 +1,4 @@
+zone: bad_exit_missing_room
 startRoom: a
 rooms:
   a:
