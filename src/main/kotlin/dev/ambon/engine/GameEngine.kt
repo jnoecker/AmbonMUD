@@ -16,13 +16,14 @@ import java.time.Clock
 class GameEngine(
     private val inbound: ReceiveChannel<InboundEvent>,
     private val outbound: SendChannel<OutboundEvent>,
+    private val players: PlayerRegistry,
     private val clock: Clock = Clock.systemUTC(),
     private val tickMillis: Long = 100L,
 ) {
     private val sessions = SessionRegistry()
 
     private val world = WorldFactory.demoWorld()
-    private val players = PlayerRegistry(world.startRoom)
+
     private val router = CommandRouter(world, players, outbound)
 
     suspend fun run() =

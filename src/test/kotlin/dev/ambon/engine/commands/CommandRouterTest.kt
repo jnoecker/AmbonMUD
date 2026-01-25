@@ -5,6 +5,7 @@ import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
@@ -19,8 +20,7 @@ class CommandRouterTest {
     fun `look emits room title description exits and prompt`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
-
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
 
@@ -56,7 +56,7 @@ class CommandRouterTest {
     fun `move north changes room and then look describes new room`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
 
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
@@ -93,7 +93,7 @@ class CommandRouterTest {
     fun `move blocked emits can't go that way and prompt`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
 
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
@@ -117,7 +117,7 @@ class CommandRouterTest {
     fun `tell to unknown name emits error to sender only`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
 
@@ -153,7 +153,7 @@ class CommandRouterTest {
     fun `tell delivers to target only and not to third party`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
 
@@ -196,7 +196,7 @@ class CommandRouterTest {
     fun `say broadcasts only to room members and echoes to sender`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
 
@@ -226,7 +226,7 @@ class CommandRouterTest {
     fun `gossip broadcasts to all connected`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
 
@@ -263,7 +263,7 @@ class CommandRouterTest {
     fun `name uniqueness is case-insensitive`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
 
@@ -287,7 +287,7 @@ class CommandRouterTest {
     fun `exits emits exits line and prompt only`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
 
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
@@ -309,7 +309,7 @@ class CommandRouterTest {
     fun `look dir shows adjacent room title when exit exists`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
 
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
@@ -338,7 +338,7 @@ class CommandRouterTest {
     fun `look dir shows message when no exit exists`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
 
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
@@ -348,7 +348,7 @@ class CommandRouterTest {
 
             val startRoom = world.rooms.getValue(world.startRoom)
             val missingDir =
-                Direction.values().firstOrNull { it !in startRoom.exits.keys }
+                Direction.entries.firstOrNull { it !in startRoom.exits.keys }
                     ?: error("Demo world start room must be missing at least one direction for this test")
 
             router.handle(sid, Command.LookDir(missingDir))
