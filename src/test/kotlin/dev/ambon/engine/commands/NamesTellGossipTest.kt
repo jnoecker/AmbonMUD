@@ -5,6 +5,7 @@ import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
@@ -18,7 +19,7 @@ class NamesTellGossipTest {
     fun `name sets and who reflects new name`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
 
@@ -44,7 +45,7 @@ class NamesTellGossipTest {
     fun `name must be unique case-insensitively`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
 
@@ -68,7 +69,7 @@ class NamesTellGossipTest {
     fun `tell delivers to target only`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
 
@@ -109,7 +110,7 @@ class NamesTellGossipTest {
     fun `gossip broadcasts to all connected`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
 
@@ -138,7 +139,7 @@ class NamesTellGossipTest {
     fun `tell across rooms still works`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom)
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val router = CommandRouter(world, players, outbound)
 
