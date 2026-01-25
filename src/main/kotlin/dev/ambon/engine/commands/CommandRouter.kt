@@ -3,6 +3,7 @@ package dev.ambon.engine.commands
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.RenameResult
 import dev.ambon.engine.events.OutboundEvent
 import kotlinx.coroutines.channels.SendChannel
 
@@ -21,7 +22,12 @@ class CommandRouter(
             }
 
             Command.Help -> {
-                outbound.send(OutboundEvent.SendInfo(sessionId, "Commands: help, look/l, n/s/e/w, ansi on/off, clear, colors, quit"))
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "Commands: help, look/l, n/s/e/w, ansi on/off, clear, colors, say, who, tell, gossip, quit",
+                    ),
+                )
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -94,6 +100,70 @@ class CommandRouter(
                         .joinToString(separator = ", ") { it.name }
 
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Online: $list"))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Name -> {
+                val me = players.get(sessionId) ?: return
+                val old = me.name
+                when (players.rename(sessionId, cmd.newName)) {
+                    RenameResult.Ok -> {
+                        outbound.send(OutboundEvent.SendInfo(sessionId, "Name set to ${players.get(sessionId)!!.name}"))
+                    }
+
+                    RenameResult.Taken -> {
+                        outbound.send(OutboundEvent.SendError(sessionId, "That name is already taken."))
+                    }
+
+                    RenameResult.Invalid -> {
+                        outbound.send(
+                            OutboundEvent.SendError(
+                                sessionId,
+                                "Invalid name. Use 2-16 chars, letters/digits/_, cannot start with a digit.",
+                            ),
+                        )
+                    }
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Tell -> {
+                val me = players.get(sessionId) ?: return
+                val targetSid = players.findSessionByName(cmd.target)
+                if (targetSid == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.target}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                if (targetSid == sessionId) {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You tell yourself: ${cmd.message}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                outbound.send(OutboundEvent.SendText(sessionId, "You tell ${cmd.target}: ${cmd.message}"))
+                outbound.send(OutboundEvent.SendText(targetSid, "${me.name} tells you: ${cmd.message}"))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Gossip -> {
+                val me = players.get(sessionId) ?: return
+                for (p in players.allPlayers()) {
+                    if (p.sessionId == sessionId) {
+                        outbound.send(OutboundEvent.SendText(sessionId, "You gossip: ${cmd.message}"))
+                    } else {
+                        outbound.send(OutboundEvent.SendText(p.sessionId, "[GOSSIP] ${me.name}: ${cmd.message}"))
+                    }
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Invalid -> {
+                outbound.send(OutboundEvent.SendText(sessionId, "Invalid command: ${cmd.command}"))
+                if (cmd.usage != null) {
+                    outbound.send(OutboundEvent.SendText(sessionId, "Usage: ${cmd.usage}"))
+                } else {
+                    outbound.send(OutboundEvent.SendText(sessionId, "Try 'help' for a list of commands."))
+                }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
