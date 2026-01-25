@@ -1,0 +1,15 @@
+zone: swamp
+startRoom: edge
+rooms:
+  edge:
+    title: "Swamp Edge"
+    description: "The ground turns wet and spongy."
+    exits:
+      west: enchanted_forest:mossy_path
+      east: deep
+
+  deep:
+    title: "Deep Swamp"
+    description: "Buzzing insects and dark water."
+    exits:
+      west: edge

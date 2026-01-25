@@ -19,101 +19,138 @@ object WorldLoader {
         ObjectMapper(YAMLFactory())
             .registerModule(KotlinModule.Builder().build())
 
-    fun loadFromResource(path: String): World {
-        val text =
-            WorldLoader::class.java.classLoader
-                .getResource(path)
-                ?.readText()
-                ?: throw WorldLoadException("World resource not found: $path")
+    fun loadFromResource(path: String): World = loadFromResources(listOf(path))
 
-        val file: WorldFile = mapper.readValue(text)
-        validate(file)
-        return toDomain(file)
-    }
+    fun loadFromResources(paths: List<String>): World {
+        if (paths.isEmpty()) throw WorldLoadException("No zone files provided")
 
-    private fun validate(file: WorldFile) {
-        val rawRooms = file.rooms
-        if (rawRooms.isEmpty()) throw WorldLoadException("World has no rooms")
+        val files = paths.map { path -> readWorldFile(path) }
 
-        val zone = file.zone.trim()
-        if (zone.isEmpty()) throw WorldLoadException("World zone cannot be blank")
+        // Validate per-file basics (no cross-zone resolution yet)
+        files.forEach { validateFileBasics(it) }
 
-        // Normalize room keys once
-        val roomIds: Set<RoomId> = rawRooms.keys.map { normalizeId(zone, it) }.toSet()
+        // Normalize + merge all rooms
+        val mergedRooms = LinkedHashMap<RoomId, Room>()
+        val allExits = LinkedHashMap<RoomId, Map<Direction, RoomId>>() // staged exits per room
 
-        val startId = normalizeId(zone, file.startRoom)
-        if (!roomIds.contains(startId)) {
-            throw WorldLoadException("startRoom '${file.startRoom}' does not exist (normalized as '${startId.value}')")
+        // If multiple files provide startRoom, pick first file’s startRoom as world start.
+        val worldStart = normalizeId(files.first().zone, files.first().startRoom)
+
+        for (file in files) {
+            val zone = file.zone.trim()
+            if (zone.isEmpty()) throw WorldLoadException("World zone cannot be blank")
+
+            // First pass per file: create room shells, detect collisions
+            for ((rawId, rf) in file.rooms) {
+                val id = normalizeId(zone, rawId)
+                if (mergedRooms.containsKey(id)) {
+                    throw WorldLoadException("Duplicate room id '${id.value}' across zone files")
+                }
+                mergedRooms[id] =
+                    Room(
+                        id = id,
+                        title = rf.title,
+                        description = rf.description,
+                        exits = emptyMap(),
+                    )
+            }
+
+            // Stage exits (normalized), but don’t validate targets until after merge
+            for ((rawId, rf) in file.rooms) {
+                val fromId = normalizeId(zone, rawId)
+                val exits: Map<Direction, RoomId> =
+                    rf.exits
+                        .map { (dirStr, targetRaw) ->
+                            val dir =
+                                parseDirectionOrNull(dirStr)
+                                    ?: throw WorldLoadException("Room '${fromId.value}' has invalid direction '$dirStr'")
+                            dir to normalizeTarget(zone, targetRaw)
+                        }.toMap()
+
+                allExits[fromId] = exits
+            }
         }
 
-        // Validate exits
-        for ((roomKey, room) in rawRooms) {
-            val fromId = normalizeId(zone, roomKey)
-
-            for ((dirStr, targetRaw) in room.exits) {
-                val dir =
-                    parseDirectionOrNull(dirStr)
-                        ?: throw WorldLoadException("Room '${fromId.value}' has invalid direction '$dirStr'")
-
-                val targetId = normalizeId(zone, targetRaw)
-
-                // For now: disallow cross-zone references until you support multi-zone loading
-                if (isCrossZone(zone, targetId)) {
-                    throw WorldLoadException(
-                        "Room '${fromId.value}' exit '$dir' targets cross-zone room '${targetId.value}', " +
-                            "but multi-zone loading is not supported yet",
-                    )
-                }
-
-                if (!roomIds.contains(targetId)) {
+        // Now validate that all exit targets exist in the merged room set
+        for ((fromId, exits) in allExits) {
+            for ((dir, targetId) in exits) {
+                if (!mergedRooms.containsKey(targetId)) {
                     throw WorldLoadException(
                         "Room '${fromId.value}' exit '$dir' points to missing room '${targetId.value}'",
                     )
                 }
             }
         }
-    }
 
-    private fun toDomain(file: WorldFile): World {
-        val zone = file.zone.trim()
+        // Apply exits by copying rooms (immutable style)
+        for ((fromId, exits) in allExits) {
+            val room = mergedRooms.getValue(fromId)
+            mergedRooms[fromId] = room.copy(exits = exits)
+        }
 
-        // First pass: create Room shells with normalized ids
-        val rooms: MutableMap<RoomId, Room> =
-            file.rooms
-                .map { (idStr, rf) ->
-                    val id = normalizeId(zone, idStr)
-                    id to
-                        Room(
-                            id = id,
-                            title = rf.title,
-                            description = rf.description,
-                            exits = emptyMap(),
-                        )
-                }.toMap()
-                .toMutableMap()
-
-        // Second pass: wire exits as Direction -> RoomId (normalized)
-        for ((idStr, rf) in file.rooms) {
-            val id = normalizeId(zone, idStr)
-            val room = rooms.getValue(id)
-
-            val exits: Map<Direction, RoomId> =
-                rf.exits
-                    .map { (dirStr, targetIdStr) ->
-                        val dir =
-                            parseDirectionOrNull(dirStr)
-                                ?: throw WorldLoadException("Room '${id.value}' has invalid direction '$dirStr'")
-                        dir to normalizeId(zone, targetIdStr)
-                    }.toMap()
-
-            rooms[id] = room.copy(exits = exits)
+        // Validate worldStart exists
+        if (!mergedRooms.containsKey(worldStart)) {
+            throw WorldLoadException("World startRoom '${worldStart.value}' does not exist in merged world")
         }
 
         return World(
-            rooms = rooms,
-            startRoom = normalizeId(zone, file.startRoom),
+            rooms = mergedRooms.toMutableMap(),
+            startRoom = worldStart,
         )
     }
+
+    private fun readWorldFile(path: String): WorldFile {
+        val text =
+            WorldLoader::class.java.classLoader
+                .getResource(path)
+                ?.readText()
+                ?: throw WorldLoadException("World resource not found: $path")
+        try {
+            return mapper.readValue(text)
+        } catch (e: Exception) {
+            throw WorldLoadException("Failed to parse '$path': ${e.message}")
+        }
+    }
+
+    private fun validateFileBasics(file: WorldFile) {
+        val zone = file.zone.trim()
+        if (zone.isEmpty()) throw WorldLoadException("World zone cannot be blank")
+
+        if (file.rooms.isEmpty()) throw WorldLoadException("Zone '$zone' has no rooms")
+
+        // startRoom can be local (preferred) or fully qualified; normalize and check within this zone file.
+        val start = normalizeId(zone, file.startRoom)
+        val roomIds =
+            file.rooms.keys
+                .map { normalizeId(zone, it) }
+                .toSet()
+
+        if (!roomIds.contains(start)) {
+            throw WorldLoadException("Zone '$zone' startRoom '${file.startRoom}' does not exist (normalized as '${start.value}')")
+        }
+    }
+
+    /**
+     * Normalize a room id that is expected to be "local to zone" unless qualified.
+     */
+    private fun normalizeId(
+        zone: String,
+        raw: String,
+    ): RoomId {
+        val s = raw.trim()
+        if (s.isEmpty()) throw WorldLoadException("Room id cannot be blank")
+        return if (':' in s) RoomId(s) else RoomId("$zone:$s")
+    }
+
+    /**
+     * Normalize exit targets:
+     * - If "other:room" => keep as-is
+     * - If "room" => treat as local to zone
+     */
+    private fun normalizeTarget(
+        zone: String,
+        raw: String,
+    ): RoomId = normalizeId(zone, raw)
 
     private fun parseDirectionOrNull(s: String): Direction? =
         when (s.lowercase()) {
@@ -125,18 +162,4 @@ object WorldLoader {
             "d", "down" -> Direction.DOWN
             else -> null
         }
-
-    private fun normalizeId(
-        zone: String,
-        raw: String,
-    ): RoomId {
-        val s = raw.trim()
-        require(s.isNotEmpty()) { "Room id cannot be blank" }
-        return if (':' in s) RoomId(s) else RoomId("$zone:$s")
-    }
-
-    private fun isCrossZone(
-        zone: String,
-        id: RoomId,
-    ): Boolean = id.zone != zone
 }
