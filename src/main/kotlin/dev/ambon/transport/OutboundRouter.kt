@@ -41,7 +41,15 @@ class OutboundRouter(
             for (ev in engineOutbound) {
                 when (ev) {
                     is OutboundEvent.SendText -> {
-                        sendText(ev.sessionId, ev.text)
+                        sendLine(ev.sessionId, ev.text, TextKind.NORMAL)
+                    }
+
+                    is OutboundEvent.SendInfo -> {
+                        sendLine(ev.sessionId, ev.text, TextKind.INFO)
+                    }
+
+                    is OutboundEvent.SendError -> {
+                        sendLine(ev.sessionId, ev.text, TextKind.ERROR)
                     }
 
                     is OutboundEvent.SendPrompt -> {
@@ -52,21 +60,30 @@ class OutboundRouter(
                         setAnsi(ev.sessionId, ev.enabled)
                     }
 
+                    is OutboundEvent.ClearScreen -> {
+                        clearScreen(ev.sessionId)
+                    }
+
+                    is OutboundEvent.ShowAnsiDemo -> {
+                        showAnsiDemo(ev.sessionId)
+                    }
+
                     is OutboundEvent.Close -> {
                         // Best-effort goodbye text; then close.
-                        sendText(ev.sessionId, ev.reason + "")
+                        sendLine(ev.sessionId, ev.reason + "", TextKind.ERROR)
                         sinks.remove(ev.sessionId)?.close?.invoke(ev.reason)
                     }
                 }
             }
         }
 
-    private fun sendText(
+    private fun sendLine(
         sessionId: SessionId,
         text: String,
+        kind: TextKind,
     ) {
         val sink = sinks[sessionId] ?: return
-        val framed = sink.renderer.renderLine(text)
+        val framed = sink.renderer.renderLine(text, kind)
 
         val ok = sink.queue.trySend(framed).isSuccess
         if (ok) {
@@ -99,5 +116,43 @@ class OutboundRouter(
         val sink = sinks[sessionId] ?: return
         sink.renderer = if (enabled) AnsiRenderer() else PlainRenderer()
         sink.lastEnqueuedWasPrompt = false // optional: keep coalescing predictable
+    }
+
+    private fun clearScreen(sessionId: SessionId) {
+        val sink = sinks[sessionId] ?: return
+        val isAnsi = sink.renderer is AnsiRenderer
+        if (!isAnsi) {
+            sendLine(sessionId, "----------------", TextKind.NORMAL)
+            return
+        }
+        // ESC[2J clears, ESC[H homes cursor
+        sink.queue.trySend("\u001B[2J\u001B[H")
+        sink.lastEnqueuedWasPrompt = false
+    }
+
+    private fun showAnsiDemo(sessionId: SessionId) {
+        val sink = sinks[sessionId] ?: return
+        val isAnsi = sink.renderer is AnsiRenderer
+        if (!isAnsi) {
+            sendLine(sessionId, "ANSI is off. Type: ansi on", TextKind.INFO)
+            return
+        }
+
+        val reset = "\u001B[0m"
+        val demo =
+            buildString {
+                append("\u001B[90mbright black\u001B[0m  ")
+                append("\u001B[91mbright red\u001B[0m  ")
+                append("\u001B[92mbright green\u001B[0m  ")
+                append("\u001B[93mbright yellow\u001B[0m  ")
+                append("\u001B[94mbright blue\u001B[0m  ")
+                append("\u001B[95mbright magenta\u001B[0m  ")
+                append("\u001B[96mbright cyan\u001B[0m  ")
+                append("\u001B[97mbright white\u001B[0m")
+                append("\r\n")
+                append(reset)
+            }
+        sink.queue.trySend(demo)
+        sink.lastEnqueuedWasPrompt = false
     }
 }
