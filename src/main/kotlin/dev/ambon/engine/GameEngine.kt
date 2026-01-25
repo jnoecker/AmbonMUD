@@ -6,6 +6,7 @@ import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.scheduler.Scheduler
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.coroutineScope
@@ -19,6 +20,8 @@ class GameEngine(
     private val players: PlayerRegistry,
     private val clock: Clock = Clock.systemUTC(),
     private val tickMillis: Long = 100L,
+    private val scheduler: Scheduler = Scheduler(clock),
+    private val debugHeartbeat: Boolean = false,
 ) {
     private val sessions = SessionRegistry()
 
@@ -37,7 +40,12 @@ class GameEngine(
                     handle(ev)
                 }
 
-                // TODO: scheduler/world tick later
+                // Run scheduled actions (bounded)
+                scheduler.runDue(maxActions = 100)
+
+                if (debugHeartbeat) {
+                    println("TICK")
+                }
 
                 val elapsed = clock.millis() - tickStart
                 val sleep = (tickMillis - elapsed).coerceAtLeast(0)
