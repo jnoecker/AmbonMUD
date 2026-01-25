@@ -6,7 +6,7 @@ This project is both:
 - a playable text-based multiplayer game server, and
 - an exploration of clean, testable backend design for long-lived, stateful systems.
 
-## ✨ Features (v0.4)
+### [Detailed Design Decisions](DesignDecisions.md)
 
 ### Core Gameplay
 - **Telnet-based client support** (with a clean path to WebSockets / SSH later)
