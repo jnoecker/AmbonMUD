@@ -9,6 +9,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -91,6 +93,176 @@ class CommandRouterTest {
                 "Expected blocked movement message. got=$outs",
             )
             Assertions.assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
+        }
+
+    @Test
+    fun `tell to unknown name emits error to sender only`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            players.connect(alice)
+            players.connect(bob)
+
+            router.handle(alice, Command.Name("Alice"))
+            router.handle(bob, Command.Name("Bob"))
+            drain(outbound)
+
+            router.handle(alice, Command.Tell("Charlie", "hi"))
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendError && it.sessionId == alice &&
+                        it.text.contains(
+                            "No such player",
+                            ignoreCase = true,
+                        )
+                },
+                "Expected error to sender for unknown name. got=$outs",
+            )
+            assertFalse(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == bob && it.text.contains("hi") },
+                "Other players should not receive tells to unknown. got=$outs",
+            )
+        }
+
+    @Test
+    fun `tell delivers to target only and not to third party`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            val eve = SessionId(3)
+            players.connect(alice)
+            players.connect(bob)
+            players.connect(eve)
+
+            router.handle(alice, Command.Name("Alice"))
+            router.handle(bob, Command.Name("Bob"))
+            router.handle(eve, Command.Name("Eve"))
+            drain(outbound)
+
+            router.handle(alice, Command.Tell("Bob", "secret"))
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendText && it.sessionId == alice && it.text.contains("You tell", ignoreCase = true) &&
+                        it.text.contains("secret")
+                },
+                "Sender should get confirmation. got=$outs",
+            )
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendText && it.sessionId == bob && it.text.contains("tells you", ignoreCase = true) &&
+                        it.text.contains("secret")
+                },
+                "Target should receive tell. got=$outs",
+            )
+            assertFalse(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == eve && it.text.contains("secret") },
+                "Third party should not see tell. got=$outs",
+            )
+        }
+
+    @Test
+    fun `say broadcasts only to room members and echoes to sender`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            players.connect(alice)
+            players.connect(bob)
+
+            router.handle(alice, Command.Name("Alice"))
+            router.handle(bob, Command.Name("Bob"))
+            drain(outbound)
+
+            router.handle(alice, Command.Say("hello"))
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == alice && it.text == "You say: hello" },
+                "Sender should see 'You say'. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == bob && it.text == "Alice says: hello" },
+                "Other room member should see broadcast. got=$outs",
+            )
+        }
+
+    @Test
+    fun `gossip broadcasts to all connected`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            val eve = SessionId(3)
+            players.connect(alice)
+            players.connect(bob)
+            players.connect(eve)
+
+            router.handle(alice, Command.Name("Alice"))
+            router.handle(bob, Command.Name("Bob"))
+            router.handle(eve, Command.Name("Eve"))
+            drain(outbound)
+
+            router.handle(alice, Command.Gossip("hello all"))
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == alice && it.text.contains("You gossip: hello all") },
+                "Sender should see self-gossip line. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == bob && it.text.contains("[GOSSIP] Alice: hello all") },
+                "Other players should see gossip. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == eve && it.text.contains("[GOSSIP] Alice: hello all") },
+                "All players should see gossip. got=$outs",
+            )
+        }
+
+    @Test
+    fun `name uniqueness is case-insensitive`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val a = SessionId(1)
+            val b = SessionId(2)
+            players.connect(a)
+            players.connect(b)
+
+            router.handle(a, Command.Name("Alice"))
+            router.handle(b, Command.Name("alice"))
+
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == b && it.text.contains("taken", ignoreCase = true) },
+                "Expected taken error. got=$outs",
+            )
         }
 
     private fun drain(ch: Channel<OutboundEvent>): List<OutboundEvent> {

@@ -1,0 +1,172 @@
+package dev.ambon.engine.commands
+
+import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.world.Direction
+import dev.ambon.domain.world.WorldFactory
+import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.events.OutboundEvent
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class NamesTellGossipTest {
+    @Test
+    fun `name sets and who reflects new name`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val a = SessionId(1)
+            players.connect(a)
+
+            router.handle(a, Command.Name("Alice"))
+            router.handle(a, Command.Who)
+
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.sessionId == a && it.text.contains("Name set to Alice") },
+                "Expected confirmation. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.sessionId == a && it.text.contains("Alice") && it.text.contains("Online:") },
+                "Expected who to show Alice. got=$outs",
+            )
+        }
+
+    @Test
+    fun `name must be unique case-insensitively`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val a = SessionId(1)
+            val b = SessionId(2)
+            players.connect(a)
+            players.connect(b)
+
+            router.handle(a, Command.Name("Alice"))
+            router.handle(b, Command.Name("alice"))
+
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == b && it.text.contains("taken", ignoreCase = true) },
+                "Expected 'taken' error for duplicate name. got=$outs",
+            )
+        }
+
+    @Test
+    fun `tell delivers to target only`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val a = SessionId(1)
+            val b = SessionId(2)
+            val c = SessionId(3)
+            players.connect(a)
+            players.connect(b)
+            players.connect(c)
+
+            router.handle(a, Command.Name("Alice"))
+            router.handle(b, Command.Name("Bob"))
+            drain(outbound)
+
+            router.handle(a, Command.Tell("Bob", "hi there"))
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendText && it.sessionId == a &&
+                        it.text.contains(
+                            "You tell",
+                        ) && it.text.contains("hi there")
+                },
+                "Sender should see confirmation. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == b && it.text.contains("Alice tells you: hi there") },
+                "Target should receive tell. got=$outs",
+            )
+            assertFalse(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == c && it.text.contains("hi there") },
+                "Non-target should not receive tell. got=$outs",
+            )
+        }
+
+    @Test
+    fun `gossip broadcasts to all connected`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val a = SessionId(1)
+            val b = SessionId(2)
+            players.connect(a)
+            players.connect(b)
+
+            router.handle(a, Command.Name("Alice"))
+            drain(outbound)
+
+            router.handle(a, Command.Gossip("hello everyone"))
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text.contains("You gossip: hello everyone") },
+                "Sender should see self message. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == b && it.text.contains("[GOSSIP] Alice: hello everyone") },
+                "Other should see gossip broadcast. got=$outs",
+            )
+        }
+
+    @Test
+    fun `tell across rooms still works`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val a = SessionId(1)
+            val b = SessionId(2)
+            players.connect(a)
+            players.connect(b)
+
+            router.handle(a, Command.Name("Alice"))
+            router.handle(b, Command.Name("Bob"))
+            drain(outbound)
+
+            // Move Bob north so he is not in Alice's room
+            router.handle(b, Command.Move(Direction.NORTH))
+            drain(outbound)
+
+            router.handle(a, Command.Tell("Bob", "still works"))
+            val outs = drain(outbound)
+
+            assertTrue(outs.any { it is OutboundEvent.SendText && it.sessionId == b && it.text.contains("still works") })
+        }
+
+    private fun drain(ch: Channel<OutboundEvent>): List<OutboundEvent> {
+        val out = mutableListOf<OutboundEvent>()
+        while (true) {
+            val ev = ch.tryReceive().getOrNull() ?: break
+            out += ev
+        }
+        return out
+    }
+}
