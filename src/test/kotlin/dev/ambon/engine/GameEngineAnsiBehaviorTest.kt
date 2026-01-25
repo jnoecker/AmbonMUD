@@ -1,6 +1,6 @@
 package dev.ambon.engine
 
-import dev.ambon.domain.SessionId
+import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi

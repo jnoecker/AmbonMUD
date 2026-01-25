@@ -1,6 +1,6 @@
 package dev.ambon.transport
 
-import dev.ambon.domain.SessionId
+import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
