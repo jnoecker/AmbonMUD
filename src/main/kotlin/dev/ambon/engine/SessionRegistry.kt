@@ -1,6 +1,6 @@
 package dev.ambon.engine
 
-import dev.ambon.domain.SessionId
+import dev.ambon.domain.ids.SessionId
 import java.util.concurrent.ConcurrentHashMap
 
 class SessionRegistry {

@@ -1,4 +1,4 @@
-package dev.ambon.domain
+package dev.ambon.domain.ids
 
 @JvmInline
 value class SessionId(

@@ -1,6 +1,6 @@
 package dev.ambon.engine.events
 
-import dev.ambon.domain.SessionId
+import dev.ambon.domain.ids.SessionId
 
 sealed interface InboundEvent {
     data class Connected(
