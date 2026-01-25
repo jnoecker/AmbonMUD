@@ -81,4 +81,44 @@ class WorldLoaderTest {
         assertEquals(bId, a.exits[Direction.NORTH])
         assertEquals(aId, b.exits[Direction.SOUTH])
     }
+
+    class MultiZoneWorldLoaderTest {
+        @Test
+        fun `loads multiple zones and resolves cross-zone exits`() {
+            val world =
+                WorldLoader.loadFromResources(
+                    listOf(
+                        "world/mz_forest.yaml",
+                        "world/mz_swamp.yaml",
+                    ),
+                )
+
+            val forestPath = RoomId("enchanted_forest:mossy_path")
+            val swampEdge = RoomId("swamp:edge")
+
+            val room = world.rooms.getValue(forestPath)
+            assertEquals(swampEdge, room.exits[Direction.EAST])
+
+            val back = world.rooms.getValue(swampEdge)
+            assertEquals(forestPath, back.exits[Direction.WEST])
+        }
+
+        @Test
+        fun `fails if two zones define the same fully-qualified room id`() {
+            val ex =
+                assertThrows(WorldLoadException::class.java) {
+                    WorldLoader.loadFromResources(listOf("world/mz_dup1.yaml", "world/mz_dup2.yaml"))
+                }
+            assertTrue(ex.message!!.contains("Duplicate room id"))
+        }
+
+        @Test
+        fun `fails if an exit targets a missing room across all zones`() {
+            val ex =
+                assertThrows(WorldLoadException::class.java) {
+                    WorldLoader.loadFromResources(listOf("world/mz_bad_missing_target.yaml"))
+                }
+            assertTrue(ex.message!!.contains("points to missing room"))
+        }
+    }
 }

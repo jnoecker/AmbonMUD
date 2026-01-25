@@ -1,0 +1,15 @@
+zone: enchanted_forest
+startRoom: trailhead
+rooms:
+  trailhead:
+    title: "Forest Trailhead"
+    description: "A narrow trail slips beneath ancient boughs."
+    exits:
+      north: mossy_path
+
+  mossy_path:
+    title: "Mossy Path"
+    description: "Velvet moss cushions the stones."
+    exits:
+      south: trailhead
+      east: swamp:edge
