@@ -1,5 +1,9 @@
 package dev.ambon.engine
 
+import dev.ambon.domain.world.WorldFactory
+import dev.ambon.engine.commands.Command
+import dev.ambon.engine.commands.CommandParser
+import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -16,6 +20,10 @@ class GameEngine(
     private val tickMillis: Long = 100L,
 ) {
     private val sessions = SessionRegistry()
+
+    private val world = WorldFactory.demoWorld()
+    private val players = PlayerRegistry(world.startRoom)
+    private val router = CommandRouter(world, players, outbound)
 
     suspend fun run() =
         coroutineScope {
@@ -39,9 +47,9 @@ class GameEngine(
     private suspend fun handle(ev: InboundEvent) {
         when (ev) {
             is InboundEvent.Connected -> {
-                sessions.onConnect(ev.sessionId)
+                players.connect(ev.sessionId)
                 outbound.send(OutboundEvent.SendInfo(ev.sessionId, "Welcome to QuickMUD"))
-                outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
+                router.handle(ev.sessionId, Command.Look) // shows room + prompt
             }
 
             is InboundEvent.Disconnected -> {
@@ -50,42 +58,7 @@ class GameEngine(
 
             is InboundEvent.LineReceived -> {
                 val line = ev.line.trim()
-                when (line.lowercase()) {
-                    "quit", "exit" -> {
-                        outbound.send(OutboundEvent.Close(ev.sessionId, "Goodbye!"))
-                    }
-
-                    "" -> {
-                        outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
-                    }
-
-                    "ansi on" -> {
-                        outbound.send(OutboundEvent.SetAnsi(ev.sessionId, true))
-                        outbound.send(OutboundEvent.SendInfo(ev.sessionId, "ANSI enabled"))
-                        outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
-                    }
-
-                    "ansi off" -> {
-                        outbound.send(OutboundEvent.SetAnsi(ev.sessionId, false))
-                        outbound.send(OutboundEvent.SendInfo(ev.sessionId, "ANSI disabled"))
-                        outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
-                    }
-
-                    "clear" -> {
-                        outbound.send(OutboundEvent.ClearScreen(ev.sessionId))
-                        outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
-                    }
-
-                    "colors" -> {
-                        outbound.send(OutboundEvent.ShowAnsiDemo(ev.sessionId))
-                        outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
-                    }
-
-                    else -> {
-                        outbound.send(OutboundEvent.SendText(ev.sessionId, "You said: $line"))
-                        outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
-                    }
-                }
+                router.handle(ev.sessionId, CommandParser.parse(line))
             }
         }
     }
