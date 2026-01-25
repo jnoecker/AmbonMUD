@@ -5,7 +5,7 @@
 # - a “cabin interior” cluster
 # - a sorceress NPC can live in: cabin_study
 
-zone: enchanted_forest
+zone: demo
 startRoom: trailhead
 rooms:
   trailhead:
@@ -13,6 +13,7 @@ rooms:
     description: "A narrow trail slips beneath ancient boughs. The air smells of pine resin and damp earth."
     exits:
       north: mossy_path
+      east: enchanted_forest:trailhead
 
   mossy_path:
     title: "Mossy Path"
