@@ -283,6 +283,86 @@ class CommandRouterTest {
             )
         }
 
+    @Test
+    fun `exits emits exits line and prompt only`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val sid = SessionId(10)
+            players.connect(sid)
+
+            router.handle(sid, Command.Exits)
+
+            val outs = drain(outbound)
+
+            // Only exits + prompt (no title/description)
+            assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.startsWith("Exits:") }, "Missing exits line. got=$outs")
+            assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
+            assertFalse(outs.any { it is OutboundEvent.SendText }, "Should not send title/desc for exits. got=$outs")
+        }
+
+    @Test
+    fun `look dir shows adjacent room title when exit exists`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val sid = SessionId(11)
+            players.connect(sid)
+
+            val startRoom = world.rooms.getValue(world.startRoom)
+            val (dir, targetId) =
+                startRoom.exits.entries.firstOrNull()
+                    ?: error("Demo world start room must have at least one exit for this test")
+
+            val target = world.rooms.getValue(targetId)
+
+            router.handle(sid, Command.LookDir(dir))
+
+            val outs = drain(outbound)
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.text == target.title },
+                "Expected target title '${target.title}'. got=$outs",
+            )
+            assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
+        }
+
+    @Test
+    fun `look dir shows message when no exit exists`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val sid = SessionId(12)
+            players.connect(sid)
+
+            val startRoom = world.rooms.getValue(world.startRoom)
+            val missingDir =
+                Direction.values().firstOrNull { it !in startRoom.exits.keys }
+                    ?: error("Demo world start room must be missing at least one direction for this test")
+
+            router.handle(sid, Command.LookDir(missingDir))
+
+            val outs = drain(outbound)
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendError && it.text.contains("nothing", ignoreCase = true)
+                },
+                "Expected 'nothing that way' message. got=$outs",
+            )
+            assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
+        }
+
     private fun drain(ch: Channel<OutboundEvent>): List<OutboundEvent> {
         val out = mutableListOf<OutboundEvent>()
         while (true) {
