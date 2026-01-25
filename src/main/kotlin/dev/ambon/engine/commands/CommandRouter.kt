@@ -92,6 +92,19 @@ class CommandRouter(
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
+            is Command.Emote -> {
+                val me = players.get(sessionId) ?: return
+                val roomId = me.roomId
+                val members = players.membersInRoom(roomId)
+
+                // Everyone else in the room
+                for (player in members) {
+                    outbound.send(OutboundEvent.SendText(player, "${me.name} ${cmd.message}"))
+                }
+
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
             Command.Who -> {
                 val list =
                     players

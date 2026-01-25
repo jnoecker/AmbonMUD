@@ -25,6 +25,10 @@ sealed interface Command {
         val message: String,
     ) : Command
 
+    data class Emote(
+        val message: String,
+    ) : Command
+
     data object Who : Command
 
     data class Name(
@@ -68,6 +72,11 @@ object CommandParser {
         // say: "say <msg>"
         matchPrefix(line, listOf("say")) { rest ->
             if (rest.isEmpty()) Command.Invalid(line, "say <message>") else Command.Say(rest)
+        }?.let { return it }
+
+        // say: "emote <msg>"
+        matchPrefix(line, listOf("emote")) { rest ->
+            if (rest.isEmpty()) Command.Invalid(line, "emote <message>") else Command.Emote(rest)
         }?.let { return it }
 
         // name: "name <newName>"
