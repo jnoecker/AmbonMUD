@@ -40,7 +40,7 @@ class GameEngine(
         when (ev) {
             is InboundEvent.Connected -> {
                 sessions.onConnect(ev.sessionId)
-                outbound.send(OutboundEvent.SendText(ev.sessionId, "Welcome to QuickMUD"))
+                outbound.send(OutboundEvent.SendInfo(ev.sessionId, "Welcome to QuickMUD"))
                 outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
             }
 
@@ -61,13 +61,23 @@ class GameEngine(
 
                     "ansi on" -> {
                         outbound.send(OutboundEvent.SetAnsi(ev.sessionId, true))
-                        outbound.send(OutboundEvent.SendText(ev.sessionId, "ANSI enabled"))
+                        outbound.send(OutboundEvent.SendInfo(ev.sessionId, "ANSI enabled"))
                         outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
                     }
 
                     "ansi off" -> {
                         outbound.send(OutboundEvent.SetAnsi(ev.sessionId, false))
-                        outbound.send(OutboundEvent.SendText(ev.sessionId, "ANSI disabled"))
+                        outbound.send(OutboundEvent.SendInfo(ev.sessionId, "ANSI disabled"))
+                        outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
+                    }
+
+                    "clear" -> {
+                        outbound.send(OutboundEvent.ClearScreen(ev.sessionId))
+                        outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
+                    }
+
+                    "colors" -> {
+                        outbound.send(OutboundEvent.ShowAnsiDemo(ev.sessionId))
                         outbound.send(OutboundEvent.SendPrompt(ev.sessionId))
                     }
 
