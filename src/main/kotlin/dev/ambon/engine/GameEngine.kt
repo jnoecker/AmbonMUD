@@ -31,6 +31,7 @@ class GameEngine(
     private val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
 
     private val mobs = MobRegistry()
+    private val mobSystem = MobSystem(world, mobs, players, outbound)
 
     private val router = CommandRouter(world, players, mobs, outbound)
 
@@ -49,6 +50,9 @@ class GameEngine(
                     val ev = inbound.tryReceive().getOrNull() ?: break
                     handle(ev)
                 }
+
+                // Simulate NPC actions (time-gated internally)
+                mobSystem.tick(maxMovesPerTick = 10)
 
                 // Run scheduled actions (bounded)
                 scheduler.runDue(maxActions = 100)
