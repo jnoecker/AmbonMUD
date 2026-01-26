@@ -202,6 +202,53 @@ class CommandRouter(
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
+            Command.Inventory -> {
+                val me = players.get(sessionId) ?: return
+                if (me.inventory.isEmpty()) {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You are carrying: nothing"))
+                } else {
+                    val items = me.inventory.joinToString(", ") { it.displayName }
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You are carrying: $items"))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Get -> {
+                val me = players.get(sessionId) ?: return
+                val room = world.rooms[me.roomId] ?: return
+
+                val idx = room.items.indexOfFirst { it.keyword.equals(cmd.keyword, ignoreCase = true) }
+                if (idx < 0) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "You don't see '${cmd.keyword}' here."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+
+                val item = room.items.removeAt(idx)
+                me.inventory.add(item)
+
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You pick up ${item.displayName}."))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Drop -> {
+                val me = players.get(sessionId) ?: return
+                val room = world.rooms[me.roomId] ?: return
+
+                val idx = me.inventory.indexOfFirst { it.keyword.equals(cmd.keyword, ignoreCase = true) }
+                if (idx < 0) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+
+                val item = me.inventory.removeAt(idx)
+                room.items.add(item)
+
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${item.displayName}."))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
             is Command.Invalid -> {
                 outbound.send(OutboundEvent.SendText(sessionId, "Invalid command: ${cmd.command}"))
                 if (cmd.usage != null) {
@@ -230,6 +277,14 @@ class CommandRouter(
 
         val exits = if (room.exits.isEmpty()) "none" else room.exits.keys.joinToString(", ") { it.name.lowercase() }
         outbound.send(OutboundEvent.SendInfo(sessionId, "Exits: $exits"))
+
+        // Items
+        if (room.items.isEmpty()) {
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Items here: none"))
+        } else {
+            val items = room.items.joinToString(", ") { it.displayName }
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Items here: $items"))
+        }
 
         val roomPlayers =
             players

@@ -55,6 +55,16 @@ sealed interface Command {
         val usage: String?,
     ) : Command
 
+    data class Get(
+        val keyword: String,
+    ) : Command
+
+    data class Drop(
+        val keyword: String,
+    ) : Command
+
+    data object Inventory : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -115,6 +125,23 @@ object CommandParser {
                 parseDirectionOrNull(rest.trim())
                     ?: return@matchPrefix Command.Invalid(line, "Usage: look <direction> (e.g., look north)")
             Command.LookDir(dir)
+        }?.let { return it }
+
+        // inventory aliases
+        matchPrefix(line, listOf("inventory", "inv", "i")) { rest ->
+            if (rest.isNotEmpty()) Command.Invalid(line, "inventory") else Command.Inventory
+        }?.let { return it }
+
+        // get/take
+        matchPrefix(line, listOf("get", "take", "pickup", "pick")) { rest ->
+            val kw = rest.trim()
+            if (kw.isEmpty()) Command.Invalid(line, "get <item>") else Command.Get(kw)
+        }?.let { return it }
+
+        // drop
+        matchPrefix(line, listOf("drop")) { rest ->
+            val kw = rest.trim()
+            if (kw.isEmpty()) Command.Invalid(line, "drop <item>") else Command.Drop(kw)
         }?.let { return it }
 
         return when (lower) {
