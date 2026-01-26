@@ -29,12 +29,37 @@ class PlayerRegistry(
 
     private var nextPlayerNum = 1
 
+    fun isConnected(sessionId: SessionId): Boolean = players.containsKey(sessionId)
+
     fun connect(sessionId: SessionId): PlayerState {
         val defaultName = "Player${nextPlayerNum++}"
         val ps = PlayerState(sessionId, defaultName, startRoom)
         players[sessionId] = ps
         roomMembers.getOrPut(startRoom) { mutableSetOf() }.add(sessionId)
         sessionByLowerName[defaultName.lowercase()] = sessionId
+        items.ensurePlayer(sessionId)
+        return ps
+    }
+
+    fun attachExisting(
+        sessionId: SessionId,
+        record: PlayerRecord,
+    ): PlayerState {
+        val ps = players[sessionId] ?: connect(sessionId)
+        val oldRoom = ps.roomId
+        val oldName = ps.name
+
+        if (oldRoom != record.roomId) {
+            roomMembers[oldRoom]?.remove(sessionId)
+            if (roomMembers[oldRoom]?.isEmpty() == true) roomMembers.remove(oldRoom)
+            roomMembers.getOrPut(record.roomId) { mutableSetOf() }.add(sessionId)
+        }
+
+        ps.name = record.name
+        ps.roomId = record.roomId
+        ps.playerId = record.id
+
+        renameInternalIndexes(sessionId, oldName, record.name)
         items.ensurePlayer(sessionId)
         return ps
     }
@@ -139,6 +164,19 @@ class PlayerRegistry(
 
         val existing = repo.findById(pid) ?: return
         repo.save(existing.copy(roomId = ps.roomId, lastSeenEpochMs = now, name = ps.name))
+    }
+
+    private fun renameInternalIndexes(
+        sessionId: SessionId,
+        oldName: String,
+        newName: String,
+    ) {
+        val oldKey = oldName.lowercase()
+        val newKey = newName.lowercase()
+        if (oldKey != newKey) {
+            sessionByLowerName.remove(oldKey)
+        }
+        sessionByLowerName[newKey] = sessionId
     }
 
     private fun isValidName(name: String): Boolean {

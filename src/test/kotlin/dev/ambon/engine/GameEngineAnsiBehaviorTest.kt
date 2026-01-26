@@ -48,6 +48,7 @@ class GameEngineAnsiBehaviorTest {
                     inbound = inbound,
                     outbound = outbound,
                     players = players,
+                    playerRepo = repo,
                     world = world,
                     clock = clock,
                     tickMillis = tickMillis,
@@ -65,6 +66,10 @@ class GameEngineAnsiBehaviorTest {
 
             // Connect
             inbound.send(InboundEvent.Connected(sid))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            inbound.send(InboundEvent.LineReceived(sid, "3"))
             advanceTimeBy(tickMillis)
             runCurrent()
 
@@ -122,6 +127,7 @@ class GameEngineAnsiBehaviorTest {
                     inbound = inbound,
                     outbound = outbound,
                     players = players,
+                    playerRepo = repo,
                     world = world,
                     clock = clock,
                     tickMillis = tickMillis,
@@ -137,6 +143,10 @@ class GameEngineAnsiBehaviorTest {
             runCurrent()
 
             inbound.send(InboundEvent.Connected(sid))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            inbound.send(InboundEvent.LineReceived(sid, "3"))
             advanceTimeBy(tickMillis)
             runCurrent()
 

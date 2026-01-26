@@ -42,6 +42,7 @@ class GameEngineIntegrationTest {
                     inbound = inbound,
                     outbound = outbound,
                     players = players,
+                    playerRepo = repo,
                     world = world,
                     clock = clock,
                     tickMillis = tickMillis,
@@ -54,6 +55,7 @@ class GameEngineIntegrationTest {
             val sid = SessionId(1L)
 
             inbound.send(InboundEvent.Connected(sid))
+            inbound.send(InboundEvent.LineReceived(sid, "3"))
             inbound.send(InboundEvent.LineReceived(sid, "Hello"))
             inbound.send(InboundEvent.LineReceived(sid, "quit"))
 
@@ -104,6 +106,7 @@ class GameEngineIntegrationTest {
                     inbound = inbound,
                     outbound = outbound,
                     players = players,
+                    playerRepo = repo,
                     world = world,
                     clock = clock,
                     tickMillis = tickMillis,
@@ -118,6 +121,8 @@ class GameEngineIntegrationTest {
 
             inbound.send(InboundEvent.Connected(sid1))
             inbound.send(InboundEvent.Connected(sid2))
+            inbound.send(InboundEvent.LineReceived(sid1, "3"))
+            inbound.send(InboundEvent.LineReceived(sid2, "3"))
 
             runCurrent()
             advanceTimeBy(5)
@@ -125,7 +130,7 @@ class GameEngineIntegrationTest {
 
             val got = mutableListOf<OutboundEvent>()
             withTimeout(500) {
-                while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Player2 enters." }) {
+                while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Guest2 enters." }) {
                     got += outbound.receive()
                 }
             }
@@ -136,7 +141,7 @@ class GameEngineIntegrationTest {
             runCurrent()
 
             withTimeout(500) {
-                while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Player2 leaves." }) {
+                while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Guest2 leaves." }) {
                     got += outbound.receive()
                 }
             }
