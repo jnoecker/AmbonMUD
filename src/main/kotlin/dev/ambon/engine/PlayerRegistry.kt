@@ -27,12 +27,13 @@ class PlayerRegistry(
 
     private var nextPlayerNum = 1
 
-    fun connect(sessionId: SessionId) {
+    fun connect(sessionId: SessionId): PlayerState {
         val defaultName = "Player${nextPlayerNum++}"
         val ps = PlayerState(sessionId, defaultName, startRoom, playerId = null)
         players[sessionId] = ps
         roomMembers.getOrPut(startRoom) { mutableSetOf() }.add(sessionId)
         sessionByLowerName[defaultName.lowercase()] = sessionId
+        return ps
     }
 
     suspend fun disconnect(sessionId: SessionId) {

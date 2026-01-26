@@ -46,12 +46,12 @@ class CommandRouter(
                 if (to == null) {
                     outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
                 } else {
-                    val oldMembers = players.playersInRoom(from).filter { it != me }
+                    val oldMembers = players.playersInRoom(from).filter { it.sessionId != me.sessionId }
                     for (other in oldMembers) {
                         outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} leaves."))
                     }
                     players.moveTo(sessionId, to)
-                    val newMembers = players.playersInRoom(to).filter { it != me }
+                    val newMembers = players.playersInRoom(to).filter { it.sessionId != me.sessionId }
                     for (other in newMembers) {
                         outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} enters."))
                     }
@@ -61,7 +61,6 @@ class CommandRouter(
             }
 
             Command.Quit -> {
-                players.disconnect(sessionId)
                 outbound.send(OutboundEvent.Close(sessionId, "Goodbye!"))
             }
 
@@ -93,14 +92,15 @@ class CommandRouter(
                 val members = players.playersInRoom(roomId)
 
                 // Sender feedback
-                outbound.send(OutboundEvent.SendText(me.sessionId, "You say: ${cmd.message}"))
-                outbound.send(OutboundEvent.SendPrompt(me.sessionId))
+                outbound.send(OutboundEvent.SendText(sessionId, "You say: ${cmd.message}"))
 
                 // Everyone else in the room
                 for (other in members) {
                     if (other == me) continue
                     outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} says: ${cmd.message}"))
                 }
+
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
             is Command.Emote -> {
@@ -114,7 +114,7 @@ class CommandRouter(
                 }
 
                 // Send a prompt only to the emoting user. */
-                outbound.send(OutboundEvent.SendPrompt(me.sessionId))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
             Command.Who -> {
@@ -155,16 +155,15 @@ class CommandRouter(
                 val targetSid = players.findSessionByName(cmd.target)
                 if (targetSid == null) {
                     outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.target}"))
-                    outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
                 if (targetSid == sessionId) {
                     outbound.send(OutboundEvent.SendInfo(sessionId, "You tell yourself: ${cmd.message}"))
-                    outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
                 outbound.send(OutboundEvent.SendText(sessionId, "You tell ${cmd.target}: ${cmd.message}"))
                 outbound.send(OutboundEvent.SendText(targetSid, "${me.name} tells you: ${cmd.message}"))
+
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -177,12 +176,14 @@ class CommandRouter(
                         outbound.send(OutboundEvent.SendText(p.sessionId, "[GOSSIP] ${me.name}: ${cmd.message}"))
                     }
                 }
+
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
             Command.Exits -> {
                 val r = room(currentRoomId(sessionId))
                 outbound.send(OutboundEvent.SendInfo(sessionId, exitsLine(r)))
+
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -195,6 +196,7 @@ class CommandRouter(
                     val target = room(targetId)
                     outbound.send(OutboundEvent.SendText(sessionId, target.title))
                 }
+
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -205,6 +207,7 @@ class CommandRouter(
                 } else {
                     outbound.send(OutboundEvent.SendText(sessionId, "Try 'help' for a list of commands."))
                 }
+
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -216,7 +219,8 @@ class CommandRouter(
     }
 
     private suspend fun sendLook(sessionId: SessionId) {
-        val roomId = players.get(sessionId)?.roomId ?: world.startRoom
+        val me = players.get(sessionId) ?: return
+        val roomId = me.roomId
         val room = world.rooms[roomId] ?: return
         outbound.send(OutboundEvent.SendText(sessionId, room.title))
         outbound.send(OutboundEvent.SendText(sessionId, room.description))
@@ -236,7 +240,8 @@ class CommandRouter(
         outbound.send(OutboundEvent.SendInfo(sessionId, playersLine))
     }
 
-    private fun currentRoomId(sessionId: SessionId): RoomId = players.get(sessionId)!!.roomId // or players.location(sessionId)
+    private fun currentRoomId(sessionId: SessionId): RoomId =
+        requireNotNull(players.get(sessionId)) { "No player for sessionId=$sessionId" }.roomId
 
     private fun room(roomId: RoomId) = world.rooms.getValue(roomId)
 
