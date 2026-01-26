@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
@@ -22,10 +23,7 @@ class GameEngine(
     private val clock: Clock = Clock.systemUTC(),
     private val tickMillis: Long = 100L,
     private val scheduler: Scheduler = Scheduler(clock),
-    private val debugHeartbeat: Boolean = false,
 ) {
-    private val sessions = SessionRegistry()
-
     private val world = WorldFactory.demoWorld()
 
     private val router = CommandRouter(world, players, outbound)
@@ -44,10 +42,6 @@ class GameEngine(
                 // Run scheduled actions (bounded)
                 scheduler.runDue(maxActions = 100)
 
-                if (debugHeartbeat) {
-                    println("TICK")
-                }
-
                 val elapsed = clock.millis() - tickStart
                 val sleep = (tickMillis - elapsed).coerceAtLeast(0)
                 delay(sleep)
@@ -57,40 +51,53 @@ class GameEngine(
     private suspend fun handle(ev: InboundEvent) {
         when (ev) {
             is InboundEvent.Connected -> {
-                players.connect(ev.sessionId)
-                val me = players.get(ev.sessionId) ?: return
-                broadcastToRoom(me.roomId, me, "${me.name} enters.")
-                outbound.send(OutboundEvent.SendInfo(me.sessionId, "Welcome to QuickMUD"))
-                router.handle(me.sessionId, Command.Look) // shows room + prompt
+                val sid = ev.sessionId
+
+                players.connect(sid)
+
+                val me = players.get(sid)
+                if (me == null) {
+                    // This should never happen; connect() must create state.
+                    outbound.send(OutboundEvent.SendError(sid, "Internal error: player not initialized"))
+                    outbound.send(OutboundEvent.Close(sid, "Internal error"))
+                    return
+                }
+
+                broadcastToRoom(me.roomId, "${me.name} enters.", sid)
+                outbound.send(OutboundEvent.SendInfo(sid, "Welcome to QuickMUD"))
+                router.handle(sid, Command.Look) // room + prompt
             }
 
             is InboundEvent.Disconnected -> {
-                val me = players.get(ev.sessionId)
+                val sid = ev.sessionId
+                val me = players.get(sid)
+
                 if (me != null) {
-                    broadcastToRoom(me.roomId, me, "${me.name} leaves.")
-                    players.disconnect(me.sessionId)
+                    broadcastToRoom(me.roomId, "${me.name} leaves.", sid)
                 }
 
-                // Disconnect using the session ID from the inbound event
-                sessions.onDisconnect(ev.sessionId)
+                players.disconnect(sid) // idempotent; safe even if me == null
             }
 
             is InboundEvent.LineReceived -> {
-                val line = ev.line.trim()
-                router.handle(ev.sessionId, CommandParser.parse(line))
+                val sid = ev.sessionId
+
+                // Optional safety: ignore input from unknown sessions
+                if (players.get(sid) == null) return
+
+                router.handle(sid, CommandParser.parse(ev.line))
             }
         }
     }
 
     private suspend fun broadcastToRoom(
         roomId: RoomId,
-        me: PlayerState,
         text: String,
+        excludeSid: SessionId? = null,
     ) {
-        val members = players.playersInRoom(roomId)
-        for (other in members) {
-            if (other == me) continue
-            outbound.send(OutboundEvent.SendText(other.sessionId, text))
+        for (p in players.playersInRoom(roomId)) {
+            if (excludeSid != null && p.sessionId == excludeSid) continue
+            outbound.send(OutboundEvent.SendText(p.sessionId, text))
         }
     }
 }
