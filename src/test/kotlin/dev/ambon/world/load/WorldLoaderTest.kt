@@ -31,6 +31,16 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `loads mobs from a zone file`() {
+        val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+
+        val mob = world.mobSpawns.single()
+        assertEquals("ok_small:rat", mob.id.value)
+        assertEquals("a small rat", mob.name)
+        assertEquals(RoomId("ok_small:b"), mob.roomId)
+    }
+
+    @Test
     fun `fails when rooms is empty`() {
         val ex =
             assertThrows(WorldLoadException::class.java) {
@@ -65,6 +75,15 @@ class WorldLoaderTest {
                 WorldLoader.loadFromResource("world/bad_direction.yaml")
             }
         assertTrue(ex.message!!.contains("invalid direction", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when a mob starts in a missing room`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_mob_missing_room.yaml")
+            }
+        assertTrue(ex.message!!.contains("starts in missing room", ignoreCase = true), "Got: ${ex.message}")
     }
 
     @Test

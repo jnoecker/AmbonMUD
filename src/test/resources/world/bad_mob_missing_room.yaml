@@ -1,9 +1,9 @@
-zone: ok_small
+zone: bad_mob
 startRoom: a
 mobs:
-  rat:
-    name: "a small rat"
-    room: b
+  ghost:
+    name: "a lost ghost"
+    room: c
 rooms:
   a:
     title: "Room A"
