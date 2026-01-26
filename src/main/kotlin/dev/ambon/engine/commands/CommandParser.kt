@@ -55,6 +55,16 @@ sealed interface Command {
         val usage: String?,
     ) : Command
 
+    data class Get(
+        val keyword: String,
+    ) : Command
+
+    data class Drop(
+        val keyword: String,
+    ) : Command
+
+    data object Inventory : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -117,6 +127,23 @@ object CommandParser {
             Command.LookDir(dir)
         }?.let { return it }
 
+        // inventory aliases
+        matchPrefix(line, listOf("inventory", "inv", "i")) { rest ->
+            if (rest.isNotEmpty()) Command.Invalid(line, "inventory") else Command.Inventory
+        }?.let { return it }
+
+        // get/take
+        matchPrefix(line, listOf("get", "take", "pickup", "pick", "pick up")) { rest ->
+            val kw = rest.trim()
+            if (kw.isEmpty()) Command.Invalid(line, "get <item>") else Command.Get(kw)
+        }?.let { return it }
+
+        // drop
+        matchPrefix(line, listOf("drop")) { rest ->
+            val kw = rest.trim()
+            if (kw.isEmpty()) Command.Invalid(line, "drop <item>") else Command.Drop(kw)
+        }?.let { return it }
+
         return when (lower) {
             "help", "?" -> Command.Help
             "look", "l" -> Command.Look
@@ -140,22 +167,15 @@ object CommandParser {
         aliases: List<String>,
         build: (rest: String) -> Command?,
     ): Command? {
-        val lower = line.lowercase()
-
+        val lower = line.lowercase().trim()
         for (kw in aliases) {
-            val kwLower = kw.lowercase()
-            val prefix = "$kwLower "
-
-            when {
-                lower == kwLower -> {
-                    return build("")
-                }
-
-                // bare verb
-                lower.startsWith(prefix) -> {
-                    val rest = line.drop(prefix.length).trim()
-                    return build(rest)
-                }
+            val key = kw.lowercase().trim()
+            val prefix = "$key "
+            if (lower.startsWith(prefix)) {
+                val rest = line.drop(prefix.length).trim()
+                return build(rest)
+            } else if (lower == key) {
+                return build("")
             }
         }
         return null

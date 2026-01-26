@@ -4,6 +4,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.RenameResult
+import dev.ambon.engine.items.ItemRegistry
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -84,7 +85,7 @@ class YamlPlayerRepositoryTest {
             // create a record that lives in room b
             val existing = repo.create("Alice", RoomId("test:b"), 1000)
 
-            val players = PlayerRegistry(start, repo, clock)
+            val players = PlayerRegistry(start, repo, ItemRegistry(), clock)
             val sid = SessionId(1)
             players.connect(sid)
 
@@ -103,7 +104,7 @@ class YamlPlayerRepositoryTest {
             val start = RoomId("test:a")
             val clock = Clock.fixed(Instant.ofEpochMilli(1000), ZoneOffset.UTC)
 
-            val players = PlayerRegistry(start, repo, clock)
+            val players = PlayerRegistry(start, repo, ItemRegistry(), clock)
             val sid = SessionId(1)
             players.connect(sid)
 

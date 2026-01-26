@@ -6,6 +6,7 @@ import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -21,10 +22,11 @@ class CommandRouterTest {
     fun `look emits room title description exits and prompt`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val sid = SessionId(1)
             players.connect(sid)
@@ -58,10 +60,11 @@ class CommandRouterTest {
     fun `look includes players currently in room`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val alice = SessionId(1)
             val bob = SessionId(2)
@@ -87,10 +90,11 @@ class CommandRouterTest {
     fun `move north changes room and then look describes new room`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val sid = SessionId(2)
             players.connect(sid)
@@ -124,10 +128,11 @@ class CommandRouterTest {
     fun `move broadcasts leave and enter to room members`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val alice = SessionId(1)
             val bob = SessionId(2)
@@ -172,10 +177,11 @@ class CommandRouterTest {
     fun `move blocked emits can't go that way and prompt`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val sid = SessionId(3)
             players.connect(sid)
@@ -196,10 +202,11 @@ class CommandRouterTest {
     fun `tell to unknown name emits error to sender only`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val alice = SessionId(1)
             val bob = SessionId(2)
@@ -233,10 +240,11 @@ class CommandRouterTest {
     fun `tell delivers to target only and not to third party`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val alice = SessionId(1)
             val bob = SessionId(2)
@@ -277,10 +285,11 @@ class CommandRouterTest {
     fun `say broadcasts only to room members and echoes to sender`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val alice = SessionId(1)
             val bob = SessionId(2)
@@ -308,10 +317,11 @@ class CommandRouterTest {
     fun `gossip broadcasts to all connected`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val alice = SessionId(1)
             val bob = SessionId(2)
@@ -346,10 +356,11 @@ class CommandRouterTest {
     fun `name uniqueness is case-insensitive`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
@@ -371,10 +382,11 @@ class CommandRouterTest {
     fun `exits emits exits line and prompt only`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val sid = SessionId(10)
             players.connect(sid)
@@ -393,10 +405,11 @@ class CommandRouterTest {
     fun `look dir shows adjacent room title when exit exists`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val sid = SessionId(11)
             players.connect(sid)
@@ -422,10 +435,11 @@ class CommandRouterTest {
     fun `look dir shows message when no exit exists`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val sid = SessionId(12)
             players.connect(sid)

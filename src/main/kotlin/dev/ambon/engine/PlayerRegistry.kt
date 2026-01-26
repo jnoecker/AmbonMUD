@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
 import java.time.Clock
@@ -17,6 +18,7 @@ sealed interface RenameResult {
 class PlayerRegistry(
     private val startRoom: RoomId,
     private val repo: PlayerRepository,
+    private val items: ItemRegistry,
     private val clock: Clock = Clock.systemUTC(),
 ) {
     private val players = mutableMapOf<SessionId, PlayerState>()
@@ -29,10 +31,11 @@ class PlayerRegistry(
 
     fun connect(sessionId: SessionId): PlayerState {
         val defaultName = "Player${nextPlayerNum++}"
-        val ps = PlayerState(sessionId, defaultName, startRoom, playerId = null)
+        val ps = PlayerState(sessionId, defaultName, startRoom)
         players[sessionId] = ps
         roomMembers.getOrPut(startRoom) { mutableSetOf() }.add(sessionId)
         sessionByLowerName[defaultName.lowercase()] = sessionId
+        items.ensurePlayer(sessionId)
         return ps
     }
 
@@ -45,6 +48,7 @@ class PlayerRegistry(
         roomMembers[ps.roomId]?.remove(sessionId)
         if (roomMembers[ps.roomId]?.isEmpty() == true) roomMembers.remove(ps.roomId)
         sessionByLowerName.remove(ps.name.lowercase())
+        items.removePlayer(sessionId)
     }
 
     fun get(sessionId: SessionId): PlayerState? = players[sessionId]
