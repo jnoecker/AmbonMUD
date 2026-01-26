@@ -69,4 +69,56 @@ class GameEngineIntegrationTest {
             inbound.close()
             outbound.close()
         }
+
+    @Test
+    fun `connect and disconnect broadcast room presence`() =
+        runTest {
+            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
+            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+
+            val world = WorldFactory.demoWorld()
+            val repo = InMemoryPlayerRepository()
+            val players = PlayerRegistry(world.startRoom, repo)
+
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    tickMillis = 1L,
+                )
+            val engineJob = launch { engine.run() }
+
+            val sid1 = SessionId(1L)
+            val sid2 = SessionId(2L)
+
+            inbound.send(InboundEvent.Connected(sid1))
+            inbound.send(InboundEvent.Connected(sid2))
+
+            runCurrent()
+            advanceTimeBy(5)
+            runCurrent()
+
+            val got = mutableListOf<OutboundEvent>()
+            withTimeout(500) {
+                while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Player2 enters." }) {
+                    got += outbound.receive()
+                }
+            }
+
+            inbound.send(InboundEvent.Disconnected(sid2, "test"))
+            runCurrent()
+            advanceTimeBy(5)
+            runCurrent()
+
+            withTimeout(500) {
+                while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Player2 leaves." }) {
+                    got += outbound.receive()
+                }
+            }
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
 }
