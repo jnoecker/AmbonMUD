@@ -8,17 +8,13 @@ data object Unauthed : ConnState
 
 data object Menu : ConnState
 
-data class LoginUsername(
-    val attempts: Int = 0,
-) : ConnState
+data object LoginUsername : ConnState
 
 data class LoginPassword(
     val username: String,
 ) : ConnState
 
-data class SignupUsername(
-    val attempts: Int = 0,
-) : ConnState
+data object SignupUsername : ConnState
 
 data class SignupPassword(
     val username: String,

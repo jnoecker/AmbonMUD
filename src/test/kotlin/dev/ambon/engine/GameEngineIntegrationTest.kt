@@ -56,12 +56,17 @@ class GameEngineIntegrationTest {
 
             inbound.send(InboundEvent.Connected(sid))
             inbound.send(InboundEvent.LineReceived(sid, "3"))
-            inbound.send(InboundEvent.LineReceived(sid, "Hello"))
-            inbound.send(InboundEvent.LineReceived(sid, "quit"))
 
             // Let the engine start + process any immediate work
             runCurrent()
             // Step time forward a few ticks so the engine loop definitely runs
+            advanceTimeBy(5)
+            runCurrent()
+
+            inbound.send(InboundEvent.LineReceived(sid, "Hello"))
+            inbound.send(InboundEvent.LineReceived(sid, "quit"))
+
+            runCurrent()
             advanceTimeBy(5)
             runCurrent()
 

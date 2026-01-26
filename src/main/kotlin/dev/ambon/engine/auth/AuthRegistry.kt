@@ -6,7 +6,6 @@ class AuthRegistry {
     private val states = mutableMapOf<SessionId, ConnState>()
 
     fun onConnect(sessionId: SessionId) {
-        states[sessionId] = Menu
     }
 
     fun onDisconnect(sessionId: SessionId) {

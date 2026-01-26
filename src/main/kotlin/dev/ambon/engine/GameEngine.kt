@@ -56,7 +56,6 @@ class GameEngine(
             postAuth = { sid ->
                 val me = players.get(sid) ?: return@AuthFlow
                 broadcastToRoom(me.roomId, "${me.name} enters.", sid)
-                outbound.send(OutboundEvent.SendInfo(sid, "Welcome to AmbonMUD."))
                 router.handle(sid, Command.Look)
             },
         )

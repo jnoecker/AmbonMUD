@@ -99,7 +99,7 @@ class YamlAccountRepository(
         try {
             path.parent?.createDirectories()
             val tmp = Files.createTempFile(path.parent, path.fileName.toString(), ".tmp")
-            Files.writeString(tmp, contents, StandardOpenOption.TRUNCATE_EXISTING)
+            Files.writeString(tmp, contents, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)
             try {
                 Files.move(tmp, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
             } catch (_: AtomicMoveNotSupportedException) {

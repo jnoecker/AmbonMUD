@@ -55,21 +55,21 @@ class AuthFlow(
     ) {
         val input = line.trim().lowercase()
         if (input.isEmpty()) {
-            renderMenu(sessionId)
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         when (input) {
             "1",
             "login",
             -> {
-                authRegistry.set(sessionId, LoginUsername())
+                authRegistry.set(sessionId, LoginUsername)
                 prompt(sessionId, "Username:")
             }
 
             "2",
             "create",
             -> {
-                authRegistry.set(sessionId, SignupUsername())
+                authRegistry.set(sessionId, SignupUsername)
                 prompt(sessionId, "Choose a username:")
             }
 
@@ -100,9 +100,10 @@ class AuthFlow(
         line: String,
         state: LoginPassword,
     ) {
+        val pass = line.trimEnd()
         val usernameLower = state.username.trim().lowercase()
         val account = accounts.findByUsernameLower(usernameLower)
-        if (account == null || !passwordHasher.verify(line, account.passwordHash)) {
+        if (account == null || !passwordHasher.verify(pass, account.passwordHash)) {
             outbound.send(OutboundEvent.SendError(sessionId, "Login failed."))
             renderMenu(sessionId)
             return
@@ -166,13 +167,13 @@ class AuthFlow(
         line: String,
         state: SignupPassword,
     ) {
-        val password = line
-        if (password.length < 6) {
+        val pass = line.trimEnd()
+        if (pass.length < 6) {
             outbound.send(OutboundEvent.SendError(sessionId, "Password must be at least 6 characters."))
             prompt(sessionId, "Choose a password:")
             return
         }
-        authRegistry.set(sessionId, SignupPasswordConfirm(state.username, password))
+        authRegistry.set(sessionId, SignupPasswordConfirm(state.username, pass))
         prompt(sessionId, "Confirm password:")
     }
 
@@ -181,7 +182,8 @@ class AuthFlow(
         line: String,
         state: SignupPasswordConfirm,
     ) {
-        if (line != state.pass1) {
+        val confirm = line.trimEnd()
+        if (confirm != state.pass1) {
             outbound.send(OutboundEvent.SendError(sessionId, "Passwords do not match."))
             authRegistry.set(sessionId, SignupPassword(state.username))
             prompt(sessionId, "Choose a password:")
