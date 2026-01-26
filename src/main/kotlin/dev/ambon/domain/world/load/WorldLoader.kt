@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.world.Direction
+import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.domain.world.data.WorldFile
@@ -32,6 +34,7 @@ object WorldLoader {
         // Normalize + merge all rooms
         val mergedRooms = LinkedHashMap<RoomId, Room>()
         val allExits = LinkedHashMap<RoomId, Map<Direction, RoomId>>() // staged exits per room
+        val mergedMobs = LinkedHashMap<MobId, MobSpawn>()
 
         // If multiple files provide startRoom, pick first file’s startRoom as world start.
         val worldStart = normalizeId(files.first().zone, files.first().startRoom)
@@ -69,6 +72,16 @@ object WorldLoader {
 
                 allExits[fromId] = exits
             }
+
+            // Stage mobs (normalized), validate uniqueness
+            for ((rawId, mf) in file.mobs) {
+                val mobId = normalizeMobId(zone, rawId)
+                if (mergedMobs.containsKey(mobId)) {
+                    throw WorldLoadException("Duplicate mob id '${mobId.value}' across zone files")
+                }
+                val roomId = normalizeTarget(zone, mf.room)
+                mergedMobs[mobId] = MobSpawn(id = mobId, name = mf.name, roomId = roomId)
+            }
         }
 
         // Now validate that all exit targets exist in the merged room set
@@ -93,9 +106,19 @@ object WorldLoader {
             throw WorldLoadException("World startRoom '${worldStart.value}' does not exist in merged world")
         }
 
+        // Validate mob starting rooms exist after merge
+        for ((mobId, mob) in mergedMobs) {
+            if (!mergedRooms.containsKey(mob.roomId)) {
+                throw WorldLoadException(
+                    "Mob '${mobId.value}' starts in missing room '${mob.roomId.value}'",
+                )
+            }
+        }
+
         return World(
             rooms = mergedRooms.toMutableMap(),
             startRoom = worldStart,
+            mobSpawns = mergedMobs.values.sortedBy { it.id.value },
         )
     }
 
@@ -151,6 +174,15 @@ object WorldLoader {
         zone: String,
         raw: String,
     ): RoomId = normalizeId(zone, raw)
+
+    private fun normalizeMobId(
+        zone: String,
+        raw: String,
+    ): MobId {
+        val s = raw.trim()
+        if (s.isEmpty()) throw WorldLoadException("Mob id cannot be blank")
+        return if (':' in s) MobId(s) else MobId("$zone:$s")
+    }
 
     private fun parseDirectionOrNull(s: String): Direction? =
         when (s.lowercase()) {

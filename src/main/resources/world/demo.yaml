@@ -7,6 +7,13 @@
 
 zone: demo
 startRoom: trailhead
+mobs:
+  wolf:
+    name: "a wary wolf"
+    room: trailhead
+  owl:
+    name: "a silent owl"
+    room: cabin_approach
 rooms:
   trailhead:
     title: "Forest Trailhead"

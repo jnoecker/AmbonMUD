@@ -1,6 +1,5 @@
 package dev.ambon.engine
 
-import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
@@ -33,8 +32,7 @@ class GameEngine(
     private val router = CommandRouter(world, players, mobs, outbound)
 
     init {
-        mobs.upsert(MobState(MobId("demo:wolf"), name = "a wary wolf", roomId = world.startRoom))
-        mobs.upsert(MobState(MobId("demo:owl"), name = "a silent owl", roomId = world.startRoom))
+        world.mobSpawns.forEach { mobs.upsert(MobState(it.id, it.name, it.roomId)) }
     }
 
     suspend fun run() =
