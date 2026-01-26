@@ -3,6 +3,7 @@ package dev.ambon.engine.commands
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.persistence.InMemoryPlayerRepository
@@ -21,8 +22,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val sid = SessionId(1)
             players.connect(sid)
@@ -57,8 +59,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val alice = SessionId(1)
             val bob = SessionId(2)
@@ -85,9 +88,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
-
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val sid = SessionId(2)
             players.connect(sid)
@@ -122,9 +125,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
-
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val alice = SessionId(1)
             val bob = SessionId(2)
@@ -170,9 +173,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
-
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val sid = SessionId(3)
             players.connect(sid)
@@ -194,8 +197,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val alice = SessionId(1)
             val bob = SessionId(2)
@@ -230,8 +234,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val alice = SessionId(1)
             val bob = SessionId(2)
@@ -273,8 +278,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val alice = SessionId(1)
             val bob = SessionId(2)
@@ -303,8 +309,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val alice = SessionId(1)
             val bob = SessionId(2)
@@ -340,8 +347,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
@@ -364,9 +372,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
-
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val sid = SessionId(10)
             players.connect(sid)
@@ -386,9 +394,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
-
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val sid = SessionId(11)
             players.connect(sid)
@@ -415,9 +423,9 @@ class CommandRouterTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
-
+            val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, outbound)
+            val router = CommandRouter(world, players, mobs, outbound)
 
             val sid = SessionId(12)
             players.connect(sid)

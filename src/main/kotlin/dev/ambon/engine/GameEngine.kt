@@ -1,7 +1,9 @@
 package dev.ambon.engine
 
+import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
@@ -26,7 +28,14 @@ class GameEngine(
 ) {
     private val world = WorldFactory.demoWorld()
 
-    private val router = CommandRouter(world, players, outbound)
+    private val mobs = MobRegistry()
+
+    private val router = CommandRouter(world, players, mobs, outbound)
+
+    init {
+        mobs.upsert(MobState(MobId("demo:wolf"), name = "a wary wolf", roomId = world.startRoom))
+        mobs.upsert(MobState(MobId("demo:owl"), name = "a silent owl", roomId = world.startRoom))
+    }
 
     suspend fun run() =
         coroutineScope {
