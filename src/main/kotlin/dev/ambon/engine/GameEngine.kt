@@ -35,6 +35,7 @@ class GameEngine(
 
     init {
         world.mobSpawns.forEach { mobs.upsert(MobState(it.id, it.name, it.roomId)) }
+        items.loadSpawns(world.itemSpawns)
     }
 
     suspend fun run() =

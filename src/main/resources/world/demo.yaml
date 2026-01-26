@@ -14,6 +14,18 @@ mobs:
   owl:
     name: "a silent owl"
     room: cabin_approach
+items:
+  lantern:
+    displayName: "a brass lantern"
+    description: "A brass lantern with soot-stained glass."
+    room: trailhead
+  note:
+    displayName: "a crumpled note"
+    description: "The ink runs: Meet me at the well."
+    mob: wolf
+  sigil:
+    displayName: "a chalk sigil"
+    description: "A faint circle of chalk dust and ash."
 rooms:
   trailhead:
     title: "Forest Trailhead"

@@ -1,5 +1,6 @@
 package dev.ambon.domain.world.load
 
+import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.world.Direction
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -38,6 +39,30 @@ class WorldLoaderTest {
         assertEquals("ok_small:rat", mob.id.value)
         assertEquals("a small rat", mob.name)
         assertEquals(RoomId("ok_small:b"), mob.roomId)
+    }
+
+    @Test
+    fun `loads items from a zone file`() {
+        val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+
+        val items = world.itemSpawns.associateBy { it.instance.id.value }
+        assertEquals(3, items.size)
+
+        val coin = items.getValue("ok_small:coin")
+        assertEquals("coin", coin.instance.item.keyword)
+        assertEquals("a silver coin", coin.instance.item.displayName)
+        assertEquals(RoomId("ok_small:a"), coin.roomId)
+        assertTrue(coin.mobId == null)
+
+        val tooth = items.getValue("ok_small:tooth")
+        assertEquals("tooth", tooth.instance.item.keyword)
+        assertEquals(MobId("ok_small:rat"), tooth.mobId)
+        assertTrue(tooth.roomId == null)
+
+        val sigil = items.getValue("ok_small:sigil")
+        assertEquals("sigil", sigil.instance.item.keyword)
+        assertTrue(sigil.roomId == null)
+        assertTrue(sigil.mobId == null)
     }
 
     @Test
@@ -84,6 +109,43 @@ class WorldLoaderTest {
                 WorldLoader.loadFromResource("world/bad_mob_missing_room.yaml")
             }
         assertTrue(ex.message!!.contains("starts in missing room", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when an item starts in a missing room`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_item_missing_room.yaml")
+            }
+        assertTrue(ex.message!!.contains("starts in missing room", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when an item starts in a missing mob`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_item_missing_mob.yaml")
+            }
+        assertTrue(ex.message!!.contains("starts in missing mob", ignoreCase = true), "Got: ${ex.message}")
+        assertTrue(ex.message!!.contains("items.", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when an item is placed in both room and mob`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_item_dual_location.yaml")
+            }
+        assertTrue(ex.message!!.contains("both room and mob", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `loads item keyword override`() {
+        val world = WorldLoader.loadFromResource("world/ok_item_keyword.yaml")
+        val item = world.itemSpawns.single()
+
+        assertEquals("ok_item_keyword:silver_coin", item.instance.id.value)
+        assertEquals("coin", item.instance.item.keyword)
     }
 
     @Test

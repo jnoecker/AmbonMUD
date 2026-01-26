@@ -4,9 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.world.Direction
+import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
@@ -35,6 +39,7 @@ object WorldLoader {
         val mergedRooms = LinkedHashMap<RoomId, Room>()
         val allExits = LinkedHashMap<RoomId, Map<Direction, RoomId>>() // staged exits per room
         val mergedMobs = LinkedHashMap<MobId, MobSpawn>()
+        val mergedItems = LinkedHashMap<ItemId, ItemSpawn>()
 
         // If multiple files provide startRoom, pick first file’s startRoom as world start.
         val worldStart = normalizeId(files.first().zone, files.first().startRoom)
@@ -82,6 +87,41 @@ object WorldLoader {
                 val roomId = normalizeTarget(zone, mf.room)
                 mergedMobs[mobId] = MobSpawn(id = mobId, name = mf.name, roomId = roomId)
             }
+
+            // Stage items (normalized), validate uniqueness
+            for ((rawId, itemFile) in file.items) {
+                val itemId = normalizeItemId(zone, rawId)
+                if (mergedItems.containsKey(itemId)) {
+                    throw WorldLoadException("Duplicate item id '${itemId.value}' across zone files")
+                }
+
+                val displayName = itemFile.displayName.trim()
+                if (displayName.isEmpty()) {
+                    throw WorldLoadException("Item '${itemId.value}' displayName cannot be blank")
+                }
+
+                val keyword = normalizeKeyword(rawId, itemFile.keyword)
+
+                val roomRaw = itemFile.room?.trim()?.takeUnless { it.isEmpty() }
+                val mobRaw = itemFile.mob?.trim()?.takeUnless { it.isEmpty() }
+                if (roomRaw != null && mobRaw != null) {
+                    throw WorldLoadException("Item '${itemId.value}' cannot be placed in both room and mob")
+                }
+
+                val roomId = roomRaw?.let { normalizeTarget(zone, it) }
+                val mobId = mobRaw?.let { normalizeMobRef(zone, it) }
+
+                mergedItems[itemId] =
+                    ItemSpawn(
+                        instance =
+                            ItemInstance(
+                                id = itemId,
+                                item = Item(keyword = keyword, displayName = displayName, description = itemFile.description),
+                            ),
+                        roomId = roomId,
+                        mobId = mobId,
+                    )
+            }
         }
 
         // Now validate that all exit targets exist in the merged room set
@@ -115,10 +155,28 @@ object WorldLoader {
             }
         }
 
+        // Validate item starting locations exist after merge
+        for ((itemId, item) in mergedItems) {
+            val roomId = item.roomId
+            if (roomId != null && !mergedRooms.containsKey(roomId)) {
+                throw WorldLoadException(
+                    "Item '${itemId.value}' starts in missing room '${roomId.value}'",
+                )
+            }
+            val mobId = item.mobId
+            if (mobId != null && !mergedMobs.containsKey(mobId)) {
+                throw WorldLoadException(
+                    "Item '${itemId.value}' starts in missing mob '${mobId.value}' " +
+                        "(check items.${itemId.value.substringAfter(':')}.mob references a mobs: entry)",
+                )
+            }
+        }
+
         return World(
             rooms = mergedRooms.toMutableMap(),
             startRoom = worldStart,
             mobSpawns = mergedMobs.values.sortedBy { it.id.value },
+            itemSpawns = mergedItems.values.sortedBy { it.instance.id.value },
         )
     }
 
@@ -182,6 +240,40 @@ object WorldLoader {
         val s = raw.trim()
         if (s.isEmpty()) throw WorldLoadException("Mob id cannot be blank")
         return if (':' in s) MobId(s) else MobId("$zone:$s")
+    }
+
+    private fun normalizeMobRef(
+        zone: String,
+        raw: String,
+    ): MobId = normalizeMobId(zone, raw)
+
+    private fun normalizeItemId(
+        zone: String,
+        raw: String,
+    ): ItemId {
+        val s = raw.trim()
+        if (s.isEmpty()) throw WorldLoadException("Item id cannot be blank")
+        return if (':' in s) ItemId(s) else ItemId("$zone:$s")
+    }
+
+    private fun normalizeKeyword(
+        rawId: String,
+        rawKeyword: String?,
+    ): String {
+        if (rawKeyword != null) {
+            val trimmed = rawKeyword.trim()
+            if (trimmed.isEmpty()) throw WorldLoadException("Item keyword cannot be blank")
+            return trimmed
+        }
+        return keywordFromId(rawId)
+    }
+
+    private fun keywordFromId(rawId: String): String {
+        val trimmed = rawId.trim()
+        if (trimmed.isEmpty()) throw WorldLoadException("Item keyword cannot be blank")
+        val base = trimmed.substringAfterLast(':')
+        if (base.isEmpty()) throw WorldLoadException("Item keyword cannot be blank")
+        return base
     }
 
     private fun parseDirectionOrNull(s: String): Direction? =

@@ -6,4 +6,5 @@ class World(
     val rooms: Map<RoomId, Room>,
     val startRoom: RoomId,
     val mobSpawns: List<MobSpawn> = emptyList(),
+    val itemSpawns: List<ItemSpawn> = emptyList(),
 )

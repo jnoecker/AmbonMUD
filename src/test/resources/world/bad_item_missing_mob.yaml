@@ -1,0 +1,10 @@
+zone: bad_item_missing_mob
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Start."
+items:
+  tooth:
+    displayName: "a tooth"
+    mob: rat
