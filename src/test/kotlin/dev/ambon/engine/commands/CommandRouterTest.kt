@@ -53,6 +53,34 @@ class CommandRouterTest {
         }
 
     @Test
+    fun `look includes players currently in room`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            players.connect(alice)
+            players.connect(bob)
+
+            router.handle(alice, Command.Name("Alice"))
+            router.handle(bob, Command.Name("Bob"))
+            drain(outbound)
+
+            router.handle(alice, Command.Look)
+
+            val outs = drain(outbound)
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendInfo && it.text == "Players here: Alice, Bob"
+                },
+                "Expected room roster line. got=$outs",
+            )
+        }
+
+    @Test
     fun `move north changes room and then look describes new room`() =
         runTest {
             val world = WorldFactory.demoWorld()
@@ -86,6 +114,54 @@ class CommandRouterTest {
             assertTrue(
                 outs.any { it is OutboundEvent.SendPrompt },
                 "Missing prompt. got=$outs",
+            )
+        }
+
+    @Test
+    fun `move broadcasts leave and enter to room members`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router = CommandRouter(world, players, outbound)
+
+            val alice = SessionId(1)
+            val bob = SessionId(2)
+            val charlie = SessionId(3)
+            players.connect(alice)
+            players.connect(bob)
+            players.connect(charlie)
+
+            router.handle(alice, Command.Name("Alice"))
+            router.handle(bob, Command.Name("Bob"))
+            router.handle(charlie, Command.Name("Charlie"))
+
+            val startRoom = world.rooms.getValue(world.startRoom)
+            val northTargetId = startRoom.exits[Direction.NORTH]
+            Assertions.assertNotNull(
+                northTargetId,
+                "Demo world start room '${startRoom.id}' must have a NORTH exit for this test",
+            )
+
+            // Move Charlie to the north room so Alice will "enter" his room.
+            router.handle(charlie, Command.Move(Direction.NORTH))
+            drain(outbound)
+
+            router.handle(alice, Command.Move(Direction.NORTH))
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendText && it.sessionId == bob && it.text == "Alice leaves."
+                },
+                "Bob should see leave broadcast. got=$outs",
+            )
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendText && it.sessionId == charlie && it.text == "Alice enters."
+                },
+                "Charlie should see enter broadcast. got=$outs",
             )
         }
 
