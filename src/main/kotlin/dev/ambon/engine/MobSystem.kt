@@ -31,7 +31,9 @@ class MobSystem(
         val now = clock.millis()
         var moves = 0
 
-        for (m in mobs.all()) {
+        val mobList = mobs.all().toMutableList()
+        mobList.shuffle(rng)
+        for (m in mobList) {
             if (moves >= maxMovesPerTick) break
 
             val dueAt = nextActAtMillis[m.id]
