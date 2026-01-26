@@ -5,6 +5,7 @@ import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -20,10 +21,11 @@ class CommandRouterBroadcastTest {
     fun `say broadcasts to other players in same room and echoes to sender`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
@@ -50,10 +52,11 @@ class CommandRouterBroadcastTest {
     fun `say does not broadcast across rooms`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
@@ -81,10 +84,11 @@ class CommandRouterBroadcastTest {
     fun `who lists connected players`() =
         runTest {
             val world = WorldFactory.demoWorld()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, outbound)
+            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)

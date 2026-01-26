@@ -8,12 +8,14 @@ import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.RenameResult
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
 import kotlinx.coroutines.channels.SendChannel
 
 class CommandRouter(
     private val world: World,
     private val players: PlayerRegistry,
     private val mobs: MobRegistry,
+    private val items: ItemRegistry,
     private val outbound: SendChannel<OutboundEvent>,
 ) {
     suspend fun handle(
@@ -204,48 +206,43 @@ class CommandRouter(
 
             Command.Inventory -> {
                 val me = players.get(sessionId) ?: return
-                if (me.inventory.isEmpty()) {
+                val inv = items.inventory(me.sessionId)
+                if (inv.isEmpty()) {
                     outbound.send(OutboundEvent.SendInfo(sessionId, "You are carrying: nothing"))
                 } else {
-                    val items = me.inventory.joinToString(", ") { it.displayName }
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "You are carrying: $items"))
+                    val list = inv.map { it.displayName }.sorted().joinToString(", ")
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You are carrying: $list"))
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
             is Command.Get -> {
                 val me = players.get(sessionId) ?: return
-                val room = world.rooms[me.roomId] ?: return
+                val roomId = me.roomId
 
-                val idx = room.items.indexOfFirst { it.keyword.equals(cmd.keyword, ignoreCase = true) }
-                if (idx < 0) {
+                val moved = items.takeFromRoom(me.sessionId, roomId, cmd.keyword)
+                if (moved == null) {
                     outbound.send(OutboundEvent.SendError(sessionId, "You don't see '${cmd.keyword}' here."))
                     outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
 
-                val item = room.items.removeAt(idx)
-                me.inventory.add(item)
-
-                outbound.send(OutboundEvent.SendInfo(sessionId, "You pick up ${item.displayName}."))
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You pick up ${moved.displayName}."))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
             is Command.Drop -> {
                 val me = players.get(sessionId) ?: return
-                val room = world.rooms[me.roomId] ?: return
+                val roomId = me.roomId
 
-                val idx = me.inventory.indexOfFirst { it.keyword.equals(cmd.keyword, ignoreCase = true) }
-                if (idx < 0) {
+                val moved = items.dropToRoom(me.sessionId, roomId, cmd.keyword)
+                if (moved == null) {
                     outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
                     outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
 
-                val item = me.inventory.removeAt(idx)
-                room.items.add(item)
-
-                outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${item.displayName}."))
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${moved.displayName}."))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -279,11 +276,12 @@ class CommandRouter(
         outbound.send(OutboundEvent.SendInfo(sessionId, "Exits: $exits"))
 
         // Items
-        if (room.items.isEmpty()) {
+        val here = items.itemsInRoom(roomId)
+        if (here.isEmpty()) {
             outbound.send(OutboundEvent.SendInfo(sessionId, "Items here: none"))
         } else {
-            val items = room.items.joinToString(", ") { it.displayName }
-            outbound.send(OutboundEvent.SendInfo(sessionId, "Items here: $items"))
+            val list = here.map { it.displayName }.sorted().joinToString(", ")
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Items here: $list"))
         }
 
         val roomPlayers =

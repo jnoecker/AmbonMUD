@@ -2,9 +2,11 @@ package dev.ambon
 
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
+import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.YamlPlayerRepository
 import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.OutboundRouter
@@ -42,12 +44,16 @@ class MudServer(
             rootDir = Paths.get("data/players"),
         )
 
+    val items = ItemRegistry()
+    val mobs = MobRegistry()
+
     val world = WorldFactory.demoWorld()
 
     val players =
         PlayerRegistry(
             startRoom = world.startRoom,
             repo = playerRepo,
+            items = items,
             clock = clock,
         )
 
@@ -57,7 +63,7 @@ class MudServer(
 
         engineJob =
             scope.launch(engineDispatcher) {
-                GameEngine(inbound, outbound, players, world).run()
+                GameEngine(inbound, outbound, players, world, mobs, items).run()
             }
 
         transport = BlockingSocketTransport(port, inbound, outboundRouter, scope)

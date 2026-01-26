@@ -4,6 +4,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -29,7 +30,12 @@ class GameEngineAnsiBehaviorTest {
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
-            val players = PlayerRegistry(world.startRoom, repo)
+            val players =
+                PlayerRegistry(
+                    world.startRoom,
+                    repo,
+                    ItemRegistry(),
+                )
 
             val tickMillis = 10L
             val engine =
@@ -96,7 +102,7 @@ class GameEngineAnsiBehaviorTest {
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
-            val players = PlayerRegistry(world.startRoom, repo)
+            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val tickMillis = 10L
             val engine =

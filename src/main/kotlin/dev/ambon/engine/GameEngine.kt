@@ -9,6 +9,7 @@ import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
@@ -22,14 +23,15 @@ class GameEngine(
     private val outbound: SendChannel<OutboundEvent>,
     private val players: PlayerRegistry,
     private val world: World,
+    private val mobs: MobRegistry = MobRegistry(),
+    private val items: ItemRegistry = ItemRegistry(),
     private val clock: Clock = Clock.systemUTC(),
     private val tickMillis: Long = 100L,
     private val scheduler: Scheduler = Scheduler(clock),
 ) {
-    private val mobs = MobRegistry()
     private val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
 
-    private val router = CommandRouter(world, players, mobs, outbound)
+    private val router = CommandRouter(world, players, mobs, items, outbound)
 
     init {
         world.mobSpawns.forEach { mobs.upsert(MobState(it.id, it.name, it.roomId)) }
