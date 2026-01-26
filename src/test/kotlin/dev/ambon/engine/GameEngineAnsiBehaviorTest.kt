@@ -37,6 +37,7 @@ class GameEngineAnsiBehaviorTest {
                     inbound = inbound,
                     outbound = outbound,
                     players = players,
+                    world = world,
                     clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC),
                     tickMillis = tickMillis,
                 )
@@ -103,6 +104,7 @@ class GameEngineAnsiBehaviorTest {
                     inbound = inbound,
                     outbound = outbound,
                     players = players,
+                    world = world,
                     clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC),
                     tickMillis = tickMillis,
                 )
