@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
@@ -62,7 +63,7 @@ class GameEngine(
                     return
                 }
 
-                broadcastToRoom(me.roomId, sid, "${me.name} enters.")
+                broadcastToRoom(me.roomId, "${me.name} enters.", sid)
                 outbound.send(OutboundEvent.SendInfo(sid, "Welcome to QuickMUD"))
                 router.handle(sid, Command.Look) // room + prompt
             }
@@ -72,7 +73,7 @@ class GameEngine(
                 val me = players.get(sid)
 
                 if (me != null) {
-                    broadcastToRoom(me.roomId, sid, "${me.name} leaves.")
+                    broadcastToRoom(me.roomId, "${me.name} leaves.", sid)
                 }
 
                 players.disconnect(sid) // idempotent; safe even if me == null
@@ -91,8 +92,8 @@ class GameEngine(
 
     private suspend fun broadcastToRoom(
         roomId: RoomId,
-        excludeSid: dev.ambon.domain.ids.SessionId?,
         text: String,
+        excludeSid: SessionId? = null,
     ) {
         for (p in players.playersInRoom(roomId)) {
             if (excludeSid != null && p.sessionId == excludeSid) continue
