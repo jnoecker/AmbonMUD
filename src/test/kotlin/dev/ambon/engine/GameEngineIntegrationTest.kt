@@ -4,6 +4,8 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -14,6 +16,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GameEngineIntegrationTest {
@@ -25,16 +30,24 @@ class GameEngineIntegrationTest {
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
-            val players = PlayerRegistry(world.startRoom, repo)
+            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
-            // Make ticks fast for tests
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val items = ItemRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 1L // Make ticks fast for tests
             val engine =
                 GameEngine(
                     inbound = inbound,
                     outbound = outbound,
                     players = players,
                     world = world,
-                    tickMillis = 1L,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
                 )
             val engineJob = launch { engine.run() }
 
@@ -79,15 +92,24 @@ class GameEngineIntegrationTest {
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
-            val players = PlayerRegistry(world.startRoom, repo)
+            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val items = ItemRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 10L
             val engine =
                 GameEngine(
                     inbound = inbound,
                     outbound = outbound,
                     players = players,
                     world = world,
-                    tickMillis = 1L,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
                 )
             val engineJob = launch { engine.run() }
 
