@@ -30,6 +30,9 @@ class GameEngine(
     private val mobs = MobRegistry()
     private val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
 
+    private val mobs = MobRegistry()
+    private val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
+
     private val router = CommandRouter(world, players, mobs, outbound)
 
     init {
