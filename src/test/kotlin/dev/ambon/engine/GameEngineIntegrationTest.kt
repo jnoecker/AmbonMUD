@@ -33,6 +33,7 @@ class GameEngineIntegrationTest {
                     inbound = inbound,
                     outbound = outbound,
                     players = players,
+                    world = world,
                     tickMillis = 1L,
                 )
             val engineJob = launch { engine.run() }
@@ -85,6 +86,7 @@ class GameEngineIntegrationTest {
                     inbound = inbound,
                     outbound = outbound,
                     players = players,
+                    world = world,
                     tickMillis = 1L,
                 )
             val engineJob = launch { engine.run() }
