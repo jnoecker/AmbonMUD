@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
@@ -57,12 +58,20 @@ class GameEngine(
         when (ev) {
             is InboundEvent.Connected -> {
                 players.connect(ev.sessionId)
-                outbound.send(OutboundEvent.SendInfo(ev.sessionId, "Welcome to QuickMUD"))
-                router.handle(ev.sessionId, Command.Look) // shows room + prompt
+                val me = players.get(ev.sessionId) ?: return
+                broadcastToRoom(me.roomId, me, "${me.name} enters.")
+                outbound.send(OutboundEvent.SendInfo(me.sessionId, "Welcome to QuickMUD"))
+                router.handle(me.sessionId, Command.Look) // shows room + prompt
             }
 
             is InboundEvent.Disconnected -> {
-                players.disconnect(ev.sessionId)
+                val me = players.get(ev.sessionId)
+                if (me != null) {
+                    broadcastToRoom(me.roomId, me, "${me.name} leaves.")
+                    players.disconnect(me.sessionId)
+                }
+
+                // Disconnect using the session ID from the inbound event
                 sessions.onDisconnect(ev.sessionId)
             }
 
@@ -70,6 +79,18 @@ class GameEngine(
                 val line = ev.line.trim()
                 router.handle(ev.sessionId, CommandParser.parse(line))
             }
+        }
+    }
+
+    private suspend fun broadcastToRoom(
+        roomId: RoomId,
+        me: PlayerState,
+        text: String,
+    ) {
+        val members = players.playersInRoom(roomId)
+        for (other in members) {
+            if (other == me) continue
+            outbound.send(OutboundEvent.SendText(other.sessionId, text))
         }
     }
 }

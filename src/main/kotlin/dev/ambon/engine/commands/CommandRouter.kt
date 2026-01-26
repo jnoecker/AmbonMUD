@@ -39,13 +39,22 @@ class CommandRouter(
             }
 
             is Command.Move -> {
-                val from = players.get(sessionId)?.roomId ?: world.startRoom
+                val me = players.get(sessionId) ?: return
+                val from = me.roomId
                 val room = world.rooms[from] ?: return
                 val to = room.exits[cmd.dir]
                 if (to == null) {
                     outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
                 } else {
+                    val oldMembers = players.playersInRoom(from).filter { it != me }
+                    for (other in oldMembers) {
+                        outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} leaves."))
+                    }
                     players.moveTo(sessionId, to)
+                    val newMembers = players.playersInRoom(to).filter { it != me }
+                    for (other in newMembers) {
+                        outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} enters."))
+                    }
                     sendLook(sessionId)
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -81,31 +90,31 @@ class CommandRouter(
             is Command.Say -> {
                 val me = players.get(sessionId) ?: return
                 val roomId = me.roomId
-                val members = players.membersInRoom(roomId)
+                val members = players.playersInRoom(roomId)
 
                 // Sender feedback
-                outbound.send(OutboundEvent.SendText(sessionId, "You say: ${cmd.message}"))
+                outbound.send(OutboundEvent.SendText(me.sessionId, "You say: ${cmd.message}"))
+                outbound.send(OutboundEvent.SendPrompt(me.sessionId))
 
                 // Everyone else in the room
                 for (other in members) {
-                    if (other == sessionId) continue
-                    outbound.send(OutboundEvent.SendText(other, "${me.name} says: ${cmd.message}"))
+                    if (other == me) continue
+                    outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} says: ${cmd.message}"))
                 }
-
-                outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
             is Command.Emote -> {
                 val me = players.get(sessionId) ?: return
                 val roomId = me.roomId
-                val members = players.membersInRoom(roomId)
+                val members = players.playersInRoom(roomId)
 
-                // Everyone else in the room
-                for (player in members) {
-                    outbound.send(OutboundEvent.SendText(player, "${me.name} ${cmd.message}"))
+                // Everyone in the room
+                for (other in members) {
+                    outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} ${cmd.message}"))
                 }
 
-                outbound.send(OutboundEvent.SendPrompt(sessionId))
+                // Send a prompt only to the emoting user. */
+                outbound.send(OutboundEvent.SendPrompt(me.sessionId))
             }
 
             Command.Who -> {
@@ -120,8 +129,6 @@ class CommandRouter(
             }
 
             is Command.Name -> {
-                val me = players.get(sessionId) ?: return
-                val old = me.name
                 when (players.rename(sessionId, cmd.newName)) {
                     RenameResult.Ok -> {
                         outbound.send(OutboundEvent.SendInfo(sessionId, "Name set to ${players.get(sessionId)!!.name}"))
@@ -215,6 +222,18 @@ class CommandRouter(
         outbound.send(OutboundEvent.SendText(sessionId, room.description))
         val exits = if (room.exits.isEmpty()) "none" else room.exits.keys.joinToString(", ") { it.name.lowercase() }
         outbound.send(OutboundEvent.SendInfo(sessionId, "Exits: $exits"))
+        val roomPlayers =
+            players
+                .playersInRoom(roomId)
+                .map { it.name }
+                .sorted()
+        val playersLine =
+            if (roomPlayers.isEmpty()) {
+                "Players here: none"
+            } else {
+                "Players here: " + roomPlayers.joinToString(", ")
+            }
+        outbound.send(OutboundEvent.SendInfo(sessionId, playersLine))
     }
 
     private fun currentRoomId(sessionId: SessionId): RoomId = players.get(sessionId)!!.roomId // or players.location(sessionId)
