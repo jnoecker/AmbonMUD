@@ -4,6 +4,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
+import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.RenameResult
 import dev.ambon.engine.events.OutboundEvent
@@ -12,6 +13,7 @@ import kotlinx.coroutines.channels.SendChannel
 class CommandRouter(
     private val world: World,
     private val players: PlayerRegistry,
+    private val mobs: MobRegistry,
     private val outbound: SendChannel<OutboundEvent>,
 ) {
     suspend fun handle(
@@ -222,22 +224,38 @@ class CommandRouter(
         val me = players.get(sessionId) ?: return
         val roomId = me.roomId
         val room = world.rooms[roomId] ?: return
+
         outbound.send(OutboundEvent.SendText(sessionId, room.title))
         outbound.send(OutboundEvent.SendText(sessionId, room.description))
+
         val exits = if (room.exits.isEmpty()) "none" else room.exits.keys.joinToString(", ") { it.name.lowercase() }
         outbound.send(OutboundEvent.SendInfo(sessionId, "Exits: $exits"))
+
         val roomPlayers =
             players
                 .playersInRoom(roomId)
                 .map { it.name }
                 .sorted()
-        val playersLine =
-            if (roomPlayers.isEmpty()) {
-                "Players here: none"
-            } else {
-                "Players here: " + roomPlayers.joinToString(", ")
-            }
-        outbound.send(OutboundEvent.SendInfo(sessionId, playersLine))
+
+        val roomMobs =
+            mobs
+                .mobsInRoom(roomId)
+                .map { it.name }
+                .sorted()
+
+        outbound.send(
+            OutboundEvent.SendInfo(
+                sessionId,
+                if (roomPlayers.isEmpty()) "Players here: none" else "Players here: ${roomPlayers.joinToString(", ")}",
+            ),
+        )
+
+        outbound.send(
+            OutboundEvent.SendInfo(
+                sessionId,
+                if (roomMobs.isEmpty()) "You see: nothing" else "You see: ${roomMobs.joinToString(", ")}",
+            ),
+        )
     }
 
     private fun currentRoomId(sessionId: SessionId): RoomId =
