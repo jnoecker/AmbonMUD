@@ -4,7 +4,7 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
-import dev.ambon.domain.world.WorldFactory
+import dev.ambon.domain.world.World
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
@@ -22,12 +22,11 @@ class GameEngine(
     private val inbound: ReceiveChannel<InboundEvent>,
     private val outbound: SendChannel<OutboundEvent>,
     private val players: PlayerRegistry,
+    private val world: World,
     private val clock: Clock = Clock.systemUTC(),
     private val tickMillis: Long = 100L,
     private val scheduler: Scheduler = Scheduler(clock),
 ) {
-    private val world = WorldFactory.demoWorld()
-
     private val mobs = MobRegistry()
     private val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
 

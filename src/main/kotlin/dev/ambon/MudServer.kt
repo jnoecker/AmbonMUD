@@ -57,7 +57,7 @@ class MudServer(
 
         engineJob =
             scope.launch(engineDispatcher) {
-                GameEngine(inbound, outbound, players).run()
+                GameEngine(inbound, outbound, players, world).run()
             }
 
         transport = BlockingSocketTransport(port, inbound, outboundRouter, scope)
