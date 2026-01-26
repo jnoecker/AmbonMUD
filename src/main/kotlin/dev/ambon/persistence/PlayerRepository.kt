@@ -12,4 +12,6 @@ interface PlayerRepository {
     ): PlayerRecord
 
     suspend fun save(record: PlayerRecord)
+
+    suspend fun delete(id: PlayerId)
 }

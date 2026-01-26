@@ -122,6 +122,16 @@ class YamlPlayerRepository(
             atomicWriteText(outPath, mapper.writeValueAsString(pf))
         }
 
+    override suspend fun delete(id: PlayerId): Unit =
+        withContext(Dispatchers.IO) {
+            val path = pathFor(id.value)
+            try {
+                Files.deleteIfExists(path)
+            } catch (e: Exception) {
+                throw PlayerPersistenceException("Failed to delete player file: $path", e)
+            }
+        }
+
     // -------- internals --------
 
     private fun PlayerFile.toDomain(): PlayerRecord =

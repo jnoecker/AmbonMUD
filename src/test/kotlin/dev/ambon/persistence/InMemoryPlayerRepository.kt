@@ -32,4 +32,8 @@ class InMemoryPlayerRepository : PlayerRepository {
     override suspend fun save(record: PlayerRecord) {
         players[record.id] = record
     }
+
+    override suspend fun delete(id: PlayerId) {
+        players.remove(id)
+    }
 }

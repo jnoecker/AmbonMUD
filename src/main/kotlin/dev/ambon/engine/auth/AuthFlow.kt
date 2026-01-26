@@ -24,6 +24,7 @@ class AuthFlow(
     private val postAuth: suspend (SessionId) -> Unit = {},
 ) {
     private var guestCounter = 1L
+    private val guestCreateMaxFailures = 5
 
     suspend fun renderMenu(sessionId: SessionId) {
         authRegistry.set(sessionId, Menu)
@@ -211,6 +212,12 @@ class AuthFlow(
         try {
             accounts.create(account)
         } catch (e: Exception) {
+            try {
+                // Best-effort cleanup so failed account writes don't reserve the name.
+                playersRepo.delete(playerRecord.id)
+            } catch (_: Exception) {
+                // Ignore cleanup failures; we'll still report the account error.
+            }
             outbound.send(OutboundEvent.SendError(sessionId, "Account creation failed."))
             renderMenu(sessionId)
             return
@@ -222,23 +229,35 @@ class AuthFlow(
     }
 
     private suspend fun handleGuest(sessionId: SessionId) {
-        val record = createGuestRecord()
+        val record =
+            try {
+                createGuestRecord()
+            } catch (_: Exception) {
+                outbound.send(OutboundEvent.SendError(sessionId, "Guest login failed."))
+                renderMenu(sessionId)
+                return
+            }
         players.attachExisting(sessionId, record)
         authRegistry.set(sessionId, Authed(record.id))
         postAuth(sessionId)
     }
 
     private suspend fun createGuestRecord(): PlayerRecord {
-        while (true) {
+        var failures = 0
+        var lastError: Exception? = null
+        while (failures < guestCreateMaxFailures) {
             val name = "Guest${guestCounter++}"
             if (players.findSessionByName(name) != null) continue
             val now = clock.millis()
             try {
+                if (playersRepo.findByName(name) != null) continue
                 return playersRepo.create(name, worldStartRoom, now)
-            } catch (_: Exception) {
-                // Try again with a new guest name.
+            } catch (e: Exception) {
+                lastError = e
+                failures++
             }
         }
+        throw IllegalStateException("Failed to create guest record after $guestCreateMaxFailures attempts.", lastError)
     }
 
     private suspend fun prompt(
