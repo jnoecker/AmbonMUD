@@ -8,6 +8,7 @@ import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,7 +31,7 @@ class MobSystemTest {
             val mob = MobState(MobId("demo:rat"), "a rat", roomA.id)
             mobs.upsert(mob)
 
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), ItemRegistry())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val clock = MutableClock(0L)
             val system =
@@ -65,7 +66,7 @@ class MobSystemTest {
             val mob = MobState(MobId("demo:rat"), "a rat", roomA.id)
             mobs.upsert(mob)
 
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), ItemRegistry())
             val sid1 = SessionId(1L)
             val sid2 = SessionId(2L)
             players.connect(sid1)
@@ -107,7 +108,7 @@ class MobSystemTest {
             val mob = MobState(MobId("demo:owl"), "an owl", roomA.id)
             mobs.upsert(mob)
 
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository())
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), ItemRegistry())
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
             val system =
                 MobSystem(

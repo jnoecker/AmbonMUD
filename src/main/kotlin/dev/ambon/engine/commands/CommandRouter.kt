@@ -8,12 +8,14 @@ import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.RenameResult
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
 import kotlinx.coroutines.channels.SendChannel
 
 class CommandRouter(
     private val world: World,
     private val players: PlayerRegistry,
     private val mobs: MobRegistry,
+    private val items: ItemRegistry,
     private val outbound: SendChannel<OutboundEvent>,
 ) {
     suspend fun handle(
@@ -202,6 +204,48 @@ class CommandRouter(
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
+            Command.Inventory -> {
+                val me = players.get(sessionId) ?: return
+                val inv = items.inventory(me.sessionId)
+                if (inv.isEmpty()) {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You are carrying: nothing"))
+                } else {
+                    val list = inv.map { it.displayName }.sorted().joinToString(", ")
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You are carrying: $list"))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Get -> {
+                val me = players.get(sessionId) ?: return
+                val roomId = me.roomId
+
+                val moved = items.takeFromRoom(me.sessionId, roomId, cmd.keyword)
+                if (moved == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "You don't see '${cmd.keyword}' here."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You pick up ${moved.displayName}."))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Drop -> {
+                val me = players.get(sessionId) ?: return
+                val roomId = me.roomId
+
+                val moved = items.dropToRoom(me.sessionId, roomId, cmd.keyword)
+                if (moved == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${moved.displayName}."))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
             is Command.Invalid -> {
                 outbound.send(OutboundEvent.SendText(sessionId, "Invalid command: ${cmd.command}"))
                 if (cmd.usage != null) {
@@ -230,6 +274,15 @@ class CommandRouter(
 
         val exits = if (room.exits.isEmpty()) "none" else room.exits.keys.joinToString(", ") { it.name.lowercase() }
         outbound.send(OutboundEvent.SendInfo(sessionId, "Exits: $exits"))
+
+        // Items
+        val here = items.itemsInRoom(roomId)
+        if (here.isEmpty()) {
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Items here: none"))
+        } else {
+            val list = here.map { it.displayName }.sorted().joinToString(", ")
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Items here: $list"))
+        }
 
         val roomPlayers =
             players
