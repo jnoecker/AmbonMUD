@@ -133,7 +133,7 @@ object CommandParser {
         }?.let { return it }
 
         // get/take
-        matchPrefix(line, listOf("get", "take", "pickup", "pick")) { rest ->
+        matchPrefix(line, listOf("get", "take", "pickup", "pick", "pick up")) { rest ->
             val kw = rest.trim()
             if (kw.isEmpty()) Command.Invalid(line, "get <item>") else Command.Get(kw)
         }?.let { return it }
@@ -167,22 +167,15 @@ object CommandParser {
         aliases: List<String>,
         build: (rest: String) -> Command?,
     ): Command? {
-        val lower = line.lowercase()
-
+        val lower = line.lowercase().trim()
         for (kw in aliases) {
-            val kwLower = kw.lowercase()
-            val prefix = "$kwLower "
-
-            when {
-                lower == kwLower -> {
-                    return build("")
-                }
-
-                // bare verb
-                lower.startsWith(prefix) -> {
-                    val rest = line.drop(prefix.length).trim()
-                    return build(rest)
-                }
+            val key = kw.lowercase().trim()
+            val prefix = "$key "
+            if (lower.startsWith(prefix)) {
+                val rest = line.drop(prefix.length).trim()
+                return build(rest)
+            } else if (lower == key) {
+                return build("")
             }
         }
         return null

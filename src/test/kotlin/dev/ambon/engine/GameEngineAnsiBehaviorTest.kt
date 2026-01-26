@@ -5,6 +5,7 @@ import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -37,6 +38,10 @@ class GameEngineAnsiBehaviorTest {
                     ItemRegistry(),
                 )
 
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val items = ItemRegistry()
+            val scheduler = Scheduler(clock)
             val tickMillis = 10L
             val engine =
                 GameEngine(
@@ -44,8 +49,11 @@ class GameEngineAnsiBehaviorTest {
                     outbound = outbound,
                     players = players,
                     world = world,
-                    clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC),
+                    clock = clock,
                     tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
                 )
 
             val job: Job = launch { engine.run() }
@@ -104,6 +112,10 @@ class GameEngineAnsiBehaviorTest {
             val repo = InMemoryPlayerRepository()
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val items = ItemRegistry()
+            val scheduler = Scheduler(clock)
             val tickMillis = 10L
             val engine =
                 GameEngine(
@@ -111,8 +123,11 @@ class GameEngineAnsiBehaviorTest {
                     outbound = outbound,
                     players = players,
                     world = world,
-                    clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC),
+                    clock = clock,
                     tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
                 )
 
             val job: Job = launch { engine.run() }

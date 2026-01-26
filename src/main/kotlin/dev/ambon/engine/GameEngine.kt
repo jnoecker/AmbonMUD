@@ -23,11 +23,11 @@ class GameEngine(
     private val outbound: SendChannel<OutboundEvent>,
     private val players: PlayerRegistry,
     private val world: World,
-    private val mobs: MobRegistry = MobRegistry(),
-    private val items: ItemRegistry = ItemRegistry(),
-    private val clock: Clock = Clock.systemUTC(),
-    private val tickMillis: Long = 100L,
-    private val scheduler: Scheduler = Scheduler(clock),
+    private val mobs: MobRegistry,
+    private val items: ItemRegistry,
+    private val clock: Clock,
+    private val tickMillis: Long,
+    private val scheduler: Scheduler,
 ) {
     private val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
 
