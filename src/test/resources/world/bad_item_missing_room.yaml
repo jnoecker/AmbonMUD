@@ -1,0 +1,10 @@
+zone: bad_item_missing_room
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Start."
+items:
+  coin:
+    displayName: "a coin"
+    room: b

@@ -1,7 +1,9 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
@@ -20,7 +22,10 @@ class CommandRouterItemsTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val items = ItemRegistry()
-            items.setRoomItems(world.startRoom, listOf(Item(keyword = "lantern", displayName = "a brass lantern")))
+            items.setRoomItems(
+                world.startRoom,
+                listOf(ItemInstance(ItemId("test:lantern"), Item(keyword = "lantern", displayName = "a brass lantern"))),
+            )
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
@@ -47,7 +52,10 @@ class CommandRouterItemsTest {
         runTest {
             val world = WorldFactory.demoWorld()
             val items = ItemRegistry()
-            items.setRoomItems(world.startRoom, listOf(Item(keyword = "note", displayName = "a crumpled note")))
+            items.setRoomItems(
+                world.startRoom,
+                listOf(ItemInstance(ItemId("test:note"), Item(keyword = "note", displayName = "a crumpled note"))),
+            )
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
@@ -60,7 +68,7 @@ class CommandRouterItemsTest {
 
             assertEquals(0, items.itemsInRoom(world.startRoom).size)
             assertEquals(1, items.inventory(sid).size)
-            assertEquals("note", items.inventory(sid)[0].keyword)
+            assertEquals("note", items.inventory(sid)[0].item.keyword)
 
             val outs = drain(outbound)
             assertTrue(
@@ -86,7 +94,10 @@ class CommandRouterItemsTest {
             items.dropToRoom(sid, world.startRoom, "lantern") // no-op, not in inv
             items.takeFromRoom(sid, world.startRoom, "lantern") // no-op
             // simplest: just set inventory by taking from a room
-            items.setRoomItems(world.startRoom, listOf(Item(keyword = "lantern", displayName = "a brass lantern")))
+            items.setRoomItems(
+                world.startRoom,
+                listOf(ItemInstance(ItemId("test:lantern"), Item(keyword = "lantern", displayName = "a brass lantern"))),
+            )
             items.takeFromRoom(sid, world.startRoom, "lantern")
 
             router.handle(sid, Command.Inventory)
@@ -116,7 +127,10 @@ class CommandRouterItemsTest {
             players.connect(sid)
 
             // Put item into inventory by taking it from the room
-            items.setRoomItems(world.startRoom, listOf(Item(keyword = "note", displayName = "a crumpled note")))
+            items.setRoomItems(
+                world.startRoom,
+                listOf(ItemInstance(ItemId("test:note"), Item(keyword = "note", displayName = "a crumpled note"))),
+            )
             items.takeFromRoom(sid, world.startRoom, "note")
             assertEquals(1, items.inventory(sid).size)
             assertEquals(0, items.itemsInRoom(world.startRoom).size)
@@ -125,7 +139,7 @@ class CommandRouterItemsTest {
 
             assertEquals(0, items.inventory(sid).size)
             assertEquals(1, items.itemsInRoom(world.startRoom).size)
-            assertEquals("note", items.itemsInRoom(world.startRoom)[0].keyword)
+            assertEquals("note", items.itemsInRoom(world.startRoom)[0].item.keyword)
 
             val outs = drain(outbound)
             assertTrue(

@@ -1,0 +1,10 @@
+zone: ok_item_keyword
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Start."
+items:
+  silver_coin:
+    displayName: "a silver coin"
+    keyword: "coin"

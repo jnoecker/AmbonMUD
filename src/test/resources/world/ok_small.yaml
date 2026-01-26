@@ -4,6 +4,15 @@ mobs:
   rat:
     name: "a small rat"
     room: b
+items:
+  coin:
+    displayName: "a silver coin"
+    room: a
+  tooth:
+    displayName: "a rat tooth"
+    mob: rat
+  sigil:
+    displayName: "a chalk sigil"
 rooms:
   a:
     title: "Room A"
