@@ -210,7 +210,7 @@ class CommandRouter(
                 if (inv.isEmpty()) {
                     outbound.send(OutboundEvent.SendInfo(sessionId, "You are carrying: nothing"))
                 } else {
-                    val list = inv.map { it.displayName }.sorted().joinToString(", ")
+                    val list = inv.map { it.item.displayName }.sorted().joinToString(", ")
                     outbound.send(OutboundEvent.SendInfo(sessionId, "You are carrying: $list"))
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -227,7 +227,7 @@ class CommandRouter(
                     return
                 }
 
-                outbound.send(OutboundEvent.SendInfo(sessionId, "You pick up ${moved.displayName}."))
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You pick up ${moved.item.displayName}."))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -242,7 +242,7 @@ class CommandRouter(
                     return
                 }
 
-                outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${moved.displayName}."))
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${moved.item.displayName}."))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -280,7 +280,7 @@ class CommandRouter(
         if (here.isEmpty()) {
             outbound.send(OutboundEvent.SendInfo(sessionId, "Items here: none"))
         } else {
-            val list = here.map { it.displayName }.sorted().joinToString(", ")
+            val list = here.map { it.item.displayName }.sorted().joinToString(", ")
             outbound.send(OutboundEvent.SendInfo(sessionId, "Items here: $list"))
         }
 
