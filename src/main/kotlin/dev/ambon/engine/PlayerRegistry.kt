@@ -106,8 +106,9 @@ class PlayerRegistry(
     fun findSessionByName(name: String): SessionId? = sessionByLowerName[name.trim().lowercase()]
 
     /**
-     * name acts as "claim name" and also "login by name" for now:
-     * - If name exists on disk AND not online -> bind this session to that record and teleport to saved room.
+     * name acts as "claim name":
+     * - If name exists on disk and belongs to this player -> refresh lastSeen and restore saved room.
+     * - If name exists and belongs to someone else -> Taken.
      * - Else create new record.
      */
     suspend fun rename(
@@ -126,8 +127,10 @@ class PlayerRegistry(
 
         val now = clock.millis()
 
-        // If a persisted player with this name exists, treat as login (unless it belongs to someone online)
+        // If a persisted player with this name exists, only allow it if it is this player's record.
         val existingRecord: PlayerRecord? = repo.findByName(newName)
+        val sameRecord = existingRecord?.id == ps.playerId
+        if (existingRecord != null && !sameRecord) return RenameResult.Taken
 
         val boundRecord =
             if (existingRecord != null) {
@@ -137,7 +140,7 @@ class PlayerRegistry(
                 repo.create(newName, ps.roomId, now)
             }
 
-        // Update room membership if login changed room
+        // Update room membership if saved room differs
         if (ps.roomId != boundRecord.roomId) {
             roomMembers[ps.roomId]?.remove(sessionId)
             if (roomMembers[ps.roomId]?.isEmpty() == true) roomMembers.remove(ps.roomId)
@@ -156,6 +159,14 @@ class PlayerRegistry(
         repo.save(boundRecord.copy(roomId = ps.roomId, lastSeenEpochMs = now))
 
         return RenameResult.Ok
+    }
+
+    fun setAccountBound(
+        sessionId: SessionId,
+        bound: Boolean,
+    ) {
+        val ps = players[sessionId] ?: return
+        ps.accountBound = bound
     }
 
     private suspend fun persistIfClaimed(ps: PlayerState) {

@@ -76,25 +76,28 @@ class YamlPlayerRepositoryTest {
         }
 
     @Test
-    fun `name loads existing player record and restores room`() =
+    fun `name does not attach existing record for different player`() =
         runTest {
             val repo = YamlPlayerRepository(tmp)
             val start = RoomId("test:a")
             val clock = Clock.fixed(Instant.ofEpochMilli(1000), ZoneOffset.UTC)
 
             // create a record that lives in room b
-            val existing = repo.create("Alice", RoomId("test:b"), 1000)
+            repo.create("Alice", RoomId("test:b"), 1000)
+            val owner = repo.create("Bob", RoomId("test:a"), 1000)
 
             val players = PlayerRegistry(start, repo, ItemRegistry(), clock)
             val sid = SessionId(1)
             players.connect(sid)
+            players.attachExisting(sid, owner)
+            players.setAccountBound(sid, true)
 
             val res = players.rename(sid, "Alice")
-            assertEquals(RenameResult.Ok, res)
+            assertEquals(RenameResult.Taken, res)
 
             val ps = players.get(sid)!!
-            assertEquals(existing.id, ps.playerId)
-            assertEquals(RoomId("test:b"), ps.roomId)
+            assertEquals(owner.id, ps.playerId)
+            assertEquals(owner.roomId, ps.roomId)
         }
 
     @Test
@@ -116,5 +119,22 @@ class YamlPlayerRepositoryTest {
 
             val loaded = repo.findById(pid)!!
             assertEquals(RoomId("test:c"), loaded.roomId)
+        }
+
+    @Test
+    fun `name does not attach existing record without account-bound session`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val start = RoomId("test:a")
+            val clock = Clock.fixed(Instant.ofEpochMilli(1000), ZoneOffset.UTC)
+
+            repo.create("Alice", RoomId("test:b"), 1000)
+
+            val players = PlayerRegistry(start, repo, ItemRegistry(), clock)
+            val sid = SessionId(1)
+            players.connect(sid)
+
+            val res = players.rename(sid, "Alice")
+            assertEquals(RenameResult.Taken, res)
         }
 }

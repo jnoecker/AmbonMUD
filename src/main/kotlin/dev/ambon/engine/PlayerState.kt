@@ -9,4 +9,5 @@ data class PlayerState(
     var name: String,
     var roomId: RoomId,
     var playerId: PlayerId? = null,
+    var accountBound: Boolean = false,
 )

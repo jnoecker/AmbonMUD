@@ -122,6 +122,7 @@ class AuthFlow(
             return
         }
         players.attachExisting(sessionId, record)
+        players.setAccountBound(sessionId, true)
         authRegistry.set(sessionId, Authed(record.id))
         postAuth(sessionId)
     }
@@ -224,6 +225,7 @@ class AuthFlow(
         }
 
         players.attachExisting(sessionId, playerRecord)
+        players.setAccountBound(sessionId, true)
         authRegistry.set(sessionId, Authed(playerRecord.id))
         postAuth(sessionId)
     }
@@ -238,6 +240,7 @@ class AuthFlow(
                 return
             }
         players.attachExisting(sessionId, record)
+        players.setAccountBound(sessionId, false)
         authRegistry.set(sessionId, Authed(record.id))
         postAuth(sessionId)
     }
