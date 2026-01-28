@@ -36,6 +36,7 @@ class YamlAccountRepository(
     override fun findByUsernameLower(usernameLower: String): AccountRecord? {
         val key = usernameLower.trim().lowercase()
         if (key.isEmpty()) return null
+        if (!isValidKey(key)) return null
         val path = pathFor(key)
         val af = readAccountFile(path) ?: return null
         return af.toDomain()
@@ -44,6 +45,7 @@ class YamlAccountRepository(
     override fun create(record: AccountRecord): AccountRecord {
         val key = record.usernameLower.trim().lowercase()
         require(key.isNotEmpty()) { "usernameLower cannot be blank" }
+        require(isValidKey(key)) { "usernameLower may only use letters, digits, or _." }
         if (findByUsernameLower(key) != null) {
             throw IllegalStateException("Account already exists: '$key'")
         }
@@ -68,6 +70,14 @@ class YamlAccountRepository(
             passwordHash = passwordHash,
             playerId = PlayerId(playerId),
         )
+
+    private fun isValidKey(key: String): Boolean {
+        for (c in key) {
+            val ok = c.isLetterOrDigit() || c == '_'
+            if (!ok) return false
+        }
+        return true
+    }
 
     private fun pathFor(usernameLower: String): Path = rootDir.resolve("$usernameLower.yaml")
 

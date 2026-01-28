@@ -109,7 +109,7 @@ class PlayerRegistry(
      * name acts as "claim name":
      * - If name exists on disk and belongs to this player -> refresh lastSeen and restore saved room.
      * - If name exists and belongs to someone else -> Taken.
-     * - Else create new record.
+     * - Else create new record (account-bound sessions rename their existing record).
      */
     suspend fun rename(
         sessionId: SessionId,
@@ -136,6 +136,10 @@ class PlayerRegistry(
             if (existingRecord != null) {
                 // If that record is already "online" under the same name, we'd have returned Taken above.
                 existingRecord.copy(lastSeenEpochMs = now)
+            } else if (ps.accountBound) {
+                val pid = ps.playerId ?: return RenameResult.Invalid
+                val current = repo.findById(pid) ?: return RenameResult.Invalid
+                current.copy(name = newName, roomId = ps.roomId, lastSeenEpochMs = now)
             } else {
                 repo.create(newName, ps.roomId, now)
             }

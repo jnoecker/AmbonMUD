@@ -92,6 +92,11 @@ class AuthFlow(
             prompt(sessionId, "Username:")
             return
         }
+        if (!isValidUsername(username)) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Username may only use letters, digits, or _."))
+            prompt(sessionId, "Username:")
+            return
+        }
         authRegistry.set(sessionId, LoginPassword(username))
         prompt(sessionId, "Password:")
     }

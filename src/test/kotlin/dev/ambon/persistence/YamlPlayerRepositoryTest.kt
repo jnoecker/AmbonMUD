@@ -8,6 +8,7 @@ import dev.ambon.engine.items.ItemRegistry
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
@@ -98,6 +99,34 @@ class YamlPlayerRepositoryTest {
             val ps = players.get(sid)!!
             assertEquals(owner.id, ps.playerId)
             assertEquals(owner.roomId, ps.roomId)
+        }
+
+    @Test
+    fun `account-bound rename keeps player id`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val start = RoomId("test:a")
+            val clock = Clock.fixed(Instant.ofEpochMilli(1000), ZoneOffset.UTC)
+
+            val original = repo.create("Alice", start, 1000)
+            val players = PlayerRegistry(start, repo, ItemRegistry(), clock)
+            val sid = SessionId(1)
+            players.connect(sid)
+            players.attachExisting(sid, original)
+            players.setAccountBound(sid, true)
+
+            val res = players.rename(sid, "Bob")
+            assertEquals(RenameResult.Ok, res)
+
+            val ps = players.get(sid)!!
+            assertEquals(original.id, ps.playerId)
+
+            val renamed = repo.findById(original.id)!!
+            assertEquals("Bob", renamed.name)
+            assertNull(repo.findByName("Alice"))
+
+            val byName = repo.findByName("Bob")!!
+            assertEquals(original.id, byName.id)
         }
 
     @Test
