@@ -185,6 +185,9 @@ class CommandRouterItemsTest {
             assertEquals(0, items.inventory(sid).size)
             val equipped = items.equipment(sid)
             assertEquals("cap", equipped.getValue(ItemSlot.HEAD).item.keyword)
+            val player = players.get(sid)
+            assertEquals(11, player!!.maxHp)
+            assertEquals(11, player.hp)
 
             val outs = drain(outbound)
             assertTrue(
@@ -224,6 +227,9 @@ class CommandRouterItemsTest {
 
             assertEquals(1, items.inventory(sid).size)
             assertTrue(items.equipment(sid).isEmpty())
+            val player = players.get(sid)
+            assertEquals(10, player!!.maxHp)
+            assertEquals(10, player.hp)
 
             val outs = drain(outbound)
             assertTrue(
