@@ -18,8 +18,8 @@ class MobSystem(
     private val rng: Random = Random(),
     private var isMobInCombat: (MobId) -> Boolean = { false },
     // Tuning knobs (defaults feel “MUD-like”)
-    private val minWanderDelayMillis: Long = 2_000L,
-    private val maxWanderDelayMillis: Long = 6_000L,
+    private val minWanderDelayMillis: Long = 5_000L,
+    private val maxWanderDelayMillis: Long = 12_000L,
 ) {
     // Next scheduled action time per mob
     private val nextActAtMillis = mutableMapOf<MobId, Long>()
