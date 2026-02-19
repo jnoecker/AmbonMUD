@@ -54,6 +54,8 @@ class GameEngineIntegrationTest {
             val sid = SessionId(1L)
 
             inbound.send(InboundEvent.Connected(sid))
+            inbound.send(InboundEvent.LineReceived(sid, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid, "password"))
             inbound.send(InboundEvent.LineReceived(sid, "Hello"))
             inbound.send(InboundEvent.LineReceived(sid, "quit"))
 
@@ -118,6 +120,10 @@ class GameEngineIntegrationTest {
 
             inbound.send(InboundEvent.Connected(sid1))
             inbound.send(InboundEvent.Connected(sid2))
+            inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid2, "Bob"))
+            inbound.send(InboundEvent.LineReceived(sid1, "password"))
+            inbound.send(InboundEvent.LineReceived(sid2, "password"))
 
             runCurrent()
             advanceTimeBy(5)
@@ -125,7 +131,7 @@ class GameEngineIntegrationTest {
 
             val got = mutableListOf<OutboundEvent>()
             withTimeout(500) {
-                while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Player2 enters." }) {
+                while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Bob enters." }) {
                     got += outbound.receive()
                 }
             }
@@ -136,7 +142,7 @@ class GameEngineIntegrationTest {
             runCurrent()
 
             withTimeout(500) {
-                while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Player2 leaves." }) {
+                while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Bob leaves." }) {
                     got += outbound.receive()
                 }
             }

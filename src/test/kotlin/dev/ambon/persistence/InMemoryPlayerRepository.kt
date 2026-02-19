@@ -15,6 +15,7 @@ class InMemoryPlayerRepository : PlayerRepository {
         name: String,
         startRoomId: RoomId,
         nowEpochMs: Long,
+        passwordHash: String,
     ): PlayerRecord {
         val id = PlayerId(nextId.getAndIncrement())
         val record =
@@ -24,6 +25,7 @@ class InMemoryPlayerRepository : PlayerRepository {
                 roomId = startRoomId,
                 createdAtEpochMs = nowEpochMs,
                 lastSeenEpochMs = nowEpochMs,
+                passwordHash = passwordHash,
             )
         players[id] = record
         return record

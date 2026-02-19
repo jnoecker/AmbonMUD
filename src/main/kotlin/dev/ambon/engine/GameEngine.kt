@@ -32,6 +32,19 @@ class GameEngine(
     private val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
 
     private val router = CommandRouter(world, players, mobs, items, outbound)
+    private val pendingLogins = mutableMapOf<SessionId, LoginState>()
+    private val nameCommandRegex = Regex("^name\\s+(.+)$", RegexOption.IGNORE_CASE)
+    private val invalidNameMessage =
+        "Invalid name. Use 2-16 chars: letters/digits/_ and cannot start with digit."
+    private val invalidPasswordMessage = "Invalid password. Use 1-72 chars."
+
+    private sealed interface LoginState {
+        data object AwaitingName : LoginState
+
+        data class AwaitingPassword(
+            val name: String,
+        ) : LoginState
+    }
 
     init {
         world.mobSpawns.forEach { mobs.upsert(MobState(it.id, it.name, it.roomId)) }
@@ -66,24 +79,16 @@ class GameEngine(
             is InboundEvent.Connected -> {
                 val sid = ev.sessionId
 
-                players.connect(sid)
-
-                val me = players.get(sid)
-                if (me == null) {
-                    // This should never happen; connect() must create state.
-                    outbound.send(OutboundEvent.SendError(sid, "Internal error: player not initialized"))
-                    outbound.send(OutboundEvent.Close(sid, "Internal error"))
-                    return
-                }
-
-                broadcastToRoom(me.roomId, "${me.name} enters.", sid)
+                pendingLogins[sid] = LoginState.AwaitingName
                 outbound.send(OutboundEvent.SendInfo(sid, "Welcome to QuickMUD"))
-                router.handle(sid, Command.Look) // room + prompt
+                promptForName(sid)
             }
 
             is InboundEvent.Disconnected -> {
                 val sid = ev.sessionId
                 val me = players.get(sid)
+
+                pendingLogins.remove(sid)
 
                 if (me != null) {
                     broadcastToRoom(me.roomId, "${me.name} leaves.", sid)
@@ -94,6 +99,12 @@ class GameEngine(
 
             is InboundEvent.LineReceived -> {
                 val sid = ev.sessionId
+
+                val loginState = pendingLogins[sid]
+                if (loginState != null) {
+                    handleLoginLine(sid, ev.line, loginState)
+                    return
+                }
 
                 // Optional safety: ignore input from unknown sessions
                 if (players.get(sid) == null) return
@@ -112,5 +123,115 @@ class GameEngine(
             if (excludeSid != null && p.sessionId == excludeSid) continue
             outbound.send(OutboundEvent.SendText(p.sessionId, text))
         }
+    }
+
+    private suspend fun handleLoginLine(
+        sessionId: SessionId,
+        line: String,
+        state: LoginState,
+    ) {
+        when (state) {
+            LoginState.AwaitingName -> handleLoginName(sessionId, line)
+            is LoginState.AwaitingPassword -> handleLoginPassword(sessionId, line, state.name)
+        }
+    }
+
+    private suspend fun handleLoginName(
+        sessionId: SessionId,
+        line: String,
+    ) {
+        val raw = line.trim()
+        if (raw.isEmpty()) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Please enter a name."))
+            promptForName(sessionId)
+            return
+        }
+
+        val name = extractLoginName(raw)
+        if (name.isEmpty()) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Please enter a name."))
+            promptForName(sessionId)
+            return
+        }
+
+        if (!players.isValidName(name)) {
+            outbound.send(OutboundEvent.SendError(sessionId, invalidNameMessage))
+            promptForName(sessionId)
+            return
+        }
+
+        if (players.isNameOnline(name, sessionId)) {
+            outbound.send(OutboundEvent.SendError(sessionId, "That name is already taken."))
+            promptForName(sessionId)
+            return
+        }
+
+        pendingLogins[sessionId] = LoginState.AwaitingPassword(name)
+        promptForPassword(sessionId)
+    }
+
+    private suspend fun handleLoginPassword(
+        sessionId: SessionId,
+        line: String,
+        name: String,
+    ) {
+        val password = line.trim()
+        if (password.isEmpty()) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Please enter a password."))
+            promptForPassword(sessionId)
+            return
+        }
+
+        when (players.login(sessionId, name, password)) {
+            LoginResult.Ok -> {
+                pendingLogins.remove(sessionId)
+                val me = players.get(sessionId)
+                if (me == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Internal error: player not initialized"))
+                    outbound.send(OutboundEvent.Close(sessionId, "Internal error"))
+                    return
+                }
+                broadcastToRoom(me.roomId, "${me.name} enters.", sessionId)
+                router.handle(sessionId, Command.Look) // room + prompt
+            }
+
+            LoginResult.InvalidName -> {
+                outbound.send(OutboundEvent.SendError(sessionId, invalidNameMessage))
+                pendingLogins[sessionId] = LoginState.AwaitingName
+                promptForName(sessionId)
+            }
+
+            LoginResult.InvalidPassword -> {
+                outbound.send(OutboundEvent.SendError(sessionId, invalidPasswordMessage))
+                promptForPassword(sessionId)
+            }
+
+            LoginResult.Taken -> {
+                outbound.send(OutboundEvent.SendError(sessionId, "That name is already taken."))
+                pendingLogins[sessionId] = LoginState.AwaitingName
+                promptForName(sessionId)
+            }
+
+            LoginResult.WrongPassword -> {
+                outbound.send(OutboundEvent.SendError(sessionId, "Incorrect password."))
+                promptForPassword(sessionId)
+            }
+        }
+    }
+
+    private suspend fun promptForName(sessionId: SessionId) {
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Enter your name:"))
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun promptForPassword(sessionId: SessionId) {
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Password:"))
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private fun extractLoginName(input: String): String {
+        if (input.equals("name", ignoreCase = true)) return ""
+        val match = nameCommandRegex.matchEntire(input)
+        return match?.groupValues?.get(1)?.trim() ?: input
     }
 }
