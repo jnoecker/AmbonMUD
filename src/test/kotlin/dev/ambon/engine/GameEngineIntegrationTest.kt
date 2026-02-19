@@ -55,6 +55,7 @@ class GameEngineIntegrationTest {
 
             inbound.send(InboundEvent.Connected(sid))
             inbound.send(InboundEvent.LineReceived(sid, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid, "password"))
             inbound.send(InboundEvent.LineReceived(sid, "Hello"))
             inbound.send(InboundEvent.LineReceived(sid, "quit"))
 
@@ -121,6 +122,8 @@ class GameEngineIntegrationTest {
             inbound.send(InboundEvent.Connected(sid2))
             inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
             inbound.send(InboundEvent.LineReceived(sid2, "Bob"))
+            inbound.send(InboundEvent.LineReceived(sid1, "password"))
+            inbound.send(InboundEvent.LineReceived(sid2, "password"))
 
             runCurrent()
             advanceTimeBy(5)
