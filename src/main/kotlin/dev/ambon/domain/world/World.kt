@@ -7,4 +7,5 @@ class World(
     val startRoom: RoomId,
     val mobSpawns: List<MobSpawn> = emptyList(),
     val itemSpawns: List<ItemSpawn> = emptyList(),
+    val zoneLifespansMinutes: Map<String, Long> = emptyMap(),
 )
