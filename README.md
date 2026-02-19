@@ -33,6 +33,18 @@ On Windows:
 .\gradlew.bat run
 ```
 
+Or launch demo mode (auto-opens browser when supported):
+
+```bash
+./gradlew demo
+```
+
+On Windows:
+
+```powershell
+.\gradlew.bat demo
+```
+
 2) Connect with telnet:
 
 ```bash
