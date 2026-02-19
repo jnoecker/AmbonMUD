@@ -26,6 +26,24 @@ items:
   sigil:
     displayName: "a chalk sigil"
     description: "A faint circle of chalk dust and ash."
+  cap:
+    displayName: "a leather cap"
+    description: "Soft leather stitched into a simple cap."
+    slot: head
+    armor: 1
+    room: cabin_entry
+  cloak:
+    displayName: "a traveler's cloak"
+    description: "A weathered cloak with a frayed hem."
+    slot: body
+    armor: 2
+    room: cabin_entry
+  dagger:
+    displayName: "a bone dagger"
+    description: "A short dagger carved from bone."
+    slot: hand
+    damage: 2
+    room: cabin_study
 rooms:
   trailhead:
     title: "Forest Trailhead"

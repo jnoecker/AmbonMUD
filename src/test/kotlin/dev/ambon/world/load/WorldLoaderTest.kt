@@ -2,6 +2,7 @@ package dev.ambon.domain.world.load
 
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.Direction
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -63,6 +64,23 @@ class WorldLoaderTest {
         assertEquals("sigil", sigil.instance.item.keyword)
         assertTrue(sigil.roomId == null)
         assertTrue(sigil.mobId == null)
+    }
+
+    @Test
+    fun `loads item stats and slots`() {
+        val world = WorldLoader.loadFromResource("world/ok_item_stats.yaml")
+
+        val items = world.itemSpawns.associateBy { it.instance.id.value }
+
+        val cap = items.getValue("ok_item_stats:cap")
+        assertEquals(ItemSlot.HEAD, cap.instance.item.slot)
+        assertEquals(0, cap.instance.item.damage)
+        assertEquals(1, cap.instance.item.armor)
+
+        val sword = items.getValue("ok_item_stats:sword")
+        assertEquals(ItemSlot.HAND, sword.instance.item.slot)
+        assertEquals(3, sword.instance.item.damage)
+        assertEquals(0, sword.instance.item.armor)
     }
 
     @Test
