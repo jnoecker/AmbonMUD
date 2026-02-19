@@ -8,7 +8,8 @@ Current State
 - Single-process telnet server with a tick-based engine, NPC wandering, and scheduled actions.
 - Login flow with name + password (bcrypt), per-session state, and basic persistence.
 - YAML-defined, multi-zone world with validation on load.
-- Items and mobs loaded from world data; items can be in rooms or on mobs; inventory supported.
+- Items and mobs loaded from world data; items can be in rooms or on mobs; inventory and equipment supported.
+- Wearable items support basic `damage` and `armor` stats with slots (head/body/hand).
 - Basic combat with `kill <mob>` and `flee`, resolved over ticks.
 - Chat and social commands (say, emote, tell, gossip), plus basic UI helpers (ANSI, clear, colors).
 
@@ -59,6 +60,9 @@ Commands
 - `tell <player> <msg>` or `t <player> <msg>`: private message.
 - `gossip <msg>` or `gs <msg>`: broadcast to everyone.
 - `inventory` / `inv` / `i`: show inventory.
+- `equipment` / `eq`: show worn items.
+- `wear <item>` / `equip <item>`: wear an item from inventory.
+- `remove <slot>` / `unequip <slot>`: remove an item from a slot (`head`, `body`, `hand`).
 - `get <item>` / `take <item>` / `pickup <item>` / `pick <item>` / `pick up <item>`: take item.
 - `drop <item>`: drop item.
 - `kill <mob>`: engage a mob in combat.
@@ -96,6 +100,7 @@ Notes:
 - Room IDs and exit targets can be local (`trailhead`) or fully qualified (`zone:trailhead`).
 - `mobs` and `items` are optional; `rooms` and `startRoom` are required.
 - Items may be placed in a `room` or on a `mob` (not both).
+- Items may define `slot` (`head`, `body`, `hand`) and optional `damage`/`armor` stats.
 - Exit directions support `north/south/east/west/up/down` in world files.
 
 Persistence

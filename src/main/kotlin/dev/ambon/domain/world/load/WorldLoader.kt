@@ -9,6 +9,7 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.MobSpawn
@@ -102,6 +103,22 @@ object WorldLoader {
 
                 val keyword = normalizeKeyword(rawId, itemFile.keyword)
 
+                val slotRaw = itemFile.slot?.trim()
+                if (slotRaw != null && slotRaw.isEmpty()) {
+                    throw WorldLoadException("Item '${itemId.value}' slot cannot be blank")
+                }
+                val slot = slotRaw?.let { parseItemSlot(itemId, it) }
+
+                val damage = itemFile.damage
+                if (damage < 0) {
+                    throw WorldLoadException("Item '${itemId.value}' damage cannot be negative")
+                }
+
+                val armor = itemFile.armor
+                if (armor < 0) {
+                    throw WorldLoadException("Item '${itemId.value}' armor cannot be negative")
+                }
+
                 val roomRaw = itemFile.room?.trim()?.takeUnless { it.isEmpty() }
                 val mobRaw = itemFile.mob?.trim()?.takeUnless { it.isEmpty() }
                 if (roomRaw != null && mobRaw != null) {
@@ -116,7 +133,15 @@ object WorldLoader {
                         instance =
                             ItemInstance(
                                 id = itemId,
-                                item = Item(keyword = keyword, displayName = displayName, description = itemFile.description),
+                                item =
+                                    Item(
+                                        keyword = keyword,
+                                        displayName = displayName,
+                                        description = itemFile.description,
+                                        slot = slot,
+                                        damage = damage,
+                                        armor = armor,
+                                    ),
                             ),
                         roomId = roomId,
                         mobId = mobId,
@@ -275,6 +300,15 @@ object WorldLoader {
         if (base.isEmpty()) throw WorldLoadException("Item keyword cannot be blank")
         return base
     }
+
+    private fun parseItemSlot(
+        itemId: ItemId,
+        raw: String,
+    ): ItemSlot =
+        ItemSlot.parse(raw)
+            ?: throw WorldLoadException(
+                "Item '${itemId.value}' has invalid slot '$raw' (expected: head, body, hand)",
+            )
 
     private fun parseDirectionOrNull(s: String): Direction? =
         when (s.lowercase()) {

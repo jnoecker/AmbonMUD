@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.ItemSpawn
 
 class ItemRegistry {
@@ -12,6 +13,36 @@ class ItemRegistry {
     private val inventoryItems = mutableMapOf<SessionId, MutableList<ItemInstance>>()
     private val mobItems = mutableMapOf<MobId, MutableList<ItemInstance>>()
     private val unplacedItems = mutableMapOf<ItemId, ItemInstance>()
+    private val equippedItems = mutableMapOf<SessionId, MutableMap<ItemSlot, ItemInstance>>()
+
+    sealed interface EquipResult {
+        data class Equipped(
+            val item: ItemInstance,
+            val slot: ItemSlot,
+        ) : EquipResult
+
+        data object NotFound : EquipResult
+
+        data class NotWearable(
+            val item: ItemInstance,
+        ) : EquipResult
+
+        data class SlotOccupied(
+            val slot: ItemSlot,
+            val item: ItemInstance,
+        ) : EquipResult
+    }
+
+    sealed interface UnequipResult {
+        data class Unequipped(
+            val item: ItemInstance,
+            val slot: ItemSlot,
+        ) : UnequipResult
+
+        data class SlotEmpty(
+            val slot: ItemSlot,
+        ) : UnequipResult
+    }
 
     fun loadSpawns(spawns: List<ItemSpawn>) {
         roomItems.clear()
@@ -49,6 +80,8 @@ class ItemRegistry {
 
     fun inventory(sessionId: SessionId): List<ItemInstance> = inventoryItems[sessionId]?.toList() ?: emptyList()
 
+    fun equipment(sessionId: SessionId): Map<ItemSlot, ItemInstance> = equippedItems[sessionId]?.toMap() ?: emptyMap()
+
     fun addMobItem(
         mobId: MobId,
         item: ItemInstance,
@@ -82,10 +115,68 @@ class ItemRegistry {
 
     fun ensurePlayer(sessionId: SessionId) {
         inventoryItems.getOrPut(sessionId) { mutableListOf() }
+        equippedItems.getOrPut(sessionId) { mutableMapOf() }
     }
 
     fun removePlayer(sessionId: SessionId) {
         inventoryItems.remove(sessionId)
+        equippedItems.remove(sessionId)
+    }
+
+    /**
+     * Move an item by keyword (case-insensitive) from a player's inventory to an equipment slot.
+     */
+    fun equipFromInventory(
+        sessionId: SessionId,
+        keyword: String,
+    ): EquipResult {
+        val inv = inventoryItems[sessionId] ?: return EquipResult.NotFound
+        var firstNonWearable: ItemInstance? = null
+        var firstOccupied: EquipResult.SlotOccupied? = null
+
+        for ((idx, instance) in inv.withIndex()) {
+            if (!instance.item.keyword.equals(keyword, ignoreCase = true)) continue
+
+            val slot = instance.item.slot
+            if (slot == null) {
+                if (firstNonWearable == null) firstNonWearable = instance
+                continue
+            }
+
+            val equipped = equippedItems.getOrPut(sessionId) { mutableMapOf() }
+            val existing = equipped[slot]
+            if (existing != null) {
+                if (firstOccupied == null) {
+                    firstOccupied = EquipResult.SlotOccupied(slot, existing)
+                }
+                continue
+            }
+
+            inv.removeAt(idx)
+            if (inv.isEmpty()) inventoryItems.remove(sessionId)
+
+            equipped[slot] = instance
+            return EquipResult.Equipped(instance, slot)
+        }
+
+        firstOccupied?.let { return it }
+        firstNonWearable?.let { return EquipResult.NotWearable(it) }
+        return EquipResult.NotFound
+    }
+
+    /**
+     * Move an equipped item from a slot back into the player's inventory.
+     */
+    fun unequip(
+        sessionId: SessionId,
+        slot: ItemSlot,
+    ): UnequipResult {
+        val equipped = equippedItems[sessionId] ?: return UnequipResult.SlotEmpty(slot)
+        val instance = equipped.remove(slot) ?: return UnequipResult.SlotEmpty(slot)
+        if (equipped.isEmpty()) equippedItems.remove(sessionId)
+
+        inventoryItems.getOrPut(sessionId) { mutableListOf() }.add(instance)
+        return UnequipResult.Unequipped(instance, slot)
     }
 
     /**
