@@ -119,6 +119,11 @@ object WorldLoader {
                     throw WorldLoadException("Item '${itemId.value}' armor cannot be negative")
                 }
 
+                val constitution = itemFile.constitution
+                if (constitution < 0) {
+                    throw WorldLoadException("Item '${itemId.value}' constitution cannot be negative")
+                }
+
                 val roomRaw = itemFile.room?.trim()?.takeUnless { it.isEmpty() }
                 val mobRaw = itemFile.mob?.trim()?.takeUnless { it.isEmpty() }
                 if (roomRaw != null && mobRaw != null) {
@@ -141,6 +146,7 @@ object WorldLoader {
                                         slot = slot,
                                         damage = damage,
                                         armor = armor,
+                                        constitution = constitution,
                                     ),
                             ),
                         roomId = roomId,
