@@ -3,6 +3,7 @@ package dev.ambon.engine.commands
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -12,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -29,7 +31,7 @@ class CommandRouterTest {
             val router = CommandRouter(world, players, mobs, items, outbound)
 
             val sid = SessionId(1)
-            players.connect(sid)
+            login(players, sid, "Player1")
 
             val startRoom = world.rooms.getValue(world.startRoom)
 
@@ -68,11 +70,8 @@ class CommandRouterTest {
 
             val alice = SessionId(1)
             val bob = SessionId(2)
-            players.connect(alice)
-            players.connect(bob)
-
-            router.handle(alice, Command.Name("Alice"))
-            router.handle(bob, Command.Name("Bob"))
+            login(players, alice, "Alice")
+            login(players, bob, "Bob")
             drain(outbound)
 
             router.handle(alice, Command.Look)
@@ -97,7 +96,7 @@ class CommandRouterTest {
             val router = CommandRouter(world, players, mobs, items, outbound)
 
             val sid = SessionId(2)
-            players.connect(sid)
+            login(players, sid, "Player2")
 
             val startRoom = world.rooms.getValue(world.startRoom)
             val northTargetId = startRoom.exits[Direction.NORTH]
@@ -137,13 +136,9 @@ class CommandRouterTest {
             val alice = SessionId(1)
             val bob = SessionId(2)
             val charlie = SessionId(3)
-            players.connect(alice)
-            players.connect(bob)
-            players.connect(charlie)
-
-            router.handle(alice, Command.Name("Alice"))
-            router.handle(bob, Command.Name("Bob"))
-            router.handle(charlie, Command.Name("Charlie"))
+            login(players, alice, "Alice")
+            login(players, bob, "Bob")
+            login(players, charlie, "Charlie")
 
             val startRoom = world.rooms.getValue(world.startRoom)
             val northTargetId = startRoom.exits[Direction.NORTH]
@@ -184,7 +179,7 @@ class CommandRouterTest {
             val router = CommandRouter(world, players, mobs, items, outbound)
 
             val sid = SessionId(3)
-            players.connect(sid)
+            login(players, sid, "Player3")
 
             // From The Foyer, WEST is not an exit in the demo world
             router.handle(sid, Command.Move(Direction.WEST))
@@ -210,11 +205,8 @@ class CommandRouterTest {
 
             val alice = SessionId(1)
             val bob = SessionId(2)
-            players.connect(alice)
-            players.connect(bob)
-
-            router.handle(alice, Command.Name("Alice"))
-            router.handle(bob, Command.Name("Bob"))
+            login(players, alice, "Alice")
+            login(players, bob, "Bob")
             drain(outbound)
 
             router.handle(alice, Command.Tell("Charlie", "hi"))
@@ -249,13 +241,9 @@ class CommandRouterTest {
             val alice = SessionId(1)
             val bob = SessionId(2)
             val eve = SessionId(3)
-            players.connect(alice)
-            players.connect(bob)
-            players.connect(eve)
-
-            router.handle(alice, Command.Name("Alice"))
-            router.handle(bob, Command.Name("Bob"))
-            router.handle(eve, Command.Name("Eve"))
+            login(players, alice, "Alice")
+            login(players, bob, "Bob")
+            login(players, eve, "Eve")
             drain(outbound)
 
             router.handle(alice, Command.Tell("Bob", "secret"))
@@ -293,11 +281,8 @@ class CommandRouterTest {
 
             val alice = SessionId(1)
             val bob = SessionId(2)
-            players.connect(alice)
-            players.connect(bob)
-
-            router.handle(alice, Command.Name("Alice"))
-            router.handle(bob, Command.Name("Bob"))
+            login(players, alice, "Alice")
+            login(players, bob, "Bob")
             drain(outbound)
 
             router.handle(alice, Command.Say("hello"))
@@ -326,13 +311,9 @@ class CommandRouterTest {
             val alice = SessionId(1)
             val bob = SessionId(2)
             val eve = SessionId(3)
-            players.connect(alice)
-            players.connect(bob)
-            players.connect(eve)
-
-            router.handle(alice, Command.Name("Alice"))
-            router.handle(bob, Command.Name("Bob"))
-            router.handle(eve, Command.Name("Eve"))
+            login(players, alice, "Alice")
+            login(players, bob, "Bob")
+            login(players, eve, "Eve")
             drain(outbound)
 
             router.handle(alice, Command.Gossip("hello all"))
@@ -353,29 +334,20 @@ class CommandRouterTest {
         }
 
     @Test
-    fun `name uniqueness is case-insensitive`() =
+    fun `login name uniqueness is case-insensitive`() =
         runTest {
             val world = WorldFactory.demoWorld()
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
-            players.connect(a)
-            players.connect(b)
 
-            router.handle(a, Command.Name("Alice"))
-            router.handle(b, Command.Name("alice"))
+            val res1 = players.login(a, "Alice", "password")
+            val res2 = players.login(b, "alice", "password")
 
-            val outs = drain(outbound)
-
-            assertTrue(
-                outs.any { it is OutboundEvent.SendError && it.sessionId == b && it.text.contains("taken", ignoreCase = true) },
-                "Expected taken error. got=$outs",
-            )
+            assertEquals(LoginResult.Ok, res1)
+            assertEquals(LoginResult.Taken, res2)
         }
 
     @Test
@@ -389,7 +361,7 @@ class CommandRouterTest {
             val router = CommandRouter(world, players, mobs, items, outbound)
 
             val sid = SessionId(10)
-            players.connect(sid)
+            login(players, sid, "Player10")
 
             router.handle(sid, Command.Exits)
 
@@ -412,7 +384,7 @@ class CommandRouterTest {
             val router = CommandRouter(world, players, mobs, items, outbound)
 
             val sid = SessionId(11)
-            players.connect(sid)
+            login(players, sid, "Player11")
 
             val startRoom = world.rooms.getValue(world.startRoom)
             val (dir, targetId) =
@@ -442,7 +414,7 @@ class CommandRouterTest {
             val router = CommandRouter(world, players, mobs, items, outbound)
 
             val sid = SessionId(12)
-            players.connect(sid)
+            login(players, sid, "Player12")
 
             val startRoom = world.rooms.getValue(world.startRoom)
             val missingDir =
@@ -468,5 +440,14 @@ class CommandRouterTest {
             out += ev
         }
         return out
+    }
+
+    private suspend fun login(
+        players: PlayerRegistry,
+        sessionId: SessionId,
+        name: String,
+    ) {
+        val res = players.login(sessionId, name, "password")
+        require(res == LoginResult.Ok) { "Login failed: $res" }
     }
 }

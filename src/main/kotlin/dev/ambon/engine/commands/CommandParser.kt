@@ -37,10 +37,6 @@ sealed interface Command {
 
     data object Who : Command
 
-    data class Name(
-        val newName: String,
-    ) : Command
-
     data class Tell(
         val target: String,
         val message: String,
@@ -93,11 +89,6 @@ object CommandParser {
         // say: "emote <msg>"
         matchPrefix(line, listOf("emote")) { rest ->
             if (rest.isEmpty()) Command.Invalid(line, "emote <message>") else Command.Emote(rest)
-        }?.let { return it }
-
-        // name: "name <newName>"
-        matchPrefix(line, listOf("name")) { rest ->
-            if (rest.isEmpty()) Command.Invalid(line, "name <newName>") else Command.Name(rest)
         }?.let { return it }
 
         // gossip: "gossip <msg>" or "gs <msg>"
