@@ -4,6 +4,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
+import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -15,6 +16,7 @@ class CommandRouter(
     private val players: PlayerRegistry,
     private val mobs: MobRegistry,
     private val items: ItemRegistry,
+    private val combat: CombatSystem,
     private val outbound: SendChannel<OutboundEvent>,
 ) {
     suspend fun handle(
@@ -30,7 +32,7 @@ class CommandRouter(
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sessionId,
-                        "Commands: help, look/l, n/s/e/w, ansi on/off, clear, colors, say, who, tell, gossip, quit",
+                        "Commands: help, look/l, n/s/e/w, ansi on/off, clear, colors, say, who, tell, gossip, kill, flee, quit",
                     ),
                 )
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -42,6 +44,11 @@ class CommandRouter(
             }
 
             is Command.Move -> {
+                if (combat.isInCombat(sessionId)) {
+                    outbound.send(OutboundEvent.SendText(sessionId, "You are in combat. Try 'flee'."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
                 val me = players.get(sessionId) ?: return
                 val from = me.roomId
                 val room = world.rooms[from] ?: return
@@ -221,6 +228,22 @@ class CommandRouter(
 
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${moved.item.displayName}."))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Kill -> {
+                val err = combat.startCombat(sessionId, cmd.target)
+                if (err != null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, err))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            Command.Flee -> {
+                val err = combat.flee(sessionId)
+                if (err != null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, err))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                }
             }
 
             is Command.Invalid -> {

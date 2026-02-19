@@ -9,4 +9,6 @@ data class PlayerState(
     var name: String,
     var roomId: RoomId,
     var playerId: PlayerId? = null,
+    var hp: Int = 10,
+    var maxHp: Int = 10,
 )

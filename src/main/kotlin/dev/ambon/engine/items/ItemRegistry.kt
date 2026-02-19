@@ -58,6 +58,19 @@ class ItemRegistry {
 
     fun itemsInMob(mobId: MobId): List<ItemInstance> = mobItems[mobId]?.toList() ?: emptyList()
 
+    /**
+     * Move all items carried by a mob into a room. Returns moved items.
+     */
+    fun dropMobItemsToRoom(
+        mobId: MobId,
+        roomId: RoomId,
+    ): List<ItemInstance> {
+        val items = mobItems.remove(mobId) ?: return emptyList()
+        if (items.isEmpty()) return emptyList()
+        roomItems.getOrPut(roomId) { mutableListOf() }.addAll(items)
+        return items
+    }
+
     fun addUnplacedItem(
         itemId: ItemId,
         item: ItemInstance,

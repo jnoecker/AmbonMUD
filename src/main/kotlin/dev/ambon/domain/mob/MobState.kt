@@ -7,4 +7,6 @@ data class MobState(
     val id: MobId,
     var name: String,
     var roomId: RoomId,
+    var hp: Int = 10,
+    var maxHp: Int = 10,
 )

@@ -16,6 +16,7 @@ class MobSystem(
     private val outbound: SendChannel<OutboundEvent>,
     private val clock: Clock = Clock.systemUTC(),
     private val rng: Random = Random(),
+    private var isMobInCombat: (MobId) -> Boolean = { false },
     // Tuning knobs (defaults feel “MUD-like”)
     private val minWanderDelayMillis: Long = 2_000L,
     private val maxWanderDelayMillis: Long = 6_000L,
@@ -44,6 +45,11 @@ class MobSystem(
             }
 
             if (now < dueAt) continue
+
+            if (isMobInCombat(m.id)) {
+                nextActAtMillis[m.id] = now + randomDelay()
+                continue
+            }
 
             // If mob has no exits, just reschedule
             val room = world.rooms[m.roomId]
@@ -75,6 +81,10 @@ class MobSystem(
      */
     fun onMobSpawned(mobId: MobId) {
         nextActAtMillis.remove(mobId) // forces fresh scheduling on next tick
+    }
+
+    fun setCombatChecker(checker: (MobId) -> Boolean) {
+        isMobInCombat = checker
     }
 
     private fun randomDelay(): Long {

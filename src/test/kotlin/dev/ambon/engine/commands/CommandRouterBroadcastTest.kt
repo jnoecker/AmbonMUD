@@ -2,6 +2,7 @@ package dev.ambon.engine.commands
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
@@ -26,7 +27,7 @@ class CommandRouterBroadcastTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, items, outbound)
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
@@ -57,7 +58,7 @@ class CommandRouterBroadcastTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, items, outbound)
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
@@ -89,7 +90,7 @@ class CommandRouterBroadcastTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, items, outbound)
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)

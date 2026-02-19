@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
@@ -30,7 +31,8 @@ class CommandRouterItemsTest {
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, MobRegistry(), items, outbound)
+            val mobs = MobRegistry()
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(1L)
             login(players, sid, "Player1")
@@ -60,7 +62,8 @@ class CommandRouterItemsTest {
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, MobRegistry(), items, outbound)
+            val mobs = MobRegistry()
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(2L)
             login(players, sid, "Player2")
@@ -86,7 +89,8 @@ class CommandRouterItemsTest {
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, MobRegistry(), items, outbound)
+            val mobs = MobRegistry()
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(3L)
             login(players, sid, "Player3")
@@ -122,7 +126,8 @@ class CommandRouterItemsTest {
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, MobRegistry(), items, outbound)
+            val mobs = MobRegistry()
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(4L)
             login(players, sid, "Player4")
