@@ -11,6 +11,7 @@ data class PlayerRecord(
     val id: PlayerId,
     val name: String,
     val roomId: RoomId,
+    val constitution: Int = 0,
     val createdAtEpochMs: Long,
     val lastSeenEpochMs: Long,
     val passwordHash: String = "",

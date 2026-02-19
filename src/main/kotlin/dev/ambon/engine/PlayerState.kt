@@ -11,4 +11,5 @@ data class PlayerState(
     var playerId: PlayerId? = null,
     var hp: Int = 10,
     var maxHp: Int = 10,
+    var constitution: Int = 0,
 )

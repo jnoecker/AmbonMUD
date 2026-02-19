@@ -76,11 +76,13 @@ class WorldLoaderTest {
         assertEquals(ItemSlot.HEAD, cap.instance.item.slot)
         assertEquals(0, cap.instance.item.damage)
         assertEquals(1, cap.instance.item.armor)
+        assertEquals(2, cap.instance.item.constitution)
 
         val sword = items.getValue("ok_item_stats:sword")
         assertEquals(ItemSlot.HAND, sword.instance.item.slot)
         assertEquals(3, sword.instance.item.damage)
         assertEquals(0, sword.instance.item.armor)
+        assertEquals(1, sword.instance.item.constitution)
     }
 
     @Test

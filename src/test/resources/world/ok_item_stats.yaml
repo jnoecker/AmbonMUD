@@ -9,7 +9,9 @@ items:
     displayName: "a leather cap"
     slot: head
     armor: 1
+    constitution: 2
   sword:
     displayName: "a short sword"
     slot: hand
     damage: 3
+    constitution: 1

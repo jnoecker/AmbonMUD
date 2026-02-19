@@ -7,6 +7,7 @@ data class ItemFile(
     val slot: String? = null,
     val damage: Int = 0,
     val armor: Int = 0,
+    val constitution: Int = 0,
     val room: String? = null,
     val mob: String? = null,
 )
