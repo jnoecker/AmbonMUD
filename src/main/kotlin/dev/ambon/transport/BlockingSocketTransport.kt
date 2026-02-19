@@ -10,15 +10,14 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.net.ServerSocket
-import java.util.concurrent.atomic.AtomicLong
 
 class BlockingSocketTransport(
     private val port: Int,
     private val inbound: SendChannel<InboundEvent>,
     private val outboundRouter: OutboundRouter,
+    private val sessionIdFactory: () -> SessionId,
     private val scope: CoroutineScope,
 ) : Transport {
-    private val nextId = AtomicLong(1)
     private var serverSocket: ServerSocket? = null
     private var acceptJob: Job? = null
 
@@ -29,9 +28,17 @@ class BlockingSocketTransport(
                 while (isActive) {
                     val sock = serverSocket!!.accept()
                     sock.tcpNoDelay = true
-                    val sessionId = SessionId(nextId.getAndIncrement())
+                    val sessionId = sessionIdFactory()
                     val outboundQueue = Channel<String>(capacity = 200)
-                    val session = NetworkSession(sessionId, sock, inbound, outboundQueue, scope)
+                    val session =
+                        NetworkSession(
+                            sessionId = sessionId,
+                            socket = sock,
+                            inbound = inbound,
+                            outboundQueue = outboundQueue,
+                            onDisconnected = { outboundRouter.unregister(sessionId) },
+                            scope = scope,
+                        )
                     outboundRouter.register(sessionId, outboundQueue) { reason ->
                         session.closeNow(reason)
                     }
