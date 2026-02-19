@@ -1,11 +1,12 @@
 AmbonMUD
 ========
 
-AmbonMUD is a Kotlin MUD server (runtime banner: "QuickMUD"). It is a small, event-driven backend with a telnet transport, data-driven world loading, and YAML-backed player persistence.
+AmbonMUD is a Kotlin MUD server (runtime banner: "QuickMUD"). It is a small, event-driven backend with telnet and WebSocket transports, data-driven world loading, and YAML-backed player persistence.
 
 Current State
 -------------
-- Single-process telnet server with a tick-based engine, NPC wandering, and scheduled actions.
+- Single-process server with a tick-based engine, NPC wandering, and scheduled actions.
+- Dual transport support: native telnet and browser WebSocket client (xterm.js).
 - Login flow with name + password (bcrypt), per-session state, and basic persistence.
 - YAML-defined, multi-zone world with validation on load.
 - Items and mobs loaded from world data; items can be in rooms or on mobs; inventory and equipment supported.
@@ -32,13 +33,31 @@ On Windows:
 .\gradlew.bat run
 ```
 
+Or launch demo mode (auto-opens browser when supported):
+
+```bash
+./gradlew demo
+```
+
+On Windows:
+
+```powershell
+.\gradlew.bat demo
+```
+
 2) Connect with telnet:
 
 ```bash
 telnet localhost 4000
 ```
 
-The server listens on port 4000 (see `src/main/kotlin/dev/ambon/Main.kt`).
+3) Open the browser demo client:
+
+```text
+http://localhost:8080
+```
+
+The server listens on telnet port 4000 and web port 8080 (see `src/main/kotlin/dev/ambon/Main.kt`).
 
 Login
 -----
@@ -123,7 +142,6 @@ Out of Scope (Yet)
 ------------------
 - Advanced combat, stats, or character progression.
 - Admin tools or in-game world editing.
-- Non-telnet transports (e.g., WebSockets).
 - Multi-process scaling or persistence beyond YAML.
 
 Design Notes

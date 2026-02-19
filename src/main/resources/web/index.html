@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>QuickMUD Web Client</title>
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.css"
+    >
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main class="shell">
+    <header class="topbar">
+        <h1>QuickMUD Demo</h1>
+        <div class="status-wrap">
+            <span id="status" class="status disconnected">Disconnected</span>
+            <button id="reconnect" type="button">Reconnect</button>
+        </div>
+    </header>
+    <section id="terminal" aria-label="QuickMUD terminal"></section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
