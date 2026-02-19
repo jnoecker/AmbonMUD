@@ -50,11 +50,12 @@ class CombatSystem(
         }
 
         val roomId = player.roomId
-        val mob = findMobInRoom(roomId, keyword) ?: return "You don't see '$keyword' here."
+        val matches = findMobsInRoom(roomId, keyword)
+        if (matches.isEmpty()) return "You don't see '$keyword' here."
 
-        if (fightsByMob.containsKey(mob.id)) {
-            return "${mob.name} is already fighting someone."
-        }
+        val mob =
+            matches.firstOrNull { !fightsByMob.containsKey(it.id) }
+                ?: return "${matches.first().name} is already fighting someone."
 
         val fight =
             Fight(
@@ -98,7 +99,8 @@ class CombatSystem(
     suspend fun tick(maxCombatsPerTick: Int = 20) {
         val now = clock.millis()
         var ran = 0
-        val fights = fightsByPlayer.values.toList()
+        val fights = fightsByPlayer.values.toMutableList()
+        fights.shuffle(rng)
         for (fight in fights) {
             if (ran >= maxCombatsPerTick) break
             if (now < fight.nextTickAtMs) continue
@@ -167,16 +169,15 @@ class CombatSystem(
         return minDamage + rng.nextInt(range)
     }
 
-    private fun findMobInRoom(
+    private fun findMobsInRoom(
         roomId: RoomId,
         keyword: String,
-    ): MobState? {
+    ): List<MobState> {
         val lower = keyword.lowercase()
         return mobs
             .mobsInRoom(roomId)
             .filter { it.name.lowercase().contains(lower) }
             .sortedBy { it.name }
-            .firstOrNull()
     }
 
     private suspend fun handleMobDeath(mob: MobState) {
