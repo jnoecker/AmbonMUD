@@ -30,10 +30,16 @@ class CombatSystem(
 
     private val fightsByPlayer = mutableMapOf<SessionId, Fight>()
     private val fightsByMob = mutableMapOf<MobId, Fight>()
+    private val defenseByPlayer = mutableMapOf<SessionId, Int>()
 
     fun isInCombat(sessionId: SessionId): Boolean = fightsByPlayer.containsKey(sessionId)
 
     fun isMobInCombat(mobId: MobId): Boolean = fightsByMob.containsKey(mobId)
+
+    fun syncPlayerDefense(sessionId: SessionId) {
+        val player = players.get(sessionId) ?: return
+        syncPlayerDefense(player)
+    }
 
     suspend fun startCombat(
         sessionId: SessionId,
@@ -92,8 +98,11 @@ class CombatSystem(
     }
 
     fun onPlayerDisconnected(sessionId: SessionId) {
-        val fight = fightsByPlayer[sessionId] ?: return
-        endFight(fight)
+        val fight = fightsByPlayer[sessionId]
+        if (fight != null) {
+            endFight(fight)
+        }
+        defenseByPlayer.remove(sessionId)
     }
 
     suspend fun tick(maxCombatsPerTick: Int = 20) {
@@ -120,6 +129,8 @@ class CombatSystem(
                 continue
             }
 
+            syncPlayerDefense(player)
+
             if (player.hp <= 0) {
                 endFight(fight)
                 outbound.send(OutboundEvent.SendText(fight.sessionId, "You are too wounded to keep fighting and flee."))
@@ -128,7 +139,9 @@ class CombatSystem(
                 continue
             }
 
-            val playerDamage = rollDamage()
+            val playerAttack = equippedAttack(player.sessionId)
+
+            val playerDamage = rollDamage() + playerAttack
             mob.hp = (mob.hp - playerDamage).coerceAtLeast(0)
             outbound.send(OutboundEvent.SendText(fight.sessionId, "You hit ${mob.name} for $playerDamage damage."))
             if (mob.hp <= 0) {
@@ -167,6 +180,24 @@ class CombatSystem(
         require(maxDamage >= minDamage) { "maxDamage must be >= minDamage" }
         val range = (maxDamage - minDamage) + 1
         return minDamage + rng.nextInt(range)
+    }
+
+    private fun equippedAttack(sessionId: SessionId): Int = items.equipment(sessionId).values.sumOf { it.item.damage }
+
+    private fun equippedDefense(sessionId: SessionId): Int = items.equipment(sessionId).values.sumOf { it.item.armor }
+
+    private fun syncPlayerDefense(player: PlayerState) {
+        val sessionId = player.sessionId
+        val currentDefense = equippedDefense(sessionId)
+        val previousDefense = defenseByPlayer[sessionId] ?: 0
+        if (currentDefense == previousDefense) return
+
+        val delta = currentDefense - previousDefense
+        player.maxHp += delta
+        player.hp = (player.hp + delta).coerceAtMost(player.maxHp)
+        if (player.hp < 0) player.hp = 0
+
+        defenseByPlayer[sessionId] = currentDefense
     }
 
     private fun findMobsInRoom(

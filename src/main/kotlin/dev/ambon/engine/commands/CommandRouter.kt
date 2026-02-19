@@ -247,6 +247,7 @@ class CommandRouter(
                                 "You wear ${result.item.item.displayName} on your ${result.slot.label()}.",
                             ),
                         )
+                        combat.syncPlayerDefense(sessionId)
                     }
 
                     is ItemRegistry.EquipResult.NotFound -> {
@@ -284,6 +285,7 @@ class CommandRouter(
                                 "You remove ${result.item.item.displayName} from your ${result.slot.label()}.",
                             ),
                         )
+                        combat.syncPlayerDefense(sessionId)
                     }
 
                     is ItemRegistry.UnequipResult.SlotEmpty -> {
