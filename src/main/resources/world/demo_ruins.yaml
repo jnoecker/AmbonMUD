@@ -1,0 +1,439 @@
+zone: demo_ruins
+lifespan: 45
+startRoom: caravan_gate
+
+mobs:
+  gate_scout:
+    name: "a wary caravan scout"
+    room: caravan_gate
+  camp_cook:
+    name: "a soot-faced camp cook"
+    room: campfire_ring
+  shrine_acolyte:
+    name: "a whispering shrine acolyte"
+    room: shrine_antechamber
+  beetle_swarm:
+    name: "a swarm of glassy beetles"
+    room: beetle_grotto
+  stone_sentinel:
+    name: "a cracked stone sentinel"
+    room: cracked_sanctum
+  bridge_bandit:
+    name: "a bridge bandit"
+    room: rope_bridge
+  drowned_warder:
+    name: "a drowned warder"
+    room: flooded_steps
+  orchard_keeper:
+    name: "an orchard keeper"
+    room: mirror_orchard
+  archive_scribe:
+    name: "a dust-choked archive scribe"
+    room: archive_stacks
+  sunken_treasurer:
+    name: "a sunken treasurer"
+    room: submerged_vault
+
+items:
+  brass_lantern:
+    displayName: "a brass lantern"
+    description: "A heavy brass lantern with a mica window. It smells faintly of whale oil."
+    room: caravan_gate
+
+  travel_cloak:
+    displayName: "a weathered travel cloak"
+    description: "A sturdy cloak patched at the hem. It still repels drizzle."
+    slot: body
+    constitution: 1
+    mob: gate_scout
+
+  iron_pot:
+    displayName: "a dented iron pot"
+    description: "Blackened from many meals. Something herbal clings to the scent."
+    room: campfire_ring
+
+  cook_knife:
+    displayName: "a camp cook's knife"
+    description: "Sharp enough to make you careful."
+    slot: hand
+    damage: 1
+    mob: camp_cook
+
+  river_charm:
+    displayName: "a braided river charm"
+    description: "A reed braid wrapped around a smooth river stone, cool to the touch."
+    constitution: 1
+    room: river_ford
+
+  bandit_dagger:
+    displayName: "a nicked dagger"
+    description: "A small blade with a chipped tip and a confident grip."
+    slot: hand
+    damage: 2
+    mob: bridge_bandit
+
+  shrine_censer:
+    displayName: "a bronze censer"
+    description: "A little brazier on chains, stained green with age."
+    room: shrine_antechamber
+
+  acolyte_mask:
+    displayName: "a stitched linen mask"
+    description: "A pale mask with tiny bead eyes. It makes your breath sound far away."
+    slot: head
+    armor: 1
+    mob: shrine_acolyte
+
+  beetle_shell:
+    displayName: "a beetle shell shard"
+    description: "A shard of iridescent shell that catches light like broken glass."
+    mob: beetle_swarm
+
+  sentinel_tablet:
+    displayName: "a cracked stone tablet"
+    description: "A slate tablet etched with a faded oath. The cracks look like a map."
+    room: cracked_sanctum
+
+  rusted_buckler:
+    displayName: "a rusted buckler"
+    description: "A small shield with flaking paint and a stubborn strap."
+    slot: hand
+    armor: 2
+    room: guard_post
+
+  archive_key:
+    displayName: "a thin iron key"
+    description: "A narrow key with an odd, asymmetrical tooth pattern."
+    mob: archive_scribe
+
+  scribe_quill:
+    displayName: "a brittle quill"
+    description: "A feather quill that crumbles if you squeeze it too hard."
+    room: archive_stacks
+
+  pearl_ring:
+    displayName: "a tarnished pearl ring"
+    description: "A band set with a cloudy pearl. It gleams faintly when wet."
+    slot: hand
+    constitution: 2
+    mob: sunken_treasurer
+
+  vault_mace:
+    displayName: "a silt-caked ceremonial mace"
+    description: "A ceremonial mace with river silt packed into its carvings."
+    slot: hand
+    damage: 3
+    room: submerged_vault
+
+  mirror_apple:
+    displayName: "a mirror-bright apple"
+    description: "Perfectly smooth, reflecting your face like a tiny moon."
+    room: mirror_orchard
+
+  mossy_helm:
+    displayName: "a mossy helm"
+    description: "A helmet overgrown with soft moss. It smells like rain and stone."
+    slot: head
+    armor: 2
+    room: fallen_archway
+
+  rope_gloves:
+    displayName: "a pair of rope-worn gloves"
+    description: "Gloves rubbed smooth from climbing. The palms are tough as leather."
+    slot: hand
+    armor: 1
+    room: rope_bridge
+
+rooms:
+  caravan_gate:
+    title: "Caravan Gate"
+    description: "A rutted track widens into a makeshift gate of lashed timbers. Beyond it, the hills rise in broken steps toward old ruins. A hand-painted sign reads: 'WELCOME, STAY ALIVE.'"
+    exits:
+      n: campfire_ring
+      e: river_ford
+      w: old_milestone
+
+  old_milestone:
+    title: "Old Milestone"
+    description: "A toppled stone marker lies half-buried in grass. The original carving has been scraped away, replaced by newer tally marks and a crude arrow."
+    exits:
+      e: caravan_gate
+      w: windbreak_ridge
+
+  windbreak_ridge:
+    title: "Windbreak Ridge"
+    description: "A low ridge blocks the worst of the wind. From here you can see the ruins: arches like broken teeth and a tower slumped into itself."
+    exits:
+      e: old_milestone
+      n: fallen_archway
+
+  campfire_ring:
+    title: "Campfire Ring"
+    description: "Stones circle a bed of ash where caravans rest. Scuffed bedrolls and empty crates suggest someone left in a hurry."
+    exits:
+      s: caravan_gate
+      n: fallen_archway
+      e: trader_tents
+
+  trader_tents:
+    title: "Trader Tents"
+    description: "Two canvas tents lean against each other for support. A few trade goods remain: cracked pottery, coils of rope, and a bundle of damp kindling."
+    exits:
+      w: campfire_ring
+      n: rope_bridge
+
+  river_ford:
+    title: "River Ford"
+    description: "Cold water braids around pale stones. Something metallic glitters under the surface, and reeds hiss in the breeze like whispered warnings."
+    exits:
+      w: caravan_gate
+      n: reed_maze
+      e: fisher_ledge
+
+  fisher_ledge:
+    title: "Fisher's Ledge"
+    description: "A narrow ledge overlooks a deeper pool. Old hooks and lines dangle from a dead branch, and the water below turns dark too quickly."
+    exits:
+      w: river_ford
+      n: flooded_steps
+
+  reed_maze:
+    title: "Reed Maze"
+    description: "Reeds tower overhead, bending into corridors that look different every time you blink. Water laps at your ankles, carrying silt and tiny shells."
+    exits:
+      s: river_ford
+      n: shrine_approach
+      e: muddy_island
+
+  muddy_island:
+    title: "Muddy Island"
+    description: "A raised patch of ground dotted with driftwood and river trash. Someone has arranged stones in a spiral here, half sunk into the mud."
+    exits:
+      w: reed_maze
+      n: shrine_approach
+
+  shrine_approach:
+    title: "Shrine Approach"
+    description: "A broken causeway of stone blocks leads to a half-submerged shrine. Small bells hang from a leaning post, chiming softly without wind."
+    exits:
+      s: reed_maze
+      n: shrine_antechamber
+      e: flooded_steps
+
+  shrine_antechamber:
+    title: "Shrine Antechamber"
+    description: "Carved pillars rise from shallow water. Salt stains and moss blur the old reliefs: a river, a crown, and a figure holding a key."
+    exits:
+      s: shrine_approach
+      n: cracked_sanctum
+      e: flooded_steps
+      w: reed_maze
+
+  cracked_sanctum:
+    title: "Cracked Sanctum"
+    description: "The shrine's heart is fractured by a jagged crack running floor to ceiling. Cold air spills from the split, carrying a faint scent of ink and wet stone."
+    exits:
+      s: shrine_antechamber
+      d: fissure_descent
+      w: guard_post
+
+  guard_post:
+    title: "Abandoned Guard Post"
+    description: "A small stone room with arrow slits facing the river. A shattered stool and a pile of moldy straw show where someone once kept watch."
+    exits:
+      e: cracked_sanctum
+      n: fallen_archway
+
+  fallen_archway:
+    title: "Fallen Archway"
+    description: "A grand arch has collapsed into a heap of dressed stone. You can pass through the rubble if you pick your footing carefully."
+    exits:
+      s: campfire_ring
+      n: courtyard_of_thorns
+      e: rope_bridge
+      w: windbreak_ridge
+
+  rope_bridge:
+    title: "Rope Bridge"
+    description: "A swaying rope bridge spans a narrow ravine. Planks creak underfoot, and the ropes are frayed in places where hands have gripped too often."
+    exits:
+      w: fallen_archway
+      e: tower_base
+      s: trader_tents
+
+  tower_base:
+    title: "Tower Base"
+    description: "The base of a broken watchtower. The interior smells of damp wood and old smoke, and stairs spiral upward in uneasy darkness."
+    exits:
+      w: rope_bridge
+      u: tower_stairs
+      n: courtyard_of_thorns
+
+  tower_stairs:
+    title: "Tower Stairs"
+    description: "A narrow spiral staircase climbs through crumbling stone. Loose grit slides under your boots with every step."
+    exits:
+      d: tower_base
+      u: tower_overlook
+
+  tower_overlook:
+    title: "Tower Overlook"
+    description: "From the broken parapet you see the river's bend, the camp below, and—farther north—a strange orchard of pale trees reflecting moonlight even now."
+    exits:
+      d: tower_stairs
+      n: mirror_orchard
+
+  courtyard_of_thorns:
+    title: "Courtyard of Thorns"
+    description: "A courtyard choked with thorny vines. Statues lie face-down, and the stones are scratched with hurried messages: 'NOT THE WATER' and 'DON'T FOLLOW THE BELLS.'"
+    exits:
+      s: fallen_archway
+      e: tower_base
+      n: archive_entrance
+      w: beetle_grotto
+
+  beetle_grotto:
+    title: "Beetle Grotto"
+    description: "A hollow under the ruined wall where beetles click and scuttle. Their shells glitter like shards of bottle glass, and the air tastes faintly of copper."
+    exits:
+      e: courtyard_of_thorns
+      n: mossy_passage
+
+  mossy_passage:
+    title: "Mossy Passage"
+    description: "A passageway lined with green-black moss. Every sound becomes muffled, as if the stone is listening and swallowing echoes."
+    exits:
+      s: beetle_grotto
+      n: archive_entrance
+      e: fissure_descent
+
+  archive_entrance:
+    title: "Archive Entrance"
+    description: "A low doorway marked with a worn sigil: an eye above a river. The threshold is clean, as if someone has recently swept away the dust."
+    exits:
+      s: courtyard_of_thorns
+      n: archive_stacks
+      w: mossy_passage
+
+  archive_stacks:
+    title: "Archive Stacks"
+    description: "Tall shelves lean at odd angles, packed with swollen books and scroll cases. Here and there, wax seals bear the same eye-and-river sigil."
+    exits:
+      s: archive_entrance
+      e: reading_nook
+      n: ledger_room
+
+  reading_nook:
+    title: "Reading Nook"
+    description: "A small alcove with a stone desk and a melted-down candle stub. Someone has scratched a neat diagram of rooms and arrows into the desktop."
+    exits:
+      w: archive_stacks
+      e: curator_cell
+
+  curator_cell:
+    title: "Curator's Cell"
+    description: "A narrow cell with iron rings set into the wall. The air smells of old perfume and damp parchment, and the floor is dry despite the ruin outside."
+    exits:
+      w: reading_nook
+
+  ledger_room:
+    title: "Ledger Room"
+    description: "A chamber dominated by a stone table and an enormous ledger bound in green leather. Pages are stuck together as if they were dipped in river water and dried."
+    exits:
+      s: archive_stacks
+      e: fissure_descent
+      n: hidden_vault_door
+
+  hidden_vault_door:
+    title: "Hidden Vault Door"
+    description: "A round door of stone with a keyhole carved into the shape of a river delta. The surrounding stone is etched with tiny names, most too worn to read."
+    exits:
+      s: ledger_room
+      d: submerged_vault
+
+  fissure_descent:
+    title: "Fissure Descent"
+    description: "A slanted crack descends into the earth. Water drips steadily, and the walls are striated with pale mineral bands like frozen lightning."
+    exits:
+      u: cracked_sanctum
+      w: mossy_passage
+      e: flooded_steps
+      d: undercroft_pool
+
+  flooded_steps:
+    title: "Flooded Steps"
+    description: "Stone steps vanish into dark water. The surface ripples in slow circles as if something below is breathing."
+    exits:
+      w: shrine_approach
+      s: fisher_ledge
+      n: undercroft_pool
+      e: silt_tunnel
+
+  silt_tunnel:
+    title: "Silt Tunnel"
+    description: "A low tunnel packed with damp silt. Your footsteps leave crisp prints that fill with water moments later, as if the ground is trying to erase you."
+    exits:
+      w: flooded_steps
+      n: undercroft_pool
+      e: river_cistern
+
+  river_cistern:
+    title: "River Cistern"
+    description: "A circular cistern where river water filters through cracks in the stone. A faint glow pulses beneath the surface like a heartbeat."
+    exits:
+      w: silt_tunnel
+      n: undercroft_pool
+
+  undercroft_pool:
+    title: "Undercroft Pool"
+    description: "A subterranean pool stretches into shadow. On the far side, stonework rises into a sealed platform—an old counting place, perhaps, for offerings and debts."
+    exits:
+      u: fissure_descent
+      s: flooded_steps
+      w: silt_tunnel
+      n: submerged_vault
+
+  submerged_vault:
+    title: "Submerged Vault"
+    description: "A vault chamber half-filled with still water. Coins and ornaments glitter under the surface, and carved columns depict a crowned figure bargaining with a river."
+    exits:
+      u: hidden_vault_door
+      s: undercroft_pool
+
+  mirror_orchard:
+    title: "Mirror Orchard"
+    description: "Pale trees grow in perfect rows, their leaves glossy as glass. Every branch reflects you from a slightly different angle, as if the orchard is taking inventory."
+    exits:
+      s: tower_overlook
+      e: orchard_path
+      w: moonwell_edge
+
+  orchard_path:
+    title: "Orchard Path"
+    description: "A gravel path crunches softly. The air here is cool and sweet, and the trees' reflections slide over your skin like moonlight in water."
+    exits:
+      w: mirror_orchard
+      e: moonwell_edge
+      n: overlook_of_names
+
+  moonwell_edge:
+    title: "Moonwell Edge"
+    description: "A circular well lined with white stone. The water is impossibly clear, showing stars even though the sky above is hidden by tree canopy."
+    exits:
+      w: mirror_orchard
+      e: orchard_path
+      n: overlook_of_names
+      d: whisper_well
+
+  whisper_well:
+    title: "Whisper Well"
+    description: "A narrow chamber beneath the well. Every drip echoes as a word you almost understand. Names float up from the water and vanish before you can grasp them."
+    exits:
+      u: moonwell_edge
+
+  overlook_of_names:
+    title: "Overlook of Names"
+    description: "A stone terrace overlooking both orchard and ruins. The balustrade is carved with a long list of names; some are crisp, others scratched away."
+    exits:
+      s: orchard_path
+      w: moonwell_edge
