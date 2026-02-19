@@ -1,4 +1,5 @@
 zone: swamp
+lifespan: 20
 startRoom: edge
 rooms:
   edge:

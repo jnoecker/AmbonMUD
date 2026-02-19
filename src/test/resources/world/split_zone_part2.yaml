@@ -1,0 +1,7 @@
+zone: split_zone
+startRoom: b
+rooms:
+  b:
+    title: "Room B"
+    description: "Part two room."
+    exits: {}

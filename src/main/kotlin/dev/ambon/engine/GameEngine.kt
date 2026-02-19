@@ -29,6 +29,11 @@ class GameEngine(
     private val tickMillis: Long,
     private val scheduler: Scheduler,
 ) {
+    private val zoneResetDueAtMillis =
+        world.zoneLifespansMinutes
+            .filterValues { it > 0L }
+            .mapValuesTo(mutableMapOf()) { (_, minutes) -> clock.millis() + minutesToMillis(minutes) }
+
     private val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
     private val combatSystem = CombatSystem(players, mobs, items, outbound, clock = clock, onMobRemoved = mobSystem::onMobRemoved)
     private val regenSystem = RegenSystem(players, items, clock = clock)
@@ -77,11 +82,76 @@ class GameEngine(
                 // Run scheduled actions (bounded)
                 scheduler.runDue(maxActions = 100)
 
+                // Reset zones when their lifespan elapses.
+                resetZonesIfDue()
+
                 val elapsed = clock.millis() - tickStart
                 val sleep = (tickMillis - elapsed).coerceAtLeast(0)
                 delay(sleep)
             }
         }
+
+    private suspend fun resetZonesIfDue() {
+        if (zoneResetDueAtMillis.isEmpty()) return
+
+        val now = clock.millis()
+        for ((zone, dueAtMillis) in zoneResetDueAtMillis.toMap()) {
+            if (now < dueAtMillis) continue
+
+            resetZone(zone)
+
+            val lifespanMinutes = world.zoneLifespansMinutes[zone] ?: continue
+            val lifespanMillis = minutesToMillis(lifespanMinutes)
+            val elapsedCycles = ((now - dueAtMillis) / lifespanMillis) + 1
+            zoneResetDueAtMillis[zone] = dueAtMillis + (elapsedCycles * lifespanMillis)
+        }
+    }
+
+    private suspend fun resetZone(zone: String) {
+        val playersInZone = players.allPlayers().filter { player -> player.roomId.zone == zone }
+        for (player in playersInZone) {
+            outbound.send(OutboundEvent.SendText(player.sessionId, "TOCK"))
+        }
+
+        val zoneRoomIds =
+            world.rooms.keys
+                .filterTo(linkedSetOf()) { roomId -> roomId.zone == zone }
+
+        val zoneMobSpawns =
+            world.mobSpawns
+                .filter { spawn -> idZone(spawn.id.value) == zone }
+        val activeZoneMobIds =
+            mobs
+                .all()
+                .map { mob -> mob.id }
+                .filter { mobId -> idZone(mobId.value) == zone }
+
+        val zoneMobIds =
+            (zoneMobSpawns.map { spawn -> spawn.id } + activeZoneMobIds)
+                .toSet()
+
+        for (mobId in zoneMobIds) {
+            combatSystem.onMobRemovedExternally(mobId)
+            mobs.remove(mobId)
+            mobSystem.onMobRemoved(mobId)
+        }
+
+        for (spawn in zoneMobSpawns) {
+            mobs.upsert(MobState(spawn.id, spawn.name, spawn.roomId))
+            mobSystem.onMobSpawned(spawn.id)
+        }
+
+        val zoneItemSpawns =
+            world.itemSpawns
+                .filter { spawn -> idZone(spawn.instance.id.value) == zone }
+
+        items.resetZone(
+            zone = zone,
+            roomIds = zoneRoomIds,
+            mobIds = zoneMobIds,
+            spawns = zoneItemSpawns,
+        )
+    }
 
     private suspend fun handle(ev: InboundEvent) {
         when (ev) {
@@ -246,4 +316,8 @@ class GameEngine(
         val match = nameCommandRegex.matchEntire(input)
         return match?.groupValues?.get(1)?.trim() ?: input
     }
+
+    private fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
+
+    private fun minutesToMillis(minutes: Long): Long = minutes * 60_000L
 }
