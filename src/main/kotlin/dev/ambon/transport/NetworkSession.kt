@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import java.io.BufferedWriter
 import java.io.OutputStreamWriter
 import java.net.Socket
+import java.util.concurrent.atomic.AtomicBoolean
 
 class NetworkSession(
     val sessionId: SessionId,
@@ -17,8 +18,11 @@ class NetworkSession(
     private val inbound: SendChannel<InboundEvent>,
     // per-session
     private val outboundQueue: Channel<String>,
+    private val onDisconnected: () -> Unit,
     private val scope: CoroutineScope,
 ) {
+    private val disconnected = AtomicBoolean(false)
+
     fun start() {
         scope.launch(Dispatchers.IO) { readLoop() }
         scope.launch(Dispatchers.IO) { writeLoop() }
@@ -28,6 +32,7 @@ class NetworkSession(
         // Closing the socket will unblock read/write loops
         runCatching { socket.close() }
         outboundQueue.close()
+        notifyDisconnected()
     }
 
     private suspend fun readLoop() {
@@ -54,6 +59,7 @@ class NetworkSession(
         } finally {
             runCatching { socket.close() }
             outboundQueue.close()
+            notifyDisconnected()
         }
     }
 
@@ -68,6 +74,12 @@ class NetworkSession(
             // ignore; reader loop will close socket
         } finally {
             runCatching { socket.close() }
+        }
+    }
+
+    private fun notifyDisconnected() {
+        if (disconnected.compareAndSet(false, true)) {
+            onDisconnected()
         }
     }
 }

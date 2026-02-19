@@ -1,5 +1,6 @@
 package dev.ambon
 
+import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
@@ -10,6 +11,7 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.YamlPlayerRepository
 import dev.ambon.transport.BlockingSocketTransport
+import dev.ambon.transport.KtorWebSocketTransport
 import dev.ambon.transport.OutboundRouter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,9 +24,11 @@ import kotlinx.coroutines.launch
 import java.nio.file.Paths
 import java.time.Clock
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
 
 class MudServer(
-    private val port: Int,
+    private val telnetPort: Int,
+    private val webPort: Int = 8080,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -32,9 +36,11 @@ class MudServer(
     private val outbound = Channel<OutboundEvent>(capacity = 10_000)
 
     private val engineDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    private val sessionIdSeq = AtomicLong(1)
 
     private lateinit var outboundRouter: OutboundRouter
-    private lateinit var transport: BlockingSocketTransport
+    private lateinit var telnetTransport: BlockingSocketTransport
+    private lateinit var webTransport: KtorWebSocketTransport
     private var engineJob: Job? = null
     private var routerJob: Job? = null
 
@@ -69,15 +75,34 @@ class MudServer(
                 GameEngine(inbound, outbound, players, world, mobs, items, clock, tickMillis, scheduler).run()
             }
 
-        transport = BlockingSocketTransport(port, inbound, outboundRouter, scope)
-        transport.start()
+        telnetTransport =
+            BlockingSocketTransport(
+                port = telnetPort,
+                inbound = inbound,
+                outboundRouter = outboundRouter,
+                sessionIdFactory = ::allocateSessionId,
+                scope = scope,
+            )
+        telnetTransport.start()
+
+        webTransport =
+            KtorWebSocketTransport(
+                port = webPort,
+                inbound = inbound,
+                outboundRouter = outboundRouter,
+                sessionIdFactory = ::allocateSessionId,
+            )
+        webTransport.start()
     }
 
     suspend fun stop() {
-        transport.stop()
+        runCatching { telnetTransport.stop() }
+        runCatching { webTransport.stop() }
         scope.cancel()
         engineDispatcher.close()
         inbound.close()
         outbound.close()
     }
+
+    private fun allocateSessionId(): SessionId = SessionId(sessionIdSeq.getAndIncrement())
 }
