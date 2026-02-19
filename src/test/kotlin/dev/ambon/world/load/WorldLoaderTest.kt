@@ -43,6 +43,13 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `loads zone lifespan minutes`() {
+        val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+
+        assertEquals(1L, world.zoneLifespansMinutes["ok_small"])
+    }
+
+    @Test
     fun `loads items from a zone file`() {
         val world = WorldLoader.loadFromResource("world/ok_small.yaml")
 
@@ -92,6 +99,15 @@ class WorldLoaderTest {
                 WorldLoader.loadFromResource("world/bad_empty_rooms.yaml")
             }
         assertTrue(ex.message!!.contains("no rooms", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when lifespan is negative`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_lifespan.yaml")
+            }
+        assertTrue(ex.message!!.contains("lifespan", ignoreCase = true), "Got: ${ex.message}")
     }
 
     @Test

@@ -1,4 +1,5 @@
 zone: ok_small
+lifespan: 1
 startRoom: a
 mobs:
   rat:

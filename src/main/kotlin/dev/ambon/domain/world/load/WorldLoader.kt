@@ -41,6 +41,7 @@ object WorldLoader {
         val allExits = LinkedHashMap<RoomId, Map<Direction, RoomId>>() // staged exits per room
         val mergedMobs = LinkedHashMap<MobId, MobSpawn>()
         val mergedItems = LinkedHashMap<ItemId, ItemSpawn>()
+        val zoneLifespansMinutes = LinkedHashMap<String, Long>()
 
         // If multiple files provide startRoom, pick first file’s startRoom as world start.
         val worldStart = normalizeId(files.first().zone, files.first().startRoom)
@@ -48,6 +49,13 @@ object WorldLoader {
         for (file in files) {
             val zone = file.zone.trim()
             if (zone.isEmpty()) throw WorldLoadException("World zone cannot be blank")
+            val lifespanMinutes = file.lifespan ?: 0L
+            val existingLifespan = zoneLifespansMinutes.putIfAbsent(zone, lifespanMinutes)
+            if (existingLifespan != null && existingLifespan != lifespanMinutes) {
+                throw WorldLoadException(
+                    "Zone '$zone' declares conflicting lifespan values ($existingLifespan and $lifespanMinutes)",
+                )
+            }
 
             // First pass per file: create room shells, detect collisions
             for ((rawId, rf) in file.rooms) {
@@ -208,6 +216,7 @@ object WorldLoader {
             startRoom = worldStart,
             mobSpawns = mergedMobs.values.sortedBy { it.id.value },
             itemSpawns = mergedItems.values.sortedBy { it.instance.id.value },
+            zoneLifespansMinutes = zoneLifespansMinutes.toMap(),
         )
     }
 
@@ -227,6 +236,10 @@ object WorldLoader {
     private fun validateFileBasics(file: WorldFile) {
         val zone = file.zone.trim()
         if (zone.isEmpty()) throw WorldLoadException("World zone cannot be blank")
+        val lifespanMinutes = file.lifespan ?: 0L
+        if (lifespanMinutes < 0L) {
+            throw WorldLoadException("Zone '$zone' lifespan must be >= 0")
+        }
 
         if (file.rooms.isEmpty()) throw WorldLoadException("Zone '$zone' has no rooms")
 

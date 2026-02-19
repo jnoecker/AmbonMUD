@@ -58,6 +58,36 @@ class ItemRegistry {
         }
     }
 
+    fun resetZone(
+        zone: String,
+        roomIds: Set<RoomId>,
+        mobIds: Set<MobId>,
+        spawns: List<ItemSpawn>,
+    ) {
+        for (roomId in roomIds) {
+            roomItems.remove(roomId)
+        }
+        for (mobId in mobIds) {
+            mobItems.remove(mobId)
+        }
+
+        val unplacedIdsToRemove =
+            unplacedItems.keys
+                .filter { itemId -> idZone(itemId.value) == zone }
+        for (itemId in unplacedIdsToRemove) {
+            unplacedItems.remove(itemId)
+        }
+
+        for (spawn in spawns) {
+            val instance = spawn.instance
+            when {
+                spawn.roomId != null -> addRoomItem(spawn.roomId, instance)
+                spawn.mobId != null -> addMobItem(spawn.mobId, instance)
+                else -> addUnplacedItem(instance.id, instance)
+            }
+        }
+    }
+
     fun clearRoom(roomId: RoomId) {
         roomItems.remove(roomId)
     }
@@ -218,4 +248,6 @@ class ItemRegistry {
         if (inv.isEmpty()) inventoryItems.remove(sessionId)
         return instance
     }
+
+    private fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
 }
