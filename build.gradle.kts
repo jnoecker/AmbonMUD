@@ -11,9 +11,14 @@ repositories {
     mavenCentral()
 }
 
+val ktorVersion = "2.3.12"
+
 dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
 
     implementation("org.slf4j:slf4j-simple:2.0.16")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
@@ -22,6 +27,9 @@ dependencies {
 
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-websockets-jvm:$ktorVersion")
 }
 
 kotlin {
@@ -34,6 +42,15 @@ application {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.register<JavaExec>("demo") {
+    group = "application"
+    description = "Runs QuickMUD and opens the browser demo client."
+    mainClass.set(application.mainClass)
+    classpath = project.extensions.getByType(org.gradle.api.tasks.SourceSetContainer::class.java)["main"].runtimeClasspath
+    standardInput = System.`in`
+    systemProperty("quickmud.demo.autolaunchBrowser", "true")
 }
 
 ktlint {
