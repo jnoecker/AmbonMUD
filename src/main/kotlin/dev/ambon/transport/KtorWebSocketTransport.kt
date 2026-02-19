@@ -21,6 +21,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 class KtorWebSocketTransport(
     private val port: Int,
@@ -80,24 +81,31 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
     val sessionId = sessionIdFactory()
     val outboundQueue = Channel<String>(capacity = 200)
     val disconnected = AtomicBoolean(false)
+    val disconnectReason = AtomicReference("EOF")
 
-    suspend fun disconnect(reason: String) {
+    fun noteDisconnectReason(reason: String) {
+        if (reason.isBlank()) return
+        disconnectReason.compareAndSet("EOF", reason)
+    }
+
+    suspend fun disconnect() {
         if (!disconnected.compareAndSet(false, true)) return
         outboundRouter.unregister(sessionId)
         outboundQueue.close()
-        runCatching { inbound.send(InboundEvent.Disconnected(sessionId, reason)) }
+        runCatching { inbound.send(InboundEvent.Disconnected(sessionId, disconnectReason.get())) }
     }
 
     outboundRouter.register(sessionId, outboundQueue) { reason ->
         this@bridgeWebSocketSession.launch {
+            noteDisconnectReason(reason)
             runCatching { this@bridgeWebSocketSession.close(CloseReason(CloseReason.Codes.NORMAL, sanitizeCloseReason(reason))) }
-            disconnect(reason)
         }
     }
 
     val connectedOk = runCatching { inbound.send(InboundEvent.Connected(sessionId)) }.isSuccess
     if (!connectedOk) {
-        disconnect("inbound closed")
+        noteDisconnectReason("inbound closed")
+        disconnect()
         return
     }
 
@@ -125,13 +133,12 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
                 else -> Unit
             }
         }
-        disconnect("EOF")
     } catch (t: Throwable) {
         val reason = t.message ?: t::class.simpleName ?: "unknown error"
-        disconnect("read error: $reason")
+        noteDisconnectReason("read error: $reason")
     } finally {
         writerJob.cancelAndJoin()
-        disconnect("EOF")
+        disconnect()
     }
 }
 

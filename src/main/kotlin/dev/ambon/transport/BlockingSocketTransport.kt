@@ -41,7 +41,6 @@ class BlockingSocketTransport(
                         )
                     outboundRouter.register(sessionId, outboundQueue) { reason ->
                         session.closeNow(reason)
-                        outboundRouter.unregister(sessionId)
                     }
                     session.start()
                 }
