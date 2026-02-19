@@ -54,7 +54,10 @@ class PlayerRegistry(
         val boundRecord =
             if (existingRecord != null) {
                 if (existingRecord.passwordHash.isNotBlank()) {
-                    if (!BCrypt.checkpw(password, existingRecord.passwordHash)) return LoginResult.WrongPassword
+                    val ok =
+                        runCatching { BCrypt.checkpw(password, existingRecord.passwordHash) }
+                            .getOrDefault(false)
+                    if (!ok) return LoginResult.WrongPassword
                     existingRecord.copy(lastSeenEpochMs = now)
                 } else {
                     existingRecord.copy(lastSeenEpochMs = now, passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()))
