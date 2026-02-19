@@ -15,7 +15,8 @@ Use this document as the default engineering playbook when making code or conten
 - Run server (Unix): `./gradlew run`
 - Lint: `.\gradlew.bat ktlintCheck`
 - Tests: `.\gradlew.bat test`
-- CI parity: `.\gradlew.bat ktlintCheck test`
+- CI parity (Unix/CI): `./gradlew ktlintCheck test`
+- CI parity (Windows): `.\gradlew.bat ktlintCheck test`
 
 The server listens on port `4000` (`src/main/kotlin/dev/ambon/Main.kt`).
 
