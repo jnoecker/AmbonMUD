@@ -66,7 +66,14 @@ class PlayerRegistry(
                 repo.create(name, startRoom, now, BCrypt.hashpw(password, BCrypt.gensalt()))
             }
 
-        val ps = PlayerState(sessionId, boundRecord.name, boundRecord.roomId, boundRecord.id)
+        val ps =
+            PlayerState(
+                sessionId = sessionId,
+                name = boundRecord.name,
+                roomId = boundRecord.roomId,
+                playerId = boundRecord.id,
+                constitution = boundRecord.constitution,
+            )
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
         sessionByLowerName[ps.name.lowercase()] = sessionId
@@ -142,7 +149,14 @@ class PlayerRegistry(
         val now = clock.millis()
 
         val existing = repo.findById(pid) ?: return
-        repo.save(existing.copy(roomId = ps.roomId, lastSeenEpochMs = now, name = ps.name))
+        repo.save(
+            existing.copy(
+                roomId = ps.roomId,
+                lastSeenEpochMs = now,
+                name = ps.name,
+                constitution = ps.constitution,
+            ),
+        )
     }
 
     private fun isValidPassword(password: String): Boolean {
