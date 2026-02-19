@@ -1,15 +1,15 @@
 AmbonMUD
 ========
 
-AmbonMUD is a Kotlin MUD server (the runtime banner says "QuickMUD") built as a small, event-driven backend. It runs a telnet-compatible TCP server, loads YAML world data at startup, and persists players to disk.
+AmbonMUD is a Kotlin MUD server (runtime banner: "QuickMUD"). It is a small, event-driven backend with a telnet transport, data-driven world loading, and YAML-backed player persistence.
 
-Features
---------
-- Tick-based game engine with NPC wandering and scheduled actions.
-- Telnet transport with ANSI rendering, prompt handling, and backpressure protection.
-- YAML-defined world data with multi-zone room IDs and validation on load.
-- Basic player persistence to `data/players` via YAML files.
-- Commands for movement, chat, inventory, and simple UI helpers.
+Current State
+-------------
+- Single-process telnet server with a tick-based engine, NPC wandering, and scheduled actions.
+- Login flow with name + password (bcrypt), per-session state, and basic persistence.
+- YAML-defined, multi-zone world with validation on load.
+- Items and mobs loaded from world data; items can be in rooms or on mobs; inventory supported.
+- Chat and social commands (say, emote, tell, gossip), plus basic UI helpers (ANSI, clear, colors).
 
 Requirements
 ------------
@@ -38,6 +38,13 @@ telnet localhost 4000
 
 The server listens on port 4000 (see `src/main/kotlin/dev/ambon/Main.kt`).
 
+Login
+-----
+On connect, you will be prompted for a character name and password.
+- Name rules: 2-16 characters, letters/digits/underscore, cannot start with a digit.
+- Password rules: 1-72 characters.
+- Existing characters require the correct password.
+
 Commands
 --------
 - `help` or `?`: list available commands.
@@ -48,7 +55,6 @@ Commands
 - `say <msg>` or `'<msg>`: speak to the room.
 - `emote <msg>`: perform an emote visible to the room.
 - `who`: list online players.
-- `name <newName>`: claim or log in to a character name.
 - `tell <player> <msg>` or `t <player> <msg>`: private message.
 - `gossip <msg>` or `gs <msg>`: broadcast to everyone.
 - `inventory` / `inv` / `i`: show inventory.
@@ -61,7 +67,7 @@ Commands
 
 World Data
 ----------
-World files live in `src/main/resources/world` and are loaded by `WorldFactory.demoWorld()`. Each YAML file describes a zone:
+World files live in `src/main/resources/world` and are loaded by `dev.ambon.domain.world.WorldFactory`. Each YAML file describes a zone; multiple zones are merged into a single world.
 
 ```yaml
 zone: demo
@@ -87,16 +93,30 @@ Notes:
 - Room IDs and exit targets can be local (`trailhead`) or fully qualified (`zone:trailhead`).
 - `mobs` and `items` are optional; `rooms` and `startRoom` are required.
 - Items may be placed in a `room` or on a `mob` (not both).
+- Exit directions support `north/south/east/west/up/down` in world files.
 
 Persistence
 -----------
-Player records are stored in `data/players` as YAML files. When you run `name <newName>`, the server either creates a new record or loads the existing one and places the player in their saved room.
+Player records are stored as YAML in `data/players/players`. IDs are allocated in `data/players/next_player_id.txt`. On login, the server loads or creates the player record and places the player in their saved room.
 
 Tests
 -----
 ```bash
 ./gradlew test
 ```
+
+Formatting / Lint
+-----------------
+```bash
+./gradlew ktlintCheck
+```
+
+Out of Scope (Yet)
+------------------
+- Combat, stats, or character progression.
+- Admin tools or in-game world editing.
+- Non-telnet transports (e.g., WebSockets).
+- Multi-process scaling or persistence beyond YAML.
 
 Design Notes
 ------------
