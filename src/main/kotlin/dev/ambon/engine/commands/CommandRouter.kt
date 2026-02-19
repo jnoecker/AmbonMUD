@@ -6,7 +6,6 @@ import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
-import dev.ambon.engine.RenameResult
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import kotlinx.coroutines.channels.SendChannel
@@ -129,28 +128,6 @@ class CommandRouter(
                         .joinToString(separator = ", ") { it.name }
 
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Online: $list"))
-                outbound.send(OutboundEvent.SendPrompt(sessionId))
-            }
-
-            is Command.Name -> {
-                when (players.rename(sessionId, cmd.newName)) {
-                    RenameResult.Ok -> {
-                        outbound.send(OutboundEvent.SendInfo(sessionId, "Name set to ${players.get(sessionId)!!.name}"))
-                    }
-
-                    RenameResult.Invalid -> {
-                        outbound.send(
-                            OutboundEvent.SendError(
-                                sessionId,
-                                "Invalid name. Use 2-16 chars: letters/digits/_ and cannot start with digit.",
-                            ),
-                        )
-                    }
-
-                    RenameResult.Taken -> {
-                        outbound.send(OutboundEvent.SendError(sessionId, "That name is already taken."))
-                    }
-                }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 

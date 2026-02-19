@@ -2,6 +2,7 @@ package dev.ambon.engine.commands
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -29,8 +30,8 @@ class CommandRouterBroadcastTest {
 
             val a = SessionId(1)
             val b = SessionId(2)
-            players.connect(a)
-            players.connect(b)
+            login(players, a, "Player1")
+            login(players, b, "Player2")
 
             router.handle(a, Command.Say("hello"))
 
@@ -60,8 +61,8 @@ class CommandRouterBroadcastTest {
 
             val a = SessionId(1)
             val b = SessionId(2)
-            players.connect(a)
-            players.connect(b)
+            login(players, a, "Player1")
+            login(players, b, "Player2")
 
             // Move b north into a different room
             router.handle(b, Command.Move(dev.ambon.domain.world.Direction.NORTH))
@@ -92,8 +93,8 @@ class CommandRouterBroadcastTest {
 
             val a = SessionId(1)
             val b = SessionId(2)
-            players.connect(a)
-            players.connect(b)
+            login(players, a, "Player1")
+            login(players, b, "Player2")
 
             router.handle(a, Command.Who)
             val outs = drain(outbound)
@@ -116,5 +117,14 @@ class CommandRouterBroadcastTest {
             out += ev
         }
         return out
+    }
+
+    private suspend fun login(
+        players: PlayerRegistry,
+        sessionId: SessionId,
+        name: String,
+    ) {
+        val res = players.login(sessionId, name, "password")
+        require(res == LoginResult.Ok) { "Login failed: $res" }
     }
 }

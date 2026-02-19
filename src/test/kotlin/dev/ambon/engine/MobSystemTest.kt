@@ -69,8 +69,8 @@ class MobSystemTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), ItemRegistry())
             val sid1 = SessionId(1L)
             val sid2 = SessionId(2L)
-            players.connect(sid1)
-            players.connect(sid2)
+            login(players, sid1, "Player1")
+            login(players, sid2, "Player2")
             players.moveTo(sid2, roomB.id)
 
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
@@ -128,4 +128,13 @@ class MobSystemTest {
             assertEquals(roomA.id, mob.roomId)
             assertTrue(outbound.tryReceive().getOrNull() == null)
         }
+
+    private suspend fun login(
+        players: PlayerRegistry,
+        sessionId: SessionId,
+        name: String,
+    ) {
+        val res = players.login(sessionId, name, "password")
+        require(res == LoginResult.Ok) { "Login failed: $res" }
+    }
 }

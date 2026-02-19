@@ -68,6 +68,12 @@ class GameEngineAnsiBehaviorTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
+            // Log in
+            inbound.send(InboundEvent.LineReceived(sid, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid, "password"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
             // Enable ANSI
             inbound.send(InboundEvent.LineReceived(sid, "ansi on"))
             advanceTimeBy(tickMillis)
@@ -137,6 +143,11 @@ class GameEngineAnsiBehaviorTest {
             runCurrent()
 
             inbound.send(InboundEvent.Connected(sid))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            inbound.send(InboundEvent.LineReceived(sid, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid, "password"))
             advanceTimeBy(tickMillis)
             runCurrent()
 

@@ -2,8 +2,8 @@ package dev.ambon.persistence
 
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.LoginResult
 import dev.ambon.engine.PlayerRegistry
-import dev.ambon.engine.RenameResult
 import dev.ambon.engine.items.ItemRegistry
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.mindrot.jbcrypt.BCrypt
 import java.nio.file.Path
 import java.time.Clock
 import java.time.Instant
@@ -26,8 +27,9 @@ class YamlPlayerRepositoryTest {
         runTest {
             val repo = YamlPlayerRepository(tmp)
             val now = 1234L
+            val hash = BCrypt.hashpw("password", BCrypt.gensalt())
 
-            val r = repo.create("Alice", RoomId("test:a"), now)
+            val r = repo.create("Alice", RoomId("test:a"), now, hash)
 
             val byId = repo.findById(r.id)
             assertNotNull(byId)
@@ -44,8 +46,9 @@ class YamlPlayerRepositoryTest {
         runTest {
             val repo = YamlPlayerRepository(tmp)
             val now = 1000L
+            val hash = BCrypt.hashpw("password", BCrypt.gensalt())
 
-            val r = repo.create("Bob", RoomId("test:a"), now)
+            val r = repo.create("Bob", RoomId("test:a"), now, hash)
             val updated = r.copy(roomId = RoomId("test:b"), lastSeenEpochMs = 2000L, ansiEnabled = true)
 
             repo.save(updated)
@@ -61,12 +64,13 @@ class YamlPlayerRepositoryTest {
         runTest {
             val repo = YamlPlayerRepository(tmp)
             val now = 1L
+            val hash = BCrypt.hashpw("password", BCrypt.gensalt())
 
-            repo.create("Carol", RoomId("test:a"), now)
+            repo.create("Carol", RoomId("test:a"), now, hash)
 
             val ex =
                 try {
-                    repo.create("carol", RoomId("test:a"), now)
+                    repo.create("carol", RoomId("test:a"), now, hash)
                     fail("Expected PlayerPersistenceException")
                 } catch (e: PlayerPersistenceException) {
                     e
@@ -83,14 +87,12 @@ class YamlPlayerRepositoryTest {
             val clock = Clock.fixed(Instant.ofEpochMilli(1000), ZoneOffset.UTC)
 
             // create a record that lives in room b
-            val existing = repo.create("Alice", RoomId("test:b"), 1000)
+            val existing = repo.create("Alice", RoomId("test:b"), 1000, BCrypt.hashpw("password", BCrypt.gensalt()))
 
             val players = PlayerRegistry(start, repo, ItemRegistry(), clock)
             val sid = SessionId(1)
-            players.connect(sid)
-
-            val res = players.rename(sid, "Alice")
-            assertEquals(RenameResult.Ok, res)
+            val res = players.login(sid, "Alice", "password")
+            assertEquals(LoginResult.Ok, res)
 
             val ps = players.get(sid)!!
             assertEquals(existing.id, ps.playerId)
@@ -106,9 +108,8 @@ class YamlPlayerRepositoryTest {
 
             val players = PlayerRegistry(start, repo, ItemRegistry(), clock)
             val sid = SessionId(1)
-            players.connect(sid)
-
-            players.rename(sid, "Bob")
+            val res = players.login(sid, "Bob", "password")
+            assertEquals(LoginResult.Ok, res)
             val ps = players.get(sid)!!
             val pid = ps.playerId!!
 

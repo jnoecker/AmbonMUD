@@ -3,6 +3,7 @@ package dev.ambon.engine.commands
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -28,17 +29,11 @@ class NamesTellGossipTest {
             val router = CommandRouter(world, players, mobs, items, outbound)
 
             val a = SessionId(1)
-            players.connect(a)
-
-            router.handle(a, Command.Name("Alice"))
+            login(players, a, "Alice")
             router.handle(a, Command.Who)
 
             val outs = drain(outbound)
 
-            assertTrue(
-                outs.any { it is OutboundEvent.SendInfo && it.sessionId == a && it.text.contains("Name set to Alice") },
-                "Expected confirmation. got=$outs",
-            )
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.sessionId == a && it.text.contains("Alice") && it.text.contains("Online:") },
                 "Expected who to show Alice. got=$outs",
@@ -51,24 +46,13 @@ class NamesTellGossipTest {
             val world = WorldFactory.demoWorld()
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
-            val router = CommandRouter(world, players, mobs, items, outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
-            players.connect(a)
-            players.connect(b)
+            login(players, a, "Alice")
 
-            router.handle(a, Command.Name("Alice"))
-            router.handle(b, Command.Name("alice"))
-
-            val outs = drain(outbound)
-
-            assertTrue(
-                outs.any { it is OutboundEvent.SendError && it.sessionId == b && it.text.contains("taken", ignoreCase = true) },
-                "Expected 'taken' error for duplicate name. got=$outs",
-            )
+            val res = players.login(b, "alice", "password")
+            assertTrue(res == LoginResult.Taken, "Expected taken for duplicate login. got=$res")
         }
 
     @Test
@@ -84,12 +68,9 @@ class NamesTellGossipTest {
             val a = SessionId(1)
             val b = SessionId(2)
             val c = SessionId(3)
-            players.connect(a)
-            players.connect(b)
-            players.connect(c)
-
-            router.handle(a, Command.Name("Alice"))
-            router.handle(b, Command.Name("Bob"))
+            login(players, a, "Alice")
+            login(players, b, "Bob")
+            login(players, c, "Eve")
             drain(outbound)
 
             router.handle(a, Command.Tell("Bob", "hi there"))
@@ -126,10 +107,8 @@ class NamesTellGossipTest {
 
             val a = SessionId(1)
             val b = SessionId(2)
-            players.connect(a)
-            players.connect(b)
-
-            router.handle(a, Command.Name("Alice"))
+            login(players, a, "Alice")
+            login(players, b, "Bob")
             drain(outbound)
 
             router.handle(a, Command.Gossip("hello everyone"))
@@ -157,11 +136,8 @@ class NamesTellGossipTest {
 
             val a = SessionId(1)
             val b = SessionId(2)
-            players.connect(a)
-            players.connect(b)
-
-            router.handle(a, Command.Name("Alice"))
-            router.handle(b, Command.Name("Bob"))
+            login(players, a, "Alice")
+            login(players, b, "Bob")
             drain(outbound)
 
             // Move Bob north so he is not in Alice's room
@@ -181,5 +157,14 @@ class NamesTellGossipTest {
             out += ev
         }
         return out
+    }
+
+    private suspend fun login(
+        players: PlayerRegistry,
+        sessionId: SessionId,
+        name: String,
+    ) {
+        val res = players.login(sessionId, name, "password")
+        require(res == LoginResult.Ok) { "Login failed: $res" }
     }
 }

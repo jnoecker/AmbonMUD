@@ -13,5 +13,6 @@ data class PlayerRecord(
     val roomId: RoomId,
     val createdAtEpochMs: Long,
     val lastSeenEpochMs: Long,
+    val passwordHash: String = "",
     val ansiEnabled: Boolean = true,
 )

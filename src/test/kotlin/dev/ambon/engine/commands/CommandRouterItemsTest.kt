@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -32,7 +33,7 @@ class CommandRouterItemsTest {
             val router = CommandRouter(world, players, MobRegistry(), items, outbound)
 
             val sid = SessionId(1L)
-            players.connect(sid)
+            login(players, sid, "Player1")
 
             router.handle(sid, Command.Look)
 
@@ -62,7 +63,7 @@ class CommandRouterItemsTest {
             val router = CommandRouter(world, players, MobRegistry(), items, outbound)
 
             val sid = SessionId(2L)
-            players.connect(sid)
+            login(players, sid, "Player2")
 
             router.handle(sid, Command.Get("note"))
 
@@ -88,7 +89,7 @@ class CommandRouterItemsTest {
             val router = CommandRouter(world, players, MobRegistry(), items, outbound)
 
             val sid = SessionId(3L)
-            players.connect(sid)
+            login(players, sid, "Player3")
 
             // give an item via registry
             items.dropToRoom(sid, world.startRoom, "lantern") // no-op, not in inv
@@ -124,7 +125,7 @@ class CommandRouterItemsTest {
             val router = CommandRouter(world, players, MobRegistry(), items, outbound)
 
             val sid = SessionId(4L)
-            players.connect(sid)
+            login(players, sid, "Player4")
 
             // Put item into inventory by taking it from the room
             items.setRoomItems(
@@ -155,5 +156,14 @@ class CommandRouterItemsTest {
             out.add(v)
         }
         return out
+    }
+
+    private suspend fun login(
+        players: PlayerRegistry,
+        sessionId: SessionId,
+        name: String,
+    ) {
+        val res = players.login(sessionId, name, "password")
+        require(res == LoginResult.Ok) { "Login failed: $res" }
     }
 }

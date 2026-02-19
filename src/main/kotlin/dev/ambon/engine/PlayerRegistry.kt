@@ -5,14 +5,19 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
+import org.mindrot.jbcrypt.BCrypt
 import java.time.Clock
 
-sealed interface RenameResult {
-    data object Ok : RenameResult
+sealed interface LoginResult {
+    data object Ok : LoginResult
 
-    data object Invalid : RenameResult
+    data object InvalidName : LoginResult
 
-    data object Taken : RenameResult
+    data object InvalidPassword : LoginResult
+
+    data object Taken : LoginResult
+
+    data object WrongPassword : LoginResult
 }
 
 class PlayerRegistry(
@@ -27,16 +32,49 @@ class PlayerRegistry(
     // Case-insensitive name index (online only)
     private val sessionByLowerName = mutableMapOf<String, SessionId>()
 
-    private var nextPlayerNum = 1
+    suspend fun login(
+        sessionId: SessionId,
+        nameRaw: String,
+        passwordRaw: String,
+    ): LoginResult {
+        if (players.containsKey(sessionId)) return LoginResult.InvalidName
 
-    fun connect(sessionId: SessionId): PlayerState {
-        val defaultName = "Player${nextPlayerNum++}"
-        val ps = PlayerState(sessionId, defaultName, startRoom)
+        val name = nameRaw.trim()
+        if (!isValidName(name)) return LoginResult.InvalidName
+
+        if (isNameOnline(name, sessionId)) return LoginResult.Taken
+
+        val password = passwordRaw.trim()
+        if (!isValidPassword(password)) return LoginResult.InvalidPassword
+
+        val now = clock.millis()
+
+        val existingRecord: PlayerRecord? = repo.findByName(name)
+
+        val boundRecord =
+            if (existingRecord != null) {
+                if (existingRecord.passwordHash.isNotBlank()) {
+                    val ok =
+                        runCatching { BCrypt.checkpw(password, existingRecord.passwordHash) }
+                            .getOrDefault(false)
+                    if (!ok) return LoginResult.WrongPassword
+                    existingRecord.copy(lastSeenEpochMs = now)
+                } else {
+                    existingRecord.copy(lastSeenEpochMs = now, passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()))
+                }
+            } else {
+                repo.create(name, startRoom, now, BCrypt.hashpw(password, BCrypt.gensalt()))
+            }
+
+        val ps = PlayerState(sessionId, boundRecord.name, boundRecord.roomId, boundRecord.id)
         players[sessionId] = ps
-        roomMembers.getOrPut(startRoom) { mutableSetOf() }.add(sessionId)
-        sessionByLowerName[defaultName.lowercase()] = sessionId
+        roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
+        sessionByLowerName[ps.name.lowercase()] = sessionId
         items.ensurePlayer(sessionId)
-        return ps
+
+        repo.save(boundRecord.copy(roomId = ps.roomId, lastSeenEpochMs = now))
+
+        return LoginResult.Ok
     }
 
     suspend fun disconnect(sessionId: SessionId) {
@@ -80,57 +118,23 @@ class PlayerRegistry(
 
     fun findSessionByName(name: String): SessionId? = sessionByLowerName[name.trim().lowercase()]
 
-    /**
-     * name acts as "claim name" and also "login by name" for now:
-     * - If name exists on disk AND not online -> bind this session to that record and teleport to saved room.
-     * - Else create new record.
-     */
-    suspend fun rename(
-        sessionId: SessionId,
-        newNameRaw: String,
-    ): RenameResult {
-        val ps = players[sessionId] ?: return RenameResult.Invalid
-        val newName = newNameRaw.trim()
-        if (!isValidName(newName)) return RenameResult.Invalid
+    fun isNameOnline(
+        name: String,
+        exclude: SessionId? = null,
+    ): Boolean {
+        val key = name.trim().lowercase()
+        val existing = sessionByLowerName[key]
+        return existing != null && existing != exclude
+    }
 
-        val key = newName.lowercase()
-
-        // Online collision?
-        val existingOnline = sessionByLowerName[key]
-        if (existingOnline != null && existingOnline != sessionId) return RenameResult.Taken
-
-        val now = clock.millis()
-
-        // If a persisted player with this name exists, treat as login (unless it belongs to someone online)
-        val existingRecord: PlayerRecord? = repo.findByName(newName)
-
-        val boundRecord =
-            if (existingRecord != null) {
-                // If that record is already "online" under the same name, we'd have returned Taken above.
-                existingRecord.copy(lastSeenEpochMs = now)
-            } else {
-                repo.create(newName, ps.roomId, now)
-            }
-
-        // Update room membership if login changed room
-        if (ps.roomId != boundRecord.roomId) {
-            roomMembers[ps.roomId]?.remove(sessionId)
-            if (roomMembers[ps.roomId]?.isEmpty() == true) roomMembers.remove(ps.roomId)
-
-            ps.roomId = boundRecord.roomId
-            roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
+    fun isValidName(name: String): Boolean {
+        if (name.length !in 2..16) return false
+        if (name[0].isDigit()) return false
+        for (c in name) {
+            val ok = c.isLetterOrDigit() || c == '_'
+            if (!ok) return false
         }
-
-        // Update in-memory identity + name index
-        sessionByLowerName.remove(ps.name.lowercase())
-        ps.name = boundRecord.name
-        ps.playerId = boundRecord.id
-        sessionByLowerName[key] = sessionId
-
-        // Save (covers the “login” case, updates lastSeen)
-        repo.save(boundRecord.copy(roomId = ps.roomId, lastSeenEpochMs = now))
-
-        return RenameResult.Ok
+        return true
     }
 
     private suspend fun persistIfClaimed(ps: PlayerState) {
@@ -141,13 +145,9 @@ class PlayerRegistry(
         repo.save(existing.copy(roomId = ps.roomId, lastSeenEpochMs = now, name = ps.name))
     }
 
-    private fun isValidName(name: String): Boolean {
-        if (name.length !in 2..16) return false
-        if (name[0].isDigit()) return false
-        for (c in name) {
-            val ok = c.isLetterOrDigit() || c == '_'
-            if (!ok) return false
-        }
+    private fun isValidPassword(password: String): Boolean {
+        if (password.isBlank()) return false
+        if (password.length > 72) return false
         return true
     }
 }

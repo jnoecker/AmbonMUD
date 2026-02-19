@@ -35,6 +35,7 @@ class YamlPlayerRepository(
         val roomId: String,
         val createdAtEpochMs: Long,
         val lastSeenEpochMs: Long,
+        val passwordHash: String = "",
         val ansiEnabled: Boolean = false,
     )
 
@@ -80,10 +81,12 @@ class YamlPlayerRepository(
         name: String,
         startRoomId: RoomId,
         nowEpochMs: Long,
+        passwordHash: String,
     ): PlayerRecord =
         withContext(Dispatchers.IO) {
             val nm = name.trim()
             require(nm.isNotEmpty()) { "name cannot be blank" }
+            require(passwordHash.isNotEmpty()) { "passwordHash cannot be blank" }
 
             // Enforce unique name (case-insensitive) for now
             val existing = findByName(nm)
@@ -99,6 +102,7 @@ class YamlPlayerRepository(
                     roomId = startRoomId,
                     createdAtEpochMs = nowEpochMs,
                     lastSeenEpochMs = nowEpochMs,
+                    passwordHash = passwordHash,
                     ansiEnabled = false,
                 )
 
@@ -115,6 +119,7 @@ class YamlPlayerRepository(
                     roomId = record.roomId.value,
                     createdAtEpochMs = record.createdAtEpochMs,
                     lastSeenEpochMs = record.lastSeenEpochMs,
+                    passwordHash = record.passwordHash,
                     ansiEnabled = record.ansiEnabled,
                 )
 
@@ -131,6 +136,7 @@ class YamlPlayerRepository(
             roomId = RoomId(roomId),
             createdAtEpochMs = createdAtEpochMs,
             lastSeenEpochMs = lastSeenEpochMs,
+            passwordHash = passwordHash,
             ansiEnabled = ansiEnabled,
         )
 
