@@ -129,6 +129,8 @@ class CombatSystem(
                 continue
             }
 
+            syncPlayerDefense(player)
+
             if (player.hp <= 0) {
                 endFight(fight)
                 outbound.send(OutboundEvent.SendText(fight.sessionId, "You are too wounded to keep fighting and flee."))
@@ -137,7 +139,6 @@ class CombatSystem(
                 continue
             }
 
-            syncPlayerDefense(player)
             val playerAttack = equippedAttack(player.sessionId)
 
             val playerDamage = rollDamage() + playerAttack
