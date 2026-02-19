@@ -1,4 +1,5 @@
 zone: enchanted_forest
+lifespan: 20
 startRoom: trailhead
 rooms:
   trailhead:

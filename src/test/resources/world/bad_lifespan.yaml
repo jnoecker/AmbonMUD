@@ -1,0 +1,8 @@
+zone: bad_lifespan
+lifespan: -1
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Only room."
+    exits: {}

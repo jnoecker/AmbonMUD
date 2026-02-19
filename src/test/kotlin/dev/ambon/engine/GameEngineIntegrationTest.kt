@@ -2,11 +2,13 @@ package dev.ambon.engine
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.MutableClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -14,6 +16,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Clock
@@ -146,6 +149,84 @@ class GameEngineIntegrationTest {
                     got += outbound.receive()
                 }
             }
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
+
+    @Test
+    fun `zone reset sends TOCK and restores spawn state`() =
+        runTest {
+            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
+            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+
+            val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+            val items = ItemRegistry()
+            val repo = InMemoryPlayerRepository()
+            val players = PlayerRegistry(world.startRoom, repo, items)
+            val mobs = MobRegistry()
+            val clock = MutableClock(0L)
+            val scheduler = Scheduler(clock)
+            val tickMillis = 1_000L
+
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
+                )
+            val engineJob = launch { engine.run() }
+
+            suspend fun step(ms: Long) {
+                clock.advance(ms)
+                advanceTimeBy(ms)
+                runCurrent()
+            }
+
+            fun drainOutbound(): List<OutboundEvent> {
+                val out = mutableListOf<OutboundEvent>()
+                while (true) {
+                    val ev = outbound.tryReceive().getOrNull() ?: break
+                    out += ev
+                }
+                return out
+            }
+
+            val sid = SessionId(1L)
+
+            runCurrent()
+
+            inbound.send(InboundEvent.Connected(sid))
+            inbound.send(InboundEvent.LineReceived(sid, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid, "password"))
+            step(tickMillis)
+
+            inbound.send(InboundEvent.LineReceived(sid, "get coin"))
+            step(tickMillis)
+
+            assertTrue(items.inventory(sid).any { it.item.keyword == "coin" })
+            assertTrue(items.itemsInRoom(world.startRoom).none { it.item.keyword == "coin" })
+
+            drainOutbound()
+
+            step(60_000L)
+            val resetEvents = drainOutbound()
+
+            assertTrue(
+                resetEvents.any { it is OutboundEvent.SendText && it.sessionId == sid && it.text == "TOCK" },
+                "Expected TOCK after zone reset; got=$resetEvents",
+            )
+            assertEquals(
+                1,
+                items.itemsInRoom(world.startRoom).count { it.item.keyword == "coin" },
+            )
 
             engineJob.cancel()
             inbound.close()

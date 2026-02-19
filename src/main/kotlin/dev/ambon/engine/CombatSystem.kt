@@ -105,6 +105,13 @@ class CombatSystem(
         defenseByPlayer.remove(sessionId)
     }
 
+    suspend fun onMobRemovedExternally(mobId: MobId) {
+        val fight = fightsByMob[mobId] ?: return
+        endFight(fight)
+        outbound.send(OutboundEvent.SendText(fight.sessionId, "Your opponent vanishes."))
+        outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
+    }
+
     suspend fun tick(maxCombatsPerTick: Int = 20) {
         val now = clock.millis()
         var ran = 0

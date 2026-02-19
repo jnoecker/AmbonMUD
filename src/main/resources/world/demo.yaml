@@ -6,6 +6,7 @@
 # - a sorceress NPC can live in: cabin_study
 
 zone: demo
+lifespan: 30
 startRoom: trailhead
 mobs:
   wolf:

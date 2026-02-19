@@ -1,0 +1,8 @@
+zone: split_zone
+lifespan: 30
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Part one room."
+    exits: {}
