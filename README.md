@@ -9,6 +9,7 @@ Current State
 - Login flow with name + password (bcrypt), per-session state, and basic persistence.
 - YAML-defined, multi-zone world with validation on load.
 - Items and mobs loaded from world data; items can be in rooms or on mobs; inventory supported.
+- Basic combat with `kill <mob>` and `flee`, resolved over ticks.
 - Chat and social commands (say, emote, tell, gossip), plus basic UI helpers (ANSI, clear, colors).
 
 Requirements
@@ -60,6 +61,8 @@ Commands
 - `inventory` / `inv` / `i`: show inventory.
 - `get <item>` / `take <item>` / `pickup <item>` / `pick <item>` / `pick up <item>`: take item.
 - `drop <item>`: drop item.
+- `kill <mob>`: engage a mob in combat.
+- `flee`: end combat (you stay in the room).
 - `ansi on` / `ansi off`: toggle ANSI colors.
 - `colors`: show ANSI demo (when ANSI is on).
 - `clear`: clear screen (ANSI) or print a divider.
@@ -113,7 +116,7 @@ Formatting / Lint
 
 Out of Scope (Yet)
 ------------------
-- Combat, stats, or character progression.
+- Advanced combat, stats, or character progression.
 - Admin tools or in-game world editing.
 - Non-telnet transports (e.g., WebSockets).
 - Multi-process scaling or persistence beyond YAML.
