@@ -182,8 +182,12 @@ class CommandRouterTest {
             val sid = SessionId(3)
             login(players, sid, "Player3")
 
-            // From The Foyer, WEST is not an exit in the demo world
-            router.handle(sid, Command.Move(Direction.WEST))
+            val startRoom = world.rooms.getValue(world.startRoom)
+            val missingDir =
+                Direction.entries.firstOrNull { it !in startRoom.exits.keys }
+                    ?: error("Demo world start room must be missing at least one direction for this test")
+
+            router.handle(sid, Command.Move(missingDir))
 
             val outs = drain(outbound)
 
