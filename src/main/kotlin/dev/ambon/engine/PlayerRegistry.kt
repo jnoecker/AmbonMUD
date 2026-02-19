@@ -39,6 +39,43 @@ class PlayerRegistry(
         return ps
     }
 
+    suspend fun login(
+        sessionId: SessionId,
+        nameRaw: String,
+    ): RenameResult {
+        if (players.containsKey(sessionId)) return RenameResult.Invalid
+
+        val name = nameRaw.trim()
+        if (!isValidName(name)) return RenameResult.Invalid
+
+        val key = name.lowercase()
+
+        // Online collision?
+        val existingOnline = sessionByLowerName[key]
+        if (existingOnline != null && existingOnline != sessionId) return RenameResult.Taken
+
+        val now = clock.millis()
+
+        val existingRecord: PlayerRecord? = repo.findByName(name)
+
+        val boundRecord =
+            if (existingRecord != null) {
+                existingRecord.copy(lastSeenEpochMs = now)
+            } else {
+                repo.create(name, startRoom, now)
+            }
+
+        val ps = PlayerState(sessionId, boundRecord.name, boundRecord.roomId, boundRecord.id)
+        players[sessionId] = ps
+        roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
+        sessionByLowerName[key] = sessionId
+        items.ensurePlayer(sessionId)
+
+        repo.save(boundRecord.copy(roomId = ps.roomId, lastSeenEpochMs = now))
+
+        return RenameResult.Ok
+    }
+
     suspend fun disconnect(sessionId: SessionId) {
         val ps = players.remove(sessionId) ?: return
 
