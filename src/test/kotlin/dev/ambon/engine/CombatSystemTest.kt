@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -65,6 +66,105 @@ class CombatSystemTest {
         }
 
     @Test
+    fun `attack bonus adds flat damage`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
+            mobs.upsert(mob)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 1,
+                    maxDamage = 1,
+                )
+
+            val sid = SessionId(3L)
+            login(players, sid, "Player3")
+
+            equipItem(
+                items,
+                sid,
+                roomId,
+                ItemInstance(
+                    ItemId("demo:dagger"),
+                    Item(keyword = "dagger", displayName = "a dagger", slot = ItemSlot.HAND, damage = 2),
+                ),
+            )
+
+            val err = combat.startCombat(sid, "rat")
+            assertNull(err)
+
+            clock.advance(1_000L)
+            combat.tick()
+
+            val updatedMob = mobs.get(mob.id)
+            assertNotNull(updatedMob)
+            assertEquals(7, updatedMob!!.hp)
+        }
+
+    @Test
+    fun `defense bonus increases max hp pool`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
+            mobs.upsert(mob)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 1,
+                    maxDamage = 1,
+                )
+
+            val sid = SessionId(4L)
+            login(players, sid, "Player4")
+
+            equipItem(
+                items,
+                sid,
+                roomId,
+                ItemInstance(
+                    ItemId("demo:cap"),
+                    Item(keyword = "cap", displayName = "a cap", slot = ItemSlot.HEAD, armor = 2),
+                ),
+            )
+
+            val err = combat.startCombat(sid, "rat")
+            assertNull(err)
+
+            clock.advance(1_000L)
+            combat.tick()
+
+            val player = players.get(sid)
+            assertNotNull(player)
+            assertEquals(12, player!!.maxHp)
+            assertEquals(11, player.hp)
+        }
+
+    @Test
     fun `mob death drops items and removes mob`() =
         runTest {
             val roomId = RoomId("zone:room")
@@ -104,6 +204,19 @@ class CombatSystemTest {
             assertTrue(items.itemsInMob(mob.id).isEmpty(), "Expected mob inventory to be cleared")
             assertEquals(1, items.itemsInRoom(roomId).size, "Expected dropped item in room")
         }
+
+    private fun equipItem(
+        items: ItemRegistry,
+        sessionId: SessionId,
+        roomId: RoomId,
+        instance: ItemInstance,
+    ) {
+        items.addRoomItem(roomId, instance)
+        val moved = items.takeFromRoom(sessionId, roomId, instance.item.keyword)
+        requireNotNull(moved) { "Expected to move item '${instance.item.keyword}' into inventory" }
+        val result = items.equipFromInventory(sessionId, instance.item.keyword)
+        require(result is ItemRegistry.EquipResult.Equipped) { "Expected to equip '${instance.item.keyword}', got $result" }
+    }
 
     private suspend fun login(
         players: PlayerRegistry,
