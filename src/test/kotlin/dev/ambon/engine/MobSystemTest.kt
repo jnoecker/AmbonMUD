@@ -129,6 +129,38 @@ class MobSystemTest {
             assertTrue(outbound.tryReceive().getOrNull() == null)
         }
 
+    @Test
+    fun `tick does not move mobs that are in combat`() =
+        runTest {
+            val roomA = Room(RoomId("zone:a"), "A", "A", mapOf(Direction.NORTH to RoomId("zone:b")))
+            val roomB = Room(RoomId("zone:b"), "B", "B", mapOf(Direction.SOUTH to RoomId("zone:a")))
+            val world = World(mapOf(roomA.id to roomA, roomB.id to roomB), roomA.id)
+            val mobs = MobRegistry()
+            val mob = MobState(MobId("demo:rat"), "a rat", roomA.id)
+            mobs.upsert(mob)
+
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), ItemRegistry())
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val system =
+                MobSystem(
+                    world,
+                    mobs,
+                    players,
+                    outbound,
+                    clock = MutableClock(0L),
+                    rng = Random(1),
+                    isMobInCombat = { true },
+                    minWanderDelayMillis = 0L,
+                    maxWanderDelayMillis = 0L,
+                )
+
+            system.tick()
+            system.tick()
+
+            assertEquals(roomA.id, mob.roomId)
+            assertTrue(outbound.tryReceive().getOrNull() == null)
+        }
+
     private suspend fun login(
         players: PlayerRegistry,
         sessionId: SessionId,

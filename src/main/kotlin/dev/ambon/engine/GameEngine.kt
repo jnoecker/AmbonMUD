@@ -30,8 +30,9 @@ class GameEngine(
     private val scheduler: Scheduler,
 ) {
     private val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
+    private val combatSystem = CombatSystem(players, mobs, items, outbound, clock = clock, onMobRemoved = mobSystem::onMobRemoved)
 
-    private val router = CommandRouter(world, players, mobs, items, outbound)
+    private val router = CommandRouter(world, players, mobs, items, combatSystem, outbound)
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
     private val nameCommandRegex = Regex("^name\\s+(.+)$", RegexOption.IGNORE_CASE)
     private val invalidNameMessage =
@@ -49,6 +50,7 @@ class GameEngine(
     init {
         world.mobSpawns.forEach { mobs.upsert(MobState(it.id, it.name, it.roomId)) }
         items.loadSpawns(world.itemSpawns)
+        mobSystem.setCombatChecker(combatSystem::isMobInCombat)
     }
 
     suspend fun run() =
@@ -64,6 +66,9 @@ class GameEngine(
 
                 // Simulate NPC actions (time-gated internally)
                 mobSystem.tick(maxMovesPerTick = 10)
+
+                // Simulate combat (time-gated internally)
+                combatSystem.tick(maxCombatsPerTick = 20)
 
                 // Run scheduled actions (bounded)
                 scheduler.runDue(maxActions = 100)
@@ -89,6 +94,8 @@ class GameEngine(
                 val me = players.get(sid)
 
                 pendingLogins.remove(sid)
+
+                combatSystem.onPlayerDisconnected(sid)
 
                 if (me != null) {
                     broadcastToRoom(me.roomId, "${me.name} leaves.", sid)
