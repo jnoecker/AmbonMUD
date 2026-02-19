@@ -41,7 +41,7 @@ object WorldLoader {
         val allExits = LinkedHashMap<RoomId, Map<Direction, RoomId>>() // staged exits per room
         val mergedMobs = LinkedHashMap<MobId, MobSpawn>()
         val mergedItems = LinkedHashMap<ItemId, ItemSpawn>()
-        val zoneLifespansMinutes = LinkedHashMap<String, Long>()
+        val zoneLifespansMinutes = LinkedHashMap<String, Long?>()
 
         // If multiple files provide startRoom, pick first file’s startRoom as world start.
         val worldStart = normalizeId(files.first().zone, files.first().startRoom)
@@ -49,12 +49,21 @@ object WorldLoader {
         for (file in files) {
             val zone = file.zone.trim()
             if (zone.isEmpty()) throw WorldLoadException("World zone cannot be blank")
-            val lifespanMinutes = file.lifespan ?: 0L
-            val existingLifespan = zoneLifespansMinutes.putIfAbsent(zone, lifespanMinutes)
-            if (existingLifespan != null && existingLifespan != lifespanMinutes) {
-                throw WorldLoadException(
-                    "Zone '$zone' declares conflicting lifespan values ($existingLifespan and $lifespanMinutes)",
-                )
+            val declaredLifespanMinutes = file.lifespan
+            if (!zoneLifespansMinutes.containsKey(zone)) {
+                zoneLifespansMinutes[zone] = declaredLifespanMinutes
+            } else {
+                val existingLifespanMinutes = zoneLifespansMinutes.getValue(zone)
+                when {
+                    declaredLifespanMinutes == null -> Unit
+                    existingLifespanMinutes == null -> zoneLifespansMinutes[zone] = declaredLifespanMinutes
+                    existingLifespanMinutes != declaredLifespanMinutes -> {
+                        throw WorldLoadException(
+                            "Zone '$zone' declares conflicting lifespan values " +
+                                "($existingLifespanMinutes and $declaredLifespanMinutes)",
+                        )
+                    }
+                }
             }
 
             // First pass per file: create room shells, detect collisions
@@ -216,7 +225,10 @@ object WorldLoader {
             startRoom = worldStart,
             mobSpawns = mergedMobs.values.sortedBy { it.id.value },
             itemSpawns = mergedItems.values.sortedBy { it.instance.id.value },
-            zoneLifespansMinutes = zoneLifespansMinutes.toMap(),
+            zoneLifespansMinutes =
+                zoneLifespansMinutes.entries
+                    .mapNotNull { (zone, lifespanMinutes) -> lifespanMinutes?.let { zone to it } }
+                    .toMap(),
         )
     }
 
@@ -236,8 +248,7 @@ object WorldLoader {
     private fun validateFileBasics(file: WorldFile) {
         val zone = file.zone.trim()
         if (zone.isEmpty()) throw WorldLoadException("World zone cannot be blank")
-        val lifespanMinutes = file.lifespan ?: 0L
-        if (lifespanMinutes < 0L) {
+        if (file.lifespan != null && file.lifespan < 0L) {
             throw WorldLoadException("Zone '$zone' lifespan must be >= 0")
         }
 

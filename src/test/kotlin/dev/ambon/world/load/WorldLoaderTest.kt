@@ -201,6 +201,21 @@ class WorldLoaderTest {
 
     class MultiZoneWorldLoaderTest {
         @Test
+        fun `allows split-zone files when lifespan is declared in only one file`() {
+            val world =
+                WorldLoader.loadFromResources(
+                    listOf(
+                        "world/split_zone_part1.yaml",
+                        "world/split_zone_part2.yaml",
+                    ),
+                )
+
+            assertEquals(30L, world.zoneLifespansMinutes["split_zone"])
+            assertTrue(world.rooms.containsKey(RoomId("split_zone:a")))
+            assertTrue(world.rooms.containsKey(RoomId("split_zone:b")))
+        }
+
+        @Test
         fun `loads multiple zones and resolves cross-zone exits`() {
             val world =
                 WorldLoader.loadFromResources(

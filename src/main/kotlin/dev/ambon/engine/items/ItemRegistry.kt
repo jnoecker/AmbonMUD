@@ -65,7 +65,13 @@ class ItemRegistry {
         spawns: List<ItemSpawn>,
     ) {
         for (roomId in roomIds) {
-            roomItems.remove(roomId)
+            val current = roomItems[roomId] ?: continue
+            val retained = current.filterTo(mutableListOf()) { instance -> idZone(instance.id.value) != zone }
+            if (retained.isEmpty()) {
+                roomItems.remove(roomId)
+            } else {
+                roomItems[roomId] = retained
+            }
         }
         for (mobId in mobIds) {
             mobItems.remove(mobId)
