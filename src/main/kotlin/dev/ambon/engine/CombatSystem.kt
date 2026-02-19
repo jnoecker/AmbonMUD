@@ -36,6 +36,11 @@ class CombatSystem(
 
     fun isMobInCombat(mobId: MobId): Boolean = fightsByMob.containsKey(mobId)
 
+    fun syncPlayerDefense(sessionId: SessionId) {
+        val player = players.get(sessionId) ?: return
+        syncPlayerDefense(player)
+    }
+
     suspend fun startCombat(
         sessionId: SessionId,
         keywordRaw: String,
@@ -176,11 +181,9 @@ class CombatSystem(
         return minDamage + rng.nextInt(range)
     }
 
-    private fun equippedAttack(sessionId: SessionId): Int =
-        items.equipment(sessionId).values.sumOf { it.item.damage }
+    private fun equippedAttack(sessionId: SessionId): Int = items.equipment(sessionId).values.sumOf { it.item.damage }
 
-    private fun equippedDefense(sessionId: SessionId): Int =
-        items.equipment(sessionId).values.sumOf { it.item.armor }
+    private fun equippedDefense(sessionId: SessionId): Int = items.equipment(sessionId).values.sumOf { it.item.armor }
 
     private fun syncPlayerDefense(player: PlayerState) {
         val sessionId = player.sessionId
