@@ -74,6 +74,12 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses kill and flee`() {
+        assertEquals(Command.Kill("wolf"), CommandParser.parse("kill wolf"))
+        assertEquals(Command.Flee, CommandParser.parse("flee"))
+    }
+
+    @Test
     fun `parses look direction`() {
         val c1 = CommandParser.parse("look north")
         assertEquals(Command.LookDir(Direction.NORTH), c1)

@@ -22,10 +22,14 @@ class MobRegistry {
             }
             existing.name = mob.name
             existing.roomId = mob.roomId
+            existing.hp = mob.hp
+            existing.maxHp = mob.maxHp
         }
     }
 
     fun all(): List<MobState> = mobs.values.toList()
+
+    fun get(mobId: MobId): MobState? = mobs[mobId]
 
     fun mobsInRoom(roomId: RoomId): List<MobState> = roomMembers[roomId]?.mapNotNull { mobs[it] } ?: emptyList()
 
@@ -39,5 +43,12 @@ class MobRegistry {
         if (roomMembers[m.roomId]?.isEmpty() == true) roomMembers.remove(m.roomId)
         m.roomId = newRoom
         roomMembers.getOrPut(newRoom) { mutableSetOf() }.add(mobId)
+    }
+
+    fun remove(mobId: MobId): MobState? {
+        val m = mobs.remove(mobId) ?: return null
+        roomMembers[m.roomId]?.remove(mobId)
+        if (roomMembers[m.roomId]?.isEmpty() == true) roomMembers.remove(m.roomId)
+        return m
     }
 }

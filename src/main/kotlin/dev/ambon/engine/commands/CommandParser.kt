@@ -61,6 +61,12 @@ sealed interface Command {
 
     data object Inventory : Command
 
+    data class Kill(
+        val target: String,
+    ) : Command
+
+    data object Flee : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -135,6 +141,12 @@ object CommandParser {
             if (kw.isEmpty()) Command.Invalid(line, "drop <item>") else Command.Drop(kw)
         }?.let { return it }
 
+        // kill
+        matchPrefix(line, listOf("kill")) { rest ->
+            val target = rest.trim()
+            if (target.isEmpty()) Command.Invalid(line, "kill <mob>") else Command.Kill(target)
+        }?.let { return it }
+
         return when (lower) {
             "help", "?" -> Command.Help
             "look", "l" -> Command.Look
@@ -149,6 +161,7 @@ object CommandParser {
             "e", "east" -> Command.Move(Direction.EAST)
             "w", "west" -> Command.Move(Direction.WEST)
             "exits", "ex" -> Command.Exits
+            "flee" -> Command.Flee
             else -> Command.Unknown(line)
         }
     }
