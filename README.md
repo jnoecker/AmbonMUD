@@ -95,6 +95,8 @@ World Data
 ----------
 World files live in `src/main/resources/world` and are loaded by `dev.ambon.domain.world.WorldFactory`. Each YAML file describes a zone; multiple zones are merged into a single world.
 
+Detailed format/validation rules for generators are documented in `docs/world-zone-yaml-spec.md`.
+
 ```yaml
 zone: demo
 startRoom: trailhead
