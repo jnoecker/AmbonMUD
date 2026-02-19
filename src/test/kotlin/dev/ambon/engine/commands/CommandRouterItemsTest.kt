@@ -232,6 +232,50 @@ class CommandRouterItemsTest {
             )
         }
 
+    @Test
+    fun `wear prefers wearable item when multiple inventory items share keyword`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val items = ItemRegistry()
+
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val mobs = MobRegistry()
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+
+            val sid = SessionId(7L)
+            login(players, sid, "Player7")
+
+            items.setRoomItems(
+                world.startRoom,
+                listOf(
+                    ItemInstance(
+                        ItemId("test:ring_plain"),
+                        Item(keyword = "ring", displayName = "a plain ring"),
+                    ),
+                    ItemInstance(
+                        ItemId("test:ring_spiked"),
+                        Item(keyword = "ring", displayName = "a spiked ring", slot = ItemSlot.HAND, damage = 1),
+                    ),
+                ),
+            )
+            items.takeFromRoom(sid, world.startRoom, "ring")
+            items.takeFromRoom(sid, world.startRoom, "ring")
+
+            router.handle(sid, Command.Wear("ring"))
+
+            val equipped = items.equipment(sid)
+            assertEquals("ring", equipped.getValue(ItemSlot.HAND).item.keyword)
+            assertEquals(1, items.inventory(sid).size)
+            assertEquals("ring", items.inventory(sid)[0].item.keyword)
+
+            val outs = drain(outbound)
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.text.contains("You wear") },
+                "Missing wear message. got=$outs",
+            )
+        }
+
     private fun drain(ch: Channel<OutboundEvent>): List<OutboundEvent> {
         val out = mutableListOf<OutboundEvent>()
         while (true) {

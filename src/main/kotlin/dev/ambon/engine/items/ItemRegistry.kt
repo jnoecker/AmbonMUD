@@ -131,21 +131,37 @@ class ItemRegistry {
         keyword: String,
     ): EquipResult {
         val inv = inventoryItems[sessionId] ?: return EquipResult.NotFound
-        val idx = inv.indexOfFirst { it.item.keyword.equals(keyword, ignoreCase = true) }
-        if (idx < 0) return EquipResult.NotFound
+        var firstNonWearable: ItemInstance? = null
+        var firstOccupied: EquipResult.SlotOccupied? = null
 
-        val instance = inv[idx]
-        val slot = instance.item.slot ?: return EquipResult.NotWearable(instance)
+        for ((idx, instance) in inv.withIndex()) {
+            if (!instance.item.keyword.equals(keyword, ignoreCase = true)) continue
 
-        val equipped = equippedItems.getOrPut(sessionId) { mutableMapOf() }
-        val existing = equipped[slot]
-        if (existing != null) return EquipResult.SlotOccupied(slot, existing)
+            val slot = instance.item.slot
+            if (slot == null) {
+                if (firstNonWearable == null) firstNonWearable = instance
+                continue
+            }
 
-        inv.removeAt(idx)
-        if (inv.isEmpty()) inventoryItems.remove(sessionId)
+            val equipped = equippedItems.getOrPut(sessionId) { mutableMapOf() }
+            val existing = equipped[slot]
+            if (existing != null) {
+                if (firstOccupied == null) {
+                    firstOccupied = EquipResult.SlotOccupied(slot, existing)
+                }
+                continue
+            }
 
-        equipped[slot] = instance
-        return EquipResult.Equipped(instance, slot)
+            inv.removeAt(idx)
+            if (inv.isEmpty()) inventoryItems.remove(sessionId)
+
+            equipped[slot] = instance
+            return EquipResult.Equipped(instance, slot)
+        }
+
+        firstOccupied?.let { return it }
+        firstNonWearable?.let { return EquipResult.NotWearable(it) }
+        return EquipResult.NotFound
     }
 
     /**
