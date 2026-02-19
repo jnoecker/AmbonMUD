@@ -31,6 +31,7 @@ class GameEngine(
 ) {
     private val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
     private val combatSystem = CombatSystem(players, mobs, items, outbound, clock = clock, onMobRemoved = mobSystem::onMobRemoved)
+    private val regenSystem = RegenSystem(players, items, clock = clock)
 
     private val router = CommandRouter(world, players, mobs, items, combatSystem, outbound)
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
@@ -70,6 +71,9 @@ class GameEngine(
                 // Simulate combat (time-gated internally)
                 combatSystem.tick(maxCombatsPerTick = 20)
 
+                // Regenerate player HP (time-gated internally)
+                regenSystem.tick(maxPlayersPerTick = 50)
+
                 // Run scheduled actions (bounded)
                 scheduler.runDue(maxActions = 100)
 
@@ -96,6 +100,7 @@ class GameEngine(
                 pendingLogins.remove(sid)
 
                 combatSystem.onPlayerDisconnected(sid)
+                regenSystem.onPlayerDisconnected(sid)
 
                 if (me != null) {
                     broadcastToRoom(me.roomId, "${me.name} leaves.", sid)
