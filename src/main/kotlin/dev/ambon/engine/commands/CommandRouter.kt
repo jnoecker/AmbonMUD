@@ -2,6 +2,7 @@ package dev.ambon.engine.commands
 
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
@@ -32,7 +33,26 @@ class CommandRouter(
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sessionId,
-                        "Commands: help, look/l, n/s/e/w, ansi on/off, clear, colors, say, who, tell, gossip, kill, flee, quit",
+                        """
+                        Commands: 
+                            help, 
+                            look/l, 
+                            n/s/e/w, 
+                            ansi on/off, 
+                            clear, 
+                            colors, 
+                            say, 
+                            who, 
+                            tell, 
+                            gossip,
+                            inventory, 
+                            equipment, 
+                            wear, 
+                            remove, 
+                            kill, 
+                            flee, 
+                            quit
+                        """.trimIndent(),
                     ),
                 )
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -196,6 +216,84 @@ class CommandRouter(
                 } else {
                     val list = inv.map { it.item.displayName }.sorted().joinToString(", ")
                     outbound.send(OutboundEvent.SendInfo(sessionId, "You are carrying: $list"))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            Command.Equipment -> {
+                val me = players.get(sessionId) ?: return
+                val equipped = items.equipment(me.sessionId)
+                if (equipped.isEmpty()) {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You are wearing: nothing"))
+                } else {
+                    val line =
+                        ItemSlot.entries.joinToString(", ") { slot ->
+                            val name = slot.label()
+                            val item = equipped[slot]?.item?.displayName ?: "none"
+                            "$name: $item"
+                        }
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You are wearing: $line"))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Wear -> {
+                val me = players.get(sessionId) ?: return
+                when (val result = items.equipFromInventory(me.sessionId, cmd.keyword)) {
+                    is ItemRegistry.EquipResult.Equipped -> {
+                        outbound.send(
+                            OutboundEvent.SendInfo(
+                                sessionId,
+                                "You wear ${result.item.item.displayName} on your ${result.slot.label()}.",
+                            ),
+                        )
+                    }
+
+                    is ItemRegistry.EquipResult.NotFound -> {
+                        outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
+                    }
+
+                    is ItemRegistry.EquipResult.NotWearable -> {
+                        outbound.send(
+                            OutboundEvent.SendError(
+                                sessionId,
+                                "${result.item.item.displayName} cannot be worn.",
+                            ),
+                        )
+                    }
+
+                    is ItemRegistry.EquipResult.SlotOccupied -> {
+                        outbound.send(
+                            OutboundEvent.SendError(
+                                sessionId,
+                                "You are already wearing ${result.item.item.displayName} on your ${result.slot.label()}.",
+                            ),
+                        )
+                    }
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Remove -> {
+                val me = players.get(sessionId) ?: return
+                when (val result = items.unequip(me.sessionId, cmd.slot)) {
+                    is ItemRegistry.UnequipResult.Unequipped -> {
+                        outbound.send(
+                            OutboundEvent.SendInfo(
+                                sessionId,
+                                "You remove ${result.item.item.displayName} from your ${result.slot.label()}.",
+                            ),
+                        )
+                    }
+
+                    is ItemRegistry.UnequipResult.SlotEmpty -> {
+                        outbound.send(
+                            OutboundEvent.SendError(
+                                sessionId,
+                                "You are not wearing anything on your ${result.slot.label()}.",
+                            ),
+                        )
+                    }
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }

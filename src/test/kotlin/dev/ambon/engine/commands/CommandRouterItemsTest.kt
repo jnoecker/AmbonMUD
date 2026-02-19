@@ -4,6 +4,7 @@ import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
@@ -151,6 +152,83 @@ class CommandRouterItemsTest {
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("You drop") },
                 "Missing drop message. got=$outs",
+            )
+        }
+
+    @Test
+    fun `wear moves item from inventory to equipment slot`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val items = ItemRegistry()
+
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val mobs = MobRegistry()
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+
+            val sid = SessionId(5L)
+            login(players, sid, "Player5")
+
+            items.setRoomItems(
+                world.startRoom,
+                listOf(
+                    ItemInstance(
+                        ItemId("test:cap"),
+                        Item(keyword = "cap", displayName = "a leather cap", slot = ItemSlot.HEAD, armor = 1),
+                    ),
+                ),
+            )
+            items.takeFromRoom(sid, world.startRoom, "cap")
+
+            router.handle(sid, Command.Wear("cap"))
+
+            assertEquals(0, items.inventory(sid).size)
+            val equipped = items.equipment(sid)
+            assertEquals("cap", equipped.getValue(ItemSlot.HEAD).item.keyword)
+
+            val outs = drain(outbound)
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.text.contains("You wear") },
+                "Missing wear message. got=$outs",
+            )
+        }
+
+    @Test
+    fun `remove moves item from equipment slot back to inventory`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val items = ItemRegistry()
+
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val mobs = MobRegistry()
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+
+            val sid = SessionId(6L)
+            login(players, sid, "Player6")
+
+            items.setRoomItems(
+                world.startRoom,
+                listOf(
+                    ItemInstance(
+                        ItemId("test:cap"),
+                        Item(keyword = "cap", displayName = "a leather cap", slot = ItemSlot.HEAD, armor = 1),
+                    ),
+                ),
+            )
+            items.takeFromRoom(sid, world.startRoom, "cap")
+            router.handle(sid, Command.Wear("cap"))
+            drain(outbound)
+
+            router.handle(sid, Command.Remove(ItemSlot.HEAD))
+
+            assertEquals(1, items.inventory(sid).size)
+            assertTrue(items.equipment(sid).isEmpty())
+
+            val outs = drain(outbound)
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.text.contains("You remove") },
+                "Missing remove message. got=$outs",
             )
         }
 

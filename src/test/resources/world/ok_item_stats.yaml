@@ -1,0 +1,15 @@
+zone: ok_item_stats
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Start."
+items:
+  cap:
+    displayName: "a leather cap"
+    slot: head
+    armor: 1
+  sword:
+    displayName: "a short sword"
+    slot: hand
+    damage: 3
