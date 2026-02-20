@@ -56,7 +56,7 @@ tasks.register<JavaExec>("demo") {
     systemProperty("config.override.ambonMUD.demo.autoLaunchBrowser", "true")
 }
 
-ktlint { 
+ktlint {
     verbose.set(true)
-    android.set(false) 
+    android.set(false)
 }
