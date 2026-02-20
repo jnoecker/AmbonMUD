@@ -22,7 +22,8 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
 
-    implementation("org.slf4j:slf4j-simple:2.0.16")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.2")
     implementation("com.sksamuel.hoplite:hoplite-core:$hopliteVersion")
