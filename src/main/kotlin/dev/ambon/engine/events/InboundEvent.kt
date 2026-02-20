@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.SessionId
 sealed interface InboundEvent {
     data class Connected(
         val sessionId: SessionId,
+        val defaultAnsiEnabled: Boolean = false,
     ) : InboundEvent
 
     data class Disconnected(

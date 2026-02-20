@@ -85,6 +85,7 @@ class MudServer(
                     clock = clock,
                     tickMillis = tickMillis,
                     scheduler = scheduler,
+                    maxInboundEventsPerTick = config.server.maxInboundEventsPerTick,
                     loginConfig = config.login,
                     engineConfig = config.engine,
                     progression = progression,
