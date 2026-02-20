@@ -18,7 +18,7 @@ class AppConfigLoaderTest {
 
     @Test
     fun `system property overrides default config`() {
-        val key = "config.override.quickmud.server.telnetPort"
+        val key = "config.override.ambonMUD.server.telnetPort"
         val previous = System.getProperty(key)
         System.setProperty(key, "4444")
 
