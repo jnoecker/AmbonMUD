@@ -37,11 +37,13 @@ mobs:
 items:
   brass_lantern:
     displayName: "a brass lantern"
+    keyword: "lantern"
     description: "A heavy brass lantern with a mica window. It smells faintly of whale oil."
     room: caravan_gate
 
   travel_cloak:
     displayName: "a weathered travel cloak"
+    keyword: "cloak"
     description: "A sturdy cloak patched at the hem. It still repels drizzle."
     slot: body
     constitution: 1
@@ -49,11 +51,13 @@ items:
 
   iron_pot:
     displayName: "a dented iron pot"
+    keyword: "pot"
     description: "Blackened from many meals. Something herbal clings to the scent."
     room: campfire_ring
 
   cook_knife:
     displayName: "a camp cook's knife"
+    keyword: "knife"
     description: "Sharp enough to make you careful."
     slot: hand
     damage: 1
@@ -61,12 +65,14 @@ items:
 
   river_charm:
     displayName: "a braided river charm"
+    keyword: "charm"
     description: "A reed braid wrapped around a smooth river stone, cool to the touch."
     constitution: 1
     room: river_ford
 
   bandit_dagger:
     displayName: "a nicked dagger"
+    keyword: "dagger"
     description: "A small blade with a chipped tip and a confident grip."
     slot: hand
     damage: 2
@@ -74,11 +80,13 @@ items:
 
   shrine_censer:
     displayName: "a bronze censer"
+    keyword: "censer"
     description: "A little brazier on chains, stained green with age."
     room: shrine_antechamber
 
   acolyte_mask:
     displayName: "a stitched linen mask"
+    keyword: "mask"
     description: "A pale mask with tiny bead eyes. It makes your breath sound far away."
     slot: head
     armor: 1
@@ -86,16 +94,19 @@ items:
 
   beetle_shell:
     displayName: "a beetle shell shard"
+    keyword: "shell"
     description: "A shard of iridescent shell that catches light like broken glass."
     mob: beetle_swarm
 
   sentinel_tablet:
     displayName: "a cracked stone tablet"
+    keyword: "tablet"
     description: "A slate tablet etched with a faded oath. The cracks look like a map."
     room: cracked_sanctum
 
   rusted_buckler:
     displayName: "a rusted buckler"
+    keyword: "buckler"
     description: "A small shield with flaking paint and a stubborn strap."
     slot: hand
     armor: 2
@@ -103,16 +114,19 @@ items:
 
   archive_key:
     displayName: "a thin iron key"
+    keyword: "key"
     description: "A narrow key with an odd, asymmetrical tooth pattern."
     mob: archive_scribe
 
   scribe_quill:
     displayName: "a brittle quill"
+    keyword: "quill"
     description: "A feather quill that crumbles if you squeeze it too hard."
     room: archive_stacks
 
   pearl_ring:
     displayName: "a tarnished pearl ring"
+    keyword: "ring"
     description: "A band set with a cloudy pearl. It gleams faintly when wet."
     slot: hand
     constitution: 2
@@ -120,6 +134,7 @@ items:
 
   vault_mace:
     displayName: "a silt-caked ceremonial mace"
+    keyword: "mace"
     description: "A ceremonial mace with river silt packed into its carvings."
     slot: hand
     damage: 3
@@ -127,11 +142,13 @@ items:
 
   mirror_apple:
     displayName: "a mirror-bright apple"
+    keyword: "apple"
     description: "Perfectly smooth, reflecting your face like a tiny moon."
     room: mirror_orchard
 
   mossy_helm:
     displayName: "a mossy helm"
+    keyword: "helm"
     description: "A helmet overgrown with soft moss. It smells like rain and stone."
     slot: head
     armor: 2
@@ -139,6 +156,7 @@ items:
 
   rope_gloves:
     displayName: "a pair of rope-worn gloves"
+    keyword: "gloves"
     description: "Gloves rubbed smooth from climbing. The palms are tough as leather."
     slot: hand
     armor: 1
