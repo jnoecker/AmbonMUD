@@ -16,7 +16,7 @@ object AppConfigLoader {
         for (source in extraSources) {
             builder = builder.addSource(source)
         }
-        builder = builder.addResourceSource(resourcePath, optional = true)
+        builder = builder.addResourceSource(resourcePath, optional = false)
 
         return builder
             .build()
