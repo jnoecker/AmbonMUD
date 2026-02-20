@@ -33,6 +33,7 @@ class AmbonMudConfigLoaderTest {
                 deployment:
                   telnetPort: 4100
                   webPort: 8181
+                  promptText: "from deployment"
                 """.trimIndent(),
             )
 
@@ -40,6 +41,9 @@ class AmbonMudConfigLoaderTest {
             .resolve("ambonmud.gameplay.yml")
             .writeText(
                 """
+                deployment:
+                  webPort: 8191
+                  promptText: "from gameplay"
                 gameplay:
                   engineTickMillis: 150
                 """.trimIndent(),
@@ -53,16 +57,39 @@ class AmbonMudConfigLoaderTest {
             )
         val props =
             mapOf(
-                "ambonmud.deployment.telnetPort" to "4300",
+                "ambonmud.deployment.webPort" to "8383",
                 "ambonmud.gameplay.engineTickMillis" to "250",
             )
 
         val config = AmbonMudConfigLoader.load(baseDir = tempDir, env = env, systemProperties = props)
 
-        assertEquals(4300, config.deployment.telnetPort)
-        assertEquals(8282, config.deployment.webPort)
-        assertEquals("http://localhost:8282", config.deployment.webClientUrl)
+        assertEquals(4200, config.deployment.telnetPort)
+        assertEquals("from gameplay", config.deployment.promptText)
+        assertEquals(8383, config.deployment.webPort)
+        assertEquals("http://localhost:8383", config.deployment.webClientUrl)
         assertEquals(250L, config.gameplay.engineTickMillis)
+    }
+
+    @Test
+    fun `keeps explicit web client URL when web port is overridden`() {
+        tempDir
+            .resolve("ambonmud.yml")
+            .writeText(
+                """
+                deployment:
+                  webClientUrl: "https://example.test/client"
+                """.trimIndent(),
+            )
+
+        val config =
+            AmbonMudConfigLoader.load(
+                baseDir = tempDir,
+                env = mapOf("AMBONMUD_DEPLOYMENT_WEB_PORT" to "8282"),
+                systemProperties = mapOf("ambonmud.deployment.webPort" to "8383"),
+            )
+
+        assertEquals(8383, config.deployment.webPort)
+        assertEquals("https://example.test/client", config.deployment.webClientUrl)
     }
 
     @Test
@@ -75,6 +102,15 @@ class AmbonMudConfigLoaderTest {
             )
 
         assertTrue(fromLegacy.deployment.demoAutoLaunchBrowser)
+
+        val fromLegacyFalse =
+            AmbonMudConfigLoader.load(
+                baseDir = tempDir,
+                env = emptyMap(),
+                systemProperties = mapOf("quickmud.demo.autolaunchBrowser" to "false"),
+            )
+
+        assertFalse(fromLegacyFalse.deployment.demoAutoLaunchBrowser)
 
         val newPropertyWins =
             AmbonMudConfigLoader.load(

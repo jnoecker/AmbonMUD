@@ -12,7 +12,7 @@ object AmbonMudConfigLoader {
     private const val DEPLOYMENT_FILE_NAME = "ambonmud.yml"
     private const val GAMEPLAY_FILE_NAME = "ambonmud.gameplay.yml"
     private const val LEGACY_DEMO_AUTO_LAUNCH_PROP = "quickmud.demo.autolaunchBrowser"
-    private const val DEFAULT_WEB_CLIENT_URL = "http://localhost:8080"
+    private val DEFAULT_WEB_CLIENT_URL = DeploymentConfig().webClientUrl
 
     fun load(
         baseDir: Path = Paths.get("").toAbsolutePath(),
@@ -26,6 +26,8 @@ object AmbonMudConfigLoader {
                 .allowEmptyConfigFiles()
                 .addMapSource(propertyOverrides(systemProperties))
                 .addMapSource(envOverrides(env))
+                // Hoplite resolves conflicts using first source wins.
+                // Register in reverse so precedence is defaults < deployment < gameplay < env < system properties.
                 .addPathSource(baseDir.resolve(GAMEPLAY_FILE_NAME), optional = true)
                 .addPathSource(baseDir.resolve(DEPLOYMENT_FILE_NAME), optional = true)
                 .build()
@@ -68,7 +70,8 @@ object AmbonMudConfigLoader {
         if (!mapped.containsKey("deployment.demoAutoLaunchBrowser")) {
             val legacy = systemProperties[LEGACY_DEMO_AUTO_LAUNCH_PROP]
             if (legacy != null) {
-                mapped["deployment.demoAutoLaunchBrowser"] = legacy
+                mapped["deployment.demoAutoLaunchBrowser"] =
+                    normalizeOverrideValue("deployment.demoAutoLaunchBrowser", legacy)
             }
         }
 
