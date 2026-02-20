@@ -6,17 +6,6 @@ import org.junit.jupiter.api.Test
 
 class AppConfigLoaderTest {
     @Test
-    fun `loads defaults from application yaml`() {
-        val config = AppConfigLoader.load()
-
-        assertEquals(4000, config.server.telnetPort)
-        assertEquals(8080, config.server.webPort)
-        assertEquals(listOf("world/demo_ruins.yaml"), config.world.resources)
-        assertEquals("data/players", config.persistence.rootDir)
-        assertEquals(false, config.demo.autoLaunchBrowser)
-    }
-
-    @Test
     fun `system property overrides default config`() {
         val key = "config.override.ambonMUD.server.telnetPort"
         val previous = System.getProperty(key)

@@ -170,6 +170,7 @@ rooms:
       n: campfire_ring
       e: river_ford
       w: old_milestone
+      s: ambon_hub:hall_of_portals
 
   old_milestone:
     title: "Old Milestone"
