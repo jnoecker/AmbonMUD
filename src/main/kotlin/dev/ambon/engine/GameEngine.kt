@@ -40,16 +40,24 @@ class GameEngine(
 
     private val router = CommandRouter(world, players, mobs, items, combatSystem, outbound)
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
+    private val failedLoginAttempts = mutableMapOf<SessionId, Int>()
     private val nameCommandRegex = Regex("^name\\s+(.+)$", RegexOption.IGNORE_CASE)
     private val invalidNameMessage =
         "Invalid name. Use 2-16 chars: letters/digits/_ and cannot start with digit."
     private val invalidPasswordMessage = "Invalid password. Use 1-72 chars."
+    private val maxWrongPasswordRetries = 3
+    private val maxFailedLoginAttemptsBeforeDisconnect = 3
 
     private sealed interface LoginState {
         data object AwaitingName : LoginState
 
+        data class AwaitingCreateConfirmation(
+            val name: String,
+        ) : LoginState
+
         data class AwaitingPassword(
             val name: String,
+            val wrongPasswordAttempts: Int = 0,
         ) : LoginState
     }
 
@@ -159,6 +167,7 @@ class GameEngine(
                 val sid = ev.sessionId
 
                 pendingLogins[sid] = LoginState.AwaitingName
+                failedLoginAttempts[sid] = 0
                 outbound.send(OutboundEvent.SendInfo(sid, "Welcome to QuickMUD"))
                 promptForName(sid)
             }
@@ -168,6 +177,7 @@ class GameEngine(
                 val me = players.get(sid)
 
                 pendingLogins.remove(sid)
+                failedLoginAttempts.remove(sid)
 
                 combatSystem.onPlayerDisconnected(sid)
                 regenSystem.onPlayerDisconnected(sid)
@@ -214,7 +224,8 @@ class GameEngine(
     ) {
         when (state) {
             LoginState.AwaitingName -> handleLoginName(sessionId, line)
-            is LoginState.AwaitingPassword -> handleLoginPassword(sessionId, line, state.name)
+            is LoginState.AwaitingCreateConfirmation -> handleLoginCreateConfirmation(sessionId, line, state)
+            is LoginState.AwaitingPassword -> handleLoginPassword(sessionId, line, state)
         }
     }
 
@@ -248,25 +259,62 @@ class GameEngine(
             return
         }
 
-        pendingLogins[sessionId] = LoginState.AwaitingPassword(name)
-        promptForPassword(sessionId)
+        if (players.hasRegisteredName(name)) {
+            pendingLogins[sessionId] = LoginState.AwaitingPassword(name)
+            promptForPassword(sessionId)
+            return
+        }
+
+        pendingLogins[sessionId] = LoginState.AwaitingCreateConfirmation(name)
+        promptForCreateConfirmation(sessionId, name)
+    }
+
+    private suspend fun handleLoginCreateConfirmation(
+        sessionId: SessionId,
+        line: String,
+        state: LoginState.AwaitingCreateConfirmation,
+    ) {
+        when (line.trim().lowercase()) {
+            "y",
+            "yes",
+            -> {
+                pendingLogins[sessionId] = LoginState.AwaitingPassword(state.name)
+                promptForPassword(sessionId)
+            }
+
+            "n",
+            "no",
+            -> {
+                pendingLogins[sessionId] = LoginState.AwaitingName
+                promptForName(sessionId)
+            }
+
+            else -> {
+                outbound.send(OutboundEvent.SendError(sessionId, "Please answer yes or no."))
+                promptForCreateConfirmation(sessionId, state.name)
+            }
+        }
     }
 
     private suspend fun handleLoginPassword(
         sessionId: SessionId,
         line: String,
-        name: String,
+        state: LoginState.AwaitingPassword,
     ) {
+        val name = state.name
         val password = line.trim()
         if (password.isEmpty()) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Please enter a password."))
-            promptForPassword(sessionId)
+            outbound.send(OutboundEvent.SendError(sessionId, "Blank password. Returning to login."))
+            if (recordFailedLoginAttemptAndCloseIfNeeded(sessionId)) return
+            pendingLogins[sessionId] = LoginState.AwaitingName
+            promptForName(sessionId)
             return
         }
 
         when (players.login(sessionId, name, password)) {
             LoginResult.Ok -> {
                 pendingLogins.remove(sessionId)
+                failedLoginAttempts.remove(sessionId)
                 val me = players.get(sessionId)
                 if (me == null) {
                     outbound.send(OutboundEvent.SendError(sessionId, "Internal error: player not initialized"))
@@ -279,6 +327,7 @@ class GameEngine(
 
             LoginResult.InvalidName -> {
                 outbound.send(OutboundEvent.SendError(sessionId, invalidNameMessage))
+                if (recordFailedLoginAttemptAndCloseIfNeeded(sessionId)) return
                 pendingLogins[sessionId] = LoginState.AwaitingName
                 promptForName(sessionId)
             }
@@ -295,10 +344,36 @@ class GameEngine(
             }
 
             LoginResult.WrongPassword -> {
-                outbound.send(OutboundEvent.SendError(sessionId, "Incorrect password."))
+                val attempts = state.wrongPasswordAttempts + 1
+                if (attempts > maxWrongPasswordRetries) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Incorrect password too many times. Returning to login."))
+                    if (recordFailedLoginAttemptAndCloseIfNeeded(sessionId)) return
+                    pendingLogins[sessionId] = LoginState.AwaitingName
+                    promptForName(sessionId)
+                    return
+                }
+
+                val attemptsRemaining = (maxWrongPasswordRetries + 1) - attempts
+                outbound.send(
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "Incorrect password. $attemptsRemaining attempt(s) before returning to login.",
+                    ),
+                )
+                pendingLogins[sessionId] = state.copy(wrongPasswordAttempts = attempts)
                 promptForPassword(sessionId)
             }
         }
+    }
+
+    private suspend fun recordFailedLoginAttemptAndCloseIfNeeded(sessionId: SessionId): Boolean {
+        val nextAttempts = (failedLoginAttempts[sessionId] ?: 0) + 1
+        failedLoginAttempts[sessionId] = nextAttempts
+        if (nextAttempts < maxFailedLoginAttemptsBeforeDisconnect) return false
+
+        pendingLogins.remove(sessionId)
+        outbound.send(OutboundEvent.Close(sessionId, "Too many failed login attempts."))
+        return true
     }
 
     private suspend fun promptForName(sessionId: SessionId) {
@@ -308,6 +383,14 @@ class GameEngine(
 
     private suspend fun promptForPassword(sessionId: SessionId) {
         outbound.send(OutboundEvent.SendInfo(sessionId, "Password:"))
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun promptForCreateConfirmation(
+        sessionId: SessionId,
+        name: String,
+    ) {
+        outbound.send(OutboundEvent.SendInfo(sessionId, "No user named '$name' was found. Create a new user? (yes/no)"))
         outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 

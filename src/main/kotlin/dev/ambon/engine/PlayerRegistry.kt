@@ -134,6 +134,12 @@ class PlayerRegistry(
         return existing != null && existing != exclude
     }
 
+    suspend fun hasRegisteredName(nameRaw: String): Boolean {
+        val name = nameRaw.trim()
+        if (name.isEmpty()) return false
+        return repo.findByName(name) != null
+    }
+
     fun isValidName(name: String): Boolean {
         if (name.length !in 2..16) return false
         if (name[0].isDigit()) return false
