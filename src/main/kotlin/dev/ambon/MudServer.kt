@@ -1,5 +1,6 @@
 package dev.ambon
 
+import dev.ambon.config.AppConfig
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
@@ -27,13 +28,12 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
 
 class MudServer(
-    private val telnetPort: Int,
-    private val webPort: Int = 8080,
+    private val config: AppConfig,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val inbound = Channel<InboundEvent>(capacity = 10_000)
-    private val outbound = Channel<OutboundEvent>(capacity = 10_000)
+    private val inbound = Channel<InboundEvent>(capacity = config.server.inboundChannelCapacity)
+    private val outbound = Channel<OutboundEvent>(capacity = config.server.outboundChannelCapacity)
 
     private val engineDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     private val sessionIdSeq = AtomicLong(1)
@@ -48,14 +48,14 @@ class MudServer(
 
     val playerRepo =
         YamlPlayerRepository(
-            rootDir = Paths.get("data/players"),
+            rootDir = Paths.get(config.persistence.rootDir),
         )
 
     val items = ItemRegistry()
     val mobs = MobRegistry()
 
-    val world = WorldFactory.demoWorld()
-    val tickMillis: Long = 100L
+    val world = WorldFactory.demoWorld(config.world.resources)
+    val tickMillis: Long = config.server.tickMillis
     val scheduler: Scheduler = Scheduler(clock)
 
     val players =
@@ -72,25 +72,44 @@ class MudServer(
 
         engineJob =
             scope.launch(engineDispatcher) {
-                GameEngine(inbound, outbound, players, world, mobs, items, clock, tickMillis, scheduler).run()
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    mobs = mobs,
+                    items = items,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    loginConfig = config.login,
+                    engineConfig = config.engine,
+                ).run()
             }
 
         telnetTransport =
             BlockingSocketTransport(
-                port = telnetPort,
+                port = config.server.telnetPort,
                 inbound = inbound,
                 outboundRouter = outboundRouter,
                 sessionIdFactory = ::allocateSessionId,
                 scope = scope,
+                sessionOutboundQueueCapacity = config.server.sessionOutboundQueueCapacity,
+                maxLineLen = config.transport.telnet.maxLineLen,
+                maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
             )
         telnetTransport.start()
 
         webTransport =
             KtorWebSocketTransport(
-                port = webPort,
+                port = config.server.webPort,
                 inbound = inbound,
                 outboundRouter = outboundRouter,
                 sessionIdFactory = ::allocateSessionId,
+                host = config.transport.websocket.host,
+                sessionOutboundQueueCapacity = config.server.sessionOutboundQueueCapacity,
+                stopGraceMillis = config.transport.websocket.stopGraceMillis,
+                stopTimeoutMillis = config.transport.websocket.stopTimeoutMillis,
             )
         webTransport.start()
     }
