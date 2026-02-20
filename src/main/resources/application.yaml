@@ -60,6 +60,7 @@ ambonMUD:
       host: 0.0.0.0
       stopGraceMillis: 1000
       stopTimeoutMillis: 2000
+    maxInboundBackpressureFailures: 3
 
   demo:
     autoLaunchBrowser: false

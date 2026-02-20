@@ -69,6 +69,9 @@ data class AppConfig(
         require(transport.telnet.maxNonPrintablePerLine >= 0) {
             "ambonMUD.transport.telnet.maxNonPrintablePerLine must be >= 0"
         }
+        require(transport.maxInboundBackpressureFailures > 0) {
+            "ambonMUD.transport.maxInboundBackpressureFailures must be > 0"
+        }
 
         require(transport.websocket.host.isNotBlank()) { "ambonMUD.transport.websocket.host must be non-blank" }
         require(transport.websocket.stopGraceMillis >= 0L) { "ambonMUD.transport.websocket.stopGraceMillis must be >= 0" }
@@ -157,6 +160,7 @@ data class SchedulerEngineConfig(
 data class TransportConfig(
     val telnet: TelnetTransportConfig = TelnetTransportConfig(),
     val websocket: WebSocketTransportConfig = WebSocketTransportConfig(),
+    val maxInboundBackpressureFailures: Int = 3,
 )
 
 data class TelnetTransportConfig(
