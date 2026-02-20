@@ -219,7 +219,8 @@ class CommandRouterTest {
 
             assertTrue(
                 outs.any {
-                    it is OutboundEvent.SendError && it.sessionId == alice &&
+                    it is OutboundEvent.SendError &&
+                        it.sessionId == alice &&
                         it.text.contains(
                             "No such player",
                             ignoreCase = true,
@@ -256,14 +257,18 @@ class CommandRouterTest {
 
             assertTrue(
                 outs.any {
-                    it is OutboundEvent.SendText && it.sessionId == alice && it.text.contains("You tell", ignoreCase = true) &&
+                    it is OutboundEvent.SendText &&
+                        it.sessionId == alice &&
+                        it.text.contains("You tell", ignoreCase = true) &&
                         it.text.contains("secret")
                 },
                 "Sender should get confirmation. got=$outs",
             )
             assertTrue(
                 outs.any {
-                    it is OutboundEvent.SendText && it.sessionId == bob && it.text.contains("tells you", ignoreCase = true) &&
+                    it is OutboundEvent.SendText &&
+                        it.sessionId == bob &&
+                        it.text.contains("tells you", ignoreCase = true) &&
                         it.text.contains("secret")
                 },
                 "Target should receive tell. got=$outs",
