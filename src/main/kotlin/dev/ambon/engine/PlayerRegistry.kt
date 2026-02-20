@@ -241,5 +241,5 @@ class PlayerRegistry(
 
     private fun normalizeName(nameRaw: String): String = nameRaw.trim()
 
-    private fun normalizePassword(passwordRaw: String): String = passwordRaw.trim()
+    private fun normalizePassword(passwordRaw: String): String = passwordRaw
 }

@@ -78,4 +78,4 @@ Use `MutableClock` and `InMemoryPlayerRepository` for deterministic unit tests. 
 
 ## Known Quirks
 
-- `src/main/kotlin/dev/ambon/engine/scheduler/Schedular.kt` defines `Scheduler` — the filename is intentionally misspelled. Do not rename it without an explicit refactor task.
+None currently.

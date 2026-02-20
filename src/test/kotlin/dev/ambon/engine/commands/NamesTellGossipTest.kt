@@ -79,10 +79,12 @@ class NamesTellGossipTest {
 
             assertTrue(
                 outs.any {
-                    it is OutboundEvent.SendText && it.sessionId == a &&
+                    it is OutboundEvent.SendText &&
+                        it.sessionId == a &&
                         it.text.contains(
                             "You tell",
-                        ) && it.text.contains("hi there")
+                        ) &&
+                        it.text.contains("hi there")
                 },
                 "Sender should see confirmation. got=$outs",
             )

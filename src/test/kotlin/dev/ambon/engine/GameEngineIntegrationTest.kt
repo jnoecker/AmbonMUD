@@ -159,7 +159,7 @@ class GameEngineIntegrationTest {
         }
 
     @Test
-    fun `zone reset sends TOCK and restores spawn state`() =
+    fun `zone reset notifies players and restores spawn state`() =
         runTest {
             val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
             val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
@@ -224,8 +224,12 @@ class GameEngineIntegrationTest {
             val resetEvents = drainOutbound()
 
             assertTrue(
-                resetEvents.any { it is OutboundEvent.SendText && it.sessionId == sid && it.text == "TOCK" },
-                "Expected TOCK after zone reset; got=$resetEvents",
+                resetEvents.any {
+                    it is OutboundEvent.SendText &&
+                        it.sessionId == sid &&
+                        it.text == "The air shimmers as the area resets around you."
+                },
+                "Expected zone reset notification after zone reset; got=$resetEvents",
             )
             assertEquals(
                 1,

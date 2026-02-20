@@ -103,4 +103,4 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Keep protocol/network concerns in `transport`; keep gameplay/state transitions in `engine`.
 - Reuse deterministic test helpers (`MutableClock`, in-memory repository) where possible.
 - Do not commit runtime player save artifacts from `data/players`.
-- `src/main/kotlin/dev/ambon/engine/scheduler/Schedular.kt` defines `Scheduler`; filename is currently mismatched, so avoid accidental rename unless doing an explicit refactor.
+- The scheduler is at `src/main/kotlin/dev/ambon/engine/scheduler/Scheduler.kt`.
