@@ -164,6 +164,7 @@ object WorldLoader {
                                         damage = damage,
                                         armor = armor,
                                         constitution = constitution,
+                                        matchByKey = itemFile.matchByKey,
                                     ),
                             ),
                         roomId = roomId,

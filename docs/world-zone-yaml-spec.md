@@ -80,7 +80,10 @@ armor: <integer, optional, default 0, must be >= 0>
 constitution: <integer, optional, default 0, must be >= 0>
 room: <room-id string, optional>
 mob: <mob-id string, optional>
+matchByKey: <boolean, optional, default false>
 ```
+
+`matchByKey` — optional boolean (default `false`). When `true`, players must type the exact keyword; substring-based fallback on `displayName` and `description` is disabled. Use for intentionally hidden or keyword-gated items.
 
 Location rules for items:
 
