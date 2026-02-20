@@ -1,0 +1,58 @@
+defaultStyle: body
+styles:
+  plain:
+    ansi: []
+  border:
+    ansi:
+      - bright_blue
+  title:
+    ansi:
+      - bold
+      - bright_yellow
+  dragon:
+    ansi:
+      - bright_magenta
+  lightning:
+    ansi:
+      - bright_yellow
+  tower:
+    ansi:
+      - bright_cyan
+  tip:
+    ansi:
+      - bold
+      - bright_green
+  body:
+    ansi:
+      - bright_cyan
+lineStyles:
+  - border
+  - title
+  - border
+  - plain
+  - body
+  - body
+  - body
+  - dragon
+  - plain
+  - body
+  - lightning
+  - lightning
+  - body
+  - body
+  - body
+  - body
+  - plain
+  - plain
+  - tower
+  - tower
+  - tower
+  - tower
+  - tower
+  - tower
+  - tower
+  - tower
+  - plain
+  - border
+  - tip
+  - border

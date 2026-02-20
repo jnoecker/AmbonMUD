@@ -22,6 +22,10 @@ sealed interface OutboundEvent {
         val sessionId: SessionId,
     ) : OutboundEvent
 
+    data class ShowLoginScreen(
+        val sessionId: SessionId,
+    ) : OutboundEvent
+
     data class SetAnsi(
         val sessionId: SessionId,
         val enabled: Boolean,

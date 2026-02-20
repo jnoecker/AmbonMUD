@@ -2,6 +2,9 @@ package dev.ambon.transport
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.ui.login.LoginScreen
+import dev.ambon.ui.login.LoginScreenLoader
+import dev.ambon.ui.login.LoginScreenRenderer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -12,7 +15,15 @@ import java.util.concurrent.ConcurrentHashMap
 class OutboundRouter(
     private val engineOutbound: ReceiveChannel<OutboundEvent>,
     private val scope: CoroutineScope,
+    private val loginScreen: LoginScreen = LoginScreenLoader.load(),
+    private val loginScreenRenderer: LoginScreenRenderer = LoginScreenRenderer(),
 ) {
+    init {
+        require(loginScreen.isValid()) {
+            "LoginScreen is invalid: lines=${loginScreen.lines.size}, ansiPrefixesByLine=${loginScreen.ansiPrefixesByLine.size}"
+        }
+    }
+
     private data class SessionSink(
         val queue: Channel<String>,
         val close: (String) -> Unit,
@@ -56,6 +67,10 @@ class OutboundRouter(
                         sendPrompt(ev.sessionId)
                     }
 
+                    is OutboundEvent.ShowLoginScreen -> {
+                        showLoginScreen(ev.sessionId)
+                    }
+
                     is OutboundEvent.SetAnsi -> {
                         setAnsi(ev.sessionId, ev.enabled)
                     }
@@ -84,16 +99,9 @@ class OutboundRouter(
     ) {
         val sink = sinks[sessionId] ?: return
         val framed = sink.renderer.renderLine(text, kind)
-
-        val ok = sink.queue.trySend(framed).isSuccess
-        if (ok) {
+        if (enqueueFramed(sessionId, sink, framed)) {
             sink.lastEnqueuedWasPrompt = false
-            return
         }
-
-        sinks.remove(sessionId)
-        sink.close("Disconnected: client too slow (outbound backpressure)")
-        sink.queue.close()
     }
 
     private fun sendPrompt(sessionId: SessionId) {
@@ -115,7 +123,21 @@ class OutboundRouter(
     ) {
         val sink = sinks[sessionId] ?: return
         sink.renderer = if (enabled) AnsiRenderer() else PlainRenderer()
-        sink.lastEnqueuedWasPrompt = false // optional: keep coalescing predictable
+        sink.lastEnqueuedWasPrompt = false
+    }
+
+    private fun showLoginScreen(sessionId: SessionId) {
+        val sink = sinks[sessionId] ?: return
+        val ansiEnabled = sink.renderer is AnsiRenderer
+        val frames = loginScreenRenderer.render(loginScreen, ansiEnabled)
+
+        for (frame in frames) {
+            if (!enqueueFramed(sessionId, sink, frame)) {
+                return
+            }
+        }
+
+        sink.lastEnqueuedWasPrompt = false
     }
 
     private fun clearScreen(sessionId: SessionId) {
@@ -126,8 +148,9 @@ class OutboundRouter(
             return
         }
         // ESC[2J clears, ESC[H homes cursor
-        sink.queue.trySend("\u001B[2J\u001B[H")
-        sink.lastEnqueuedWasPrompt = false
+        if (enqueueFramed(sessionId, sink, "\u001B[2J\u001B[H")) {
+            sink.lastEnqueuedWasPrompt = false
+        }
     }
 
     private fun showAnsiDemo(sessionId: SessionId) {
@@ -138,7 +161,6 @@ class OutboundRouter(
             return
         }
 
-        val reset = "\u001B[0m"
         val demo =
             buildString {
                 append("\u001B[90mbright black\u001B[0m  ")
@@ -150,9 +172,31 @@ class OutboundRouter(
                 append("\u001B[96mbright cyan\u001B[0m  ")
                 append("\u001B[97mbright white\u001B[0m")
                 append("\r\n")
-                append(reset)
+                append("\u001B[0m")
             }
-        sink.queue.trySend(demo)
-        sink.lastEnqueuedWasPrompt = false
+        if (enqueueFramed(sessionId, sink, demo)) {
+            sink.lastEnqueuedWasPrompt = false
+        }
+    }
+
+    private fun enqueueFramed(
+        sessionId: SessionId,
+        sink: SessionSink,
+        framed: String,
+    ): Boolean {
+        val ok = sink.queue.trySend(framed).isSuccess
+        if (ok) return true
+
+        disconnectSlowClient(sessionId, sink)
+        return false
+    }
+
+    private fun disconnectSlowClient(
+        sessionId: SessionId,
+        sink: SessionSink,
+    ) {
+        sinks.remove(sessionId)
+        sink.close("Disconnected: client too slow (outbound backpressure)")
+        sink.queue.close()
     }
 }
