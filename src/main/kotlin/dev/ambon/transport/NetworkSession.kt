@@ -20,6 +20,9 @@ class NetworkSession(
     private val outboundQueue: Channel<String>,
     private val onDisconnected: () -> Unit,
     private val scope: CoroutineScope,
+    private val lineMaxLength: Int = 1024,
+    private val maxNonPrintablePerLine: Int = 32,
+    private val readBufferBytes: Int = 4096,
 ) {
     private val disconnected = AtomicBoolean(false)
 
@@ -36,11 +39,15 @@ class NetworkSession(
     }
 
     private suspend fun readLoop() {
-        val decoder = TelnetLineDecoder(maxLineLen = 1024)
+        val decoder =
+            TelnetLineDecoder(
+                maxLineLen = lineMaxLength,
+                maxNonPrintablePerLine = maxNonPrintablePerLine,
+            )
         try {
             inbound.send(InboundEvent.Connected(sessionId))
             val input = socket.getInputStream()
-            val buf = ByteArray(4096)
+            val buf = ByteArray(readBufferBytes)
 
             while (true) {
                 val n = input.read(buf)

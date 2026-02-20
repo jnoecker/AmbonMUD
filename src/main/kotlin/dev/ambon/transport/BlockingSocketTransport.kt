@@ -17,6 +17,10 @@ class BlockingSocketTransport(
     private val outboundRouter: OutboundRouter,
     private val sessionIdFactory: () -> SessionId,
     private val scope: CoroutineScope,
+    private val sessionQueueCapacity: Int = 200,
+    private val lineMaxLength: Int = 1024,
+    private val maxNonPrintablePerLine: Int = 32,
+    private val readBufferBytes: Int = 4096,
 ) : Transport {
     private var serverSocket: ServerSocket? = null
     private var acceptJob: Job? = null
@@ -29,7 +33,7 @@ class BlockingSocketTransport(
                     val sock = serverSocket!!.accept()
                     sock.tcpNoDelay = true
                     val sessionId = sessionIdFactory()
-                    val outboundQueue = Channel<String>(capacity = 200)
+                    val outboundQueue = Channel<String>(capacity = sessionQueueCapacity)
                     val session =
                         NetworkSession(
                             sessionId = sessionId,
@@ -38,6 +42,9 @@ class BlockingSocketTransport(
                             outboundQueue = outboundQueue,
                             onDisconnected = { outboundRouter.unregister(sessionId) },
                             scope = scope,
+                            lineMaxLength = lineMaxLength,
+                            maxNonPrintablePerLine = maxNonPrintablePerLine,
+                            readBufferBytes = readBufferBytes,
                         )
                     outboundRouter.register(sessionId, outboundQueue) { reason ->
                         session.closeNow(reason)

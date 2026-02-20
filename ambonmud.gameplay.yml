@@ -1,0 +1,20 @@
+gameplay:
+  engineTickMillis: 100
+  schedulerMaxActionsPerTick: 100
+  loginMaxWrongPasswordRetries: 3
+  loginMaxFailedLoginAttemptsBeforeDisconnect: 3
+  mob:
+    minWanderDelayMillis: 5000
+    maxWanderDelayMillis: 12000
+    maxMovesPerTick: 10
+  combat:
+    tickMillis: 1000
+    minDamage: 1
+    maxDamage: 4
+    maxCombatsPerTick: 20
+  regen:
+    baseIntervalMs: 5000
+    minIntervalMs: 1000
+    msPerConstitution: 200
+    regenAmount: 1
+    maxPlayersPerTick: 50

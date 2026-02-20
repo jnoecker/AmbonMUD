@@ -10,6 +10,7 @@ data class ScheduledAction(
 
 class Scheduler(
     private val clock: Clock,
+    private val defaultMaxActionsPerRun: Int = 100,
 ) {
     private val pq =
         PriorityQueue<ScheduledAction>(compareBy { it.dueAtEpochMs })
@@ -34,7 +35,7 @@ class Scheduler(
      * Run all actions due as of now, but cap execution so a bad schedule can't
      * starve the engine.
      */
-    suspend fun runDue(maxActions: Int = 100) {
+    suspend fun runDue(maxActions: Int = defaultMaxActionsPerRun) {
         val now = clock.millis()
         var ran = 0
         while (ran < maxActions) {

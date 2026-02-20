@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
 class OutboundRouter(
     private val engineOutbound: ReceiveChannel<OutboundEvent>,
     private val scope: CoroutineScope,
+    promptText: String = "> ",
 ) {
     private data class SessionSink(
         val queue: Channel<String>,
@@ -22,7 +23,7 @@ class OutboundRouter(
 
     private val sinks = ConcurrentHashMap<SessionId, SessionSink>()
 
-    private val promptSpec = PromptSpec(text = "> ")
+    private val promptSpec = PromptSpec(text = promptText)
 
     fun register(
         sessionId: SessionId,

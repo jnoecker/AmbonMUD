@@ -50,7 +50,7 @@ tasks.register<JavaExec>("demo") {
     mainClass.set(application.mainClass)
     classpath = project.extensions.getByType(org.gradle.api.tasks.SourceSetContainer::class.java)["main"].runtimeClasspath
     standardInput = System.`in`
-    systemProperty("quickmud.demo.autolaunchBrowser", "true")
+    systemProperty("ambonmud.deployment.demoAutoLaunchBrowser", "true")
 }
 
 ktlint {

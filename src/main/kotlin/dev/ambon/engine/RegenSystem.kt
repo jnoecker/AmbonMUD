@@ -14,6 +14,7 @@ class RegenSystem(
     private val minIntervalMs: Long = 1_000L,
     private val msPerConstitution: Long = 200L,
     private val regenAmount: Int = 1,
+    private val maxPlayersPerTick: Int = 50,
 ) {
     private val lastRegenAtMs = mutableMapOf<SessionId, Long>()
 
@@ -21,7 +22,7 @@ class RegenSystem(
         lastRegenAtMs.remove(sessionId)
     }
 
-    fun tick(maxPlayersPerTick: Int = 50) {
+    fun tick(maxPlayersPerTick: Int = this.maxPlayersPerTick) {
         val now = clock.millis()
         var ran = 0
 

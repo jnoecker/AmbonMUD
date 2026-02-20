@@ -29,6 +29,10 @@ class KtorWebSocketTransport(
     private val outboundRouter: OutboundRouter,
     private val sessionIdFactory: () -> SessionId,
     private val host: String = "0.0.0.0",
+    private val sessionQueueCapacity: Int = 200,
+    private val stopGracePeriodMillis: Long = 1_000L,
+    private val stopTimeoutMillis: Long = 2_000L,
+    private val maxCloseReasonLength: Int = DEFAULT_MAX_CLOSE_REASON_LENGTH,
 ) : Transport {
     private var engine: ApplicationEngine? = null
 
@@ -39,12 +43,14 @@ class KtorWebSocketTransport(
                     inbound = inbound,
                     outboundRouter = outboundRouter,
                     sessionIdFactory = sessionIdFactory,
+                    sessionQueueCapacity = sessionQueueCapacity,
+                    maxCloseReasonLength = maxCloseReasonLength,
                 )
             }.start(wait = false)
     }
 
     override suspend fun stop() {
-        engine?.stop(gracePeriodMillis = 1_000, timeoutMillis = 2_000)
+        engine?.stop(gracePeriodMillis = stopGracePeriodMillis, timeoutMillis = stopTimeoutMillis)
         engine = null
     }
 }
@@ -53,6 +59,8 @@ internal fun Application.quickMudWebModule(
     inbound: SendChannel<InboundEvent>,
     outboundRouter: OutboundRouter,
     sessionIdFactory: () -> SessionId,
+    sessionQueueCapacity: Int = 200,
+    maxCloseReasonLength: Int = DEFAULT_MAX_CLOSE_REASON_LENGTH,
 ) {
     install(WebSockets)
 
@@ -62,6 +70,8 @@ internal fun Application.quickMudWebModule(
                 inbound = inbound,
                 outboundRouter = outboundRouter,
                 sessionIdFactory = sessionIdFactory,
+                sessionQueueCapacity = sessionQueueCapacity,
+                maxCloseReasonLength = maxCloseReasonLength,
             )
         }
 
@@ -77,9 +87,11 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
     inbound: SendChannel<InboundEvent>,
     outboundRouter: OutboundRouter,
     sessionIdFactory: () -> SessionId,
+    sessionQueueCapacity: Int,
+    maxCloseReasonLength: Int,
 ) {
     val sessionId = sessionIdFactory()
-    val outboundQueue = Channel<String>(capacity = 200)
+    val outboundQueue = Channel<String>(capacity = sessionQueueCapacity)
     val disconnected = AtomicBoolean(false)
     val disconnectReason = AtomicReference("EOF")
 
@@ -98,7 +110,11 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
     outboundRouter.register(sessionId, outboundQueue) { reason ->
         this@bridgeWebSocketSession.launch {
             noteDisconnectReason(reason)
-            runCatching { this@bridgeWebSocketSession.close(CloseReason(CloseReason.Codes.NORMAL, sanitizeCloseReason(reason))) }
+            runCatching {
+                this@bridgeWebSocketSession.close(
+                    CloseReason(CloseReason.Codes.NORMAL, sanitizeCloseReason(reason, maxCloseReasonLength)),
+                )
+            }
         }
     }
 
@@ -173,7 +189,10 @@ internal fun splitIncomingLines(payload: String): List<String> {
     return if (lines.isEmpty()) listOf(payload) else lines
 }
 
-private fun sanitizeCloseReason(reason: String): String {
+private fun sanitizeCloseReason(
+    reason: String,
+    maxCloseReasonLength: Int,
+): String {
     val cleaned =
         reason
             .replace('\r', ' ')
@@ -181,9 +200,9 @@ private fun sanitizeCloseReason(reason: String): String {
             .trim()
     return when {
         cleaned.isEmpty() -> "closed"
-        cleaned.length <= MAX_CLOSE_REASON_LENGTH -> cleaned
-        else -> cleaned.take(MAX_CLOSE_REASON_LENGTH)
+        cleaned.length <= maxCloseReasonLength -> cleaned
+        else -> cleaned.take(maxCloseReasonLength)
     }
 }
 
-private const val MAX_CLOSE_REASON_LENGTH = 123
+private const val DEFAULT_MAX_CLOSE_REASON_LENGTH = 123

@@ -20,6 +20,7 @@ class CombatSystem(
     private val tickMillis: Long = 1_000L,
     private val minDamage: Int = 1,
     private val maxDamage: Int = 4,
+    private val maxCombatsPerTick: Int = 20,
     private val onMobRemoved: (MobId) -> Unit = {},
 ) {
     private data class Fight(
@@ -112,7 +113,7 @@ class CombatSystem(
         outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
     }
 
-    suspend fun tick(maxCombatsPerTick: Int = 20) {
+    suspend fun tick(maxCombatsPerTick: Int = this.maxCombatsPerTick) {
         val now = clock.millis()
         var ran = 0
         val fights = fightsByPlayer.values.toMutableList()

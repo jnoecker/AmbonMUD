@@ -20,6 +20,7 @@ class MobSystem(
     // Tuning knobs (defaults feel “MUD-like”)
     private val minWanderDelayMillis: Long = 5_000L,
     private val maxWanderDelayMillis: Long = 12_000L,
+    private val maxMovesPerTick: Int = 10,
 ) {
     // Next scheduled action time per mob
     private val nextActAtMillis = mutableMapOf<MobId, Long>()
@@ -28,7 +29,7 @@ class MobSystem(
      * Called frequently (e.g. every engine tick). This method is time-gated;
      * it will only move mobs whose cooldown has expired.
      */
-    suspend fun tick(maxMovesPerTick: Int = 10) {
+    suspend fun tick(maxMovesPerTick: Int = this.maxMovesPerTick) {
         val now = clock.millis()
         var moves = 0
 

@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import dev.ambon.config.GameplayConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
@@ -28,15 +29,48 @@ class GameEngine(
     private val clock: Clock,
     private val tickMillis: Long,
     private val scheduler: Scheduler,
+    private val gameplay: GameplayConfig = GameplayConfig(),
 ) {
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
             .filterValues { it > 0L }
             .mapValuesTo(mutableMapOf()) { (_, minutes) -> clock.millis() + minutesToMillis(minutes) }
 
-    private val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
-    private val combatSystem = CombatSystem(players, mobs, items, outbound, clock = clock, onMobRemoved = mobSystem::onMobRemoved)
-    private val regenSystem = RegenSystem(players, items, clock = clock)
+    private val mobSystem =
+        MobSystem(
+            world = world,
+            mobs = mobs,
+            players = players,
+            outbound = outbound,
+            clock = clock,
+            minWanderDelayMillis = gameplay.mob.minWanderDelayMillis,
+            maxWanderDelayMillis = gameplay.mob.maxWanderDelayMillis,
+            maxMovesPerTick = gameplay.mob.maxMovesPerTick,
+        )
+    private val combatSystem =
+        CombatSystem(
+            players = players,
+            mobs = mobs,
+            items = items,
+            outbound = outbound,
+            clock = clock,
+            tickMillis = gameplay.combat.tickMillis,
+            minDamage = gameplay.combat.minDamage,
+            maxDamage = gameplay.combat.maxDamage,
+            maxCombatsPerTick = gameplay.combat.maxCombatsPerTick,
+            onMobRemoved = mobSystem::onMobRemoved,
+        )
+    private val regenSystem =
+        RegenSystem(
+            players = players,
+            items = items,
+            clock = clock,
+            baseIntervalMs = gameplay.regen.baseIntervalMs,
+            minIntervalMs = gameplay.regen.minIntervalMs,
+            msPerConstitution = gameplay.regen.msPerConstitution,
+            regenAmount = gameplay.regen.regenAmount,
+            maxPlayersPerTick = gameplay.regen.maxPlayersPerTick,
+        )
 
     private val router = CommandRouter(world, players, mobs, items, combatSystem, outbound)
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
@@ -45,8 +79,8 @@ class GameEngine(
     private val invalidNameMessage =
         "Invalid name. Use 2-16 chars: letters/digits/_ and cannot start with digit."
     private val invalidPasswordMessage = "Invalid password. Use 1-72 chars."
-    private val maxWrongPasswordRetries = 3
-    private val maxFailedLoginAttemptsBeforeDisconnect = 3
+    private val maxWrongPasswordRetries = gameplay.loginMaxWrongPasswordRetries
+    private val maxFailedLoginAttemptsBeforeDisconnect = gameplay.loginMaxFailedLoginAttemptsBeforeDisconnect
 
     private sealed interface LoginState {
         data object AwaitingName : LoginState
@@ -83,16 +117,16 @@ class GameEngine(
                 }
 
                 // Simulate NPC actions (time-gated internally)
-                mobSystem.tick(maxMovesPerTick = 10)
+                mobSystem.tick()
 
                 // Simulate combat (time-gated internally)
-                combatSystem.tick(maxCombatsPerTick = 20)
+                combatSystem.tick()
 
                 // Regenerate player HP (time-gated internally)
-                regenSystem.tick(maxPlayersPerTick = 50)
+                regenSystem.tick()
 
                 // Run scheduled actions (bounded)
-                scheduler.runDue(maxActions = 100)
+                scheduler.runDue()
 
                 // Reset zones when their lifespan elapses.
                 resetZonesIfDue()

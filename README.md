@@ -57,7 +57,35 @@ telnet localhost 4000
 http://localhost:8080
 ```
 
-The server listens on telnet port 4000 and web port 8080 (see `src/main/kotlin/dev/ambon/Main.kt`).
+The default server listens on telnet port 4000 and web port 8080.
+
+Configuration
+-------------
+Runtime configuration now lives in two root-level files:
+- `ambonmud.yml` (deployment/runtime: ports, paths, transport sizing, prompt, world resources, demo browser launch).
+- `ambonmud.gameplay.yml` (engine/gameplay tuning: tick rate, scheduler cap, login limits, mob/combat/regen tuning).
+
+Override precedence is:
+1. built-in defaults
+2. `ambonmud.yml`
+3. `ambonmud.gameplay.yml`
+4. `AMBONMUD_*` environment variables
+5. `ambonmud.*` JVM system properties
+
+Examples:
+
+```powershell
+$env:AMBONMUD_DEPLOYMENT_TELNET_PORT = "5000"
+$env:AMBONMUD_GAMEPLAY_ENGINE_TICK_MILLIS = "75"
+.\gradlew.bat run
+```
+
+```powershell
+.\gradlew.bat -Dambonmud.deployment.webPort=8181 -Dambonmud.gameplay.combat.maxDamage=6 run
+```
+
+Demo mode now uses `ambonmud.deployment.demoAutoLaunchBrowser=true`.
+The legacy `quickmud.demo.autolaunchBrowser` system property is still accepted.
 
 Login
 -----
