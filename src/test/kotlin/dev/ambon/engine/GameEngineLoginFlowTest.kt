@@ -317,6 +317,27 @@ class GameEngineLoginFlowTest {
 
             inbound.send(InboundEvent.LineReceived(sid, "NewUser"))
             inbound.send(InboundEvent.LineReceived(sid, "yes"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val afterYes = drainOutbound(outbound)
+            assertTrue(
+                afterYes.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text == "Create a password:"
+                },
+                "Expected create-password prompt after confirmation. got=$afterYes",
+            )
+            assertFalse(
+                afterYes.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text == "Password:"
+                },
+                "Did not expect existing-user password prompt for new-account flow. got=$afterYes",
+            )
+
             inbound.send(InboundEvent.LineReceived(sid, "password"))
             advanceTimeBy(tickMillis)
             runCurrent()
