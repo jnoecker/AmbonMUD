@@ -18,6 +18,8 @@ sealed interface LoginResult {
     data object Taken : LoginResult
 
     data object WrongPassword : LoginResult
+
+    data class Takeover(val oldSessionId: SessionId) : LoginResult
 }
 
 sealed interface CreateResult {
@@ -54,8 +56,6 @@ class PlayerRegistry(
         val name = normalizeName(nameRaw)
         if (!isValidName(name)) return LoginResult.InvalidName
 
-        if (isNameOnline(name, sessionId)) return LoginResult.Taken
-
         val password = normalizePassword(passwordRaw)
         if (!isValidPassword(password)) return LoginResult.InvalidPassword
 
@@ -82,6 +82,12 @@ class PlayerRegistry(
                     CreateResult.Taken -> LoginResult.Taken
                 }
             }
+
+        if (isNameOnline(name, sessionId)) {
+            val oldSid = findSessionByName(name)!!
+            takeoverSession(oldSid, sessionId, boundRecord, now)
+            return LoginResult.Takeover(oldSid)
+        }
 
         bindSession(sessionId, boundRecord, now)
         return LoginResult.Ok
@@ -241,6 +247,30 @@ class PlayerRegistry(
             if (!ok) return false
         }
         return true
+    }
+
+    private suspend fun takeoverSession(
+        oldSid: SessionId,
+        newSid: SessionId,
+        boundRecord: PlayerRecord,
+        now: Long,
+    ) {
+        val oldPs = players[oldSid] ?: return
+        val newPs = oldPs.copy(sessionId = newSid, ansiEnabled = boundRecord.ansiEnabled)
+
+        players.remove(oldSid)
+        players[newSid] = newPs
+
+        roomMembers[oldPs.roomId]?.let { members ->
+            members.remove(oldSid)
+            members.add(newSid)
+        }
+
+        sessionByLowerName[newPs.name.lowercase()] = newSid
+
+        items.remapPlayer(oldSid, newSid)
+
+        persistIfClaimed(newPs)
     }
 
     private suspend fun persistIfClaimed(ps: PlayerState) {

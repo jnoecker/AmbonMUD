@@ -357,7 +357,7 @@ class CommandRouterTest {
             val res2 = players.login(b, "alice", "password")
 
             assertEquals(LoginResult.Ok, res1)
-            assertEquals(LoginResult.Taken, res2)
+            assertTrue(res2 is LoginResult.Takeover, "Expected Takeover for duplicate name with correct password. got=$res2")
         }
 
     @Test

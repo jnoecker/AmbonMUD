@@ -17,6 +17,13 @@ class RegenSystem(
 ) {
     private val lastRegenAtMs = mutableMapOf<SessionId, Long>()
 
+    fun remapSession(
+        oldSid: SessionId,
+        newSid: SessionId,
+    ) {
+        lastRegenAtMs.remove(oldSid)?.let { lastRegenAtMs[newSid] = it }
+    }
+
     fun onPlayerDisconnected(sessionId: SessionId) {
         lastRegenAtMs.remove(sessionId)
     }

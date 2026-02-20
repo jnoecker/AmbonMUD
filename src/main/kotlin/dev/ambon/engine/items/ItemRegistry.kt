@@ -154,6 +154,14 @@ class ItemRegistry {
         equippedItems.getOrPut(sessionId) { mutableMapOf() }
     }
 
+    fun remapPlayer(
+        oldSid: SessionId,
+        newSid: SessionId,
+    ) {
+        inventoryItems.remove(oldSid)?.let { inventoryItems[newSid] = it }
+        equippedItems.remove(oldSid)?.let { equippedItems[newSid] = it }
+    }
+
     fun removePlayer(sessionId: SessionId) {
         inventoryItems.remove(sessionId)
         equippedItems.remove(sessionId)
