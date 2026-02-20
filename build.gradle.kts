@@ -51,6 +51,20 @@ tasks.test {
     useJUnitPlatform()
 }
 
+// Map -Pconfig.X=Y project properties to config.override.X system properties.
+// Provides a shell-safe, uniform way to override any Hoplite config value at runtime.
+// Example: ./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
+//          ./gradlew run -Pconfig.ambonMUD.server.tickMillis=500
+fun JavaExec.applyConfigOverrides() {
+    project.properties
+        .filter { (k, _) -> k.startsWith("config.") }
+        .forEach { (k, v) -> systemProperty("config.override.$k", v.toString()) }
+}
+
+tasks.named<JavaExec>("run") {
+    applyConfigOverrides()
+}
+
 tasks.register<JavaExec>("demo") {
     group = "application"
     description = "Runs AmbonMUD and opens the browser demo client."
@@ -58,6 +72,7 @@ tasks.register<JavaExec>("demo") {
     classpath = project.extensions.getByType(org.gradle.api.tasks.SourceSetContainer::class.java)["main"].runtimeClasspath
     standardInput = System.`in`
     systemProperty("config.override.ambonMUD.demo.autoLaunchBrowser", "true")
+    applyConfigOverrides()
 }
 
 ktlint {
