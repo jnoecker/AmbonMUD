@@ -224,7 +224,11 @@ class GameEngineIntegrationTest {
             val resetEvents = drainOutbound()
 
             assertTrue(
-                resetEvents.any { it is OutboundEvent.SendText && it.sessionId == sid && it.text == "The air shimmers as the area resets around you." },
+                resetEvents.any {
+                    it is OutboundEvent.SendText &&
+                        it.sessionId == sid &&
+                        it.text == "The air shimmers as the area resets around you."
+                },
                 "Expected zone reset notification after zone reset; got=$resetEvents",
             )
             assertEquals(
