@@ -15,14 +15,17 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class GameMetrics(
     private val registry: MeterRegistry,
+    private val bindJvmMetrics: Boolean = true,
 ) {
     init {
-        JvmMemoryMetrics().bindTo(registry)
-        JvmGcMetrics().bindTo(registry)
-        JvmThreadMetrics().bindTo(registry)
-        ClassLoaderMetrics().bindTo(registry)
-        ProcessorMetrics().bindTo(registry)
-        UptimeMetrics().bindTo(registry)
+        if (bindJvmMetrics) {
+            JvmMemoryMetrics().bindTo(registry)
+            JvmGcMetrics().bindTo(registry)
+            JvmThreadMetrics().bindTo(registry)
+            ClassLoaderMetrics().bindTo(registry)
+            ProcessorMetrics().bindTo(registry)
+            UptimeMetrics().bindTo(registry)
+        }
     }
 
     private val sessionsOnlineCount = AtomicInteger(0)
@@ -30,9 +33,9 @@ class GameMetrics(
     private val wsOnlineCount = AtomicInteger(0)
 
     init {
-        Gauge.builder("sessions_online", sessionsOnlineCount) { it.get().toDouble() }.register(registry)
-        Gauge.builder("telnet_connections_online", telnetOnlineCount) { it.get().toDouble() }.register(registry)
-        Gauge.builder("ws_connections_online", wsOnlineCount) { it.get().toDouble() }.register(registry)
+        Gauge.builder("sessions_online") { sessionsOnlineCount.get().toDouble() }.register(registry)
+        Gauge.builder("telnet_connections_online") { telnetOnlineCount.get().toDouble() }.register(registry)
+        Gauge.builder("ws_connections_online") { wsOnlineCount.get().toDouble() }.register(registry)
     }
 
     private val telnetConnectedCounter =
@@ -54,16 +57,28 @@ class GameMetrics(
     private val outboundEnqueueFailedCounter =
         Counter.builder("outbound_enqueue_failed_total").register(registry)
 
-    val engineTickTimer: Timer = Timer.builder("engine_tick_duration_seconds").register(registry)
+    val engineTickTimer: Timer =
+        Timer.builder("engine_tick_duration_seconds")
+            .publishPercentileHistogram()
+            .register(registry)
     private val engineTicksCounter = Counter.builder("engine_ticks_total").register(registry)
     private val engineTickOverrunCounter = Counter.builder("engine_tick_overrun_total").register(registry)
     private val inboundEventsProcessedCounter =
         Counter.builder("engine_inbound_events_processed_total").register(registry)
 
-    val mobSystemTickTimer: Timer = Timer.builder("mob_system_tick_duration_seconds").register(registry)
-    val combatSystemTickTimer: Timer = Timer.builder("combat_system_tick_duration_seconds").register(registry)
+    val mobSystemTickTimer: Timer =
+        Timer.builder("mob_system_tick_duration_seconds")
+            .publishPercentileHistogram()
+            .register(registry)
+    val combatSystemTickTimer: Timer =
+        Timer.builder("combat_system_tick_duration_seconds")
+            .publishPercentileHistogram()
+            .register(registry)
     val regenTickTimer: Timer = Timer.builder("regen_tick_duration_seconds").register(registry)
-    val schedulerRunDueTimer: Timer = Timer.builder("scheduler_run_due_duration_seconds").register(registry)
+    val schedulerRunDueTimer: Timer =
+        Timer.builder("scheduler_run_due_duration_seconds")
+            .publishPercentileHistogram()
+            .register(registry)
 
     private val mobMovesCounter = Counter.builder("mob_moves_total").register(registry)
     private val combatsProcessedCounter = Counter.builder("combats_processed_total").register(registry)
@@ -157,18 +172,18 @@ class GameMetrics(
     fun onPlayerSaveFailure() = playerSaveFailuresCounter.increment()
 
     fun bindPlayerRegistry(supplier: () -> Int) {
-        Gauge.builder("players_online", supplier) { it().toDouble() }.register(registry)
+        Gauge.builder("players_online") { supplier().toDouble() }.register(registry)
     }
 
     fun bindMobRegistry(supplier: () -> Int) {
-        Gauge.builder("mobs_alive", supplier) { it().toDouble() }.register(registry)
+        Gauge.builder("mobs_alive") { supplier().toDouble() }.register(registry)
     }
 
     fun bindRoomsOccupied(supplier: () -> Int) {
-        Gauge.builder("rooms_occupied", supplier) { it().toDouble() }.register(registry)
+        Gauge.builder("rooms_occupied") { supplier().toDouble() }.register(registry)
     }
 
     companion object {
-        fun noop(): GameMetrics = GameMetrics(SimpleMeterRegistry())
+        fun noop(): GameMetrics = GameMetrics(SimpleMeterRegistry(), bindJvmMetrics = false)
     }
 }
