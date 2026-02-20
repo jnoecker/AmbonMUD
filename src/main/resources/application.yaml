@@ -9,6 +9,8 @@ ambonMUD:
 
   world:
     resources:
+      - world/ambon_hub.yaml
+      - world/noecker_resume.yaml
       - world/demo_ruins.yaml
 
   persistence:

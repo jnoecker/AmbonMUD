@@ -1,0 +1,308 @@
+zone: noecker_resume
+lifespan: 60
+startRoom: foyer_of_first_principles
+
+mobs:
+  curious_recruiter:
+    name: "a curious recruiter"
+    room: foyer_of_first_principles
+  pair_programmer:
+    name: "a friendly pair programmer"
+    room: kotlin_corridor
+  aws_architect:
+    name: "an AWS solutions architect"
+    room: cloud_observatory
+  legacy_ghost:
+    name: "a legacy ghost of monoliths past"
+    room: migration_bridge
+  skeptical_reviewer:
+    name: "a skeptical code reviewer"
+    room: review_gauntlet
+  oncall_pager:
+    name: "an angry on-call pager"
+    room: incident_war_room
+  interview_candidate:
+    name: "a nervous interview candidate"
+    room: karat_interview_studio
+  calm_mentor:
+    name: "a calm mentor"
+    room: mentorship_mezzanine
+  patent_lawyer:
+    name: "a patent lawyer with ink-stained fingers"
+    room: patent_annex
+  imposter_wisp:
+    name: "an imposter-syndrome wisp"
+    room: mirror_of_doubt
+
+items:
+  diogenes_lantern:
+    displayName: "Diogenes' lantern"
+    description: "A battered lantern labeled: 'Searching for an honest bug report.' It somehow makes requirements clearer."
+    slot: hand
+    damage: 1
+    room: foyer_of_first_principles
+
+  math_laurel:
+    displayName: "a laurel of mathematics"
+    description: "A woven laurel that smells faintly of chalk dust and proofs."
+    slot: head
+    constitution: 1
+    room: duquesne_hall
+
+  cs_diploma_scroll:
+    displayName: "a computer science diploma scroll"
+    description: "It unfurls into clean interfaces, invariants, and a gentle warning about undefined behavior."
+    room: duquesne_hall
+
+  valedictorian_medal:
+    displayName: "a valedictorian medal"
+    description: "Bright enough to blind your inner critic for a moment."
+    slot: head
+    armor: 1
+    room: graduation_stage
+
+  aws_cert_badge:
+    displayName: "an AWS certification badge"
+    description: "Stamped: 'Solutions Architect – Associate'. It hums when you draw boxes and arrows."
+    slot: hand
+    armor: 1
+    room: cloud_observatory
+
+  well_architected_shield:
+    displayName: "a Well-Architected shield"
+    description: "Reliability on the front. Cost control on the back. It blocks questionable defaults."
+    slot: hand
+    armor: 2
+    room: migration_bridge
+
+  ci_cd_wrench:
+    displayName: "a CI/CD wrench"
+    description: "Turn it once and deployment time drops. Turn it twice and someone asks for 'just one more pipeline'."
+    slot: hand
+    damage: 1
+    room: pipeline_foundry
+
+  observability_compass:
+    displayName: "an observability compass"
+    description: "Points toward structured logs, metrics, traces, and the root cause you missed the first time."
+    room: incident_war_room
+
+  serverless_talisman:
+    displayName: "a serverless talisman"
+    description: "Etched with Lambda, API Gateway, SQS, and DynamoDB. It prefers small, sharp responsibilities."
+    slot: hand
+    constitution: 1
+    room: serverless_shrine
+
+  interview_clipboard:
+    displayName: "an interview clipboard"
+    description: "Covered in rubric checkboxes and notes like: 'clarity', 'tradeoffs', 'production readiness'."
+    room: karat_interview_studio
+
+  mentorship_notebook:
+    displayName: "a mentorship notebook"
+    description: "Packed with mock interview drills, actionable feedback, and tiny celebrations of progress."
+    room: mentorship_mezzanine
+
+  apprenticeship_syllabus:
+    displayName: "an apprenticeship syllabus"
+    description: "State-approved and surprisingly battle-tested. The margins contain hard-earned advice."
+    room: apprenticeship_classroom
+
+  patent_scroll:
+    displayName: "a patent scroll"
+    description: "Authorship Technologies—names and numbers in neat rows. It crackles with reproducible results."
+    room: patent_annex
+
+  cost_savings_coin:
+    displayName: "a heavy cost-savings coin"
+    description: "Stamped: '$100K/month'. It clinks whenever you replace an expensive data source with a smarter one."
+    room: optimization_vault
+
+rooms:
+  foyer_of_first_principles:
+    title: "Foyer of First Principles"
+    description: "A bright entryway lined with whiteboards. Every question here becomes: 'What do we know, exactly?' Doorways lead into a career built on backend systems, careful tradeoffs, and a suspiciously logical mindset."
+    exits:
+      n: timeline_corridor
+      e: mirror_of_doubt
+      w: ambon_hub:hall_of_portals
+
+  mirror_of_doubt:
+    title: "Mirror of Doubt"
+    description: "A mirror that reflects you with a tooltip reading 'Are you sure you deserve this?' Strangely, the reflection fades when you list concrete accomplishments out loud."
+    exits:
+      w: foyer_of_first_principles
+      n: mentorship_mezzanine
+
+  timeline_corridor:
+    title: "Timeline Corridor"
+    description: "A long hallway with plaques arranged in chronological order. The air smells like fresh commits and old lessons."
+    exits:
+      s: foyer_of_first_principles
+      n: proteus_workbench
+
+  proteus_workbench:
+    title: "PROTEUS Workbench"
+    description: "A practical workshop full of half-disassembled systems and the joy of getting real software shipped. You can almost hear the early-career momentum building."
+    exits:
+      s: timeline_corridor
+      n: juola_labs
+
+  juola_labs:
+    title: "Juola Labs"
+    description: "A research-minded lab where the most dangerous monster is an unrepeatable experiment. Notes on linguistic attribution are stacked everywhere, each annotated for correctness and reproducibility."
+    exits:
+      s: proteus_workbench
+      e: patent_annex
+      n: authorship_foundry
+
+  authorship_foundry:
+    title: "Authorship Foundry"
+    description: "A forge where text becomes signals, and signals become systems. Everything is explainable or it doesn't count."
+    exits:
+      s: juola_labs
+      n: signify_market
+
+  patent_annex:
+    title: "Patent Annex"
+    description: "A quiet side room with framed filings. On the wall: 'Authorship Technologies' and two U.S. patent numbers—proof that the ideas made it out of the lab and into the world."
+    exits:
+      w: juola_labs
+
+  signify_market:
+    title: "Signifyd Market Street"
+    description: "A bustling street where risk decisions move fast and correctness matters. Service boundaries and data flow diagrams are etched into the cobblestones."
+    exits:
+      s: authorship_foundry
+      n: review_gauntlet
+      e: optimization_vault
+
+  optimization_vault:
+    title: "Optimization Vault"
+    description: "A vault of graphs and invoices. A ledger reads: 'Reduced recurring data costs by approximately $100K/month' beside notes on vendor evaluation and smarter sourcing."
+    exits:
+      w: signify_market
+
+  review_gauntlet:
+    title: "Review Gauntlet"
+    description: "A corridor of pull requests guarded by sharp questions: 'What’s the failure mode?' 'What’s the blast radius?' 'Where’s the metric?' The right answers open doors."
+    exits:
+      s: signify_market
+      n: enzyme_workshop
+
+  enzyme_workshop:
+    title: "Enzyme Workshop"
+    description: "A clean room for building systems that must be auditable and correct. Regulatory constraints hover like runes—demanding validation, traceability, and careful data handling."
+    exits:
+      s: review_gauntlet
+      e: fda_archive
+      n: freelance_crossroads
+
+  fda_archive:
+    title: "FDA 510(k) Archive"
+    description: "Shelves of documents and extraction pipelines. A sign says: 'Automate the boring parts, never compromise the audit trail.'"
+    exits:
+      w: enzyme_workshop
+
+  freelance_crossroads:
+    title: "Freelance Crossroads"
+    description: "A crossroads labeled 'Noecker & Associates'. The paths are ambiguous, requirements incomplete, and expectations high—exactly the sort of place staff-level scope is forged."
+    exits:
+      s: enzyme_workshop
+      n: migration_bridge
+      e: pipeline_foundry
+      w: kotlin_corridor
+
+  migration_bridge:
+    title: "Migration Bridge"
+    description: "A bridge spanning a chasm labeled 'Legacy → Cloud'. Each plank is a careful step: incremental delivery, backward compatibility, operational safety. The Well-Architected shield hangs here like a blessing and a warning."
+    exits:
+      s: freelance_crossroads
+      n: serverless_shrine
+
+  serverless_shrine:
+    title: "Serverless Shrine"
+    description: "A shrine etched with Lambda, API Gateway, SQS, and DynamoDB. Offerings include small functions, clean contracts, and a refusal to let queues become mystery meat."
+    exits:
+      s: migration_bridge
+      n: cloud_observatory
+
+  pipeline_foundry:
+    title: "Pipeline Foundry"
+    description: "A foundry of Jenkins gears and Docker valves. A banner reads: 'Reduced deployment time by 60%'. The machines thrum with repeatability."
+    exits:
+      w: freelance_crossroads
+      n: incident_war_room
+
+  incident_war_room:
+    title: "Incident War Room"
+    description: "Screens glow with dashboards. Structured logs march in disciplined rows. Traces thread through services like bright string, shortening the distance between symptom and cause."
+    exits:
+      s: pipeline_foundry
+      e: cloud_observatory
+      n: karat_interview_studio
+
+  cloud_observatory:
+    title: "Cloud Observatory"
+    description: "An observatory of AWS diagrams and cost curves. From here you can see the whole system—reliability, observability, and cost control aligned like constellations."
+    exits:
+      w: incident_war_room
+      s: serverless_shrine
+      n: mentorship_mezzanine
+
+  kotlin_corridor:
+    title: "Kotlin Corridor"
+    description: "A bright corridor with JVM runes and Spring-shaped arches. Type safety and expressiveness make the air feel crisp."
+    exits:
+      e: freelance_crossroads
+      n: duquesne_hall
+
+  karat_interview_studio:
+    title: "Karat Interview Studio"
+    description: "A studio with a timer on the wall and a thousand tiny stories in the chairs. A chalkboard reads: '3,000+ technical interviews' and 'calibrated feedback on tradeoffs, clarity, and production readiness.'"
+    exits:
+      s: incident_war_room
+      n: mentorship_mezzanine
+
+  mentorship_mezzanine:
+    title: "Mentorship Mezzanine"
+    description: "A warm mezzanine overlooking a maze of interview rooms. Notes say: 'Mentored 500+ engineers' and 'Actionable feedback beats vague praise.'"
+    exits:
+      s: karat_interview_studio
+      w: mirror_of_doubt
+      n: apprenticeship_classroom
+
+  apprenticeship_classroom:
+    title: "Apprenticeship Classroom"
+    description: "A classroom with a state-approved curriculum on the lectern. The lessons are practical: fundamentals, real projects, and the gentle discipline of finishing what you start."
+    exits:
+      s: mentorship_mezzanine
+      n: duquesne_hall
+
+  duquesne_hall:
+    title: "Duquesne Hall"
+    description: "A grand hall where Computer Science and Mathematics share the same chalkboard. A plaque reads: 'B.S. Computer Science | B.A. Mathematics' and 'Graduated summa cum laude.'"
+    exits:
+      s: apprenticeship_classroom
+      n: graduation_stage
+      e: gatech_studio
+
+  gatech_studio:
+    title: "Georgia Tech Studio"
+    description: "A studio full of diagrams: machine learning, AI, robotics. Even the whiteboards feel competitive—but the notes are meticulous."
+    exits:
+      w: duquesne_hall
+
+  graduation_stage:
+    title: "Graduation Stage"
+    description: "A stage with spotlights and a podium. The crowd is a blur, but the medal is sharp: 'Valedictorian'—and the moment is yours, even if the paperwork tried to simplify it."
+    exits:
+      s: duquesne_hall
+      n: epilogue_terminal
+
+  epilogue_terminal:
+    title: "Epilogue Terminal"
+    description: "A terminal prompt waits: 'dev.ambon>' The cursor blinks like an invitation—more systems to design, more worlds to build, more silly zones to ship."
+    exits:
+      s: graduation_stage

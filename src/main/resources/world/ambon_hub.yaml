@@ -1,0 +1,25 @@
+zone: ambon_hub
+lifespan: 0
+startRoom: hall_of_portals
+
+rooms:
+  hall_of_portals:
+    title: "Hall of Portals"
+    description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving—some blank, some half-formed, all waiting for destinations. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.'"
+    exits:
+      e: noecker_resume:foyer_of_first_principles
+      n: demo_ruins:caravan_gate
+      s: blank_arches
+      w: wayfinder_gallery
+
+  blank_arches:
+    title: "Blank Arches"
+    description: "Unkeyed archways stand here like paused sentences. Their surfaces ripple faintly, showing nothing but distant starlight. Someone has chalked labels beneath them: 'COMING SOON.'"
+    exits:
+      n: hall_of_portals
+
+  wayfinder_gallery:
+    title: "Wayfinder Gallery"
+    description: "A narrow gallery lined with relief maps of places that don't exist yet. A brass needle floats over each plaque, twitching toward the hall as if eager to be used."
+    exits:
+      e: hall_of_portals
