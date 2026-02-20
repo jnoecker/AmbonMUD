@@ -6,12 +6,13 @@ AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a small, eve
 Current State
 -------------
 - Single-process server with a tick-based engine, NPC wandering, and scheduled actions.
-- Dual transport support: native telnet and browser WebSocket client (xterm.js).
+- Dual transport support: native telnet and a browser WebSocket client (xterm.js; served by the server at `/` and `/ws`).
 - Login flow with name + password (bcrypt), per-session state, and basic persistence.
-- YAML-defined, multi-zone world with validation on load.
+- YAML-defined, multi-zone world with validation on load (optional zone `lifespan` resets to respawn mobs/items).
 - Items and mobs loaded from world data; items can be in rooms or on mobs; inventory and equipment supported.
-- Wearable items support basic `damage` and `armor` stats with slots (head/body/hand).
-- Basic combat with `kill <mob>` and `flee`, resolved over ticks.
+- Wearable items support basic `damage`, `armor`, and `constitution` stats with slots (head/body/hand).
+- Basic combat with `kill <mob>` and `flee`, resolved over ticks (kills grant XP; players can level up).
+- HP regeneration over time (regen interval scales with constitution + equipment).
 - Chat and social commands (say, emote, tell, gossip), plus basic UI helpers (ANSI, clear, colors).
 
 Requirements
@@ -65,6 +66,8 @@ http://localhost:8080
 
 By default the server listens on telnet port 4000 and web port 8080. These values come from `src/main/resources/application.yaml`.
 
+Note: The web client loads xterm.js from a CDN. If you're offline, prefer telnet.
+
 Configuration
 -------------
 Runtime config is loaded via Hoplite from `src/main/resources/application.yaml`.
@@ -87,6 +90,11 @@ On Windows:
 ```powershell
 .\gradlew.bat run -Dconfig.override.ambonMUD.server.telnetPort=5000
 ```
+
+Most day-to-day tuning lives under:
+- `ambonMUD.server` (ports, tick rates, channel capacities)
+- `ambonMUD.world.resources` (which zone YAML resources to load)
+- `ambonMUD.persistence.rootDir` (where player YAML data is written)
 
 Login
 -----
@@ -153,12 +161,13 @@ Notes:
 - Room IDs and exit targets can be local (`trailhead`) or fully qualified (`zone:trailhead`).
 - `mobs` and `items` are optional; `rooms` and `startRoom` are required.
 - Items may be placed in a `room` or on a `mob` (not both).
-- Items may define `slot` (`head`, `body`, `hand`) and optional `damage`/`armor` stats.
+- Items may define `slot` (`head`, `body`, `hand`) and optional `damage`/`armor`/`constitution` stats.
 - Exit directions support `north/south/east/west/up/down` in world files.
+- Optional `lifespan` is in minutes; zones with `lifespan > 0` periodically reset mob/item spawns at runtime.
 
 Persistence
 -----------
-Player records are stored as YAML in `data/players/players`. IDs are allocated in `data/players/next_player_id.txt`. On login, the server loads or creates the player record and places the player in their saved room.
+Player records are stored as YAML under `data/players/players` (configurable via `ambonMUD.persistence.rootDir`). IDs are allocated in `data/players/next_player_id.txt`. On login, the server loads or creates the player record and places the player in their saved room.
 
 Tests
 -----
@@ -174,7 +183,8 @@ Formatting / Lint
 
 Out of Scope (Yet)
 ------------------
-- Advanced combat, stats, or character progression.
+- Rich character sheet/stats UI (for example `score`) beyond the current combat + leveling messages.
+- Advanced combat tuning, per-mob loot/XP tables, or deeper stat systems.
 - Admin tools or in-game world editing.
 - Multi-process scaling or persistence beyond YAML.
 

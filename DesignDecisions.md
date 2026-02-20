@@ -6,7 +6,7 @@ The goal is to keep the codebase easy to extend (world content, commands, transp
 ## Table of Contents
 
 1. Event-driven engine (not request/response)
-2. Transport as a replaceable adapter (telnet first)
+2. Transport as a replaceable adapter (telnet first, WebSocket added)
 3. Backpressure handled explicitly
 4. ANSI support is semantic (not sprinkled escapes)
 5. World content is data (not code)
@@ -24,7 +24,7 @@ Decision: The server runs as a long-lived event loop (tick-based) consuming inbo
 Why:
 - A MUD is a stateful real-time system, not a stateless HTTP API.
 - The event model provides a clean boundary between transport and game logic.
-- A tick loop makes it easy to add world ticks (regen, mob AI, scheduled events) without re-architecting.
+- A tick loop makes it easy to add world ticks (combat, regen, mob AI, scheduled events, zone resets) without re-architecting.
 
 Tradeoff:
 - You need to be disciplined about blocking calls. Network and disk I/O must not stall the loop.
@@ -33,15 +33,16 @@ Tradeoff:
 
 ## 2) Transport as a replaceable adapter (telnet first)
 
-Decision: Start with telnet for maximum simplicity and compatibility, while keeping the core engine unaware of telnet specifics.
+Decision: Start with telnet for maximum simplicity and compatibility, while keeping the core engine unaware of transport specifics. Add WebSockets as a second adapter (for a browser demo client) without rewriting game logic.
 
 Why:
 - Telnet gives immediate feedback and makes iteration fast.
 - The engine speaks in semantic events (SendText, SendPrompt, Close, ClearScreen) instead of raw socket writes.
-- This keeps a clean path to future transports (WebSockets, SSH) without rewriting game logic.
+- WebSockets (Ktor) provides a low-friction browser client while still bridging only lines in and framed text out.
+- This keeps a clean path to future transports (SSH, other clients) without rewriting game logic.
 
 Tradeoff:
-- Telnet negotiation and line decoding are "old-world" concerns, but they stay isolated to transport.
+- Telnet negotiation/line decoding and WebSocket framing are "edge" concerns, but they stay isolated to transport.
 
 ---
 
