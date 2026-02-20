@@ -24,10 +24,10 @@ object AmbonMudConfigLoader {
                 .empty()
                 .addDefaults()
                 .allowEmptyConfigFiles()
+                // Hoplite uses "first source wins": earlier-registered sources override later ones.
+                // Effective precedence is defaults < ambonmud.yml < ambonmud.gameplay.yml < env < JVM properties.
                 .addMapSource(propertyOverrides(systemProperties))
                 .addMapSource(envOverrides(env))
-                // Hoplite resolves conflicts using first source wins.
-                // Register in reverse so precedence is defaults < deployment < gameplay < env < system properties.
                 .addPathSource(baseDir.resolve(GAMEPLAY_FILE_NAME), optional = true)
                 .addPathSource(baseDir.resolve(DEPLOYMENT_FILE_NAME), optional = true)
                 .build()
