@@ -660,8 +660,48 @@ Edit or add YAML files in `src/main/resources/world/`, then register them in `sr
 | `engine.regen` | `baseIntervalMillis` (5000), `hpPerTick` (1), `msPerConstitution` |
 | `engine.mob` | `minWanderDelayMillis`, `maxWanderDelayMillis`, `maxMovesPerTick` |
 | `progression` | `xp.baseXp`, `xp.exponent`, `xp.linearXp`, `hpPerLevel`, `maxLevel`, `fullHealOnLevelUp` |
+| `logging` | `level` (INFO), `packageLevels` — per-package level overrides |
 
 When adding a new config key, update both `AppConfig.kt` (data class + `validated()` checks) and `application.yaml`.
+
+### Runtime Overrides
+
+Any config value can be overridden at the command line using `-P` project properties. The pattern is `-Pconfig.<key>=<value>`, which maps to Hoplite's `config.override.<key>` system property internally:
+
+```bash
+# Override root log level
+./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
+
+# Override a specific package log level
+./gradlew run -Pconfig.ambonMUD.logging.packageLevels.dev.ambon.transport=DEBUG
+
+# Override server port
+./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000
+
+# Override tick speed
+./gradlew run -Pconfig.ambonMUD.server.tickMillis=500
+```
+
+This works in all shells including Windows PowerShell — no quoting issues.
+
+### Logging
+
+Structured logging uses [Logback](https://logback.qos.ch/) + [kotlin-logging](https://github.com/oshai/kotlin-logging). Default configuration is in `src/main/resources/logback.xml` (INFO level, console output). Tests use `src/test/resources/logback-test.xml` (WARN+ only, suppresses test noise).
+
+Key log events by package:
+
+| Package | Notable Events |
+|---------|---------------|
+| `dev.ambon` (Main, MudServer) | Startup ports, metrics endpoint, server stopped |
+| `dev.ambon.engine` | Player login/logout (INFO), slow tick >2× tickMillis (WARN), unhandled tick exception (ERROR) |
+| `dev.ambon.engine.scheduler` | Failed scheduled action with throwable (ERROR), dropped actions (WARN) |
+| `dev.ambon.transport` | Bind (INFO), connection lifecycle (DEBUG), backpressure/protocol disconnect (WARN), read errors (ERROR) |
+
+To trace connection lifecycle at runtime:
+
+```bash
+./gradlew run -Pconfig.ambonMUD.logging.packageLevels.dev.ambon.transport=DEBUG
+```
 
 ---
 

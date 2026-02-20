@@ -14,6 +14,7 @@ data class AppConfig(
     val transport: TransportConfig = TransportConfig(),
     val demo: DemoConfig = DemoConfig(),
     val observability: ObservabilityConfig = ObservabilityConfig(),
+    val logging: LoggingConfig = LoggingConfig(),
 ) {
     fun validated(): AppConfig {
         require(server.telnetPort in 1..65535) { "ambonMUD.server.telnetPort must be between 1 and 65535" }
@@ -189,4 +190,9 @@ data class ObservabilityConfig(
     val metricsEnabled: Boolean = true,
     val metricsEndpoint: String = "/metrics",
     val staticTags: Map<String, String> = emptyMap(),
+)
+
+data class LoggingConfig(
+    val level: String = "INFO",
+    val packageLevels: Map<String, String> = emptyMap(),
 )

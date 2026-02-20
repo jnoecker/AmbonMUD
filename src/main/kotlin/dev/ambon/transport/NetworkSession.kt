@@ -3,6 +3,7 @@ package dev.ambon.transport
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.metrics.GameMetrics
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -12,6 +13,8 @@ import java.io.BufferedWriter
 import java.io.OutputStreamWriter
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
+
+private val log = KotlinLogging.logger {}
 
 class NetworkSession(
     val sessionId: SessionId,
@@ -48,6 +51,7 @@ class NetworkSession(
                 maxNonPrintablePerLine = maxNonPrintablePerLine,
             )
         try {
+            log.debug { "Telnet session connected: sessionId=$sessionId address=${socket.remoteSocketAddress}" }
             inbound.send(InboundEvent.Connected(sessionId))
             metrics.onTelnetConnected()
             val input = socket.getInputStream()
@@ -62,15 +66,19 @@ class NetworkSession(
                 }
             }
 
+            log.debug { "Telnet session EOF: sessionId=$sessionId" }
             metrics.onTelnetDisconnected("EOF")
             inbound.send(InboundEvent.Disconnected(sessionId, "EOF"))
         } catch (b: InboundBackpressure) {
+            log.warn { "Telnet session disconnected due to backpressure: sessionId=$sessionId" }
             metrics.onTelnetDisconnected("backpressure")
             runCatching { inbound.trySend(InboundEvent.Disconnected(sessionId, b.message ?: "inbound backpressure")) }
         } catch (v: ProtocolViolation) {
+            log.warn { "Telnet session disconnected due to protocol violation: sessionId=$sessionId message=${v.message}" }
             metrics.onTelnetDisconnected("error")
             inbound.send(InboundEvent.Disconnected(sessionId, "protocol violation: ${v.message}"))
         } catch (t: Throwable) {
+            log.error(t) { "Unexpected read error: sessionId=$sessionId" }
             metrics.onTelnetDisconnected("error")
             inbound.send(InboundEvent.Disconnected(sessionId, "read error: ${t.message}"))
         } finally {
@@ -110,6 +118,7 @@ class NetworkSession(
 
         inboundBackpressureFailures++
         metrics.onInboundBackpressureFailure()
+        log.debug { "Inbound line dropped due to backpressure: sessionId=$sessionId failures=$inboundBackpressureFailures" }
         if (inboundBackpressureFailures >= maxInboundBackpressureFailures) {
             throw InboundBackpressure("inbound backpressure")
         }

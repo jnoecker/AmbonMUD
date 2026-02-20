@@ -3,6 +3,7 @@ package dev.ambon.transport
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.metrics.GameMetrics
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -11,6 +12,8 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.net.ServerSocket
+
+private val log = KotlinLogging.logger {}
 
 class BlockingSocketTransport(
     private val port: Int,
@@ -29,12 +32,14 @@ class BlockingSocketTransport(
 
     override suspend fun start() {
         serverSocket = ServerSocket(port)
+        log.info { "Telnet listening on port $port" }
         acceptJob =
             scope.launch(Dispatchers.IO) {
                 while (isActive) {
                     val sock = serverSocket!!.accept()
                     sock.tcpNoDelay = true
                     val sessionId = sessionIdFactory()
+                    log.debug { "New telnet connection: remoteAddress=${sock.remoteSocketAddress} sessionId=$sessionId" }
                     val outboundQueue = Channel<String>(capacity = sessionOutboundQueueCapacity)
                     val session =
                         NetworkSession(
