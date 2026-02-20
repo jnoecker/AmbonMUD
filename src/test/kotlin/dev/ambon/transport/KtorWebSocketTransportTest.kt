@@ -45,7 +45,7 @@ class KtorWebSocketTransportTest {
 
                 wsClient.webSocket("/ws") {
                     assertEquals(
-                        InboundEvent.Connected(sid),
+                        InboundEvent.Connected(sid, defaultAnsiEnabled = true),
                         withTimeout(3_000) { inbound.receive() },
                     )
 
