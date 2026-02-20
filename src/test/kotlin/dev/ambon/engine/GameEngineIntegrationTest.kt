@@ -193,15 +193,6 @@ class GameEngineIntegrationTest {
                 runCurrent()
             }
 
-            fun drainOutbound(): List<OutboundEvent> {
-                val out = mutableListOf<OutboundEvent>()
-                while (true) {
-                    val ev = outbound.tryReceive().getOrNull() ?: break
-                    out += ev
-                }
-                return out
-            }
-
             val sid = SessionId(1L)
 
             runCurrent()
@@ -218,10 +209,10 @@ class GameEngineIntegrationTest {
             assertTrue(items.inventory(sid).any { it.item.keyword == "coin" })
             assertTrue(items.itemsInRoom(world.startRoom).none { it.item.keyword == "coin" })
 
-            drainOutbound()
+            drainOutbound(outbound)
 
             step(60_000L)
-            val resetEvents = drainOutbound()
+            val resetEvents = drainOutbound(outbound)
 
             assertTrue(
                 resetEvents.any {
@@ -240,4 +231,81 @@ class GameEngineIntegrationTest {
             inbound.close()
             outbound.close()
         }
+
+    @Test
+    fun `ansi preference persists and is restored on login`() =
+        runTest {
+            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
+            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+
+            val world = WorldFactory.demoWorld()
+            val repo = InMemoryPlayerRepository()
+            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
+
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val items = ItemRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 10L
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
+                )
+            val engineJob = launch { engine.run() }
+
+            fun step() {
+                advanceTimeBy(tickMillis)
+                runCurrent()
+            }
+
+            val sid1 = SessionId(1L)
+
+            runCurrent()
+            inbound.send(InboundEvent.Connected(sid1))
+            inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid1, "yes"))
+            inbound.send(InboundEvent.LineReceived(sid1, "password"))
+            step()
+
+            inbound.send(InboundEvent.LineReceived(sid1, "ansi on"))
+            step()
+
+            inbound.send(InboundEvent.Disconnected(sid1, "test"))
+            step()
+
+            drainOutbound(outbound)
+
+            val sid2 = SessionId(2L)
+            inbound.send(InboundEvent.Connected(sid2))
+            inbound.send(InboundEvent.LineReceived(sid2, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid2, "password"))
+            step()
+
+            val outs = drainOutbound(outbound)
+            assertTrue(
+                outs.any { it is OutboundEvent.SetAnsi && it.sessionId == sid2 && it.enabled },
+                "Expected ANSI preference to be restored on login; got=$outs",
+            )
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
+
+    private fun drainOutbound(outbound: Channel<OutboundEvent>): List<OutboundEvent> {
+        val out = mutableListOf<OutboundEvent>()
+        while (true) {
+            val ev = outbound.tryReceive().getOrNull() ?: break
+            out += ev
+        }
+        return out
+    }
 }
