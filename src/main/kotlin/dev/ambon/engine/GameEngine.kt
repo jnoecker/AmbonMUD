@@ -299,12 +299,6 @@ class GameEngine(
             return
         }
 
-        if (players.isNameOnline(name, sessionId)) {
-            outbound.send(OutboundEvent.SendError(sessionId, "That name is already taken."))
-            promptForName(sessionId)
-            return
-        }
-
         if (players.hasRegisteredName(name)) {
             pendingLogins[sessionId] = LoginState.AwaitingExistingPassword(name)
             promptForExistingPassword(sessionId)
@@ -357,7 +351,7 @@ class GameEngine(
             return
         }
 
-        when (players.login(sessionId, name, password, defaultAnsiEnabled = sessionAnsiDefaults[sessionId] ?: false)) {
+        when (val result = players.login(sessionId, name, password, defaultAnsiEnabled = sessionAnsiDefaults[sessionId] ?: false)) {
             LoginResult.Ok -> {
                 finalizeSuccessfulLogin(sessionId)
             }
@@ -399,6 +393,16 @@ class GameEngine(
                 )
                 pendingLogins[sessionId] = state.copy(wrongPasswordAttempts = attempts)
                 promptForExistingPassword(sessionId)
+            }
+
+            is LoginResult.Takeover -> {
+                val oldSid = result.oldSessionId
+                combatSystem.remapSession(oldSid, sessionId)
+                regenSystem.remapSession(oldSid, sessionId)
+                outbound.send(OutboundEvent.Close(oldSid, "Your account has logged in from another location."))
+                val me = players.get(sessionId)
+                if (me != null) broadcastToRoom(me.roomId, "${me.name} briefly flickers.", sessionId)
+                finalizeSuccessfulLogin(sessionId, suppressEnterBroadcast = true)
             }
         }
     }
@@ -453,7 +457,10 @@ class GameEngine(
         return true
     }
 
-    private suspend fun finalizeSuccessfulLogin(sessionId: SessionId) {
+    private suspend fun finalizeSuccessfulLogin(
+        sessionId: SessionId,
+        suppressEnterBroadcast: Boolean = false,
+    ) {
         pendingLogins.remove(sessionId)
         failedLoginAttempts.remove(sessionId)
 
@@ -465,7 +472,9 @@ class GameEngine(
         }
 
         outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
-        broadcastToRoom(me.roomId, "${me.name} enters.", sessionId)
+        if (!suppressEnterBroadcast) {
+            broadcastToRoom(me.roomId, "${me.name} enters.", sessionId)
+        }
         router.handle(sessionId, Command.Look) // room + prompt
     }
 
