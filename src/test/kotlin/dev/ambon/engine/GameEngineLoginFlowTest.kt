@@ -26,6 +26,66 @@ import java.time.ZoneOffset
 @OptIn(ExperimentalCoroutinesApi::class)
 class GameEngineLoginFlowTest {
     @Test
+    fun `connect shows login screen before name prompt`() =
+        runTest {
+            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
+            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+
+            val world = WorldFactory.demoWorld()
+            val repo = InMemoryPlayerRepository()
+            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
+
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val items = ItemRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 10L
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
+                )
+            val engineJob = launch { engine.run() }
+
+            val sid = SessionId(99L)
+            runCurrent()
+
+            inbound.send(InboundEvent.Connected(sid))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val outs = drainOutbound(outbound)
+            val loginIndex = outs.indexOfFirst { it is OutboundEvent.ShowLoginScreen && it.sessionId == sid }
+            val namePromptIndex =
+                outs.indexOfFirst {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text == "Enter your name:"
+                }
+
+            assertTrue(loginIndex >= 0, "Expected ShowLoginScreen for new connection. got=$outs")
+            assertTrue(
+                namePromptIndex > loginIndex,
+                "Expected name prompt after login screen. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendPrompt && it.sessionId == sid },
+                "Expected a prompt after connect. got=$outs",
+            )
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
+
+    @Test
     fun `blank password returns to name prompt`() =
         runTest {
             val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
