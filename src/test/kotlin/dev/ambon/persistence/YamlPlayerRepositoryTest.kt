@@ -17,6 +17,7 @@ import java.nio.file.Path
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
+import kotlin.io.path.writeText
 
 class YamlPlayerRepositoryTest {
     @TempDir
@@ -49,7 +50,14 @@ class YamlPlayerRepositoryTest {
             val hash = BCrypt.hashpw("password", BCrypt.gensalt())
 
             val r = repo.create("Bob", RoomId("test:a"), now, hash)
-            val updated = r.copy(roomId = RoomId("test:b"), lastSeenEpochMs = 2000L, ansiEnabled = true)
+            val updated =
+                r.copy(
+                    roomId = RoomId("test:b"),
+                    lastSeenEpochMs = 2000L,
+                    ansiEnabled = true,
+                    level = 3,
+                    xpTotal = 400L,
+                )
 
             repo.save(updated)
 
@@ -57,6 +65,8 @@ class YamlPlayerRepositoryTest {
             assertEquals(RoomId("test:b"), loaded.roomId)
             assertEquals(2000L, loaded.lastSeenEpochMs)
             assertTrue(loaded.ansiEnabled)
+            assertEquals(3, loaded.level)
+            assertEquals(400L, loaded.xpTotal)
         }
 
     @Test
@@ -117,5 +127,28 @@ class YamlPlayerRepositoryTest {
 
             val loaded = repo.findById(pid)!!
             assertEquals(RoomId("test:c"), loaded.roomId)
+        }
+
+    @Test
+    fun `legacy yaml without progression fields loads defaults`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val path = tmp.resolve("players").resolve("00000000000000000001.yaml")
+            path.writeText(
+                """
+                id: 1
+                name: Legacy
+                roomId: test:a
+                createdAtEpochMs: 100
+                lastSeenEpochMs: 200
+                passwordHash: legacy-hash
+                ansiEnabled: false
+                """.trimIndent(),
+            )
+
+            val loaded = repo.findById(PlayerId(1))
+            assertNotNull(loaded)
+            assertEquals(1, loaded!!.level)
+            assertEquals(0L, loaded.xpTotal)
         }
 }

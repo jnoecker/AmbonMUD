@@ -28,4 +28,10 @@ class AppConfigLoaderTest {
         val invalid = AppConfig(server = ServerConfig(telnetPort = 0))
         assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
     }
+
+    @Test
+    fun `validation rejects invalid progression values`() {
+        val invalid = AppConfig(progression = ProgressionConfig(maxLevel = 0))
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
 }
