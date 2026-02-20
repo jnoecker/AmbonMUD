@@ -2,12 +2,17 @@ package dev.ambon.transport
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
+import dev.ambon.metrics.GameMetrics
+import io.ktor.http.ContentType
 import io.ktor.server.application.Application
+import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.netty.Netty
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.DefaultWebSocketServerSession
 import io.ktor.server.websocket.WebSockets
@@ -16,6 +21,7 @@ import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
@@ -35,6 +41,9 @@ class KtorWebSocketTransport(
     private val maxLineLen: Int = 1024,
     private val maxNonPrintablePerLine: Int = 32,
     private val maxInboundBackpressureFailures: Int = 3,
+    private val prometheusRegistry: PrometheusMeterRegistry? = null,
+    private val metricsEndpoint: String = "/metrics",
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) : Transport {
     private var engine: ApplicationEngine? = null
 
@@ -49,6 +58,9 @@ class KtorWebSocketTransport(
                     maxLineLen = maxLineLen,
                     maxNonPrintablePerLine = maxNonPrintablePerLine,
                     maxInboundBackpressureFailures = maxInboundBackpressureFailures,
+                    prometheusRegistry = prometheusRegistry,
+                    metricsEndpoint = metricsEndpoint,
+                    metrics = metrics,
                 )
             }.start(wait = false)
     }
@@ -67,10 +79,22 @@ internal fun Application.ambonMUDWebModule(
     maxLineLen: Int = 1024,
     maxNonPrintablePerLine: Int = 32,
     maxInboundBackpressureFailures: Int = 3,
+    prometheusRegistry: PrometheusMeterRegistry? = null,
+    metricsEndpoint: String = "/metrics",
+    metrics: GameMetrics = GameMetrics.noop(),
 ) {
     install(WebSockets)
 
     routing {
+        if (prometheusRegistry != null) {
+            get(metricsEndpoint) {
+                call.respondText(
+                    contentType = ContentType.parse("text/plain; version=0.0.4; charset=utf-8"),
+                    text = prometheusRegistry.scrape(),
+                )
+            }
+        }
+
         webSocket("/ws") {
             bridgeWebSocketSession(
                 inbound = inbound,
@@ -80,6 +104,7 @@ internal fun Application.ambonMUDWebModule(
                 maxLineLen = maxLineLen,
                 maxNonPrintablePerLine = maxNonPrintablePerLine,
                 maxInboundBackpressureFailures = maxInboundBackpressureFailures,
+                metrics = metrics,
             )
         }
 
@@ -99,6 +124,7 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
     maxLineLen: Int,
     maxNonPrintablePerLine: Int,
     maxInboundBackpressureFailures: Int,
+    metrics: GameMetrics = GameMetrics.noop(),
 ) {
     val sessionId = sessionIdFactory()
     val outboundQueue = Channel<String>(capacity = sessionOutboundQueueCapacity)
@@ -138,6 +164,7 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
         disconnect()
         return
     }
+    metrics.onWsConnected()
 
     val writerJob =
         launch {
@@ -159,9 +186,11 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
                         val sent = inbound.trySend(InboundEvent.LineReceived(sessionId, line)).isSuccess
                         if (sent) {
                             inboundBackpressureFailures = 0
+                            metrics.onInboundLineWs()
                             continue
                         }
                         inboundBackpressureFailures++
+                        metrics.onInboundBackpressureFailure()
                         if (inboundBackpressureFailures >= maxInboundBackpressureFailures) {
                             throw InboundBackpressure("inbound backpressure")
                         }
@@ -187,6 +216,7 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
     } finally {
         writerJob.cancelAndJoin()
         disconnect()
+        metrics.onWsDisconnected(disconnectReason.get())
     }
 }
 

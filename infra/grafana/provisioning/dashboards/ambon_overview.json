@@ -1,0 +1,124 @@
+{
+  "title": "AmbonMUD Overview",
+  "uid": "ambon-overview",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Sessions Online",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "sessions_online",
+          "legendFormat": "sessions"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Players Online",
+      "type": "stat",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "players_online",
+          "legendFormat": "players"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Engine Tick Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.50, rate(engine_tick_duration_seconds_bucket[1m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.95, rate(engine_tick_duration_seconds_bucket[1m]))",
+          "legendFormat": "p95"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.99, rate(engine_tick_duration_seconds_bucket[1m]))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Engine Tick Overruns / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(engine_tick_overrun_total[1m])",
+          "legendFormat": "overruns/s"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Sessions Connected / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 10, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(sessions_connected_total[1m])",
+          "legendFormat": "{{transport}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "XP Awarded / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 10, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(xp_awarded_total[1m])",
+          "legendFormat": "{{source}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "JVM Memory Used (bytes)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "jvm_memory_used_bytes",
+          "legendFormat": "{{area}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Process CPU Usage",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "process_cpu_usage",
+          "legendFormat": "cpu"
+        }
+      ]
+    }
+  ]
+}
