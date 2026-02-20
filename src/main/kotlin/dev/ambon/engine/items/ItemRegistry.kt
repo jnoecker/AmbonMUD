@@ -4,6 +4,7 @@ import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.ItemSpawn
@@ -169,17 +170,29 @@ class ItemRegistry {
 
     /**
      * Move an item by keyword (case-insensitive) from a player's inventory to an equipment slot.
+     * Falls back to substring matching on displayName/description when no exact match is found
+     * and the keyword is at least 3 characters.
      */
     fun equipFromInventory(
         sessionId: SessionId,
         keyword: String,
+    ): EquipResult {
+        val exact = equipFromInventoryWithMatcher(sessionId) { it.keyword.equals(keyword, ignoreCase = true) }
+        if (exact !is EquipResult.NotFound) return exact
+        if (keyword.length < 3) return EquipResult.NotFound
+        return equipFromInventoryWithMatcher(sessionId) { matchesSubstring(it, keyword) }
+    }
+
+    private fun equipFromInventoryWithMatcher(
+        sessionId: SessionId,
+        matcher: (Item) -> Boolean,
     ): EquipResult {
         val inv = inventoryItems[sessionId] ?: return EquipResult.NotFound
         var firstNonWearable: ItemInstance? = null
         var firstOccupied: EquipResult.SlotOccupied? = null
 
         for ((idx, instance) in inv.withIndex()) {
-            if (!instance.item.keyword.equals(keyword, ignoreCase = true)) continue
+            if (!matcher(instance.item)) continue
 
             val slot = instance.item.slot
             if (slot == null) {
@@ -233,7 +246,11 @@ class ItemRegistry {
         keyword: String,
     ): ItemInstance? {
         val items = roomItems[roomId] ?: return null
-        val idx = items.indexOfFirst { it.item.keyword.equals(keyword, ignoreCase = true) }
+
+        var idx = items.indexOfFirst { it.item.keyword.equals(keyword, ignoreCase = true) }
+        if (idx < 0 && keyword.length >= 3) {
+            idx = items.indexOfFirst { matchesSubstring(it.item, keyword) }
+        }
         if (idx < 0) return null
 
         val instance = items.removeAt(idx)
@@ -253,7 +270,11 @@ class ItemRegistry {
         keyword: String,
     ): ItemInstance? {
         val inv = inventoryItems[sessionId] ?: return null
-        val idx = inv.indexOfFirst { it.item.keyword.equals(keyword, ignoreCase = true) }
+
+        var idx = inv.indexOfFirst { it.item.keyword.equals(keyword, ignoreCase = true) }
+        if (idx < 0 && keyword.length >= 3) {
+            idx = inv.indexOfFirst { matchesSubstring(it.item, keyword) }
+        }
         if (idx < 0) return null
 
         val instance = inv.removeAt(idx)
@@ -262,6 +283,16 @@ class ItemRegistry {
         if (inv.isEmpty()) inventoryItems.remove(sessionId)
         return instance
     }
+
+    private fun matchesSubstring(
+        item: Item,
+        input: String,
+    ): Boolean =
+        !item.matchByKey &&
+            (
+                item.displayName.contains(input, ignoreCase = true) ||
+                    item.description.contains(input, ignoreCase = true)
+            )
 
     private fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
 }

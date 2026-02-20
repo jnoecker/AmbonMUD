@@ -8,4 +8,5 @@ data class Item(
     val damage: Int = 0,
     val armor: Int = 0,
     val constitution: Int = 0,
+    val matchByKey: Boolean = false,
 )
