@@ -51,7 +51,14 @@ class MudServer(
     private val clock = Clock.systemUTC()
 
     private val prometheusRegistry: PrometheusMeterRegistry? =
-        if (config.observability.metricsEnabled) PrometheusMeterRegistry(PrometheusConfig.DEFAULT) else null
+        if (config.observability.metricsEnabled) {
+            PrometheusMeterRegistry(PrometheusConfig.DEFAULT).also { reg ->
+                reg.config().commonTags("service", "ambonmud")
+                config.observability.staticTags.forEach { (k, v) -> reg.config().commonTags(k, v) }
+            }
+        } else {
+            null
+        }
 
     private val gameMetrics: GameMetrics =
         if (prometheusRegistry != null) GameMetrics(prometheusRegistry) else GameMetrics.noop()
