@@ -44,7 +44,11 @@ class BlockingSocketTransport(
                             maxLineLen = maxLineLen,
                             maxNonPrintablePerLine = maxNonPrintablePerLine,
                         )
-                    outboundRouter.register(sessionId, outboundQueue) { reason ->
+                    outboundRouter.register(
+                        sessionId = sessionId,
+                        queue = outboundQueue,
+                        defaultAnsiEnabled = false,
+                    ) { reason ->
                         session.closeNow(reason)
                     }
                     session.start()
