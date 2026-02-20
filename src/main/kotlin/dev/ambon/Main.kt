@@ -1,22 +1,29 @@
 package dev.ambon
 
+import dev.ambon.config.AppConfigLoader
 import kotlinx.coroutines.runBlocking
 import java.awt.Desktop
 import java.net.URI
 
 fun main() =
     runBlocking {
-        val server = MudServer(telnetPort = 4000, webPort = 8080)
+        val config = AppConfigLoader.load()
+        val server = MudServer(config)
+        val webClientUrl = "http://${config.demo.webClientHost}:${config.server.webPort}"
+
         server.start()
-        println("QuickMUD listening on telnet port 4000 (telnet localhost 4000)")
-        println("QuickMUD web client at $WEB_CLIENT_URL")
-        maybeAutoLaunchBrowser(WEB_CLIENT_URL)
+        println("QuickMUD listening on telnet port ${config.server.telnetPort} (telnet localhost ${config.server.telnetPort})")
+        println("QuickMUD web client at $webClientUrl")
+        maybeAutoLaunchBrowser(webClientUrl, config.demo.autoLaunchBrowser)
         // keep alive
         kotlinx.coroutines.delay(Long.MAX_VALUE)
     }
 
-private fun maybeAutoLaunchBrowser(url: String) {
-    if (!java.lang.Boolean.getBoolean(DEMO_AUTO_LAUNCH_PROP)) return
+private fun maybeAutoLaunchBrowser(
+    url: String,
+    enabled: Boolean,
+) {
+    if (!enabled) return
 
     Thread {
         Thread.sleep(300)
@@ -38,6 +45,3 @@ private fun maybeAutoLaunchBrowser(url: String) {
         start()
     }
 }
-
-private const val DEMO_AUTO_LAUNCH_PROP = "quickmud.demo.autolaunchBrowser"
-private const val WEB_CLIENT_URL = "http://localhost:8080"
