@@ -106,4 +106,33 @@ class PlayerProgressionTest {
         assertEquals(12, player.maxHp)
         assertEquals(3, player.hp)
     }
+
+    @Test
+    fun `grantXp uses level formula as max hp source of truth`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 50,
+                    xp = XpCurveConfig(baseXp = 100L, exponent = 2.0, linearXp = 0L),
+                    rewards = LevelRewardsConfig(hpPerLevel = 2, fullHealOnLevelUp = true),
+                ),
+            )
+
+        val player =
+            PlayerState(
+                sessionId = SessionId(3L),
+                name = "Cara",
+                roomId = RoomId("test:start"),
+                baseMaxHp = 99,
+                hp = 50,
+                maxHp = 99,
+            )
+
+        progression.grantXp(player, 100L)
+
+        assertEquals(2, player.level)
+        assertEquals(12, player.baseMaxHp)
+        assertEquals(12, player.maxHp)
+        assertEquals(12, player.hp)
+    }
 }

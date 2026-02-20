@@ -1,10 +1,12 @@
 package dev.ambon.engine
 
 import dev.ambon.config.ProgressionConfig
+import dev.ambon.domain.mob.MobState
 import kotlin.math.pow
 import kotlin.math.roundToLong
 
 data class LevelUpResult(
+    val previousLevel: Int,
     val levelsGained: Int,
     val newLevel: Int,
     val xpTotal: Long,
@@ -81,18 +83,35 @@ class PlayerProgression(
 
     fun defaultKillXpReward(): Long = scaledXp(config.xp.defaultKillXp)
 
+    fun killXpReward(
+        @Suppress("UNUSED_PARAMETER") mob: MobState,
+    ): Long {
+        // Placeholder for future per-mob tuning.
+        return defaultKillXpReward()
+    }
+
     fun grantXp(
         player: PlayerState,
         amount: Long,
     ): LevelUpResult {
         val currentXpTotal = player.xpTotal.coerceAtLeast(0L)
         val currentLevel = computeLevel(currentXpTotal)
+        val currentBaseMaxHp = maxHpForLevel(currentLevel)
+        val existingBonus = (player.maxHp - player.baseMaxHp).coerceAtLeast(0)
         player.xpTotal = currentXpTotal
         player.level = currentLevel
+        player.baseMaxHp = currentBaseMaxHp
+        player.maxHp = safeAddInt(currentBaseMaxHp, existingBonus)
 
         val safeAmount = amount.coerceAtLeast(0L)
         if (safeAmount == 0L) {
-            return LevelUpResult(levelsGained = 0, newLevel = currentLevel, xpTotal = currentXpTotal)
+            player.hp = player.hp.coerceIn(0, player.maxHp)
+            return LevelUpResult(
+                previousLevel = currentLevel,
+                levelsGained = 0,
+                newLevel = currentLevel,
+                xpTotal = currentXpTotal,
+            )
         }
 
         val previousLevel = currentLevel
@@ -103,20 +122,30 @@ class PlayerProgression(
         player.xpTotal = newXpTotal
         player.level = newLevel
 
+        val previousBaseMaxHp = maxHpForLevel(previousLevel)
+        val newBaseMaxHp = maxHpForLevel(newLevel)
+        val nonProgressionBonus = (player.maxHp - previousBaseMaxHp).coerceAtLeast(0)
+        val newEffectiveMaxHp = safeAddInt(newBaseMaxHp, nonProgressionBonus)
+        player.baseMaxHp = newBaseMaxHp
+        player.maxHp = newEffectiveMaxHp
+
         if (levelsGained > 0) {
-            val hpGain = levelsGained * config.rewards.hpPerLevel
-            player.maxHp = (player.maxHp.toLong() + hpGain.toLong()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
             player.hp =
                 if (config.rewards.fullHealOnLevelUp) {
-                    player.maxHp
+                    newEffectiveMaxHp
                 } else {
-                    player.hp.coerceIn(0, player.maxHp)
+                    player.hp.coerceIn(0, newEffectiveMaxHp)
                 }
         } else {
-            player.hp = player.hp.coerceIn(0, player.maxHp)
+            player.hp = player.hp.coerceIn(0, newEffectiveMaxHp)
         }
 
-        return LevelUpResult(levelsGained = levelsGained, newLevel = newLevel, xpTotal = newXpTotal)
+        return LevelUpResult(
+            previousLevel = previousLevel,
+            levelsGained = levelsGained,
+            newLevel = newLevel,
+            xpTotal = newXpTotal,
+        )
     }
 
     private fun safeAdd(
@@ -126,4 +155,9 @@ class PlayerProgression(
         if (left > Long.MAX_VALUE - right) return Long.MAX_VALUE
         return left + right
     }
+
+    private fun safeAddInt(
+        left: Int,
+        right: Int,
+    ): Int = (left.toLong() + right.toLong()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
 }

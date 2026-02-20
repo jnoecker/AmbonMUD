@@ -9,6 +9,7 @@ data class PlayerState(
     var name: String,
     var roomId: RoomId,
     var playerId: PlayerId? = null,
+    var baseMaxHp: Int = BASE_MAX_HP,
     var hp: Int = BASE_MAX_HP,
     var maxHp: Int = BASE_MAX_HP,
     var constitution: Int = 0,

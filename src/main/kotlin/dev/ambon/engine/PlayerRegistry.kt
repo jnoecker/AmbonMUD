@@ -123,6 +123,7 @@ class PlayerRegistry(
                 name = boundRecord.name,
                 roomId = boundRecord.roomId,
                 playerId = boundRecord.id,
+                baseMaxHp = maxHp,
                 hp = maxHp,
                 maxHp = maxHp,
                 constitution = boundRecord.constitution,
