@@ -5,6 +5,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.metrics.GameMetrics
+import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -27,6 +29,7 @@ class PlayerPersistenceException(
 
 class YamlPlayerRepository(
     private val rootDir: Path,
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) : PlayerRepository {
     // DTO uses plain types so Jackson doesn't need special Map key handling etc.
     private data class PlayerFile(
@@ -60,24 +63,34 @@ class YamlPlayerRepository(
 
     override suspend fun findByName(name: String): PlayerRecord? =
         withContext(Dispatchers.IO) {
-            val target = name.trim()
-            if (target.isEmpty()) return@withContext null
+            val sample = Timer.start()
+            try {
+                val target = name.trim()
+                if (target.isEmpty()) return@withContext null
 
-            // Simple scan. Fine for Phase 1. Later: index file or SQLite.
-            playersDir.listDirectoryEntries("*.yaml").forEach { p ->
-                val pf = readPlayerFile(p) ?: return@forEach
-                if (pf.name.equals(target, ignoreCase = true)) {
-                    return@withContext pf.toDomain()
+                // Simple scan. Fine for Phase 1. Later: index file or SQLite.
+                playersDir.listDirectoryEntries("*.yaml").forEach { p ->
+                    val pf = readPlayerFile(p) ?: return@forEach
+                    if (pf.name.equals(target, ignoreCase = true)) {
+                        return@withContext pf.toDomain()
+                    }
                 }
+                null
+            } finally {
+                sample.stop(metrics.playerRepoLoadTimer)
             }
-            null
         }
 
     override suspend fun findById(id: PlayerId): PlayerRecord? =
         withContext(Dispatchers.IO) {
-            val path = pathFor(id.value)
-            val pf = readPlayerFile(path) ?: return@withContext null
-            pf.toDomain()
+            val sample = Timer.start()
+            try {
+                val path = pathFor(id.value)
+                val pf = readPlayerFile(path) ?: return@withContext null
+                pf.toDomain()
+            } finally {
+                sample.stop(metrics.playerRepoLoadTimer)
+            }
         }
 
     override suspend fun create(
@@ -116,22 +129,31 @@ class YamlPlayerRepository(
 
     override suspend fun save(record: PlayerRecord): Unit =
         withContext(Dispatchers.IO) {
-            val pf =
-                PlayerFile(
-                    id = record.id.value,
-                    name = record.name,
-                    roomId = record.roomId.value,
-                    constitution = record.constitution,
-                    level = record.level,
-                    xpTotal = record.xpTotal,
-                    createdAtEpochMs = record.createdAtEpochMs,
-                    lastSeenEpochMs = record.lastSeenEpochMs,
-                    passwordHash = record.passwordHash,
-                    ansiEnabled = record.ansiEnabled,
-                )
+            val sample = Timer.start()
+            try {
+                val pf =
+                    PlayerFile(
+                        id = record.id.value,
+                        name = record.name,
+                        roomId = record.roomId.value,
+                        constitution = record.constitution,
+                        level = record.level,
+                        xpTotal = record.xpTotal,
+                        createdAtEpochMs = record.createdAtEpochMs,
+                        lastSeenEpochMs = record.lastSeenEpochMs,
+                        passwordHash = record.passwordHash,
+                        ansiEnabled = record.ansiEnabled,
+                    )
 
-            val outPath = pathFor(record.id.value)
-            atomicWriteText(outPath, mapper.writeValueAsString(pf))
+                val outPath = pathFor(record.id.value)
+                atomicWriteText(outPath, mapper.writeValueAsString(pf))
+                metrics.onPlayerSave()
+            } catch (e: Throwable) {
+                metrics.onPlayerSaveFailure()
+                throw e
+            } finally {
+                sample.stop(metrics.playerRepoSaveTimer)
+            }
         }
 
     // -------- internals --------

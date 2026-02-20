@@ -10,6 +10,7 @@ import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.metrics.GameMetrics
 import kotlinx.coroutines.channels.SendChannel
 
 class CommandRouter(
@@ -19,6 +20,7 @@ class CommandRouter(
     private val items: ItemRegistry,
     private val combat: CombatSystem,
     private val outbound: SendChannel<OutboundEvent>,
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     suspend fun handle(
         sessionId: SessionId,

@@ -2,6 +2,7 @@ package dev.ambon.transport
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
+import dev.ambon.metrics.GameMetrics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -23,6 +24,7 @@ class NetworkSession(
     private val maxLineLen: Int = 1024,
     private val maxNonPrintablePerLine: Int = 32,
     private val maxInboundBackpressureFailures: Int = 3,
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     private val disconnected = AtomicBoolean(false)
     private var inboundBackpressureFailures = 0
@@ -47,6 +49,7 @@ class NetworkSession(
             )
         try {
             inbound.send(InboundEvent.Connected(sessionId))
+            metrics.onTelnetConnected()
             val input = socket.getInputStream()
             val buf = ByteArray(4096)
 
@@ -59,12 +62,16 @@ class NetworkSession(
                 }
             }
 
+            metrics.onTelnetDisconnected("EOF")
             inbound.send(InboundEvent.Disconnected(sessionId, "EOF"))
         } catch (b: InboundBackpressure) {
+            metrics.onTelnetDisconnected("backpressure")
             runCatching { inbound.trySend(InboundEvent.Disconnected(sessionId, b.message ?: "inbound backpressure")) }
         } catch (v: ProtocolViolation) {
+            metrics.onTelnetDisconnected("error")
             inbound.send(InboundEvent.Disconnected(sessionId, "protocol violation: ${v.message}"))
         } catch (t: Throwable) {
+            metrics.onTelnetDisconnected("error")
             inbound.send(InboundEvent.Disconnected(sessionId, "read error: ${t.message}"))
         } finally {
             runCatching { socket.close() }
@@ -97,10 +104,12 @@ class NetworkSession(
         val result = inbound.trySend(InboundEvent.LineReceived(sessionId, line))
         if (result.isSuccess) {
             inboundBackpressureFailures = 0
+            metrics.onInboundLineTelnet()
             return
         }
 
         inboundBackpressureFailures++
+        metrics.onInboundBackpressureFailure()
         if (inboundBackpressureFailures >= maxInboundBackpressureFailures) {
             throw InboundBackpressure("inbound backpressure")
         }
