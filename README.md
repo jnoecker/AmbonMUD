@@ -79,22 +79,21 @@ ambonMUD:
   ...
 ```
 
-Useful system-property override example:
+Any config value can be overridden at runtime with a `-P` project property using the pattern `-Pconfig.<key>=<value>`:
 
 ```bash
-./gradlew run -Dconfig.override.ambonMUD.server.telnetPort=5000
+./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000
+./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
+./gradlew run -Pconfig.ambonMUD.logging.packageLevels.dev.ambon.transport=DEBUG
 ```
 
-On Windows:
-
-```powershell
-.\gradlew.bat run -Dconfig.override.ambonMUD.server.telnetPort=5000
-```
+This works identically on Windows PowerShell with no quoting issues.
 
 Most day-to-day tuning lives under:
 - `ambonMUD.server` (ports, tick rates, channel capacities)
 - `ambonMUD.world.resources` (which zone YAML resources to load)
 - `ambonMUD.persistence.rootDir` (where player YAML data is written)
+- `ambonMUD.logging` (root log level and per-package overrides)
 
 Login
 -----
