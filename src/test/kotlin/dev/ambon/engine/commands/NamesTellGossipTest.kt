@@ -53,7 +53,7 @@ class NamesTellGossipTest {
             login(players, a, "Alice")
 
             val res = players.login(b, "alice", "password")
-            assertTrue(res == LoginResult.Taken, "Expected taken for duplicate login. got=$res")
+            assertTrue(res is LoginResult.Takeover, "Expected Takeover for duplicate login with correct password. got=$res")
         }
 
     @Test
