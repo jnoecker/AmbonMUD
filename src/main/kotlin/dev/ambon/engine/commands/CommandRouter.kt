@@ -163,10 +163,12 @@ class CommandRouter(
                 val targetSid = players.findSessionByName(cmd.target)
                 if (targetSid == null) {
                     outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.target}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
                 if (targetSid == sessionId) {
                     outbound.send(OutboundEvent.SendInfo(sessionId, "You tell yourself: ${cmd.message}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
                 outbound.send(OutboundEvent.SendText(sessionId, "You tell ${cmd.target}: ${cmd.message}"))
