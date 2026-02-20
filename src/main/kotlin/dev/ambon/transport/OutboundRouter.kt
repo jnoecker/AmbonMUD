@@ -38,9 +38,15 @@ class OutboundRouter(
     fun register(
         sessionId: SessionId,
         queue: Channel<String>,
+        defaultAnsiEnabled: Boolean = false,
         close: (String) -> Unit,
     ) {
-        sinks[sessionId] = SessionSink(queue, close)
+        sinks[sessionId] =
+            SessionSink(
+                queue = queue,
+                close = close,
+                renderer = if (defaultAnsiEnabled) AnsiRenderer() else PlainRenderer(),
+            )
     }
 
     fun unregister(sessionId: SessionId) {

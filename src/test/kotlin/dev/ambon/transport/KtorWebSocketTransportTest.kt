@@ -63,7 +63,8 @@ class KtorWebSocketTransportTest {
                     val payload =
                         withTimeout(3_000) { incoming.receive() }
                             .let { frame -> (frame as Frame.Text).readText() }
-                    assertEquals("hello\r\n", payload)
+                    assertTrue(payload.contains("hello"))
+                    assertTrue(payload.contains("\u001B["))
                 }
 
                 val disconnected = withTimeout(3_000) { inbound.receive() }
