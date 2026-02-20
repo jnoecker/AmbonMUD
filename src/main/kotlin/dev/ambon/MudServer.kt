@@ -16,6 +16,7 @@ import dev.ambon.persistence.YamlPlayerRepository
 import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.KtorWebSocketTransport
 import dev.ambon.transport.OutboundRouter
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +31,8 @@ import java.nio.file.Paths
 import java.time.Clock
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
+
+private val log = KotlinLogging.logger {}
 
 class MudServer(
     private val config: AppConfig,
@@ -126,6 +129,7 @@ class MudServer(
                 metrics = gameMetrics,
             )
         telnetTransport.start()
+        log.info { "Telnet transport bound on port ${config.server.telnetPort}" }
 
         webTransport =
             KtorWebSocketTransport(
@@ -145,6 +149,10 @@ class MudServer(
                 metrics = gameMetrics,
             )
         webTransport.start()
+        log.info { "WebSocket transport bound on ${config.transport.websocket.host}:${config.server.webPort}" }
+        if (config.observability.metricsEnabled) {
+            log.info { "Metrics enabled at ${config.observability.metricsEndpoint}" }
+        }
     }
 
     private fun bindWorldStateGauges() {
@@ -160,6 +168,7 @@ class MudServer(
         engineDispatcher.close()
         inbound.close()
         outbound.close()
+        log.info { "Server stopped" }
     }
 
     private fun allocateSessionId(): SessionId = SessionId(sessionIdSeq.getAndIncrement())

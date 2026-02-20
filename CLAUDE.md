@@ -19,6 +19,13 @@ Run a single test class:
 ./gradlew test --tests "dev.ambon.engine.commands.CommandParserTest"
 ```
 
+Override any config value at runtime with `-Pconfig.<key>=<value>`:
+```bash
+./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
+./gradlew run -Pconfig.ambonMUD.logging.packageLevels.dev.ambon.transport=DEBUG
+./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000
+```
+
 On Windows use `.\gradlew.bat` instead of `./gradlew`.
 
 ## Architecture

@@ -1,8 +1,11 @@
 package dev.ambon.engine.scheduler
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import java.time.Clock
 import java.util.PriorityQueue
+
+private val log = KotlinLogging.logger {}
 
 data class ScheduledAction(
     val dueAtEpochMs: Long,
@@ -46,7 +49,7 @@ class Scheduler(
                 next.action()
             } catch (t: Throwable) {
                 if (t is CancellationException) throw t
-                System.err.println("Scheduled action failed: ${t.message ?: t::class.simpleName}")
+                log.error(t) { "Scheduled action failed" }
             }
             ran++
         }
@@ -57,6 +60,7 @@ class Scheduler(
                 if (item.dueAtEpochMs <= now2) dropped++
             }
         }
+        if (dropped > 0) log.warn { "Scheduler dropped $dropped overdue actions (cap=$maxActions)" }
         return Pair(ran, dropped)
     }
 

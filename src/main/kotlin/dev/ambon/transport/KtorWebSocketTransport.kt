@@ -3,6 +3,7 @@ package dev.ambon.transport
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.metrics.GameMetrics
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.ContentType
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
@@ -28,6 +29,8 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+
+private val log = KotlinLogging.logger {}
 
 class KtorWebSocketTransport(
     private val port: Int,
@@ -165,6 +168,7 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
         return
     }
     metrics.onWsConnected()
+    log.debug { "WebSocket session connected: sessionId=$sessionId" }
 
     val writerJob =
         launch {
@@ -216,7 +220,9 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
     } finally {
         writerJob.cancelAndJoin()
         disconnect()
-        metrics.onWsDisconnected(disconnectReason.get())
+        val reason = disconnectReason.get()
+        log.debug { "WebSocket session disconnected: sessionId=$sessionId reason=$reason" }
+        metrics.onWsDisconnected(reason)
     }
 }
 

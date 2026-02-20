@@ -88,6 +88,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 ### Configuration / demo client
 - Config schema changes: update `src/main/kotlin/dev/ambon/config/AppConfig.kt` and `src/main/resources/application.yaml` together; keep `validated()` strict.
 - Web demo client changes: update `src/main/resources/web` and sanity-check connect/disconnect against `KtorWebSocketTransport`.
+- Runtime config overrides use `-Pconfig.<key>=<value>` (e.g. `./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG`). This works in all shells including Windows PowerShell.
 
 ### Persistence
 - Keep `PlayerRepository` as the abstraction boundary.

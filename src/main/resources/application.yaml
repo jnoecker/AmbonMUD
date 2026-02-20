@@ -70,3 +70,9 @@ ambonMUD:
     metricsEnabled: true
     metricsEndpoint: "/metrics"
     staticTags: {}
+
+  logging:
+    level: INFO
+    packageLevels:
+      dev.ambon.transport: INFO
+      dev.ambon.engine: INFO
