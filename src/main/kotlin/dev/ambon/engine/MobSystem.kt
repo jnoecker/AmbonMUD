@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.World
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.metrics.GameMetrics
 import kotlinx.coroutines.channels.SendChannel
 import java.time.Clock
 import java.util.Random
@@ -20,6 +21,7 @@ class MobSystem(
     // Tuning knobs (defaults feel “MUD-like”)
     private val minWanderDelayMillis: Long = 5_000L,
     private val maxWanderDelayMillis: Long = 12_000L,
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     // Next scheduled action time per mob
     private val nextActAtMillis = mutableMapOf<MobId, Long>()
@@ -28,7 +30,7 @@ class MobSystem(
      * Called frequently (e.g. every engine tick). This method is time-gated;
      * it will only move mobs whose cooldown has expired.
      */
-    suspend fun tick(maxMovesPerTick: Int = 10) {
+    suspend fun tick(maxMovesPerTick: Int = 10): Int {
         val now = clock.millis()
         var moves = 0
 
@@ -66,6 +68,7 @@ class MobSystem(
             nextActAtMillis[m.id] = now + randomDelay()
             moves++
         }
+        return moves
     }
 
     /**
