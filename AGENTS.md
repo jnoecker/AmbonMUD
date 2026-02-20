@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Purpose
-This repository is a Kotlin MUD server ("AmbonMUD") with a single-process event loop, a telnet transport adapter, YAML world loading, and YAML-backed player persistence.
+This repository is a Kotlin MUD server ("AmbonMUD") with a single-process event loop, telnet + WebSocket transports, YAML world loading, a small browser demo client, and YAML-backed player persistence.
 
 Use this document as the default engineering playbook when making code or content changes.
 
@@ -13,19 +13,25 @@ Use this document as the default engineering playbook when making code or conten
 ## Core Commands
 - Run server (Windows): `.\gradlew.bat run`
 - Run server (Unix): `./gradlew run`
+- Demo (Windows): `.\gradlew.bat demo`
+- Demo (Unix): `./gradlew demo`
 - Lint: `.\gradlew.bat ktlintCheck`
 - Tests: `.\gradlew.bat test`
 - CI parity (Unix/CI): `./gradlew ktlintCheck test`
 - CI parity (Windows): `.\gradlew.bat ktlintCheck test`
 
-The server listens on port `4000` (`src/main/kotlin/dev/ambon/Main.kt`).
+By default the server listens on telnet port `4000` and web port `8080` (configured in `src/main/resources/application.yaml`, printed by `src/main/kotlin/dev/ambon/Main.kt`).
 
 ## Project Map
 - Bootstrap/runtime wiring: `src/main/kotlin/dev/ambon/Main.kt`, `src/main/kotlin/dev/ambon/MudServer.kt`
+- Configuration: `src/main/kotlin/dev/ambon/config`, `src/main/resources/application.yaml`
 - Engine and gameplay: `src/main/kotlin/dev/ambon/engine`
 - Transport and protocol: `src/main/kotlin/dev/ambon/transport`
+- Web demo client (static): `src/main/resources/web`
+- Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
 - World content: `src/main/resources/world`
+- World format contract: `docs/world-zone-yaml-spec.md`
 - Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence`
 - Tests: `src/test/kotlin`, fixtures in `src/test/resources/world`
 - Runtime player data (git-ignored): `data/players`
@@ -34,6 +40,7 @@ The server listens on port `4000` (`src/main/kotlin/dev/ambon/Main.kt`).
 1. Engine vs transport boundary
 - Engine communicates using semantic events only (`InboundEvent`, `OutboundEvent`).
 - ANSI/control behavior remains semantic in engine (`SetAnsi`, `ClearScreen`, `ShowAnsiDemo`), with raw escape rendering in transport renderers only.
+- Transports (telnet + WebSocket) are adapters only: decode lines into `InboundEvent`s and render `OutboundEvent`s; no gameplay/state in transport.
 
 2. Engine loop model
 - `GameEngine` is single-threaded via its dispatcher and tick loop.
@@ -50,12 +57,14 @@ The server listens on port `4000` (`src/main/kotlin/dev/ambon/Main.kt`).
 - Multi-zone world loading and cross-zone exits are supported.
 - Loader validates exits, start room, mob/item placement, stats, and slot/direction values.
 - Item placement is exclusive: room or mob (or unplaced), never both.
+- Zone `lifespan` is in minutes; `lifespan <= 0` disables resets. The engine uses `lifespan` to reset a zone's mob/item spawns.
 
 5. Player and persistence invariants
 - Name validation: length 2..16, alnum/underscore only, cannot start with digit.
 - Password validation: non-blank, max 72 chars (BCrypt-safe).
 - Case-insensitive online-name uniqueness is enforced.
 - Player room/last-seen persistence must stay intact.
+- Player progression persistence must stay intact (level/xp/constitution).
 - Keep atomic-write behavior for YAML persistence files.
 
 ## Change Playbooks
@@ -75,6 +84,10 @@ The server listens on port `4000` (`src/main/kotlin/dev/ambon/Main.kt`).
 - Content-only changes: edit YAML in `src/main/resources/world`.
 - Loader/schema behavior changes: update `WorldLoader.kt` and add fixture coverage in `src/test/resources/world`.
 - Keep both positive and negative validation tests in `src/test/kotlin/dev/ambon/world/load/WorldLoaderTest.kt`.
+
+### Configuration / demo client
+- Config schema changes: update `src/main/kotlin/dev/ambon/config/AppConfig.kt` and `src/main/resources/application.yaml` together; keep `validated()` strict.
+- Web demo client changes: update `src/main/resources/web` and sanity-check connect/disconnect against `KtorWebSocketTransport`.
 
 ### Persistence
 - Keep `PlayerRepository` as the abstraction boundary.
