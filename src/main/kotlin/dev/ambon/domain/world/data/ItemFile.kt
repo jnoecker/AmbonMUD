@@ -10,4 +10,5 @@ data class ItemFile(
     val constitution: Int = 0,
     val room: String? = null,
     val mob: String? = null,
+    val matchByKey: Boolean = false,
 )
