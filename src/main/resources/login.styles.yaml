@@ -1,3 +1,5 @@
+# Note: LoginScreenRenderer appends ANSI reset at end of each styled line.
+# You do not need to include the reset token in style ansi lists.
 defaultStyle: body
 styles:
   plain:

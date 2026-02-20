@@ -1,6 +1,7 @@
 package dev.ambon.ui.login
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -25,6 +26,18 @@ class LoginScreenLoaderTest {
             LoginScreenLoader.loadFromTexts(
                 linesText = "line one\nline two",
                 stylesYaml = null,
+            )
+
+        assertEquals(listOf("line one", "line two"), screen.lines)
+        assertEquals(listOf("", ""), screen.ansiPrefixesByLine)
+    }
+
+    @Test
+    fun `loadFromTexts treats blank styles yaml as missing`() {
+        val screen =
+            LoginScreenLoader.loadFromTexts(
+                linesText = "line one\nline two",
+                stylesYaml = "   \n\t",
             )
 
         assertEquals(listOf("line one", "line two"), screen.lines)
@@ -73,6 +86,32 @@ class LoginScreenLoaderTest {
 
         assertEquals(listOf("a", "b"), screen.lines)
         assertEquals(listOf("", ""), screen.ansiPrefixesByLine)
+    }
+
+    @Test
+    fun `loadFromTexts strict mode unknown default style includes known styles`() {
+        val error =
+            assertThrows(IllegalStateException::class.java) {
+                LoginScreenLoader.loadFromTexts(
+                    linesText = "a",
+                    stylesYaml =
+                        """
+                        defaultStyle: body
+                        styles:
+                          title:
+                            ansi:
+                              - bright_yellow
+                        lineStyles:
+                          - title
+                        """.trimIndent(),
+                    strict = true,
+                )
+            }
+
+        val message = error.message
+        assertNotNull(message)
+        assertTrue(message!!.contains("Unknown defaultStyle 'body'"))
+        assertTrue(message.contains("Known styles=[plain, title]"))
     }
 
     @Test

@@ -22,6 +22,9 @@ object LoginScreenLoader {
         if (stylesYaml == null) {
             return plain(lines)
         }
+        if (stylesYaml.isBlank()) {
+            return plain(lines)
+        }
 
         return runCatching {
             parseStyled(lines, stylesYaml)
@@ -48,7 +51,9 @@ object LoginScreenLoader {
         val defaultStyle = stylesFile.defaultStyle.trim().ifEmpty { "plain" }
         val defaultPrefix =
             stylePrefixes[defaultStyle]
-                ?: throw IllegalStateException("Unknown defaultStyle '$defaultStyle'")
+                ?: throw IllegalStateException(
+                    "Unknown defaultStyle '$defaultStyle'. Known styles=${stylePrefixes.keys.sorted()}",
+                )
 
         if (stylesFile.lineStyles.size > lines.size) {
             throw IllegalStateException(

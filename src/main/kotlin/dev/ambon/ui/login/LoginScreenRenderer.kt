@@ -24,6 +24,7 @@ class LoginScreenRenderer {
         ansiEnabled: Boolean,
     ): String {
         if (line.isEmpty()) return "\r\n"
+        // Reset is always appended for styled lines, so style prefixes can omit reset.
         if (ansiEnabled && ansiPrefix.isNotEmpty()) return ansiPrefix + line + ANSI_RESET + "\r\n"
         return line + "\r\n"
     }
