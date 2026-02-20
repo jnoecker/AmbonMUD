@@ -16,6 +16,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -111,5 +112,22 @@ class KtorWebSocketTransportTest {
         assertEquals(listOf(""), splitIncomingLines(""))
         assertEquals(listOf("line"), splitIncomingLines("line"))
         assertEquals(listOf("", ""), splitIncomingLines("\r\n\r\n"))
+    }
+
+    @Test
+    fun `sanitizeIncomingLines enforces max length and non-printable limits`() {
+        val longLine = "x".repeat(5)
+        val longEx =
+            assertThrows(ProtocolViolation::class.java) {
+                sanitizeIncomingLines(longLine, maxLineLen = 4, maxNonPrintablePerLine = 10)
+            }
+        assertTrue(longEx.message!!.contains("Line too long"))
+
+        val nonPrintable = "ok\u0001bad"
+        val nonPrintableEx =
+            assertThrows(ProtocolViolation::class.java) {
+                sanitizeIncomingLines(nonPrintable, maxLineLen = 20, maxNonPrintablePerLine = 0)
+            }
+        assertTrue(nonPrintableEx.message!!.contains("non-printable"))
     }
 }

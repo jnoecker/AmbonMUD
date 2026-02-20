@@ -32,6 +32,9 @@ class KtorWebSocketTransport(
     private val sessionOutboundQueueCapacity: Int = 200,
     private val stopGraceMillis: Long = 1_000L,
     private val stopTimeoutMillis: Long = 2_000L,
+    private val maxLineLen: Int = 1024,
+    private val maxNonPrintablePerLine: Int = 32,
+    private val maxInboundBackpressureFailures: Int = 3,
 ) : Transport {
     private var engine: ApplicationEngine? = null
 
@@ -43,6 +46,9 @@ class KtorWebSocketTransport(
                     outboundRouter = outboundRouter,
                     sessionIdFactory = sessionIdFactory,
                     sessionOutboundQueueCapacity = sessionOutboundQueueCapacity,
+                    maxLineLen = maxLineLen,
+                    maxNonPrintablePerLine = maxNonPrintablePerLine,
+                    maxInboundBackpressureFailures = maxInboundBackpressureFailures,
                 )
             }.start(wait = false)
     }
@@ -58,6 +64,9 @@ internal fun Application.ambonMUDWebModule(
     outboundRouter: OutboundRouter,
     sessionIdFactory: () -> SessionId,
     sessionOutboundQueueCapacity: Int = 200,
+    maxLineLen: Int = 1024,
+    maxNonPrintablePerLine: Int = 32,
+    maxInboundBackpressureFailures: Int = 3,
 ) {
     install(WebSockets)
 
@@ -68,6 +77,9 @@ internal fun Application.ambonMUDWebModule(
                 outboundRouter = outboundRouter,
                 sessionIdFactory = sessionIdFactory,
                 sessionOutboundQueueCapacity = sessionOutboundQueueCapacity,
+                maxLineLen = maxLineLen,
+                maxNonPrintablePerLine = maxNonPrintablePerLine,
+                maxInboundBackpressureFailures = maxInboundBackpressureFailures,
             )
         }
 
@@ -84,11 +96,15 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
     outboundRouter: OutboundRouter,
     sessionIdFactory: () -> SessionId,
     sessionOutboundQueueCapacity: Int,
+    maxLineLen: Int,
+    maxNonPrintablePerLine: Int,
+    maxInboundBackpressureFailures: Int,
 ) {
     val sessionId = sessionIdFactory()
     val outboundQueue = Channel<String>(capacity = sessionOutboundQueueCapacity)
     val disconnected = AtomicBoolean(false)
     val disconnectReason = AtomicReference("EOF")
+    var inboundBackpressureFailures = 0
 
     fun noteDisconnectReason(reason: String) {
         if (reason.isBlank()) return
@@ -138,8 +154,17 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
         for (frame in incoming) {
             when (frame) {
                 is Frame.Text -> {
-                    for (line in splitIncomingLines(frame.readText())) {
-                        inbound.send(InboundEvent.LineReceived(sessionId, line))
+                    val lines = sanitizeIncomingLines(frame.readText(), maxLineLen, maxNonPrintablePerLine)
+                    for (line in lines) {
+                        val sent = inbound.trySend(InboundEvent.LineReceived(sessionId, line)).isSuccess
+                        if (sent) {
+                            inboundBackpressureFailures = 0
+                            continue
+                        }
+                        inboundBackpressureFailures++
+                        if (inboundBackpressureFailures >= maxInboundBackpressureFailures) {
+                            throw InboundBackpressure("inbound backpressure")
+                        }
                     }
                 }
 
@@ -152,6 +177,10 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
                 }
             }
         }
+    } catch (b: InboundBackpressure) {
+        noteDisconnectReason(b.message ?: "inbound backpressure")
+    } catch (v: ProtocolViolation) {
+        noteDisconnectReason("protocol violation: ${v.message}")
     } catch (t: Throwable) {
         val reason = t.message ?: t::class.simpleName ?: "unknown error"
         noteDisconnectReason("read error: $reason")
@@ -190,6 +219,31 @@ internal fun splitIncomingLines(payload: String): List<String> {
     }
 
     return if (lines.isEmpty()) listOf(payload) else lines
+}
+
+internal fun sanitizeIncomingLines(
+    payload: String,
+    maxLineLen: Int,
+    maxNonPrintablePerLine: Int,
+): List<String> {
+    val lines = splitIncomingLines(payload)
+    for (line in lines) {
+        if (line.length > maxLineLen) {
+            throw ProtocolViolation("Line too long (>$maxLineLen)")
+        }
+
+        var nonPrintableCount = 0
+        for (ch in line) {
+            val printable = (ch in ' '..'~') || ch == '\t'
+            if (!printable) {
+                nonPrintableCount++
+                if (nonPrintableCount > maxNonPrintablePerLine) {
+                    throw ProtocolViolation("Too many non-printable bytes in line")
+                }
+            }
+        }
+    }
+    return lines
 }
 
 private fun sanitizeCloseReason(reason: String): String {
