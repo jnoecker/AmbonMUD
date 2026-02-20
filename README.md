@@ -1,7 +1,7 @@
 AmbonMUD
 ========
 
-AmbonMUD is a Kotlin MUD server (runtime banner: "QuickMUD"). It is a small, event-driven backend with telnet and WebSocket transports, data-driven world loading, and YAML-backed player persistence.
+AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a small, event-driven backend with telnet and WebSocket transports, data-driven world loading, and YAML-backed player persistence.
 
 Current State
 -------------
@@ -48,7 +48,7 @@ On Windows:
 `demo` enables browser auto-launch by setting:
 
 ```text
-config.override.quickmud.demo.autoLaunchBrowser=true
+config.override.ambonMUD.demo.autoLaunchBrowser=true
 ```
 
 2) Connect with telnet:
@@ -72,20 +72,20 @@ Runtime config is loaded via Hoplite from `src/main/resources/application.yaml`.
 Top-level key:
 
 ```yaml
-quickmud:
+ambonMUD:
   ...
 ```
 
 Useful system-property override example:
 
 ```bash
-./gradlew run -Dconfig.override.quickmud.server.telnetPort=5000
+./gradlew run -Dconfig.override.ambonMUD.server.telnetPort=5000
 ```
 
 On Windows:
 
 ```powershell
-.\gradlew.bat run -Dconfig.override.quickmud.server.telnetPort=5000
+.\gradlew.bat run -Dconfig.override.ambonMUD.server.telnetPort=5000
 ```
 
 Login

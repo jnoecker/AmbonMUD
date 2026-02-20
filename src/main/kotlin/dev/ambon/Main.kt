@@ -11,8 +11,8 @@ fun main() =
         val server = MudServer(config)
         val webClientUrl = config.demo.webClientUrl ?: "http://${config.demo.webClientHost}:${config.server.webPort}"
         server.start()
-        println("QuickMUD listening on telnet port ${config.server.telnetPort} (telnet localhost ${config.server.telnetPort})")
-        println("QuickMUD web client at $webClientUrl")
+        println("AmbonMUD listening on telnet port ${config.server.telnetPort} (telnet localhost ${config.server.telnetPort})")
+        println("AmbonMUD web client at $webClientUrl")
         maybeAutoLaunchBrowser(webClientUrl, config.demo.autoLaunchBrowser)
         // keep alive
         kotlinx.coroutines.delay(Long.MAX_VALUE)
@@ -40,7 +40,7 @@ private fun maybeAutoLaunchBrowser(
         }
     }.apply {
         isDaemon = true
-        name = "quickmud-browser-launcher"
+        name = "ambonMUD-browser-launcher"
         start()
     }
 }

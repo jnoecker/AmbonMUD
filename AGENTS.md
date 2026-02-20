@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Purpose
-This repository is a Kotlin MUD server ("QuickMUD") with a single-process event loop, a telnet transport adapter, YAML world loading, and YAML-backed player persistence.
+This repository is a Kotlin MUD server ("AmbonMUD") with a single-process event loop, a telnet transport adapter, YAML world loading, and YAML-backed player persistence.
 
 Use this document as the default engineering playbook when making code or content changes.
 
