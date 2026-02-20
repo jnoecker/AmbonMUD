@@ -168,6 +168,53 @@ class CombatSystemTest {
         }
 
     @Test
+    fun `unequipping armor clamps hp to new max without reducing current hp`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 1,
+                    maxDamage = 1,
+                )
+
+            val sid = SessionId(6L)
+            login(players, sid, "Player6")
+
+            equipItem(
+                items,
+                sid,
+                roomId,
+                ItemInstance(
+                    ItemId("demo:helm"),
+                    Item(keyword = "helm", displayName = "a helm", slot = ItemSlot.HEAD, armor = 2),
+                ),
+            )
+            combat.syncPlayerDefense(sid)
+
+            val player = players.get(sid)!!
+            player.hp = 8
+
+            items.unequip(sid, ItemSlot.HEAD)
+            combat.syncPlayerDefense(sid)
+
+            assertEquals(10, player.maxHp)
+            assertEquals(8, player.hp)
+        }
+
+    @Test
     fun `mob death drops items and removes mob`() =
         runTest {
             val roomId = RoomId("zone:room")

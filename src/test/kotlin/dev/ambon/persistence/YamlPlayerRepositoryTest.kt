@@ -30,7 +30,7 @@ class YamlPlayerRepositoryTest {
             val now = 1234L
             val hash = BCrypt.hashpw("password", BCrypt.gensalt())
 
-            val r = repo.create("Alice", RoomId("test:a"), now, hash)
+            val r = repo.create("Alice", RoomId("test:a"), now, hash, ansiEnabled = false)
 
             val byId = repo.findById(r.id)
             assertNotNull(byId)
@@ -49,7 +49,7 @@ class YamlPlayerRepositoryTest {
             val now = 1000L
             val hash = BCrypt.hashpw("password", BCrypt.gensalt())
 
-            val r = repo.create("Bob", RoomId("test:a"), now, hash)
+            val r = repo.create("Bob", RoomId("test:a"), now, hash, ansiEnabled = false)
             val updated =
                 r.copy(
                     roomId = RoomId("test:b"),
@@ -76,11 +76,11 @@ class YamlPlayerRepositoryTest {
             val now = 1L
             val hash = BCrypt.hashpw("password", BCrypt.gensalt())
 
-            repo.create("Carol", RoomId("test:a"), now, hash)
+            repo.create("Carol", RoomId("test:a"), now, hash, ansiEnabled = false)
 
             val ex =
                 try {
-                    repo.create("carol", RoomId("test:a"), now, hash)
+                    repo.create("carol", RoomId("test:a"), now, hash, ansiEnabled = false)
                     fail("Expected PlayerPersistenceException")
                 } catch (e: PlayerPersistenceException) {
                     e
@@ -97,7 +97,14 @@ class YamlPlayerRepositoryTest {
             val clock = Clock.fixed(Instant.ofEpochMilli(1000), ZoneOffset.UTC)
 
             // create a record that lives in room b
-            val existing = repo.create("Alice", RoomId("test:b"), 1000, BCrypt.hashpw("password", BCrypt.gensalt()))
+            val existing =
+                repo.create(
+                    "Alice",
+                    RoomId("test:b"),
+                    1000,
+                    BCrypt.hashpw("password", BCrypt.gensalt()),
+                    ansiEnabled = false,
+                )
 
             val players = PlayerRegistry(start, repo, ItemRegistry(), clock)
             val sid = SessionId(1)

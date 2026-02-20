@@ -30,6 +30,7 @@ class GameEngine(
     private val clock: Clock,
     private val tickMillis: Long,
     private val scheduler: Scheduler,
+    private val maxInboundEventsPerTick: Int = Int.MAX_VALUE,
     private val loginConfig: LoginConfig = LoginConfig(),
     private val engineConfig: EngineConfig = EngineConfig(),
     private val progression: PlayerProgression = PlayerProgression(),
@@ -76,6 +77,7 @@ class GameEngine(
     private val router = CommandRouter(world, players, mobs, items, combatSystem, outbound)
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
     private val failedLoginAttempts = mutableMapOf<SessionId, Int>()
+    private val sessionAnsiDefaults = mutableMapOf<SessionId, Boolean>()
     private val nameCommandRegex = Regex("^name\\s+(.+)$", RegexOption.IGNORE_CASE)
     private val invalidNameMessage =
         "Invalid name. Use 2-16 chars: letters/digits/_ and cannot start with digit."
@@ -112,9 +114,11 @@ class GameEngine(
                 val tickStart = clock.millis()
 
                 // Drain inbound without blocking
-                while (true) {
+                var inboundProcessed = 0
+                while (inboundProcessed < maxInboundEventsPerTick) {
                     val ev = inbound.tryReceive().getOrNull() ?: break
                     handle(ev)
+                    inboundProcessed++
                 }
 
                 // Simulate NPC actions (time-gated internally)
@@ -207,6 +211,7 @@ class GameEngine(
 
                 pendingLogins[sid] = LoginState.AwaitingName
                 failedLoginAttempts[sid] = 0
+                sessionAnsiDefaults[sid] = ev.defaultAnsiEnabled
                 outbound.send(OutboundEvent.ShowLoginScreen(sid))
                 promptForName(sid)
             }
@@ -217,6 +222,7 @@ class GameEngine(
 
                 pendingLogins.remove(sid)
                 failedLoginAttempts.remove(sid)
+                sessionAnsiDefaults.remove(sid)
 
                 combatSystem.onPlayerDisconnected(sid)
                 regenSystem.onPlayerDisconnected(sid)
@@ -351,7 +357,7 @@ class GameEngine(
             return
         }
 
-        when (players.login(sessionId, name, password)) {
+        when (players.login(sessionId, name, password, defaultAnsiEnabled = sessionAnsiDefaults[sessionId] ?: false)) {
             LoginResult.Ok -> {
                 finalizeSuccessfulLogin(sessionId)
             }
@@ -411,7 +417,7 @@ class GameEngine(
             return
         }
 
-        when (players.create(sessionId, state.name, password)) {
+        when (players.create(sessionId, state.name, password, defaultAnsiEnabled = sessionAnsiDefaults[sessionId] ?: false)) {
             CreateResult.Ok -> {
                 finalizeSuccessfulLogin(sessionId)
             }
@@ -458,6 +464,7 @@ class GameEngine(
             return
         }
 
+        outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
         broadcastToRoom(me.roomId, "${me.name} enters.", sessionId)
         router.handle(sessionId, Command.Look) // room + prompt
     }

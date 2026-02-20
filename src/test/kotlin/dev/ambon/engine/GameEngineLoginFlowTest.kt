@@ -93,7 +93,7 @@ class GameEngineLoginFlowTest {
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()))
+            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
@@ -165,7 +165,7 @@ class GameEngineLoginFlowTest {
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()))
+            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
@@ -257,7 +257,7 @@ class GameEngineLoginFlowTest {
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()))
+            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)

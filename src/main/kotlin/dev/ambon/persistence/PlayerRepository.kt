@@ -10,6 +10,7 @@ interface PlayerRepository {
         startRoomId: dev.ambon.domain.ids.RoomId,
         nowEpochMs: Long,
         passwordHash: String,
+        ansiEnabled: Boolean,
     ): PlayerRecord
 
     suspend fun save(record: PlayerRecord)

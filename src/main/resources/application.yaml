@@ -5,6 +5,7 @@ ambonMUD:
     inboundChannelCapacity: 10000
     outboundChannelCapacity: 10000
     sessionOutboundQueueCapacity: 200
+    maxInboundEventsPerTick: 1000
     tickMillis: 100
 
   world:

@@ -96,12 +96,14 @@ class CommandRouter(
 
             Command.AnsiOn -> {
                 outbound.send(OutboundEvent.SetAnsi(sessionId, true))
+                players.setAnsiEnabled(sessionId, true)
                 outbound.send(OutboundEvent.SendInfo(sessionId, "ANSI enabled"))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
             Command.AnsiOff -> {
                 outbound.send(OutboundEvent.SetAnsi(sessionId, false))
+                players.setAnsiEnabled(sessionId, false)
                 outbound.send(OutboundEvent.SendInfo(sessionId, "ANSI disabled"))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }

@@ -113,7 +113,10 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
         }
     }
 
-    val connectedOk = runCatching { inbound.send(InboundEvent.Connected(sessionId)) }.isSuccess
+    val connectedOk =
+        runCatching {
+            inbound.send(InboundEvent.Connected(sessionId, defaultAnsiEnabled = true))
+        }.isSuccess
     if (!connectedOk) {
         noteDisconnectReason("inbound closed")
         disconnect()

@@ -85,6 +85,7 @@ class YamlPlayerRepository(
         startRoomId: RoomId,
         nowEpochMs: Long,
         passwordHash: String,
+        ansiEnabled: Boolean,
     ): PlayerRecord =
         withContext(Dispatchers.IO) {
             val nm = name.trim()
@@ -106,7 +107,7 @@ class YamlPlayerRepository(
                     createdAtEpochMs = nowEpochMs,
                     lastSeenEpochMs = nowEpochMs,
                     passwordHash = passwordHash,
-                    ansiEnabled = false,
+                    ansiEnabled = ansiEnabled,
                 )
 
             save(record)

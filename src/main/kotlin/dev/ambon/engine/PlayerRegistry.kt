@@ -47,6 +47,7 @@ class PlayerRegistry(
         sessionId: SessionId,
         nameRaw: String,
         passwordRaw: String,
+        defaultAnsiEnabled: Boolean = false,
     ): LoginResult {
         if (players.containsKey(sessionId)) return LoginResult.InvalidName
 
@@ -74,7 +75,7 @@ class PlayerRegistry(
                     existingRecord.copy(lastSeenEpochMs = now, passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()))
                 }
             } else {
-                return when (create(sessionId, name, password)) {
+                return when (create(sessionId, name, password, defaultAnsiEnabled)) {
                     CreateResult.Ok -> LoginResult.Ok
                     CreateResult.InvalidName -> LoginResult.InvalidName
                     CreateResult.InvalidPassword -> LoginResult.InvalidPassword
@@ -90,6 +91,7 @@ class PlayerRegistry(
         sessionId: SessionId,
         nameRaw: String,
         passwordRaw: String,
+        defaultAnsiEnabled: Boolean = false,
     ): CreateResult {
         if (players.containsKey(sessionId)) return CreateResult.InvalidName
 
@@ -104,7 +106,14 @@ class PlayerRegistry(
         if (repo.findByName(name) != null) return CreateResult.Taken
 
         val now = clock.millis()
-        val created = repo.create(name, startRoom, now, BCrypt.hashpw(password, BCrypt.gensalt()))
+        val created =
+            repo.create(
+                name = name,
+                startRoomId = startRoom,
+                nowEpochMs = now,
+                passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()),
+                ansiEnabled = defaultAnsiEnabled,
+            )
         bindSession(sessionId, created, now)
         return CreateResult.Ok
     }
@@ -129,13 +138,21 @@ class PlayerRegistry(
                 constitution = boundRecord.constitution,
                 level = level,
                 xpTotal = xpTotal,
+                ansiEnabled = boundRecord.ansiEnabled,
             )
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
         sessionByLowerName[ps.name.lowercase()] = sessionId
         items.ensurePlayer(sessionId)
 
-        repo.save(boundRecord.copy(roomId = ps.roomId, lastSeenEpochMs = now, level = level, xpTotal = xpTotal))
+        repo.save(
+            boundRecord.copy(
+                roomId = ps.roomId,
+                lastSeenEpochMs = now,
+                level = level,
+                xpTotal = xpTotal,
+            ),
+        )
     }
 
     suspend fun disconnect(sessionId: SessionId) {
@@ -189,6 +206,16 @@ class PlayerRegistry(
         return result
     }
 
+    suspend fun setAnsiEnabled(
+        sessionId: SessionId,
+        enabled: Boolean,
+    ) {
+        val ps = players[sessionId] ?: return
+        if (ps.ansiEnabled == enabled) return
+        ps.ansiEnabled = enabled
+        persistIfClaimed(ps)
+    }
+
     fun findSessionByName(name: String): SessionId? = sessionByLowerName[normalizeName(name).lowercase()]
 
     fun isNameOnline(
@@ -229,6 +256,7 @@ class PlayerRegistry(
                 constitution = ps.constitution,
                 level = ps.level,
                 xpTotal = ps.xpTotal,
+                ansiEnabled = ps.ansiEnabled,
             ),
         )
     }
