@@ -91,6 +91,15 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses get aliases including pick up`() {
+        assertEquals(Command.Get("coin"), CommandParser.parse("get coin"))
+        assertEquals(Command.Get("coin"), CommandParser.parse("take coin"))
+        assertEquals(Command.Get("coin"), CommandParser.parse("pickup coin"))
+        assertEquals(Command.Get("coin"), CommandParser.parse("pick coin"))
+        assertEquals(Command.Get("coin"), CommandParser.parse("pick up coin"))
+    }
+
+    @Test
     fun `parses kill and flee`() {
         assertEquals(Command.Kill("wolf"), CommandParser.parse("kill wolf"))
         assertEquals(Command.Flee, CommandParser.parse("flee"))
