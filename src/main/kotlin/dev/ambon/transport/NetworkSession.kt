@@ -22,8 +22,10 @@ class NetworkSession(
     private val scope: CoroutineScope,
     private val maxLineLen: Int = 1024,
     private val maxNonPrintablePerLine: Int = 32,
+    private val maxInboundBackpressureFailures: Int = 3,
 ) {
     private val disconnected = AtomicBoolean(false)
+    private var inboundBackpressureFailures = 0
 
     fun start() {
         scope.launch(Dispatchers.IO) { readLoop() }
@@ -53,11 +55,13 @@ class NetworkSession(
                 if (n == -1) break
                 val lines = decoder.feed(buf, n)
                 for (line in lines) {
-                    inbound.send(InboundEvent.LineReceived(sessionId, line))
+                    sendInboundLineOrThrow(line)
                 }
             }
 
             inbound.send(InboundEvent.Disconnected(sessionId, "EOF"))
+        } catch (b: InboundBackpressure) {
+            runCatching { inbound.trySend(InboundEvent.Disconnected(sessionId, b.message ?: "inbound backpressure")) }
         } catch (v: ProtocolViolation) {
             inbound.send(InboundEvent.Disconnected(sessionId, "protocol violation: ${v.message}"))
         } catch (t: Throwable) {
@@ -87,5 +91,19 @@ class NetworkSession(
         if (disconnected.compareAndSet(false, true)) {
             onDisconnected()
         }
+    }
+
+    private fun sendInboundLineOrThrow(line: String) {
+        val result = inbound.trySend(InboundEvent.LineReceived(sessionId, line))
+        if (result.isSuccess) {
+            inboundBackpressureFailures = 0
+            return
+        }
+
+        inboundBackpressureFailures++
+        if (inboundBackpressureFailures >= maxInboundBackpressureFailures) {
+            throw InboundBackpressure("inbound backpressure")
+        }
+        // Drop the line and keep the session open until the threshold is exceeded.
     }
 }

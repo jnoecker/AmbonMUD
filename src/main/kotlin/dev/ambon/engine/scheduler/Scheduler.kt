@@ -1,5 +1,6 @@
 package dev.ambon.engine.scheduler
 
+import kotlinx.coroutines.CancellationException
 import java.time.Clock
 import java.util.PriorityQueue
 
@@ -41,7 +42,12 @@ class Scheduler(
             val next = pq.peek() ?: break
             if (next.dueAtEpochMs > now) break
             pq.poll()
-            next.action()
+            try {
+                next.action()
+            } catch (t: Throwable) {
+                if (t is CancellationException) throw t
+                System.err.println("Scheduled action failed: ${t.message ?: t::class.simpleName}")
+            }
             ran++
         }
     }

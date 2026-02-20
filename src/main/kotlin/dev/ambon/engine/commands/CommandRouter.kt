@@ -34,24 +34,28 @@ class CommandRouter(
                     OutboundEvent.SendInfo(
                         sessionId,
                         """
-                        Commands: 
-                            help, 
-                            look/l, 
-                            n/s/e/w, 
-                            ansi on/off, 
-                            clear, 
-                            colors, 
-                            say, 
-                            who, 
-                            tell, 
-                            gossip,
-                            inventory, 
-                            equipment, 
-                            wear, 
-                            remove, 
-                            kill, 
-                            flee, 
-                            quit
+                        Commands:
+                            help/?
+                            look/l (or look <direction>)
+                            n/s/e/w/u/d
+                            exits/ex
+                            say <msg> or '<msg>
+                            emote <msg>
+                            who
+                            tell/t <player> <msg>
+                            gossip/gs <msg>
+                            inventory/inv/i
+                            equipment/eq
+                            wear/equip <item>
+                            remove/unequip <slot>
+                            get/take/pickup <item>
+                            drop <item>
+                            kill <mob>
+                            flee
+                            ansi on/off
+                            colors
+                            clear
+                            quit/exit
                         """.trimIndent(),
                     ),
                 )

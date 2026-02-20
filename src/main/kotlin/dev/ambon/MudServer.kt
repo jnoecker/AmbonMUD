@@ -102,6 +102,7 @@ class MudServer(
                 sessionOutboundQueueCapacity = config.server.sessionOutboundQueueCapacity,
                 maxLineLen = config.transport.telnet.maxLineLen,
                 maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
+                maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
             )
         telnetTransport.start()
 
@@ -115,6 +116,9 @@ class MudServer(
                 sessionOutboundQueueCapacity = config.server.sessionOutboundQueueCapacity,
                 stopGraceMillis = config.transport.websocket.stopGraceMillis,
                 stopTimeoutMillis = config.transport.websocket.stopTimeoutMillis,
+                maxLineLen = config.transport.telnet.maxLineLen,
+                maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
+                maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
             )
         webTransport.start()
     }

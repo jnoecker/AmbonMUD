@@ -20,6 +20,7 @@ class BlockingSocketTransport(
     private val sessionOutboundQueueCapacity: Int = 200,
     private val maxLineLen: Int = 1024,
     private val maxNonPrintablePerLine: Int = 32,
+    private val maxInboundBackpressureFailures: Int = 3,
 ) : Transport {
     private var serverSocket: ServerSocket? = null
     private var acceptJob: Job? = null
@@ -43,6 +44,7 @@ class BlockingSocketTransport(
                             scope = scope,
                             maxLineLen = maxLineLen,
                             maxNonPrintablePerLine = maxNonPrintablePerLine,
+                            maxInboundBackpressureFailures = maxInboundBackpressureFailures,
                         )
                     outboundRouter.register(
                         sessionId = sessionId,

@@ -111,7 +111,7 @@ Commands
 - `help` or `?`: list available commands.
 - `look` or `l`: look around the current room.
 - `look <direction>`: peek into a direction (e.g. `look north`).
-- `n`, `s`, `e`, `w` (or `north`, `south`, `east`, `west`): move.
+- `n`, `s`, `e`, `w`, `u`, `d` (or `north`, `south`, `east`, `west`, `up`, `down`): move.
 - `exits` or `ex`: list exits in the current room.
 - `say <msg>` or `'<msg>`: speak to the room.
 - `emote <msg>`: perform an emote visible to the room.
