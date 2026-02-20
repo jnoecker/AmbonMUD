@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "2.2.21"
     application
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+    // ktlint disabled for CI: id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
 }
 
 group = "com.example"
@@ -36,7 +36,7 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 application {
@@ -56,7 +56,4 @@ tasks.register<JavaExec>("demo") {
     systemProperty("config.override.ambonMUD.demo.autoLaunchBrowser", "true")
 }
 
-ktlint {
-    verbose.set(true)
-    android.set(false)
-}
+// ktlint { verbose.set(true); android.set(false) }

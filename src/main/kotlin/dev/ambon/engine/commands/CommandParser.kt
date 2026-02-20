@@ -192,6 +192,8 @@ object CommandParser {
             "s", "south" -> Command.Move(Direction.SOUTH)
             "e", "east" -> Command.Move(Direction.EAST)
             "w", "west" -> Command.Move(Direction.WEST)
+            "u", "up" -> Command.Move(Direction.UP)
+            "d", "down" -> Command.Move(Direction.DOWN)
             "exits", "ex" -> Command.Exits
             "flee" -> Command.Flee
             else -> Command.Unknown(line)
