@@ -14,6 +14,7 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
@@ -21,6 +22,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.time.Clock
+
+private val log = KotlinLogging.logger {}
 
 class GameEngine(
     private val inbound: ReceiveChannel<InboundEvent>,
@@ -120,47 +123,53 @@ class GameEngine(
                 val tickStart = clock.millis()
                 val tickSample = Timer.start()
 
-                // Drain inbound without blocking
-                var inboundProcessed = 0
-                while (inboundProcessed < maxInboundEventsPerTick) {
-                    val ev = inbound.tryReceive().getOrNull() ?: break
-                    handle(ev)
-                    inboundProcessed++
+                try {
+                    // Drain inbound without blocking
+                    var inboundProcessed = 0
+                    while (inboundProcessed < maxInboundEventsPerTick) {
+                        val ev = inbound.tryReceive().getOrNull() ?: break
+                        handle(ev)
+                        inboundProcessed++
+                    }
+                    metrics.onInboundEventsProcessed(inboundProcessed)
+
+                    // Simulate NPC actions (time-gated internally)
+                    val mobSample = Timer.start()
+                    val mobMoves = mobSystem.tick(maxMovesPerTick = engineConfig.mob.maxMovesPerTick)
+                    mobSample.stop(metrics.mobSystemTickTimer)
+                    metrics.onMobMoves(mobMoves)
+
+                    // Simulate combat (time-gated internally)
+                    val combatSample = Timer.start()
+                    val combatsRan = combatSystem.tick(maxCombatsPerTick = engineConfig.combat.maxCombatsPerTick)
+                    combatSample.stop(metrics.combatSystemTickTimer)
+                    metrics.onCombatsProcessed(combatsRan)
+
+                    // Regenerate player HP (time-gated internally)
+                    val regenSample = Timer.start()
+                    regenSystem.tick(maxPlayersPerTick = engineConfig.regen.maxPlayersPerTick)
+                    regenSample.stop(metrics.regenTickTimer)
+
+                    // Run scheduled actions (bounded)
+                    val schedulerSample = Timer.start()
+                    val (actionsRan, actionsDropped) = scheduler.runDue(maxActions = engineConfig.scheduler.maxActionsPerTick)
+                    schedulerSample.stop(metrics.schedulerRunDueTimer)
+                    metrics.onSchedulerActionsExecuted(actionsRan)
+                    metrics.onSchedulerActionsDropped(actionsDropped)
+
+                    // Reset zones when their lifespan elapses.
+                    resetZonesIfDue()
+                } catch (t: Throwable) {
+                    if (t is kotlinx.coroutines.CancellationException) throw t
+                    log.error(t) { "Unhandled exception during tick processing" }
                 }
-                metrics.onInboundEventsProcessed(inboundProcessed)
-
-                // Simulate NPC actions (time-gated internally)
-                val mobSample = Timer.start()
-                val mobMoves = mobSystem.tick(maxMovesPerTick = engineConfig.mob.maxMovesPerTick)
-                mobSample.stop(metrics.mobSystemTickTimer)
-                metrics.onMobMoves(mobMoves)
-
-                // Simulate combat (time-gated internally)
-                val combatSample = Timer.start()
-                val combatsRan = combatSystem.tick(maxCombatsPerTick = engineConfig.combat.maxCombatsPerTick)
-                combatSample.stop(metrics.combatSystemTickTimer)
-                metrics.onCombatsProcessed(combatsRan)
-
-                // Regenerate player HP (time-gated internally)
-                val regenSample = Timer.start()
-                regenSystem.tick(maxPlayersPerTick = engineConfig.regen.maxPlayersPerTick)
-                regenSample.stop(metrics.regenTickTimer)
-
-                // Run scheduled actions (bounded)
-                val schedulerSample = Timer.start()
-                val (actionsRan, actionsDropped) = scheduler.runDue(maxActions = engineConfig.scheduler.maxActionsPerTick)
-                schedulerSample.stop(metrics.schedulerRunDueTimer)
-                metrics.onSchedulerActionsExecuted(actionsRan)
-                metrics.onSchedulerActionsDropped(actionsDropped)
-
-                // Reset zones when their lifespan elapses.
-                resetZonesIfDue()
 
                 val elapsed = clock.millis() - tickStart
                 val sleep = (tickMillis - elapsed).coerceAtLeast(0)
 
                 metrics.onEngineTick()
                 if (elapsed > tickMillis) metrics.onEngineTickOverrun()
+                if (elapsed > tickMillis * 2) log.warn { "Slow tick: elapsed=${elapsed}ms (threshold=${tickMillis * 2}ms)" }
                 tickSample.stop(metrics.engineTickTimer)
 
                 delay(sleep)
@@ -253,6 +262,7 @@ class GameEngine(
                 regenSystem.onPlayerDisconnected(sid)
 
                 if (me != null) {
+                    log.info { "Player logged out: name=${me.name} sessionId=$sid" }
                     broadcastToRoom(me.roomId, "${me.name} leaves.", sid)
                 }
 
@@ -496,6 +506,7 @@ class GameEngine(
             return
         }
 
+        log.info { "Player logged in: name=${me.name} sessionId=$sessionId" }
         outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
         if (!suppressEnterBroadcast) {
             broadcastToRoom(me.roomId, "${me.name} enters.", sessionId)
