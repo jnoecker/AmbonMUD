@@ -9,8 +9,7 @@ fun main() =
     runBlocking {
         val config = AppConfigLoader.load()
         val server = MudServer(config)
-        val webClientUrl = "http://${config.demo.webClientHost}:${config.server.webPort}"
-
+        val webClientUrl = config.demo.webClientUrl ?: "http://${config.demo.webClientHost}:${config.server.webPort}"
         server.start()
         println("QuickMUD listening on telnet port ${config.server.telnetPort} (telnet localhost ${config.server.telnetPort})")
         println("QuickMUD web client at $webClientUrl")

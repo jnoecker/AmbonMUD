@@ -140,4 +140,5 @@ data class WebSocketTransportConfig(
 data class DemoConfig(
     val autoLaunchBrowser: Boolean = false,
     val webClientHost: String = "localhost",
+    var webClientUrl: String? = null,
 )
