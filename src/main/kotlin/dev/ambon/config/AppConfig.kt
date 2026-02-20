@@ -1,7 +1,7 @@
 package dev.ambon.config
 
-data class QuickMudRootConfig(
-    val quickmud: AppConfig = AppConfig(),
+data class AmbonMUDRootConfig(
+    val ambonMUD: AppConfig = AppConfig(),
 )
 
 data class AppConfig(
@@ -14,54 +14,54 @@ data class AppConfig(
     val demo: DemoConfig = DemoConfig(),
 ) {
     fun validated(): AppConfig {
-        require(server.telnetPort in 1..65535) { "quickmud.server.telnetPort must be between 1 and 65535" }
-        require(server.webPort in 1..65535) { "quickmud.server.webPort must be between 1 and 65535" }
-        require(server.inboundChannelCapacity > 0) { "quickmud.server.inboundChannelCapacity must be > 0" }
-        require(server.outboundChannelCapacity > 0) { "quickmud.server.outboundChannelCapacity must be > 0" }
-        require(server.sessionOutboundQueueCapacity > 0) { "quickmud.server.sessionOutboundQueueCapacity must be > 0" }
-        require(server.tickMillis > 0L) { "quickmud.server.tickMillis must be > 0" }
+        require(server.telnetPort in 1..65535) { "ambonMUD.server.telnetPort must be between 1 and 65535" }
+        require(server.webPort in 1..65535) { "ambonMUD.server.webPort must be between 1 and 65535" }
+        require(server.inboundChannelCapacity > 0) { "ambonMUD.server.inboundChannelCapacity must be > 0" }
+        require(server.outboundChannelCapacity > 0) { "ambonMUD.server.outboundChannelCapacity must be > 0" }
+        require(server.sessionOutboundQueueCapacity > 0) { "ambonMUD.server.sessionOutboundQueueCapacity must be > 0" }
+        require(server.tickMillis > 0L) { "ambonMUD.server.tickMillis must be > 0" }
 
-        require(world.resources.isNotEmpty()) { "quickmud.world.resources must not be empty" }
-        require(world.resources.all { it.isNotBlank() }) { "quickmud.world.resources entries must be non-blank" }
+        require(world.resources.isNotEmpty()) { "ambonMUD.world.resources must not be empty" }
+        require(world.resources.all { it.isNotBlank() }) { "ambonMUD.world.resources entries must be non-blank" }
 
-        require(persistence.rootDir.isNotBlank()) { "quickmud.persistence.rootDir must be non-blank" }
+        require(persistence.rootDir.isNotBlank()) { "ambonMUD.persistence.rootDir must be non-blank" }
 
-        require(login.maxWrongPasswordRetries >= 0) { "quickmud.login.maxWrongPasswordRetries must be >= 0" }
+        require(login.maxWrongPasswordRetries >= 0) { "ambonMUD.login.maxWrongPasswordRetries must be >= 0" }
         require(login.maxFailedAttemptsBeforeDisconnect > 0) {
-            "quickmud.login.maxFailedAttemptsBeforeDisconnect must be > 0"
+            "ambonMUD.login.maxFailedAttemptsBeforeDisconnect must be > 0"
         }
 
-        require(engine.mob.maxMovesPerTick > 0) { "quickmud.engine.mob.maxMovesPerTick must be > 0" }
-        require(engine.mob.minWanderDelayMillis >= 0L) { "quickmud.engine.mob.minWanderDelayMillis must be >= 0" }
+        require(engine.mob.maxMovesPerTick > 0) { "ambonMUD.engine.mob.maxMovesPerTick must be > 0" }
+        require(engine.mob.minWanderDelayMillis >= 0L) { "ambonMUD.engine.mob.minWanderDelayMillis must be >= 0" }
         require(engine.mob.maxWanderDelayMillis >= engine.mob.minWanderDelayMillis) {
-            "quickmud.engine.mob.maxWanderDelayMillis must be >= minWanderDelayMillis"
+            "ambonMUD.engine.mob.maxWanderDelayMillis must be >= minWanderDelayMillis"
         }
 
-        require(engine.combat.maxCombatsPerTick > 0) { "quickmud.engine.combat.maxCombatsPerTick must be > 0" }
-        require(engine.combat.tickMillis > 0L) { "quickmud.engine.combat.tickMillis must be > 0" }
-        require(engine.combat.minDamage > 0) { "quickmud.engine.combat.minDamage must be > 0" }
+        require(engine.combat.maxCombatsPerTick > 0) { "ambonMUD.engine.combat.maxCombatsPerTick must be > 0" }
+        require(engine.combat.tickMillis > 0L) { "ambonMUD.engine.combat.tickMillis must be > 0" }
+        require(engine.combat.minDamage > 0) { "ambonMUD.engine.combat.minDamage must be > 0" }
         require(engine.combat.maxDamage >= engine.combat.minDamage) {
-            "quickmud.engine.combat.maxDamage must be >= minDamage"
+            "ambonMUD.engine.combat.maxDamage must be >= minDamage"
         }
 
-        require(engine.regen.maxPlayersPerTick > 0) { "quickmud.engine.regen.maxPlayersPerTick must be > 0" }
-        require(engine.regen.baseIntervalMillis > 0L) { "quickmud.engine.regen.baseIntervalMillis must be > 0" }
-        require(engine.regen.minIntervalMillis > 0L) { "quickmud.engine.regen.minIntervalMillis must be > 0" }
-        require(engine.regen.msPerConstitution >= 0L) { "quickmud.engine.regen.msPerConstitution must be >= 0" }
-        require(engine.regen.regenAmount > 0) { "quickmud.engine.regen.regenAmount must be > 0" }
+        require(engine.regen.maxPlayersPerTick > 0) { "ambonMUD.engine.regen.maxPlayersPerTick must be > 0" }
+        require(engine.regen.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.baseIntervalMillis must be > 0" }
+        require(engine.regen.minIntervalMillis > 0L) { "ambonMUD.engine.regen.minIntervalMillis must be > 0" }
+        require(engine.regen.msPerConstitution >= 0L) { "ambonMUD.engine.regen.msPerConstitution must be >= 0" }
+        require(engine.regen.regenAmount > 0) { "ambonMUD.engine.regen.regenAmount must be > 0" }
 
-        require(engine.scheduler.maxActionsPerTick > 0) { "quickmud.engine.scheduler.maxActionsPerTick must be > 0" }
+        require(engine.scheduler.maxActionsPerTick > 0) { "ambonMUD.engine.scheduler.maxActionsPerTick must be > 0" }
 
-        require(transport.telnet.maxLineLen > 0) { "quickmud.transport.telnet.maxLineLen must be > 0" }
+        require(transport.telnet.maxLineLen > 0) { "ambonMUD.transport.telnet.maxLineLen must be > 0" }
         require(transport.telnet.maxNonPrintablePerLine >= 0) {
-            "quickmud.transport.telnet.maxNonPrintablePerLine must be >= 0"
+            "ambonMUD.transport.telnet.maxNonPrintablePerLine must be >= 0"
         }
 
-        require(transport.websocket.host.isNotBlank()) { "quickmud.transport.websocket.host must be non-blank" }
-        require(transport.websocket.stopGraceMillis >= 0L) { "quickmud.transport.websocket.stopGraceMillis must be >= 0" }
-        require(transport.websocket.stopTimeoutMillis >= 0L) { "quickmud.transport.websocket.stopTimeoutMillis must be >= 0" }
+        require(transport.websocket.host.isNotBlank()) { "ambonMUD.transport.websocket.host must be non-blank" }
+        require(transport.websocket.stopGraceMillis >= 0L) { "ambonMUD.transport.websocket.stopGraceMillis must be >= 0" }
+        require(transport.websocket.stopTimeoutMillis >= 0L) { "ambonMUD.transport.websocket.stopTimeoutMillis must be >= 0" }
 
-        require(demo.webClientHost.isNotBlank()) { "quickmud.demo.webClientHost must be non-blank" }
+        require(demo.webClientHost.isNotBlank()) { "ambonMUD.demo.webClientHost must be non-blank" }
 
         return this
     }

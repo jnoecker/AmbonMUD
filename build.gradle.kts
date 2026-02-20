@@ -49,11 +49,11 @@ tasks.test {
 
 tasks.register<JavaExec>("demo") {
     group = "application"
-    description = "Runs QuickMUD and opens the browser demo client."
+    description = "Runs AmbonMUD and opens the browser demo client."
     mainClass.set(application.mainClass)
     classpath = project.extensions.getByType(org.gradle.api.tasks.SourceSetContainer::class.java)["main"].runtimeClasspath
     standardInput = System.`in`
-    systemProperty("config.override.quickmud.demo.autoLaunchBrowser", "true")
+    systemProperty("config.override.ambonMUD.demo.autoLaunchBrowser", "true")
 }
 
 ktlint {

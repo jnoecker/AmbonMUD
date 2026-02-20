@@ -31,7 +31,7 @@ class KtorWebSocketTransportTest {
 
             testApplication {
                 application {
-                    quickMudWebModule(
+                    ambonMUDWebModule(
                         inbound = inbound,
                         outboundRouter = outboundRouter,
                         sessionIdFactory = { sid },
@@ -85,7 +85,7 @@ class KtorWebSocketTransportTest {
 
             testApplication {
                 application {
-                    quickMudWebModule(
+                    ambonMUDWebModule(
                         inbound = inbound,
                         outboundRouter = outboundRouter,
                         sessionIdFactory = { SessionId(1) },
@@ -94,7 +94,7 @@ class KtorWebSocketTransportTest {
 
                 val response = client.get("/")
                 assertEquals(HttpStatusCode.OK, response.status)
-                assertTrue(response.bodyAsText().contains("QuickMUD Demo"))
+                assertTrue(response.bodyAsText().contains("AmbonMUD Demo"))
             }
 
             inbound.close()

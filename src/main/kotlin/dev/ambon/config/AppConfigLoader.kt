@@ -20,8 +20,8 @@ object AppConfigLoader {
 
         return builder
             .build()
-            .loadConfigOrThrow<QuickMudRootConfig>()
-            .quickmud
+            .loadConfigOrThrow<AmbonMUDRootConfig>()
+            .ambonMUD
             .validated()
     }
 }

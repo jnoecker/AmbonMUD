@@ -38,7 +38,7 @@ class KtorWebSocketTransport(
     override suspend fun start() {
         engine =
             embeddedServer(Netty, port = port, host = host) {
-                quickMudWebModule(
+                ambonMUDWebModule(
                     inbound = inbound,
                     outboundRouter = outboundRouter,
                     sessionIdFactory = sessionIdFactory,
@@ -53,7 +53,7 @@ class KtorWebSocketTransport(
     }
 }
 
-internal fun Application.quickMudWebModule(
+internal fun Application.ambonMUDWebModule(
     inbound: SendChannel<InboundEvent>,
     outboundRouter: OutboundRouter,
     sessionIdFactory: () -> SessionId,
@@ -136,8 +136,13 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
                     }
                 }
 
-                is Frame.Close -> break
-                else -> Unit
+                is Frame.Close -> {
+                    break
+                }
+
+                else -> {
+                    Unit
+                }
             }
         }
     } catch (t: Throwable) {
