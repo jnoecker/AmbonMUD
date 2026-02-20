@@ -20,6 +20,16 @@ sealed interface LoginResult {
     data object WrongPassword : LoginResult
 }
 
+sealed interface CreateResult {
+    data object Ok : CreateResult
+
+    data object InvalidName : CreateResult
+
+    data object InvalidPassword : CreateResult
+
+    data object Taken : CreateResult
+}
+
 class PlayerRegistry(
     private val startRoom: RoomId,
     private val repo: PlayerRepository,
@@ -39,12 +49,12 @@ class PlayerRegistry(
     ): LoginResult {
         if (players.containsKey(sessionId)) return LoginResult.InvalidName
 
-        val name = nameRaw.trim()
+        val name = normalizeName(nameRaw)
         if (!isValidName(name)) return LoginResult.InvalidName
 
         if (isNameOnline(name, sessionId)) return LoginResult.Taken
 
-        val password = passwordRaw.trim()
+        val password = normalizePassword(passwordRaw)
         if (!isValidPassword(password)) return LoginResult.InvalidPassword
 
         val now = clock.millis()
@@ -63,9 +73,46 @@ class PlayerRegistry(
                     existingRecord.copy(lastSeenEpochMs = now, passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()))
                 }
             } else {
-                repo.create(name, startRoom, now, BCrypt.hashpw(password, BCrypt.gensalt()))
+                return when (create(sessionId, name, password)) {
+                    CreateResult.Ok -> LoginResult.Ok
+                    CreateResult.InvalidName -> LoginResult.InvalidName
+                    CreateResult.InvalidPassword -> LoginResult.InvalidPassword
+                    CreateResult.Taken -> LoginResult.Taken
+                }
             }
 
+        bindSession(sessionId, boundRecord, now)
+        return LoginResult.Ok
+    }
+
+    suspend fun create(
+        sessionId: SessionId,
+        nameRaw: String,
+        passwordRaw: String,
+    ): CreateResult {
+        if (players.containsKey(sessionId)) return CreateResult.InvalidName
+
+        val name = normalizeName(nameRaw)
+        if (!isValidName(name)) return CreateResult.InvalidName
+
+        if (isNameOnline(name, sessionId)) return CreateResult.Taken
+
+        val password = normalizePassword(passwordRaw)
+        if (!isValidPassword(password)) return CreateResult.InvalidPassword
+
+        if (repo.findByName(name) != null) return CreateResult.Taken
+
+        val now = clock.millis()
+        val created = repo.create(name, startRoom, now, BCrypt.hashpw(password, BCrypt.gensalt()))
+        bindSession(sessionId, created, now)
+        return CreateResult.Ok
+    }
+
+    private suspend fun bindSession(
+        sessionId: SessionId,
+        boundRecord: PlayerRecord,
+        now: Long,
+    ) {
         val ps =
             PlayerState(
                 sessionId = sessionId,
@@ -80,8 +127,6 @@ class PlayerRegistry(
         items.ensurePlayer(sessionId)
 
         repo.save(boundRecord.copy(roomId = ps.roomId, lastSeenEpochMs = now))
-
-        return LoginResult.Ok
     }
 
     suspend fun disconnect(sessionId: SessionId) {
@@ -123,15 +168,21 @@ class PlayerRegistry(
         persistIfClaimed(ps)
     }
 
-    fun findSessionByName(name: String): SessionId? = sessionByLowerName[name.trim().lowercase()]
+    fun findSessionByName(name: String): SessionId? = sessionByLowerName[normalizeName(name).lowercase()]
 
     fun isNameOnline(
         name: String,
         exclude: SessionId? = null,
     ): Boolean {
-        val key = name.trim().lowercase()
+        val key = normalizeName(name).lowercase()
         val existing = sessionByLowerName[key]
         return existing != null && existing != exclude
+    }
+
+    suspend fun hasRegisteredName(nameRaw: String): Boolean {
+        val name = normalizeName(nameRaw)
+        if (!isValidName(name)) return false
+        return repo.findByName(name) != null
     }
 
     fun isValidName(name: String): Boolean {
@@ -164,4 +215,8 @@ class PlayerRegistry(
         if (password.length > 72) return false
         return true
     }
+
+    private fun normalizeName(nameRaw: String): String = nameRaw.trim()
+
+    private fun normalizePassword(passwordRaw: String): String = passwordRaw.trim()
 }
