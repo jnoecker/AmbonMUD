@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.metrics.GameMetrics
 import java.time.Clock
 import java.util.Random
 
@@ -14,6 +15,7 @@ class RegenSystem(
     private val minIntervalMs: Long = 1_000L,
     private val msPerConstitution: Long = 200L,
     private val regenAmount: Int = 1,
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     private val lastRegenAtMs = mutableMapOf<SessionId, Long>()
 

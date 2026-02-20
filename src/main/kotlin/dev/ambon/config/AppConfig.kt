@@ -13,6 +13,7 @@ data class AppConfig(
     val progression: ProgressionConfig = ProgressionConfig(),
     val transport: TransportConfig = TransportConfig(),
     val demo: DemoConfig = DemoConfig(),
+    val observability: ObservabilityConfig = ObservabilityConfig(),
 ) {
     fun validated(): AppConfig {
         require(server.telnetPort in 1..65535) { "ambonMUD.server.telnetPort must be between 1 and 65535" }
@@ -78,6 +79,10 @@ data class AppConfig(
         require(transport.websocket.stopTimeoutMillis >= 0L) { "ambonMUD.transport.websocket.stopTimeoutMillis must be >= 0" }
 
         require(demo.webClientHost.isNotBlank()) { "ambonMUD.demo.webClientHost must be non-blank" }
+
+        require(observability.metricsEndpoint.startsWith("/")) {
+            "ambonMUD.observability.metricsEndpoint must start with '/'"
+        }
 
         return this
     }
@@ -178,4 +183,10 @@ data class DemoConfig(
     val autoLaunchBrowser: Boolean = false,
     val webClientHost: String = "localhost",
     val webClientUrl: String? = null,
+)
+
+data class ObservabilityConfig(
+    val metricsEnabled: Boolean = true,
+    val metricsEndpoint: String = "/metrics",
+    val staticTags: Map<String, String> = emptyMap(),
 )

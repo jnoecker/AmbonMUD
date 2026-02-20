@@ -1,0 +1,140 @@
+{
+  "title": "AmbonMUD Transport",
+  "uid": "ambon-transport",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Sessions Online",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "sessions_online",
+          "legendFormat": "sessions"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Telnet Online",
+      "type": "stat",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "telnet_connections_online",
+          "legendFormat": "telnet"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "WebSocket Online",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "ws_connections_online",
+          "legendFormat": "ws"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Sessions Connected / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 4, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(sessions_connected_total[1m])",
+          "legendFormat": "{{transport}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Sessions Disconnected / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 4, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(sessions_disconnected_total[1m])",
+          "legendFormat": "{{transport}}/{{reason}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Inbound Lines / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 4, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(inbound_lines_total[1m])",
+          "legendFormat": "{{transport}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Inbound Backpressure Failures / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 10, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(inbound_backpressure_failures_total[1m])",
+          "legendFormat": "failures/s"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Outbound Frames / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 10, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(outbound_frames_total[1m])",
+          "legendFormat": "frames/s"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Outbound Enqueue Failed / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 10, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(outbound_enqueue_failed_total[1m])",
+          "legendFormat": "failed/s"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Outbound Backpressure Disconnects / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(outbound_backpressure_disconnects_total[1m])",
+          "legendFormat": "disconnects/s"
+        }
+      ]
+    }
+  ]
+}

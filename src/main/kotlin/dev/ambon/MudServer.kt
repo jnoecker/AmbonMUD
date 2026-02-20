@@ -11,10 +11,13 @@ import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
+import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.YamlPlayerRepository
 import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.KtorWebSocketTransport
 import dev.ambon.transport.OutboundRouter
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -47,9 +50,23 @@ class MudServer(
 
     private val clock = Clock.systemUTC()
 
+    private val prometheusRegistry: PrometheusMeterRegistry? =
+        if (config.observability.metricsEnabled) {
+            PrometheusMeterRegistry(PrometheusConfig.DEFAULT).also { reg ->
+                reg.config().commonTags("service", "ambonmud")
+                config.observability.staticTags.forEach { (k, v) -> reg.config().commonTags(k, v) }
+            }
+        } else {
+            null
+        }
+
+    private val gameMetrics: GameMetrics =
+        if (prometheusRegistry != null) GameMetrics(prometheusRegistry) else GameMetrics.noop()
+
     private val playerRepo =
         YamlPlayerRepository(
             rootDir = Paths.get(config.persistence.rootDir),
+            metrics = gameMetrics,
         )
 
     private val items = ItemRegistry()
@@ -70,7 +87,9 @@ class MudServer(
         )
 
     suspend fun start() {
-        outboundRouter = OutboundRouter(outbound, scope)
+        bindWorldStateGauges()
+
+        outboundRouter = OutboundRouter(outbound, scope, metrics = gameMetrics)
         routerJob = outboundRouter.start()
 
         engineJob =
@@ -89,6 +108,7 @@ class MudServer(
                     loginConfig = config.login,
                     engineConfig = config.engine,
                     progression = progression,
+                    metrics = gameMetrics,
                 ).run()
             }
 
@@ -103,6 +123,7 @@ class MudServer(
                 maxLineLen = config.transport.telnet.maxLineLen,
                 maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
                 maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
+                metrics = gameMetrics,
             )
         telnetTransport.start()
 
@@ -119,8 +140,17 @@ class MudServer(
                 maxLineLen = config.transport.telnet.maxLineLen,
                 maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
                 maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
+                prometheusRegistry = prometheusRegistry,
+                metricsEndpoint = config.observability.metricsEndpoint,
+                metrics = gameMetrics,
             )
         webTransport.start()
+    }
+
+    private fun bindWorldStateGauges() {
+        gameMetrics.bindPlayerRegistry { players.allPlayers().size }
+        gameMetrics.bindMobRegistry { mobs.all().size }
+        gameMetrics.bindRoomsOccupied { players.allPlayers().map { it.roomId }.toSet().size }
     }
 
     suspend fun stop() {
