@@ -39,6 +39,18 @@ ambonMUD:
     scheduler:
       maxActionsPerTick: 100
 
+  progression:
+    maxLevel: 50
+    xp:
+      baseXp: 100
+      exponent: 2.0
+      linearXp: 0
+      multiplier: 1.0
+      defaultKillXp: 50
+    rewards:
+      hpPerLevel: 2
+      fullHealOnLevelUp: true
+
   transport:
     telnet:
       maxLineLen: 1024

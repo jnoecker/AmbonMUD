@@ -10,6 +10,7 @@ data class AppConfig(
     val persistence: PersistenceConfig = PersistenceConfig(),
     val login: LoginConfig = LoginConfig(),
     val engine: EngineConfig = EngineConfig(),
+    val progression: ProgressionConfig = ProgressionConfig(),
     val transport: TransportConfig = TransportConfig(),
     val demo: DemoConfig = DemoConfig(),
 ) {
@@ -51,6 +52,14 @@ data class AppConfig(
         require(engine.regen.regenAmount > 0) { "ambonMUD.engine.regen.regenAmount must be > 0" }
 
         require(engine.scheduler.maxActionsPerTick > 0) { "ambonMUD.engine.scheduler.maxActionsPerTick must be > 0" }
+
+        require(progression.maxLevel > 0) { "ambonMUD.progression.maxLevel must be > 0" }
+        require(progression.xp.baseXp > 0L) { "ambonMUD.progression.xp.baseXp must be > 0" }
+        require(progression.xp.exponent > 0.0) { "ambonMUD.progression.xp.exponent must be > 0" }
+        require(progression.xp.linearXp >= 0L) { "ambonMUD.progression.xp.linearXp must be >= 0" }
+        require(progression.xp.multiplier >= 0.0) { "ambonMUD.progression.xp.multiplier must be >= 0" }
+        require(progression.xp.defaultKillXp >= 0L) { "ambonMUD.progression.xp.defaultKillXp must be >= 0" }
+        require(progression.rewards.hpPerLevel >= 0) { "ambonMUD.progression.rewards.hpPerLevel must be >= 0" }
 
         require(transport.telnet.maxLineLen > 0) { "ambonMUD.transport.telnet.maxLineLen must be > 0" }
         require(transport.telnet.maxNonPrintablePerLine >= 0) {
@@ -94,6 +103,25 @@ data class EngineConfig(
     val combat: CombatEngineConfig = CombatEngineConfig(),
     val regen: RegenEngineConfig = RegenEngineConfig(),
     val scheduler: SchedulerEngineConfig = SchedulerEngineConfig(),
+)
+
+data class ProgressionConfig(
+    val maxLevel: Int = 50,
+    val xp: XpCurveConfig = XpCurveConfig(),
+    val rewards: LevelRewardsConfig = LevelRewardsConfig(),
+)
+
+data class XpCurveConfig(
+    val baseXp: Long = 100L,
+    val exponent: Double = 2.0,
+    val linearXp: Long = 0L,
+    val multiplier: Double = 1.0,
+    val defaultKillXp: Long = 50L,
+)
+
+data class LevelRewardsConfig(
+    val hpPerLevel: Int = 2,
+    val fullHealOnLevelUp: Boolean = true,
 )
 
 data class MobEngineConfig(
