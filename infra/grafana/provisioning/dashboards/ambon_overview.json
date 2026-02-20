@@ -2,7 +2,7 @@
   "title": "AmbonMUD Overview",
   "uid": "ambon-overview",
   "schemaVersion": 38,
-  "version": 1,
+  "version": 2,
   "refresh": "15s",
   "time": { "from": "now-15m", "to": "now" },
   "panels": [
@@ -34,6 +34,58 @@
     },
     {
       "id": 3,
+      "title": "Telnet Online",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "telnet_connections_online",
+          "legendFormat": "telnet"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "WebSocket Online",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "ws_connections_online",
+          "legendFormat": "ws"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Mobs Alive",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "mobs_alive",
+          "legendFormat": "mobs"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Rooms Occupied",
+      "type": "stat",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rooms_occupied",
+          "legendFormat": "rooms"
+        }
+      ]
+    },
+    {
+      "id": 7,
       "title": "Engine Tick Duration (seconds)",
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 4, "w": 12, "h": 6 },
@@ -56,10 +108,10 @@
       ]
     },
     {
-      "id": 4,
+      "id": 8,
       "title": "Engine Tick Overruns / sec",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 6 },
+      "gridPos": { "x": 12, "y": 4, "w": 6, "h": 6 },
       "targets": [
         {
           "datasource": { "type": "prometheus" },
@@ -69,10 +121,49 @@
       ]
     },
     {
-      "id": 5,
-      "title": "Sessions Connected / sec",
+      "id": 9,
+      "title": "Engine Ticks / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 18, "y": 4, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(engine_ticks_total[1m])",
+          "legendFormat": "ticks/s"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Inbound Events Processed / sec",
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 10, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(engine_inbound_events_processed_total[1m])",
+          "legendFormat": "events/s"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Inbound Lines / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 10, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(inbound_lines_total[1m])",
+          "legendFormat": "{{transport}}"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Sessions Connected / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 8, "h": 6 },
       "targets": [
         {
           "datasource": { "type": "prometheus" },
@@ -82,10 +173,191 @@
       ]
     },
     {
-      "id": 6,
+      "id": 13,
+      "title": "Sessions Disconnected / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 16, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(sessions_disconnected_total[1m])",
+          "legendFormat": "{{transport}}/{{reason}}"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Inbound Backpressure Failures / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 16, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(inbound_backpressure_failures_total[1m])",
+          "legendFormat": "failures/s"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Outbound Frames / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 22, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(outbound_frames_total[1m])",
+          "legendFormat": "frames/s"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Outbound Enqueue Failed / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 22, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(outbound_enqueue_failed_total[1m])",
+          "legendFormat": "failed/s"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "Outbound Backpressure Disconnects / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 22, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(outbound_backpressure_disconnects_total[1m])",
+          "legendFormat": "disconnects/s"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Mob System Tick Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 28, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.50, rate(mob_system_tick_duration_seconds_bucket[1m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.95, rate(mob_system_tick_duration_seconds_bucket[1m]))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "title": "Combat System Tick Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 28, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.50, rate(combat_system_tick_duration_seconds_bucket[1m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.95, rate(combat_system_tick_duration_seconds_bucket[1m]))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "title": "Regen Tick Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 34, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(regen_tick_duration_seconds_sum[1m]) / rate(regen_tick_duration_seconds_count[1m])",
+          "legendFormat": "avg"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "regen_tick_duration_seconds_max",
+          "legendFormat": "max"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "title": "Scheduler Run Due Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 34, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.50, rate(scheduler_run_due_duration_seconds_bucket[1m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.95, rate(scheduler_run_due_duration_seconds_bucket[1m]))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Mob Moves / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 40, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(mob_moves_total[1m])",
+          "legendFormat": "moves/s"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "title": "Combats Processed / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 40, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(combats_processed_total[1m])",
+          "legendFormat": "combats/s"
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "title": "Scheduler Actions / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 40, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(scheduler_actions_executed_total[1m])",
+          "legendFormat": "executed/s"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(scheduler_actions_dropped_total[1m])",
+          "legendFormat": "dropped/s"
+        }
+      ]
+    },
+    {
+      "id": 25,
       "title": "XP Awarded / sec",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 10, "w": 12, "h": 6 },
+      "gridPos": { "x": 0, "y": 46, "w": 12, "h": 6 },
       "targets": [
         {
           "datasource": { "type": "prometheus" },
@@ -95,10 +367,90 @@
       ]
     },
     {
-      "id": 7,
+      "id": 26,
+      "title": "Level Ups / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 46, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(level_ups_total[1m])",
+          "legendFormat": "levelups/s"
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "title": "Player Deaths / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 18, "y": 46, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(player_deaths_total[1m])",
+          "legendFormat": "deaths/s"
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "title": "Player Saves / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 52, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(player_saves_total[1m])",
+          "legendFormat": "saves/s"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(player_save_failures_total[1m])",
+          "legendFormat": "failures/s"
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "title": "Player Repo Save Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 52, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(player_repo_save_duration_seconds_sum[1m]) / rate(player_repo_save_duration_seconds_count[1m])",
+          "legendFormat": "avg"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "player_repo_save_duration_seconds_max",
+          "legendFormat": "max"
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "title": "Player Repo Load Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 18, "y": 52, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(player_repo_load_duration_seconds_sum[1m]) / rate(player_repo_load_duration_seconds_count[1m])",
+          "legendFormat": "avg"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "player_repo_load_duration_seconds_max",
+          "legendFormat": "max"
+        }
+      ]
+    },
+    {
+      "id": 31,
       "title": "JVM Memory Used (bytes)",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 6 },
+      "gridPos": { "x": 0, "y": 58, "w": 12, "h": 6 },
       "targets": [
         {
           "datasource": { "type": "prometheus" },
@@ -108,15 +460,77 @@
       ]
     },
     {
-      "id": 8,
+      "id": 32,
+      "title": "JVM Threads",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 58, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "jvm_threads_live_threads",
+          "legendFormat": "live"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "jvm_threads_daemon_threads",
+          "legendFormat": "daemon"
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "title": "Classes Loaded",
+      "type": "timeseries",
+      "gridPos": { "x": 18, "y": 58, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "jvm_classes_loaded",
+          "legendFormat": "loaded"
+        }
+      ]
+    },
+    {
+      "id": 34,
       "title": "Process CPU Usage",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 6 },
+      "gridPos": { "x": 0, "y": 64, "w": 8, "h": 6 },
       "targets": [
         {
           "datasource": { "type": "prometheus" },
           "expr": "process_cpu_usage",
-          "legendFormat": "cpu"
+          "legendFormat": "process"
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "title": "System CPU Usage",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 64, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "system_cpu_usage",
+          "legendFormat": "system"
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "title": "JVM GC Pause / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 64, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(jvm_gc_pause_seconds_sum[1m])",
+          "legendFormat": "pause_seconds/s"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(jvm_gc_pause_seconds_count[1m])",
+          "legendFormat": "pauses/s"
         }
       ]
     }
