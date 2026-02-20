@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -16,6 +17,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mindrot.jbcrypt.BCrypt
@@ -403,6 +406,244 @@ class GameEngineLoginFlowTest {
             runCurrent()
 
             assertEquals("NewUser", players.get(sid)?.name)
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
+
+    @Test
+    fun `second login with correct password kicks first session and observer sees flicker`() =
+        runTest {
+            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
+            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+
+            val world = WorldFactory.demoWorld()
+            val repo = InMemoryPlayerRepository()
+            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create("Observer", world.startRoom, 0L, BCrypt.hashpw("pw", BCrypt.gensalt()), ansiEnabled = false)
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, repo, items)
+
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 10L
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
+                )
+            val engineJob = launch { engine.run() }
+
+            val sid1 = SessionId(1L)
+            val sid2 = SessionId(2L)
+            val sid3 = SessionId(3L)
+            runCurrent()
+
+            // Login Observer (sid3) and Alice (sid1) — both land in start room
+            inbound.send(InboundEvent.Connected(sid3))
+            inbound.send(InboundEvent.LineReceived(sid3, "Observer"))
+            inbound.send(InboundEvent.LineReceived(sid3, "pw"))
+            inbound.send(InboundEvent.Connected(sid1))
+            inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid1, "secret"))
+
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            assertEquals("Alice", players.get(sid1)?.name, "Expected Alice logged in on sid1")
+            drainOutbound(outbound)
+
+            // Second session takes over Alice with correct password
+            inbound.send(InboundEvent.Connected(sid2))
+            inbound.send(InboundEvent.LineReceived(sid2, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid2, "secret"))
+
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val outs = drainOutbound(outbound)
+
+            // Old session is closed with kick message
+            val kick = outs.filterIsInstance<OutboundEvent.Close>().firstOrNull { it.sessionId == sid1 }
+            assertNotNull(kick, "Expected Close event for old session. got=$outs")
+            assertEquals("Your account has logged in from another location.", kick!!.reason)
+
+            // Observer in the same room sees the flicker message
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == sid3 && it.text == "Alice briefly flickers." },
+                "Expected observer to see flicker message. got=$outs",
+            )
+
+            // New session does NOT receive an "enters." broadcast
+            assertFalse(
+                outs.filterIsInstance<OutboundEvent.SendText>()
+                    .any { it.sessionId == sid2 && it.text.contains("enters.") },
+                "Expected no 'enters.' broadcast for takeover. got=$outs",
+            )
+
+            // New session now owns Alice; old session is gone
+            assertNull(players.get(sid1), "Expected old session removed from registry")
+            assertEquals("Alice", players.get(sid2)?.name)
+            assertEquals(sid2, players.findSessionByName("Alice"))
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
+
+    @Test
+    fun `wrong password on live name does not kick original session`() =
+        runTest {
+            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
+            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+
+            val world = WorldFactory.demoWorld()
+            val repo = InMemoryPlayerRepository()
+            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, repo, items)
+
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 10L
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
+                )
+            val engineJob = launch { engine.run() }
+
+            val sid1 = SessionId(1L)
+            val sid2 = SessionId(2L)
+            runCurrent()
+
+            // Login Alice on sid1
+            inbound.send(InboundEvent.Connected(sid1))
+            inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid1, "secret"))
+
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            assertEquals("Alice", players.get(sid1)?.name)
+            drainOutbound(outbound)
+
+            // Second session attempts takeover with wrong password
+            inbound.send(InboundEvent.Connected(sid2))
+            inbound.send(InboundEvent.LineReceived(sid2, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid2, "wrongpassword"))
+
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val outs = drainOutbound(outbound)
+
+            // Original session is NOT closed
+            assertFalse(
+                outs.any { it is OutboundEvent.Close && it.sessionId == sid1 },
+                "Expected old session to remain open after wrong password. got=$outs",
+            )
+
+            // Original session still owns Alice
+            assertEquals("Alice", players.get(sid1)?.name)
+            assertNull(players.get(sid2), "Expected sid2 not logged in after wrong password")
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
+
+    @Test
+    fun `combat is inherited after session takeover`() =
+        runTest {
+            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
+            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+
+            // ok_small world: start room 'ok_small:a', mob 'rat' in 'ok_small:b', exit north from a to b
+            val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+            val repo = InMemoryPlayerRepository()
+            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, repo, items)
+
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 10L
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
+                )
+            val engineJob = launch { engine.run() }
+
+            val sid1 = SessionId(1L)
+            val sid2 = SessionId(2L)
+            runCurrent()
+
+            // Login Alice, move to rat's room, start combat
+            inbound.send(InboundEvent.Connected(sid1))
+            inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid1, "secret"))
+            inbound.send(InboundEvent.LineReceived(sid1, "n"))
+            inbound.send(InboundEvent.LineReceived(sid1, "kill rat"))
+
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            drainOutbound(outbound)
+
+            // Take over Alice on sid2
+            inbound.send(InboundEvent.Connected(sid2))
+            inbound.send(InboundEvent.LineReceived(sid2, "Alice"))
+            inbound.send(InboundEvent.LineReceived(sid2, "secret"))
+
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            drainOutbound(outbound)
+
+            // Flee on sid2 — succeeds only if combat was inherited
+            inbound.send(InboundEvent.LineReceived(sid2, "flee"))
+
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val outs = drainOutbound(outbound)
+
+            assertFalse(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == sid2 && it.text == "You are not in combat." },
+                "Expected flee to succeed (combat inherited). got=$outs",
+            )
+            assertTrue(
+                outs.filterIsInstance<OutboundEvent.SendText>()
+                    .any { it.sessionId == sid2 && it.text.startsWith("You flee from") },
+                "Expected 'You flee from...' message on new session. got=$outs",
+            )
 
             engineJob.cancel()
             inbound.close()

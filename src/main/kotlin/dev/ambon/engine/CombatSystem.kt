@@ -98,6 +98,19 @@ class CombatSystem(
         return null
     }
 
+    fun remapSession(
+        oldSid: SessionId,
+        newSid: SessionId,
+    ) {
+        val fight = fightsByPlayer.remove(oldSid)
+        if (fight != null) {
+            val newFight = fight.copy(sessionId = newSid)
+            fightsByPlayer[newSid] = newFight
+            fightsByMob[fight.mobId] = newFight
+        }
+        defenseByPlayer.remove(oldSid)?.let { defenseByPlayer[newSid] = it }
+    }
+
     fun onPlayerDisconnected(sessionId: SessionId) {
         val fight = fightsByPlayer[sessionId]
         if (fight != null) {
