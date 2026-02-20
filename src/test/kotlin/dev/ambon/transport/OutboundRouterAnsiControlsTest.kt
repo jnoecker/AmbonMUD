@@ -2,12 +2,14 @@ package dev.ambon.transport
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.ui.login.LoginScreen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
@@ -113,6 +115,96 @@ class OutboundRouterAnsiControlsTest {
 
             job.cancel()
             q.close()
+            engineOutbound.close()
+        }
+
+    @Test
+    fun `ShowLoginScreen prints plain text lines when ansi is off`() =
+        runTest {
+            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router =
+                OutboundRouter(
+                    engineOutbound = engineOutbound,
+                    scope = this,
+                    loginScreen =
+                        LoginScreen(
+                            lines = listOf("a", "b"),
+                            ansiPrefixesByLine = listOf("\u001B[93m", "\u001B[92m"),
+                        ),
+                )
+            val job = router.start()
+
+            val sid = SessionId(41)
+            val q = Channel<String>(capacity = 10)
+            router.register(sid, q) { fail("should not close") }
+
+            engineOutbound.send(OutboundEvent.ShowLoginScreen(sid))
+            runCurrent()
+
+            assertEquals("a\r\n", q.tryReceive().getOrNull())
+            assertEquals("b\r\n", q.tryReceive().getOrNull())
+
+            job.cancel()
+            q.close()
+            engineOutbound.close()
+        }
+
+    @Test
+    fun `ShowLoginScreen emits ANSI escapes when ansi enabled`() =
+        runTest {
+            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val router =
+                OutboundRouter(
+                    engineOutbound = engineOutbound,
+                    scope = this,
+                    loginScreen =
+                        LoginScreen(
+                            lines = listOf("W E L C O M E", "TIP: help"),
+                            ansiPrefixesByLine = listOf("\u001B[93m", "\u001B[92m"),
+                        ),
+                )
+            val job = router.start()
+
+            val sid = SessionId(42)
+            val q = Channel<String>(capacity = 10)
+            router.register(sid, q) { fail("should not close") }
+
+            engineOutbound.send(OutboundEvent.SetAnsi(sid, enabled = true))
+            engineOutbound.send(OutboundEvent.ShowLoginScreen(sid))
+            runCurrent()
+
+            val first = q.tryReceive().getOrNull()
+            val second = q.tryReceive().getOrNull()
+
+            assertNotNull(first, "Expected first login banner line")
+            assertNotNull(second, "Expected second login banner line")
+            assertTrue(first!!.contains("\u001B["), "Expected ANSI in first line. got=$first")
+            assertTrue(second!!.contains("\u001B["), "Expected ANSI in second line. got=$second")
+            assertTrue(first.contains("W E L C O M E"), "Expected banner text in first line. got=$first")
+            assertTrue(second.contains("TIP: help"), "Expected banner text in second line. got=$second")
+
+            job.cancel()
+            q.close()
+            engineOutbound.close()
+        }
+
+    @Test
+    fun `rejects invalid login screen when style count does not match line count`() =
+        runTest {
+            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+
+            assertThrows(IllegalArgumentException::class.java) {
+                OutboundRouter(
+                    engineOutbound = engineOutbound,
+                    scope = this,
+                    loginScreen =
+                        LoginScreen(
+                            lines = listOf("line one", "line two"),
+                            ansiPrefixesByLine = listOf(""),
+                        ),
+                )
+            }
+
             engineOutbound.close()
         }
 

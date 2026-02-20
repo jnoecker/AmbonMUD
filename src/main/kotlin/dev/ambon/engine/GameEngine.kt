@@ -205,7 +205,7 @@ class GameEngine(
 
                 pendingLogins[sid] = LoginState.AwaitingName
                 failedLoginAttempts[sid] = 0
-                outbound.send(OutboundEvent.SendInfo(sid, "Welcome to AmbonMUD"))
+                outbound.send(OutboundEvent.ShowLoginScreen(sid))
                 promptForName(sid)
             }
 

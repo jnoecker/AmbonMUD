@@ -94,6 +94,9 @@ On connect, you will be prompted for a character name and password.
 - Name rules: 2-16 characters, letters/digits/underscore, cannot start with a digit.
 - Password rules: 1-72 characters.
 - Existing characters require the correct password.
+- Login banner text is loaded from `src/main/resources/login.txt`.
+- Optional login banner styles are loaded from `src/main/resources/login.styles.yaml`.
+- If the styles file is missing or invalid, the banner is shown without ANSI styling.
 
 Commands
 --------

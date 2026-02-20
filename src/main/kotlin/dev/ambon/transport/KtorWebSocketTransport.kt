@@ -102,7 +102,11 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
         runCatching { inbound.send(InboundEvent.Disconnected(sessionId, disconnectReason.get())) }
     }
 
-    outboundRouter.register(sessionId, outboundQueue) { reason ->
+    outboundRouter.register(
+        sessionId = sessionId,
+        queue = outboundQueue,
+        defaultAnsiEnabled = true,
+    ) { reason ->
         this@bridgeWebSocketSession.launch {
             noteDisconnectReason(reason)
             runCatching { this@bridgeWebSocketSession.close(CloseReason(CloseReason.Codes.NORMAL, sanitizeCloseReason(reason))) }
