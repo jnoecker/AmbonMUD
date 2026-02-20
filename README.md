@@ -64,6 +64,7 @@ Configuration
 Runtime configuration now lives in two root-level files:
 - `ambonmud.yml` (deployment/runtime: ports, paths, transport sizing, prompt, world resources, demo browser launch).
 - `ambonmud.gameplay.yml` (engine/gameplay tuning: tick rate, scheduler cap, login limits, mob/combat/regen tuning).
+- Files and overrides are bound via [Hoplite](https://github.com/sksamuel/hoplite).
 
 Override precedence is:
 1. built-in defaults

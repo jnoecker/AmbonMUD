@@ -102,8 +102,8 @@ class AmbonMudConfigLoaderTest {
             }
 
         assertTrue(
-            ex.message!!.contains("deployment.telnetPort"),
-            "Expected canonical config key in error message. got='${ex.message}'",
+            ex.message!!.contains("telnetPort"),
+            "Expected field name in error message. got='${ex.message}'",
         )
     }
 }
