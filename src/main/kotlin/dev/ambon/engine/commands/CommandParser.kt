@@ -204,7 +204,8 @@ object CommandParser {
         build: (rest: String) -> Command?,
     ): Command? {
         val lower = line.lowercase().trim()
-        for (kw in aliases) {
+        val orderedAliases = aliases.sortedByDescending { it.trim().length }
+        for (kw in orderedAliases) {
             val key = kw.lowercase().trim()
             val prefix = "$key "
             if (lower.startsWith(prefix)) {
