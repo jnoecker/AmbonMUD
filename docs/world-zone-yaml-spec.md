@@ -17,12 +17,16 @@ It is written for code generators that need to emit valid zone files.
 
 ```yaml
 zone: <string, required, non-blank after trim>
-lifespan: <integer >= 0, optional>
+lifespan: <integer minutes >= 0, optional>
 startRoom: <room-id string, required>
 rooms: <map<string, Room>, required, must be non-empty>
 mobs: <map<string, Mob>, optional, default {}>
 items: <map<string, Item>, optional, default {}>
 ```
+
+`lifespan` notes:
+- Units are minutes.
+- `0` is allowed and, in the current engine, effectively disables runtime resets (zones reset only when `lifespan > 0`).
 
 ### Required vs optional
 
@@ -112,7 +116,7 @@ Examples with `zone: swamp`:
 Each individual file must satisfy:
 
 1. `zone` is non-blank after trim.
-2. If `lifespan` is present, it is `>= 0`.
+2. If `lifespan` is present, it is `>= 0` (minutes).
 3. `rooms` is not empty.
 4. `startRoom` (after normalization) exists among that same file's normalized room IDs.
 
@@ -175,7 +179,7 @@ rooms:
 
 ```yaml
 zone: crypt
-lifespan: 30
+lifespan: 30 # minutes
 startRoom: entry
 
 mobs:
