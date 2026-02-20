@@ -45,4 +45,20 @@ class SchedulerTest {
             assertEquals(10, count)
             assertEquals(0, s.size())
         }
+
+    @Test
+    fun `exceptions in scheduled actions do not stop later actions`() =
+        runTest {
+            val clock = MutableClock(1000)
+            val s = Scheduler(clock)
+
+            var ran = 0
+            s.scheduleAt(1000) { throw IllegalStateException("boom") }
+            s.scheduleAt(1000) { ran++ }
+
+            s.runDue(maxActions = 10)
+
+            assertEquals(1, ran)
+            assertEquals(0, s.size())
+        }
 }
