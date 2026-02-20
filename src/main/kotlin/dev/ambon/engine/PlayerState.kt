@@ -15,6 +15,7 @@ data class PlayerState(
     var constitution: Int = 0,
     var level: Int = 1,
     var xpTotal: Long = 0L,
+    var ansiEnabled: Boolean = false,
 ) {
     companion object {
         const val BASE_MAX_HP = 10

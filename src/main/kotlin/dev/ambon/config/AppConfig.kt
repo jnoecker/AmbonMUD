@@ -20,6 +20,7 @@ data class AppConfig(
         require(server.inboundChannelCapacity > 0) { "ambonMUD.server.inboundChannelCapacity must be > 0" }
         require(server.outboundChannelCapacity > 0) { "ambonMUD.server.outboundChannelCapacity must be > 0" }
         require(server.sessionOutboundQueueCapacity > 0) { "ambonMUD.server.sessionOutboundQueueCapacity must be > 0" }
+        require(server.maxInboundEventsPerTick > 0) { "ambonMUD.server.maxInboundEventsPerTick must be > 0" }
         require(server.tickMillis > 0L) { "ambonMUD.server.tickMillis must be > 0" }
 
         require(world.resources.isNotEmpty()) { "ambonMUD.world.resources must not be empty" }
@@ -85,6 +86,7 @@ data class ServerConfig(
     val inboundChannelCapacity: Int = 10_000,
     val outboundChannelCapacity: Int = 10_000,
     val sessionOutboundQueueCapacity: Int = 200,
+    val maxInboundEventsPerTick: Int = 1_000,
     val tickMillis: Long = 100L,
 )
 

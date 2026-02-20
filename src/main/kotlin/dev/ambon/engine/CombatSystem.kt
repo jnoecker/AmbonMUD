@@ -201,8 +201,14 @@ class CombatSystem(
         if (currentDefense == previousDefense) return
 
         val delta = currentDefense - previousDefense
-        player.maxHp += delta
-        player.hp = (player.hp + delta).coerceAtMost(player.maxHp)
+        val newMaxHp = (player.maxHp + delta).coerceAtLeast(0)
+        player.maxHp = newMaxHp
+        player.hp =
+            if (delta > 0) {
+                (player.hp + delta).coerceAtMost(newMaxHp)
+            } else {
+                player.hp.coerceAtMost(newMaxHp)
+            }
         if (player.hp < 0) player.hp = 0
 
         defenseByPlayer[sessionId] = currentDefense
