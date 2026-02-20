@@ -33,9 +33,9 @@ class Scheduler(
 
     /**
      * Run all actions due as of now, but cap execution so a bad schedule can't
-     * starve the engine.
+     * starve the engine. Returns Pair(actionsRan, actionsDropped).
      */
-    suspend fun runDue(maxActions: Int = 100) {
+    suspend fun runDue(maxActions: Int = 100): Pair<Int, Int> {
         val now = clock.millis()
         var ran = 0
         while (ran < maxActions) {
@@ -50,6 +50,14 @@ class Scheduler(
             }
             ran++
         }
+        var dropped = 0
+        if (ran >= maxActions) {
+            val now2 = clock.millis()
+            for (item in pq) {
+                if (item.dueAtEpochMs <= now2) dropped++
+            }
+        }
+        return Pair(ran, dropped)
     }
 
     fun size(): Int = pq.size

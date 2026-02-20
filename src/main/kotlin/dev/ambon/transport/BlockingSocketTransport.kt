@@ -2,6 +2,7 @@ package dev.ambon.transport
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
+import dev.ambon.metrics.GameMetrics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,6 +22,7 @@ class BlockingSocketTransport(
     private val maxLineLen: Int = 1024,
     private val maxNonPrintablePerLine: Int = 32,
     private val maxInboundBackpressureFailures: Int = 3,
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) : Transport {
     private var serverSocket: ServerSocket? = null
     private var acceptJob: Job? = null
@@ -45,6 +47,7 @@ class BlockingSocketTransport(
                             maxLineLen = maxLineLen,
                             maxNonPrintablePerLine = maxNonPrintablePerLine,
                             maxInboundBackpressureFailures = maxInboundBackpressureFailures,
+                            metrics = metrics,
                         )
                     outboundRouter.register(
                         sessionId = sessionId,

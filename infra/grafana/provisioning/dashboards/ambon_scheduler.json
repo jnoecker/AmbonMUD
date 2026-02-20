@@ -1,0 +1,46 @@
+{
+  "title": "AmbonMUD Scheduler",
+  "uid": "ambon-scheduler",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Scheduler Run Due Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.50, rate(scheduler_run_due_duration_seconds_bucket[1m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.95, rate(scheduler_run_due_duration_seconds_bucket[1m]))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Scheduler Actions / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(scheduler_actions_executed_total[1m])",
+          "legendFormat": "executed/s"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(scheduler_actions_dropped_total[1m])",
+          "legendFormat": "dropped/s"
+        }
+      ]
+    }
+  ]
+}

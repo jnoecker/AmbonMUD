@@ -1,0 +1,98 @@
+{
+  "title": "AmbonMUD JVM",
+  "uid": "ambon-jvm",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "JVM Memory Used (MB)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "jvm_memory_used_bytes / 1024 / 1024",
+          "legendFormat": "{{area}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "JVM Threads",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "jvm_threads_live_threads",
+          "legendFormat": "live"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "jvm_threads_daemon_threads",
+          "legendFormat": "daemon"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Classes Loaded",
+      "type": "timeseries",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "jvm_classes_loaded",
+          "legendFormat": "loaded"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Process CPU Usage",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "process_cpu_usage",
+          "legendFormat": "process"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "System CPU Usage",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 6, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "system_cpu_usage",
+          "legendFormat": "system"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "JVM GC Pause / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 6, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(jvm_gc_pause_seconds_sum[1m])",
+          "legendFormat": "pause_seconds/s"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(jvm_gc_pause_seconds_count[1m])",
+          "legendFormat": "pauses/s"
+        }
+      ]
+    }
+  ]
+}

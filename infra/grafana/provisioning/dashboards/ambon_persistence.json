@@ -1,0 +1,64 @@
+{
+  "title": "AmbonMUD Persistence",
+  "uid": "ambon-persistence",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Player Saves / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(player_saves_total[1m])",
+          "legendFormat": "saves/s"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(player_save_failures_total[1m])",
+          "legendFormat": "failures/s"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Player Repo Save Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(player_repo_save_duration_seconds_sum[1m]) / rate(player_repo_save_duration_seconds_count[1m])",
+          "legendFormat": "avg"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "player_repo_save_duration_seconds_max",
+          "legendFormat": "max"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Player Repo Load Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(player_repo_load_duration_seconds_sum[1m]) / rate(player_repo_load_duration_seconds_count[1m])",
+          "legendFormat": "avg"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "player_repo_load_duration_seconds_max",
+          "legendFormat": "max"
+        }
+      ]
+    }
+  ]
+}

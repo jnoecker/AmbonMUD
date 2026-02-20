@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.metrics.GameMetrics
 import kotlinx.coroutines.channels.SendChannel
 import java.time.Clock
 import java.util.Random
@@ -22,6 +23,7 @@ class CombatSystem(
     private val maxDamage: Int = 4,
     private val onMobRemoved: (MobId) -> Unit = {},
     private val progression: PlayerProgression = PlayerProgression(),
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     private data class Fight(
         val sessionId: SessionId,
@@ -126,7 +128,7 @@ class CombatSystem(
         outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
     }
 
-    suspend fun tick(maxCombatsPerTick: Int = 20) {
+    suspend fun tick(maxCombatsPerTick: Int = 20): Int {
         val now = clock.millis()
         var ran = 0
         val fights = fightsByPlayer.values.toMutableList()
@@ -153,6 +155,7 @@ class CombatSystem(
             syncPlayerDefense(player)
 
             if (player.hp <= 0) {
+                metrics.onPlayerDeath()
                 endFight(fight)
                 outbound.send(OutboundEvent.SendText(fight.sessionId, "You are too wounded to keep fighting and flee."))
                 outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
@@ -178,6 +181,7 @@ class CombatSystem(
             outbound.send(OutboundEvent.SendText(fight.sessionId, "${mob.name} hits you for $mobDamage damage."))
 
             if (player.hp <= 0) {
+                metrics.onPlayerDeath()
                 endFight(fight)
                 outbound.send(OutboundEvent.SendText(fight.sessionId, "You are forced to flee from ${mob.name}."))
                 outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
@@ -189,6 +193,7 @@ class CombatSystem(
             outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
             ran++
         }
+        return ran
     }
 
     private fun endFight(fight: Fight) {
@@ -257,8 +262,10 @@ class CombatSystem(
         if (reward <= 0L) return
 
         val result = players.grantXp(sessionId, reward, progression) ?: return
+        metrics.onXpAwarded(reward, "kill")
         outbound.send(OutboundEvent.SendText(sessionId, "You gain $reward XP."))
         if (result.levelsGained <= 0) return
+        metrics.onLevelUp()
 
         val oldMaxHp = progression.maxHpForLevel(result.previousLevel)
         val newMaxHp = progression.maxHpForLevel(result.newLevel)

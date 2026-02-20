@@ -13,6 +13,8 @@ import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
+import dev.ambon.metrics.GameMetrics
+import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.coroutineScope
@@ -34,6 +36,7 @@ class GameEngine(
     private val loginConfig: LoginConfig = LoginConfig(),
     private val engineConfig: EngineConfig = EngineConfig(),
     private val progression: PlayerProgression = PlayerProgression(),
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
@@ -49,6 +52,7 @@ class GameEngine(
             clock = clock,
             minWanderDelayMillis = engineConfig.mob.minWanderDelayMillis,
             maxWanderDelayMillis = engineConfig.mob.maxWanderDelayMillis,
+            metrics = metrics,
         )
     private val combatSystem =
         CombatSystem(
@@ -62,6 +66,7 @@ class GameEngine(
             maxDamage = engineConfig.combat.maxDamage,
             onMobRemoved = mobSystem::onMobRemoved,
             progression = progression,
+            metrics = metrics,
         )
     private val regenSystem =
         RegenSystem(
@@ -72,9 +77,10 @@ class GameEngine(
             minIntervalMs = engineConfig.regen.minIntervalMillis,
             msPerConstitution = engineConfig.regen.msPerConstitution,
             regenAmount = engineConfig.regen.regenAmount,
+            metrics = metrics,
         )
 
-    private val router = CommandRouter(world, players, mobs, items, combatSystem, outbound)
+    private val router = CommandRouter(world, players, mobs, items, combatSystem, outbound, metrics = metrics)
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
     private val failedLoginAttempts = mutableMapOf<SessionId, Int>()
     private val sessionAnsiDefaults = mutableMapOf<SessionId, Boolean>()
@@ -112,6 +118,7 @@ class GameEngine(
         coroutineScope {
             while (isActive) {
                 val tickStart = clock.millis()
+                val tickSample = Timer.start()
 
                 // Drain inbound without blocking
                 var inboundProcessed = 0
@@ -120,24 +127,42 @@ class GameEngine(
                     handle(ev)
                     inboundProcessed++
                 }
+                metrics.onInboundEventsProcessed(inboundProcessed)
 
                 // Simulate NPC actions (time-gated internally)
-                mobSystem.tick(maxMovesPerTick = engineConfig.mob.maxMovesPerTick)
+                val mobSample = Timer.start()
+                val mobMoves = mobSystem.tick(maxMovesPerTick = engineConfig.mob.maxMovesPerTick)
+                mobSample.stop(metrics.mobSystemTickTimer)
+                metrics.onMobMoves(mobMoves)
 
                 // Simulate combat (time-gated internally)
-                combatSystem.tick(maxCombatsPerTick = engineConfig.combat.maxCombatsPerTick)
+                val combatSample = Timer.start()
+                val combatsRan = combatSystem.tick(maxCombatsPerTick = engineConfig.combat.maxCombatsPerTick)
+                combatSample.stop(metrics.combatSystemTickTimer)
+                metrics.onCombatsProcessed(combatsRan)
 
                 // Regenerate player HP (time-gated internally)
+                val regenSample = Timer.start()
                 regenSystem.tick(maxPlayersPerTick = engineConfig.regen.maxPlayersPerTick)
+                regenSample.stop(metrics.regenTickTimer)
 
                 // Run scheduled actions (bounded)
-                scheduler.runDue(maxActions = engineConfig.scheduler.maxActionsPerTick)
+                val schedulerSample = Timer.start()
+                val (actionsRan, actionsDropped) = scheduler.runDue(maxActions = engineConfig.scheduler.maxActionsPerTick)
+                schedulerSample.stop(metrics.schedulerRunDueTimer)
+                metrics.onSchedulerActionsExecuted(actionsRan)
+                metrics.onSchedulerActionsDropped(actionsDropped)
 
                 // Reset zones when their lifespan elapses.
                 resetZonesIfDue()
 
                 val elapsed = clock.millis() - tickStart
                 val sleep = (tickMillis - elapsed).coerceAtLeast(0)
+
+                metrics.onEngineTick()
+                if (elapsed > tickMillis) metrics.onEngineTickOverrun()
+                tickSample.stop(metrics.engineTickTimer)
+
                 delay(sleep)
             }
         }

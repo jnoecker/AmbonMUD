@@ -2,6 +2,7 @@ package dev.ambon.transport
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.metrics.GameMetrics
 import dev.ambon.ui.login.LoginScreen
 import dev.ambon.ui.login.LoginScreenLoader
 import dev.ambon.ui.login.LoginScreenRenderer
@@ -17,6 +18,7 @@ class OutboundRouter(
     private val scope: CoroutineScope,
     private val loginScreen: LoginScreen = LoginScreenLoader.load(),
     private val loginScreenRenderer: LoginScreenRenderer = LoginScreenRenderer(),
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     init {
         require(loginScreen.isValid()) {
@@ -191,8 +193,11 @@ class OutboundRouter(
         framed: String,
     ): Boolean {
         val ok = sink.queue.trySend(framed).isSuccess
-        if (ok) return true
-
+        if (ok) {
+            metrics.onOutboundFrameEnqueued()
+            return true
+        }
+        metrics.onOutboundEnqueueFailed()
         disconnectSlowClient(sessionId, sink)
         return false
     }
@@ -201,6 +206,7 @@ class OutboundRouter(
         sessionId: SessionId,
         sink: SessionSink,
     ) {
+        metrics.onOutboundBackpressureDisconnect()
         sinks.remove(sessionId)
         sink.close("Disconnected: client too slow (outbound backpressure)")
         sink.queue.close()

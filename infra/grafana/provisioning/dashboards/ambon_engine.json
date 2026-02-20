@@ -1,0 +1,90 @@
+{
+  "title": "AmbonMUD Engine",
+  "uid": "ambon-engine",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Engine Tick Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.50, rate(engine_tick_duration_seconds_bucket[1m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.95, rate(engine_tick_duration_seconds_bucket[1m]))",
+          "legendFormat": "p95"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.99, rate(engine_tick_duration_seconds_bucket[1m]))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Engine Tick Overruns / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(engine_tick_overrun_total[1m])",
+          "legendFormat": "overruns/s"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Engine Ticks / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(engine_ticks_total[1m])",
+          "legendFormat": "ticks/s"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Inbound Events Processed / sec",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "rate(engine_inbound_events_processed_total[1m])",
+          "legendFormat": "events/s"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Scheduler Run Due Duration (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.50, rate(scheduler_run_due_duration_seconds_bucket[1m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": { "type": "prometheus" },
+          "expr": "histogram_quantile(0.95, rate(scheduler_run_due_duration_seconds_bucket[1m]))",
+          "legendFormat": "p95"
+        }
+      ]
+    }
+  ]
+}
