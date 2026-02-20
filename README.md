@@ -45,6 +45,12 @@ On Windows:
 .\gradlew.bat demo
 ```
 
+`demo` enables browser auto-launch by setting:
+
+```text
+config.override.quickmud.demo.autoLaunchBrowser=true
+```
+
 2) Connect with telnet:
 
 ```bash
@@ -57,7 +63,30 @@ telnet localhost 4000
 http://localhost:8080
 ```
 
-The server listens on telnet port 4000 and web port 8080 (see `src/main/kotlin/dev/ambon/Main.kt`).
+By default the server listens on telnet port 4000 and web port 8080. These values come from `src/main/resources/application.yaml`.
+
+Configuration
+-------------
+Runtime config is loaded via Hoplite from `src/main/resources/application.yaml`.
+
+Top-level key:
+
+```yaml
+quickmud:
+  ...
+```
+
+Useful system-property override example:
+
+```bash
+./gradlew run -Dconfig.override.quickmud.server.telnetPort=5000
+```
+
+On Windows:
+
+```powershell
+.\gradlew.bat run -Dconfig.override.quickmud.server.telnetPort=5000
+```
 
 Login
 -----

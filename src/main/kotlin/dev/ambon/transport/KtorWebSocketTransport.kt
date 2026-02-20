@@ -29,6 +29,9 @@ class KtorWebSocketTransport(
     private val outboundRouter: OutboundRouter,
     private val sessionIdFactory: () -> SessionId,
     private val host: String = "0.0.0.0",
+    private val sessionOutboundQueueCapacity: Int = 200,
+    private val stopGraceMillis: Long = 1_000L,
+    private val stopTimeoutMillis: Long = 2_000L,
 ) : Transport {
     private var engine: ApplicationEngine? = null
 
@@ -39,12 +42,13 @@ class KtorWebSocketTransport(
                     inbound = inbound,
                     outboundRouter = outboundRouter,
                     sessionIdFactory = sessionIdFactory,
+                    sessionOutboundQueueCapacity = sessionOutboundQueueCapacity,
                 )
             }.start(wait = false)
     }
 
     override suspend fun stop() {
-        engine?.stop(gracePeriodMillis = 1_000, timeoutMillis = 2_000)
+        engine?.stop(gracePeriodMillis = stopGraceMillis, timeoutMillis = stopTimeoutMillis)
         engine = null
     }
 }
@@ -53,6 +57,7 @@ internal fun Application.quickMudWebModule(
     inbound: SendChannel<InboundEvent>,
     outboundRouter: OutboundRouter,
     sessionIdFactory: () -> SessionId,
+    sessionOutboundQueueCapacity: Int = 200,
 ) {
     install(WebSockets)
 
@@ -62,6 +67,7 @@ internal fun Application.quickMudWebModule(
                 inbound = inbound,
                 outboundRouter = outboundRouter,
                 sessionIdFactory = sessionIdFactory,
+                sessionOutboundQueueCapacity = sessionOutboundQueueCapacity,
             )
         }
 
@@ -77,9 +83,10 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
     inbound: SendChannel<InboundEvent>,
     outboundRouter: OutboundRouter,
     sessionIdFactory: () -> SessionId,
+    sessionOutboundQueueCapacity: Int,
 ) {
     val sessionId = sessionIdFactory()
-    val outboundQueue = Channel<String>(capacity = 200)
+    val outboundQueue = Channel<String>(capacity = sessionOutboundQueueCapacity)
     val disconnected = AtomicBoolean(false)
     val disconnectReason = AtomicReference("EOF")
 

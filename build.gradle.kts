@@ -12,6 +12,7 @@ repositories {
 }
 
 val ktorVersion = "2.3.12"
+val hopliteVersion = "2.9.0"
 
 dependencies {
     // Coroutines
@@ -23,6 +24,8 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.16")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.2")
+    implementation("com.sksamuel.hoplite:hoplite-core:$hopliteVersion")
+    implementation("com.sksamuel.hoplite:hoplite-yaml:$hopliteVersion")
     implementation("org.mindrot:jbcrypt:0.4")
 
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
@@ -50,7 +53,7 @@ tasks.register<JavaExec>("demo") {
     mainClass.set(application.mainClass)
     classpath = project.extensions.getByType(org.gradle.api.tasks.SourceSetContainer::class.java)["main"].runtimeClasspath
     standardInput = System.`in`
-    systemProperty("quickmud.demo.autolaunchBrowser", "true")
+    systemProperty("config.override.quickmud.demo.autoLaunchBrowser", "true")
 }
 
 ktlint {
