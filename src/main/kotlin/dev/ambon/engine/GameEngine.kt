@@ -32,6 +32,7 @@ class GameEngine(
     private val scheduler: Scheduler,
     private val loginConfig: LoginConfig = LoginConfig(),
     private val engineConfig: EngineConfig = EngineConfig(),
+    private val progression: PlayerProgression = PlayerProgression(),
 ) {
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
@@ -59,6 +60,7 @@ class GameEngine(
             minDamage = engineConfig.combat.minDamage,
             maxDamage = engineConfig.combat.maxDamage,
             onMobRemoved = mobSystem::onMobRemoved,
+            progression = progression,
         )
     private val regenSystem =
         RegenSystem(

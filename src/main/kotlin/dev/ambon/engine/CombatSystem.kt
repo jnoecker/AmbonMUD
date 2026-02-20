@@ -21,6 +21,7 @@ class CombatSystem(
     private val minDamage: Int = 1,
     private val maxDamage: Int = 4,
     private val onMobRemoved: (MobId) -> Unit = {},
+    private val progression: PlayerProgression = PlayerProgression(),
 ) {
     private data class Fight(
         val sessionId: SessionId,
@@ -152,7 +153,7 @@ class CombatSystem(
             mob.hp = (mob.hp - playerDamage).coerceAtLeast(0)
             outbound.send(OutboundEvent.SendText(fight.sessionId, "You hit ${mob.name} for $playerDamage damage."))
             if (mob.hp <= 0) {
-                handleMobDeath(mob)
+                handleMobDeath(fight.sessionId, mob)
                 endFight(fight)
                 outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
                 ran++
@@ -218,11 +219,33 @@ class CombatSystem(
             .sortedBy { it.name }
     }
 
-    private suspend fun handleMobDeath(mob: MobState) {
+    private suspend fun handleMobDeath(
+        killerSessionId: SessionId,
+        mob: MobState,
+    ) {
         mobs.remove(mob.id)
         onMobRemoved(mob.id)
         items.dropMobItemsToRoom(mob.id, mob.roomId)
         broadcastToRoom(mob.roomId, "${mob.name} dies.")
+        grantKillXp(killerSessionId)
+    }
+
+    private suspend fun grantKillXp(sessionId: SessionId) {
+        val reward = progression.defaultKillXpReward()
+        if (reward <= 0L) return
+
+        val result = players.grantXp(sessionId, reward, progression) ?: return
+        outbound.send(OutboundEvent.SendText(sessionId, "You gain $reward XP."))
+        if (result.levelsGained <= 0) return
+
+        val hpGain = result.levelsGained * progression.hpPerLevel
+        val levelUpMessage =
+            if (hpGain > 0) {
+                "You reached level ${result.newLevel}! (+$hpGain max HP)"
+            } else {
+                "You reached level ${result.newLevel}!"
+            }
+        outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
     }
 
     private suspend fun broadcastToRoom(

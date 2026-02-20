@@ -35,6 +35,7 @@ class PlayerRegistry(
     private val repo: PlayerRepository,
     private val items: ItemRegistry,
     private val clock: Clock = Clock.systemUTC(),
+    private val progression: PlayerProgression = PlayerProgression(),
 ) {
     private val players = mutableMapOf<SessionId, PlayerState>()
     private val roomMembers = mutableMapOf<RoomId, MutableSet<SessionId>>()
@@ -113,20 +114,27 @@ class PlayerRegistry(
         boundRecord: PlayerRecord,
         now: Long,
     ) {
+        val xpTotal = boundRecord.xpTotal.coerceAtLeast(0L)
+        val level = progression.computeLevel(xpTotal)
+        val maxHp = progression.maxHpForLevel(level)
         val ps =
             PlayerState(
                 sessionId = sessionId,
                 name = boundRecord.name,
                 roomId = boundRecord.roomId,
                 playerId = boundRecord.id,
+                hp = maxHp,
+                maxHp = maxHp,
                 constitution = boundRecord.constitution,
+                level = level,
+                xpTotal = xpTotal,
             )
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
         sessionByLowerName[ps.name.lowercase()] = sessionId
         items.ensurePlayer(sessionId)
 
-        repo.save(boundRecord.copy(roomId = ps.roomId, lastSeenEpochMs = now))
+        repo.save(boundRecord.copy(roomId = ps.roomId, lastSeenEpochMs = now, level = level, xpTotal = xpTotal))
     }
 
     suspend fun disconnect(sessionId: SessionId) {
@@ -168,6 +176,18 @@ class PlayerRegistry(
         persistIfClaimed(ps)
     }
 
+    suspend fun grantXp(
+        sessionId: SessionId,
+        amount: Long,
+        progressionOverride: PlayerProgression? = null,
+    ): LevelUpResult? {
+        val ps = players[sessionId] ?: return null
+        val activeProgression = progressionOverride ?: progression
+        val result = activeProgression.grantXp(ps, amount)
+        persistIfClaimed(ps)
+        return result
+    }
+
     fun findSessionByName(name: String): SessionId? = sessionByLowerName[normalizeName(name).lowercase()]
 
     fun isNameOnline(
@@ -206,6 +226,8 @@ class PlayerRegistry(
                 lastSeenEpochMs = now,
                 name = ps.name,
                 constitution = ps.constitution,
+                level = ps.level,
+                xpTotal = ps.xpTotal,
             ),
         )
     }

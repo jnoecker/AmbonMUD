@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
@@ -53,6 +54,7 @@ class MudServer(
 
     val items = ItemRegistry()
     val mobs = MobRegistry()
+    val progression = PlayerProgression(config.progression)
 
     val world = WorldFactory.demoWorld(config.world.resources)
     val tickMillis: Long = config.server.tickMillis
@@ -64,6 +66,7 @@ class MudServer(
             repo = playerRepo,
             items = items,
             clock = clock,
+            progression = progression,
         )
 
     suspend fun start() {
@@ -84,6 +87,7 @@ class MudServer(
                     scheduler = scheduler,
                     loginConfig = config.login,
                     engineConfig = config.engine,
+                    progression = progression,
                 ).run()
             }
 

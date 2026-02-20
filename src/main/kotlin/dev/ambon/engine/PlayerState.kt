@@ -9,7 +9,13 @@ data class PlayerState(
     var name: String,
     var roomId: RoomId,
     var playerId: PlayerId? = null,
-    var hp: Int = 10,
-    var maxHp: Int = 10,
+    var hp: Int = BASE_MAX_HP,
+    var maxHp: Int = BASE_MAX_HP,
     var constitution: Int = 0,
-)
+    var level: Int = 1,
+    var xpTotal: Long = 0L,
+) {
+    companion object {
+        const val BASE_MAX_HP = 10
+    }
+}
