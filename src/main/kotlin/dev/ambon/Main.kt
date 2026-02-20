@@ -11,6 +11,11 @@ fun main() =
         val server = MudServer(config)
         val webClientUrl = config.demo.webClientUrl ?: "http://${config.demo.webClientHost}:${config.server.webPort}"
         server.start()
+        Runtime.getRuntime().addShutdownHook(
+            Thread {
+                runBlocking { server.stop() }
+            },
+        )
         println("AmbonMUD listening on telnet port ${config.server.telnetPort} (telnet localhost ${config.server.telnetPort})")
         println("AmbonMUD web client at $webClientUrl")
         maybeAutoLaunchBrowser(webClientUrl, config.demo.autoLaunchBrowser)

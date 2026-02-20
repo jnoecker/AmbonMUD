@@ -37,6 +37,9 @@ data class AppConfig(
         require(engine.mob.maxWanderDelayMillis >= engine.mob.minWanderDelayMillis) {
             "ambonMUD.engine.mob.maxWanderDelayMillis must be >= minWanderDelayMillis"
         }
+        require(engine.mob.maxWanderDelayMillis - engine.mob.minWanderDelayMillis <= Int.MAX_VALUE.toLong()) {
+            "ambonMUD.engine.mob wander delay range (max - min) must not exceed Int.MAX_VALUE ms"
+        }
 
         require(engine.combat.maxCombatsPerTick > 0) { "ambonMUD.engine.combat.maxCombatsPerTick must be > 0" }
         require(engine.combat.tickMillis > 0L) { "ambonMUD.engine.combat.tickMillis must be > 0" }
@@ -168,5 +171,5 @@ data class WebSocketTransportConfig(
 data class DemoConfig(
     val autoLaunchBrowser: Boolean = false,
     val webClientHost: String = "localhost",
-    var webClientUrl: String? = null,
+    val webClientUrl: String? = null,
 )

@@ -36,7 +36,7 @@ class MudServer(
     private val inbound = Channel<InboundEvent>(capacity = config.server.inboundChannelCapacity)
     private val outbound = Channel<OutboundEvent>(capacity = config.server.outboundChannelCapacity)
 
-    private val engineDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    private val engineDispatcher = Executors.newSingleThreadExecutor { r -> Thread(r, "ambonMUD-engine") }.asCoroutineDispatcher()
     private val sessionIdSeq = AtomicLong(1)
 
     private lateinit var outboundRouter: OutboundRouter
@@ -47,20 +47,20 @@ class MudServer(
 
     private val clock = Clock.systemUTC()
 
-    val playerRepo =
+    private val playerRepo =
         YamlPlayerRepository(
             rootDir = Paths.get(config.persistence.rootDir),
         )
 
-    val items = ItemRegistry()
-    val mobs = MobRegistry()
-    val progression = PlayerProgression(config.progression)
+    private val items = ItemRegistry()
+    private val mobs = MobRegistry()
+    private val progression = PlayerProgression(config.progression)
 
-    val world = WorldFactory.demoWorld(config.world.resources)
-    val tickMillis: Long = config.server.tickMillis
-    val scheduler: Scheduler = Scheduler(clock)
+    private val world = WorldFactory.demoWorld(config.world.resources)
+    private val tickMillis: Long = config.server.tickMillis
+    private val scheduler: Scheduler = Scheduler(clock)
 
-    val players =
+    private val players =
         PlayerRegistry(
             startRoom = world.startRoom,
             repo = playerRepo,

@@ -157,7 +157,7 @@ class GameEngine(
     private suspend fun resetZone(zone: String) {
         val playersInZone = players.allPlayers().filter { player -> player.roomId.zone == zone }
         for (player in playersInZone) {
-            outbound.send(OutboundEvent.SendText(player.sessionId, "TOCK"))
+            outbound.send(OutboundEvent.SendText(player.sessionId, "The air shimmers as the area resets around you."))
         }
 
         val zoneRoomIds =
@@ -342,8 +342,8 @@ class GameEngine(
         state: LoginState.AwaitingExistingPassword,
     ) {
         val name = state.name
-        val password = line.trim()
-        if (password.isEmpty()) {
+        val password = line
+        if (password.isBlank()) {
             outbound.send(OutboundEvent.SendError(sessionId, "Blank password. Returning to login."))
             if (recordFailedLoginAttemptAndCloseIfNeeded(sessionId)) return
             pendingLogins[sessionId] = LoginState.AwaitingName
@@ -402,8 +402,8 @@ class GameEngine(
         line: String,
         state: LoginState.AwaitingNewPassword,
     ) {
-        val password = line.trim()
-        if (password.isEmpty()) {
+        val password = line
+        if (password.isBlank()) {
             outbound.send(OutboundEvent.SendError(sessionId, "Blank password. Returning to login."))
             if (recordFailedLoginAttemptAndCloseIfNeeded(sessionId)) return
             pendingLogins[sessionId] = LoginState.AwaitingName
