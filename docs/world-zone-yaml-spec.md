@@ -61,9 +61,40 @@ Each key is a mob ID (local or fully qualified).
 Each value:
 
 ```yaml
-name: <string, required>
-room: <room-id string, required>
+name:       <string, required>
+room:       <room-id string, required>
+tier:       <string, optional — one of weak|standard|elite|boss (case-insensitive); default standard>
+level:      <integer >= 1, optional; default 1>
+hp:         <integer >= 1, optional — overrides tier-computed hp>
+minDamage:  <integer >= 1, optional — overrides tier-computed minDamage>
+maxDamage:  <integer >= minDamage, optional — overrides tier-computed maxDamage>
+armor:      <integer >= 0, optional — overrides tier baseArmor (flat damage reduction, no level scaling)>
+xpReward:   <long >= 0, optional — overrides tier-computed xpReward>
 ```
+
+**Tier formula** (for tier `T` and level `L`, where `L` defaults to 1):
+
+```
+hp         = T.baseHp + (L-1) * T.hpPerLevel
+minDamage  = T.baseMinDamage + (L-1) * T.damagePerLevel
+maxDamage  = T.baseMaxDamage + (L-1) * T.damagePerLevel
+armor      = T.baseArmor                          (flat, no level scaling)
+xpReward   = T.baseXpReward + (L-1) * T.xpRewardPerLevel
+```
+
+Any explicit per-mob field overrides the computed value from the tier formula.
+
+Tier default values are operator-configurable via `application.yaml` under `ambonMUD.engine.mob.tiers`.
+The built-in defaults are:
+
+| Tier     | baseHp | hpPerLevel | baseMinDmg | baseMaxDmg | dmgPerLevel | baseArmor | baseXp | xpPerLevel |
+|----------|--------|------------|------------|------------|-------------|-----------|--------|------------|
+| weak     | 5      | 2          | 1          | 2          | 0           | 0         | 15     | 5          |
+| standard | 10     | 3          | 1          | 4          | 1           | 0         | 30     | 10         |
+| elite    | 20     | 5          | 2          | 6          | 1           | 1         | 75     | 20         |
+| boss     | 50     | 10         | 3          | 8          | 2           | 3         | 200    | 50         |
+
+**Mob armor** applies as flat damage reduction: `effectiveDamage = max(1, playerRoll - mob.armor)`.
 
 ### `items` map
 
@@ -189,6 +220,11 @@ mobs:
   rat:
     name: "a cave rat"
     room: hall
+  sentinel:
+    name: "a stone sentinel"
+    room: entry
+    tier: elite
+    level: 3
 
 items:
   helm:

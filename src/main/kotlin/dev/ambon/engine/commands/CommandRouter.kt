@@ -469,7 +469,14 @@ class CommandRouter(
                 val zone = template.id.value.substringBefore(':', template.id.value)
                 val local = template.id.value.substringAfter(':', template.id.value)
                 val newMobId = MobId("$zone:${local}_adm_$seq")
-                mobs.upsert(MobState(id = newMobId, name = template.name, roomId = me.roomId))
+                mobs.upsert(
+                    MobState(
+                        id = newMobId, name = template.name, roomId = me.roomId,
+                        hp = template.maxHp, maxHp = template.maxHp,
+                        minDamage = template.minDamage, maxDamage = template.maxDamage,
+                        armor = template.armor, xpReward = template.xpReward,
+                    ),
+                )
                 outbound.send(OutboundEvent.SendInfo(sessionId, "${template.name} appears."))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
