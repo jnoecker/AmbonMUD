@@ -1,7 +1,11 @@
 package dev.ambon
 
+import dev.ambon.bus.InboundBus
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.bus.OutboundBus
+import dev.ambon.bus.RedisInboundBus
+import dev.ambon.bus.RedisOutboundBus
 import dev.ambon.config.AppConfig
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
@@ -34,6 +38,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.nio.file.Paths
 import java.time.Clock
+import java.util.UUID
 import java.util.concurrent.Executors
 
 private val log = KotlinLogging.logger {}
@@ -42,10 +47,6 @@ class MudServer(
     private val config: AppConfig,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
-    private val inbound = LocalInboundBus(capacity = config.server.inboundChannelCapacity)
-    private val outbound = LocalOutboundBus(capacity = config.server.outboundChannelCapacity)
-
     private val engineDispatcher = Executors.newSingleThreadExecutor { r -> Thread(r, "ambonMUD-engine") }.asCoroutineDispatcher()
     private val sessionIdFactory = AtomicSessionIdFactory()
 
@@ -98,6 +99,33 @@ class MudServer(
 
     private val playerRepo = coalescingRepo ?: l2Repo
 
+    private val instanceId: String =
+        config.redis.bus.instanceId.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+
+    private val inbound: InboundBus =
+        if (config.redis.enabled && config.redis.bus.enabled && redisManager != null) {
+            RedisInboundBus(
+                delegate = LocalInboundBus(capacity = config.server.inboundChannelCapacity),
+                manager = redisManager,
+                channelName = config.redis.bus.inboundChannel,
+                instanceId = instanceId,
+            )
+        } else {
+            LocalInboundBus(capacity = config.server.inboundChannelCapacity)
+        }
+
+    private val outbound: OutboundBus =
+        if (config.redis.enabled && config.redis.bus.enabled && redisManager != null) {
+            RedisOutboundBus(
+                delegate = LocalOutboundBus(capacity = config.server.outboundChannelCapacity),
+                manager = redisManager,
+                channelName = config.redis.bus.outboundChannel,
+                instanceId = instanceId,
+            )
+        } else {
+            LocalOutboundBus(capacity = config.server.outboundChannelCapacity)
+        }
+
     private var persistenceWorker: PersistenceWorker? = null
 
     private val items = ItemRegistry()
@@ -119,6 +147,8 @@ class MudServer(
 
     suspend fun start() {
         redisManager?.connect()
+        (inbound as? RedisInboundBus)?.startSubscribing()
+        (outbound as? RedisOutboundBus)?.startSubscribing()
         bindWorldStateGauges()
 
         if (coalescingRepo != null) {
