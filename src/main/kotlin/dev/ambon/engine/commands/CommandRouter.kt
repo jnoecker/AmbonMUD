@@ -7,6 +7,7 @@ import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -20,6 +21,7 @@ class CommandRouter(
     private val items: ItemRegistry,
     private val combat: CombatSystem,
     private val outbound: SendChannel<OutboundEvent>,
+    private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     suspend fun handle(
@@ -54,6 +56,7 @@ class CommandRouter(
                             drop <item>
                             kill <mob>
                             flee
+                            score/sc
                             ansi on/off
                             colors
                             clear
@@ -345,6 +348,54 @@ class CommandRouter(
                 if (err != null) {
                     outbound.send(OutboundEvent.SendError(sessionId, err))
                 }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            Command.Score -> {
+                val me = players.get(sessionId) ?: return
+                val equipped = items.equipment(sessionId)
+
+                val attackBonus = equipped.values.sumOf { it.item.damage }
+                val dmgMin = combat.minDamage + attackBonus
+                val dmgMax = combat.maxDamage + attackBonus
+
+                val xpLine =
+                    run {
+                        val into = progression.xpIntoLevel(me.xpTotal)
+                        val span = progression.xpToNextLevel(me.xpTotal)
+                        if (span == null) "MAXED" else "${"%,d".format(into)} / ${"%,d".format(span)}"
+                    }
+
+                val armorTotal = equipped.values.sumOf { it.item.armor }
+                val armorDetail =
+                    if (armorTotal > 0) {
+                        val parts =
+                            ItemSlot.entries
+                                .filter { slot -> equipped[slot]?.item?.armor?.let { it > 0 } == true }
+                                .joinToString(", ") { slot -> "${slot.label()}: ${equipped[slot]!!.item.displayName}" }
+                        "+$armorTotal ($parts)"
+                    } else {
+                        "+0"
+                    }
+
+                val equipConstitution = equipped.values.sumOf { it.item.constitution }
+                val totalCon = me.constitution + equipConstitution
+
+                val sb = StringBuilder()
+                sb.appendLine("[ ${me.name} — Level ${me.level} Adventurer ]")
+                sb.appendLine("  HP  : ${me.hp} / ${me.maxHp}      XP : $xpLine")
+                sb.append("  Dmg : $dmgMin–$dmgMax          Armor: $armorDetail")
+                if (totalCon > 0) {
+                    val conParts =
+                        ItemSlot.entries
+                            .filter { slot -> equipped[slot]?.item?.constitution?.let { it > 0 } == true }
+                            .joinToString(", ") { slot -> "${slot.label()}: ${equipped[slot]!!.item.displayName}" }
+                    val conLine = if (conParts.isNotEmpty()) "+$totalCon ($conParts)" else "+$totalCon"
+                    sb.appendLine()
+                    sb.append("  Con : $conLine")
+                }
+
+                outbound.send(OutboundEvent.SendInfo(sessionId, sb.toString().trimEnd()))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
