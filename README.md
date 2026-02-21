@@ -15,6 +15,17 @@ Current State
 - HP regeneration over time (regen interval scales with constitution + equipment).
 - Chat and social commands (say, emote, tell, gossip), plus basic UI helpers (ANSI, clear, colors).
 
+Screenshots
+-----------
+Grafana dashboards during load testing:
+![Grafana dashboard view 1](src/main/resources/screenshots/Dashboard1.png)
+![Grafana dashboard view 2](src/main/resources/screenshots/Dashboard2.png)
+![Grafana dashboard view 3](src/main/resources/screenshots/Dashboard3.png)
+
+Web client:
+![Web client login](src/main/resources/screenshots/Login.png)
+![Web client combat](src/main/resources/screenshots/Combat.png)
+
 Requirements
 ------------
 - JDK 17
