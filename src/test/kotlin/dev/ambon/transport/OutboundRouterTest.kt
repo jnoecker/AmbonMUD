@@ -1,5 +1,6 @@
 package dev.ambon.transport
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,7 +22,7 @@ class OutboundRouterTest {
     @Test
     fun `disconnects slow client when outbound queue is full`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
 
             val sessionId = SessionId(1L)
@@ -64,7 +65,7 @@ class OutboundRouterTest {
     @Test
     fun `routes outbound events to correct session queue`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 
@@ -92,7 +93,7 @@ class OutboundRouterTest {
     @Test
     fun `unregister stops delivery`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 
@@ -118,7 +119,7 @@ class OutboundRouterTest {
     @Test
     fun `Close event invokes close callback and stops further delivery`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 
@@ -151,7 +152,7 @@ class OutboundRouterTest {
     @Test
     fun `SetAnsi changes prompt rendering`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 

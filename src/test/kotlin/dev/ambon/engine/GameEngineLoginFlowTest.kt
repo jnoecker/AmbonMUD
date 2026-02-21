@@ -1,5 +1,7 @@
 package dev.ambon.engine
 
+import dev.ambon.bus.LocalInboundBus
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.domain.world.load.WorldLoader
@@ -9,7 +11,6 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -31,8 +32,8 @@ class GameEngineLoginFlowTest {
     @Test
     fun `connect shows login screen before name prompt`() =
         runTest {
-            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
@@ -91,8 +92,8 @@ class GameEngineLoginFlowTest {
     @Test
     fun `blank password returns to name prompt`() =
         runTest {
-            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
@@ -163,8 +164,8 @@ class GameEngineLoginFlowTest {
     @Test
     fun `fourth wrong password returns to login`() =
         runTest {
-            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
@@ -255,8 +256,8 @@ class GameEngineLoginFlowTest {
     @Test
     fun `disconnects after three failed login cycles`() =
         runTest {
-            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
@@ -297,7 +298,7 @@ class GameEngineLoginFlowTest {
             val got = mutableListOf<OutboundEvent>()
             withTimeout(500) {
                 while (got.none { it is OutboundEvent.Close && it.sessionId == sid }) {
-                    got += outbound.receive()
+                    got += outbound.asReceiveChannel().receive()
                 }
             }
 
@@ -312,8 +313,8 @@ class GameEngineLoginFlowTest {
     @Test
     fun `new user requires confirmation before password prompt`() =
         runTest {
-            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
@@ -415,8 +416,8 @@ class GameEngineLoginFlowTest {
     @Test
     fun `second login with correct password kicks first session and observer sees flicker`() =
         runTest {
-            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
@@ -503,8 +504,8 @@ class GameEngineLoginFlowTest {
     @Test
     fun `wrong password on live name does not kick original session`() =
         runTest {
-            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
@@ -573,8 +574,8 @@ class GameEngineLoginFlowTest {
     @Test
     fun `combat is inherited after session takeover`() =
         runTest {
-            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             // ok_small world: start room 'ok_small:a', mob 'rat' in 'ok_small:b', exit north from a to b
             val world = WorldLoader.loadFromResource("world/ok_small.yaml")
@@ -650,7 +651,7 @@ class GameEngineLoginFlowTest {
             outbound.close()
         }
 
-    private fun drainOutbound(outbound: Channel<OutboundEvent>): List<OutboundEvent> {
+    private fun drainOutbound(outbound: LocalOutboundBus): List<OutboundEvent> {
         val out = mutableListOf<OutboundEvent>()
         while (true) {
             val ev = outbound.tryReceive().getOrNull() ?: break

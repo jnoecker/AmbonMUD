@@ -1,14 +1,13 @@
 package dev.ambon.transport
 
+import dev.ambon.bus.InboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.engine.events.InboundEvent
 import dev.ambon.metrics.GameMetrics
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.net.ServerSocket
@@ -17,7 +16,7 @@ private val log = KotlinLogging.logger {}
 
 class BlockingSocketTransport(
     private val port: Int,
-    private val inbound: SendChannel<InboundEvent>,
+    private val inbound: InboundBus,
     private val outboundRouter: OutboundRouter,
     private val sessionIdFactory: () -> SessionId,
     private val scope: CoroutineScope,
