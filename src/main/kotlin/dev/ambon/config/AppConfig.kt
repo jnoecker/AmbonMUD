@@ -15,6 +15,7 @@ data class AppConfig(
     val demo: DemoConfig = DemoConfig(),
     val observability: ObservabilityConfig = ObservabilityConfig(),
     val logging: LoggingConfig = LoggingConfig(),
+    val redis: RedisConfig = RedisConfig(),
 ) {
     fun validated(): AppConfig {
         require(server.telnetPort in 1..65535) { "ambonMUD.server.telnetPort must be between 1 and 65535" }
@@ -91,6 +92,11 @@ data class AppConfig(
 
         require(observability.metricsEndpoint.startsWith("/")) {
             "ambonMUD.observability.metricsEndpoint must start with '/'"
+        }
+
+        if (redis.enabled) {
+            require(redis.uri.isNotBlank()) { "ambonMUD.redis.uri must be non-blank when redis.enabled=true" }
+            require(redis.cacheTtlSeconds > 0L) { "ambonMUD.redis.cacheTtlSeconds must be > 0" }
         }
 
         return this
@@ -283,6 +289,12 @@ data class ObservabilityConfig(
 data class LoggingConfig(
     val level: String = "INFO",
     val packageLevels: Map<String, String> = emptyMap(),
+)
+
+data class RedisConfig(
+    val enabled: Boolean = false,
+    val uri: String = "redis://localhost:6379",
+    val cacheTtlSeconds: Long = 3600L,
 )
 
 private fun validateMobTier(

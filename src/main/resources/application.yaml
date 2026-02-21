@@ -119,3 +119,8 @@ ambonMUD:
     packageLevels:
       dev.ambon.transport: INFO
       dev.ambon.engine: INFO
+
+  redis:
+    enabled: false
+    uri: "redis://localhost:6379"
+    cacheTtlSeconds: 3600
