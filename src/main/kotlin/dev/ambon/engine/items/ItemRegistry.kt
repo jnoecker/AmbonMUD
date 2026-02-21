@@ -14,6 +14,7 @@ class ItemRegistry {
     private val inventoryItems = mutableMapOf<SessionId, MutableList<ItemInstance>>()
     private val mobItems = mutableMapOf<MobId, MutableList<ItemInstance>>()
     private val unplacedItems = mutableMapOf<ItemId, ItemInstance>()
+    private val itemTemplates = mutableMapOf<ItemId, ItemInstance>()
     private val equippedItems = mutableMapOf<SessionId, MutableMap<ItemSlot, ItemInstance>>()
 
     sealed interface EquipResult {
@@ -49,11 +50,12 @@ class ItemRegistry {
         roomItems.clear()
         mobItems.clear()
         unplacedItems.clear()
+        itemTemplates.clear()
         for (spawn in spawns) {
             val instance = spawn.instance
+            itemTemplates[instance.id] = instance
             when {
                 spawn.roomId != null -> addRoomItem(spawn.roomId, instance)
-                spawn.mobId != null -> addMobItem(spawn.mobId, instance)
                 else -> addUnplacedItem(instance.id, instance)
             }
         }
@@ -84,12 +86,18 @@ class ItemRegistry {
         for (itemId in unplacedIdsToRemove) {
             unplacedItems.remove(itemId)
         }
+        val templateIdsToRemove =
+            itemTemplates.keys
+                .filter { itemId -> idZone(itemId.value) == zone }
+        for (itemId in templateIdsToRemove) {
+            itemTemplates.remove(itemId)
+        }
 
         for (spawn in spawns) {
             val instance = spawn.instance
+            itemTemplates[instance.id] = instance
             when {
                 spawn.roomId != null -> addRoomItem(spawn.roomId, instance)
-                spawn.mobId != null -> addMobItem(spawn.mobId, instance)
                 else -> addUnplacedItem(instance.id, instance)
             }
         }
@@ -143,6 +151,23 @@ class ItemRegistry {
         if (items.isEmpty()) return emptyList()
         roomItems.getOrPut(roomId) { mutableListOf() }.addAll(items)
         return items
+    }
+
+    /**
+     * Instantiate a template item and place it in the room as a mob loot drop.
+     */
+    fun placeMobDrop(
+        itemId: ItemId,
+        roomId: RoomId,
+    ): ItemInstance? {
+        val template = itemTemplates[itemId] ?: return null
+        val dropped =
+            ItemInstance(
+                id = template.id,
+                item = template.item.copy(),
+            )
+        addRoomItem(roomId, dropped)
+        return dropped
     }
 
     fun addUnplacedItem(

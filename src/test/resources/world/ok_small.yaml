@@ -5,13 +5,15 @@ mobs:
   rat:
     name: "a small rat"
     room: b
+    drops:
+      - itemId: tooth
+        chance: 1.0
 items:
   coin:
     displayName: "a silver coin"
     room: a
   tooth:
     displayName: "a rat tooth"
-    mob: rat
   sigil:
     displayName: "a chalk sigil"
 rooms:

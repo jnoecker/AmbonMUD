@@ -11,6 +11,8 @@ import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
+import dev.ambon.domain.world.ItemSpawn
+import dev.ambon.domain.world.MobDrop
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
@@ -253,6 +255,112 @@ class CombatSystemTest {
             assertNull(mobs.get(mob.id), "Expected mob to be removed after death")
             assertTrue(items.itemsInMob(mob.id).isEmpty(), "Expected mob inventory to be cleared")
             assertEquals(1, items.itemsInRoom(roomId).size, "Expected dropped item in room")
+        }
+
+    @Test
+    fun `mob death rolls guaranteed loot table drop`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            items.loadSpawns(
+                listOf(
+                    ItemSpawn(
+                        instance =
+                            ItemInstance(
+                                ItemId("demo:fang"),
+                                Item(keyword = "fang", displayName = "a wolf fang"),
+                            ),
+                    ),
+                ),
+            )
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob =
+                MobState(
+                    MobId("demo:wolf"),
+                    "a wolf",
+                    roomId,
+                    hp = 1,
+                    maxHp = 1,
+                    drops = listOf(MobDrop(ItemId("demo:fang"), 1.0)),
+                )
+            mobs.upsert(mob)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(2),
+                    tickMillis = 1_000L,
+                )
+
+            val sid = SessionId(7L)
+            login(players, sid, "Player7")
+            val err = combat.startCombat(sid, "wolf")
+            assertNull(err)
+
+            clock.advance(1_000L)
+            combat.tick()
+
+            assertTrue(items.itemsInRoom(roomId).any { it.id.value == "demo:fang" })
+        }
+
+    @Test
+    fun `mob death skips loot table drop when chance is zero`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            items.loadSpawns(
+                listOf(
+                    ItemSpawn(
+                        instance =
+                            ItemInstance(
+                                ItemId("demo:fang"),
+                                Item(keyword = "fang", displayName = "a wolf fang"),
+                            ),
+                    ),
+                ),
+            )
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob =
+                MobState(
+                    MobId("demo:wolf"),
+                    "a wolf",
+                    roomId,
+                    hp = 1,
+                    maxHp = 1,
+                    drops = listOf(MobDrop(ItemId("demo:fang"), 0.0)),
+                )
+            mobs.upsert(mob)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(2),
+                    tickMillis = 1_000L,
+                )
+
+            val sid = SessionId(8L)
+            login(players, sid, "Player8")
+            val err = combat.startCombat(sid, "wolf")
+            assertNull(err)
+
+            clock.advance(1_000L)
+            combat.tick()
+
+            assertTrue(items.itemsInRoom(roomId).none { it.id.value == "demo:fang" })
         }
 
     @Test

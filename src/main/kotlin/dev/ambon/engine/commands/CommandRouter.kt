@@ -475,6 +475,7 @@ class CommandRouter(
                         hp = template.maxHp, maxHp = template.maxHp,
                         minDamage = template.minDamage, maxDamage = template.maxDamage,
                         armor = template.armor, xpReward = template.xpReward,
+                        drops = template.drops,
                     ),
                 )
                 outbound.send(OutboundEvent.SendInfo(sessionId, "${template.name} appears."))

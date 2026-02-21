@@ -12,4 +12,5 @@ data class MobSpawn(
     val maxDamage: Int = 4,
     val armor: Int = 0,
     val xpReward: Long = 30L,
+    val drops: List<MobDrop> = emptyList(),
 )

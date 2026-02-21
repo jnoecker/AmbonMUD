@@ -48,6 +48,34 @@ class ItemRegistryTest {
         assertFalse(itemIds.contains("demo:lantern"))
     }
 
+    @Test
+    fun `placeMobDrop instantiates template item into room`() {
+        val registry = ItemRegistry()
+        val roomId = RoomId("demo:trailhead")
+        val itemId = ItemId("demo:coin")
+        registry.loadSpawns(
+            listOf(
+                ItemSpawn(
+                    instance = instance("demo:coin", "coin", "a silver coin"),
+                ),
+            ),
+        )
+
+        val dropped = registry.placeMobDrop(itemId, roomId)
+
+        assertNotNull(dropped)
+        val roomItems = registry.itemsInRoom(roomId)
+        assertEquals(1, roomItems.size)
+        assertEquals("demo:coin", roomItems.single().id.value)
+    }
+
+    @Test
+    fun `placeMobDrop returns null when item template is missing`() {
+        val registry = ItemRegistry()
+        val dropped = registry.placeMobDrop(ItemId("demo:missing"), RoomId("demo:room"))
+        assertNull(dropped)
+    }
+
     // --- Substring fallback tests ---
 
     @Test
