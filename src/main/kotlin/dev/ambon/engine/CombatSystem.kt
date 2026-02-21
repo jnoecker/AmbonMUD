@@ -21,6 +21,8 @@ class CombatSystem(
     private val tickMillis: Long = 1_000L,
     internal val minDamage: Int = 1,
     internal val maxDamage: Int = 4,
+    private val detailedFeedbackEnabled: Boolean = false,
+    private val detailedFeedbackRoomBroadcastEnabled: Boolean = false,
     private val onMobRemoved: (MobId) -> Unit = {},
     private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
@@ -169,11 +171,29 @@ class CombatSystem(
             }
 
             val playerAttack = equippedAttack(player.sessionId)
-
-            val rawPlayerDamage = rollDamage() + playerAttack
-            val effectivePlayerDamage = (rawPlayerDamage - mob.armor).coerceAtLeast(1)
+            val playerRoll = rollDamage()
+            val rawPlayerDamage = playerRoll + playerAttack
+            val preClampPlayerDamage = rawPlayerDamage - mob.armor
+            val effectivePlayerDamage = preClampPlayerDamage.coerceAtLeast(1)
+            val playerArmorAbsorbed = (rawPlayerDamage - effectivePlayerDamage).coerceAtLeast(0)
+            val playerMinDamageClamped = preClampPlayerDamage < 1
+            val playerFeedbackSuffix =
+                combatFeedbackSuffix(
+                    roll = playerRoll,
+                    attackBonus = playerAttack,
+                    armorAbsorbed = playerArmorAbsorbed,
+                    clampedToMinimum = playerMinDamageClamped,
+                )
             mob.hp = (mob.hp - effectivePlayerDamage).coerceAtLeast(0)
-            outbound.send(OutboundEvent.SendText(fight.sessionId, "You hit ${mob.name} for $effectivePlayerDamage damage."))
+            val playerHitText = "You hit ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix."
+            outbound.send(OutboundEvent.SendText(fight.sessionId, playerHitText))
+            if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
+                broadcastToRoom(
+                    player.roomId,
+                    "[Combat] ${player.name} hits ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix.",
+                    exclude = fight.sessionId,
+                )
+            }
             if (mob.hp <= 0) {
                 handleMobDeath(fight.sessionId, mob)
                 endFight(fight)
@@ -182,9 +202,23 @@ class CombatSystem(
                 continue
             }
 
-            val mobDamage = rollDamage(mob.minDamage, mob.maxDamage)
+            val mobRoll = rollDamage(mob.minDamage, mob.maxDamage)
+            val mobDamage = mobRoll
+            val mobFeedbackSuffix =
+                combatFeedbackSuffix(
+                    roll = mobRoll,
+                    armorAbsorbed = 0,
+                )
             player.hp = (player.hp - mobDamage).coerceAtLeast(0)
-            outbound.send(OutboundEvent.SendText(fight.sessionId, "${mob.name} hits you for $mobDamage damage."))
+            val mobHitText = "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
+            outbound.send(OutboundEvent.SendText(fight.sessionId, mobHitText))
+            if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
+                broadcastToRoom(
+                    player.roomId,
+                    "[Combat] ${mob.name} hits ${player.name} for $mobDamage damage$mobFeedbackSuffix.",
+                    exclude = fight.sessionId,
+                )
+            }
 
             if (player.hp <= 0) {
                 metrics.onPlayerDeath()
@@ -215,6 +249,26 @@ class CombatSystem(
         require(max >= min) { "max damage must be >= min damage" }
         val range = (max - min) + 1
         return min + rng.nextInt(range)
+    }
+
+    private fun combatFeedbackSuffix(
+        roll: Int,
+        attackBonus: Int = 0,
+        armorAbsorbed: Int,
+        clampedToMinimum: Boolean = false,
+    ): String {
+        if (!detailedFeedbackEnabled) return ""
+        val parts = mutableListOf<String>()
+        var rollSummary = "roll $roll"
+        if (attackBonus > 0) {
+            rollSummary += " +atk $attackBonus"
+        }
+        parts += rollSummary
+        parts += "armor absorbed $armorAbsorbed"
+        if (clampedToMinimum) {
+            parts += "min 1 applied"
+        }
+        return " (${parts.joinToString(", ")})"
     }
 
     private fun equippedAttack(sessionId: SessionId): Int = items.equipment(sessionId).values.sumOf { it.item.damage }
