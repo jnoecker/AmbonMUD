@@ -1,0 +1,16 @@
+zone: bad_mob_drop_chance
+startRoom: hall
+mobs:
+  rat:
+    name: "a small rat"
+    room: hall
+    drops:
+      - itemId: tooth
+        chance: 1.2
+items:
+  tooth:
+    displayName: "a rat tooth"
+rooms:
+  hall:
+    title: "Hall"
+    description: "A stone hall."

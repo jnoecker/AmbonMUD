@@ -11,6 +11,7 @@ It is written for code generators that need to emit valid zone files.
   - `WorldFile` (`zone`, `lifespan`, `startRoom`, `rooms`, `mobs`, `items`)
   - `RoomFile`
   - `MobFile`
+  - `MobDropFile`
   - `ItemFile`
 
 ## Top-Level Schema
@@ -63,22 +64,30 @@ Each value:
 ```yaml
 name:       <string, required>
 room:       <room-id string, required>
-tier:       <string, optional — one of weak|standard|elite|boss (case-insensitive); default standard>
+tier:       <string, optional - one of weak|standard|elite|boss (case-insensitive); default standard>
 level:      <integer >= 1, optional; default 1>
-hp:         <integer >= 1, optional — overrides tier-computed hp>
-minDamage:  <integer >= 1, optional — overrides tier-computed minDamage>
-maxDamage:  <integer >= minDamage, optional — overrides tier-computed maxDamage>
-armor:      <integer >= 0, optional — overrides tier baseArmor (flat damage reduction, no level scaling)>
-xpReward:   <long >= 0, optional — overrides tier-computed xpReward>
+hp:         <integer >= 1, optional - overrides tier-computed hp>
+minDamage:  <integer >= 1, optional - overrides tier-computed minDamage>
+maxDamage:  <integer >= minDamage, optional - overrides tier-computed maxDamage>
+armor:      <integer >= 0, optional - overrides tier baseArmor (flat damage reduction, no level scaling)>
+xpReward:   <long >= 0, optional - overrides tier-computed xpReward>
+drops:      <list<Drop>, optional, default []>
 ```
 
-**Tier formula** (for tier `T` and level `L`, where `L` defaults to 1):
+`Drop` entry:
 
+```yaml
+itemId: <item-id string, required>
+chance: <double in [0.0, 1.0], required>
 ```
+
+Tier formula (for tier `T` and level `L`, where `L` defaults to 1):
+
+```text
 hp         = T.baseHp + (L-1) * T.hpPerLevel
 minDamage  = T.baseMinDamage + (L-1) * T.damagePerLevel
 maxDamage  = T.baseMaxDamage + (L-1) * T.damagePerLevel
-armor      = T.baseArmor                          (flat, no level scaling)
+armor      = T.baseArmor
 xpReward   = T.baseXpReward + (L-1) * T.xpRewardPerLevel
 ```
 
@@ -94,7 +103,7 @@ The built-in defaults are:
 | elite    | 20     | 5          | 2          | 6          | 1           | 1         | 75     | 20         |
 | boss     | 50     | 10         | 3          | 8          | 2           | 3         | 200    | 50         |
 
-**Mob armor** applies as flat damage reduction: `effectiveDamage = max(1, playerRoll - mob.armor)`.
+Mob armor applies as flat damage reduction: `effectiveDamage = max(1, playerRoll - mob.armor)`.
 
 ### `items` map
 
@@ -110,16 +119,15 @@ damage: <integer, optional, default 0, must be >= 0>
 armor: <integer, optional, default 0, must be >= 0>
 constitution: <integer, optional, default 0, must be >= 0>
 room: <room-id string, optional>
-mob: <mob-id string, optional>
 matchByKey: <boolean, optional, default false>
 ```
 
-`matchByKey` — optional boolean (default `false`). When `true`, players must type the exact keyword; substring-based fallback on `displayName` and `description` is disabled. Use for intentionally hidden or keyword-gated items.
+`matchByKey` is optional (default `false`). When `true`, players must type the exact keyword; substring-based fallback on `displayName` and `description` is disabled.
 
 Location rules for items:
 
-- `room` and `mob` cannot both be set.
-- Both may be omitted (item starts unplaced).
+- `room` may be omitted (item starts unplaced).
+- `mob` placement is deprecated and rejected by the loader.
 
 ## ID Normalization Rules
 
@@ -136,7 +144,8 @@ This applies to:
 - `rooms` keys
 - room exit targets
 - `mobs` keys and `mobs.*.room`
-- `items` keys, `items.*.room`, `items.*.mob`
+- `mobs.*.drops.*.itemId`
+- `items` keys and `items.*.room`
 
 Examples with `zone: swamp`:
 
@@ -168,7 +177,7 @@ When loading multiple files:
 4. Every exit target must resolve to an existing merged room.
 5. Every mob `room` must resolve to an existing merged room.
 6. Every item `room` (if set) must resolve to an existing merged room.
-7. Every item `mob` (if set) must resolve to an existing merged mob.
+7. Every mob drop `itemId` must resolve to an existing merged item.
 8. For repeated `zone` names across files, `lifespan` merge rule is:
    - if only one file sets `lifespan`, that value is used
    - if multiple files set it, all non-null values must match
@@ -193,7 +202,7 @@ For each file your tool emits:
 3. Ensure `startRoom` points to a room in that same file (after normalization).
 4. Restrict exit direction keys to the allowed set.
 5. Use only non-negative integers for `lifespan`, `damage`, `armor`, `constitution`.
-6. For every item, set at most one of `room` or `mob`.
+6. For every item, use `room` or omit placement entirely (unplaced). Do not use `mob`.
 7. Ensure all local/qualified references resolve in the merged set of files.
 8. Ensure normalized room/mob/item IDs are globally unique across files.
 9. If splitting one zone across files, keep `lifespan` consistent when repeated.
@@ -220,6 +229,9 @@ mobs:
   rat:
     name: "a cave rat"
     room: hall
+    drops:
+      - itemId: fang
+        chance: 1.0
   sentinel:
     name: "a stone sentinel"
     room: entry
@@ -235,7 +247,6 @@ items:
     room: entry
   fang:
     displayName: "a rat fang"
-    mob: rat
   sigil:
     displayName: "a chalk sigil"
 

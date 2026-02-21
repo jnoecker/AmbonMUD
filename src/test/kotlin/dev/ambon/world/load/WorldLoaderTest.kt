@@ -1,6 +1,5 @@
 package dev.ambon.domain.world.load
 
-import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.Direction
@@ -45,6 +44,9 @@ class WorldLoaderTest {
         assertEquals(4, mob.maxDamage)
         assertEquals(0, mob.armor)
         assertEquals(30L, mob.xpReward)
+        assertEquals(1, mob.drops.size)
+        assertEquals("ok_small:tooth", mob.drops.single().itemId.value)
+        assertEquals(1.0, mob.drops.single().chance)
     }
 
     @Test
@@ -65,17 +67,14 @@ class WorldLoaderTest {
         assertEquals("coin", coin.instance.item.keyword)
         assertEquals("a silver coin", coin.instance.item.displayName)
         assertEquals(RoomId("ok_small:a"), coin.roomId)
-        assertTrue(coin.mobId == null)
 
         val tooth = items.getValue("ok_small:tooth")
         assertEquals("tooth", tooth.instance.item.keyword)
-        assertEquals(MobId("ok_small:rat"), tooth.mobId)
         assertTrue(tooth.roomId == null)
 
         val sigil = items.getValue("ok_small:sigil")
         assertEquals("sigil", sigil.instance.item.keyword)
         assertTrue(sigil.roomId == null)
-        assertTrue(sigil.mobId == null)
     }
 
     @Test
@@ -162,13 +161,13 @@ class WorldLoaderTest {
     }
 
     @Test
-    fun `fails when an item starts in a missing mob`() {
+    fun `fails when an item uses deprecated mob placement`() {
         val ex =
             assertThrows(WorldLoadException::class.java) {
                 WorldLoader.loadFromResource("world/bad_item_missing_mob.yaml")
             }
-        assertTrue(ex.message!!.contains("starts in missing mob", ignoreCase = true), "Got: ${ex.message}")
-        assertTrue(ex.message!!.contains("items.", ignoreCase = true), "Got: ${ex.message}")
+        assertTrue(ex.message!!.contains("deprecated", ignoreCase = true), "Got: ${ex.message}")
+        assertTrue(ex.message!!.contains("drops", ignoreCase = true), "Got: ${ex.message}")
     }
 
     @Test
@@ -287,6 +286,24 @@ class WorldLoaderTest {
                 WorldLoader.loadFromResource("world/bad_mob_damage_range.yaml")
             }
         assertTrue(ex.message!!.contains("maxDamage", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when mob drop chance is out of range`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_mob_drop_chance.yaml")
+            }
+        assertTrue(ex.message!!.contains("chance", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when mob drop references missing item`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_mob_drop_missing_item.yaml")
+            }
+        assertTrue(ex.message!!.contains("missing item", ignoreCase = true), "Got: ${ex.message}")
     }
 
     class MultiZoneWorldLoaderTest {

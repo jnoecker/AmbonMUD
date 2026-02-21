@@ -10,4 +10,5 @@ data class MobFile(
     val maxDamage: Int? = null,
     val armor: Int? = null,
     val xpReward: Long? = null,
+    val drops: List<MobDropFile> = emptyList(),
 )

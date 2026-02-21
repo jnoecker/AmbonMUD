@@ -1,0 +1,16 @@
+zone: bad_mob_drop_missing_item
+startRoom: hall
+mobs:
+  rat:
+    name: "a small rat"
+    room: hall
+    drops:
+      - itemId: missing_tooth
+        chance: 0.5
+items:
+  tooth:
+    displayName: "a rat tooth"
+rooms:
+  hall:
+    title: "Hall"
+    description: "A stone hall."

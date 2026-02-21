@@ -6,21 +6,36 @@ mobs:
   gate_scout:
     name: "a wary caravan scout"
     room: caravan_gate
+    drops:
+      - itemId: travel_cloak
+        chance: 1.0
   camp_cook:
     name: "a soot-faced camp cook"
     room: campfire_ring
+    drops:
+      - itemId: cook_knife
+        chance: 1.0
   shrine_acolyte:
     name: "a whispering shrine acolyte"
     room: shrine_antechamber
+    drops:
+      - itemId: acolyte_mask
+        chance: 1.0
   beetle_swarm:
     name: "a swarm of glassy beetles"
     room: beetle_grotto
+    drops:
+      - itemId: beetle_shell
+        chance: 1.0
   stone_sentinel:
     name: "a cracked stone sentinel"
     room: cracked_sanctum
   bridge_bandit:
     name: "a bridge bandit"
     room: rope_bridge
+    drops:
+      - itemId: bandit_dagger
+        chance: 1.0
   drowned_warder:
     name: "a drowned warder"
     room: flooded_steps
@@ -30,9 +45,15 @@ mobs:
   archive_scribe:
     name: "a dust-choked archive scribe"
     room: archive_stacks
+    drops:
+      - itemId: archive_key
+        chance: 1.0
   sunken_treasurer:
     name: "a sunken treasurer"
     room: submerged_vault
+    drops:
+      - itemId: pearl_ring
+        chance: 1.0
 
 items:
   brass_lantern:
@@ -47,7 +68,6 @@ items:
     description: "A sturdy cloak patched at the hem. It still repels drizzle."
     slot: body
     constitution: 1
-    mob: gate_scout
 
   iron_pot:
     displayName: "a dented iron pot"
@@ -61,7 +81,6 @@ items:
     description: "Sharp enough to make you careful."
     slot: hand
     damage: 1
-    mob: camp_cook
 
   river_charm:
     displayName: "a braided river charm"
@@ -76,7 +95,6 @@ items:
     description: "A small blade with a chipped tip and a confident grip."
     slot: hand
     damage: 2
-    mob: bridge_bandit
 
   shrine_censer:
     displayName: "a bronze censer"
@@ -90,13 +108,11 @@ items:
     description: "A pale mask with tiny bead eyes. It makes your breath sound far away."
     slot: head
     armor: 1
-    mob: shrine_acolyte
 
   beetle_shell:
     displayName: "a beetle shell shard"
     keyword: "shell"
     description: "A shard of iridescent shell that catches light like broken glass."
-    mob: beetle_swarm
 
   sentinel_tablet:
     displayName: "a cracked stone tablet"
@@ -116,7 +132,6 @@ items:
     displayName: "a thin iron key"
     keyword: "key"
     description: "A narrow key with an odd, asymmetrical tooth pattern."
-    mob: archive_scribe
 
   scribe_quill:
     displayName: "a brittle quill"
@@ -130,7 +145,6 @@ items:
     description: "A band set with a cloudy pearl. It gleams faintly when wet."
     slot: hand
     constitution: 2
-    mob: sunken_treasurer
 
   vault_mace:
     displayName: "a silt-caked ceremonial mace"

@@ -132,6 +132,7 @@ class GameEngine(
                     hp = spawn.maxHp, maxHp = spawn.maxHp,
                     minDamage = spawn.minDamage, maxDamage = spawn.maxDamage,
                     armor = spawn.armor, xpReward = spawn.xpReward,
+                    drops = spawn.drops,
                 ),
             )
         }
@@ -250,6 +251,7 @@ class GameEngine(
                     hp = spawn.maxHp, maxHp = spawn.maxHp,
                     minDamage = spawn.minDamage, maxDamage = spawn.maxDamage,
                     armor = spawn.armor, xpReward = spawn.xpReward,
+                    drops = spawn.drops,
                 ),
             )
             mobSystem.onMobSpawned(spawn.id)

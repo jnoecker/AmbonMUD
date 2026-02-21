@@ -13,6 +13,7 @@ import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.ItemSpawn
+import dev.ambon.domain.world.MobDrop
 import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
@@ -134,6 +135,25 @@ object WorldLoader {
                 val resolvedMaxDamage = mf.maxDamage ?: (tier.baseMaxDamage + steps * tier.damagePerLevel)
                 val resolvedArmor = mf.armor ?: tier.baseArmor
                 val resolvedXpReward = mf.xpReward ?: (tier.baseXpReward + steps.toLong() * tier.xpRewardPerLevel)
+                val drops =
+                    mf.drops.mapIndexed { index, drop ->
+                        val rawItemId = drop.itemId.trim()
+                        if (rawItemId.isEmpty()) {
+                            throw WorldLoadException("Mob '${mobId.value}' drop #${index + 1} itemId cannot be blank")
+                        }
+
+                        val chance = drop.chance
+                        if (chance.isNaN() || chance < 0.0 || chance > 1.0) {
+                            throw WorldLoadException(
+                                "Mob '${mobId.value}' drop #${index + 1} chance must be in [0.0, 1.0] (got $chance)",
+                            )
+                        }
+
+                        MobDrop(
+                            itemId = normalizeItemId(zone, rawItemId),
+                            chance = chance,
+                        )
+                    }
 
                 if (resolvedHp < 1) throw WorldLoadException("Mob '${mobId.value}' resolved hp must be >= 1")
                 if (resolvedMinDamage < 1) {
@@ -160,6 +180,7 @@ object WorldLoader {
                         maxDamage = resolvedMaxDamage,
                         armor = resolvedArmor,
                         xpReward = resolvedXpReward,
+                        drops = drops,
                     )
             }
 
@@ -201,11 +222,19 @@ object WorldLoader {
                 val roomRaw = itemFile.room?.trim()?.takeUnless { it.isEmpty() }
                 val mobRaw = itemFile.mob?.trim()?.takeUnless { it.isEmpty() }
                 if (roomRaw != null && mobRaw != null) {
-                    throw WorldLoadException("Item '${itemId.value}' cannot be placed in both room and mob")
+                    throw WorldLoadException(
+                        "Item '${itemId.value}' cannot be placed in both room and mob. " +
+                            "Use mobs.<id>.drops for mob loot.",
+                    )
+                }
+                if (mobRaw != null) {
+                    throw WorldLoadException(
+                        "Item '${itemId.value}' uses deprecated 'mob' placement. " +
+                            "Use mobs.<id>.drops instead.",
+                    )
                 }
 
                 val roomId = roomRaw?.let { normalizeTarget(zone, it) }
-                val mobId = mobRaw?.let { normalizeMobRef(zone, it) }
 
                 mergedItems[itemId] =
                     ItemSpawn(
@@ -225,7 +254,6 @@ object WorldLoader {
                                     ),
                             ),
                         roomId = roomId,
-                        mobId = mobId,
                     )
             }
         }
@@ -269,12 +297,16 @@ object WorldLoader {
                     "Item '${itemId.value}' starts in missing room '${roomId.value}'",
                 )
             }
-            val mobId = item.mobId
-            if (mobId != null && !mergedMobs.containsKey(mobId)) {
-                throw WorldLoadException(
-                    "Item '${itemId.value}' starts in missing mob '${mobId.value}' " +
-                        "(check items.${itemId.value.substringAfter(':')}.mob references a mobs: entry)",
-                )
+        }
+
+        // Validate mob drop item references exist after merge
+        for ((mobId, mob) in mergedMobs) {
+            for ((index, drop) in mob.drops.withIndex()) {
+                if (!mergedItems.containsKey(drop.itemId)) {
+                    throw WorldLoadException(
+                        "Mob '${mobId.value}' drop #${index + 1} references missing item '${drop.itemId.value}'",
+                    )
+                }
             }
         }
 
@@ -354,11 +386,6 @@ object WorldLoader {
         if (s.isEmpty()) throw WorldLoadException("Mob id cannot be blank")
         return if (':' in s) MobId(s) else MobId("$zone:$s")
     }
-
-    private fun normalizeMobRef(
-        zone: String,
-        raw: String,
-    ): MobId = normalizeMobId(zone, raw)
 
     private fun normalizeItemId(
         zone: String,
