@@ -15,6 +15,12 @@ Current State
 - HP regeneration over time (regen interval scales with constitution + equipment).
 - Chat and social commands (say, emote, tell, gossip), plus basic UI helpers (ANSI, clear, colors).
 
+Screenshots
+-----------
+Web client:
+![Web client login](src/main/resources/screenshots/Login.png)
+![Web client combat](src/main/resources/screenshots/Combat.png)
+
 Requirements
 ------------
 - JDK 17
@@ -179,6 +185,31 @@ Formatting / Lint
 ```bash
 ./gradlew ktlintCheck
 ```
+
+Observability (Docker + Grafana)
+--------------------------------
+This repo includes a Prometheus + Grafana stack for local metrics dashboards.
+
+1) Start the stack:
+
+```bash
+docker compose up -d
+```
+
+2) Open Grafana:
+
+```text
+http://localhost:3000
+```
+
+Login:
+- Username: `admin`
+- Password: `admin`
+
+Grafana dashboards during load testing:
+![Grafana dashboard view 1](src/main/resources/screenshots/Dashboard1.png)
+![Grafana dashboard view 2](src/main/resources/screenshots/Dashboard2.png)
+![Grafana dashboard view 3](src/main/resources/screenshots/Dashboard3.png)
 
 Out of Scope (Yet)
 ------------------
