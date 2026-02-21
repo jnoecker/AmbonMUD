@@ -5,14 +5,13 @@ ambonMUD:
     inboundChannelCapacity: 10000
     outboundChannelCapacity: 10000
     sessionOutboundQueueCapacity: 200
-    maxInboundEventsPerTick: 1000
+    maxInboundEventsPerTick: 5000
     tickMillis: 100
 
   world:
     resources:
-      - world/ambon_hub.yaml
-      - world/noecker_resume.yaml
-      - world/demo_ruins.yaml
+      - world/load_test_cube_part1.yaml
+      - world/load_test_cube_part2.yaml
 
   persistence:
     rootDir: data/players
@@ -23,22 +22,22 @@ ambonMUD:
 
   engine:
     mob:
-      maxMovesPerTick: 10
+      maxMovesPerTick: 50
       minWanderDelayMillis: 5000
       maxWanderDelayMillis: 12000
     combat:
-      maxCombatsPerTick: 20
+      maxCombatsPerTick: 100
       tickMillis: 1000
-      minDamage: 1
-      maxDamage: 4
+      minDamage: 4
+      maxDamage: 10
     regen:
-      maxPlayersPerTick: 50
+      maxPlayersPerTick: 200
       baseIntervalMillis: 5000
       minIntervalMillis: 1000
       msPerConstitution: 200
       regenAmount: 1
     scheduler:
-      maxActionsPerTick: 100
+      maxActionsPerTick: 500
 
   progression:
     maxLevel: 50
@@ -49,7 +48,7 @@ ambonMUD:
       multiplier: 1.0
       defaultKillXp: 50
     rewards:
-      hpPerLevel: 2
+      hpPerLevel: 10
       fullHealOnLevelUp: true
 
   transport:

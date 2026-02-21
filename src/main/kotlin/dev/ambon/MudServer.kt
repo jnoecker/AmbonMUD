@@ -77,12 +77,14 @@ class MudServer(
     private val progression = PlayerProgression(config.progression)
 
     private val world = WorldFactory.demoWorld(config.world.resources)
+    private val startZoneRooms = world.rooms.keys.filter { it.zone == world.startRoom.zone }
     private val tickMillis: Long = config.server.tickMillis
     private val scheduler: Scheduler = Scheduler(clock)
 
     private val players =
         PlayerRegistry(
             startRoom = world.startRoom,
+            startRooms = startZoneRooms,
             repo = playerRepo,
             items = items,
             clock = clock,

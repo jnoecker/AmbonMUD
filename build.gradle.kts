@@ -63,6 +63,7 @@ fun JavaExec.applyConfigOverrides() {
 
 tasks.named<JavaExec>("run") {
     applyConfigOverrides()
+    jvmArgs("-Xms2g", "-Xmx2g")
 }
 
 tasks.register<JavaExec>("demo") {
@@ -73,6 +74,7 @@ tasks.register<JavaExec>("demo") {
     standardInput = System.`in`
     systemProperty("config.override.ambonMUD.demo.autoLaunchBrowser", "true")
     applyConfigOverrides()
+    jvmArgs("-Xms2g", "-Xmx2g")
 }
 
 ktlint {

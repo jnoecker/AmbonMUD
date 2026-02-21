@@ -7,6 +7,7 @@ import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
 import org.mindrot.jbcrypt.BCrypt
 import java.time.Clock
+import java.util.Random
 
 sealed interface LoginResult {
     data object Ok : LoginResult
@@ -34,10 +35,12 @@ sealed interface CreateResult {
 
 class PlayerRegistry(
     private val startRoom: RoomId,
+    private val startRooms: List<RoomId> = listOf(startRoom),
     private val repo: PlayerRepository,
     private val items: ItemRegistry,
     private val clock: Clock = Clock.systemUTC(),
     private val progression: PlayerProgression = PlayerProgression(),
+    private val rng: Random = Random(),
 ) {
     private val players = mutableMapOf<SessionId, PlayerState>()
     private val roomMembers = mutableMapOf<RoomId, MutableSet<SessionId>>()
@@ -112,10 +115,16 @@ class PlayerRegistry(
         if (repo.findByName(name) != null) return CreateResult.Taken
 
         val now = clock.millis()
+        val spawnRoom =
+            if (startRooms.isNotEmpty()) {
+                startRooms[rng.nextInt(startRooms.size)]
+            } else {
+                startRoom
+            }
         val created =
             repo.create(
                 name = name,
-                startRoomId = startRoom,
+                startRoomId = spawnRoom,
                 nowEpochMs = now,
                 passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()),
                 ansiEnabled = defaultAnsiEnabled,

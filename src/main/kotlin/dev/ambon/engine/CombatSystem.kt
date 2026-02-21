@@ -163,12 +163,10 @@ class CombatSystem(
                 continue
             }
 
-            val playerAttack = equippedAttack(player.sessionId)
-
-            val playerDamage = rollDamage() + playerAttack
-            mob.hp = (mob.hp - playerDamage).coerceAtLeast(0)
-            outbound.send(OutboundEvent.SendText(fight.sessionId, "You hit ${mob.name} for $playerDamage damage."))
-            if (mob.hp <= 0) {
+            val instantRoll = rng.nextInt(100)
+            if (instantRoll < 90) {
+                mob.hp = 0
+                outbound.send(OutboundEvent.SendText(fight.sessionId, "You strike down ${mob.name}."))
                 handleMobDeath(fight.sessionId, mob)
                 endFight(fight)
                 outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
@@ -176,20 +174,10 @@ class CombatSystem(
                 continue
             }
 
-            val mobDamage = rollDamage()
-            player.hp = (player.hp - mobDamage).coerceAtLeast(0)
-            outbound.send(OutboundEvent.SendText(fight.sessionId, "${mob.name} hits you for $mobDamage damage."))
-
-            if (player.hp <= 0) {
-                metrics.onPlayerDeath()
-                endFight(fight)
-                outbound.send(OutboundEvent.SendText(fight.sessionId, "You are forced to flee from ${mob.name}."))
-                outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
-                ran++
-                continue
-            }
-
-            fight.nextTickAtMs = now + tickMillis
+            player.hp = 0
+            metrics.onPlayerDeath()
+            endFight(fight)
+            outbound.send(OutboundEvent.SendText(fight.sessionId, "You are forced to flee from ${mob.name}."))
             outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
             ran++
         }
