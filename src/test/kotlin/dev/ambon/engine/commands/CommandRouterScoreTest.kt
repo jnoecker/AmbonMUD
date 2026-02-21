@@ -38,9 +38,7 @@ class CommandRouterScoreTest {
             router.handle(sid, Command.Score)
 
             val outs = drain(outbound)
-            val info = outs.filterIsInstance<OutboundEvent.SendInfo>().firstOrNull()
-            assertTrue(info != null, "Expected SendInfo. got=$outs")
-            val text = info!!.text
+            val text = outs.filterIsInstance<OutboundEvent.SendInfo>().joinToString("\n") { it.text }
             assertTrue(text.contains("Arandel"), "Missing name. text=$text")
             assertTrue(text.contains("Level 1"), "Missing level. text=$text")
             assertTrue(text.contains("HP"), "Missing HP. text=$text")
@@ -70,7 +68,7 @@ class CommandRouterScoreTest {
             router.handle(sid, Command.Score)
 
             val outs = drain(outbound)
-            val text = outs.filterIsInstance<OutboundEvent.SendInfo>().firstOrNull()?.text ?: ""
+            val text = outs.filterIsInstance<OutboundEvent.SendInfo>().joinToString("\n") { it.text }
             assertTrue(text.contains("+3"), "Expected armor total +3. text=$text")
             assertTrue(text.contains("iron helm"), "Expected item name in armor detail. text=$text")
         }
@@ -98,7 +96,7 @@ class CommandRouterScoreTest {
             router.handle(sid, Command.Score)
 
             val outs = drain(outbound)
-            val text = outs.filterIsInstance<OutboundEvent.SendInfo>().firstOrNull()?.text ?: ""
+            val text = outs.filterIsInstance<OutboundEvent.SendInfo>().joinToString("\n") { it.text }
             assertTrue(text.contains("MAXED"), "Expected MAXED at max level. text=$text")
         }
 

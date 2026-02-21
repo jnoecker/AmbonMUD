@@ -381,21 +381,19 @@ class CommandRouter(
                 val equipConstitution = equipped.values.sumOf { it.item.constitution }
                 val totalCon = me.constitution + equipConstitution
 
-                val sb = StringBuilder()
-                sb.appendLine("[ ${me.name} — Level ${me.level} Adventurer ]")
-                sb.appendLine("  HP  : ${me.hp} / ${me.maxHp}      XP : $xpLine")
-                sb.append("  Dmg : $dmgMin–$dmgMax          Armor: $armorDetail")
+                outbound.send(OutboundEvent.SendInfo(sessionId, "[ ${me.name} — Level ${me.level} Adventurer ]"))
+                outbound.send(OutboundEvent.SendInfo(sessionId, "  HP  : ${me.hp} / ${me.maxHp}      XP : $xpLine"))
                 if (totalCon > 0) {
                     val conParts =
                         ItemSlot.entries
                             .filter { slot -> equipped[slot]?.item?.constitution?.let { it > 0 } == true }
                             .joinToString(", ") { slot -> "${slot.label()}: ${equipped[slot]!!.item.displayName}" }
                     val conLine = if (conParts.isNotEmpty()) "+$totalCon ($conParts)" else "+$totalCon"
-                    sb.appendLine()
-                    sb.append("  Con : $conLine")
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "  Dmg : $dmgMin–$dmgMax          Armor: $armorDetail"))
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "  Con : $conLine"))
+                } else {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "  Dmg : $dmgMin–$dmgMax          Armor: $armorDetail"))
                 }
-
-                outbound.send(OutboundEvent.SendInfo(sessionId, sb.toString().trimEnd()))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
