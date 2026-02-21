@@ -19,6 +19,7 @@ import dev.ambon.transport.OutboundRouter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -50,6 +51,7 @@ class MudServer(
     private lateinit var webTransport: KtorWebSocketTransport
     private var engineJob: Job? = null
     private var routerJob: Job? = null
+    private val shutdownSignal = CompletableDeferred<Unit>()
 
     private val clock = Clock.systemUTC()
 
@@ -112,6 +114,7 @@ class MudServer(
                     engineConfig = config.engine,
                     progression = progression,
                     metrics = gameMetrics,
+                    onShutdown = { shutdownSignal.complete(Unit) },
                 ).run()
             }
 
@@ -160,6 +163,8 @@ class MudServer(
         gameMetrics.bindMobRegistry { mobs.all().size }
         gameMetrics.bindRoomsOccupied { players.allPlayers().map { it.roomId }.toSet().size }
     }
+
+    suspend fun awaitShutdown() = shutdownSignal.await()
 
     suspend fun stop() {
         runCatching { telnetTransport.stop() }
