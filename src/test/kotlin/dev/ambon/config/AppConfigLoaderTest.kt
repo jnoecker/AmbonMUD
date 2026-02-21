@@ -44,4 +44,19 @@ class AppConfigLoaderTest {
             )
         assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
     }
+
+    @Test
+    fun `validated rejects combat room feedback when feedback is disabled`() {
+        val invalid =
+            AppConfig(
+                engine =
+                    EngineConfig(
+                        combat =
+                            CombatEngineConfig(
+                                feedback = CombatFeedbackConfig(enabled = false, roomBroadcastEnabled = true),
+                            ),
+                    ),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
 }
