@@ -83,7 +83,7 @@ class GameEngine(
             metrics = metrics,
         )
 
-    private val router = CommandRouter(world, players, mobs, items, combatSystem, outbound, metrics = metrics)
+    private val router = CommandRouter(world, players, mobs, items, combatSystem, outbound, progression = progression, metrics = metrics)
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
     private val failedLoginAttempts = mutableMapOf<SessionId, Int>()
     private val sessionAnsiDefaults = mutableMapOf<SessionId, Boolean>()
