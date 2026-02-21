@@ -43,6 +43,7 @@ class YamlPlayerRepository(
         val lastSeenEpochMs: Long,
         val passwordHash: String = "",
         val ansiEnabled: Boolean = false,
+        val isStaff: Boolean = false,
     )
 
     private val mapper: ObjectMapper =
@@ -143,6 +144,7 @@ class YamlPlayerRepository(
                         lastSeenEpochMs = record.lastSeenEpochMs,
                         passwordHash = record.passwordHash,
                         ansiEnabled = record.ansiEnabled,
+                        isStaff = record.isStaff,
                     )
 
                 val outPath = pathFor(record.id.value)
@@ -170,6 +172,7 @@ class YamlPlayerRepository(
             lastSeenEpochMs = lastSeenEpochMs,
             passwordHash = passwordHash,
             ansiEnabled = ansiEnabled,
+            isStaff = isStaff,
         )
 
     private fun pathFor(id: Long): Path = playersDir.resolve(id.toString().padStart(20, '0') + ".yaml")

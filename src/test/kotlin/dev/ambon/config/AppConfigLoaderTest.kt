@@ -59,4 +59,22 @@ class AppConfigLoaderTest {
             )
         assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
     }
+
+    @Test
+    fun `redis validation skipped when disabled`() {
+        val config = AppConfig(redis = RedisConfig(enabled = false, uri = ""))
+        config.validated()
+    }
+
+    @Test
+    fun `redis validation rejects blank uri when enabled`() {
+        val invalid = AppConfig(redis = RedisConfig(enabled = true, uri = ""))
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `redis validation rejects non-positive cacheTtlSeconds`() {
+        val invalid = AppConfig(redis = RedisConfig(enabled = true, cacheTtlSeconds = 0L))
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
 }

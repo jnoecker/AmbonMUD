@@ -7,6 +7,7 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.fail
@@ -57,6 +58,7 @@ class YamlPlayerRepositoryTest {
                     ansiEnabled = true,
                     level = 3,
                     xpTotal = 400L,
+                    isStaff = true,
                 )
 
             repo.save(updated)
@@ -67,6 +69,7 @@ class YamlPlayerRepositoryTest {
             assertTrue(loaded.ansiEnabled)
             assertEquals(3, loaded.level)
             assertEquals(400L, loaded.xpTotal)
+            assertTrue(loaded.isStaff)
         }
 
     @Test
@@ -157,5 +160,6 @@ class YamlPlayerRepositoryTest {
             assertNotNull(loaded)
             assertEquals(1, loaded!!.level)
             assertEquals(0L, loaded.xpTotal)
+            assertFalse(loaded.isStaff)
         }
 }

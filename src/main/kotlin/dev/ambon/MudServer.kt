@@ -12,8 +12,11 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.PersistenceWorker
+import dev.ambon.persistence.PlayerRepository
+import dev.ambon.persistence.RedisCachingPlayerRepository
 import dev.ambon.persistence.WriteCoalescingPlayerRepository
 import dev.ambon.persistence.YamlPlayerRepository
+import dev.ambon.redis.RedisConnectionManager
 import dev.ambon.session.AtomicSessionIdFactory
 import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.KtorWebSocketTransport
@@ -74,10 +77,26 @@ class MudServer(
             metrics = gameMetrics,
         )
 
-    private val coalescingRepo: WriteCoalescingPlayerRepository? =
-        if (config.persistence.worker.enabled) WriteCoalescingPlayerRepository(yamlRepo) else null
+    private val redisManager: RedisConnectionManager? =
+        if (config.redis.enabled) RedisConnectionManager(config.redis) else null
 
-    private val playerRepo = coalescingRepo ?: yamlRepo
+    private val redisRepo: RedisCachingPlayerRepository? =
+        if (redisManager != null) {
+            RedisCachingPlayerRepository(
+                delegate = yamlRepo,
+                cache = redisManager,
+                cacheTtlSeconds = config.redis.cacheTtlSeconds,
+            )
+        } else {
+            null
+        }
+
+    private val l2Repo: PlayerRepository = redisRepo ?: yamlRepo
+
+    private val coalescingRepo: WriteCoalescingPlayerRepository? =
+        if (config.persistence.worker.enabled) WriteCoalescingPlayerRepository(l2Repo) else null
+
+    private val playerRepo = coalescingRepo ?: l2Repo
 
     private var persistenceWorker: PersistenceWorker? = null
 
@@ -99,6 +118,7 @@ class MudServer(
         )
 
     suspend fun start() {
+        redisManager?.connect()
         bindWorldStateGauges()
 
         if (coalescingRepo != null) {
@@ -189,6 +209,7 @@ class MudServer(
         runCatching { telnetTransport.stop() }
         runCatching { webTransport.stop() }
         runCatching { persistenceWorker?.shutdown() }
+        runCatching { redisManager?.close() }
         scope.cancel()
         engineDispatcher.close()
         inbound.close()
