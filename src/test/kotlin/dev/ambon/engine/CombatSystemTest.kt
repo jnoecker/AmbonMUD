@@ -576,6 +576,169 @@ class CombatSystemTest {
             assertTrue(messages.any { it.contains("hits you for 10 damage") }, "Expected mob hit for 10, messages: $messages")
         }
 
+    @Test
+    fun `detailed combat feedback includes compact roll and armor summaries for both sides`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob =
+                MobState(
+                    MobId("demo:rat"),
+                    "a rat",
+                    roomId,
+                    hp = 20,
+                    maxHp = 20,
+                    minDamage = 7,
+                    maxDamage = 7,
+                    armor = 2,
+                )
+            mobs.upsert(mob)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 5,
+                    maxDamage = 5,
+                    detailedFeedbackEnabled = true,
+                )
+
+            val sid = SessionId(9L)
+            login(players, sid, "Tester9")
+            combat.startCombat(sid, "rat")
+            clock.advance(1_000L)
+            combat.tick()
+
+            val messages =
+                drainOutbound(outbound)
+                    .filterIsInstance<OutboundEvent.SendText>()
+                    .filter { it.sessionId == sid }
+                    .map { it.text }
+
+            assertTrue(
+                messages.any { it.contains("You hit a rat for 3 damage (roll 5, armor absorbed 2).") },
+                "Expected detailed player hit feedback, messages: $messages",
+            )
+            assertTrue(
+                messages.any { it.contains("a rat hits you for 7 damage (roll 7, armor absorbed 0).") },
+                "Expected detailed mob hit feedback, messages: $messages",
+            )
+        }
+
+    @Test
+    fun `detailed combat feedback shows min clamp when armor fully absorbs roll`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, armor = 100)
+            mobs.upsert(mob)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 1,
+                    maxDamage = 1,
+                    detailedFeedbackEnabled = true,
+                )
+
+            val sid = SessionId(10L)
+            login(players, sid, "Tester10")
+            combat.startCombat(sid, "rat")
+            clock.advance(1_000L)
+            combat.tick()
+
+            val messages =
+                drainOutbound(outbound)
+                    .filterIsInstance<OutboundEvent.SendText>()
+                    .filter { it.sessionId == sid }
+                    .map { it.text }
+
+            assertTrue(
+                messages.any { it.contains("You hit a rat for 1 damage (roll 1, armor absorbed 0, min 1 applied).") },
+                "Expected min-clamp feedback in player hit message, messages: $messages",
+            )
+        }
+
+    @Test
+    fun `detailed combat feedback can broadcast to room observers when enabled`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob =
+                MobState(
+                    MobId("demo:rat"),
+                    "a rat",
+                    roomId,
+                    hp = 20,
+                    maxHp = 20,
+                    minDamage = 7,
+                    maxDamage = 7,
+                    armor = 2,
+                )
+            mobs.upsert(mob)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 5,
+                    maxDamage = 5,
+                    detailedFeedbackEnabled = true,
+                    detailedFeedbackRoomBroadcastEnabled = true,
+                )
+
+            val fighterSid = SessionId(11L)
+            val observerSid = SessionId(12L)
+            login(players, fighterSid, "Fighter")
+            login(players, observerSid, "Observer")
+            combat.startCombat(fighterSid, "rat")
+            clock.advance(1_000L)
+            combat.tick()
+
+            val observerMessages =
+                drainOutbound(outbound)
+                    .filterIsInstance<OutboundEvent.SendText>()
+                    .filter { it.sessionId == observerSid }
+                    .map { it.text }
+
+            assertTrue(
+                observerMessages.any { it.contains("[Combat] Fighter hits a rat for 3 damage (roll 5, armor absorbed 2).") },
+                "Expected room observer player-hit feedback, messages: $observerMessages",
+            )
+            assertTrue(
+                observerMessages.any { it.contains("[Combat] a rat hits Fighter for 7 damage (roll 7, armor absorbed 0).") },
+                "Expected room observer mob-hit feedback, messages: $observerMessages",
+            )
+        }
+
     private fun drainOutbound(outbound: Channel<OutboundEvent>): List<OutboundEvent> {
         val events = mutableListOf<OutboundEvent>()
         while (true) {

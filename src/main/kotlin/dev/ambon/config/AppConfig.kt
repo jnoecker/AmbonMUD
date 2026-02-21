@@ -54,6 +54,9 @@ data class AppConfig(
         require(engine.combat.maxDamage >= engine.combat.minDamage) {
             "ambonMUD.engine.combat.maxDamage must be >= minDamage"
         }
+        require(!engine.combat.feedback.roomBroadcastEnabled || engine.combat.feedback.enabled) {
+            "ambonMUD.engine.combat.feedback.roomBroadcastEnabled requires feedback.enabled=true"
+        }
 
         require(engine.regen.maxPlayersPerTick > 0) { "ambonMUD.engine.regen.maxPlayersPerTick must be > 0" }
         require(engine.regen.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.baseIntervalMillis must be > 0" }
@@ -221,6 +224,12 @@ data class CombatEngineConfig(
     val tickMillis: Long = 1_000L,
     val minDamage: Int = 1,
     val maxDamage: Int = 4,
+    val feedback: CombatFeedbackConfig = CombatFeedbackConfig(),
+)
+
+data class CombatFeedbackConfig(
+    val enabled: Boolean = false,
+    val roomBroadcastEnabled: Boolean = false,
 )
 
 data class RegenEngineConfig(

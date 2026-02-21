@@ -68,6 +68,9 @@ ambonMUD:
       tickMillis: 1000
       minDamage: 1
       maxDamage: 4
+      feedback:
+        enabled: true
+        roomBroadcastEnabled: false
     regen:
       maxPlayersPerTick: 50
       baseIntervalMillis: 5000

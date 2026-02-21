@@ -68,6 +68,8 @@ class GameEngine(
             tickMillis = engineConfig.combat.tickMillis,
             minDamage = engineConfig.combat.minDamage,
             maxDamage = engineConfig.combat.maxDamage,
+            detailedFeedbackEnabled = engineConfig.combat.feedback.enabled,
+            detailedFeedbackRoomBroadcastEnabled = engineConfig.combat.feedback.roomBroadcastEnabled,
             onMobRemoved = mobSystem::onMobRemoved,
             progression = progression,
             metrics = metrics,
