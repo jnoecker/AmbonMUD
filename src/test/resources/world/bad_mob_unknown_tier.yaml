@@ -1,0 +1,11 @@
+zone: bad_mob_unknown_tier
+startRoom: room
+mobs:
+  monster:
+    name: "a legendary monster"
+    room: room
+    tier: legendary
+rooms:
+  room:
+    title: "Room"
+    description: "A plain room."

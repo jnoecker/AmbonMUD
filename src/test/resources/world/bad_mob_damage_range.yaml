@@ -1,0 +1,12 @@
+zone: bad_mob_damage_range
+startRoom: room
+mobs:
+  rat:
+    name: "a rat"
+    room: room
+    minDamage: 5
+    maxDamage: 2
+rooms:
+  room:
+    title: "Room"
+    description: "A plain room."

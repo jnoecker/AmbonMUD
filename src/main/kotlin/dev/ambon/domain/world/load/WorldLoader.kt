@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import dev.ambon.config.MobTiersConfig
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -26,9 +27,15 @@ object WorldLoader {
         ObjectMapper(YAMLFactory())
             .registerModule(KotlinModule.Builder().build())
 
-    fun loadFromResource(path: String): World = loadFromResources(listOf(path))
+    fun loadFromResource(
+        path: String,
+        tiers: MobTiersConfig = MobTiersConfig(),
+    ): World = loadFromResources(listOf(path), tiers)
 
-    fun loadFromResources(paths: List<String>): World {
+    fun loadFromResources(
+        paths: List<String>,
+        tiers: MobTiersConfig = MobTiersConfig(),
+    ): World {
         if (paths.isEmpty()) throw WorldLoadException("No zone files provided")
 
         val files = paths.map { path -> readWorldFile(path) }
@@ -103,7 +110,57 @@ object WorldLoader {
                     throw WorldLoadException("Duplicate mob id '${mobId.value}' across zone files")
                 }
                 val roomId = normalizeTarget(zone, mf.room)
-                mergedMobs[mobId] = MobSpawn(id = mobId, name = mf.name, roomId = roomId)
+
+                val tierName = mf.tier?.trim()?.lowercase()
+                val tier =
+                    if (tierName == null) {
+                        tiers.standard
+                    } else {
+                        tiers.forName(tierName)
+                            ?: throw WorldLoadException(
+                                "Mob '${mobId.value}' has unknown tier '$tierName' " +
+                                    "(expected: weak, standard, elite, boss)",
+                            )
+                    }
+
+                val level = mf.level ?: 1
+                if (level < 1) {
+                    throw WorldLoadException("Mob '${mobId.value}' level must be >= 1 (got $level)")
+                }
+                val steps = level - 1
+
+                val resolvedHp = mf.hp ?: (tier.baseHp + steps * tier.hpPerLevel)
+                val resolvedMinDamage = mf.minDamage ?: (tier.baseMinDamage + steps * tier.damagePerLevel)
+                val resolvedMaxDamage = mf.maxDamage ?: (tier.baseMaxDamage + steps * tier.damagePerLevel)
+                val resolvedArmor = mf.armor ?: tier.baseArmor
+                val resolvedXpReward = mf.xpReward ?: (tier.baseXpReward + steps.toLong() * tier.xpRewardPerLevel)
+
+                if (resolvedHp < 1) throw WorldLoadException("Mob '${mobId.value}' resolved hp must be >= 1")
+                if (resolvedMinDamage < 1) {
+                    throw WorldLoadException("Mob '${mobId.value}' resolved minDamage must be >= 1")
+                }
+                if (resolvedMaxDamage < resolvedMinDamage) {
+                    throw WorldLoadException(
+                        "Mob '${mobId.value}' resolved maxDamage ($resolvedMaxDamage) must be >= " +
+                            "minDamage ($resolvedMinDamage)",
+                    )
+                }
+                if (resolvedArmor < 0) throw WorldLoadException("Mob '${mobId.value}' resolved armor must be >= 0")
+                if (resolvedXpReward < 0L) {
+                    throw WorldLoadException("Mob '${mobId.value}' resolved xpReward must be >= 0")
+                }
+
+                mergedMobs[mobId] =
+                    MobSpawn(
+                        id = mobId,
+                        name = mf.name,
+                        roomId = roomId,
+                        maxHp = resolvedHp,
+                        minDamage = resolvedMinDamage,
+                        maxDamage = resolvedMaxDamage,
+                        armor = resolvedArmor,
+                        xpReward = resolvedXpReward,
+                    )
             }
 
             // Stage items (normalized), validate uniqueness

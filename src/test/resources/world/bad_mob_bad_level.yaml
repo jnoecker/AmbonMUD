@@ -1,0 +1,11 @@
+zone: bad_mob_bad_level
+startRoom: room
+mobs:
+  rat:
+    name: "a rat"
+    room: room
+    level: 0
+rooms:
+  room:
+    title: "Room"
+    description: "A plain room."
