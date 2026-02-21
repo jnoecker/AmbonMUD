@@ -1,5 +1,7 @@
 package dev.ambon.engine
 
+import dev.ambon.bus.LocalInboundBus
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.events.InboundEvent
@@ -9,7 +11,6 @@ import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -26,8 +27,8 @@ class GameEngineAnsiBehaviorTest {
     @Test
     fun `ansi on then clear emits ClearScreen (not dashed line)`() =
         runTest {
-            val inbound = Channel<InboundEvent>(Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
@@ -112,8 +113,8 @@ class GameEngineAnsiBehaviorTest {
     @Test
     fun `ansi off then clear still emits ClearScreen (fallback handled by transport)`() =
         runTest {
-            val inbound = Channel<InboundEvent>(Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
@@ -187,7 +188,7 @@ class GameEngineAnsiBehaviorTest {
             outbound.close()
         }
 
-    private fun drainOutbound(outbound: Channel<OutboundEvent>): List<OutboundEvent> {
+    private fun drainOutbound(outbound: LocalOutboundBus): List<OutboundEvent> {
         val out = mutableListOf<OutboundEvent>()
         while (true) {
             val ev = outbound.tryReceive().getOrNull() ?: break

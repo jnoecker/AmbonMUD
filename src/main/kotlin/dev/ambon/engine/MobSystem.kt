@@ -1,12 +1,12 @@
 package dev.ambon.engine
 
+import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.World
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.metrics.GameMetrics
-import kotlinx.coroutines.channels.SendChannel
 import java.time.Clock
 import java.util.Random
 
@@ -14,7 +14,7 @@ class MobSystem(
     private val world: World,
     private val mobs: MobRegistry,
     private val players: PlayerRegistry,
-    private val outbound: SendChannel<OutboundEvent>,
+    private val outbound: OutboundBus,
     private val clock: Clock = Clock.systemUTC(),
     private val rng: Random = Random(),
     private var isMobInCombat: (MobId) -> Boolean = { false },

@@ -1,5 +1,7 @@
 package dev.ambon.engine
 
+import dev.ambon.bus.InboundBus
+import dev.ambon.bus.OutboundBus
 import dev.ambon.config.EngineConfig
 import dev.ambon.config.LoginConfig
 import dev.ambon.domain.ids.RoomId
@@ -16,8 +18,6 @@ import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Timer
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -26,8 +26,8 @@ import java.time.Clock
 private val log = KotlinLogging.logger {}
 
 class GameEngine(
-    private val inbound: ReceiveChannel<InboundEvent>,
-    private val outbound: SendChannel<OutboundEvent>,
+    private val inbound: InboundBus,
+    private val outbound: OutboundBus,
     private val players: PlayerRegistry,
     private val world: World,
     private val mobs: MobRegistry,

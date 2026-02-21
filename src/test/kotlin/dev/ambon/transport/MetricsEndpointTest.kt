@@ -1,14 +1,13 @@
 package dev.ambon.transport
 
-import dev.ambon.engine.events.InboundEvent
-import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.bus.LocalInboundBus
+import dev.ambon.bus.LocalOutboundBus
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -18,8 +17,8 @@ class MetricsEndpointTest {
     @Test
     fun `GET metrics returns 200 with prometheus text when registry is provided`(): Unit =
         runBlocking {
-            val inbound = Channel<InboundEvent>(Channel.UNLIMITED)
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val engineOutbound = LocalOutboundBus()
             val outboundRouter = OutboundRouter(engineOutbound, this)
             val prometheusRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
             // Register a metric so the scrape output is non-empty
@@ -53,8 +52,8 @@ class MetricsEndpointTest {
     @Test
     fun `GET metrics returns 404 when no registry is provided`(): Unit =
         runBlocking {
-            val inbound = Channel<InboundEvent>(Channel.UNLIMITED)
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val engineOutbound = LocalOutboundBus()
             val outboundRouter = OutboundRouter(engineOutbound, this)
 
             testApplication {

@@ -16,6 +16,9 @@ ambonMUD:
 
   persistence:
     rootDir: data/players
+    worker:
+      enabled: true
+      flushIntervalMs: 5000
 
   login:
     maxWrongPasswordRetries: 3
