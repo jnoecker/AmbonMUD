@@ -1,5 +1,7 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
@@ -12,7 +14,6 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -24,7 +25,7 @@ import org.junit.jupiter.api.Test
 class CommandRouterAdminTest {
     // ── helpers ────────────────────────────────────────────────────────────────
 
-    private fun drain(ch: Channel<OutboundEvent>): List<OutboundEvent> {
+    private fun drain(ch: LocalOutboundBus): List<OutboundEvent> {
         val out = mutableListOf<OutboundEvent>()
         while (true) {
             val ev = ch.tryReceive().getOrNull() ?: break
@@ -55,7 +56,7 @@ class CommandRouterAdminTest {
         players: PlayerRegistry,
         mobs: MobRegistry,
         items: ItemRegistry,
-        outbound: Channel<OutboundEvent>,
+        outbound: OutboundBus,
         onShutdown: suspend () -> Unit = {},
         onMobSmited: (MobId) -> Unit = {},
     ): CommandRouter {
@@ -82,7 +83,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val sid = SessionId(1)
@@ -108,7 +109,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val sid = SessionId(1)
@@ -129,7 +130,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val sid = SessionId(1)
@@ -154,7 +155,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val sid = SessionId(1)
@@ -175,7 +176,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val sid = SessionId(1)
@@ -201,7 +202,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val staffSid = SessionId(1)
@@ -231,7 +232,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val staffSid = SessionId(1)
@@ -256,7 +257,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val staffSid = SessionId(1)
@@ -282,7 +283,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val staffSid = SessionId(1)
@@ -303,7 +304,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val staffSid = SessionId(1)
@@ -328,7 +329,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             var shutdownCalled = false
             val router = makeRouter(players, mobs, items, outbound, onShutdown = { shutdownCalled = true })
 
@@ -359,7 +360,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             var shutdownCalled = false
             val router = makeRouter(players, mobs, items, outbound, onShutdown = { shutdownCalled = true })
 
@@ -380,7 +381,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val staffSid = SessionId(1)
@@ -407,7 +408,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val staffSid = SessionId(1)
@@ -432,7 +433,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             var smitedMobId: MobId? = null
             val router = makeRouter(players, mobs, items, outbound, onMobSmited = { smitedMobId = it })
 
@@ -459,7 +460,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val staffSid = SessionId(1)
@@ -484,7 +485,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val staffSid = SessionId(1)
@@ -513,7 +514,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val staffSid = SessionId(1)
@@ -540,7 +541,7 @@ class CommandRouterAdminTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
 
             val staffSid = SessionId(1)

@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -15,7 +16,6 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.metrics.GameMetrics
-import kotlinx.coroutines.channels.SendChannel
 
 class CommandRouter(
     private val world: World,
@@ -23,7 +23,7 @@ class CommandRouter(
     private val mobs: MobRegistry,
     private val items: ItemRegistry,
     private val combat: CombatSystem,
-    private val outbound: SendChannel<OutboundEvent>,
+    private val outbound: OutboundBus,
     private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val onShutdown: suspend () -> Unit = {},

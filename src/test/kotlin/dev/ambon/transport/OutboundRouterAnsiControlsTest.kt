@@ -1,5 +1,6 @@
 package dev.ambon.transport
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.ui.login.LoginScreen
@@ -19,7 +20,7 @@ class OutboundRouterAnsiControlsTest {
     @Test
     fun `ClearScreen emits ANSI clear sequence when ansi enabled`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 
@@ -43,7 +44,7 @@ class OutboundRouterAnsiControlsTest {
     @Test
     fun `ClearScreen falls back to dashed line when ansi disabled`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 
@@ -69,7 +70,7 @@ class OutboundRouterAnsiControlsTest {
     @Test
     fun `ShowAnsiDemo prints info message when ansi is off`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 
@@ -93,7 +94,7 @@ class OutboundRouterAnsiControlsTest {
     @Test
     fun `ShowAnsiDemo emits ANSI escapes when ansi enabled`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 
@@ -121,7 +122,7 @@ class OutboundRouterAnsiControlsTest {
     @Test
     fun `ShowLoginScreen prints plain text lines when ansi is off`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router =
                 OutboundRouter(
                     engineOutbound = engineOutbound,
@@ -152,7 +153,7 @@ class OutboundRouterAnsiControlsTest {
     @Test
     fun `ShowLoginScreen emits ANSI escapes when ansi enabled`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router =
                 OutboundRouter(
                     engineOutbound = engineOutbound,
@@ -191,7 +192,7 @@ class OutboundRouterAnsiControlsTest {
     @Test
     fun `rejects invalid login screen when style count does not match line count`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
 
             assertThrows(IllegalArgumentException::class.java) {
                 OutboundRouter(
@@ -211,7 +212,7 @@ class OutboundRouterAnsiControlsTest {
     @Test
     fun `ClearScreen and ShowAnsiDemo do not close the session`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 

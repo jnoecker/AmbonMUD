@@ -1,5 +1,6 @@
 package dev.ambon.transport
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,7 +33,7 @@ class PlainRendererTest {
     @Test
     fun `prompt rendering uses PromptSpec text not toString`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 

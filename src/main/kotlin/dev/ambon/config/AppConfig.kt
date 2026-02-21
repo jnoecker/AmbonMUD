@@ -29,6 +29,7 @@ data class AppConfig(
         require(world.resources.all { it.isNotBlank() }) { "ambonMUD.world.resources entries must be non-blank" }
 
         require(persistence.rootDir.isNotBlank()) { "ambonMUD.persistence.rootDir must be non-blank" }
+        require(persistence.worker.flushIntervalMs > 0L) { "ambonMUD.persistence.worker.flushIntervalMs must be > 0" }
 
         require(login.maxWrongPasswordRetries >= 0) { "ambonMUD.login.maxWrongPasswordRetries must be >= 0" }
         require(login.maxFailedAttemptsBeforeDisconnect > 0) {
@@ -112,6 +113,12 @@ data class WorldConfig(
 
 data class PersistenceConfig(
     val rootDir: String = "data/players",
+    val worker: PersistenceWorkerConfig = PersistenceWorkerConfig(),
+)
+
+data class PersistenceWorkerConfig(
+    val enabled: Boolean = true,
+    val flushIntervalMs: Long = 5_000L,
 )
 
 data class LoginConfig(

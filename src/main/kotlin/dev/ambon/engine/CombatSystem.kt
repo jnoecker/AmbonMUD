@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -7,7 +8,6 @@ import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.metrics.GameMetrics
-import kotlinx.coroutines.channels.SendChannel
 import java.time.Clock
 import java.util.Random
 
@@ -15,7 +15,7 @@ class CombatSystem(
     private val players: PlayerRegistry,
     private val mobs: MobRegistry,
     private val items: ItemRegistry,
-    private val outbound: SendChannel<OutboundEvent>,
+    private val outbound: OutboundBus,
     private val clock: Clock = Clock.systemUTC(),
     private val rng: Random = Random(),
     private val tickMillis: Long = 1_000L,

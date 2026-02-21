@@ -1,5 +1,6 @@
 package dev.ambon.transport
 
+import dev.ambon.bus.InboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.metrics.GameMetrics
@@ -25,7 +26,6 @@ import io.ktor.websocket.readText
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -34,7 +34,7 @@ private val log = KotlinLogging.logger {}
 
 class KtorWebSocketTransport(
     private val port: Int,
-    private val inbound: SendChannel<InboundEvent>,
+    private val inbound: InboundBus,
     private val outboundRouter: OutboundRouter,
     private val sessionIdFactory: () -> SessionId,
     private val host: String = "0.0.0.0",
@@ -75,7 +75,7 @@ class KtorWebSocketTransport(
 }
 
 internal fun Application.ambonMUDWebModule(
-    inbound: SendChannel<InboundEvent>,
+    inbound: InboundBus,
     outboundRouter: OutboundRouter,
     sessionIdFactory: () -> SessionId,
     sessionOutboundQueueCapacity: Int = 200,
@@ -120,7 +120,7 @@ internal fun Application.ambonMUDWebModule(
 }
 
 private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
-    inbound: SendChannel<InboundEvent>,
+    inbound: InboundBus,
     outboundRouter: OutboundRouter,
     sessionIdFactory: () -> SessionId,
     sessionOutboundQueueCapacity: Int,

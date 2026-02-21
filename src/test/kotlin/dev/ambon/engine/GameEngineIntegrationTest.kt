@@ -1,5 +1,7 @@
 package dev.ambon.engine
 
+import dev.ambon.bus.LocalInboundBus
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.domain.world.load.WorldLoader
@@ -10,7 +12,6 @@ import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -28,8 +29,8 @@ class GameEngineIntegrationTest {
     @Test
     fun `connect then say hello then quit`() =
         runTest {
-            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
@@ -74,7 +75,7 @@ class GameEngineIntegrationTest {
 
             withTimeout(500) {
                 while (got.none { it is OutboundEvent.Close && it.sessionId == sid }) {
-                    got += outbound.receive()
+                    got += outbound.asReceiveChannel().receive()
                 }
             }
 
@@ -93,8 +94,8 @@ class GameEngineIntegrationTest {
     @Test
     fun `connect and disconnect broadcast room presence`() =
         runTest {
-            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
@@ -138,7 +139,7 @@ class GameEngineIntegrationTest {
             val got = mutableListOf<OutboundEvent>()
             withTimeout(500) {
                 while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Bob enters." }) {
-                    got += outbound.receive()
+                    got += outbound.asReceiveChannel().receive()
                 }
             }
 
@@ -149,7 +150,7 @@ class GameEngineIntegrationTest {
 
             withTimeout(500) {
                 while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Bob leaves." }) {
-                    got += outbound.receive()
+                    got += outbound.asReceiveChannel().receive()
                 }
             }
 
@@ -161,8 +162,8 @@ class GameEngineIntegrationTest {
     @Test
     fun `zone reset notifies players and restores spawn state`() =
         runTest {
-            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldLoader.loadFromResource("world/ok_small.yaml")
             val items = ItemRegistry()
@@ -235,8 +236,8 @@ class GameEngineIntegrationTest {
     @Test
     fun `ansi preference persists and is restored on login`() =
         runTest {
-            val inbound = Channel<InboundEvent>(capacity = Channel.UNLIMITED)
-            val outbound = Channel<OutboundEvent>(capacity = Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
 
             val world = WorldFactory.demoWorld()
             val repo = InMemoryPlayerRepository()
@@ -300,7 +301,7 @@ class GameEngineIntegrationTest {
             outbound.close()
         }
 
-    private fun drainOutbound(outbound: Channel<OutboundEvent>): List<OutboundEvent> {
+    private fun drainOutbound(outbound: LocalOutboundBus): List<OutboundEvent> {
         val out = mutableListOf<OutboundEvent>()
         while (true) {
             val ev = outbound.tryReceive().getOrNull() ?: break
