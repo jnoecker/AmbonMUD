@@ -41,6 +41,8 @@ class PersistenceWorkerTest {
 
             assertEquals(0, repo.dirtyCount())
             assertEquals(RoomId("zone:room2"), delegate.findById(record.id)!!.roomId)
+
+            worker.shutdown()
         }
 
     @Test
@@ -105,5 +107,7 @@ class PersistenceWorkerTest {
             runCurrent()
             assertEquals(0, repo.dirtyCount())
             assertEquals(RoomId("zone:r2"), delegate.findById(record.id)!!.roomId)
+
+            worker.shutdown()
         }
 }
