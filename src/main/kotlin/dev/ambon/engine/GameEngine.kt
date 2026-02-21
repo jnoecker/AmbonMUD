@@ -40,6 +40,7 @@ class GameEngine(
     private val engineConfig: EngineConfig = EngineConfig(),
     private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
+    private val onShutdown: suspend () -> Unit = {},
 ) {
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
@@ -83,7 +84,19 @@ class GameEngine(
             metrics = metrics,
         )
 
-    private val router = CommandRouter(world, players, mobs, items, combatSystem, outbound, progression = progression, metrics = metrics)
+    private val router =
+        CommandRouter(
+            world = world,
+            players = players,
+            mobs = mobs,
+            items = items,
+            combat = combatSystem,
+            outbound = outbound,
+            progression = progression,
+            metrics = metrics,
+            onShutdown = onShutdown,
+            onMobSmited = mobSystem::onMobRemoved,
+        )
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
     private val failedLoginAttempts = mutableMapOf<SessionId, Int>()
     private val sessionAnsiDefaults = mutableMapOf<SessionId, Boolean>()

@@ -33,8 +33,9 @@ fun main() =
         log.info { "AmbonMUD listening on telnet port ${config.server.telnetPort} (telnet localhost ${config.server.telnetPort})" }
         log.info { "AmbonMUD web client at $webClientUrl" }
         maybeAutoLaunchBrowser(webClientUrl, config.demo.autoLaunchBrowser)
-        // keep alive
-        kotlinx.coroutines.delay(Long.MAX_VALUE)
+        server.awaitShutdown()
+        log.info { "Shutdown signal received. Stopping server..." }
+        server.stop()
     }
 
 private fun maybeAutoLaunchBrowser(
