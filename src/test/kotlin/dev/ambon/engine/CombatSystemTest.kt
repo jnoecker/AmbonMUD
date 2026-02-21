@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.XpCurveConfig
@@ -18,7 +19,6 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -39,7 +39,7 @@ class CombatSystemTest {
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
             mobs.upsert(mob)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -80,7 +80,7 @@ class CombatSystemTest {
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
             mobs.upsert(mob)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -129,7 +129,7 @@ class CombatSystemTest {
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
             mobs.upsert(mob)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -177,7 +177,7 @@ class CombatSystemTest {
             val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -230,7 +230,7 @@ class CombatSystemTest {
                 ItemInstance(ItemId("demo:feather"), Item(keyword = "feather", displayName = "a black feather")),
             )
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -286,7 +286,7 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -339,7 +339,7 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -373,7 +373,7 @@ class CombatSystemTest {
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 1, maxHp = 1, xpReward = 50L)
             mobs.upsert(mob)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val progression =
                 PlayerProgression(
@@ -462,7 +462,7 @@ class CombatSystemTest {
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, armor = 100)
             mobs.upsert(mob)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -502,7 +502,7 @@ class CombatSystemTest {
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, armor = 2)
             mobs.upsert(mob)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -548,7 +548,7 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -596,7 +596,7 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -644,7 +644,7 @@ class CombatSystemTest {
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, armor = 100)
             mobs.upsert(mob)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -698,7 +698,7 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val combat =
                 CombatSystem(
@@ -739,7 +739,7 @@ class CombatSystemTest {
             )
         }
 
-    private fun drainOutbound(outbound: Channel<OutboundEvent>): List<OutboundEvent> {
+    private fun drainOutbound(outbound: LocalOutboundBus): List<OutboundEvent> {
         val events = mutableListOf<OutboundEvent>()
         while (true) {
             val event = outbound.tryReceive().getOrNull() ?: break

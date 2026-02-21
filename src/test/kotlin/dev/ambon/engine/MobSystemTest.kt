@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -12,7 +13,6 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -32,7 +32,7 @@ class MobSystemTest {
             mobs.upsert(mob)
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), ItemRegistry())
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val system =
                 MobSystem(
@@ -73,7 +73,7 @@ class MobSystemTest {
             login(players, sid2, "Player2")
             players.moveTo(sid2, roomB.id)
 
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val system =
                 MobSystem(
                     world,
@@ -109,7 +109,7 @@ class MobSystemTest {
             mobs.upsert(mob)
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), ItemRegistry())
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val system =
                 MobSystem(
                     world,
@@ -140,7 +140,7 @@ class MobSystemTest {
             mobs.upsert(mob)
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), ItemRegistry())
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val system =
                 MobSystem(
                     world,

@@ -1,18 +1,20 @@
 package dev.ambon
 
+import dev.ambon.bus.LocalInboundBus
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.AppConfig
-import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
-import dev.ambon.engine.events.InboundEvent
-import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
+import dev.ambon.persistence.PersistenceWorker
+import dev.ambon.persistence.WriteCoalescingPlayerRepository
 import dev.ambon.persistence.YamlPlayerRepository
+import dev.ambon.session.AtomicSessionIdFactory
 import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.KtorWebSocketTransport
 import dev.ambon.transport.OutboundRouter
@@ -26,12 +28,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import java.nio.file.Paths
 import java.time.Clock
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicLong
 
 private val log = KotlinLogging.logger {}
 
@@ -40,11 +40,11 @@ class MudServer(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val inbound = Channel<InboundEvent>(capacity = config.server.inboundChannelCapacity)
-    private val outbound = Channel<OutboundEvent>(capacity = config.server.outboundChannelCapacity)
+    private val inbound = LocalInboundBus(capacity = config.server.inboundChannelCapacity)
+    private val outbound = LocalOutboundBus(capacity = config.server.outboundChannelCapacity)
 
     private val engineDispatcher = Executors.newSingleThreadExecutor { r -> Thread(r, "ambonMUD-engine") }.asCoroutineDispatcher()
-    private val sessionIdSeq = AtomicLong(1)
+    private val sessionIdFactory = AtomicSessionIdFactory()
 
     private lateinit var outboundRouter: OutboundRouter
     private lateinit var telnetTransport: BlockingSocketTransport
@@ -68,11 +68,18 @@ class MudServer(
     private val gameMetrics: GameMetrics =
         if (prometheusRegistry != null) GameMetrics(prometheusRegistry) else GameMetrics.noop()
 
-    private val playerRepo =
+    private val yamlRepo =
         YamlPlayerRepository(
             rootDir = Paths.get(config.persistence.rootDir),
             metrics = gameMetrics,
         )
+
+    private val coalescingRepo: WriteCoalescingPlayerRepository? =
+        if (config.persistence.worker.enabled) WriteCoalescingPlayerRepository(yamlRepo) else null
+
+    private val playerRepo = coalescingRepo ?: yamlRepo
+
+    private var persistenceWorker: PersistenceWorker? = null
 
     private val items = ItemRegistry()
     private val mobs = MobRegistry()
@@ -93,6 +100,18 @@ class MudServer(
 
     suspend fun start() {
         bindWorldStateGauges()
+
+        if (coalescingRepo != null) {
+            val worker =
+                PersistenceWorker(
+                    repo = coalescingRepo,
+                    flushIntervalMs = config.persistence.worker.flushIntervalMs,
+                    scope = scope,
+                )
+            worker.start()
+            persistenceWorker = worker
+            log.info { "Persistence worker started (flushIntervalMs=${config.persistence.worker.flushIntervalMs})" }
+        }
 
         outboundRouter = OutboundRouter(outbound, scope, metrics = gameMetrics)
         routerJob = outboundRouter.start()
@@ -123,7 +142,7 @@ class MudServer(
                 port = config.server.telnetPort,
                 inbound = inbound,
                 outboundRouter = outboundRouter,
-                sessionIdFactory = ::allocateSessionId,
+                sessionIdFactory = sessionIdFactory::allocate,
                 scope = scope,
                 sessionOutboundQueueCapacity = config.server.sessionOutboundQueueCapacity,
                 maxLineLen = config.transport.telnet.maxLineLen,
@@ -139,7 +158,7 @@ class MudServer(
                 port = config.server.webPort,
                 inbound = inbound,
                 outboundRouter = outboundRouter,
-                sessionIdFactory = ::allocateSessionId,
+                sessionIdFactory = sessionIdFactory::allocate,
                 host = config.transport.websocket.host,
                 sessionOutboundQueueCapacity = config.server.sessionOutboundQueueCapacity,
                 stopGraceMillis = config.transport.websocket.stopGraceMillis,
@@ -169,12 +188,11 @@ class MudServer(
     suspend fun stop() {
         runCatching { telnetTransport.stop() }
         runCatching { webTransport.stop() }
+        runCatching { persistenceWorker?.shutdown() }
         scope.cancel()
         engineDispatcher.close()
         inbound.close()
         outbound.close()
         log.info { "Server stopped" }
     }
-
-    private fun allocateSessionId(): SessionId = SessionId(sessionIdSeq.getAndIncrement())
 }

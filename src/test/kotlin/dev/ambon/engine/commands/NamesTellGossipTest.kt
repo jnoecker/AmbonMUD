@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.WorldFactory
@@ -11,7 +12,6 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -26,7 +26,7 @@ class NamesTellGossipTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
@@ -62,7 +62,7 @@ class NamesTellGossipTest {
             val world = WorldFactory.demoWorld()
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
@@ -105,7 +105,7 @@ class NamesTellGossipTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
@@ -134,7 +134,7 @@ class NamesTellGossipTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
@@ -153,7 +153,7 @@ class NamesTellGossipTest {
             assertTrue(outs.any { it is OutboundEvent.SendText && it.sessionId == b && it.text.contains("still works") })
         }
 
-    private fun drain(ch: Channel<OutboundEvent>): List<OutboundEvent> {
+    private fun drain(ch: LocalOutboundBus): List<OutboundEvent> {
         val out = mutableListOf<OutboundEvent>()
         while (true) {
             val ev = ch.tryReceive().getOrNull() ?: break

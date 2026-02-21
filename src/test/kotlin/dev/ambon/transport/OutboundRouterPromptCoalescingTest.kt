@@ -1,5 +1,6 @@
 package dev.ambon.transport
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,7 +17,7 @@ class OutboundRouterPromptCoalescingTest {
     @Test
     fun `coalesces consecutive prompts`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 
@@ -40,7 +41,7 @@ class OutboundRouterPromptCoalescingTest {
     @Test
     fun `text breaks prompt coalescing`() =
         runTest {
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val engineOutbound = LocalOutboundBus()
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 

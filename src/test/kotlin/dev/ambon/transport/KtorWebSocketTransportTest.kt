@@ -1,5 +1,8 @@
 package dev.ambon.transport
 
+import dev.ambon.bus.InboundBus
+import dev.ambon.bus.LocalInboundBus
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
@@ -12,7 +15,7 @@ import io.ktor.server.testing.testApplication
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -24,8 +27,8 @@ class KtorWebSocketTransportTest {
     @Test
     fun `websocket bridges inbound and outbound events`(): Unit =
         runBlocking {
-            val inbound = Channel<InboundEvent>(Channel.UNLIMITED)
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val engineOutbound = LocalOutboundBus()
             val outboundRouter = OutboundRouter(engineOutbound, this)
             val routerJob = outboundRouter.start()
             val sid = SessionId(42)
@@ -47,17 +50,17 @@ class KtorWebSocketTransportTest {
                 wsClient.webSocket("/ws") {
                     assertEquals(
                         InboundEvent.Connected(sid, defaultAnsiEnabled = true),
-                        withTimeout(3_000) { inbound.receive() },
+                        withTimeout(3_000) { inbound.awaitReceive() },
                     )
 
                     send(Frame.Text("look\r\nwho"))
                     assertEquals(
                         InboundEvent.LineReceived(sid, "look"),
-                        withTimeout(3_000) { inbound.receive() },
+                        withTimeout(3_000) { inbound.awaitReceive() },
                     )
                     assertEquals(
                         InboundEvent.LineReceived(sid, "who"),
-                        withTimeout(3_000) { inbound.receive() },
+                        withTimeout(3_000) { inbound.awaitReceive() },
                     )
 
                     engineOutbound.send(OutboundEvent.SendText(sid, "hello"))
@@ -68,7 +71,7 @@ class KtorWebSocketTransportTest {
                     assertTrue(payload.contains("\u001B["))
                 }
 
-                val disconnected = withTimeout(3_000) { inbound.receive() }
+                val disconnected = withTimeout(3_000) { inbound.awaitReceive() }
                 assertTrue(disconnected is InboundEvent.Disconnected)
                 assertEquals(sid, (disconnected as InboundEvent.Disconnected).sessionId)
             }
@@ -81,8 +84,8 @@ class KtorWebSocketTransportTest {
     @Test
     fun `serves web client index page`(): Unit =
         runBlocking {
-            val inbound = Channel<InboundEvent>(Channel.UNLIMITED)
-            val engineOutbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val inbound = LocalInboundBus()
+            val engineOutbound = LocalOutboundBus()
             val outboundRouter = OutboundRouter(engineOutbound, this)
 
             testApplication {
@@ -129,5 +132,12 @@ class KtorWebSocketTransportTest {
                 sanitizeIncomingLines(nonPrintable, maxLineLen = 20, maxNonPrintablePerLine = 0)
             }
         assertTrue(nonPrintableEx.message!!.contains("non-printable"))
+    }
+
+    private suspend fun InboundBus.awaitReceive(): InboundEvent {
+        while (true) {
+            tryReceive().getOrNull()?.let { return it }
+            delay(1)
+        }
     }
 }

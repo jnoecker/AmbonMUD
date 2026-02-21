@@ -1,5 +1,6 @@
 package dev.ambon.transport
 
+import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.metrics.GameMetrics
@@ -9,12 +10,11 @@ import dev.ambon.ui.login.LoginScreenRenderer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
 class OutboundRouter(
-    private val engineOutbound: ReceiveChannel<OutboundEvent>,
+    private val engineOutbound: OutboundBus,
     private val scope: CoroutineScope,
     private val loginScreen: LoginScreen = LoginScreenLoader.load(),
     private val loginScreenRenderer: LoginScreenRenderer = LoginScreenRenderer(),
@@ -57,7 +57,7 @@ class OutboundRouter(
 
     fun start(): Job =
         scope.launch {
-            for (ev in engineOutbound) {
+            for (ev in engineOutbound.asReceiveChannel()) {
                 when (ev) {
                     is OutboundEvent.SendText -> {
                         sendLine(ev.sessionId, ev.text, TextKind.NORMAL)

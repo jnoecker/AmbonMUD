@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
@@ -13,7 +14,6 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -31,7 +31,7 @@ class CommandRouterItemsTest {
             )
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
@@ -62,7 +62,7 @@ class CommandRouterItemsTest {
             )
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
@@ -89,7 +89,7 @@ class CommandRouterItemsTest {
             val items = ItemRegistry()
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
@@ -126,7 +126,7 @@ class CommandRouterItemsTest {
             val items = ItemRegistry()
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
@@ -162,7 +162,7 @@ class CommandRouterItemsTest {
             val items = ItemRegistry()
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
@@ -203,7 +203,7 @@ class CommandRouterItemsTest {
             val items = ItemRegistry()
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
@@ -245,7 +245,7 @@ class CommandRouterItemsTest {
             val items = ItemRegistry()
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
@@ -282,7 +282,7 @@ class CommandRouterItemsTest {
             )
         }
 
-    private fun drain(ch: Channel<OutboundEvent>): List<OutboundEvent> {
+    private fun drain(ch: LocalOutboundBus): List<OutboundEvent> {
         val out = mutableListOf<OutboundEvent>()
         while (true) {
             val v = ch.tryReceive().getOrNull() ?: break

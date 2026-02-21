@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
@@ -14,7 +15,6 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -27,7 +27,7 @@ class CommandRouterScoreTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val combat = CombatSystem(players, mobs, items, outbound, minDamage = 1, maxDamage = 4)
             val router = CommandRouter(world, players, mobs, items, combat, outbound)
 
@@ -54,7 +54,7 @@ class CommandRouterScoreTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val combat = CombatSystem(players, mobs, items, outbound, minDamage = 1, maxDamage = 4)
             val router = CommandRouter(world, players, mobs, items, combat, outbound)
 
@@ -80,7 +80,7 @@ class CommandRouterScoreTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val outbound = LocalOutboundBus()
             val combat = CombatSystem(players, mobs, items, outbound)
             val progression = PlayerProgression()
             val router = CommandRouter(world, players, mobs, items, combat, outbound, progression = progression)
@@ -100,7 +100,7 @@ class CommandRouterScoreTest {
             assertTrue(text.contains("MAXED"), "Expected MAXED at max level. text=$text")
         }
 
-    private fun drain(ch: Channel<OutboundEvent>): List<OutboundEvent> {
+    private fun drain(ch: LocalOutboundBus): List<OutboundEvent> {
         val out = mutableListOf<OutboundEvent>()
         while (true) {
             val ev = ch.tryReceive().getOrNull() ?: break
