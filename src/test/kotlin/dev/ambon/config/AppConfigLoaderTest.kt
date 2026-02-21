@@ -34,4 +34,14 @@ class AppConfigLoaderTest {
         val invalid = AppConfig(progression = ProgressionConfig(maxLevel = 0))
         assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
     }
+
+    @Test
+    fun `validated rejects tier with baseHp 0`() {
+        val badTier = MobTierConfig(baseHp = 0)
+        val invalid =
+            AppConfig(
+                engine = EngineConfig(mob = MobEngineConfig(tiers = MobTiersConfig(standard = badTier))),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
 }

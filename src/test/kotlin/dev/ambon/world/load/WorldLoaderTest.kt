@@ -40,6 +40,11 @@ class WorldLoaderTest {
         assertEquals("ok_small:rat", mob.id.value)
         assertEquals("a small rat", mob.name)
         assertEquals(RoomId("ok_small:b"), mob.roomId)
+        assertEquals(10, mob.maxHp)
+        assertEquals(1, mob.minDamage)
+        assertEquals(4, mob.maxDamage)
+        assertEquals(0, mob.armor)
+        assertEquals(30L, mob.xpReward)
     }
 
     @Test
@@ -197,6 +202,91 @@ class WorldLoaderTest {
 
         assertEquals(bId, a.exits[Direction.NORTH])
         assertEquals(aId, b.exits[Direction.SOUTH])
+    }
+
+    @Test
+    fun `loads mob without tier or level uses standard defaults`() {
+        val world = WorldLoader.loadFromResource("world/ok_mob_stats.yaml")
+        val mobs = world.mobSpawns.associateBy { it.id.value }
+
+        val rat = mobs.getValue("ok_mob_stats:rat")
+        assertEquals(10, rat.maxHp)
+        assertEquals(1, rat.minDamage)
+        assertEquals(4, rat.maxDamage)
+        assertEquals(0, rat.armor)
+        assertEquals(30L, rat.xpReward)
+    }
+
+    @Test
+    fun `loads mob with tier and level applies tier formula`() {
+        val world = WorldLoader.loadFromResource("world/ok_mob_stats.yaml")
+        val mobs = world.mobSpawns.associateBy { it.id.value }
+
+        // standard tier, level=3: steps=2
+        // hp = 10 + 2*3 = 16
+        // minDamage = 1 + 2*1 = 3
+        // maxDamage = 4 + 2*1 = 6
+        // armor = 0
+        // xpReward = 30 + 2*10 = 50
+        val bandit = mobs.getValue("ok_mob_stats:bandit")
+        assertEquals(16, bandit.maxHp)
+        assertEquals(3, bandit.minDamage)
+        assertEquals(6, bandit.maxDamage)
+        assertEquals(0, bandit.armor)
+        assertEquals(50L, bandit.xpReward)
+    }
+
+    @Test
+    fun `loads mob with explicit stat overrides`() {
+        val world = WorldLoader.loadFromResource("world/ok_mob_stats.yaml")
+        val mobs = world.mobSpawns.associateBy { it.id.value }
+
+        val mob = mobs.getValue("ok_mob_stats:override_mob")
+        assertEquals(99, mob.maxHp)
+        assertEquals(5, mob.minDamage)
+        assertEquals(10, mob.maxDamage)
+        assertEquals(2, mob.armor)
+        assertEquals(999L, mob.xpReward)
+    }
+
+    @Test
+    fun `loads mob with boss tier applies boss defaults`() {
+        val world = WorldLoader.loadFromResource("world/ok_mob_stats.yaml")
+        val mobs = world.mobSpawns.associateBy { it.id.value }
+
+        val boss = mobs.getValue("ok_mob_stats:boss_mob")
+        assertEquals(50, boss.maxHp)
+        assertEquals(3, boss.minDamage)
+        assertEquals(8, boss.maxDamage)
+        assertEquals(3, boss.armor)
+        assertEquals(200L, boss.xpReward)
+    }
+
+    @Test
+    fun `fails when mob has unknown tier`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_mob_unknown_tier.yaml")
+            }
+        assertTrue(ex.message!!.contains("unknown tier", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when mob level is less than 1`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_mob_bad_level.yaml")
+            }
+        assertTrue(ex.message!!.contains("level", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when resolved maxDamage less than minDamage`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_mob_damage_range.yaml")
+            }
+        assertTrue(ex.message!!.contains("maxDamage", ignoreCase = true), "Got: ${ex.message}")
     }
 
     class MultiZoneWorldLoaderTest {

@@ -170,9 +170,10 @@ class CombatSystem(
 
             val playerAttack = equippedAttack(player.sessionId)
 
-            val playerDamage = rollDamage() + playerAttack
-            mob.hp = (mob.hp - playerDamage).coerceAtLeast(0)
-            outbound.send(OutboundEvent.SendText(fight.sessionId, "You hit ${mob.name} for $playerDamage damage."))
+            val rawPlayerDamage = rollDamage() + playerAttack
+            val effectivePlayerDamage = (rawPlayerDamage - mob.armor).coerceAtLeast(1)
+            mob.hp = (mob.hp - effectivePlayerDamage).coerceAtLeast(0)
+            outbound.send(OutboundEvent.SendText(fight.sessionId, "You hit ${mob.name} for $effectivePlayerDamage damage."))
             if (mob.hp <= 0) {
                 handleMobDeath(fight.sessionId, mob)
                 endFight(fight)
@@ -181,7 +182,7 @@ class CombatSystem(
                 continue
             }
 
-            val mobDamage = rollDamage()
+            val mobDamage = rollDamage(mob.minDamage, mob.maxDamage)
             player.hp = (player.hp - mobDamage).coerceAtLeast(0)
             outbound.send(OutboundEvent.SendText(fight.sessionId, "${mob.name} hits you for $mobDamage damage."))
 
@@ -206,11 +207,14 @@ class CombatSystem(
         fightsByMob.remove(fight.mobId)
     }
 
-    private fun rollDamage(): Int {
-        require(minDamage > 0) { "minDamage must be > 0" }
-        require(maxDamage >= minDamage) { "maxDamage must be >= minDamage" }
-        val range = (maxDamage - minDamage) + 1
-        return minDamage + rng.nextInt(range)
+    private fun rollDamage(
+        min: Int = minDamage,
+        max: Int = maxDamage,
+    ): Int {
+        require(min > 0) { "min damage must be > 0" }
+        require(max >= min) { "max damage must be >= min damage" }
+        val range = (max - min) + 1
+        return min + rng.nextInt(range)
     }
 
     private fun equippedAttack(sessionId: SessionId): Int = items.equipment(sessionId).values.sumOf { it.item.damage }

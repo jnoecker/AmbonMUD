@@ -125,7 +125,16 @@ class GameEngine(
     }
 
     init {
-        world.mobSpawns.forEach { mobs.upsert(MobState(it.id, it.name, it.roomId)) }
+        world.mobSpawns.forEach { spawn ->
+            mobs.upsert(
+                MobState(
+                    id = spawn.id, name = spawn.name, roomId = spawn.roomId,
+                    hp = spawn.maxHp, maxHp = spawn.maxHp,
+                    minDamage = spawn.minDamage, maxDamage = spawn.maxDamage,
+                    armor = spawn.armor, xpReward = spawn.xpReward,
+                ),
+            )
+        }
         items.loadSpawns(world.itemSpawns)
         mobSystem.setCombatChecker(combatSystem::isMobInCombat)
     }
@@ -235,7 +244,14 @@ class GameEngine(
         }
 
         for (spawn in zoneMobSpawns) {
-            mobs.upsert(MobState(spawn.id, spawn.name, spawn.roomId))
+            mobs.upsert(
+                MobState(
+                    id = spawn.id, name = spawn.name, roomId = spawn.roomId,
+                    hp = spawn.maxHp, maxHp = spawn.maxHp,
+                    minDamage = spawn.minDamage, maxDamage = spawn.maxDamage,
+                    armor = spawn.armor, xpReward = spawn.xpReward,
+                ),
+            )
             mobSystem.onMobSpawned(spawn.id)
         }
 

@@ -26,6 +26,43 @@ ambonMUD:
       maxMovesPerTick: 10
       minWanderDelayMillis: 5000
       maxWanderDelayMillis: 12000
+      tiers:
+        weak:
+          baseHp: 5
+          hpPerLevel: 2
+          baseMinDamage: 1
+          baseMaxDamage: 2
+          damagePerLevel: 0
+          baseArmor: 0
+          baseXpReward: 15
+          xpRewardPerLevel: 5
+        standard:
+          baseHp: 10
+          hpPerLevel: 3
+          baseMinDamage: 1
+          baseMaxDamage: 4
+          damagePerLevel: 1
+          baseArmor: 0
+          baseXpReward: 30
+          xpRewardPerLevel: 10
+        elite:
+          baseHp: 20
+          hpPerLevel: 5
+          baseMinDamage: 2
+          baseMaxDamage: 6
+          damagePerLevel: 1
+          baseArmor: 1
+          baseXpReward: 75
+          xpRewardPerLevel: 20
+        boss:
+          baseHp: 50
+          hpPerLevel: 10
+          baseMinDamage: 3
+          baseMaxDamage: 8
+          damagePerLevel: 2
+          baseArmor: 3
+          baseXpReward: 200
+          xpRewardPerLevel: 50
     combat:
       maxCombatsPerTick: 20
       tickMillis: 1000
