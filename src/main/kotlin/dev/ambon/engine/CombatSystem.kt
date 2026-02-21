@@ -121,6 +121,11 @@ class CombatSystem(
         defenseByPlayer.remove(sessionId)
     }
 
+    fun endCombatFor(sessionId: SessionId) {
+        val fight = fightsByPlayer[sessionId] ?: return
+        endFight(fight)
+    }
+
     suspend fun onMobRemovedExternally(mobId: MobId) {
         val fight = fightsByMob[mobId] ?: return
         endFight(fight)

@@ -80,6 +80,29 @@ sealed interface Command {
 
     data object Score : Command
 
+    data class Goto(
+        val arg: String,
+    ) : Command
+
+    data class Transfer(
+        val playerName: String,
+        val arg: String,
+    ) : Command
+
+    data class Spawn(
+        val templateArg: String,
+    ) : Command
+
+    data object Shutdown : Command
+
+    data class Smite(
+        val target: String,
+    ) : Command
+
+    data class Kick(
+        val playerName: String,
+    ) : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -181,6 +204,36 @@ object CommandParser {
             if (target.isEmpty()) Command.Invalid(line, "kill <mob>") else Command.Kill(target)
         }?.let { return it }
 
+        // goto
+        matchPrefix(line, listOf("goto")) { rest ->
+            if (rest.isEmpty()) Command.Invalid(line, "goto <zone:room | room | zone:>") else Command.Goto(rest)
+        }?.let { return it }
+
+        // transfer
+        matchPrefix(line, listOf("transfer")) { rest ->
+            val parts = rest.split(Regex("\\s+"), limit = 2)
+            if (parts.size < 2 || parts[1].isBlank()) {
+                Command.Invalid(line, "transfer <player> <room>")
+            } else {
+                Command.Transfer(parts[0], parts[1].trim())
+            }
+        }?.let { return it }
+
+        // spawn
+        matchPrefix(line, listOf("spawn")) { rest ->
+            if (rest.isEmpty()) Command.Invalid(line, "spawn <mob-template>") else Command.Spawn(rest)
+        }?.let { return it }
+
+        // smite
+        matchPrefix(line, listOf("smite")) { rest ->
+            if (rest.isEmpty()) Command.Invalid(line, "smite <player|mob>") else Command.Smite(rest)
+        }?.let { return it }
+
+        // kick
+        matchPrefix(line, listOf("kick")) { rest ->
+            if (rest.isEmpty()) Command.Invalid(line, "kick <player>") else Command.Kick(rest)
+        }?.let { return it }
+
         return when (lower) {
             "help", "?" -> Command.Help
             "look", "l" -> Command.Look
@@ -199,6 +252,7 @@ object CommandParser {
             "exits", "ex" -> Command.Exits
             "flee" -> Command.Flee
             "score", "sc" -> Command.Score
+            "shutdown" -> Command.Shutdown
             else -> Command.Unknown(line)
         }
     }
