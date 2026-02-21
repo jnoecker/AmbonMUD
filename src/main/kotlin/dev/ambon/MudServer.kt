@@ -84,7 +84,7 @@ class MudServer(
         if (redisManager != null) {
             RedisCachingPlayerRepository(
                 delegate = yamlRepo,
-                redisManager = redisManager,
+                cache = redisManager,
                 cacheTtlSeconds = config.redis.cacheTtlSeconds,
             )
         } else {

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.domain.ids.RoomId
-import dev.ambon.redis.RedisConnectionManager
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,7 +13,7 @@ private val log = KotlinLogging.logger {}
 
 class RedisCachingPlayerRepository(
     private val delegate: PlayerRepository,
-    private val redisManager: RedisConnectionManager,
+    private val cache: StringCache,
     private val cacheTtlSeconds: Long,
 ) : PlayerRepository {
     private data class PlayerJson(
@@ -41,40 +40,36 @@ class RedisCachingPlayerRepository(
     private fun idKey(id: Long) = "player:id:$id"
 
     override suspend fun findByName(name: String): PlayerRecord? {
-        val cmds = redisManager.commands
-        if (cmds != null) {
-            try {
-                val record =
-                    withContext(Dispatchers.IO) {
-                        val idStr = cmds.get(nameKey(name)) ?: return@withContext null
-                        val id = idStr.toLongOrNull() ?: return@withContext null
-                        val json = cmds.get(idKey(id)) ?: return@withContext null
-                        mapper.readValue<PlayerJson>(json).toDomain()
-                    }
-                if (record != null) return record
-            } catch (e: Exception) {
-                log.warn(e) { "Redis error in findByName($name) — falling through to delegate" }
-            }
+        try {
+            val record =
+                withContext(Dispatchers.IO) {
+                    val idStr = cache.get(nameKey(name)) ?: return@withContext null
+                    val id = idStr.toLongOrNull() ?: return@withContext null
+                    val json = cache.get(idKey(id)) ?: return@withContext null
+                    mapper.readValue<PlayerJson>(json).toDomain()
+                }
+            if (record != null) return record
+        } catch (e: Exception) {
+            log.warn(e) { "Redis error in findByName($name) - falling through to delegate" }
         }
+
         val record = delegate.findByName(name)
         if (record != null) cacheRecord(record)
         return record
     }
 
     override suspend fun findById(id: PlayerId): PlayerRecord? {
-        val cmds = redisManager.commands
-        if (cmds != null) {
-            try {
-                val record =
-                    withContext(Dispatchers.IO) {
-                        val json = cmds.get(idKey(id.value)) ?: return@withContext null
-                        mapper.readValue<PlayerJson>(json).toDomain()
-                    }
-                if (record != null) return record
-            } catch (e: Exception) {
-                log.warn(e) { "Redis error in findById($id) — falling through to delegate" }
-            }
+        try {
+            val record =
+                withContext(Dispatchers.IO) {
+                    val json = cache.get(idKey(id.value)) ?: return@withContext null
+                    mapper.readValue<PlayerJson>(json).toDomain()
+                }
+            if (record != null) return record
+        } catch (e: Exception) {
+            log.warn(e) { "Redis error in findById($id) - falling through to delegate" }
         }
+
         val record = delegate.findById(id)
         if (record != null) cacheRecord(record)
         return record
@@ -98,7 +93,6 @@ class RedisCachingPlayerRepository(
     }
 
     private suspend fun cacheRecord(record: PlayerRecord) {
-        val cmds = redisManager.commands ?: return
         try {
             withContext(Dispatchers.IO) {
                 val json =
@@ -117,11 +111,11 @@ class RedisCachingPlayerRepository(
                             isStaff = record.isStaff,
                         ),
                     )
-                cmds.setex(idKey(record.id.value), cacheTtlSeconds, json)
-                cmds.setex(nameKey(record.name), cacheTtlSeconds, record.id.value.toString())
+                cache.setEx(idKey(record.id.value), cacheTtlSeconds, json)
+                cache.setEx(nameKey(record.name), cacheTtlSeconds, record.id.value.toString())
             }
         } catch (e: Exception) {
-            log.warn(e) { "Redis error caching player ${record.name} — ignoring" }
+            log.warn(e) { "Redis error caching player ${record.name} - ignoring" }
         }
     }
 

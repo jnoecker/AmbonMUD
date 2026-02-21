@@ -1,6 +1,7 @@
 package dev.ambon.redis
 
 import dev.ambon.config.RedisConfig
+import dev.ambon.persistence.StringCache
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
@@ -10,7 +11,7 @@ private val log = KotlinLogging.logger {}
 
 class RedisConnectionManager(
     private val config: RedisConfig,
-) : AutoCloseable {
+) : AutoCloseable, StringCache {
     var commands: RedisCommands<String, String>? = null
         private set
 
@@ -27,9 +28,19 @@ class RedisConnectionManager(
             commands = conn.sync()
             log.info { "Redis connection established (uri=${config.uri})" }
         } catch (e: Exception) {
-            log.warn(e) { "Redis connection failed — operating without Redis cache (uri=${config.uri})" }
+            log.warn(e) { "Redis connection failed - operating without Redis cache (uri=${config.uri})" }
             commands = null
         }
+    }
+
+    override fun get(key: String): String? = commands?.get(key)
+
+    override fun setEx(
+        key: String,
+        ttlSeconds: Long,
+        value: String,
+    ) {
+        commands?.setex(key, ttlSeconds, value)
     }
 
     override fun close() {

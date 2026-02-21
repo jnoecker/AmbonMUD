@@ -1,56 +1,28 @@
 package dev.ambon.persistence
 
-import dev.ambon.config.RedisConfig
 import dev.ambon.domain.ids.RoomId
-import dev.ambon.redis.RedisConnectionManager
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
 
-@Testcontainers
 class RedisCachingPlayerRepositoryTest {
-    companion object {
-        @Container
-        @JvmField
-        val redis: GenericContainer<*> =
-            GenericContainer("redis:7-alpine")
-                .withExposedPorts(6379)
-    }
-
-    private lateinit var manager: RedisConnectionManager
+    private lateinit var cache: InMemoryStringCache
     private lateinit var delegate: InMemoryPlayerRepository
     private lateinit var repo: RedisCachingPlayerRepository
 
     @BeforeEach
     fun setUp() {
+        cache = InMemoryStringCache()
         delegate = InMemoryPlayerRepository()
-        manager =
-            RedisConnectionManager(
-                RedisConfig(
-                    enabled = true,
-                    uri = "redis://${redis.host}:${redis.getMappedPort(6379)}",
-                ),
-            )
-        manager.connect()
-        manager.commands?.flushall()
         repo =
             RedisCachingPlayerRepository(
                 delegate = delegate,
-                redisManager = manager,
+                cache = cache,
                 cacheTtlSeconds = 60L,
             )
-    }
-
-    @AfterEach
-    fun tearDown() {
-        manager.close()
     }
 
     @Test
@@ -155,7 +127,7 @@ class RedisCachingPlayerRepositoryTest {
         }
 
     @Test
-    fun `connection failure degrades gracefully`() =
+    fun `cache failure degrades gracefully`() =
         runBlocking {
             delegate.create(
                 name = "Gandalf",
@@ -164,7 +136,7 @@ class RedisCachingPlayerRepositoryTest {
                 passwordHash = "hash6",
                 ansiEnabled = false,
             )
-            manager.close()
+            cache.failAllRequests = true
 
             val found = repo.findByName("Gandalf")
             assertNotNull(found)
@@ -217,4 +189,27 @@ class RedisCachingPlayerRepositoryTest {
             assertEquals(true, found.ansiEnabled)
             assertEquals(true, found.isStaff)
         }
+
+    private class InMemoryStringCache : StringCache {
+        private val values = mutableMapOf<String, String>()
+        var failAllRequests: Boolean = false
+
+        override fun get(key: String): String? {
+            failIfConfigured()
+            return values[key]
+        }
+
+        override fun setEx(
+            key: String,
+            ttlSeconds: Long,
+            value: String,
+        ) {
+            failIfConfigured()
+            values[key] = value
+        }
+
+        private fun failIfConfigured() {
+            if (failAllRequests) error("Cache unavailable")
+        }
+    }
 }

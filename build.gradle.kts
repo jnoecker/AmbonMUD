@@ -39,8 +39,6 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")
     testImplementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
     testImplementation("io.ktor:ktor-client-websockets-jvm:$ktorVersion")
-    testImplementation("org.testcontainers:testcontainers:1.20.4")
-    testImplementation("org.testcontainers:junit-jupiter:1.20.4")
 }
 
 kotlin {
@@ -53,27 +51,6 @@ application {
 
 tasks.test {
     useJUnitPlatform()
-    // Testcontainers scans PATH to detect docker-machine. On Windows, Microsoft Store Python
-    // shim paths contain illegal characters (<, >) that crash java.nio.file.Paths.get().
-    // Strip those entries from the test JVM's PATH so the scan never sees them.
-    val badMarkers =
-        listOf(
-            "PythonSoftwareFoundation.Python",
-            "WindowsApps",
-        )
-    val original = System.getenv("PATH") ?: ""
-    val filtered =
-        original
-            .split(";")
-            .filter { entry -> badMarkers.none { marker -> entry.contains(marker, ignoreCase = true) } }
-            .joinToString(";")
-    environment("PATH", filtered)
-    // Docker Desktop on Windows (WSL2 backend) exposes the daemon on a non-default named pipe.
-    // Set DOCKER_HOST so Testcontainers' EnvironmentAndSystemPropertyClientProviderStrategy
-    // connects to the right pipe instead of the stub //./pipe/docker_engine.
-    if (System.getProperty("os.name", "").contains("Windows", ignoreCase = true)) {
-        environment("DOCKER_HOST", "npipe:////./pipe/docker_cli")
-    }
 }
 
 // Map -Pconfig.X=Y project properties to config.override.X system properties.
