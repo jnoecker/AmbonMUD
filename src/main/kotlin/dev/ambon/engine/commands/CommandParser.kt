@@ -78,6 +78,8 @@ sealed interface Command {
 
     data object Flee : Command
 
+    data object Score : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -196,6 +198,7 @@ object CommandParser {
             "d", "down" -> Command.Move(Direction.DOWN)
             "exits", "ex" -> Command.Exits
             "flee" -> Command.Flee
+            "score", "sc" -> Command.Score
             else -> Command.Unknown(line)
         }
     }
