@@ -145,6 +145,7 @@ class PlayerRegistry(
                 level = level,
                 xpTotal = xpTotal,
                 ansiEnabled = boundRecord.ansiEnabled,
+                isStaff = boundRecord.isStaff,
             )
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)

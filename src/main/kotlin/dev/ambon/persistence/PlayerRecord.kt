@@ -18,4 +18,5 @@ data class PlayerRecord(
     val lastSeenEpochMs: Long,
     val passwordHash: String = "",
     val ansiEnabled: Boolean = false,
+    val isStaff: Boolean = false,
 )

@@ -1,8 +1,11 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.mob.MobState
+import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
@@ -23,7 +26,11 @@ class CommandRouter(
     private val outbound: SendChannel<OutboundEvent>,
     private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
+    private val onShutdown: suspend () -> Unit = {},
+    private val onMobSmited: (MobId) -> Unit = {},
 ) {
+    private var adminSpawnSeq = 0
+
     suspend fun handle(
         sessionId: SessionId,
         cmd: Command,
@@ -61,6 +68,13 @@ class CommandRouter(
                             colors
                             clear
                             quit/exit
+                        Staff commands (requires staff flag):
+                            goto <zone:room | room | zone:>
+                            transfer <player> <room>
+                            spawn <mob-template>
+                            smite <player|mob>
+                            kick <player>
+                            shutdown
                         """.trimIndent(),
                     ),
                 )
@@ -405,6 +419,127 @@ class CommandRouter(
                 }
             }
 
+            is Command.Goto -> {
+                if (!requireStaff(sessionId)) return
+                val me = players.get(sessionId) ?: return
+                val targetRoomId = resolveGotoArg(cmd.arg, me.roomId.zone)
+                if (targetRoomId == null || !world.rooms.containsKey(targetRoomId)) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "No such room: ${cmd.arg}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                players.moveTo(sessionId, targetRoomId)
+                sendLook(sessionId)
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Transfer -> {
+                if (!requireStaff(sessionId)) return
+                val targetSid = players.findSessionByName(cmd.playerName)
+                if (targetSid == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Player not found: ${cmd.playerName}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val targetPlayer = players.get(targetSid) ?: return
+                val targetRoomId = resolveGotoArg(cmd.arg, targetPlayer.roomId.zone)
+                if (targetRoomId == null || !world.rooms.containsKey(targetRoomId)) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "No such room: ${cmd.arg}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                players.moveTo(targetSid, targetRoomId)
+                outbound.send(OutboundEvent.SendText(targetSid, "You are transported by a divine hand."))
+                sendLook(targetSid)
+                outbound.send(OutboundEvent.SendPrompt(targetSid))
+                outbound.send(OutboundEvent.SendInfo(sessionId, "Transferred ${targetPlayer.name} to ${targetRoomId.value}."))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Spawn -> {
+                if (!requireStaff(sessionId)) return
+                val me = players.get(sessionId) ?: return
+                val template = findMobTemplate(cmd.templateArg)
+                if (template == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "No mob template found: ${cmd.templateArg}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val seq = ++adminSpawnSeq
+                val zone = template.id.value.substringBefore(':', template.id.value)
+                val local = template.id.value.substringAfter(':', template.id.value)
+                val newMobId = MobId("$zone:${local}_adm_$seq")
+                mobs.upsert(MobState(id = newMobId, name = template.name, roomId = me.roomId))
+                outbound.send(OutboundEvent.SendInfo(sessionId, "${template.name} appears."))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            Command.Shutdown -> {
+                if (!requireStaff(sessionId)) return
+                val me = players.get(sessionId) ?: return
+                for (p in players.allPlayers()) {
+                    outbound.send(
+                        OutboundEvent.SendText(p.sessionId, "[SYSTEM] ${me.name} has initiated a server shutdown. Goodbye!"),
+                    )
+                }
+                onShutdown()
+            }
+
+            is Command.Smite -> {
+                if (!requireStaff(sessionId)) return
+                val me = players.get(sessionId) ?: return
+
+                // Try player name first (online only, cannot smite self)
+                val targetSid = players.findSessionByName(cmd.target)
+                if (targetSid != null && targetSid != sessionId) {
+                    val targetPlayer = players.get(targetSid) ?: return
+                    combat.endCombatFor(targetSid)
+                    targetPlayer.hp = 1
+                    players.moveTo(targetSid, world.startRoom)
+                    outbound.send(
+                        OutboundEvent.SendText(targetSid, "A divine hand strikes you down. You awaken at the start, bruised and humbled."),
+                    )
+                    sendLook(targetSid)
+                    outbound.send(OutboundEvent.SendPrompt(targetSid))
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Smote ${targetPlayer.name}."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+
+                // Try mob in current room (partial name match)
+                val lowerTarget = cmd.target.lowercase()
+                val targetMob = mobs.mobsInRoom(me.roomId).firstOrNull { it.name.lowercase().contains(lowerTarget) }
+                if (targetMob == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "No player or mob named '${cmd.target}'."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                combat.onMobRemovedExternally(targetMob.id)
+                items.removeMobItems(targetMob.id)
+                mobs.remove(targetMob.id)
+                onMobSmited(targetMob.id)
+                broadcastToRoom(me.roomId, "${targetMob.name} is struck down by divine wrath.")
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Kick -> {
+                if (!requireStaff(sessionId)) return
+                val targetSid = players.findSessionByName(cmd.playerName)
+                if (targetSid == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Player not found: ${cmd.playerName}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                if (targetSid == sessionId) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "You cannot kick yourself."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                outbound.send(OutboundEvent.Close(targetSid, "Kicked by staff."))
+                outbound.send(OutboundEvent.SendInfo(sessionId, "${cmd.playerName} has been kicked."))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
             is Command.Invalid -> {
                 outbound.send(OutboundEvent.SendText(sessionId, "Invalid command: ${cmd.command}"))
                 if (cmd.usage != null) {
@@ -420,6 +555,60 @@ class CommandRouter(
                 outbound.send(OutboundEvent.SendText(sessionId, "Huh?"))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
+        }
+    }
+
+    private suspend fun requireStaff(sessionId: SessionId): Boolean {
+        val me = players.get(sessionId) ?: return false
+        if (!me.isStaff) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You are not staff."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return false
+        }
+        return true
+    }
+
+    private fun resolveGotoArg(
+        arg: String,
+        currentZone: String,
+    ): RoomId? {
+        return if (':' in arg) {
+            val zone = arg.substringBefore(':').trim()
+            val local = arg.substringAfter(':').trim()
+            val effectiveZone = zone.ifEmpty { currentZone }
+            if (local.isEmpty()) {
+                // "zone:" or ":" — find start room for that zone
+                if (world.startRoom.zone == effectiveZone) {
+                    world.startRoom
+                } else {
+                    world.rooms.keys.firstOrNull { it.zone == effectiveZone }
+                }
+            } else {
+                runCatching { RoomId("$effectiveZone:$local") }.getOrNull()
+            }
+        } else {
+            runCatching { RoomId("$currentZone:$arg") }.getOrNull()
+        }
+    }
+
+    private fun findMobTemplate(arg: String): MobSpawn? {
+        val trimmed = arg.trim()
+        return if (':' in trimmed) {
+            world.mobSpawns.firstOrNull { it.id.value.equals(trimmed, ignoreCase = true) }
+        } else {
+            val lowerLocal = trimmed.lowercase()
+            world.mobSpawns.firstOrNull { it.id.value.substringAfter(':', it.id.value).lowercase() == lowerLocal }
+        }
+    }
+
+    private suspend fun broadcastToRoom(
+        roomId: RoomId,
+        text: String,
+        exclude: SessionId? = null,
+    ) {
+        for (p in players.playersInRoom(roomId)) {
+            if (exclude != null && p.sessionId == exclude) continue
+            outbound.send(OutboundEvent.SendText(p.sessionId, text))
         }
     }
 

@@ -128,6 +128,10 @@ class ItemRegistry {
 
     fun itemsInMob(mobId: MobId): List<ItemInstance> = mobItems[mobId]?.toList() ?: emptyList()
 
+    fun removeMobItems(mobId: MobId) {
+        mobItems.remove(mobId)
+    }
+
     /**
      * Move all items carried by a mob into a room. Returns moved items.
      */

@@ -16,6 +16,7 @@ data class PlayerState(
     var level: Int = 1,
     var xpTotal: Long = 0L,
     var ansiEnabled: Boolean = false,
+    var isStaff: Boolean = false,
 ) {
     companion object {
         const val BASE_MAX_HP = 10

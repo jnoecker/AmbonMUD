@@ -119,4 +119,86 @@ class CommandParserTest {
         val c = CommandParser.parse("look sideways")
         assertTrue(c is Command.Invalid)
     }
+
+    @Test
+    fun `parses goto with full zone and room`() {
+        assertEquals(Command.Goto("demo_ruins:caravan_gate"), CommandParser.parse("goto demo_ruins:caravan_gate"))
+    }
+
+    @Test
+    fun `parses goto with local room only`() {
+        assertEquals(Command.Goto("caravan_gate"), CommandParser.parse("goto caravan_gate"))
+    }
+
+    @Test
+    fun `parses goto with zone colon empty room`() {
+        assertEquals(Command.Goto("demo_ruins:"), CommandParser.parse("goto demo_ruins:"))
+    }
+
+    @Test
+    fun `goto with no arg returns Invalid`() {
+        assertTrue(CommandParser.parse("goto") is Command.Invalid)
+        assertTrue(CommandParser.parse("goto   ") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses transfer with player and room`() {
+        assertEquals(Command.Transfer("Alice", "demo_ruins:caravan_gate"), CommandParser.parse("transfer Alice demo_ruins:caravan_gate"))
+    }
+
+    @Test
+    fun `transfer with missing room returns Invalid`() {
+        assertTrue(CommandParser.parse("transfer Alice") is Command.Invalid)
+        assertTrue(CommandParser.parse("transfer Alice   ") is Command.Invalid)
+    }
+
+    @Test
+    fun `transfer with no args returns Invalid`() {
+        assertTrue(CommandParser.parse("transfer") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses spawn with local name`() {
+        assertEquals(Command.Spawn("gate_scout"), CommandParser.parse("spawn gate_scout"))
+    }
+
+    @Test
+    fun `parses spawn with fully qualified name`() {
+        assertEquals(Command.Spawn("demo_ruins:gate_scout"), CommandParser.parse("spawn demo_ruins:gate_scout"))
+    }
+
+    @Test
+    fun `spawn with no arg returns Invalid`() {
+        assertTrue(CommandParser.parse("spawn") is Command.Invalid)
+        assertTrue(CommandParser.parse("spawn   ") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses shutdown`() {
+        assertEquals(Command.Shutdown, CommandParser.parse("shutdown"))
+        assertEquals(Command.Shutdown, CommandParser.parse("  shutdown  "))
+    }
+
+    @Test
+    fun `parses smite with target`() {
+        assertEquals(Command.Smite("Alice"), CommandParser.parse("smite Alice"))
+        assertEquals(Command.Smite("gate_scout"), CommandParser.parse("smite gate_scout"))
+    }
+
+    @Test
+    fun `smite with no target returns Invalid`() {
+        assertTrue(CommandParser.parse("smite") is Command.Invalid)
+        assertTrue(CommandParser.parse("smite   ") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses kick with player name`() {
+        assertEquals(Command.Kick("Bob"), CommandParser.parse("kick Bob"))
+    }
+
+    @Test
+    fun `kick with no player returns Invalid`() {
+        assertTrue(CommandParser.parse("kick") is Command.Invalid)
+        assertTrue(CommandParser.parse("kick   ") is Command.Invalid)
+    }
 }
