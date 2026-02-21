@@ -262,7 +262,7 @@ class CombatSystemTest {
             val items = ItemRegistry()
             val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 1, maxHp = 1)
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 1, maxHp = 1, xpReward = 50L)
             mobs.upsert(mob)
 
             val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
@@ -342,6 +342,131 @@ class CombatSystemTest {
         val res = players.login(sessionId, name, "password")
         require(res == LoginResult.Ok) { "Login failed: $res" }
     }
+
+    @Test
+    fun `mob armor reduces player effective damage to minimum 1`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            // armor=100 absorbs all player damage; minimum 1 must apply
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, armor = 100)
+            mobs.upsert(mob)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 1,
+                    maxDamage = 1,
+                )
+
+            val sid = SessionId(1L)
+            login(players, sid, "Tester1")
+            combat.startCombat(sid, "rat")
+            clock.advance(1_000L)
+            combat.tick()
+
+            // mob should lose at least 1 hp (minimum effective damage)
+            assertTrue(mob.hp <= 9, "Expected mob hp <= 9, got ${mob.hp}")
+            assertEquals(9, mob.hp)
+
+            val messages = drainOutbound(outbound).filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            assertTrue(messages.any { it.contains("for 1 damage") }, "Expected 'for 1 damage' in: $messages")
+        }
+
+    @Test
+    fun `mob armor reduces player damage by flat amount`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            // armor=2, player rolls fixed 5 → effective = 5-2 = 3
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, armor = 2)
+            mobs.upsert(mob)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 5,
+                    maxDamage = 5,
+                )
+
+            val sid = SessionId(2L)
+            login(players, sid, "Tester2")
+            combat.startCombat(sid, "rat")
+            clock.advance(1_000L)
+            combat.tick()
+
+            assertEquals(7, mob.hp, "Expected mob hp=7 (10 - (5-2)=3)")
+            val messages = drainOutbound(outbound).filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            assertTrue(messages.any { it.contains("for 3 damage") }, "Expected 'for 3 damage' in: $messages")
+        }
+
+    @Test
+    fun `mob uses its own damage range not global config`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            // mob has minDamage=10, maxDamage=10; global config has 1/1
+            val mob =
+                MobState(
+                    MobId("demo:rat"),
+                    "a rat",
+                    roomId,
+                    hp = 10,
+                    maxHp = 10,
+                    minDamage = 10,
+                    maxDamage = 10,
+                )
+            mobs.upsert(mob)
+
+            val outbound = Channel<OutboundEvent>(Channel.UNLIMITED)
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 1,
+                    maxDamage = 1,
+                )
+
+            val sid = SessionId(3L)
+            login(players, sid, "Tester3")
+            combat.startCombat(sid, "rat")
+            clock.advance(1_000L)
+            combat.tick()
+
+            val player = players.get(sid)
+            assertNotNull(player)
+            // mob should have hit player for 10 (its own damage), not 1 (global config)
+            val messages = drainOutbound(outbound).filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            assertTrue(messages.any { it.contains("hits you for 10 damage") }, "Expected mob hit for 10, messages: $messages")
+        }
 
     private fun drainOutbound(outbound: Channel<OutboundEvent>): List<OutboundEvent> {
         val events = mutableListOf<OutboundEvent>()

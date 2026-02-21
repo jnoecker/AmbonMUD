@@ -1,0 +1,29 @@
+zone: ok_mob_stats
+startRoom: hall
+mobs:
+  rat:
+    name: "a small rat"
+    room: hall
+  bandit:
+    name: "a bandit"
+    room: hall
+    tier: standard
+    level: 3
+  override_mob:
+    name: "a custom mob"
+    room: hall
+    tier: standard
+    level: 1
+    hp: 99
+    minDamage: 5
+    maxDamage: 10
+    armor: 2
+    xpReward: 999
+  boss_mob:
+    name: "the dungeon boss"
+    room: hall
+    tier: boss
+rooms:
+  hall:
+    title: "Hall"
+    description: "A stone hall."

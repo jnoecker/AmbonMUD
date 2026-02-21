@@ -43,6 +43,10 @@ data class AppConfig(
         require(engine.mob.maxWanderDelayMillis - engine.mob.minWanderDelayMillis <= Int.MAX_VALUE.toLong()) {
             "ambonMUD.engine.mob wander delay range (max - min) must not exceed Int.MAX_VALUE ms"
         }
+        validateMobTier("weak", engine.mob.tiers.weak)
+        validateMobTier("standard", engine.mob.tiers.standard)
+        validateMobTier("elite", engine.mob.tiers.elite)
+        validateMobTier("boss", engine.mob.tiers.boss)
 
         require(engine.combat.maxCombatsPerTick > 0) { "ambonMUD.engine.combat.maxCombatsPerTick must be > 0" }
         require(engine.combat.tickMillis > 0L) { "ambonMUD.engine.combat.tickMillis must be > 0" }
@@ -138,10 +142,78 @@ data class LevelRewardsConfig(
     val fullHealOnLevelUp: Boolean = true,
 )
 
+data class MobTierConfig(
+    val baseHp: Int = 10,
+    val hpPerLevel: Int = 3,
+    val baseMinDamage: Int = 1,
+    val baseMaxDamage: Int = 4,
+    val damagePerLevel: Int = 1,
+    val baseArmor: Int = 0,
+    val baseXpReward: Long = 30L,
+    val xpRewardPerLevel: Long = 10L,
+)
+
+data class MobTiersConfig(
+    val weak: MobTierConfig =
+        MobTierConfig(
+            baseHp = 5,
+            hpPerLevel = 2,
+            baseMinDamage = 1,
+            baseMaxDamage = 2,
+            damagePerLevel = 0,
+            baseArmor = 0,
+            baseXpReward = 15L,
+            xpRewardPerLevel = 5L,
+        ),
+    val standard: MobTierConfig =
+        MobTierConfig(
+            baseHp = 10,
+            hpPerLevel = 3,
+            baseMinDamage = 1,
+            baseMaxDamage = 4,
+            damagePerLevel = 1,
+            baseArmor = 0,
+            baseXpReward = 30L,
+            xpRewardPerLevel = 10L,
+        ),
+    val elite: MobTierConfig =
+        MobTierConfig(
+            baseHp = 20,
+            hpPerLevel = 5,
+            baseMinDamage = 2,
+            baseMaxDamage = 6,
+            damagePerLevel = 1,
+            baseArmor = 1,
+            baseXpReward = 75L,
+            xpRewardPerLevel = 20L,
+        ),
+    val boss: MobTierConfig =
+        MobTierConfig(
+            baseHp = 50,
+            hpPerLevel = 10,
+            baseMinDamage = 3,
+            baseMaxDamage = 8,
+            damagePerLevel = 2,
+            baseArmor = 3,
+            baseXpReward = 200L,
+            xpRewardPerLevel = 50L,
+        ),
+) {
+    fun forName(name: String): MobTierConfig? =
+        when (name.lowercase()) {
+            "weak" -> weak
+            "standard" -> standard
+            "elite" -> elite
+            "boss" -> boss
+            else -> null
+        }
+}
+
 data class MobEngineConfig(
     val maxMovesPerTick: Int = 10,
     val minWanderDelayMillis: Long = 5_000L,
     val maxWanderDelayMillis: Long = 12_000L,
+    val tiers: MobTiersConfig = MobTiersConfig(),
 )
 
 data class CombatEngineConfig(
@@ -196,3 +268,19 @@ data class LoggingConfig(
     val level: String = "INFO",
     val packageLevels: Map<String, String> = emptyMap(),
 )
+
+private fun validateMobTier(
+    name: String,
+    tier: MobTierConfig,
+) {
+    require(tier.baseHp > 0) { "ambonMUD.engine.mob.tiers.$name.baseHp must be > 0" }
+    require(tier.hpPerLevel >= 0) { "ambonMUD.engine.mob.tiers.$name.hpPerLevel must be >= 0" }
+    require(tier.baseMinDamage > 0) { "ambonMUD.engine.mob.tiers.$name.baseMinDamage must be > 0" }
+    require(tier.baseMaxDamage >= tier.baseMinDamage) {
+        "ambonMUD.engine.mob.tiers.$name.baseMaxDamage must be >= baseMinDamage"
+    }
+    require(tier.damagePerLevel >= 0) { "ambonMUD.engine.mob.tiers.$name.damagePerLevel must be >= 0" }
+    require(tier.baseArmor >= 0) { "ambonMUD.engine.mob.tiers.$name.baseArmor must be >= 0" }
+    require(tier.baseXpReward >= 0L) { "ambonMUD.engine.mob.tiers.$name.baseXpReward must be >= 0" }
+    require(tier.xpRewardPerLevel >= 0L) { "ambonMUD.engine.mob.tiers.$name.xpRewardPerLevel must be >= 0" }
+}

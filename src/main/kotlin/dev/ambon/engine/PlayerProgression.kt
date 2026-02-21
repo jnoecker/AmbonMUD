@@ -83,12 +83,7 @@ class PlayerProgression(
 
     fun defaultKillXpReward(): Long = scaledXp(config.xp.defaultKillXp)
 
-    fun killXpReward(
-        @Suppress("UNUSED_PARAMETER") mob: MobState,
-    ): Long {
-        // Placeholder for future per-mob tuning.
-        return defaultKillXpReward()
-    }
+    fun killXpReward(mob: MobState): Long = scaledXp(mob.xpReward)
 
     fun grantXp(
         player: PlayerState,

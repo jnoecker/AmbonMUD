@@ -9,4 +9,8 @@ data class MobState(
     var roomId: RoomId,
     var hp: Int = 10,
     var maxHp: Int = 10,
+    val minDamage: Int = 1,
+    val maxDamage: Int = 4,
+    val armor: Int = 0,
+    val xpReward: Long = 30L,
 )
