@@ -259,8 +259,18 @@ class CombatSystem(
         mobs.remove(mob.id)
         onMobRemoved(mob.id)
         items.dropMobItemsToRoom(mob.id, mob.roomId)
+        rollDrops(mob)
         broadcastToRoom(mob.roomId, "${mob.name} dies.")
         grantKillXp(killerSessionId, mob)
+    }
+
+    private fun rollDrops(mob: MobState) {
+        for (drop in mob.drops) {
+            if (drop.chance <= 0.0) continue
+            val shouldDrop = drop.chance >= 1.0 || rng.nextDouble() < drop.chance
+            if (!shouldDrop) continue
+            items.placeMobDrop(drop.itemId, mob.roomId)
+        }
     }
 
     private suspend fun grantKillXp(
