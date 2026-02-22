@@ -24,10 +24,7 @@ Override any config value at runtime with `-Pconfig.<key>=<value>`:
 ./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
 ./gradlew run -Pconfig.ambonMUD.logging.packageLevels.dev.ambon.transport=DEBUG
 ./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000
-./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES \
-              -Pconfig.ambonMUD.database.jdbcUrl=jdbc:postgresql://localhost:5432/ambonmud \
-              -Pconfig.ambonMUD.database.username=ambon \
-              -Pconfig.ambonMUD.database.password=secret
+./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES  # connection defaults match docker compose
 ```
 
 On Windows use `.\gradlew.bat` instead of `./gradlew`.

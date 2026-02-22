@@ -184,9 +184,9 @@ data class PersistenceWorkerConfig(
 )
 
 data class DatabaseConfig(
-    val jdbcUrl: String = "",
-    val username: String = "",
-    val password: String = "",
+    val jdbcUrl: String = "jdbc:postgresql://localhost:5432/ambonmud",
+    val username: String = "ambon",
+    val password: String = "ambon",
     val maxPoolSize: Int = 5,
     val minimumIdle: Int = 1,
 )

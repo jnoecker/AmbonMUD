@@ -71,7 +71,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Player room/last-seen persistence must stay intact.
 - Player progression persistence must stay intact (level/xp/constitution).
 - Keep atomic-write behavior for YAML persistence files.
-- The persistence backend is selectable via `ambonMUD.persistence.backend` (`YAML` or `POSTGRES`). When `POSTGRES`, `ambonMUD.database.jdbcUrl` is required.
+- The persistence backend is selectable via `ambonMUD.persistence.backend` (`YAML` or `POSTGRES`). Database connection defaults match the docker compose stack, so switching to Postgres only requires flipping the backend flag.
 - The persistence chain is: `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (optional) → `YamlPlayerRepository` or `PostgresPlayerRepository`. Changes to `PlayerRecord` must survive all three layers including JSON round-trip through Redis.
 - `PostgresPlayerRepository` uses Exposed DSL, Flyway migrations, and HikariCP. Schema lives in `src/main/resources/db/migration/`. Tests use H2 in PostgreSQL-compatibility mode (no Docker required).
 - `isStaff` is a `PlayerRecord` field; it is faithfully serialized through all persistence layers. Grant by editing the player YAML directly or updating the `players` table row.
