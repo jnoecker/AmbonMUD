@@ -28,6 +28,7 @@ class CommandRouter(
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val onShutdown: suspend () -> Unit = {},
     private val onMobSmited: (MobId) -> Unit = {},
+    private val onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
 ) {
     private var adminSpawnSeq = 0
 
@@ -99,8 +100,13 @@ class CommandRouter(
                 if (to == null) {
                     outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
                 } else if (!world.rooms.containsKey(to)) {
-                    // Cross-zone exit to a zone not loaded on this engine (Phase 5c will add handoff)
-                    outbound.send(OutboundEvent.SendText(sessionId, "The way shimmers but does not yield."))
+                    // Cross-zone exit — hand off to the owning engine if sharding is active
+                    if (onCrossZoneMove != null) {
+                        onCrossZoneMove.invoke(sessionId, to)
+                        return // handoff manages its own prompt/cleanup
+                    } else {
+                        outbound.send(OutboundEvent.SendText(sessionId, "The way shimmers but does not yield."))
+                    }
                 } else {
                     val oldMembers = players.playersInRoom(from).filter { it.sessionId != me.sessionId }
                     for (other in oldMembers) {

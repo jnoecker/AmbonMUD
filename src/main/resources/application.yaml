@@ -3,6 +3,7 @@ ambonMUD:
 
   sharding:
     enabled: false
+    engineId: engine-1
     zones: []
 
   grpc:

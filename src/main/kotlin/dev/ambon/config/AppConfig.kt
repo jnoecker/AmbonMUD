@@ -412,6 +412,8 @@ data class RedisConfig(
 data class ShardingConfig(
     /** Enable zone-based sharding. When false, the engine loads all zones (default). */
     val enabled: Boolean = false,
+    /** Unique identifier for this engine instance. Used for inter-engine messaging and zone ownership. */
+    val engineId: String = "engine-1",
     /** Zones this engine owns. Empty list = all zones (single-engine backward compat). */
     val zones: List<String> = emptyList(),
 )

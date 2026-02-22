@@ -174,6 +174,38 @@ class PlayerRegistry(
         items.removePlayer(sessionId)
     }
 
+    /**
+     * Add a player from a cross-zone handoff, bypassing the login flow.
+     * The player is placed directly into the target room.
+     */
+    fun bindFromHandoff(
+        sessionId: SessionId,
+        ps: PlayerState,
+    ) {
+        players[sessionId] = ps
+        roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
+        sessionByLowerName[ps.name.lowercase()] = sessionId
+        items.ensurePlayer(sessionId)
+    }
+
+    /**
+     * Remove a player for cross-zone handoff without persisting.
+     * Persistence should happen before calling this (with the target room saved).
+     * Returns the removed PlayerState, or null if not found.
+     */
+    suspend fun removeForHandoff(sessionId: SessionId): PlayerState? {
+        val ps = players.remove(sessionId) ?: return null
+
+        // Persist with target room before removing
+        persistIfClaimed(ps)
+
+        roomMembers[ps.roomId]?.remove(sessionId)
+        if (roomMembers[ps.roomId]?.isEmpty() == true) roomMembers.remove(ps.roomId)
+        sessionByLowerName.remove(ps.name.lowercase())
+        items.removePlayer(sessionId)
+        return ps
+    }
+
     fun get(sessionId: SessionId): PlayerState? = players[sessionId]
 
     fun allPlayers(): List<PlayerState> = players.values.toList()

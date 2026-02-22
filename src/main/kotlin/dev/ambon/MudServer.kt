@@ -28,6 +28,13 @@ import dev.ambon.persistence.YamlPlayerRepository
 import dev.ambon.redis.RedisConnectionManager
 import dev.ambon.redis.redisObjectMapper
 import dev.ambon.session.AtomicSessionIdFactory
+import dev.ambon.sharding.EngineAddress
+import dev.ambon.sharding.HandoffManager
+import dev.ambon.sharding.InterEngineBus
+import dev.ambon.sharding.LocalInterEngineBus
+import dev.ambon.sharding.RedisInterEngineBus
+import dev.ambon.sharding.StaticZoneRegistry
+import dev.ambon.sharding.ZoneRegistry
 import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.KtorWebSocketTransport
 import dev.ambon.transport.OutboundRouter
@@ -177,6 +184,53 @@ class MudServer(
             progression = progression,
         )
 
+    // --- Sharding infrastructure (null when sharding is disabled) ---
+    private val shardingEnabled = config.sharding.enabled
+    private val engineId = config.sharding.engineId
+
+    private val zoneRegistry: ZoneRegistry? =
+        if (shardingEnabled) {
+            StaticZoneRegistry(
+                mapOf(
+                    engineId to Pair(
+                        EngineAddress(engineId, "localhost", config.server.telnetPort),
+                        config.sharding.zones.toSet(),
+                    ),
+                ),
+            )
+        } else {
+            null
+        }
+
+    private val interEngineBus: InterEngineBus? =
+        if (shardingEnabled && redisManager != null) {
+            RedisInterEngineBus(
+                engineId = engineId,
+                publisher = makeBusPublisher(redisManager),
+                subscriberSetup = makeBusSubscriberSetup(redisManager),
+                mapper = redisObjectMapper,
+            )
+        } else if (shardingEnabled) {
+            LocalInterEngineBus()
+        } else {
+            null
+        }
+
+    private val handoffManager: HandoffManager? =
+        if (shardingEnabled && interEngineBus != null && zoneRegistry != null) {
+            HandoffManager(
+                engineId = engineId,
+                players = players,
+                items = items,
+                outbound = outbound,
+                bus = interEngineBus,
+                zoneRegistry = zoneRegistry,
+                clock = clock,
+            )
+        } else {
+            null
+        }
+
     suspend fun start() {
         if (config.redis.enabled && config.redis.bus.enabled) {
             log.warn {
@@ -204,6 +258,15 @@ class MudServer(
         outboundRouter = OutboundRouter(outbound, scope, metrics = gameMetrics)
         routerJob = outboundRouter.start()
 
+        // Start inter-engine bus and register zones
+        if (interEngineBus != null) {
+            interEngineBus.start()
+        }
+        if (zoneRegistry != null) {
+            val addr = EngineAddress(engineId, "localhost", config.server.telnetPort)
+            zoneRegistry.claimZones(engineId, addr, config.sharding.zones.toSet())
+        }
+
         engineJob =
             scope.launch(engineDispatcher) {
                 GameEngine(
@@ -222,6 +285,8 @@ class MudServer(
                     progression = progression,
                     metrics = gameMetrics,
                     onShutdown = { shutdownSignal.complete(Unit) },
+                    handoffManager = handoffManager,
+                    interEngineBus = interEngineBus,
                 ).run()
             }
 
@@ -298,6 +363,7 @@ class MudServer(
         runCatching { telnetTransport.stop() }
         runCatching { webTransport.stop() }
         runCatching { engineJob?.cancelAndJoin() }
+        runCatching { interEngineBus?.close() }
         runCatching { persistenceWorker?.shutdown() }
         runCatching { redisManager?.close() }
         runCatching { databaseManager?.close() }

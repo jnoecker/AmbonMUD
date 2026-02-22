@@ -16,6 +16,10 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
+import dev.ambon.sharding.HandoffManager
+import dev.ambon.sharding.HandoffResult
+import dev.ambon.sharding.InterEngineBus
+import dev.ambon.sharding.InterEngineMessage
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.coroutineScope
@@ -41,6 +45,8 @@ class GameEngine(
     private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val onShutdown: suspend () -> Unit = {},
+    private val handoffManager: HandoffManager? = null,
+    private val interEngineBus: InterEngineBus? = null,
 ) {
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
@@ -98,6 +104,7 @@ class GameEngine(
             metrics = metrics,
             onShutdown = onShutdown,
             onMobSmited = mobSystem::onMobRemoved,
+            onCrossZoneMove = if (handoffManager != null) ::handleCrossZoneMove else null,
         )
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
     private val failedLoginAttempts = mutableMapOf<SessionId, Int>()
@@ -157,6 +164,16 @@ class GameEngine(
                         inboundProcessed++
                     }
                     metrics.onInboundEventsProcessed(inboundProcessed)
+
+                    // Drain inter-engine messages (cross-zone handoffs, global commands)
+                    if (interEngineBus != null) {
+                        var interEngineProcessed = 0
+                        while (interEngineProcessed < maxInboundEventsPerTick) {
+                            val msg = interEngineBus.incoming().tryReceive().getOrNull() ?: break
+                            handleInterEngineMessage(msg)
+                            interEngineProcessed++
+                        }
+                    }
 
                     // Simulate NPC actions (time-gated internally)
                     val mobSample = Timer.start()
@@ -269,6 +286,49 @@ class GameEngine(
             mobIds = zoneMobIds,
             spawns = zoneItemSpawns,
         )
+    }
+
+    private suspend fun handleCrossZoneMove(sessionId: SessionId, targetRoomId: RoomId) {
+        val mgr = handoffManager ?: return
+        // End combat before handoff (should already be blocked by Move handler, but be safe)
+        combatSystem.endCombatFor(sessionId)
+        regenSystem.onPlayerDisconnected(sessionId)
+
+        when (val result = mgr.initiateHandoff(sessionId, targetRoomId)) {
+            is HandoffResult.Initiated -> {
+                log.info { "Cross-zone handoff initiated to engine=${result.targetEngine.engineId}" }
+            }
+            HandoffResult.PlayerNotFound -> {
+                log.warn { "Cross-zone move failed: player not found for session=$sessionId" }
+            }
+            HandoffResult.NoEngineForZone -> {
+                // No engine owns the target zone — fall back to shimmer message
+                outbound.send(
+                    OutboundEvent.SendText(sessionId, "The way shimmers but does not yield."),
+                )
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+        }
+    }
+
+    private suspend fun handleInterEngineMessage(msg: InterEngineMessage) {
+        when (msg) {
+            is InterEngineMessage.PlayerHandoff -> {
+                val mgr = handoffManager ?: return
+                val sid = mgr.acceptHandoff(msg) ?: return
+                // Show the player their new surroundings
+                router.handle(sid, Command.Look)
+            }
+            is InterEngineMessage.HandoffAck -> {
+                if (msg.success) {
+                    log.debug { "Handoff ack received: session=${msg.sessionId} success" }
+                } else {
+                    log.warn { "Handoff failed: session=${msg.sessionId} error=${msg.errorMessage}" }
+                }
+            }
+            // Other message types (gossip, tell, who, etc.) will be handled in Phase 5d
+            else -> log.debug { "Unhandled inter-engine message: ${msg::class.simpleName}" }
+        }
     }
 
     private suspend fun handle(ev: InboundEvent) {

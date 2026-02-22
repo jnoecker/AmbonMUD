@@ -2,7 +2,6 @@ package dev.ambon.sharding
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import dev.ambon.domain.ids.RoomId
 
 /**
  * Messages exchanged between engine instances for cross-zone operations.
@@ -63,6 +62,7 @@ sealed interface InterEngineMessage {
         val targetRoomId: String,
         val playerState: SerializedPlayerState,
         val gatewayId: Int,
+        val sourceEngineId: String = "",
     ) : InterEngineMessage
 
     /** Acknowledge a player handoff. */
@@ -102,6 +102,22 @@ data class PlayerSummary(
 )
 
 /**
+ * Serialized item data for cross-zone handoff. Carries the full item definition
+ * so that the target engine can reconstruct items without needing the source zone's templates.
+ */
+data class SerializedItem(
+    val id: String = "",
+    val keyword: String = "",
+    val displayName: String = "",
+    val description: String = "",
+    val slot: String? = null,
+    val damage: Int = 0,
+    val armor: Int = 0,
+    val constitution: Int = 0,
+    val matchByKey: Boolean = false,
+)
+
+/**
  * Full player state for cross-zone handoff. Serialized as JSON for transport.
  */
 data class SerializedPlayerState(
@@ -119,6 +135,6 @@ data class SerializedPlayerState(
     val passwordHash: String,
     val createdEpochMs: Long,
     val lastSeenEpochMs: Long,
-    val inventoryItemIds: List<String> = emptyList(),
-    val equippedItems: Map<String, String> = emptyMap(), // slot name → item id
+    val inventoryItems: List<SerializedItem> = emptyList(),
+    val equippedItems: Map<String, SerializedItem> = emptyMap(), // slot name → item
 )

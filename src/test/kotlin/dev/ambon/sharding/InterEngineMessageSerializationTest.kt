@@ -60,18 +60,60 @@ class InterEngineMessageSerializationTest {
             passwordHash = "hash",
             createdEpochMs = 1000L,
             lastSeenEpochMs = 2000L,
-            inventoryItemIds = listOf("zone:sword", "zone:shield"),
-            equippedItems = mapOf("HAND" to "zone:sword"),
+            inventoryItems = listOf(
+                SerializedItem(
+                    id = "zone:sword",
+                    keyword = "sword",
+                    displayName = "a sharp sword",
+                    slot = "HAND",
+                    damage = 5,
+                ),
+                SerializedItem(
+                    id = "zone:shield",
+                    keyword = "shield",
+                    displayName = "a wooden shield",
+                    slot = "BODY",
+                    armor = 2,
+                ),
+            ),
+            equippedItems = mapOf(
+                "HAND" to SerializedItem(
+                    id = "zone:sword",
+                    keyword = "sword",
+                    displayName = "a sharp sword",
+                    slot = "HAND",
+                    damage = 5,
+                ),
+            ),
         )
         val msg = InterEngineMessage.PlayerHandoff(
             sessionId = 99L,
             targetRoomId = "other_zone:room2",
             playerState = state,
             gatewayId = 1,
+            sourceEngineId = "engine-1",
         )
         val json = mapper.writeValueAsString(msg as InterEngineMessage)
         val deserialized = mapper.readValue<InterEngineMessage>(json)
         assertEquals(msg, deserialized)
+    }
+
+    @Test
+    fun `SerializedItem round-trips through JSON`() {
+        val item = SerializedItem(
+            id = "zone:magic_staff",
+            keyword = "staff",
+            displayName = "a glowing staff",
+            description = "It hums with power.",
+            slot = "HAND",
+            damage = 7,
+            armor = 1,
+            constitution = 2,
+            matchByKey = true,
+        )
+        val json = mapper.writeValueAsString(item)
+        val deserialized = mapper.readValue<SerializedItem>(json)
+        assertEquals(item, deserialized)
     }
 
     @Test

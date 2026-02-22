@@ -198,6 +198,27 @@ class ItemRegistry {
     }
 
     /**
+     * Add an item directly to a player's inventory (used by handoff).
+     */
+    fun addToInventory(
+        sessionId: SessionId,
+        item: ItemInstance,
+    ) {
+        inventoryItems.getOrPut(sessionId) { mutableListOf() }.add(item)
+    }
+
+    /**
+     * Set an equipped item in a specific slot (used by handoff).
+     */
+    fun setEquippedItem(
+        sessionId: SessionId,
+        slot: ItemSlot,
+        item: ItemInstance,
+    ) {
+        equippedItems.getOrPut(sessionId) { mutableMapOf() }[slot] = item
+    }
+
+    /**
      * Move an item by keyword (case-insensitive) from a player's inventory to an equipment slot.
      * Falls back to substring matching on displayName/description when no exact match is found
      * and the keyword is at least 3 characters.
