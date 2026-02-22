@@ -103,6 +103,11 @@ class GameMetrics(
     private val playerSavesCounter = Counter.builder("player_saves_total").register(registry)
     private val playerSaveFailuresCounter = Counter.builder("player_save_failures_total").register(registry)
 
+    private val sessionIdSequenceOverflowCounter =
+        Counter.builder("session_id_sequence_overflow_total").register(registry)
+    private val sessionIdClockRollbackCounter =
+        Counter.builder("session_id_clock_rollback_total").register(registry)
+
     fun onTelnetConnected() {
         telnetConnectedCounter.increment()
         sessionsOnlineCount.incrementAndGet()
@@ -186,6 +191,10 @@ class GameMetrics(
     fun onPlayerSave() = playerSavesCounter.increment()
 
     fun onPlayerSaveFailure() = playerSaveFailuresCounter.increment()
+
+    fun onSessionIdSequenceOverflow() = sessionIdSequenceOverflowCounter.increment()
+
+    fun onSessionIdClockRollback() = sessionIdClockRollbackCounter.increment()
 
     fun bindPlayerRegistry(supplier: () -> Int) {
         Gauge.builder("players_online") { supplier().toDouble() }.register(registry)
