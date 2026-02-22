@@ -1,23 +1,29 @@
 AmbonMUD
 ========
 
-AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a production-quality, event-driven backend with telnet and WebSocket transports, data-driven world loading, tiered NPC combat, and a layered persistence stack with optional Redis caching.
+AmbonMUD is a Kotlin/JVM MUD server with a single-threaded game engine, telnet and WebSocket transports, YAML world content, and a layered persistence stack.
 
-Current State
--------------
-- Single-process server with a tick-based engine, NPC wandering, and scheduled actions.
-- Dual transport support: native telnet and a browser WebSocket client (xterm.js; served by the server at `/` and `/ws`).
-- Login flow with name + password (bcrypt), per-session state, and layered persistence (write-behind coalescing + optional Redis L2 cache).
-- YAML-defined, multi-zone world with validation on load (optional zone `lifespan` resets to respawn mobs/items).
-- Items and mobs loaded from world data; items can be in rooms or on mobs; inventory and equipment supported.
-- Wearable items support basic `damage`, `armor`, and `constitution` stats with slots (head/body/hand).
+Current Highlights
+------------------
+- Single-process event loop (`GameEngine`) with bounded per-tick work.
+- Dual client support:
+  - Telnet on `4000` (default)
+  - Web client + WebSocket on `8080` (default)
+- Semantic event boundaries:
+  - Engine uses `InboundEvent` / `OutboundEvent`
+  - Transport renders protocol bytes and ANSI
+- Login/account flow with bcrypt password checks and takeover handling.
 - Tiered NPC system (weak/standard/elite/boss) with per-mob stat overrides, XP rewards, and loot tables.
-- Combat with `kill <mob>` and `flee`, resolved over ticks (kills grant XP; players can level up).
-- HP regeneration over time (regen interval scales with constitution + equipment).
-- Chat and social commands (say, emote, tell, gossip), plus basic UI helpers (ANSI, clear, colors).
-- Staff/admin commands (goto, transfer, spawn, smite, kick, shutdown) gated behind `isStaff` flag.
-- Abstracted `InboundBus` / `OutboundBus` interfaces enabling future multi-process routing.
-- Optional Redis integration: L2 player cache + pub/sub event bus (disabled by default).
+- Combat, regen, scheduler, and zone lifespan resets.
+- Inventory/equipment and stat modifiers (`damage`, `armor`, `constitution`).
+- Layered persistence:
+  - `WriteCoalescingPlayerRepository` (optional worker)
+  - `RedisCachingPlayerRepository` (optional)
+  - `YamlPlayerRepository` (durable store)
+- Optional Redis integration:
+  - L2 player cache
+  - Pub/sub event buses (`RedisInboundBus`, `RedisOutboundBus`)
+- Prometheus metrics endpoint (enabled by default) and local Grafana stack via Docker Compose.
 
 Screenshots
 -----------
@@ -25,62 +31,52 @@ Web client:
 ![Web client login](src/main/resources/screenshots/Login.png)
 ![Web client combat](src/main/resources/screenshots/Combat.png)
 
+Grafana dashboards:
+![Grafana dashboard view 1](src/main/resources/screenshots/Dashboard1.png)
+![Grafana dashboard view 2](src/main/resources/screenshots/Dashboard2.png)
+![Grafana dashboard view 3](src/main/resources/screenshots/Dashboard3.png)
+
 Requirements
 ------------
-- JDK 17
+- JDK 17 (Gradle toolchain target)
 - Gradle wrapper (included)
 
-Run
----
-1) Start the server:
+Quick Start
+-----------
+Start server (Unix):
 
 ```bash
 ./gradlew run
 ```
 
-On Windows:
+Start server (Windows PowerShell):
 
 ```powershell
 .\gradlew.bat run
 ```
 
-Or launch demo mode (auto-opens browser when supported):
+Run demo mode (auto-launch browser when supported):
 
 ```bash
 ./gradlew demo
 ```
 
-On Windows:
-
 ```powershell
 .\gradlew.bat demo
 ```
 
-`demo` enables browser auto-launch by setting:
+Connect:
+- Telnet: `telnet localhost 4000`
+- Browser: `http://localhost:8080`
 
-```text
-config.override.ambonMUD.demo.autoLaunchBrowser=true
-```
-
-2) Connect with telnet:
-
-```bash
-telnet localhost 4000
-```
-
-3) Open the browser demo client:
-
-```text
-http://localhost:8080
-```
-
-By default the server listens on telnet port 4000 and web port 8080. These values come from `src/main/resources/application.yaml`.
-
-Note: The web client loads xterm.js from a CDN. If you're offline, prefer telnet.
+Notes:
+- Defaults come from `src/main/resources/application.yaml`.
+- The web client loads xterm.js from a CDN; telnet works fully offline.
 
 Configuration
 -------------
-Runtime config is loaded via Hoplite from `src/main/resources/application.yaml`.
+Config schema lives in `src/main/kotlin/dev/ambon/config/AppConfig.kt`.
+Defaults live in `src/main/resources/application.yaml`.
 
 Top-level key:
 
@@ -89,189 +85,240 @@ ambonMUD:
   ...
 ```
 
-Any config value can be overridden at runtime with a `-P` project property using the pattern `-Pconfig.<key>=<value>`:
+Runtime overrides use `-Pconfig.<path>=<value>`:
 
 ```bash
 ./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000
 ./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
-./gradlew run -Pconfig.ambonMUD.logging.packageLevels.dev.ambon.transport=DEBUG
+./gradlew run -Pconfig.ambonMUD.engine.mob.maxMovesPerTick=25
+./gradlew run -Pconfig.ambonMUD.redis.enabled=true
 ```
 
-This works identically on Windows PowerShell with no quoting issues.
+High-use sections:
+- `ambonMUD.server` (ports, tick rate, channel capacities)
+- `ambonMUD.world.resources` (zone file list)
+- `ambonMUD.persistence` (root path + worker)
+- `ambonMUD.redis` (cache + bus)
+- `ambonMUD.engine.*` (mob/combat/regen/scheduler caps)
+- `ambonMUD.observability` (metrics endpoint)
+- `ambonMUD.logging` (root and package log levels)
 
-Most day-to-day tuning lives under:
-- `ambonMUD.server` (ports, tick rates, channel capacities)
-- `ambonMUD.world.resources` (which zone YAML resources to load)
-- `ambonMUD.persistence.rootDir` (where player YAML data is written)
-- `ambonMUD.persistence.worker` (write-behind flush interval, enable/disable)
-- `ambonMUD.redis` (enabled, URI, cache TTL, pub/sub bus config)
-- `ambonMUD.logging` (root log level and per-package overrides)
+Architecture At A Glance
+------------------------
+
+```text
+Transports (telnet + WebSocket)
+  -> decode input into InboundEvent
+  -> render OutboundEvent to session output
+        |
+        v
+InboundBus / OutboundBus (Local* or Redis*)
+        |
+        v
+GameEngine (single-threaded tick loop)
+  - login FSM
+  - command routing
+  - combat, mobs, regen
+  - scheduler
+  - zone resets
+        |
+        v
+OutboundRouter
+  - per-session queue routing
+  - ANSI/plain rendering
+  - prompt coalescing
+  - backpressure disconnects
+```
+
+Core boundary rules:
+- Engine does not know sockets/web protocols.
+- Transport does not own gameplay state.
+- ANSI/control output remains semantic in engine (`SetAnsi`, `ClearScreen`, `ShowAnsiDemo`).
 
 Login
 -----
-On connect, you will be prompted for a character name and password.
-- Name rules: 2-16 characters, letters/digits/underscore, cannot start with a digit.
-- Password rules: 1-72 characters.
-- Existing characters require the correct password.
-- Login banner text is loaded from `src/main/resources/login.txt`.
-- Optional login banner styles are loaded from `src/main/resources/login.styles.yaml`.
-- If the styles file is missing or invalid, the banner is shown without ANSI styling.
+On connect, players enter a login state machine.
 
-Commands
---------
-**Movement / Look**
-- `n`, `s`, `e`, `w`, `u`, `d` (or `north`, `south`, `east`, `west`, `up`, `down`): move.
-- `look` or `l`: look around the current room.
-- `look <direction>`: peek into a direction (e.g. `look north`).
-- `exits` or `ex`: list exits in the current room.
+Validation rules:
+- Name: `2..16` chars, alnum/underscore, cannot start with digit.
+- Password: non-blank, max `72` chars (bcrypt-safe).
 
-**Communication**
-- `say <msg>` or `'<msg>`: speak to the room.
-- `emote <msg>`: perform an emote visible to the room.
-- `who`: list online players.
-- `tell <player> <msg>` or `t <player> <msg>`: private message.
-- `gossip <msg>` or `gs <msg>`: broadcast to everyone.
+Behavior:
+- Existing player: password required.
+- New player: create flow with confirmation.
+- Same-name takeover: old session is disconnected, session state remaps to new connection.
 
-**Items**
-- `inventory` / `inv` / `i`: show inventory.
-- `equipment` / `eq`: show worn items.
-- `wear <item>` / `equip <item>`: wear an item from inventory.
-- `remove <slot>` / `unequip <slot>`: remove an item from a slot (`head`, `body`, `hand`).
-- `get <item>` / `take <item>` / `pickup <item>` / `pick <item>` / `pick up <item>`: take item.
-- `drop <item>`: drop item.
+Command Reference
+-----------------
+Movement / world:
+- `n/s/e/w/u/d` and `north/south/east/west/up/down`
+- `look` / `l`
+- `look <direction>`
+- `exits` / `ex`
 
-**Combat**
-- `kill <mob>`: engage a mob in combat.
-- `flee`: end combat (you stay in the room).
+Communication:
+- `say <msg>` or `'<msg>`
+- `emote <msg>`
+- `who`
+- `tell <player> <msg>` / `t <player> <msg>`
+- `gossip <msg>` / `gs <msg>`
 
-**Character**
-- `score` or `sc`: show character sheet (level, HP, XP, constitution, equipment stats).
+Items and gear:
+- `inventory` / `inv` / `i`
+- `equipment` / `eq`
+- `wear <item>` / `equip <item>`
+- `remove <head|body|hand>` / `unequip <head|body|hand>`
+- `get <item>` / `take <item>` / `pickup <item>` / `pick <item>` / `pick up <item>`
+- `drop <item>`
 
-**UI / Settings**
-- `ansi on` / `ansi off`: toggle ANSI colors.
-- `colors`: show ANSI demo (when ANSI is on).
-- `clear`: clear screen (ANSI) or print a divider.
-- `help` or `?`: list available commands.
-- `quit` or `exit`: disconnect.
+Combat and character:
+- `kill <mob>`
+- `flee`
+- `score` / `sc`
 
-**Staff / Admin** *(requires `isStaff: true` on the player record)*
-- `goto <room>`: teleport to a room (`zone:room`, bare `room` for current zone, `zone:` for zone start).
-- `transfer <player> <room>`: move a player to a room.
-- `spawn <mob-template>`: spawn a mob by template ID.
-- `smite <player|mob>`: instantly kill a player or mob.
-- `kick <player>`: disconnect a player.
-- `shutdown`: gracefully shut down the server.
+UI / session:
+- `ansi on` / `ansi off`
+- `colors`
+- `clear`
+- `help` / `?`
+- `quit` / `exit`
+
+Staff commands (`isStaff: true`):
+- `goto <zone:room | room | zone:>`
+- `transfer <player> <room>`
+- `spawn <mob-template>`
+- `smite <player|mob>`
+  - Player target: removes from combat, sets HP to 1, moves to world start.
+  - Mob target: removes mob from room.
+- `kick <player>`
+- `shutdown`
 
 World Data
 ----------
-World files live in `src/main/resources/world` and are loaded by `dev.ambon.domain.world.WorldFactory`. Each YAML file describes a zone; multiple zones are merged into a single world.
+World files live in `src/main/resources/world`.
+The default world list is configured in `application.yaml` under `ambonMUD.world.resources`.
 
-Detailed format/validation rules for generators are documented in `docs/world-zone-yaml-spec.md`.
+Format and validation contract:
+- `docs/world-zone-yaml-spec.md`
+- Loader: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
 
-```yaml
-zone: demo
-startRoom: trailhead
-mobs:
-  wolf:
-    name: "a wary wolf"
-    room: trailhead
-items:
-  lantern:
-    displayName: "a brass lantern"
-    description: "A brass lantern with soot-stained glass."
-    room: trailhead
-rooms:
-  trailhead:
-    title: "Forest Trailhead"
-    description: "A narrow trail slips beneath ancient boughs."
-    exits:
-      north: mossy_path
-```
-
-Notes:
-- Room IDs and exit targets can be local (`trailhead`) or fully qualified (`zone:trailhead`).
-- `mobs` and `items` are optional; `rooms` and `startRoom` are required.
-- Items may be placed in a `room` or on a `mob` (not both).
-- Items may define `slot` (`head`, `body`, `hand`) and optional `damage`/`armor`/`constitution` stats.
-- Exit directions support `north/south/east/west/up/down` in world files.
-- Optional `lifespan` is in minutes; zones with `lifespan > 0` periodically reset mob/item spawns at runtime.
+Key rules:
+- IDs are namespaced (`zone:id`) after normalization.
+- Cross-zone exits are supported.
+- Item placement supports `room` or unplaced; `mob` placement is deprecated and rejected.
+- Mob loot uses `mobs.<id>.drops` with `itemId` + `chance`.
+- Zone `lifespan` is in minutes; `lifespan > 0` enables runtime resets.
 
 Persistence
 -----------
-Player records are stored as YAML under `data/players/players/` (configurable via `ambonMUD.persistence.rootDir`). IDs are allocated in `data/players/next_player_id.txt`. On login, the server loads or creates the player record and places the player in their saved room.
+Durable data is YAML under `data/players` by default:
+- Player files: `data/players/players/<zero-padded-id>.yaml`
+- ID allocator: `data/players/next_player_id.txt`
 
-The persistence stack has three layers:
+Repository layering (outermost to innermost):
 
+```text
+WriteCoalescingPlayerRepository   (optional, async write-behind)
+  -> RedisCachingPlayerRepository (optional, if redis.enabled=true)
+    -> YamlPlayerRepository       (durable, atomic file writes)
 ```
-WriteCoalescingPlayerRepository  ← dirty-flag write-behind (configurable flush interval)
-  ↓
-RedisCachingPlayerRepository     ← L2 cache (if redis.enabled = true)
-  ↓
-YamlPlayerRepository             ← durable YAML files, atomic writes
-```
 
-Redis caching is disabled by default. Enable it with:
+`PlayerRegistry` always uses the `PlayerRepository` abstraction and does not know which wrappers are active.
+
+Granting staff access:
+- Set `isStaff: true` in the relevant player file (`data/players/players/<id>.yaml`).
+
+Redis Integration
+-----------------
+Redis is optional and disabled by default.
+
+Enable cache:
 
 ```yaml
 ambonMUD:
   redis:
     enabled: true
-    uri: "redis://localhost:6379"
+    uri: redis://localhost:6379
     cacheTtlSeconds: 3600
 ```
 
-To grant staff/admin access to a player, manually add `isStaff: true` to their YAML record at `data/players/players/<name>.yaml`.
+Enable pub/sub buses:
 
-Tests
------
-```bash
-./gradlew test
+```yaml
+ambonMUD:
+  redis:
+    enabled: true
+    bus:
+      enabled: true
+      inboundChannel: ambon:inbound
+      outboundChannel: ambon:outbound
+      instanceId: ""
 ```
 
-Formatting / Lint
------------------
-```bash
-./gradlew ktlintCheck
-```
+Notes:
+- Bus mode is currently marked experimental in startup logs.
+- Redis failures degrade to best-effort behavior; engine process should keep running.
 
-Observability (Docker + Grafana)
---------------------------------
-This repo includes a Prometheus + Grafana stack for local metrics dashboards.
+Observability
+-------------
+Prometheus metrics are exposed on the web server at:
+- Default: `http://localhost:8080/metrics`
+- Configurable: `ambonMUD.observability.metricsEndpoint`
 
-1) Start the stack:
+Local dashboard stack:
 
 ```bash
 docker compose up -d
 ```
 
-2) Open Grafana:
-
-```text
-http://localhost:3000
-```
-
-Login:
-- Username: `admin`
+Grafana:
+- URL: `http://localhost:3000`
+- User: `admin`
 - Password: `admin`
 
-Grafana dashboards during load testing:
-![Grafana dashboard view 1](src/main/resources/screenshots/Dashboard1.png)
-![Grafana dashboard view 2](src/main/resources/screenshots/Dashboard2.png)
-![Grafana dashboard view 3](src/main/resources/screenshots/Dashboard3.png)
+Developer Workflow
+------------------
+Run tests:
 
-Scalability Roadmap
--------------------
-The codebase follows a four-phase scalability plan. Phases 1–3 are implemented:
+```bash
+./gradlew test
+```
+
+Run lint:
+
+```bash
+./gradlew ktlintCheck
+```
+
+CI parity:
+
+```bash
+./gradlew ktlintCheck test
+```
+
+Windows equivalents:
+
+```powershell
+.\gradlew.bat test
+.\gradlew.bat ktlintCheck
+.\gradlew.bat ktlintCheck test
+```
+
+Scalability Status
+------------------
+Scalability plan phases:
 
 | Phase | Description | Status |
-|-------|-------------|--------|
-| 1 | Abstract `InboundBus`/`OutboundBus` interfaces; extract `SessionIdFactory` | ✅ Done |
-| 2 | Async persistence worker with write-behind coalescing | ✅ Done |
-| 3 | Redis L2 player cache + pub/sub event bus | ✅ Done |
-| 4 | gRPC gateway split for true horizontal scaling | Planned |
+|------|-------------|--------|
+| 1 | Bus abstraction + session ID factory | Done |
+| 2 | Async write-behind persistence worker | Done |
+| 3 | Redis L2 cache + Redis event bus | Done |
+| 4 | Gateway/engine split (gRPC) | Planned |
 
-See `docs/scalability-plan-brainstorm.md` for detailed design and `DesignDecisions.md` for rationale.
-
-Design Notes
+Related Docs
 ------------
-See `DesignDecisions.md` for architectural rationale and future-direction notes.
+- `AGENTS.md` - engineering playbook and invariants
+- `docs/onboarding.md` - developer onboarding
+- `DesignDecisions.md` - architectural rationale
+- `docs/scalability-plan-brainstorm.md` - roadmap and implementation status
+- `docs/world-zone-yaml-spec.md` - world content format contract

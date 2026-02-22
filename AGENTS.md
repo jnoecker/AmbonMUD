@@ -1,134 +1,140 @@
 # AGENTS.md
 
 ## Purpose
-This repository is a Kotlin MUD server ("AmbonMUD") with a single-process event loop, telnet + WebSocket transports, YAML world loading, a small browser demo client, and a layered persistence stack with optional Redis caching and pub/sub.
+AmbonMUD is a Kotlin MUD server with a single-threaded engine loop, telnet + WebSocket transports, YAML world loading, and layered persistence with optional Redis cache/pub-sub.
 
-Use this document as the default engineering playbook when making code or content changes.
+Use this file as the default engineering playbook for code and content changes.
 
 ## Environment
-- JDK: 17 toolchain in Gradle (`build.gradle.kts`), CI currently runs on Java 21 (`.github/workflows/ci.yml`).
-- Build tool: Gradle wrapper (`gradlew`, `gradlew.bat`).
-- Kotlin style: `kotlin.code.style=official` (`gradle.properties`).
+- JDK: Gradle toolchain targets 17 (`build.gradle.kts`); CI runs Java 21 (`.github/workflows/ci.yml`).
+- Build: Gradle wrapper (`gradlew`, `gradlew.bat`).
+- Kotlin style: official (`kotlin.code.style=official`).
 
 ## Core Commands
 - Run server (Windows): `.\gradlew.bat run`
 - Run server (Unix): `./gradlew run`
-- Demo (Windows): `.\gradlew.bat demo`
-- Demo (Unix): `./gradlew demo`
+- Demo mode (Windows): `.\gradlew.bat demo`
+- Demo mode (Unix): `./gradlew demo`
 - Lint: `.\gradlew.bat ktlintCheck`
 - Tests: `.\gradlew.bat test`
-- CI parity (Unix/CI): `./gradlew ktlintCheck test`
+- CI parity (Unix): `./gradlew ktlintCheck test`
 - CI parity (Windows): `.\gradlew.bat ktlintCheck test`
 
-By default the server listens on telnet port `4000` and web port `8080` (configured in `src/main/resources/application.yaml`, printed by `src/main/kotlin/dev/ambon/Main.kt`).
+Default ports from `src/main/resources/application.yaml`:
+- Telnet: `4000`
+- Web/WebSocket: `8080`
 
 ## Project Map
-- Bootstrap/runtime wiring: `src/main/kotlin/dev/ambon/Main.kt`, `src/main/kotlin/dev/ambon/MudServer.kt`
-- Configuration: `src/main/kotlin/dev/ambon/config`, `src/main/resources/application.yaml`
+- Entry and wiring: `src/main/kotlin/dev/ambon/Main.kt`, `src/main/kotlin/dev/ambon/MudServer.kt`
+- Config schema/loading: `src/main/kotlin/dev/ambon/config`, `src/main/resources/application.yaml`
 - Engine and gameplay: `src/main/kotlin/dev/ambon/engine`
 - Transport and protocol: `src/main/kotlin/dev/ambon/transport`
-- Event bus interfaces + impls: `src/main/kotlin/dev/ambon/bus` (`InboundBus`, `OutboundBus`, `Local*Bus`, `Redis*Bus`)
-- Redis connection management + JSON: `src/main/kotlin/dev/ambon/redis`
+- Bus abstractions + impls: `src/main/kotlin/dev/ambon/bus`
+- Redis connection and JSON support: `src/main/kotlin/dev/ambon/redis`
 - Session ID allocation: `src/main/kotlin/dev/ambon/session`
-- Metrics (Micrometer / Prometheus): `src/main/kotlin/dev/ambon/metrics`
-- Web demo client (static): `src/main/resources/web`
-- Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
-- World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
+- Metrics: `src/main/kotlin/dev/ambon/metrics`
+- World loading: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
 - World content: `src/main/resources/world`
-- World format contract: `docs/world-zone-yaml-spec.md`
-- Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence`
-- Tests: `src/test/kotlin`, fixtures in `src/test/resources/world`
+- World format spec: `docs/world-zone-yaml-spec.md`
+- Persistence layers: `src/main/kotlin/dev/ambon/persistence`
+- Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
+- Browser demo client: `src/main/resources/web`
+- Tests: `src/test/kotlin` (fixtures: `src/test/resources/world`)
 - Runtime player data (git-ignored): `data/players`
 
 ## Architecture Contracts (Do Not Break)
-1. Engine vs transport boundary
-- Engine communicates using semantic events only (`InboundEvent`, `OutboundEvent`).
-- ANSI/control behavior remains semantic in engine (`SetAnsi`, `ClearScreen`, `ShowAnsiDemo`), with raw escape rendering in transport renderers only.
-- Transports (telnet + WebSocket) are adapters only: decode lines into `InboundEvent`s and render `OutboundEvent`s; no gameplay/state in transport.
+1. Engine/transport boundary
+- Engine communicates via semantic events only: `InboundEvent`, `OutboundEvent`.
+- Transport adapters decode raw protocol input and render outbound text.
+- ANSI/control bytes are rendered only in transport renderers (`AnsiRenderer`, `PlainRenderer`).
 
-2. Engine loop model
-- `GameEngine` is single-threaded via its dispatcher and tick loop.
-- Keep blocking I/O out of engine systems/router.
-- Use injected `Clock` for time-based logic; do not introduce direct wall-clock calls.
+2. Bus boundary
+- Engine accepts `InboundBus` and `OutboundBus`; do not pass raw channels into engine code.
+- Single-process mode uses `LocalInboundBus` + `LocalOutboundBus`.
+- Redis mode wraps local buses with `RedisInboundBus` + `RedisOutboundBus`.
 
-3. Session output semantics
-- `OutboundRouter` applies backpressure (slow clients may be disconnected).
-- Prompt coalescing is intentional: consecutive prompts collapse.
-- `Close` sends final text then closes via callback.
+3. Engine execution model
+- `GameEngine` runs on a single-threaded dispatcher.
+- Keep blocking I/O out of engine systems and command routing.
+- Use injected `Clock` for time logic; do not call wall clock APIs directly in engine code.
 
-4. World and ID invariants
-- `RoomId` must be namespaced: `<zone>:<room>`.
-- Multi-zone world loading and cross-zone exits are supported.
-- Loader validates exits, start room, mob/item placement, stats, and slot/direction values.
-- Item placement is exclusive: room or mob (or unplaced), never both.
-- Zone `lifespan` is in minutes; `lifespan <= 0` disables resets. The engine uses `lifespan` to reset a zone's mob/item spawns.
+4. Session output semantics
+- `OutboundRouter` owns per-session outbound queues.
+- Prompt coalescing is intentional (`SendPrompt` collapse behavior).
+- Slow outbound clients may be disconnected (backpressure protection).
+- `Close` sends final text then invokes close callback.
 
-5. Player and persistence invariants
-- Name validation: length 2..16, alnum/underscore only, cannot start with digit.
-- Password validation: non-blank, max 72 chars (BCrypt-safe).
-- Case-insensitive online-name uniqueness is enforced.
-- Player room/last-seen persistence must stay intact.
-- Player progression persistence must stay intact (level/xp/constitution).
-- Keep atomic-write behavior for YAML persistence files.
-- The persistence chain is: `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (optional) → `YamlPlayerRepository`. Changes to `PlayerRecord` must survive all three layers including JSON round-trip through Redis.
-- `isStaff` is a `PlayerRecord` field; it is faithfully serialized through all persistence layers. Grant by editing the player YAML directly.
+5. World and ID invariants
+- IDs are namespaced (`zone:id`) for rooms, mobs, and items.
+- Multi-zone loading and cross-zone exits are supported.
+- Zone `lifespan` is minutes; `lifespan > 0` enables runtime reset.
+- Item placement uses `room` or unplaced only.
+- Deprecated `items.*.mob` placement is rejected; mob loot uses `mobs.*.drops`.
 
-6. Event bus boundary
-- The engine receives an `InboundBus` and sends to an `OutboundBus` — never raw `Channel` references.
-- `Local*Bus` implementations wrap channels and preserve single-process behavior.
-- `Redis*Bus` implementations publish to Redis and deliver remotely-originated events to the local delegate.
-- All engine tests use `LocalInboundBus`/`LocalOutboundBus` directly.
+6. Player and persistence invariants
+- Name validation: length `2..16`, alnum/underscore, cannot start with digit.
+- Password validation: non-blank, max 72 chars.
+- Online name uniqueness is case-insensitive.
+- Player location/last-seen/progression (`level`, `xpTotal`, `constitution`) must persist.
+- YAML writes remain atomic (temp + move strategy).
+- Repository layering (outer to inner):
+  `WriteCoalescingPlayerRepository` -> `RedisCachingPlayerRepository` (optional) -> `YamlPlayerRepository`.
+- `PlayerRecord` changes must round-trip through YAML and Redis JSON.
+- Staff access comes from `PlayerRecord.isStaff` and is granted by editing the player YAML file.
+
+7. Redis optionality and resilience
+- Redis is opt-in (`ambonMUD.redis.enabled=false` by default).
+- Redis errors should degrade gracefully; avoid hard dependency failures in engine flow.
+- Redis bus mode is currently experimental and should stay explicitly guarded in docs/logs.
 
 ## Change Playbooks
 ### Commands
-1. Update parse behavior in `src/main/kotlin/dev/ambon/engine/commands/CommandParser.kt`.
-2. Add/adjust command variant in `src/main/kotlin/dev/ambon/engine/commands/CommandParser.kt` (`Command` sealed interface).
+1. Add parse behavior in `src/main/kotlin/dev/ambon/engine/commands/CommandParser.kt`.
+2. Add/adjust `Command` variant.
 3. Implement behavior in `src/main/kotlin/dev/ambon/engine/commands/CommandRouter.kt`.
-4. Preserve prompt behavior for success/failure paths.
-5. Add/adjust parser tests and router/integration tests under `src/test/kotlin/dev/ambon/engine`.
+4. Preserve prompt semantics on success/failure paths.
+5. Add tests in parser/router/integration suites under `src/test/kotlin/dev/ambon/engine`.
 
 ### Combat, mobs, items
-- Modify `CombatSystem`, `MobSystem`, `MobRegistry`, `ItemRegistry` carefully to preserve membership/index consistency.
-- Maintain bounded per-tick processing caps (`max*PerTick`) to avoid starvation.
-- Add/adjust tests for damage, equipment modifiers, death/drop flow, and move/broadcast behavior.
+- Edit `CombatSystem`, `MobSystem`, `MobRegistry`, `ItemRegistry` carefully; preserve membership/index consistency.
+- Maintain bounded per-tick caps (`max*PerTick`) to prevent starvation.
+- Add tests for damage/armor, drops, equip modifiers, death/flee flows, and movement broadcasts.
 
 ### World content and loader
-- Content-only changes: edit YAML in `src/main/resources/world`.
-- Loader/schema behavior changes: update `WorldLoader.kt` and add fixture coverage in `src/test/resources/world`.
-- Keep both positive and negative validation tests in `src/test/kotlin/dev/ambon/world/load/WorldLoaderTest.kt`.
+- Content-only change: edit YAML under `src/main/resources/world`.
+- Loader/schema change: update `WorldLoader.kt` + fixtures + `WorldLoaderTest`.
+- Keep positive and negative validation coverage.
 
-### Configuration / demo client
-- Config schema changes: update `src/main/kotlin/dev/ambon/config/AppConfig.kt` and `src/main/resources/application.yaml` together; keep `validated()` strict.
-- Web demo client changes: update `src/main/resources/web` and sanity-check connect/disconnect against `KtorWebSocketTransport`.
-- Runtime config overrides use `-Pconfig.<key>=<value>` (e.g. `./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG`). This works in all shells including Windows PowerShell.
+### Configuration and runtime wiring
+- Update `AppConfig.kt` and `application.yaml` together.
+- Keep `validated()` strict when adding fields.
+- Runtime overrides use `-Pconfig.<key>=<value>`.
 
 ### Persistence
-- Keep `PlayerRepository` as the abstraction boundary.
-- Preserve case-insensitive lookup and unique-name behavior.
-- Use `YamlPlayerRepositoryTest` and `@TempDir` for regression coverage.
-- When adding fields to `PlayerRecord`: add with a default value so existing YAML files still deserialize; verify the field round-trips through Jackson/Redis JSON (`RedisCachingPlayerRepositoryTest`).
-- Do not add persistence logic directly to `GameEngine` or `PlayerRegistry` — all writes go through `repo.save()` which the coalescing wrapper intercepts.
+- Keep `PlayerRepository` as abstraction boundary.
+- Do not place persistence logic directly inside gameplay systems.
+- For new `PlayerRecord` fields:
+  - add default values for backward compatibility,
+  - verify YAML round-trip,
+  - verify Redis JSON round-trip.
+- Ensure worker shutdown still flushes dirty records.
 
-### Staff/Admin commands
-- Add parse logic in `CommandParser.kt` (alongside existing admin block).
-- Gate with `if (!playerState.isStaff)` check in `CommandRouter.kt`.
-- Add tests in `CommandRouterAdminTest`.
+### Bus/Redis
+- New event variants in `InboundEvent`/`OutboundEvent` require matching updates in Redis bus envelope serialization/deserialization.
+- Preserve same semantics between local and Redis buses.
 
-### Event bus / Redis
-- Bus implementations live in `dev.ambon.bus`; Redis infrastructure in `dev.ambon.redis`.
-- When adding new `InboundEvent` or `OutboundEvent` variants, also add them to the Redis bus envelope in `RedisInboundBus`/`RedisOutboundBus` (type discriminator string + new data class).
-- `RedisConnectionManager` degrades gracefully when Redis is unavailable — never let a Redis failure crash the engine.
+### Transport
+- Keep protocol safety checks (`maxLineLen`, non-printable thresholds, inbound backpressure failures).
+- Keep gameplay logic out of transport classes.
 
 ## Testing Expectations
-- Minimum verification for any meaningful change: `ktlintCheck` and `test`.
-- Prefer focused test runs while iterating, then run full suite before finalizing.
-- Add tests for every behavioral change; this codebase treats tests as design constraints.
+- Minimum for meaningful changes: `ktlintCheck` and `test`.
+- Prefer focused tests while iterating, then run full suite.
+- Add tests for every behavior change.
 
 ## Practical Notes
-- Keep protocol/network concerns in `transport`; keep gameplay/state transitions in `engine`.
-- Keep bus/Redis concerns in `bus`/`redis`; wire them in `MudServer.kt` only.
-- Reuse deterministic test helpers (`MutableClock`, in-memory repository) where possible.
-- Do not commit runtime player save artifacts from `data/players`.
-- The scheduler is at `src/main/kotlin/dev/ambon/engine/scheduler/Scheduler.kt`.
-- Micrometer metrics use package `io.micrometer.prometheusmetrics` (not the deprecated `io.micrometer.prometheus`).
-- Staff access is granted by setting `isStaff: true` in the player's YAML file — there is no in-game promotion command.
+- Keep protocol concerns in `transport`; gameplay/state transitions in `engine`.
+- Keep Redis/bus concerns in `redis` and `bus`; wire in `MudServer.kt`.
+- Scheduler location: `src/main/kotlin/dev/ambon/engine/scheduler/Scheduler.kt`.
+- Metrics endpoint is served from Ktor web module (`/metrics` by default).
+- Do not commit runtime save files from `data/players`.
