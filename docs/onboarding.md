@@ -943,12 +943,13 @@ Edit or add YAML files in `src/main/resources/world/`, then register them in `sr
 
 | Section | Key Settings |
 |---------|-------------|
+| `mode` | `STANDALONE` (default), `ENGINE`, `GATEWAY` |
 | `server` | `telnetPort` (4000), `webPort` (8080), `tickMillis` (100), `sessionOutboundQueueCapacity` (200) |
 | `world` | `resources` — list of zone YAML classpath paths |
-| `persistence` | `dataDir` — root directory for player files |
-| `login` | `maxPasswordAttempts` (3) |
-| `engine.combat` | `minDamage`, `maxDamage`, `roundMillis`, `maxCombatsPerTick` |
-| `engine.regen` | `baseIntervalMillis` (5000), `hpPerTick` (1), `msPerConstitution` |
+| `persistence` | `rootDir` — root directory for player files |
+| `login` | `maxWrongPasswordRetries` (3), `maxFailedAttemptsBeforeDisconnect` (3) |
+| `engine.combat` | `minDamage`, `maxDamage`, `tickMillis`, `maxCombatsPerTick` |
+| `engine.regen` | `baseIntervalMillis` (5000), `regenAmount` (1), `msPerConstitution`, `minIntervalMillis` |
 | `engine.mob` | `minWanderDelayMillis`, `maxWanderDelayMillis`, `maxMovesPerTick`, `tiers` |
 | `progression` | `xp.baseXp`, `xp.exponent`, `xp.linearXp`, `hpPerLevel`, `maxLevel`, `fullHealOnLevelUp` |
 | `persistence.worker` | `flushIntervalMs` (5000), `enabled` (true) |

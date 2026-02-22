@@ -7,6 +7,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.grpc.Server
 import io.grpc.ServerBuilder
 import kotlinx.coroutines.CoroutineScope
+import java.util.concurrent.TimeUnit
 
 private val log = KotlinLogging.logger {}
 
@@ -22,7 +23,14 @@ class EngineGrpcServer(
     outbound: OutboundBus,
     scope: CoroutineScope,
     metrics: GameMetrics = GameMetrics.noop(),
+    private val gracefulShutdownTimeoutMs: Long = DEFAULT_GRACEFUL_SHUTDOWN_TIMEOUT_MS,
+    private val forceShutdownTimeoutMs: Long = DEFAULT_FORCE_SHUTDOWN_TIMEOUT_MS,
 ) {
+    init {
+        require(gracefulShutdownTimeoutMs > 0L) { "gracefulShutdownTimeoutMs must be > 0" }
+        require(forceShutdownTimeoutMs > 0L) { "forceShutdownTimeoutMs must be > 0" }
+    }
+
     private val serviceImpl = EngineServiceImpl(inbound = inbound, outbound = outbound, scope = scope)
     private val dispatcher = GrpcOutboundDispatcher(outbound = outbound, serviceImpl = serviceImpl, scope = scope, metrics = metrics)
 
@@ -37,10 +45,34 @@ class EngineGrpcServer(
         log.info { "Engine gRPC server listening on port $port" }
     }
 
+    internal fun listeningPort(): Int = server.port
+
     fun stop() {
         dispatcher.stop()
         server.shutdown()
-        server.awaitTermination()
+        try {
+            val graceful = server.awaitTermination(gracefulShutdownTimeoutMs, TimeUnit.MILLISECONDS)
+            if (!graceful) {
+                log.warn {
+                    "Engine gRPC server did not stop within ${gracefulShutdownTimeoutMs}ms; forcing shutdownNow()"
+                }
+                server.shutdownNow()
+                val forced = server.awaitTermination(forceShutdownTimeoutMs, TimeUnit.MILLISECONDS)
+                if (!forced) {
+                    log.error {
+                        "Engine gRPC server still running after forced shutdown timeout " +
+                            "(${forceShutdownTimeoutMs}ms)"
+                    }
+                }
+            }
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            log.warn(e) { "Interrupted while waiting for engine gRPC server shutdown; forcing shutdownNow()" }
+            server.shutdownNow()
+        }
         log.info { "Engine gRPC server stopped" }
     }
 }
+
+private const val DEFAULT_GRACEFUL_SHUTDOWN_TIMEOUT_MS = 5_000L
+private const val DEFAULT_FORCE_SHUTDOWN_TIMEOUT_MS = 5_000L
