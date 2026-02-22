@@ -89,14 +89,16 @@ class MudServer(
 
     private val baseRepo: PlayerRepository =
         when (config.persistence.backend) {
-            PersistenceBackend.YAML -> YamlPlayerRepository(
-                rootDir = Paths.get(config.persistence.rootDir),
-                metrics = gameMetrics,
-            )
-            PersistenceBackend.POSTGRES -> PostgresPlayerRepository(
-                database = databaseManager!!.database,
-                metrics = gameMetrics,
-            )
+            PersistenceBackend.YAML ->
+                YamlPlayerRepository(
+                    rootDir = Paths.get(config.persistence.rootDir),
+                    metrics = gameMetrics,
+                )
+            PersistenceBackend.POSTGRES ->
+                PostgresPlayerRepository(
+                    database = databaseManager!!.database,
+                    metrics = gameMetrics,
+                )
         }
 
     private val redisManager: RedisConnectionManager? =

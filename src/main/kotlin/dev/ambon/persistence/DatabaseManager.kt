@@ -12,13 +12,14 @@ class DatabaseManager(private val config: DatabaseConfig) {
     val database: Database
 
     init {
-        val hikariConfig = HikariConfig().apply {
-            jdbcUrl = config.jdbcUrl
-            username = config.username
-            password = config.password
-            maximumPoolSize = config.maxPoolSize
-            minimumIdle = config.minimumIdle
-        }
+        val hikariConfig =
+            HikariConfig().apply {
+                jdbcUrl = config.jdbcUrl
+                username = config.username
+                password = config.password
+                maximumPoolSize = config.maxPoolSize
+                minimumIdle = config.minimumIdle
+            }
         hikariDataSource = HikariDataSource(hikariConfig)
         database = Database.connect(hikariDataSource)
     }

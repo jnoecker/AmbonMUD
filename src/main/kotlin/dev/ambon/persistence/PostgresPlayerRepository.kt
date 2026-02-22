@@ -15,7 +15,6 @@ class PostgresPlayerRepository(
     private val database: Database,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) : PlayerRepository {
-
     override suspend fun findByName(name: String): PlayerRecord? {
         val sample = Timer.start()
         try {
@@ -54,15 +53,16 @@ class PostgresPlayerRepository(
         val trimmed = name.trim()
         try {
             return newSuspendedTransaction(Dispatchers.IO, database) {
-                val result = PlayersTable.insert {
-                    it[PlayersTable.name] = trimmed
-                    it[nameLower] = trimmed.lowercase()
-                    it[roomId] = startRoomId.value
-                    it[createdAtEpochMs] = nowEpochMs
-                    it[lastSeenEpochMs] = nowEpochMs
-                    it[PlayersTable.passwordHash] = passwordHash
-                    it[PlayersTable.ansiEnabled] = ansiEnabled
-                }
+                val result =
+                    PlayersTable.insert {
+                        it[PlayersTable.name] = trimmed
+                        it[nameLower] = trimmed.lowercase()
+                        it[roomId] = startRoomId.value
+                        it[createdAtEpochMs] = nowEpochMs
+                        it[lastSeenEpochMs] = nowEpochMs
+                        it[PlayersTable.passwordHash] = passwordHash
+                        it[PlayersTable.ansiEnabled] = ansiEnabled
+                    }
 
                 PlayerRecord(
                     id = PlayerId(result[PlayersTable.id]),
@@ -111,17 +111,18 @@ class PostgresPlayerRepository(
         }
     }
 
-    private fun ResultRow.toPlayerRecord() = PlayerRecord(
-        id = PlayerId(this[PlayersTable.id]),
-        name = this[PlayersTable.name],
-        roomId = RoomId(this[PlayersTable.roomId]),
-        constitution = this[PlayersTable.constitution],
-        level = this[PlayersTable.level],
-        xpTotal = this[PlayersTable.xpTotal],
-        createdAtEpochMs = this[PlayersTable.createdAtEpochMs],
-        lastSeenEpochMs = this[PlayersTable.lastSeenEpochMs],
-        passwordHash = this[PlayersTable.passwordHash],
-        ansiEnabled = this[PlayersTable.ansiEnabled],
-        isStaff = this[PlayersTable.isStaff],
-    )
+    private fun ResultRow.toPlayerRecord() =
+        PlayerRecord(
+            id = PlayerId(this[PlayersTable.id]),
+            name = this[PlayersTable.name],
+            roomId = RoomId(this[PlayersTable.roomId]),
+            constitution = this[PlayersTable.constitution],
+            level = this[PlayersTable.level],
+            xpTotal = this[PlayersTable.xpTotal],
+            createdAtEpochMs = this[PlayersTable.createdAtEpochMs],
+            lastSeenEpochMs = this[PlayersTable.lastSeenEpochMs],
+            passwordHash = this[PlayersTable.passwordHash],
+            ansiEnabled = this[PlayersTable.ansiEnabled],
+            isStaff = this[PlayersTable.isStaff],
+        )
 }

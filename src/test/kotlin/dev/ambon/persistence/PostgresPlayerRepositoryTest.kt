@@ -26,11 +26,12 @@ class PostgresPlayerRepositoryTest {
         @BeforeAll
         @JvmStatic
         fun setup() {
-            val config = HikariConfig().apply {
-                jdbcUrl = "jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"
-                username = "sa"
-                password = ""
-            }
+            val config =
+                HikariConfig().apply {
+                    jdbcUrl = "jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"
+                    username = "sa"
+                    password = ""
+                }
             hikari = HikariDataSource(config)
             database = Database.connect(hikari)
             Flyway.configure().dataSource(hikari).load().migrate()
@@ -52,75 +53,82 @@ class PostgresPlayerRepositoryTest {
     }
 
     @Test
-    fun `create then findById and findByName`() = runTest {
-        val repo = PostgresPlayerRepository(database)
+    fun `create then findById and findByName`() =
+        runTest {
+            val repo = PostgresPlayerRepository(database)
 
-        val created = repo.create("Alice", RoomId("test:a"), 1234L, "hash123", ansiEnabled = false)
+            val created = repo.create("Alice", RoomId("test:a"), 1234L, "hash123", ansiEnabled = false)
 
-        assertEquals("Alice", created.name)
-        assertEquals(RoomId("test:a"), created.roomId)
-        assertEquals(1234L, created.createdAtEpochMs)
+            assertEquals("Alice", created.name)
+            assertEquals(RoomId("test:a"), created.roomId)
+            assertEquals(1234L, created.createdAtEpochMs)
 
-        val byId = repo.findById(created.id)
-        assertNotNull(byId)
-        assertEquals("Alice", byId!!.name)
-        assertEquals(RoomId("test:a"), byId.roomId)
+            val byId = repo.findById(created.id)
+            assertNotNull(byId)
+            assertEquals("Alice", byId!!.name)
+            assertEquals(RoomId("test:a"), byId.roomId)
 
-        val byName = repo.findByName("alice")
-        assertNotNull(byName)
-        assertEquals(created.id, byName!!.id)
-    }
-
-    @Test
-    fun `save persists changes`() = runTest {
-        val repo = PostgresPlayerRepository(database)
-
-        val created = repo.create("Bob", RoomId("test:a"), 1000L, "hash456", ansiEnabled = false)
-        val updated = created.copy(
-            roomId = RoomId("test:b"),
-            lastSeenEpochMs = 2000L,
-            ansiEnabled = true,
-            level = 3,
-            xpTotal = 400L,
-            isStaff = true,
-        )
-
-        repo.save(updated)
-
-        val loaded = repo.findById(created.id)!!
-        assertEquals(RoomId("test:b"), loaded.roomId)
-        assertEquals(2000L, loaded.lastSeenEpochMs)
-        assertTrue(loaded.ansiEnabled)
-        assertEquals(3, loaded.level)
-        assertEquals(400L, loaded.xpTotal)
-        assertTrue(loaded.isStaff)
-    }
-
-    @Test
-    fun `create enforces unique name case-insensitive`() = runTest {
-        val repo = PostgresPlayerRepository(database)
-
-        repo.create("Carol", RoomId("test:a"), 1L, "hash789", ansiEnabled = false)
-
-        val ex = try {
-            repo.create("carol", RoomId("test:a"), 1L, "hash789", ansiEnabled = false)
-            fail("Expected PlayerPersistenceException")
-        } catch (e: PlayerPersistenceException) {
-            e
+            val byName = repo.findByName("alice")
+            assertNotNull(byName)
+            assertEquals(created.id, byName!!.id)
         }
 
-        assertTrue(ex.message!!.contains("taken", ignoreCase = true))
-    }
+    @Test
+    fun `save persists changes`() =
+        runTest {
+            val repo = PostgresPlayerRepository(database)
+
+            val created = repo.create("Bob", RoomId("test:a"), 1000L, "hash456", ansiEnabled = false)
+            val updated =
+                created.copy(
+                    roomId = RoomId("test:b"),
+                    lastSeenEpochMs = 2000L,
+                    ansiEnabled = true,
+                    level = 3,
+                    xpTotal = 400L,
+                    isStaff = true,
+                )
+
+            repo.save(updated)
+
+            val loaded = repo.findById(created.id)!!
+            assertEquals(RoomId("test:b"), loaded.roomId)
+            assertEquals(2000L, loaded.lastSeenEpochMs)
+            assertTrue(loaded.ansiEnabled)
+            assertEquals(3, loaded.level)
+            assertEquals(400L, loaded.xpTotal)
+            assertTrue(loaded.isStaff)
+        }
 
     @Test
-    fun `findByName returns null for unknown`() = runTest {
-        val repo = PostgresPlayerRepository(database)
-        assertNull(repo.findByName("nobody"))
-    }
+    fun `create enforces unique name case-insensitive`() =
+        runTest {
+            val repo = PostgresPlayerRepository(database)
+
+            repo.create("Carol", RoomId("test:a"), 1L, "hash789", ansiEnabled = false)
+
+            val ex =
+                try {
+                    repo.create("carol", RoomId("test:a"), 1L, "hash789", ansiEnabled = false)
+                    fail("Expected PlayerPersistenceException")
+                } catch (e: PlayerPersistenceException) {
+                    e
+                }
+
+            assertTrue(ex.message!!.contains("taken", ignoreCase = true))
+        }
 
     @Test
-    fun `findById returns null for unknown`() = runTest {
-        val repo = PostgresPlayerRepository(database)
-        assertNull(repo.findById(PlayerId(999)))
-    }
+    fun `findByName returns null for unknown`() =
+        runTest {
+            val repo = PostgresPlayerRepository(database)
+            assertNull(repo.findByName("nobody"))
+        }
+
+    @Test
+    fun `findById returns null for unknown`() =
+        runTest {
+            val repo = PostgresPlayerRepository(database)
+            assertNull(repo.findById(PlayerId(999)))
+        }
 }
