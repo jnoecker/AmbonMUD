@@ -36,7 +36,7 @@ dependencies {
     implementation("io.micrometer:micrometer-core:$micrometerVersion")
     implementation("io.micrometer:micrometer-registry-prometheus:$micrometerVersion")
 
-    implementation("io.lettuce:lettuce-core:6.3.2.RELEASE")
+    implementation("io.lettuce:lettuce-core:7.4.0.RELEASE")
 
     // gRPC / Protobuf
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
