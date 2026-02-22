@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package ambonmud.v1;
+
+option java_package = "dev.ambon.grpc.proto";
+option java_multiple_files = true;
+
+// ── Inbound events (Gateway → Engine) ────────────────────────────────────────
+
+message InboundEventProto {
+  int64 session_id = 1;
+  oneof event {
+    ConnectedProto connected = 2;
+    DisconnectedProto disconnected = 3;
+    LineReceivedProto line_received = 4;
+  }
+}
+
+message ConnectedProto {
+  bool default_ansi_enabled = 1;
+}
+
+message DisconnectedProto {
+  string reason = 1;
+}
+
+message LineReceivedProto {
+  string line = 1;
+}
+
+// ── Outbound events (Engine → Gateway) ───────────────────────────────────────
+
+message OutboundEventProto {
+  int64 session_id = 1;
+  oneof event {
+    SendTextProto send_text = 2;
+    SendInfoProto send_info = 3;
+    SendErrorProto send_error = 4;
+    SendPromptProto send_prompt = 5;
+    ShowLoginScreenProto show_login_screen = 6;
+    SetAnsiProto set_ansi = 7;
+    CloseProto close = 8;
+    ClearScreenProto clear_screen = 9;
+    ShowAnsiDemoProto show_ansi_demo = 10;
+  }
+}
+
+message SendTextProto {
+  string text = 1;
+}
+
+message SendInfoProto {
+  string text = 1;
+}
+
+message SendErrorProto {
+  string text = 1;
+}
+
+message SendPromptProto {}
+
+message ShowLoginScreenProto {}
+
+message SetAnsiProto {
+  bool enabled = 1;
+}
+
+message CloseProto {
+  string reason = 1;
+}
+
+message ClearScreenProto {}
+
+message ShowAnsiDemoProto {}

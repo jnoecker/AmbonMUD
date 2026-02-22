@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package ambonmud.v1;
+
+option java_package = "dev.ambon.grpc.proto";
+option java_multiple_files = true;
+
+import "ambonmud/v1/events.proto";
+
+// EngineService is the single gRPC service exposed by the engine process.
+// A gateway opens one bidirectional stream per engine connection.
+// All session traffic for that gateway is multiplexed over this stream.
+service EngineService {
+  rpc EventStream(stream InboundEventProto) returns (stream OutboundEventProto);
+}
