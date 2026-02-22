@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class SessionRouterTest {
-
     private fun makeRouter(vararg engineIds: String): Pair<SessionRouter, Map<String, Channel<InboundEventProto>>> {
         val router = SessionRouter(engineIds.toList())
         val channels = mutableMapOf<String, Channel<InboundEventProto>>()
@@ -34,76 +33,80 @@ class SessionRouterTest {
     }
 
     @Test
-    fun `Connected event assigns session round-robin`() = runBlocking {
-        val (router, channels) = makeRouter("e1", "e2")
+    fun `Connected event assigns session round-robin`() =
+        runBlocking {
+            val (router, channels) = makeRouter("e1", "e2")
 
-        val sid1 = SessionId(1)
-        val sid2 = SessionId(2)
-        val sid3 = SessionId(3)
+            val sid1 = SessionId(1)
+            val sid2 = SessionId(2)
+            val sid3 = SessionId(3)
 
-        router.send(InboundEvent.Connected(sid1))
-        router.send(InboundEvent.Connected(sid2))
-        router.send(InboundEvent.Connected(sid3))
+            router.send(InboundEvent.Connected(sid1))
+            router.send(InboundEvent.Connected(sid2))
+            router.send(InboundEvent.Connected(sid3))
 
-        assertEquals("e1", router.engineFor(sid1))
-        assertEquals("e2", router.engineFor(sid2))
-        assertEquals("e1", router.engineFor(sid3))
+            assertEquals("e1", router.engineFor(sid1))
+            assertEquals("e2", router.engineFor(sid2))
+            assertEquals("e1", router.engineFor(sid3))
 
-        // Verify events reached the right channels
-        assertNotNull(channels["e1"]!!.tryReceive().getOrNull())
-        assertNotNull(channels["e2"]!!.tryReceive().getOrNull())
-        assertNotNull(channels["e1"]!!.tryReceive().getOrNull())
-    }
-
-    @Test
-    fun `LineReceived routes to assigned engine`() = runBlocking {
-        val (router, channels) = makeRouter("e1", "e2")
-
-        val sid = SessionId(1)
-        router.send(InboundEvent.Connected(sid))
-        // sid is assigned to e1
-
-        router.send(InboundEvent.LineReceived(sid, "look"))
-
-        // Connected + LineReceived should both be on e1
-        val proto1 = channels["e1"]!!.tryReceive().getOrNull()
-        assertNotNull(proto1)
-        val proto2 = channels["e1"]!!.tryReceive().getOrNull()
-        assertNotNull(proto2)
-        assertEquals("look", proto2!!.lineReceived.line)
-
-        // e2 should have nothing
-        assertNull(channels["e2"]!!.tryReceive().getOrNull())
-    }
+            // Verify events reached the right channels
+            assertNotNull(channels["e1"]!!.tryReceive().getOrNull())
+            assertNotNull(channels["e2"]!!.tryReceive().getOrNull())
+            assertNotNull(channels["e1"]!!.tryReceive().getOrNull())
+        }
 
     @Test
-    fun `Disconnected cleans up session mapping`() = runBlocking {
-        val (router, _) = makeRouter("e1")
+    fun `LineReceived routes to assigned engine`() =
+        runBlocking {
+            val (router, channels) = makeRouter("e1", "e2")
 
-        val sid = SessionId(1)
-        router.send(InboundEvent.Connected(sid))
-        assertEquals("e1", router.engineFor(sid))
+            val sid = SessionId(1)
+            router.send(InboundEvent.Connected(sid))
+            // sid is assigned to e1
 
-        router.send(InboundEvent.Disconnected(sid, "client closed"))
-        assertNull(router.engineFor(sid))
-    }
+            router.send(InboundEvent.LineReceived(sid, "look"))
+
+            // Connected + LineReceived should both be on e1
+            val proto1 = channels["e1"]!!.tryReceive().getOrNull()
+            assertNotNull(proto1)
+            val proto2 = channels["e1"]!!.tryReceive().getOrNull()
+            assertNotNull(proto2)
+            assertEquals("look", proto2!!.lineReceived.line)
+
+            // e2 should have nothing
+            assertNull(channels["e2"]!!.tryReceive().getOrNull())
+        }
 
     @Test
-    fun `remapSession updates routing`() = runBlocking {
-        val (router, channels) = makeRouter("e1", "e2")
+    fun `Disconnected cleans up session mapping`() =
+        runBlocking {
+            val (router, _) = makeRouter("e1")
 
-        val sid = SessionId(1)
-        router.send(InboundEvent.Connected(sid))
-        assertEquals("e1", router.engineFor(sid))
+            val sid = SessionId(1)
+            router.send(InboundEvent.Connected(sid))
+            assertEquals("e1", router.engineFor(sid))
 
-        // Remap to e2
-        assertTrue(router.remapSession(sid, "e2"))
-        assertEquals("e2", router.engineFor(sid))
+            router.send(InboundEvent.Disconnected(sid, "client closed"))
+            assertNull(router.engineFor(sid))
+        }
 
-        // Subsequent events should go to e2
-        router.send(InboundEvent.LineReceived(sid, "look"))
-        assertNotNull(channels["e2"]!!.tryReceive().getOrNull())
-    }
+    @Test
+    fun `remapSession updates routing`() =
+        runBlocking {
+            val (router, channels) = makeRouter("e1", "e2")
+
+            val sid = SessionId(1)
+            router.send(InboundEvent.Connected(sid))
+            assertEquals("e1", router.engineFor(sid))
+
+            // Remap to e2
+            assertTrue(router.remapSession(sid, "e2"))
+            assertEquals("e2", router.engineFor(sid))
+
+            // Subsequent events should go to e2
+            router.send(InboundEvent.LineReceived(sid, "look"))
+            assertNotNull(channels["e2"]!!.tryReceive().getOrNull())
+        }
 
     @Test
     fun `remapSession fails for unknown engine`() {
@@ -149,24 +152,25 @@ class SessionRouterTest {
     }
 
     @Test
-    fun `reattachEngine swaps channel`() = runBlocking {
-        val (router, channels) = makeRouter("e1")
+    fun `reattachEngine swaps channel`() =
+        runBlocking {
+            val (router, channels) = makeRouter("e1")
 
-        val sid = SessionId(1)
-        router.send(InboundEvent.Connected(sid))
-        assertNotNull(channels["e1"]!!.tryReceive().getOrNull())
+            val sid = SessionId(1)
+            router.send(InboundEvent.Connected(sid))
+            assertNotNull(channels["e1"]!!.tryReceive().getOrNull())
 
-        // Swap to new channel
-        val newChannel = Channel<InboundEventProto>(100)
-        router.reattachEngine("e1", newChannel)
+            // Swap to new channel
+            val newChannel = Channel<InboundEventProto>(100)
+            router.reattachEngine("e1", newChannel)
 
-        router.send(InboundEvent.LineReceived(sid, "after reattach"))
+            router.send(InboundEvent.LineReceived(sid, "after reattach"))
 
-        // Old channel should not have new events
-        assertNull(channels["e1"]!!.tryReceive().getOrNull())
-        // New channel should have the event
-        val proto = newChannel.tryReceive().getOrNull()
-        assertNotNull(proto)
-        assertEquals("after reattach", proto!!.lineReceived.line)
-    }
+            // Old channel should not have new events
+            assertNull(channels["e1"]!!.tryReceive().getOrNull())
+            // New channel should have the event
+            val proto = newChannel.tryReceive().getOrNull()
+            assertNotNull(proto)
+            assertEquals("after reattach", proto!!.lineReceived.line)
+        }
 }

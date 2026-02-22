@@ -12,12 +12,13 @@ class StaticZoneRegistryTest {
 
     @Test
     fun `ownerOf returns the engine that owns a zone`() {
-        val registry = StaticZoneRegistry(
-            mapOf(
-                "engine-1" to Pair(engine1, setOf("zone_a", "zone_b")),
-                "engine-2" to Pair(engine2, setOf("zone_c")),
-            ),
-        )
+        val registry =
+            StaticZoneRegistry(
+                mapOf(
+                    "engine-1" to Pair(engine1, setOf("zone_a", "zone_b")),
+                    "engine-2" to Pair(engine2, setOf("zone_c")),
+                ),
+            )
 
         assertEquals(engine1, registry.ownerOf("zone_a"))
         assertEquals(engine1, registry.ownerOf("zone_b"))
@@ -26,21 +27,23 @@ class StaticZoneRegistryTest {
 
     @Test
     fun `ownerOf returns null for unknown zone`() {
-        val registry = StaticZoneRegistry(
-            mapOf("engine-1" to Pair(engine1, setOf("zone_a"))),
-        )
+        val registry =
+            StaticZoneRegistry(
+                mapOf("engine-1" to Pair(engine1, setOf("zone_a"))),
+            )
 
         assertNull(registry.ownerOf("nonexistent"))
     }
 
     @Test
     fun `allAssignments returns all zone to engine mappings`() {
-        val registry = StaticZoneRegistry(
-            mapOf(
-                "engine-1" to Pair(engine1, setOf("zone_a", "zone_b")),
-                "engine-2" to Pair(engine2, setOf("zone_c")),
-            ),
-        )
+        val registry =
+            StaticZoneRegistry(
+                mapOf(
+                    "engine-1" to Pair(engine1, setOf("zone_a", "zone_b")),
+                    "engine-2" to Pair(engine2, setOf("zone_c")),
+                ),
+            )
 
         val assignments = registry.allAssignments()
         assertEquals(3, assignments.size)
@@ -50,9 +53,10 @@ class StaticZoneRegistryTest {
 
     @Test
     fun `isLocal returns true when zone belongs to engine`() {
-        val registry = StaticZoneRegistry(
-            mapOf("engine-1" to Pair(engine1, setOf("zone_a"))),
-        )
+        val registry =
+            StaticZoneRegistry(
+                mapOf("engine-1" to Pair(engine1, setOf("zone_a"))),
+            )
 
         assertTrue(registry.isLocal("zone_a", "engine-1"))
         assertTrue(!registry.isLocal("zone_a", "engine-2"))

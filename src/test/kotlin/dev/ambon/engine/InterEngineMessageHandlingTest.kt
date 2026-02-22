@@ -34,7 +34,10 @@ private class CapturingInterEngineBus : InterEngineBus {
     private val incomingChannel = Channel<InterEngineMessage>(1_000)
     val sent = mutableListOf<Pair<String?, InterEngineMessage>>()
 
-    override suspend fun sendTo(targetEngineId: String, message: InterEngineMessage) {
+    override suspend fun sendTo(
+        targetEngineId: String,
+        message: InterEngineMessage,
+    ) {
         sent.add(targetEngineId to message)
         // NOT looped back — only captured
     }
@@ -60,7 +63,6 @@ private class CapturingInterEngineBus : InterEngineBus {
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class InterEngineMessageHandlingTest {
-
     private fun buildEngine(
         engineId: String = "engine-1",
         bus: InterEngineBus = LocalInterEngineBus(),
@@ -76,20 +78,21 @@ class InterEngineMessageHandlingTest {
         val outbound = LocalOutboundBus()
         val scheduler = Scheduler(clock)
 
-        val engine = GameEngine(
-            inbound = inbound,
-            outbound = outbound,
-            players = players,
-            world = world,
-            mobs = mobs,
-            items = items,
-            clock = clock,
-            tickMillis = 100L,
-            scheduler = scheduler,
-            interEngineBus = bus,
-            engineId = engineId,
-            onShutdown = onShutdown,
-        )
+        val engine =
+            GameEngine(
+                inbound = inbound,
+                outbound = outbound,
+                players = players,
+                world = world,
+                mobs = mobs,
+                items = items,
+                clock = clock,
+                tickMillis = 100L,
+                scheduler = scheduler,
+                interEngineBus = bus,
+                engineId = engineId,
+                onShutdown = onShutdown,
+            )
 
         return EngineTestHarness(engine, inbound, outbound, bus, players, clock)
     }
@@ -112,7 +115,11 @@ class InterEngineMessageHandlingTest {
         return out
     }
 
-    private suspend fun loginViaEngine(harness: EngineTestHarness, sid: SessionId, name: String) {
+    private suspend fun loginViaEngine(
+        harness: EngineTestHarness,
+        sid: SessionId,
+        name: String,
+    ) {
         harness.inbound.send(InboundEvent.Connected(sid))
         harness.inbound.send(InboundEvent.LineReceived(sid, name))
         harness.inbound.send(InboundEvent.LineReceived(sid, "yes"))
@@ -120,253 +127,262 @@ class InterEngineMessageHandlingTest {
     }
 
     @Test
-    fun `GlobalBroadcast GOSSIP delivers to local players when from another engine`() = runTest {
-        val h = buildEngine("engine-1")
-        val sid = SessionId(1)
+    fun `GlobalBroadcast GOSSIP delivers to local players when from another engine`() =
+        runTest {
+            val h = buildEngine("engine-1")
+            val sid = SessionId(1)
 
-        val job = launch { h.engine.run() }
+            val job = launch { h.engine.run() }
 
-        loginViaEngine(h, sid, "Alice")
-        advanceUntilIdle()
-        drain(h.outbound)
+            loginViaEngine(h, sid, "Alice")
+            advanceUntilIdle()
+            drain(h.outbound)
 
-        // Inject a gossip broadcast from another engine
-        (h.bus as LocalInterEngineBus).broadcast(
-            InterEngineMessage.GlobalBroadcast(
-                broadcastType = BroadcastType.GOSSIP,
-                senderName = "Bob",
-                text = "hello from engine-2",
-                sourceEngineId = "engine-2",
-            ),
-        )
-        advanceUntilIdle()
-        h.clock.advance(200)
-        advanceUntilIdle()
+            // Inject a gossip broadcast from another engine
+            (h.bus as LocalInterEngineBus).broadcast(
+                InterEngineMessage.GlobalBroadcast(
+                    broadcastType = BroadcastType.GOSSIP,
+                    senderName = "Bob",
+                    text = "hello from engine-2",
+                    sourceEngineId = "engine-2",
+                ),
+            )
+            advanceUntilIdle()
+            h.clock.advance(200)
+            advanceUntilIdle()
 
-        val outs = drain(h.outbound)
-        assertTrue(
-            outs.any { it is OutboundEvent.SendText && "[GOSSIP] Bob: hello from engine-2" in (it as OutboundEvent.SendText).text },
-            "Local player should receive remote gossip. got=$outs",
-        )
+            val outs = drain(h.outbound)
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && "[GOSSIP] Bob: hello from engine-2" in (it as OutboundEvent.SendText).text },
+                "Local player should receive remote gossip. got=$outs",
+            )
 
-        job.cancel()
-    }
-
-    @Test
-    fun `GlobalBroadcast from same engine is ignored`() = runTest {
-        val h = buildEngine("engine-1")
-        val sid = SessionId(1)
-
-        val job = launch { h.engine.run() }
-
-        loginViaEngine(h, sid, "Alice")
-        advanceUntilIdle()
-        drain(h.outbound)
-
-        (h.bus as LocalInterEngineBus).broadcast(
-            InterEngineMessage.GlobalBroadcast(
-                broadcastType = BroadcastType.GOSSIP,
-                senderName = "Alice",
-                text = "my own gossip",
-                sourceEngineId = "engine-1",
-            ),
-        )
-        advanceUntilIdle()
-        h.clock.advance(200)
-        advanceUntilIdle()
-
-        val outs = drain(h.outbound)
-        assertTrue(
-            outs.none { it is OutboundEvent.SendText && "my own gossip" in (it as OutboundEvent.SendText).text },
-            "Self-broadcast should be ignored. got=$outs",
-        )
-
-        job.cancel()
-    }
+            job.cancel()
+        }
 
     @Test
-    fun `TellMessage delivers to local player`() = runTest {
-        val h = buildEngine("engine-1")
-        val sid = SessionId(1)
+    fun `GlobalBroadcast from same engine is ignored`() =
+        runTest {
+            val h = buildEngine("engine-1")
+            val sid = SessionId(1)
 
-        val job = launch { h.engine.run() }
+            val job = launch { h.engine.run() }
 
-        loginViaEngine(h, sid, "Alice")
-        advanceUntilIdle()
-        drain(h.outbound)
+            loginViaEngine(h, sid, "Alice")
+            advanceUntilIdle()
+            drain(h.outbound)
 
-        (h.bus as LocalInterEngineBus).broadcast(
-            InterEngineMessage.TellMessage(
-                fromName = "Bob",
-                toName = "Alice",
-                text = "hi alice",
-            ),
-        )
-        advanceUntilIdle()
-        h.clock.advance(200)
-        advanceUntilIdle()
+            (h.bus as LocalInterEngineBus).broadcast(
+                InterEngineMessage.GlobalBroadcast(
+                    broadcastType = BroadcastType.GOSSIP,
+                    senderName = "Alice",
+                    text = "my own gossip",
+                    sourceEngineId = "engine-1",
+                ),
+            )
+            advanceUntilIdle()
+            h.clock.advance(200)
+            advanceUntilIdle()
 
-        val outs = drain(h.outbound)
-        assertTrue(
-            outs.any { it is OutboundEvent.SendText && "Bob tells you: hi alice" in (it as OutboundEvent.SendText).text },
-            "Local player should receive remote tell. got=$outs",
-        )
+            val outs = drain(h.outbound)
+            assertTrue(
+                outs.none { it is OutboundEvent.SendText && "my own gossip" in (it as OutboundEvent.SendText).text },
+                "Self-broadcast should be ignored. got=$outs",
+            )
 
-        job.cancel()
-    }
-
-    @Test
-    fun `WhoRequest from other engine triggers WhoResponse`() = runTest {
-        val capturingBus = CapturingInterEngineBus()
-        val h = buildEngine("engine-1", bus = capturingBus)
-        val sid = SessionId(1)
-
-        val job = launch { h.engine.run() }
-
-        loginViaEngine(h, sid, "Alice")
-        advanceUntilIdle()
-        drain(h.outbound)
-        capturingBus.sent.clear()
-
-        // Inject a WhoRequest from another engine
-        capturingBus.inject(
-            InterEngineMessage.WhoRequest(
-                requestId = "req-123",
-                replyToEngineId = "engine-2",
-            ),
-        )
-        advanceUntilIdle()
-        h.clock.advance(200)
-        advanceUntilIdle()
-
-        // The capturing bus should have recorded the WhoResponse via sendTo
-        val whoResponses = capturingBus.sent
-            .filter { (_, msg) -> msg is InterEngineMessage.WhoResponse }
-        assertEquals(1, whoResponses.size, "Expected exactly one WhoResponse. sent=${capturingBus.sent}")
-        val (targetEngine, msg) = whoResponses[0]
-        assertEquals("engine-2", targetEngine)
-        val resp = msg as InterEngineMessage.WhoResponse
-        assertEquals("req-123", resp.requestId)
-        assertEquals(1, resp.players.size)
-        assertEquals("Alice", resp.players[0].name)
-
-        job.cancel()
-    }
+            job.cancel()
+        }
 
     @Test
-    fun `WhoRequest from self is ignored`() = runTest {
-        val capturingBus = CapturingInterEngineBus()
-        val h = buildEngine("engine-1", bus = capturingBus)
-        val sid = SessionId(1)
+    fun `TellMessage delivers to local player`() =
+        runTest {
+            val h = buildEngine("engine-1")
+            val sid = SessionId(1)
 
-        val job = launch { h.engine.run() }
+            val job = launch { h.engine.run() }
 
-        loginViaEngine(h, sid, "Alice")
-        advanceUntilIdle()
-        drain(h.outbound)
-        capturingBus.sent.clear()
+            loginViaEngine(h, sid, "Alice")
+            advanceUntilIdle()
+            drain(h.outbound)
 
-        // Inject a WhoRequest from self (should be ignored)
-        capturingBus.inject(
-            InterEngineMessage.WhoRequest(
-                requestId = "req-self",
-                replyToEngineId = "engine-1",
-            ),
-        )
-        advanceUntilIdle()
-        h.clock.advance(200)
-        advanceUntilIdle()
+            (h.bus as LocalInterEngineBus).broadcast(
+                InterEngineMessage.TellMessage(
+                    fromName = "Bob",
+                    toName = "Alice",
+                    text = "hi alice",
+                ),
+            )
+            advanceUntilIdle()
+            h.clock.advance(200)
+            advanceUntilIdle()
 
-        val whoResponses = capturingBus.sent.filter { (_, msg) -> msg is InterEngineMessage.WhoResponse }
-        assertTrue(whoResponses.isEmpty(), "Self-WhoRequest should not generate a response. sent=${capturingBus.sent}")
+            val outs = drain(h.outbound)
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && "Bob tells you: hi alice" in (it as OutboundEvent.SendText).text },
+                "Local player should receive remote tell. got=$outs",
+            )
 
-        job.cancel()
-    }
-
-    @Test
-    fun `WhoResponse with unknown requestId is silently dropped`() = runTest {
-        val h = buildEngine("engine-1")
-        val sid = SessionId(1)
-
-        val job = launch { h.engine.run() }
-
-        loginViaEngine(h, sid, "Alice")
-        advanceUntilIdle()
-        drain(h.outbound)
-
-        // Inject a WhoResponse with an unknown requestId
-        (h.bus as LocalInterEngineBus).broadcast(
-            InterEngineMessage.WhoResponse(
-                requestId = "unknown-request",
-                players = listOf(PlayerSummary("Bob", "swamp:edge", 3)),
-            ),
-        )
-        advanceUntilIdle()
-        h.clock.advance(200)
-        advanceUntilIdle()
-
-        val outs = drain(h.outbound)
-        assertTrue(
-            outs.none { it is OutboundEvent.SendInfo && "Bob" in (it as OutboundEvent.SendInfo).text },
-            "Unknown requestId WhoResponse should be dropped",
-        )
-
-        job.cancel()
-    }
+            job.cancel()
+        }
 
     @Test
-    fun `KickRequest closes local player session`() = runTest {
-        val h = buildEngine("engine-1")
-        val sid = SessionId(1)
+    fun `WhoRequest from other engine triggers WhoResponse`() =
+        runTest {
+            val capturingBus = CapturingInterEngineBus()
+            val h = buildEngine("engine-1", bus = capturingBus)
+            val sid = SessionId(1)
 
-        val job = launch { h.engine.run() }
+            val job = launch { h.engine.run() }
 
-        loginViaEngine(h, sid, "Alice")
-        advanceUntilIdle()
-        drain(h.outbound)
+            loginViaEngine(h, sid, "Alice")
+            advanceUntilIdle()
+            drain(h.outbound)
+            capturingBus.sent.clear()
 
-        (h.bus as LocalInterEngineBus).broadcast(
-            InterEngineMessage.KickRequest(targetPlayerName = "Alice"),
-        )
-        advanceUntilIdle()
-        h.clock.advance(200)
-        advanceUntilIdle()
+            // Inject a WhoRequest from another engine
+            capturingBus.inject(
+                InterEngineMessage.WhoRequest(
+                    requestId = "req-123",
+                    replyToEngineId = "engine-2",
+                ),
+            )
+            advanceUntilIdle()
+            h.clock.advance(200)
+            advanceUntilIdle()
 
-        val outs = drain(h.outbound)
-        assertTrue(
-            outs.any { it is OutboundEvent.Close && it.sessionId == sid },
-            "KickRequest should close the local session. got=$outs",
-        )
+            // The capturing bus should have recorded the WhoResponse via sendTo
+            val whoResponses =
+                capturingBus.sent
+                    .filter { (_, msg) -> msg is InterEngineMessage.WhoResponse }
+            assertEquals(1, whoResponses.size, "Expected exactly one WhoResponse. sent=${capturingBus.sent}")
+            val (targetEngine, msg) = whoResponses[0]
+            assertEquals("engine-2", targetEngine)
+            val resp = msg as InterEngineMessage.WhoResponse
+            assertEquals("req-123", resp.requestId)
+            assertEquals(1, resp.players.size)
+            assertEquals("Alice", resp.players[0].name)
 
-        job.cancel()
-    }
+            job.cancel()
+        }
 
     @Test
-    fun `ShutdownRequest triggers local shutdown`() = runTest {
-        var shutdownCalled = false
-        val h = buildEngine("engine-1", onShutdown = { shutdownCalled = true })
-        val sid = SessionId(1)
+    fun `WhoRequest from self is ignored`() =
+        runTest {
+            val capturingBus = CapturingInterEngineBus()
+            val h = buildEngine("engine-1", bus = capturingBus)
+            val sid = SessionId(1)
 
-        val job = launch { h.engine.run() }
+            val job = launch { h.engine.run() }
 
-        loginViaEngine(h, sid, "Alice")
-        advanceUntilIdle()
-        drain(h.outbound)
+            loginViaEngine(h, sid, "Alice")
+            advanceUntilIdle()
+            drain(h.outbound)
+            capturingBus.sent.clear()
 
-        (h.bus as LocalInterEngineBus).broadcast(
-            InterEngineMessage.ShutdownRequest(initiatorName = "Admin"),
-        )
-        advanceUntilIdle()
-        h.clock.advance(200)
-        advanceUntilIdle()
+            // Inject a WhoRequest from self (should be ignored)
+            capturingBus.inject(
+                InterEngineMessage.WhoRequest(
+                    requestId = "req-self",
+                    replyToEngineId = "engine-1",
+                ),
+            )
+            advanceUntilIdle()
+            h.clock.advance(200)
+            advanceUntilIdle()
 
-        val outs = drain(h.outbound)
-        assertTrue(
-            outs.any { it is OutboundEvent.SendText && "shutdown" in (it as OutboundEvent.SendText).text.lowercase() },
-            "Local player should see shutdown message. got=$outs",
-        )
-        assertTrue(shutdownCalled, "onShutdown callback should be called")
+            val whoResponses = capturingBus.sent.filter { (_, msg) -> msg is InterEngineMessage.WhoResponse }
+            assertTrue(whoResponses.isEmpty(), "Self-WhoRequest should not generate a response. sent=${capturingBus.sent}")
 
-        job.cancel()
-    }
+            job.cancel()
+        }
+
+    @Test
+    fun `WhoResponse with unknown requestId is silently dropped`() =
+        runTest {
+            val h = buildEngine("engine-1")
+            val sid = SessionId(1)
+
+            val job = launch { h.engine.run() }
+
+            loginViaEngine(h, sid, "Alice")
+            advanceUntilIdle()
+            drain(h.outbound)
+
+            // Inject a WhoResponse with an unknown requestId
+            (h.bus as LocalInterEngineBus).broadcast(
+                InterEngineMessage.WhoResponse(
+                    requestId = "unknown-request",
+                    players = listOf(PlayerSummary("Bob", "swamp:edge", 3)),
+                ),
+            )
+            advanceUntilIdle()
+            h.clock.advance(200)
+            advanceUntilIdle()
+
+            val outs = drain(h.outbound)
+            assertTrue(
+                outs.none { it is OutboundEvent.SendInfo && "Bob" in (it as OutboundEvent.SendInfo).text },
+                "Unknown requestId WhoResponse should be dropped",
+            )
+
+            job.cancel()
+        }
+
+    @Test
+    fun `KickRequest closes local player session`() =
+        runTest {
+            val h = buildEngine("engine-1")
+            val sid = SessionId(1)
+
+            val job = launch { h.engine.run() }
+
+            loginViaEngine(h, sid, "Alice")
+            advanceUntilIdle()
+            drain(h.outbound)
+
+            (h.bus as LocalInterEngineBus).broadcast(
+                InterEngineMessage.KickRequest(targetPlayerName = "Alice"),
+            )
+            advanceUntilIdle()
+            h.clock.advance(200)
+            advanceUntilIdle()
+
+            val outs = drain(h.outbound)
+            assertTrue(
+                outs.any { it is OutboundEvent.Close && it.sessionId == sid },
+                "KickRequest should close the local session. got=$outs",
+            )
+
+            job.cancel()
+        }
+
+    @Test
+    fun `ShutdownRequest triggers local shutdown`() =
+        runTest {
+            var shutdownCalled = false
+            val h = buildEngine("engine-1", onShutdown = { shutdownCalled = true })
+            val sid = SessionId(1)
+
+            val job = launch { h.engine.run() }
+
+            loginViaEngine(h, sid, "Alice")
+            advanceUntilIdle()
+            drain(h.outbound)
+
+            (h.bus as LocalInterEngineBus).broadcast(
+                InterEngineMessage.ShutdownRequest(initiatorName = "Admin"),
+            )
+            advanceUntilIdle()
+            h.clock.advance(200)
+            advanceUntilIdle()
+
+            val outs = drain(h.outbound)
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && "shutdown" in (it as OutboundEvent.SendText).text.lowercase() },
+                "Local player should see shutdown message. got=$outs",
+            )
+            assertTrue(shutdownCalled, "onShutdown callback should be called")
+
+            job.cancel()
+        }
 }

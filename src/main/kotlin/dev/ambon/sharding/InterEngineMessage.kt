@@ -137,5 +137,6 @@ data class SerializedPlayerState(
     val createdEpochMs: Long,
     val lastSeenEpochMs: Long,
     val inventoryItems: List<SerializedItem> = emptyList(),
-    val equippedItems: Map<String, SerializedItem> = emptyMap(), // slot name → item
+    // slot name → item
+    val equippedItems: Map<String, SerializedItem> = emptyMap(),
 )

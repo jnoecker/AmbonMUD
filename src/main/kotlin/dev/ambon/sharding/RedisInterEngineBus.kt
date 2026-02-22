@@ -16,8 +16,10 @@ private val log = KotlinLogging.logger {}
  */
 data class InterEngineEnvelope(
     val senderEngineId: String = "",
-    val targetEngineId: String? = null, // null = broadcast
-    val payload: String = "", // JSON-serialized InterEngineMessage
+    // null = broadcast
+    val targetEngineId: String? = null,
+    // JSON-serialized InterEngineMessage
+    val payload: String = "",
 )
 
 /**
@@ -40,24 +42,29 @@ class RedisInterEngineBus(
     private val broadcastChannel = "$channelPrefix:broadcast"
     private val targetedChannel = "$channelPrefix:$engineId"
 
-    override suspend fun sendTo(targetEngineId: String, message: InterEngineMessage) {
+    override suspend fun sendTo(
+        targetEngineId: String,
+        message: InterEngineMessage,
+    ) {
         val payloadJson = mapper.writeValueAsString(message)
-        val envelope = InterEngineEnvelope(
-            senderEngineId = engineId,
-            targetEngineId = targetEngineId,
-            payload = payloadJson,
-        )
+        val envelope =
+            InterEngineEnvelope(
+                senderEngineId = engineId,
+                targetEngineId = targetEngineId,
+                payload = payloadJson,
+            )
         val json = mapper.writeValueAsString(envelope)
         publisher.publish("$channelPrefix:$targetEngineId", json)
     }
 
     override suspend fun broadcast(message: InterEngineMessage) {
         val payloadJson = mapper.writeValueAsString(message)
-        val envelope = InterEngineEnvelope(
-            senderEngineId = engineId,
-            targetEngineId = null,
-            payload = payloadJson,
-        )
+        val envelope =
+            InterEngineEnvelope(
+                senderEngineId = engineId,
+                targetEngineId = null,
+                payload = payloadJson,
+            )
         val json = mapper.writeValueAsString(envelope)
         publisher.publish(broadcastChannel, json)
     }

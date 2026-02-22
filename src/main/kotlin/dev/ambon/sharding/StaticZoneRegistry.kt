@@ -30,7 +30,11 @@ class StaticZoneRegistry(
 
     override fun ownerOf(zone: String): EngineAddress? = zoneToEngine[zone]
 
-    override fun claimZones(engineId: String, address: EngineAddress, zones: Set<String>) {
+    override fun claimZones(
+        engineId: String,
+        address: EngineAddress,
+        zones: Set<String>,
+    ) {
         // No-op for static registry; assignments are fixed at construction.
     }
 

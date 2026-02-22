@@ -11,7 +11,10 @@ import kotlinx.coroutines.channels.ReceiveChannel
  */
 interface InterEngineBus {
     /** Send a message targeted at a specific engine (by engineId). */
-    suspend fun sendTo(targetEngineId: String, message: InterEngineMessage)
+    suspend fun sendTo(
+        targetEngineId: String,
+        message: InterEngineMessage,
+    )
 
     /** Broadcast a message to ALL engines (including self). */
     suspend fun broadcast(message: InterEngineMessage)

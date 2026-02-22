@@ -192,10 +192,11 @@ class MudServer(
         if (shardingEnabled) {
             StaticZoneRegistry(
                 mapOf(
-                    engineId to Pair(
-                        EngineAddress(engineId, "localhost", config.server.telnetPort),
-                        config.sharding.zones.toSet(),
-                    ),
+                    engineId to
+                        Pair(
+                            EngineAddress(engineId, "localhost", config.server.telnetPort),
+                            config.sharding.zones.toSet(),
+                        ),
                 ),
             )
         } else {

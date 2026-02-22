@@ -13,8 +13,8 @@ import dev.ambon.grpc.proto.OutboundEventProto
 import dev.ambon.grpc.proto.SendErrorProto
 import dev.ambon.grpc.proto.SendInfoProto
 import dev.ambon.grpc.proto.SendPromptProto
-import dev.ambon.grpc.proto.SessionRedirectProto
 import dev.ambon.grpc.proto.SendTextProto
+import dev.ambon.grpc.proto.SessionRedirectProto
 import dev.ambon.grpc.proto.SetAnsiProto
 import dev.ambon.grpc.proto.ShowAnsiDemoProto
 import dev.ambon.grpc.proto.ShowLoginScreenProto

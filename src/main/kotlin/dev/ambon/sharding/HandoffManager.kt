@@ -18,7 +18,9 @@ private val log = KotlinLogging.logger {}
 
 sealed interface HandoffResult {
     data class Initiated(val targetEngine: EngineAddress) : HandoffResult
+
     data object PlayerNotFound : HandoffResult
+
     data object NoEngineForZone : HandoffResult
 }
 
@@ -56,21 +58,23 @@ class HandoffManager(
     ): HandoffResult {
         val player = players.get(sessionId) ?: return HandoffResult.PlayerNotFound
 
-        val targetEngine = zoneRegistry.ownerOf(targetRoomId.zone)
-            ?: return HandoffResult.NoEngineForZone
+        val targetEngine =
+            zoneRegistry.ownerOf(targetRoomId.zone)
+                ?: return HandoffResult.NoEngineForZone
 
         // Serialize player + items before removing
         val inv = items.inventory(sessionId)
         val eq = items.equipment(sessionId)
         val serialized = serializePlayer(player, targetRoomId, inv, eq)
 
-        val handoff = InterEngineMessage.PlayerHandoff(
-            sessionId = sessionId.value,
-            targetRoomId = targetRoomId.value,
-            playerState = serialized,
-            gatewayId = 0,
-            sourceEngineId = engineId,
-        )
+        val handoff =
+            InterEngineMessage.PlayerHandoff(
+                sessionId = sessionId.value,
+                targetRoomId = targetRoomId.value,
+                playerState = serialized,
+                gatewayId = 0,
+                sourceEngineId = engineId,
+            )
 
         // Tell the gateway to remap this session to the target engine
         outbound.send(
@@ -125,20 +129,21 @@ class HandoffManager(
             return null
         }
 
-        val ps = PlayerState(
-            sessionId = sessionId,
-            name = state.name,
-            roomId = targetRoom,
-            playerId = state.playerId?.let { PlayerId(it) },
-            baseMaxHp = state.baseMaxHp,
-            hp = state.hp,
-            maxHp = state.maxHp,
-            constitution = state.constitution,
-            level = state.level,
-            xpTotal = state.xpTotal,
-            ansiEnabled = state.ansiEnabled,
-            isStaff = state.isStaff,
-        )
+        val ps =
+            PlayerState(
+                sessionId = sessionId,
+                name = state.name,
+                roomId = targetRoom,
+                playerId = state.playerId?.let { PlayerId(it) },
+                baseMaxHp = state.baseMaxHp,
+                hp = state.hp,
+                maxHp = state.maxHp,
+                constitution = state.constitution,
+                level = state.level,
+                xpTotal = state.xpTotal,
+                ansiEnabled = state.ansiEnabled,
+                isStaff = state.isStaff,
+            )
 
         // Bind player to local registries
         players.bindFromHandoff(sessionId, ps)
@@ -186,50 +191,55 @@ class HandoffManager(
             targetRoomId: RoomId,
             inventory: List<ItemInstance>,
             equipment: Map<ItemSlot, ItemInstance>,
-        ): SerializedPlayerState = SerializedPlayerState(
-            playerId = player.playerId?.value,
-            name = player.name,
-            roomId = targetRoomId.value,
-            hp = player.hp,
-            maxHp = player.maxHp,
-            baseMaxHp = player.baseMaxHp,
-            constitution = player.constitution,
-            level = player.level,
-            xpTotal = player.xpTotal,
-            ansiEnabled = player.ansiEnabled,
-            isStaff = player.isStaff,
-            passwordHash = "",
-            createdEpochMs = 0L,
-            lastSeenEpochMs = 0L,
-            inventoryItems = inventory.map { serializeItem(it) },
-            equippedItems = equipment.mapKeys { (slot, _) -> slot.name }
-                .mapValues { (_, instance) -> serializeItem(instance) },
-        )
+        ): SerializedPlayerState =
+            SerializedPlayerState(
+                playerId = player.playerId?.value,
+                name = player.name,
+                roomId = targetRoomId.value,
+                hp = player.hp,
+                maxHp = player.maxHp,
+                baseMaxHp = player.baseMaxHp,
+                constitution = player.constitution,
+                level = player.level,
+                xpTotal = player.xpTotal,
+                ansiEnabled = player.ansiEnabled,
+                isStaff = player.isStaff,
+                passwordHash = "",
+                createdEpochMs = 0L,
+                lastSeenEpochMs = 0L,
+                inventoryItems = inventory.map { serializeItem(it) },
+                equippedItems =
+                    equipment.mapKeys { (slot, _) -> slot.name }
+                        .mapValues { (_, instance) -> serializeItem(instance) },
+            )
 
-        fun serializeItem(instance: ItemInstance): SerializedItem = SerializedItem(
-            id = instance.id.value,
-            keyword = instance.item.keyword,
-            displayName = instance.item.displayName,
-            description = instance.item.description,
-            slot = instance.item.slot?.name,
-            damage = instance.item.damage,
-            armor = instance.item.armor,
-            constitution = instance.item.constitution,
-            matchByKey = instance.item.matchByKey,
-        )
+        fun serializeItem(instance: ItemInstance): SerializedItem =
+            SerializedItem(
+                id = instance.id.value,
+                keyword = instance.item.keyword,
+                displayName = instance.item.displayName,
+                description = instance.item.description,
+                slot = instance.item.slot?.name,
+                damage = instance.item.damage,
+                armor = instance.item.armor,
+                constitution = instance.item.constitution,
+                matchByKey = instance.item.matchByKey,
+            )
 
-        fun deserializeItem(serialized: SerializedItem): ItemInstance = ItemInstance(
-            id = ItemId(serialized.id),
-            item = Item(
-                keyword = serialized.keyword,
-                displayName = serialized.displayName,
-                description = serialized.description,
-                slot = serialized.slot?.let { ItemSlot.parse(it) },
-                damage = serialized.damage,
-                armor = serialized.armor,
-                constitution = serialized.constitution,
-                matchByKey = serialized.matchByKey,
-            ),
-        )
+        fun deserializeItem(serialized: SerializedItem): ItemInstance =
+            ItemInstance(
+                id = ItemId(serialized.id),
+                item =
+                    Item(
+                        keyword = serialized.keyword,
+                        displayName = serialized.displayName,
+                        description = serialized.description,
+                        slot = serialized.slot?.let { ItemSlot.parse(it) },
+                        damage = serialized.damage,
+                        armor = serialized.armor,
+                        constitution = serialized.constitution,
+                        matchByKey = serialized.matchByKey,
+                    ),
+            )
     }
 }

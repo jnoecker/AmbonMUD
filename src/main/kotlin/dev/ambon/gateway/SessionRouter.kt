@@ -51,7 +51,10 @@ class SessionRouter(
      * Register (or replace) the gRPC send channel for an engine.
      * Called during initial setup and during reconnect.
      */
-    fun registerEngine(engineId: String, channel: SendChannel<InboundEventProto>) {
+    fun registerEngine(
+        engineId: String,
+        channel: SendChannel<InboundEventProto>,
+    ) {
         engineChannels[engineId] = channel
         log.debug { "Registered channel for engine $engineId" }
     }
@@ -59,7 +62,10 @@ class SessionRouter(
     /**
      * Swap in a new gRPC send channel for an engine (reconnect).
      */
-    fun reattachEngine(engineId: String, newChannel: SendChannel<InboundEventProto>) {
+    fun reattachEngine(
+        engineId: String,
+        newChannel: SendChannel<InboundEventProto>,
+    ) {
         engineChannels[engineId] = newChannel
         log.info { "Reattached channel for engine $engineId" }
     }
@@ -80,7 +86,10 @@ class SessionRouter(
      * Remap a session to a different engine (called on SessionRedirect).
      * Returns true if the remap was successful.
      */
-    fun remapSession(sessionId: SessionId, newEngineId: String): Boolean {
+    fun remapSession(
+        sessionId: SessionId,
+        newEngineId: String,
+    ): Boolean {
         if (!engineChannels.containsKey(newEngineId)) {
             log.warn { "Cannot remap session $sessionId to unknown engine $newEngineId" }
             return false

@@ -22,13 +22,13 @@ import dev.ambon.sharding.HandoffResult
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.InterEngineMessage
 import dev.ambon.sharding.PlayerSummary
-import java.util.UUID
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Timer
+import java.time.Clock
+import java.util.UUID
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import java.time.Clock
 
 private val log = KotlinLogging.logger {}
 
@@ -296,7 +296,10 @@ class GameEngine(
         )
     }
 
-    private suspend fun handleCrossZoneMove(sessionId: SessionId, targetRoomId: RoomId) {
+    private suspend fun handleCrossZoneMove(
+        sessionId: SessionId,
+        targetRoomId: RoomId,
+    ) {
         val mgr = handoffManager ?: return
         // End combat before handoff (should already be blocked by Move handler, but be safe)
         combatSystem.endCombatFor(sessionId)
@@ -382,9 +385,10 @@ class GameEngine(
             is InterEngineMessage.WhoRequest -> {
                 // Don't reply to our own requests
                 if (msg.replyToEngineId == engineId) return
-                val localPlayers = players.allPlayers().map {
-                    PlayerSummary(name = it.name, roomId = it.roomId.value, level = it.level)
-                }
+                val localPlayers =
+                    players.allPlayers().map {
+                        PlayerSummary(name = it.name, roomId = it.roomId.value, level = it.level)
+                    }
                 interEngineBus?.sendTo(
                     msg.replyToEngineId,
                     InterEngineMessage.WhoResponse(
@@ -438,7 +442,10 @@ class GameEngine(
     }
 
     /** Resolve a room ID string, adding current zone prefix if needed. */
-    private fun resolveRoomId(arg: String, currentZone: String): RoomId? {
+    private fun resolveRoomId(
+        arg: String,
+        currentZone: String,
+    ): RoomId? {
         return if (':' in arg) {
             runCatching { RoomId(arg) }.getOrNull()
         } else {

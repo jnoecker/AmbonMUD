@@ -106,12 +106,13 @@ class ProtoMapperTest {
 
     @Test
     fun `SessionRedirect round-trips`() {
-        val event = OutboundEvent.SessionRedirect(
-            sessionId = sid,
-            newEngineId = "engine-2",
-            newEngineHost = "host2.example.com",
-            newEnginePort = 9092,
-        )
+        val event =
+            OutboundEvent.SessionRedirect(
+                sessionId = sid,
+                newEngineId = "engine-2",
+                newEngineHost = "host2.example.com",
+                newEnginePort = 9092,
+            )
         assertEquals(event, event.toProto().toDomain())
     }
 

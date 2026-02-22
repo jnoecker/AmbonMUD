@@ -13,7 +13,10 @@ class LocalInterEngineBus(
 ) : InterEngineBus {
     private val channel = Channel<InterEngineMessage>(capacity)
 
-    override suspend fun sendTo(targetEngineId: String, message: InterEngineMessage) {
+    override suspend fun sendTo(
+        targetEngineId: String,
+        message: InterEngineMessage,
+    ) {
         channel.send(message)
     }
 

@@ -20,7 +20,11 @@ interface ZoneRegistry {
     fun ownerOf(zone: String): EngineAddress?
 
     /** Register this engine as owner of the given zones. */
-    fun claimZones(engineId: String, address: EngineAddress, zones: Set<String>)
+    fun claimZones(
+        engineId: String,
+        address: EngineAddress,
+        zones: Set<String>,
+    )
 
     /** Heartbeat to keep leases alive (only meaningful for TTL-backed registries). */
     fun renewLease(engineId: String)
@@ -29,6 +33,8 @@ interface ZoneRegistry {
     fun allAssignments(): Map<String, EngineAddress>
 
     /** Is the given zone owned by this engine? */
-    fun isLocal(zone: String, engineId: String): Boolean =
-        ownerOf(zone)?.engineId == engineId
+    fun isLocal(
+        zone: String,
+        engineId: String,
+    ): Boolean = ownerOf(zone)?.engineId == engineId
 }

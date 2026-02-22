@@ -147,10 +147,11 @@ class EngineServer(
         if (shardingEnabled) {
             StaticZoneRegistry(
                 mapOf(
-                    engineId to Pair(
-                        EngineAddress(engineId, "localhost", config.grpc.server.port),
-                        config.sharding.zones.toSet(),
-                    ),
+                    engineId to
+                        Pair(
+                            EngineAddress(engineId, "localhost", config.grpc.server.port),
+                            config.sharding.zones.toSet(),
+                        ),
                 ),
             )
         } else {

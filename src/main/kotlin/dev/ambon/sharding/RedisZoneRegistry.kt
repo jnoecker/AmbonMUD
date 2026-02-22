@@ -31,7 +31,11 @@ class RedisZoneRegistry(
         }
     }
 
-    override fun claimZones(engineId: String, address: EngineAddress, zones: Set<String>) {
+    override fun claimZones(
+        engineId: String,
+        address: EngineAddress,
+        zones: Set<String>,
+    ) {
         val json = mapper.writeValueAsString(address)
         for (zone in zones) {
             redis.setEx("$keyPrefix$zone", leaseTtlSeconds, json)
@@ -48,11 +52,12 @@ class RedisZoneRegistry(
         val cursor = commands.scan(io.lettuce.core.ScanArgs.Builder.matches("$keyPrefix*").limit(100))
         for (key in cursor.keys) {
             val json = commands.get(key) ?: continue
-            val addr = try {
-                mapper.readValue<EngineAddress>(json)
-            } catch (_: Exception) {
-                continue
-            }
+            val addr =
+                try {
+                    mapper.readValue<EngineAddress>(json)
+                } catch (_: Exception) {
+                    continue
+                }
             if (addr.engineId == engineId) {
                 commands.expire(key, leaseTtlSeconds)
             }
@@ -66,11 +71,12 @@ class RedisZoneRegistry(
         for (key in cursor.keys) {
             val zone = key.removePrefix(keyPrefix)
             val json = commands.get(key) ?: continue
-            val addr = try {
-                mapper.readValue<EngineAddress>(json)
-            } catch (_: Exception) {
-                continue
-            }
+            val addr =
+                try {
+                    mapper.readValue<EngineAddress>(json)
+                } catch (_: Exception) {
+                    continue
+                }
             result[zone] = addr
         }
         return result
