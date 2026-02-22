@@ -125,6 +125,9 @@ data class AppConfig(
             require(grpc.client.engineHost.isNotBlank()) { "ambonMUD.grpc.client.engineHost must be non-blank in gateway mode" }
             require(grpc.client.enginePort in 1..65535) { "ambonMUD.grpc.client.enginePort must be between 1 and 65535" }
             require(gateway.id in 0..0xFFFF) { "ambonMUD.gateway.id must be between 0 and 65535" }
+            require(gateway.snowflake.idLeaseTtlSeconds > 0L) {
+                "ambonMUD.gateway.snowflake.idLeaseTtlSeconds must be > 0"
+            }
         }
 
         return this
@@ -334,10 +337,17 @@ data class GrpcConfig(
     val client: GrpcClientConfig = GrpcClientConfig(),
 )
 
+/** Snowflake session-ID hardening settings (used by GATEWAY mode). */
+data class SnowflakeConfig(
+    /** TTL in seconds for the Redis gateway-ID exclusive lease. */
+    val idLeaseTtlSeconds: Long = 300L,
+)
+
 /** Gateway-specific settings. */
 data class GatewayConfig(
     /** 16-bit gateway ID for [SnowflakeSessionIdFactory] bit-field (0–65535). */
     val id: Int = 0,
+    val snowflake: SnowflakeConfig = SnowflakeConfig(),
 )
 
 data class RedisBusConfig(

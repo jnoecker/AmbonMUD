@@ -1,6 +1,9 @@
 package dev.ambon.session
 
 import dev.ambon.domain.ids.SessionId
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val log = KotlinLogging.logger {}
 
 /**
  * Generates globally-unique [SessionId] values using a Snowflake-style bit layout.
@@ -18,9 +21,19 @@ import dev.ambon.domain.ids.SessionId
  * because the high 16 bits differ, even if the lower 48 bits happen to collide.
  *
  * In [standalone] mode [AtomicSessionIdFactory] is still used (simpler, monotonic, no gateway concept).
+ *
+ * **Hardening policies:**
+ * - *Sequence overflow (WAIT)*: when all 65 536 sequence slots in a second are used, the allocating
+ *   thread waits (releasing the monitor) in 1 ms increments until the clock second advances.
+ * - *Clock rollback (MONOTONIC_FLOOR)*: if the clock moves backward, [lastSecond] is kept as a
+ *   monotonic floor; the sequence continues incrementing.  If the rollback is large enough that
+ *   the sequence also overflows, the WAIT policy kicks in automatically.
  */
 class SnowflakeSessionIdFactory(
     gatewayId: Int,
+    private val clockSeconds: () -> Long = { System.currentTimeMillis() / 1000L },
+    private val onSequenceOverflow: () -> Unit = {},
+    private val onClockRollback: () -> Unit = {},
 ) : SessionIdFactory {
     init {
         require(gatewayId in 0..0xFFFF) { "gatewayId must be in 0..65535, got $gatewayId" }
@@ -29,7 +42,7 @@ class SnowflakeSessionIdFactory(
     private val gatewayBits = gatewayId.toLong() and 0xFFFFL
 
     @Volatile
-    private var lastSecond: Long = currentSecond()
+    private var lastSecond: Long = clockSeconds()
 
     @Volatile
     private var seq: Int = 0
@@ -39,14 +52,39 @@ class SnowflakeSessionIdFactory(
         val sequence: Int
 
         synchronized(this) {
-            val now = currentSecond()
-            if (now != lastSecond) {
-                lastSecond = now
-                seq = 0
+            val now = clockSeconds()
+            when {
+                now > lastSecond -> {
+                    lastSecond = now
+                    seq = 0
+                }
+                now < lastSecond -> {
+                    log.warn { "Clock rollback detected: now=$now lastSecond=$lastSecond — applying monotonic floor" }
+                    onClockRollback()
+                    // Keep lastSecond as monotonic floor; seq continues incrementing.
+                }
+                // now == lastSecond: same second, normal increment — no action needed
             }
+
+            // Sequence overflow: wait (releasing the monitor) until the clock second advances.
+            if (seq > 0xFFFF) {
+                log.warn { "Sequence overflow at second=$lastSecond — waiting for clock to advance" }
+                onSequenceOverflow()
+                while (true) {
+                    @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+                    (this as java.lang.Object).wait(1)
+                    val nowAfterWait = clockSeconds()
+                    if (nowAfterWait > lastSecond) {
+                        lastSecond = nowAfterWait
+                        seq = 0
+                        break
+                    }
+                }
+            }
+
             second = lastSecond
             sequence = seq
-            seq = (seq + 1) and 0xFFFF
+            seq++ // No masking — let seq grow past 0xFFFF so overflow is detected next call
         }
 
         val id =
@@ -55,6 +93,4 @@ class SnowflakeSessionIdFactory(
                 (sequence.toLong() and 0xFFFFL)
         return SessionId(id)
     }
-
-    private fun currentSecond(): Long = System.currentTimeMillis() / 1000L
 }
