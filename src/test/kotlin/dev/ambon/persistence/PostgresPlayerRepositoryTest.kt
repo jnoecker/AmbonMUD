@@ -4,8 +4,8 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import dev.ambon.domain.ids.RoomId
 import kotlinx.coroutines.test.runTest
-import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.AfterAll
@@ -34,7 +34,10 @@ class PostgresPlayerRepositoryTest {
                 }
             hikari = HikariDataSource(config)
             database = Database.connect(hikari)
-            Flyway.configure().dataSource(hikari).load().migrate()
+            transaction(database) {
+                SchemaUtils.create(PlayersTable)
+                exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_players_name_lower ON players (name_lower)")
+            }
         }
 
         @AfterAll
@@ -48,7 +51,6 @@ class PostgresPlayerRepositoryTest {
     fun reset() {
         transaction(database) {
             PlayersTable.deleteAll()
-            exec("ALTER SEQUENCE player_id_seq RESTART WITH 1")
         }
     }
 
