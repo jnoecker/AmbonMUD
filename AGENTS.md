@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Purpose
-This repository is a Kotlin MUD server ("AmbonMUD") with a single-process event loop, telnet + WebSocket transports, YAML world loading, a small browser demo client, and a layered persistence stack with optional Redis caching and pub/sub.
+This repository is a Kotlin MUD server ("AmbonMUD") with a tick-based event loop, telnet + WebSocket transports, YAML world loading, a small browser demo client, and a layered persistence stack with optional Redis caching and pub/sub. It supports three deployment modes: `STANDALONE` (single-process, default), `ENGINE` (game logic + gRPC server), and `GATEWAY` (transports + gRPC client) for horizontal scaling.
 
 Use this document as the default engineering playbook when making code or content changes.
 
@@ -27,10 +27,10 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Configuration: `src/main/kotlin/dev/ambon/config`, `src/main/resources/application.yaml`
 - Engine and gameplay: `src/main/kotlin/dev/ambon/engine`
 - Transport and protocol: `src/main/kotlin/dev/ambon/transport`
-- Event bus interfaces + impls: `src/main/kotlin/dev/ambon/bus` (`InboundBus`, `OutboundBus`, `Local*Bus`, `Redis*Bus`)
+- Event bus interfaces + impls: `src/main/kotlin/dev/ambon/bus` (`InboundBus`, `OutboundBus`, `Local*Bus`, `Redis*Bus`, `Grpc*Bus`)
 - Redis connection management + JSON: `src/main/kotlin/dev/ambon/redis`
-- Session ID allocation: `src/main/kotlin/dev/ambon/session`
-- Metrics (Micrometer / Prometheus): `src/main/kotlin/dev/ambon/metrics`
+- Session ID allocation + gateway lease: `src/main/kotlin/dev/ambon/session` (`AtomicSessionIdFactory`, `SnowflakeSessionIdFactory`, `GatewayIdLeaseManager`)
+- Metrics (Micrometer / Prometheus): `src/main/kotlin/dev/ambon/metrics` (`GameMetrics`, `MetricsHttpServer`)
 - Web demo client (static): `src/main/resources/web`
 - Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
@@ -77,6 +77,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - The engine receives an `InboundBus` and sends to an `OutboundBus` — never raw `Channel` references.
 - `Local*Bus` implementations wrap channels and preserve single-process behavior.
 - `Redis*Bus` implementations publish to Redis and deliver remotely-originated events to the local delegate.
+- `Grpc*Bus` implementations wrap `Local*Bus` and forward/receive events to/from the gRPC stream (used by gateways in `GATEWAY` mode).
 - All engine tests use `LocalInboundBus`/`LocalOutboundBus` directly.
 
 ## Change Playbooks
@@ -114,9 +115,11 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Gate with `if (!playerState.isStaff)` check in `CommandRouter.kt`.
 - Add tests in `CommandRouterAdminTest`.
 
-### Event bus / Redis
-- Bus implementations live in `dev.ambon.bus`; Redis infrastructure in `dev.ambon.redis`.
-- When adding new `InboundEvent` or `OutboundEvent` variants, also add them to the Redis bus envelope in `RedisInboundBus`/`RedisOutboundBus` (type discriminator string + new data class).
+### Event bus / Redis / gRPC
+- Bus implementations live in `dev.ambon.bus`; Redis infrastructure in `dev.ambon.redis`; gRPC proto mapping in `dev.ambon.grpc`.
+- When adding new `InboundEvent` or `OutboundEvent` variants, also add them to:
+  - the Redis bus envelope in `RedisInboundBus`/`RedisOutboundBus` (type discriminator string + new data class)
+  - the proto definitions in `src/main/proto/ambonmud/v1/events.proto` and mapping in `ProtoMapper.kt`
 - `RedisConnectionManager` degrades gracefully when Redis is unavailable — never let a Redis failure crash the engine.
 
 ## Testing Expectations
