@@ -12,7 +12,7 @@ repositories {
     mavenCentral()
 }
 
-val ktorVersion = "2.3.12"
+val ktorVersion = "3.4.0"
 val hopliteVersion = "2.9.0"
 val micrometerVersion = "1.14.5"
 val grpcVersion = "1.72.0"
