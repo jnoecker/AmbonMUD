@@ -27,6 +27,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
 private val log = KotlinLogging.logger {}
 
@@ -40,6 +41,7 @@ class GatewayServer(
     private val config: AppConfig,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val fatalShutdownTriggered = AtomicBoolean(false)
 
     private val sessionIdFactory: SessionIdFactory = SnowflakeSessionIdFactory(config.gateway.id)
 
@@ -91,6 +93,15 @@ class GatewayServer(
                 delegate = LocalOutboundBus(capacity = config.server.outboundChannelCapacity),
                 grpcReceiveFlow = outboundFlow,
                 scope = scope,
+                metrics = gameMetrics,
+                onFatalStreamFailure = { error ->
+                    if (fatalShutdownTriggered.compareAndSet(false, true)) {
+                        log.error(error) {
+                            "Fatal gateway/engine stream failure; stopping gateway to avoid session desync"
+                        }
+                        scope.launch { stop() }
+                    }
+                },
             )
         grpcOutboundBus.startReceiving()
 

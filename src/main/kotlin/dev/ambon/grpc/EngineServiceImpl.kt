@@ -9,11 +9,13 @@ import dev.ambon.grpc.proto.InboundEventProto
 import dev.ambon.grpc.proto.OutboundEventProto
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.util.concurrent.ConcurrentHashMap
 
 private val log = KotlinLogging.logger {}
@@ -69,12 +71,8 @@ class EngineServiceImpl(
                 // that never sent an explicit Disconnected (e.g. gateway crash).
                 val orphans = sessionToStream.keys().toList().filter { sessionToStream[it] === streamChannel }
                 orphans.forEach { sid ->
-                    sessionToStream.remove(sid)
-                    try {
-                        inbound.send(InboundEvent.Disconnected(sessionId = sid, reason = "gateway-disconnect"))
-                    } catch (_: Exception) {
-                        // best-effort
-                    }
+                    runCatching { forceDisconnectSession(sid, reason = "gateway-disconnect") }
+                        .onFailure { t -> log.warn(t) { "Failed to synthesize disconnect for orphaned session $sid" } }
                 }
                 streamChannel.close()
             }
@@ -82,7 +80,35 @@ class EngineServiceImpl(
 
         return streamChannel.receiveAsFlow()
     }
+
+    /**
+     * Removes a session's stream route and injects a synthetic disconnect into the engine.
+     *
+     * Used by stream-teardown cleanup and by [GrpcOutboundDispatcher] when control-plane
+     * delivery fails and we need to fail closed for a single session.
+     */
+    internal suspend fun forceDisconnectSession(
+        sessionId: SessionId,
+        reason: String,
+    ) {
+        val removed = sessionToStream.remove(sessionId) ?: return
+        val event = InboundEvent.Disconnected(sessionId = sessionId, reason = reason)
+        try {
+            withTimeout(SYNTHETIC_DISCONNECT_SEND_TIMEOUT_MS) {
+                inbound.send(event)
+            }
+        } catch (e: TimeoutCancellationException) {
+            val fallback = inbound.trySend(event)
+            if (fallback.isFailure) {
+                log.error {
+                    "Failed to enqueue synthetic disconnect for session $sessionId after route removal " +
+                        "(stream=$removed, reason=$reason)"
+                }
+            }
+        }
+    }
 }
 
 /** Per-gateway-stream outbound buffer. Large enough to absorb bursts without constant drops. */
 private const val STREAM_CHANNEL_CAPACITY = 8_192
+private const val SYNTHETIC_DISCONNECT_SEND_TIMEOUT_MS = 250L

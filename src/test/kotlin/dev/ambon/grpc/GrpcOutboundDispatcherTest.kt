@@ -21,7 +21,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -40,7 +42,13 @@ class GrpcOutboundDispatcherTest {
         outbound = LocalOutboundBus(capacity = 1000)
         scope = CoroutineScope(SupervisorJob())
         serviceImpl = EngineServiceImpl(inbound = inbound, outbound = outbound, scope = scope)
-        dispatcher = GrpcOutboundDispatcher(outbound = outbound, serviceImpl = serviceImpl, scope = scope)
+        dispatcher =
+            GrpcOutboundDispatcher(
+                outbound = outbound,
+                serviceImpl = serviceImpl,
+                scope = scope,
+                controlPlaneSendTimeoutMs = 25L,
+            )
 
         grpcServer =
             InProcessServerBuilder.forName(serverName)
@@ -124,5 +132,54 @@ class GrpcOutboundDispatcherTest {
         assertEquals(sid, OutboundEvent.Close(sid, "").sessionId())
         assertEquals(sid, OutboundEvent.ClearScreen(sid).sessionId())
         assertEquals(sid, OutboundEvent.ShowAnsiDemo(sid).sessionId())
+    }
+
+    @Test
+    fun `control-plane event on full stream forces synthetic disconnect`() =
+        runBlocking {
+            val sid = SessionId(5001L)
+            val fullStream = Channel<OutboundEventProto>(capacity = 1)
+            serviceImpl.sessionToStream[sid] = fullStream
+            fullStream.trySend(OutboundEvent.SendText(sid, "pre-fill").toProto())
+
+            outbound.send(OutboundEvent.Close(sessionId = sid, reason = "bye"))
+            delay(100)
+
+            assertNull(serviceImpl.sessionToStream[sid], "Session route should be removed after control-plane failure")
+            val events = drainInboundEvents()
+            assertNotNull(
+                events.filterIsInstance<InboundEvent.Disconnected>().firstOrNull {
+                    it.sessionId == sid && it.reason.startsWith("control-plane-delivery-failed:")
+                },
+                "Expected synthetic disconnect with control-plane failure reason",
+            )
+            fullStream.close()
+        }
+
+    @Test
+    fun `data-plane event on full stream is dropped without forced disconnect`() =
+        runBlocking {
+            val sid = SessionId(5002L)
+            val fullStream = Channel<OutboundEventProto>(capacity = 1)
+            serviceImpl.sessionToStream[sid] = fullStream
+            fullStream.trySend(OutboundEvent.SendText(sid, "pre-fill").toProto())
+
+            outbound.send(OutboundEvent.SendText(sessionId = sid, text = "drop me"))
+            delay(100)
+
+            assertNotNull(serviceImpl.sessionToStream[sid], "Data-plane drop should not remove session route")
+            val events = drainInboundEvents()
+            val disconnectedForSid = events.filterIsInstance<InboundEvent.Disconnected>().any { it.sessionId == sid }
+            assertFalse(disconnectedForSid, "Data-plane drop should not force disconnect")
+            fullStream.close()
+        }
+
+    private fun drainInboundEvents(limit: Int = 20): List<InboundEvent> {
+        val events = mutableListOf<InboundEvent>()
+        repeat(limit) {
+            val next = inbound.tryReceive().getOrNull() ?: return@repeat
+            events += next
+        }
+        return events
     }
 }

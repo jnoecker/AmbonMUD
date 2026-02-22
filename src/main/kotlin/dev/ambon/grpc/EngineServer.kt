@@ -103,6 +103,7 @@ class EngineServer(
             inbound = inbound,
             outbound = outbound,
             scope = scope,
+            metrics = gameMetrics,
         )
 
     private val items = ItemRegistry()

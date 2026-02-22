@@ -3,15 +3,20 @@ package dev.ambon.bus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.grpc.toProto
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -112,4 +117,57 @@ class GrpcOutboundBusTest {
         val iface: OutboundBus = bus
         assertNotNull(iface)
     }
+
+    @Test
+    fun `control-plane enqueue failure triggers fatal callback`() =
+        runBlocking {
+            val fatal = CompletableDeferred<Throwable>()
+            val sid = SessionId(30L)
+            val fullDelegate = LocalOutboundBus(capacity = Channel.RENDEZVOUS)
+            val grpcFlow =
+                flow {
+                    emit(OutboundEvent.Close(sessionId = sid, reason = "disconnect").toProto())
+                    delay(2_000L)
+                }
+
+            bus =
+                GrpcOutboundBus(
+                    delegate = fullDelegate,
+                    grpcReceiveFlow = grpcFlow,
+                    scope = scope,
+                    controlPlaneSendTimeoutMs = 25L,
+                    onFatalStreamFailure = { error -> fatal.complete(error) },
+                )
+            bus.startReceiving()
+
+            val error = withTimeout(1_000L) { fatal.await() }
+            assertTrue(error is IllegalStateException)
+        }
+
+    @Test
+    fun `data-plane enqueue failure is dropped without fatal callback`() =
+        runBlocking {
+            val fatal = CompletableDeferred<Throwable>()
+            val sid = SessionId(31L)
+            val fullDelegate = LocalOutboundBus(capacity = Channel.RENDEZVOUS)
+            val grpcFlow =
+                flow {
+                    emit(OutboundEvent.SendText(sessionId = sid, text = "drop").toProto())
+                    delay(2_000L)
+                }
+
+            bus =
+                GrpcOutboundBus(
+                    delegate = fullDelegate,
+                    grpcReceiveFlow = grpcFlow,
+                    scope = scope,
+                    onFatalStreamFailure = { error -> fatal.complete(error) },
+                )
+            bus.startReceiving()
+
+            delay(100L)
+            assertFalse(fatal.isCompleted, "Data-plane drops should not trigger fatal callback")
+            val result = bus.tryReceive()
+            assertTrue(result.isFailure || result.getOrNull() == null)
+        }
 }
