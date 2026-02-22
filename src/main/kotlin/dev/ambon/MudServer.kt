@@ -39,6 +39,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import java.nio.file.Paths
 import java.time.Clock
@@ -154,6 +155,12 @@ class MudServer(
         )
 
     suspend fun start() {
+        if (config.redis.enabled && config.redis.bus.enabled) {
+            log.warn {
+                "Redis bus mode is experimental and may publish sensitive inbound input. " +
+                    "Use only in development until Phase 4 hardening."
+            }
+        }
         redisManager?.connect()
         (inbound as? RedisInboundBus)?.startSubscribing()
         (outbound as? RedisOutboundBus)?.startSubscribing()
@@ -267,7 +274,7 @@ class MudServer(
     suspend fun stop() {
         runCatching { telnetTransport.stop() }
         runCatching { webTransport.stop() }
-        runCatching { engineJob?.cancel() }
+        runCatching { engineJob?.cancelAndJoin() }
         runCatching { persistenceWorker?.shutdown() }
         runCatching { redisManager?.close() }
         scope.cancel()
