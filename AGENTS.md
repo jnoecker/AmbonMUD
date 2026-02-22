@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Purpose
-This repository is a Kotlin MUD server ("AmbonMUD") with a single-process event loop, telnet + WebSocket transports, YAML world loading, a small browser demo client, and YAML-backed player persistence.
+This repository is a Kotlin MUD server ("AmbonMUD") with a single-process event loop, telnet + WebSocket transports, YAML world loading, a small browser demo client, and a layered persistence stack with optional Redis caching and pub/sub.
 
 Use this document as the default engineering playbook when making code or content changes.
 
@@ -27,6 +27,10 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Configuration: `src/main/kotlin/dev/ambon/config`, `src/main/resources/application.yaml`
 - Engine and gameplay: `src/main/kotlin/dev/ambon/engine`
 - Transport and protocol: `src/main/kotlin/dev/ambon/transport`
+- Event bus interfaces + impls: `src/main/kotlin/dev/ambon/bus` (`InboundBus`, `OutboundBus`, `Local*Bus`, `Redis*Bus`)
+- Redis connection management + JSON: `src/main/kotlin/dev/ambon/redis`
+- Session ID allocation: `src/main/kotlin/dev/ambon/session`
+- Metrics (Micrometer / Prometheus): `src/main/kotlin/dev/ambon/metrics`
 - Web demo client (static): `src/main/resources/web`
 - Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
@@ -66,6 +70,14 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Player room/last-seen persistence must stay intact.
 - Player progression persistence must stay intact (level/xp/constitution).
 - Keep atomic-write behavior for YAML persistence files.
+- The persistence chain is: `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (optional) → `YamlPlayerRepository`. Changes to `PlayerRecord` must survive all three layers including JSON round-trip through Redis.
+- `isStaff` is a `PlayerRecord` field; it is faithfully serialized through all persistence layers. Grant by editing the player YAML directly.
+
+6. Event bus boundary
+- The engine receives an `InboundBus` and sends to an `OutboundBus` — never raw `Channel` references.
+- `Local*Bus` implementations wrap channels and preserve single-process behavior.
+- `Redis*Bus` implementations publish to Redis and deliver remotely-originated events to the local delegate.
+- All engine tests use `LocalInboundBus`/`LocalOutboundBus` directly.
 
 ## Change Playbooks
 ### Commands
@@ -94,6 +106,18 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Keep `PlayerRepository` as the abstraction boundary.
 - Preserve case-insensitive lookup and unique-name behavior.
 - Use `YamlPlayerRepositoryTest` and `@TempDir` for regression coverage.
+- When adding fields to `PlayerRecord`: add with a default value so existing YAML files still deserialize; verify the field round-trips through Jackson/Redis JSON (`RedisCachingPlayerRepositoryTest`).
+- Do not add persistence logic directly to `GameEngine` or `PlayerRegistry` — all writes go through `repo.save()` which the coalescing wrapper intercepts.
+
+### Staff/Admin commands
+- Add parse logic in `CommandParser.kt` (alongside existing admin block).
+- Gate with `if (!playerState.isStaff)` check in `CommandRouter.kt`.
+- Add tests in `CommandRouterAdminTest`.
+
+### Event bus / Redis
+- Bus implementations live in `dev.ambon.bus`; Redis infrastructure in `dev.ambon.redis`.
+- When adding new `InboundEvent` or `OutboundEvent` variants, also add them to the Redis bus envelope in `RedisInboundBus`/`RedisOutboundBus` (type discriminator string + new data class).
+- `RedisConnectionManager` degrades gracefully when Redis is unavailable — never let a Redis failure crash the engine.
 
 ## Testing Expectations
 - Minimum verification for any meaningful change: `ktlintCheck` and `test`.
@@ -102,6 +126,9 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 
 ## Practical Notes
 - Keep protocol/network concerns in `transport`; keep gameplay/state transitions in `engine`.
+- Keep bus/Redis concerns in `bus`/`redis`; wire them in `MudServer.kt` only.
 - Reuse deterministic test helpers (`MutableClock`, in-memory repository) where possible.
 - Do not commit runtime player save artifacts from `data/players`.
 - The scheduler is at `src/main/kotlin/dev/ambon/engine/scheduler/Scheduler.kt`.
+- Micrometer metrics use package `io.micrometer.prometheusmetrics` (not the deprecated `io.micrometer.prometheus`).
+- Staff access is granted by setting `isStaff: true` in the player's YAML file — there is no in-game promotion command.

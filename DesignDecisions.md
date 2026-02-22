@@ -11,9 +11,12 @@ The goal is to keep the codebase easy to extend (world content, commands, transp
 4. ANSI support is semantic (not sprinkled escapes)
 5. World content is data (not code)
 6. Namespaced IDs for multi-zone worlds
-7. Persistence is phased (YAML first, DB later)
+7. Persistence is phased (YAML → Redis → DB)
 8. Dependency injection without a framework
 9. Tests as design constraints
+10. Event bus abstraction (not raw channels)
+11. Write-behind persistence worker (async, coalescing)
+12. Redis as opt-in infrastructure (not a hard dependency)
 
 ---
 
@@ -101,17 +104,20 @@ Tradeoff:
 
 ---
 
-## 7) Persistence is phased (YAML first, DB later)
+## 7) Persistence is phased (YAML → Redis → DB)
 
-Decision: Use YAML player persistence in Phase 1, with a repository interface to preserve swapability.
+Decision: Use YAML player persistence as the durable layer, with a layered repository stack that adds write-behind coalescing and Redis caching in subsequent phases.
 
 Why:
-- YAML persistence is inspectable, easy to debug, and requires no infrastructure.
-- Repository abstraction allows clean migration to SQLite/Postgres later.
-- Atomic write strategy prevents corruption on crash.
+- YAML persistence is inspectable, easy to debug, and requires no infrastructure (Phase 1).
+- Repository abstraction allows clean migration or cache layering without touching game logic.
+- Atomic write strategy prevents corruption on crash at every layer.
+- Write-behind coalescing (Phase 2) removes persistence from the hot path — every room move was hitting disk.
+- Redis L2 cache (Phase 3) allows faster reads across processes and reduces directory scan frequency.
 
 Tradeoff:
-- Directory scans for lookup are acceptable for MVP, but will not scale forever (intentionally deferred).
+- Directory scans for lookup are acceptable at current scale; Redis name index defers the scaling wall.
+- Write-behind creates a potential data loss window (configurable, default 5 s); acceptable for a game server.
 
 ---
 
@@ -140,3 +146,48 @@ Why:
 
 Tradeoff:
 - Some extra time up front, but faster iteration over time.
+
+---
+
+## 10) Event bus abstraction (not raw channels)
+
+Decision: Extract `InboundBus` and `OutboundBus` interfaces wrapping Kotlin channels, rather than passing `Channel<T>` directly to the engine.
+
+Why:
+- Creates a clean substitution point: swap `LocalInboundBus` for `RedisInboundBus` without changing any engine code.
+- Mirrors the transport adapter pattern at the bus layer — the engine is now fully decoupled from both transport and bus technology.
+- Enables future gRPC gateway split (Phase 4) with `GrpcInboundBus` / `GrpcOutboundBus`.
+- The interface is minimal: `send`, `trySend`, `tryReceive`, `close` — only what the engine actually needs.
+
+Tradeoff:
+- One extra indirection compared to raw channels, but the payoff in substitutability is immediate and demonstrated (Redis bus works today).
+
+---
+
+## 11) Write-behind persistence worker (async, coalescing)
+
+Decision: Move player saves off the engine tick into a background coroutine with dirty-flag coalescing.
+
+Why:
+- Every room move was calling `repo.save()` synchronously, which was blocking I/O on the engine's hot path (even though it used `Dispatchers.IO`).
+- Coalescing means 10 rapid room changes produce exactly 1 file write.
+- `PlayerRegistry.kt` calls `repo.save()` exactly as before — the coalescing is transparent to game logic.
+- Shutdown sequence flushes all dirty records before stopping, so data loss is bounded to the flush interval.
+
+Tradeoff:
+- Up to `flushIntervalMs` (default 5 s) of data loss on hard crash. Acceptable for a game server; configurable if requirements tighten.
+
+---
+
+## 12) Redis as opt-in infrastructure (not a hard dependency)
+
+Decision: Redis is enabled via config (`redis.enabled = false` by default). The server runs identically without it at every scale.
+
+Why:
+- Forcing Redis in development would add friction and a required service just to start the server.
+- The bus and cache layers both degrade gracefully: Redis failure logs a warning and falls back to the local implementation.
+- Allows incremental adoption: Redis cache only (no bus), or both, or neither.
+- Keeps the test suite fast — integration tests for Redis use Testcontainers and are isolated.
+
+Tradeoff:
+- Dual-path code (enabled/disabled) requires explicit null checks on `RedisConnectionManager.commands`. This is intentional and visible, not hidden.
