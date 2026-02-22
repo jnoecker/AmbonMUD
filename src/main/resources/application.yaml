@@ -35,10 +35,18 @@ ambonMUD:
       - world/demo_ruins.yaml
 
   persistence:
+    backend: YAML
     rootDir: data/players
     worker:
       enabled: true
       flushIntervalMs: 5000
+
+  database:
+    jdbcUrl: ""
+    username: ""
+    password: ""
+    maxPoolSize: 5
+    minimumIdle: 1
 
   login:
     maxWrongPasswordRetries: 3
