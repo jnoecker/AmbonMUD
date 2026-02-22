@@ -108,6 +108,13 @@ class GameMetrics(
     private val sessionIdClockRollbackCounter =
         Counter.builder("session_id_clock_rollback_total").register(registry)
 
+    private val gatewayReconnectAttemptsCounter =
+        Counter.builder("gateway_reconnect_attempts_total").register(registry)
+    private val gatewayReconnectSuccessCounter =
+        Counter.builder("gateway_reconnect_success_total").register(registry)
+    private val gatewayReconnectBudgetExhaustedCounter =
+        Counter.builder("gateway_reconnect_budget_exhausted_total").register(registry)
+
     fun onTelnetConnected() {
         telnetConnectedCounter.increment()
         sessionsOnlineCount.incrementAndGet()
@@ -195,6 +202,12 @@ class GameMetrics(
     fun onSessionIdSequenceOverflow() = sessionIdSequenceOverflowCounter.increment()
 
     fun onSessionIdClockRollback() = sessionIdClockRollbackCounter.increment()
+
+    fun onGatewayReconnectAttempt() = gatewayReconnectAttemptsCounter.increment()
+
+    fun onGatewayReconnectSuccess() = gatewayReconnectSuccessCounter.increment()
+
+    fun onGatewayReconnectBudgetExhausted() = gatewayReconnectBudgetExhaustedCounter.increment()
 
     fun bindPlayerRegistry(supplier: () -> Int) {
         Gauge.builder("players_online") { supplier().toDouble() }.register(registry)

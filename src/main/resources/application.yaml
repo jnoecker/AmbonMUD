@@ -12,6 +12,12 @@ ambonMUD:
     id: 0
     snowflake:
       idLeaseTtlSeconds: 300
+    reconnect:
+      maxAttempts: 10
+      initialDelayMs: 1000
+      maxDelayMs: 30000
+      jitterFactor: 0.2
+      streamVerifyMs: 2000
 
   server:
     telnetPort: 4000
