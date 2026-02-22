@@ -10,6 +10,8 @@ import dev.ambon.config.AppConfig
 import dev.ambon.grpc.proto.EngineServiceGrpcKt
 import dev.ambon.grpc.proto.InboundEventProto
 import dev.ambon.metrics.GameMetrics
+import dev.ambon.redis.RedisConnectionManager
+import dev.ambon.session.GatewayIdLeaseManager
 import dev.ambon.session.SessionIdFactory
 import dev.ambon.session.SnowflakeSessionIdFactory
 import dev.ambon.transport.BlockingSocketTransport
@@ -18,6 +20,7 @@ import dev.ambon.transport.OutboundRouter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import io.lettuce.core.SetArgs
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.CoroutineScope
@@ -27,6 +30,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 
 private val log = KotlinLogging.logger {}
@@ -43,8 +47,6 @@ class GatewayServer(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val fatalShutdownTriggered = AtomicBoolean(false)
 
-    private val sessionIdFactory: SessionIdFactory = SnowflakeSessionIdFactory(config.gateway.id)
-
     private val prometheusRegistry: PrometheusMeterRegistry? =
         if (config.observability.metricsEnabled) {
             PrometheusMeterRegistry(PrometheusConfig.DEFAULT).also { reg ->
@@ -57,6 +59,19 @@ class GatewayServer(
 
     private val gameMetrics: GameMetrics =
         if (prometheusRegistry != null) GameMetrics(prometheusRegistry) else GameMetrics.noop()
+
+    private val instanceId: String =
+        config.redis.bus.instanceId.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+
+    private val redisManager: RedisConnectionManager? =
+        if (config.redis.enabled) RedisConnectionManager(config.redis) else null
+
+    private val sessionIdFactory: SessionIdFactory =
+        SnowflakeSessionIdFactory(
+            gatewayId = config.gateway.id,
+            onSequenceOverflow = gameMetrics::onSessionIdSequenceOverflow,
+            onClockRollback = gameMetrics::onSessionIdClockRollback,
+        )
 
     private val grpcManagedChannel: ManagedChannel =
         ManagedChannelBuilder
@@ -78,7 +93,43 @@ class GatewayServer(
     private lateinit var telnetTransport: BlockingSocketTransport
     private lateinit var webTransport: KtorWebSocketTransport
 
+    private var leaseManager: GatewayIdLeaseManager? = null
+
     suspend fun start() {
+        redisManager?.connect()
+
+        val cmds = redisManager?.commands
+        if (config.redis.enabled) {
+            if (cmds != null) {
+                val mgr =
+                    GatewayIdLeaseManager(
+                        gatewayId = config.gateway.id,
+                        instanceId = instanceId,
+                        leaseTtlSeconds = config.gateway.snowflake.idLeaseTtlSeconds,
+                        setNxEx = { key, value, ttl ->
+                            cmds.set(key, value, SetArgs.Builder.nx().ex(ttl)) == "OK"
+                        },
+                        getValue = { key -> cmds.get(key) },
+                        deleteKey = { key -> cmds.del(key) },
+                    )
+                leaseManager = mgr
+                if (mgr.tryAcquire()) {
+                    log.info { "Acquired gateway.id lease for gateway=${config.gateway.id}" }
+                } else {
+                    throw IllegalStateException(
+                        "Duplicate gateway.id detected: gateway=${config.gateway.id} " +
+                            "is already claimed by ${mgr.currentOwner()}",
+                    )
+                }
+            } else {
+                log.warn {
+                    "Redis enabled but connection unavailable — gateway.id duplicate detection skipped"
+                }
+            }
+        } else {
+            log.warn { "Redis not enabled — gateway.id duplicate detection unavailable" }
+        }
+
         // Open the bidi gRPC stream to the engine.
         val outboundFlow = engineStub.eventStream(inboundProtoChannel.receiveAsFlow())
 
@@ -156,6 +207,8 @@ class GatewayServer(
         runCatching { grpcOutboundBus.stopReceiving() }
         runCatching { inboundProtoChannel.close() }
         runCatching { grpcManagedChannel.shutdown() }
+        runCatching { leaseManager?.release() }
+        runCatching { redisManager?.close() }
         scope.cancel()
         log.info { "Gateway server stopped" }
     }
