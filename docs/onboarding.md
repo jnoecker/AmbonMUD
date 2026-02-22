@@ -95,13 +95,15 @@ The `docker-compose.yml` in the repo root brings up PostgreSQL, Redis, Prometheu
 docker compose up -d
 ```
 
-This gives you everything needed for all features and deployment modes. To run the server with the Postgres backend against the Docker stack:
+This gives you everything needed for all features and deployment modes. The `application.yaml` defaults for database and Redis connections already match the compose stack, so you only need to toggle the feature flags:
 
 ```bash
+# Postgres backend
+./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES
+
+# Postgres + Redis caching
 ./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES \
-              -Pconfig.ambonMUD.database.jdbcUrl=jdbc:postgresql://localhost:5432/ambonmud \
-              -Pconfig.ambonMUD.database.username=ambon \
-              -Pconfig.ambonMUD.database.password=ambon
+              -Pconfig.ambonMUD.redis.enabled=true
 ```
 
 Flyway creates the schema automatically on first startup. Data is persisted in a Docker named volume (`pgdata`); use `docker compose down -v` to wipe it.
@@ -1023,7 +1025,7 @@ Edit or add YAML files in `src/main/resources/world/`, then register them in `sr
 | `server` | `telnetPort` (4000), `webPort` (8080), `tickMillis` (100), `sessionOutboundQueueCapacity` (200) |
 | `world` | `resources` — list of zone YAML classpath paths |
 | `persistence` | `backend` (`YAML`/`POSTGRES`), `rootDir` — root directory for player files (YAML only) |
-| `database` | `jdbcUrl`, `username`, `password`, `maxPoolSize`, `minimumIdle` (required when backend=POSTGRES) |
+| `database` | `jdbcUrl`, `username`, `password`, `maxPoolSize`, `minimumIdle` (defaults match docker compose) |
 | `login` | `maxWrongPasswordRetries` (3), `maxFailedAttemptsBeforeDisconnect` (3) |
 | `engine.combat` | `minDamage`, `maxDamage`, `tickMillis`, `maxCombatsPerTick` |
 | `engine.regen` | `baseIntervalMillis` (5000), `regenAmount` (1), `msPerConstitution`, `minIntervalMillis` |
@@ -1058,11 +1060,8 @@ Any config value can be overridden at the command line using `-P` project proper
 # Override tick speed
 ./gradlew run -Pconfig.ambonMUD.server.tickMillis=500
 
-# Use PostgreSQL backend
-./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES \
-              -Pconfig.ambonMUD.database.jdbcUrl=jdbc:postgresql://localhost:5432/ambonmud \
-              -Pconfig.ambonMUD.database.username=ambon \
-              -Pconfig.ambonMUD.database.password=secret
+# Use PostgreSQL backend (connection defaults match docker compose)
+./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES
 ```
 
 This works in all shells including Windows PowerShell — no quoting issues.
