@@ -91,14 +91,17 @@ database:
 
 ## Phase 2: Flyway Migration & Schema
 
-### 2a. Create migration file
+### 2a. Create migration file (single migration)
 
 Path: `src/main/resources/db/migration/V1__create_players_table.sql`
 
 ```sql
+CREATE SEQUENCE player_id_seq START WITH 1 INCREMENT BY 1;
+
 CREATE TABLE players (
-    id         BIGINT       PRIMARY KEY,
+    id         BIGINT       PRIMARY KEY DEFAULT nextval('player_id_seq'),
     name       VARCHAR(16)  NOT NULL,
+    name_lower VARCHAR(16)  NOT NULL,
     room_id    VARCHAR(128) NOT NULL,
     constitution INT        NOT NULL DEFAULT 0,
     level      INT          NOT NULL DEFAULT 1,
@@ -110,23 +113,14 @@ CREATE TABLE players (
     is_staff   BOOLEAN      NOT NULL DEFAULT FALSE
 );
 
-CREATE UNIQUE INDEX idx_players_name_lower ON players (LOWER(name));
+CREATE UNIQUE INDEX idx_players_name_lower ON players (name_lower);
 ```
 
 Notes:
-- `BIGINT` primary key (not `BIGSERIAL`) — IDs are application-generated via a sequence.
-- `LOWER(name)` unique index enforces case-insensitive uniqueness at the DB level.
+- **`DEFAULT nextval('player_id_seq')`** — the DB auto-assigns IDs on insert; no need for a separate SELECT nextval round-trip.
+- **`name_lower` column** — materialized lowercase name for portable case-insensitive uniqueness. Expression indexes (`LOWER(name)`) are idiomatic Postgres but unreliable in H2's PostgreSQL-compatibility mode. A plain `UNIQUE INDEX` on a stored column works identically across both.
+- The repository is responsible for populating `name_lower = name.trim().lowercase()` on every insert/upsert.
 - All column types are H2-compatible in `MODE=PostgreSQL`.
-
-### 2b. Add ID sequence migration
-
-Path: `src/main/resources/db/migration/V2__add_player_id_sequence.sql`
-
-```sql
-CREATE SEQUENCE player_id_seq START WITH 1 INCREMENT BY 1;
-```
-
-This replaces the `next_player_id.txt` file approach.
 
 ---
 
@@ -140,8 +134,9 @@ Exposed DSL table object matching the Flyway-managed schema:
 
 ```kotlin
 object PlayersTable : Table("players") {
-    val id = long("id")
+    val id = long("id").autoIncrement("player_id_seq")
     val name = varchar("name", 16)
+    val nameLower = varchar("name_lower", 16)
     val roomId = varchar("room_id", 128)
     val constitution = integer("constitution").default(0)
     val level = integer("level").default(1)
@@ -168,35 +163,33 @@ class PostgresPlayerRepository(
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) : PlayerRepository {
 
-    override suspend fun findByName(name: String): PlayerRecord? =
-        withContext(Dispatchers.IO) {
-            val sample = Timer.start()
-            try {
-                newSuspendedTransaction(Dispatchers.IO, database) {
-                    PlayersTable.selectAll()
-                        .where { PlayersTable.name.lowerCase() eq name.trim().lowercase() }
-                        .firstOrNull()
-                        ?.toPlayerRecord()
-                }
-            } finally {
-                sample.stop(metrics.playerRepoLoadTimer)
+    override suspend fun findByName(name: String): PlayerRecord? {
+        val sample = Timer.start()
+        try {
+            return newSuspendedTransaction(Dispatchers.IO, database) {
+                PlayersTable.selectAll()
+                    .where { PlayersTable.nameLower eq name.trim().lowercase() }
+                    .firstOrNull()
+                    ?.toPlayerRecord()
             }
+        } finally {
+            sample.stop(metrics.playerRepoLoadTimer)
         }
+    }
 
-    override suspend fun findById(id: PlayerId): PlayerRecord? =
-        withContext(Dispatchers.IO) {
-            val sample = Timer.start()
-            try {
-                newSuspendedTransaction(Dispatchers.IO, database) {
-                    PlayersTable.selectAll()
-                        .where { PlayersTable.id eq id.value }
-                        .firstOrNull()
-                        ?.toPlayerRecord()
-                }
-            } finally {
-                sample.stop(metrics.playerRepoLoadTimer)
+    override suspend fun findById(id: PlayerId): PlayerRecord? {
+        val sample = Timer.start()
+        try {
+            return newSuspendedTransaction(Dispatchers.IO, database) {
+                PlayersTable.selectAll()
+                    .where { PlayersTable.id eq id.value }
+                    .firstOrNull()
+                    ?.toPlayerRecord()
             }
+        } finally {
+            sample.stop(metrics.playerRepoLoadTimer)
         }
+    }
 
     override suspend fun create(
         name: String,
@@ -204,63 +197,59 @@ class PostgresPlayerRepository(
         nowEpochMs: Long,
         passwordHash: String,
         ansiEnabled: Boolean,
-    ): PlayerRecord =
-        withContext(Dispatchers.IO) {
+    ): PlayerRecord {
+        val trimmed = name.trim()
+        return newSuspendedTransaction(Dispatchers.IO, database) {
+            val result = PlayersTable.insert {
+                it[PlayersTable.name] = trimmed
+                it[nameLower] = trimmed.lowercase()
+                it[roomId] = startRoomId.value
+                it[createdAtEpochMs] = nowEpochMs
+                it[lastSeenEpochMs] = nowEpochMs
+                it[PlayersTable.passwordHash] = passwordHash
+                it[PlayersTable.ansiEnabled] = ansiEnabled
+            }
+
+            PlayerRecord(
+                id = PlayerId(result[PlayersTable.id]),
+                name = trimmed,
+                roomId = startRoomId,
+                createdAtEpochMs = nowEpochMs,
+                lastSeenEpochMs = nowEpochMs,
+                passwordHash = passwordHash,
+                ansiEnabled = ansiEnabled,
+            )
+        }
+    }
+
+    override suspend fun save(record: PlayerRecord) {
+        val sample = Timer.start()
+        try {
             newSuspendedTransaction(Dispatchers.IO, database) {
-                val newId = exec("SELECT nextval('player_id_seq')") { rs ->
-                    rs.next(); rs.getLong(1)
-                }!!
-
-                PlayersTable.insert {
-                    it[PlayersTable.id] = newId
-                    it[PlayersTable.name] = name.trim()
-                    it[roomId] = startRoomId.value
-                    it[createdAtEpochMs] = nowEpochMs
-                    it[lastSeenEpochMs] = nowEpochMs
-                    it[PlayersTable.passwordHash] = passwordHash
-                    it[PlayersTable.ansiEnabled] = ansiEnabled
+                // Upsert: insert or update on conflict — matches YAML overwrite semantics
+                PlayersTable.upsert(PlayersTable.id) {
+                    it[id] = record.id.value
+                    it[name] = record.name
+                    it[nameLower] = record.name.lowercase()
+                    it[roomId] = record.roomId.value
+                    it[constitution] = record.constitution
+                    it[level] = record.level
+                    it[xpTotal] = record.xpTotal
+                    it[createdAtEpochMs] = record.createdAtEpochMs
+                    it[lastSeenEpochMs] = record.lastSeenEpochMs
+                    it[passwordHash] = record.passwordHash
+                    it[ansiEnabled] = record.ansiEnabled
+                    it[isStaff] = record.isStaff
                 }
-
-                PlayerRecord(
-                    id = PlayerId(newId),
-                    name = name.trim(),
-                    roomId = startRoomId,
-                    createdAtEpochMs = nowEpochMs,
-                    lastSeenEpochMs = nowEpochMs,
-                    passwordHash = passwordHash,
-                    ansiEnabled = ansiEnabled,
-                )
             }
+            metrics.onPlayerSave()
+        } catch (e: Throwable) {
+            metrics.onPlayerSaveFailure()
+            throw e
+        } finally {
+            sample.stop(metrics.playerRepoSaveTimer)
         }
-
-    override suspend fun save(record: PlayerRecord) =
-        withContext(Dispatchers.IO) {
-            val sample = Timer.start()
-            try {
-                newSuspendedTransaction(Dispatchers.IO, database) {
-                    // Upsert: insert or update on conflict — matches YAML overwrite semantics
-                    PlayersTable.upsert(PlayersTable.id) {
-                        it[id] = record.id.value
-                        it[name] = record.name
-                        it[roomId] = record.roomId.value
-                        it[constitution] = record.constitution
-                        it[level] = record.level
-                        it[xpTotal] = record.xpTotal
-                        it[createdAtEpochMs] = record.createdAtEpochMs
-                        it[lastSeenEpochMs] = record.lastSeenEpochMs
-                        it[passwordHash] = record.passwordHash
-                        it[ansiEnabled] = record.ansiEnabled
-                        it[isStaff] = record.isStaff
-                    }
-                }
-                metrics.onPlayerSave()
-            } catch (e: Throwable) {
-                metrics.onPlayerSaveFailure()
-                throw e
-            } finally {
-                sample.stop(metrics.playerRepoSaveTimer)
-            }
-        }
+    }
 
     private fun ResultRow.toPlayerRecord() = PlayerRecord(
         id = PlayerId(this[PlayersTable.id]),
@@ -280,11 +269,11 @@ class PostgresPlayerRepository(
 
 Key design decisions:
 - **Exposed DSL** — type-safe column references, compile-time safety on queries, idiomatic Kotlin.
-- **`newSuspendedTransaction`** — Exposed's coroutine-aware transaction wrapper, keeps engine non-blocking.
+- **`newSuspendedTransaction(Dispatchers.IO, db)`** — Exposed's coroutine-aware transaction wrapper dispatches to IO internally; no outer `withContext` needed, keeping stack traces clean.
 - **`upsert` on save** — `INSERT ... ON CONFLICT (id) DO UPDATE` so saves are idempotent (matches YAML behavior where save overwrites the file).
 - **Metrics** — reuses existing `playerRepoLoadTimer` / `playerRepoSaveTimer` / `onPlayerSave()` / `onPlayerSaveFailure()`.
-- **Sequence for IDs** — `SELECT nextval('player_id_seq')` inside the create transaction, replacing the file-based `next_player_id.txt`.
-- **Case-insensitive duplicate detection** — enforced at the DB level by the unique index on `LOWER(name)`. The `INSERT` will throw on conflict, which we catch and wrap as `PlayerPersistenceException`.
+- **Auto-generated IDs** — `id` column has `DEFAULT nextval('player_id_seq')`; the insert omits `id` and Exposed reads the generated value back from `result[PlayersTable.id]`, replacing the file-based `next_player_id.txt`.
+- **`name_lower` column** — materialized lowercase for portable case-insensitive uniqueness. The unique index on `name_lower` works identically on Postgres and H2, avoiding expression-index dialect issues. The `INSERT` will throw on conflict, which we catch and wrap as `PlayerPersistenceException`.
 
 ### 3c. Create `DatabaseManager.kt`
 
@@ -444,8 +433,7 @@ Tests cover:
 | `build.gradle.kts` | Add Exposed, HikariCP, PostgreSQL driver, Flyway, H2 test deps |
 | `src/main/kotlin/dev/ambon/config/AppConfig.kt` | Add `PersistenceBackend` enum, `DatabaseConfig`, validation |
 | `src/main/resources/application.yaml` | Add `database` section, `backend` field |
-| `src/main/resources/db/migration/V1__create_players_table.sql` | New: schema migration |
-| `src/main/resources/db/migration/V2__add_player_id_sequence.sql` | New: ID sequence |
+| `src/main/resources/db/migration/V1__create_players_table.sql` | New: schema + sequence (single migration) |
 | `src/main/kotlin/dev/ambon/persistence/PlayersTable.kt` | New: Exposed DSL table definition |
 | `src/main/kotlin/dev/ambon/persistence/DatabaseManager.kt` | New: HikariCP + Flyway + Exposed wrapper |
 | `src/main/kotlin/dev/ambon/persistence/PostgresPlayerRepository.kt` | New: Exposed-based `PlayerRepository` impl |
