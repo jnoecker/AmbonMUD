@@ -10,7 +10,7 @@ class InterEngineMessageSerializationTest {
 
     @Test
     fun `GlobalBroadcast round-trips through JSON`() {
-        val msg = InterEngineMessage.GlobalBroadcast(BroadcastType.GOSSIP, "Alice", "Hello!")
+        val msg = InterEngineMessage.GlobalBroadcast(BroadcastType.GOSSIP, "Alice", "Hello!", sourceEngineId = "engine-1")
         val json = mapper.writeValueAsString(msg as InterEngineMessage)
         val deserialized = mapper.readValue<InterEngineMessage>(json)
         assertEquals(msg, deserialized)

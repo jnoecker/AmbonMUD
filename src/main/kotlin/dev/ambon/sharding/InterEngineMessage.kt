@@ -25,6 +25,7 @@ sealed interface InterEngineMessage {
         val broadcastType: BroadcastType,
         val senderName: String,
         val text: String,
+        val sourceEngineId: String = "",
     ) : InterEngineMessage
 
     /** Cross-engine private message (tell). */

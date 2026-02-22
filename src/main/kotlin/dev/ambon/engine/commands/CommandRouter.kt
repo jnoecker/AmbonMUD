@@ -16,6 +16,9 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.metrics.GameMetrics
+import dev.ambon.sharding.BroadcastType
+import dev.ambon.sharding.InterEngineBus
+import dev.ambon.sharding.InterEngineMessage
 
 class CommandRouter(
     private val world: World,
@@ -29,6 +32,9 @@ class CommandRouter(
     private val onShutdown: suspend () -> Unit = {},
     private val onMobSmited: (MobId) -> Unit = {},
     private val onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
+    private val interEngineBus: InterEngineBus? = null,
+    private val engineId: String = "",
+    private val onRemoteWho: (suspend (SessionId) -> Unit)? = null,
 ) {
     private var adminSpawnSeq = 0
 
@@ -189,6 +195,9 @@ class CommandRouter(
                         .joinToString(separator = ", ") { it.name }
 
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Online: $list"))
+                if (onRemoteWho != null) {
+                    onRemoteWho.invoke(sessionId)
+                }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -196,7 +205,19 @@ class CommandRouter(
                 val me = players.get(sessionId) ?: return
                 val targetSid = players.findSessionByName(cmd.target)
                 if (targetSid == null) {
-                    outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.target}"))
+                    // Not found locally — try remote delivery via inter-engine bus
+                    if (interEngineBus != null) {
+                        interEngineBus.broadcast(
+                            InterEngineMessage.TellMessage(
+                                fromName = me.name,
+                                toName = cmd.target,
+                                text = cmd.message,
+                            ),
+                        )
+                        outbound.send(OutboundEvent.SendText(sessionId, "You tell ${cmd.target}: ${cmd.message}"))
+                    } else {
+                        outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.target}"))
+                    }
                     outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
@@ -220,6 +241,15 @@ class CommandRouter(
                         outbound.send(OutboundEvent.SendText(p.sessionId, "[GOSSIP] ${me.name}: ${cmd.message}"))
                     }
                 }
+                // Broadcast to other engines
+                interEngineBus?.broadcast(
+                    InterEngineMessage.GlobalBroadcast(
+                        broadcastType = BroadcastType.GOSSIP,
+                        senderName = me.name,
+                        text = cmd.message,
+                        sourceEngineId = engineId,
+                    ),
+                )
 
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
@@ -436,7 +466,17 @@ class CommandRouter(
                 if (!requireStaff(sessionId)) return
                 val me = players.get(sessionId) ?: return
                 val targetRoomId = resolveGotoArg(cmd.arg, me.roomId.zone)
-                if (targetRoomId == null || !world.rooms.containsKey(targetRoomId)) {
+                if (targetRoomId == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "No such room: ${cmd.arg}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                if (!world.rooms.containsKey(targetRoomId)) {
+                    // Room not in our world — try cross-zone goto
+                    if (onCrossZoneMove != null) {
+                        onCrossZoneMove.invoke(sessionId, targetRoomId)
+                        return
+                    }
                     outbound.send(OutboundEvent.SendError(sessionId, "No such room: ${cmd.arg}"))
                     outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
@@ -448,9 +488,22 @@ class CommandRouter(
 
             is Command.Transfer -> {
                 if (!requireStaff(sessionId)) return
+                val me = players.get(sessionId) ?: return
                 val targetSid = players.findSessionByName(cmd.playerName)
                 if (targetSid == null) {
-                    outbound.send(OutboundEvent.SendError(sessionId, "Player not found: ${cmd.playerName}"))
+                    // Not found locally — try remote transfer
+                    if (interEngineBus != null) {
+                        interEngineBus.broadcast(
+                            InterEngineMessage.TransferRequest(
+                                staffName = me.name,
+                                targetPlayerName = cmd.playerName,
+                                targetRoomId = cmd.arg,
+                            ),
+                        )
+                        outbound.send(OutboundEvent.SendInfo(sessionId, "Transfer request sent to other engines."))
+                    } else {
+                        outbound.send(OutboundEvent.SendError(sessionId, "Player not found: ${cmd.playerName}"))
+                    }
                     outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
@@ -503,6 +556,15 @@ class CommandRouter(
                         OutboundEvent.SendText(p.sessionId, "[SYSTEM] ${me.name} has initiated a server shutdown. Goodbye!"),
                     )
                 }
+                // Broadcast shutdown to other engines
+                interEngineBus?.broadcast(
+                    InterEngineMessage.GlobalBroadcast(
+                        broadcastType = BroadcastType.SHUTDOWN,
+                        senderName = me.name,
+                        text = "${me.name} has initiated a server shutdown. Goodbye!",
+                        sourceEngineId = engineId,
+                    ),
+                )
                 onShutdown()
             }
 
@@ -547,7 +609,15 @@ class CommandRouter(
                 if (!requireStaff(sessionId)) return
                 val targetSid = players.findSessionByName(cmd.playerName)
                 if (targetSid == null) {
-                    outbound.send(OutboundEvent.SendError(sessionId, "Player not found: ${cmd.playerName}"))
+                    // Not found locally — try remote kick
+                    if (interEngineBus != null) {
+                        interEngineBus.broadcast(
+                            InterEngineMessage.KickRequest(targetPlayerName = cmd.playerName),
+                        )
+                        outbound.send(OutboundEvent.SendInfo(sessionId, "Kick request sent to other engines."))
+                    } else {
+                        outbound.send(OutboundEvent.SendError(sessionId, "Player not found: ${cmd.playerName}"))
+                    }
                     outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }

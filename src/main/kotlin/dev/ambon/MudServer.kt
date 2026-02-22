@@ -287,6 +287,7 @@ class MudServer(
                     onShutdown = { shutdownSignal.complete(Unit) },
                     handoffManager = handoffManager,
                     interEngineBus = interEngineBus,
+                    engineId = engineId,
                 ).run()
             }
 
