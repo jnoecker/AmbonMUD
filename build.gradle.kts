@@ -29,7 +29,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.0")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.2")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.0")
     implementation("com.sksamuel.hoplite:hoplite-core:$hopliteVersion")
     implementation("com.sksamuel.hoplite:hoplite-yaml:$hopliteVersion")
     implementation("org.mindrot:jbcrypt:0.4")
