@@ -31,8 +31,16 @@ private const val FORWARD_SEND_TIMEOUT_MS = 5_000L
  */
 class GrpcInboundBus(
     private val delegate: LocalInboundBus,
-    private val grpcSendChannel: SendChannel<InboundEventProto>,
+    grpcSendChannel: SendChannel<InboundEventProto>,
 ) : InboundBus {
+    @Volatile
+    private var grpcSendChannel: SendChannel<InboundEventProto> = grpcSendChannel
+
+    /** Swap in a new gRPC send channel (called by the reconnect loop after a new stream is open). */
+    fun reattach(newChannel: SendChannel<InboundEventProto>) {
+        grpcSendChannel = newChannel
+    }
+
     override suspend fun send(event: InboundEvent) {
         delegate.trySend(event) // best-effort tap; never suspends
         val proto = event.toProto()

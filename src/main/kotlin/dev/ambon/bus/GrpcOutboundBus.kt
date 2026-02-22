@@ -27,10 +27,13 @@ private val log = KotlinLogging.logger {}
  * A background coroutine reads from [grpcReceiveFlow] (the outbound side of the bidi stream),
  * converts each proto to a domain event via [toDomain], and forwards it to the delegate.
  * [OutboundRouter] then consumes from the delegate as normal.
+ *
+ * The flow reference can be swapped via [reattach] to support reconnect without restarting the
+ * transport layer.
  */
 class GrpcOutboundBus(
     private val delegate: LocalOutboundBus,
-    private val grpcReceiveFlow: Flow<dev.ambon.grpc.proto.OutboundEventProto>,
+    grpcReceiveFlow: Flow<dev.ambon.grpc.proto.OutboundEventProto>,
     private val scope: CoroutineScope,
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val controlPlaneSendTimeoutMs: Long = DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS,
@@ -42,6 +45,8 @@ class GrpcOutboundBus(
         }
     }
 
+    private var currentFlow: Flow<dev.ambon.grpc.proto.OutboundEventProto> = grpcReceiveFlow
+
     private var receiverJob: Job? = null
 
     /** Start reading from the gRPC stream and forwarding events to the delegate. */
@@ -49,7 +54,7 @@ class GrpcOutboundBus(
         receiverJob =
             scope.launch {
                 try {
-                    grpcReceiveFlow.collect { proto ->
+                    currentFlow.collect { proto ->
                         val event = proto.toDomain()
                         if (event == null) {
                             log.warn { "Received unrecognised OutboundEventProto from engine: $proto" }
@@ -101,6 +106,26 @@ class GrpcOutboundBus(
             }
         log.info { "GrpcOutboundBus receiver started" }
     }
+
+    /**
+     * Cancel the current receiver, swap in [newFlow], and start a new receiver.
+     *
+     * Used by the gateway reconnect loop: after the engine gRPC stream dies, a new bidi stream is
+     * opened and this method swaps the bus onto the new stream without touching the transport layer.
+     */
+    suspend fun reattach(newFlow: Flow<dev.ambon.grpc.proto.OutboundEventProto>) {
+        receiverJob?.cancelAndJoin()
+        currentFlow = newFlow
+        startReceiving()
+    }
+
+    /** Suspends until the current receiver job completes (or is already done). */
+    suspend fun awaitReceiverCompletion() {
+        receiverJob?.join()
+    }
+
+    /** Returns true if the receiver coroutine is currently active. */
+    fun isReceiverActive(): Boolean = receiverJob?.isActive == true
 
     fun stopReceiving() {
         runBlocking { receiverJob?.cancelAndJoin() }
