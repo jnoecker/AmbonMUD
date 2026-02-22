@@ -33,16 +33,17 @@ Welcome to AmbonMUD. This guide walks a new developer from zero to productive as
 
 ## 1. What Is This?
 
-AmbonMUD is a **single-process, tick-based MUD (Multi-User Dungeon) server** written in Kotlin/JVM. It supports simultaneous telnet and WebSocket clients, YAML-defined world content, bcrypt-hashed player accounts, and real-time combat/mob/regen systems.
+AmbonMUD is a **tick-based MUD (Multi-User Dungeon) server** written in Kotlin/JVM. It supports simultaneous telnet and WebSocket clients, YAML-defined world content, bcrypt-hashed player accounts, and real-time combat/mob/regen systems. It can run as a single process or split into separate engine and gateway processes for horizontal scaling.
 
 The codebase is intentionally designed like a production backend service, not a toy project. The emphasis is on clean architectural boundaries, testability, and incremental extensibility.
-    
+
 Key stats:
 - **Transport**: Telnet (port 4000) + WebSocket / browser demo (port 8080)
 - **Engine**: Single-threaded coroutine dispatcher, 100 ms ticks
 - **Persistence**: Write-behind coalescing → optional Redis L2 cache → atomic YAML files
 - **World content**: YAML zone files, multi-zone with cross-zone exits
 - **Scalability**: Phases 1–4 complete (bus abstraction, async persistence, Redis integration, gRPC gateway split); three deployment modes: `STANDALONE`, `ENGINE`, `GATEWAY`
+- **Gateway resilience**: Exponential-backoff reconnect when the engine gRPC stream is lost; Snowflake session IDs with overflow wait and clock-rollback hardening
 
 ---
 
@@ -151,9 +152,11 @@ AmbonMUD/
 │   ├── session/                   # Session ID allocation
 │   │   ├── SessionIdFactory.kt    # Interface: allocate() → SessionId
 │   │   ├── AtomicSessionIdFactory.kt  # AtomicLong-based impl (standalone mode)
-│   │   └── SnowflakeSessionIdFactory.kt  # Bit-packed IDs for multi-gateway (Phase 4)
+│   │   ├── SnowflakeSessionIdFactory.kt  # Bit-packed IDs for multi-gateway (Phase 4)
+│   │   └── GatewayIdLeaseManager.kt  # Redis-based exclusive lease for gateway IDs
 │   ├── metrics/                   # Observability
-│   │   └── GameMetrics.kt         # Micrometer gauges/counters for Prometheus
+│   │   ├── GameMetrics.kt         # Micrometer gauges/counters for Prometheus
+│   │   └── MetricsHttpServer.kt   # Standalone Prometheus scrape endpoint (ENGINE mode)
 │   ├── transport/                 # Protocol adapters
 │   │   ├── BlockingSocketTransport.kt  # Telnet server
 │   │   ├── KtorWebSocketTransport.kt   # WebSocket / Ktor
@@ -180,7 +183,7 @@ AmbonMUD/
 │   │   ├── demo_ruins.yaml
 │   │   └── noecker_resume.yaml
 │   └── web/                       # Static browser client (xterm.js)
-├── src/test/kotlin/               # Full test suite (~45 test files)
+├── src/test/kotlin/               # Full test suite (~49 test files)
 ├── src/test/resources/world/      # World fixtures (valid + invalid)
 ├── data/players/                  # Runtime player saves (git-ignored)
 ├── docs/
@@ -791,11 +794,32 @@ service EngineService {
 - **`GatewayServer`**: Creates a `ManagedChannel` to the engine, opens the bidirectional stream, and wires `GrpcInboundBus` + `GrpcOutboundBus`. Transport adapters (`BlockingSocketTransport`, `KtorWebSocketTransport`) use the gRPC buses.
 - **`SnowflakeSessionIdFactory`**: Generates globally unique session IDs across multiple gateways. Bit layout: `[16-bit gatewayId][32-bit unix_seconds][16-bit sequence]`. `GatewayConfig.id` (0–65535) is the gateway's assigned ID.
 
-### Disconnect Handling (v1)
+### Disconnect Handling
 
 When a gateway's gRPC stream closes (network failure or restart), the engine synthesizes `InboundEvent.Disconnected` for every session that was registered to that stream, cleanly removing them from the world.
 
-> **Follow-up (not yet implemented):** Gateway reconnect-with-retry logic. Currently, a gateway restart starts fresh (all sessions lost).
+### Gateway Reconnect
+
+When the gateway detects a gRPC stream failure, it performs bounded exponential-backoff reconnect:
+
+1. All existing local sessions are disconnected with an informational message.
+2. The old inbound channel is closed so new session attempts fail immediately.
+3. The gateway retries up to `gateway.reconnect.maxAttempts` times with exponential backoff (configurable initial/max delay and jitter factor).
+4. Each attempt opens a new bidi gRPC stream and waits `gateway.reconnect.streamVerifyMs` to confirm the stream is healthy.
+5. On success: the inbound bus is reattached and new connections are accepted.
+6. On budget exhaustion: the gateway shuts down.
+
+Configuration (`application.yaml`):
+```yaml
+ambonMUD:
+  gateway:
+    reconnect:
+      maxAttempts: 10
+      initialDelayMs: 1000
+      maxDelayMs: 30000
+      jitterFactor: 0.2
+      streamVerifyMs: 2000
+```
 
 ### Running in Split Mode
 
@@ -826,7 +850,7 @@ Config overrides:
 
 **File:** `src/main/kotlin/dev/ambon/metrics/GameMetrics.kt`
 
-AmbonMUD exposes Prometheus metrics via Micrometer at `http://localhost:8080/metrics`.
+AmbonMUD exposes Prometheus metrics via Micrometer. In `STANDALONE` and `GATEWAY` modes, the scrape endpoint is served by the Ktor web server at `http://localhost:8080/metrics`. In `ENGINE` mode (which has no Ktor server), a standalone `MetricsHttpServer` exposes the endpoint at `http://localhost:9090/metrics` (port configurable via `observability.metricsHttpPort`).
 
 Key metrics:
 - Online session count (gauge)
@@ -957,6 +981,8 @@ Edit or add YAML files in `src/main/resources/world/`, then register them in `sr
 | `grpc.server` | `port` (9090) — gRPC listen port (engine mode) |
 | `grpc.client` | `engineHost` (localhost), `enginePort` (9090) — engine address (gateway mode) |
 | `gateway` | `id` (0) — 16-bit gateway ID for `SnowflakeSessionIdFactory` (0–65535) |
+| `gateway.snowflake` | `idLeaseTtlSeconds` (300) — TTL for Redis gateway-ID exclusive lease |
+| `gateway.reconnect` | `maxAttempts` (10), `initialDelayMs` (1000), `maxDelayMs` (30000), `jitterFactor` (0.2), `streamVerifyMs` (2000) |
 | `observability` | Prometheus metrics endpoint |
 | `logging` | `level` (INFO), `packageLevels` — per-package level overrides |
 
@@ -1020,13 +1046,21 @@ To trace connection lifecycle at runtime:
 | `CommandParserTest` | All command aliases and parse variants |
 | `CommandRouterTest` | Command execution, broadcasts, error cases |
 | `CommandRouterAdminTest` | Staff/admin command gating and execution |
+| `CommandRouterBroadcastTest` | Room and global broadcast behavior |
+| `CommandRouterItemsTest` | Item get/drop/wear/remove command execution |
 | `CommandRouterScoreTest` | Score command output |
+| `NamesTellGossipTest` | Tell and gossip name resolution edge cases |
 | `CombatSystemTest` | Damage, HP, death, XP grant, armor math |
 | `GameEngineIntegrationTest` | Full login-to-gameplay integration |
 | `GameEngineLoginFlowTest` | Login FSM edge cases and takeover |
+| `GameEngineAnsiBehaviorTest` | ANSI toggle and rendering integration |
+| `MobRegistryTest` | Mob registration, room membership index |
 | `MobSystemTest` | Wander scheduling, time-gating, per-tick cap |
 | `PlayerProgressionTest` | XP curves, level computation, HP scaling |
 | `ItemRegistryTest` | Equip, inventory, loot drops, keyword matching |
+| `SchedulerTest` | Delayed/recurring callback scheduling |
+| `SchedulerDropsTest` | Scheduler per-tick cap and action dropping |
+| `AppConfigLoaderTest` | Config loading and validation |
 | `YamlPlayerRepositoryTest` | File I/O, atomic writes, case-insensitive lookup |
 | `RedisCachingPlayerRepositoryTest` | Redis L2 cache hit/miss, TTL, fallback |
 | `WriteCoalescingPlayerRepositoryTest` | Dirty tracking, coalescing (N saves → 1 write) |
@@ -1035,16 +1069,28 @@ To trace connection lifecycle at runtime:
 | `LocalOutboundBusTest` | Channel wrapping |
 | `RedisInboundBusTest` | Pub/sub delivery, instanceId filtering |
 | `RedisOutboundBusTest` | Pub/sub delivery, instanceId filtering |
-| `WorldLoaderTest` | YAML parsing, per-file and cross-file validation |
-| `AnsiRendererTest` | Color output, escape code correctness |
-| `KtorWebSocketTransportTest` | WebSocket connect/disconnect |
-| `GameMetricsTest` | Metric registration and updates |
-| `ProtoMapperTest` | Round-trip every InboundEvent/OutboundEvent variant through proto |
-| `SnowflakeSessionIdFactoryTest` | Uniqueness, monotonicity, bit-field correctness |
-| `EngineServiceImplTest` | In-process gRPC bidirectional streaming |
-| `GrpcOutboundDispatcherTest` | Per-session stream routing, unknown-session drop |
 | `GrpcInboundBusTest` | Delegate pattern + gRPC forward |
 | `GrpcOutboundBusTest` | Delegate pattern + gRPC receive |
+| `WorldLoaderTest` | YAML parsing, per-file and cross-file validation |
+| `AnsiRendererTest` | Color output, escape code correctness |
+| `PlainRendererTest` | Plain text rendering (no escape codes) |
+| `TelnetLineDecoderTest` | Telnet protocol byte stripping |
+| `OutboundRouterTest` | Event routing to per-session renderers |
+| `OutboundRouterPromptCoalescingTest` | Consecutive prompt collapsing |
+| `OutboundRouterAnsiControlsTest` | ANSI control event routing |
+| `KtorWebSocketTransportTest` | WebSocket connect/disconnect |
+| `MetricsEndpointTest` | Prometheus scrape endpoint via Ktor |
+| `GameMetricsTest` | Metric registration and updates |
+| `MetricsHttpServerTest` | Standalone metrics HTTP server (ENGINE mode) |
+| `LoginScreenLoaderTest` | Login banner file loading |
+| `LoginScreenRendererTest` | Login banner ANSI rendering |
+| `ProtoMapperTest` | Round-trip every InboundEvent/OutboundEvent variant through proto |
+| `SnowflakeSessionIdFactoryTest` | Uniqueness, monotonicity, bit-field correctness |
+| `AtomicSessionIdFactoryTest` | Sequential ID allocation |
+| `GatewayIdLeaseManagerTest` | Redis-based gateway ID exclusive lease |
+| `EngineServiceImplTest` | In-process gRPC bidirectional streaming |
+| `EngineGrpcServerTest` | gRPC server lifecycle |
+| `GrpcOutboundDispatcherTest` | Per-session stream routing, unknown-session drop |
 | `GatewayEngineIntegrationTest` | Full in-process connect → login → say → quit over gRPC |
 
 ### Testing Expectations
