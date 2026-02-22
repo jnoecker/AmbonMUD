@@ -222,6 +222,34 @@ class HandoffManagerTest {
             events.add(ev)
         }
         assertTrue(events.any { it is OutboundEvent.SendText && "shimmers" in (it as OutboundEvent.SendText).text })
+
+        // Verify a SessionRedirect was sent before the shimmer message
+        val redirectEvent = events.filterIsInstance<OutboundEvent.SessionRedirect>().firstOrNull()
+        assertNotNull(redirectEvent)
+        assertEquals(sid, redirectEvent!!.sessionId)
+        assertEquals(targetEngineId, redirectEvent.newEngineId)
+        assertEquals("host2", redirectEvent.newEngineHost)
+        assertEquals(9091, redirectEvent.newEnginePort)
+    }
+
+    @Test
+    fun `initiateHandoff sends SessionRedirect before text message`() = runBlocking {
+        players.create(sid, "Alice", "password123")
+
+        handoffManager.initiateHandoff(sid, targetRoom)
+
+        val events = mutableListOf<OutboundEvent>()
+        while (true) {
+            val ev = outboundChannel.tryReceive().getOrNull() ?: break
+            events.add(ev)
+        }
+
+        // SessionRedirect should come before the shimmer text
+        val redirectIdx = events.indexOfFirst { it is OutboundEvent.SessionRedirect }
+        val textIdx = events.indexOfFirst { it is OutboundEvent.SendText && "shimmers" in (it as OutboundEvent.SendText).text }
+        assertTrue(redirectIdx >= 0, "Should have a SessionRedirect event")
+        assertTrue(textIdx >= 0, "Should have a shimmer text event")
+        assertTrue(redirectIdx < textIdx, "SessionRedirect should come before the shimmer text")
     }
 
     @Test

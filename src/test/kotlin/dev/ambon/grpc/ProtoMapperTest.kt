@@ -105,6 +105,17 @@ class ProtoMapperTest {
     }
 
     @Test
+    fun `SessionRedirect round-trips`() {
+        val event = OutboundEvent.SessionRedirect(
+            sessionId = sid,
+            newEngineId = "engine-2",
+            newEngineHost = "host2.example.com",
+            newEnginePort = 9092,
+        )
+        assertEquals(event, event.toProto().toDomain())
+    }
+
+    @Test
     fun `Empty OutboundEventProto toDomain returns null`() {
         val proto = dev.ambon.grpc.proto.OutboundEventProto.getDefaultInstance()
         assertNull(proto.toDomain())

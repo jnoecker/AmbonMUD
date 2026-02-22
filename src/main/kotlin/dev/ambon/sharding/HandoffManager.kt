@@ -72,6 +72,16 @@ class HandoffManager(
             sourceEngineId = engineId,
         )
 
+        // Tell the gateway to remap this session to the target engine
+        outbound.send(
+            OutboundEvent.SessionRedirect(
+                sessionId = sessionId,
+                newEngineId = targetEngine.engineId,
+                newEngineHost = targetEngine.host,
+                newEnginePort = targetEngine.port,
+            ),
+        )
+
         // Notify the player
         outbound.send(OutboundEvent.SendText(sessionId, "The air shimmers as you cross into new territory..."))
 

@@ -392,6 +392,15 @@ data class GatewayConfig(
     val id: Int = 0,
     val snowflake: SnowflakeConfig = SnowflakeConfig(),
     val reconnect: GatewayReconnectConfig = GatewayReconnectConfig(),
+    /** Static list of engines for multi-engine mode. Empty = single engine via grpc.client config. */
+    val engines: List<GatewayEngineEntry> = emptyList(),
+)
+
+/** Address entry for a remote engine in multi-engine gateway mode. */
+data class GatewayEngineEntry(
+    val id: String,
+    val host: String,
+    val port: Int,
 )
 
 data class RedisBusConfig(

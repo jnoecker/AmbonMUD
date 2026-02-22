@@ -23,6 +23,17 @@ ambonMUD:
       maxDelayMs: 30000
       jitterFactor: 0.2
       streamVerifyMs: 2000
+    # Multi-engine mode: when engines list is non-empty, the gateway connects
+    # to all listed engines and uses SessionRouter for session-to-engine routing.
+    # Leave empty for single-engine mode (uses grpc.client config instead).
+    engines: []
+    #engines:
+    #  - id: engine-1
+    #    host: localhost
+    #    port: 9091
+    #  - id: engine-2
+    #    host: localhost
+    #    port: 9092
 
   server:
     telnetPort: 4000
