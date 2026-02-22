@@ -1,5 +1,6 @@
 package dev.ambon.bus
 
+import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.grpc.isControlPlane
 import dev.ambon.grpc.sessionId
@@ -20,6 +21,18 @@ import kotlinx.coroutines.withTimeout
 
 private val log = KotlinLogging.logger {}
 
+sealed interface GrpcOutboundFailure {
+    data class StreamFailure(
+        val cause: Throwable,
+    ) : GrpcOutboundFailure
+
+    data class ControlPlaneDeliveryFailure(
+        val sessionId: SessionId,
+        val eventType: String,
+        val reason: String,
+    ) : GrpcOutboundFailure
+}
+
 /**
  * Gateway-side [OutboundBus] that receives events from the engine via a gRPC stream.
  *
@@ -37,7 +50,7 @@ class GrpcOutboundBus(
     private val scope: CoroutineScope,
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val controlPlaneSendTimeoutMs: Long = DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS,
-    private val onFatalStreamFailure: (Throwable) -> Unit = {},
+    private val onFailure: (GrpcOutboundFailure) -> Unit = {},
 ) : OutboundBus {
     init {
         require(controlPlaneSendTimeoutMs > 0L) {
@@ -87,10 +100,14 @@ class GrpcOutboundBus(
                         } catch (_: TimeoutCancellationException) {
                             metrics.onGrpcControlPlaneDrop("gateway_local_queue_full_timeout")
                             metrics.onGrpcForcedDisconnectDueToControlDeliveryFailure("gateway_local_queue_full_timeout")
-                            throw IllegalStateException(
-                                "Gateway local outbound queue did not accept control-plane " +
-                                    "${event::class.simpleName} for session ${event.sessionId()}",
+                            notifyFailure(
+                                GrpcOutboundFailure.ControlPlaneDeliveryFailure(
+                                    sessionId = event.sessionId(),
+                                    eventType = event::class.simpleName ?: "UnknownOutboundEvent",
+                                    reason = "gateway_local_queue_full_timeout",
+                                ),
                             )
+                            return@collect
                         }
                     }
                     throw IllegalStateException("Engine gRPC outbound stream completed unexpectedly")
@@ -98,13 +115,17 @@ class GrpcOutboundBus(
                     throw e
                 } catch (e: Exception) {
                     log.error(e) { "Engine gRPC outbound stream ended fatally" }
-                    runCatching { onFatalStreamFailure(e) }
-                        .onFailure { cbErr ->
-                            log.error(cbErr) { "Fatal stream failure callback threw" }
-                        }
+                    notifyFailure(GrpcOutboundFailure.StreamFailure(e))
                 }
             }
         log.info { "GrpcOutboundBus receiver started" }
+    }
+
+    private fun notifyFailure(failure: GrpcOutboundFailure) {
+        runCatching { onFailure(failure) }
+            .onFailure { cbErr ->
+                log.error(cbErr) { "GrpcOutboundBus failure callback threw" }
+            }
     }
 
     /**

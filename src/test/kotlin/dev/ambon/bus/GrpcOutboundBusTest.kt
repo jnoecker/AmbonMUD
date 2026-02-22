@@ -3,7 +3,6 @@ package dev.ambon.bus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.grpc.toProto
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -14,7 +13,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -119,15 +117,15 @@ class GrpcOutboundBusTest {
     }
 
     @Test
-    fun `control-plane enqueue failure triggers fatal callback`() =
+    fun `control-plane enqueue failure triggers classified delivery failure without stopping receiver`() =
         runBlocking {
-            val fatal = CompletableDeferred<Throwable>()
+            val failures = Channel<GrpcOutboundFailure>(Channel.UNLIMITED)
             val sid = SessionId(30L)
             val fullDelegate = LocalOutboundBus(capacity = Channel.RENDEZVOUS)
             val grpcFlow =
                 flow {
                     emit(OutboundEvent.Close(sessionId = sid, reason = "disconnect").toProto())
-                    delay(2_000L)
+                    delay(5_000L)
                 }
 
             bus =
@@ -136,18 +134,22 @@ class GrpcOutboundBusTest {
                     grpcReceiveFlow = grpcFlow,
                     scope = scope,
                     controlPlaneSendTimeoutMs = 25L,
-                    onFatalStreamFailure = { error -> fatal.complete(error) },
+                    onFailure = { failure -> failures.trySend(failure) },
                 )
             bus.startReceiving()
 
-            val error = withTimeout(1_000L) { fatal.await() }
-            assertTrue(error is IllegalStateException)
+            val failure = withTimeout(1_000L) { failures.receive() }
+            assertTrue(failure is GrpcOutboundFailure.ControlPlaneDeliveryFailure)
+            val typed = failure as GrpcOutboundFailure.ControlPlaneDeliveryFailure
+            assertEquals(sid, typed.sessionId)
+            assertEquals("gateway_local_queue_full_timeout", typed.reason)
+            assertTrue(bus.isReceiverActive(), "Receiver should stay active after local delivery failure")
         }
 
     @Test
-    fun `data-plane enqueue failure is dropped without fatal callback`() =
+    fun `data-plane enqueue failure is dropped without invoking failure callback`() =
         runBlocking {
-            val fatal = CompletableDeferred<Throwable>()
+            val failures = Channel<GrpcOutboundFailure>(Channel.UNLIMITED)
             val sid = SessionId(31L)
             val fullDelegate = LocalOutboundBus(capacity = Channel.RENDEZVOUS)
             val grpcFlow =
@@ -161,12 +163,12 @@ class GrpcOutboundBusTest {
                     delegate = fullDelegate,
                     grpcReceiveFlow = grpcFlow,
                     scope = scope,
-                    onFatalStreamFailure = { error -> fatal.complete(error) },
+                    onFailure = { failure -> failures.trySend(failure) },
                 )
             bus.startReceiving()
 
             delay(100L)
-            assertFalse(fatal.isCompleted, "Data-plane drops should not trigger fatal callback")
+            assertTrue(failures.tryReceive().isFailure, "Data-plane drops should not trigger failure callback")
             val result = bus.tryReceive()
             assertTrue(result.isFailure || result.getOrNull() == null)
         }

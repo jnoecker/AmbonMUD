@@ -1,6 +1,7 @@
 package dev.ambon.grpc
 
 import dev.ambon.bus.GrpcOutboundBus
+import dev.ambon.bus.GrpcOutboundFailure
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.GatewayReconnectConfig
@@ -249,11 +250,15 @@ class GatewayEngineIntegrationTest {
                     delegate = delegate,
                     grpcReceiveFlow = failingFlow,
                     scope = busScope,
-                    onFatalStreamFailure = { e -> failureLatch.trySend(e) },
+                    onFailure = { failure ->
+                        if (failure is GrpcOutboundFailure.StreamFailure) {
+                            failureLatch.trySend(failure.cause)
+                        }
+                    },
                 )
             bus.startReceiving()
 
-            // Confirm onFatalStreamFailure is called.
+            // Confirm stream-failure callback is called.
             withTimeout(2_000L) { failureLatch.receive() }
 
             // Replace with a working flow backed by a channel.
@@ -302,7 +307,11 @@ class GatewayEngineIntegrationTest {
                         delegate = delegate,
                         grpcReceiveFlow = outboundFlow,
                         scope = busScope,
-                        onFatalStreamFailure = { e -> failureLatch.trySend(e) },
+                        onFailure = { failure ->
+                            if (failure is GrpcOutboundFailure.StreamFailure) {
+                                failureLatch.trySend(failure.cause)
+                            }
+                        },
                     )
                 bus.startReceiving()
 
@@ -323,7 +332,7 @@ class GatewayEngineIntegrationTest {
                 grpcServer.awaitTermination(2L, TimeUnit.SECONDS)
                 inboundChannel.close()
 
-                // Verify onFatalStreamFailure fires.
+                // Verify stream-failure callback fires.
                 withTimeout(3_000L) { failureLatch.receive() }
 
                 // Restart the gRPC server with the same in-process name.

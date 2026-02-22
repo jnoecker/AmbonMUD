@@ -2,6 +2,7 @@ package dev.ambon.gateway
 
 import dev.ambon.bus.GrpcInboundBus
 import dev.ambon.bus.GrpcOutboundBus
+import dev.ambon.bus.GrpcOutboundFailure
 import dev.ambon.bus.InboundBus
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
@@ -104,6 +105,9 @@ class GatewayServer(
 
     private var leaseManager: GatewayIdLeaseManager? = null
 
+    private val streamLostDisconnectReason = "Disconnected: engine connection lost. Please reconnect."
+    private val localControlDeliveryDisconnectReason = "Disconnected: gateway outbound queue stalled."
+
     suspend fun start() {
         redisManager?.connect()
 
@@ -154,17 +158,34 @@ class GatewayServer(
                 grpcReceiveFlow = outboundFlow,
                 scope = scope,
                 metrics = gameMetrics,
-                onFatalStreamFailure = { error ->
-                    if (reconnecting.compareAndSet(false, true)) {
-                        log.warn(error) { "Engine gRPC stream lost; scheduling reconnect" }
-                        scope.launch { attemptReconnect() }
+                onFailure = { failure ->
+                    when (failure) {
+                        is GrpcOutboundFailure.StreamFailure -> {
+                            if (reconnecting.compareAndSet(false, true)) {
+                                log.warn(failure.cause) { "Engine gRPC stream lost; scheduling reconnect" }
+                                scope.launch { handleStreamFailure() }
+                            }
+                        }
+
+                        is GrpcOutboundFailure.ControlPlaneDeliveryFailure -> {
+                            log.warn {
+                                "Gateway local queue stalled for control-plane ${failure.eventType} " +
+                                    "(session=${failure.sessionId}, reason=${failure.reason}); disconnecting session"
+                            }
+                            scope.launch {
+                                outboundRouter.forceDisconnect(
+                                    sessionId = failure.sessionId,
+                                    reason = localControlDeliveryDisconnectReason,
+                                )
+                            }
+                        }
                     }
                 },
             )
-        grpcOutboundBus.startReceiving()
 
         outboundRouter = OutboundRouter(engineOutbound = grpcOutboundBus, scope = scope, metrics = gameMetrics)
         scope.launch { outboundRouter.start() }
+        grpcOutboundBus.startReceiving()
 
         telnetTransport =
             BlockingSocketTransport(
@@ -218,6 +239,14 @@ class GatewayServer(
         runCatching { redisManager?.close() }
         scope.cancel()
         log.info { "Gateway server stopped" }
+    }
+
+    private suspend fun handleStreamFailure() {
+        val disconnected = outboundRouter.disconnectAll(streamLostDisconnectReason)
+        if (disconnected > 0) {
+            log.info { "Disconnected $disconnected local session(s) after engine stream loss" }
+        }
+        attemptReconnect()
     }
 
     /**
