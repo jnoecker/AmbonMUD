@@ -105,7 +105,7 @@ class CommandRouter(
                 val to = room.exits[cmd.dir]
                 if (to == null) {
                     outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
-                } else if (!world.rooms.containsKey(to)) {
+                } else if (room.remoteExits.contains(cmd.dir) || !world.rooms.containsKey(to)) {
                     // Cross-zone exit — hand off to the owning engine if sharding is active
                     if (onCrossZoneMove != null) {
                         onCrossZoneMove.invoke(sessionId, to)
@@ -268,7 +268,7 @@ class CommandRouter(
                     outbound.send(OutboundEvent.SendError(sessionId, "You see nothing that way."))
                 } else {
                     val target = world.rooms[targetId]
-                    if (target == null) {
+                    if (target == null || r.remoteExits.contains(cmd.dir)) {
                         outbound.send(OutboundEvent.SendText(sessionId, "You see a shimmering passage."))
                     } else {
                         outbound.send(OutboundEvent.SendText(sessionId, target.title))

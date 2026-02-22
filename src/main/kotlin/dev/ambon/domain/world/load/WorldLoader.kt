@@ -287,7 +287,13 @@ object WorldLoader {
         // Apply exits by copying rooms (immutable style)
         for ((fromId, exits) in allExits) {
             val room = mergedRooms.getValue(fromId)
-            mergedRooms[fromId] = room.copy(exits = exits)
+            val remoteExits =
+                if (filteredLoad) {
+                    exits.filterValues { it.zone !in loadedZones }.keys.toSet()
+                } else {
+                    emptySet()
+                }
+            mergedRooms[fromId] = room.copy(exits = exits, remoteExits = remoteExits)
         }
 
         // Validate worldStart exists

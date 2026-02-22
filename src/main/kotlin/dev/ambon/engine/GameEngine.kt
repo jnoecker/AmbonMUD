@@ -52,6 +52,8 @@ class GameEngine(
     private val handoffManager: HandoffManager? = null,
     private val interEngineBus: InterEngineBus? = null,
     private val engineId: String = "",
+    /** Returns the number of peer engines (excluding self). Used for `who` shard coverage warnings. */
+    private val peerEngineCount: () -> Int = { 0 },
 ) {
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
@@ -145,7 +147,9 @@ class GameEngine(
     private data class PendingWhoRequest(
         val sessionId: SessionId,
         val deadlineEpochMs: Long,
+        val expectedPeerCount: Int,
         val remotePlayerNames: MutableSet<String> = linkedSetOf(),
+        var respondedCount: Int = 0,
     )
 
     init {
@@ -349,6 +353,7 @@ class GameEngine(
             PendingWhoRequest(
                 sessionId = sessionId,
                 deadlineEpochMs = clock.millis() + WHO_RESPONSE_WAIT_MS,
+                expectedPeerCount = peerEngineCount(),
             )
         bus.broadcast(
             InterEngineMessage.WhoRequest(
@@ -366,9 +371,19 @@ class GameEngine(
             val (_, pending) = itr.next()
             if (nowEpochMs < pending.deadlineEpochMs) continue
 
-            if (players.get(pending.sessionId) != null && pending.remotePlayerNames.isNotEmpty()) {
-                val names = pending.remotePlayerNames.sorted().joinToString(", ")
-                outbound.send(OutboundEvent.SendInfo(pending.sessionId, "Also online: $names"))
+            if (players.get(pending.sessionId) != null) {
+                if (pending.remotePlayerNames.isNotEmpty()) {
+                    val names = pending.remotePlayerNames.sorted().joinToString(", ")
+                    outbound.send(OutboundEvent.SendInfo(pending.sessionId, "Also online: $names"))
+                }
+                if (pending.expectedPeerCount > 0 && pending.respondedCount < pending.expectedPeerCount) {
+                    outbound.send(
+                        OutboundEvent.SendInfo(
+                            pending.sessionId,
+                            "(Note: some game shards did not respond — results may be incomplete.)",
+                        ),
+                    )
+                }
             }
             itr.remove()
         }
@@ -473,7 +488,7 @@ class GameEngine(
                     pendingWhoRequests.remove(msg.requestId)
                     return
                 }
-                if (msg.players.isEmpty()) return
+                pending.respondedCount++
                 pending.remotePlayerNames += msg.players.map(PlayerSummary::name)
             }
             is InterEngineMessage.KickRequest -> {

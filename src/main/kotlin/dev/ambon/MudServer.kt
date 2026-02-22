@@ -350,6 +350,14 @@ class MudServer(
                     handoffManager = handoffManager,
                     interEngineBus = interEngineBus,
                     engineId = engineId,
+                    peerEngineCount = {
+                        zoneRegistry?.allAssignments()?.values
+                            ?.map { it.engineId }
+                            ?.filter { it != engineId }
+                            ?.toSet()
+                            ?.size
+                            ?: 0
+                    },
                 ).run()
             }
 
