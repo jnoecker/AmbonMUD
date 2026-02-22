@@ -1,7 +1,7 @@
 AmbonMUD
 ========
 
-AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a production-quality, event-driven backend with telnet and WebSocket transports, data-driven world loading, tiered NPC combat, and a layered persistence stack with optional Redis caching.
+AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a production-quality, event-driven backend with telnet and WebSocket transports, data-driven world loading, tiered NPC combat, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching.
 
 Current State
 -------------
@@ -106,8 +106,10 @@ This works identically on Windows PowerShell with no quoting issues.
 Most day-to-day tuning lives under:
 - `ambonMUD.server` (ports, tick rates, channel capacities)
 - `ambonMUD.world.resources` (which zone YAML resources to load)
-- `ambonMUD.persistence.rootDir` (where player YAML data is written)
+- `ambonMUD.persistence.backend` (`YAML` or `POSTGRES` — default `YAML`)
+- `ambonMUD.persistence.rootDir` (where player YAML data is written, YAML backend only)
 - `ambonMUD.persistence.worker` (write-behind flush interval, enable/disable)
+- `ambonMUD.database` (jdbcUrl, username, password, pool size — required when backend is `POSTGRES`)
 - `ambonMUD.redis` (enabled, URI, cache TTL, pub/sub bus config)
 - `ambonMUD.logging` (root log level and per-package overrides)
 
@@ -202,9 +204,14 @@ Notes:
 
 Persistence
 -----------
-Player records are stored as YAML under `data/players/players/` (configurable via `ambonMUD.persistence.rootDir`). IDs are allocated in `data/players/next_player_id.txt`. On login, the server loads or creates the player record and places the player in their saved room.
+AmbonMUD supports two player persistence backends, selected via `ambonMUD.persistence.backend`:
 
-The persistence stack has three layers:
+| Backend | Description |
+|---------|-------------|
+| `YAML` (default) | Player records stored as YAML files under `data/players/`. No external infrastructure needed. |
+| `POSTGRES` | Player records stored in a PostgreSQL database. Schema managed by Flyway migrations. |
+
+The persistence stack has three layers regardless of backend:
 
 ```
 WriteCoalescingPlayerRepository  ← dirty-flag write-behind (configurable flush interval)
@@ -212,7 +219,41 @@ WriteCoalescingPlayerRepository  ← dirty-flag write-behind (configurable flush
 RedisCachingPlayerRepository     ← L2 cache (if redis.enabled = true)
   ↓
 YamlPlayerRepository             ← durable YAML files, atomic writes
+  — or —
+PostgresPlayerRepository         ← Exposed DSL + HikariCP connection pool
 ```
+
+### YAML Backend (default)
+
+No additional configuration needed. Player files are written to `data/players/players/` (configurable via `ambonMUD.persistence.rootDir`). IDs are allocated in `data/players/next_player_id.txt`.
+
+### PostgreSQL Backend
+
+Requires a running PostgreSQL instance. Enable with:
+
+```bash
+./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES \
+              -Pconfig.ambonMUD.database.jdbcUrl=jdbc:postgresql://localhost:5432/ambonmud \
+              -Pconfig.ambonMUD.database.username=ambon \
+              -Pconfig.ambonMUD.database.password=secret
+```
+
+Or in `application.yaml`:
+
+```yaml
+ambonMUD:
+  persistence:
+    backend: POSTGRES
+  database:
+    jdbcUrl: "jdbc:postgresql://localhost:5432/ambonmud"
+    username: ambon
+    password: secret
+    maxPoolSize: 5
+```
+
+Flyway runs migrations automatically on startup. Schema files live in `src/main/resources/db/migration/`.
+
+### Redis Caching (optional, works with either backend)
 
 Redis caching is disabled by default. Enable it with:
 
@@ -224,7 +265,11 @@ ambonMUD:
     cacheTtlSeconds: 3600
 ```
 
-To grant staff/admin access to a player, manually add `isStaff: true` to their YAML record at `data/players/players/<name>.yaml`.
+### Staff Access
+
+To grant staff/admin access to a player:
+- **YAML backend:** add `isStaff: true` to their record at `data/players/players/<id>.yaml`
+- **Postgres backend:** set `is_staff = true` on their row in the `players` table
 
 Tests
 -----

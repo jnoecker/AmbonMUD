@@ -1,5 +1,8 @@
 package dev.ambon.config
 
+/** Selects the player persistence backend. */
+enum class PersistenceBackend { YAML, POSTGRES }
+
 /** Deployment mode controlling which components are started. */
 enum class DeploymentMode {
     /** All components in a single process (default, current behaviour). */
@@ -28,6 +31,7 @@ data class AppConfig(
     val demo: DemoConfig = DemoConfig(),
     val observability: ObservabilityConfig = ObservabilityConfig(),
     val logging: LoggingConfig = LoggingConfig(),
+    val database: DatabaseConfig = DatabaseConfig(),
     val redis: RedisConfig = RedisConfig(),
     val grpc: GrpcConfig = GrpcConfig(),
     val gateway: GatewayConfig = GatewayConfig(),
@@ -46,6 +50,11 @@ data class AppConfig(
 
         require(persistence.rootDir.isNotBlank()) { "ambonMUD.persistence.rootDir must be non-blank" }
         require(persistence.worker.flushIntervalMs > 0L) { "ambonMUD.persistence.worker.flushIntervalMs must be > 0" }
+
+        if (persistence.backend == PersistenceBackend.POSTGRES) {
+            require(database.jdbcUrl.isNotBlank()) { "ambonMUD.database.jdbcUrl required when backend=POSTGRES" }
+            require(database.maxPoolSize > 0) { "ambonMUD.database.maxPoolSize must be > 0" }
+        }
 
         require(login.maxWrongPasswordRetries >= 0) { "ambonMUD.login.maxWrongPasswordRetries must be >= 0" }
         require(login.maxFailedAttemptsBeforeDisconnect > 0) {
@@ -164,6 +173,7 @@ data class WorldConfig(
 )
 
 data class PersistenceConfig(
+    val backend: PersistenceBackend = PersistenceBackend.YAML,
     val rootDir: String = "data/players",
     val worker: PersistenceWorkerConfig = PersistenceWorkerConfig(),
 )
@@ -171,6 +181,14 @@ data class PersistenceConfig(
 data class PersistenceWorkerConfig(
     val enabled: Boolean = true,
     val flushIntervalMs: Long = 5_000L,
+)
+
+data class DatabaseConfig(
+    val jdbcUrl: String = "",
+    val username: String = "",
+    val password: String = "",
+    val maxPoolSize: Int = 5,
+    val minimumIdle: Int = 1,
 )
 
 data class LoginConfig(
