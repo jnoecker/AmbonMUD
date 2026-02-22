@@ -291,10 +291,18 @@ data class LoggingConfig(
     val packageLevels: Map<String, String> = emptyMap(),
 )
 
+data class RedisBusConfig(
+    val enabled: Boolean = false,
+    val inboundChannel: String = "ambon:inbound",
+    val outboundChannel: String = "ambon:outbound",
+    val instanceId: String = "",
+)
+
 data class RedisConfig(
     val enabled: Boolean = false,
     val uri: String = "redis://localhost:6379",
     val cacheTtlSeconds: Long = 3600L,
+    val bus: RedisBusConfig = RedisBusConfig(),
 )
 
 private fun validateMobTier(

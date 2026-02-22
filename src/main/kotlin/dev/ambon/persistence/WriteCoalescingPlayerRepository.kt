@@ -2,6 +2,8 @@ package dev.ambon.persistence
 
 import dev.ambon.domain.ids.RoomId
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 private val log = KotlinLogging.logger {}
 
@@ -14,19 +16,39 @@ private val log = KotlinLogging.logger {}
 class WriteCoalescingPlayerRepository(
     private val delegate: PlayerRepository,
 ) : PlayerRepository {
+    private val lock = ReentrantLock()
     private val cache = mutableMapOf<PlayerId, PlayerRecord>()
-    private val dirty = mutableSetOf<PlayerId>()
+    private val dirtyVersions = mutableMapOf<PlayerId, Long>()
+    private val versions = mutableMapOf<PlayerId, Long>()
+
+    private data class PendingSave(
+        val id: PlayerId,
+        val version: Long,
+        val record: PlayerRecord,
+    )
 
     override suspend fun findByName(name: String): PlayerRecord? {
-        val cached = cache.values.find { it.name.equals(name, ignoreCase = true) }
+        val cached = lock.withLock { cache.values.find { it.name.equals(name, ignoreCase = true) } }
         if (cached != null) return cached
-        return delegate.findByName(name)?.also { cache[it.id] = it }
+        val loaded = delegate.findByName(name) ?: return null
+        lock.withLock {
+            if (cache[loaded.id] == null) {
+                cache[loaded.id] = loaded
+            }
+        }
+        return loaded
     }
 
     override suspend fun findById(id: PlayerId): PlayerRecord? {
-        val cached = cache[id]
+        val cached = lock.withLock { cache[id] }
         if (cached != null) return cached
-        return delegate.findById(id)?.also { cache[it.id] = it }
+        val loaded = delegate.findById(id) ?: return null
+        lock.withLock {
+            if (cache[loaded.id] == null) {
+                cache[loaded.id] = loaded
+            }
+        }
+        return loaded
     }
 
     override suspend fun create(
@@ -37,35 +59,63 @@ class WriteCoalescingPlayerRepository(
         ansiEnabled: Boolean,
     ): PlayerRecord {
         val record = delegate.create(name, startRoomId, nowEpochMs, passwordHash, ansiEnabled)
-        cache[record.id] = record
+        lock.withLock {
+            cache[record.id] = record
+            if (versions[record.id] == null) {
+                versions[record.id] = 0L
+            }
+        }
         return record
     }
 
     override suspend fun save(record: PlayerRecord) {
-        cache[record.id] = record
-        dirty.add(record.id)
+        lock.withLock {
+            cache[record.id] = record
+            val nextVersion = (versions[record.id] ?: 0L) + 1L
+            versions[record.id] = nextVersion
+            dirtyVersions[record.id] = nextVersion
+        }
     }
 
     suspend fun flushDirty(): Int {
-        if (dirty.isEmpty()) return 0
-        val toFlush = dirty.toList()
+        val toFlush = snapshotDirty()
+        if (toFlush.isEmpty()) return 0
         var flushed = 0
-        for (id in toFlush) {
-            val record = cache[id] ?: continue
+        for (pending in toFlush) {
             try {
-                delegate.save(record)
-                dirty.remove(id)
+                delegate.save(pending.record)
+                lock.withLock {
+                    if (dirtyVersions[pending.id] == pending.version) {
+                        dirtyVersions.remove(pending.id)
+                    }
+                }
                 flushed++
             } catch (e: Exception) {
-                log.error(e) { "Failed to flush player record: id=$id name=${record.name}" }
+                log.error(e) { "Failed to flush player record: id=${pending.id} name=${pending.record.name}" }
             }
         }
         return flushed
     }
 
-    suspend fun flushAll(): Int = flushDirty()
+    suspend fun flushAll(): Int {
+        var total = 0
+        while (true) {
+            val flushed = flushDirty()
+            total += flushed
+            val hasDirty = lock.withLock { dirtyVersions.isNotEmpty() }
+            if (!hasDirty || flushed == 0) return total
+        }
+    }
 
-    fun dirtyCount(): Int = dirty.size
+    fun dirtyCount(): Int = lock.withLock { dirtyVersions.size }
 
-    fun cachedCount(): Int = cache.size
+    fun cachedCount(): Int = lock.withLock { cache.size }
+
+    private fun snapshotDirty(): List<PendingSave> =
+        lock.withLock {
+            dirtyVersions.mapNotNull { (id, version) ->
+                val record = cache[id] ?: return@mapNotNull null
+                PendingSave(id = id, version = version, record = record)
+            }
+        }
 }
