@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -41,7 +42,8 @@ class PersistenceWorker(
     }
 
     suspend fun shutdown() {
-        job?.cancel()
+        job?.cancelAndJoin()
+        job = null
         try {
             val flushed = repo.flushAll()
             log.info { "PersistenceWorker shutdown: flushed $flushed record(s)" }
