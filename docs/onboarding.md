@@ -52,7 +52,8 @@ Key stats:
 ### Prerequisites
 
 - JDK 17+ (CI runs Java 21; the Gradle toolchain targets 17)
-- No other infrastructure needed
+- Docker (optional — for PostgreSQL, Redis, and observability stack)
+- No other infrastructure needed for the default YAML persistence mode
 
 ### Run the Server
 
@@ -85,6 +86,25 @@ Outputs:
 ```bash
 ./gradlew ktlintCheck
 ```
+
+### Full Infrastructure (Docker Compose)
+
+The `docker-compose.yml` in the repo root brings up PostgreSQL, Redis, Prometheus, and Grafana:
+
+```bash
+docker compose up -d
+```
+
+This gives you everything needed for all features and deployment modes. To run the server with the Postgres backend against the Docker stack:
+
+```bash
+./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES \
+              -Pconfig.ambonMUD.database.jdbcUrl=jdbc:postgresql://localhost:5432/ambonmud \
+              -Pconfig.ambonMUD.database.username=ambon \
+              -Pconfig.ambonMUD.database.password=ambon
+```
+
+Flyway creates the schema automatically on first startup. Data is persisted in a Docker named volume (`pgdata`); use `docker compose down -v` to wipe it.
 
 ### CI Parity (run before finalizing any change)
 
@@ -697,6 +717,8 @@ Test code uses `InMemoryPlayerRepository`. Production uses the full chain.
 - `save()` uses upsert (insert-or-update) keyed on the player ID
 - `DatabaseManager` owns the HikariCP DataSource and Exposed `Database` instance
 
+The easiest way to get a local Postgres instance is via `docker compose up -d` (see [Quick Start](#2-quick-start)), which starts a `postgres:16-alpine` container with database `ambonmud` and user/password `ambon`/`ambon` on port 5432.
+
 ### PlayerRecord
 
 ```kotlin
@@ -762,11 +784,18 @@ ambonMUD:
       instanceId: ""           # auto-UUID if blank
 ```
 
-### Running with Redis (local Docker)
+### Running with Redis
+
+The `docker compose up -d` stack (see [Quick Start](#2-quick-start)) includes Redis on port 6379. To enable it:
+
+```bash
+./gradlew run -Pconfig.ambonMUD.redis.enabled=true
+```
+
+Or run Redis standalone if you prefer:
 
 ```bash
 docker run --rm -p 6379:6379 redis:7-alpine
-./gradlew run -Pconfig.ambonMUD.redis.enabled=true
 ```
 
 ---

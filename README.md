@@ -283,9 +283,16 @@ Formatting / Lint
 ./gradlew ktlintCheck
 ```
 
-Observability (Docker + Grafana)
---------------------------------
-This repo includes a Prometheus + Grafana stack for local metrics dashboards.
+Docker Compose (Full Infrastructure)
+-------------------------------------
+The `docker-compose.yml` brings up all optional infrastructure in one command:
+
+| Service | Image | Port | Purpose |
+|---------|-------|------|---------|
+| Prometheus | `prom/prometheus:v2.51.2` | 9090 | Metrics scraping |
+| Grafana | `grafana/grafana:10.4.2` | 3000 | Dashboards |
+| Redis | `redis:7-alpine` | 6379 | L2 player cache + pub/sub event bus |
+| PostgreSQL | `postgres:16-alpine` | 5432 | Player persistence (alternative to YAML) |
 
 1) Start the stack:
 
@@ -293,7 +300,24 @@ This repo includes a Prometheus + Grafana stack for local metrics dashboards.
 docker compose up -d
 ```
 
-2) Open Grafana:
+2) Run with the PostgreSQL backend:
+
+```bash
+./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES \
+              -Pconfig.ambonMUD.database.jdbcUrl=jdbc:postgresql://localhost:5432/ambonmud \
+              -Pconfig.ambonMUD.database.username=ambon \
+              -Pconfig.ambonMUD.database.password=ambon
+```
+
+Flyway runs migrations automatically on first startup — no manual schema setup needed.
+
+3) Run with Redis caching enabled:
+
+```bash
+./gradlew run -Pconfig.ambonMUD.redis.enabled=true
+```
+
+4) Open Grafana:
 
 ```text
 http://localhost:3000
@@ -302,6 +326,8 @@ http://localhost:3000
 Login:
 - Username: `admin`
 - Password: `admin`
+
+Data is persisted in a Docker named volume (`pgdata`). To wipe the database and start fresh, run `docker compose down -v`.
 
 Grafana dashboards during load testing:
 ![Grafana dashboard view 1](src/main/resources/screenshots/Dashboard1.png)
