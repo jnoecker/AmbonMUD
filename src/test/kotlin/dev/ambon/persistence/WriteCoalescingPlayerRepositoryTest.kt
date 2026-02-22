@@ -1,6 +1,8 @@
 package dev.ambon.persistence
 
 import dev.ambon.domain.ids.RoomId
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -76,6 +78,32 @@ class WriteCoalescingPlayerRepositoryTest {
             assertEquals(1, counter.saveCount)
             val fromDelegate = counter.findById(record.id)
             assertEquals(RoomId("zone:r5"), fromDelegate!!.roomId)
+        }
+
+    @Test
+    fun `flushDirty keeps newer save dirty when update arrives mid-flush`() =
+        runTest {
+            val delegate = BlockingSaveRepository(InMemoryPlayerRepository())
+            val repo = WriteCoalescingPlayerRepository(delegate)
+            val record = delegate.create("Alice", startRoom, 1000L, "hash", false)
+
+            repo.save(record.copy(roomId = RoomId("zone:r1")))
+
+            val saveStarted = CompletableDeferred<Unit>()
+            val allowSaveToFinish = CompletableDeferred<Unit>()
+            delegate.blockNextSave(started = saveStarted, proceed = allowSaveToFinish)
+
+            val flushJob = async { repo.flushDirty() }
+            saveStarted.await()
+            repo.save(record.copy(roomId = RoomId("zone:r2")))
+            allowSaveToFinish.complete(Unit)
+            flushJob.await()
+
+            assertEquals(1, repo.dirtyCount())
+
+            repo.flushDirty()
+            assertEquals(0, repo.dirtyCount())
+            assertEquals(RoomId("zone:r2"), delegate.findById(record.id)!!.roomId)
         }
 
     @Test
@@ -177,4 +205,31 @@ private class SaveCountingRepository(
         saveCount++
         delegate.save(record)
     }
+}
+
+private class BlockingSaveRepository(
+    private val delegate: InMemoryPlayerRepository,
+) : PlayerRepository by delegate {
+    private var gate: SaveGate? = null
+
+    fun blockNextSave(
+        started: CompletableDeferred<Unit>,
+        proceed: CompletableDeferred<Unit>,
+    ) {
+        gate = SaveGate(started = started, proceed = proceed)
+    }
+
+    override suspend fun save(record: PlayerRecord) {
+        gate?.let { saveGate ->
+            gate = null
+            saveGate.started.complete(Unit)
+            saveGate.proceed.await()
+        }
+        delegate.save(record)
+    }
+
+    private data class SaveGate(
+        val started: CompletableDeferred<Unit>,
+        val proceed: CompletableDeferred<Unit>,
+    )
 }

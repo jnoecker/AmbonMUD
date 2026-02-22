@@ -124,3 +124,8 @@ ambonMUD:
     enabled: false
     uri: "redis://localhost:6379"
     cacheTtlSeconds: 3600
+    bus:
+      enabled: false
+      inboundChannel: ambon:inbound
+      outboundChannel: ambon:outbound
+      instanceId: ""

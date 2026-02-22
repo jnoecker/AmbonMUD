@@ -18,3 +18,8 @@ services:
       - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
