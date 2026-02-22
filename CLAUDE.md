@@ -30,14 +30,20 @@ On Windows use `.\gradlew.bat` instead of `./gradlew`.
 
 ## Architecture
 
-AmbonMUD is a single-process, tick-based MUD server (Kotlin/JVM). The core design separates gameplay from transport:
+AmbonMUD supports three deployment modes (set via `ambonMUD.mode`):
+- **`STANDALONE`** (default): single-process, all components in-process.
+- **`ENGINE`**: GameEngine + persistence + gRPC server; gateways connect remotely.
+- **`GATEWAY`**: transports + gRPC client; game logic runs on a remote engine.
+
+The core design separates gameplay from transport:
 
 ```
 Transports (telnet / WebSocket)
     │  decode raw I/O into InboundEvent, render OutboundEvent
     ▼
 InboundBus / OutboundBus  (interface layer; Local* impls in single-process mode)
-    │                      (Redis* impls available for multi-process pub/sub routing)
+    │                      (Redis* impls for multi-process pub/sub)
+    │                      (Grpc* impls for gateway ↔ engine gRPC streaming)
     ▼
 GameEngine  (single-threaded coroutine dispatcher, 100ms tick)
     │  CommandRouter, CombatSystem, MobSystem, RegenSystem,
@@ -66,7 +72,10 @@ Sessions
 | Config schema + defaults | `src/main/kotlin/dev/ambon/config/AppConfig.kt`, `src/main/resources/application.yaml` |
 | Game engine + subsystems | `src/main/kotlin/dev/ambon/engine/` |
 | Command parsing + routing | `engine/commands/CommandParser.kt`, `CommandRouter.kt` |
-| Event bus interfaces + impls | `src/main/kotlin/dev/ambon/bus/` |
+| Event bus interfaces + impls | `src/main/kotlin/dev/ambon/bus/` (Local*, Redis*, Grpc*) |
+| gRPC server + engine-mode root | `src/main/kotlin/dev/ambon/grpc/` |
+| Gateway-mode composition root | `src/main/kotlin/dev/ambon/gateway/GatewayServer.kt` |
+| Proto definitions | `src/main/proto/ambonmud/v1/` |
 | Redis connection + JSON support | `src/main/kotlin/dev/ambon/redis/` |
 | Session ID allocation | `src/main/kotlin/dev/ambon/session/` |
 | Metrics (Micrometer/Prometheus) | `src/main/kotlin/dev/ambon/metrics/` |

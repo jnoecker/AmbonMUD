@@ -24,6 +24,10 @@ class GameMetricsTest {
             noop.onOutboundFrameEnqueued()
             noop.onOutboundBackpressureDisconnect()
             noop.onOutboundEnqueueFailed()
+            noop.onGrpcControlPlaneDrop("stream_full_timeout")
+            noop.onGrpcDataPlaneDrop("stream_full")
+            noop.onGrpcControlPlaneFallbackSend()
+            noop.onGrpcForcedDisconnectDueToControlDeliveryFailure("stream_full_timeout")
             noop.onEngineTickOverrun()
             noop.onInboundEventsProcessed(5)
             noop.onMobMoves(3)
@@ -144,5 +148,31 @@ class GameMetricsTest {
 
         assertEquals(10.0, registry.counter("scheduler_actions_executed_total").count())
         assertEquals(3.0, registry.counter("scheduler_actions_dropped_total").count())
+    }
+
+    @Test
+    fun `grpc control and data plane counters increment`() {
+        metrics.onGrpcControlPlaneDrop("stream_full_timeout")
+        metrics.onGrpcControlPlaneDrop("stream_full_timeout")
+        metrics.onGrpcDataPlaneDrop("stream_full")
+        metrics.onGrpcControlPlaneFallbackSend()
+        metrics.onGrpcForcedDisconnectDueToControlDeliveryFailure("stream_full_timeout")
+
+        assertEquals(
+            2.0,
+            registry.counter("grpc_outbound_control_plane_dropped_total", "reason", "stream_full_timeout").count(),
+        )
+        assertEquals(
+            1.0,
+            registry.counter("grpc_outbound_data_plane_dropped_total", "reason", "stream_full").count(),
+        )
+        assertEquals(
+            1.0,
+            registry.counter("grpc_outbound_control_plane_fallback_total").count(),
+        )
+        assertEquals(
+            1.0,
+            registry.counter("grpc_forced_disconnect_control_plane_total", "reason", "stream_full_timeout").count(),
+        )
     }
 }

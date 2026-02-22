@@ -1,4 +1,16 @@
 ambonMUD:
+  mode: STANDALONE
+
+  grpc:
+    server:
+      port: 9090
+    client:
+      engineHost: localhost
+      enginePort: 9090
+
+  gateway:
+    id: 0
+
   server:
     telnetPort: 4000
     webPort: 8080
