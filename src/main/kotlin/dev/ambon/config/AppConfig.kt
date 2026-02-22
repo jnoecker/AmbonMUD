@@ -1,10 +1,23 @@
 package dev.ambon.config
 
+/** Deployment mode controlling which components are started. */
+enum class DeploymentMode {
+    /** All components in a single process (default, current behaviour). */
+    STANDALONE,
+
+    /** Game engine + persistence + gRPC server; no transports. */
+    ENGINE,
+
+    /** Transports + OutboundRouter + gRPC client to a remote engine; no local engine/persistence. */
+    GATEWAY,
+}
+
 data class AmbonMUDRootConfig(
     val ambonMUD: AppConfig = AppConfig(),
 )
 
 data class AppConfig(
+    val mode: DeploymentMode = DeploymentMode.STANDALONE,
     val server: ServerConfig = ServerConfig(),
     val world: WorldConfig = WorldConfig(),
     val persistence: PersistenceConfig = PersistenceConfig(),
@@ -16,6 +29,8 @@ data class AppConfig(
     val observability: ObservabilityConfig = ObservabilityConfig(),
     val logging: LoggingConfig = LoggingConfig(),
     val redis: RedisConfig = RedisConfig(),
+    val grpc: GrpcConfig = GrpcConfig(),
+    val gateway: GatewayConfig = GatewayConfig(),
 ) {
     fun validated(): AppConfig {
         require(server.telnetPort in 1..65535) { "ambonMUD.server.telnetPort must be between 1 and 65535" }
@@ -97,6 +112,16 @@ data class AppConfig(
         if (redis.enabled) {
             require(redis.uri.isNotBlank()) { "ambonMUD.redis.uri must be non-blank when redis.enabled=true" }
             require(redis.cacheTtlSeconds > 0L) { "ambonMUD.redis.cacheTtlSeconds must be > 0" }
+        }
+
+        if (mode == DeploymentMode.ENGINE || mode == DeploymentMode.GATEWAY) {
+            require(grpc.server.port in 1..65535) { "ambonMUD.grpc.server.port must be between 1 and 65535" }
+        }
+
+        if (mode == DeploymentMode.GATEWAY) {
+            require(grpc.client.engineHost.isNotBlank()) { "ambonMUD.grpc.client.engineHost must be non-blank in gateway mode" }
+            require(grpc.client.enginePort in 1..65535) { "ambonMUD.grpc.client.enginePort must be between 1 and 65535" }
+            require(gateway.id in 0..0xFFFF) { "ambonMUD.gateway.id must be between 0 and 65535" }
         }
 
         return this
@@ -289,6 +314,26 @@ data class ObservabilityConfig(
 data class LoggingConfig(
     val level: String = "INFO",
     val packageLevels: Map<String, String> = emptyMap(),
+)
+
+data class GrpcServerConfig(
+    val port: Int = 9090,
+)
+
+data class GrpcClientConfig(
+    val engineHost: String = "localhost",
+    val enginePort: Int = 9090,
+)
+
+data class GrpcConfig(
+    val server: GrpcServerConfig = GrpcServerConfig(),
+    val client: GrpcClientConfig = GrpcClientConfig(),
+)
+
+/** Gateway-specific settings. */
+data class GatewayConfig(
+    /** 16-bit gateway ID for [SnowflakeSessionIdFactory] bit-field (0–65535). */
+    val id: Int = 0,
 )
 
 data class RedisBusConfig(
