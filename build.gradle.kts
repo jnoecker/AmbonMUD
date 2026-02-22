@@ -18,6 +18,7 @@ val micrometerVersion = "1.16.3"
 val grpcVersion = "1.79.0"
 val grpcKotlinVersion = "1.5.0"
 val protobufVersion = "3.25.5"
+val exposedVersion = "0.58.0"
 
 dependencies {
     // Coroutines
@@ -38,11 +39,25 @@ dependencies {
 
     implementation("io.lettuce:lettuce-core:7.4.0.RELEASE")
 
+    // Exposed (Kotlin SQL framework)
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    // Connection pool
+    implementation("com.zaxxer:HikariCP:6.2.1")
+    // JDBC driver
+    implementation("org.postgresql:postgresql:42.7.5")
+    // Schema migration
+    implementation("org.flywaydb:flyway-core:11.3.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.3.0")
+
     // gRPC / Protobuf
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
+
+    // Test: H2 in Postgres mode
+    testImplementation("com.h2database:h2:2.3.232")
 
     testImplementation("io.grpc:grpc-testing:$grpcVersion")
     testImplementation("io.grpc:grpc-inprocess:$grpcVersion")

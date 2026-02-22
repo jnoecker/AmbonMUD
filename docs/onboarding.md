@@ -40,7 +40,7 @@ The codebase is intentionally designed like a production backend service, not a 
 Key stats:
 - **Transport**: Telnet (port 4000) + WebSocket / browser demo (port 8080)
 - **Engine**: Single-threaded coroutine dispatcher, 100 ms ticks
-- **Persistence**: Write-behind coalescing → optional Redis L2 cache → atomic YAML files
+- **Persistence**: Write-behind coalescing → optional Redis L2 cache → YAML files or PostgreSQL (selectable via config)
 - **World content**: YAML zone files, multi-zone with cross-zone exits
 - **Scalability**: Phases 1–4 complete (bus abstraction, async persistence, Redis integration, gRPC gateway split); three deployment modes: `STANDALONE`, `ENGINE`, `GATEWAY`
 - **Gateway resilience**: Exponential-backoff reconnect when the engine gRPC stream is lost; Snowflake session IDs with overflow wait and clock-rollback hardening
@@ -169,6 +169,9 @@ AmbonMUD/
 │   ├── persistence/               # Player persistence stack (Phases 2–3)
 │   │   ├── PlayerRepository.kt    # Interface (swappable)
 │   │   ├── YamlPlayerRepository.kt         # Durable YAML, atomic writes
+│   │   ├── PostgresPlayerRepository.kt     # Exposed DSL + HikariCP
+│   │   ├── PlayersTable.kt        # Exposed table definition
+│   │   ├── DatabaseManager.kt     # HikariCP pool + Flyway + Exposed wiring
 │   │   ├── RedisCachingPlayerRepository.kt # L2 cache (Phase 3, opt-in)
 │   │   ├── WriteCoalescingPlayerRepository.kt  # Write-behind (Phase 2)
 │   │   ├── PersistenceWorker.kt   # Background flush coroutine
@@ -176,6 +179,8 @@ AmbonMUD/
 │   └── ui/login/                  # Login banner rendering
 ├── src/main/resources/
 │   ├── application.yaml           # Runtime config (ports, tuning, world files)
+│   ├── db/migration/              # Flyway SQL migrations (Postgres backend)
+│   │   └── V1__create_players_table.sql
 │   ├── login.txt                  # Login banner text
 │   ├── login.styles.yaml          # ANSI styles for banner
 │   ├── world/                     # Zone YAML files
@@ -475,7 +480,7 @@ level, xpTotal
 ansiEnabled
 ```
 
-Persisted via `PlayerRecord` to YAML on save.
+Persisted via `PlayerRecord` to YAML or PostgreSQL on save (depending on configured backend).
 
 ---
 
@@ -642,14 +647,16 @@ interface OutboundBus {
 
 **Files:** `src/main/kotlin/dev/ambon/persistence/`
 
-The persistence stack has three layers, assembled in `MudServer.kt`:
+The persistence stack has three layers, assembled in `MudServer.kt`. The bottom layer is selected by `ambonMUD.persistence.backend` (`YAML` or `POSTGRES`):
 
 ```
 WriteCoalescingPlayerRepository  ← write-behind (Phase 2)
   ↓
 RedisCachingPlayerRepository     ← L2 cache (Phase 3, if redis.enabled)
   ↓
-YamlPlayerRepository             ← durable YAML, atomic writes
+YamlPlayerRepository             ← durable YAML, atomic writes (backend=YAML)
+  — or —
+PostgresPlayerRepository         ← Exposed DSL + HikariCP (backend=POSTGRES)
 ```
 
 ### Interface
@@ -674,12 +681,21 @@ Test code uses `InMemoryPlayerRepository`. Production uses the full chain.
 - `PersistenceWorker` calls `flushDirty()` on a configurable interval (default 5 s) from `Dispatchers.IO`
 - On server shutdown: `worker.shutdown()` calls `flushAll()` before stopping
 
-### YamlPlayerRepository
+### YamlPlayerRepository (backend=YAML, default)
 
 - Player files stored at `data/players/players/{id}.yaml`
 - Sequential ID allocation from `data/players/next_player_id.txt`
 - Case-insensitive name lookup (scans directory)
 - Atomic writes via temp-file + rename (crash-safe)
+
+### PostgresPlayerRepository (backend=POSTGRES)
+
+- Uses Exposed DSL for type-safe SQL queries
+- HikariCP connection pool (configurable pool size)
+- Flyway migrations run automatically on startup (schema in `src/main/resources/db/migration/`)
+- Case-insensitive name uniqueness enforced by a unique index on `name_lower`
+- `save()` uses upsert (insert-or-update) keyed on the player ID
+- `DatabaseManager` owns the HikariCP DataSource and Exposed `Database` instance
 
 ### PlayerRecord
 
@@ -695,13 +711,15 @@ data class PlayerRecord(
     val lastSeenEpochMs: Long,
     val passwordHash: String,   // bcrypt
     val ansiEnabled: Boolean,
-    val isStaff: Boolean = false,  // grant manually via YAML edit
+    val isStaff: Boolean = false,  // grant manually via YAML edit or DB update
 )
 ```
 
 The `data/players/` directory is git-ignored. Do not commit player save files.
 
-To grant staff access: open `data/players/players/<name>.yaml` and add `isStaff: true`.
+To grant staff access:
+- **YAML backend:** open `data/players/players/<id>.yaml` and add `isStaff: true`
+- **Postgres backend:** set `is_staff = true` on the player's row in the `players` table
 
 ---
 
@@ -874,12 +892,17 @@ docker compose up -d
 
 **Gate:** `PlayerRecord.isStaff` / `PlayerState.isStaff`
 
-Staff status is granted out-of-band by manually editing the player's YAML file. There is no in-game promotion command.
+Staff status is granted out-of-band. There is no in-game promotion command.
 
-```yaml
-# data/players/players/1.yaml
-isStaff: true
-```
+- **YAML backend:** edit the player's YAML file
+  ```yaml
+  # data/players/players/1.yaml
+  isStaff: true
+  ```
+- **Postgres backend:** update the database row
+  ```sql
+  UPDATE players SET is_staff = true WHERE name_lower = 'alice';
+  ```
 
 The flag is copied from `PlayerRecord` → `PlayerState` at login (`PlayerRegistry.bindSession()`). All admin commands check `if (!playerState.isStaff)` before executing.
 
@@ -970,7 +993,8 @@ Edit or add YAML files in `src/main/resources/world/`, then register them in `sr
 | `mode` | `STANDALONE` (default), `ENGINE`, `GATEWAY` |
 | `server` | `telnetPort` (4000), `webPort` (8080), `tickMillis` (100), `sessionOutboundQueueCapacity` (200) |
 | `world` | `resources` — list of zone YAML classpath paths |
-| `persistence` | `rootDir` — root directory for player files |
+| `persistence` | `backend` (`YAML`/`POSTGRES`), `rootDir` — root directory for player files (YAML only) |
+| `database` | `jdbcUrl`, `username`, `password`, `maxPoolSize`, `minimumIdle` (required when backend=POSTGRES) |
 | `login` | `maxWrongPasswordRetries` (3), `maxFailedAttemptsBeforeDisconnect` (3) |
 | `engine.combat` | `minDamage`, `maxDamage`, `tickMillis`, `maxCombatsPerTick` |
 | `engine.regen` | `baseIntervalMillis` (5000), `regenAmount` (1), `msPerConstitution`, `minIntervalMillis` |
@@ -1004,6 +1028,12 @@ Any config value can be overridden at the command line using `-P` project proper
 
 # Override tick speed
 ./gradlew run -Pconfig.ambonMUD.server.tickMillis=500
+
+# Use PostgreSQL backend
+./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES \
+              -Pconfig.ambonMUD.database.jdbcUrl=jdbc:postgresql://localhost:5432/ambonmud \
+              -Pconfig.ambonMUD.database.username=ambon \
+              -Pconfig.ambonMUD.database.password=secret
 ```
 
 This works in all shells including Windows PowerShell — no quoting issues.
@@ -1062,6 +1092,7 @@ To trace connection lifecycle at runtime:
 | `SchedulerDropsTest` | Scheduler per-tick cap and action dropping |
 | `AppConfigLoaderTest` | Config loading and validation |
 | `YamlPlayerRepositoryTest` | File I/O, atomic writes, case-insensitive lookup |
+| `PostgresPlayerRepositoryTest` | Exposed CRUD, upsert, unique-name enforcement (H2 in PG mode) |
 | `RedisCachingPlayerRepositoryTest` | Redis L2 cache hit/miss, TTL, fallback |
 | `WriteCoalescingPlayerRepositoryTest` | Dirty tracking, coalescing (N saves → 1 write) |
 | `PersistenceWorkerTest` | Periodic flush, shutdown flush |
@@ -1136,6 +1167,8 @@ Edit YAML in `src/main/resources/world/`. If adding a new file, register it in `
 2. `PlayerRegistry.kt` — map field to `PlayerState` on load; persist on save
 3. `YamlPlayerRepositoryTest` — verify round-trip through YAML
 4. `RedisCachingPlayerRepositoryTest` — verify round-trip through Jackson/Redis
+5. For Postgres: add a Flyway migration (`V<N>__description.sql`), update `PlayersTable.kt` (column definition), and update `PostgresPlayerRepository.kt` (`toPlayerRecord()`, `insert`, `upsert` mappings)
+6. `PostgresPlayerRepositoryTest` — verify round-trip through H2/Postgres
 
 ### Add a Staff/Admin Command
 
@@ -1194,7 +1227,7 @@ Edit YAML in `src/main/resources/world/`. If adding a new file, register it in `
 
 ### Persistence Chain Ordering
 - `MudServer.kt` constructs the chain in this order (outermost first):
-  `WriteCoalescing` → `RedisCache` (if enabled) → `Yaml`
+  `WriteCoalescing` → `RedisCache` (if enabled) → `Yaml` or `Postgres` (selected by `ambonMUD.persistence.backend`)
 - `PlayerRegistry` calls `repo.save()` — it does not know which layer handles it
 
 ---

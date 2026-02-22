@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Purpose
-This repository is a Kotlin MUD server ("AmbonMUD") with a tick-based event loop, telnet + WebSocket transports, YAML world loading, a small browser demo client, and a layered persistence stack with optional Redis caching and pub/sub. It supports three deployment modes: `STANDALONE` (single-process, default), `ENGINE` (game logic + gRPC server), and `GATEWAY` (transports + gRPC client) for horizontal scaling.
+This repository is a Kotlin MUD server ("AmbonMUD") with a tick-based event loop, telnet + WebSocket transports, YAML world loading, a small browser demo client, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching and pub/sub. It supports three deployment modes: `STANDALONE` (single-process, default), `ENGINE` (game logic + gRPC server), and `GATEWAY` (transports + gRPC client) for horizontal scaling.
 
 Use this document as the default engineering playbook when making code or content changes.
 
@@ -36,7 +36,8 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
 - World content: `src/main/resources/world`
 - World format contract: `docs/world-zone-yaml-spec.md`
-- Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence`
+- Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence` (`PlayerRepository`, `YamlPlayerRepository`, `PostgresPlayerRepository`, `DatabaseManager`, `PlayersTable`)
+- Flyway schema migrations: `src/main/resources/db/migration`
 - Tests: `src/test/kotlin`, fixtures in `src/test/resources/world`
 - Runtime player data (git-ignored): `data/players`
 
@@ -70,8 +71,10 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Player room/last-seen persistence must stay intact.
 - Player progression persistence must stay intact (level/xp/constitution).
 - Keep atomic-write behavior for YAML persistence files.
-- The persistence chain is: `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (optional) → `YamlPlayerRepository`. Changes to `PlayerRecord` must survive all three layers including JSON round-trip through Redis.
-- `isStaff` is a `PlayerRecord` field; it is faithfully serialized through all persistence layers. Grant by editing the player YAML directly.
+- The persistence backend is selectable via `ambonMUD.persistence.backend` (`YAML` or `POSTGRES`). When `POSTGRES`, `ambonMUD.database.jdbcUrl` is required.
+- The persistence chain is: `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (optional) → `YamlPlayerRepository` or `PostgresPlayerRepository`. Changes to `PlayerRecord` must survive all three layers including JSON round-trip through Redis.
+- `PostgresPlayerRepository` uses Exposed DSL, Flyway migrations, and HikariCP. Schema lives in `src/main/resources/db/migration/`. Tests use H2 in PostgreSQL-compatibility mode (no Docker required).
+- `isStaff` is a `PlayerRecord` field; it is faithfully serialized through all persistence layers. Grant by editing the player YAML directly or updating the `players` table row.
 
 6. Event bus boundary
 - The engine receives an `InboundBus` and sends to an `OutboundBus` — never raw `Channel` references.
@@ -106,8 +109,8 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 ### Persistence
 - Keep `PlayerRepository` as the abstraction boundary.
 - Preserve case-insensitive lookup and unique-name behavior.
-- Use `YamlPlayerRepositoryTest` and `@TempDir` for regression coverage.
-- When adding fields to `PlayerRecord`: add with a default value so existing YAML files still deserialize; verify the field round-trips through Jackson/Redis JSON (`RedisCachingPlayerRepositoryTest`).
+- Use `YamlPlayerRepositoryTest` and `@TempDir` for YAML regression coverage; use `PostgresPlayerRepositoryTest` (H2 in-memory) for Postgres coverage.
+- When adding fields to `PlayerRecord`: add with a default value so existing YAML files still deserialize; verify the field round-trips through Jackson/Redis JSON (`RedisCachingPlayerRepositoryTest`). For Postgres, add a new Flyway migration (`V<N>__description.sql`) and update `PlayersTable.kt` + `PostgresPlayerRepository.kt` (mapping in `toPlayerRecord()`, `insert`, and `upsert`).
 - Do not add persistence logic directly to `GameEngine` or `PlayerRegistry` — all writes go through `repo.save()` which the coalescing wrapper intercepts.
 
 ### Staff/Admin commands
@@ -134,4 +137,4 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Do not commit runtime player save artifacts from `data/players`.
 - The scheduler is at `src/main/kotlin/dev/ambon/engine/scheduler/Scheduler.kt`.
 - Micrometer metrics use package `io.micrometer.prometheusmetrics` (not the deprecated `io.micrometer.prometheus`).
-- Staff access is granted by setting `isStaff: true` in the player's YAML file — there is no in-game promotion command.
+- Staff access is granted by setting `isStaff: true` in the player's YAML file (or updating the `is_staff` column in the `players` table when using Postgres) — there is no in-game promotion command.

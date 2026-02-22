@@ -24,6 +24,10 @@ Override any config value at runtime with `-Pconfig.<key>=<value>`:
 ./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
 ./gradlew run -Pconfig.ambonMUD.logging.packageLevels.dev.ambon.transport=DEBUG
 ./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000
+./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES \
+              -Pconfig.ambonMUD.database.jdbcUrl=jdbc:postgresql://localhost:5432/ambonmud \
+              -Pconfig.ambonMUD.database.username=ambon \
+              -Pconfig.ambonMUD.database.password=secret
 ```
 
 On Windows use `.\gradlew.bat` instead of `./gradlew`.
@@ -62,7 +66,7 @@ Sessions
 - Player name: 2–16 chars, alnum/underscore, cannot start with a digit.
 - Password: non-blank, max 72 chars (BCrypt limit).
 - YAML player files use atomic writes — preserve this in any persistence changes.
-- Persistence flows through the full chain: `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (if enabled) → `YamlPlayerRepository`.
+- Persistence flows through the full chain: `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (if enabled) → `YamlPlayerRepository` or `PostgresPlayerRepository` (selected via `ambonMUD.persistence.backend`).
 
 ## Key Locations
 
@@ -83,7 +87,8 @@ Sessions
 | World YAML content | `src/main/resources/world/` |
 | World loader + validation | `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt` |
 | World YAML format spec | `docs/world-zone-yaml-spec.md` |
-| Persistence | `src/main/kotlin/dev/ambon/persistence/` |
+| Persistence (YAML + Postgres) | `src/main/kotlin/dev/ambon/persistence/` |
+| Flyway migrations | `src/main/resources/db/migration/` |
 | Tests | `src/test/kotlin/` (fixtures: `src/test/resources/world/`) |
 | Web demo client (static) | `src/main/resources/web/` |
 | Runtime player saves | `data/players/` (git-ignored, do not commit) |
@@ -95,7 +100,7 @@ Sessions
 - **Combat/mob/item:** edit `CombatSystem`, `MobSystem`, `MobRegistry`, `ItemRegistry`; preserve `max*PerTick` caps.
 - **World content only:** edit YAML in `src/main/resources/world/`; no code change needed.
 - **Config:** update `AppConfig.kt` and `application.yaml` together; keep `validated()` strict.
-- **Persistence:** work through the `PlayerRepository` interface; maintain case-insensitive lookup and atomic writes. The chain is `WriteCoalescing → RedisCache → Yaml` — changes to `PlayerRecord` must survive all three layers.
+- **Persistence:** work through the `PlayerRepository` interface; maintain case-insensitive lookup and atomic writes (YAML) or unique-index enforcement (Postgres). The chain is `WriteCoalescing → RedisCache → Yaml/Postgres` — changes to `PlayerRecord` must survive all three layers. When adding columns to the Postgres backend, add a new Flyway migration in `src/main/resources/db/migration/` and update `PlayersTable.kt`.
 - **Bus/Redis/gRPC:** `InboundBus`/`OutboundBus` are the engine boundaries; do not pass raw channels to engine code. Redis and gRPC variants are optional wrappers — always test with both `LocalInboundBus` and the mock bus in unit tests. When adding new event variants, update both the Redis bus envelope and the proto definitions + `ProtoMapper`.
 
 ## Testing

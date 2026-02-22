@@ -9,6 +9,7 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.bus.RedisInboundBus
 import dev.ambon.bus.RedisOutboundBus
 import dev.ambon.config.AppConfig
+import dev.ambon.config.PersistenceBackend
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
@@ -17,8 +18,10 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
+import dev.ambon.persistence.DatabaseManager
 import dev.ambon.persistence.PersistenceWorker
 import dev.ambon.persistence.PlayerRepository
+import dev.ambon.persistence.PostgresPlayerRepository
 import dev.ambon.persistence.RedisCachingPlayerRepository
 import dev.ambon.persistence.WriteCoalescingPlayerRepository
 import dev.ambon.persistence.YamlPlayerRepository
@@ -77,11 +80,26 @@ class MudServer(
     private val gameMetrics: GameMetrics =
         if (prometheusRegistry != null) GameMetrics(prometheusRegistry) else GameMetrics.noop()
 
-    private val yamlRepo =
-        YamlPlayerRepository(
-            rootDir = Paths.get(config.persistence.rootDir),
-            metrics = gameMetrics,
-        )
+    private val databaseManager: DatabaseManager? =
+        if (config.persistence.backend == PersistenceBackend.POSTGRES) {
+            DatabaseManager(config.database).also { it.migrate() }
+        } else {
+            null
+        }
+
+    private val baseRepo: PlayerRepository =
+        when (config.persistence.backend) {
+            PersistenceBackend.YAML ->
+                YamlPlayerRepository(
+                    rootDir = Paths.get(config.persistence.rootDir),
+                    metrics = gameMetrics,
+                )
+            PersistenceBackend.POSTGRES ->
+                PostgresPlayerRepository(
+                    database = databaseManager!!.database,
+                    metrics = gameMetrics,
+                )
+        }
 
     private val redisManager: RedisConnectionManager? =
         if (config.redis.enabled) RedisConnectionManager(config.redis) else null
@@ -89,7 +107,7 @@ class MudServer(
     private val redisRepo: RedisCachingPlayerRepository? =
         if (redisManager != null) {
             RedisCachingPlayerRepository(
-                delegate = yamlRepo,
+                delegate = baseRepo,
                 cache = redisManager,
                 cacheTtlSeconds = config.redis.cacheTtlSeconds,
             )
@@ -97,7 +115,7 @@ class MudServer(
             null
         }
 
-    private val l2Repo: PlayerRepository = redisRepo ?: yamlRepo
+    private val l2Repo: PlayerRepository = redisRepo ?: baseRepo
 
     private val coalescingRepo: WriteCoalescingPlayerRepository? =
         if (config.persistence.worker.enabled) WriteCoalescingPlayerRepository(l2Repo) else null
@@ -277,6 +295,7 @@ class MudServer(
         runCatching { engineJob?.cancelAndJoin() }
         runCatching { persistenceWorker?.shutdown() }
         runCatching { redisManager?.close() }
+        runCatching { databaseManager?.close() }
         scope.cancel()
         engineDispatcher.close()
         inbound.close()
