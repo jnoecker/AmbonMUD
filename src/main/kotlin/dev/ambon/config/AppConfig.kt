@@ -108,6 +108,9 @@ data class AppConfig(
         require(observability.metricsEndpoint.startsWith("/")) {
             "ambonMUD.observability.metricsEndpoint must start with '/'"
         }
+        require(observability.metricsHttpPort in 1..65535) {
+            "ambonMUD.observability.metricsHttpPort must be between 1 and 65535"
+        }
 
         if (redis.enabled) {
             require(redis.uri.isNotBlank()) { "ambonMUD.redis.uri must be non-blank when redis.enabled=true" }
@@ -308,6 +311,7 @@ data class DemoConfig(
 data class ObservabilityConfig(
     val metricsEnabled: Boolean = true,
     val metricsEndpoint: String = "/metrics",
+    val metricsHttpPort: Int = 9090,
     val staticTags: Map<String, String> = emptyMap(),
 )
 
