@@ -117,6 +117,64 @@ class OutboundRouterTest {
         }
 
     @Test
+    fun `forceDisconnect closes one registered session`() =
+        runTest {
+            val engineOutbound = LocalOutboundBus()
+            val router = OutboundRouter(engineOutbound, this)
+            val job = router.start()
+
+            val sessionId = SessionId(84)
+            val q = Channel<String>(capacity = 10)
+            val closedReason = AtomicReference<String?>(null)
+            router.register(sessionId, q) { reason -> closedReason.set(reason) }
+
+            val disconnected = router.forceDisconnect(sessionId, "engine stream lost")
+            assertTrue(disconnected)
+            assertEquals("engine stream lost", closedReason.get())
+
+            engineOutbound.send(OutboundEvent.SendText(sessionId, "should-not-arrive"))
+            testScheduler.advanceUntilIdle()
+            assertNull(q.tryReceive().getOrNull(), "Queue should not receive data after forceDisconnect")
+
+            job.cancel()
+            engineOutbound.close()
+            q.close()
+        }
+
+    @Test
+    fun `disconnectAll closes all registered sessions`() =
+        runTest {
+            val engineOutbound = LocalOutboundBus()
+            val router = OutboundRouter(engineOutbound, this)
+            val job = router.start()
+
+            val sid1 = SessionId(100)
+            val sid2 = SessionId(101)
+            val q1 = Channel<String>(capacity = 10)
+            val q2 = Channel<String>(capacity = 10)
+            val reason1 = AtomicReference<String?>(null)
+            val reason2 = AtomicReference<String?>(null)
+            router.register(sid1, q1) { reason -> reason1.set(reason) }
+            router.register(sid2, q2) { reason -> reason2.set(reason) }
+
+            val disconnected = router.disconnectAll("engine restart")
+            assertEquals(2, disconnected)
+            assertEquals("engine restart", reason1.get())
+            assertEquals("engine restart", reason2.get())
+
+            engineOutbound.send(OutboundEvent.SendText(sid1, "nope-1"))
+            engineOutbound.send(OutboundEvent.SendText(sid2, "nope-2"))
+            testScheduler.advanceUntilIdle()
+            assertNull(q1.tryReceive().getOrNull())
+            assertNull(q2.tryReceive().getOrNull())
+
+            job.cancel()
+            engineOutbound.close()
+            q1.close()
+            q2.close()
+        }
+
+    @Test
     fun `Close event invokes close callback and stops further delivery`() =
         runTest {
             val engineOutbound = LocalOutboundBus()

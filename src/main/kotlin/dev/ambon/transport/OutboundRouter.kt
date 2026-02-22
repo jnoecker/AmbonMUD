@@ -55,6 +55,33 @@ class OutboundRouter(
         sinks.remove(sessionId)?.queue?.close()
     }
 
+    /**
+     * Forcibly closes one active session through its registered close callback.
+     *
+     * Returns true if an active session sink existed and was closed.
+     */
+    fun forceDisconnect(
+        sessionId: SessionId,
+        reason: String,
+    ): Boolean {
+        val sink = sinks.remove(sessionId) ?: return false
+        sink.close(reason)
+        sink.queue.close()
+        return true
+    }
+
+    /** Forcibly disconnects all currently registered sessions. */
+    fun disconnectAll(reason: String): Int {
+        val sessionIds = sinks.keys.toList()
+        var disconnected = 0
+        for (sessionId in sessionIds) {
+            if (forceDisconnect(sessionId, reason)) {
+                disconnected++
+            }
+        }
+        return disconnected
+    }
+
     fun start(): Job =
         scope.launch {
             for (ev in engineOutbound.asReceiveChannel()) {
@@ -198,17 +225,12 @@ class OutboundRouter(
             return true
         }
         metrics.onOutboundEnqueueFailed()
-        disconnectSlowClient(sessionId, sink)
+        disconnectSlowClient(sessionId)
         return false
     }
 
-    private fun disconnectSlowClient(
-        sessionId: SessionId,
-        sink: SessionSink,
-    ) {
+    private fun disconnectSlowClient(sessionId: SessionId) {
         metrics.onOutboundBackpressureDisconnect()
-        sinks.remove(sessionId)
-        sink.close("Disconnected: client too slow (outbound backpressure)")
-        sink.queue.close()
+        forceDisconnect(sessionId, "Disconnected: client too slow (outbound backpressure)")
     }
 }
