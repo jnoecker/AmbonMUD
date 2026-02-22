@@ -120,9 +120,9 @@ engine:zones:<engineId> →  SET of zone names                   TTL=30s
 
 ### 2. Session Router (New)
 
-The routing layer that directs inbound events from gateways to the correct engine. Two possible designs:
+The routing layer that directs inbound events from gateways to the correct engine.
 
-#### Option A: Smart Gateways (Preferred)
+#### Smart Gateways 
 
 Gateways maintain a local cache of `zone → engine` mappings (populated from ZoneRegistry). When a gateway receives an inbound event, it looks up the player's current zone and forwards to the correct engine.
 
@@ -139,14 +139,6 @@ Gateway
 
 The gateway tracks `sessionId → engineStream` and updates this mapping when a player crosses zones (the old engine sends a redirect signal).
 
-#### Option B: Routing Proxy
-
-A stateless proxy sits between gateways and engines. Gateways maintain a single stream to the proxy; the proxy fans out to engines.
-
-**Pros:** Gateways stay simple. Single connection point.
-**Cons:** Extra hop. Proxy is itself a SPOF unless replicated.
-
-**Recommendation:** Option A (Smart Gateways). It aligns with the existing architecture where gateways already manage streams, and avoids introducing a new SPOF.
 
 ### 3. Inter-Engine Bus (New)
 
@@ -369,10 +361,8 @@ class GatewayServer {
 
 **Inbound routing:** When the gateway receives a `LineReceived` from a session, it looks up `sessionToEngine[sessionId]` and sends to the correct engine's stream.
 
-**Login flow:** New connections must be routed to an engine for login processing. Options:
-- **Designated login engine:** One engine handles all logins, then hands off to the correct zone engine based on the player's saved `roomId`.
+**Login flow:** New connections must be routed to an engine for login processing. 
 - **Any engine:** The gateway picks any engine (round-robin or random). That engine runs the login flow. If the player's saved room is in another engine's zone, it initiates a handoff immediately after login.
-- **Login service:** A lightweight stateless service that handles authentication only, then directs the gateway to the correct engine.
 
 **Recommendation:** "Any engine" approach for simplicity. The handoff protocol already handles the redirect. Login is infrequent enough that the extra hop doesn't matter.
 
@@ -437,7 +427,7 @@ Persistence is already shared (YAML directory or Postgres database). No changes 
    - **Manual restart:** Restart the engine, it reclaims its zones, players reconnect.
    - **Automatic failover:** A standby engine detects the expired lease and claims the orphaned zones. Players must re-login (session state is lost, but player records are persisted).
 
-Automatic failover is a future enhancement. For the initial implementation, manual restart with player reconnect is sufficient — it's already better than the current situation where the *entire* server goes down.
+Automatic failover is a future enhancement. For the initial implementation, manual restart with player reconnect is sufficient — it's already better than the current situation where the *entire* server goes down. Add an issue to track this for later.
 
 ### Network Partition (Engine-to-Engine)
 
@@ -600,17 +590,15 @@ services:
 
 ## Open Questions
 
-1. **Login engine selection.** The "any engine" approach is simplest, but creates a guaranteed extra handoff for players whose saved room is on a different engine. Should we read the player's saved `roomId` from persistence *in the gateway* (or a lightweight auth service) and route directly to the correct engine? This avoids the handoff but adds persistence awareness to the gateway layer.
+1. **Item ownership during handoff.** When a player transfers engines, their inventory items transfer too. But items are currently tracked by `ItemRegistry` with room/player placement. The target engine needs to instantiate these items in its local `ItemRegistry`. Should we serialize full `ItemInstance` data in the handoff, or rely on item templates and just transfer IDs? Take whichever approach seems most reasonable.
 
-2. **Item ownership during handoff.** When a player transfers engines, their inventory items transfer too. But items are currently tracked by `ItemRegistry` with room/player placement. The target engine needs to instantiate these items in its local `ItemRegistry`. Should we serialize full `ItemInstance` data in the handoff, or rely on item templates and just transfer IDs?
+3. **Start room assignment.** The `world.startRoom` is currently global. If new characters start in `ambon_hub`, then the engine owning `ambon_hub` must handle all new character creation. Is this acceptable, or should start room be configurable per engine?  All characters start in a generated room that prints some kind of welcome message and links to the world.startRoom?  "Thanks for joining us at AmbonMUD, proceed north to begin".  Each engine owns that room (lets us handle large influx of new users) and hands off to ambon_hub engine.
 
-3. **Start room assignment.** The `world.startRoom` is currently global. If new characters start in `ambon_hub`, then the engine owning `ambon_hub` must handle all new character creation. Is this acceptable, or should start room be configurable per engine?
+4. **Redis as hard dependency.** The current architecture keeps Redis optional. Zone-based sharding effectively requires Redis (for ZoneRegistry, InterEngineBus, player location index). Should we accept Redis as a hard dependency for sharded mode, or design a Redis-free alternative (e.g., static config + direct gRPC)? Let's keep redis as a hard dependency if that's the easiest path at this point.
 
-4. **Redis as hard dependency.** The current architecture keeps Redis optional. Zone-based sharding effectively requires Redis (for ZoneRegistry, InterEngineBus, player location index). Should we accept Redis as a hard dependency for sharded mode, or design a Redis-free alternative (e.g., static config + direct gRPC)?
+5. **Gossip ordering.** With multiple engines, `gossip` messages may arrive at different players in different orders (each engine processes the broadcast independently). Is this acceptable for a MUD, or do we need a total ordering guarantee (e.g., Redis Streams with a sequence number)? Let's keep ordering best effort (order doesn't matter)
 
-5. **Gossip ordering.** With multiple engines, `gossip` messages may arrive at different players in different orders (each engine processes the broadcast independently). Is this acceptable for a MUD, or do we need a total ordering guarantee (e.g., Redis Streams with a sequence number)?
-
-6. **Metrics aggregation.** Each engine exposes its own `/metrics`. Should there be a unified metrics view, or is per-engine scraping (standard Prometheus federation) sufficient?
+6. **Metrics aggregation.** Each engine exposes its own `/metrics`. Should there be a unified metrics view, or is per-engine scraping (standard Prometheus federation) sufficient? Standard is good.
 
 ---
 
