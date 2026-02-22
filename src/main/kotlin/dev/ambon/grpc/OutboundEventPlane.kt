@@ -14,6 +14,7 @@ fun OutboundEvent.isControlPlane(): Boolean =
         is OutboundEvent.ShowLoginScreen,
         is OutboundEvent.SetAnsi,
         is OutboundEvent.ClearScreen,
+        is OutboundEvent.SessionRedirect,
         -> true
         is OutboundEvent.SendText,
         is OutboundEvent.SendInfo,

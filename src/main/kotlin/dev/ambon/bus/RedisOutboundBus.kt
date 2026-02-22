@@ -117,6 +117,8 @@ class RedisOutboundBus(
                             type = "ShowAnsiDemo",
                             sessionId = event.sessionId.value,
                         )
+                    is OutboundEvent.SessionRedirect ->
+                        return // control-plane event, not published to Redis
                 }
             publisher.publish(channelName, mapper.writeValueAsString(env))
         } catch (e: Exception) {
