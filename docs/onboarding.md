@@ -17,12 +17,16 @@ Welcome to AmbonMUD. This guide walks a new developer from zero to productive as
 9. [Domain Model](#9-domain-model)
 10. [Subsystems](#10-subsystems)
 11. [Transport Adapters](#11-transport-adapters)
-12. [Persistence Layer](#12-persistence-layer)
-13. [World Loading & YAML Format](#13-world-loading--yaml-format)
-14. [Configuration](#14-configuration)
-15. [Testing](#15-testing)
-16. [Common Change Playbooks](#16-common-change-playbooks)
-17. [Critical Invariants: Never Break These](#17-critical-invariants-never-break-these)
+12. [Event Bus System](#12-event-bus-system)
+13. [Persistence Layer](#13-persistence-layer)
+14. [Redis Integration](#14-redis-integration)
+15. [Metrics & Observability](#15-metrics--observability)
+16. [Staff / Admin System](#16-staff--admin-system)
+17. [World Loading & YAML Format](#17-world-loading--yaml-format)
+18. [Configuration](#18-configuration)
+19. [Testing](#19-testing)
+20. [Common Change Playbooks](#20-common-change-playbooks)
+21. [Critical Invariants: Never Break These](#21-critical-invariants-never-break-these)
 
 ---
 
@@ -35,8 +39,9 @@ The codebase is intentionally designed like a production backend service, not a 
 Key stats:
 - **Transport**: Telnet (port 4000) + WebSocket / browser demo (port 8080)
 - **Engine**: Single-threaded coroutine dispatcher, 100 ms ticks
-- **Persistence**: Per-player YAML files with atomic writes
+- **Persistence**: Write-behind coalescing → optional Redis L2 cache → atomic YAML files
 - **World content**: YAML zone files, multi-zone with cross-zone exits
+- **Scalability**: Phases 1–3 complete (bus abstraction, async persistence worker, Redis integration); Phase 4 (gRPC split) is planned
 
 ---
 
@@ -104,7 +109,7 @@ AmbonMUD/
 │   ├── domain/                    # Pure domain types
 │   │   ├── ids/                   # RoomId, MobId, ItemId, SessionId (value classes)
 │   │   ├── items/                 # Item, ItemSlot
-│   │   ├── mob/                   # MobState
+│   │   ├── mob/                   # MobState (with tiered combat stats)
 │   │   └── world/                 # Room, World, Direction
 │   │       └── load/              # WorldLoader (YAML → domain)
 │   ├── engine/                    # All gameplay logic
@@ -122,6 +127,21 @@ AmbonMUD/
 │   │   ├── events/                # InboundEvent, OutboundEvent sealed types
 │   │   ├── items/                 # ItemRegistry
 │   │   └── scheduler/             # Scheduler (delayed/recurring actions)
+│   ├── bus/                       # Event bus abstraction (Phase 1)
+│   │   ├── InboundBus.kt          # Interface for engine ← transport events
+│   │   ├── OutboundBus.kt         # Interface for engine → transport events
+│   │   ├── LocalInboundBus.kt     # Wraps Channel<InboundEvent>
+│   │   ├── LocalOutboundBus.kt    # Wraps Channel<OutboundEvent>
+│   │   ├── RedisInboundBus.kt     # Local + Redis pub/sub (Phase 3)
+│   │   └── RedisOutboundBus.kt    # Local + Redis pub/sub (Phase 3)
+│   ├── redis/                     # Redis infrastructure (Phase 3)
+│   │   ├── RedisConnectionManager.kt  # Lettuce lifecycle, sync/async commands
+│   │   └── JsonSupport.kt         # Jackson ObjectMapper (KotlinModule)
+│   ├── session/                   # Session ID allocation (Phase 1)
+│   │   ├── SessionIdFactory.kt    # Interface: allocate() → SessionId
+│   │   └── AtomicSessionIdFactory.kt  # AtomicLong-based impl
+│   ├── metrics/                   # Observability
+│   │   └── GameMetrics.kt         # Micrometer gauges/counters for Prometheus
 │   ├── transport/                 # Protocol adapters
 │   │   ├── BlockingSocketTransport.kt  # Telnet server
 │   │   ├── KtorWebSocketTransport.kt   # WebSocket / Ktor
@@ -131,9 +151,12 @@ AmbonMUD/
 │   │   ├── PlainRenderer.kt       # Plain text (no color)
 │   │   ├── TelnetLineDecoder.kt   # Telnet protocol handling
 │   │   └── InboundBackpressure.kt # Drop / disconnect slow inbound
-│   ├── persistence/
+│   ├── persistence/               # Player persistence stack (Phases 2–3)
 │   │   ├── PlayerRepository.kt    # Interface (swappable)
-│   │   ├── YamlPlayerRepository.kt# YAML impl with atomic writes
+│   │   ├── YamlPlayerRepository.kt         # Durable YAML, atomic writes
+│   │   ├── RedisCachingPlayerRepository.kt # L2 cache (Phase 3, opt-in)
+│   │   ├── WriteCoalescingPlayerRepository.kt  # Write-behind (Phase 2)
+│   │   ├── PersistenceWorker.kt   # Background flush coroutine
 │   │   └── PlayerRecord.kt        # Serializable player data
 │   └── ui/login/                  # Login banner rendering
 ├── src/main/resources/
@@ -145,11 +168,12 @@ AmbonMUD/
 │   │   ├── demo_ruins.yaml
 │   │   └── noecker_resume.yaml
 │   └── web/                       # Static browser client (xterm.js)
-├── src/test/kotlin/               # Full test suite
+├── src/test/kotlin/               # Full test suite (~45 test files)
 ├── src/test/resources/world/      # World fixtures (valid + invalid)
 ├── data/players/                  # Runtime player saves (git-ignored)
 ├── docs/
 │   ├── world-zone-yaml-spec.md    # World YAML format contract
+│   ├── scalability-plan-brainstorm.md  # 4-phase scaling roadmap
 │   └── onboarding.md              # This file
 ├── AGENTS.md                      # Engineering playbook
 ├── CLAUDE.md                      # Claude Code orientation
@@ -170,7 +194,15 @@ Clients (telnet / browser WebSocket)
  │   KtorWebSocketTransport)        │
  │  decode raw I/O → InboundEvent   │
  └──────────────┬───────────────────┘
-                │ InboundEvent channel
+                │
+                ▼
+ ┌──────────────────────────────────┐
+ │  InboundBus / OutboundBus        │
+ │  (interface layer)               │
+ │  Local*Bus   — single-process    │
+ │  Redis*Bus   — multi-process     │
+ └──────────────┬───────────────────┘
+                │
                 ▼
  ┌──────────────────────────────────┐
  │  GameEngine  (single-threaded)   │
@@ -183,7 +215,7 @@ Clients (telnet / browser WebSocket)
  │    6. resetZonesIfDue()          │
  │  CommandRouter executes commands │
  └──────────────┬───────────────────┘
-                │ OutboundEvent channel
+                │
                 ▼
  ┌──────────────────────────────────┐
  │  OutboundRouter                  │
@@ -198,10 +230,11 @@ Clients (telnet / browser WebSocket)
    (colors on)    (colors off)
 ```
 
-**The two rules that everything else follows from:**
+**The three rules that everything else follows from:**
 
 1. **Engine communicates only via `InboundEvent` / `OutboundEvent`.** No transport code in the engine; no gameplay logic in transport.
 2. **GameEngine is single-threaded.** Never call blocking I/O inside engine systems. Use the injected `Clock` for any time-based logic.
+3. **Engine speaks to the bus, not to channels.** Always accept `InboundBus` / `OutboundBus`; never pass raw `Channel` references into the engine.
 
 ---
 
@@ -284,9 +317,11 @@ A pure function `parse(line: String): Command`. No side effects. Returns a seale
 | Communication | `Say`, `Emote`, `Tell`, `Gossip` |
 | Items | `Get`, `Drop`, `Wear`, `Remove`, `Inventory`, `Equipment` |
 | Combat | `Kill`, `Flee` |
+| Character | `Score` |
 | Social | `Who`, `Help` |
 | UI / Settings | `Look`, `Exits`, `AnsiOn`, `AnsiOff`, `Clear`, `Colors` |
 | System | `Quit`, `Noop`, `Invalid`, `Unknown` |
+| Staff/Admin | `Goto`, `Transfer`, `Spawn`, `Smite`, `Kick`, `Shutdown` |
 
 Aliases are handled here (e.g. `t` → `tell`, `i` → `inventory`). Direction parsing normalizes `n/north/s/south/e/east/w/west/u/up/d/down`.
 
@@ -404,8 +439,14 @@ data class MobState(
     val roomId: RoomId,
     var hp: Int,
     val maxHp: Int,
+    val minDamage: Int,      // per-round damage range
+    val maxDamage: Int,
+    val armor: Int,          // flat damage reduction vs player
+    val xpReward: Int,       // granted to killer on death
 )
 ```
+
+Mob stats are resolved at world load time from a combination of the mob's tier (weak/standard/elite/boss), level, and any per-mob overrides in the zone YAML. See `docs/world-zone-yaml-spec.md` for the full override syntax.
 
 ### PlayerState
 
@@ -536,9 +577,60 @@ Both implement `TextRenderer`. Selection is per-session and can be toggled at ru
 
 ---
 
-## 12. Persistence Layer
+## 12. Event Bus System
+
+**Files:** `src/main/kotlin/dev/ambon/bus/`
+
+The event bus system (Phase 1 of the scalability refactor) decouples the engine from raw Kotlin channels and creates the seam needed for future multi-process routing.
+
+### Interfaces
+
+```kotlin
+interface InboundBus {
+    suspend fun send(event: InboundEvent)
+    fun trySend(event: InboundEvent): Boolean
+    fun tryReceive(): InboundEvent?
+    fun close()
+}
+
+interface OutboundBus {
+    suspend fun send(event: OutboundEvent)
+    fun tryReceive(): OutboundEvent?
+    fun asReceiveChannel(): ReceiveChannel<OutboundEvent>
+    fun close()
+}
+```
+
+### Local Implementations (single-process)
+
+- `LocalInboundBus` — wraps `Channel<InboundEvent>`, used in all tests and default runtime
+- `LocalOutboundBus` — wraps `Channel<OutboundEvent>`, same
+
+### Redis Implementations (multi-process pub/sub)
+
+- `RedisInboundBus` — wraps `LocalInboundBus` as delegate; publishes to Redis on every `send`/`trySend`; subscribes to Redis channel and delivers remote events to the delegate
+- `RedisOutboundBus` — same pattern for outbound events
+- Each instance carries a UUID `instanceId`; events originating from this instance are filtered out on receive to prevent echo
+- Envelope format: JSON with `instanceId`, `type`, `sessionId`, plus type-specific fields
+- Enabled in `MudServer` when `redis.enabled && redis.bus.enabled`
+
+**Rule:** The engine always receives `InboundBus` / `OutboundBus` — never raw channels.
+
+---
+
+## 13. Persistence Layer
 
 **Files:** `src/main/kotlin/dev/ambon/persistence/`
+
+The persistence stack has three layers, assembled in `MudServer.kt`:
+
+```
+WriteCoalescingPlayerRepository  ← write-behind (Phase 2)
+  ↓
+RedisCachingPlayerRepository     ← L2 cache (Phase 3, if redis.enabled)
+  ↓
+YamlPlayerRepository             ← durable YAML, atomic writes
+```
 
 ### Interface
 
@@ -551,7 +643,16 @@ interface PlayerRepository {
 }
 ```
 
-Test code uses `InMemoryPlayerRepository`. Production uses `YamlPlayerRepository`.
+Test code uses `InMemoryPlayerRepository`. Production uses the full chain.
+
+### WriteCoalescingPlayerRepository
+
+- Wraps any `PlayerRepository`
+- `save()` marks the record dirty and caches it in memory — no I/O
+- `findByName()`/`findById()` check in-memory dirty cache before delegating
+- `flushDirty()` writes only changed records; `flushAll()` writes everything
+- `PersistenceWorker` calls `flushDirty()` on a configurable interval (default 5 s) from `Dispatchers.IO`
+- On server shutdown: `worker.shutdown()` calls `flushAll()` before stopping
 
 ### YamlPlayerRepository
 
@@ -574,14 +675,115 @@ data class PlayerRecord(
     val lastSeenEpochMs: Long,
     val passwordHash: String,   // bcrypt
     val ansiEnabled: Boolean,
+    val isStaff: Boolean = false,  // grant manually via YAML edit
 )
 ```
 
 The `data/players/` directory is git-ignored. Do not commit player save files.
 
+To grant staff access: open `data/players/players/<name>.yaml` and add `isStaff: true`.
+
 ---
 
-## 13. World Loading & YAML Format
+## 14. Redis Integration
+
+**Files:** `src/main/kotlin/dev/ambon/redis/`, `src/main/kotlin/dev/ambon/bus/Redis*Bus.kt`, `src/main/kotlin/dev/ambon/persistence/RedisCachingPlayerRepository.kt`
+
+Redis integration is **disabled by default** (`redis.enabled = false`). The server runs identically without Redis.
+
+### RedisConnectionManager
+
+- Lettuce-based lifecycle (`AutoCloseable`)
+- Attempts connection at startup; logs warning and degrades gracefully on failure
+- Exposes `commands` (sync) and `asyncCommands` (async) — both nullable; code must null-check
+- `connectPubSub()` creates a separate connection for pub/sub (required by Lettuce)
+
+### RedisCachingPlayerRepository
+
+- Wraps `WriteCoalescingPlayerRepository` as delegate
+- Key scheme:
+  - `player:name:<lowercase>` → `<playerId>` (name → ID index)
+  - `player:id:<playerId>` → JSON `PlayerRecord` (full record)
+- Uses Jackson `ObjectMapper` with `KotlinModule` + `FAIL_ON_UNKNOWN_PROPERTIES=false`
+- Writes: `SETEX` with configurable TTL (default 3600 s)
+- Reads: Redis hit → return; Redis miss or error → delegate to YAML chain
+- Gracefully falls back to delegate on any Redis exception
+
+### Redis Bus Config
+
+```yaml
+ambonMUD:
+  redis:
+    enabled: true
+    uri: "redis://localhost:6379"
+    cacheTtlSeconds: 3600
+    bus:
+      enabled: true
+      inboundChannel: "ambon:inbound"
+      outboundChannel: "ambon:outbound"
+      instanceId: ""           # auto-UUID if blank
+```
+
+### Running with Redis (local Docker)
+
+```bash
+docker run --rm -p 6379:6379 redis:7-alpine
+./gradlew run -Pconfig.ambonMUD.redis.enabled=true
+```
+
+---
+
+## 15. Metrics & Observability
+
+**File:** `src/main/kotlin/dev/ambon/metrics/GameMetrics.kt`
+
+AmbonMUD exposes Prometheus metrics via Micrometer at `http://localhost:8080/metrics`.
+
+Key metrics:
+- Online session count (gauge)
+- Total connections / disconnections (counters)
+- Combat rounds and kills (counters)
+- Mob wandering moves (counter)
+- HP regen ticks (counter)
+
+The `docker-compose.yml` in the repo root starts a Prometheus + Grafana stack for local dashboards.
+
+```bash
+docker compose up -d
+# Grafana: http://localhost:3000  (admin / admin)
+```
+
+**Package note:** Uses `io.micrometer.prometheusmetrics.PrometheusMeterRegistry` (Micrometer ≥ 1.12). Do not use the deprecated `io.micrometer.prometheus.*` package.
+
+---
+
+## 16. Staff / Admin System
+
+**Gate:** `PlayerRecord.isStaff` / `PlayerState.isStaff`
+
+Staff status is granted out-of-band by manually editing the player's YAML file. There is no in-game promotion command.
+
+```yaml
+# data/players/players/1.yaml
+isStaff: true
+```
+
+The flag is copied from `PlayerRecord` → `PlayerState` at login (`PlayerRegistry.bindSession()`). All admin commands check `if (!playerState.isStaff)` before executing.
+
+### Admin Commands
+
+| Command | Effect |
+|---------|--------|
+| `goto <dest>` | Teleport self. `zone:room` = exact; `room` = current zone; `zone:` = zone start |
+| `transfer <player> <room>` | Move a player to a room |
+| `spawn <mob-template>` | Spawn a mob from a world template ID (local part match against `world.mobSpawns`) |
+| `smite <target>` | Instantly kill a player or mob |
+| `kick <player>` | Disconnect a player with a message |
+| `shutdown` | Gracefully shut down the server (flush persistence, stop all transports) |
+
+---
+
+## 17. World Loading & YAML Format
 
 **Loader:** `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
 **Full spec:** `docs/world-zone-yaml-spec.md`
@@ -642,7 +844,7 @@ Edit or add YAML files in `src/main/resources/world/`, then register them in `sr
 
 ---
 
-## 14. Configuration
+## 18. Configuration
 
 **Schema:** `src/main/kotlin/dev/ambon/config/AppConfig.kt`
 **Values:** `src/main/resources/application.yaml`
@@ -658,8 +860,11 @@ Edit or add YAML files in `src/main/resources/world/`, then register them in `sr
 | `login` | `maxPasswordAttempts` (3) |
 | `engine.combat` | `minDamage`, `maxDamage`, `roundMillis`, `maxCombatsPerTick` |
 | `engine.regen` | `baseIntervalMillis` (5000), `hpPerTick` (1), `msPerConstitution` |
-| `engine.mob` | `minWanderDelayMillis`, `maxWanderDelayMillis`, `maxMovesPerTick` |
+| `engine.mob` | `minWanderDelayMillis`, `maxWanderDelayMillis`, `maxMovesPerTick`, `tiers` |
 | `progression` | `xp.baseXp`, `xp.exponent`, `xp.linearXp`, `hpPerLevel`, `maxLevel`, `fullHealOnLevelUp` |
+| `persistence.worker` | `flushIntervalMs` (5000), `enabled` (true) |
+| `redis` | `enabled` (false), `uri`, `cacheTtlSeconds`, `bus.*` |
+| `observability` | Prometheus metrics endpoint |
 | `logging` | `level` (INFO), `packageLevels` — per-package level overrides |
 
 When adding a new config key, update both `AppConfig.kt` (data class + `validated()` checks) and `application.yaml`.
@@ -705,7 +910,7 @@ To trace connection lifecycle at runtime:
 
 ---
 
-## 15. Testing
+## 19. Testing
 
 ### Test Helpers
 
@@ -721,6 +926,8 @@ To trace connection lifecycle at runtime:
 |------------|---------------|
 | `CommandParserTest` | All command aliases and parse variants |
 | `CommandRouterTest` | Command execution, broadcasts, error cases |
+| `CommandRouterAdminTest` | Staff/admin command gating and execution |
+| `CommandRouterScoreTest` | Score command output |
 | `CombatSystemTest` | Damage, HP, death, XP grant, armor math |
 | `GameEngineIntegrationTest` | Full login-to-gameplay integration |
 | `GameEngineLoginFlowTest` | Login FSM edge cases and takeover |
@@ -728,9 +935,17 @@ To trace connection lifecycle at runtime:
 | `PlayerProgressionTest` | XP curves, level computation, HP scaling |
 | `ItemRegistryTest` | Equip, inventory, loot drops, keyword matching |
 | `YamlPlayerRepositoryTest` | File I/O, atomic writes, case-insensitive lookup |
+| `RedisCachingPlayerRepositoryTest` | Redis L2 cache hit/miss, TTL, fallback |
+| `WriteCoalescingPlayerRepositoryTest` | Dirty tracking, coalescing (N saves → 1 write) |
+| `PersistenceWorkerTest` | Periodic flush, shutdown flush |
+| `LocalInboundBusTest` | Channel wrapping, capacity behavior |
+| `LocalOutboundBusTest` | Channel wrapping |
+| `RedisInboundBusTest` | Pub/sub delivery, instanceId filtering |
+| `RedisOutboundBusTest` | Pub/sub delivery, instanceId filtering |
 | `WorldLoaderTest` | YAML parsing, per-file and cross-file validation |
 | `AnsiRendererTest` | Color output, escape code correctness |
 | `KtorWebSocketTransportTest` | WebSocket connect/disconnect |
+| `GameMetricsTest` | Metric registration and updates |
 
 ### Testing Expectations
 
@@ -741,7 +956,7 @@ To trace connection lifecycle at runtime:
 
 ---
 
-## 16. Common Change Playbooks
+## 20. Common Change Playbooks
 
 ### Add a New Command
 
@@ -771,19 +986,26 @@ Edit YAML in `src/main/resources/world/`. If adding a new file, register it in `
 
 ### Add a Persistence Field
 
-1. `PlayerRecord.kt` — add field (keep backward compatibility or migrate existing files)
+1. `PlayerRecord.kt` — add field with a default value (backward compat with existing YAML and Redis JSON)
 2. `PlayerRegistry.kt` — map field to `PlayerState` on load; persist on save
-3. `YamlPlayerRepositoryTest` — add coverage
+3. `YamlPlayerRepositoryTest` — verify round-trip through YAML
+4. `RedisCachingPlayerRepositoryTest` — verify round-trip through Jackson/Redis
+
+### Add a Staff/Admin Command
+
+1. `CommandParser.kt` — add to the admin command block; add `Command.SomeName` variant
+2. `CommandRouter.kt` — add `when` branch; gate with `if (!playerState.isStaff) { ... return }`
+3. `CommandRouterAdminTest` — add tests for gated + ungated behavior
 
 ### Add a New Transport
 
-1. Implement a class that reads from the `inbound: Channel<InboundEvent>` and writes to `outbound: Channel<OutboundEvent>`
+1. Implement a class that reads from the `inbound: InboundBus` and writes to `outbound: OutboundBus`
 2. Wire it in `MudServer.kt`
 3. No engine or gameplay changes needed
 
 ---
 
-## 17. Critical Invariants: Never Break These
+## 21. Critical Invariants: Never Break These
 
 ### Engine/Transport Boundary
 - Engine code must never reference transport types
@@ -819,6 +1041,16 @@ Edit YAML in `src/main/resources/world/`. If adding a new file, register it in `
 - `CombatSystem`, `MobSystem`, and inbound event handling all have `max*PerTick` limits
 - These prevent any single tick from running indefinitely under load — preserve them when adding new tick-driven systems
 
+### Event Bus Boundary
+- The engine always receives `InboundBus`/`OutboundBus` — never raw channels
+- `Redis*Bus` wraps `Local*Bus`; both honor the same interface contract
+- A `Redis*Bus` failure must never propagate to the engine; catch and log
+
+### Persistence Chain Ordering
+- `MudServer.kt` constructs the chain in this order (outermost first):
+  `WriteCoalescing` → `RedisCache` (if enabled) → `Yaml`
+- `PlayerRegistry` calls `repo.save()` — it does not know which layer handles it
+
 ---
 
 ## Further Reading
@@ -826,3 +1058,4 @@ Edit YAML in `src/main/resources/world/`. If adding a new file, register it in `
 - `DesignDecisions.md` — explains the "why" behind every major architectural choice
 - `AGENTS.md` — the full engineering playbook (change procedures, invariants)
 - `docs/world-zone-yaml-spec.md` — complete YAML world format reference
+- `docs/scalability-plan-brainstorm.md` — 4-phase scalability roadmap and phase status

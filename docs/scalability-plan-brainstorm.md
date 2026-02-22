@@ -30,7 +30,7 @@ Clients (telnet/WS)                     Clients (telnet/WS)
 
 ---
 
-## Phase 1: Abstract the Event Transport Layer
+## Phase 1: Abstract the Event Transport Layer ✅ IMPLEMENTED
 
 **Goal:** Extract `EventBus` interfaces to replace direct `Channel` usage, creating the seam for future gRPC swap. Also abstract session ID allocation.
 
@@ -71,7 +71,7 @@ Clients (telnet/WS)                     Clients (telnet/WS)
 
 ---
 
-## Phase 2: Async Persistence Worker
+## Phase 2: Async Persistence Worker ✅ IMPLEMENTED
 
 **Goal:** Move player saves off the engine tick into a background worker. Write-behind with dirty-flag coalescing.
 
@@ -118,9 +118,16 @@ Reads (`findByName`, `findById`) must stay synchronous for login flow. Only writ
 
 ---
 
-## Phase 3: Redis Integration
+## Phase 3: Redis Integration ✅ IMPLEMENTED
 
 **Goal:** Add Redis as cache + pub/sub bus. YAML stays durable. Redis is opt-in (`enabled: false` default).
+
+> **Implementation notes (actual vs plan):**
+> - `RedisCachingPlayerRepository` wraps the coalescing repo (not YAML directly as originally sketched)
+> - Key scheme uses `player:id:<id>` instead of a hash (`player:<playerId>`) — JSON string, not Redis hash
+> - Bus is split into `RedisInboundBus` / `RedisOutboundBus` (separate from a monolithic `RedisPubSubBus`)
+> - `RedisSessionRegistry` was deferred to Phase 4 (not yet needed in single-engine mode)
+> - `instanceId` is UUID auto-generated if not set in config
 
 ### New files
 
@@ -164,7 +171,7 @@ implementation("io.lettuce:lettuce-core:6.3.2.RELEASE")
 
 ---
 
-## Phase 4: gRPC Gateway Split
+## Phase 4: gRPC Gateway Split 🔲 PLANNED
 
 **Goal:** Split into Gateway (transports + routing) and Engine (game logic + persistence) processes, communicating via gRPC bidirectional streaming.
 

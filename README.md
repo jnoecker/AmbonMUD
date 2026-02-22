@@ -1,19 +1,23 @@
 AmbonMUD
 ========
 
-AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a small, event-driven backend with telnet and WebSocket transports, data-driven world loading, and YAML-backed player persistence.
+AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a production-quality, event-driven backend with telnet and WebSocket transports, data-driven world loading, tiered NPC combat, and a layered persistence stack with optional Redis caching.
 
 Current State
 -------------
 - Single-process server with a tick-based engine, NPC wandering, and scheduled actions.
 - Dual transport support: native telnet and a browser WebSocket client (xterm.js; served by the server at `/` and `/ws`).
-- Login flow with name + password (bcrypt), per-session state, and basic persistence.
+- Login flow with name + password (bcrypt), per-session state, and layered persistence (write-behind coalescing + optional Redis L2 cache).
 - YAML-defined, multi-zone world with validation on load (optional zone `lifespan` resets to respawn mobs/items).
 - Items and mobs loaded from world data; items can be in rooms or on mobs; inventory and equipment supported.
 - Wearable items support basic `damage`, `armor`, and `constitution` stats with slots (head/body/hand).
-- Basic combat with `kill <mob>` and `flee`, resolved over ticks (kills grant XP; players can level up).
+- Tiered NPC system (weak/standard/elite/boss) with per-mob stat overrides, XP rewards, and loot tables.
+- Combat with `kill <mob>` and `flee`, resolved over ticks (kills grant XP; players can level up).
 - HP regeneration over time (regen interval scales with constitution + equipment).
 - Chat and social commands (say, emote, tell, gossip), plus basic UI helpers (ANSI, clear, colors).
+- Staff/admin commands (goto, transfer, spawn, smite, kick, shutdown) gated behind `isStaff` flag.
+- Abstracted `InboundBus` / `OutboundBus` interfaces enabling future multi-process routing.
+- Optional Redis integration: L2 player cache + pub/sub event bus (disabled by default).
 
 Screenshots
 -----------
@@ -99,6 +103,8 @@ Most day-to-day tuning lives under:
 - `ambonMUD.server` (ports, tick rates, channel capacities)
 - `ambonMUD.world.resources` (which zone YAML resources to load)
 - `ambonMUD.persistence.rootDir` (where player YAML data is written)
+- `ambonMUD.persistence.worker` (write-behind flush interval, enable/disable)
+- `ambonMUD.redis` (enabled, URI, cache TTL, pub/sub bus config)
 - `ambonMUD.logging` (root log level and per-package overrides)
 
 Login
@@ -113,28 +119,48 @@ On connect, you will be prompted for a character name and password.
 
 Commands
 --------
-- `help` or `?`: list available commands.
+**Movement / Look**
+- `n`, `s`, `e`, `w`, `u`, `d` (or `north`, `south`, `east`, `west`, `up`, `down`): move.
 - `look` or `l`: look around the current room.
 - `look <direction>`: peek into a direction (e.g. `look north`).
-- `n`, `s`, `e`, `w`, `u`, `d` (or `north`, `south`, `east`, `west`, `up`, `down`): move.
 - `exits` or `ex`: list exits in the current room.
+
+**Communication**
 - `say <msg>` or `'<msg>`: speak to the room.
 - `emote <msg>`: perform an emote visible to the room.
 - `who`: list online players.
 - `tell <player> <msg>` or `t <player> <msg>`: private message.
 - `gossip <msg>` or `gs <msg>`: broadcast to everyone.
+
+**Items**
 - `inventory` / `inv` / `i`: show inventory.
 - `equipment` / `eq`: show worn items.
 - `wear <item>` / `equip <item>`: wear an item from inventory.
 - `remove <slot>` / `unequip <slot>`: remove an item from a slot (`head`, `body`, `hand`).
 - `get <item>` / `take <item>` / `pickup <item>` / `pick <item>` / `pick up <item>`: take item.
 - `drop <item>`: drop item.
+
+**Combat**
 - `kill <mob>`: engage a mob in combat.
 - `flee`: end combat (you stay in the room).
+
+**Character**
+- `score` or `sc`: show character sheet (level, HP, XP, constitution, equipment stats).
+
+**UI / Settings**
 - `ansi on` / `ansi off`: toggle ANSI colors.
 - `colors`: show ANSI demo (when ANSI is on).
 - `clear`: clear screen (ANSI) or print a divider.
+- `help` or `?`: list available commands.
 - `quit` or `exit`: disconnect.
+
+**Staff / Admin** *(requires `isStaff: true` on the player record)*
+- `goto <room>`: teleport to a room (`zone:room`, bare `room` for current zone, `zone:` for zone start).
+- `transfer <player> <room>`: move a player to a room.
+- `spawn <mob-template>`: spawn a mob by template ID.
+- `smite <player|mob>`: instantly kill a player or mob.
+- `kick <player>`: disconnect a player.
+- `shutdown`: gracefully shut down the server.
 
 World Data
 ----------
@@ -172,7 +198,29 @@ Notes:
 
 Persistence
 -----------
-Player records are stored as YAML under `data/players/players` (configurable via `ambonMUD.persistence.rootDir`). IDs are allocated in `data/players/next_player_id.txt`. On login, the server loads or creates the player record and places the player in their saved room.
+Player records are stored as YAML under `data/players/players/` (configurable via `ambonMUD.persistence.rootDir`). IDs are allocated in `data/players/next_player_id.txt`. On login, the server loads or creates the player record and places the player in their saved room.
+
+The persistence stack has three layers:
+
+```
+WriteCoalescingPlayerRepository  ← dirty-flag write-behind (configurable flush interval)
+  ↓
+RedisCachingPlayerRepository     ← L2 cache (if redis.enabled = true)
+  ↓
+YamlPlayerRepository             ← durable YAML files, atomic writes
+```
+
+Redis caching is disabled by default. Enable it with:
+
+```yaml
+ambonMUD:
+  redis:
+    enabled: true
+    uri: "redis://localhost:6379"
+    cacheTtlSeconds: 3600
+```
+
+To grant staff/admin access to a player, manually add `isStaff: true` to their YAML record at `data/players/players/<name>.yaml`.
 
 Tests
 -----
@@ -211,12 +259,18 @@ Grafana dashboards during load testing:
 ![Grafana dashboard view 2](src/main/resources/screenshots/Dashboard2.png)
 ![Grafana dashboard view 3](src/main/resources/screenshots/Dashboard3.png)
 
-Out of Scope (Yet)
-------------------
-- Rich character sheet/stats UI (for example `score`) beyond the current combat + leveling messages.
-- Advanced combat tuning, per-mob loot/XP tables, or deeper stat systems.
-- Admin tools or in-game world editing.
-- Multi-process scaling or persistence beyond YAML.
+Scalability Roadmap
+-------------------
+The codebase follows a four-phase scalability plan. Phases 1–3 are implemented:
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1 | Abstract `InboundBus`/`OutboundBus` interfaces; extract `SessionIdFactory` | ✅ Done |
+| 2 | Async persistence worker with write-behind coalescing | ✅ Done |
+| 3 | Redis L2 player cache + pub/sub event bus | ✅ Done |
+| 4 | gRPC gateway split for true horizontal scaling | Planned |
+
+See `docs/scalability-plan-brainstorm.md` for detailed design and `DesignDecisions.md` for rationale.
 
 Design Notes
 ------------

@@ -36,6 +36,9 @@ AmbonMUD is a single-process, tick-based MUD server (Kotlin/JVM). The core desig
 Transports (telnet / WebSocket)
     │  decode raw I/O into InboundEvent, render OutboundEvent
     ▼
+InboundBus / OutboundBus  (interface layer; Local* impls in single-process mode)
+    │                      (Redis* impls available for multi-process pub/sub routing)
+    ▼
 GameEngine  (single-threaded coroutine dispatcher, 100ms tick)
     │  CommandRouter, CombatSystem, MobSystem, RegenSystem,
     │  Scheduler, PlayerProgression, Registries
@@ -53,6 +56,7 @@ Sessions
 - Player name: 2–16 chars, alnum/underscore, cannot start with a digit.
 - Password: non-blank, max 72 chars (BCrypt limit).
 - YAML player files use atomic writes — preserve this in any persistence changes.
+- Persistence flows through the full chain: `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (if enabled) → `YamlPlayerRepository`.
 
 ## Key Locations
 
@@ -62,6 +66,10 @@ Sessions
 | Config schema + defaults | `src/main/kotlin/dev/ambon/config/AppConfig.kt`, `src/main/resources/application.yaml` |
 | Game engine + subsystems | `src/main/kotlin/dev/ambon/engine/` |
 | Command parsing + routing | `engine/commands/CommandParser.kt`, `CommandRouter.kt` |
+| Event bus interfaces + impls | `src/main/kotlin/dev/ambon/bus/` |
+| Redis connection + JSON support | `src/main/kotlin/dev/ambon/redis/` |
+| Session ID allocation | `src/main/kotlin/dev/ambon/session/` |
+| Metrics (Micrometer/Prometheus) | `src/main/kotlin/dev/ambon/metrics/` |
 | Transport adapters | `src/main/kotlin/dev/ambon/transport/` |
 | World YAML content | `src/main/resources/world/` |
 | World loader + validation | `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt` |
@@ -74,10 +82,12 @@ Sessions
 ## Change Playbooks (summary)
 
 - **New command:** parse in `CommandParser.kt` → implement in `CommandRouter.kt` → add tests.
+- **Staff command:** add to `CommandParser.kt`; gate with `playerState.isStaff` check in `CommandRouter.kt`.
 - **Combat/mob/item:** edit `CombatSystem`, `MobSystem`, `MobRegistry`, `ItemRegistry`; preserve `max*PerTick` caps.
 - **World content only:** edit YAML in `src/main/resources/world/`; no code change needed.
 - **Config:** update `AppConfig.kt` and `application.yaml` together; keep `validated()` strict.
-- **Persistence:** work through the `PlayerRepository` interface; maintain case-insensitive lookup and atomic writes.
+- **Persistence:** work through the `PlayerRepository` interface; maintain case-insensitive lookup and atomic writes. The chain is `WriteCoalescing → RedisCache → Yaml` — changes to `PlayerRecord` must survive all three layers.
+- **Bus/Redis:** `InboundBus`/`OutboundBus` are the engine boundaries; do not pass raw channels to engine code. Redis variants are optional wrappers — always test with both `LocalInboundBus` and the mock bus in unit tests.
 
 ## Testing
 
