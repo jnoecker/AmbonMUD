@@ -35,6 +35,7 @@ data class AppConfig(
     val redis: RedisConfig = RedisConfig(),
     val grpc: GrpcConfig = GrpcConfig(),
     val gateway: GatewayConfig = GatewayConfig(),
+    val sharding: ShardingConfig = ShardingConfig(),
 ) {
     fun validated(): AppConfig {
         require(server.telnetPort in 1..65535) { "ambonMUD.server.telnetPort must be between 1 and 65535" }
@@ -405,6 +406,14 @@ data class RedisConfig(
     val uri: String = "redis://localhost:6379",
     val cacheTtlSeconds: Long = 3600L,
     val bus: RedisBusConfig = RedisBusConfig(),
+)
+
+/** Zone-based engine sharding settings. */
+data class ShardingConfig(
+    /** Enable zone-based sharding. When false, the engine loads all zones (default). */
+    val enabled: Boolean = false,
+    /** Zones this engine owns. Empty list = all zones (single-engine backward compat). */
+    val zones: List<String> = emptyList(),
 )
 
 private fun validateMobTier(

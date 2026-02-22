@@ -98,6 +98,9 @@ class CommandRouter(
                 val to = room.exits[cmd.dir]
                 if (to == null) {
                     outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
+                } else if (!world.rooms.containsKey(to)) {
+                    // Cross-zone exit to a zone not loaded on this engine (Phase 5c will add handoff)
+                    outbound.send(OutboundEvent.SendText(sessionId, "The way shimmers but does not yield."))
                 } else {
                     val oldMembers = players.playersInRoom(from).filter { it.sessionId != me.sessionId }
                     for (other in oldMembers) {
@@ -228,8 +231,12 @@ class CommandRouter(
                 if (targetId == null) {
                     outbound.send(OutboundEvent.SendError(sessionId, "You see nothing that way."))
                 } else {
-                    val target = room(targetId)
-                    outbound.send(OutboundEvent.SendText(sessionId, target.title))
+                    val target = world.rooms[targetId]
+                    if (target == null) {
+                        outbound.send(OutboundEvent.SendText(sessionId, "You see a shimmering passage."))
+                    } else {
+                        outbound.send(OutboundEvent.SendText(sessionId, target.title))
+                    }
                 }
 
                 outbound.send(OutboundEvent.SendPrompt(sessionId))

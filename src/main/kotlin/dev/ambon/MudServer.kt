@@ -159,7 +159,12 @@ class MudServer(
     private val mobs = MobRegistry()
     private val progression = PlayerProgression(config.progression)
 
-    private val world = WorldFactory.demoWorld(config.world.resources, config.engine.mob.tiers)
+    private val world =
+        WorldFactory.demoWorld(
+            resources = config.world.resources,
+            tiers = config.engine.mob.tiers,
+            zoneFilter = if (config.sharding.enabled) config.sharding.zones.toSet() else emptySet(),
+        )
     private val tickMillis: Long = config.server.tickMillis
     private val scheduler: Scheduler = Scheduler(clock)
 

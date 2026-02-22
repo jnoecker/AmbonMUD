@@ -1,6 +1,10 @@
 ambonMUD:
   mode: STANDALONE
 
+  sharding:
+    enabled: false
+    zones: []
+
   grpc:
     server:
       port: 9090

@@ -36,10 +36,20 @@ object WorldLoader {
     fun loadFromResources(
         paths: List<String>,
         tiers: MobTiersConfig = MobTiersConfig(),
+        zoneFilter: Set<String> = emptySet(),
     ): World {
         if (paths.isEmpty()) throw WorldLoadException("No zone files provided")
 
-        val files = paths.map { path -> readWorldFile(path) }
+        val allFiles = paths.map { path -> readWorldFile(path) }
+        val files =
+            if (zoneFilter.isEmpty()) {
+                allFiles
+            } else {
+                allFiles.filter { it.zone.trim() in zoneFilter }
+            }
+        if (files.isEmpty()) {
+            throw WorldLoadException("No zone files match the zone filter: $zoneFilter")
+        }
 
         // Validate per-file basics (no cross-zone resolution yet)
         files.forEach { validateFileBasics(it) }
@@ -258,9 +268,13 @@ object WorldLoader {
             }
         }
 
-        // Now validate that all exit targets exist in the merged room set
+        // Now validate that all exit targets exist in the merged room set.
+        // When a zone filter is active, exits pointing to rooms in non-loaded zones
+        // are kept but not validated (they are cross-zone stubs).
+        val loadedZones = mergedRooms.keys.mapTo(mutableSetOf()) { it.zone }
         for ((fromId, exits) in allExits) {
             for ((dir, targetId) in exits) {
+                if (targetId.zone !in loadedZones) continue // cross-zone stub — skip
                 if (!mergedRooms.containsKey(targetId)) {
                     throw WorldLoadException(
                         "Room '${fromId.value}' exit '$dir' points to missing room '${targetId.value}'",
