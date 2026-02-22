@@ -1,6 +1,33 @@
 ambonMUD:
   mode: STANDALONE
 
+  sharding:
+    enabled: false
+    engineId: engine-1
+    zones: []
+    advertiseHost: localhost
+    # Optional explicit advertised port override. When omitted, the server
+    # uses mode-specific defaults (ENGINE=grpc.server.port, STANDALONE=telnetPort).
+    #advertisePort: 9090
+    registry:
+      # STATIC (default) or REDIS
+      type: STATIC
+      leaseTtlSeconds: 30
+      # Optional static assignments used when type=STATIC. If empty, sharded
+      # engines only know their own local zone ownership.
+      assignments: []
+      #assignments:
+      #  - engineId: engine-1
+      #    host: localhost
+      #    port: 9091
+      #    zones: [ambon_hub, demo_ruins]
+      #  - engineId: engine-2
+      #    host: localhost
+      #    port: 9092
+      #    zones: [noecker_resume]
+    handoff:
+      ackTimeoutMs: 2000
+
   grpc:
     server:
       port: 9090
@@ -18,6 +45,17 @@ ambonMUD:
       maxDelayMs: 30000
       jitterFactor: 0.2
       streamVerifyMs: 2000
+    # Multi-engine mode: when engines list is non-empty, the gateway connects
+    # to all listed engines and uses SessionRouter for session-to-engine routing.
+    # Leave empty for single-engine mode (uses grpc.client config instead).
+    engines: []
+    #engines:
+    #  - id: engine-1
+    #    host: localhost
+    #    port: 9091
+    #  - id: engine-2
+    #    host: localhost
+    #    port: 9092
 
   server:
     telnetPort: 4000

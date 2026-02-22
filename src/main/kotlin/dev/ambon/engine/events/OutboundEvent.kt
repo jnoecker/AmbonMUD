@@ -43,4 +43,12 @@ sealed interface OutboundEvent {
     data class ShowAnsiDemo(
         val sessionId: SessionId,
     ) : OutboundEvent
+
+    /** Redirect a session to a different engine (sent during cross-zone handoff). */
+    data class SessionRedirect(
+        val sessionId: SessionId,
+        val newEngineId: String,
+        val newEngineHost: String,
+        val newEnginePort: Int,
+    ) : OutboundEvent
 }

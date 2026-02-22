@@ -140,6 +140,7 @@ fun OutboundEvent.sessionId(): SessionId =
         is OutboundEvent.Close -> sessionId
         is OutboundEvent.ClearScreen -> sessionId
         is OutboundEvent.ShowAnsiDemo -> sessionId
+        is OutboundEvent.SessionRedirect -> sessionId
     }
 
 private const val DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS = 250L

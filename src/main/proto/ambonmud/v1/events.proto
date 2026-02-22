@@ -42,6 +42,7 @@ message OutboundEventProto {
     CloseProto close = 8;
     ClearScreenProto clear_screen = 9;
     ShowAnsiDemoProto show_ansi_demo = 10;
+    SessionRedirectProto session_redirect = 11;
   }
 }
 
@@ -72,3 +73,9 @@ message CloseProto {
 message ClearScreenProto {}
 
 message ShowAnsiDemoProto {}
+
+message SessionRedirectProto {
+  string new_engine_id = 1;
+  string new_engine_host = 2;
+  int32 new_engine_port = 3;
+}

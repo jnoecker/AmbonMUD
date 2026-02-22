@@ -7,4 +7,6 @@ data class Room(
     val title: String,
     val description: String,
     val exits: Map<Direction, RoomId>,
+    /** Directions whose targets are in zones not loaded on this engine (cross-zone stubs). */
+    val remoteExits: Set<Direction> = emptySet(),
 )
