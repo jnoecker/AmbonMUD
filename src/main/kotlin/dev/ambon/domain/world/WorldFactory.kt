@@ -9,5 +9,6 @@ object WorldFactory {
     fun demoWorld(
         resources: List<String> = defaultWorldResources,
         tiers: MobTiersConfig = MobTiersConfig(),
-    ): World = WorldLoader.loadFromResources(resources, tiers)
+        zoneFilter: Set<String> = emptySet(),
+    ): World = WorldLoader.loadFromResources(resources, tiers, zoneFilter)
 }

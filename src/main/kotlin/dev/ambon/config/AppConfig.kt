@@ -35,6 +35,7 @@ data class AppConfig(
     val redis: RedisConfig = RedisConfig(),
     val grpc: GrpcConfig = GrpcConfig(),
     val gateway: GatewayConfig = GatewayConfig(),
+    val sharding: ShardingConfig = ShardingConfig(),
 ) {
     fun validated(): AppConfig {
         require(server.telnetPort in 1..65535) { "ambonMUD.server.telnetPort must be between 1 and 65535" }
@@ -151,6 +152,56 @@ data class AppConfig(
             }
             require(gateway.reconnect.streamVerifyMs > 0) {
                 "ambonMUD.gateway.reconnect.streamVerifyMs must be > 0"
+            }
+
+            val seenGatewayEngineIds = mutableSetOf<String>()
+            gateway.engines.forEachIndexed { idx, entry ->
+                require(entry.id.isNotBlank()) { "ambonMUD.gateway.engines[$idx].id must be non-blank" }
+                require(entry.host.isNotBlank()) { "ambonMUD.gateway.engines[$idx].host must be non-blank" }
+                require(entry.port in 1..65535) { "ambonMUD.gateway.engines[$idx].port must be between 1 and 65535" }
+                require(seenGatewayEngineIds.add(entry.id)) {
+                    "ambonMUD.gateway.engines contains duplicate id '${entry.id}'"
+                }
+            }
+        }
+
+        if (sharding.enabled) {
+            require(sharding.engineId.isNotBlank()) { "ambonMUD.sharding.engineId must be non-blank when sharding.enabled=true" }
+            require(sharding.handoff.ackTimeoutMs > 0L) { "ambonMUD.sharding.handoff.ackTimeoutMs must be > 0" }
+            require(sharding.registry.leaseTtlSeconds > 0L) {
+                "ambonMUD.sharding.registry.leaseTtlSeconds must be > 0"
+            }
+            require(sharding.advertiseHost.isNotBlank()) {
+                "ambonMUD.sharding.advertiseHost must be non-blank when sharding.enabled=true"
+            }
+            sharding.advertisePort?.let { port ->
+                require(port in 1..65535) { "ambonMUD.sharding.advertisePort must be between 1 and 65535" }
+            }
+
+            val seenAssignmentEngineIds = mutableSetOf<String>()
+            val seenAssignedZones = mutableSetOf<String>()
+            sharding.registry.assignments.forEachIndexed { idx, assignment ->
+                require(assignment.engineId.isNotBlank()) {
+                    "ambonMUD.sharding.registry.assignments[$idx].engineId must be non-blank"
+                }
+                require(assignment.host.isNotBlank()) {
+                    "ambonMUD.sharding.registry.assignments[$idx].host must be non-blank"
+                }
+                require(assignment.port in 1..65535) {
+                    "ambonMUD.sharding.registry.assignments[$idx].port must be between 1 and 65535"
+                }
+                require(seenAssignmentEngineIds.add(assignment.engineId)) {
+                    "ambonMUD.sharding.registry.assignments contains duplicate engineId '${assignment.engineId}'"
+                }
+
+                assignment.zones.forEach { zone ->
+                    require(zone.isNotBlank()) {
+                        "ambonMUD.sharding.registry.assignments[$idx].zones entries must be non-blank"
+                    }
+                    require(seenAssignedZones.add(zone)) {
+                        "Zone '$zone' is assigned more than once in ambonMUD.sharding.registry.assignments"
+                    }
+                }
             }
         }
 
@@ -391,6 +442,15 @@ data class GatewayConfig(
     val id: Int = 0,
     val snowflake: SnowflakeConfig = SnowflakeConfig(),
     val reconnect: GatewayReconnectConfig = GatewayReconnectConfig(),
+    /** Static list of engines for multi-engine mode. Empty = single engine via grpc.client config. */
+    val engines: List<GatewayEngineEntry> = emptyList(),
+)
+
+/** Address entry for a remote engine in multi-engine gateway mode. */
+data class GatewayEngineEntry(
+    val id: String,
+    val host: String,
+    val port: Int,
 )
 
 data class RedisBusConfig(
@@ -405,6 +465,46 @@ data class RedisConfig(
     val uri: String = "redis://localhost:6379",
     val cacheTtlSeconds: Long = 3600L,
     val bus: RedisBusConfig = RedisBusConfig(),
+)
+
+enum class ShardingRegistryType {
+    STATIC,
+    REDIS,
+}
+
+data class ShardingRegistryAssignment(
+    val engineId: String,
+    val host: String,
+    val port: Int,
+    val zones: List<String> = emptyList(),
+)
+
+data class ShardingRegistryConfig(
+    val type: ShardingRegistryType = ShardingRegistryType.STATIC,
+    val leaseTtlSeconds: Long = 30L,
+    val assignments: List<ShardingRegistryAssignment> = emptyList(),
+)
+
+data class ShardingHandoffConfig(
+    val ackTimeoutMs: Long = 2_000L,
+)
+
+/** Zone-based engine sharding settings. */
+data class ShardingConfig(
+    /** Enable zone-based sharding. When false, the engine loads all zones (default). */
+    val enabled: Boolean = false,
+    /** Unique identifier for this engine instance. Used for inter-engine messaging and zone ownership. */
+    val engineId: String = "engine-1",
+    /** Zones this engine owns. Empty list = all zones (single-engine backward compat). */
+    val zones: List<String> = emptyList(),
+    /** Registry settings for mapping zones to owning engines. */
+    val registry: ShardingRegistryConfig = ShardingRegistryConfig(),
+    /** Cross-engine handoff behavior. */
+    val handoff: ShardingHandoffConfig = ShardingHandoffConfig(),
+    /** Host advertised in zone ownership records for this engine. */
+    val advertiseHost: String = "localhost",
+    /** Optional advertised port override. Defaults to mode-specific port when null. */
+    val advertisePort: Int? = null,
 )
 
 private fun validateMobTier(
