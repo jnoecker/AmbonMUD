@@ -20,13 +20,14 @@ Welcome to AmbonMUD. This guide walks a new developer from zero to productive as
 12. [Event Bus System](#12-event-bus-system)
 13. [Persistence Layer](#13-persistence-layer)
 14. [Redis Integration](#14-redis-integration)
-15. [Metrics & Observability](#15-metrics--observability)
-16. [Staff / Admin System](#16-staff--admin-system)
-17. [World Loading & YAML Format](#17-world-loading--yaml-format)
-18. [Configuration](#18-configuration)
-19. [Testing](#19-testing)
-20. [Common Change Playbooks](#20-common-change-playbooks)
-21. [Critical Invariants: Never Break These](#21-critical-invariants-never-break-these)
+15. [gRPC Gateway Split & Deployment Modes](#15-grpc-gateway-split--deployment-modes)
+16. [Metrics & Observability](#16-metrics--observability)
+17. [Staff / Admin System](#17-staff--admin-system)
+18. [World Loading & YAML Format](#18-world-loading--yaml-format)
+19. [Configuration](#19-configuration)
+20. [Testing](#20-testing)
+21. [Common Change Playbooks](#21-common-change-playbooks)
+22. [Critical Invariants: Never Break These](#22-critical-invariants-never-break-these)
 
 ---
 
@@ -41,7 +42,7 @@ Key stats:
 - **Engine**: Single-threaded coroutine dispatcher, 100 ms ticks
 - **Persistence**: Write-behind coalescing → optional Redis L2 cache → atomic YAML files
 - **World content**: YAML zone files, multi-zone with cross-zone exits
-- **Scalability**: Phases 1–3 complete (bus abstraction, async persistence worker, Redis integration); Phase 4 (gRPC split) is planned
+- **Scalability**: Phases 1–4 complete (bus abstraction, async persistence, Redis integration, gRPC gateway split); three deployment modes: `STANDALONE`, `ENGINE`, `GATEWAY`
 
 ---
 
@@ -133,13 +134,24 @@ AmbonMUD/
 │   │   ├── LocalInboundBus.kt     # Wraps Channel<InboundEvent>
 │   │   ├── LocalOutboundBus.kt    # Wraps Channel<OutboundEvent>
 │   │   ├── RedisInboundBus.kt     # Local + Redis pub/sub (Phase 3)
-│   │   └── RedisOutboundBus.kt    # Local + Redis pub/sub (Phase 3)
+│   │   ├── RedisOutboundBus.kt    # Local + Redis pub/sub (Phase 3)
+│   │   ├── GrpcInboundBus.kt      # Wraps Local + forwards to gRPC stream (Phase 4)
+│   │   └── GrpcOutboundBus.kt     # Wraps Local + receives from gRPC stream (Phase 4)
+│   ├── grpc/                      # gRPC gateway/engine split (Phase 4)
+│   │   ├── EngineGrpcServer.kt    # gRPC server lifecycle wrapper
+│   │   ├── EngineServiceImpl.kt   # Bidi-streaming service impl; sessionToStream map
+│   │   ├── GrpcOutboundDispatcher.kt  # Engine-side: demux OutboundBus → gateway streams
+│   │   ├── EngineServer.kt        # ENGINE-mode composition root
+│   │   └── ProtoMapper.kt         # InboundEvent/OutboundEvent ↔ proto extension functions
+│   ├── gateway/                   # GATEWAY-mode composition root (Phase 4)
+│   │   └── GatewayServer.kt       # Transports + gRPC client; no engine/persistence
 │   ├── redis/                     # Redis infrastructure (Phase 3)
 │   │   ├── RedisConnectionManager.kt  # Lettuce lifecycle, sync/async commands
 │   │   └── JsonSupport.kt         # Jackson ObjectMapper (KotlinModule)
-│   ├── session/                   # Session ID allocation (Phase 1)
+│   ├── session/                   # Session ID allocation
 │   │   ├── SessionIdFactory.kt    # Interface: allocate() → SessionId
-│   │   └── AtomicSessionIdFactory.kt  # AtomicLong-based impl
+│   │   ├── AtomicSessionIdFactory.kt  # AtomicLong-based impl (standalone mode)
+│   │   └── SnowflakeSessionIdFactory.kt  # Bit-packed IDs for multi-gateway (Phase 4)
 │   ├── metrics/                   # Observability
 │   │   └── GameMetrics.kt         # Micrometer gauges/counters for Prometheus
 │   ├── transport/                 # Protocol adapters
@@ -614,6 +626,11 @@ interface OutboundBus {
 - Envelope format: JSON with `instanceId`, `type`, `sessionId`, plus type-specific fields
 - Enabled in `MudServer` when `redis.enabled && redis.bus.enabled`
 
+### gRPC Implementations (gateway ↔ engine)
+
+- `GrpcInboundBus` — wraps `LocalInboundBus` as delegate; on every `send`/`trySend`, also fire-and-forgets the proto-encoded event to the gateway's gRPC send channel. Used by the gateway to forward inbound events to the engine.
+- `GrpcOutboundBus` — wraps `LocalOutboundBus` as delegate; a background coroutine collects from the engine's gRPC receive flow and delivers events into the delegate via `trySend`. Used by the gateway so `OutboundRouter` can consume events normally.
+
 **Rule:** The engine always receives `InboundBus` / `OutboundBus` — never raw channels.
 
 ---
@@ -733,7 +750,79 @@ docker run --rm -p 6379:6379 redis:7-alpine
 
 ---
 
-## 15. Metrics & Observability
+## 15. gRPC Gateway Split & Deployment Modes
+
+**Files:** `src/main/kotlin/dev/ambon/grpc/`, `src/main/kotlin/dev/ambon/gateway/`, `src/main/proto/`
+
+Phase 4 of the scalability refactor splits the monolith into two independently deployable processes. The mode is controlled by `ambonMUD.mode` in `application.yaml`.
+
+### Three Deployment Modes
+
+| Mode | What runs | gRPC role |
+|------|-----------|-----------|
+| `STANDALONE` (default) | Everything in-process: engine + transports + persistence | None |
+| `ENGINE` | `GameEngine` + persistence + `EngineGrpcServer`; no transports | gRPC server |
+| `GATEWAY` | Transports + `OutboundRouter` + gRPC client to remote engine; no local game logic | gRPC client |
+
+`Main.kt` routes to `MudServer`, `EngineServer`, or `GatewayServer` based on `config.mode`.
+
+### gRPC Protocol
+
+A single bidirectional streaming RPC connects each gateway to the engine:
+
+```protobuf
+service EngineService {
+  rpc EventStream(stream InboundEventProto) returns (stream OutboundEventProto);
+}
+```
+
+- **One stream per gateway** (not per session). All sessions from one gateway share one stream.
+- `InboundEventProto` / `OutboundEventProto` use `oneof` for type safety; each carries a top-level `session_id`.
+- `ProtoMapper.kt` provides `InboundEvent.toProto()` / `InboundEventProto.toDomain()` extension functions.
+
+### Engine-Side Components
+
+- **`EngineServiceImpl`**: Implements `EventStream`. For each connected gateway: collects inbound proto events → decodes via `ProtoMapper` → delivers to `InboundBus`. Registers `sessionId → channel` in `sessionToStream` map on `Connected`.
+- **`GrpcOutboundDispatcher`**: Background coroutine that drains the engine's `OutboundBus` and routes each event to the owning gateway's send channel via `sessionToStream` lookup.
+- **`EngineGrpcServer`**: Lifecycle wrapper (Netty-based); owns `EngineServiceImpl` + `GrpcOutboundDispatcher`.
+
+### Gateway-Side Components
+
+- **`GatewayServer`**: Creates a `ManagedChannel` to the engine, opens the bidirectional stream, and wires `GrpcInboundBus` + `GrpcOutboundBus`. Transport adapters (`BlockingSocketTransport`, `KtorWebSocketTransport`) use the gRPC buses.
+- **`SnowflakeSessionIdFactory`**: Generates globally unique session IDs across multiple gateways. Bit layout: `[16-bit gatewayId][32-bit unix_seconds][16-bit sequence]`. `GatewayConfig.id` (0–65535) is the gateway's assigned ID.
+
+### Disconnect Handling (v1)
+
+When a gateway's gRPC stream closes (network failure or restart), the engine synthesizes `InboundEvent.Disconnected` for every session that was registered to that stream, cleanly removing them from the world.
+
+> **Follow-up (not yet implemented):** Gateway reconnect-with-retry logic. Currently, a gateway restart starts fresh (all sessions lost).
+
+### Running in Split Mode
+
+```bash
+# Terminal 1 — start the engine
+./gradlew run -Pconfig.ambonMUD.mode=ENGINE
+
+# Terminal 2 — start a gateway (connects to engine on localhost:9090)
+./gradlew run -Pconfig.ambonMUD.mode=GATEWAY
+```
+
+Config overrides:
+```bash
+# Engine on custom port
+./gradlew run -Pconfig.ambonMUD.mode=ENGINE -Pconfig.ambonMUD.grpc.server.port=9191
+
+# Gateway pointing to remote engine
+./gradlew run -Pconfig.ambonMUD.mode=GATEWAY \
+  -Pconfig.ambonMUD.grpc.client.engineHost=engine.example.com \
+  -Pconfig.ambonMUD.grpc.client.enginePort=9090 \
+  -Pconfig.ambonMUD.gateway.id=1
+```
+
+---
+
+## 16. Metrics & Observability
+
 
 **File:** `src/main/kotlin/dev/ambon/metrics/GameMetrics.kt`
 
@@ -757,7 +846,7 @@ docker compose up -d
 
 ---
 
-## 16. Staff / Admin System
+## 17. Staff / Admin System
 
 **Gate:** `PlayerRecord.isStaff` / `PlayerState.isStaff`
 
@@ -783,7 +872,7 @@ The flag is copied from `PlayerRecord` → `PlayerState` at login (`PlayerRegist
 
 ---
 
-## 17. World Loading & YAML Format
+## 18. World Loading & YAML Format
 
 **Loader:** `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
 **Full spec:** `docs/world-zone-yaml-spec.md`
@@ -844,7 +933,7 @@ Edit or add YAML files in `src/main/resources/world/`, then register them in `sr
 
 ---
 
-## 18. Configuration
+## 19. Configuration
 
 **Schema:** `src/main/kotlin/dev/ambon/config/AppConfig.kt`
 **Values:** `src/main/resources/application.yaml`
@@ -864,6 +953,9 @@ Edit or add YAML files in `src/main/resources/world/`, then register them in `sr
 | `progression` | `xp.baseXp`, `xp.exponent`, `xp.linearXp`, `hpPerLevel`, `maxLevel`, `fullHealOnLevelUp` |
 | `persistence.worker` | `flushIntervalMs` (5000), `enabled` (true) |
 | `redis` | `enabled` (false), `uri`, `cacheTtlSeconds`, `bus.*` |
+| `grpc.server` | `port` (9090) — gRPC listen port (engine mode) |
+| `grpc.client` | `engineHost` (localhost), `enginePort` (9090) — engine address (gateway mode) |
+| `gateway` | `id` (0) — 16-bit gateway ID for `SnowflakeSessionIdFactory` (0–65535) |
 | `observability` | Prometheus metrics endpoint |
 | `logging` | `level` (INFO), `packageLevels` — per-package level overrides |
 
@@ -910,7 +1002,7 @@ To trace connection lifecycle at runtime:
 
 ---
 
-## 19. Testing
+## 20. Testing
 
 ### Test Helpers
 
@@ -946,6 +1038,13 @@ To trace connection lifecycle at runtime:
 | `AnsiRendererTest` | Color output, escape code correctness |
 | `KtorWebSocketTransportTest` | WebSocket connect/disconnect |
 | `GameMetricsTest` | Metric registration and updates |
+| `ProtoMapperTest` | Round-trip every InboundEvent/OutboundEvent variant through proto |
+| `SnowflakeSessionIdFactoryTest` | Uniqueness, monotonicity, bit-field correctness |
+| `EngineServiceImplTest` | In-process gRPC bidirectional streaming |
+| `GrpcOutboundDispatcherTest` | Per-session stream routing, unknown-session drop |
+| `GrpcInboundBusTest` | Delegate pattern + gRPC forward |
+| `GrpcOutboundBusTest` | Delegate pattern + gRPC receive |
+| `GatewayEngineIntegrationTest` | Full in-process connect → login → say → quit over gRPC |
 
 ### Testing Expectations
 
@@ -956,7 +1055,7 @@ To trace connection lifecycle at runtime:
 
 ---
 
-## 20. Common Change Playbooks
+## 21. Common Change Playbooks
 
 ### Add a New Command
 
@@ -1005,7 +1104,7 @@ Edit YAML in `src/main/resources/world/`. If adding a new file, register it in `
 
 ---
 
-## 21. Critical Invariants: Never Break These
+## 22. Critical Invariants: Never Break These
 
 ### Engine/Transport Boundary
 - Engine code must never reference transport types
@@ -1058,4 +1157,4 @@ Edit YAML in `src/main/resources/world/`. If adding a new file, register it in `
 - `DesignDecisions.md` — explains the "why" behind every major architectural choice
 - `AGENTS.md` — the full engineering playbook (change procedures, invariants)
 - `docs/world-zone-yaml-spec.md` — complete YAML world format reference
-- `docs/scalability-plan-brainstorm.md` — 4-phase scalability roadmap and phase status
+- `docs/scalability-plan-brainstorm.md` — 4-phase scalability roadmap (all phases complete)
