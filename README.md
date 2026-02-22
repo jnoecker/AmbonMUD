@@ -261,14 +261,14 @@ Grafana dashboards during load testing:
 
 Scalability Roadmap
 -------------------
-The codebase follows a four-phase scalability plan. Phases 1–3 are implemented:
+The codebase follows a four-phase scalability plan. Phases 1–4 are implemented:
 
 | Phase | Description | Status |
 |-------|-------------|--------|
 | 1 | Abstract `InboundBus`/`OutboundBus` interfaces; extract `SessionIdFactory` | ✅ Done |
 | 2 | Async persistence worker with write-behind coalescing | ✅ Done |
 | 3 | Redis L2 player cache + pub/sub event bus | ✅ Done |
-| 4 | gRPC gateway split for true horizontal scaling | Planned |
+| 4 | gRPC gateway split for true horizontal scaling | ✅ Done |
 
 See `docs/scalability-plan-brainstorm.md` for detailed design and `DesignDecisions.md` for rationale.
 

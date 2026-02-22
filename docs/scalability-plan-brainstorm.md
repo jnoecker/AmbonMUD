@@ -171,64 +171,80 @@ implementation("io.lettuce:lettuce-core:6.3.2.RELEASE")
 
 ---
 
-## Phase 4: gRPC Gateway Split 🔲 PLANNED
+## Phase 4: gRPC Gateway Split ✅ IMPLEMENTED
 
-**Goal:** Split into Gateway (transports + routing) and Engine (game logic + persistence) processes, communicating via gRPC bidirectional streaming.
+**Goal:** Split into Gateway (transports + routing) and Engine (game logic + persistence) processes, communicating via gRPC bidirectional streaming. Default mode (`standalone`) unchanged.
+
+> **Implementation notes (actual vs plan):**
+> - Single Gradle module — no multi-module split; different entry points per mode
+> - One gRPC stream per gateway (not per session); engine maps `sessionId → stream`
+> - `GrpcOutboundDispatcher` replaces `OutboundRouter` in engine mode; consumes the single `OutboundBus`, demuxes to gateway streams
+> - `GrpcInboundBus`/`GrpcOutboundBus` follow the delegate pattern (wrap `Local*Bus`), mirroring `Redis*Bus`
+> - `GatewayConfig.id` is a 16-bit gateway ID (0–65535) for `SnowflakeSessionIdFactory`
+> - Gateway disconnect in v1: engine generates synthetic `Disconnected` for all orphaned sessions
+> - Dependency versions: gRPC 1.72.0, grpc-kotlin-stub 1.5.0, protobuf 3.25.5 (must match grpc-protobuf transitive dep)
+> - Proto files in `src/main/proto/ambonmud/v1/`; generated sources excluded from ktlint
 
 ### New files
 
 | File | Purpose |
 |------|---------|
-| `proto/ambonmud/v1/events.proto` | Protobuf messages mirroring `InboundEvent`/`OutboundEvent` |
-| `proto/ambonmud/v1/engine_service.proto` | `service EngineService { rpc EventStream(stream Inbound) returns (stream Outbound); }` |
-| `grpc/EngineGrpcServer.kt` | Hosts gRPC service, accepts gateway connections |
-| `grpc/EngineServiceImpl.kt` | Bidirectional streaming: proto↔domain conversion, session→stream routing |
-| `grpc/ProtoMapper.kt` | Bidirectional `InboundEvent`/`OutboundEvent` ↔ proto conversion |
-| `bus/GrpcInboundBus.kt` | `InboundBus` impl that sends over gRPC stream |
-| `bus/GrpcOutboundBus.kt` | `OutboundBus` impl that receives from gRPC stream |
-| `gateway/GatewayMain.kt` | Entry point for gateway process |
-| `gateway/GatewayConfig.kt` | Gateway-specific config |
-| `session/SnowflakeSessionIdFactory.kt` | Globally unique IDs: `(gatewayId << 48) \| (timestamp << 16) \| seq` |
+| `src/main/proto/ambonmud/v1/events.proto` | Protobuf oneof messages mirroring `InboundEvent`/`OutboundEvent` |
+| `src/main/proto/ambonmud/v1/engine_service.proto` | `service EngineService { rpc EventStream(stream Inbound) returns (stream Outbound); }` |
+| `grpc/ProtoMapper.kt` | Bidirectional `InboundEvent`/`OutboundEvent` ↔ proto extension functions |
+| `grpc/EngineGrpcServer.kt` | gRPC server lifecycle wrapper (start/stop on configurable port) |
+| `grpc/EngineServiceImpl.kt` | Bidirectional streaming service; `channelFlow` + `sessionToStream` map |
+| `grpc/GrpcOutboundDispatcher.kt` | Engine-side: consumes `OutboundBus`, demuxes to gateway streams by sessionId |
+| `grpc/EngineServer.kt` | Engine-mode composition root (GameEngine + persistence + gRPC server; no transports) |
+| `gateway/GatewayServer.kt` | Gateway-mode composition root (transports + gRPC client bus; no engine) |
+| `bus/GrpcInboundBus.kt` | `InboundBus` impl wrapping `LocalInboundBus`; fire-and-forget forward to gRPC stream |
+| `bus/GrpcOutboundBus.kt` | `OutboundBus` impl wrapping `LocalOutboundBus`; background coroutine receives from gRPC stream |
+| `session/SnowflakeSessionIdFactory.kt` | Globally unique IDs: `[16-bit gatewayId][32-bit unix_seconds][16-bit seq]` |
 
 ### Three deployment modes (`ambonMUD.mode`)
 
-| Mode | Runs | gRPC | Redis |
-|------|------|------|-------|
-| `standalone` (default) | Everything in-process | No | Optional |
-| `engine` | GameEngine + gRPC server + persistence | Server | Required |
-| `gateway` | Transports + OutboundRouter + gRPC client | Client | Required |
+| Mode | Runs | gRPC Role | Redis |
+|------|------|-----------|-------|
+| `STANDALONE` (default) | Everything in-process | None | Optional |
+| `ENGINE` | GameEngine + gRPC server + persistence | Server | Optional |
+| `GATEWAY` | Transports + OutboundRouter + gRPC client | Client | Optional |
 
-### Files to modify
+### Files modified
 
 | File | Change |
 |------|--------|
-| `MudServer.kt` | Add `mode` switch: standalone/engine/gateway component selection |
-| `Main.kt` | Route to appropriate startup based on mode |
-| `AppConfig.kt` | Add `GrpcConfig`, `GatewayConfig`, `DeploymentMode` enum |
-| `application.yaml` | Add `ambonMUD.mode`, `grpc.*`, `gateway.*` defaults |
+| `Main.kt` | `when (config.mode)` routes to `MudServer` / `EngineServer` / `GatewayServer` |
+| `AppConfig.kt` | Add `DeploymentMode` enum, `GrpcConfig`, `GatewayConfig` data classes; new fields on `AppConfig` |
+| `application.yaml` | Add `mode: STANDALONE`, `grpc.server.port: 9090`, `grpc.client.*`, `gateway.id: 0` |
+| `build.gradle.kts` | Add protobuf plugin (0.9.6), gRPC deps (1.72.0), ktlint exclusion for generated sources |
 
 ### New dependencies
 ```kotlin
-implementation("io.grpc:grpc-netty-shaded:1.62.2")
-implementation("io.grpc:grpc-protobuf:1.62.2")
-implementation("io.grpc:grpc-kotlin-stub:1.4.1")
-implementation("com.google.protobuf:protobuf-kotlin:3.25.3")
-plugins { id("com.google.protobuf") version "0.9.4" }
+// Plugin
+id("com.google.protobuf") version "0.9.6"
+// Runtime
+implementation("io.grpc:grpc-netty-shaded:1.72.0")
+implementation("io.grpc:grpc-protobuf:1.72.0")
+implementation("io.grpc:grpc-stub:1.72.0")
+implementation("io.grpc:grpc-kotlin-stub:1.5.0")
+// Test
+testImplementation("io.grpc:grpc-inprocess:1.72.0")
 ```
 
 ### Session routing
-- Each `Connected` event arrives on a specific gRPC stream → engine maps `sessionId → stream`
-- Outbound events routed to owning stream by sessionId lookup
-- Redis `session:*` keys provide backup/recovery and cross-gateway operations
-
-### Risk: High — largest change, introduces network failure modes. Mitigated by standalone mode always working.
+- Each gateway holds one bidirectional gRPC stream to the engine
+- Each `Connected` event on that stream registers `sessionId → stream` in `EngineServiceImpl.sessionToStream`
+- `GrpcOutboundDispatcher` looks up the stream by sessionId and calls `trySend()` on the channel
+- When a gateway stream closes, engine synthesizes `InboundEvent.Disconnected` for all its sessions
 
 ### Verification
-- `ProtoMapperTest` — round-trip every event variant
-- `EngineServiceImplTest` — bidirectional streaming with in-process gRPC
-- `SnowflakeSessionIdFactoryTest` — uniqueness across gateway IDs
-- Integration: engine + gateway in-JVM, run connect → login → say → quit flow
-- `ktlintCheck test` passes
+- `ProtoMapperTest` — round-trip every event variant (3 inbound + 9 outbound)
+- `SnowflakeSessionIdFactoryTest` — uniqueness, monotonicity, bit-field correctness
+- `EngineServiceImplTest` — in-process gRPC bidirectional streaming
+- `GrpcOutboundDispatcherTest` — per-session routing, unknown session drops
+- `GrpcInboundBusTest`, `GrpcOutboundBusTest` — delegate pattern
+- `GatewayEngineIntegrationTest` — full in-process connect → login → say → quit flow over gRPC
+- `ktlintCheck test` passes (all existing tests unaffected)
 
 ---
 

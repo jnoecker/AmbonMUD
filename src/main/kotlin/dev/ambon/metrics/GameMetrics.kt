@@ -56,6 +56,8 @@ class GameMetrics(
         Counter.builder("outbound_backpressure_disconnects_total").register(registry)
     private val outboundEnqueueFailedCounter =
         Counter.builder("outbound_enqueue_failed_total").register(registry)
+    private val grpcControlPlaneFallbackCounter =
+        Counter.builder("grpc_outbound_control_plane_fallback_total").register(registry)
 
     val engineTickTimer: Timer =
         Timer.builder("engine_tick_duration_seconds")
@@ -136,6 +138,20 @@ class GameMetrics(
     fun onOutboundBackpressureDisconnect() = outboundBackpressureDisconnectsCounter.increment()
 
     fun onOutboundEnqueueFailed() = outboundEnqueueFailedCounter.increment()
+
+    fun onGrpcControlPlaneDrop(reason: String) {
+        registry.counter("grpc_outbound_control_plane_dropped_total", "reason", reason).increment()
+    }
+
+    fun onGrpcDataPlaneDrop(reason: String) {
+        registry.counter("grpc_outbound_data_plane_dropped_total", "reason", reason).increment()
+    }
+
+    fun onGrpcControlPlaneFallbackSend() = grpcControlPlaneFallbackCounter.increment()
+
+    fun onGrpcForcedDisconnectDueToControlDeliveryFailure(reason: String) {
+        registry.counter("grpc_forced_disconnect_control_plane_total", "reason", reason).increment()
+    }
 
     fun onEngineTick() = engineTicksCounter.increment()
 
