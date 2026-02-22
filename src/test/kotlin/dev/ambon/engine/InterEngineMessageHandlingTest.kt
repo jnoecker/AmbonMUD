@@ -16,10 +16,13 @@ import dev.ambon.sharding.LocalInterEngineBus
 import dev.ambon.sharding.PlayerSummary
 import dev.ambon.test.MutableClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -126,6 +129,15 @@ class InterEngineMessageHandlingTest {
         harness.inbound.send(InboundEvent.LineReceived(sid, "password"))
     }
 
+    private suspend fun TestScope.pumpEngine(
+        harness: EngineTestHarness,
+        millis: Long = 300L,
+    ) {
+        harness.clock.advance(millis)
+        advanceTimeBy(millis)
+        runCurrent()
+    }
+
     @Test
     fun `GlobalBroadcast GOSSIP delivers to local players when from another engine`() =
         runTest {
@@ -135,7 +147,7 @@ class InterEngineMessageHandlingTest {
             val job = launch { h.engine.run() }
 
             loginViaEngine(h, sid, "Alice")
-            advanceUntilIdle()
+            pumpEngine(h)
             drain(h.outbound)
 
             // Inject a gossip broadcast from another engine
@@ -147,9 +159,7 @@ class InterEngineMessageHandlingTest {
                     sourceEngineId = "engine-2",
                 ),
             )
-            advanceUntilIdle()
-            h.clock.advance(200)
-            advanceUntilIdle()
+            pumpEngine(h)
 
             val outs = drain(h.outbound)
             assertTrue(
@@ -157,7 +167,7 @@ class InterEngineMessageHandlingTest {
                 "Local player should receive remote gossip. got=$outs",
             )
 
-            job.cancel()
+            job.cancelAndJoin()
         }
 
     @Test
@@ -169,7 +179,7 @@ class InterEngineMessageHandlingTest {
             val job = launch { h.engine.run() }
 
             loginViaEngine(h, sid, "Alice")
-            advanceUntilIdle()
+            pumpEngine(h)
             drain(h.outbound)
 
             (h.bus as LocalInterEngineBus).broadcast(
@@ -180,9 +190,7 @@ class InterEngineMessageHandlingTest {
                     sourceEngineId = "engine-1",
                 ),
             )
-            advanceUntilIdle()
-            h.clock.advance(200)
-            advanceUntilIdle()
+            pumpEngine(h)
 
             val outs = drain(h.outbound)
             assertTrue(
@@ -190,7 +198,7 @@ class InterEngineMessageHandlingTest {
                 "Self-broadcast should be ignored. got=$outs",
             )
 
-            job.cancel()
+            job.cancelAndJoin()
         }
 
     @Test
@@ -202,7 +210,7 @@ class InterEngineMessageHandlingTest {
             val job = launch { h.engine.run() }
 
             loginViaEngine(h, sid, "Alice")
-            advanceUntilIdle()
+            pumpEngine(h)
             drain(h.outbound)
 
             (h.bus as LocalInterEngineBus).broadcast(
@@ -212,9 +220,7 @@ class InterEngineMessageHandlingTest {
                     text = "hi alice",
                 ),
             )
-            advanceUntilIdle()
-            h.clock.advance(200)
-            advanceUntilIdle()
+            pumpEngine(h)
 
             val outs = drain(h.outbound)
             assertTrue(
@@ -222,7 +228,7 @@ class InterEngineMessageHandlingTest {
                 "Local player should receive remote tell. got=$outs",
             )
 
-            job.cancel()
+            job.cancelAndJoin()
         }
 
     @Test
@@ -235,7 +241,7 @@ class InterEngineMessageHandlingTest {
             val job = launch { h.engine.run() }
 
             loginViaEngine(h, sid, "Alice")
-            advanceUntilIdle()
+            pumpEngine(h)
             drain(h.outbound)
             capturingBus.sent.clear()
 
@@ -246,9 +252,7 @@ class InterEngineMessageHandlingTest {
                     replyToEngineId = "engine-2",
                 ),
             )
-            advanceUntilIdle()
-            h.clock.advance(200)
-            advanceUntilIdle()
+            pumpEngine(h)
 
             // The capturing bus should have recorded the WhoResponse via sendTo
             val whoResponses =
@@ -262,7 +266,7 @@ class InterEngineMessageHandlingTest {
             assertEquals(1, resp.players.size)
             assertEquals("Alice", resp.players[0].name)
 
-            job.cancel()
+            job.cancelAndJoin()
         }
 
     @Test
@@ -275,7 +279,7 @@ class InterEngineMessageHandlingTest {
             val job = launch { h.engine.run() }
 
             loginViaEngine(h, sid, "Alice")
-            advanceUntilIdle()
+            pumpEngine(h)
             drain(h.outbound)
             capturingBus.sent.clear()
 
@@ -286,14 +290,12 @@ class InterEngineMessageHandlingTest {
                     replyToEngineId = "engine-1",
                 ),
             )
-            advanceUntilIdle()
-            h.clock.advance(200)
-            advanceUntilIdle()
+            pumpEngine(h)
 
             val whoResponses = capturingBus.sent.filter { (_, msg) -> msg is InterEngineMessage.WhoResponse }
             assertTrue(whoResponses.isEmpty(), "Self-WhoRequest should not generate a response. sent=${capturingBus.sent}")
 
-            job.cancel()
+            job.cancelAndJoin()
         }
 
     @Test
@@ -305,7 +307,7 @@ class InterEngineMessageHandlingTest {
             val job = launch { h.engine.run() }
 
             loginViaEngine(h, sid, "Alice")
-            advanceUntilIdle()
+            pumpEngine(h)
             drain(h.outbound)
 
             // Inject a WhoResponse with an unknown requestId
@@ -315,9 +317,7 @@ class InterEngineMessageHandlingTest {
                     players = listOf(PlayerSummary("Bob", "swamp:edge", 3)),
                 ),
             )
-            advanceUntilIdle()
-            h.clock.advance(200)
-            advanceUntilIdle()
+            pumpEngine(h)
 
             val outs = drain(h.outbound)
             assertTrue(
@@ -325,7 +325,7 @@ class InterEngineMessageHandlingTest {
                 "Unknown requestId WhoResponse should be dropped",
             )
 
-            job.cancel()
+            job.cancelAndJoin()
         }
 
     @Test
@@ -337,15 +337,13 @@ class InterEngineMessageHandlingTest {
             val job = launch { h.engine.run() }
 
             loginViaEngine(h, sid, "Alice")
-            advanceUntilIdle()
+            pumpEngine(h)
             drain(h.outbound)
 
             (h.bus as LocalInterEngineBus).broadcast(
                 InterEngineMessage.KickRequest(targetPlayerName = "Alice"),
             )
-            advanceUntilIdle()
-            h.clock.advance(200)
-            advanceUntilIdle()
+            pumpEngine(h)
 
             val outs = drain(h.outbound)
             assertTrue(
@@ -353,7 +351,7 @@ class InterEngineMessageHandlingTest {
                 "KickRequest should close the local session. got=$outs",
             )
 
-            job.cancel()
+            job.cancelAndJoin()
         }
 
     @Test
@@ -366,15 +364,13 @@ class InterEngineMessageHandlingTest {
             val job = launch { h.engine.run() }
 
             loginViaEngine(h, sid, "Alice")
-            advanceUntilIdle()
+            pumpEngine(h)
             drain(h.outbound)
 
             (h.bus as LocalInterEngineBus).broadcast(
                 InterEngineMessage.ShutdownRequest(initiatorName = "Admin"),
             )
-            advanceUntilIdle()
-            h.clock.advance(200)
-            advanceUntilIdle()
+            pumpEngine(h)
 
             val outs = drain(h.outbound)
             assertTrue(
@@ -383,6 +379,6 @@ class InterEngineMessageHandlingTest {
             )
             assertTrue(shutdownCalled, "onShutdown callback should be called")
 
-            job.cancel()
+            job.cancelAndJoin()
         }
 }

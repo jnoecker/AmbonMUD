@@ -7,6 +7,8 @@ import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.AppConfig
+import dev.ambon.config.PersistenceBackend
+import dev.ambon.config.ShardingRegistryType
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
@@ -16,8 +18,10 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.metrics.MetricsHttpServer
+import dev.ambon.persistence.DatabaseManager
 import dev.ambon.persistence.PersistenceWorker
 import dev.ambon.persistence.PlayerRepository
+import dev.ambon.persistence.PostgresPlayerRepository
 import dev.ambon.persistence.RedisCachingPlayerRepository
 import dev.ambon.persistence.WriteCoalescingPlayerRepository
 import dev.ambon.persistence.YamlPlayerRepository
@@ -28,9 +32,9 @@ import dev.ambon.sharding.HandoffManager
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.LocalInterEngineBus
 import dev.ambon.sharding.RedisInterEngineBus
+import dev.ambon.sharding.RedisZoneRegistry
 import dev.ambon.sharding.StaticZoneRegistry
 import dev.ambon.sharding.ZoneRegistry
-import dev.ambon.transport.OutboundRouter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.lettuce.core.pubsub.RedisPubSubAdapter
 import io.micrometer.prometheusmetrics.PrometheusConfig
@@ -43,6 +47,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.nio.file.Paths
 import java.time.Clock
@@ -79,11 +85,26 @@ class EngineServer(
     private val gameMetrics: GameMetrics =
         if (prometheusRegistry != null) GameMetrics(prometheusRegistry) else GameMetrics.noop()
 
-    private val yamlRepo =
-        YamlPlayerRepository(
-            rootDir = Paths.get(config.persistence.rootDir),
-            metrics = gameMetrics,
-        )
+    private val databaseManager: DatabaseManager? =
+        if (config.persistence.backend == PersistenceBackend.POSTGRES) {
+            DatabaseManager(config.database).also { it.migrate() }
+        } else {
+            null
+        }
+
+    private val baseRepo: PlayerRepository =
+        when (config.persistence.backend) {
+            PersistenceBackend.YAML ->
+                YamlPlayerRepository(
+                    rootDir = Paths.get(config.persistence.rootDir),
+                    metrics = gameMetrics,
+                )
+            PersistenceBackend.POSTGRES ->
+                PostgresPlayerRepository(
+                    database = databaseManager!!.database,
+                    metrics = gameMetrics,
+                )
+        }
 
     private val redisManager: RedisConnectionManager? =
         if (config.redis.enabled) RedisConnectionManager(config.redis) else null
@@ -91,7 +112,7 @@ class EngineServer(
     private val redisRepo: RedisCachingPlayerRepository? =
         if (redisManager != null) {
             RedisCachingPlayerRepository(
-                delegate = yamlRepo,
+                delegate = baseRepo,
                 cache = redisManager,
                 cacheTtlSeconds = config.redis.cacheTtlSeconds,
             )
@@ -99,7 +120,7 @@ class EngineServer(
             null
         }
 
-    private val l2Repo: PlayerRepository = redisRepo ?: yamlRepo
+    private val l2Repo: PlayerRepository = redisRepo ?: baseRepo
 
     private val coalescingRepo: WriteCoalescingPlayerRepository? =
         if (config.persistence.worker.enabled) WriteCoalescingPlayerRepository(l2Repo) else null
@@ -121,14 +142,35 @@ class EngineServer(
     private val items = ItemRegistry()
     private val mobs = MobRegistry()
     private val progression = PlayerProgression(config.progression)
+    private val shardingEnabled = config.sharding.enabled
+    private val engineId = config.sharding.engineId
+    private val configuredShardedZones = config.sharding.zones.map(String::trim).filter { it.isNotEmpty() }.toSet()
+    private val zoneFilter =
+        if (shardingEnabled && configuredShardedZones.isNotEmpty()) {
+            configuredShardedZones
+        } else {
+            emptySet()
+        }
 
     private val world =
         WorldFactory.demoWorld(
             resources = config.world.resources,
             tiers = config.engine.mob.tiers,
-            zoneFilter = if (config.sharding.enabled) config.sharding.zones.toSet() else emptySet(),
+            zoneFilter = zoneFilter,
         )
     private val scheduler: Scheduler = Scheduler(clock)
+    private val localZones: Set<String> =
+        if (shardingEnabled && configuredShardedZones.isNotEmpty()) {
+            configuredShardedZones
+        } else {
+            world.rooms.keys.mapTo(linkedSetOf()) { it.zone }
+        }
+    private val advertisedEngineAddress: EngineAddress =
+        EngineAddress(
+            engineId = engineId,
+            host = config.sharding.advertiseHost,
+            port = config.sharding.advertisePort ?: config.grpc.server.port,
+        )
 
     private val players =
         PlayerRegistry(
@@ -140,20 +182,38 @@ class EngineServer(
         )
 
     // --- Sharding infrastructure (null when sharding is disabled) ---
-    private val shardingEnabled = config.sharding.enabled
-    private val engineId = config.sharding.engineId
-
     private val zoneRegistry: ZoneRegistry? =
         if (shardingEnabled) {
-            StaticZoneRegistry(
-                mapOf(
-                    engineId to
-                        Pair(
-                            EngineAddress(engineId, "localhost", config.grpc.server.port),
-                            config.sharding.zones.toSet(),
-                        ),
-                ),
-            )
+            when (config.sharding.registry.type) {
+                ShardingRegistryType.REDIS -> {
+                    val manager =
+                        requireNotNull(redisManager) {
+                            "Sharding registry type REDIS requires ambonMUD.redis.enabled=true"
+                        }
+                    RedisZoneRegistry(
+                        redis = manager,
+                        mapper = redisObjectMapper,
+                        leaseTtlSeconds = config.sharding.registry.leaseTtlSeconds,
+                    )
+                }
+
+                ShardingRegistryType.STATIC -> {
+                    val configuredAssignments = config.sharding.registry.assignments
+                    val assignmentMap =
+                        if (configuredAssignments.isEmpty()) {
+                            mapOf(engineId to Pair(advertisedEngineAddress, localZones))
+                        } else {
+                            configuredAssignments.associate { assignment ->
+                                assignment.engineId to
+                                    Pair(
+                                        EngineAddress(assignment.engineId, assignment.host, assignment.port),
+                                        assignment.zones.map(String::trim).filter { it.isNotEmpty() }.toSet(),
+                                    )
+                            }
+                        }
+                    StaticZoneRegistry(assignmentMap)
+                }
+            }
         } else {
             null
         }
@@ -181,16 +241,18 @@ class EngineServer(
                 outbound = outbound,
                 bus = interEngineBus,
                 zoneRegistry = zoneRegistry,
+                isTargetRoomLocal = world.rooms::containsKey,
                 clock = clock,
+                ackTimeoutMs = config.sharding.handoff.ackTimeoutMs,
             )
         } else {
             null
         }
 
     private var persistenceWorker: PersistenceWorker? = null
-    private var outboundRouter: OutboundRouter? = null
     private var engineJob: Job? = null
     private var metricsHttpServer: MetricsHttpServer? = null
+    private var zoneHeartbeatJob: Job? = null
 
     suspend fun start() {
         redisManager?.connect()
@@ -215,8 +277,22 @@ class EngineServer(
             interEngineBus.start()
         }
         if (zoneRegistry != null) {
-            val addr = EngineAddress(engineId, "localhost", config.grpc.server.port)
-            zoneRegistry.claimZones(engineId, addr, config.sharding.zones.toSet())
+            zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
+            val heartbeatIntervalMs =
+                ((config.sharding.registry.leaseTtlSeconds * 1_000L) / 3L)
+                    .coerceAtLeast(1_000L)
+            zoneHeartbeatJob =
+                scope.launch {
+                    while (isActive) {
+                        delay(heartbeatIntervalMs)
+                        runCatching {
+                            zoneRegistry.renewLease(engineId)
+                            zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
+                        }.onFailure { err ->
+                            log.warn(err) { "Zone lease heartbeat failed for engine=$engineId" }
+                        }
+                    }
+                }
         }
 
         engineJob =
@@ -262,10 +338,12 @@ class EngineServer(
     suspend fun stop() {
         runCatching { metricsHttpServer?.stop() }
         runCatching { grpcServer.stop() }
+        runCatching { zoneHeartbeatJob?.cancelAndJoin() }
         runCatching { engineJob?.cancelAndJoin() }
         runCatching { interEngineBus?.close() }
         runCatching { persistenceWorker?.shutdown() }
         runCatching { redisManager?.close() }
+        runCatching { databaseManager?.close() }
         scope.cancel()
         engineDispatcher.close()
         inbound.close()

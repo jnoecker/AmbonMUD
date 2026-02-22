@@ -10,6 +10,7 @@ import dev.ambon.bus.RedisInboundBus
 import dev.ambon.bus.RedisOutboundBus
 import dev.ambon.config.AppConfig
 import dev.ambon.config.PersistenceBackend
+import dev.ambon.config.ShardingRegistryType
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
@@ -33,6 +34,7 @@ import dev.ambon.sharding.HandoffManager
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.LocalInterEngineBus
 import dev.ambon.sharding.RedisInterEngineBus
+import dev.ambon.sharding.RedisZoneRegistry
 import dev.ambon.sharding.StaticZoneRegistry
 import dev.ambon.sharding.ZoneRegistry
 import dev.ambon.transport.BlockingSocketTransport
@@ -50,6 +52,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.nio.file.Paths
 import java.time.Clock
@@ -165,15 +169,36 @@ class MudServer(
     private val items = ItemRegistry()
     private val mobs = MobRegistry()
     private val progression = PlayerProgression(config.progression)
+    private val shardingEnabled = config.sharding.enabled
+    private val engineId = config.sharding.engineId
+    private val configuredShardedZones = config.sharding.zones.map(String::trim).filter { it.isNotEmpty() }.toSet()
+    private val zoneFilter =
+        if (shardingEnabled && configuredShardedZones.isNotEmpty()) {
+            configuredShardedZones
+        } else {
+            emptySet()
+        }
 
     private val world =
         WorldFactory.demoWorld(
             resources = config.world.resources,
             tiers = config.engine.mob.tiers,
-            zoneFilter = if (config.sharding.enabled) config.sharding.zones.toSet() else emptySet(),
+            zoneFilter = zoneFilter,
         )
     private val tickMillis: Long = config.server.tickMillis
     private val scheduler: Scheduler = Scheduler(clock)
+    private val localZones: Set<String> =
+        if (shardingEnabled && configuredShardedZones.isNotEmpty()) {
+            configuredShardedZones
+        } else {
+            world.rooms.keys.mapTo(linkedSetOf()) { it.zone }
+        }
+    private val advertisedEngineAddress: EngineAddress =
+        EngineAddress(
+            engineId = engineId,
+            host = config.sharding.advertiseHost,
+            port = config.sharding.advertisePort ?: config.server.telnetPort,
+        )
 
     private val players =
         PlayerRegistry(
@@ -185,20 +210,38 @@ class MudServer(
         )
 
     // --- Sharding infrastructure (null when sharding is disabled) ---
-    private val shardingEnabled = config.sharding.enabled
-    private val engineId = config.sharding.engineId
-
     private val zoneRegistry: ZoneRegistry? =
         if (shardingEnabled) {
-            StaticZoneRegistry(
-                mapOf(
-                    engineId to
-                        Pair(
-                            EngineAddress(engineId, "localhost", config.server.telnetPort),
-                            config.sharding.zones.toSet(),
-                        ),
-                ),
-            )
+            when (config.sharding.registry.type) {
+                ShardingRegistryType.REDIS -> {
+                    val manager =
+                        requireNotNull(redisManager) {
+                            "Sharding registry type REDIS requires ambonMUD.redis.enabled=true"
+                        }
+                    RedisZoneRegistry(
+                        redis = manager,
+                        mapper = redisObjectMapper,
+                        leaseTtlSeconds = config.sharding.registry.leaseTtlSeconds,
+                    )
+                }
+
+                ShardingRegistryType.STATIC -> {
+                    val configuredAssignments = config.sharding.registry.assignments
+                    val assignmentMap =
+                        if (configuredAssignments.isEmpty()) {
+                            mapOf(engineId to Pair(advertisedEngineAddress, localZones))
+                        } else {
+                            configuredAssignments.associate { assignment ->
+                                assignment.engineId to
+                                    Pair(
+                                        EngineAddress(assignment.engineId, assignment.host, assignment.port),
+                                        assignment.zones.map(String::trim).filter { it.isNotEmpty() }.toSet(),
+                                    )
+                            }
+                        }
+                    StaticZoneRegistry(assignmentMap)
+                }
+            }
         } else {
             null
         }
@@ -226,11 +269,15 @@ class MudServer(
                 outbound = outbound,
                 bus = interEngineBus,
                 zoneRegistry = zoneRegistry,
+                isTargetRoomLocal = world.rooms::containsKey,
                 clock = clock,
+                ackTimeoutMs = config.sharding.handoff.ackTimeoutMs,
             )
         } else {
             null
         }
+
+    private var zoneHeartbeatJob: Job? = null
 
     suspend fun start() {
         if (config.redis.enabled && config.redis.bus.enabled) {
@@ -264,8 +311,22 @@ class MudServer(
             interEngineBus.start()
         }
         if (zoneRegistry != null) {
-            val addr = EngineAddress(engineId, "localhost", config.server.telnetPort)
-            zoneRegistry.claimZones(engineId, addr, config.sharding.zones.toSet())
+            zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
+            val heartbeatIntervalMs =
+                ((config.sharding.registry.leaseTtlSeconds * 1_000L) / 3L)
+                    .coerceAtLeast(1_000L)
+            zoneHeartbeatJob =
+                scope.launch {
+                    while (isActive) {
+                        delay(heartbeatIntervalMs)
+                        runCatching {
+                            zoneRegistry.renewLease(engineId)
+                            zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
+                        }.onFailure { err ->
+                            log.warn(err) { "Zone lease heartbeat failed for engine=$engineId" }
+                        }
+                    }
+                }
         }
 
         engineJob =
@@ -364,6 +425,7 @@ class MudServer(
     suspend fun stop() {
         runCatching { telnetTransport.stop() }
         runCatching { webTransport.stop() }
+        runCatching { zoneHeartbeatJob?.cancelAndJoin() }
         runCatching { engineJob?.cancelAndJoin() }
         runCatching { interEngineBus?.close() }
         runCatching { persistenceWorker?.shutdown() }

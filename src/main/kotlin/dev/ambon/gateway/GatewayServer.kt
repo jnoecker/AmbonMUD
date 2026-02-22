@@ -8,6 +8,7 @@ import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.AppConfig
+import dev.ambon.config.GatewayEngineEntry
 import dev.ambon.config.GatewayReconnectConfig
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
@@ -102,6 +103,7 @@ class GatewayServer(
     // ── Multi-engine mode state ─────────────────────────────────────────────────
     private var sessionRouter: SessionRouter? = null
     private val perEngineManagedChannels = mutableMapOf<String, ManagedChannel>()
+    private val perEngineInboundChannels = mutableMapOf<String, Channel<InboundEventProto>>()
     private val perEngineReceiverJobs = mutableMapOf<String, Job>()
     private var mergedOutbound: LocalOutboundBus? = null
 
@@ -278,53 +280,110 @@ class GatewayServer(
         mergedOutbound = merged
 
         for (entry in engines) {
-            val managedChannel =
-                ManagedChannelBuilder
-                    .forAddress(entry.host, entry.port)
-                    .usePlaintext()
-                    .build()
-            perEngineManagedChannels[entry.id] = managedChannel
-
-            val stub = EngineServiceGrpcKt.EngineServiceCoroutineStub(managedChannel)
-            val protoChannel = Channel<InboundEventProto>(capacity = config.server.inboundChannelCapacity)
-
-            router.registerEngine(entry.id, protoChannel)
-
-            val outboundFlow = stub.eventStream(protoChannel.receiveAsFlow())
-
-            val job =
-                scope.launch {
-                    try {
-                        outboundFlow.collect { proto ->
-                            val event = proto.toDomain()
-                            if (event == null) {
-                                log.warn { "Unrecognised OutboundEventProto from engine ${entry.id}: $proto" }
-                                return@collect
-                            }
-
-                            // Intercept SessionRedirect: remap session routing, don't forward to UI
-                            if (event is OutboundEvent.SessionRedirect) {
-                                router.remapSession(
-                                    SessionId(proto.sessionId),
-                                    event.newEngineId,
-                                )
-                                return@collect
-                            }
-
-                            merged.send(event)
-                        }
-                        log.warn { "Engine ${entry.id} outbound stream completed unexpectedly" }
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        log.error(e) { "Engine ${entry.id} gRPC outbound stream failed" }
-                    }
-                }
+            connectMultiEngine(entry, router, initial = true)
+            val job = scope.launch { runMultiEngineLoop(entry, router, merged) }
             perEngineReceiverJobs[entry.id] = job
         }
 
         activeInbound = router
         activeOutbound = merged
+    }
+
+    private fun connectMultiEngine(
+        entry: GatewayEngineEntry,
+        router: SessionRouter,
+        initial: Boolean,
+    ) {
+        val managedChannel =
+            ManagedChannelBuilder
+                .forAddress(entry.host, entry.port)
+                .usePlaintext()
+                .build()
+
+        val protoChannel = Channel<InboundEventProto>(capacity = config.server.inboundChannelCapacity)
+
+        val oldChannel = perEngineInboundChannels.put(entry.id, protoChannel)
+        oldChannel?.close()
+        val oldManaged = perEngineManagedChannels.put(entry.id, managedChannel)
+        oldManaged?.shutdown()
+
+        if (initial) {
+            router.registerEngine(entry.id, protoChannel)
+        } else {
+            router.reattachEngine(entry.id, protoChannel)
+        }
+    }
+
+    private suspend fun runMultiEngineLoop(
+        entry: GatewayEngineEntry,
+        router: SessionRouter,
+        merged: LocalOutboundBus,
+    ) {
+        while (true) {
+            val managedChannel = perEngineManagedChannels[entry.id] ?: return
+            val protoChannel = perEngineInboundChannels[entry.id] ?: return
+            val stub = EngineServiceGrpcKt.EngineServiceCoroutineStub(managedChannel)
+
+            try {
+                stub.eventStream(protoChannel.receiveAsFlow()).collect { proto ->
+                    val event = proto.toDomain()
+                    if (event == null) {
+                        log.warn { "Unrecognised OutboundEventProto from engine ${entry.id}: $proto" }
+                        return@collect
+                    }
+
+                    // Intercept SessionRedirect: remap session routing, don't forward to UI.
+                    if (event is OutboundEvent.SessionRedirect) {
+                        router.remapSession(
+                            SessionId(proto.sessionId),
+                            event.newEngineId,
+                        )
+                        return@collect
+                    }
+
+                    merged.send(event)
+                }
+                log.warn { "Engine ${entry.id} outbound stream completed unexpectedly" }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                log.error(e) { "Engine ${entry.id} gRPC outbound stream failed" }
+            }
+
+            val reconnected = attemptMultiEngineReconnect(entry, router)
+            if (!reconnected) {
+                log.error { "Reconnect budget exhausted for engine ${entry.id}; stopping gateway" }
+                scope.launch { stop() }
+                return
+            }
+        }
+    }
+
+    private suspend fun attemptMultiEngineReconnect(
+        entry: GatewayEngineEntry,
+        router: SessionRouter,
+    ): Boolean {
+        val reconnectConfig = config.gateway.reconnect
+        for (attempt in 0 until reconnectConfig.maxAttempts) {
+            val delayMs = computeBackoffDelay(attempt, reconnectConfig)
+            log.info {
+                "Engine ${entry.id} reconnect attempt ${attempt + 1}/${reconnectConfig.maxAttempts} in ${delayMs}ms"
+            }
+            gameMetrics.onGatewayReconnectAttempt()
+            delay(delayMs)
+
+            try {
+                connectMultiEngine(entry, router, initial = false)
+                log.info { "Engine ${entry.id} reconnected on attempt ${attempt + 1}" }
+                gameMetrics.onGatewayReconnectSuccess()
+                return true
+            } catch (e: Exception) {
+                log.warn(e) { "Engine ${entry.id} reconnect attempt ${attempt + 1} failed" }
+            }
+        }
+
+        gameMetrics.onGatewayReconnectBudgetExhausted()
+        return false
     }
 
     suspend fun stop() {
@@ -336,6 +395,9 @@ class GatewayServer(
                 runCatching { job.cancel() }
             }
             sessionRouter?.close()
+            for ((_, ch) in perEngineInboundChannels) {
+                runCatching { ch.close() }
+            }
             for ((_, ch) in perEngineManagedChannels) {
                 runCatching { ch.shutdown() }
             }

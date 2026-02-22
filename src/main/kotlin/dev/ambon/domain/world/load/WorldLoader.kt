@@ -272,9 +272,10 @@ object WorldLoader {
         // When a zone filter is active, exits pointing to rooms in non-loaded zones
         // are kept but not validated (they are cross-zone stubs).
         val loadedZones = mergedRooms.keys.mapTo(mutableSetOf()) { it.zone }
+        val filteredLoad = zoneFilter.isNotEmpty()
         for ((fromId, exits) in allExits) {
             for ((dir, targetId) in exits) {
-                if (targetId.zone !in loadedZones) continue // cross-zone stub — skip
+                if (filteredLoad && targetId.zone !in loadedZones) continue
                 if (!mergedRooms.containsKey(targetId)) {
                     throw WorldLoadException(
                         "Room '${fromId.value}' exit '$dir' points to missing room '${targetId.value}'",

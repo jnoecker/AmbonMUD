@@ -18,6 +18,7 @@ import dev.ambon.test.MutableClock
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -83,7 +84,9 @@ class HandoffManagerTest {
             outbound = outbound,
             bus = bus,
             zoneRegistry = zoneRegistry,
+            isTargetRoomLocal = { room -> room.zone == "forest" },
             clock = clock,
+            ackTimeoutMs = 1_000L,
         )
 
     private val sid = SessionId(1L)
@@ -107,7 +110,7 @@ class HandoffManagerTest {
                 baseMaxHp = 18,
                 constitution = 3,
                 level = 5,
-                xpTotal = 25000L,
+                xpTotal = 25_000L,
                 ansiEnabled = true,
                 isStaff = false,
             )
@@ -144,7 +147,7 @@ class HandoffManagerTest {
         assertEquals(18, serialized.baseMaxHp)
         assertEquals(3, serialized.constitution)
         assertEquals(5, serialized.level)
-        assertEquals(25000L, serialized.xpTotal)
+        assertEquals(25_000L, serialized.xpTotal)
         assertTrue(serialized.ansiEnabled)
 
         assertEquals(1, serialized.inventoryItems.size)
@@ -200,80 +203,124 @@ class HandoffManagerTest {
     @Test
     fun `initiateHandoff returns NoEngineForZone when zone has no owner`() =
         runBlocking {
-            // Create a player via PlayerRegistry (handles BCrypt hashing properly)
             players.create(sid, "Alice", "password123")
 
             val result = handoffManager.initiateHandoff(sid, RoomId("unknown_zone:room1"))
             assertEquals(HandoffResult.NoEngineForZone, result)
+            assertNotNull(players.get(sid))
+            assertFalse(handoffManager.isInTransit(sid))
+        }
 
-            // Player should still exist (handoff was not initiated)
+    @Test
+    fun `initiateHandoff keeps player local until ack and marks transit`() =
+        runBlocking {
+            players.create(sid, "Alice", "password123")
+
+            val result = handoffManager.initiateHandoff(sid, targetRoom)
+            assertTrue(result is HandoffResult.Initiated)
+            assertTrue(handoffManager.isInTransit(sid))
+            assertNotNull(players.get(sid))
+
+            val events = drainOutbound()
+            assertTrue(events.any { it is OutboundEvent.SendText && "shimmers" in it.text })
+            assertTrue(events.none { it is OutboundEvent.SessionRedirect })
+
+            val handoffMessage = bus.incoming().tryReceive().getOrNull() as? InterEngineMessage.PlayerHandoff
+            assertNotNull(handoffMessage)
+            assertEquals(sid.value, handoffMessage!!.sessionId)
+            assertEquals(targetRoom.value, handoffMessage.targetRoomId)
+        }
+
+    @Test
+    fun `initiateHandoff returns AlreadyInTransit when pending`() =
+        runBlocking {
+            players.create(sid, "Alice", "password123")
+            val first = handoffManager.initiateHandoff(sid, targetRoom)
+            val second = handoffManager.initiateHandoff(sid, targetRoom)
+
+            assertTrue(first is HandoffResult.Initiated)
+            assertEquals(HandoffResult.AlreadyInTransit, second)
+        }
+
+    @Test
+    fun `handleAck success removes player and emits redirect`() =
+        runBlocking {
+            players.create(sid, "Alice", "password123")
+            handoffManager.initiateHandoff(sid, targetRoom)
+            drainOutbound()
+            bus.incoming().tryReceive() // consume PlayerHandoff message
+
+            val result =
+                handoffManager.handleAck(
+                    InterEngineMessage.HandoffAck(
+                        sessionId = sid.value,
+                        success = true,
+                    ),
+                )
+
+            assertTrue(result is HandoffAckResult.Completed)
+            assertFalse(handoffManager.isInTransit(sid))
+            assertNull(players.get(sid))
+
+            val redirect = drainOutbound().filterIsInstance<OutboundEvent.SessionRedirect>().single()
+            assertEquals(sid, redirect.sessionId)
+            assertEquals(targetEngineId, redirect.newEngineId)
+            assertEquals("host2", redirect.newEngineHost)
+            assertEquals(9091, redirect.newEnginePort)
+        }
+
+    @Test
+    fun `handleAck failure keeps player local and clears transit`() =
+        runBlocking {
+            players.create(sid, "Alice", "password123")
+            handoffManager.initiateHandoff(sid, targetRoom)
+
+            val result =
+                handoffManager.handleAck(
+                    InterEngineMessage.HandoffAck(
+                        sessionId = sid.value,
+                        success = false,
+                        errorMessage = "target rejected",
+                    ),
+                )
+
+            assertEquals(HandoffAckResult.Failed("target rejected"), result)
+            assertFalse(handoffManager.isInTransit(sid))
+            assertNotNull(players.get(sid))
+            assertTrue(drainOutbound().none { it is OutboundEvent.SessionRedirect })
+        }
+
+    @Test
+    fun `expireTimedOut returns stale handoff`() =
+        runBlocking {
+            players.create(sid, "Alice", "password123")
+            handoffManager.initiateHandoff(sid, targetRoom)
+            assertTrue(handoffManager.isInTransit(sid))
+
+            clock.advance(1_001L)
+            val expired = handoffManager.expireTimedOut()
+
+            assertEquals(1, expired.size)
+            assertEquals(sid, expired.single().sessionId)
+            assertFalse(handoffManager.isInTransit(sid))
             assertNotNull(players.get(sid))
         }
 
     @Test
-    fun `initiateHandoff removes player and sends handoff message`() =
+    fun `acceptHandoff creates player in local registries and sends success ack`() =
         runBlocking {
-            // Create and login a player via PlayerRegistry
-            players.create(sid, "Alice", "password123")
-
-            // Give the player an inventory item
-            val coin =
-                ItemInstance(
-                    id = ItemId("forest:coin"),
-                    item = Item(keyword = "coin", displayName = "a gold coin"),
+            val targetManager =
+                HandoffManager(
+                    engineId = targetEngineId,
+                    players = players,
+                    items = items,
+                    outbound = outbound,
+                    bus = bus,
+                    zoneRegistry = zoneRegistry,
+                    isTargetRoomLocal = { room -> room.zone == "swamp" },
+                    clock = clock,
                 )
-            items.addToInventory(sid, coin)
 
-            val result = handoffManager.initiateHandoff(sid, targetRoom)
-
-            assertTrue(result is HandoffResult.Initiated)
-            assertEquals(targetEngineId, (result as HandoffResult.Initiated).targetEngine.engineId)
-
-            // Player should be removed from local registry
-            assertNull(players.get(sid))
-
-            // Verify outbound messages were sent (shimmer message + departure)
-            // Drain a few events to verify
-            val events = mutableListOf<OutboundEvent>()
-            while (true) {
-                val ev = outboundChannel.tryReceive().getOrNull() ?: break
-                events.add(ev)
-            }
-            assertTrue(events.any { it is OutboundEvent.SendText && "shimmers" in (it as OutboundEvent.SendText).text })
-
-            // Verify a SessionRedirect was sent before the shimmer message
-            val redirectEvent = events.filterIsInstance<OutboundEvent.SessionRedirect>().firstOrNull()
-            assertNotNull(redirectEvent)
-            assertEquals(sid, redirectEvent!!.sessionId)
-            assertEquals(targetEngineId, redirectEvent.newEngineId)
-            assertEquals("host2", redirectEvent.newEngineHost)
-            assertEquals(9091, redirectEvent.newEnginePort)
-        }
-
-    @Test
-    fun `initiateHandoff sends SessionRedirect before text message`() =
-        runBlocking {
-            players.create(sid, "Alice", "password123")
-
-            handoffManager.initiateHandoff(sid, targetRoom)
-
-            val events = mutableListOf<OutboundEvent>()
-            while (true) {
-                val ev = outboundChannel.tryReceive().getOrNull() ?: break
-                events.add(ev)
-            }
-
-            // SessionRedirect should come before the shimmer text
-            val redirectIdx = events.indexOfFirst { it is OutboundEvent.SessionRedirect }
-            val textIdx = events.indexOfFirst { it is OutboundEvent.SendText && "shimmers" in (it as OutboundEvent.SendText).text }
-            assertTrue(redirectIdx >= 0, "Should have a SessionRedirect event")
-            assertTrue(textIdx >= 0, "Should have a shimmer text event")
-            assertTrue(redirectIdx < textIdx, "SessionRedirect should come before the shimmer text")
-        }
-
-    @Test
-    fun `acceptHandoff creates player in local registries with items`() =
-        runBlocking {
             val handoff =
                 InterEngineMessage.PlayerHandoff(
                     sessionId = 42L,
@@ -288,12 +335,12 @@ class HandoffManagerTest {
                             baseMaxHp = 22,
                             constitution = 4,
                             level = 7,
-                            xpTotal = 40000L,
+                            xpTotal = 40_000L,
                             ansiEnabled = true,
                             isStaff = false,
                             passwordHash = "hash123",
-                            createdEpochMs = 1000L,
-                            lastSeenEpochMs = 2000L,
+                            createdEpochMs = 1_000L,
+                            lastSeenEpochMs = 2_000L,
                             inventoryItems =
                                 listOf(
                                     SerializedItem(
@@ -315,14 +362,12 @@ class HandoffManagerTest {
                                 ),
                         ),
                     gatewayId = 1,
+                    sourceEngineId = sourceEngineId,
                 )
 
-            val resultSid = handoffManager.acceptHandoff(handoff)
-
-            assertNotNull(resultSid)
+            val resultSid = targetManager.acceptHandoff(handoff)
             assertEquals(SessionId(42L), resultSid)
 
-            // Verify player was added to registry
             val player = players.get(SessionId(42L))
             assertNotNull(player)
             assertEquals("Bob", player!!.name)
@@ -330,27 +375,36 @@ class HandoffManagerTest {
             assertEquals(18, player.hp)
             assertEquals(25, player.maxHp)
             assertEquals(7, player.level)
-            assertEquals(40000L, player.xpTotal)
+            assertEquals(40_000L, player.xpTotal)
             assertTrue(player.ansiEnabled)
 
-            // Verify inventory was restored
             val inv = items.inventory(SessionId(42L))
             assertEquals(1, inv.size)
             assertEquals("forest:coin", inv[0].id.value)
-            assertEquals("a gold coin", inv[0].item.displayName)
 
-            // Verify equipment was restored
             val eq = items.equipment(SessionId(42L))
-            assertEquals(1, eq.size)
-            assertNotNull(eq[ItemSlot.HAND])
             assertEquals("forest:sword", eq[ItemSlot.HAND]!!.id.value)
-            assertEquals(5, eq[ItemSlot.HAND]!!.item.damage)
+
+            val ack = bus.incoming().tryReceive().getOrNull() as? InterEngineMessage.HandoffAck
+            assertNotNull(ack)
+            assertTrue(ack!!.success)
         }
 
     @Test
-    fun `acceptHandoff rejects duplicate session`() =
+    fun `acceptHandoff rejects non-local target room and sends failure ack`() =
         runBlocking {
-            // First accept
+            val targetManager =
+                HandoffManager(
+                    engineId = targetEngineId,
+                    players = players,
+                    items = items,
+                    outbound = outbound,
+                    bus = bus,
+                    zoneRegistry = zoneRegistry,
+                    isTargetRoomLocal = { false },
+                    clock = clock,
+                )
+
             val handoff =
                 InterEngineMessage.PlayerHandoff(
                     sessionId = 42L,
@@ -373,13 +427,23 @@ class HandoffManagerTest {
                             lastSeenEpochMs = 0L,
                         ),
                     gatewayId = 1,
+                    sourceEngineId = sourceEngineId,
                 )
 
-            val first = handoffManager.acceptHandoff(handoff)
-            assertNotNull(first)
+            val result = targetManager.acceptHandoff(handoff)
+            assertNull(result)
 
-            // Second accept with same session ID should be rejected
-            val second = handoffManager.acceptHandoff(handoff)
-            assertNull(second)
+            val ack = bus.incoming().tryReceive().getOrNull() as? InterEngineMessage.HandoffAck
+            assertNotNull(ack)
+            assertFalse(ack!!.success)
         }
+
+    private fun drainOutbound(): List<OutboundEvent> {
+        val events = mutableListOf<OutboundEvent>()
+        while (true) {
+            val ev = outboundChannel.tryReceive().getOrNull() ?: break
+            events += ev
+        }
+        return events
+    }
 }

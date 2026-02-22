@@ -13,6 +13,7 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PlayerId
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.time.Clock
 
 private val log = KotlinLogging.logger {}
 
@@ -22,17 +23,34 @@ sealed interface HandoffResult {
     data object PlayerNotFound : HandoffResult
 
     data object NoEngineForZone : HandoffResult
+
+    data object AlreadyInTransit : HandoffResult
 }
+
+sealed interface HandoffAckResult {
+    data class Completed(val targetEngine: EngineAddress) : HandoffAckResult
+
+    data class Failed(val errorMessage: String?) : HandoffAckResult
+
+    data object NotPending : HandoffAckResult
+}
+
+data class TimedOutHandoff(
+    val sessionId: SessionId,
+    val targetRoomId: RoomId,
+    val targetEngine: EngineAddress,
+)
 
 /**
  * Manages cross-zone player handoffs between engine instances.
  *
- * **Source side** ([initiateHandoff]): serializes the player's full state
- * (stats, inventory, equipment), sends a [InterEngineMessage.PlayerHandoff]
- * to the target engine, and removes the player from local registries.
+ * Source side:
+ * - [initiateHandoff] sends a handoff message and marks the session in transit.
+ * - [handleAck] finalizes the transfer only after target ack.
+ * - [expireTimedOut] surfaces stale in-transit handoffs for rollback messaging.
  *
- * **Target side** ([acceptHandoff]): deserializes the incoming state,
- * binds the player into local registries, and restores inventory/equipment.
+ * Target side:
+ * - [acceptHandoff] restores player state and sends an ack back to source.
  */
 class HandoffManager(
     private val engineId: String,
@@ -41,32 +59,48 @@ class HandoffManager(
     private val outbound: OutboundBus,
     private val bus: InterEngineBus,
     private val zoneRegistry: ZoneRegistry,
-    private val clock: java.time.Clock = java.time.Clock.systemUTC(),
+    private val isTargetRoomLocal: (RoomId) -> Boolean = { true },
+    private val clock: Clock = Clock.systemUTC(),
+    private val ackTimeoutMs: Long = 2_000L,
 ) {
-    /**
-     * Initiate a cross-zone handoff for a player moving to [targetRoomId].
-     *
-     * 1. Serializes the player's full state + inventory + equipment
-     * 2. Persists the player with the target room (via removeForHandoff)
-     * 3. Sends the handoff message to the target engine
-     * 4. Removes the player from local registries
-     * 5. Notifies the room of departure
-     */
+    init {
+        require(ackTimeoutMs > 0L) { "ackTimeoutMs must be > 0" }
+    }
+
+    private data class PendingHandoff(
+        val playerName: String,
+        val fromRoomId: RoomId,
+        val targetRoomId: RoomId,
+        val targetEngine: EngineAddress,
+        val deadlineEpochMs: Long,
+    )
+
+    private val pendingBySession = mutableMapOf<SessionId, PendingHandoff>()
+
+    fun isInTransit(sessionId: SessionId): Boolean = pendingBySession.containsKey(sessionId)
+
+    fun cancelIfPending(sessionId: SessionId) {
+        pendingBySession.remove(sessionId)
+    }
+
     suspend fun initiateHandoff(
         sessionId: SessionId,
         targetRoomId: RoomId,
     ): HandoffResult {
+        if (pendingBySession.containsKey(sessionId)) {
+            return HandoffResult.AlreadyInTransit
+        }
+
         val player = players.get(sessionId) ?: return HandoffResult.PlayerNotFound
+        val targetEngine = zoneRegistry.ownerOf(targetRoomId.zone) ?: return HandoffResult.NoEngineForZone
 
-        val targetEngine =
-            zoneRegistry.ownerOf(targetRoomId.zone)
-                ?: return HandoffResult.NoEngineForZone
-
-        // Serialize player + items before removing
-        val inv = items.inventory(sessionId)
-        val eq = items.equipment(sessionId)
-        val serialized = serializePlayer(player, targetRoomId, inv, eq)
-
+        val serialized =
+            serializePlayer(
+                player = player,
+                targetRoomId = targetRoomId,
+                inventory = items.inventory(sessionId),
+                equipment = items.equipment(sessionId),
+            )
         val handoff =
             InterEngineMessage.PlayerHandoff(
                 sessionId = sessionId.value,
@@ -76,56 +110,101 @@ class HandoffManager(
                 sourceEngineId = engineId,
             )
 
-        // Tell the gateway to remap this session to the target engine
-        outbound.send(
-            OutboundEvent.SessionRedirect(
-                sessionId = sessionId,
-                newEngineId = targetEngine.engineId,
-                newEngineHost = targetEngine.host,
-                newEnginePort = targetEngine.port,
-            ),
-        )
-
-        // Notify the player
-        outbound.send(OutboundEvent.SendText(sessionId, "The air shimmers as you cross into new territory..."))
-
-        // Broadcast departure to the room
-        for (other in players.playersInRoom(player.roomId)) {
-            if (other.sessionId != sessionId) {
-                outbound.send(OutboundEvent.SendText(other.sessionId, "${player.name} leaves."))
-            }
-        }
-
-        // Remove from local registries (this also persists with current room)
-        // Update room to target before removing so persistence saves the correct room
-        player.roomId = targetRoomId
-        players.removeForHandoff(sessionId)
-
-        // Send to target engine
         bus.sendTo(targetEngine.engineId, handoff)
+        pendingBySession[sessionId] =
+            PendingHandoff(
+                playerName = player.name,
+                fromRoomId = player.roomId,
+                targetRoomId = targetRoomId,
+                targetEngine = targetEngine,
+                deadlineEpochMs = clock.millis() + ackTimeoutMs,
+            )
 
+        outbound.send(OutboundEvent.SendText(sessionId, "The air shimmers as you cross into new territory..."))
         log.info {
             "Handoff initiated: player=${player.name} session=${sessionId.value} " +
                 "from=$engineId to=${targetEngine.engineId} targetRoom=${targetRoomId.value}"
         }
-
         return HandoffResult.Initiated(targetEngine)
     }
 
-    /**
-     * Accept an incoming player handoff from another engine.
-     *
-     * Reconstructs the player state and inventory/equipment in local registries.
-     * Returns the SessionId if successful, null on failure.
-     */
+    suspend fun handleAck(msg: InterEngineMessage.HandoffAck): HandoffAckResult {
+        val sessionId = SessionId(msg.sessionId)
+        val pending = pendingBySession.remove(sessionId) ?: return HandoffAckResult.NotPending
+
+        if (!msg.success) {
+            return HandoffAckResult.Failed(msg.errorMessage)
+        }
+
+        val player = players.get(sessionId)
+        if (player == null) {
+            log.warn { "Received successful handoff ack for missing session=${sessionId.value}" }
+            return HandoffAckResult.Completed(pending.targetEngine)
+        }
+
+        for (other in players.playersInRoom(pending.fromRoomId)) {
+            if (other.sessionId != sessionId) {
+                outbound.send(OutboundEvent.SendText(other.sessionId, "${pending.playerName} leaves."))
+            }
+        }
+
+        player.roomId = pending.targetRoomId
+        players.removeForHandoff(sessionId)
+        outbound.send(
+            OutboundEvent.SessionRedirect(
+                sessionId = sessionId,
+                newEngineId = pending.targetEngine.engineId,
+                newEngineHost = pending.targetEngine.host,
+                newEnginePort = pending.targetEngine.port,
+            ),
+        )
+
+        return HandoffAckResult.Completed(pending.targetEngine)
+    }
+
+    fun expireTimedOut(nowEpochMs: Long = clock.millis()): List<TimedOutHandoff> {
+        if (pendingBySession.isEmpty()) return emptyList()
+
+        val timedOut = mutableListOf<TimedOutHandoff>()
+        val itr = pendingBySession.iterator()
+        while (itr.hasNext()) {
+            val (sessionId, pending) = itr.next()
+            if (nowEpochMs < pending.deadlineEpochMs) continue
+            timedOut +=
+                TimedOutHandoff(
+                    sessionId = sessionId,
+                    targetRoomId = pending.targetRoomId,
+                    targetEngine = pending.targetEngine,
+                )
+            itr.remove()
+        }
+        return timedOut
+    }
+
     suspend fun acceptHandoff(handoff: InterEngineMessage.PlayerHandoff): SessionId? {
-        val state = handoff.playerState
         val sessionId = SessionId(handoff.sessionId)
+        val state = handoff.playerState
         val targetRoom = RoomId(handoff.targetRoomId)
 
-        // Check for duplicate — player might already be here from a retry
+        if (!isTargetRoomLocal(targetRoom)) {
+            log.warn { "Rejecting handoff for session=${sessionId.value}: target room ${targetRoom.value} is not local" }
+            sendAck(
+                targetEngineId = handoff.sourceEngineId,
+                sessionId = sessionId,
+                success = false,
+                errorMessage = "Target room is not hosted on this engine",
+            )
+            return null
+        }
+
         if (players.get(sessionId) != null) {
-            log.warn { "Duplicate handoff for session=${sessionId.value}, player=${state.name} — ignoring" }
+            log.warn { "Duplicate handoff for session=${sessionId.value}, player=${state.name}" }
+            sendAck(
+                targetEngineId = handoff.sourceEngineId,
+                sessionId = sessionId,
+                success = false,
+                errorMessage = "Session already exists on target engine",
+            )
             return null
         }
 
@@ -145,44 +224,62 @@ class HandoffManager(
                 isStaff = state.isStaff,
             )
 
-        // Bind player to local registries
-        players.bindFromHandoff(sessionId, ps)
+        try {
+            players.bindFromHandoff(sessionId, ps)
 
-        // Restore inventory
-        for (item in state.inventoryItems) {
-            items.addToInventory(sessionId, deserializeItem(item))
-        }
-
-        // Restore equipment
-        for ((slotName, item) in state.equippedItems) {
-            val slot = ItemSlot.parse(slotName) ?: continue
-            items.setEquippedItem(sessionId, slot, deserializeItem(item))
-        }
-
-        // Broadcast arrival to the room
-        for (other in players.playersInRoom(targetRoom)) {
-            if (other.sessionId != sessionId) {
-                outbound.send(OutboundEvent.SendText(other.sessionId, "${state.name} enters."))
+            for (item in state.inventoryItems) {
+                items.addToInventory(sessionId, deserializeItem(item))
             }
+            for ((slotName, item) in state.equippedItems) {
+                val slot = ItemSlot.parse(slotName) ?: continue
+                items.setEquippedItem(sessionId, slot, deserializeItem(item))
+            }
+
+            for (other in players.playersInRoom(targetRoom)) {
+                if (other.sessionId != sessionId) {
+                    outbound.send(OutboundEvent.SendText(other.sessionId, "${state.name} enters."))
+                }
+            }
+        } catch (err: Throwable) {
+            log.warn(err) { "Failed to accept handoff for session=${sessionId.value}" }
+            runCatching { players.removeForHandoff(sessionId) }
+            sendAck(
+                targetEngineId = handoff.sourceEngineId,
+                sessionId = sessionId,
+                success = false,
+                errorMessage = "Failed to restore player on target engine",
+            )
+            return null
         }
 
         log.info {
             "Handoff accepted: player=${state.name} session=${sessionId.value} " +
                 "room=${targetRoom.value} on engine=$engineId"
         }
-
-        // Send ack back to source engine (best-effort)
-        if (handoff.sourceEngineId.isNotEmpty()) {
-            bus.sendTo(
-                handoff.sourceEngineId,
-                InterEngineMessage.HandoffAck(
-                    sessionId = sessionId.value,
-                    success = true,
-                ),
-            )
-        }
-
+        sendAck(
+            targetEngineId = handoff.sourceEngineId,
+            sessionId = sessionId,
+            success = true,
+            errorMessage = null,
+        )
         return sessionId
+    }
+
+    private suspend fun sendAck(
+        targetEngineId: String,
+        sessionId: SessionId,
+        success: Boolean,
+        errorMessage: String?,
+    ) {
+        if (targetEngineId.isBlank()) return
+        bus.sendTo(
+            targetEngineId,
+            InterEngineMessage.HandoffAck(
+                sessionId = sessionId.value,
+                success = success,
+                errorMessage = errorMessage,
+            ),
+        )
     }
 
     companion object {
@@ -209,7 +306,8 @@ class HandoffManager(
                 lastSeenEpochMs = 0L,
                 inventoryItems = inventory.map { serializeItem(it) },
                 equippedItems =
-                    equipment.mapKeys { (slot, _) -> slot.name }
+                    equipment
+                        .mapKeys { (slot, _) -> slot.name }
                         .mapValues { (_, instance) -> serializeItem(instance) },
             )
 
