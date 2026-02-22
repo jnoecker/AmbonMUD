@@ -128,6 +128,21 @@ data class AppConfig(
             require(gateway.snowflake.idLeaseTtlSeconds > 0L) {
                 "ambonMUD.gateway.snowflake.idLeaseTtlSeconds must be > 0"
             }
+            require(gateway.reconnect.maxAttempts > 0) {
+                "ambonMUD.gateway.reconnect.maxAttempts must be > 0"
+            }
+            require(gateway.reconnect.initialDelayMs > 0) {
+                "ambonMUD.gateway.reconnect.initialDelayMs must be > 0"
+            }
+            require(gateway.reconnect.maxDelayMs >= gateway.reconnect.initialDelayMs) {
+                "ambonMUD.gateway.reconnect.maxDelayMs must be >= initialDelayMs"
+            }
+            require(gateway.reconnect.jitterFactor in 0.0..1.0) {
+                "ambonMUD.gateway.reconnect.jitterFactor must be in 0.0..1.0"
+            }
+            require(gateway.reconnect.streamVerifyMs > 0) {
+                "ambonMUD.gateway.reconnect.streamVerifyMs must be > 0"
+            }
         }
 
         return this
@@ -343,11 +358,21 @@ data class SnowflakeConfig(
     val idLeaseTtlSeconds: Long = 300L,
 )
 
+/** Reconnect/backoff settings for the gateway → engine gRPC stream. */
+data class GatewayReconnectConfig(
+    val maxAttempts: Int = 10,
+    val initialDelayMs: Long = 1_000L,
+    val maxDelayMs: Long = 30_000L,
+    val jitterFactor: Double = 0.2,
+    val streamVerifyMs: Long = 2_000L,
+)
+
 /** Gateway-specific settings. */
 data class GatewayConfig(
     /** 16-bit gateway ID for [SnowflakeSessionIdFactory] bit-field (0–65535). */
     val id: Int = 0,
     val snowflake: SnowflakeConfig = SnowflakeConfig(),
+    val reconnect: GatewayReconnectConfig = GatewayReconnectConfig(),
 )
 
 data class RedisBusConfig(
