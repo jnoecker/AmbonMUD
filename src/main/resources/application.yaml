@@ -124,6 +124,7 @@ ambonMUD:
   observability:
     metricsEnabled: true
     metricsEndpoint: "/metrics"
+    metricsHttpPort: 9090
     staticTags: {}
 
   logging:

@@ -13,6 +13,7 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
+import dev.ambon.metrics.MetricsHttpServer
 import dev.ambon.persistence.PersistenceWorker
 import dev.ambon.persistence.PlayerRepository
 import dev.ambon.persistence.RedisCachingPlayerRepository
@@ -125,6 +126,7 @@ class EngineServer(
     private var persistenceWorker: PersistenceWorker? = null
     private var outboundRouter: OutboundRouter? = null
     private var engineJob: Job? = null
+    private var metricsHttpServer: MetricsHttpServer? = null
 
     suspend fun start() {
         redisManager?.connect()
@@ -166,12 +168,23 @@ class EngineServer(
             }
 
         grpcServer.start()
+        if (prometheusRegistry != null) {
+            val server =
+                MetricsHttpServer(
+                    port = config.observability.metricsHttpPort,
+                    registry = prometheusRegistry,
+                    endpoint = config.observability.metricsEndpoint,
+                )
+            server.start()
+            metricsHttpServer = server
+        }
         log.info { "Engine server started (gRPC port=${config.grpc.server.port})" }
     }
 
     suspend fun awaitShutdown() = shutdownSignal.await()
 
     suspend fun stop() {
+        runCatching { metricsHttpServer?.stop() }
         runCatching { grpcServer.stop() }
         runCatching { engineJob?.cancelAndJoin() }
         runCatching { persistenceWorker?.shutdown() }
