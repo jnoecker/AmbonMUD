@@ -16,6 +16,13 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
+import dev.ambon.sharding.BroadcastType
+import dev.ambon.sharding.HandoffManager
+import dev.ambon.sharding.HandoffResult
+import dev.ambon.sharding.InterEngineBus
+import dev.ambon.sharding.InterEngineMessage
+import dev.ambon.sharding.PlayerSummary
+import java.util.UUID
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.coroutineScope
@@ -41,6 +48,9 @@ class GameEngine(
     private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val onShutdown: suspend () -> Unit = {},
+    private val handoffManager: HandoffManager? = null,
+    private val interEngineBus: InterEngineBus? = null,
+    private val engineId: String = "",
 ) {
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
@@ -98,10 +108,15 @@ class GameEngine(
             metrics = metrics,
             onShutdown = onShutdown,
             onMobSmited = mobSystem::onMobRemoved,
+            onCrossZoneMove = if (handoffManager != null) ::handleCrossZoneMove else null,
+            interEngineBus = interEngineBus,
+            engineId = engineId,
+            onRemoteWho = if (interEngineBus != null) ::handleRemoteWho else null,
         )
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
     private val failedLoginAttempts = mutableMapOf<SessionId, Int>()
     private val sessionAnsiDefaults = mutableMapOf<SessionId, Boolean>()
+    private val pendingWhoRequests = mutableMapOf<String, SessionId>()
     private val nameCommandRegex = Regex("^name\\s+(.+)$", RegexOption.IGNORE_CASE)
     private val invalidNameMessage =
         "Invalid name. Use 2-16 chars: letters/digits/_ and cannot start with digit."
@@ -157,6 +172,16 @@ class GameEngine(
                         inboundProcessed++
                     }
                     metrics.onInboundEventsProcessed(inboundProcessed)
+
+                    // Drain inter-engine messages (cross-zone handoffs, global commands)
+                    if (interEngineBus != null) {
+                        var interEngineProcessed = 0
+                        while (interEngineProcessed < maxInboundEventsPerTick) {
+                            val msg = interEngineBus.incoming().tryReceive().getOrNull() ?: break
+                            handleInterEngineMessage(msg)
+                            interEngineProcessed++
+                        }
+                    }
 
                     // Simulate NPC actions (time-gated internally)
                     val mobSample = Timer.start()
@@ -269,6 +294,156 @@ class GameEngine(
             mobIds = zoneMobIds,
             spawns = zoneItemSpawns,
         )
+    }
+
+    private suspend fun handleCrossZoneMove(sessionId: SessionId, targetRoomId: RoomId) {
+        val mgr = handoffManager ?: return
+        // End combat before handoff (should already be blocked by Move handler, but be safe)
+        combatSystem.endCombatFor(sessionId)
+        regenSystem.onPlayerDisconnected(sessionId)
+
+        when (val result = mgr.initiateHandoff(sessionId, targetRoomId)) {
+            is HandoffResult.Initiated -> {
+                log.info { "Cross-zone handoff initiated to engine=${result.targetEngine.engineId}" }
+            }
+            HandoffResult.PlayerNotFound -> {
+                log.warn { "Cross-zone move failed: player not found for session=$sessionId" }
+            }
+            HandoffResult.NoEngineForZone -> {
+                // No engine owns the target zone — fall back to shimmer message
+                outbound.send(
+                    OutboundEvent.SendText(sessionId, "The way shimmers but does not yield."),
+                )
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+        }
+    }
+
+    private suspend fun handleRemoteWho(sessionId: SessionId) {
+        val bus = interEngineBus ?: return
+        val requestId = UUID.randomUUID().toString()
+        pendingWhoRequests[requestId] = sessionId
+        bus.broadcast(
+            InterEngineMessage.WhoRequest(
+                requestId = requestId,
+                replyToEngineId = engineId,
+            ),
+        )
+    }
+
+    private suspend fun handleInterEngineMessage(msg: InterEngineMessage) {
+        when (msg) {
+            is InterEngineMessage.PlayerHandoff -> {
+                val mgr = handoffManager ?: return
+                val sid = mgr.acceptHandoff(msg) ?: return
+                // Show the player their new surroundings
+                router.handle(sid, Command.Look)
+            }
+            is InterEngineMessage.HandoffAck -> {
+                if (msg.success) {
+                    log.debug { "Handoff ack received: session=${msg.sessionId} success" }
+                } else {
+                    log.warn { "Handoff failed: session=${msg.sessionId} error=${msg.errorMessage}" }
+                }
+            }
+            is InterEngineMessage.GlobalBroadcast -> {
+                // Skip broadcasts from ourselves (already delivered locally)
+                if (msg.sourceEngineId == engineId) return
+                when (msg.broadcastType) {
+                    BroadcastType.GOSSIP -> {
+                        for (p in players.allPlayers()) {
+                            outbound.send(
+                                OutboundEvent.SendText(p.sessionId, "[GOSSIP] ${msg.senderName}: ${msg.text}"),
+                            )
+                        }
+                    }
+                    BroadcastType.SHUTDOWN -> {
+                        for (p in players.allPlayers()) {
+                            outbound.send(
+                                OutboundEvent.SendText(p.sessionId, "[SYSTEM] ${msg.text}"),
+                            )
+                        }
+                        onShutdown()
+                    }
+                    BroadcastType.ANNOUNCEMENT -> {
+                        for (p in players.allPlayers()) {
+                            outbound.send(
+                                OutboundEvent.SendText(p.sessionId, "[ANNOUNCEMENT] ${msg.text}"),
+                            )
+                        }
+                    }
+                }
+            }
+            is InterEngineMessage.TellMessage -> {
+                // Deliver to local player if present
+                val targetSid = players.findSessionByName(msg.toName) ?: return
+                outbound.send(OutboundEvent.SendText(targetSid, "${msg.fromName} tells you: ${msg.text}"))
+            }
+            is InterEngineMessage.WhoRequest -> {
+                // Don't reply to our own requests
+                if (msg.replyToEngineId == engineId) return
+                val localPlayers = players.allPlayers().map {
+                    PlayerSummary(name = it.name, roomId = it.roomId.value, level = it.level)
+                }
+                interEngineBus?.sendTo(
+                    msg.replyToEngineId,
+                    InterEngineMessage.WhoResponse(
+                        requestId = msg.requestId,
+                        players = localPlayers,
+                    ),
+                )
+            }
+            is InterEngineMessage.WhoResponse -> {
+                val requestingSid = pendingWhoRequests.remove(msg.requestId) ?: return
+                if (players.get(requestingSid) == null) return // player disconnected
+                if (msg.players.isEmpty()) return
+                val names = msg.players.sortedBy { it.name }.joinToString(", ") { it.name }
+                outbound.send(OutboundEvent.SendInfo(requestingSid, "Also online: $names"))
+            }
+            is InterEngineMessage.KickRequest -> {
+                val targetSid = players.findSessionByName(msg.targetPlayerName) ?: return
+                outbound.send(OutboundEvent.Close(targetSid, "Kicked by staff."))
+            }
+            is InterEngineMessage.ShutdownRequest -> {
+                for (p in players.allPlayers()) {
+                    outbound.send(
+                        OutboundEvent.SendText(
+                            p.sessionId,
+                            "[SYSTEM] ${msg.initiatorName} has initiated a server shutdown. Goodbye!",
+                        ),
+                    )
+                }
+                onShutdown()
+            }
+            is InterEngineMessage.TransferRequest -> {
+                val targetSid = players.findSessionByName(msg.targetPlayerName) ?: return
+                val targetPlayer = players.get(targetSid) ?: return
+                val targetRoomId = resolveRoomId(msg.targetRoomId, targetPlayer.roomId.zone) ?: return
+                if (world.rooms.containsKey(targetRoomId)) {
+                    // Room is on this engine — move locally
+                    players.moveTo(targetSid, targetRoomId)
+                    outbound.send(OutboundEvent.SendText(targetSid, "You are transported by a divine hand."))
+                    router.handle(targetSid, Command.Look)
+                } else if (handoffManager != null) {
+                    // Room is on another engine — initiate handoff
+                    combatSystem.endCombatFor(targetSid)
+                    regenSystem.onPlayerDisconnected(targetSid)
+                    handoffManager.initiateHandoff(targetSid, targetRoomId)
+                }
+            }
+            is InterEngineMessage.SessionRedirect -> {
+                log.debug { "SessionRedirect received (handled at gateway layer)" }
+            }
+        }
+    }
+
+    /** Resolve a room ID string, adding current zone prefix if needed. */
+    private fun resolveRoomId(arg: String, currentZone: String): RoomId? {
+        return if (':' in arg) {
+            runCatching { RoomId(arg) }.getOrNull()
+        } else {
+            runCatching { RoomId("$currentZone:$arg") }.getOrNull()
+        }
     }
 
     private suspend fun handle(ev: InboundEvent) {

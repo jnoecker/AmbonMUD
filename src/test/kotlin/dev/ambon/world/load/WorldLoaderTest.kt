@@ -360,4 +360,64 @@ class WorldLoaderTest {
             assertTrue(ex.message!!.contains("points to missing room"))
         }
     }
+
+    class ZoneFilteredWorldLoaderTest {
+        private val multiZonePaths = listOf("world/mz_forest.yaml", "world/mz_swamp.yaml")
+
+        @Test
+        fun `empty zone filter loads all zones`() {
+            val world = WorldLoader.loadFromResources(multiZonePaths, zoneFilter = emptySet())
+
+            assertTrue(world.rooms.containsKey(RoomId("enchanted_forest:trailhead")))
+            assertTrue(world.rooms.containsKey(RoomId("swamp:edge")))
+        }
+
+        @Test
+        fun `zone filter loads only matching zones`() {
+            val world = WorldLoader.loadFromResources(multiZonePaths, zoneFilter = setOf("enchanted_forest"))
+
+            assertTrue(world.rooms.containsKey(RoomId("enchanted_forest:trailhead")))
+            assertTrue(world.rooms.containsKey(RoomId("enchanted_forest:mossy_path")))
+            assertTrue(!world.rooms.containsKey(RoomId("swamp:edge")))
+            assertTrue(!world.rooms.containsKey(RoomId("swamp:deep")))
+        }
+
+        @Test
+        fun `cross-zone exits are preserved but targets are not validated`() {
+            val world = WorldLoader.loadFromResources(multiZonePaths, zoneFilter = setOf("enchanted_forest"))
+
+            val mossyPath = world.rooms.getValue(RoomId("enchanted_forest:mossy_path"))
+            // Cross-zone exit to swamp:edge is preserved even though swamp is not loaded
+            assertEquals(RoomId("swamp:edge"), mossyPath.exits[Direction.EAST])
+        }
+
+        @Test
+        fun `startRoom comes from first filtered zone`() {
+            val world = WorldLoader.loadFromResources(multiZonePaths, zoneFilter = setOf("swamp"))
+
+            assertEquals(RoomId("swamp:edge"), world.startRoom)
+        }
+
+        @Test
+        fun `zone filter with no matching zones throws`() {
+            val ex =
+                assertThrows(WorldLoadException::class.java) {
+                    WorldLoader.loadFromResources(multiZonePaths, zoneFilter = setOf("nonexistent"))
+                }
+            assertTrue(ex.message!!.contains("No zone files match"), "Got: ${ex.message}")
+        }
+
+        @Test
+        fun `filtering one zone from multi-zone world produces valid world`() {
+            val world = WorldLoader.loadFromResources(multiZonePaths, zoneFilter = setOf("swamp"))
+
+            assertEquals(2, world.rooms.size)
+            assertTrue(world.rooms.containsKey(RoomId("swamp:edge")))
+            assertTrue(world.rooms.containsKey(RoomId("swamp:deep")))
+
+            // Cross-zone exit back to forest is preserved
+            val edge = world.rooms.getValue(RoomId("swamp:edge"))
+            assertEquals(RoomId("enchanted_forest:mossy_path"), edge.exits[Direction.WEST])
+        }
+    }
 }

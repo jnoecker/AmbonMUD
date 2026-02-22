@@ -123,6 +123,10 @@ class OutboundRouter(
                         sendLine(ev.sessionId, ev.reason + "", TextKind.ERROR)
                         sinks.remove(ev.sessionId)?.close?.invoke(ev.reason)
                     }
+
+                    is OutboundEvent.SessionRedirect -> {
+                        // Handled at the gateway routing layer; ignored here.
+                    }
                 }
             }
         }

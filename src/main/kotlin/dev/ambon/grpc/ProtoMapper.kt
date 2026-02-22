@@ -13,6 +13,7 @@ import dev.ambon.grpc.proto.OutboundEventProto
 import dev.ambon.grpc.proto.SendErrorProto
 import dev.ambon.grpc.proto.SendInfoProto
 import dev.ambon.grpc.proto.SendPromptProto
+import dev.ambon.grpc.proto.SessionRedirectProto
 import dev.ambon.grpc.proto.SendTextProto
 import dev.ambon.grpc.proto.SetAnsiProto
 import dev.ambon.grpc.proto.ShowAnsiDemoProto
@@ -121,6 +122,17 @@ fun OutboundEvent.toProto(): OutboundEventProto =
                 .setSessionId(sessionId.value)
                 .setShowAnsiDemo(ShowAnsiDemoProto.getDefaultInstance())
                 .build()
+        is OutboundEvent.SessionRedirect ->
+            OutboundEventProto.newBuilder()
+                .setSessionId(sessionId.value)
+                .setSessionRedirect(
+                    SessionRedirectProto.newBuilder()
+                        .setNewEngineId(newEngineId)
+                        .setNewEngineHost(newEngineHost)
+                        .setNewEnginePort(newEnginePort)
+                        .build(),
+                )
+                .build()
     }
 
 /** Converts [OutboundEventProto] → domain [OutboundEvent], or null if the oneof is not set. */
@@ -145,6 +157,13 @@ fun OutboundEventProto.toDomain(): OutboundEvent? {
             OutboundEvent.ClearScreen(sessionId = sid)
         OutboundEventProto.EventCase.SHOW_ANSI_DEMO ->
             OutboundEvent.ShowAnsiDemo(sessionId = sid)
+        OutboundEventProto.EventCase.SESSION_REDIRECT ->
+            OutboundEvent.SessionRedirect(
+                sessionId = sid,
+                newEngineId = sessionRedirect.newEngineId,
+                newEngineHost = sessionRedirect.newEngineHost,
+                newEnginePort = sessionRedirect.newEnginePort,
+            )
         else -> null
     }
 }

@@ -1,5 +1,7 @@
 package dev.ambon.grpc
 
+import dev.ambon.bus.BusPublisher
+import dev.ambon.bus.BusSubscriberSetup
 import dev.ambon.bus.InboundBus
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
@@ -20,8 +22,17 @@ import dev.ambon.persistence.RedisCachingPlayerRepository
 import dev.ambon.persistence.WriteCoalescingPlayerRepository
 import dev.ambon.persistence.YamlPlayerRepository
 import dev.ambon.redis.RedisConnectionManager
+import dev.ambon.redis.redisObjectMapper
+import dev.ambon.sharding.EngineAddress
+import dev.ambon.sharding.HandoffManager
+import dev.ambon.sharding.InterEngineBus
+import dev.ambon.sharding.LocalInterEngineBus
+import dev.ambon.sharding.RedisInterEngineBus
+import dev.ambon.sharding.StaticZoneRegistry
+import dev.ambon.sharding.ZoneRegistry
 import dev.ambon.transport.OutboundRouter
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.lettuce.core.pubsub.RedisPubSubAdapter
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.CompletableDeferred
@@ -111,7 +122,12 @@ class EngineServer(
     private val mobs = MobRegistry()
     private val progression = PlayerProgression(config.progression)
 
-    private val world = WorldFactory.demoWorld(config.world.resources, config.engine.mob.tiers)
+    private val world =
+        WorldFactory.demoWorld(
+            resources = config.world.resources,
+            tiers = config.engine.mob.tiers,
+            zoneFilter = if (config.sharding.enabled) config.sharding.zones.toSet() else emptySet(),
+        )
     private val scheduler: Scheduler = Scheduler(clock)
 
     private val players =
@@ -122,6 +138,53 @@ class EngineServer(
             clock = clock,
             progression = progression,
         )
+
+    // --- Sharding infrastructure (null when sharding is disabled) ---
+    private val shardingEnabled = config.sharding.enabled
+    private val engineId = config.sharding.engineId
+
+    private val zoneRegistry: ZoneRegistry? =
+        if (shardingEnabled) {
+            StaticZoneRegistry(
+                mapOf(
+                    engineId to Pair(
+                        EngineAddress(engineId, "localhost", config.grpc.server.port),
+                        config.sharding.zones.toSet(),
+                    ),
+                ),
+            )
+        } else {
+            null
+        }
+
+    private val interEngineBus: InterEngineBus? =
+        if (shardingEnabled && redisManager != null) {
+            RedisInterEngineBus(
+                engineId = engineId,
+                publisher = makeBusPublisher(redisManager),
+                subscriberSetup = makeBusSubscriberSetup(redisManager),
+                mapper = redisObjectMapper,
+            )
+        } else if (shardingEnabled) {
+            LocalInterEngineBus()
+        } else {
+            null
+        }
+
+    private val handoffManager: HandoffManager? =
+        if (shardingEnabled && interEngineBus != null && zoneRegistry != null) {
+            HandoffManager(
+                engineId = engineId,
+                players = players,
+                items = items,
+                outbound = outbound,
+                bus = interEngineBus,
+                zoneRegistry = zoneRegistry,
+                clock = clock,
+            )
+        } else {
+            null
+        }
 
     private var persistenceWorker: PersistenceWorker? = null
     private var outboundRouter: OutboundRouter? = null
@@ -146,6 +209,15 @@ class EngineServer(
         // but we still need to prevent the outbound bus channel from blocking.
         // The GrpcOutboundDispatcher in EngineGrpcServer drains it.
 
+        // Start inter-engine bus and register zones
+        if (interEngineBus != null) {
+            interEngineBus.start()
+        }
+        if (zoneRegistry != null) {
+            val addr = EngineAddress(engineId, "localhost", config.grpc.server.port)
+            zoneRegistry.claimZones(engineId, addr, config.sharding.zones.toSet())
+        }
+
         engineJob =
             scope.launch(engineDispatcher) {
                 GameEngine(
@@ -164,6 +236,9 @@ class EngineServer(
                     progression = progression,
                     metrics = gameMetrics,
                     onShutdown = { shutdownSignal.complete(Unit) },
+                    handoffManager = handoffManager,
+                    interEngineBus = interEngineBus,
+                    engineId = engineId,
                 ).run()
             }
 
@@ -187,6 +262,7 @@ class EngineServer(
         runCatching { metricsHttpServer?.stop() }
         runCatching { grpcServer.stop() }
         runCatching { engineJob?.cancelAndJoin() }
+        runCatching { interEngineBus?.close() }
         runCatching { persistenceWorker?.shutdown() }
         runCatching { redisManager?.close() }
         scope.cancel()
@@ -195,4 +271,25 @@ class EngineServer(
         outbound.close()
         log.info { "Engine server stopped" }
     }
+
+    private fun makeBusPublisher(manager: RedisConnectionManager): BusPublisher =
+        BusPublisher { ch, msg ->
+            manager.asyncCommands?.publish(ch, msg)
+        }
+
+    private fun makeBusSubscriberSetup(manager: RedisConnectionManager): BusSubscriberSetup =
+        BusSubscriberSetup { ch, onMessage ->
+            val conn = manager.connectPubSub()
+            if (conn != null) {
+                conn.addListener(
+                    object : RedisPubSubAdapter<String, String>() {
+                        override fun message(
+                            channel: String,
+                            message: String,
+                        ) = onMessage(message)
+                    },
+                )
+                conn.sync().subscribe(ch)
+            }
+        }
 }

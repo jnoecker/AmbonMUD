@@ -35,6 +35,7 @@ data class AppConfig(
     val redis: RedisConfig = RedisConfig(),
     val grpc: GrpcConfig = GrpcConfig(),
     val gateway: GatewayConfig = GatewayConfig(),
+    val sharding: ShardingConfig = ShardingConfig(),
 ) {
     fun validated(): AppConfig {
         require(server.telnetPort in 1..65535) { "ambonMUD.server.telnetPort must be between 1 and 65535" }
@@ -391,6 +392,15 @@ data class GatewayConfig(
     val id: Int = 0,
     val snowflake: SnowflakeConfig = SnowflakeConfig(),
     val reconnect: GatewayReconnectConfig = GatewayReconnectConfig(),
+    /** Static list of engines for multi-engine mode. Empty = single engine via grpc.client config. */
+    val engines: List<GatewayEngineEntry> = emptyList(),
+)
+
+/** Address entry for a remote engine in multi-engine gateway mode. */
+data class GatewayEngineEntry(
+    val id: String,
+    val host: String,
+    val port: Int,
 )
 
 data class RedisBusConfig(
@@ -405,6 +415,16 @@ data class RedisConfig(
     val uri: String = "redis://localhost:6379",
     val cacheTtlSeconds: Long = 3600L,
     val bus: RedisBusConfig = RedisBusConfig(),
+)
+
+/** Zone-based engine sharding settings. */
+data class ShardingConfig(
+    /** Enable zone-based sharding. When false, the engine loads all zones (default). */
+    val enabled: Boolean = false,
+    /** Unique identifier for this engine instance. Used for inter-engine messaging and zone ownership. */
+    val engineId: String = "engine-1",
+    /** Zones this engine owns. Empty list = all zones (single-engine backward compat). */
+    val zones: List<String> = emptyList(),
 )
 
 private fun validateMobTier(
