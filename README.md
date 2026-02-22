@@ -5,7 +5,8 @@ AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a production
 
 Current State
 -------------
-- Single-process server with a tick-based engine, NPC wandering, and scheduled actions.
+- Tick-based engine with NPC wandering and scheduled actions.
+- Three deployment modes: `STANDALONE` (single-process, default), `ENGINE` (game logic + gRPC server), `GATEWAY` (transports + gRPC client) for horizontal scaling.
 - Dual transport support: native telnet and a browser WebSocket client (xterm.js; served by the server at `/` and `/ws`).
 - Login flow with name + password (bcrypt), per-session state, and layered persistence (write-behind coalescing + optional Redis L2 cache).
 - YAML-defined, multi-zone world with validation on load (optional zone `lifespan` resets to respawn mobs/items).
@@ -16,8 +17,11 @@ Current State
 - HP regeneration over time (regen interval scales with constitution + equipment).
 - Chat and social commands (say, emote, tell, gossip), plus basic UI helpers (ANSI, clear, colors).
 - Staff/admin commands (goto, transfer, spawn, smite, kick, shutdown) gated behind `isStaff` flag.
-- Abstracted `InboundBus` / `OutboundBus` interfaces enabling future multi-process routing.
+- Abstracted `InboundBus` / `OutboundBus` interfaces with Local, Redis, and gRPC implementations.
 - Optional Redis integration: L2 player cache + pub/sub event bus (disabled by default).
+- gRPC bidirectional streaming for gateway-to-engine communication with exponential-backoff reconnect.
+- Snowflake-style session IDs for globally unique allocation across gateways, with overflow wait and clock-rollback hardening.
+- Prometheus metrics endpoint (served by Ktor in `STANDALONE` / `GATEWAY` mode; standalone HTTP server in `ENGINE` mode).
 
 Screenshots
 -----------

@@ -17,6 +17,7 @@ The goal is to keep the codebase easy to extend (world content, commands, transp
 10. Event bus abstraction (not raw channels)
 11. Write-behind persistence worker (async, coalescing)
 12. Redis as opt-in infrastructure (not a hard dependency)
+13. Gateway reconnect with bounded backoff (not unbounded retry)
 
 ---
 
@@ -191,3 +192,20 @@ Why:
 
 Tradeoff:
 - Dual-path code (enabled/disabled) requires explicit null checks on `RedisConnectionManager.commands`. This is intentional and visible, not hidden.
+
+---
+
+## 13) Gateway reconnect with bounded backoff (not unbounded retry)
+
+Decision: When a gateway's gRPC stream to the engine fails, the gateway performs bounded exponential-backoff reconnect with configurable limits — not an unbounded retry loop.
+
+Why:
+- Network partitions and engine restarts are expected in a split deployment; silent session loss is a poor user experience.
+- Exponential backoff with jitter prevents thundering herd when multiple gateways reconnect simultaneously.
+- A hard attempt budget (`maxAttempts`, default 10) prevents a gateway from retrying forever against a permanently dead engine, which would waste resources and mask failures.
+- During reconnect, the inbound channel is closed so new connection attempts fail fast — no silent event queuing into a stale stream.
+- After successful reconnect the gateway accepts new sessions immediately; old sessions are cleanly disconnected with an informational message.
+
+Tradeoff:
+- All sessions on a gateway are lost on stream failure (each reconnect starts fresh). Session migration would require engine-side session state serialization, which is significantly more complex and deferred for now.
+- The `streamVerifyMs` health-check window adds latency to each reconnect attempt, but prevents false-positive "reconnected" states from immediately-dying streams.
