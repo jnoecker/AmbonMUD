@@ -1,14 +1,10 @@
 package dev.ambon.bus
 
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.redis.RedisConnectionManager
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.lettuce.core.pubsub.RedisPubSubAdapter
 import kotlinx.coroutines.channels.ChannelResult
 import kotlinx.coroutines.channels.ReceiveChannel
 
@@ -16,9 +12,11 @@ private val log = KotlinLogging.logger {}
 
 class RedisOutboundBus(
     private val delegate: LocalOutboundBus,
-    private val manager: RedisConnectionManager,
+    private val publisher: BusPublisher,
+    private val subscriberSetup: BusSubscriberSetup,
     private val channelName: String,
     private val instanceId: String,
+    private val mapper: ObjectMapper,
 ) : OutboundBus {
     private data class Envelope(
         val instanceId: String = "",
@@ -29,31 +27,17 @@ class RedisOutboundBus(
         val reason: String = "",
     )
 
-    private val mapper: ObjectMapper =
-        ObjectMapper()
-            .registerModule(KotlinModule.Builder().build())
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-
     fun startSubscribing() {
-        val conn = manager.connectPubSub() ?: return
-        conn.addListener(
-            object : RedisPubSubAdapter<String, String>() {
-                override fun message(
-                    channel: String,
-                    message: String,
-                ) {
-                    try {
-                        val env = mapper.readValue<Envelope>(message)
-                        if (env.instanceId == instanceId) return
-                        val event = env.toEvent() ?: return
-                        delegate.trySend(event)
-                    } catch (e: Exception) {
-                        log.warn(e) { "Failed to deserialize outbound event from Redis" }
-                    }
-                }
-            },
-        )
-        conn.sync().subscribe(channelName)
+        subscriberSetup.startListening(channelName) { message ->
+            try {
+                val env = mapper.readValue<Envelope>(message)
+                if (env.instanceId == instanceId) return@startListening
+                val event = env.toEvent() ?: return@startListening
+                delegate.trySend(event)
+            } catch (e: Exception) {
+                log.warn(e) { "Failed to deserialize outbound event from Redis" }
+            }
+        }
         log.info { "Redis outbound bus subscribed to '$channelName' (instanceId=$instanceId)" }
     }
 
@@ -71,7 +55,6 @@ class RedisOutboundBus(
     }
 
     private fun publish(event: OutboundEvent) {
-        val async = manager.asyncCommands ?: return
         try {
             val env =
                 when (event) {
@@ -135,7 +118,7 @@ class RedisOutboundBus(
                             sessionId = event.sessionId.value,
                         )
                 }
-            async.publish(channelName, mapper.writeValueAsString(env))
+            publisher.publish(channelName, mapper.writeValueAsString(env))
         } catch (e: Exception) {
             log.warn(e) { "Failed to publish outbound event to Redis" }
         }

@@ -1,5 +1,7 @@
 package dev.ambon
 
+import dev.ambon.bus.BusPublisher
+import dev.ambon.bus.BusSubscriberSetup
 import dev.ambon.bus.InboundBus
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
@@ -21,11 +23,13 @@ import dev.ambon.persistence.RedisCachingPlayerRepository
 import dev.ambon.persistence.WriteCoalescingPlayerRepository
 import dev.ambon.persistence.YamlPlayerRepository
 import dev.ambon.redis.RedisConnectionManager
+import dev.ambon.redis.redisObjectMapper
 import dev.ambon.session.AtomicSessionIdFactory
 import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.KtorWebSocketTransport
 import dev.ambon.transport.OutboundRouter
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.lettuce.core.pubsub.RedisPubSubAdapter
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.CompletableDeferred
@@ -106,9 +110,11 @@ class MudServer(
         if (config.redis.enabled && config.redis.bus.enabled && redisManager != null) {
             RedisInboundBus(
                 delegate = LocalInboundBus(capacity = config.server.inboundChannelCapacity),
-                manager = redisManager,
+                publisher = makeBusPublisher(redisManager),
+                subscriberSetup = makeBusSubscriberSetup(redisManager),
                 channelName = config.redis.bus.inboundChannel,
                 instanceId = instanceId,
+                mapper = redisObjectMapper,
             )
         } else {
             LocalInboundBus(capacity = config.server.inboundChannelCapacity)
@@ -118,9 +124,11 @@ class MudServer(
         if (config.redis.enabled && config.redis.bus.enabled && redisManager != null) {
             RedisOutboundBus(
                 delegate = LocalOutboundBus(capacity = config.server.outboundChannelCapacity),
-                manager = redisManager,
+                publisher = makeBusPublisher(redisManager),
+                subscriberSetup = makeBusSubscriberSetup(redisManager),
                 channelName = config.redis.bus.outboundChannel,
                 instanceId = instanceId,
+                mapper = redisObjectMapper,
             )
         } else {
             LocalOutboundBus(capacity = config.server.outboundChannelCapacity)
@@ -227,6 +235,27 @@ class MudServer(
         }
     }
 
+    private fun makeBusPublisher(manager: RedisConnectionManager): BusPublisher =
+        BusPublisher { ch, msg ->
+            manager.asyncCommands?.publish(ch, msg)
+        }
+
+    private fun makeBusSubscriberSetup(manager: RedisConnectionManager): BusSubscriberSetup =
+        BusSubscriberSetup { ch, onMessage ->
+            val conn = manager.connectPubSub()
+            if (conn != null) {
+                conn.addListener(
+                    object : RedisPubSubAdapter<String, String>() {
+                        override fun message(
+                            channel: String,
+                            message: String,
+                        ) = onMessage(message)
+                    },
+                )
+                conn.sync().subscribe(ch)
+            }
+        }
+
     private fun bindWorldStateGauges() {
         gameMetrics.bindPlayerRegistry { players.allPlayers().size }
         gameMetrics.bindMobRegistry { mobs.all().size }
@@ -238,6 +267,7 @@ class MudServer(
     suspend fun stop() {
         runCatching { telnetTransport.stop() }
         runCatching { webTransport.stop() }
+        runCatching { engineJob?.cancel() }
         runCatching { persistenceWorker?.shutdown() }
         runCatching { redisManager?.close() }
         scope.cancel()

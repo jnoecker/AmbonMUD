@@ -2,6 +2,7 @@ package dev.ambon.persistence
 
 import dev.ambon.domain.ids.RoomId
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.util.concurrent.ConcurrentHashMap
 
 private val log = KotlinLogging.logger {}
 
@@ -14,8 +15,8 @@ private val log = KotlinLogging.logger {}
 class WriteCoalescingPlayerRepository(
     private val delegate: PlayerRepository,
 ) : PlayerRepository {
-    private val cache = mutableMapOf<PlayerId, PlayerRecord>()
-    private val dirty = mutableSetOf<PlayerId>()
+    private val cache = ConcurrentHashMap<PlayerId, PlayerRecord>()
+    private val dirty: MutableSet<PlayerId> = ConcurrentHashMap.newKeySet()
 
     override suspend fun findByName(name: String): PlayerRecord? {
         val cached = cache.values.find { it.name.equals(name, ignoreCase = true) }

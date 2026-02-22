@@ -1,10 +1,9 @@
 package dev.ambon.persistence
 
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.redis.redisObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,6 +14,7 @@ class RedisCachingPlayerRepository(
     private val delegate: PlayerRepository,
     private val cache: StringCache,
     private val cacheTtlSeconds: Long,
+    private val mapper: ObjectMapper = redisObjectMapper,
 ) : PlayerRepository {
     private data class PlayerJson(
         val id: Long,
@@ -29,11 +29,6 @@ class RedisCachingPlayerRepository(
         val ansiEnabled: Boolean = false,
         val isStaff: Boolean = false,
     )
-
-    private val mapper: ObjectMapper =
-        ObjectMapper()
-            .registerModule(KotlinModule.Builder().build())
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
     private fun nameKey(name: String) = "player:name:${name.lowercase()}"
 
