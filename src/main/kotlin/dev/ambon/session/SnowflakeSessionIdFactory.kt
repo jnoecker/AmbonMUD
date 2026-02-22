@@ -1,7 +1,6 @@
 package dev.ambon.session
 
 import dev.ambon.domain.ids.SessionId
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Generates globally-unique [SessionId] values using a Snowflake-style bit layout.
@@ -28,9 +27,6 @@ class SnowflakeSessionIdFactory(
     }
 
     private val gatewayBits = gatewayId.toLong() and 0xFFFFL
-
-    // Packs lastSecond (high 32 bits) and seq (low 32 bits) into a single Long for atomic CAS.
-    private val state = AtomicInteger(0) // seq only; second checked via System.currentTimeMillis
 
     @Volatile
     private var lastSecond: Long = currentSecond()

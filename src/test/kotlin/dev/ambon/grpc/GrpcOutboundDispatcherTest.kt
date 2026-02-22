@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.grpc.proto.OutboundEventProto
+import io.grpc.Server
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Test
 
 class GrpcOutboundDispatcherTest {
     private val serverName = "dispatcher-test-${System.nanoTime()}"
+    private lateinit var grpcServer: Server
     private lateinit var inbound: LocalInboundBus
     private lateinit var outbound: LocalOutboundBus
     private lateinit var scope: CoroutineScope
@@ -40,11 +42,12 @@ class GrpcOutboundDispatcherTest {
         serviceImpl = EngineServiceImpl(inbound = inbound, outbound = outbound, scope = scope)
         dispatcher = GrpcOutboundDispatcher(outbound = outbound, serviceImpl = serviceImpl, scope = scope)
 
-        InProcessServerBuilder.forName(serverName)
-            .directExecutor()
-            .addService(serviceImpl)
-            .build()
-            .start()
+        grpcServer =
+            InProcessServerBuilder.forName(serverName)
+                .directExecutor()
+                .addService(serviceImpl)
+                .build()
+                .start()
 
         dispatcher.start()
     }
@@ -52,6 +55,7 @@ class GrpcOutboundDispatcherTest {
     @AfterEach
     fun tearDown() {
         dispatcher.stop()
+        grpcServer.shutdownNow()
         scope.cancel()
     }
 

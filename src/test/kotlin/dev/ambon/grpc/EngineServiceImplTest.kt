@@ -5,6 +5,7 @@ import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import io.grpc.ManagedChannel
+import io.grpc.Server
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.Test
  */
 class EngineServiceImplTest {
     private val serverName = "engine-test-${System.nanoTime()}"
+    private lateinit var grpcServer: Server
     private lateinit var inbound: LocalInboundBus
     private lateinit var outbound: LocalOutboundBus
     private lateinit var scope: CoroutineScope
@@ -42,11 +44,12 @@ class EngineServiceImplTest {
         scope = CoroutineScope(SupervisorJob())
         serviceImpl = EngineServiceImpl(inbound = inbound, outbound = outbound, scope = scope)
 
-        InProcessServerBuilder.forName(serverName)
-            .directExecutor()
-            .addService(serviceImpl)
-            .build()
-            .start()
+        grpcServer =
+            InProcessServerBuilder.forName(serverName)
+                .directExecutor()
+                .addService(serviceImpl)
+                .build()
+                .start()
 
         channel =
             InProcessChannelBuilder.forName(serverName)
@@ -57,6 +60,7 @@ class EngineServiceImplTest {
     @AfterEach
     fun tearDown() {
         channel.shutdownNow()
+        grpcServer.shutdownNow()
         scope.cancel()
     }
 

@@ -15,6 +15,7 @@ import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.grpc.proto.OutboundEventProto
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.InMemoryPlayerRepository
+import io.grpc.Server
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import kotlinx.coroutines.CoroutineScope
@@ -51,6 +52,7 @@ import java.util.concurrent.Executors
 class GatewayEngineIntegrationTest {
     private val serverName = "integration-test-${System.nanoTime()}"
 
+    private lateinit var grpcServer: Server
     private lateinit var engineDispatcher: kotlinx.coroutines.ExecutorCoroutineDispatcher
     private lateinit var scope: CoroutineScope
     private lateinit var engineInbound: LocalInboundBus
@@ -80,11 +82,12 @@ class GatewayEngineIntegrationTest {
                 scope = scope,
             )
 
-        InProcessServerBuilder.forName(serverName)
-            .directExecutor()
-            .addService(serviceImpl)
-            .build()
-            .start()
+        grpcServer =
+            InProcessServerBuilder.forName(serverName)
+                .directExecutor()
+                .addService(serviceImpl)
+                .build()
+                .start()
 
         dispatcher.start()
 
@@ -121,6 +124,7 @@ class GatewayEngineIntegrationTest {
     @AfterEach
     fun tearDown() {
         dispatcher.stop()
+        grpcServer.shutdownNow()
         scope.cancel()
         engineDispatcher.close()
     }

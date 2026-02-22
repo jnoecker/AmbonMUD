@@ -174,7 +174,6 @@ class EngineServer(
         runCatching { grpcServer.stop() }
         runCatching { engineJob?.cancelAndJoin() }
         runCatching { persistenceWorker?.shutdown() }
-        runCatching { outboundRouter?.let { /* not used */ } }
         runCatching { redisManager?.close() }
         scope.cancel()
         engineDispatcher.close()

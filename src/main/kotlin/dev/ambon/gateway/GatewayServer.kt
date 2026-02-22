@@ -84,7 +84,6 @@ class GatewayServer(
             GrpcInboundBus(
                 delegate = LocalInboundBus(capacity = config.server.inboundChannelCapacity),
                 grpcSendChannel = inboundProtoChannel,
-                scope = scope,
             )
 
         grpcOutboundBus =

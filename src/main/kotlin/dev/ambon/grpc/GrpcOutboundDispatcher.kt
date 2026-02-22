@@ -51,7 +51,22 @@ class GrpcOutboundDispatcher(
         val proto = event.toProto()
         val result = streamChannel.trySend(proto)
         if (result.isFailure) {
-            log.warn { "Gateway stream for session $sid is full or closed; dropping event" }
+            if (result.isClosed) {
+                // Channel closed — gateway disconnected. Remove the orphaned session; the
+                // gateway's stream-end cleanup should also fire, but this guards any race.
+                serviceImpl.sessionToStream.remove(sid)
+                log.info { "Gateway stream for session $sid is closed; removed from routing table" }
+            } else {
+                // Channel full — gateway is too slow to drain. Drop low-value events silently;
+                // warn on substantive ones so operators can tune capacity or detect stuck gateways.
+                // TODO: track per-session consecutive-drop count and force Disconnected after threshold.
+                when (event) {
+                    is OutboundEvent.SendPrompt ->
+                        log.debug { "Dropped SendPrompt for session $sid (gateway stream full)" }
+                    else ->
+                        log.warn { "Gateway stream for session $sid is full; dropped ${event::class.simpleName}" }
+                }
+            }
         }
     }
 }

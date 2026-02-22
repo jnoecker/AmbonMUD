@@ -12,7 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
@@ -37,50 +37,52 @@ class EngineServiceImpl(
      */
     internal val sessionToStream = ConcurrentHashMap<SessionId, SendChannel<OutboundEventProto>>()
 
-    override fun eventStream(requests: Flow<InboundEventProto>): Flow<OutboundEventProto> =
-        channelFlow {
-            // Register this stream's send channel so GrpcOutboundDispatcher can route to it.
-            val streamChannel: SendChannel<OutboundEventProto> = channel
+    override fun eventStream(requests: Flow<InboundEventProto>): Flow<OutboundEventProto> {
+        // Explicit channel so we control capacity directly. The dispatcher uses trySend() into
+        // this channel; a large buffer prevents spurious drops under burst load while still
+        // bounding memory per gateway stream. If the channel stays full the dispatcher logs a
+        // warning and drops low-value events (see GrpcOutboundDispatcher).
+        val streamChannel = Channel<OutboundEventProto>(capacity = STREAM_CHANNEL_CAPACITY)
 
-            val readerJob =
-                scope.launch {
+        scope.launch {
+            try {
+                requests.collect { proto ->
+                    val event = proto.toDomain() ?: return@collect
+                    // Track session ownership.
+                    when (event) {
+                        is InboundEvent.Connected -> {
+                            sessionToStream[event.sessionId] = streamChannel
+                            log.debug { "Session ${event.sessionId} registered to stream" }
+                        }
+                        is InboundEvent.Disconnected -> {
+                            sessionToStream.remove(event.sessionId)
+                            log.debug { "Session ${event.sessionId} removed from stream" }
+                        }
+                        else -> Unit
+                    }
+                    inbound.send(event)
+                }
+            } catch (e: Exception) {
+                log.warn(e) { "Gateway stream reader error; generating synthetic disconnects" }
+            } finally {
+                // Gateway stream ended — generate synthetic Disconnected for any orphaned sessions
+                // that never sent an explicit Disconnected (e.g. gateway crash).
+                val orphans = sessionToStream.keys().toList().filter { sessionToStream[it] === streamChannel }
+                orphans.forEach { sid ->
+                    sessionToStream.remove(sid)
                     try {
-                        requests.collect { proto ->
-                            val event = proto.toDomain() ?: return@collect
-                            // Track session ownership.
-                            when (event) {
-                                is InboundEvent.Connected -> {
-                                    sessionToStream[event.sessionId] = streamChannel
-                                    log.debug { "Session ${event.sessionId} registered to stream" }
-                                }
-                                is InboundEvent.Disconnected -> {
-                                    sessionToStream.remove(event.sessionId)
-                                    log.debug { "Session ${event.sessionId} removed from stream" }
-                                }
-                                else -> Unit
-                            }
-                            inbound.send(event)
-                        }
-                    } catch (e: Exception) {
-                        log.warn(e) { "Gateway stream reader error; generating synthetic disconnects" }
-                    } finally {
-                        // Gateway stream broke — generate synthetic Disconnected for all orphaned sessions.
-                        val orphans = sessionToStream.keys().toList().filter { sessionToStream[it] === streamChannel }
-                        orphans.forEach { sid ->
-                            sessionToStream.remove(sid)
-                            try {
-                                inbound.send(InboundEvent.Disconnected(sessionId = sid, reason = "gateway-disconnect"))
-                            } catch (_: Exception) {
-                                // best-effort
-                            }
-                        }
-                        close()
+                        inbound.send(InboundEvent.Disconnected(sessionId = sid, reason = "gateway-disconnect"))
+                    } catch (_: Exception) {
+                        // best-effort
                     }
                 }
-
-            readerJob.join()
+                streamChannel.close()
+            }
         }
+
+        return streamChannel.receiveAsFlow()
+    }
 }
 
-/** Outbound channel capacity used when registering streams. */
-private const val STREAM_CHANNEL_CAPACITY = Channel.UNLIMITED
+/** Per-gateway-stream outbound buffer. Large enough to absorb bursts without constant drops. */
+private const val STREAM_CHANNEL_CAPACITY = 8_192
