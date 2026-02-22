@@ -42,9 +42,9 @@ ambonMUD:
       flushIntervalMs: 5000
 
   database:
-    jdbcUrl: ""
-    username: ""
-    password: ""
+    jdbcUrl: "jdbc:postgresql://localhost:5432/ambonmud"
+    username: ambon
+    password: ambon
     maxPoolSize: 5
     minimumIdle: 1
 
