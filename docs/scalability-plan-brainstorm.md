@@ -181,8 +181,11 @@ implementation("io.lettuce:lettuce-core:6.3.2.RELEASE")
 > - `GrpcOutboundDispatcher` replaces `OutboundRouter` in engine mode; consumes the single `OutboundBus`, demuxes to gateway streams
 > - `GrpcInboundBus`/`GrpcOutboundBus` follow the delegate pattern (wrap `Local*Bus`), mirroring `Redis*Bus`
 > - `GatewayConfig.id` is a 16-bit gateway ID (0–65535) for `SnowflakeSessionIdFactory`
-> - Gateway disconnect in v1: engine generates synthetic `Disconnected` for all orphaned sessions
-> - Dependency versions: gRPC 1.72.0, grpc-kotlin-stub 1.5.0, protobuf 3.25.5 (must match grpc-protobuf transitive dep)
+> - Gateway disconnect: engine generates synthetic `Disconnected` for all orphaned sessions
+> - Gateway reconnect: exponential-backoff reconnect with configurable bounds (`gateway.reconnect.*`); Snowflake session-ID hardening with overflow WAIT and clock-rollback floor
+> - Prometheus metrics endpoint in ENGINE mode via standalone `MetricsHttpServer` (configurable port)
+> - Redis-based gateway-ID exclusive lease (`GatewayIdLeaseManager`) prevents duplicate gateway IDs
+> - Dependency versions at time of writing: gRPC 1.72.0 (since bumped), grpc-kotlin-stub 1.5.0, protobuf 3.25.5 (must match grpc-protobuf transitive dep)
 > - Proto files in `src/main/proto/ambonmud/v1/`; generated sources excluded from ktlint
 
 ### New files

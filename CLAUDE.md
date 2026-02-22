@@ -71,7 +71,7 @@ Sessions
 | Entry point / wiring | `src/main/kotlin/dev/ambon/Main.kt`, `MudServer.kt` |
 | Config schema + defaults | `src/main/kotlin/dev/ambon/config/AppConfig.kt`, `src/main/resources/application.yaml` |
 | Game engine + subsystems | `src/main/kotlin/dev/ambon/engine/` |
-| Command parsing + routing | `engine/commands/CommandParser.kt`, `CommandRouter.kt` |
+| Command parsing + routing | `src/main/kotlin/dev/ambon/engine/commands/CommandParser.kt`, `CommandRouter.kt` |
 | Event bus interfaces + impls | `src/main/kotlin/dev/ambon/bus/` (Local*, Redis*, Grpc*) |
 | gRPC server + engine-mode root | `src/main/kotlin/dev/ambon/grpc/` |
 | Gateway-mode composition root | `src/main/kotlin/dev/ambon/gateway/GatewayServer.kt` |
@@ -96,7 +96,7 @@ Sessions
 - **World content only:** edit YAML in `src/main/resources/world/`; no code change needed.
 - **Config:** update `AppConfig.kt` and `application.yaml` together; keep `validated()` strict.
 - **Persistence:** work through the `PlayerRepository` interface; maintain case-insensitive lookup and atomic writes. The chain is `WriteCoalescing → RedisCache → Yaml` — changes to `PlayerRecord` must survive all three layers.
-- **Bus/Redis:** `InboundBus`/`OutboundBus` are the engine boundaries; do not pass raw channels to engine code. Redis variants are optional wrappers — always test with both `LocalInboundBus` and the mock bus in unit tests.
+- **Bus/Redis/gRPC:** `InboundBus`/`OutboundBus` are the engine boundaries; do not pass raw channels to engine code. Redis and gRPC variants are optional wrappers — always test with both `LocalInboundBus` and the mock bus in unit tests. When adding new event variants, update both the Redis bus envelope and the proto definitions + `ProtoMapper`.
 
 ## Testing
 
