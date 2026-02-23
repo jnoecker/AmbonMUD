@@ -221,6 +221,12 @@ data class AppConfig(
                     }
                 }
             }
+
+            if (sharding.playerIndex.enabled) {
+                require(sharding.playerIndex.heartbeatMs > 0L) {
+                    "ambonMUD.sharding.playerIndex.heartbeatMs must be > 0"
+                }
+            }
         }
 
         return this
@@ -539,6 +545,13 @@ data class ShardingHandoffConfig(
     val ackTimeoutMs: Long = 2_000L,
 )
 
+data class PlayerIndexConfig(
+    /** Enable the Redis player-location index for O(1) cross-engine tell routing. */
+    val enabled: Boolean = false,
+    /** How often (ms) to refresh key TTLs for online players. */
+    val heartbeatMs: Long = 10_000L,
+)
+
 /** Zone-based engine sharding settings. */
 data class ShardingConfig(
     /** Enable zone-based sharding. When false, the engine loads all zones (default). */
@@ -555,6 +568,8 @@ data class ShardingConfig(
     val advertiseHost: String = "localhost",
     /** Optional advertised port override. Defaults to mode-specific port when null. */
     val advertisePort: Int? = null,
+    /** Redis player-location index for O(1) cross-engine tell routing. */
+    val playerIndex: PlayerIndexConfig = PlayerIndexConfig(),
 )
 
 private fun validateMobTier(

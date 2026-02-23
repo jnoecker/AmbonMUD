@@ -27,6 +27,11 @@ ambonMUD:
       #    zones: [noecker_resume]
     handoff:
       ackTimeoutMs: 2000
+    # Redis player-location index for O(1) cross-engine tell routing.
+    # Requires sharding.enabled=true and redis.enabled=true.
+    playerIndex:
+      enabled: false
+      heartbeatMs: 10000
 
   grpc:
     server:
