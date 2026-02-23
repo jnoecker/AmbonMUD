@@ -4,6 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > The full engineering playbook is in `AGENTS.md`. This file summarizes the most important points for quick orientation.
 
+## PR Review & Fix Workflow
+
+When I ask you to review or fix a PR:
+1. Use `gh pr view <number> --json headRefName` to identify the PR's branch
+2. Run `git checkout <branch>` to switch to that branch and `git pull` to get latest
+3. Make all changes on that branch
+4. Commit and push to that same branch — NEVER create a new branch
+5. The push will automatically update the PR
+
+Never create new branches when fixing PR feedback unless I explicitly ask for one.
+
 ## Commands
 
 ```bash
