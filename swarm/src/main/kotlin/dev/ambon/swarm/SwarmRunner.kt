@@ -39,7 +39,6 @@ class SwarmRunner(
                 BotCredential(name = generateName(config.run.namespacePrefix, idx), password = config.run.basePassword)
             }
 
-        val random = if (config.run.seed != null) Random(config.run.seed) else Random.Default
         val launchIntervalMs = computeLaunchIntervalMillis(config.run.totalBots, config.run.rampSeconds)
         val endAt = startedAt + config.run.durationSeconds * 1000L
 
@@ -51,7 +50,8 @@ class SwarmRunner(
         val jobs = mutableListOf<Job>()
 
         creds.forEachIndexed { idx, credential ->
-            val botRandom = if (config.run.deterministic) Random((config.run.seed ?: 1L) + idx) else random
+            val botRandom =
+                if (config.run.seed != null) Random(config.run.seed + idx) else Random(Random.nextLong())
             val protocol = selectProtocol(config.run.protocolMix, botRandom)
             jobs +=
                 parent.launch {
@@ -170,16 +170,16 @@ private class BotWorker(
 
     private suspend fun login(connection: BotConnection): Boolean {
         var stage = 0
+        var consecutiveTimeouts = 0
         val started = System.nanoTime()
         while (System.currentTimeMillis() < endAtEpochMs) {
             val line = connection.pollLine(timeoutMillis = 1500)
             if (line == null) {
-                if (stage >= 4) {
-                    metrics.loginLatency(Duration.ofNanos(System.nanoTime() - started).toMillis())
-                    return true
-                }
+                consecutiveTimeouts++
+                if (consecutiveTimeouts >= 3) return false
                 continue
             }
+            consecutiveTimeouts = 0
             val lower = line.lowercase()
             when {
                 "enter your name" in lower -> {
@@ -254,37 +254,37 @@ private class TelnetBotConnection(
     private val incoming = Collections.synchronizedList(mutableListOf<String>())
     private val closed = AtomicBoolean(false)
     private val outputLock = Mutex()
-    private lateinit var output: java.io.OutputStream
+    private val output: java.io.OutputStream
+    private val readerThread: Thread
 
     init {
         socket.connect(InetSocketAddress(host, port), 3000)
         socket.soTimeout = 500
         val input = socket.getInputStream()
-        val output = socket.getOutputStream()
+        output = socket.getOutputStream()
 
-        Thread {
-            val buf = ByteArray(4096)
-            val sb = StringBuilder()
-            while (!closed.get()) {
-                val n = runCatching { input.read(buf) }.getOrElse { -1 }
-                if (n <= 0) break
-                val text = String(buf, 0, n, StandardCharsets.UTF_8)
-                sb.append(text)
-                while (true) {
-                    val idx = sb.indexOf("\n")
-                    if (idx < 0) break
-                    val line = sb.substring(0, idx).replace("\r", "").trim()
-                    sb.delete(0, idx + 1)
-                    if (line.isNotBlank()) incoming += line
+        readerThread =
+            Thread {
+                val buf = ByteArray(4096)
+                val sb = StringBuilder()
+                while (!closed.get()) {
+                    val n = runCatching { input.read(buf) }.getOrElse { -1 }
+                    if (n <= 0) break
+                    val text = String(buf, 0, n, StandardCharsets.UTF_8)
+                    sb.append(text)
+                    while (true) {
+                        val idx = sb.indexOf("\n")
+                        if (idx < 0) break
+                        val line = sb.substring(0, idx).replace("\r", "").trim()
+                        sb.delete(0, idx + 1)
+                        if (line.isNotBlank()) incoming += line
+                    }
                 }
+                closed.set(true)
+            }.apply {
+                isDaemon = true
+                start()
             }
-            closed.set(true)
-        }.apply {
-            isDaemon = true
-            start()
-        }
-
-        this.output = output
     }
 
     override suspend fun sendLine(line: String) {
@@ -308,8 +308,10 @@ private class TelnetBotConnection(
     }
 
     override fun close() {
-        closed.set(true)
-        runCatching { socket.close() }
+        if (closed.compareAndSet(false, true)) {
+            runCatching { socket.close() }
+            readerThread.interrupt()
+        }
     }
 }
 
@@ -373,6 +375,7 @@ private class WebSocketBotConnection(
                         .map { it.replace("\r", "").trim() }
                         .filter { it.isNotBlank() }
             }
+            webSocket.request(1)
             return CompletableFuture.completedFuture(null)
         }
 

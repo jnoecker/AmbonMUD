@@ -1,6 +1,7 @@
 package dev.ambon.swarm
 
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.random.Random
 
 class SwarmMetrics {
     private val connectOk = AtomicLong(0)
@@ -11,13 +12,12 @@ class SwarmMetrics {
     private val intentionalDisconnects = AtomicLong(0)
     private val droppedConnections = AtomicLong(0)
 
-    private val connectLatenciesMs = mutableListOf<Long>()
-    private val loginLatenciesMs = mutableListOf<Long>()
-    private val lock = Any()
+    private val connectLatencies = ReservoirSample()
+    private val loginLatencies = ReservoirSample()
 
     fun connectionSucceeded(latencyMs: Long) {
         connectOk.incrementAndGet()
-        synchronized(lock) { connectLatenciesMs += latencyMs }
+        connectLatencies.add(latencyMs)
     }
 
     fun connectionFailed() {
@@ -45,7 +45,7 @@ class SwarmMetrics {
     }
 
     fun loginLatency(latencyMs: Long) {
-        synchronized(lock) { loginLatenciesMs += latencyMs }
+        loginLatencies.add(latencyMs)
     }
 
     fun snapshotLine(prefix: String): String =
@@ -58,8 +58,8 @@ class SwarmMetrics {
     ): String {
         val connectPct = percentage(connectOk.get(), connectOk.get() + connectFailed.get())
         val loginPct = percentage(loginOk.get(), loginOk.get() + loginFailed.get())
-        val connectStats = stats(connectLatenciesMs)
-        val loginStats = stats(loginLatenciesMs)
+        val connectStats = stats(connectLatencies.snapshot())
+        val loginStats = stats(loginLatencies.snapshot())
 
         return buildString {
             appendLine("=== Swarm Load Test Summary ===")
@@ -109,4 +109,36 @@ class SwarmMetrics {
         val p99: Long,
         val avg: Long,
     )
+}
+
+/**
+ * Thread-safe reservoir sample capped at [maxSize] entries.
+ * Uses Algorithm R for uniform random sampling over a stream.
+ */
+internal class ReservoirSample(
+    private val maxSize: Int = 10_000,
+) {
+    private val data = LongArray(maxSize)
+    private var count = 0L
+    private val lock = Any()
+
+    fun add(value: Long) {
+        synchronized(lock) {
+            if (count < maxSize) {
+                data[count.toInt()] = value
+            } else {
+                val idx = Random.nextLong(count + 1)
+                if (idx < maxSize) {
+                    data[idx.toInt()] = value
+                }
+            }
+            count++
+        }
+    }
+
+    fun snapshot(): List<Long> =
+        synchronized(lock) {
+            val n = minOf(count, maxSize.toLong()).toInt()
+            data.take(n)
+        }
 }
