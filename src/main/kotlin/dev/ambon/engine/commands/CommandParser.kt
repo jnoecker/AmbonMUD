@@ -119,6 +119,23 @@ sealed interface Command {
 
     data object Spells : Command
 
+    data class Whisper(
+        val target: String,
+        val message: String,
+    ) : Command
+
+    data class Shout(
+        val message: String,
+    ) : Command
+
+    data class Ooc(
+        val message: String,
+    ) : Command
+
+    data class Pose(
+        val message: String,
+    ) : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -231,6 +248,30 @@ object CommandParser {
                 val keyword = parts.dropLast(1).joinToString(" ").trim()
                 if (keyword.isEmpty()) Command.Invalid(line, "give <item> <player>") else Command.Give(keyword, playerName)
             }
+        }?.let { return it }
+
+        // whisper: "whisper <target> <msg>" or "wh <target> <msg>"
+        matchPrefix(line, listOf("whisper", "wh")) { rest ->
+            val parts = rest.split(Regex("\\s+"), limit = 2)
+            if (parts.size < 2) return@matchPrefix Command.Invalid(line, "whisper <target> <msg>")
+            val target = parts[0]
+            val msg = parts[1].trim()
+            if (msg.isEmpty()) Command.Invalid(line, "whisper <target> <msg>") else Command.Whisper(target, msg)
+        }?.let { return it }
+
+        // shout: "shout <msg>" or "sh <msg>"
+        matchPrefix(line, listOf("shout", "sh")) { rest ->
+            if (rest.isEmpty()) Command.Invalid(line, "shout <message>") else Command.Shout(rest)
+        }?.let { return it }
+
+        // ooc: "ooc <msg>"
+        matchPrefix(line, listOf("ooc")) { rest ->
+            if (rest.isEmpty()) Command.Invalid(line, "ooc <message>") else Command.Ooc(rest)
+        }?.let { return it }
+
+        // pose: "pose <msg>" or "po <msg>"
+        matchPrefix(line, listOf("pose", "po")) { rest ->
+            if (rest.isEmpty()) Command.Invalid(line, "pose <message>") else Command.Pose(rest)
         }?.let { return it }
 
         // cast / c

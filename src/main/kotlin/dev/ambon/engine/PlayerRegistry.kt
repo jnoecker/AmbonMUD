@@ -222,6 +222,8 @@ class PlayerRegistry(
             ?.toSet()
             ?: emptySet()
 
+    fun playersInZone(zone: String): List<PlayerState> = players.values.filter { it.roomId.zone == zone }
+
     suspend fun moveTo(
         sessionId: SessionId,
         newRoom: RoomId,
