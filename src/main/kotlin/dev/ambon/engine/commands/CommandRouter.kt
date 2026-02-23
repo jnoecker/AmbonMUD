@@ -313,6 +313,11 @@ class CommandRouter(
 
             is Command.Pose -> {
                 val me = players.get(sessionId) ?: return
+                if (!cmd.message.contains(me.name, ignoreCase = true)) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Your pose must include your name (${me.name})."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
                 val roomId = me.roomId
                 val members = players.playersInRoom(roomId)
                 for (other in members) {

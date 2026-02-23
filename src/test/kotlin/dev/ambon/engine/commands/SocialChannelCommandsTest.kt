@@ -235,16 +235,37 @@ class SocialChannelCommandsTest {
             login(players, b, "Bob")
             drain(outbound)
 
+            router.handle(a, Command.Pose("Alice coughs loudly."))
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "Alice coughs loudly." },
+                "Sender should see pose text as-is. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == b && it.text == "Alice coughs loudly." },
+                "Others in room should see pose text as-is. got=$outs",
+            )
+        }
+
+    @Test
+    fun `pose rejected when player name absent from message`() =
+        runTest {
+            val (router, players, outbound) = buildFixture()
+            val a = SessionId(1)
+            login(players, a, "Alice")
+            drain(outbound)
+
             router.handle(a, Command.Pose("The old man coughs loudly."))
             val outs = drain(outbound)
 
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "The old man coughs loudly." },
-                "Sender should see pose text as-is. got=$outs",
+                outs.any { it is OutboundEvent.SendError && it.sessionId == a },
+                "Should get an error when name is absent. got=$outs",
             )
-            assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.sessionId == b && it.text == "The old man coughs loudly." },
-                "Others in room should see pose text as-is. got=$outs",
+            assertFalse(
+                outs.any { it is OutboundEvent.SendText && it.sessionId == a },
+                "Pose text should not be sent when rejected. got=$outs",
             )
         }
 
@@ -261,11 +282,11 @@ class SocialChannelCommandsTest {
             router.handle(b, Command.Move(Direction.NORTH))
             drain(outbound)
 
-            router.handle(a, Command.Pose("dances alone."))
+            router.handle(a, Command.Pose("Alice dances alone."))
             val outs = drain(outbound)
 
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "dances alone." },
+                outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "Alice dances alone." },
                 "Sender should see pose. got=$outs",
             )
             assertFalse(
