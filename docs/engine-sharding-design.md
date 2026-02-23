@@ -593,6 +593,7 @@ services:
 1. **Item ownership during handoff.** When a player transfers engines, their inventory items transfer too. But items are currently tracked by `ItemRegistry` with room/player placement. The target engine needs to instantiate these items in its local `ItemRegistry`. Should we serialize full `ItemInstance` data in the handoff, or rely on item templates and just transfer IDs? Take whichever approach seems most reasonable.
 
 3. **Start room assignment.** The `world.startRoom` is currently global. If new characters start in `ambon_hub`, then the engine owning `ambon_hub` must handle all new character creation. Is this acceptable, or should start room be configurable per engine?  All characters start in a generated room that prints some kind of welcome message and links to the world.startRoom?  "Thanks for joining us at AmbonMUD, proceed north to begin".  Each engine owns that room (lets us handle large influx of new users) and hands off to ambon_hub engine.
+   - Follow-up proposal: `docs/replicated-entry-zone-plan.md`
 
 4. **Redis as hard dependency.** The current architecture keeps Redis optional. Zone-based sharding effectively requires Redis (for ZoneRegistry, InterEngineBus, player location index). Should we accept Redis as a hard dependency for sharded mode, or design a Redis-free alternative (e.g., static config + direct gRPC)? Let's keep redis as a hard dependency if that's the easiest path at this point.
 
