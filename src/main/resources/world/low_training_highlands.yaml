@@ -1,0 +1,1167 @@
+zone: low_training_highlands
+lifespan: 25
+startRoom: switchback_foot
+
+mobs:
+  cliff_ram_01:
+    name: "a cliff ram"
+    room: switchback_foot
+    tier: weak
+    level: 2
+
+  storm_kite_02:
+    name: "a storm kite"
+    room: broken_switchback
+    tier: weak
+    level: 3
+
+  ridge_outlaw_03:
+    name: "a ridge outlaw"
+    room: skybridge_span
+    tier: weak
+    level: 2
+
+  frost_stalker_04:
+    name: "a frost stalker"
+    room: thunder_roost
+    tier: weak
+    level: 3
+
+  crag_warden_05:
+    name: "a crag warden"
+    room: goatpath_terrace
+    tier: weak
+    level: 2
+
+  howling_marauder_06:
+    name: "a howling marauder"
+    room: cloudpines
+    tier: weak
+    level: 3
+
+  granite_hawk_07:
+    name: "a granite hawk"
+    room: shale_turn
+    tier: weak
+    level: 2
+
+  mist_sentry_08:
+    name: "a mist sentry"
+    room: ridge_lanterns
+    tier: weak
+    level: 3
+    drops:
+      - itemId: trophy_08
+        chance: 0.25
+
+  hail_hunter_09:
+    name: "a hail hunter"
+    room: frozen_runoff
+    tier: weak
+    level: 2
+
+  sky_raider_10:
+    name: "a sky raider"
+    room: hawk_perch
+    tier: weak
+    level: 4
+    drops:
+      - itemId: trophy_10
+        chance: 0.35
+
+  cliff_ram_11:
+    name: "a cliff ram"
+    room: narrow_col
+    tier: weak
+    level: 3
+
+  storm_kite_12:
+    name: "a storm kite"
+    room: storm_knot
+    tier: standard
+    level: 4
+    drops:
+      - itemId: trophy_12
+        chance: 0.35
+
+  ridge_outlaw_13:
+    name: "a ridge outlaw"
+    room: cliffside_hovel
+    tier: weak
+    level: 3
+
+  frost_stalker_14:
+    name: "a frost stalker"
+    room: avalanche_cut
+    tier: weak
+    level: 4
+    drops:
+      - itemId: trophy_02
+        chance: 0.35
+
+  crag_warden_15:
+    name: "a crag warden"
+    room: knucklebone_ridge
+    tier: weak
+    level: 3
+
+  howling_marauder_16:
+    name: "a howling marauder"
+    room: mistwall_gap
+    tier: standard
+    level: 4
+    drops:
+      - itemId: trophy_04
+        chance: 0.35
+
+  granite_hawk_17:
+    name: "a granite hawk"
+    room: banner_stones
+    tier: weak
+    level: 3
+
+  mist_sentry_18:
+    name: "a mist sentry"
+    room: echoes_saddle
+    tier: weak
+    level: 4
+    drops:
+      - itemId: trophy_06
+        chance: 0.35
+
+  hail_hunter_19:
+    name: "a hail hunter"
+    room: old_signal_tower
+    tier: standard
+    level: 4
+
+  sky_raider_20:
+    name: "a sky raider"
+    room: lightning_spire
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_08
+        chance: 0.50
+
+  cliff_ram_21:
+    name: "a cliff ram"
+    room: windharrow
+    tier: standard
+    level: 4
+
+  storm_kite_22:
+    name: "a storm kite"
+    room: granite_step
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_10
+        chance: 0.50
+
+  ridge_outlaw_23:
+    name: "a ridge outlaw"
+    room: raincatch_basin
+    tier: standard
+    level: 4
+
+  frost_stalker_24:
+    name: "a frost stalker"
+    room: coldfire_camp
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_12
+        chance: 0.50
+
+  crag_warden_25:
+    name: "a crag warden"
+    room: ridgeback_shelf
+    tier: standard
+    level: 4
+
+  howling_marauder_26:
+    name: "a howling marauder"
+    room: snowmelt_pass
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_02
+        chance: 0.50
+
+  granite_hawk_27:
+    name: "a granite hawk"
+    room: cragwatch
+    tier: standard
+    level: 4
+
+  mist_sentry_28:
+    name: "a mist sentry"
+    room: cloudbreak_lip
+    tier: standard
+    level: 6
+    drops:
+      - itemId: trophy_04
+        chance: 0.70
+
+  hail_hunter_29:
+    name: "a hail hunter"
+    room: thunderhead_path
+    tier: standard
+    level: 5
+
+  sky_raider_30:
+    name: "a sky raider"
+    room: high_cairn
+    tier: elite
+    level: 6
+    drops:
+      - itemId: trophy_06
+        chance: 0.80
+
+  cliff_ram_31:
+    name: "a cliff ram"
+    room: shearwall_turn
+    tier: standard
+    level: 5
+
+  storm_kite_32:
+    name: "a storm kite"
+    room: raven_lift
+    tier: standard
+    level: 6
+    drops:
+      - itemId: trophy_08
+        chance: 0.70
+
+  ridge_outlaw_33:
+    name: "a ridge outlaw"
+    room: hailgate
+    tier: elite
+    level: 5
+
+  frost_stalker_34:
+    name: "a frost stalker"
+    room: split_ice_stair
+    tier: standard
+    level: 6
+    drops:
+      - itemId: trophy_10
+        chance: 0.70
+
+  crag_warden_35:
+    name: "a crag warden"
+    room: needle_shelf
+    tier: standard
+    level: 5
+
+  howling_marauder_36:
+    name: "a howling marauder"
+    room: white_echo
+    tier: elite
+    level: 6
+    drops:
+      - itemId: trophy_12
+        chance: 0.80
+
+  granite_hawk_37:
+    name: "a granite hawk"
+    room: farseer_post
+    tier: elite
+    level: 6
+
+  mist_sentry_38:
+    name: "a mist sentry"
+    room: stormbell_span
+    tier: elite
+    level: 7
+    drops:
+      - itemId: trophy_02
+        chance: 1.0
+
+  hail_hunter_39:
+    name: "a hail hunter"
+    room: skycut_notch
+    tier: elite
+    level: 8
+
+  sky_raider_40:
+    name: "a sky raider"
+    room: highwind_chute
+    tier: elite
+    level: 6
+    drops:
+      - itemId: trophy_04
+        chance: 0.85
+
+items:
+  gear_01:
+    displayName: "a ridgeforged hatchet"
+    keyword: "hatchet"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
+    slot: hand
+    damage: 2
+    room: switchback_foot
+
+  gear_02:
+    displayName: "a stormproof coat"
+    keyword: "coat"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
+    slot: body
+    armor: 2
+    room: broken_switchback
+
+  gear_03:
+    displayName: "a frostlined bandolier"
+    keyword: "bandolier"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
+    slot: head
+    armor: 1
+    room: skybridge_span
+
+  gear_04:
+    displayName: "a granite hood"
+    keyword: "hood"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
+    slot: hand
+    damage: 2
+    room: thunder_roost
+
+  gear_05:
+    displayName: "a windbound gauntlet"
+    keyword: "gauntlet"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
+    slot: body
+    armor: 1
+    room: goatpath_terrace
+
+  gear_06:
+    displayName: "a spiked pauldron"
+    keyword: "pauldron"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
+    slot: head
+    armor: 2
+    room: cloudpines
+
+  gear_07:
+    displayName: "a ropebound axe"
+    keyword: "axe"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
+    slot: hand
+    damage: 2
+    room: shale_turn
+
+  gear_08:
+    displayName: "a ironclad mail"
+    keyword: "mail"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
+    slot: body
+    armor: 2
+    room: ridge_lanterns
+
+  gear_09:
+    displayName: "a summit blade"
+    keyword: "blade"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
+    slot: head
+    armor: 1
+    room: frozen_runoff
+
+  gear_10:
+    displayName: "a skyworn vest"
+    keyword: "vest"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
+    slot: hand
+    damage: 3
+    room: hawk_perch
+
+  gear_11:
+    displayName: "a ridgeforged hatchet"
+    keyword: "hatchet"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
+    slot: body
+    armor: 2
+    room: narrow_col
+
+  gear_12:
+    displayName: "a stormproof coat"
+    keyword: "coat"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
+    slot: head
+    armor: 3
+    room: storm_knot
+
+  gear_13:
+    displayName: "a frostlined bandolier"
+    keyword: "bandolier"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
+    slot: hand
+    damage: 3
+    room: cliffside_hovel
+
+  gear_14:
+    displayName: "a granite hood"
+    keyword: "hood"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
+    slot: body
+    armor: 3
+    room: avalanche_cut
+
+  gear_15:
+    displayName: "a windbound gauntlet"
+    keyword: "gauntlet"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
+    slot: head
+    armor: 2
+    room: knucklebone_ridge
+
+  gear_16:
+    displayName: "a spiked pauldron"
+    keyword: "pauldron"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
+    slot: hand
+    damage: 3
+    room: mistwall_gap
+
+  gear_17:
+    displayName: "a ropebound axe"
+    keyword: "axe"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
+    slot: body
+    armor: 2
+    room: banner_stones
+
+  gear_18:
+    displayName: "a ironclad mail"
+    keyword: "mail"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
+    slot: head
+    armor: 3
+    room: echoes_saddle
+
+  gear_19:
+    displayName: "a summit blade"
+    keyword: "blade"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
+    slot: hand
+    damage: 4
+    room: old_signal_tower
+
+  gear_20:
+    displayName: "a skyworn vest"
+    keyword: "vest"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: lightning_spire
+
+  gear_21:
+    displayName: "a ridgeforged hatchet"
+    keyword: "hatchet"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
+    slot: head
+    armor: 3
+    constitution: 1
+    room: windharrow
+
+  gear_22:
+    displayName: "a stormproof coat"
+    keyword: "coat"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
+    slot: hand
+    damage: 4
+    room: granite_step
+
+  gear_23:
+    displayName: "a frostlined bandolier"
+    keyword: "bandolier"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
+    slot: body
+    armor: 3
+    constitution: 1
+    room: raincatch_basin
+
+  gear_24:
+    displayName: "a granite hood"
+    keyword: "hood"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
+    slot: head
+    armor: 4
+    constitution: 1
+    room: coldfire_camp
+
+  gear_25:
+    displayName: "a windbound gauntlet"
+    keyword: "gauntlet"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
+    slot: hand
+    damage: 4
+    room: ridgeback_shelf
+
+  gear_26:
+    displayName: "a spiked pauldron"
+    keyword: "pauldron"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: snowmelt_pass
+
+  gear_27:
+    displayName: "a ropebound axe"
+    keyword: "axe"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
+    slot: head
+    armor: 3
+    constitution: 1
+    room: cragwatch
+
+  gear_28:
+    displayName: "a ironclad mail"
+    keyword: "mail"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
+    slot: hand
+    damage: 5
+    room: cloudbreak_lip
+
+  gear_29:
+    displayName: "a summit blade"
+    keyword: "blade"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: thunderhead_path
+
+  gear_30:
+    displayName: "a skyworn vest"
+    keyword: "vest"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
+    slot: head
+    armor: 5
+    constitution: 1
+    room: high_cairn
+
+  gear_31:
+    displayName: "a ridgeforged hatchet"
+    keyword: "hatchet"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
+    slot: hand
+    damage: 5
+    room: shearwall_turn
+
+  gear_32:
+    displayName: "a stormproof coat"
+    keyword: "coat"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
+    slot: body
+    armor: 5
+    constitution: 1
+    room: raven_lift
+
+  gear_33:
+    displayName: "a frostlined bandolier"
+    keyword: "bandolier"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
+    slot: head
+    armor: 4
+    constitution: 1
+    room: hailgate
+
+  gear_34:
+    displayName: "a granite hood"
+    keyword: "hood"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
+    slot: hand
+    damage: 5
+    room: split_ice_stair
+
+  gear_35:
+    displayName: "a windbound gauntlet"
+    keyword: "gauntlet"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: needle_shelf
+
+  gear_36:
+    displayName: "a spiked pauldron"
+    keyword: "pauldron"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
+    slot: head
+    armor: 5
+    constitution: 1
+    room: white_echo
+
+  gear_37:
+    displayName: "a ropebound axe"
+    keyword: "axe"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-5 circuit in this zone."
+    slot: hand
+    damage: 6
+    room: farseer_post
+
+  gear_38:
+    displayName: "a ironclad mail"
+    keyword: "mail"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-5 circuit in this zone."
+    slot: body
+    armor: 6
+    constitution: 2
+    room: stormbell_span
+
+  gear_39:
+    displayName: "a summit blade"
+    keyword: "blade"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-5 circuit in this zone."
+    slot: head
+    armor: 5
+    constitution: 2
+    room: skycut_notch
+
+  gear_40:
+    displayName: "a skyworn vest"
+    keyword: "vest"
+    description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-5 circuit in this zone."
+    slot: hand
+    damage: 6
+    room: highwind_chute
+
+  ration_01:
+    displayName: "a field ration pack #1"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 10
+      grantXp: 15
+    room: white_echo
+
+  ration_02:
+    displayName: "a field ration pack #2"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 2
+    onUse:
+      healHp: 12
+      grantXp: 20
+    room: farseer_post
+
+  ration_03:
+    displayName: "a field ration pack #3"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 14
+      grantXp: 25
+    room: stormbell_span
+
+  ration_04:
+    displayName: "a field ration pack #4"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 2
+    onUse:
+      healHp: 16
+      grantXp: 30
+    room: skycut_notch
+
+  ration_05:
+    displayName: "a field ration pack #5"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 18
+      grantXp: 35
+    room: highwind_chute
+
+  ration_06:
+    displayName: "a field ration pack #6"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 2
+    onUse:
+      healHp: 20
+      grantXp: 40
+    room: broken_astrolabe
+
+  trophy_01:
+    displayName: "a thundering sigil"
+    keyword: "sigil"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 5
+
+  trophy_02:
+    displayName: "a echoing token"
+    keyword: "token"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 4
+    constitution: 1
+
+  trophy_03:
+    displayName: "a runed totem"
+    keyword: "totem"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 3
+    constitution: 1
+
+  trophy_04:
+    displayName: "a stormcut seal"
+    keyword: "seal"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 6
+
+  trophy_05:
+    displayName: "a snowworn relic"
+    keyword: "relic"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 4
+    constitution: 1
+
+  trophy_06:
+    displayName: "a skybound medallion"
+    keyword: "medallion"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 5
+    constitution: 1
+
+  trophy_07:
+    displayName: "a horizon crest"
+    keyword: "crest"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 6
+
+  trophy_08:
+    displayName: "a deepwind idol"
+    keyword: "idol"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 5
+    constitution: 1
+
+  trophy_09:
+    displayName: "a summit brand"
+    keyword: "brand"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 5
+    constitution: 2
+
+  trophy_10:
+    displayName: "a glacier mark"
+    keyword: "mark"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 8
+
+  trophy_11:
+    displayName: "a thundering sigil"
+    keyword: "sigil"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 5
+    constitution: 2
+
+  trophy_12:
+    displayName: "a echoing token"
+    keyword: "token"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 6
+    constitution: 2
+
+rooms:
+  switchback_foot:
+    title: "Switchback Foot"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Switchback Foot anchors one segment of the zone circuit."
+    exits:
+      n: hawk_perch
+      e: broken_switchback
+      s: ambon_hub:blank_arches
+
+  broken_switchback:
+    title: "Broken Switchback"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Broken Switchback anchors one segment of the zone circuit."
+    exits:
+      n: narrow_col
+      e: skybridge_span
+      w: switchback_foot
+
+  skybridge_span:
+    title: "Skybridge Span"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Skybridge Span anchors one segment of the zone circuit."
+    exits:
+      n: storm_knot
+      e: thunder_roost
+      w: broken_switchback
+
+  thunder_roost:
+    title: "Thunder Roost"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Thunder Roost anchors one segment of the zone circuit."
+    exits:
+      n: cliffside_hovel
+      e: goatpath_terrace
+      w: skybridge_span
+
+  goatpath_terrace:
+    title: "Goatpath Terrace"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Goatpath Terrace anchors one segment of the zone circuit."
+    exits:
+      n: avalanche_cut
+      e: cloudpines
+      w: thunder_roost
+
+  cloudpines:
+    title: "Cloudpines"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Cloudpines anchors one segment of the zone circuit."
+    exits:
+      n: knucklebone_ridge
+      e: shale_turn
+      w: goatpath_terrace
+
+  shale_turn:
+    title: "Shale Turn"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Shale Turn anchors one segment of the zone circuit."
+    exits:
+      n: mistwall_gap
+      e: ridge_lanterns
+      w: cloudpines
+
+  ridge_lanterns:
+    title: "Ridge Lanterns"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Ridge Lanterns anchors one segment of the zone circuit."
+    exits:
+      n: banner_stones
+      e: frozen_runoff
+      w: shale_turn
+
+  frozen_runoff:
+    title: "Frozen Runoff"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Frozen Runoff anchors one segment of the zone circuit."
+    exits:
+      n: echoes_saddle
+      w: ridge_lanterns
+
+  hawk_perch:
+    title: "Hawk Perch"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Hawk Perch anchors one segment of the zone circuit."
+    exits:
+      n: old_signal_tower
+      e: narrow_col
+      s: switchback_foot
+
+  narrow_col:
+    title: "Narrow Col"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Narrow Col anchors one segment of the zone circuit."
+    exits:
+      n: lightning_spire
+      e: storm_knot
+      s: broken_switchback
+      w: hawk_perch
+
+  storm_knot:
+    title: "Storm Knot"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Storm Knot anchors one segment of the zone circuit."
+    exits:
+      n: windharrow
+      e: cliffside_hovel
+      s: skybridge_span
+      w: narrow_col
+
+  cliffside_hovel:
+    title: "Cliffside Hovel"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Cliffside Hovel anchors one segment of the zone circuit."
+    exits:
+      n: granite_step
+      e: avalanche_cut
+      s: thunder_roost
+      w: storm_knot
+
+  avalanche_cut:
+    title: "Avalanche Cut"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Avalanche Cut anchors one segment of the zone circuit."
+    exits:
+      n: raincatch_basin
+      e: knucklebone_ridge
+      s: goatpath_terrace
+      w: cliffside_hovel
+
+  knucklebone_ridge:
+    title: "Knucklebone Ridge"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Knucklebone Ridge anchors one segment of the zone circuit."
+    exits:
+      n: coldfire_camp
+      e: mistwall_gap
+      s: cloudpines
+      w: avalanche_cut
+
+  mistwall_gap:
+    title: "Mistwall Gap"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Mistwall Gap anchors one segment of the zone circuit."
+    exits:
+      n: ridgeback_shelf
+      e: banner_stones
+      s: shale_turn
+      w: knucklebone_ridge
+
+  banner_stones:
+    title: "Banner Stones"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Banner Stones anchors one segment of the zone circuit."
+    exits:
+      n: snowmelt_pass
+      e: echoes_saddle
+      s: ridge_lanterns
+      w: mistwall_gap
+
+  echoes_saddle:
+    title: "Echoes Saddle"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Echoes Saddle anchors one segment of the zone circuit."
+    exits:
+      n: cragwatch
+      s: frozen_runoff
+      w: banner_stones
+
+  old_signal_tower:
+    title: "Old Signal Tower"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Old Signal Tower anchors one segment of the zone circuit."
+    exits:
+      n: cloudbreak_lip
+      e: lightning_spire
+      s: hawk_perch
+
+  lightning_spire:
+    title: "Lightning Spire"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Lightning Spire anchors one segment of the zone circuit."
+    exits:
+      n: thunderhead_path
+      e: windharrow
+      s: narrow_col
+      w: old_signal_tower
+
+  windharrow:
+    title: "Windharrow"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Windharrow anchors one segment of the zone circuit."
+    exits:
+      n: high_cairn
+      e: granite_step
+      s: storm_knot
+      w: lightning_spire
+
+  granite_step:
+    title: "Granite Step"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Granite Step anchors one segment of the zone circuit."
+    exits:
+      n: shearwall_turn
+      e: raincatch_basin
+      s: cliffside_hovel
+      w: windharrow
+
+  raincatch_basin:
+    title: "Raincatch Basin"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Raincatch Basin anchors one segment of the zone circuit."
+    exits:
+      n: raven_lift
+      e: coldfire_camp
+      s: avalanche_cut
+      w: granite_step
+
+  coldfire_camp:
+    title: "Coldfire Camp"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Coldfire Camp anchors one segment of the zone circuit."
+    exits:
+      n: hailgate
+      e: ridgeback_shelf
+      s: knucklebone_ridge
+      w: raincatch_basin
+
+  ridgeback_shelf:
+    title: "Ridgeback Shelf"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Ridgeback Shelf anchors one segment of the zone circuit."
+    exits:
+      n: split_ice_stair
+      e: snowmelt_pass
+      s: mistwall_gap
+      w: coldfire_camp
+
+  snowmelt_pass:
+    title: "Snowmelt Pass"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Snowmelt Pass anchors one segment of the zone circuit."
+    exits:
+      n: needle_shelf
+      e: cragwatch
+      s: banner_stones
+      w: ridgeback_shelf
+
+  cragwatch:
+    title: "Cragwatch"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Cragwatch anchors one segment of the zone circuit."
+    exits:
+      n: white_echo
+      s: echoes_saddle
+      w: snowmelt_pass
+
+  cloudbreak_lip:
+    title: "Cloudbreak Lip"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Cloudbreak Lip anchors one segment of the zone circuit."
+    exits:
+      n: farseer_post
+      e: thunderhead_path
+      s: old_signal_tower
+
+  thunderhead_path:
+    title: "Thunderhead Path"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Thunderhead Path anchors one segment of the zone circuit."
+    exits:
+      n: stormbell_span
+      e: high_cairn
+      s: lightning_spire
+      w: cloudbreak_lip
+
+  high_cairn:
+    title: "High Cairn"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. High Cairn anchors one segment of the zone circuit."
+    exits:
+      n: skycut_notch
+      e: shearwall_turn
+      s: windharrow
+      w: thunderhead_path
+
+  shearwall_turn:
+    title: "Shearwall Turn"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Shearwall Turn anchors one segment of the zone circuit."
+    exits:
+      n: highwind_chute
+      e: raven_lift
+      s: granite_step
+      w: high_cairn
+
+  raven_lift:
+    title: "Raven Lift"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Raven Lift anchors one segment of the zone circuit."
+    exits:
+      n: broken_astrolabe
+      e: hailgate
+      s: raincatch_basin
+      w: shearwall_turn
+
+  hailgate:
+    title: "Hailgate"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Hailgate anchors one segment of the zone circuit."
+    exits:
+      n: frostspire_tread
+      e: split_ice_stair
+      s: coldfire_camp
+      w: raven_lift
+
+  split_ice_stair:
+    title: "Split Ice Stair"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Split Ice Stair anchors one segment of the zone circuit."
+    exits:
+      n: goatking_step
+      e: needle_shelf
+      s: ridgeback_shelf
+      w: hailgate
+
+  needle_shelf:
+    title: "Needle Shelf"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Needle Shelf anchors one segment of the zone circuit."
+    exits:
+      n: summit_ledger
+      e: white_echo
+      s: snowmelt_pass
+      w: split_ice_stair
+
+  white_echo:
+    title: "White Echo"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. White Echo anchors one segment of the zone circuit."
+    exits:
+      n: last_banner
+      s: cragwatch
+      w: needle_shelf
+
+  farseer_post:
+    title: "Farseer Post"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Farseer Post anchors one segment of the zone circuit."
+    exits:
+      e: stormbell_span
+      s: cloudbreak_lip
+
+  stormbell_span:
+    title: "Stormbell Span"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Stormbell Span anchors one segment of the zone circuit."
+    exits:
+      e: skycut_notch
+      s: thunderhead_path
+      w: farseer_post
+
+  skycut_notch:
+    title: "Skycut Notch"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Skycut Notch anchors one segment of the zone circuit."
+    exits:
+      e: highwind_chute
+      s: high_cairn
+      w: stormbell_span
+
+  highwind_chute:
+    title: "Highwind Chute"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Highwind Chute anchors one segment of the zone circuit."
+    exits:
+      e: broken_astrolabe
+      s: shearwall_turn
+      w: skycut_notch
+
+  broken_astrolabe:
+    title: "Broken Astrolabe"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Broken Astrolabe anchors one segment of the zone circuit."
+    exits:
+      e: frostspire_tread
+      s: raven_lift
+      w: highwind_chute
+
+  frostspire_tread:
+    title: "Frostspire Tread"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Frostspire Tread anchors one segment of the zone circuit."
+    exits:
+      e: goatking_step
+      s: hailgate
+      w: broken_astrolabe
+
+  goatking_step:
+    title: "Goatking Step"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Goatking Step anchors one segment of the zone circuit."
+    exits:
+      e: summit_ledger
+      s: split_ice_stair
+      w: frostspire_tread
+
+  summit_ledger:
+    title: "Summit Ledger"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Summit Ledger anchors one segment of the zone circuit."
+    exits:
+      e: last_banner
+      s: needle_shelf
+      w: goatking_step
+
+  last_banner:
+    title: "Last Banner"
+    description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Last Banner anchors one segment of the zone circuit."
+    exits:
+      s: white_echo
+      w: summit_ledger
