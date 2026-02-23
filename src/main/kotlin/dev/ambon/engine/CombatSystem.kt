@@ -41,6 +41,8 @@ class CombatSystem(
 
     fun isMobInCombat(mobId: MobId): Boolean = fightsByMob.containsKey(mobId)
 
+    fun currentTarget(sessionId: SessionId): MobId? = fightsByPlayer[sessionId]?.mobId
+
     fun syncPlayerDefense(sessionId: SessionId) {
         val player = players.get(sessionId) ?: return
         syncPlayerDefense(player)
@@ -310,6 +312,20 @@ class CombatSystem(
         killerSessionId: SessionId,
         mob: MobState,
     ) {
+        mobs.remove(mob.id)
+        onMobRemoved(mob.id)
+        items.dropMobItemsToRoom(mob.id, mob.roomId)
+        rollDrops(mob)
+        broadcastToRoom(mob.roomId, "${mob.name} dies.")
+        grantKillXp(killerSessionId, mob)
+    }
+
+    suspend fun handleSpellKill(
+        killerSessionId: SessionId,
+        mob: MobState,
+    ) {
+        val fight = fightsByMob[mob.id]
+        if (fight != null) endFight(fight)
         mobs.remove(mob.id)
         onMobRemoved(mob.id)
         items.dropMobItemsToRoom(mob.id, mob.roomId)

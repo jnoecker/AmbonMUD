@@ -201,4 +201,29 @@ class CommandParserTest {
         assertTrue(CommandParser.parse("kick") is Command.Invalid)
         assertTrue(CommandParser.parse("kick   ") is Command.Invalid)
     }
+
+    @Test
+    fun `parses cast with spell and target`() {
+        assertEquals(Command.Cast("fireball", "rat"), CommandParser.parse("cast fireball rat"))
+        assertEquals(Command.Cast("fireball", "rat"), CommandParser.parse("c fireball rat"))
+    }
+
+    @Test
+    fun `parses cast with spell only (no target)`() {
+        assertEquals(Command.Cast("heal", null), CommandParser.parse("cast heal"))
+        assertEquals(Command.Cast("heal", null), CommandParser.parse("c heal"))
+    }
+
+    @Test
+    fun `cast with no args returns Invalid`() {
+        assertTrue(CommandParser.parse("cast") is Command.Invalid)
+        assertTrue(CommandParser.parse("cast   ") is Command.Invalid)
+        assertTrue(CommandParser.parse("c") is Command.Unknown)
+    }
+
+    @Test
+    fun `parses spells and abilities`() {
+        assertEquals(Command.Spells, CommandParser.parse("spells"))
+        assertEquals(Command.Spells, CommandParser.parse("abilities"))
+    }
 }
