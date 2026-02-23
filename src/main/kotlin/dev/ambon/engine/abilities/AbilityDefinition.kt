@@ -1,7 +1,9 @@
 package dev.ambon.engine.abilities
 
 @JvmInline
-value class AbilityId(val value: String)
+value class AbilityId(
+    val value: String,
+)
 
 enum class TargetType {
     ENEMY,

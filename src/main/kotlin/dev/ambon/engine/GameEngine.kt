@@ -89,6 +89,7 @@ class GameEngine(
             onMobRemoved = mobSystem::onMobRemoved,
             progression = progression,
             metrics = metrics,
+            onLevelUp = { sid, level -> abilitySystem.syncAbilities(sid, level) },
         )
     private val regenSystem =
         RegenSystem(
@@ -104,10 +105,11 @@ class GameEngine(
             manaRegenAmount = engineConfig.regen.mana.regenAmount,
             metrics = metrics,
         )
-    private val abilityRegistry = AbilityRegistry().also { reg ->
-        AbilityRegistryLoader.load(engineConfig.abilities, reg)
-    }
-    private val abilitySystem =
+    private val abilityRegistry =
+        AbilityRegistry().also { reg ->
+            AbilityRegistryLoader.load(engineConfig.abilities, reg)
+        }
+    private val abilitySystem: AbilitySystem =
         AbilitySystem(
             players = players,
             mobs = mobs,

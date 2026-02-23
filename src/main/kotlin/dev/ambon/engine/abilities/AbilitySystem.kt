@@ -70,21 +70,23 @@ class AbilitySystem(
         // 4. Resolve target
         when (ability.targetType) {
             TargetType.ENEMY -> {
-                val keyword = targetKeyword
-                    ?: if (combat.isInCombat(sessionId)) {
-                        // Auto-target current combat mob
-                        null
-                    } else {
-                        return "Cast ${ability.displayName} on whom?"
-                    }
+                val keyword =
+                    targetKeyword
+                        ?: if (combat.isInCombat(sessionId)) {
+                            // Auto-target current combat mob
+                            null
+                        } else {
+                            return "Cast ${ability.displayName} on whom?"
+                        }
 
-                val mob = if (keyword != null) {
-                    findMobInRoom(player.roomId, keyword)
-                        ?: return "You don't see '$keyword' here."
-                } else {
-                    combat.currentTarget(sessionId)?.let { mobs.get(it) }
-                        ?: return "Cast ${ability.displayName} on whom?"
-                }
+                val mob =
+                    if (keyword != null) {
+                        findMobInRoom(player.roomId, keyword)
+                            ?: return "You don't see '$keyword' here."
+                    } else {
+                        combat.currentTarget(sessionId)?.let { mobs.get(it) }
+                            ?: return "Cast ${ability.displayName} on whom?"
+                    }
 
                 // 5. Deduct mana
                 player.mana -= ability.manaCost
@@ -95,7 +97,9 @@ class AbilitySystem(
                 }
 
                 // 7. Apply damage
-                val effect = ability.effect as AbilityEffect.DirectDamage
+                val effect =
+                    ability.effect as? AbilityEffect.DirectDamage
+                        ?: return "Spell misconfigured (expected damage effect)."
                 val damage = rollRange(effect.minDamage, effect.maxDamage)
                 // Spell damage bypasses armor
                 mob.hp = (mob.hp - damage).coerceAtLeast(0)
@@ -128,7 +132,9 @@ class AbilitySystem(
                 }
 
                 // 7. Apply heal
-                val effect = ability.effect as AbilityEffect.DirectHeal
+                val effect =
+                    ability.effect as? AbilityEffect.DirectHeal
+                        ?: return "Spell misconfigured (expected heal effect)."
                 val healAmount = rollRange(effect.minHeal, effect.maxHeal)
                 val before = player.hp
                 player.hp = (player.hp + healAmount).coerceAtMost(player.maxHp)

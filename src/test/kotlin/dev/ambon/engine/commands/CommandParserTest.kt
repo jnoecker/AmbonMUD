@@ -218,7 +218,7 @@ class CommandParserTest {
     fun `cast with no args returns Invalid`() {
         assertTrue(CommandParser.parse("cast") is Command.Invalid)
         assertTrue(CommandParser.parse("cast   ") is Command.Invalid)
-        assertTrue(CommandParser.parse("c") is Command.Unknown)
+        assertTrue(CommandParser.parse("c") is Command.Invalid) // "c" is a prefix for cast
     }
 
     @Test
