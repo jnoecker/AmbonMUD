@@ -126,8 +126,17 @@ class CommandRouterScoreTest {
     ) {
         val instance = ItemInstance(itemId, item)
         items.ensurePlayer(sessionId)
-        items.addRoomItem(dev.ambon.domain.ids.RoomId("test:room"), instance)
-        items.takeFromRoom(sessionId, dev.ambon.domain.ids.RoomId("test:room"), item.keyword)
+        items.addRoomItem(
+            dev.ambon.domain.ids
+                .RoomId("test:room"),
+            instance,
+        )
+        items.takeFromRoom(
+            sessionId,
+            dev.ambon.domain.ids
+                .RoomId("test:room"),
+            item.keyword,
+        )
         items.equipFromInventory(sessionId, item.keyword)
     }
 }
