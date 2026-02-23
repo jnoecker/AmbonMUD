@@ -9,8 +9,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import java.io.BufferedWriter
-import java.io.OutputStreamWriter
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -33,6 +31,9 @@ class NetworkSession(
     private val disconnected = AtomicBoolean(false)
     private var inboundBackpressureFailures = 0
 
+    private val terminalCaps = TerminalCapabilities()
+    private val outputLock = Any()
+
     fun start() {
         scope.launch(Dispatchers.IO) { readLoop() }
         scope.launch(Dispatchers.IO) { writeLoop() }
@@ -50,6 +51,7 @@ class NetworkSession(
             TelnetLineDecoder(
                 maxLineLen = maxLineLen,
                 maxNonPrintablePerLine = maxNonPrintablePerLine,
+                onControlEvent = ::onTelnetControlEvent,
             )
         try {
             log.debug { "Telnet session connected: sessionId=$sessionId address=${socket.remoteSocketAddress}" }
@@ -57,6 +59,8 @@ class NetworkSession(
             metrics.onTelnetConnected()
             val input = socket.getInputStream()
             val buf = ByteArray(4096)
+
+            sendInitialNegotiation()
 
             while (true) {
                 val n = input.read(buf)
@@ -89,12 +93,124 @@ class NetworkSession(
         }
     }
 
+    private fun sendInitialNegotiation() {
+        // Phase 1: request terminal type and window size.
+        sendTelnetCommand(TelnetProtocol.DO, TelnetProtocol.TTYPE)
+        sendTelnetCommand(TelnetProtocol.DO, TelnetProtocol.NAWS)
+    }
+
+    private fun onTelnetControlEvent(event: TelnetControlEvent) {
+        when (event) {
+            is TelnetControlEvent.Command -> Unit
+            is TelnetControlEvent.Negotiation -> handleTelnetNegotiation(event)
+            is TelnetControlEvent.Subnegotiation -> handleTelnetSubnegotiation(event)
+        }
+    }
+
+    private fun handleTelnetNegotiation(event: TelnetControlEvent.Negotiation) {
+        if (event.command == TelnetProtocol.WILL && event.option == TelnetProtocol.TTYPE) {
+            sendTelnetSubnegotiation(
+                option = TelnetProtocol.TTYPE,
+                payload = byteArrayOf(TelnetProtocol.TTYPE_SEND.toByte()),
+            )
+            return
+        }
+
+        if (event.command == TelnetProtocol.WONT && event.option == TelnetProtocol.TTYPE) {
+            terminalCaps.terminalType = null
+            return
+        }
+
+        if (event.command == TelnetProtocol.WILL && event.option == TelnetProtocol.NAWS) {
+            terminalCaps.nawsEnabled = true
+            return
+        }
+
+        if (event.command == TelnetProtocol.WONT && event.option == TelnetProtocol.NAWS) {
+            terminalCaps.nawsEnabled = false
+            terminalCaps.columns = null
+            terminalCaps.rows = null
+        }
+    }
+
+    private fun handleTelnetSubnegotiation(event: TelnetControlEvent.Subnegotiation) {
+        when (event.option) {
+            TelnetProtocol.TTYPE -> parseTerminalType(event.payload)
+            TelnetProtocol.NAWS -> parseWindowSize(event.payload)
+        }
+    }
+
+    private fun parseTerminalType(payload: ByteArray) {
+        if (payload.isEmpty()) return
+        if ((payload[0].toInt() and 0xFF) != TelnetProtocol.TTYPE_IS) return
+
+        val term =
+            payload
+                .drop(1)
+                .take(64)
+                .map { (it.toInt() and 0xFF).toChar() }
+                .joinToString(separator = "")
+                .trim()
+        if (term.isNotEmpty()) {
+            terminalCaps.terminalType = term
+            log.debug { "Telnet terminal type: sessionId=$sessionId term=$term" }
+        }
+    }
+
+    private fun parseWindowSize(payload: ByteArray) {
+        if (payload.size < 4) return
+
+        val width = ((payload[0].toInt() and 0xFF) shl 8) or (payload[1].toInt() and 0xFF)
+        val height = ((payload[2].toInt() and 0xFF) shl 8) or (payload[3].toInt() and 0xFF)
+        if (width == 0 || height == 0) return
+
+        terminalCaps.columns = width
+        terminalCaps.rows = height
+        log.debug { "Telnet window size: sessionId=$sessionId cols=$width rows=$height" }
+    }
+
+    private fun sendTelnetCommand(
+        command: Int,
+        option: Int,
+    ) {
+        val bytes = byteArrayOf(TelnetProtocol.IAC.toByte(), command.toByte(), option.toByte())
+        sendRaw(bytes)
+    }
+
+    private fun sendTelnetSubnegotiation(
+        option: Int,
+        payload: ByteArray,
+    ) {
+        val buffer = ByteArray(3 + payload.size + 2)
+        buffer[0] = TelnetProtocol.IAC.toByte()
+        buffer[1] = TelnetProtocol.SB.toByte()
+        buffer[2] = option.toByte()
+        payload.copyInto(buffer, destinationOffset = 3)
+        buffer[buffer.size - 2] = TelnetProtocol.IAC.toByte()
+        buffer[buffer.size - 1] = TelnetProtocol.SE.toByte()
+        sendRaw(buffer)
+    }
+
+    private fun sendRaw(bytes: ByteArray) {
+        try {
+            synchronized(outputLock) {
+                socket.getOutputStream().write(bytes)
+                socket.getOutputStream().flush()
+            }
+        } catch (t: Throwable) {
+            log.debug(t) { "Failed to send telnet negotiation frame: sessionId=$sessionId" }
+        }
+    }
+
     private suspend fun writeLoop() {
         try {
-            val writer = BufferedWriter(OutputStreamWriter(socket.getOutputStream(), Charsets.UTF_8))
+            val output = socket.getOutputStream()
             for (msg in outboundQueue) {
-                writer.write(msg)
-                writer.flush()
+                val bytes = msg.toByteArray(Charsets.UTF_8)
+                synchronized(outputLock) {
+                    output.write(bytes)
+                    output.flush()
+                }
                 onOutboundFrameWritten()
             }
         } catch (_: Throwable) {
@@ -126,4 +242,14 @@ class NetworkSession(
         }
         // Drop the line and keep the session open until the threshold is exceeded.
     }
+}
+
+private class TerminalCapabilities {
+    @Volatile var terminalType: String? = null
+
+    @Volatile var columns: Int? = null
+
+    @Volatile var rows: Int? = null
+
+    @Volatile var nawsEnabled: Boolean = false
 }
