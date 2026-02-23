@@ -136,6 +136,9 @@ data class SerializedPlayerState(
     val passwordHash: String,
     val createdEpochMs: Long,
     val lastSeenEpochMs: Long,
+    val mana: Int = 20,
+    val maxMana: Int = 20,
+    val baseMana: Int = 20,
     val inventoryItems: List<SerializedItem> = emptyList(),
     // slot name → item
     val equippedItems: Map<String, SerializedItem> = emptyMap(),
