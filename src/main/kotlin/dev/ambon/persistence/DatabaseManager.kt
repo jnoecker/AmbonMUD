@@ -6,7 +6,9 @@ import dev.ambon.config.DatabaseConfig
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 
-class DatabaseManager(private val config: DatabaseConfig) {
+class DatabaseManager(
+    private val config: DatabaseConfig,
+) {
     private val hikariDataSource: HikariDataSource
 
     val database: Database
@@ -25,7 +27,8 @@ class DatabaseManager(private val config: DatabaseConfig) {
     }
 
     fun migrate() {
-        Flyway.configure()
+        Flyway
+            .configure()
             .dataSource(hikariDataSource)
             .load()
             .migrate()

@@ -49,7 +49,12 @@ class RedisZoneRegistry(
         // In practice, the engine knows its own zones; callers should
         // call claimZones again to renew. This is a convenience for
         // the heartbeat loop.
-        val cursor = commands.scan(io.lettuce.core.ScanArgs.Builder.matches("$keyPrefix*").limit(100))
+        val cursor =
+            commands.scan(
+                io.lettuce.core.ScanArgs.Builder
+                    .matches("$keyPrefix*")
+                    .limit(100),
+            )
         for (key in cursor.keys) {
             val json = commands.get(key) ?: continue
             val addr =
@@ -67,7 +72,12 @@ class RedisZoneRegistry(
     override fun allAssignments(): Map<String, EngineAddress> {
         val commands = redis.commands ?: return emptyMap()
         val result = mutableMapOf<String, EngineAddress>()
-        val cursor = commands.scan(io.lettuce.core.ScanArgs.Builder.matches("$keyPrefix*").limit(1000))
+        val cursor =
+            commands.scan(
+                io.lettuce.core.ScanArgs.Builder
+                    .matches("$keyPrefix*")
+                    .limit(1000),
+            )
         for (key in cursor.keys) {
             val zone = key.removePrefix(keyPrefix)
             val json = commands.get(key) ?: continue

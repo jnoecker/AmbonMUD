@@ -9,10 +9,11 @@ import io.ktor.http.ContentType
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.install
-import io.ktor.server.engine.ApplicationEngine
+import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.netty.Netty
+import io.ktor.server.netty.NettyApplicationEngine
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -48,7 +49,7 @@ class KtorWebSocketTransport(
     private val metricsEndpoint: String = "/metrics",
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) : Transport {
-    private var engine: ApplicationEngine? = null
+    private var engine: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
 
     override suspend fun start() {
         engine =

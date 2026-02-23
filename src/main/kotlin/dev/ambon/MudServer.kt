@@ -134,7 +134,8 @@ class MudServer(
     private val playerRepo = coalescingRepo ?: l2Repo
 
     private val instanceId: String =
-        config.redis.bus.instanceId.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+        config.redis.bus.instanceId
+            .takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
 
     private val inbound: InboundBus =
         if (config.redis.enabled && config.redis.bus.enabled && redisManager != null) {
@@ -171,7 +172,11 @@ class MudServer(
     private val progression = PlayerProgression(config.progression)
     private val shardingEnabled = config.sharding.enabled
     private val engineId = config.sharding.engineId
-    private val configuredShardedZones = config.sharding.zones.map(String::trim).filter { it.isNotEmpty() }.toSet()
+    private val configuredShardedZones =
+        config.sharding.zones
+            .map(String::trim)
+            .filter { it.isNotEmpty() }
+            .toSet()
     private val zoneFilter =
         if (shardingEnabled && configuredShardedZones.isNotEmpty()) {
             configuredShardedZones
@@ -235,7 +240,10 @@ class MudServer(
                                 assignment.engineId to
                                     Pair(
                                         EngineAddress(assignment.engineId, assignment.host, assignment.port),
-                                        assignment.zones.map(String::trim).filter { it.isNotEmpty() }.toSet(),
+                                        assignment.zones
+                                            .map(String::trim)
+                                            .filter { it.isNotEmpty() }
+                                            .toSet(),
                                     )
                             }
                         }
@@ -351,7 +359,9 @@ class MudServer(
                     interEngineBus = interEngineBus,
                     engineId = engineId,
                     peerEngineCount = {
-                        zoneRegistry?.allAssignments()?.values
+                        zoneRegistry
+                            ?.allAssignments()
+                            ?.values
                             ?.map { it.engineId }
                             ?.filter { it != engineId }
                             ?.toSet()
@@ -425,7 +435,13 @@ class MudServer(
     private fun bindWorldStateGauges() {
         gameMetrics.bindPlayerRegistry { players.allPlayers().size }
         gameMetrics.bindMobRegistry { mobs.all().size }
-        gameMetrics.bindRoomsOccupied { players.allPlayers().map { it.roomId }.toSet().size }
+        gameMetrics.bindRoomsOccupied {
+            players
+                .allPlayers()
+                .map { it.roomId }
+                .toSet()
+                .size
+        }
     }
 
     suspend fun awaitShutdown() = shutdownSignal.await()

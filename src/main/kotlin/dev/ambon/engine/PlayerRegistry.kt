@@ -19,7 +19,9 @@ sealed interface LoginResult {
 
     data object WrongPassword : LoginResult
 
-    data class Takeover(val oldSessionId: SessionId) : LoginResult
+    data class Takeover(
+        val oldSessionId: SessionId,
+    ) : LoginResult
 }
 
 sealed interface CreateResult {

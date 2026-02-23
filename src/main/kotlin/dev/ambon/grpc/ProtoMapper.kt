@@ -23,32 +23,35 @@ import dev.ambon.grpc.proto.ShowLoginScreenProto
 fun InboundEvent.toProto(): InboundEventProto =
     when (this) {
         is InboundEvent.Connected ->
-            InboundEventProto.newBuilder()
+            InboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setConnected(
-                    ConnectedProto.newBuilder()
+                    ConnectedProto
+                        .newBuilder()
                         .setDefaultAnsiEnabled(defaultAnsiEnabled)
                         .build(),
-                )
-                .build()
+                ).build()
         is InboundEvent.Disconnected ->
-            InboundEventProto.newBuilder()
+            InboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setDisconnected(
-                    DisconnectedProto.newBuilder()
+                    DisconnectedProto
+                        .newBuilder()
                         .setReason(reason)
                         .build(),
-                )
-                .build()
+                ).build()
         is InboundEvent.LineReceived ->
-            InboundEventProto.newBuilder()
+            InboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setLineReceived(
-                    LineReceivedProto.newBuilder()
+                    LineReceivedProto
+                        .newBuilder()
                         .setLine(line)
                         .build(),
-                )
-                .build()
+                ).build()
     }
 
 /** Converts [InboundEventProto] → domain [InboundEvent], or null if the oneof is not set. */
@@ -78,61 +81,71 @@ fun InboundEventProto.toDomain(): InboundEvent? {
 fun OutboundEvent.toProto(): OutboundEventProto =
     when (this) {
         is OutboundEvent.SendText ->
-            OutboundEventProto.newBuilder()
+            OutboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setSendText(SendTextProto.newBuilder().setText(text).build())
                 .build()
         is OutboundEvent.SendInfo ->
-            OutboundEventProto.newBuilder()
+            OutboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setSendInfo(SendInfoProto.newBuilder().setText(text).build())
                 .build()
         is OutboundEvent.SendError ->
-            OutboundEventProto.newBuilder()
+            OutboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setSendError(SendErrorProto.newBuilder().setText(text).build())
                 .build()
         is OutboundEvent.SendPrompt ->
-            OutboundEventProto.newBuilder()
+            OutboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setSendPrompt(SendPromptProto.getDefaultInstance())
                 .build()
         is OutboundEvent.ShowLoginScreen ->
-            OutboundEventProto.newBuilder()
+            OutboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setShowLoginScreen(ShowLoginScreenProto.getDefaultInstance())
                 .build()
         is OutboundEvent.SetAnsi ->
-            OutboundEventProto.newBuilder()
+            OutboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setSetAnsi(SetAnsiProto.newBuilder().setEnabled(enabled).build())
                 .build()
         is OutboundEvent.Close ->
-            OutboundEventProto.newBuilder()
+            OutboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setClose(CloseProto.newBuilder().setReason(reason).build())
                 .build()
         is OutboundEvent.ClearScreen ->
-            OutboundEventProto.newBuilder()
+            OutboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setClearScreen(ClearScreenProto.getDefaultInstance())
                 .build()
         is OutboundEvent.ShowAnsiDemo ->
-            OutboundEventProto.newBuilder()
+            OutboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setShowAnsiDemo(ShowAnsiDemoProto.getDefaultInstance())
                 .build()
         is OutboundEvent.SessionRedirect ->
-            OutboundEventProto.newBuilder()
+            OutboundEventProto
+                .newBuilder()
                 .setSessionId(sessionId.value)
                 .setSessionRedirect(
-                    SessionRedirectProto.newBuilder()
+                    SessionRedirectProto
+                        .newBuilder()
                         .setNewEngineId(newEngineId)
                         .setNewEngineHost(newEngineHost)
                         .setNewEnginePort(newEnginePort)
                         .build(),
-                )
-                .build()
+                ).build()
     }
 
 /** Converts [OutboundEventProto] → domain [OutboundEvent], or null if the oneof is not set. */

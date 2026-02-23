@@ -80,7 +80,8 @@ class GatewayServer(
         if (prometheusRegistry != null) GameMetrics(prometheusRegistry) else GameMetrics.noop()
 
     private val instanceId: String =
-        config.redis.bus.instanceId.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+        config.redis.bus.instanceId
+            .takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
 
     private val redisManager: RedisConnectionManager? =
         if (config.redis.enabled) RedisConnectionManager(config.redis) else null

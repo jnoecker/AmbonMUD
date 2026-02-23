@@ -60,7 +60,8 @@ class GameMetrics(
         Counter.builder("grpc_outbound_control_plane_fallback_total").register(registry)
 
     val engineTickTimer: Timer =
-        Timer.builder("engine_tick_duration_seconds")
+        Timer
+            .builder("engine_tick_duration_seconds")
             .publishPercentileHistogram()
             .register(registry)
     private val engineTicksCounter = Counter.builder("engine_ticks_total").register(registry)
@@ -69,16 +70,19 @@ class GameMetrics(
         Counter.builder("engine_inbound_events_processed_total").register(registry)
 
     val mobSystemTickTimer: Timer =
-        Timer.builder("mob_system_tick_duration_seconds")
+        Timer
+            .builder("mob_system_tick_duration_seconds")
             .publishPercentileHistogram()
             .register(registry)
     val combatSystemTickTimer: Timer =
-        Timer.builder("combat_system_tick_duration_seconds")
+        Timer
+            .builder("combat_system_tick_duration_seconds")
             .publishPercentileHistogram()
             .register(registry)
     val regenTickTimer: Timer = Timer.builder("regen_tick_duration_seconds").register(registry)
     val schedulerRunDueTimer: Timer =
-        Timer.builder("scheduler_run_due_duration_seconds")
+        Timer
+            .builder("scheduler_run_due_duration_seconds")
             .publishPercentileHistogram()
             .register(registry)
 

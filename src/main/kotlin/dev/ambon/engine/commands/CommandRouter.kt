@@ -537,10 +537,15 @@ class CommandRouter(
                 val newMobId = MobId("$zone:${local}_adm_$seq")
                 mobs.upsert(
                     MobState(
-                        id = newMobId, name = template.name, roomId = me.roomId,
-                        hp = template.maxHp, maxHp = template.maxHp,
-                        minDamage = template.minDamage, maxDamage = template.maxDamage,
-                        armor = template.armor, xpReward = template.xpReward,
+                        id = newMobId,
+                        name = template.name,
+                        roomId = me.roomId,
+                        hp = template.maxHp,
+                        maxHp = template.maxHp,
+                        minDamage = template.minDamage,
+                        maxDamage = template.maxDamage,
+                        armor = template.armor,
+                        xpReward = template.xpReward,
                         drops = template.drops,
                     ),
                 )
@@ -662,8 +667,8 @@ class CommandRouter(
     private fun resolveGotoArg(
         arg: String,
         currentZone: String,
-    ): RoomId? {
-        return if (':' in arg) {
+    ): RoomId? =
+        if (':' in arg) {
             val zone = arg.substringBefore(':').trim()
             val local = arg.substringAfter(':').trim()
             val effectiveZone = zone.ifEmpty { currentZone }
@@ -680,7 +685,6 @@ class CommandRouter(
         } else {
             runCatching { RoomId("$currentZone:$arg") }.getOrNull()
         }
-    }
 
     private fun findMobTemplate(arg: String): MobSpawn? {
         val trimmed = arg.trim()
@@ -688,7 +692,11 @@ class CommandRouter(
             world.mobSpawns.firstOrNull { it.id.value.equals(trimmed, ignoreCase = true) }
         } else {
             val lowerLocal = trimmed.lowercase()
-            world.mobSpawns.firstOrNull { it.id.value.substringAfter(':', it.id.value).lowercase() == lowerLocal }
+            world.mobSpawns.firstOrNull {
+                it.id.value
+                    .substringAfter(':', it.id.value)
+                    .lowercase() == lowerLocal
+            }
         }
     }
 

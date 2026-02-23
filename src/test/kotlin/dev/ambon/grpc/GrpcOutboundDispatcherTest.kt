@@ -51,7 +51,8 @@ class GrpcOutboundDispatcherTest {
             )
 
         grpcServer =
-            InProcessServerBuilder.forName(serverName)
+            InProcessServerBuilder
+                .forName(serverName)
                 .directExecutor()
                 .addService(serviceImpl)
                 .build()
@@ -71,25 +72,31 @@ class GrpcOutboundDispatcherTest {
     fun `OutboundEvent is delivered to the correct gateway stream`() =
         runBlocking {
             val grpcChannel =
-                InProcessChannelBuilder.forName(serverName)
+                InProcessChannelBuilder
+                    .forName(serverName)
                     .directExecutor()
                     .build()
-            val stub = dev.ambon.grpc.proto.EngineServiceGrpcKt.EngineServiceCoroutineStub(grpcChannel)
+            val stub =
+                dev.ambon.grpc.proto.EngineServiceGrpcKt
+                    .EngineServiceCoroutineStub(grpcChannel)
             val sid = SessionId(10L)
             val receivedProtos = Channel<OutboundEventProto>(10)
 
             // Gateway stream: send Connected then wait for exactly 1 outbound event.
             val gatewayJob =
                 launch {
-                    stub.eventStream(
-                        flow {
-                            emit(InboundEvent.Connected(sessionId = sid).toProto())
-                            // Keep the inbound flow open long enough for the outbound event to arrive.
-                            delay(2000)
-                        },
-                    ).take(1).toList().forEach { proto ->
-                        receivedProtos.trySend(proto)
-                    }
+                    stub
+                        .eventStream(
+                            flow {
+                                emit(InboundEvent.Connected(sessionId = sid).toProto())
+                                // Keep the inbound flow open long enough for the outbound event to arrive.
+                                delay(2000)
+                            },
+                        ).take(1)
+                        .toList()
+                        .forEach { proto ->
+                            receivedProtos.trySend(proto)
+                        }
                 }
 
             // Wait for the Connected event to be processed and the session registered.

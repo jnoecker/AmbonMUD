@@ -91,7 +91,8 @@ class GatewayEngineIntegrationTest {
             )
 
         grpcServer =
-            InProcessServerBuilder.forName(serverName)
+            InProcessServerBuilder
+                .forName(serverName)
                 .directExecutor()
                 .addService(serviceImpl)
                 .build()
@@ -141,10 +142,13 @@ class GatewayEngineIntegrationTest {
     fun `connect login say quit flows through gRPC`() =
         runBlocking {
             val grpcChannel =
-                InProcessChannelBuilder.forName(serverName)
+                InProcessChannelBuilder
+                    .forName(serverName)
                     .directExecutor()
                     .build()
-            val stub = dev.ambon.grpc.proto.EngineServiceGrpcKt.EngineServiceCoroutineStub(grpcChannel)
+            val stub =
+                dev.ambon.grpc.proto.EngineServiceGrpcKt
+                    .EngineServiceCoroutineStub(grpcChannel)
             val sid = SessionId(1L)
 
             val received = Channel<OutboundEventProto>(Channel.UNLIMITED)
@@ -152,24 +156,25 @@ class GatewayEngineIntegrationTest {
             // Gateway stream: emit inbound events then keep stream open for responses.
             val gatewayJob =
                 launch {
-                    stub.eventStream(
-                        flow {
-                            emit(InboundEvent.Connected(sessionId = sid, defaultAnsiEnabled = false).toProto())
-                            delay(50)
-                            emit(InboundEvent.LineReceived(sessionId = sid, line = "Alice").toProto())
-                            delay(50)
-                            emit(InboundEvent.LineReceived(sessionId = sid, line = "yes").toProto())
-                            delay(50)
-                            emit(InboundEvent.LineReceived(sessionId = sid, line = "password").toProto())
-                            delay(100)
-                            emit(InboundEvent.LineReceived(sessionId = sid, line = "say Hello world!").toProto())
-                            delay(50)
-                            emit(InboundEvent.LineReceived(sessionId = sid, line = "quit").toProto())
-                            delay(500)
-                        },
-                    ).collect { proto ->
-                        received.trySend(proto)
-                    }
+                    stub
+                        .eventStream(
+                            flow {
+                                emit(InboundEvent.Connected(sessionId = sid, defaultAnsiEnabled = false).toProto())
+                                delay(50)
+                                emit(InboundEvent.LineReceived(sessionId = sid, line = "Alice").toProto())
+                                delay(50)
+                                emit(InboundEvent.LineReceived(sessionId = sid, line = "yes").toProto())
+                                delay(50)
+                                emit(InboundEvent.LineReceived(sessionId = sid, line = "password").toProto())
+                                delay(100)
+                                emit(InboundEvent.LineReceived(sessionId = sid, line = "say Hello world!").toProto())
+                                delay(50)
+                                emit(InboundEvent.LineReceived(sessionId = sid, line = "quit").toProto())
+                                delay(500)
+                            },
+                        ).collect { proto ->
+                            received.trySend(proto)
+                        }
                 }
 
             // Wait for the full flow to complete (or timeout after 5 seconds).
@@ -289,11 +294,13 @@ class GatewayEngineIntegrationTest {
             val busScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
             try {
                 val grpcChannel =
-                    InProcessChannelBuilder.forName(serverName)
+                    InProcessChannelBuilder
+                        .forName(serverName)
                         .directExecutor()
                         .build()
                 val stub =
-                    dev.ambon.grpc.proto.EngineServiceGrpcKt.EngineServiceCoroutineStub(grpcChannel)
+                    dev.ambon.grpc.proto.EngineServiceGrpcKt
+                        .EngineServiceCoroutineStub(grpcChannel)
                 val sid = SessionId(2L)
                 val failureLatch = Channel<Throwable>(1)
                 val delegate = LocalOutboundBus(capacity = 1_000)
@@ -337,7 +344,8 @@ class GatewayEngineIntegrationTest {
 
                 // Restart the gRPC server with the same in-process name.
                 newGrpcServer =
-                    InProcessServerBuilder.forName(serverName)
+                    InProcessServerBuilder
+                        .forName(serverName)
                         .directExecutor()
                         .addService(serviceImpl)
                         .build()

@@ -38,7 +38,9 @@ class ProtoMapperTest {
 
     @Test
     fun `Empty InboundEventProto toDomain returns null`() {
-        val proto = dev.ambon.grpc.proto.InboundEventProto.getDefaultInstance()
+        val proto =
+            dev.ambon.grpc.proto.InboundEventProto
+                .getDefaultInstance()
         assertNull(proto.toDomain())
     }
 
@@ -118,7 +120,9 @@ class ProtoMapperTest {
 
     @Test
     fun `Empty OutboundEventProto toDomain returns null`() {
-        val proto = dev.ambon.grpc.proto.OutboundEventProto.getDefaultInstance()
+        val proto =
+            dev.ambon.grpc.proto.OutboundEventProto
+                .getDefaultInstance()
         assertNull(proto.toDomain())
     }
 

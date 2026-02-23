@@ -29,7 +29,10 @@ class MetricsEndpointTest {
                     ambonMUDWebModule(
                         inbound = inbound,
                         outboundRouter = outboundRouter,
-                        sessionIdFactory = { dev.ambon.domain.ids.SessionId(1) },
+                        sessionIdFactory = {
+                            dev.ambon.domain.ids
+                                .SessionId(1)
+                        },
                         prometheusRegistry = prometheusRegistry,
                         metricsEndpoint = "/metrics",
                     )
@@ -61,7 +64,10 @@ class MetricsEndpointTest {
                     ambonMUDWebModule(
                         inbound = inbound,
                         outboundRouter = outboundRouter,
-                        sessionIdFactory = { dev.ambon.domain.ids.SessionId(1) },
+                        sessionIdFactory = {
+                            dev.ambon.domain.ids
+                                .SessionId(1)
+                        },
                         prometheusRegistry = null,
                     )
                 }
