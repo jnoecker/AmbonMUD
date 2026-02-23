@@ -14,9 +14,13 @@ rooms:
 
   blank_arches:
     title: "Blank Arches"
-    description: "Unkeyed archways stand here like paused sentences. Their surfaces ripple faintly, showing nothing but distant starlight. Someone has chalked labels beneath them: 'COMING SOON.'"
+    description: "Unkeyed archways stand here like paused sentences. New chalkwork now marks several passages for low-rank adventurers, each arch pulsing with a different color of mist."
     exits:
       e: wayfinder_gallery
+      n: low_training_marsh:reedwalk_landing
+      s: low_training_highlands:switchback_foot
+      u: low_training_mines:orelift_station
+      d: low_training_barrens:windcut_gate
 
   wayfinder_gallery:
     title: "Wayfinder Gallery"

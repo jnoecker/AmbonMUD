@@ -1,0 +1,1167 @@
+zone: low_training_barrens
+lifespan: 20
+startRoom: windcut_gate
+
+mobs:
+  dustback_rat_01:
+    name: "a dustback rat"
+    room: windcut_gate
+    tier: weak
+    level: 2
+
+  thorn_jackal_02:
+    name: "a thorn jackal"
+    room: cracked_causeway
+    tier: weak
+    level: 3
+
+  cinder_scout_03:
+    name: "a cinder scout"
+    room: thorn_scrub
+    tier: weak
+    level: 2
+
+  salt_skulk_04:
+    name: "a salt skulk"
+    room: watch_fire
+    tier: weak
+    level: 3
+
+  ash_raider_05:
+    name: "an ash raider"
+    room: bonewash_trail
+    tier: weak
+    level: 2
+
+  ragged_vulture_06:
+    name: "a ragged vulture"
+    room: saltflats_rim
+    tier: weak
+    level: 3
+
+  sunscar_crawler_07:
+    name: "a sunscar crawler"
+    room: jackal_run
+    tier: weak
+    level: 2
+
+  hollow_runner_08:
+    name: "a hollow runner"
+    room: cinder_marker
+    tier: weak
+    level: 3
+    drops:
+      - itemId: trophy_08
+        chance: 0.25
+
+  flint_hunter_09:
+    name: "a flint hunter"
+    room: split_badlands
+    tier: weak
+    level: 2
+
+  glasswind_marauder_10:
+    name: "a glasswind marauder"
+    room: dry_well
+    tier: weak
+    level: 4
+    drops:
+      - itemId: trophy_10
+        chance: 0.35
+
+  dustback_rat_11:
+    name: "a dustback rat"
+    room: flint_ledge
+    tier: weak
+    level: 3
+
+  thorn_jackal_12:
+    name: "a thorn jackal"
+    room: windscar_notch
+    tier: standard
+    level: 4
+    drops:
+      - itemId: trophy_12
+        chance: 0.35
+
+  cinder_scout_13:
+    name: "a cinder scout"
+    room: raptor_post
+    tier: weak
+    level: 3
+
+  salt_skulk_14:
+    name: "a salt skulk"
+    room: ash_spur
+    tier: weak
+    level: 4
+    drops:
+      - itemId: trophy_02
+        chance: 0.35
+
+  ash_raider_15:
+    name: "an ash raider"
+    room: scavenger_haul
+    tier: weak
+    level: 3
+
+  ragged_vulture_16:
+    name: "a ragged vulture"
+    room: shattered_span
+    tier: standard
+    level: 4
+    drops:
+      - itemId: trophy_04
+        chance: 0.35
+
+  sunscar_crawler_17:
+    name: "a sunscar crawler"
+    room: low_bluff
+    tier: weak
+    level: 3
+
+  hollow_runner_18:
+    name: "a hollow runner"
+    room: ember_ditch
+    tier: weak
+    level: 4
+    drops:
+      - itemId: trophy_06
+        chance: 0.35
+
+  flint_hunter_19:
+    name: "a flint hunter"
+    room: hornet_scrub
+    tier: standard
+    level: 4
+
+  glasswind_marauder_20:
+    name: "a glasswind marauder"
+    room: dustbowl_hollow
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_08
+        chance: 0.50
+
+  dustback_rat_21:
+    name: "a dustback rat"
+    room: cairn_turn
+    tier: standard
+    level: 4
+
+  thorn_jackal_22:
+    name: "a thorn jackal"
+    room: storm_drain
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_10
+        chance: 0.50
+
+  cinder_scout_23:
+    name: "a cinder scout"
+    room: ridge_marker
+    tier: standard
+    level: 4
+
+  salt_skulk_24:
+    name: "a salt skulk"
+    room: deadfall_gully
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_12
+        chance: 0.50
+
+  ash_raider_25:
+    name: "an ash raider"
+    room: sunbleach_step
+    tier: standard
+    level: 4
+
+  ragged_vulture_26:
+    name: "a ragged vulture"
+    room: brittle_ravine
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_02
+        chance: 0.50
+
+  sunscar_crawler_27:
+    name: "a sunscar crawler"
+    room: long_scree
+    tier: standard
+    level: 4
+
+  hollow_runner_28:
+    name: "a hollow runner"
+    room: hollow_watch
+    tier: standard
+    level: 6
+    drops:
+      - itemId: trophy_04
+        chance: 0.70
+
+  flint_hunter_29:
+    name: "a flint hunter"
+    room: vulture_climb
+    tier: standard
+    level: 5
+
+  glasswind_marauder_30:
+    name: "a glasswind marauder"
+    room: red_mesa_edge
+    tier: elite
+    level: 6
+    drops:
+      - itemId: trophy_06
+        chance: 0.80
+
+  dustback_rat_31:
+    name: "a dustback rat"
+    room: flayed_track
+    tier: standard
+    level: 5
+
+  thorn_jackal_32:
+    name: "a thorn jackal"
+    room: char_pillar
+    tier: standard
+    level: 6
+    drops:
+      - itemId: trophy_08
+        chance: 0.70
+
+  cinder_scout_33:
+    name: "a cinder scout"
+    room: sandspine_run
+    tier: elite
+    level: 5
+
+  salt_skulk_34:
+    name: "a salt skulk"
+    room: husk_basin
+    tier: standard
+    level: 6
+    drops:
+      - itemId: trophy_10
+        chance: 0.70
+
+  ash_raider_35:
+    name: "an ash raider"
+    room: dunehook_cross
+    tier: standard
+    level: 5
+
+  ragged_vulture_36:
+    name: "a ragged vulture"
+    room: kestrel_pit
+    tier: elite
+    level: 6
+    drops:
+      - itemId: trophy_12
+        chance: 0.80
+
+  sunscar_crawler_37:
+    name: "a sunscar crawler"
+    room: chalk_spur
+    tier: elite
+    level: 6
+
+  hollow_runner_38:
+    name: "a hollow runner"
+    room: dead_heliograph
+    tier: elite
+    level: 7
+    drops:
+      - itemId: trophy_02
+        chance: 1.0
+
+  flint_hunter_39:
+    name: "a flint hunter"
+    room: glasswind_walk
+    tier: elite
+    level: 8
+
+  glasswind_marauder_40:
+    name: "a glasswind marauder"
+    room: razorwash
+    tier: elite
+    level: 6
+    drops:
+      - itemId: trophy_04
+        chance: 0.85
+
+items:
+  gear_01:
+    displayName: "a stitched club"
+    keyword: "club"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
+    slot: hand
+    damage: 2
+    room: windcut_gate
+
+  gear_02:
+    displayName: "a sunbaked cloak"
+    keyword: "cloak"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
+    slot: body
+    armor: 2
+    room: cracked_causeway
+
+  gear_03:
+    displayName: "a thornbound knife"
+    keyword: "knife"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
+    slot: head
+    armor: 1
+    room: thorn_scrub
+
+  gear_04:
+    displayName: "a ashcoated mantle"
+    keyword: "mantle"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
+    slot: hand
+    damage: 2
+    room: watch_fire
+
+  gear_05:
+    displayName: "a flinted helm"
+    keyword: "helm"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
+    slot: body
+    armor: 1
+    room: bonewash_trail
+
+  gear_06:
+    displayName: "a windscarred bracer"
+    keyword: "bracer"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
+    slot: head
+    armor: 2
+    room: saltflats_rim
+
+  gear_07:
+    displayName: "a dustproof sling"
+    keyword: "sling"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
+    slot: hand
+    damage: 2
+    room: jackal_run
+
+  gear_08:
+    displayName: "a roughhide mail"
+    keyword: "mail"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
+    slot: body
+    armor: 2
+    room: cinder_marker
+
+  gear_09:
+    displayName: "a cinderwoven blade"
+    keyword: "blade"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
+    slot: head
+    armor: 1
+    room: split_badlands
+
+  gear_10:
+    displayName: "a salted vest"
+    keyword: "vest"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
+    slot: hand
+    damage: 3
+    room: dry_well
+
+  gear_11:
+    displayName: "a stitched club"
+    keyword: "club"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
+    slot: body
+    armor: 2
+    room: flint_ledge
+
+  gear_12:
+    displayName: "a sunbaked cloak"
+    keyword: "cloak"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
+    slot: head
+    armor: 3
+    room: windscar_notch
+
+  gear_13:
+    displayName: "a thornbound knife"
+    keyword: "knife"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
+    slot: hand
+    damage: 3
+    room: raptor_post
+
+  gear_14:
+    displayName: "a ashcoated mantle"
+    keyword: "mantle"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
+    slot: body
+    armor: 3
+    room: ash_spur
+
+  gear_15:
+    displayName: "a flinted helm"
+    keyword: "helm"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
+    slot: head
+    armor: 2
+    room: scavenger_haul
+
+  gear_16:
+    displayName: "a windscarred bracer"
+    keyword: "bracer"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
+    slot: hand
+    damage: 3
+    room: shattered_span
+
+  gear_17:
+    displayName: "a dustproof sling"
+    keyword: "sling"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
+    slot: body
+    armor: 2
+    room: low_bluff
+
+  gear_18:
+    displayName: "a roughhide mail"
+    keyword: "mail"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
+    slot: head
+    armor: 3
+    room: ember_ditch
+
+  gear_19:
+    displayName: "a cinderwoven blade"
+    keyword: "blade"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
+    slot: hand
+    damage: 4
+    room: hornet_scrub
+
+  gear_20:
+    displayName: "a salted vest"
+    keyword: "vest"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: dustbowl_hollow
+
+  gear_21:
+    displayName: "a stitched club"
+    keyword: "club"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
+    slot: head
+    armor: 3
+    constitution: 1
+    room: cairn_turn
+
+  gear_22:
+    displayName: "a sunbaked cloak"
+    keyword: "cloak"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
+    slot: hand
+    damage: 4
+    room: storm_drain
+
+  gear_23:
+    displayName: "a thornbound knife"
+    keyword: "knife"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
+    slot: body
+    armor: 3
+    constitution: 1
+    room: ridge_marker
+
+  gear_24:
+    displayName: "a ashcoated mantle"
+    keyword: "mantle"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
+    slot: head
+    armor: 4
+    constitution: 1
+    room: deadfall_gully
+
+  gear_25:
+    displayName: "a flinted helm"
+    keyword: "helm"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
+    slot: hand
+    damage: 4
+    room: sunbleach_step
+
+  gear_26:
+    displayName: "a windscarred bracer"
+    keyword: "bracer"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: brittle_ravine
+
+  gear_27:
+    displayName: "a dustproof sling"
+    keyword: "sling"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
+    slot: head
+    armor: 3
+    constitution: 1
+    room: long_scree
+
+  gear_28:
+    displayName: "a roughhide mail"
+    keyword: "mail"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
+    slot: hand
+    damage: 5
+    room: hollow_watch
+
+  gear_29:
+    displayName: "a cinderwoven blade"
+    keyword: "blade"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: vulture_climb
+
+  gear_30:
+    displayName: "a salted vest"
+    keyword: "vest"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
+    slot: head
+    armor: 5
+    constitution: 1
+    room: red_mesa_edge
+
+  gear_31:
+    displayName: "a stitched club"
+    keyword: "club"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
+    slot: hand
+    damage: 5
+    room: flayed_track
+
+  gear_32:
+    displayName: "a sunbaked cloak"
+    keyword: "cloak"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
+    slot: body
+    armor: 5
+    constitution: 1
+    room: char_pillar
+
+  gear_33:
+    displayName: "a thornbound knife"
+    keyword: "knife"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
+    slot: head
+    armor: 4
+    constitution: 1
+    room: sandspine_run
+
+  gear_34:
+    displayName: "a ashcoated mantle"
+    keyword: "mantle"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
+    slot: hand
+    damage: 5
+    room: husk_basin
+
+  gear_35:
+    displayName: "a flinted helm"
+    keyword: "helm"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: dunehook_cross
+
+  gear_36:
+    displayName: "a windscarred bracer"
+    keyword: "bracer"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
+    slot: head
+    armor: 5
+    constitution: 1
+    room: kestrel_pit
+
+  gear_37:
+    displayName: "a dustproof sling"
+    keyword: "sling"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-5 circuit in this zone."
+    slot: hand
+    damage: 6
+    room: chalk_spur
+
+  gear_38:
+    displayName: "a roughhide mail"
+    keyword: "mail"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-5 circuit in this zone."
+    slot: body
+    armor: 6
+    constitution: 2
+    room: dead_heliograph
+
+  gear_39:
+    displayName: "a cinderwoven blade"
+    keyword: "blade"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-5 circuit in this zone."
+    slot: head
+    armor: 5
+    constitution: 2
+    room: glasswind_walk
+
+  gear_40:
+    displayName: "a salted vest"
+    keyword: "vest"
+    description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-5 circuit in this zone."
+    slot: hand
+    damage: 6
+    room: razorwash
+
+  ration_01:
+    displayName: "a field ration pack #1"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 10
+      grantXp: 15
+    room: kestrel_pit
+
+  ration_02:
+    displayName: "a field ration pack #2"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 2
+    onUse:
+      healHp: 12
+      grantXp: 20
+    room: chalk_spur
+
+  ration_03:
+    displayName: "a field ration pack #3"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 14
+      grantXp: 25
+    room: dead_heliograph
+
+  ration_04:
+    displayName: "a field ration pack #4"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 2
+    onUse:
+      healHp: 16
+      grantXp: 30
+    room: glasswind_walk
+
+  ration_05:
+    displayName: "a field ration pack #5"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 18
+      grantXp: 35
+    room: razorwash
+
+  ration_06:
+    displayName: "a field ration pack #6"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 2
+    onUse:
+      healHp: 20
+      grantXp: 40
+    room: shiver_flats
+
+  trophy_01:
+    displayName: "a scarred token"
+    keyword: "token"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 5
+
+  trophy_02:
+    displayName: "a burnished badge"
+    keyword: "badge"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 4
+    constitution: 1
+
+  trophy_03:
+    displayName: "a gilded fetish"
+    keyword: "fetish"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 3
+    constitution: 1
+
+  trophy_04:
+    displayName: "a weathered medallion"
+    keyword: "medallion"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 6
+
+  trophy_05:
+    displayName: "a etched charm"
+    keyword: "charm"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 4
+    constitution: 1
+
+  trophy_06:
+    displayName: "a jagged seal"
+    keyword: "seal"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 5
+    constitution: 1
+
+  trophy_07:
+    displayName: "a obsidian amulet"
+    keyword: "amulet"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 6
+
+  trophy_08:
+    displayName: "a hushed idol"
+    keyword: "idol"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 5
+    constitution: 1
+
+  trophy_09:
+    displayName: "a storm crest"
+    keyword: "crest"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 5
+    constitution: 2
+
+  trophy_10:
+    displayName: "a bloodred mark"
+    keyword: "mark"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 8
+
+  trophy_11:
+    displayName: "a scarred token"
+    keyword: "token"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 5
+    constitution: 2
+
+  trophy_12:
+    displayName: "a burnished badge"
+    keyword: "badge"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 6
+    constitution: 2
+
+rooms:
+  windcut_gate:
+    title: "Windcut Gate"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Windcut Gate anchors one segment of the zone circuit."
+    exits:
+      n: dry_well
+      e: cracked_causeway
+      w: ambon_hub:blank_arches
+
+  cracked_causeway:
+    title: "Cracked Causeway"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Cracked Causeway anchors one segment of the zone circuit."
+    exits:
+      n: flint_ledge
+      e: thorn_scrub
+      w: windcut_gate
+
+  thorn_scrub:
+    title: "Thorn Scrub"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Thorn Scrub anchors one segment of the zone circuit."
+    exits:
+      n: windscar_notch
+      e: watch_fire
+      w: cracked_causeway
+
+  watch_fire:
+    title: "Watch Fire"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Watch Fire anchors one segment of the zone circuit."
+    exits:
+      n: raptor_post
+      e: bonewash_trail
+      w: thorn_scrub
+
+  bonewash_trail:
+    title: "Bonewash Trail"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Bonewash Trail anchors one segment of the zone circuit."
+    exits:
+      n: ash_spur
+      e: saltflats_rim
+      w: watch_fire
+
+  saltflats_rim:
+    title: "Saltflats Rim"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Saltflats Rim anchors one segment of the zone circuit."
+    exits:
+      n: scavenger_haul
+      e: jackal_run
+      w: bonewash_trail
+
+  jackal_run:
+    title: "Jackal Run"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Jackal Run anchors one segment of the zone circuit."
+    exits:
+      n: shattered_span
+      e: cinder_marker
+      w: saltflats_rim
+
+  cinder_marker:
+    title: "Cinder Marker"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Cinder Marker anchors one segment of the zone circuit."
+    exits:
+      n: low_bluff
+      e: split_badlands
+      w: jackal_run
+
+  split_badlands:
+    title: "Split Badlands"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Split Badlands anchors one segment of the zone circuit."
+    exits:
+      n: ember_ditch
+      w: cinder_marker
+
+  dry_well:
+    title: "Dry Well"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Dry Well anchors one segment of the zone circuit."
+    exits:
+      n: hornet_scrub
+      e: flint_ledge
+      s: windcut_gate
+
+  flint_ledge:
+    title: "Flint Ledge"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Flint Ledge anchors one segment of the zone circuit."
+    exits:
+      n: dustbowl_hollow
+      e: windscar_notch
+      s: cracked_causeway
+      w: dry_well
+
+  windscar_notch:
+    title: "Windscar Notch"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Windscar Notch anchors one segment of the zone circuit."
+    exits:
+      n: cairn_turn
+      e: raptor_post
+      s: thorn_scrub
+      w: flint_ledge
+
+  raptor_post:
+    title: "Raptor Post"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Raptor Post anchors one segment of the zone circuit."
+    exits:
+      n: storm_drain
+      e: ash_spur
+      s: watch_fire
+      w: windscar_notch
+
+  ash_spur:
+    title: "Ash Spur"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Ash Spur anchors one segment of the zone circuit."
+    exits:
+      n: ridge_marker
+      e: scavenger_haul
+      s: bonewash_trail
+      w: raptor_post
+
+  scavenger_haul:
+    title: "Scavenger Haul"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Scavenger Haul anchors one segment of the zone circuit."
+    exits:
+      n: deadfall_gully
+      e: shattered_span
+      s: saltflats_rim
+      w: ash_spur
+
+  shattered_span:
+    title: "Shattered Span"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Shattered Span anchors one segment of the zone circuit."
+    exits:
+      n: sunbleach_step
+      e: low_bluff
+      s: jackal_run
+      w: scavenger_haul
+
+  low_bluff:
+    title: "Low Bluff"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Low Bluff anchors one segment of the zone circuit."
+    exits:
+      n: brittle_ravine
+      e: ember_ditch
+      s: cinder_marker
+      w: shattered_span
+
+  ember_ditch:
+    title: "Ember Ditch"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Ember Ditch anchors one segment of the zone circuit."
+    exits:
+      n: long_scree
+      s: split_badlands
+      w: low_bluff
+
+  hornet_scrub:
+    title: "Hornet Scrub"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Hornet Scrub anchors one segment of the zone circuit."
+    exits:
+      n: hollow_watch
+      e: dustbowl_hollow
+      s: dry_well
+
+  dustbowl_hollow:
+    title: "Dustbowl Hollow"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Dustbowl Hollow anchors one segment of the zone circuit."
+    exits:
+      n: vulture_climb
+      e: cairn_turn
+      s: flint_ledge
+      w: hornet_scrub
+
+  cairn_turn:
+    title: "Cairn Turn"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Cairn Turn anchors one segment of the zone circuit."
+    exits:
+      n: red_mesa_edge
+      e: storm_drain
+      s: windscar_notch
+      w: dustbowl_hollow
+
+  storm_drain:
+    title: "Storm Drain"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Storm Drain anchors one segment of the zone circuit."
+    exits:
+      n: flayed_track
+      e: ridge_marker
+      s: raptor_post
+      w: cairn_turn
+
+  ridge_marker:
+    title: "Ridge Marker"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Ridge Marker anchors one segment of the zone circuit."
+    exits:
+      n: char_pillar
+      e: deadfall_gully
+      s: ash_spur
+      w: storm_drain
+
+  deadfall_gully:
+    title: "Deadfall Gully"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Deadfall Gully anchors one segment of the zone circuit."
+    exits:
+      n: sandspine_run
+      e: sunbleach_step
+      s: scavenger_haul
+      w: ridge_marker
+
+  sunbleach_step:
+    title: "Sunbleach Step"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Sunbleach Step anchors one segment of the zone circuit."
+    exits:
+      n: husk_basin
+      e: brittle_ravine
+      s: shattered_span
+      w: deadfall_gully
+
+  brittle_ravine:
+    title: "Brittle Ravine"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Brittle Ravine anchors one segment of the zone circuit."
+    exits:
+      n: dunehook_cross
+      e: long_scree
+      s: low_bluff
+      w: sunbleach_step
+
+  long_scree:
+    title: "Long Scree"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Long Scree anchors one segment of the zone circuit."
+    exits:
+      n: kestrel_pit
+      s: ember_ditch
+      w: brittle_ravine
+
+  hollow_watch:
+    title: "Hollow Watch"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Hollow Watch anchors one segment of the zone circuit."
+    exits:
+      n: chalk_spur
+      e: vulture_climb
+      s: hornet_scrub
+
+  vulture_climb:
+    title: "Vulture Climb"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Vulture Climb anchors one segment of the zone circuit."
+    exits:
+      n: dead_heliograph
+      e: red_mesa_edge
+      s: dustbowl_hollow
+      w: hollow_watch
+
+  red_mesa_edge:
+    title: "Red Mesa Edge"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Red Mesa Edge anchors one segment of the zone circuit."
+    exits:
+      n: glasswind_walk
+      e: flayed_track
+      s: cairn_turn
+      w: vulture_climb
+
+  flayed_track:
+    title: "Flayed Track"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Flayed Track anchors one segment of the zone circuit."
+    exits:
+      n: razorwash
+      e: char_pillar
+      s: storm_drain
+      w: red_mesa_edge
+
+  char_pillar:
+    title: "Char Pillar"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Char Pillar anchors one segment of the zone circuit."
+    exits:
+      n: shiver_flats
+      e: sandspine_run
+      s: ridge_marker
+      w: flayed_track
+
+  sandspine_run:
+    title: "Sandspine Run"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Sandspine Run anchors one segment of the zone circuit."
+    exits:
+      n: lone_obelisk
+      e: husk_basin
+      s: deadfall_gully
+      w: char_pillar
+
+  husk_basin:
+    title: "Husk Basin"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Husk Basin anchors one segment of the zone circuit."
+    exits:
+      n: bonefan_cut
+      e: dunehook_cross
+      s: sunbleach_step
+      w: sandspine_run
+
+  dunehook_cross:
+    title: "Dunehook Cross"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Dunehook Cross anchors one segment of the zone circuit."
+    exits:
+      n: sunvault_rise
+      e: kestrel_pit
+      s: brittle_ravine
+      w: husk_basin
+
+  kestrel_pit:
+    title: "Kestrel Pit"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Kestrel Pit anchors one segment of the zone circuit."
+    exits:
+      n: far_redoubt
+      s: long_scree
+      w: dunehook_cross
+
+  chalk_spur:
+    title: "Chalk Spur"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Chalk Spur anchors one segment of the zone circuit."
+    exits:
+      e: dead_heliograph
+      s: hollow_watch
+
+  dead_heliograph:
+    title: "Dead Heliograph"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Dead Heliograph anchors one segment of the zone circuit."
+    exits:
+      e: glasswind_walk
+      s: vulture_climb
+      w: chalk_spur
+
+  glasswind_walk:
+    title: "Glasswind Walk"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Glasswind Walk anchors one segment of the zone circuit."
+    exits:
+      e: razorwash
+      s: red_mesa_edge
+      w: dead_heliograph
+
+  razorwash:
+    title: "Razorwash"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Razorwash anchors one segment of the zone circuit."
+    exits:
+      e: shiver_flats
+      s: flayed_track
+      w: glasswind_walk
+
+  shiver_flats:
+    title: "Shiver Flats"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Shiver Flats anchors one segment of the zone circuit."
+    exits:
+      e: lone_obelisk
+      s: char_pillar
+      w: razorwash
+
+  lone_obelisk:
+    title: "Lone Obelisk"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Lone Obelisk anchors one segment of the zone circuit."
+    exits:
+      e: bonefan_cut
+      s: sandspine_run
+      w: shiver_flats
+
+  bonefan_cut:
+    title: "Bonefan Cut"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Bonefan Cut anchors one segment of the zone circuit."
+    exits:
+      e: sunvault_rise
+      s: husk_basin
+      w: lone_obelisk
+
+  sunvault_rise:
+    title: "Sunvault Rise"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Sunvault Rise anchors one segment of the zone circuit."
+    exits:
+      e: far_redoubt
+      s: dunehook_cross
+      w: bonefan_cut
+
+  far_redoubt:
+    title: "Far Redoubt"
+    description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Far Redoubt anchors one segment of the zone circuit."
+    exits:
+      s: kestrel_pit
+      w: sunvault_rise
