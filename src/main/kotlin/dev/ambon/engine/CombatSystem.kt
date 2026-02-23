@@ -26,6 +26,7 @@ class CombatSystem(
     private val onMobRemoved: (MobId) -> Unit = {},
     private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
+    private val onLevelUp: (SessionId, Int) -> Unit = { _, _ -> },
 ) {
     private data class Fight(
         val sessionId: SessionId,
@@ -355,6 +356,7 @@ class CombatSystem(
         outbound.send(OutboundEvent.SendText(sessionId, "You gain $reward XP."))
         if (result.levelsGained <= 0) return
         metrics.onLevelUp()
+        onLevelUp(sessionId, result.newLevel)
 
         val oldMaxHp = progression.maxHpForLevel(result.previousLevel)
         val newMaxHp = progression.maxHpForLevel(result.newLevel)
