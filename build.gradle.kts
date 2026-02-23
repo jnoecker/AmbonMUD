@@ -169,3 +169,10 @@ protobuf {
         }
     }
 }
+
+
+tasks.register("swarmRun") {
+    group = "application"
+    description = "Runs the swarm load-testing utility (use :swarm:run with --args for arguments)."
+    dependsOn(":swarm:run")
+}
