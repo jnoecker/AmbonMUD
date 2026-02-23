@@ -3,7 +3,7 @@ package dev.ambon.engine.commands
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
-import dev.ambon.domain.world.WorldFactory
+import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
@@ -24,7 +24,7 @@ class CommandRouterTest {
     @Test
     fun `look emits room title description exits and prompt`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -62,7 +62,7 @@ class CommandRouterTest {
     @Test
     fun `look includes players currently in room`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -89,7 +89,7 @@ class CommandRouterTest {
     @Test
     fun `move north changes room and then look describes new room`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -127,7 +127,7 @@ class CommandRouterTest {
     @Test
     fun `move broadcasts leave and enter to room members`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -172,7 +172,7 @@ class CommandRouterTest {
     @Test
     fun `move blocked emits can't go that way and prompt`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -201,7 +201,7 @@ class CommandRouterTest {
     @Test
     fun `tell to unknown name emits error to sender only`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -237,7 +237,7 @@ class CommandRouterTest {
     @Test
     fun `tell delivers to target only and not to third party`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -282,7 +282,7 @@ class CommandRouterTest {
     @Test
     fun `say broadcasts only to room members and echoes to sender`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -311,7 +311,7 @@ class CommandRouterTest {
     @Test
     fun `gossip broadcasts to all connected`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -346,7 +346,7 @@ class CommandRouterTest {
     @Test
     fun `login name uniqueness is case-insensitive`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
 
@@ -363,7 +363,7 @@ class CommandRouterTest {
     @Test
     fun `exits emits exits line and prompt only`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -386,7 +386,7 @@ class CommandRouterTest {
     @Test
     fun `look dir shows adjacent room title when exit exists`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -416,7 +416,7 @@ class CommandRouterTest {
     @Test
     fun `look dir shows message when no exit exists`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()

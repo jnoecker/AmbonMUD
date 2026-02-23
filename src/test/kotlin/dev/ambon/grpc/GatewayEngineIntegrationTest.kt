@@ -6,7 +6,7 @@ import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.GatewayReconnectConfig
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.WorldFactory
+import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
@@ -101,7 +101,7 @@ class GatewayEngineIntegrationTest {
         dispatcher.start()
 
         // Start the game engine on its own thread.
-        val world = WorldFactory.demoWorld()
+        val world = WorldLoader.loadFromResource("world/test_world.yaml")
         val repo = InMemoryPlayerRepository()
         val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
         val items = ItemRegistry()

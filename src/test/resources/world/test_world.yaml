@@ -1,0 +1,31 @@
+# Minimal world used exclusively by unit/integration tests.
+# Production world files (tutorial_glade, ambon_hub, etc.) must NOT be required
+# by engine or command tests.  Any change to game content should leave these
+# tests unaffected.
+zone: test_zone
+lifespan: 30
+startRoom: hub
+mobs:
+  grunt:
+    name: "a burly grunt"
+    room: outpost
+    drops:
+      - itemId: badge
+        chance: 0.5
+items:
+  coin:
+    displayName: "a silver coin"
+    room: hub
+  badge:
+    displayName: "a worn badge"
+rooms:
+  hub:
+    title: "Test Hub"
+    description: "A central test room."
+    exits:
+      north: outpost
+  outpost:
+    title: "Test Outpost"
+    description: "A northern test room."
+    exits:
+      south: hub

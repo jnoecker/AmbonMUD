@@ -7,7 +7,7 @@ import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.items.ItemUseEffect
-import dev.ambon.domain.world.WorldFactory
+import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
@@ -24,7 +24,7 @@ class CommandRouterItemsTest {
     @Test
     fun `look includes items here line`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             items.setRoomItems(
                 world.startRoom,
@@ -55,7 +55,7 @@ class CommandRouterItemsTest {
     @Test
     fun `get moves item from room to inventory`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             items.setRoomItems(
                 world.startRoom,
@@ -86,7 +86,7 @@ class CommandRouterItemsTest {
     @Test
     fun `inventory shows carried items`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
@@ -123,7 +123,7 @@ class CommandRouterItemsTest {
     @Test
     fun `drop moves item from inventory to room`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
@@ -159,7 +159,7 @@ class CommandRouterItemsTest {
     @Test
     fun `wear moves item from inventory to equipment slot`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
@@ -200,7 +200,7 @@ class CommandRouterItemsTest {
     @Test
     fun `remove moves item from equipment slot back to inventory`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
@@ -242,7 +242,7 @@ class CommandRouterItemsTest {
     @Test
     fun `wear prefers wearable item when multiple inventory items share keyword`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
 
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
@@ -286,7 +286,7 @@ class CommandRouterItemsTest {
     @Test
     fun `use applies effects and consumes when charges reach zero`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
@@ -338,7 +338,7 @@ class CommandRouterItemsTest {
     @Test
     fun `use can consume equipped item and updates defense`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
@@ -383,7 +383,7 @@ class CommandRouterItemsTest {
     @Test
     fun `give moves item to nearby player inventory`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
@@ -416,7 +416,7 @@ class CommandRouterItemsTest {
     @Test
     fun `give removes equipped item and updates defense`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
@@ -457,7 +457,7 @@ class CommandRouterItemsTest {
     @Test
     fun `give requires target in same room`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()

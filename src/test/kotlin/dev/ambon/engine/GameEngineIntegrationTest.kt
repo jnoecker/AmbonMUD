@@ -3,7 +3,6 @@ package dev.ambon.engine
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.WorldFactory
 import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
@@ -32,7 +31,7 @@ class GameEngineIntegrationTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
@@ -97,7 +96,7 @@ class GameEngineIntegrationTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
@@ -239,7 +238,7 @@ class GameEngineIntegrationTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
