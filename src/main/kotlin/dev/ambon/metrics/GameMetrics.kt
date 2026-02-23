@@ -99,6 +99,8 @@ class GameMetrics(
         Counter.builder("xp_awarded_total").tag("source", "quest").register(registry)
     private val xpAwardedAdminCounter =
         Counter.builder("xp_awarded_total").tag("source", "admin").register(registry)
+    private val xpAwardedItemUseCounter =
+        Counter.builder("xp_awarded_total").tag("source", "item_use").register(registry)
     private val levelUpsCounter = Counter.builder("level_ups_total").register(registry)
     private val playerDeathsCounter = Counter.builder("player_deaths_total").register(registry)
 
@@ -191,6 +193,7 @@ class GameMetrics(
             "kill" -> xpAwardedKillCounter.increment(amount.toDouble())
             "quest" -> xpAwardedQuestCounter.increment(amount.toDouble())
             "admin" -> xpAwardedAdminCounter.increment(amount.toDouble())
+            "item_use" -> xpAwardedItemUseCounter.increment(amount.toDouble())
             else -> xpAwardedKillCounter.increment(amount.toDouble())
         }
     }

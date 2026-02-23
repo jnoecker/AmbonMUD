@@ -100,6 +100,24 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses use command`() {
+        assertEquals(Command.Use("potion"), CommandParser.parse("use potion"))
+    }
+
+    @Test
+    fun `parses give command with multi-word item`() {
+        assertEquals(Command.Give("shimmering potion", "Bob"), CommandParser.parse("give shimmering potion Bob"))
+    }
+
+    @Test
+    fun `give and use validate arguments`() {
+        assertTrue(CommandParser.parse("use") is Command.Invalid)
+        assertTrue(CommandParser.parse("use   ") is Command.Invalid)
+        assertTrue(CommandParser.parse("give coin") is Command.Invalid)
+        assertTrue(CommandParser.parse("give   ") is Command.Invalid)
+    }
+
+    @Test
     fun `parses kill and flee`() {
         assertEquals(Command.Kill("wolf"), CommandParser.parse("kill wolf"))
         assertEquals(Command.Flee, CommandParser.parse("flee"))

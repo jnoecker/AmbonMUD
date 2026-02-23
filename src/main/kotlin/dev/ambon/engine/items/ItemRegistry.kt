@@ -4,7 +4,6 @@ import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.ItemSpawn
@@ -45,6 +44,46 @@ class ItemRegistry {
             val slot: ItemSlot,
         ) : UnequipResult
     }
+
+    enum class HeldItemLocation {
+        INVENTORY,
+        EQUIPPED,
+    }
+
+    sealed interface UseResult {
+        data class Used(
+            val item: ItemInstance,
+            val location: HeldItemLocation,
+            val consumed: Boolean,
+            val remainingCharges: Int?,
+        ) : UseResult
+
+        data object NotFound : UseResult
+
+        data class NotUsable(
+            val item: ItemInstance,
+        ) : UseResult
+
+        data class NoCharges(
+            val item: ItemInstance,
+        ) : UseResult
+    }
+
+    sealed interface GiveResult {
+        data class Given(
+            val item: ItemInstance,
+            val location: HeldItemLocation,
+        ) : GiveResult
+
+        data object NotFound : GiveResult
+    }
+
+    private data class MatchedOwnedItem(
+        val item: ItemInstance,
+        val location: HeldItemLocation,
+        val index: Int? = null,
+        val slot: ItemSlot? = null,
+    )
 
     fun loadSpawns(spawns: List<ItemSpawn>) {
         roomItems.clear()
@@ -227,22 +266,24 @@ class ItemRegistry {
         sessionId: SessionId,
         keyword: String,
     ): EquipResult {
-        val exact = equipFromInventoryWithMatcher(sessionId) { it.keyword.equals(keyword, ignoreCase = true) }
-        if (exact !is EquipResult.NotFound) return exact
-        if (keyword.length < 3) return EquipResult.NotFound
-        return equipFromInventoryWithMatcher(sessionId) { matchesSubstring(it, keyword) }
+        for (mode in itemMatchModes(keyword)) {
+            val result = equipFromInventoryWithMatcher(sessionId, keyword, mode)
+            if (result !is EquipResult.NotFound) return result
+        }
+        return EquipResult.NotFound
     }
 
     private fun equipFromInventoryWithMatcher(
         sessionId: SessionId,
-        matcher: (Item) -> Boolean,
+        keyword: String,
+        mode: ItemMatchMode,
     ): EquipResult {
         val inv = inventoryItems[sessionId] ?: return EquipResult.NotFound
         var firstNonWearable: ItemInstance? = null
         var firstOccupied: EquipResult.SlotOccupied? = null
 
         for ((idx, instance) in inv.withIndex()) {
-            if (!matcher(instance.item)) continue
+            if (!mode.matches(instance.item, keyword)) continue
 
             val slot = instance.item.slot
             if (slot == null) {
@@ -287,6 +328,68 @@ class ItemRegistry {
     }
 
     /**
+     * Use an item from inventory or equipment by keyword.
+     */
+    fun useItem(
+        sessionId: SessionId,
+        keyword: String,
+    ): UseResult {
+        val match = findOwnedItemMatch(sessionId, keyword) ?: return UseResult.NotFound
+        if (match.item.item.onUse == null) return UseResult.NotUsable(match.item)
+
+        val currentCharges = match.item.item.charges
+        if (currentCharges != null && currentCharges <= 0) {
+            return UseResult.NoCharges(match.item)
+        }
+
+        val nextCharges = currentCharges?.minus(1)
+        val shouldConsume =
+            match.item.item.consumable &&
+                (
+                    nextCharges == null ||
+                        nextCharges <= 0
+                )
+
+        if (shouldConsume) {
+            removeOwnedItem(sessionId, match)
+            return UseResult.Used(
+                item = match.item,
+                location = match.location,
+                consumed = true,
+                remainingCharges = nextCharges?.coerceAtLeast(0),
+            )
+        }
+
+        val updatedItem =
+            if (currentCharges != null) {
+                match.item.copy(item = match.item.item.copy(charges = nextCharges))
+            } else {
+                match.item
+            }
+        storeOwnedItem(sessionId, match, updatedItem)
+        return UseResult.Used(
+            item = updatedItem,
+            location = match.location,
+            consumed = false,
+            remainingCharges = nextCharges,
+        )
+    }
+
+    /**
+     * Move an item from one player to another, searching inventory first and equipment second.
+     */
+    fun giveToPlayer(
+        fromSessionId: SessionId,
+        toSessionId: SessionId,
+        keyword: String,
+    ): GiveResult {
+        val match = findOwnedItemMatch(fromSessionId, keyword) ?: return GiveResult.NotFound
+        val moved = removeOwnedItem(fromSessionId, match)
+        inventoryItems.getOrPut(toSessionId) { mutableListOf() }.add(moved)
+        return GiveResult.Given(item = moved, location = match.location)
+    }
+
+    /**
      * Move an item by keyword (case-insensitive) from a room to a player's inventory.
      * Returns the moved item, or null if not found.
      */
@@ -296,11 +399,7 @@ class ItemRegistry {
         keyword: String,
     ): ItemInstance? {
         val items = roomItems[roomId] ?: return null
-
-        var idx = items.indexOfFirst { it.item.keyword.equals(keyword, ignoreCase = true) }
-        if (idx < 0 && keyword.length >= 3) {
-            idx = items.indexOfFirst { matchesSubstring(it.item, keyword) }
-        }
+        val idx = findMatchingItemIndex(items, keyword)
         if (idx < 0) return null
 
         val instance = items.removeAt(idx)
@@ -320,11 +419,7 @@ class ItemRegistry {
         keyword: String,
     ): ItemInstance? {
         val inv = inventoryItems[sessionId] ?: return null
-
-        var idx = inv.indexOfFirst { it.item.keyword.equals(keyword, ignoreCase = true) }
-        if (idx < 0 && keyword.length >= 3) {
-            idx = inv.indexOfFirst { matchesSubstring(it.item, keyword) }
-        }
+        val idx = findMatchingItemIndex(inv, keyword)
         if (idx < 0) return null
 
         val instance = inv.removeAt(idx)
@@ -334,15 +429,88 @@ class ItemRegistry {
         return instance
     }
 
-    private fun matchesSubstring(
-        item: Item,
-        input: String,
-    ): Boolean =
-        !item.matchByKey &&
-            (
-                item.displayName.contains(input, ignoreCase = true) ||
-                    item.description.contains(input, ignoreCase = true)
-            )
+    private fun findOwnedItemMatch(
+        sessionId: SessionId,
+        keyword: String,
+    ): MatchedOwnedItem? {
+        val inv = inventoryItems[sessionId]
+        val equipped = equippedItems[sessionId]
+
+        for (mode in itemMatchModes(keyword)) {
+            if (inv != null) {
+                val invIdx = inv.indexOfFirst { mode.matches(it.item, keyword) }
+                if (invIdx >= 0) {
+                    return MatchedOwnedItem(
+                        item = inv[invIdx],
+                        location = HeldItemLocation.INVENTORY,
+                        index = invIdx,
+                    )
+                }
+            }
+
+            if (equipped != null) {
+                val slot =
+                    ItemSlot.entries.firstOrNull { candidateSlot ->
+                        val equippedItem = equipped[candidateSlot] ?: return@firstOrNull false
+                        mode.matches(equippedItem.item, keyword)
+                    }
+                if (slot != null) {
+                    return MatchedOwnedItem(
+                        item = equipped.getValue(slot),
+                        location = HeldItemLocation.EQUIPPED,
+                        slot = slot,
+                    )
+                }
+            }
+        }
+
+        return null
+    }
+
+    private fun removeOwnedItem(
+        sessionId: SessionId,
+        match: MatchedOwnedItem,
+    ): ItemInstance =
+        when (match.location) {
+            HeldItemLocation.INVENTORY -> {
+                val inv = inventoryItems[sessionId] ?: return match.item
+                val idx = match.index ?: return match.item
+                if (idx !in inv.indices) return match.item
+                val removed = inv.removeAt(idx)
+                if (inv.isEmpty()) inventoryItems.remove(sessionId)
+                removed
+            }
+
+            HeldItemLocation.EQUIPPED -> {
+                val equipped = equippedItems[sessionId] ?: return match.item
+                val slot = match.slot ?: return match.item
+                val removed = equipped.remove(slot) ?: match.item
+                if (equipped.isEmpty()) equippedItems.remove(sessionId)
+                removed
+            }
+        }
+
+    private fun storeOwnedItem(
+        sessionId: SessionId,
+        match: MatchedOwnedItem,
+        item: ItemInstance,
+    ) {
+        when (match.location) {
+            HeldItemLocation.INVENTORY -> {
+                val inv = inventoryItems[sessionId] ?: return
+                val idx = match.index ?: return
+                if (idx !in inv.indices) return
+                inv[idx] = item
+            }
+
+            HeldItemLocation.EQUIPPED -> {
+                val equipped = equippedItems[sessionId] ?: return
+                val slot = match.slot ?: return
+                if (!equipped.containsKey(slot)) return
+                equipped[slot] = item
+            }
+        }
+    }
 
     private fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
 }

@@ -70,6 +70,8 @@ class CommandRouter(
                             remove/unequip <slot>
                             get/take/pickup <item>
                             drop <item>
+                            use <item>
+                            give <item> <player>
                             kill <mob>
                             flee
                             cast/c <spell> [target]
@@ -401,6 +403,107 @@ class CommandRouter(
                 }
 
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${moved.item.displayName}."))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Use -> {
+                val me = players.get(sessionId) ?: return
+                when (val result = items.useItem(me.sessionId, cmd.keyword)) {
+                    is ItemRegistry.UseResult.Used -> {
+                        val effect = result.item.item.onUse
+                        if (effect == null) {
+                            outbound.send(OutboundEvent.SendError(sessionId, "${result.item.item.displayName} cannot be used."))
+                            outbound.send(OutboundEvent.SendPrompt(sessionId))
+                            return
+                        }
+
+                        outbound.send(OutboundEvent.SendInfo(sessionId, "You use ${result.item.item.displayName}."))
+
+                        if (effect.healHp > 0) {
+                            val previousHp = me.hp
+                            me.hp = (me.hp + effect.healHp).coerceAtMost(me.maxHp)
+                            val healed = (me.hp - previousHp).coerceAtLeast(0)
+                            if (healed > 0) {
+                                outbound.send(OutboundEvent.SendInfo(sessionId, "You recover $healed HP."))
+                            } else {
+                                outbound.send(OutboundEvent.SendInfo(sessionId, "You are already at full health."))
+                            }
+                        }
+
+                        if (effect.grantXp > 0L) {
+                            grantScaledItemXp(sessionId, effect.grantXp)
+                        }
+
+                        if (result.consumed) {
+                            outbound.send(OutboundEvent.SendInfo(sessionId, "${result.item.item.displayName} is consumed."))
+                            if (result.location == ItemRegistry.HeldItemLocation.EQUIPPED) {
+                                combat.syncPlayerDefense(sessionId)
+                            }
+                        } else if (result.remainingCharges != null) {
+                            outbound.send(
+                                OutboundEvent.SendInfo(
+                                    sessionId,
+                                    "${result.item.item.displayName} has ${result.remainingCharges} charge(s) remaining.",
+                                ),
+                            )
+                        }
+                    }
+
+                    is ItemRegistry.UseResult.NotFound -> {
+                        outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying or wearing '${cmd.keyword}'."))
+                    }
+
+                    is ItemRegistry.UseResult.NotUsable -> {
+                        outbound.send(OutboundEvent.SendError(sessionId, "${result.item.item.displayName} cannot be used."))
+                    }
+
+                    is ItemRegistry.UseResult.NoCharges -> {
+                        outbound.send(
+                            OutboundEvent.SendError(
+                                sessionId,
+                                "${result.item.item.displayName} has no charges remaining.",
+                            ),
+                        )
+                    }
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Give -> {
+                val me = players.get(sessionId) ?: return
+                val targetSid = players.findSessionByName(cmd.playerName)
+                if (targetSid == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.playerName}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                if (targetSid == sessionId) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "You cannot give items to yourself."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+
+                val target = players.get(targetSid) ?: return
+                if (target.roomId != me.roomId) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "${target.name} is not here."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+
+                when (val result = items.giveToPlayer(me.sessionId, targetSid, cmd.keyword)) {
+                    is ItemRegistry.GiveResult.Given -> {
+                        if (result.location == ItemRegistry.HeldItemLocation.EQUIPPED) {
+                            combat.syncPlayerDefense(sessionId)
+                        }
+                        outbound.send(OutboundEvent.SendInfo(sessionId, "You give ${result.item.item.displayName} to ${target.name}."))
+                        outbound.send(OutboundEvent.SendInfo(targetSid, "${me.name} gives you ${result.item.item.displayName}."))
+                    }
+
+                    is ItemRegistry.GiveResult.NotFound -> {
+                        outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying or wearing '${cmd.keyword}'."))
+                    }
+                }
+
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -760,6 +863,46 @@ class CommandRouter(
         for (p in players.playersInRoom(roomId)) {
             if (exclude != null && p.sessionId == exclude) continue
             outbound.send(OutboundEvent.SendText(p.sessionId, text))
+        }
+    }
+
+    private suspend fun grantScaledItemXp(
+        sessionId: SessionId,
+        rawXp: Long,
+    ) {
+        val scaledXp = progression.scaledXp(rawXp)
+        if (scaledXp <= 0L) return
+
+        val result = players.grantXp(sessionId, scaledXp, progression) ?: return
+        metrics.onXpAwarded(scaledXp, "item_use")
+        outbound.send(OutboundEvent.SendInfo(sessionId, "You gain $scaledXp XP."))
+
+        if (result.levelsGained <= 0) return
+        metrics.onLevelUp()
+
+        val oldMaxHp = progression.maxHpForLevel(result.previousLevel)
+        val newMaxHp = progression.maxHpForLevel(result.newLevel)
+        val hpGain = (newMaxHp - oldMaxHp).coerceAtLeast(0)
+        val oldMaxMana = progression.maxManaForLevel(result.previousLevel)
+        val newMaxMana = progression.maxManaForLevel(result.newLevel)
+        val manaGain = (newMaxMana - oldMaxMana).coerceAtLeast(0)
+        val bonusParts = mutableListOf<String>()
+        if (hpGain > 0) bonusParts += "+$hpGain max HP"
+        if (manaGain > 0) bonusParts += "+$manaGain max Mana"
+
+        val levelUpMessage =
+            if (bonusParts.isNotEmpty()) {
+                "You reached level ${result.newLevel}! (${bonusParts.joinToString(", ")})"
+            } else {
+                "You reached level ${result.newLevel}!"
+            }
+        outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
+
+        if (abilitySystem != null) {
+            val newAbilities = abilitySystem.syncAbilities(sessionId, result.newLevel)
+            for (ability in newAbilities) {
+                outbound.send(OutboundEvent.SendText(sessionId, "You have learned ${ability.displayName}!"))
+            }
         }
     }
 

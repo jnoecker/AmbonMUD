@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.items.ItemUseEffect
 import dev.ambon.domain.world.ItemSpawn
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -205,6 +206,101 @@ class ItemRegistryTest {
         val result = registry.equipFromInventory(sid, "dent")
 
         assertTrue(result is ItemRegistry.EquipResult.NotFound)
+    }
+
+    @Test
+    fun `useItem decrements charges and consumes at zero when consumable`() {
+        val registry = ItemRegistry()
+        val sid = SessionId(1L)
+        registry.ensurePlayer(sid)
+        val sourceRoom = RoomId("demo:source")
+        registry.setRoomItems(
+            sourceRoom,
+            listOf(
+                ItemInstance(
+                    id = ItemId("demo:potion"),
+                    item =
+                        Item(
+                            keyword = "potion",
+                            displayName = "a potion",
+                            consumable = true,
+                            charges = 2,
+                            onUse = ItemUseEffect(healHp = 5),
+                        ),
+                ),
+            ),
+        )
+        registry.takeFromRoom(sid, sourceRoom, "potion")
+
+        val first = registry.useItem(sid, "potion")
+        assertTrue(first is ItemRegistry.UseResult.Used && !first.consumed)
+        val remainingPotion = registry.inventory(sid).single()
+        assertEquals(1, remainingPotion.item.charges)
+
+        val second = registry.useItem(sid, "potion")
+        assertTrue(second is ItemRegistry.UseResult.Used && second.consumed)
+        assertTrue(registry.inventory(sid).isEmpty())
+    }
+
+    @Test
+    fun `useItem finds equipped items with same matching rules`() {
+        val registry = ItemRegistry()
+        val sid = SessionId(1L)
+        registry.ensurePlayer(sid)
+        val sourceRoom = RoomId("demo:source")
+        registry.setRoomItems(
+            sourceRoom,
+            listOf(
+                ItemInstance(
+                    id = ItemId("demo:circlet"),
+                    item =
+                        Item(
+                            keyword = "circlet",
+                            displayName = "a bright circlet",
+                            slot = ItemSlot.HEAD,
+                            onUse = ItemUseEffect(grantXp = 10),
+                        ),
+                ),
+            ),
+        )
+        registry.takeFromRoom(sid, sourceRoom, "circlet")
+        registry.equipFromInventory(sid, "circlet")
+
+        val result = registry.useItem(sid, "bright")
+        assertTrue(result is ItemRegistry.UseResult.Used)
+        val used = result as ItemRegistry.UseResult.Used
+        assertEquals(ItemRegistry.HeldItemLocation.EQUIPPED, used.location)
+    }
+
+    @Test
+    fun `giveToPlayer can transfer equipped item`() {
+        val registry = ItemRegistry()
+        val fromSid = SessionId(1L)
+        val toSid = SessionId(2L)
+        registry.ensurePlayer(fromSid)
+        registry.ensurePlayer(toSid)
+
+        val sourceRoom = RoomId("demo:source")
+        registry.setRoomItems(
+            sourceRoom,
+            listOf(
+                ItemInstance(
+                    id = ItemId("demo:helm"),
+                    item = Item(keyword = "helm", displayName = "a steel helm", slot = ItemSlot.HEAD, armor = 1),
+                ),
+            ),
+        )
+        registry.takeFromRoom(fromSid, sourceRoom, "helm")
+        registry.equipFromInventory(fromSid, "helm")
+
+        val result = registry.giveToPlayer(fromSid, toSid, "helm")
+
+        assertTrue(result is ItemRegistry.GiveResult.Given)
+        val given = result as ItemRegistry.GiveResult.Given
+        assertEquals(ItemRegistry.HeldItemLocation.EQUIPPED, given.location)
+        assertTrue(registry.equipment(fromSid).isEmpty())
+        val received = registry.inventory(toSid).single()
+        assertEquals("helm", received.item.keyword)
     }
 
     private fun instance(

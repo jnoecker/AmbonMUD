@@ -7,6 +7,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.items.ItemUseEffect
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
@@ -175,6 +176,9 @@ class HandoffManagerTest {
                         damage = 7,
                         armor = 1,
                         constitution = 2,
+                        consumable = true,
+                        charges = 3,
+                        onUse = ItemUseEffect(healHp = 4, grantXp = 12),
                         matchByKey = true,
                     ),
             )
@@ -190,6 +194,9 @@ class HandoffManagerTest {
         assertEquals(original.item.damage, restored.item.damage)
         assertEquals(original.item.armor, restored.item.armor)
         assertEquals(original.item.constitution, restored.item.constitution)
+        assertEquals(original.item.consumable, restored.item.consumable)
+        assertEquals(original.item.charges, restored.item.charges)
+        assertEquals(original.item.onUse, restored.item.onUse)
         assertEquals(original.item.matchByKey, restored.item.matchByKey)
     }
 

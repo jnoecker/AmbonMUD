@@ -116,7 +116,15 @@ data class SerializedItem(
     val damage: Int = 0,
     val armor: Int = 0,
     val constitution: Int = 0,
+    val consumable: Boolean = false,
+    val charges: Int? = null,
+    val onUse: SerializedItemUseEffect? = null,
     val matchByKey: Boolean = false,
+)
+
+data class SerializedItemUseEffect(
+    val healHp: Int = 0,
+    val grantXp: Long = 0L,
 )
 
 /**

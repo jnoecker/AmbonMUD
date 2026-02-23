@@ -61,7 +61,6 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - `RoomId` must be namespaced: `<zone>:<room>`.
 - Multi-zone world loading and cross-zone exits are supported.
 - Loader validates exits, start room, mob/item placement, stats, and slot/direction values.
-- Item placement is exclusive: room or mob (or unplaced), never both.
 - Zone `lifespan` is in minutes; `lifespan <= 0` disables resets. The engine uses `lifespan` to reset a zone's mob/item spawns.
 
 5. Player and persistence invariants
