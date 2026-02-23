@@ -25,6 +25,7 @@ import dev.ambon.sharding.HandoffManager
 import dev.ambon.sharding.HandoffResult
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.InterEngineMessage
+import dev.ambon.sharding.PlayerLocationIndex
 import dev.ambon.sharding.PlayerSummary
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Timer
@@ -57,6 +58,8 @@ class GameEngine(
     private val engineId: String = "",
     /** Returns the number of peer engines (excluding self). Used for `who` shard coverage warnings. */
     private val peerEngineCount: () -> Int = { 0 },
+    /** Player-location index for O(1) cross-engine tell routing. */
+    private val playerLocationIndex: PlayerLocationIndex? = null,
 ) {
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
@@ -140,6 +143,7 @@ class GameEngine(
             interEngineBus = interEngineBus,
             engineId = engineId,
             onRemoteWho = if (interEngineBus != null) ::handleRemoteWho else null,
+            playerLocationIndex = playerLocationIndex,
         )
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
     private val failedLoginAttempts = mutableMapOf<SessionId, Int>()
@@ -440,6 +444,8 @@ class GameEngine(
             is InterEngineMessage.PlayerHandoff -> {
                 val mgr = handoffManager ?: return
                 val sid = mgr.acceptHandoff(msg) ?: return
+                // Register player on this engine (O(1) tell routing)
+                playerLocationIndex?.register(msg.playerState.name)
                 // Show the player their new surroundings
                 router.handle(sid, Command.Look)
             }
@@ -447,6 +453,8 @@ class GameEngine(
                 val mgr = handoffManager ?: return
                 when (val result = mgr.handleAck(msg)) {
                     is HandoffAckResult.Completed -> {
+                        // Deregister from this engine; target engine will register on its side
+                        playerLocationIndex?.unregister(result.playerName)
                         log.debug {
                             "Handoff ack completed: session=${msg.sessionId} " +
                                 "targetEngine=${result.targetEngine.engineId}"
@@ -622,6 +630,7 @@ class GameEngine(
 
                 if (me != null) {
                     log.info { "Player logged out: name=${me.name} sessionId=$sid" }
+                    playerLocationIndex?.unregister(me.name)
                     broadcastToRoom(me.roomId, "${me.name} leaves.", sid)
                 }
 
@@ -872,6 +881,7 @@ class GameEngine(
         }
 
         log.info { "Player logged in: name=${me.name} sessionId=$sessionId" }
+        playerLocationIndex?.register(me.name)
         abilitySystem.syncAbilities(sessionId, me.level)
         outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
         if (!ensureLoginRoomAvailable(sessionId, suppressEnterBroadcast)) return

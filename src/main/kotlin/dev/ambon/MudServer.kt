@@ -33,7 +33,9 @@ import dev.ambon.sharding.EngineAddress
 import dev.ambon.sharding.HandoffManager
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.LocalInterEngineBus
+import dev.ambon.sharding.PlayerLocationIndex
 import dev.ambon.sharding.RedisInterEngineBus
+import dev.ambon.sharding.RedisPlayerLocationIndex
 import dev.ambon.sharding.RedisZoneRegistry
 import dev.ambon.sharding.StaticZoneRegistry
 import dev.ambon.sharding.ZoneRegistry
@@ -285,7 +287,20 @@ class MudServer(
             null
         }
 
+    private val playerLocationIndex: PlayerLocationIndex? =
+        if (shardingEnabled && config.sharding.playerIndex.enabled && redisManager != null) {
+            val keyTtlSeconds = (config.sharding.playerIndex.heartbeatMs * 3L / 1_000L).coerceAtLeast(1L)
+            RedisPlayerLocationIndex(
+                engineId = engineId,
+                redis = redisManager,
+                keyTtlSeconds = keyTtlSeconds,
+            )
+        } else {
+            null
+        }
+
     private var zoneHeartbeatJob: Job? = null
+    private var playerIndexHeartbeatJob: Job? = null
 
     init {
         bindQueueMetrics()
@@ -346,6 +361,24 @@ class MudServer(
         if (interEngineBus != null) {
             interEngineBus.start()
         }
+
+        // Start player-location index heartbeat
+        if (playerLocationIndex != null) {
+            val heartbeatMs = config.sharding.playerIndex.heartbeatMs
+            playerIndexHeartbeatJob =
+                scope.launch {
+                    while (isActive) {
+                        delay(heartbeatMs)
+                        runCatching {
+                            // refreshTtls uses the index's own internal name tracking —
+                            // no access to PlayerRegistry needed, avoiding a cross-thread read.
+                            playerLocationIndex.refreshTtls()
+                        }.onFailure { err ->
+                            log.warn(err) { "Player location index heartbeat failed" }
+                        }
+                    }
+                }
+        }
         if (zoneRegistry != null) {
             zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
             val heartbeatIntervalMs =
@@ -386,6 +419,7 @@ class MudServer(
                     handoffManager = handoffManager,
                     interEngineBus = interEngineBus,
                     engineId = engineId,
+                    playerLocationIndex = playerLocationIndex,
                     peerEngineCount = {
                         zoneRegistry
                             ?.allAssignments()
@@ -478,6 +512,7 @@ class MudServer(
         runCatching { telnetTransport.stop() }
         runCatching { webTransport.stop() }
         runCatching { zoneHeartbeatJob?.cancelAndJoin() }
+        runCatching { playerIndexHeartbeatJob?.cancelAndJoin() }
         runCatching { engineJob?.cancelAndJoin() }
         runCatching { interEngineBus?.close() }
         runCatching { persistenceWorker?.shutdown() }

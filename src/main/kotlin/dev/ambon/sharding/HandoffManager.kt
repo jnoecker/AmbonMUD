@@ -33,6 +33,7 @@ sealed interface HandoffResult {
 sealed interface HandoffAckResult {
     data class Completed(
         val targetEngine: EngineAddress,
+        val playerName: String,
     ) : HandoffAckResult
 
     data class Failed(
@@ -146,7 +147,7 @@ class HandoffManager(
         val player = players.get(sessionId)
         if (player == null) {
             log.warn { "Received successful handoff ack for missing session=${sessionId.value}" }
-            return HandoffAckResult.Completed(pending.targetEngine)
+            return HandoffAckResult.Completed(pending.targetEngine, pending.playerName)
         }
 
         for (other in players.playersInRoom(pending.fromRoomId)) {
@@ -166,7 +167,7 @@ class HandoffManager(
             ),
         )
 
-        return HandoffAckResult.Completed(pending.targetEngine)
+        return HandoffAckResult.Completed(pending.targetEngine, pending.playerName)
     }
 
     fun expireTimedOut(nowEpochMs: Long = clock.millis()): List<TimedOutHandoff> {

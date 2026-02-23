@@ -20,6 +20,7 @@ import dev.ambon.metrics.GameMetrics
 import dev.ambon.sharding.BroadcastType
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.InterEngineMessage
+import dev.ambon.sharding.PlayerLocationIndex
 
 class CommandRouter(
     private val world: World,
@@ -37,6 +38,7 @@ class CommandRouter(
     private val interEngineBus: InterEngineBus? = null,
     private val engineId: String = "",
     private val onRemoteWho: (suspend (SessionId) -> Unit)? = null,
+    private val playerLocationIndex: PlayerLocationIndex? = null,
 ) {
     private var adminSpawnSeq = 0
 
@@ -217,13 +219,18 @@ class CommandRouter(
                 if (targetSid == null) {
                     // Not found locally — try remote delivery via inter-engine bus
                     if (interEngineBus != null) {
-                        interEngineBus.broadcast(
+                        val tell =
                             InterEngineMessage.TellMessage(
                                 fromName = me.name,
                                 toName = cmd.target,
                                 text = cmd.message,
-                            ),
-                        )
+                            )
+                        val targetEngineId = playerLocationIndex?.lookupEngineId(cmd.target)
+                        if (targetEngineId != null && targetEngineId != engineId) {
+                            interEngineBus.sendTo(targetEngineId, tell)
+                        } else {
+                            interEngineBus.broadcast(tell)
+                        }
                         outbound.send(OutboundEvent.SendText(sessionId, "You tell ${cmd.target}: ${cmd.message}"))
                     } else {
                         outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.target}"))
