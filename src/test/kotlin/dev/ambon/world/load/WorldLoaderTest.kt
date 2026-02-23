@@ -3,6 +3,7 @@ package dev.ambon.domain.world.load
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.Direction
+import dev.ambon.domain.world.WorldFactory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -309,6 +310,30 @@ class WorldLoaderTest {
                 WorldLoader.loadFromResource("world/bad_mob_drop_missing_item.yaml")
             }
         assertTrue(ex.message!!.contains("missing item", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `loads tutorial glade zone with all rooms mobs and items`() {
+        val world = WorldLoader.loadFromResource("world/tutorial_glade.yaml")
+
+        assertEquals(RoomId("tutorial_glade:awakening_clearing"), world.startRoom)
+        assertEquals(28, world.rooms.size)
+        assertEquals(8, world.mobSpawns.size)
+        assertEquals(14, world.itemSpawns.size)
+        assertEquals(30L, world.zoneLifespansMinutes["tutorial_glade"])
+    }
+
+    @Test
+    fun `tutorial glade cross-zone exit resolves in full world`() {
+        val world = WorldFactory.demoWorld()
+
+        assertEquals(RoomId("tutorial_glade:awakening_clearing"), world.startRoom)
+
+        val forestGate = world.rooms.getValue(RoomId("tutorial_glade:forest_gate"))
+        assertEquals(RoomId("ambon_hub:hall_of_portals"), forestGate.exits[Direction.NORTH])
+
+        val hub = world.rooms.getValue(RoomId("ambon_hub:hall_of_portals"))
+        assertEquals(RoomId("tutorial_glade:forest_gate"), hub.exits[Direction.SOUTH])
     }
 
     class MultiZoneWorldLoaderTest {
