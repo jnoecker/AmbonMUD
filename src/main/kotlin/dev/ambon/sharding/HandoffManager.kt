@@ -18,7 +18,9 @@ import java.time.Clock
 private val log = KotlinLogging.logger {}
 
 sealed interface HandoffResult {
-    data class Initiated(val targetEngine: EngineAddress) : HandoffResult
+    data class Initiated(
+        val targetEngine: EngineAddress,
+    ) : HandoffResult
 
     data object PlayerNotFound : HandoffResult
 
@@ -28,9 +30,13 @@ sealed interface HandoffResult {
 }
 
 sealed interface HandoffAckResult {
-    data class Completed(val targetEngine: EngineAddress) : HandoffAckResult
+    data class Completed(
+        val targetEngine: EngineAddress,
+    ) : HandoffAckResult
 
-    data class Failed(val errorMessage: String?) : HandoffAckResult
+    data class Failed(
+        val errorMessage: String?,
+    ) : HandoffAckResult
 
     data object NotPending : HandoffAckResult
 }

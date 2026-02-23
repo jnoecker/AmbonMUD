@@ -13,7 +13,8 @@ private val log = KotlinLogging.logger {}
 
 class RedisConnectionManager(
     private val config: RedisConfig,
-) : AutoCloseable, StringCache {
+) : AutoCloseable,
+    StringCache {
     var commands: RedisCommands<String, String>? = null
         private set
 

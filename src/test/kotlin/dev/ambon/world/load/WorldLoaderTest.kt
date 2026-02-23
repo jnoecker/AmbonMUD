@@ -45,7 +45,12 @@ class WorldLoaderTest {
         assertEquals(0, mob.armor)
         assertEquals(30L, mob.xpReward)
         assertEquals(1, mob.drops.size)
-        assertEquals("ok_small:tooth", mob.drops.single().itemId.value)
+        assertEquals(
+            "ok_small:tooth",
+            mob.drops
+                .single()
+                .itemId.value,
+        )
         assertEquals(1.0, mob.drops.single().chance)
     }
 

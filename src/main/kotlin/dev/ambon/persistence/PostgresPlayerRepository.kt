@@ -19,7 +19,8 @@ class PostgresPlayerRepository(
         val sample = Timer.start()
         try {
             return newSuspendedTransaction(Dispatchers.IO, database) {
-                PlayersTable.selectAll()
+                PlayersTable
+                    .selectAll()
                     .where { PlayersTable.nameLower eq name.trim().lowercase() }
                     .firstOrNull()
                     ?.toPlayerRecord()
@@ -33,7 +34,8 @@ class PostgresPlayerRepository(
         val sample = Timer.start()
         try {
             return newSuspendedTransaction(Dispatchers.IO, database) {
-                PlayersTable.selectAll()
+                PlayersTable
+                    .selectAll()
                     .where { PlayersTable.id eq id.value }
                     .firstOrNull()
                     ?.toPlayerRecord()

@@ -45,14 +45,16 @@ class EngineServiceImplTest {
         serviceImpl = EngineServiceImpl(inbound = inbound, outbound = outbound, scope = scope)
 
         grpcServer =
-            InProcessServerBuilder.forName(serverName)
+            InProcessServerBuilder
+                .forName(serverName)
                 .directExecutor()
                 .addService(serviceImpl)
                 .build()
                 .start()
 
         channel =
-            InProcessChannelBuilder.forName(serverName)
+            InProcessChannelBuilder
+                .forName(serverName)
                 .directExecutor()
                 .build()
     }
@@ -64,7 +66,9 @@ class EngineServiceImplTest {
         scope.cancel()
     }
 
-    private fun stub() = dev.ambon.grpc.proto.EngineServiceGrpcKt.EngineServiceCoroutineStub(channel)
+    private fun stub() =
+        dev.ambon.grpc.proto.EngineServiceGrpcKt
+            .EngineServiceCoroutineStub(channel)
 
     @Test
     fun `Connected event is forwarded to InboundBus`() =
@@ -74,11 +78,12 @@ class EngineServiceImplTest {
             // Flow completes immediately after emitting — stream closes cleanly.
             val job =
                 launch {
-                    stub().eventStream(
-                        flow {
-                            emit(InboundEvent.Connected(sessionId = sid, defaultAnsiEnabled = false).toProto())
-                        },
-                    ).toList()
+                    stub()
+                        .eventStream(
+                            flow {
+                                emit(InboundEvent.Connected(sessionId = sid, defaultAnsiEnabled = false).toProto())
+                            },
+                        ).toList()
                 }
             job.join()
 
@@ -96,11 +101,12 @@ class EngineServiceImplTest {
 
             val job =
                 launch {
-                    stub().eventStream(
-                        flow {
-                            emit(InboundEvent.Connected(sessionId = sid, defaultAnsiEnabled = true).toProto())
-                        },
-                    ).toList()
+                    stub()
+                        .eventStream(
+                            flow {
+                                emit(InboundEvent.Connected(sessionId = sid, defaultAnsiEnabled = true).toProto())
+                            },
+                        ).toList()
                 }
             job.join()
 
@@ -117,12 +123,13 @@ class EngineServiceImplTest {
             // Stream opens and immediately closes — after join, session should be gone.
             val job =
                 launch {
-                    stub().eventStream(
-                        flow {
-                            emit(InboundEvent.Connected(sessionId = sid).toProto())
-                            emit(InboundEvent.Disconnected(sessionId = sid, reason = "quit").toProto())
-                        },
-                    ).toList()
+                    stub()
+                        .eventStream(
+                            flow {
+                                emit(InboundEvent.Connected(sessionId = sid).toProto())
+                                emit(InboundEvent.Disconnected(sessionId = sid, reason = "quit").toProto())
+                            },
+                        ).toList()
                 }
             job.join()
 
@@ -136,12 +143,13 @@ class EngineServiceImplTest {
 
             val job =
                 launch {
-                    stub().eventStream(
-                        flow {
-                            emit(InboundEvent.Connected(sessionId = sid).toProto())
-                            emit(InboundEvent.LineReceived(sessionId = sid, line = "look").toProto())
-                        },
-                    ).toList()
+                    stub()
+                        .eventStream(
+                            flow {
+                                emit(InboundEvent.Connected(sessionId = sid).toProto())
+                                emit(InboundEvent.LineReceived(sessionId = sid, line = "look").toProto())
+                            },
+                        ).toList()
                 }
             job.join()
 

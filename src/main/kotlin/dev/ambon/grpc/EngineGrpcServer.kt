@@ -35,7 +35,8 @@ class EngineGrpcServer(
     private val dispatcher = GrpcOutboundDispatcher(outbound = outbound, serviceImpl = serviceImpl, scope = scope, metrics = metrics)
 
     private val server: Server =
-        ServerBuilder.forPort(port)
+        ServerBuilder
+            .forPort(port)
             .addService(serviceImpl)
             .build()
 

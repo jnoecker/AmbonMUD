@@ -144,7 +144,11 @@ class EngineServer(
     private val progression = PlayerProgression(config.progression)
     private val shardingEnabled = config.sharding.enabled
     private val engineId = config.sharding.engineId
-    private val configuredShardedZones = config.sharding.zones.map(String::trim).filter { it.isNotEmpty() }.toSet()
+    private val configuredShardedZones =
+        config.sharding.zones
+            .map(String::trim)
+            .filter { it.isNotEmpty() }
+            .toSet()
     private val zoneFilter =
         if (shardingEnabled && configuredShardedZones.isNotEmpty()) {
             configuredShardedZones
@@ -207,7 +211,10 @@ class EngineServer(
                                 assignment.engineId to
                                     Pair(
                                         EngineAddress(assignment.engineId, assignment.host, assignment.port),
-                                        assignment.zones.map(String::trim).filter { it.isNotEmpty() }.toSet(),
+                                        assignment.zones
+                                            .map(String::trim)
+                                            .filter { it.isNotEmpty() }
+                                            .toSet(),
                                     )
                             }
                         }
@@ -317,7 +324,9 @@ class EngineServer(
                     interEngineBus = interEngineBus,
                     engineId = engineId,
                     peerEngineCount = {
-                        zoneRegistry?.allAssignments()?.values
+                        zoneRegistry
+                            ?.allAssignments()
+                            ?.values
                             ?.map { it.engineId }
                             ?.filter { it != engineId }
                             ?.toSet()

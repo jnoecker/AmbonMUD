@@ -175,9 +175,8 @@ class SessionRouter(
         return result
     }
 
-    override fun tryReceive(): ChannelResult<InboundEvent> {
+    override fun tryReceive(): ChannelResult<InboundEvent> =
         throw UnsupportedOperationException("SessionRouter does not support tryReceive — engines read from their own channels")
-    }
 
     override fun close() {
         for ((_, channel) in engineChannels) {
