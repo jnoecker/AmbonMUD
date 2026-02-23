@@ -228,6 +228,45 @@ class GameMetrics(
         Gauge.builder("rooms_occupied") { supplier().toDouble() }.register(registry)
     }
 
+    fun bindInboundBusQueue(
+        depthSupplier: () -> Int,
+        capacitySupplier: () -> Int,
+    ) {
+        Gauge.builder("inbound_bus_queue_depth") { depthSupplier().toDouble() }.register(registry)
+        Gauge.builder("inbound_bus_queue_capacity") { capacitySupplier().toDouble() }.register(registry)
+    }
+
+    fun bindOutboundBusQueue(
+        depthSupplier: () -> Int,
+        capacitySupplier: () -> Int,
+    ) {
+        Gauge.builder("outbound_bus_queue_depth") { depthSupplier().toDouble() }.register(registry)
+        Gauge.builder("outbound_bus_queue_capacity") { capacitySupplier().toDouble() }.register(registry)
+    }
+
+    fun bindSessionOutboundQueue(
+        transport: String,
+        depthSupplier: () -> Int,
+        capacitySupplier: () -> Int,
+    ) {
+        Gauge
+            .builder("session_outbound_queue_depth") { depthSupplier().toDouble() }
+            .tag("transport", transport)
+            .register(registry)
+        Gauge
+            .builder("session_outbound_queue_capacity") { capacitySupplier().toDouble() }
+            .tag("transport", transport)
+            .register(registry)
+    }
+
+    fun bindWriteCoalescerDirtyCount(supplier: () -> Int) {
+        Gauge.builder("write_coalescer_dirty_count") { supplier().toDouble() }.register(registry)
+    }
+
+    fun bindSchedulerPendingActions(supplier: () -> Int) {
+        Gauge.builder("scheduler_pending_actions") { supplier().toDouble() }.register(registry)
+    }
+
     companion object {
         fun noop(): GameMetrics = GameMetrics(SimpleMeterRegistry(), bindJvmMetrics = false)
     }

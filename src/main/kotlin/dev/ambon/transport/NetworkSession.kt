@@ -24,6 +24,7 @@ class NetworkSession(
     private val outboundQueue: Channel<String>,
     private val onDisconnected: () -> Unit,
     private val scope: CoroutineScope,
+    private val onOutboundFrameWritten: () -> Unit = {},
     private val maxLineLen: Int = 1024,
     private val maxNonPrintablePerLine: Int = 32,
     private val maxInboundBackpressureFailures: Int = 3,
@@ -94,6 +95,7 @@ class NetworkSession(
             for (msg in outboundQueue) {
                 writer.write(msg)
                 writer.flush()
+                onOutboundFrameWritten()
             }
         } catch (_: Throwable) {
             // ignore; reader loop will close socket

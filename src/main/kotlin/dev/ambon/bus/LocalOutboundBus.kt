@@ -4,21 +4,40 @@ import dev.ambon.engine.events.OutboundEvent
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ChannelResult
 import kotlinx.coroutines.channels.ReceiveChannel
+import java.util.concurrent.atomic.AtomicInteger
 
 class LocalOutboundBus(
-    capacity: Int = Channel.UNLIMITED,
+    val capacity: Int = Channel.UNLIMITED,
 ) : OutboundBus {
     private val channel = Channel<OutboundEvent>(capacity)
+    private val depth = AtomicInteger(0)
 
-    override suspend fun send(event: OutboundEvent) = channel.send(event)
+    override suspend fun send(event: OutboundEvent) {
+        channel.send(event)
+        depth.incrementAndGet()
+    }
 
-    fun trySend(event: OutboundEvent): ChannelResult<Unit> = channel.trySend(event)
+    fun trySend(event: OutboundEvent): ChannelResult<Unit> {
+        val result = channel.trySend(event)
+        if (result.isSuccess) {
+            depth.incrementAndGet()
+        }
+        return result
+    }
 
-    override fun tryReceive(): ChannelResult<OutboundEvent> = channel.tryReceive()
+    override fun tryReceive(): ChannelResult<OutboundEvent> {
+        val result = channel.tryReceive()
+        if (result.isSuccess) {
+            depth.updateAndGet { current -> (current - 1).coerceAtLeast(0) }
+        }
+        return result
+    }
 
     override fun asReceiveChannel(): ReceiveChannel<OutboundEvent> = channel
 
     override fun close() {
         channel.close()
     }
+
+    fun depth(): Int = depth.get()
 }

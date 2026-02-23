@@ -71,4 +71,6 @@ class GrpcInboundBus(
     override fun close() {
         delegate.close()
     }
+
+    fun delegateForMetrics(): LocalInboundBus = delegate
 }
