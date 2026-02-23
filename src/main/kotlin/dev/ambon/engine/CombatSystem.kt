@@ -177,7 +177,9 @@ class CombatSystem(
             if (player.hp <= 0) {
                 metrics.onPlayerDeath()
                 endFight(fight)
-                outbound.send(OutboundEvent.SendText(fight.sessionId, "You are too wounded to keep fighting and flee."))
+                outbound.send(OutboundEvent.SendText(fight.sessionId, "You collapse, too wounded to keep fighting."))
+                outbound.send(OutboundEvent.SendText(fight.sessionId, "You are safe now — rest and your wounds will mend."))
+                broadcastToRoom(player.roomId, "${player.name} has fallen in battle.", exclude = fight.sessionId)
                 outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
                 ran++
                 continue
@@ -236,7 +238,9 @@ class CombatSystem(
             if (player.hp <= 0) {
                 metrics.onPlayerDeath()
                 endFight(fight)
-                outbound.send(OutboundEvent.SendText(fight.sessionId, "You are forced to flee from ${mob.name}."))
+                outbound.send(OutboundEvent.SendText(fight.sessionId, "You have been slain by ${mob.name}."))
+                outbound.send(OutboundEvent.SendText(fight.sessionId, "You are safe now — rest and your wounds will mend."))
+                broadcastToRoom(player.roomId, "${player.name} has been slain by ${mob.name}.", exclude = fight.sessionId)
                 outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
                 ran++
                 continue
