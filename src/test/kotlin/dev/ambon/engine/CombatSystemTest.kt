@@ -387,7 +387,13 @@ class CombatSystemTest {
                                 multiplier = 1.0,
                                 defaultKillXp = 50L,
                             ),
-                        rewards = LevelRewardsConfig(hpPerLevel = 3, fullHealOnLevelUp = true),
+                        rewards =
+                            LevelRewardsConfig(
+                                hpPerLevel = 3,
+                                fullHealOnLevelUp = true,
+                                manaPerLevel = 5,
+                                fullManaOnLevelUp = true,
+                            ),
                     ),
                 )
             val combat =
@@ -426,7 +432,7 @@ class CombatSystemTest {
                     .filter { it.sessionId == sid }
                     .map { it.text }
             assertTrue(messages.contains("You gain 50 XP."))
-            assertTrue(messages.contains("You reached level 2! (+3 max HP)"))
+            assertTrue(messages.contains("You reached level 2! (+3 max HP, +5 max Mana)"))
         }
 
     private fun equipItem(

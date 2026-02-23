@@ -15,19 +15,25 @@ class RegenSystem(
     private val minIntervalMs: Long = 1_000L,
     private val msPerConstitution: Long = 200L,
     private val regenAmount: Int = 1,
+    private val manaBaseIntervalMs: Long = 3_000L,
+    private val manaMinIntervalMs: Long = 1_000L,
+    private val manaRegenAmount: Int = 1,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     private val lastRegenAtMs = mutableMapOf<SessionId, Long>()
+    private val lastManaRegenAtMs = mutableMapOf<SessionId, Long>()
 
     fun remapSession(
         oldSid: SessionId,
         newSid: SessionId,
     ) {
         lastRegenAtMs.remove(oldSid)?.let { lastRegenAtMs[newSid] = it }
+        lastManaRegenAtMs.remove(oldSid)?.let { lastManaRegenAtMs[newSid] = it }
     }
 
     fun onPlayerDisconnected(sessionId: SessionId) {
         lastRegenAtMs.remove(sessionId)
+        lastManaRegenAtMs.remove(sessionId)
     }
 
     fun tick(maxPlayersPerTick: Int = 50) {
@@ -41,21 +47,40 @@ class RegenSystem(
             if (ran >= maxPlayersPerTick) break
 
             val sessionId = player.sessionId
+            var didWork = false
+
+            // HP regen
             if (player.hp >= player.maxHp) {
                 lastRegenAtMs[sessionId] = now
-                continue
+            } else {
+                val last = lastRegenAtMs[sessionId] ?: now
+                val interval = regenIntervalMs(player)
+                if (now - last >= interval) {
+                    val updated = (player.hp + regenAmount).coerceAtMost(player.maxHp)
+                    if (updated != player.hp) {
+                        player.hp = updated
+                    }
+                    lastRegenAtMs[sessionId] = now
+                    didWork = true
+                }
             }
 
-            val last = lastRegenAtMs[sessionId] ?: now
-            val interval = regenIntervalMs(player)
-            if (now - last < interval) continue
-
-            val updated = (player.hp + regenAmount).coerceAtMost(player.maxHp)
-            if (updated != player.hp) {
-                player.hp = updated
+            // Mana regen
+            if (player.mana >= player.maxMana) {
+                lastManaRegenAtMs[sessionId] = now
+            } else {
+                val lastMana = lastManaRegenAtMs[sessionId] ?: now
+                if (now - lastMana >= manaBaseIntervalMs) {
+                    val updated = (player.mana + manaRegenAmount).coerceAtMost(player.maxMana)
+                    if (updated != player.mana) {
+                        player.mana = updated
+                    }
+                    lastManaRegenAtMs[sessionId] = now
+                    didWork = true
+                }
             }
-            lastRegenAtMs[sessionId] = now
-            ran++
+
+            if (didWork) ran++
         }
     }
 

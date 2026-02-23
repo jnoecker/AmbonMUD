@@ -103,6 +103,13 @@ sealed interface Command {
         val playerName: String,
     ) : Command
 
+    data class Cast(
+        val spellName: String,
+        val target: String?,
+    ) : Command
+
+    data object Spells : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -198,6 +205,15 @@ object CommandParser {
             if (kw.isEmpty()) Command.Invalid(line, "drop <item>") else Command.Drop(kw)
         }?.let { return it }
 
+        // cast / c
+        matchPrefix(line, listOf("cast", "c")) { rest ->
+            if (rest.isEmpty()) return@matchPrefix Command.Invalid(line, "cast <spell> [target]")
+            val parts = rest.split(Regex("\\s+"), limit = 2)
+            val spellName = parts[0]
+            val target = parts.getOrNull(1)?.trim()?.takeIf { it.isNotEmpty() }
+            Command.Cast(spellName, target)
+        }?.let { return it }
+
         // kill
         matchPrefix(line, listOf("kill")) { rest ->
             val target = rest.trim()
@@ -252,6 +268,7 @@ object CommandParser {
             "exits", "ex" -> Command.Exits
             "flee" -> Command.Flee
             "score", "sc" -> Command.Score
+            "spells", "abilities" -> Command.Spells
             "shutdown" -> Command.Shutdown
             else -> Command.Unknown(line)
         }

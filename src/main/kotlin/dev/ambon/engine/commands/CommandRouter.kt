@@ -13,6 +13,7 @@ import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.metrics.GameMetrics
@@ -28,6 +29,7 @@ class CommandRouter(
     private val combat: CombatSystem,
     private val outbound: OutboundBus,
     private val progression: PlayerProgression = PlayerProgression(),
+    private val abilitySystem: AbilitySystem? = null,
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val onShutdown: suspend () -> Unit = {},
     private val onMobSmited: (MobId) -> Unit = {},
@@ -70,6 +72,8 @@ class CommandRouter(
                             drop <item>
                             kill <mob>
                             flee
+                            cast/c <spell> [target]
+                            spells/abilities
                             score/sc
                             ansi on/off
                             colors
@@ -408,6 +412,53 @@ class CommandRouter(
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
+            is Command.Cast -> {
+                if (abilitySystem == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Abilities are not available."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val err = abilitySystem.cast(sessionId, cmd.spellName, cmd.target)
+                if (err != null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, err))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            Command.Spells -> {
+                if (abilitySystem == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Abilities are not available."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val known = abilitySystem.knownAbilities(sessionId)
+                if (known.isEmpty()) {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You don't know any spells yet."))
+                } else {
+                    val me = players.get(sessionId) ?: return
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Known spells (Mana: ${me.mana}/${me.maxMana}):"))
+                    for (a in known) {
+                        val remainingMs = abilitySystem.cooldownRemainingMs(sessionId, a.id)
+                        val cdText =
+                            if (remainingMs > 0) {
+                                val remainingSec = ((remainingMs + 999) / 1000).coerceAtLeast(1)
+                                "${remainingSec}s remaining"
+                            } else if (a.cooldownMs > 0) {
+                                "${a.cooldownMs / 1000}s cooldown"
+                            } else {
+                                "no cooldown"
+                            }
+                        outbound.send(
+                            OutboundEvent.SendInfo(
+                                sessionId,
+                                "  ${a.displayName}  — ${a.manaCost} mana, $cdText — ${a.description}",
+                            ),
+                        )
+                    }
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
             Command.Score -> {
                 val me = players.get(sessionId) ?: return
                 val equipped = items.equipment(sessionId)
@@ -440,6 +491,7 @@ class CommandRouter(
 
                 outbound.send(OutboundEvent.SendInfo(sessionId, "[ ${me.name} — Level ${me.level} Adventurer ]"))
                 outbound.send(OutboundEvent.SendInfo(sessionId, "  HP  : ${me.hp} / ${me.maxHp}      XP : $xpLine"))
+                outbound.send(OutboundEvent.SendInfo(sessionId, "  Mana: ${me.mana} / ${me.maxMana}"))
                 if (totalCon > 0) {
                     val conParts =
                         ItemSlot.entries

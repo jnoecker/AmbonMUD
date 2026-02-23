@@ -15,6 +15,8 @@ object PlayersTable : Table("players") {
     val passwordHash = varchar("password_hash", 72).default("")
     val ansiEnabled = bool("ansi_enabled").default(false)
     val isStaff = bool("is_staff").default(false)
+    val mana = integer("mana").default(20)
+    val maxMana = integer("max_mana").default(20)
 
     override val primaryKey = PrimaryKey(id)
 }
