@@ -116,6 +116,9 @@ class InterEngineMessageSerializationTest {
                 damage = 7,
                 armor = 1,
                 constitution = 2,
+                consumable = true,
+                charges = 3,
+                onUse = SerializedItemUseEffect(healHp = 4, grantXp = 12),
                 matchByKey = true,
             )
         val json = mapper.writeValueAsString(item)

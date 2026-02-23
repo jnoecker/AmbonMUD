@@ -158,6 +158,10 @@ items:
     displayName: "a mirror-bright apple"
     keyword: "apple"
     description: "Perfectly smooth, reflecting your face like a tiny moon."
+    consumable: true
+    onUse:
+      healHp: 4
+      grantXp: 5
     room: mirror_orchard
 
   mossy_helm:
