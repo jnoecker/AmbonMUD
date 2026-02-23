@@ -22,4 +22,10 @@ class SwarmConfigTest {
         val config = SwarmConfig(run = RunConfig(namespacePrefix = "1bad"))
         assertThrows<IllegalArgumentException> { config.validated() }
     }
+
+    @Test
+    fun `namespace prefix longer than 10 chars is rejected`() {
+        val config = SwarmConfig(run = RunConfig(namespacePrefix = "abcdefghijk"))
+        assertThrows<IllegalArgumentException> { config.validated() }
+    }
 }

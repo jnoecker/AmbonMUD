@@ -18,8 +18,8 @@ data class SwarmConfig(
         require(run.durationSeconds > 0) { "run.durationSeconds must be > 0" }
         require(run.rampSeconds >= 0) { "run.rampSeconds must be >= 0" }
         require(run.protocolMix.telnetPercent in 0..100) { "run.protocolMix.telnetPercent must be in 0..100" }
-        require(run.namespacePrefix.matches(Regex("[A-Za-z_][A-Za-z0-9_]{1,15}"))) {
-            "run.namespacePrefix must match player-name constraints (2..16 chars, alnum/underscore, not starting with digit)"
+        require(run.namespacePrefix.matches(Regex("[A-Za-z_][A-Za-z0-9_]{0,9}"))) {
+            "run.namespacePrefix must be 1..10 chars (alnum/underscore, not starting with digit) to leave room for _NNNN suffix"
         }
         require(run.basePassword.isNotBlank() && run.basePassword.length <= 72) {
             "run.basePassword must be non-blank and <= 72 chars"
