@@ -2,6 +2,7 @@ package dev.ambon.sharding
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import dev.ambon.engine.PlayerState
 
 /**
  * Messages exchanged between engine instances for cross-zone operations.
@@ -136,9 +137,9 @@ data class SerializedPlayerState(
     val passwordHash: String,
     val createdEpochMs: Long,
     val lastSeenEpochMs: Long,
-    val mana: Int = 20,
-    val maxMana: Int = 20,
-    val baseMana: Int = 20,
+    val mana: Int = PlayerState.BASE_MANA,
+    val maxMana: Int = PlayerState.BASE_MANA,
+    val baseMana: Int = PlayerState.BASE_MANA,
     val inventoryItems: List<SerializedItem> = emptyList(),
     // slot name → item
     val equippedItems: Map<String, SerializedItem> = emptyMap(),

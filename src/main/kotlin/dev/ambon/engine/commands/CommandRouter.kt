@@ -435,9 +435,19 @@ class CommandRouter(
                 if (known.isEmpty()) {
                     outbound.send(OutboundEvent.SendInfo(sessionId, "You don't know any spells yet."))
                 } else {
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "Known spells:"))
+                    val me = players.get(sessionId) ?: return
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Known spells (Mana: ${me.mana}/${me.maxMana}):"))
                     for (a in known) {
-                        val cdText = if (a.cooldownMs > 0) "${a.cooldownMs / 1000}s cooldown" else "no cooldown"
+                        val remainingMs = abilitySystem.cooldownRemainingMs(sessionId, a.id)
+                        val cdText =
+                            if (remainingMs > 0) {
+                                val remainingSec = ((remainingMs + 999) / 1000).coerceAtLeast(1)
+                                "${remainingSec}s remaining"
+                            } else if (a.cooldownMs > 0) {
+                                "${a.cooldownMs / 1000}s cooldown"
+                            } else {
+                                "no cooldown"
+                            }
                         outbound.send(
                             OutboundEvent.SendInfo(
                                 sessionId,

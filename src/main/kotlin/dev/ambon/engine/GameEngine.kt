@@ -89,7 +89,12 @@ class GameEngine(
             onMobRemoved = mobSystem::onMobRemoved,
             progression = progression,
             metrics = metrics,
-            onLevelUp = { sid, level -> abilitySystem.syncAbilities(sid, level) },
+            onLevelUp = { sid, level ->
+                val newAbilities = abilitySystem.syncAbilities(sid, level)
+                for (ability in newAbilities) {
+                    outbound.send(OutboundEvent.SendText(sid, "You have learned ${ability.displayName}!"))
+                }
+            },
         )
     private val regenSystem =
         RegenSystem(
@@ -112,12 +117,10 @@ class GameEngine(
     private val abilitySystem: AbilitySystem =
         AbilitySystem(
             players = players,
-            mobs = mobs,
             registry = abilityRegistry,
             outbound = outbound,
             combat = combatSystem,
             clock = clock,
-            progression = progression,
         )
 
     private val router =

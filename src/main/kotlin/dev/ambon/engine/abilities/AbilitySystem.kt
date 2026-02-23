@@ -3,10 +3,7 @@ package dev.ambon.engine.abilities
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.MobRegistry
-import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import java.time.Clock
@@ -14,13 +11,11 @@ import java.util.Random
 
 class AbilitySystem(
     private val players: PlayerRegistry,
-    private val mobs: MobRegistry,
     private val registry: AbilityRegistry,
     private val outbound: OutboundBus,
     private val combat: CombatSystem,
     private val clock: Clock,
     private val rng: Random = Random(),
-    private val progression: PlayerProgression = PlayerProgression(),
 ) {
     private val learnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
     private val cooldowns = mutableMapOf<SessionId, MutableMap<AbilityId, Long>>()
@@ -81,15 +76,15 @@ class AbilitySystem(
 
                 val mob =
                     if (keyword != null) {
-                        findMobInRoom(player.roomId, keyword)
+                        combat.findMobInRoom(player.roomId, keyword)
                             ?: return "You don't see '$keyword' here."
                     } else {
-                        combat.currentTarget(sessionId)?.let { mobs.get(it) }
+                        combat.getCombatTarget(sessionId)
                             ?: return "Cast ${ability.displayName} on whom?"
                     }
 
                 // 5. Deduct mana
-                player.mana -= ability.manaCost
+                player.mana = (player.mana - ability.manaCost).coerceAtLeast(0)
 
                 // 6. Set cooldown
                 if (ability.cooldownMs > 0) {
@@ -124,7 +119,7 @@ class AbilitySystem(
 
             TargetType.SELF -> {
                 // 5. Deduct mana
-                player.mana -= ability.manaCost
+                player.mana = (player.mana - ability.manaCost).coerceAtLeast(0)
 
                 // 6. Set cooldown
                 if (ability.cooldownMs > 0) {
@@ -162,6 +157,14 @@ class AbilitySystem(
         return known.mapNotNull { registry.get(it) }.sortedBy { it.levelRequired }
     }
 
+    fun cooldownRemainingMs(
+        sessionId: SessionId,
+        abilityId: AbilityId,
+    ): Long {
+        val expiresAt = cooldowns[sessionId]?.get(abilityId) ?: return 0L
+        return (expiresAt - clock.millis()).coerceAtLeast(0L)
+    }
+
     fun onPlayerDisconnected(sessionId: SessionId) {
         learnedAbilities.remove(sessionId)
         cooldowns.remove(sessionId)
@@ -181,16 +184,6 @@ class AbilitySystem(
     ): Int {
         if (max <= min) return min
         return min + rng.nextInt((max - min) + 1)
-    }
-
-    private fun findMobInRoom(
-        roomId: RoomId,
-        keyword: String,
-    ): MobState? {
-        val lower = keyword.lowercase()
-        return mobs
-            .mobsInRoom(roomId)
-            .firstOrNull { it.name.lowercase().contains(lower) }
     }
 
     private suspend fun broadcastToRoom(

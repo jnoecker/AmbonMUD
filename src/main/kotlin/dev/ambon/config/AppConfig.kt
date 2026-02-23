@@ -98,9 +98,16 @@ data class AppConfig(
         require(engine.regen.mana.regenAmount > 0) { "ambonMUD.engine.regen.mana.regenAmount must be > 0" }
 
         engine.abilities.definitions.forEach { (key, def) ->
+            require(def.displayName.isNotBlank()) { "ability '$key' displayName must be non-blank" }
             require(def.manaCost >= 0) { "ability '$key' manaCost must be >= 0" }
             require(def.cooldownMs >= 0L) { "ability '$key' cooldownMs must be >= 0" }
             require(def.levelRequired >= 1) { "ability '$key' levelRequired must be >= 1" }
+            require(def.targetType.uppercase() in listOf("ENEMY", "SELF")) {
+                "ability '$key' targetType must be ENEMY or SELF, got '${def.targetType}'"
+            }
+            require(def.effect.type.uppercase() in listOf("DIRECT_DAMAGE", "DIRECT_HEAL")) {
+                "ability '$key' effect.type must be DIRECT_DAMAGE or DIRECT_HEAL, got '${def.effect.type}'"
+            }
         }
 
         require(progression.maxLevel > 0) { "ambonMUD.progression.maxLevel must be > 0" }

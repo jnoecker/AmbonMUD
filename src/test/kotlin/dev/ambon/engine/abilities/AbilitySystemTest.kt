@@ -85,7 +85,6 @@ class AbilitySystemTest {
         val abilitySystem =
             AbilitySystem(
                 players = players,
-                mobs = mobs,
                 registry = registry,
                 outbound = outbound,
                 combat = combat,
