@@ -370,8 +370,9 @@ class MudServer(
                     while (isActive) {
                         delay(heartbeatMs)
                         runCatching {
-                            val names = players.allPlayers().map { it.name }
-                            playerLocationIndex.refreshAll(names)
+                            // refreshTtls uses the index's own internal name tracking —
+                            // no access to PlayerRegistry needed, avoiding a cross-thread read.
+                            playerLocationIndex.refreshTtls()
                         }.onFailure { err ->
                             log.warn(err) { "Player location index heartbeat failed" }
                         }

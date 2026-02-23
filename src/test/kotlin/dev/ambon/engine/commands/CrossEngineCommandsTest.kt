@@ -348,7 +348,7 @@ private class MapPlayerLocationIndex(
 
     override fun unregister(playerName: String) {}
 
-    override fun lookupEngineId(playerName: String): String? = entries[playerName.lowercase()]
+    override suspend fun lookupEngineId(playerName: String): String? = entries[playerName.lowercase()]
 
-    override fun refreshAll(playerNames: Collection<String>) {}
+    override fun refreshTtls() {}
 }

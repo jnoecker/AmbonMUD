@@ -17,12 +17,13 @@ interface PlayerLocationIndex {
     /**
      * Look up which engine hosts the named player.
      * Returns the engine ID, or null if the player is not in the index.
+     * Suspend because implementations may perform non-blocking I/O.
      */
-    fun lookupEngineId(playerName: String): String?
+    suspend fun lookupEngineId(playerName: String): String?
 
     /**
-     * Refresh the TTL for all listed players (heartbeat).
-     * Called periodically to prevent keys from expiring while players are still online.
+     * Refresh the TTL for all players registered on this engine.
+     * Uses internally tracked names — no external player list required.
      */
-    fun refreshAll(playerNames: Collection<String>)
+    fun refreshTtls()
 }
