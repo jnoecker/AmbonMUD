@@ -46,12 +46,13 @@ class EngineGrpcServerTest {
             val gatewayJob =
                 scope.launch {
                     runCatching {
-                        stub.eventStream(
-                            flow {
-                                emit(InboundEvent.Connected(sessionId = SessionId(1L)).toProto())
-                                delay(10_000L)
-                            },
-                        ).collect {}
+                        stub
+                            .eventStream(
+                                flow {
+                                    emit(InboundEvent.Connected(sessionId = SessionId(1L)).toProto())
+                                    delay(10_000L)
+                                },
+                            ).collect {}
                     }
                 }
 

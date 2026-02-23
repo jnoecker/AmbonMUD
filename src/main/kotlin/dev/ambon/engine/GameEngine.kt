@@ -156,10 +156,15 @@ class GameEngine(
         world.mobSpawns.forEach { spawn ->
             mobs.upsert(
                 MobState(
-                    id = spawn.id, name = spawn.name, roomId = spawn.roomId,
-                    hp = spawn.maxHp, maxHp = spawn.maxHp,
-                    minDamage = spawn.minDamage, maxDamage = spawn.maxDamage,
-                    armor = spawn.armor, xpReward = spawn.xpReward,
+                    id = spawn.id,
+                    name = spawn.name,
+                    roomId = spawn.roomId,
+                    hp = spawn.maxHp,
+                    maxHp = spawn.maxHp,
+                    minDamage = spawn.minDamage,
+                    maxDamage = spawn.maxDamage,
+                    armor = spawn.armor,
+                    xpReward = spawn.xpReward,
                     drops = spawn.drops,
                 ),
             )
@@ -292,10 +297,15 @@ class GameEngine(
         for (spawn in zoneMobSpawns) {
             mobs.upsert(
                 MobState(
-                    id = spawn.id, name = spawn.name, roomId = spawn.roomId,
-                    hp = spawn.maxHp, maxHp = spawn.maxHp,
-                    minDamage = spawn.minDamage, maxDamage = spawn.maxDamage,
-                    armor = spawn.armor, xpReward = spawn.xpReward,
+                    id = spawn.id,
+                    name = spawn.name,
+                    roomId = spawn.roomId,
+                    hp = spawn.maxHp,
+                    maxHp = spawn.maxHp,
+                    minDamage = spawn.minDamage,
+                    maxDamage = spawn.maxDamage,
+                    armor = spawn.armor,
+                    xpReward = spawn.xpReward,
                     drops = spawn.drops,
                 ),
             )
@@ -545,13 +555,12 @@ class GameEngine(
     private fun resolveRoomId(
         arg: String,
         currentZone: String,
-    ): RoomId? {
-        return if (':' in arg) {
+    ): RoomId? =
+        if (':' in arg) {
             runCatching { RoomId(arg) }.getOrNull()
         } else {
             runCatching { RoomId("$currentZone:$arg") }.getOrNull()
         }
-    }
 
     private suspend fun handle(ev: InboundEvent) {
         when (ev) {

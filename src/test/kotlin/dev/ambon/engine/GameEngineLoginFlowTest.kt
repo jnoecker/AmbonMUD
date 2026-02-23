@@ -486,7 +486,8 @@ class GameEngineLoginFlowTest {
 
             // New session does NOT receive an "enters." broadcast
             assertFalse(
-                outs.filterIsInstance<OutboundEvent.SendText>()
+                outs
+                    .filterIsInstance<OutboundEvent.SendText>()
                     .any { it.sessionId == sid2 && it.text.contains("enters.") },
                 "Expected no 'enters.' broadcast for takeover. got=$outs",
             )
@@ -641,7 +642,8 @@ class GameEngineLoginFlowTest {
                 "Expected flee to succeed (combat inherited). got=$outs",
             )
             assertTrue(
-                outs.filterIsInstance<OutboundEvent.SendText>()
+                outs
+                    .filterIsInstance<OutboundEvent.SendText>()
                     .any { it.sessionId == sid2 && it.text.startsWith("You flee from") },
                 "Expected 'You flee from...' message on new session. got=$outs",
             )

@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "2.3.10"
     application
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+    id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     id("com.google.protobuf") version "0.9.6"
 }
 
@@ -12,7 +12,7 @@ repositories {
     mavenCentral()
 }
 
-val ktorVersion = "2.3.12"
+val ktorVersion = "3.4.0"
 val hopliteVersion = "2.9.0"
 val micrometerVersion = "1.16.3"
 val grpcVersion = "1.79.0"
@@ -62,7 +62,8 @@ dependencies {
     testImplementation("io.grpc:grpc-testing:$grpcVersion")
     testImplementation("io.grpc:grpc-inprocess:$grpcVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")
     testImplementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
     testImplementation("io.ktor:ktor-client-websockets-jvm:$ktorVersion")

@@ -78,7 +78,9 @@ class GrpcOutboundBusTest {
     @Test
     fun `unknown proto variant is silently dropped`() =
         runBlocking {
-            val emptyProto = dev.ambon.grpc.proto.OutboundEventProto.getDefaultInstance()
+            val emptyProto =
+                dev.ambon.grpc.proto.OutboundEventProto
+                    .getDefaultInstance()
             val grpcFlow = flow { emit(emptyProto) }
 
             bus = GrpcOutboundBus(delegate = delegate, grpcReceiveFlow = grpcFlow, scope = scope)
