@@ -6,7 +6,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
-import dev.ambon.domain.world.WorldFactory
+import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
@@ -23,7 +23,7 @@ class CommandRouterScoreTest {
     @Test
     fun `score shows name level hp and damage range`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -50,7 +50,7 @@ class CommandRouterScoreTest {
     @Test
     fun `score with equipped armor item lists it in Armor section`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -76,7 +76,7 @@ class CommandRouterScoreTest {
     @Test
     fun `score at max level shows MAXED for XP`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
