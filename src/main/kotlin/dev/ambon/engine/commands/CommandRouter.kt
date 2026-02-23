@@ -61,9 +61,13 @@ class CommandRouter(
                             exits/ex
                             say <msg> or '<msg>
                             emote <msg>
+                            pose <msg>
                             who
                             tell/t <player> <msg>
+                            whisper/wh <player> <msg>
                             gossip/gs <msg>
+                            shout/sh <msg>
+                            ooc <msg>
                             inventory/inv/i
                             equipment/eq
                             wear/equip <item>
@@ -257,6 +261,63 @@ class CommandRouter(
                     ),
                 )
 
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Whisper -> {
+                val me = players.get(sessionId) ?: return
+                val targetSid = players.findSessionByName(cmd.target)
+                if (targetSid == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.target}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                if (targetSid == sessionId) {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You whisper to yourself: ${cmd.message}"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val target = players.get(targetSid) ?: return
+                if (target.roomId != me.roomId) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "${target.name} is not here."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                outbound.send(OutboundEvent.SendText(sessionId, "You whisper to ${target.name}: ${cmd.message}"))
+                outbound.send(OutboundEvent.SendText(targetSid, "${me.name} whispers to you: ${cmd.message}"))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Shout -> {
+                val me = players.get(sessionId) ?: return
+                val zone = me.roomId.zone
+                outbound.send(OutboundEvent.SendText(sessionId, "You shout: ${cmd.message}"))
+                for (p in players.playersInZone(zone)) {
+                    if (p.sessionId == sessionId) continue
+                    outbound.send(OutboundEvent.SendText(p.sessionId, "[SHOUT] ${me.name}: ${cmd.message}"))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Ooc -> {
+                val me = players.get(sessionId) ?: return
+                for (p in players.allPlayers()) {
+                    if (p.sessionId == sessionId) {
+                        outbound.send(OutboundEvent.SendText(sessionId, "You say OOC: ${cmd.message}"))
+                    } else {
+                        outbound.send(OutboundEvent.SendText(p.sessionId, "[OOC] ${me.name}: ${cmd.message}"))
+                    }
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Pose -> {
+                val me = players.get(sessionId) ?: return
+                val roomId = me.roomId
+                val members = players.playersInRoom(roomId)
+                for (other in members) {
+                    outbound.send(OutboundEvent.SendText(other.sessionId, cmd.message))
+                }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
