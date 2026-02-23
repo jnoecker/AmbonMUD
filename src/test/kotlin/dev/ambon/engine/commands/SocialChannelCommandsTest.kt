@@ -3,7 +3,7 @@ package dev.ambon.engine.commands
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
-import dev.ambon.domain.world.WorldFactory
+import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class SocialChannelCommandsTest {
     private fun buildFixture(): Triple<CommandRouter, PlayerRegistry, LocalOutboundBus> {
-        val world = WorldFactory.demoWorld()
+        val world = WorldLoader.loadFromResource("world/test_world.yaml")
         val items = ItemRegistry()
         val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
         val mobs = MobRegistry()

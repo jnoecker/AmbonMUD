@@ -2,7 +2,7 @@ package dev.ambon.engine.commands
 
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.WorldFactory
+import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
@@ -22,7 +22,7 @@ class CommandRouterBroadcastTest {
     @Test
     fun `say broadcasts to other players in same room and echoes to sender`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -53,7 +53,7 @@ class CommandRouterBroadcastTest {
     @Test
     fun `say does not broadcast across rooms`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -85,7 +85,7 @@ class CommandRouterBroadcastTest {
     @Test
     fun `who lists connected players`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()

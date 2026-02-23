@@ -3,7 +3,6 @@ package dev.ambon.engine
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.WorldFactory
 import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
@@ -35,7 +34,7 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
@@ -95,7 +94,7 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
             repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
@@ -167,7 +166,7 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
             repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
@@ -259,7 +258,7 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
             repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
@@ -316,7 +315,7 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
@@ -419,7 +418,7 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
             repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
             repo.create("Observer", world.startRoom, 0L, BCrypt.hashpw("pw", BCrypt.gensalt()), ansiEnabled = false)
@@ -508,7 +507,7 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
             repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
             val items = ItemRegistry()

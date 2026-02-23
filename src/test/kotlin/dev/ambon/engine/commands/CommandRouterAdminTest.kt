@@ -5,7 +5,7 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
-import dev.ambon.domain.world.WorldFactory
+import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
@@ -60,7 +60,7 @@ class CommandRouterAdminTest {
         onShutdown: suspend () -> Unit = {},
         onMobSmited: (MobId) -> Unit = {},
     ): CommandRouter {
-        val world = WorldFactory.demoWorld()
+        val world = WorldLoader.loadFromResource("world/test_world.yaml")
         val combat = CombatSystem(players, mobs, items, outbound)
         return CommandRouter(
             world = world,
@@ -79,7 +79,7 @@ class CommandRouterAdminTest {
     @Test
     fun `non-staff player receives error on goto`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -90,7 +90,7 @@ class CommandRouterAdminTest {
             login(players, sid, "Alice")
             drain(outbound)
 
-            router.handle(sid, Command.Goto("demo_ruins:caravan_gate"))
+            router.handle(sid, Command.Goto("test_zone:outpost"))
             val outs = drain(outbound)
 
             assertTrue(
@@ -105,7 +105,7 @@ class CommandRouterAdminTest {
     @Test
     fun `goto moves staff player to exact room`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -116,7 +116,7 @@ class CommandRouterAdminTest {
             loginStaff(players, sid, "Alice")
             drain(outbound)
 
-            val target = "demo_ruins:caravan_gate"
+            val target = "test_zone:outpost"
             router.handle(sid, Command.Goto(target))
             drain(outbound)
 
@@ -126,7 +126,7 @@ class CommandRouterAdminTest {
     @Test
     fun `goto with local room resolves in current zone`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -137,21 +137,21 @@ class CommandRouterAdminTest {
             loginStaff(players, sid, "Alice")
             drain(outbound)
 
-            // First teleport to demo_ruins zone
-            router.handle(sid, Command.Goto("demo_ruins:caravan_gate"))
+            // First teleport to test_zone zone
+            router.handle(sid, Command.Goto("test_zone:outpost"))
             drain(outbound)
 
-            // Now goto a local room name only — should resolve in demo_ruins
-            router.handle(sid, Command.Goto("campfire_ring"))
+            // Now goto a local room name only — should resolve in test_zone
+            router.handle(sid, Command.Goto("hub"))
             drain(outbound)
 
-            assertEquals("demo_ruins:campfire_ring", players.get(sid)!!.roomId.value)
+            assertEquals("test_zone:hub", players.get(sid)!!.roomId.value)
         }
 
     @Test
     fun `goto zone-colon resolves to a room in that zone`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -162,17 +162,17 @@ class CommandRouterAdminTest {
             loginStaff(players, sid, "Alice")
             drain(outbound)
 
-            router.handle(sid, Command.Goto("demo_ruins:"))
+            router.handle(sid, Command.Goto("test_zone:"))
             drain(outbound)
 
             val roomId = players.get(sid)!!.roomId
-            assertEquals("demo_ruins", roomId.zone, "Should have landed in demo_ruins zone. got=$roomId")
+            assertEquals("test_zone", roomId.zone, "Should have landed in test_zone zone. got=$roomId")
         }
 
     @Test
     fun `goto unknown room emits error and prompt`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -198,7 +198,7 @@ class CommandRouterAdminTest {
     @Test
     fun `transfer moves target player and sends them a look`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -211,10 +211,10 @@ class CommandRouterAdminTest {
             login(players, bobSid, "Bob")
             drain(outbound)
 
-            router.handle(staffSid, Command.Transfer("Bob", "demo_ruins:caravan_gate"))
+            router.handle(staffSid, Command.Transfer("Bob", "test_zone:outpost"))
             val outs = drain(outbound)
 
-            assertEquals("demo_ruins:caravan_gate", players.get(bobSid)!!.roomId.value, "Bob should be in new room")
+            assertEquals("test_zone:outpost", players.get(bobSid)!!.roomId.value, "Bob should be in new room")
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == bobSid && it.text.contains("divine hand") },
                 "Bob should receive divine transport message. got=$outs",
@@ -228,7 +228,7 @@ class CommandRouterAdminTest {
     @Test
     fun `transfer unknown player emits error`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -239,7 +239,7 @@ class CommandRouterAdminTest {
             loginStaff(players, staffSid, "Admin")
             drain(outbound)
 
-            router.handle(staffSid, Command.Transfer("Ghost", "demo_ruins:caravan_gate"))
+            router.handle(staffSid, Command.Transfer("Ghost", "test_zone:outpost"))
             val outs = drain(outbound)
 
             assertTrue(
@@ -253,7 +253,7 @@ class CommandRouterAdminTest {
     @Test
     fun `spawn creates mob in staff room`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -265,7 +265,7 @@ class CommandRouterAdminTest {
             val staffRoom = players.get(staffSid)!!.roomId
             drain(outbound)
 
-            router.handle(staffSid, Command.Spawn("gate_scout"))
+            router.handle(staffSid, Command.Spawn("grunt"))
             val outs = drain(outbound)
 
             val spawned = mobs.mobsInRoom(staffRoom)
@@ -279,7 +279,7 @@ class CommandRouterAdminTest {
     @Test
     fun `spawn with fully qualified name works`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -291,7 +291,7 @@ class CommandRouterAdminTest {
             val staffRoom = players.get(staffSid)!!.roomId
             drain(outbound)
 
-            router.handle(staffSid, Command.Spawn("demo_ruins:gate_scout"))
+            router.handle(staffSid, Command.Spawn("test_zone:grunt"))
             drain(outbound)
 
             assertTrue(mobs.mobsInRoom(staffRoom).isNotEmpty(), "Expected a mob to be spawned in staff room")
@@ -300,7 +300,7 @@ class CommandRouterAdminTest {
     @Test
     fun `spawn unknown template emits error`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -325,7 +325,7 @@ class CommandRouterAdminTest {
     @Test
     fun `shutdown broadcasts to all players and calls onShutdown callback`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -356,7 +356,7 @@ class CommandRouterAdminTest {
     @Test
     fun `non-staff cannot trigger shutdown`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -377,7 +377,7 @@ class CommandRouterAdminTest {
     @Test
     fun `smite player sets hp to 1 and moves to start room`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -404,7 +404,7 @@ class CommandRouterAdminTest {
     @Test
     fun `smite player sends divine message to target`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -429,7 +429,7 @@ class CommandRouterAdminTest {
     @Test
     fun `smite mob removes it from registry`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -443,7 +443,7 @@ class CommandRouterAdminTest {
             drain(outbound)
 
             // Place a mob in the same room as staff
-            val mobId = MobId("demo_ruins:test_scout")
+            val mobId = MobId("test_zone:test_grunt")
             mobs.upsert(MobState(id = mobId, name = "a wary caravan scout", roomId = staffRoom))
 
             router.handle(staffSid, Command.Smite("scout"))
@@ -456,7 +456,7 @@ class CommandRouterAdminTest {
     @Test
     fun `smite mob not found emits error`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -481,7 +481,7 @@ class CommandRouterAdminTest {
     @Test
     fun `kick sends Close event to target session`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -510,7 +510,7 @@ class CommandRouterAdminTest {
     @Test
     fun `kick self emits error`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
@@ -537,7 +537,7 @@ class CommandRouterAdminTest {
     @Test
     fun `kick unknown player emits error`() =
         runTest {
-            val world = WorldFactory.demoWorld()
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
