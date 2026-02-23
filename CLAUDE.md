@@ -106,4 +106,4 @@ Use `MutableClock` and `InMemoryPlayerRepository` for deterministic unit tests. 
 
 ## Known Quirks
 
-None currently.
+- **JVM Toolchain version:** The `jvmToolchain()` in `build.gradle.kts` must match the JDK installed in the build environment. Cloud/CI environments typically provide JDK 21. If the build fails with `Cannot find a Java installation … matching: {languageVersion=17}` (and the Foojay toolchain resolver cannot auto-provision due to network/proxy restrictions), update `jvmToolchain(17)` → `jvmToolchain(21)` in `build.gradle.kts`.
