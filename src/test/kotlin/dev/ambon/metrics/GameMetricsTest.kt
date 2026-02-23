@@ -153,6 +153,40 @@ class GameMetricsTest {
     }
 
     @Test
+    fun `queue and scheduler gauges bind and update`() {
+        var inboundDepth = 2
+        var outboundDepth = 3
+        var schedulerPending = 4
+        var dirtyCount = 1
+
+        metrics.bindInboundBusQueue({ inboundDepth }) { 16 }
+        metrics.bindOutboundBusQueue({ outboundDepth }) { 32 }
+        metrics.bindSchedulerPendingActions { schedulerPending }
+        metrics.bindWriteCoalescerDirtyCount { dirtyCount }
+        var sessionTotalDepth = 5
+        var sessionMaxDepth = 5
+        metrics.bindSessionOutboundQueueAggregate(
+            totalDepthSupplier = { sessionTotalDepth },
+            maxDepthSupplier = { sessionMaxDepth },
+        )
+
+        assertEquals(2.0, registry.get("inbound_bus_queue_depth").gauge().value())
+        assertEquals(16.0, registry.get("inbound_bus_queue_capacity").gauge().value())
+        assertEquals(3.0, registry.get("outbound_bus_queue_depth").gauge().value())
+        assertEquals(32.0, registry.get("outbound_bus_queue_capacity").gauge().value())
+        assertEquals(4.0, registry.get("scheduler_pending_actions").gauge().value())
+        assertEquals(1.0, registry.get("write_coalescer_dirty_count").gauge().value())
+        assertEquals(5.0, registry.get("session_outbound_queue_depth_total").gauge().value())
+        assertEquals(5.0, registry.get("session_outbound_queue_depth_max").gauge().value())
+
+        inboundDepth = 9
+        schedulerPending = 7
+
+        assertEquals(9.0, registry.get("inbound_bus_queue_depth").gauge().value())
+        assertEquals(7.0, registry.get("scheduler_pending_actions").gauge().value())
+    }
+
+    @Test
     fun `grpc control and data plane counters increment`() {
         metrics.onGrpcControlPlaneDrop("stream_full_timeout")
         metrics.onGrpcControlPlaneDrop("stream_full_timeout")

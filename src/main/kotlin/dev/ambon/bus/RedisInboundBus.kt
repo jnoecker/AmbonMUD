@@ -59,6 +59,8 @@ class RedisInboundBus(
         delegate.close()
     }
 
+    fun delegateForMetrics(): LocalInboundBus = delegate
+
     private fun publish(event: InboundEvent) {
         try {
             val env =

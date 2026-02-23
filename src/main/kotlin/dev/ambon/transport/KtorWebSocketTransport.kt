@@ -151,6 +151,8 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
     outboundRouter.register(
         sessionId = sessionId,
         queue = outboundQueue,
+        queueCapacity = sessionOutboundQueueCapacity,
+        transport = "ws",
         defaultAnsiEnabled = true,
     ) { reason ->
         this@bridgeWebSocketSession.launch {
@@ -176,6 +178,7 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
             try {
                 for (message in outboundQueue) {
                     send(Frame.Text(message))
+                    outboundRouter.onSessionQueueFrameConsumed(sessionId)
                 }
             } catch (_: Throwable) {
                 // best effort

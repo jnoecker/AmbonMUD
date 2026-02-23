@@ -48,6 +48,7 @@ class BlockingSocketTransport(
                             outboundQueue = outboundQueue,
                             onDisconnected = { outboundRouter.unregister(sessionId) },
                             scope = scope,
+                            onOutboundFrameWritten = { outboundRouter.onSessionQueueFrameConsumed(sessionId) },
                             maxLineLen = maxLineLen,
                             maxNonPrintablePerLine = maxNonPrintablePerLine,
                             maxInboundBackpressureFailures = maxInboundBackpressureFailures,
@@ -56,6 +57,8 @@ class BlockingSocketTransport(
                     outboundRouter.register(
                         sessionId = sessionId,
                         queue = outboundQueue,
+                        queueCapacity = sessionOutboundQueueCapacity,
+                        transport = "telnet",
                         defaultAnsiEnabled = false,
                     ) { reason ->
                         session.closeNow(reason)

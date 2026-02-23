@@ -168,6 +168,8 @@ class GrpcOutboundBus(
     override fun close() {
         delegate.close()
     }
+
+    fun delegateForMetrics(): LocalOutboundBus = delegate
 }
 
 private const val DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS = 250L

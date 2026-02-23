@@ -199,6 +199,8 @@ class GatewayServer(
             )
         webTransport.start()
 
+        bindQueueMetrics()
+
         if (multiEngine) {
             val engineIds = config.gateway.engines.joinToString(", ") { "${it.id}@${it.host}:${it.port}" }
             log.info { "Gateway connected to engines: $engineIds" }
@@ -208,6 +210,24 @@ class GatewayServer(
             }
             log.info {
                 "Gateway connected to engine at ${config.grpc.client.engineHost}:${config.grpc.client.enginePort}"
+            }
+        }
+    }
+
+    private fun bindQueueMetrics() {
+        when (val bus = activeInbound) {
+            is LocalInboundBus -> gameMetrics.bindInboundBusQueue(bus::depth) { bus.capacity }
+            is GrpcInboundBus -> {
+                val delegate = bus.delegateForMetrics()
+                gameMetrics.bindInboundBusQueue(delegate::depth) { delegate.capacity }
+            }
+        }
+
+        when (val bus = activeOutbound) {
+            is LocalOutboundBus -> gameMetrics.bindOutboundBusQueue(bus::depth) { bus.capacity }
+            is GrpcOutboundBus -> {
+                val delegate = bus.delegateForMetrics()
+                gameMetrics.bindOutboundBusQueue(delegate::depth) { delegate.capacity }
             }
         }
     }

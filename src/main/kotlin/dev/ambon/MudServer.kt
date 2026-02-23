@@ -287,6 +287,34 @@ class MudServer(
 
     private var zoneHeartbeatJob: Job? = null
 
+    init {
+        bindQueueMetrics()
+        gameMetrics.bindSchedulerPendingActions(scheduler::size)
+        coalescingRepo?.let { gameMetrics.bindWriteCoalescerDirtyCount(it::dirtyCount) }
+    }
+
+    private fun bindQueueMetrics() {
+        when (val bus = inbound) {
+            is LocalInboundBus -> {
+                gameMetrics.bindInboundBusQueue(bus::depth) { bus.capacity }
+            }
+            is RedisInboundBus -> {
+                val delegate = bus.delegateForMetrics()
+                gameMetrics.bindInboundBusQueue(delegate::depth) { delegate.capacity }
+            }
+        }
+
+        when (val bus = outbound) {
+            is LocalOutboundBus -> {
+                gameMetrics.bindOutboundBusQueue(bus::depth) { bus.capacity }
+            }
+            is RedisOutboundBus -> {
+                val delegate = bus.delegateForMetrics()
+                gameMetrics.bindOutboundBusQueue(delegate::depth) { delegate.capacity }
+            }
+        }
+    }
+
     suspend fun start() {
         if (config.redis.enabled && config.redis.bus.enabled) {
             log.warn {
