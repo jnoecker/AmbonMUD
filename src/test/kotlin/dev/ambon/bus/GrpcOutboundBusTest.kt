@@ -31,8 +31,8 @@ class GrpcOutboundBusTest {
 
     @AfterEach
     fun tearDown() {
-        scope.cancel()
         bus.stopReceiving()
+        scope.cancel()
     }
 
     @Test

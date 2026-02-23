@@ -149,7 +149,14 @@ class GrpcOutboundBus(
     fun isReceiverActive(): Boolean = receiverJob?.isActive == true
 
     fun stopReceiving() {
-        runBlocking { receiverJob?.cancelAndJoin() }
+        runBlocking {
+            try {
+                withTimeout(STOP_TIMEOUT_MS) { receiverJob?.cancelAndJoin() }
+            } catch (_: TimeoutCancellationException) {
+                log.warn { "GrpcOutboundBus receiver did not stop within ${STOP_TIMEOUT_MS}ms; forcing cancel" }
+                receiverJob?.cancel()
+            }
+        }
     }
 
     override suspend fun send(event: OutboundEvent) = delegate.send(event)
@@ -164,3 +171,4 @@ class GrpcOutboundBus(
 }
 
 private const val DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS = 250L
+private const val STOP_TIMEOUT_MS = 5_000L
