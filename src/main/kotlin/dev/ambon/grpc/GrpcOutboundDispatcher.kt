@@ -49,7 +49,14 @@ class GrpcOutboundDispatcher(
     }
 
     fun stop() {
-        runBlocking { job?.cancelAndJoin() }
+        runBlocking {
+            try {
+                withTimeout(STOP_TIMEOUT_MS) { job?.cancelAndJoin() }
+            } catch (_: TimeoutCancellationException) {
+                log.warn { "GrpcOutboundDispatcher job did not stop within ${STOP_TIMEOUT_MS}ms; forcing cancel" }
+                job?.cancel()
+            }
+        }
         log.info { "GrpcOutboundDispatcher stopped" }
     }
 
@@ -144,3 +151,4 @@ fun OutboundEvent.sessionId(): SessionId =
     }
 
 private const val DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS = 250L
+private const val STOP_TIMEOUT_MS = 5_000L
