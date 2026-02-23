@@ -745,6 +745,173 @@ class CombatSystemTest {
             )
         }
 
+    @Test
+    fun `player slain by mob shows death summary and safe respawn message`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            // mob hits hard enough to one-shot the player
+            val mob =
+                MobState(
+                    MobId("demo:ogre"),
+                    "an ogre",
+                    roomId,
+                    hp = 100,
+                    maxHp = 100,
+                    minDamage = 50,
+                    maxDamage = 50,
+                )
+            mobs.upsert(mob)
+
+            val outbound = LocalOutboundBus()
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 1,
+                    maxDamage = 1,
+                )
+
+            val sid = SessionId(20L)
+            login(players, sid, "Victim")
+            combat.startCombat(sid, "ogre")
+            // drain the "You attack an ogre." message
+            drainOutbound(outbound)
+
+            clock.advance(1_000L)
+            combat.tick()
+
+            val messages =
+                drainOutbound(outbound)
+                    .filterIsInstance<OutboundEvent.SendText>()
+                    .filter { it.sessionId == sid }
+                    .map { it.text }
+
+            assertTrue(
+                messages.any { it.contains("You have been slain by an ogre.") },
+                "Expected death summary message, got: $messages",
+            )
+            assertTrue(
+                messages.any { it.contains("You are safe now") },
+                "Expected safe respawn message, got: $messages",
+            )
+        }
+
+    @Test
+    fun `player death broadcasts to room observers`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob =
+                MobState(
+                    MobId("demo:ogre"),
+                    "an ogre",
+                    roomId,
+                    hp = 100,
+                    maxHp = 100,
+                    minDamage = 50,
+                    maxDamage = 50,
+                )
+            mobs.upsert(mob)
+
+            val outbound = LocalOutboundBus()
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 1,
+                    maxDamage = 1,
+                )
+
+            val fighterSid = SessionId(21L)
+            val observerSid = SessionId(22L)
+            login(players, fighterSid, "Fighter")
+            login(players, observerSid, "Observer")
+            combat.startCombat(fighterSid, "ogre")
+            drainOutbound(outbound)
+
+            clock.advance(1_000L)
+            combat.tick()
+
+            val observerMessages =
+                drainOutbound(outbound)
+                    .filterIsInstance<OutboundEvent.SendText>()
+                    .filter { it.sessionId == observerSid }
+                    .map { it.text }
+
+            assertTrue(
+                observerMessages.any { it.contains("Fighter has been slain by an ogre.") },
+                "Expected death broadcast to observer, got: $observerMessages",
+            )
+        }
+
+    @Test
+    fun `player at zero hp shows collapse message and safe respawn`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 100, maxHp = 100)
+            mobs.upsert(mob)
+
+            val outbound = LocalOutboundBus()
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 1,
+                    maxDamage = 1,
+                )
+
+            val sid = SessionId(23L)
+            login(players, sid, "Wounded")
+            // manually set HP to 0 before the combat tick
+            players.get(sid)!!.hp = 0
+            combat.startCombat(sid, "rat")
+            drainOutbound(outbound)
+
+            clock.advance(1_000L)
+            combat.tick()
+
+            val messages =
+                drainOutbound(outbound)
+                    .filterIsInstance<OutboundEvent.SendText>()
+                    .filter { it.sessionId == sid }
+                    .map { it.text }
+
+            assertTrue(
+                messages.any { it.contains("You collapse, too wounded to keep fighting.") },
+                "Expected collapse message, got: $messages",
+            )
+            assertTrue(
+                messages.any { it.contains("You are safe now") },
+                "Expected safe respawn message, got: $messages",
+            )
+        }
+
     private fun drainOutbound(outbound: LocalOutboundBus): List<OutboundEvent> {
         val events = mutableListOf<OutboundEvent>()
         while (true) {
