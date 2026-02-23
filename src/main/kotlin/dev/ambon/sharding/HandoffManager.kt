@@ -232,6 +232,14 @@ class HandoffManager(
                 mana = state.mana,
                 maxMana = state.maxMana,
                 baseMana = state.baseMana,
+                playerClass =
+                    dev.ambon.domain.character.PlayerClass
+                        .fromString(state.playerClass)
+                        ?: dev.ambon.domain.character.PlayerClass.WARRIOR,
+                playerRace =
+                    dev.ambon.domain.character.PlayerRace
+                        .fromString(state.playerRace)
+                        ?: dev.ambon.domain.character.PlayerRace.HUMAN,
             )
 
         try {
@@ -322,6 +330,8 @@ class HandoffManager(
                     equipment
                         .mapKeys { (slot, _) -> slot.name }
                         .mapValues { (_, instance) -> serializeItem(instance) },
+                playerClass = player.playerClass.name,
+                playerRace = player.playerRace.name,
             )
 
         fun serializeItem(instance: ItemInstance): SerializedItem =

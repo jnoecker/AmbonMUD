@@ -116,7 +116,8 @@ class CombatSystemTest {
 
             val updatedMob = mobs.get(mob.id)
             assertNotNull(updatedMob)
-            assertEquals(7, updatedMob!!.hp)
+            // Warrior class adds +2 base damage → 1+2(weapon)+2(class)=5 total → mob hp: 10-5=5
+            assertEquals(5, updatedMob!!.hp)
         }
 
     @Test
@@ -423,8 +424,9 @@ class CombatSystemTest {
             assertNotNull(player)
             assertEquals(2, player!!.level)
             assertEquals(50L, player.xpTotal)
-            assertEquals(13, player.maxHp)
-            assertEquals(13, player.hp)
+            // Warrior class: hpPerLevel=4, manaPerLevel=1
+            assertEquals(14, player.maxHp)
+            assertEquals(14, player.hp)
 
             val messages =
                 drainOutbound(outbound)
@@ -432,7 +434,7 @@ class CombatSystemTest {
                     .filter { it.sessionId == sid }
                     .map { it.text }
             assertTrue(messages.contains("You gain 50 XP."))
-            assertTrue(messages.contains("You reached level 2! (+3 max HP, +5 max Mana)"))
+            assertTrue(messages.contains("You reached level 2! (+4 max HP, +1 max Mana)"))
         }
 
     private fun equipItem(
@@ -529,9 +531,10 @@ class CombatSystemTest {
             clock.advance(1_000L)
             combat.tick()
 
-            assertEquals(7, mob.hp, "Expected mob hp=7 (10 - (5-2)=3)")
+            // Warrior class adds +2 damage → total attack=5+2=7, minus 2 armor = 5
+            assertEquals(5, mob.hp, "Expected mob hp=5 (10 - (5+2-2)=5)")
             val messages = drainOutbound(outbound).filterIsInstance<OutboundEvent.SendText>().map { it.text }
-            assertTrue(messages.any { it.contains("for 3 damage") }, "Expected 'for 3 damage' in: $messages")
+            assertTrue(messages.any { it.contains("for 5 damage") }, "Expected 'for 5 damage' in: $messages")
         }
 
     @Test
@@ -577,9 +580,9 @@ class CombatSystemTest {
 
             val player = players.get(sid)
             assertNotNull(player)
-            // mob should have hit player for 10 (its own damage), not 1 (global config)
+            // mob should have hit player for 9 (its own damage 10 minus warrior armor bonus 1)
             val messages = drainOutbound(outbound).filterIsInstance<OutboundEvent.SendText>().map { it.text }
-            assertTrue(messages.any { it.contains("hits you for 10 damage") }, "Expected mob hit for 10, messages: $messages")
+            assertTrue(messages.any { it.contains("hits you for 9 damage") }, "Expected mob hit for 9, messages: $messages")
         }
 
     @Test
@@ -630,12 +633,14 @@ class CombatSystemTest {
                     .filter { it.sessionId == sid }
                     .map { it.text }
 
+            // Warrior class: +2 damage bonus → roll 5 + 2 attack = 7, minus 2 mob armor = 5
             assertTrue(
-                messages.any { it.contains("You hit a rat for 3 damage (roll 5, armor absorbed 2).") },
+                messages.any { it.contains("You hit a rat for 5 damage (roll 5 +atk 2, armor absorbed 2).") },
                 "Expected detailed player hit feedback, messages: $messages",
             )
+            // Warrior class: +1 armor bonus → mob roll 7 - 1 class armor = 6
             assertTrue(
-                messages.any { it.contains("a rat hits you for 7 damage (roll 7, armor absorbed 0).") },
+                messages.any { it.contains("a rat hits you for 6 damage (roll 7, armor absorbed 1).") },
                 "Expected detailed mob hit feedback, messages: $messages",
             )
         }
@@ -678,8 +683,9 @@ class CombatSystemTest {
                     .filter { it.sessionId == sid }
                     .map { it.text }
 
+            // Warrior class: +2 damage → roll 1 + 2 = 3, minus 100 armor → clamped to 1
             assertTrue(
-                messages.any { it.contains("You hit a rat for 1 damage (roll 1, armor absorbed 0, min 1 applied).") },
+                messages.any { it.contains("You hit a rat for 1 damage (roll 1 +atk 2, armor absorbed 2, min 1 applied).") },
                 "Expected min-clamp feedback in player hit message, messages: $messages",
             )
         }
@@ -735,12 +741,14 @@ class CombatSystemTest {
                     .filter { it.sessionId == observerSid }
                     .map { it.text }
 
+            // Warrior class: +2 damage → roll 5 + 2 attack = 7, minus 2 mob armor = 5
             assertTrue(
-                observerMessages.any { it.contains("[Combat] Fighter hits a rat for 3 damage (roll 5, armor absorbed 2).") },
+                observerMessages.any { it.contains("[Combat] Fighter hits a rat for 5 damage (roll 5 +atk 2, armor absorbed 2).") },
                 "Expected room observer player-hit feedback, messages: $observerMessages",
             )
+            // Warrior class: +1 armor → mob roll 7 - 1 = 6
             assertTrue(
-                observerMessages.any { it.contains("[Combat] a rat hits Fighter for 7 damage (roll 7, armor absorbed 0).") },
+                observerMessages.any { it.contains("[Combat] a rat hits Fighter for 6 damage (roll 7, armor absorbed 1).") },
                 "Expected room observer mob-hit feedback, messages: $observerMessages",
             )
         }

@@ -2,6 +2,8 @@ package dev.ambon.persistence
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import dev.ambon.domain.character.PlayerClass
+import dev.ambon.domain.character.PlayerRace
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.redis.redisObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -30,6 +32,8 @@ class RedisCachingPlayerRepository(
         val isStaff: Boolean = false,
         val mana: Int = 20,
         val maxMana: Int = 20,
+        val playerClass: String = "WARRIOR",
+        val playerRace: String = "HUMAN",
     )
 
     private fun nameKey(name: String) = "player:name:${name.lowercase()}"
@@ -78,8 +82,10 @@ class RedisCachingPlayerRepository(
         nowEpochMs: Long,
         passwordHash: String,
         ansiEnabled: Boolean,
+        playerClass: PlayerClass,
+        playerRace: PlayerRace,
     ): PlayerRecord {
-        val record = delegate.create(name, startRoomId, nowEpochMs, passwordHash, ansiEnabled)
+        val record = delegate.create(name, startRoomId, nowEpochMs, passwordHash, ansiEnabled, playerClass, playerRace)
         cacheRecord(record)
         return record
     }
@@ -108,6 +114,8 @@ class RedisCachingPlayerRepository(
                             isStaff = record.isStaff,
                             mana = record.mana,
                             maxMana = record.maxMana,
+                            playerClass = record.playerClass.name,
+                            playerRace = record.playerRace.name,
                         ),
                     )
                 cache.setEx(idKey(record.id.value), cacheTtlSeconds, json)
@@ -133,5 +141,7 @@ class RedisCachingPlayerRepository(
             isStaff = isStaff,
             mana = mana,
             maxMana = maxMana,
+            playerClass = PlayerClass.fromString(playerClass) ?: PlayerClass.WARRIOR,
+            playerRace = PlayerRace.fromString(playerRace) ?: PlayerRace.HUMAN,
         )
 }

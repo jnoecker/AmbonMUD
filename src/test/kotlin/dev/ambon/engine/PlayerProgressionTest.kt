@@ -75,8 +75,9 @@ class PlayerProgressionTest {
         assertEquals(400L, result.xpTotal)
         assertEquals(3, player.level)
         assertEquals(400L, player.xpTotal)
-        assertEquals(14, player.maxHp)
-        assertEquals(14, player.hp)
+        // Default Warrior class: hpPerLevel=4 → 10 + 4*2 = 18
+        assertEquals(18, player.maxHp)
+        assertEquals(18, player.hp)
     }
 
     @Test
@@ -103,7 +104,8 @@ class PlayerProgressionTest {
 
         assertEquals(2, player.level)
         assertEquals(100L, player.xpTotal)
-        assertEquals(12, player.maxHp)
+        // Default Warrior class: hpPerLevel=4 → 10 + 4*1 = 14
+        assertEquals(14, player.maxHp)
         assertEquals(3, player.hp)
     }
 
@@ -131,8 +133,9 @@ class PlayerProgressionTest {
         progression.grantXp(player, 100L)
 
         assertEquals(2, player.level)
-        assertEquals(12, player.baseMaxHp)
-        assertEquals(12, player.maxHp)
-        assertEquals(12, player.hp)
+        // Default Warrior class: hpPerLevel=4 → 10 + 4*1 = 14
+        assertEquals(14, player.baseMaxHp)
+        assertEquals(14, player.maxHp)
+        assertEquals(14, player.hp)
     }
 }

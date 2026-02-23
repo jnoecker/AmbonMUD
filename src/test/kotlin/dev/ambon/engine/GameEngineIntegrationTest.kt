@@ -61,6 +61,8 @@ class GameEngineIntegrationTest {
             inbound.send(InboundEvent.LineReceived(sid, "Alice"))
             inbound.send(InboundEvent.LineReceived(sid, "yes"))
             inbound.send(InboundEvent.LineReceived(sid, "password"))
+            inbound.send(InboundEvent.LineReceived(sid, "warrior"))
+            inbound.send(InboundEvent.LineReceived(sid, "human"))
             inbound.send(InboundEvent.LineReceived(sid, "Hello"))
             inbound.send(InboundEvent.LineReceived(sid, "quit"))
 
@@ -131,6 +133,10 @@ class GameEngineIntegrationTest {
             inbound.send(InboundEvent.LineReceived(sid2, "yes"))
             inbound.send(InboundEvent.LineReceived(sid1, "password"))
             inbound.send(InboundEvent.LineReceived(sid2, "password"))
+            inbound.send(InboundEvent.LineReceived(sid1, "warrior"))
+            inbound.send(InboundEvent.LineReceived(sid2, "warrior"))
+            inbound.send(InboundEvent.LineReceived(sid1, "human"))
+            inbound.send(InboundEvent.LineReceived(sid2, "human"))
 
             runCurrent()
             advanceTimeBy(5)
@@ -202,6 +208,8 @@ class GameEngineIntegrationTest {
             inbound.send(InboundEvent.LineReceived(sid, "Alice"))
             inbound.send(InboundEvent.LineReceived(sid, "yes"))
             inbound.send(InboundEvent.LineReceived(sid, "password"))
+            inbound.send(InboundEvent.LineReceived(sid, "warrior"))
+            inbound.send(InboundEvent.LineReceived(sid, "human"))
             step(tickMillis)
 
             inbound.send(InboundEvent.LineReceived(sid, "get coin"))
@@ -274,6 +282,8 @@ class GameEngineIntegrationTest {
             inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
             inbound.send(InboundEvent.LineReceived(sid1, "yes"))
             inbound.send(InboundEvent.LineReceived(sid1, "password"))
+            inbound.send(InboundEvent.LineReceived(sid1, "warrior"))
+            inbound.send(InboundEvent.LineReceived(sid1, "human"))
             step()
 
             inbound.send(InboundEvent.LineReceived(sid1, "ansi on"))

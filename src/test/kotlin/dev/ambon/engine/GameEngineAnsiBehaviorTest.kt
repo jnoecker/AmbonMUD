@@ -73,6 +73,8 @@ class GameEngineAnsiBehaviorTest {
             inbound.send(InboundEvent.LineReceived(sid, "Alice"))
             inbound.send(InboundEvent.LineReceived(sid, "yes"))
             inbound.send(InboundEvent.LineReceived(sid, "password"))
+            inbound.send(InboundEvent.LineReceived(sid, "warrior"))
+            inbound.send(InboundEvent.LineReceived(sid, "human"))
             advanceTimeBy(tickMillis)
             runCurrent()
 
@@ -151,6 +153,8 @@ class GameEngineAnsiBehaviorTest {
             inbound.send(InboundEvent.LineReceived(sid, "Alice"))
             inbound.send(InboundEvent.LineReceived(sid, "yes"))
             inbound.send(InboundEvent.LineReceived(sid, "password"))
+            inbound.send(InboundEvent.LineReceived(sid, "warrior"))
+            inbound.send(InboundEvent.LineReceived(sid, "human"))
             advanceTimeBy(tickMillis)
             runCurrent()
 

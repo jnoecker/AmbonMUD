@@ -406,6 +406,35 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
+            // After password, the flow now asks for class and race
+            val afterPassword = drainOutbound(outbound)
+            assertTrue(
+                afterPassword.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text.contains("Choose your class:")
+                },
+                "Expected class selection prompt after password. got=$afterPassword",
+            )
+
+            inbound.send(InboundEvent.LineReceived(sid, "warrior"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val afterClass = drainOutbound(outbound)
+            assertTrue(
+                afterClass.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text.contains("Choose your race:")
+                },
+                "Expected race selection prompt after class. got=$afterClass",
+            )
+
+            inbound.send(InboundEvent.LineReceived(sid, "human"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
             assertEquals("NewUser", players.get(sid)?.name)
 
             engineJob.cancel()

@@ -4,6 +4,8 @@ import dev.ambon.bus.InboundBus
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.EngineConfig
 import dev.ambon.config.LoginConfig
+import dev.ambon.domain.character.PlayerClass
+import dev.ambon.domain.character.PlayerRace
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
@@ -166,6 +168,17 @@ class GameEngine(
 
         data class AwaitingNewPassword(
             val name: String,
+        ) : LoginState
+
+        data class AwaitingClass(
+            val name: String,
+            val password: String,
+        ) : LoginState
+
+        data class AwaitingRace(
+            val name: String,
+            val password: String,
+            val playerClass: PlayerClass,
         ) : LoginState
     }
 
@@ -671,6 +684,8 @@ class GameEngine(
             is LoginState.AwaitingCreateConfirmation -> handleLoginCreateConfirmation(sessionId, line, state)
             is LoginState.AwaitingExistingPassword -> handleLoginExistingPassword(sessionId, line, state)
             is LoginState.AwaitingNewPassword -> handleLoginNewPassword(sessionId, line, state)
+            is LoginState.AwaitingClass -> handleLoginClass(sessionId, line, state)
+            is LoginState.AwaitingRace -> handleLoginRace(sessionId, line, state)
         }
     }
 
@@ -821,7 +836,61 @@ class GameEngine(
             return
         }
 
-        when (players.create(sessionId, state.name, password, defaultAnsiEnabled = sessionAnsiDefaults[sessionId] ?: false)) {
+        if (password.length > 72) {
+            outbound.send(OutboundEvent.SendError(sessionId, invalidPasswordMessage))
+            promptForNewPassword(sessionId)
+            return
+        }
+
+        pendingLogins[sessionId] = LoginState.AwaitingClass(name = state.name, password = password)
+        promptForClass(sessionId)
+    }
+
+    private suspend fun handleLoginClass(
+        sessionId: SessionId,
+        line: String,
+        state: LoginState.AwaitingClass,
+    ) {
+        val input = line.trim()
+        val playerClass = PlayerClass.fromString(input)
+        if (playerClass == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Invalid class. Please choose one of: ${PlayerClass.selectionPrompt()}."))
+            promptForClass(sessionId)
+            return
+        }
+
+        pendingLogins[sessionId] =
+            LoginState.AwaitingRace(
+                name = state.name,
+                password = state.password,
+                playerClass = playerClass,
+            )
+        promptForRace(sessionId)
+    }
+
+    private suspend fun handleLoginRace(
+        sessionId: SessionId,
+        line: String,
+        state: LoginState.AwaitingRace,
+    ) {
+        val input = line.trim()
+        val playerRace = PlayerRace.fromString(input)
+        if (playerRace == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Invalid race. Please choose one of: ${PlayerRace.selectionPrompt()}."))
+            promptForRace(sessionId)
+            return
+        }
+
+        when (
+            players.create(
+                sessionId,
+                state.name,
+                state.password,
+                defaultAnsiEnabled = sessionAnsiDefaults[sessionId] ?: false,
+                playerClass = state.playerClass,
+                playerRace = playerRace,
+            )
+        ) {
             CreateResult.Ok -> {
                 finalizeSuccessfulLogin(sessionId)
             }
@@ -835,7 +904,9 @@ class GameEngine(
 
             CreateResult.InvalidPassword -> {
                 outbound.send(OutboundEvent.SendError(sessionId, invalidPasswordMessage))
-                promptForNewPassword(sessionId)
+                if (recordFailedLoginAttemptAndCloseIfNeeded(sessionId)) return
+                pendingLogins[sessionId] = LoginState.AwaitingName
+                promptForName(sessionId)
             }
 
             CreateResult.Taken -> {
@@ -951,6 +1022,16 @@ class GameEngine(
         name: String,
     ) {
         outbound.send(OutboundEvent.SendInfo(sessionId, "No user named '$name' was found. Create a new user? (yes/no)"))
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun promptForClass(sessionId: SessionId) {
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Choose your class: ${PlayerClass.selectionPrompt()}"))
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun promptForRace(sessionId: SessionId) {
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Choose your race: ${PlayerRace.selectionPrompt()}"))
         outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 

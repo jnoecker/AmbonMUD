@@ -1,5 +1,7 @@
 package dev.ambon.persistence
 
+import dev.ambon.domain.character.PlayerClass
+import dev.ambon.domain.character.PlayerRace
 import dev.ambon.domain.ids.RoomId
 import java.util.concurrent.atomic.AtomicLong
 
@@ -17,6 +19,8 @@ class InMemoryPlayerRepository : PlayerRepository {
         nowEpochMs: Long,
         passwordHash: String,
         ansiEnabled: Boolean,
+        playerClass: PlayerClass,
+        playerRace: PlayerRace,
     ): PlayerRecord {
         val id = PlayerId(nextId.getAndIncrement())
         val record =
@@ -28,6 +32,8 @@ class InMemoryPlayerRepository : PlayerRepository {
                 lastSeenEpochMs = nowEpochMs,
                 passwordHash = passwordHash,
                 ansiEnabled = ansiEnabled,
+                playerClass = playerClass,
+                playerRace = playerRace,
             )
         players[id] = record
         return record

@@ -1,5 +1,7 @@
 package dev.ambon.engine
 
+import dev.ambon.domain.character.PlayerClass
+import dev.ambon.domain.character.PlayerRace
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.persistence.PlayerId
@@ -20,6 +22,8 @@ data class PlayerState(
     var mana: Int = BASE_MANA,
     var maxMana: Int = BASE_MANA,
     var baseMana: Int = BASE_MANA,
+    var playerClass: PlayerClass = PlayerClass.WARRIOR,
+    var playerRace: PlayerRace = PlayerRace.HUMAN,
 ) {
     companion object {
         const val BASE_MAX_HP = 10

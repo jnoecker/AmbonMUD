@@ -185,7 +185,7 @@ class CombatSystem(
                 continue
             }
 
-            val playerAttack = equippedAttack(player.sessionId)
+            val playerAttack = equippedAttack(player.sessionId) + player.playerClass.baseDamageBonus
             val playerRoll = rollDamage()
             val rawPlayerDamage = playerRoll + playerAttack
             val preClampPlayerDamage = rawPlayerDamage - mob.armor
@@ -218,11 +218,14 @@ class CombatSystem(
             }
 
             val mobRoll = rollDamage(mob.minDamage, mob.maxDamage)
-            val mobDamage = mobRoll
+            val classArmorReduction = player.playerClass.baseArmorBonus
+            val rawMobDamage = mobRoll - classArmorReduction
+            val mobDamage = rawMobDamage.coerceAtLeast(1)
+            val classArmorAbsorbed = (mobRoll - mobDamage).coerceAtLeast(0)
             val mobFeedbackSuffix =
                 combatFeedbackSuffix(
                     roll = mobRoll,
-                    armorAbsorbed = 0,
+                    armorAbsorbed = classArmorAbsorbed,
                 )
             player.hp = (player.hp - mobDamage).coerceAtLeast(0)
             val mobHitText = "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
@@ -366,11 +369,14 @@ class CombatSystem(
         if (result.levelsGained <= 0) return
         metrics.onLevelUp()
 
-        val oldMaxHp = progression.maxHpForLevel(result.previousLevel)
-        val newMaxHp = progression.maxHpForLevel(result.newLevel)
+        val levelUpPlayer = players.get(sessionId)
+        val pc = levelUpPlayer?.playerClass ?: dev.ambon.domain.character.PlayerClass.WARRIOR
+        val pr = levelUpPlayer?.playerRace ?: dev.ambon.domain.character.PlayerRace.HUMAN
+        val oldMaxHp = progression.maxHpForLevel(result.previousLevel, pc, pr)
+        val newMaxHp = progression.maxHpForLevel(result.newLevel, pc, pr)
         val hpGain = (newMaxHp - oldMaxHp).coerceAtLeast(0)
-        val oldMaxMana = progression.maxManaForLevel(result.previousLevel)
-        val newMaxMana = progression.maxManaForLevel(result.newLevel)
+        val oldMaxMana = progression.maxManaForLevel(result.previousLevel, pc, pr)
+        val newMaxMana = progression.maxManaForLevel(result.newLevel, pc, pr)
         val manaGain = (newMaxMana - oldMaxMana).coerceAtLeast(0)
         val bonusParts = mutableListOf<String>()
         if (hpGain > 0) bonusParts += "+$hpGain max HP"

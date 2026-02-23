@@ -1,5 +1,7 @@
 package dev.ambon.persistence
 
+import dev.ambon.domain.character.PlayerClass
+import dev.ambon.domain.character.PlayerRace
 import dev.ambon.domain.ids.RoomId
 
 @JvmInline
@@ -21,4 +23,6 @@ data class PlayerRecord(
     val isStaff: Boolean = false,
     val mana: Int = 20,
     val maxMana: Int = 20,
+    val playerClass: PlayerClass = PlayerClass.WARRIOR,
+    val playerRace: PlayerRace = PlayerRace.HUMAN,
 )

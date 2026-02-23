@@ -1,5 +1,7 @@
 package dev.ambon.persistence
 
+import dev.ambon.domain.character.PlayerClass
+import dev.ambon.domain.character.PlayerRace
 import dev.ambon.domain.ids.RoomId
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.concurrent.locks.ReentrantLock
@@ -57,8 +59,10 @@ class WriteCoalescingPlayerRepository(
         nowEpochMs: Long,
         passwordHash: String,
         ansiEnabled: Boolean,
+        playerClass: PlayerClass,
+        playerRace: PlayerRace,
     ): PlayerRecord {
-        val record = delegate.create(name, startRoomId, nowEpochMs, passwordHash, ansiEnabled)
+        val record = delegate.create(name, startRoomId, nowEpochMs, passwordHash, ansiEnabled, playerClass, playerRace)
         lock.withLock {
             cache[record.id] = record
             if (versions[record.id] == null) {

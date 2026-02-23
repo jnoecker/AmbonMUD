@@ -43,7 +43,8 @@ class CommandRouterScoreTest {
             assertTrue(text.contains("Level 1"), "Missing level. text=$text")
             assertTrue(text.contains("HP"), "Missing HP. text=$text")
             assertTrue(text.contains("XP"), "Missing XP. text=$text")
-            assertTrue(text.contains("1–4"), "Missing damage range. text=$text")
+            // Default class is Warrior with +2 base damage → 3–6
+            assertTrue(text.contains("3–6"), "Missing damage range. text=$text")
             assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
         }
 

@@ -17,6 +17,8 @@ object PlayersTable : Table("players") {
     val isStaff = bool("is_staff").default(false)
     val mana = integer("mana").default(20)
     val maxMana = integer("max_mana").default(20)
+    val playerClass = varchar("player_class", 16).default("WARRIOR")
+    val playerRace = varchar("player_race", 16).default("HUMAN")
 
     override val primaryKey = PrimaryKey(id)
 }

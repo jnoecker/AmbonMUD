@@ -1,6 +1,8 @@
 package dev.ambon.engine
 
 import dev.ambon.config.ProgressionConfig
+import dev.ambon.domain.character.PlayerClass
+import dev.ambon.domain.character.PlayerRace
 import dev.ambon.domain.mob.MobState
 import kotlin.math.pow
 import kotlin.math.roundToLong
@@ -69,6 +71,7 @@ class PlayerProgression(
         return (nextFloor - currentFloor).coerceAtLeast(0L)
     }
 
+    /** Max HP using config defaults (backward-compatible, ignores class/race). */
     fun maxHpForLevel(level: Int): Int {
         val normalizedLevel = level.coerceIn(1, config.maxLevel)
         val bonus = (normalizedLevel - 1).toLong() * config.rewards.hpPerLevel.toLong()
@@ -77,10 +80,41 @@ class PlayerProgression(
             .toInt()
     }
 
+    /** Max HP using class HP-per-level scaling and race flat bonus. */
+    fun maxHpForLevel(
+        level: Int,
+        playerClass: PlayerClass,
+        playerRace: PlayerRace,
+    ): Int {
+        val normalizedLevel = level.coerceIn(1, config.maxLevel)
+        val bonus = (normalizedLevel - 1).toLong() * playerClass.hpPerLevel.toLong()
+        val raceBonus = playerRace.hpBonus.toLong()
+        return (PlayerState.BASE_MAX_HP.toLong() + bonus + raceBonus)
+            .coerceAtLeast(1L)
+            .coerceAtMost(Int.MAX_VALUE.toLong())
+            .toInt()
+    }
+
+    /** Max mana using config defaults (backward-compatible, ignores class/race). */
     fun maxManaForLevel(level: Int): Int {
         val normalizedLevel = level.coerceIn(1, config.maxLevel)
         val bonus = (normalizedLevel - 1).toLong() * config.rewards.manaPerLevel.toLong()
         return (PlayerState.BASE_MANA.toLong() + bonus)
+            .coerceAtMost(Int.MAX_VALUE.toLong())
+            .toInt()
+    }
+
+    /** Max mana using class mana-per-level scaling and race flat bonus. */
+    fun maxManaForLevel(
+        level: Int,
+        playerClass: PlayerClass,
+        playerRace: PlayerRace,
+    ): Int {
+        val normalizedLevel = level.coerceIn(1, config.maxLevel)
+        val bonus = (normalizedLevel - 1).toLong() * playerClass.manaPerLevel.toLong()
+        val raceBonus = playerRace.manaBonus.toLong()
+        return (PlayerState.BASE_MANA.toLong() + bonus + raceBonus)
+            .coerceAtLeast(0L)
             .coerceAtMost(Int.MAX_VALUE.toLong())
             .toInt()
     }
@@ -100,9 +134,12 @@ class PlayerProgression(
         player: PlayerState,
         amount: Long,
     ): LevelUpResult {
+        val pc = player.playerClass
+        val pr = player.playerRace
+
         val currentXpTotal = player.xpTotal.coerceAtLeast(0L)
         val currentLevel = computeLevel(currentXpTotal)
-        val currentBaseMaxHp = maxHpForLevel(currentLevel)
+        val currentBaseMaxHp = maxHpForLevel(currentLevel, pc, pr)
         val existingBonus = (player.maxHp - player.baseMaxHp).coerceAtLeast(0)
         player.xpTotal = currentXpTotal
         player.level = currentLevel
@@ -128,14 +165,14 @@ class PlayerProgression(
         player.xpTotal = newXpTotal
         player.level = newLevel
 
-        val previousBaseMaxHp = maxHpForLevel(previousLevel)
-        val newBaseMaxHp = maxHpForLevel(newLevel)
+        val previousBaseMaxHp = maxHpForLevel(previousLevel, pc, pr)
+        val newBaseMaxHp = maxHpForLevel(newLevel, pc, pr)
         val nonProgressionBonus = (player.maxHp - previousBaseMaxHp).coerceAtLeast(0)
         val newEffectiveMaxHp = safeAddInt(newBaseMaxHp, nonProgressionBonus)
         player.baseMaxHp = newBaseMaxHp
         player.maxHp = newEffectiveMaxHp
 
-        val newMaxMana = maxManaForLevel(newLevel)
+        val newMaxMana = maxManaForLevel(newLevel, pc, pr)
         player.baseMana = newMaxMana
         player.maxMana = newMaxMana
 

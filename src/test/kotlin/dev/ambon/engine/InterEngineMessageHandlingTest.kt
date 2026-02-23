@@ -127,6 +127,8 @@ class InterEngineMessageHandlingTest {
         harness.inbound.send(InboundEvent.LineReceived(sid, name))
         harness.inbound.send(InboundEvent.LineReceived(sid, "yes"))
         harness.inbound.send(InboundEvent.LineReceived(sid, "password"))
+        harness.inbound.send(InboundEvent.LineReceived(sid, "warrior"))
+        harness.inbound.send(InboundEvent.LineReceived(sid, "human"))
     }
 
     private suspend fun TestScope.pumpEngine(

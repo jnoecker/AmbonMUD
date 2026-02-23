@@ -1,5 +1,7 @@
 package dev.ambon.engine
 
+import dev.ambon.domain.character.PlayerClass
+import dev.ambon.domain.character.PlayerRace
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.items.ItemRegistry
@@ -100,6 +102,8 @@ class PlayerRegistry(
         nameRaw: String,
         passwordRaw: String,
         defaultAnsiEnabled: Boolean = false,
+        playerClass: PlayerClass = PlayerClass.WARRIOR,
+        playerRace: PlayerRace = PlayerRace.HUMAN,
     ): CreateResult {
         if (players.containsKey(sessionId)) return CreateResult.InvalidName
 
@@ -121,6 +125,8 @@ class PlayerRegistry(
                 nowEpochMs = now,
                 passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()),
                 ansiEnabled = defaultAnsiEnabled,
+                playerClass = playerClass,
+                playerRace = playerRace,
             )
         bindSession(sessionId, created, now)
         return CreateResult.Ok
@@ -131,10 +137,12 @@ class PlayerRegistry(
         boundRecord: PlayerRecord,
         now: Long,
     ) {
+        val pc = boundRecord.playerClass
+        val pr = boundRecord.playerRace
         val xpTotal = boundRecord.xpTotal.coerceAtLeast(0L)
         val level = progression.computeLevel(xpTotal)
-        val maxHp = progression.maxHpForLevel(level)
-        val maxMana = progression.maxManaForLevel(level)
+        val maxHp = progression.maxHpForLevel(level, pc, pr)
+        val maxMana = progression.maxManaForLevel(level, pc, pr)
         val ps =
             PlayerState(
                 sessionId = sessionId,
@@ -152,6 +160,8 @@ class PlayerRegistry(
                 mana = boundRecord.mana.coerceIn(0, maxMana),
                 maxMana = maxMana,
                 baseMana = maxMana,
+                playerClass = pc,
+                playerRace = pr,
             )
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
@@ -330,6 +340,8 @@ class PlayerRegistry(
                 ansiEnabled = ps.ansiEnabled,
                 mana = ps.mana,
                 maxMana = ps.maxMana,
+                playerClass = ps.playerClass,
+                playerRace = ps.playerRace,
             ),
         )
     }

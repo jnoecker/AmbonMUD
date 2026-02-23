@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import dev.ambon.domain.character.PlayerClass
+import dev.ambon.domain.character.PlayerRace
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.metrics.GameMetrics
 import io.micrometer.core.instrument.Timer
@@ -46,6 +48,8 @@ class YamlPlayerRepository(
         val isStaff: Boolean = false,
         val mana: Int = 20,
         val maxMana: Int = 20,
+        val playerClass: String = "WARRIOR",
+        val playerRace: String = "HUMAN",
     )
 
     private val mapper: ObjectMapper =
@@ -102,6 +106,8 @@ class YamlPlayerRepository(
         nowEpochMs: Long,
         passwordHash: String,
         ansiEnabled: Boolean,
+        playerClass: PlayerClass,
+        playerRace: PlayerRace,
     ): PlayerRecord =
         withContext(Dispatchers.IO) {
             val nm = name.trim()
@@ -124,6 +130,8 @@ class YamlPlayerRepository(
                     lastSeenEpochMs = nowEpochMs,
                     passwordHash = passwordHash,
                     ansiEnabled = ansiEnabled,
+                    playerClass = playerClass,
+                    playerRace = playerRace,
                 )
 
             save(record)
@@ -149,6 +157,8 @@ class YamlPlayerRepository(
                         isStaff = record.isStaff,
                         mana = record.mana,
                         maxMana = record.maxMana,
+                        playerClass = record.playerClass.name,
+                        playerRace = record.playerRace.name,
                     )
 
                 val outPath = pathFor(record.id.value)
@@ -179,6 +189,8 @@ class YamlPlayerRepository(
             isStaff = isStaff,
             mana = mana,
             maxMana = maxMana,
+            playerClass = PlayerClass.fromString(playerClass) ?: PlayerClass.WARRIOR,
+            playerRace = PlayerRace.fromString(playerRace) ?: PlayerRace.HUMAN,
         )
 
     private fun pathFor(id: Long): Path = playersDir.resolve(id.toString().padStart(20, '0') + ".yaml")

@@ -1,5 +1,7 @@
 package dev.ambon.persistence
 
+import dev.ambon.domain.character.PlayerClass
+import dev.ambon.domain.character.PlayerRace
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.metrics.GameMetrics
 import io.micrometer.core.instrument.Timer
@@ -51,6 +53,8 @@ class PostgresPlayerRepository(
         nowEpochMs: Long,
         passwordHash: String,
         ansiEnabled: Boolean,
+        playerClass: PlayerClass,
+        playerRace: PlayerRace,
     ): PlayerRecord {
         val trimmed = name.trim()
         try {
@@ -64,6 +68,8 @@ class PostgresPlayerRepository(
                         it[lastSeenEpochMs] = nowEpochMs
                         it[PlayersTable.passwordHash] = passwordHash
                         it[PlayersTable.ansiEnabled] = ansiEnabled
+                        it[PlayersTable.playerClass] = playerClass.name
+                        it[PlayersTable.playerRace] = playerRace.name
                     }
 
                 PlayerRecord(
@@ -74,6 +80,8 @@ class PostgresPlayerRepository(
                     lastSeenEpochMs = nowEpochMs,
                     passwordHash = passwordHash,
                     ansiEnabled = ansiEnabled,
+                    playerClass = playerClass,
+                    playerRace = playerRace,
                 )
             }
         } catch (e: Exception) {
@@ -104,6 +112,8 @@ class PostgresPlayerRepository(
                     it[isStaff] = record.isStaff
                     it[mana] = record.mana
                     it[maxMana] = record.maxMana
+                    it[playerClass] = record.playerClass.name
+                    it[playerRace] = record.playerRace.name
                 }
             }
             metrics.onPlayerSave()
@@ -130,5 +140,7 @@ class PostgresPlayerRepository(
             isStaff = this[PlayersTable.isStaff],
             mana = this[PlayersTable.mana],
             maxMana = this[PlayersTable.maxMana],
+            playerClass = PlayerClass.fromString(this[PlayersTable.playerClass]) ?: PlayerClass.WARRIOR,
+            playerRace = PlayerRace.fromString(this[PlayersTable.playerRace]) ?: PlayerRace.HUMAN,
         )
 }

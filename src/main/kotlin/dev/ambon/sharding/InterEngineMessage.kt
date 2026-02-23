@@ -151,4 +151,6 @@ data class SerializedPlayerState(
     val inventoryItems: List<SerializedItem> = emptyList(),
     // slot name → item
     val equippedItems: Map<String, SerializedItem> = emptyMap(),
+    val playerClass: String = "WARRIOR",
+    val playerRace: String = "HUMAN",
 )

@@ -632,7 +632,7 @@ class CommandRouter(
                 val me = players.get(sessionId) ?: return
                 val equipped = items.equipment(sessionId)
 
-                val attackBonus = equipped.values.sumOf { it.item.damage }
+                val attackBonus = equipped.values.sumOf { it.item.damage } + me.playerClass.baseDamageBonus
                 val dmgMin = combat.minDamage + attackBonus
                 val dmgMax = combat.maxDamage + attackBonus
 
@@ -658,7 +658,13 @@ class CommandRouter(
                 val equipConstitution = equipped.values.sumOf { it.item.constitution }
                 val totalCon = me.constitution + equipConstitution
 
-                outbound.send(OutboundEvent.SendInfo(sessionId, "[ ${me.name} — Level ${me.level} Adventurer ]"))
+                val raceClass = "${me.playerRace.displayName} ${me.playerClass.displayName}"
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "[ ${me.name} — Level ${me.level} $raceClass ]",
+                    ),
+                )
                 outbound.send(OutboundEvent.SendInfo(sessionId, "  HP  : ${me.hp} / ${me.maxHp}      XP : $xpLine"))
                 outbound.send(OutboundEvent.SendInfo(sessionId, "  Mana: ${me.mana} / ${me.maxMana}"))
                 if (totalCon > 0) {
