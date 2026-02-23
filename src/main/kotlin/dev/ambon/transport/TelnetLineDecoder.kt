@@ -95,6 +95,7 @@ class TelnetLineDecoder(
                     }
 
                     TelnetProtocol.IAC -> {
+                        // Escaped IAC inside subnegotiation data.
                         appendSubnegotiationByte(TelnetProtocol.IAC)
                         state = State.IAC_SB_DATA
                     }
@@ -166,10 +167,18 @@ sealed interface TelnetControlEvent {
         val option: Int,
     ) : TelnetControlEvent
 
-    data class Subnegotiation(
+    class Subnegotiation(
         val option: Int,
         val payload: ByteArray,
-    ) : TelnetControlEvent
+    ) : TelnetControlEvent {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Subnegotiation) return false
+            return option == other.option && payload.contentEquals(other.payload)
+        }
+
+        override fun hashCode(): Int = 31 * option + payload.contentHashCode()
+    }
 }
 
 object TelnetProtocol {

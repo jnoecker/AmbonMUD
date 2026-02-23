@@ -86,6 +86,65 @@ class TelnetLineDecoderTest {
     }
 
     @Test
+    fun `handles escaped IAC inside subnegotiation payload`() {
+        val controls = mutableListOf<TelnetControlEvent>()
+        val d = TelnetLineDecoder(onControlEvent = { controls += it })
+
+        // NAWS with high byte of width = 0xFF, encoded as IAC IAC in the payload.
+        val bytes =
+            byteArrayOf(
+                TelnetProtocol.IAC.toByte(),
+                TelnetProtocol.SB.toByte(),
+                TelnetProtocol.NAWS.toByte(),
+                TelnetProtocol.IAC.toByte(), // escaped 0xFF — first byte of IAC IAC pair
+                TelnetProtocol.IAC.toByte(), // second byte of IAC IAC pair → literal 0xFF in payload
+                0x00, // low byte of width
+                0x00, // high byte of height
+                0x18, // low byte of height (24)
+                TelnetProtocol.IAC.toByte(),
+                TelnetProtocol.SE.toByte(),
+            )
+
+        d.feed(bytes)
+
+        assertEquals(1, controls.size)
+        val sub = controls.single() as TelnetControlEvent.Subnegotiation
+        assertEquals(TelnetProtocol.NAWS, sub.option)
+        // IAC IAC inside subnegotiation decodes to a single 0xFF byte in the payload.
+        assertEquals(listOf(0xFF, 0x00, 0x00, 0x18), sub.payload.map { it.toInt() and 0xFF })
+    }
+
+    @Test
+    fun `abandons subnegotiation on invalid IAC sequence and resumes in DATA`() {
+        val controls = mutableListOf<TelnetControlEvent>()
+        val d = TelnetLineDecoder(onControlEvent = { controls += it })
+
+        // IAC followed by a non-SE, non-IAC byte inside subnegotiation is invalid.
+        // The state machine should abandon the subnegotiation, return to DATA,
+        // and continue decoding normally so the trailing line is emitted.
+        val bytes =
+            byteArrayOf(
+                TelnetProtocol.IAC.toByte(),
+                TelnetProtocol.SB.toByte(),
+                TelnetProtocol.NAWS.toByte(),
+                0x00,
+                0x50,
+                TelnetProtocol.IAC.toByte(),
+                0x01, // not SE, not IAC — invalid; subneg abandoned here
+                'H'.code.toByte(), // decoder is back in DATA state
+                'i'.code.toByte(),
+                '\n'.code.toByte(),
+            )
+
+        val lines = d.feed(bytes)
+
+        // No control event — subnegotiation was abandoned before SE.
+        assertTrue(controls.isEmpty())
+        // Data following the invalid sequence is decoded normally.
+        assertEquals(listOf("Hi"), lines)
+    }
+
+    @Test
     fun `handles line split across chunks`() {
         val d = TelnetLineDecoder(maxLineLen = 1024)
 

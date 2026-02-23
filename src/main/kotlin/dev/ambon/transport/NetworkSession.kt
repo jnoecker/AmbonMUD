@@ -9,8 +9,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import java.io.BufferedWriter
-import java.io.OutputStreamWriter
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -118,6 +116,11 @@ class NetworkSession(
             return
         }
 
+        if (event.command == TelnetProtocol.WONT && event.option == TelnetProtocol.TTYPE) {
+            terminalCaps.terminalType = null
+            return
+        }
+
         if (event.command == TelnetProtocol.WILL && event.option == TelnetProtocol.NAWS) {
             terminalCaps.nawsEnabled = true
             return
@@ -159,7 +162,7 @@ class NetworkSession(
 
         val width = ((payload[0].toInt() and 0xFF) shl 8) or (payload[1].toInt() and 0xFF)
         val height = ((payload[2].toInt() and 0xFF) shl 8) or (payload[3].toInt() and 0xFF)
-        if (width <= 0 || height <= 0) return
+        if (width == 0 || height == 0) return
 
         terminalCaps.columns = width
         terminalCaps.rows = height
@@ -189,21 +192,24 @@ class NetworkSession(
     }
 
     private fun sendRaw(bytes: ByteArray) {
-        runCatching {
+        try {
             synchronized(outputLock) {
                 socket.getOutputStream().write(bytes)
                 socket.getOutputStream().flush()
             }
+        } catch (t: Throwable) {
+            log.debug(t) { "Failed to send telnet negotiation frame: sessionId=$sessionId" }
         }
     }
 
     private suspend fun writeLoop() {
         try {
-            val writer = BufferedWriter(OutputStreamWriter(socket.getOutputStream(), Charsets.UTF_8))
+            val output = socket.getOutputStream()
             for (msg in outboundQueue) {
+                val bytes = msg.toByteArray(Charsets.UTF_8)
                 synchronized(outputLock) {
-                    writer.write(msg)
-                    writer.flush()
+                    output.write(bytes)
+                    output.flush()
                 }
                 onOutboundFrameWritten()
             }
@@ -238,9 +244,12 @@ class NetworkSession(
     }
 }
 
-private data class TerminalCapabilities(
-    var terminalType: String? = null,
-    var columns: Int? = null,
-    var rows: Int? = null,
-    var nawsEnabled: Boolean = false,
-)
+private class TerminalCapabilities {
+    @Volatile var terminalType: String? = null
+
+    @Volatile var columns: Int? = null
+
+    @Volatile var rows: Int? = null
+
+    @Volatile var nawsEnabled: Boolean = false
+}
