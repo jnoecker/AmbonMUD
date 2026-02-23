@@ -4,7 +4,13 @@ import dev.ambon.config.MobTiersConfig
 import dev.ambon.domain.world.load.WorldLoader
 
 object WorldFactory {
-    private val defaultWorldResources = listOf("world/ambon_hub.yaml", "world/noecker_resume.yaml", "world/demo_ruins.yaml")
+    private val defaultWorldResources =
+        listOf(
+            "world/tutorial_glade.yaml",
+            "world/ambon_hub.yaml",
+            "world/noecker_resume.yaml",
+            "world/demo_ruins.yaml",
+        )
 
     fun demoWorld(
         resources: List<String> = defaultWorldResources,

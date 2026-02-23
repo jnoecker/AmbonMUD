@@ -1,0 +1,359 @@
+zone: tutorial_glade
+lifespan: 30
+startRoom: awakening_clearing
+
+mobs:
+  territorial_hare:
+    name: "a territorial hare"
+    room: mushroom_grove
+    tier: weak
+  scrappy_fox:
+    name: "a scrappy fox"
+    room: berry_thicket
+    tier: weak
+    drops:
+      - itemId: fox_pelt_vest
+        chance: 1.0
+  cave_spider:
+    name: "a cave spider"
+    room: vine_curtain
+    tier: weak
+  proud_stag:
+    name: "a proud stag"
+    room: deer_meadow
+    drops:
+      - itemId: antler_helm
+        chance: 1.0
+  forest_guardian:
+    name: "an ancient forest guardian"
+    room: guardian_grove
+    drops:
+      - itemId: guardian_token
+        chance: 1.0
+  snapping_turtle:
+    name: "a snapping turtle"
+    room: muddy_bank
+    tier: weak
+  mother_hare:
+    name: "a protective mother hare"
+    room: rabbit_warren
+    tier: weak
+    drops:
+      - itemId: soft_rabbit_pelt
+        chance: 1.0
+  grey_wolf:
+    name: "a grey wolf"
+    room: wolf_den
+    level: 2
+    drops:
+      - itemId: wolf_fang_pendant
+        chance: 1.0
+
+items:
+  walking_stick:
+    displayName: "a gnarled walking stick"
+    keyword: "stick"
+    description: "A crooked branch worn smooth by someone's grip. It feels solid enough to swing."
+    slot: hand
+    damage: 1
+    room: awakening_clearing
+
+  leather_cap:
+    displayName: "a worn leather cap"
+    keyword: "cap"
+    description: "A simple leather cap left behind on a stump. It still fits snugly."
+    slot: head
+    armor: 1
+    room: hermit_camp
+
+  fox_pelt_vest:
+    displayName: "a fox pelt vest"
+    keyword: "vest"
+    description: "A rough vest stitched from russet fur. It smells of pine needles."
+    slot: body
+    armor: 1
+
+  antler_helm:
+    displayName: "an antler helm"
+    keyword: "helm"
+    description: "A helm fashioned from shed antlers and woven bark. The tines curve protectively."
+    slot: head
+    armor: 1
+    constitution: 1
+
+  crystal_shard:
+    displayName: "a crystal shard"
+    keyword: "shard"
+    description: "A sliver of pale crystal humming with faint energy. Its edge is surprisingly keen."
+    slot: hand
+    damage: 2
+    room: crystal_spring
+
+  gnawed_bone:
+    displayName: "a gnawed bone"
+    keyword: "bone"
+    description: "A thick bone gnawed to a blunt point. Crude, but it could leave a mark."
+    slot: hand
+    damage: 1
+    room: burrow_stash
+
+  wolf_fang_pendant:
+    displayName: "a wolf fang pendant"
+    keyword: "pendant"
+    description: "A large fang strung on a braided cord. It pulses with a feral warmth."
+    slot: hand
+    damage: 2
+    constitution: 1
+
+  woven_bark_armor:
+    displayName: "woven bark armor"
+    keyword: "armor"
+    description: "Strips of living bark woven into a flexible chest piece. Sap still beads on its surface."
+    slot: body
+    armor: 1
+    constitution: 1
+    room: den_stash
+
+  old_journal_page:
+    displayName: "an old journal page"
+    keyword: "journal"
+    description: "A yellowed page torn from a journal. The handwriting is cramped: 'Day 7. The forest teaches, if you listen.'"
+    room: hermit_camp
+
+  glowing_mushroom:
+    displayName: "a glowing mushroom"
+    keyword: "mushroom"
+    description: "A fat mushroom cap that emits a soft blue-green glow. It feels cool and slightly damp."
+    room: mushroom_grove
+
+  smooth_river_stone:
+    displayName: "a smooth river stone"
+    keyword: "stone"
+    description: "A perfectly smooth stone warmed by the sun. It fits comfortably in your palm."
+    room: pond_island
+
+  soft_rabbit_pelt:
+    displayName: "a soft rabbit pelt"
+    keyword: "pelt"
+    description: "A small patch of downy fur, impossibly soft to the touch."
+
+  guardian_token:
+    displayName: "a guardian token"
+    keyword: "token"
+    description: "A disc of polished wood carved with a leaf pattern. It hums faintly when held."
+
+  carved_bowl:
+    displayName: "a carved wooden bowl"
+    keyword: "bowl"
+    description: "A small bowl carved from a single knot of wood. Initials are scratched into the bottom."
+    room: treehouse_platform
+
+rooms:
+  # --- Main Path Phase 1: Exploration ---
+
+  awakening_clearing:
+    title: "Awakening Clearing"
+    description: "You stand in a sun-dappled clearing ringed by ancient oaks. Soft grass cushions your feet, and birdsong drifts from the canopy above. A gnarled walking stick lies half-hidden in the clover. A mossy trail leads north into the trees."
+    exits:
+      n: mossy_trail
+
+  mossy_trail:
+    title: "Mossy Trail"
+    description: "A narrow trail winds between moss-covered stones and leaning birch trees. Ferns brush your knees as you walk, and the air smells of damp earth and wild mint."
+    exits:
+      n: old_signpost
+      s: awakening_clearing
+
+  old_signpost:
+    title: "Old Signpost"
+    description: "A weathered signpost stands at a fork in the trail. One arm points north and reads 'CAMP', another points vaguely into the undergrowth. Most of the paint has peeled away, but someone has scratched fresh arrows into the wood."
+    exits:
+      n: hermit_camp
+      s: mossy_trail
+
+  hermit_camp:
+    title: "Hermit's Camp"
+    description: "A small campsite tucked beneath a leaning pine. A bedroll lies unrolled beside a cold fire ring, and a leather cap sits on a mossy stump as if placed there moments ago. Whoever camped here left in a hurry."
+    exits:
+      n: stream_crossing
+      s: old_signpost
+
+  stream_crossing:
+    title: "Stream Crossing"
+    description: "A clear stream cuts across the trail, burbling over smooth stepping stones. Sunlight flashes off the water, and dragonflies hover above the current. The main path continues north, and a faint trail leads east toward the sound of frogs."
+    exits:
+      n: mushroom_grove
+      s: hermit_camp
+      e: lily_pond
+
+  # --- Main Path Phase 2: First Combat ---
+
+  mushroom_grove:
+    title: "Mushroom Grove"
+    description: "Giant mushrooms grow in clusters here, their spotted caps rising waist-high. Spores drift in lazy spirals through shafts of green light. Something rustles beneath the nearest cap, and the air tastes faintly of copper. A large burrow opens to the east."
+    exits:
+      n: fern_hollow
+      s: stream_crossing
+      e: burrow_entrance
+
+  fern_hollow:
+    title: "Fern Hollow"
+    description: "A sheltered hollow carpeted in soft ferns. The canopy is thick here, muffling all sound to a gentle hush. It feels safe, a place to catch your breath before pressing on."
+    exits:
+      n: berry_thicket
+      s: mushroom_grove
+
+  berry_thicket:
+    title: "Berry Thicket"
+    description: "Thorny bushes heavy with dark berries crowd the trail. Claw marks score the bark of nearby trees, and tufts of russet fur cling to the lowest branches. Something guards this patch jealously."
+    exits:
+      n: fallen_log_bridge
+      s: fern_hollow
+
+  fallen_log_bridge:
+    title: "Fallen Log Bridge"
+    description: "A massive fallen tree spans a narrow ravine. Its bark is worn smooth by the passage of many feet, and ferns sprout from cracks along its length. The drop below is not far, but the rocks look unfriendly."
+    exits:
+      n: sunlit_glade
+      s: berry_thicket
+
+  sunlit_glade:
+    title: "Sunlit Glade"
+    description: "A beautiful glade where the canopy parts to let in a column of golden light. Wildflowers bloom in every color, and butterflies spiral upward in the warmth. The forest feels alive and listening."
+    exits:
+      n: deer_meadow
+      s: fallen_log_bridge
+
+  # --- Main Path Phase 3: Harder Challenges ---
+
+  deer_meadow:
+    title: "Deer Meadow"
+    description: "A broad meadow of tall grass and clover. Hoof prints pattern the soft earth, and the forest thickens to the north. A rocky trail leads east between moss-covered boulders."
+    exits:
+      n: ancient_oak
+      s: sunlit_glade
+      e: rocky_outcrop
+
+  ancient_oak:
+    title: "Ancient Oak"
+    description: "An enormous oak dominates the clearing, its trunk wider than three people standing arm to arm. Thick roots ripple across the ground like frozen waves, and a fraying rope ladder dangles from a high branch. A passage leads north through tangled vines."
+    exits:
+      n: vine_curtain
+      s: deer_meadow
+      u: rope_ladder
+
+  vine_curtain:
+    title: "Vine Curtain"
+    description: "Dense curtains of hanging vines obscure the path ahead. Pale webs glitter between the strands, and something skitters just out of sight. The air is cooler here, with a faint mineral tang."
+    exits:
+      n: crystal_spring
+      s: ancient_oak
+
+  crystal_spring:
+    title: "Crystal Spring"
+    description: "An underground spring wells up into a shallow pool of impossibly clear water. Pale crystals jut from the rocks at its edge, catching the dim light and throwing tiny rainbows across the moss. A particularly sharp shard lies loose on the bank."
+    exits:
+      n: guardian_grove
+      s: vine_curtain
+
+  guardian_grove:
+    title: "Guardian Grove"
+    description: "A solemn ring of silver-barked trees surrounds a mossy mound. The air here feels heavy with old purpose, and the branches interlock overhead like clasped hands. An ancient figure stands motionless at the center, watching."
+    exits:
+      n: forest_gate
+      s: crystal_spring
+
+  forest_gate:
+    title: "Forest Gate"
+    description: "A natural archway of intertwined branches frames the path ahead. Beyond it, the forest gives way to open sky and the faint smell of worked stone. You sense that passing through means leaving the forest's shelter behind."
+    exits:
+      n: ambon_hub:hall_of_portals
+      s: guardian_grove
+
+  # --- Side Area A: Pond (east of stream_crossing) ---
+
+  lily_pond:
+    title: "Lily Pond"
+    description: "A tranquil pond dotted with white lily pads. Fish dart beneath the surface in flashes of silver, and a bullfrog watches you from a mossy rock."
+    exits:
+      w: stream_crossing
+      e: pond_island
+
+  pond_island:
+    title: "Pond Island"
+    description: "A miniature island barely large enough to stand on. Reeds ring its edge, and the water laps gently at your feet. A smooth stone sits on the highest point, placed there with obvious care."
+    exits:
+      w: lily_pond
+      s: muddy_bank
+
+  muddy_bank:
+    title: "Muddy Bank"
+    description: "The pond's southern bank is churned to thick mud. Shell fragments and small bones litter the ground, and something heavy has dragged itself back and forth between the water and a hollow log."
+    exits:
+      n: pond_island
+
+  # --- Side Area B: Rabbit Warren (east of mushroom_grove) ---
+
+  burrow_entrance:
+    title: "Burrow Entrance"
+    description: "A large burrow mouth gapes at the base of a mossy hillock. Scratched earth and scattered tufts of fur mark it as well-used. The opening is just wide enough to squeeze through."
+    exits:
+      w: mushroom_grove
+      d: rabbit_warren
+
+  rabbit_warren:
+    title: "Rabbit Warren"
+    description: "A low, earthy chamber lined with packed dirt and dry grass. Dozens of smaller tunnels branch off in every direction, and the air is warm with the scent of fur and fresh-turned soil."
+    exits:
+      u: burrow_entrance
+      d: burrow_stash
+
+  burrow_stash:
+    title: "Burrow Stash"
+    description: "A dead-end chamber at the deepest point of the warren. Bones, shiny pebbles, and bits of cloth have been dragged here and arranged in a rough nest. Something has been hoarding treasures."
+    exits:
+      u: rabbit_warren
+
+  # --- Side Area C: Treehouse (up from ancient_oak) ---
+
+  rope_ladder:
+    title: "Rope Ladder"
+    description: "You cling to a fraying rope ladder that sways with every movement. The ground falls away below, and the oak's branches creak in the wind. A wooden platform is visible above."
+    exits:
+      d: ancient_oak
+      u: treehouse_platform
+
+  treehouse_platform:
+    title: "Treehouse Platform"
+    description: "A weathered platform built into the oak's crown. Warped planks and rusted nails speak of someone's long-abandoned project. A carved bowl sits in the corner, and a ladder continues upward."
+    exits:
+      d: rope_ladder
+      u: lookout_perch
+
+  lookout_perch:
+    title: "Lookout Perch"
+    description: "The highest point in the forest. From here you can see the canopy stretching in every direction like a green ocean, broken only by a distant stone archway to the north. The wind carries the sound of birdsong and, faintly, running water."
+    exits:
+      d: treehouse_platform
+
+  # --- Side Area D: Wolf Den (east of deer_meadow) ---
+
+  rocky_outcrop:
+    title: "Rocky Outcrop"
+    description: "Jagged boulders jut from the hillside, scored with deep claw marks. Tufts of grey fur cling to the rough stone, and a low growl echoes from somewhere ahead."
+    exits:
+      w: deer_meadow
+      e: wolf_den
+
+  wolf_den:
+    title: "Wolf Den"
+    description: "A shallow cave beneath an overhang of rock and twisted roots. Bones are scattered across the floor, and the smell of musk hangs heavy in the still air. Yellow eyes watch you from the shadows."
+    exits:
+      w: rocky_outcrop
+      e: den_stash
+
+  den_stash:
+    title: "Den Stash"
+    description: "The deepest recess of the wolf's den. Trinkets and torn cloth lie tangled among old bones. Something useful has been dragged here and half-buried beneath a pile of leaves."
+    exits:
+      w: wolf_den
