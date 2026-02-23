@@ -214,4 +214,141 @@ class CrossEngineCommandsTest {
         val res = players.login(sessionId, name, "password")
         require(res == LoginResult.Ok) { "Login failed: $res" }
     }
+
+    @Test
+    fun `tell to unknown player uses sendTo when player index returns target engine`() =
+        runTest {
+            val sid = SessionId(1)
+            login(players, sid, "Alice")
+            drain(outbound)
+
+            val capturingBus = CapturingInterEngineBus()
+            val index = MapPlayerLocationIndex(mapOf("bob" to "engine-2"))
+            val indexRouter =
+                CommandRouter(
+                    world = world,
+                    players = players,
+                    mobs = mobs,
+                    items = items,
+                    combat = CombatSystem(players, mobs, items, outbound),
+                    outbound = outbound,
+                    interEngineBus = capturingBus,
+                    engineId = "engine-1",
+                    playerLocationIndex = index,
+                )
+
+            indexRouter.handle(sid, Command.Tell("Bob", "hello from alice"))
+
+            val outs = drain(outbound)
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && "You tell Bob" in (it as OutboundEvent.SendText).text },
+            )
+            assertTrue(outs.none { it is OutboundEvent.SendError })
+
+            assertEquals(1, capturingBus.sendToInvocations.size)
+            assertEquals("engine-2", capturingBus.sendToInvocations[0].first)
+            val msg = capturingBus.sendToInvocations[0].second
+            assertTrue(msg is InterEngineMessage.TellMessage)
+            assertEquals("Bob", (msg as InterEngineMessage.TellMessage).toName)
+            assertEquals(0, capturingBus.broadcastInvocations.size)
+        }
+
+    @Test
+    fun `tell falls back to broadcast when player index returns null`() =
+        runTest {
+            val sid = SessionId(1)
+            login(players, sid, "Alice")
+            drain(outbound)
+
+            val capturingBus = CapturingInterEngineBus()
+            val emptyIndex = MapPlayerLocationIndex(emptyMap())
+            val indexRouter =
+                CommandRouter(
+                    world = world,
+                    players = players,
+                    mobs = mobs,
+                    items = items,
+                    combat = CombatSystem(players, mobs, items, outbound),
+                    outbound = outbound,
+                    interEngineBus = capturingBus,
+                    engineId = "engine-1",
+                    playerLocationIndex = emptyIndex,
+                )
+
+            indexRouter.handle(sid, Command.Tell("Bob", "hello"))
+
+            assertEquals(0, capturingBus.sendToInvocations.size)
+            assertEquals(1, capturingBus.broadcastInvocations.size)
+            assertTrue(capturingBus.broadcastInvocations[0] is InterEngineMessage.TellMessage)
+        }
+
+    @Test
+    fun `tell falls back to broadcast when player index returns own engine`() =
+        runTest {
+            val sid = SessionId(1)
+            login(players, sid, "Alice")
+            drain(outbound)
+
+            val capturingBus = CapturingInterEngineBus()
+            // index says "Bob" is on engine-1 (same engine), should still broadcast
+            val sameEngineIndex = MapPlayerLocationIndex(mapOf("bob" to "engine-1"))
+            val indexRouter =
+                CommandRouter(
+                    world = world,
+                    players = players,
+                    mobs = mobs,
+                    items = items,
+                    combat = CombatSystem(players, mobs, items, outbound),
+                    outbound = outbound,
+                    interEngineBus = capturingBus,
+                    engineId = "engine-1",
+                    playerLocationIndex = sameEngineIndex,
+                )
+
+            indexRouter.handle(sid, Command.Tell("Bob", "hello"))
+
+            assertEquals(0, capturingBus.sendToInvocations.size)
+            assertEquals(1, capturingBus.broadcastInvocations.size)
+        }
+}
+
+/** Test double: captures sendTo and broadcast invocations separately. */
+private class CapturingInterEngineBus : dev.ambon.sharding.InterEngineBus {
+    val sendToInvocations = mutableListOf<Pair<String, InterEngineMessage>>()
+    val broadcastInvocations = mutableListOf<InterEngineMessage>()
+    private val ch = kotlinx.coroutines.channels.Channel<InterEngineMessage>(1_000)
+
+    override suspend fun sendTo(
+        targetEngineId: String,
+        message: InterEngineMessage,
+    ) {
+        sendToInvocations += targetEngineId to message
+        ch.send(message)
+    }
+
+    override suspend fun broadcast(message: InterEngineMessage) {
+        broadcastInvocations += message
+        ch.send(message)
+    }
+
+    override fun incoming(): kotlinx.coroutines.channels.ReceiveChannel<InterEngineMessage> = ch
+
+    override suspend fun start() {}
+
+    override fun close() {
+        ch.close()
+    }
+}
+
+/** Test double: simple map-backed PlayerLocationIndex. */
+private class MapPlayerLocationIndex(
+    private val entries: Map<String, String>,
+) : dev.ambon.sharding.PlayerLocationIndex {
+    override fun register(playerName: String) {}
+
+    override fun unregister(playerName: String) {}
+
+    override suspend fun lookupEngineId(playerName: String): String? = entries[playerName.lowercase()]
+
+    override fun refreshTtls() {}
 }
