@@ -244,19 +244,12 @@ class GameMetrics(
         Gauge.builder("outbound_bus_queue_capacity") { capacitySupplier().toDouble() }.register(registry)
     }
 
-    fun bindSessionOutboundQueue(
-        transport: String,
-        depthSupplier: () -> Int,
-        capacitySupplier: () -> Int,
+    fun bindSessionOutboundQueueAggregate(
+        totalDepthSupplier: () -> Int,
+        maxDepthSupplier: () -> Int,
     ) {
-        Gauge
-            .builder("session_outbound_queue_depth") { depthSupplier().toDouble() }
-            .tag("transport", transport)
-            .register(registry)
-        Gauge
-            .builder("session_outbound_queue_capacity") { capacitySupplier().toDouble() }
-            .tag("transport", transport)
-            .register(registry)
+        Gauge.builder("session_outbound_queue_depth_total") { totalDepthSupplier().toDouble() }.register(registry)
+        Gauge.builder("session_outbound_queue_depth_max") { maxDepthSupplier().toDouble() }.register(registry)
     }
 
     fun bindWriteCoalescerDirtyCount(supplier: () -> Int) {

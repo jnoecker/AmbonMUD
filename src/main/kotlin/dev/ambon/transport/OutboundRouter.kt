@@ -25,13 +25,17 @@ class OutboundRouter(
         require(loginScreen.isValid()) {
             "LoginScreen is invalid: lines=${loginScreen.lines.size}, ansiPrefixesByLine=${loginScreen.ansiPrefixesByLine.size}"
         }
+        metrics.bindSessionOutboundQueueAggregate(
+            totalDepthSupplier = { sinks.values.sumOf { it.queueDepth.get() } },
+            maxDepthSupplier = { sinks.values.maxOfOrNull { it.queueDepth.get() } ?: 0 },
+        )
     }
 
     private data class SessionSink(
         val queue: Channel<String>,
         val close: (String) -> Unit,
-        val transport: String,
-        val queueCapacity: Int,
+        val transport: String = "unknown",
+        val queueCapacity: Int = 0,
         val queueDepth: AtomicInteger = AtomicInteger(0),
         @Volatile var lastEnqueuedWasPrompt: Boolean = false,
         @Volatile var renderer: TextRenderer = PlainRenderer(),
@@ -44,8 +48,8 @@ class OutboundRouter(
     fun register(
         sessionId: SessionId,
         queue: Channel<String>,
-        queueCapacity: Int,
-        transport: String,
+        queueCapacity: Int = 0,
+        transport: String = "unknown",
         defaultAnsiEnabled: Boolean = false,
         close: (String) -> Unit,
     ) {
@@ -58,11 +62,6 @@ class OutboundRouter(
                 renderer = if (defaultAnsiEnabled) AnsiRenderer() else PlainRenderer(),
             )
         sinks[sessionId] = sink
-        metrics.bindSessionOutboundQueue(
-            transport = transport,
-            depthSupplier = { sink.queueDepth.get() },
-            capacitySupplier = { sink.queueCapacity },
-        )
     }
 
     fun unregister(sessionId: SessionId) {

@@ -13,14 +13,20 @@ class LocalOutboundBus(
     private val depth = AtomicInteger(0)
 
     override suspend fun send(event: OutboundEvent) {
-        channel.send(event)
         depth.incrementAndGet()
+        try {
+            channel.send(event)
+        } catch (e: Throwable) {
+            depth.decrementAndGet()
+            throw e
+        }
     }
 
     fun trySend(event: OutboundEvent): ChannelResult<Unit> {
+        depth.incrementAndGet()
         val result = channel.trySend(event)
-        if (result.isSuccess) {
-            depth.incrementAndGet()
+        if (!result.isSuccess) {
+            depth.decrementAndGet()
         }
         return result
     }

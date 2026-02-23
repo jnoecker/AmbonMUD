@@ -163,10 +163,11 @@ class GameMetricsTest {
         metrics.bindOutboundBusQueue({ outboundDepth }) { 32 }
         metrics.bindSchedulerPendingActions { schedulerPending }
         metrics.bindWriteCoalescerDirtyCount { dirtyCount }
-        metrics.bindSessionOutboundQueue(
-            transport = "telnet",
-            depthSupplier = { 5 },
-            capacitySupplier = { 64 },
+        var sessionTotalDepth = 5
+        var sessionMaxDepth = 5
+        metrics.bindSessionOutboundQueueAggregate(
+            totalDepthSupplier = { sessionTotalDepth },
+            maxDepthSupplier = { sessionMaxDepth },
         )
 
         assertEquals(2.0, registry.get("inbound_bus_queue_depth").gauge().value())
@@ -175,14 +176,8 @@ class GameMetricsTest {
         assertEquals(32.0, registry.get("outbound_bus_queue_capacity").gauge().value())
         assertEquals(4.0, registry.get("scheduler_pending_actions").gauge().value())
         assertEquals(1.0, registry.get("write_coalescer_dirty_count").gauge().value())
-        assertEquals(
-            5.0,
-            registry
-                .get("session_outbound_queue_depth")
-                .tag("transport", "telnet")
-                .gauge()
-                .value(),
-        )
+        assertEquals(5.0, registry.get("session_outbound_queue_depth_total").gauge().value())
+        assertEquals(5.0, registry.get("session_outbound_queue_depth_max").gauge().value())
 
         inboundDepth = 9
         schedulerPending = 7
