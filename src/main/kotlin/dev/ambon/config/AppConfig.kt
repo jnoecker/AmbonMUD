@@ -90,6 +90,9 @@ data class AppConfig(
         require(engine.regen.minIntervalMillis > 0L) { "ambonMUD.engine.regen.minIntervalMillis must be > 0" }
         require(engine.regen.msPerConstitution >= 0L) { "ambonMUD.engine.regen.msPerConstitution must be >= 0" }
         require(engine.regen.regenAmount > 0) { "ambonMUD.engine.regen.regenAmount must be > 0" }
+        require(engine.regen.mana.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.baseIntervalMillis must be > 0" }
+        require(engine.regen.mana.minIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.minIntervalMillis must be > 0" }
+        require(engine.regen.mana.regenAmount > 0) { "ambonMUD.engine.regen.mana.regenAmount must be > 0" }
 
         require(engine.scheduler.maxActionsPerTick > 0) { "ambonMUD.engine.scheduler.maxActionsPerTick must be > 0" }
 
@@ -100,6 +103,20 @@ data class AppConfig(
         require(progression.xp.multiplier >= 0.0) { "ambonMUD.progression.xp.multiplier must be >= 0" }
         require(progression.xp.defaultKillXp >= 0L) { "ambonMUD.progression.xp.defaultKillXp must be >= 0" }
         require(progression.rewards.hpPerLevel >= 0) { "ambonMUD.progression.rewards.hpPerLevel must be >= 0" }
+        require(progression.rewards.manaPerLevel >= 0) { "ambonMUD.progression.rewards.manaPerLevel must be >= 0" }
+
+        engine.abilities.definitions.forEach { (id, def) ->
+            require(def.displayName.isNotBlank()) { "ambonMUD.engine.abilities.definitions.$id.displayName must be non-blank" }
+            require(def.manaCost >= 0) { "ambonMUD.engine.abilities.definitions.$id.manaCost must be >= 0" }
+            require(def.cooldownMs >= 0L) { "ambonMUD.engine.abilities.definitions.$id.cooldownMs must be >= 0" }
+            require(def.levelRequired >= 1) { "ambonMUD.engine.abilities.definitions.$id.levelRequired must be >= 1" }
+            require(def.targetType in listOf("ENEMY", "SELF")) {
+                "ambonMUD.engine.abilities.definitions.$id.targetType must be ENEMY or SELF"
+            }
+            require(def.effect.type in listOf("DIRECT_DAMAGE", "DIRECT_HEAL")) {
+                "ambonMUD.engine.abilities.definitions.$id.effect.type must be DIRECT_DAMAGE or DIRECT_HEAL"
+            }
+        }
 
         require(transport.telnet.maxLineLen > 0) { "ambonMUD.transport.telnet.maxLineLen must be > 0" }
         require(transport.telnet.maxNonPrintablePerLine >= 0) {
@@ -252,6 +269,7 @@ data class EngineConfig(
     val combat: CombatEngineConfig = CombatEngineConfig(),
     val regen: RegenEngineConfig = RegenEngineConfig(),
     val scheduler: SchedulerEngineConfig = SchedulerEngineConfig(),
+    val abilities: AbilityEngineConfig = AbilityEngineConfig(),
 )
 
 data class ProgressionConfig(
@@ -271,6 +289,8 @@ data class XpCurveConfig(
 data class LevelRewardsConfig(
     val hpPerLevel: Int = 2,
     val fullHealOnLevelUp: Boolean = true,
+    val manaPerLevel: Int = 5,
+    val fullManaOnLevelUp: Boolean = true,
 )
 
 data class MobTierConfig(
@@ -366,10 +386,39 @@ data class RegenEngineConfig(
     val minIntervalMillis: Long = 1_000L,
     val msPerConstitution: Long = 200L,
     val regenAmount: Int = 1,
+    val mana: ManaRegenConfig = ManaRegenConfig(),
+)
+
+data class ManaRegenConfig(
+    val baseIntervalMillis: Long = 3_000L,
+    val minIntervalMillis: Long = 1_000L,
+    val regenAmount: Int = 1,
 )
 
 data class SchedulerEngineConfig(
     val maxActionsPerTick: Int = 100,
+)
+
+data class AbilityEffectConfig(
+    val type: String = "DIRECT_DAMAGE",
+    val minDamage: Int = 0,
+    val maxDamage: Int = 0,
+    val minHeal: Int = 0,
+    val maxHeal: Int = 0,
+)
+
+data class AbilityDefinitionConfig(
+    val displayName: String = "",
+    val description: String = "",
+    val manaCost: Int = 10,
+    val cooldownMs: Long = 0L,
+    val levelRequired: Int = 1,
+    val targetType: String = "ENEMY",
+    val effect: AbilityEffectConfig = AbilityEffectConfig(),
+)
+
+data class AbilityEngineConfig(
+    val definitions: Map<String, AbilityDefinitionConfig> = emptyMap(),
 )
 
 data class TransportConfig(

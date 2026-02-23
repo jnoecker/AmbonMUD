@@ -37,9 +37,36 @@ class CombatSystem(
     private val fightsByMob = mutableMapOf<MobId, Fight>()
     private val defenseByPlayer = mutableMapOf<SessionId, Int>()
 
+    private var onLevelUp: (suspend (SessionId, Int) -> Unit)? = null
+
+    fun setOnLevelUp(handler: suspend (SessionId, Int) -> Unit) {
+        onLevelUp = handler
+    }
+
     fun isInCombat(sessionId: SessionId): Boolean = fightsByPlayer.containsKey(sessionId)
 
     fun isMobInCombat(mobId: MobId): Boolean = fightsByMob.containsKey(mobId)
+
+    fun getCombatTarget(sessionId: SessionId): MobState? {
+        val fight = fightsByPlayer[sessionId] ?: return null
+        return mobs.get(fight.mobId)
+    }
+
+    fun findMobInRoom(
+        roomId: RoomId,
+        keyword: String,
+    ): MobState? = findMobsInRoom(roomId, keyword).firstOrNull()
+
+    suspend fun handleSpellKill(
+        killerSessionId: SessionId,
+        mob: MobState,
+    ) {
+        val fight = fightsByMob[mob.id]
+        if (fight != null) {
+            endFight(fight)
+        }
+        handleMobDeath(killerSessionId, mob)
+    }
 
     fun syncPlayerDefense(sessionId: SessionId) {
         val player = players.get(sessionId) ?: return
@@ -343,13 +370,20 @@ class CombatSystem(
         val oldMaxHp = progression.maxHpForLevel(result.previousLevel)
         val newMaxHp = progression.maxHpForLevel(result.newLevel)
         val hpGain = (newMaxHp - oldMaxHp).coerceAtLeast(0)
+        val oldMaxMana = progression.maxManaForLevel(result.previousLevel)
+        val newMaxMana = progression.maxManaForLevel(result.newLevel)
+        val manaGain = (newMaxMana - oldMaxMana).coerceAtLeast(0)
+        val bonusParts = mutableListOf<String>()
+        if (hpGain > 0) bonusParts += "+$hpGain max HP"
+        if (manaGain > 0) bonusParts += "+$manaGain max Mana"
         val levelUpMessage =
-            if (hpGain > 0) {
-                "You reached level ${result.newLevel}! (+$hpGain max HP)"
+            if (bonusParts.isNotEmpty()) {
+                "You reached level ${result.newLevel}! (${bonusParts.joinToString(", ")})"
             } else {
                 "You reached level ${result.newLevel}!"
             }
         outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
+        onLevelUp?.invoke(sessionId, result.newLevel)
     }
 
     private suspend fun broadcastToRoom(

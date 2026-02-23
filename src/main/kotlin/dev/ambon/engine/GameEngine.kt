@@ -8,6 +8,12 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.World
+import dev.ambon.engine.abilities.AbilityDefinition
+import dev.ambon.engine.abilities.AbilityEffect
+import dev.ambon.engine.abilities.AbilityId
+import dev.ambon.engine.abilities.AbilityRegistry
+import dev.ambon.engine.abilities.AbilitySystem
+import dev.ambon.engine.abilities.TargetType
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
@@ -96,7 +102,43 @@ class GameEngine(
             minIntervalMs = engineConfig.regen.minIntervalMillis,
             msPerConstitution = engineConfig.regen.msPerConstitution,
             regenAmount = engineConfig.regen.regenAmount,
+            manaBaseIntervalMs = engineConfig.regen.mana.baseIntervalMillis,
+            manaMinIntervalMs = engineConfig.regen.mana.minIntervalMillis,
+            manaRegenAmount = engineConfig.regen.mana.regenAmount,
             metrics = metrics,
+        )
+
+    private val abilityRegistry =
+        AbilityRegistry().also { reg ->
+            engineConfig.abilities.definitions.forEach { (id, cfg) ->
+                val effect =
+                    when (cfg.effect.type.uppercase()) {
+                        "DIRECT_DAMAGE" -> AbilityEffect.DirectDamage(cfg.effect.minDamage, cfg.effect.maxDamage)
+                        "DIRECT_HEAL" -> AbilityEffect.DirectHeal(cfg.effect.minHeal, cfg.effect.maxHeal)
+                        else -> error("Unknown ability effect type: ${cfg.effect.type}")
+                    }
+                reg.register(
+                    AbilityDefinition(
+                        id = AbilityId(id),
+                        displayName = cfg.displayName,
+                        description = cfg.description,
+                        manaCost = cfg.manaCost,
+                        cooldownMs = cfg.cooldownMs,
+                        levelRequired = cfg.levelRequired,
+                        targetType = TargetType.valueOf(cfg.targetType.uppercase()),
+                        effect = effect,
+                    ),
+                )
+            }
+        }
+
+    private val abilitySystem =
+        AbilitySystem(
+            registry = abilityRegistry,
+            players = players,
+            combat = combatSystem,
+            outbound = outbound,
+            clock = clock,
         )
 
     private val router =
@@ -111,6 +153,7 @@ class GameEngine(
             metrics = metrics,
             onShutdown = onShutdown,
             onMobSmited = mobSystem::onMobRemoved,
+            abilities = abilitySystem,
             onCrossZoneMove = if (handoffManager != null) ::handleCrossZoneMove else null,
             interEngineBus = interEngineBus,
             engineId = engineId,
@@ -171,6 +214,12 @@ class GameEngine(
         }
         items.loadSpawns(world.itemSpawns)
         mobSystem.setCombatChecker(combatSystem::isMobInCombat)
+        combatSystem.setOnLevelUp { sessionId, newLevel ->
+            val newAbilities = abilitySystem.syncAbilitiesAndReturnNew(sessionId, newLevel)
+            for (name in newAbilities) {
+                outbound.send(OutboundEvent.SendText(sessionId, "You have learned $name!"))
+            }
+        }
     }
 
     suspend fun run() =
@@ -332,6 +381,7 @@ class GameEngine(
         // End combat before handoff (should already be blocked by Move handler, but be safe)
         combatSystem.endCombatFor(sessionId)
         regenSystem.onPlayerDisconnected(sessionId)
+        abilitySystem.onPlayerDisconnected(sessionId)
 
         when (val result = mgr.initiateHandoff(sessionId, targetRoomId)) {
             is HandoffResult.Initiated -> {
@@ -593,6 +643,7 @@ class GameEngine(
 
                 combatSystem.onPlayerDisconnected(sid)
                 regenSystem.onPlayerDisconnected(sid)
+                abilitySystem.onPlayerDisconnected(sid)
 
                 if (me != null) {
                     log.info { "Player logged out: name=${me.name} sessionId=$sid" }
@@ -772,6 +823,7 @@ class GameEngine(
                 val oldSid = result.oldSessionId
                 combatSystem.remapSession(oldSid, sessionId)
                 regenSystem.remapSession(oldSid, sessionId)
+                abilitySystem.remapSession(oldSid, sessionId)
                 outbound.send(OutboundEvent.Close(oldSid, "Your account has logged in from another location."))
                 val me = players.get(sessionId)
                 if (me != null) broadcastToRoom(me.roomId, "${me.name} briefly flickers.", sessionId)
@@ -846,6 +898,7 @@ class GameEngine(
 
         log.info { "Player logged in: name=${me.name} sessionId=$sessionId" }
         outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
+        abilitySystem.syncAbilities(sessionId, me.level)
         if (!ensureLoginRoomAvailable(sessionId, suppressEnterBroadcast)) return
         if (!suppressEnterBroadcast) {
             broadcastToRoom(me.roomId, "${me.name} enters.", sessionId)

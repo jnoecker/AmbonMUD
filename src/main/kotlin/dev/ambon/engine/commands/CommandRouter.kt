@@ -13,6 +13,7 @@ import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.metrics.GameMetrics
@@ -31,6 +32,7 @@ class CommandRouter(
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val onShutdown: suspend () -> Unit = {},
     private val onMobSmited: (MobId) -> Unit = {},
+    private val abilities: AbilitySystem? = null,
     private val onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
     private val interEngineBus: InterEngineBus? = null,
     private val engineId: String = "",
@@ -70,6 +72,8 @@ class CommandRouter(
                             drop <item>
                             kill <mob>
                             flee
+                            cast/c <spell> [target]
+                            spells/abilities
                             score/sc
                             ansi on/off
                             colors
@@ -440,6 +444,7 @@ class CommandRouter(
 
                 outbound.send(OutboundEvent.SendInfo(sessionId, "[ ${me.name} — Level ${me.level} Adventurer ]"))
                 outbound.send(OutboundEvent.SendInfo(sessionId, "  HP  : ${me.hp} / ${me.maxHp}      XP : $xpLine"))
+                outbound.send(OutboundEvent.SendInfo(sessionId, "  Mana: ${me.mana} / ${me.maxMana}"))
                 if (totalCon > 0) {
                     val conParts =
                         ItemSlot.entries
@@ -450,6 +455,47 @@ class CommandRouter(
                     outbound.send(OutboundEvent.SendInfo(sessionId, "  Con : $conLine"))
                 } else {
                     outbound.send(OutboundEvent.SendInfo(sessionId, "  Dmg : $dmgMin–$dmgMax          Armor: $armorDetail"))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Cast -> {
+                if (abilities == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Abilities are not enabled."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val err = abilities.cast(sessionId, cmd.spellName, cmd.target)
+                if (err != null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, err))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            Command.Spells -> {
+                val me = players.get(sessionId) ?: return
+                if (abilities == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Abilities are not enabled."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val known = abilities.knownAbilities(sessionId)
+                if (known.isEmpty()) {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You don't know any spells yet."))
+                } else {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Known spells:"))
+                    for (ab in known) {
+                        val cdMs = abilities.cooldownRemaining(sessionId, ab.id)
+                        val cdStr = if (cdMs > 0) " [${(cdMs + 999) / 1000}s cd]" else ""
+                        val targetStr = ab.targetType.name.lowercase()
+                        outbound.send(
+                            OutboundEvent.SendInfo(
+                                sessionId,
+                                "  ${ab.displayName} (${ab.manaCost} mana, $targetStr)$cdStr — ${ab.description}",
+                            ),
+                        )
+                    }
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Mana: ${me.mana} / ${me.maxMana}"))
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
