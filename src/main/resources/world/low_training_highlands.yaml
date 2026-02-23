@@ -1,0 +1,77 @@
+zone: low_training_highlands
+lifespan: 25
+startRoom: switchback_foot
+
+mobs:
+  cliff_ram:
+    name: "a cliff ram"
+    room: broken_switchback
+    tier: standard
+    level: 4
+  storm_kite:
+    name: "a storm kite"
+    room: skybridge_span
+    tier: standard
+    level: 5
+  ridge_outlaw:
+    name: "a ridge outlaw"
+    room: thunder_roost
+    tier: elite
+    level: 5
+    drops:
+      - itemId: outlaw_bandolier
+        chance: 1.0
+
+items:
+  ridge_hatchet:
+    displayName: "a ridge hatchet"
+    keyword: "hatchet"
+    description: "A compact climbing hatchet with a chipped but sturdy edge."
+    slot: hand
+    damage: 4
+    room: switchback_foot
+
+  windproof_coat:
+    displayName: "a windproof coat"
+    keyword: "coat"
+    description: "A heavy wool coat waxed against rain and mountain gusts."
+    slot: body
+    armor: 3
+    constitution: 1
+    room: skybridge_span
+
+  outlaw_bandolier:
+    displayName: "an outlaw's bandolier"
+    keyword: "bandolier"
+    description: "A leather bandolier fitted with brass loops and lucky tokens."
+    slot: head
+    armor: 2
+    constitution: 1
+
+rooms:
+  switchback_foot:
+    title: "Switchback Foot"
+    description: "A steep trailhead climbs into fog-wrapped ridges. Stone cairns mark the route up, and a painted post points down toward the hub gates."
+    exits:
+      n: broken_switchback
+      s: ambon_hub:blank_arches
+
+  broken_switchback:
+    title: "Broken Switchback"
+    description: "The trail zigzags along a cliff face where sections of railing have collapsed. Loose gravel skitters into the valley below."
+    exits:
+      n: skybridge_span
+      s: switchback_foot
+
+  skybridge_span:
+    title: "Skybridge Span"
+    description: "A rope-and-plank bridge sways between two jagged outcrops. Wind tears through the gap with a low, steady roar."
+    exits:
+      n: thunder_roost
+      s: broken_switchback
+
+  thunder_roost:
+    title: "Thunder Roost"
+    description: "An exposed stone platform crowns the ridge. Black stormclouds gather overhead, and old campfire circles suggest frequent ambushes."
+    exits:
+      s: skybridge_span

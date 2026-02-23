@@ -1,0 +1,76 @@
+zone: low_training_barrens
+lifespan: 20
+startRoom: windcut_gate
+
+mobs:
+  dustback_rat:
+    name: "a dustback rat"
+    room: cracked_causeway
+    tier: weak
+    level: 2
+  thorn_jackal:
+    name: "a thorn jackal"
+    room: thorn_scrub
+    tier: standard
+    level: 2
+    drops:
+      - itemId: jackal_tooth_knife
+        chance: 1.0
+  barrens_scout:
+    name: "a barrens scout"
+    room: watch_fire
+    tier: standard
+    level: 3
+
+items:
+  reed_wrapped_club:
+    displayName: "a reed-wrapped club"
+    keyword: "club"
+    description: "A hardwood branch reinforced with braided reeds. It is balanced for quick swings."
+    slot: hand
+    damage: 2
+    room: windcut_gate
+
+  stitched_dust_cloak:
+    displayName: "a stitched dust cloak"
+    keyword: "cloak"
+    description: "A scavenger's cloak stitched from pale canvas and fur scraps."
+    slot: body
+    armor: 1
+    constitution: 1
+    room: watch_fire
+
+  jackal_tooth_knife:
+    displayName: "a jackal tooth knife"
+    keyword: "knife"
+    description: "A sharpened tooth bound to a bone hilt with sinew."
+    slot: hand
+    damage: 3
+
+rooms:
+  windcut_gate:
+    title: "Windcut Gate"
+    description: "A split stone arch rises from the scrub plain, its weathered lintel carved with warning marks. A narrow track heads east into the training barrens, while the western path leads back to the hub."
+    exits:
+      e: cracked_causeway
+      w: ambon_hub:blank_arches
+
+  cracked_causeway:
+    title: "Cracked Causeway"
+    description: "Flat slate slabs form an old road through thorny brush. Dust devils dance between broken milestones."
+    exits:
+      e: thorn_scrub
+      w: windcut_gate
+
+  thorn_scrub:
+    title: "Thorn Scrub"
+    description: "Low thorn bushes crowd the track, forcing careful footing. Fresh pawprints circle a small bone pile near the path."
+    exits:
+      n: watch_fire
+      w: cracked_causeway
+
+  watch_fire:
+    title: "Watch Fire"
+    description: "A ring of stones protects a low fire that never fully goes out. Scout markings on nearby rocks point toward deeper hunting grounds."
+    exits:
+      s: thorn_scrub

@@ -1,0 +1,76 @@
+zone: low_training_mines
+lifespan: 25
+startRoom: orelift_station
+
+mobs:
+  tunnel_bat:
+    name: "a tunnel bat"
+    room: echo_gallery
+    tier: weak
+    level: 3
+  slag_beetle:
+    name: "a slag beetle"
+    room: ember_vein
+    tier: standard
+    level: 4
+  pick_rogue:
+    name: "a rogue pickhand"
+    room: foreman_cache
+    tier: standard
+    level: 4
+    drops:
+      - itemId: foreman_helm
+        chance: 1.0
+
+items:
+  miner_pick:
+    displayName: "a miner's pick"
+    keyword: "pick"
+    description: "A short-handled pick with a sharpened steel point."
+    slot: hand
+    damage: 3
+    room: orelift_station
+
+  slagguard_jacket:
+    displayName: "a slagguard jacket"
+    keyword: "jacket"
+    description: "A quilted jacket lined with heat-resistant leather patches."
+    slot: body
+    armor: 2
+    constitution: 1
+    room: ember_vein
+
+  foreman_helm:
+    displayName: "a foreman's iron helm"
+    keyword: "helm"
+    description: "An iron helm with a cracked lamp bracket on the brow."
+    slot: head
+    armor: 2
+
+rooms:
+  orelift_station:
+    title: "Orelift Station"
+    description: "A rusted ore lift hangs silent above old tracks. Chalk arrows on the wall mark a route down the active tunnels and a route back up to safer ground."
+    exits:
+      d: echo_gallery
+      u: ambon_hub:blank_arches
+
+  echo_gallery:
+    title: "Echo Gallery"
+    description: "A wide tunnel amplifies every footstep into rolling echoes. Broken support beams lean against glittering mineral seams."
+    exits:
+      e: ember_vein
+      u: orelift_station
+
+  ember_vein:
+    title: "Ember Vein"
+    description: "Red-orange ore veins glow faintly through fractured stone. Heat shimmers along the walls, and the air smells of hot metal."
+    exits:
+      e: foreman_cache
+      w: echo_gallery
+
+  foreman_cache:
+    title: "Foreman Cache"
+    description: "A reinforced side chamber once used to store payroll and blasting powder. Most crates are empty, but a few useful pieces remain."
+    exits:
+      w: ember_vein

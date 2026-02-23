@@ -1,0 +1,76 @@
+zone: low_training_marsh
+lifespan: 20
+startRoom: reedwalk_landing
+
+mobs:
+  marsh_newt:
+    name: "a marsh newt"
+    room: cattail_pass
+    tier: weak
+    level: 2
+  bog_lurker:
+    name: "a bog lurker"
+    room: drowned_shrine
+    tier: standard
+    level: 3
+    drops:
+      - itemId: bogglass_charm
+        chance: 1.0
+  mire_raider:
+    name: "a mire raider"
+    room: rope_ferry
+    tier: standard
+    level: 3
+
+items:
+  driftwood_spear:
+    displayName: "a driftwood spear"
+    keyword: "spear"
+    description: "A straight driftwood shaft tipped with chipped stone."
+    slot: hand
+    damage: 3
+    room: reedwalk_landing
+
+  mudsealed_boots:
+    displayName: "mud-sealed boots"
+    keyword: "boots"
+    description: "Heavy boots sealed with waxed mud to keep out cold marsh water."
+    slot: body
+    armor: 2
+    room: rope_ferry
+
+  bogglass_charm:
+    displayName: "a bogglass charm"
+    keyword: "charm"
+    description: "A polished shard of swamp glass on a braided cord."
+    slot: head
+    armor: 1
+    constitution: 1
+
+rooms:
+  reedwalk_landing:
+    title: "Reedwalk Landing"
+    description: "Boardwalk planks begin at a dry knoll and stretch out over black water. Frogs croak in layered chorus while lantern posts sway in the fog."
+    exits:
+      n: cattail_pass
+      s: ambon_hub:blank_arches
+
+  cattail_pass:
+    title: "Cattail Pass"
+    description: "Tall cattails close in on both sides of the boardwalk, brushing your shoulders with wet leaves. Ripples spread through the water in slow circles."
+    exits:
+      n: drowned_shrine
+      s: reedwalk_landing
+
+  drowned_shrine:
+    title: "Drowned Shrine"
+    description: "The roofline of an old shrine rises from the mire, half swallowed by silt and moss. Cracked idol faces stare from beneath the waterline."
+    exits:
+      e: rope_ferry
+      s: cattail_pass
+
+  rope_ferry:
+    title: "Rope Ferry"
+    description: "A hand-pulled raft is tied to a taut rope crossing a dark channel. Supply crates sit stacked beside a weathered sign warning of raiders."
+    exits:
+      w: drowned_shrine
