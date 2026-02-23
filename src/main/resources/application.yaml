@@ -147,8 +147,58 @@ ambonMUD:
       minIntervalMillis: 1000
       msPerConstitution: 200
       regenAmount: 1
+      mana:
+        baseIntervalMillis: 3000
+        minIntervalMillis: 1000
+        regenAmount: 1
     scheduler:
       maxActionsPerTick: 100
+    abilities:
+      definitions:
+        magic_missile:
+          displayName: "Magic Missile"
+          description: "Hurls a bolt of arcane energy at your foe."
+          manaCost: 8
+          cooldownMs: 0
+          levelRequired: 1
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 4
+            maxDamage: 8
+        heal:
+          displayName: "Heal"
+          description: "Mend your wounds with restorative magic."
+          manaCost: 10
+          cooldownMs: 5000
+          levelRequired: 1
+          targetType: SELF
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 6
+            maxHeal: 10
+        fireball:
+          displayName: "Fireball"
+          description: "Engulf your enemy in flames."
+          manaCost: 15
+          cooldownMs: 3000
+          levelRequired: 5
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 8
+            maxDamage: 16
+        mend:
+          displayName: "Mend"
+          description: "A powerful healing spell that restores significant health."
+          manaCost: 25
+          cooldownMs: 8000
+          levelRequired: 10
+          targetType: SELF
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 15
+            maxHeal: 25
 
   progression:
     maxLevel: 50
@@ -160,7 +210,9 @@ ambonMUD:
       defaultKillXp: 50
     rewards:
       hpPerLevel: 2
+      manaPerLevel: 5
       fullHealOnLevelUp: true
+      fullManaOnLevelUp: true
 
   transport:
     telnet:

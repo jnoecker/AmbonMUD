@@ -228,6 +228,9 @@ class HandoffManager(
                 xpTotal = state.xpTotal,
                 ansiEnabled = state.ansiEnabled,
                 isStaff = state.isStaff,
+                mana = state.mana,
+                maxMana = state.maxMana,
+                baseMana = state.baseMana,
             )
 
         try {
@@ -310,6 +313,9 @@ class HandoffManager(
                 passwordHash = "",
                 createdEpochMs = 0L,
                 lastSeenEpochMs = 0L,
+                mana = player.mana,
+                maxMana = player.maxMana,
+                baseMana = player.baseMana,
                 inventoryItems = inventory.map { serializeItem(it) },
                 equippedItems =
                     equipment

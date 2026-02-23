@@ -102,6 +102,8 @@ class PostgresPlayerRepository(
                     it[passwordHash] = record.passwordHash
                     it[ansiEnabled] = record.ansiEnabled
                     it[isStaff] = record.isStaff
+                    it[mana] = record.mana
+                    it[maxMana] = record.maxMana
                 }
             }
             metrics.onPlayerSave()
@@ -126,5 +128,7 @@ class PostgresPlayerRepository(
             passwordHash = this[PlayersTable.passwordHash],
             ansiEnabled = this[PlayersTable.ansiEnabled],
             isStaff = this[PlayersTable.isStaff],
+            mana = this[PlayersTable.mana],
+            maxMana = this[PlayersTable.maxMana],
         )
 }

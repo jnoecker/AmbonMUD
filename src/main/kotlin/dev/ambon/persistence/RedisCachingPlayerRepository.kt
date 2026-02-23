@@ -28,6 +28,8 @@ class RedisCachingPlayerRepository(
         val passwordHash: String = "",
         val ansiEnabled: Boolean = false,
         val isStaff: Boolean = false,
+        val mana: Int = 20,
+        val maxMana: Int = 20,
     )
 
     private fun nameKey(name: String) = "player:name:${name.lowercase()}"
@@ -104,6 +106,8 @@ class RedisCachingPlayerRepository(
                             passwordHash = record.passwordHash,
                             ansiEnabled = record.ansiEnabled,
                             isStaff = record.isStaff,
+                            mana = record.mana,
+                            maxMana = record.maxMana,
                         ),
                     )
                 cache.setEx(idKey(record.id.value), cacheTtlSeconds, json)
@@ -127,5 +131,7 @@ class RedisCachingPlayerRepository(
             passwordHash = passwordHash,
             ansiEnabled = ansiEnabled,
             isStaff = isStaff,
+            mana = mana,
+            maxMana = maxMana,
         )
 }

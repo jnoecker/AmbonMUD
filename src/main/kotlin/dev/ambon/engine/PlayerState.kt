@@ -17,8 +17,12 @@ data class PlayerState(
     var xpTotal: Long = 0L,
     var ansiEnabled: Boolean = false,
     var isStaff: Boolean = false,
+    var mana: Int = BASE_MANA,
+    var maxMana: Int = BASE_MANA,
+    var baseMana: Int = BASE_MANA,
 ) {
     companion object {
         const val BASE_MAX_HP = 10
+        const val BASE_MANA = 20
     }
 }

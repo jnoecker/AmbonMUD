@@ -19,4 +19,6 @@ data class PlayerRecord(
     val passwordHash: String = "",
     val ansiEnabled: Boolean = false,
     val isStaff: Boolean = false,
+    val mana: Int = 20,
+    val maxMana: Int = 20,
 )

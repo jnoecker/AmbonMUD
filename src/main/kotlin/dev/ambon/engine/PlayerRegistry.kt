@@ -134,6 +134,7 @@ class PlayerRegistry(
         val xpTotal = boundRecord.xpTotal.coerceAtLeast(0L)
         val level = progression.computeLevel(xpTotal)
         val maxHp = progression.maxHpForLevel(level)
+        val maxMana = progression.maxManaForLevel(level)
         val ps =
             PlayerState(
                 sessionId = sessionId,
@@ -148,6 +149,9 @@ class PlayerRegistry(
                 xpTotal = xpTotal,
                 ansiEnabled = boundRecord.ansiEnabled,
                 isStaff = boundRecord.isStaff,
+                mana = boundRecord.mana.coerceIn(0, maxMana),
+                maxMana = maxMana,
+                baseMana = maxMana,
             )
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
@@ -322,6 +326,8 @@ class PlayerRegistry(
                 level = ps.level,
                 xpTotal = ps.xpTotal,
                 ansiEnabled = ps.ansiEnabled,
+                mana = ps.mana,
+                maxMana = ps.maxMana,
             ),
         )
     }

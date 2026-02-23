@@ -21,6 +21,9 @@ class PlayerProgression(
     val hpPerLevel: Int
         get() = config.rewards.hpPerLevel
 
+    val manaPerLevel: Int
+        get() = config.rewards.manaPerLevel
+
     fun totalXpForLevel(level: Int): Long {
         if (level <= 1) return 0L
 
@@ -70,6 +73,14 @@ class PlayerProgression(
         val normalizedLevel = level.coerceIn(1, config.maxLevel)
         val bonus = (normalizedLevel - 1).toLong() * config.rewards.hpPerLevel.toLong()
         return (PlayerState.BASE_MAX_HP.toLong() + bonus)
+            .coerceAtMost(Int.MAX_VALUE.toLong())
+            .toInt()
+    }
+
+    fun maxManaForLevel(level: Int): Int {
+        val normalizedLevel = level.coerceIn(1, config.maxLevel)
+        val bonus = (normalizedLevel - 1).toLong() * config.rewards.manaPerLevel.toLong()
+        return (PlayerState.BASE_MANA.toLong() + bonus)
             .coerceAtMost(Int.MAX_VALUE.toLong())
             .toInt()
     }
@@ -124,6 +135,10 @@ class PlayerProgression(
         player.baseMaxHp = newBaseMaxHp
         player.maxHp = newEffectiveMaxHp
 
+        val newMaxMana = maxManaForLevel(newLevel)
+        player.baseMana = newMaxMana
+        player.maxMana = newMaxMana
+
         if (levelsGained > 0) {
             player.hp =
                 if (config.rewards.fullHealOnLevelUp) {
@@ -131,8 +146,15 @@ class PlayerProgression(
                 } else {
                     player.hp.coerceIn(0, newEffectiveMaxHp)
                 }
+            player.mana =
+                if (config.rewards.fullManaOnLevelUp) {
+                    newMaxMana
+                } else {
+                    player.mana.coerceIn(0, newMaxMana)
+                }
         } else {
             player.hp = player.hp.coerceIn(0, newEffectiveMaxHp)
+            player.mana = player.mana.coerceIn(0, newMaxMana)
         }
 
         return LevelUpResult(

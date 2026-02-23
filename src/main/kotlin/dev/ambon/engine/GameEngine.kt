@@ -8,6 +8,9 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.World
+import dev.ambon.engine.abilities.AbilityRegistry
+import dev.ambon.engine.abilities.AbilityRegistryLoader
+import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
@@ -86,6 +89,12 @@ class GameEngine(
             onMobRemoved = mobSystem::onMobRemoved,
             progression = progression,
             metrics = metrics,
+            onLevelUp = { sid, level ->
+                val newAbilities = abilitySystem.syncAbilities(sid, level)
+                for (ability in newAbilities) {
+                    outbound.send(OutboundEvent.SendText(sid, "You have learned ${ability.displayName}!"))
+                }
+            },
         )
     private val regenSystem =
         RegenSystem(
@@ -96,7 +105,22 @@ class GameEngine(
             minIntervalMs = engineConfig.regen.minIntervalMillis,
             msPerConstitution = engineConfig.regen.msPerConstitution,
             regenAmount = engineConfig.regen.regenAmount,
+            manaBaseIntervalMs = engineConfig.regen.mana.baseIntervalMillis,
+            manaMinIntervalMs = engineConfig.regen.mana.minIntervalMillis,
+            manaRegenAmount = engineConfig.regen.mana.regenAmount,
             metrics = metrics,
+        )
+    private val abilityRegistry =
+        AbilityRegistry().also { reg ->
+            AbilityRegistryLoader.load(engineConfig.abilities, reg)
+        }
+    private val abilitySystem: AbilitySystem =
+        AbilitySystem(
+            players = players,
+            registry = abilityRegistry,
+            outbound = outbound,
+            combat = combatSystem,
+            clock = clock,
         )
 
     private val router =
@@ -108,6 +132,7 @@ class GameEngine(
             combat = combatSystem,
             outbound = outbound,
             progression = progression,
+            abilitySystem = abilitySystem,
             metrics = metrics,
             onShutdown = onShutdown,
             onMobSmited = mobSystem::onMobRemoved,
@@ -593,6 +618,7 @@ class GameEngine(
 
                 combatSystem.onPlayerDisconnected(sid)
                 regenSystem.onPlayerDisconnected(sid)
+                abilitySystem.onPlayerDisconnected(sid)
 
                 if (me != null) {
                     log.info { "Player logged out: name=${me.name} sessionId=$sid" }
@@ -772,6 +798,7 @@ class GameEngine(
                 val oldSid = result.oldSessionId
                 combatSystem.remapSession(oldSid, sessionId)
                 regenSystem.remapSession(oldSid, sessionId)
+                abilitySystem.remapSession(oldSid, sessionId)
                 outbound.send(OutboundEvent.Close(oldSid, "Your account has logged in from another location."))
                 val me = players.get(sessionId)
                 if (me != null) broadcastToRoom(me.roomId, "${me.name} briefly flickers.", sessionId)
@@ -845,6 +872,7 @@ class GameEngine(
         }
 
         log.info { "Player logged in: name=${me.name} sessionId=$sessionId" }
+        abilitySystem.syncAbilities(sessionId, me.level)
         outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
         if (!ensureLoginRoomAvailable(sessionId, suppressEnterBroadcast)) return
         if (!suppressEnterBroadcast) {

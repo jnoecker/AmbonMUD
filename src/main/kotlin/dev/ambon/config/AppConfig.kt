@@ -93,6 +93,23 @@ data class AppConfig(
 
         require(engine.scheduler.maxActionsPerTick > 0) { "ambonMUD.engine.scheduler.maxActionsPerTick must be > 0" }
 
+        require(engine.regen.mana.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.baseIntervalMillis must be > 0" }
+        require(engine.regen.mana.minIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.minIntervalMillis must be > 0" }
+        require(engine.regen.mana.regenAmount > 0) { "ambonMUD.engine.regen.mana.regenAmount must be > 0" }
+
+        engine.abilities.definitions.forEach { (key, def) ->
+            require(def.displayName.isNotBlank()) { "ability '$key' displayName must be non-blank" }
+            require(def.manaCost >= 0) { "ability '$key' manaCost must be >= 0" }
+            require(def.cooldownMs >= 0L) { "ability '$key' cooldownMs must be >= 0" }
+            require(def.levelRequired >= 1) { "ability '$key' levelRequired must be >= 1" }
+            require(def.targetType.uppercase() in listOf("ENEMY", "SELF")) {
+                "ability '$key' targetType must be ENEMY or SELF, got '${def.targetType}'"
+            }
+            require(def.effect.type.uppercase() in listOf("DIRECT_DAMAGE", "DIRECT_HEAL")) {
+                "ability '$key' effect.type must be DIRECT_DAMAGE or DIRECT_HEAL, got '${def.effect.type}'"
+            }
+        }
+
         require(progression.maxLevel > 0) { "ambonMUD.progression.maxLevel must be > 0" }
         require(progression.xp.baseXp > 0L) { "ambonMUD.progression.xp.baseXp must be > 0" }
         require(progression.xp.exponent > 0.0) { "ambonMUD.progression.xp.exponent must be > 0" }
@@ -100,6 +117,7 @@ data class AppConfig(
         require(progression.xp.multiplier >= 0.0) { "ambonMUD.progression.xp.multiplier must be >= 0" }
         require(progression.xp.defaultKillXp >= 0L) { "ambonMUD.progression.xp.defaultKillXp must be >= 0" }
         require(progression.rewards.hpPerLevel >= 0) { "ambonMUD.progression.rewards.hpPerLevel must be >= 0" }
+        require(progression.rewards.manaPerLevel >= 0) { "ambonMUD.progression.rewards.manaPerLevel must be >= 0" }
 
         require(transport.telnet.maxLineLen > 0) { "ambonMUD.transport.telnet.maxLineLen must be > 0" }
         require(transport.telnet.maxNonPrintablePerLine >= 0) {
@@ -252,6 +270,7 @@ data class EngineConfig(
     val combat: CombatEngineConfig = CombatEngineConfig(),
     val regen: RegenEngineConfig = RegenEngineConfig(),
     val scheduler: SchedulerEngineConfig = SchedulerEngineConfig(),
+    val abilities: AbilityEngineConfig = AbilityEngineConfig(),
 )
 
 data class ProgressionConfig(
@@ -270,7 +289,9 @@ data class XpCurveConfig(
 
 data class LevelRewardsConfig(
     val hpPerLevel: Int = 2,
+    val manaPerLevel: Int = 5,
     val fullHealOnLevelUp: Boolean = true,
+    val fullManaOnLevelUp: Boolean = true,
 )
 
 data class MobTierConfig(
@@ -366,10 +387,39 @@ data class RegenEngineConfig(
     val minIntervalMillis: Long = 1_000L,
     val msPerConstitution: Long = 200L,
     val regenAmount: Int = 1,
+    val mana: ManaRegenConfig = ManaRegenConfig(),
+)
+
+data class ManaRegenConfig(
+    val baseIntervalMillis: Long = 3_000L,
+    val minIntervalMillis: Long = 1_000L,
+    val regenAmount: Int = 1,
 )
 
 data class SchedulerEngineConfig(
     val maxActionsPerTick: Int = 100,
+)
+
+data class AbilityEngineConfig(
+    val definitions: Map<String, AbilityDefinitionConfig> = emptyMap(),
+)
+
+data class AbilityDefinitionConfig(
+    val displayName: String = "",
+    val description: String = "",
+    val manaCost: Int = 10,
+    val cooldownMs: Long = 0L,
+    val levelRequired: Int = 1,
+    val targetType: String = "ENEMY",
+    val effect: AbilityEffectConfig = AbilityEffectConfig(),
+)
+
+data class AbilityEffectConfig(
+    val type: String = "DIRECT_DAMAGE",
+    val minDamage: Int = 0,
+    val maxDamage: Int = 0,
+    val minHeal: Int = 0,
+    val maxHeal: Int = 0,
 )
 
 data class TransportConfig(
