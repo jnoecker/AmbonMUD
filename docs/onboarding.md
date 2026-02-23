@@ -1001,7 +1001,7 @@ Local IDs (no `:`) are automatically prefixed with the zone name. Fully qualifie
 The loader validates both per-file and cross-file (merged world):
 - All exit targets resolve to existing rooms
 - All mob rooms resolve
-- All item placements resolve (room or mob, never both)
+- Item room placements resolve; deprecated `mob` placement and dual `room`+`mob` placement are rejected by the loader
 - No duplicate room/mob/item IDs across files
 - `lifespan` values are consistent if a zone spans multiple files
 
@@ -1240,9 +1240,10 @@ Edit YAML in `src/main/resources/world/`. If adding a new file, register it in `
 - `YamlPlayerRepository` writes to a temp file then renames atomically
 - Do not replace this with direct file writes
 
-### Item Placement Exclusivity
-- An item can be in a room, on a mob, or unplaced — never more than one
-- Enforced by `WorldLoader` at load time; maintain this in `ItemRegistry`
+### Item Placement Rules (Current Loader Behavior)
+- The loader currently accepts `room` placement or unplaced items
+- `mob` placement is deprecated/rejected, and setting both `room` and `mob` is rejected
+- Treat this as loader behavior (subject to future evolution), not a core engine architecture boundary
 
 ### Per-Tick Processing Caps
 - `CombatSystem`, `MobSystem`, and inbound event handling all have `max*PerTick` limits

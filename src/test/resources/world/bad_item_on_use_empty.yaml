@@ -1,0 +1,10 @@
+zone: bad_item_on_use_empty
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Start."
+items:
+  token:
+    displayName: "an inert token"
+    onUse: {}

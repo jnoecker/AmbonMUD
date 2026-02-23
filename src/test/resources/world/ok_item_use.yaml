@@ -1,0 +1,15 @@
+zone: ok_item_use
+startRoom: a
+rooms:
+  a:
+    title: "Room A"
+    description: "Start."
+items:
+  potion:
+    displayName: "a novice potion"
+    room: a
+    consumable: true
+    charges: 3
+    onUse:
+      healHp: 5
+      grantXp: 25

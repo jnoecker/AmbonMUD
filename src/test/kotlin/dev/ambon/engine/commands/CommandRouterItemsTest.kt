@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.items.ItemUseEffect
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
@@ -280,6 +281,211 @@ class CommandRouterItemsTest {
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("You wear") },
                 "Missing wear message. got=$outs",
             )
+        }
+
+    @Test
+    fun `use applies effects and consumes when charges reach zero`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val outbound = LocalOutboundBus()
+            val mobs = MobRegistry()
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+
+            val sid = SessionId(8L)
+            login(players, sid, "Player8")
+            players.get(sid)!!.hp = 5
+
+            items.setRoomItems(
+                world.startRoom,
+                listOf(
+                    ItemInstance(
+                        ItemId("test:potion"),
+                        Item(
+                            keyword = "potion",
+                            displayName = "a red potion",
+                            consumable = true,
+                            charges = 2,
+                            onUse = ItemUseEffect(healHp = 3),
+                        ),
+                    ),
+                ),
+            )
+            items.takeFromRoom(sid, world.startRoom, "potion")
+
+            router.handle(sid, Command.Use("potion"))
+
+            assertEquals(8, players.get(sid)!!.hp)
+            assertEquals(1, items.inventory(sid).size)
+            val remainingPotion = items.inventory(sid).single()
+            assertEquals(1, remainingPotion.item.charges)
+
+            var outs = drain(outbound)
+            assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.contains("You use a red potion") })
+            assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.contains("recover 3 HP") })
+            assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.contains("1 charge") })
+
+            router.handle(sid, Command.Use("potion"))
+
+            assertEquals(10, players.get(sid)!!.hp)
+            assertTrue(items.inventory(sid).isEmpty())
+
+            outs = drain(outbound)
+            assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.contains("is consumed") })
+        }
+
+    @Test
+    fun `use can consume equipped item and updates defense`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val outbound = LocalOutboundBus()
+            val mobs = MobRegistry()
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+
+            val sid = SessionId(9L)
+            login(players, sid, "Player9")
+
+            items.setRoomItems(
+                world.startRoom,
+                listOf(
+                    ItemInstance(
+                        ItemId("test:blessed_cap"),
+                        Item(
+                            keyword = "cap",
+                            displayName = "a blessed cap",
+                            slot = ItemSlot.HEAD,
+                            armor = 1,
+                            consumable = true,
+                            charges = 1,
+                            onUse = ItemUseEffect(healHp = 1),
+                        ),
+                    ),
+                ),
+            )
+            items.takeFromRoom(sid, world.startRoom, "cap")
+            router.handle(sid, Command.Wear("cap"))
+            drain(outbound)
+
+            assertEquals(11, players.get(sid)!!.maxHp)
+            router.handle(sid, Command.Use("cap"))
+
+            assertTrue(items.equipment(sid).isEmpty())
+            assertEquals(10, players.get(sid)!!.maxHp)
+
+            val outs = drain(outbound)
+            assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.contains("You use a blessed cap") })
+            assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.contains("is consumed") })
+        }
+
+    @Test
+    fun `give moves item to nearby player inventory`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val outbound = LocalOutboundBus()
+            val mobs = MobRegistry()
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+
+            val aliceSid = SessionId(10L)
+            val bobSid = SessionId(11L)
+            login(players, aliceSid, "Alice")
+            login(players, bobSid, "Bob")
+
+            items.setRoomItems(
+                world.startRoom,
+                listOf(ItemInstance(ItemId("test:coin"), Item(keyword = "coin", displayName = "a silver coin"))),
+            )
+            items.takeFromRoom(aliceSid, world.startRoom, "coin")
+
+            router.handle(aliceSid, Command.Give("coin", "Bob"))
+
+            assertTrue(items.inventory(aliceSid).isEmpty())
+            assertEquals(1, items.inventory(bobSid).size)
+            val bobsItem = items.inventory(bobSid).single()
+            assertEquals("coin", bobsItem.item.keyword)
+
+            val outs = drain(outbound)
+            assertTrue(outs.any { it is OutboundEvent.SendInfo && it.sessionId == aliceSid && it.text.contains("You give") })
+            assertTrue(outs.any { it is OutboundEvent.SendInfo && it.sessionId == bobSid && it.text.contains("gives you") })
+        }
+
+    @Test
+    fun `give removes equipped item and updates defense`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val outbound = LocalOutboundBus()
+            val mobs = MobRegistry()
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+
+            val aliceSid = SessionId(12L)
+            val bobSid = SessionId(13L)
+            login(players, aliceSid, "Alice2")
+            login(players, bobSid, "Bob2")
+
+            items.setRoomItems(
+                world.startRoom,
+                listOf(
+                    ItemInstance(
+                        ItemId("test:cap"),
+                        Item(keyword = "cap", displayName = "a sturdy cap", slot = ItemSlot.HEAD, armor = 1),
+                    ),
+                ),
+            )
+            items.takeFromRoom(aliceSid, world.startRoom, "cap")
+            router.handle(aliceSid, Command.Wear("cap"))
+            drain(outbound)
+
+            assertEquals(11, players.get(aliceSid)!!.maxHp)
+            router.handle(aliceSid, Command.Give("cap", "Bob2"))
+
+            assertTrue(items.equipment(aliceSid).isEmpty())
+            assertEquals(10, players.get(aliceSid)!!.maxHp)
+            val bobsItem = items.inventory(bobSid).single()
+            assertEquals("cap", bobsItem.item.keyword)
+
+            val outs = drain(outbound)
+            assertTrue(outs.any { it is OutboundEvent.SendInfo && it.sessionId == aliceSid && it.text.contains("You give") })
+            assertTrue(outs.any { it is OutboundEvent.SendInfo && it.sessionId == bobSid && it.text.contains("gives you") })
+        }
+
+    @Test
+    fun `give requires target in same room`() =
+        runTest {
+            val world = WorldFactory.demoWorld()
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val outbound = LocalOutboundBus()
+            val mobs = MobRegistry()
+            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+
+            val aliceSid = SessionId(14L)
+            val bobSid = SessionId(15L)
+            login(players, aliceSid, "Alice3")
+            login(players, bobSid, "Bob3")
+
+            val startRoom = world.rooms.getValue(world.startRoom)
+            val targetRoom = startRoom.exits.values.first()
+            players.moveTo(bobSid, targetRoom)
+
+            items.setRoomItems(
+                world.startRoom,
+                listOf(ItemInstance(ItemId("test:coin"), Item(keyword = "coin", displayName = "a silver coin"))),
+            )
+            items.takeFromRoom(aliceSid, world.startRoom, "coin")
+
+            router.handle(aliceSid, Command.Give("coin", "Bob3"))
+
+            assertEquals(1, items.inventory(aliceSid).size)
+            assertTrue(items.inventory(bobSid).isEmpty())
+
+            val outs = drain(outbound)
+            assertTrue(outs.any { it is OutboundEvent.SendError && it.text.contains("not here") })
         }
 
     private fun drain(ch: LocalOutboundBus): List<OutboundEvent> {

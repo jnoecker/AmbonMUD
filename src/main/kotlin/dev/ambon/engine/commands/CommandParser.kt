@@ -60,6 +60,15 @@ sealed interface Command {
         val keyword: String,
     ) : Command
 
+    data class Use(
+        val keyword: String,
+    ) : Command
+
+    data class Give(
+        val keyword: String,
+        val playerName: String,
+    ) : Command
+
     data object Inventory : Command
 
     data object Equipment : Command
@@ -203,6 +212,25 @@ object CommandParser {
         matchPrefix(line, listOf("drop")) { rest ->
             val kw = rest.trim()
             if (kw.isEmpty()) Command.Invalid(line, "drop <item>") else Command.Drop(kw)
+        }?.let { return it }
+
+        // use
+        matchPrefix(line, listOf("use")) { rest ->
+            val kw = rest.trim()
+            if (kw.isEmpty()) Command.Invalid(line, "use <item>") else Command.Use(kw)
+        }?.let { return it }
+
+        // give
+        matchPrefix(line, listOf("give")) { rest ->
+            val trimmed = rest.trim()
+            val parts = trimmed.split(Regex("\\s+"))
+            if (parts.size < 2) {
+                Command.Invalid(line, "give <item> <player>")
+            } else {
+                val playerName = parts.last()
+                val keyword = parts.dropLast(1).joinToString(" ").trim()
+                if (keyword.isEmpty()) Command.Invalid(line, "give <item> <player>") else Command.Give(keyword, playerName)
+            }
         }?.let { return it }
 
         // cast / c

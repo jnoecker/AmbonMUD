@@ -118,11 +118,27 @@ slot: <string, optional, one of head|body|hand (case-insensitive)>
 damage: <integer, optional, default 0, must be >= 0>
 armor: <integer, optional, default 0, must be >= 0>
 constitution: <integer, optional, default 0, must be >= 0>
+consumable: <boolean, optional, default false>
+charges: <integer, optional, must be > 0 when present>
+onUse: <OnUse, optional>
 room: <room-id string, optional>
 matchByKey: <boolean, optional, default false>
 ```
 
 `matchByKey` is optional (default `false`). When `true`, players must type the exact keyword; substring-based fallback on `displayName` and `description` is disabled.
+
+`OnUse` entry:
+
+```yaml
+healHp: <integer, optional, default 0, must be >= 0>
+grantXp: <long, optional, default 0, must be >= 0>
+```
+
+If `onUse` is present, at least one effect must be positive (`healHp > 0` or `grantXp > 0`).
+
+Charge/consumption notes:
+- If `charges` is set, one charge is spent per use.
+- If `consumable: true`, the item is removed when charges are exhausted (or immediately after use when `charges` is unset).
 
 Location rules for items:
 
@@ -203,9 +219,11 @@ For each file your tool emits:
 4. Restrict exit direction keys to the allowed set.
 5. Use only non-negative integers for `lifespan`, `damage`, `armor`, `constitution`.
 6. For every item, use `room` or omit placement entirely (unplaced). Do not use `mob`.
-7. Ensure all local/qualified references resolve in the merged set of files.
-8. Ensure normalized room/mob/item IDs are globally unique across files.
-9. If splitting one zone across files, keep `lifespan` consistent when repeated.
+7. If `onUse` is present, include at least one positive effect (`healHp` or `grantXp`).
+8. If `charges` is present, it must be > 0.
+9. Ensure all local/qualified references resolve in the merged set of files.
+10. Ensure normalized room/mob/item IDs are globally unique across files.
+11. If splitting one zone across files, keep `lifespan` consistent when repeated.
 
 ## Minimal Valid Example
 

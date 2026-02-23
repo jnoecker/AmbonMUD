@@ -7,6 +7,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.items.ItemUseEffect
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.events.OutboundEvent
@@ -333,6 +334,15 @@ class HandoffManager(
                 damage = instance.item.damage,
                 armor = instance.item.armor,
                 constitution = instance.item.constitution,
+                consumable = instance.item.consumable,
+                charges = instance.item.charges,
+                onUse =
+                    instance.item.onUse?.let { effect ->
+                        SerializedItemUseEffect(
+                            healHp = effect.healHp,
+                            grantXp = effect.grantXp,
+                        )
+                    },
                 matchByKey = instance.item.matchByKey,
             )
 
@@ -348,6 +358,15 @@ class HandoffManager(
                         damage = serialized.damage,
                         armor = serialized.armor,
                         constitution = serialized.constitution,
+                        consumable = serialized.consumable,
+                        charges = serialized.charges,
+                        onUse =
+                            serialized.onUse?.let { effect ->
+                                ItemUseEffect(
+                                    healHp = effect.healHp,
+                                    grantXp = effect.grantXp,
+                                )
+                            },
                         matchByKey = serialized.matchByKey,
                     ),
             )
