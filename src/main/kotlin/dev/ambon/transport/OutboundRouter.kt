@@ -12,6 +12,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 class OutboundRouter(
     private val engineOutbound: OutboundBus,
@@ -24,11 +25,18 @@ class OutboundRouter(
         require(loginScreen.isValid()) {
             "LoginScreen is invalid: lines=${loginScreen.lines.size}, ansiPrefixesByLine=${loginScreen.ansiPrefixesByLine.size}"
         }
+        metrics.bindSessionOutboundQueueAggregate(
+            totalDepthSupplier = { sinks.values.sumOf { it.queueDepth.get() } },
+            maxDepthSupplier = { sinks.values.maxOfOrNull { it.queueDepth.get() } ?: 0 },
+        )
     }
 
     private data class SessionSink(
         val queue: Channel<String>,
         val close: (String) -> Unit,
+        val transport: String = "unknown",
+        val queueCapacity: Int = 0,
+        val queueDepth: AtomicInteger = AtomicInteger(0),
         @Volatile var lastEnqueuedWasPrompt: Boolean = false,
         @Volatile var renderer: TextRenderer = PlainRenderer(),
     )
@@ -40,15 +48,20 @@ class OutboundRouter(
     fun register(
         sessionId: SessionId,
         queue: Channel<String>,
+        queueCapacity: Int = 0,
+        transport: String = "unknown",
         defaultAnsiEnabled: Boolean = false,
         close: (String) -> Unit,
     ) {
-        sinks[sessionId] =
+        val sink =
             SessionSink(
                 queue = queue,
                 close = close,
+                transport = transport,
+                queueCapacity = queueCapacity,
                 renderer = if (defaultAnsiEnabled) AnsiRenderer() else PlainRenderer(),
             )
+        sinks[sessionId] = sink
     }
 
     fun unregister(sessionId: SessionId) {
@@ -151,7 +164,10 @@ class OutboundRouter(
 
         val framed = sink.renderer.renderPrompt(promptSpec)
         val ok = sink.queue.trySend(framed).isSuccess
-        if (ok) sink.lastEnqueuedWasPrompt = true
+        if (ok) {
+            sink.queueDepth.incrementAndGet()
+            sink.lastEnqueuedWasPrompt = true
+        }
 
         // Queue full: prompts are disposable
     }
@@ -225,12 +241,17 @@ class OutboundRouter(
     ): Boolean {
         val ok = sink.queue.trySend(framed).isSuccess
         if (ok) {
+            sink.queueDepth.incrementAndGet()
             metrics.onOutboundFrameEnqueued()
             return true
         }
         metrics.onOutboundEnqueueFailed()
         disconnectSlowClient(sessionId)
         return false
+    }
+
+    fun onSessionQueueFrameConsumed(sessionId: SessionId) {
+        sinks[sessionId]?.queueDepth?.updateAndGet { current -> (current - 1).coerceAtLeast(0) }
     }
 
     private fun disconnectSlowClient(sessionId: SessionId) {

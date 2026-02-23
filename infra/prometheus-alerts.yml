@@ -1,0 +1,52 @@
+groups:
+  - name: ambonmud-core-alerts
+    rules:
+      - alert: AmbonEngineTickOverrunHigh
+        expr: rate(engine_tick_overrun_total[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Engine tick overruns are sustained
+          description: Engine tick overruns are occurring at >0.1/s over 5m.
+          runbook_url: https://github.com/jnoecker/AmbonMUD/blob/main/docs/onboarding.md#observability-runbook
+
+      - alert: AmbonGatewayReconnectBudgetExhausted
+        expr: increase(gateway_reconnect_budget_exhausted_total[15m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: Gateway reconnect budget exhausted
+          description: Gateway exhausted reconnect attempts in the last 15 minutes.
+          runbook_url: https://github.com/jnoecker/AmbonMUD/blob/main/docs/onboarding.md#observability-runbook
+
+      - alert: AmbonOutboundBackpressureDisconnectSpike
+        expr: increase(outbound_backpressure_disconnects_total[5m]) >= 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Outbound backpressure disconnect spike
+          description: At least 5 clients were disconnected due to outbound backpressure within 5m.
+          runbook_url: https://github.com/jnoecker/AmbonMUD/blob/main/docs/onboarding.md#observability-runbook
+
+      - alert: AmbonPlayerSaveFailures
+        expr: increase(player_save_failures_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: Player save failures detected
+          description: One or more player save failures occurred in the last 10 minutes.
+          runbook_url: https://github.com/jnoecker/AmbonMUD/blob/main/docs/onboarding.md#observability-runbook
+
+      - alert: AmbonMetricsEndpointDown
+        expr: up{job="ambonmud"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: AmbonMUD metrics endpoint is down
+          description: Prometheus cannot scrape the ambonmud metrics endpoint.
+          runbook_url: https://github.com/jnoecker/AmbonMUD/blob/main/docs/onboarding.md#observability-runbook
