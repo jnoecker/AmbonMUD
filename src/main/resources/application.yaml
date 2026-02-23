@@ -68,6 +68,7 @@ ambonMUD:
 
   world:
     resources:
+      - world/tutorial_glade.yaml
       - world/ambon_hub.yaml
       - world/noecker_resume.yaml
       - world/demo_ruins.yaml

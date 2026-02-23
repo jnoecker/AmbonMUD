@@ -9,17 +9,18 @@ rooms:
     exits:
       e: noecker_resume:foyer_of_first_principles
       n: demo_ruins:caravan_gate
-      s: blank_arches
+      s: tutorial_glade:forest_gate
       w: wayfinder_gallery
 
   blank_arches:
     title: "Blank Arches"
     description: "Unkeyed archways stand here like paused sentences. Their surfaces ripple faintly, showing nothing but distant starlight. Someone has chalked labels beneath them: 'COMING SOON.'"
     exits:
-      n: hall_of_portals
+      e: wayfinder_gallery
 
   wayfinder_gallery:
     title: "Wayfinder Gallery"
     description: "A narrow gallery lined with relief maps of places that don't exist yet. A brass needle floats over each plaque, twitching toward the hall as if eager to be used."
     exits:
       e: hall_of_portals
+      w: blank_arches
