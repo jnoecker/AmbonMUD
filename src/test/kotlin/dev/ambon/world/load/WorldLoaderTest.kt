@@ -314,7 +314,11 @@ class WorldLoaderTest {
 
     @Test
     fun `loads tutorial glade zone with all rooms mobs and items`() {
-        val world = WorldLoader.loadFromResource("world/tutorial_glade.yaml")
+        val world =
+            WorldLoader.loadFromResources(
+                listOf("world/tutorial_glade.yaml"),
+                zoneFilter = setOf("tutorial_glade"),
+            )
 
         assertEquals(RoomId("tutorial_glade:awakening_clearing"), world.startRoom)
         assertEquals(28, world.rooms.size)
