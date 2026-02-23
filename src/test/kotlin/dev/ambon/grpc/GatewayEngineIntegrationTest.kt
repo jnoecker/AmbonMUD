@@ -177,31 +177,34 @@ class GatewayEngineIntegrationTest {
                         }
                 }
 
-            // Wait for the full flow to complete (or timeout after 5 seconds).
-            val events = mutableListOf<OutboundEvent>()
-            withTimeout(5000L) {
-                while (events.none { it is OutboundEvent.Close && it.sessionId == sid }) {
-                    val proto = received.receive()
-                    val event = proto.toDomain()
-                    if (event != null) events += event
+            try {
+                // Wait for the full flow to complete (or timeout after 5 seconds).
+                val events = mutableListOf<OutboundEvent>()
+                withTimeout(5000L) {
+                    while (events.none { it is OutboundEvent.Close && it.sessionId == sid }) {
+                        val proto = received.receive()
+                        val event = proto.toDomain()
+                        if (event != null) events += event
+                    }
                 }
+
+                assertTrue(
+                    events.any { it is OutboundEvent.ShowLoginScreen },
+                    "Expected ShowLoginScreen; got=$events",
+                )
+                assertTrue(
+                    events.any { it is OutboundEvent.SendText && it.sessionId == sid },
+                    "Expected SendText (room description or welcome); got=$events",
+                )
+                assertTrue(
+                    events.any { it is OutboundEvent.Close && it.sessionId == sid },
+                    "Expected Close (from quit); got=$events",
+                )
+            } finally {
+                gatewayJob.cancel()
+                received.close()
+                grpcChannel.shutdownNow()
             }
-
-            assertTrue(
-                events.any { it is OutboundEvent.ShowLoginScreen },
-                "Expected ShowLoginScreen; got=$events",
-            )
-            assertTrue(
-                events.any { it is OutboundEvent.SendText && it.sessionId == sid },
-                "Expected SendText (room description or welcome); got=$events",
-            )
-            assertTrue(
-                events.any { it is OutboundEvent.Close && it.sessionId == sid },
-                "Expected Close (from quit); got=$events",
-            )
-
-            gatewayJob.cancel()
-            grpcChannel.shutdownNow()
         }
 
     // ── Reconnect: backoff delay computation ────────────────────────────────────
@@ -243,6 +246,7 @@ class GatewayEngineIntegrationTest {
             val busScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
             val failureLatch = Channel<Throwable>(1)
             val delegate = LocalOutboundBus(capacity = 100)
+            var workingChannel: Channel<OutboundEventProto>? = null
 
             // Flow that throws immediately (simulates a broken stream).
             val failingFlow =
@@ -263,26 +267,29 @@ class GatewayEngineIntegrationTest {
                 )
             bus.startReceiving()
 
-            // Confirm stream-failure callback is called.
-            withTimeout(2_000L) { failureLatch.receive() }
+            try {
+                // Confirm stream-failure callback is called.
+                withTimeout(2_000L) { failureLatch.receive() }
 
-            // Replace with a working flow backed by a channel.
-            val workingChannel = Channel<OutboundEventProto>(10)
-            bus.reattach(workingChannel.receiveAsFlow())
+                // Replace with a working flow backed by a channel.
+                val ch = Channel<OutboundEventProto>(10)
+                workingChannel = ch
+                bus.reattach(ch.receiveAsFlow())
 
-            // Push a ShowLoginScreen event through the new flow.
-            val proto = OutboundEvent.ShowLoginScreen(SessionId(1L)).toProto()
-            workingChannel.send(proto)
+                // Push a ShowLoginScreen event through the new flow.
+                val proto = OutboundEvent.ShowLoginScreen(SessionId(1L)).toProto()
+                ch.send(proto)
 
-            // Verify the event reaches the delegate.
-            withTimeout(2_000L) {
-                while (delegate.tryReceive().isFailure) {
-                    delay(10)
+                // Verify the event reaches the delegate.
+                withTimeout(2_000L) {
+                    while (delegate.tryReceive().isFailure) {
+                        delay(10)
+                    }
                 }
+            } finally {
+                busScope.cancel()
+                workingChannel?.close()
             }
-
-            busScope.cancel()
-            workingChannel.close()
         }
 
     // ── Reconnect: end-to-end stream loss and recovery ──────────────────────────

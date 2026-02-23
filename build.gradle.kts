@@ -1,3 +1,5 @@
+import java.time.Duration
+
 plugins {
     kotlin("jvm") version "2.3.10"
     application
@@ -79,6 +81,10 @@ application {
 
 tasks.test {
     useJUnitPlatform()
+    // Prevent the entire test suite from hanging indefinitely (e.g. due to coroutine
+    // leaks or gRPC streams that never close). Individual test timeouts are configured
+    // in junit-platform.properties; this is a backstop for the Gradle process itself.
+    timeout = Duration.ofMinutes(5)
 }
 
 // Map -Pconfig.X=Y project properties to config.override.X system properties.

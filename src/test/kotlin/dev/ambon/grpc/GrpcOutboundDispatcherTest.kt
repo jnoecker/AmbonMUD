@@ -99,23 +99,28 @@ class GrpcOutboundDispatcherTest {
                         }
                 }
 
-            // Wait for the Connected event to be processed and the session registered.
-            delay(100)
+            try {
+                // Wait for the Connected event to be processed and the session registered.
+                delay(100)
 
-            // Engine produces an outbound event.
-            outbound.send(OutboundEvent.SendText(sessionId = sid, text = "Hello gateway!"))
+                // Engine produces an outbound event.
+                outbound.send(OutboundEvent.SendText(sessionId = sid, text = "Hello gateway!"))
 
-            // Wait for the event to be dispatched to the stream and received.
-            delay(100)
+                // Wait for the event to be dispatched to the stream and received.
+                delay(100)
 
-            val proto = receivedProtos.tryReceive().getOrNull()
-            assertNotNull(proto, "Gateway stream should have received the outbound event")
-            val event = proto!!.toDomain()
-            assertNotNull(event)
-            assertEquals(OutboundEvent.SendText(sessionId = sid, text = "Hello gateway!"), event)
+                val proto = receivedProtos.tryReceive().getOrNull()
+                assertNotNull(proto, "Gateway stream should have received the outbound event")
+                val event = proto!!.toDomain()
+                assertNotNull(event)
+                assertEquals(OutboundEvent.SendText(sessionId = sid, text = "Hello gateway!"), event)
 
-            gatewayJob.join()
-            grpcChannel.shutdownNow()
+                gatewayJob.join()
+            } finally {
+                gatewayJob.cancel()
+                receivedProtos.close()
+                grpcChannel.shutdownNow()
+            }
         }
 
     @Test
@@ -146,21 +151,24 @@ class GrpcOutboundDispatcherTest {
         runBlocking {
             val sid = SessionId(5001L)
             val fullStream = Channel<OutboundEventProto>(capacity = 1)
-            serviceImpl.sessionToStream[sid] = fullStream
-            fullStream.trySend(OutboundEvent.SendText(sid, "pre-fill").toProto())
+            try {
+                serviceImpl.sessionToStream[sid] = fullStream
+                fullStream.trySend(OutboundEvent.SendText(sid, "pre-fill").toProto())
 
-            outbound.send(OutboundEvent.Close(sessionId = sid, reason = "bye"))
-            delay(100)
+                outbound.send(OutboundEvent.Close(sessionId = sid, reason = "bye"))
+                delay(100)
 
-            assertNull(serviceImpl.sessionToStream[sid], "Session route should be removed after control-plane failure")
-            val events = drainInboundEvents()
-            assertNotNull(
-                events.filterIsInstance<InboundEvent.Disconnected>().firstOrNull {
-                    it.sessionId == sid && it.reason.startsWith("control-plane-delivery-failed:")
-                },
-                "Expected synthetic disconnect with control-plane failure reason",
-            )
-            fullStream.close()
+                assertNull(serviceImpl.sessionToStream[sid], "Session route should be removed after control-plane failure")
+                val events = drainInboundEvents()
+                assertNotNull(
+                    events.filterIsInstance<InboundEvent.Disconnected>().firstOrNull {
+                        it.sessionId == sid && it.reason.startsWith("control-plane-delivery-failed:")
+                    },
+                    "Expected synthetic disconnect with control-plane failure reason",
+                )
+            } finally {
+                fullStream.close()
+            }
         }
 
     @Test
@@ -168,17 +176,20 @@ class GrpcOutboundDispatcherTest {
         runBlocking {
             val sid = SessionId(5002L)
             val fullStream = Channel<OutboundEventProto>(capacity = 1)
-            serviceImpl.sessionToStream[sid] = fullStream
-            fullStream.trySend(OutboundEvent.SendText(sid, "pre-fill").toProto())
+            try {
+                serviceImpl.sessionToStream[sid] = fullStream
+                fullStream.trySend(OutboundEvent.SendText(sid, "pre-fill").toProto())
 
-            outbound.send(OutboundEvent.SendText(sessionId = sid, text = "drop me"))
-            delay(100)
+                outbound.send(OutboundEvent.SendText(sessionId = sid, text = "drop me"))
+                delay(100)
 
-            assertNotNull(serviceImpl.sessionToStream[sid], "Data-plane drop should not remove session route")
-            val events = drainInboundEvents()
-            val disconnectedForSid = events.filterIsInstance<InboundEvent.Disconnected>().any { it.sessionId == sid }
-            assertFalse(disconnectedForSid, "Data-plane drop should not force disconnect")
-            fullStream.close()
+                assertNotNull(serviceImpl.sessionToStream[sid], "Data-plane drop should not remove session route")
+                val events = drainInboundEvents()
+                val disconnectedForSid = events.filterIsInstance<InboundEvent.Disconnected>().any { it.sessionId == sid }
+                assertFalse(disconnectedForSid, "Data-plane drop should not force disconnect")
+            } finally {
+                fullStream.close()
+            }
         }
 
     private fun drainInboundEvents(limit: Int = 20): List<InboundEvent> {
