@@ -103,6 +103,19 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `loads item use settings`() {
+        val world = WorldLoader.loadFromResource("world/ok_item_use.yaml")
+        val spawn = world.itemSpawns.single()
+        val potion = spawn.instance.item
+        val effect = requireNotNull(potion.onUse)
+
+        assertTrue(potion.consumable)
+        assertEquals(3, potion.charges)
+        assertEquals(5, effect.healHp)
+        assertEquals(25L, effect.grantXp)
+    }
+
+    @Test
     fun `fails when rooms is empty`() {
         val ex =
             assertThrows(WorldLoadException::class.java) {
@@ -174,6 +187,24 @@ class WorldLoaderTest {
             }
         assertTrue(ex.message!!.contains("deprecated", ignoreCase = true), "Got: ${ex.message}")
         assertTrue(ex.message!!.contains("drops", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when item charges are non-positive`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_item_charges.yaml")
+            }
+        assertTrue(ex.message!!.contains("charges", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when item onUse block has no positive effect`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_item_on_use_empty.yaml")
+            }
+        assertTrue(ex.message!!.contains("onUse", ignoreCase = true), "Got: ${ex.message}")
     }
 
     @Test

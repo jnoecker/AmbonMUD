@@ -106,11 +106,13 @@ class GameMetricsTest {
         metrics.onXpAwarded(500L, "kill")
         metrics.onXpAwarded(200L, "quest")
         metrics.onXpAwarded(100L, "admin")
+        metrics.onXpAwarded(75L, "item_use")
         metrics.onXpAwarded(50L, "unknown")
 
         assertEquals(550.0, registry.counter("xp_awarded_total", "source", "kill").count())
         assertEquals(200.0, registry.counter("xp_awarded_total", "source", "quest").count())
         assertEquals(100.0, registry.counter("xp_awarded_total", "source", "admin").count())
+        assertEquals(75.0, registry.counter("xp_awarded_total", "source", "item_use").count())
     }
 
     @Test
