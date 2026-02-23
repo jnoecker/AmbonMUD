@@ -10,6 +10,10 @@ object WorldFactory {
             "world/ambon_hub.yaml",
             "world/noecker_resume.yaml",
             "world/demo_ruins.yaml",
+            "world/low_training_marsh.yaml",
+            "world/low_training_highlands.yaml",
+            "world/low_training_mines.yaml",
+            "world/low_training_barrens.yaml",
         )
 
     fun demoWorld(
