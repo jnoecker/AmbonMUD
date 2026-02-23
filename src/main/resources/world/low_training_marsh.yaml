@@ -3,74 +3,1165 @@ lifespan: 20
 startRoom: reedwalk_landing
 
 mobs:
-  marsh_newt:
+  marsh_newt_01:
     name: "a marsh newt"
-    room: cattail_pass
+    room: reedwalk_landing
     tier: weak
     level: 2
-  bog_lurker:
+
+  bog_lurker_02:
     name: "a bog lurker"
+    room: cattail_pass
+    tier: weak
+    level: 3
+
+  mire_raider_03:
+    name: "a mire raider"
     room: drowned_shrine
-    tier: standard
+    tier: weak
+    level: 2
+
+  reed_skimmer_04:
+    name: "a reed skimmer"
+    room: rope_ferry
+    tier: weak
+    level: 3
+
+  silt_stalker_05:
+    name: "a silt stalker"
+    room: eel_sluice
+    tier: weak
+    level: 2
+
+  murk_frog_06:
+    name: "a murk frog"
+    room: peat_hollow
+    tier: weak
+    level: 3
+
+  fen_cutter_07:
+    name: "a fen cutter"
+    room: fogweir
+    tier: weak
+    level: 2
+
+  drift_scav_08:
+    name: "a drift scav"
+    room: moss_quay
+    tier: weak
     level: 3
     drops:
-      - itemId: bogglass_charm
-        chance: 1.0
-  mire_raider:
-    name: "a mire raider"
-    room: rope_ferry
-    tier: standard
+      - itemId: trophy_08
+        chance: 0.25
+
+  hollow_hunter_09:
+    name: "a hollow hunter"
+    room: fen_watch
+    tier: weak
+    level: 2
+
+  brackish_mauler_10:
+    name: "a brackish mauler"
+    room: heron_bend
+    tier: weak
+    level: 4
+    drops:
+      - itemId: trophy_10
+        chance: 0.35
+
+  marsh_newt_11:
+    name: "a marsh newt"
+    room: blackwater_crossing
+    tier: weak
     level: 3
 
+  bog_lurker_12:
+    name: "a bog lurker"
+    room: willow_sink
+    tier: standard
+    level: 4
+    drops:
+      - itemId: trophy_12
+        chance: 0.35
+
+  mire_raider_13:
+    name: "a mire raider"
+    room: leechstep
+    tier: weak
+    level: 3
+
+  reed_skimmer_14:
+    name: "a reed skimmer"
+    room: warden_posts
+    tier: weak
+    level: 4
+    drops:
+      - itemId: trophy_02
+        chance: 0.35
+
+  silt_stalker_15:
+    name: "a silt stalker"
+    room: drowned_oratory
+    tier: weak
+    level: 3
+
+  murk_frog_16:
+    name: "a murk frog"
+    room: silt_chute
+    tier: standard
+    level: 4
+    drops:
+      - itemId: trophy_04
+        chance: 0.35
+
+  fen_cutter_17:
+    name: "a fen cutter"
+    room: hissing_marsh
+    tier: weak
+    level: 3
+
+  drift_scav_18:
+    name: "a drift scav"
+    room: old_tarp_dock
+    tier: weak
+    level: 4
+    drops:
+      - itemId: trophy_06
+        chance: 0.35
+
+  hollow_hunter_19:
+    name: "a hollow hunter"
+    room: mire_dyke
+    tier: standard
+    level: 4
+
+  brackish_mauler_20:
+    name: "a brackish mauler"
+    room: reedmaze_core
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_08
+        chance: 0.50
+
+  marsh_newt_21:
+    name: "a marsh newt"
+    room: lantern_stilts
+    tier: standard
+    level: 4
+
+  bog_lurker_22:
+    name: "a bog lurker"
+    room: croak_pool
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_10
+        chance: 0.50
+
+  mire_raider_23:
+    name: "a mire raider"
+    room: ferry_anchor
+    tier: standard
+    level: 4
+
+  reed_skimmer_24:
+    name: "a reed skimmer"
+    room: bloom_sump
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_12
+        chance: 0.50
+
+  silt_stalker_25:
+    name: "a silt stalker"
+    room: deadreed_span
+    tier: standard
+    level: 4
+
+  murk_frog_26:
+    name: "a murk frog"
+    room: mudlark_nest
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_02
+        chance: 0.50
+
+  fen_cutter_27:
+    name: "a fen cutter"
+    room: sallow_cove
+    tier: standard
+    level: 4
+
+  drift_scav_28:
+    name: "a drift scav"
+    room: bogglass_bank
+    tier: standard
+    level: 6
+    drops:
+      - itemId: trophy_04
+        chance: 0.70
+
+  hollow_hunter_29:
+    name: "a hollow hunter"
+    room: otter_runnel
+    tier: standard
+    level: 5
+
+  brackish_mauler_30:
+    name: "a brackish mauler"
+    room: moonfen_edge
+    tier: elite
+    level: 6
+    drops:
+      - itemId: trophy_06
+        chance: 0.80
+
+  marsh_newt_31:
+    name: "a marsh newt"
+    room: grave_mud
+    tier: standard
+    level: 5
+
+  bog_lurker_32:
+    name: "a bog lurker"
+    room: snare_reeds
+    tier: standard
+    level: 6
+    drops:
+      - itemId: trophy_08
+        chance: 0.70
+
+  mire_raider_33:
+    name: "a mire raider"
+    room: oilwater_turn
+    tier: elite
+    level: 5
+
+  reed_skimmer_34:
+    name: "a reed skimmer"
+    room: floodplain_teeth
+    tier: standard
+    level: 6
+    drops:
+      - itemId: trophy_10
+        chance: 0.70
+
+  silt_stalker_35:
+    name: "a silt stalker"
+    room: gator_blind
+    tier: standard
+    level: 5
+
+  murk_frog_36:
+    name: "a murk frog"
+    room: brine_foot
+    tier: elite
+    level: 6
+    drops:
+      - itemId: trophy_12
+        chance: 0.80
+
+  fen_cutter_37:
+    name: "a fen cutter"
+    room: rotwood_cleft
+    tier: elite
+    level: 6
+
+  drift_scav_38:
+    name: "a drift scav"
+    room: sinker_lane
+    tier: elite
+    level: 7
+    drops:
+      - itemId: trophy_02
+        chance: 1.0
+
+  hollow_hunter_39:
+    name: "a hollow hunter"
+    room: swarm_berth
+    tier: elite
+    level: 8
+
+  brackish_mauler_40:
+    name: "a brackish mauler"
+    room: marrow_fen
+    tier: elite
+    level: 6
+    drops:
+      - itemId: trophy_04
+        chance: 0.85
+
 items:
-  driftwood_spear:
+  gear_01:
     displayName: "a driftwood spear"
     keyword: "spear"
-    description: "A straight driftwood shaft tipped with chipped stone."
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-1 circuit in this zone."
     slot: hand
-    damage: 3
+    damage: 2
     room: reedwalk_landing
 
-  mudsealed_boots:
-    displayName: "mud-sealed boots"
+  gear_02:
+    displayName: "a mudsealed boots"
     keyword: "boots"
-    description: "Heavy boots sealed with waxed mud to keep out cold marsh water."
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-1 circuit in this zone."
     slot: body
     armor: 2
-    room: rope_ferry
+    room: cattail_pass
 
-  bogglass_charm:
+  gear_03:
     displayName: "a bogglass charm"
     keyword: "charm"
-    description: "A polished shard of swamp glass on a braided cord."
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-1 circuit in this zone."
     slot: head
     armor: 1
+    room: drowned_shrine
+
+  gear_04:
+    displayName: "a reedbound cloak"
+    keyword: "cloak"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-1 circuit in this zone."
+    slot: hand
+    damage: 2
+    room: rope_ferry
+
+  gear_05:
+    displayName: "a mistwoven hatchet"
+    keyword: "hatchet"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-1 circuit in this zone."
+    slot: body
+    armor: 1
+    room: eel_sluice
+
+  gear_06:
+    displayName: "a tarred hood"
+    keyword: "hood"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-1 circuit in this zone."
+    slot: head
+    armor: 2
+    room: peat_hollow
+
+  gear_07:
+    displayName: "a fenforged gauntlet"
+    keyword: "gauntlet"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-1 circuit in this zone."
+    slot: hand
+    damage: 2
+    room: fogweir
+
+  gear_08:
+    displayName: "a willow buckler"
+    keyword: "buckler"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-1 circuit in this zone."
+    slot: body
+    armor: 2
+    room: moss_quay
+
+  gear_09:
+    displayName: "a brinecured blade"
+    keyword: "blade"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-1 circuit in this zone."
+    slot: head
+    armor: 1
+    room: fen_watch
+
+  gear_10:
+    displayName: "a marshborn tunic"
+    keyword: "tunic"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-2 circuit in this zone."
+    slot: hand
+    damage: 3
+    room: heron_bend
+
+  gear_11:
+    displayName: "a driftwood spear"
+    keyword: "spear"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-2 circuit in this zone."
+    slot: body
+    armor: 2
+    room: blackwater_crossing
+
+  gear_12:
+    displayName: "a mudsealed boots"
+    keyword: "boots"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-2 circuit in this zone."
+    slot: head
+    armor: 3
+    room: willow_sink
+
+  gear_13:
+    displayName: "a bogglass charm"
+    keyword: "charm"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-2 circuit in this zone."
+    slot: hand
+    damage: 3
+    room: leechstep
+
+  gear_14:
+    displayName: "a reedbound cloak"
+    keyword: "cloak"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-2 circuit in this zone."
+    slot: body
+    armor: 3
+    room: warden_posts
+
+  gear_15:
+    displayName: "a mistwoven hatchet"
+    keyword: "hatchet"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-2 circuit in this zone."
+    slot: head
+    armor: 2
+    room: drowned_oratory
+
+  gear_16:
+    displayName: "a tarred hood"
+    keyword: "hood"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-2 circuit in this zone."
+    slot: hand
+    damage: 3
+    room: silt_chute
+
+  gear_17:
+    displayName: "a fenforged gauntlet"
+    keyword: "gauntlet"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-2 circuit in this zone."
+    slot: body
+    armor: 2
+    room: hissing_marsh
+
+  gear_18:
+    displayName: "a willow buckler"
+    keyword: "buckler"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-2 circuit in this zone."
+    slot: head
+    armor: 3
+    room: old_tarp_dock
+
+  gear_19:
+    displayName: "a brinecured blade"
+    keyword: "blade"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-3 circuit in this zone."
+    slot: hand
+    damage: 4
+    room: mire_dyke
+
+  gear_20:
+    displayName: "a marshborn tunic"
+    keyword: "tunic"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-3 circuit in this zone."
+    slot: body
+    armor: 4
     constitution: 1
+    room: reedmaze_core
+
+  gear_21:
+    displayName: "a driftwood spear"
+    keyword: "spear"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-3 circuit in this zone."
+    slot: head
+    armor: 3
+    constitution: 1
+    room: lantern_stilts
+
+  gear_22:
+    displayName: "a mudsealed boots"
+    keyword: "boots"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-3 circuit in this zone."
+    slot: hand
+    damage: 4
+    room: croak_pool
+
+  gear_23:
+    displayName: "a bogglass charm"
+    keyword: "charm"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-3 circuit in this zone."
+    slot: body
+    armor: 3
+    constitution: 1
+    room: ferry_anchor
+
+  gear_24:
+    displayName: "a reedbound cloak"
+    keyword: "cloak"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-3 circuit in this zone."
+    slot: head
+    armor: 4
+    constitution: 1
+    room: bloom_sump
+
+  gear_25:
+    displayName: "a mistwoven hatchet"
+    keyword: "hatchet"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-3 circuit in this zone."
+    slot: hand
+    damage: 4
+    room: deadreed_span
+
+  gear_26:
+    displayName: "a tarred hood"
+    keyword: "hood"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-3 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: mudlark_nest
+
+  gear_27:
+    displayName: "a fenforged gauntlet"
+    keyword: "gauntlet"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-3 circuit in this zone."
+    slot: head
+    armor: 3
+    constitution: 1
+    room: sallow_cove
+
+  gear_28:
+    displayName: "a willow buckler"
+    keyword: "buckler"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-4 circuit in this zone."
+    slot: hand
+    damage: 5
+    room: bogglass_bank
+
+  gear_29:
+    displayName: "a brinecured blade"
+    keyword: "blade"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-4 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: otter_runnel
+
+  gear_30:
+    displayName: "a marshborn tunic"
+    keyword: "tunic"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-4 circuit in this zone."
+    slot: head
+    armor: 5
+    constitution: 1
+    room: moonfen_edge
+
+  gear_31:
+    displayName: "a driftwood spear"
+    keyword: "spear"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-4 circuit in this zone."
+    slot: hand
+    damage: 5
+    room: grave_mud
+
+  gear_32:
+    displayName: "a mudsealed boots"
+    keyword: "boots"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-4 circuit in this zone."
+    slot: body
+    armor: 5
+    constitution: 1
+    room: snare_reeds
+
+  gear_33:
+    displayName: "a bogglass charm"
+    keyword: "charm"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-4 circuit in this zone."
+    slot: head
+    armor: 4
+    constitution: 1
+    room: oilwater_turn
+
+  gear_34:
+    displayName: "a reedbound cloak"
+    keyword: "cloak"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-4 circuit in this zone."
+    slot: hand
+    damage: 5
+    room: floodplain_teeth
+
+  gear_35:
+    displayName: "a mistwoven hatchet"
+    keyword: "hatchet"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-4 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: gator_blind
+
+  gear_36:
+    displayName: "a tarred hood"
+    keyword: "hood"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-4 circuit in this zone."
+    slot: head
+    armor: 5
+    constitution: 1
+    room: brine_foot
+
+  gear_37:
+    displayName: "a fenforged gauntlet"
+    keyword: "gauntlet"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-5 circuit in this zone."
+    slot: hand
+    damage: 6
+    room: rotwood_cleft
+
+  gear_38:
+    displayName: "a willow buckler"
+    keyword: "buckler"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-5 circuit in this zone."
+    slot: body
+    armor: 6
+    constitution: 2
+    room: sinker_lane
+
+  gear_39:
+    displayName: "a brinecured blade"
+    keyword: "blade"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-5 circuit in this zone."
+    slot: head
+    armor: 5
+    constitution: 2
+    room: swarm_berth
+
+  gear_40:
+    displayName: "a marshborn tunic"
+    keyword: "tunic"
+    description: "Salt-stained kit issued by marsh patrol quartermasters. Issued for the depth-5 circuit in this zone."
+    slot: hand
+    damage: 6
+    room: marrow_fen
+
+  ration_01:
+    displayName: "a field ration pack #1"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 10
+      grantXp: 15
+    room: brine_foot
+
+  ration_02:
+    displayName: "a field ration pack #2"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 2
+    onUse:
+      healHp: 12
+      grantXp: 20
+    room: rotwood_cleft
+
+  ration_03:
+    displayName: "a field ration pack #3"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 14
+      grantXp: 25
+    room: sinker_lane
+
+  ration_04:
+    displayName: "a field ration pack #4"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 2
+    onUse:
+      healHp: 16
+      grantXp: 30
+    room: swarm_berth
+
+  ration_05:
+    displayName: "a field ration pack #5"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 18
+      grantXp: 35
+    room: marrow_fen
+
+  ration_06:
+    displayName: "a field ration pack #6"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 2
+    onUse:
+      healHp: 20
+      grantXp: 40
+    room: nightlily_reach
+
+  trophy_01:
+    displayName: "a sunken totem"
+    keyword: "totem"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 5
+
+  trophy_02:
+    displayName: "a hollow idol"
+    keyword: "idol"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 4
+    constitution: 1
+
+  trophy_03:
+    displayName: "a shrouded sigil"
+    keyword: "sigil"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 3
+    constitution: 1
+
+  trophy_04:
+    displayName: "a glimmering talisman"
+    keyword: "talisman"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 6
+
+  trophy_05:
+    displayName: "a warped relic"
+    keyword: "relic"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 4
+    constitution: 1
+
+  trophy_06:
+    displayName: "a stilled fetish"
+    keyword: "fetish"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 5
+    constitution: 1
+
+  trophy_07:
+    displayName: "a brackish medallion"
+    keyword: "medallion"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 6
+
+  trophy_08:
+    displayName: "a blackened keystone"
+    keyword: "keystone"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 5
+    constitution: 1
+
+  trophy_09:
+    displayName: "a gloom seal"
+    keyword: "seal"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 5
+    constitution: 2
+
+  trophy_10:
+    displayName: "a drowned charm"
+    keyword: "charm"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 8
+
+  trophy_11:
+    displayName: "a sunken totem"
+    keyword: "totem"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 5
+    constitution: 2
+
+  trophy_12:
+    displayName: "a hollow idol"
+    keyword: "idol"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 6
+    constitution: 2
 
 rooms:
   reedwalk_landing:
     title: "Reedwalk Landing"
-    description: "Boardwalk planks begin at a dry knoll and stretch out over black water. Frogs croak in layered chorus while lantern posts sway in the fog."
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. The outer lanes are supervised and relatively stable. Reedwalk Landing anchors one segment of the zone circuit."
     exits:
-      n: cattail_pass
+      n: heron_bend
+      e: cattail_pass
       s: ambon_hub:blank_arches
 
   cattail_pass:
     title: "Cattail Pass"
-    description: "Tall cattails close in on both sides of the boardwalk, brushing your shoulders with wet leaves. Ripples spread through the water in slow circles."
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. The outer lanes are supervised and relatively stable. Cattail Pass anchors one segment of the zone circuit."
     exits:
-      n: drowned_shrine
-      s: reedwalk_landing
+      n: blackwater_crossing
+      e: drowned_shrine
+      w: reedwalk_landing
 
   drowned_shrine:
     title: "Drowned Shrine"
-    description: "The roofline of an old shrine rises from the mire, half swallowed by silt and moss. Cracked idol faces stare from beneath the waterline."
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. The outer lanes are supervised and relatively stable. Drowned Shrine anchors one segment of the zone circuit."
     exits:
+      n: willow_sink
       e: rope_ferry
-      s: cattail_pass
+      w: cattail_pass
 
   rope_ferry:
     title: "Rope Ferry"
-    description: "A hand-pulled raft is tied to a taut rope crossing a dark channel. Supply crates sit stacked beside a weathered sign warning of raiders."
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. The outer lanes are supervised and relatively stable. Rope Ferry anchors one segment of the zone circuit."
     exits:
+      n: leechstep
+      e: eel_sluice
       w: drowned_shrine
+
+  eel_sluice:
+    title: "Eel Sluice"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. The outer lanes are supervised and relatively stable. Eel Sluice anchors one segment of the zone circuit."
+    exits:
+      n: warden_posts
+      e: peat_hollow
+      w: rope_ferry
+
+  peat_hollow:
+    title: "Peat Hollow"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. The outer lanes are supervised and relatively stable. Peat Hollow anchors one segment of the zone circuit."
+    exits:
+      n: drowned_oratory
+      e: fogweir
+      w: eel_sluice
+
+  fogweir:
+    title: "Fogweir"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. The outer lanes are supervised and relatively stable. Fogweir anchors one segment of the zone circuit."
+    exits:
+      n: silt_chute
+      e: moss_quay
+      w: peat_hollow
+
+  moss_quay:
+    title: "Moss Quay"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. The outer lanes are supervised and relatively stable. Moss Quay anchors one segment of the zone circuit."
+    exits:
+      n: hissing_marsh
+      e: fen_watch
+      w: fogweir
+
+  fen_watch:
+    title: "Fen Watch"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. The outer lanes are supervised and relatively stable. Fen Watch anchors one segment of the zone circuit."
+    exits:
+      n: old_tarp_dock
+      w: moss_quay
+
+  heron_bend:
+    title: "Heron Bend"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Visibility drops and standing water hides old snare lines. Heron Bend anchors one segment of the zone circuit."
+    exits:
+      n: mire_dyke
+      e: blackwater_crossing
+      s: reedwalk_landing
+
+  blackwater_crossing:
+    title: "Blackwater Crossing"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Visibility drops and standing water hides old snare lines. Blackwater Crossing anchors one segment of the zone circuit."
+    exits:
+      n: reedmaze_core
+      e: willow_sink
+      s: cattail_pass
+      w: heron_bend
+
+  willow_sink:
+    title: "Willow Sink"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Visibility drops and standing water hides old snare lines. Willow Sink anchors one segment of the zone circuit."
+    exits:
+      n: lantern_stilts
+      e: leechstep
+      s: drowned_shrine
+      w: blackwater_crossing
+
+  leechstep:
+    title: "Leechstep"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Visibility drops and standing water hides old snare lines. Leechstep anchors one segment of the zone circuit."
+    exits:
+      n: croak_pool
+      e: warden_posts
+      s: rope_ferry
+      w: willow_sink
+
+  warden_posts:
+    title: "Warden Posts"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Visibility drops and standing water hides old snare lines. Warden Posts anchors one segment of the zone circuit."
+    exits:
+      n: ferry_anchor
+      e: drowned_oratory
+      s: eel_sluice
+      w: leechstep
+
+  drowned_oratory:
+    title: "Drowned Oratory"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Visibility drops and standing water hides old snare lines. Drowned Oratory anchors one segment of the zone circuit."
+    exits:
+      n: bloom_sump
+      e: silt_chute
+      s: peat_hollow
+      w: warden_posts
+
+  silt_chute:
+    title: "Silt Chute"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Visibility drops and standing water hides old snare lines. Silt Chute anchors one segment of the zone circuit."
+    exits:
+      n: deadreed_span
+      e: hissing_marsh
+      s: fogweir
+      w: drowned_oratory
+
+  hissing_marsh:
+    title: "Hissing Marsh"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Visibility drops and standing water hides old snare lines. Hissing Marsh anchors one segment of the zone circuit."
+    exits:
+      n: mudlark_nest
+      e: old_tarp_dock
+      s: moss_quay
+      w: silt_chute
+
+  old_tarp_dock:
+    title: "Old Tarp Dock"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Visibility drops and standing water hides old snare lines. Old Tarp Dock anchors one segment of the zone circuit."
+    exits:
+      n: sallow_cove
+      s: fen_watch
+      w: hissing_marsh
+
+  mire_dyke:
+    title: "Mire Dyke"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Traffic thins as patrols transition from drills to live response. Mire Dyke anchors one segment of the zone circuit."
+    exits:
+      n: bogglass_bank
+      e: reedmaze_core
+      s: heron_bend
+
+  reedmaze_core:
+    title: "Reedmaze Core"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Traffic thins as patrols transition from drills to live response. Reedmaze Core anchors one segment of the zone circuit."
+    exits:
+      n: otter_runnel
+      e: lantern_stilts
+      s: blackwater_crossing
+      w: mire_dyke
+
+  lantern_stilts:
+    title: "Lantern Stilts"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Traffic thins as patrols transition from drills to live response. Lantern Stilts anchors one segment of the zone circuit."
+    exits:
+      n: moonfen_edge
+      e: croak_pool
+      s: willow_sink
+      w: reedmaze_core
+
+  croak_pool:
+    title: "Croak Pool"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Traffic thins as patrols transition from drills to live response. Croak Pool anchors one segment of the zone circuit."
+    exits:
+      n: grave_mud
+      e: ferry_anchor
+      s: leechstep
+      w: lantern_stilts
+
+  ferry_anchor:
+    title: "Ferry Anchor"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Traffic thins as patrols transition from drills to live response. Ferry Anchor anchors one segment of the zone circuit."
+    exits:
+      n: snare_reeds
+      e: bloom_sump
+      s: warden_posts
+      w: croak_pool
+
+  bloom_sump:
+    title: "Bloom Sump"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Traffic thins as patrols transition from drills to live response. Bloom Sump anchors one segment of the zone circuit."
+    exits:
+      n: oilwater_turn
+      e: deadreed_span
+      s: drowned_oratory
+      w: ferry_anchor
+
+  deadreed_span:
+    title: "Deadreed Span"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Traffic thins as patrols transition from drills to live response. Deadreed Span anchors one segment of the zone circuit."
+    exits:
+      n: floodplain_teeth
+      e: mudlark_nest
+      s: silt_chute
+      w: bloom_sump
+
+  mudlark_nest:
+    title: "Mudlark Nest"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Traffic thins as patrols transition from drills to live response. Mudlark Nest anchors one segment of the zone circuit."
+    exits:
+      n: gator_blind
+      e: sallow_cove
+      s: hissing_marsh
+      w: deadreed_span
+
+  sallow_cove:
+    title: "Sallow Cove"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Traffic thins as patrols transition from drills to live response. Sallow Cove anchors one segment of the zone circuit."
+    exits:
+      n: brine_foot
+      s: old_tarp_dock
+      w: mudlark_nest
+
+  bogglass_bank:
+    title: "Bogglass Bank"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Hostile nests and broken walkways force coordinated movement. Bogglass Bank anchors one segment of the zone circuit."
+    exits:
+      n: rotwood_cleft
+      e: otter_runnel
+      s: mire_dyke
+
+  otter_runnel:
+    title: "Otter Runnel"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Hostile nests and broken walkways force coordinated movement. Otter Runnel anchors one segment of the zone circuit."
+    exits:
+      n: sinker_lane
+      e: moonfen_edge
+      s: reedmaze_core
+      w: bogglass_bank
+
+  moonfen_edge:
+    title: "Moonfen Edge"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Hostile nests and broken walkways force coordinated movement. Moonfen Edge anchors one segment of the zone circuit."
+    exits:
+      n: swarm_berth
+      e: grave_mud
+      s: lantern_stilts
+      w: otter_runnel
+
+  grave_mud:
+    title: "Grave Mud"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Hostile nests and broken walkways force coordinated movement. Grave Mud anchors one segment of the zone circuit."
+    exits:
+      n: marrow_fen
+      e: snare_reeds
+      s: croak_pool
+      w: moonfen_edge
+
+  snare_reeds:
+    title: "Snare Reeds"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Hostile nests and broken walkways force coordinated movement. Snare Reeds anchors one segment of the zone circuit."
+    exits:
+      n: nightlily_reach
+      e: oilwater_turn
+      s: ferry_anchor
+      w: grave_mud
+
+  oilwater_turn:
+    title: "Oilwater Turn"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Hostile nests and broken walkways force coordinated movement. Oilwater Turn anchors one segment of the zone circuit."
+    exits:
+      n: driftbone_ford
+      e: floodplain_teeth
+      s: bloom_sump
+      w: snare_reeds
+
+  floodplain_teeth:
+    title: "Floodplain Teeth"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Hostile nests and broken walkways force coordinated movement. Floodplain Teeth anchors one segment of the zone circuit."
+    exits:
+      n: blackmire_step
+      e: gator_blind
+      s: deadreed_span
+      w: oilwater_turn
+
+  gator_blind:
+    title: "Gator Blind"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Hostile nests and broken walkways force coordinated movement. Gator Blind anchors one segment of the zone circuit."
+    exits:
+      n: ghostpole_slough
+      e: brine_foot
+      s: mudlark_nest
+      w: floodplain_teeth
+
+  brine_foot:
+    title: "Brine Foot"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. Hostile nests and broken walkways force coordinated movement. Brine Foot anchors one segment of the zone circuit."
+    exits:
+      n: last_lantern
+      s: sallow_cove
+      w: gator_blind
+
+  rotwood_cleft:
+    title: "Rotwood Cleft"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. This innermost ring is treated as a capstone gauntlet by veterans. Rotwood Cleft anchors one segment of the zone circuit."
+    exits:
+      e: sinker_lane
+      s: bogglass_bank
+
+  sinker_lane:
+    title: "Sinker Lane"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. This innermost ring is treated as a capstone gauntlet by veterans. Sinker Lane anchors one segment of the zone circuit."
+    exits:
+      e: swarm_berth
+      s: otter_runnel
+      w: rotwood_cleft
+
+  swarm_berth:
+    title: "Swarm Berth"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. This innermost ring is treated as a capstone gauntlet by veterans. Swarm Berth anchors one segment of the zone circuit."
+    exits:
+      e: marrow_fen
+      s: moonfen_edge
+      w: sinker_lane
+
+  marrow_fen:
+    title: "Marrow Fen"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. This innermost ring is treated as a capstone gauntlet by veterans. Marrow Fen anchors one segment of the zone circuit."
+    exits:
+      e: nightlily_reach
+      s: grave_mud
+      w: swarm_berth
+
+  nightlily_reach:
+    title: "Nightlily Reach"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. This innermost ring is treated as a capstone gauntlet by veterans. Nightlily Reach anchors one segment of the zone circuit."
+    exits:
+      e: driftbone_ford
+      s: snare_reeds
+      w: marrow_fen
+
+  driftbone_ford:
+    title: "Driftbone Ford"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. This innermost ring is treated as a capstone gauntlet by veterans. Driftbone Ford anchors one segment of the zone circuit."
+    exits:
+      e: blackmire_step
+      s: oilwater_turn
+      w: nightlily_reach
+
+  blackmire_step:
+    title: "Blackmire Step"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. This innermost ring is treated as a capstone gauntlet by veterans. Blackmire Step anchors one segment of the zone circuit."
+    exits:
+      e: ghostpole_slough
+      s: floodplain_teeth
+      w: driftbone_ford
+
+  ghostpole_slough:
+    title: "Ghostpole Slough"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. This innermost ring is treated as a capstone gauntlet by veterans. Ghostpole Slough anchors one segment of the zone circuit."
+    exits:
+      e: last_lantern
+      s: gator_blind
+      w: blackmire_step
+
+  last_lantern:
+    title: "Last Lantern"
+    description: "Slick boardwalk planks and reedbound berms keep trainees above black water while fog horns pulse in the distance. This innermost ring is treated as a capstone gauntlet by veterans. Last Lantern anchors one segment of the zone circuit."
+    exits:
+      s: brine_foot
+      w: ghostpole_slough

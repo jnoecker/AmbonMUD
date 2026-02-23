@@ -3,74 +3,1165 @@ lifespan: 25
 startRoom: orelift_station
 
 mobs:
-  tunnel_bat:
+  tunnel_bat_01:
     name: "a tunnel bat"
+    room: orelift_station
+    tier: weak
+    level: 2
+
+  slag_beetle_02:
+    name: "a slag beetle"
     room: echo_gallery
     tier: weak
     level: 3
-  slag_beetle:
-    name: "a slag beetle"
+
+  pick_rogue_03:
+    name: "a pick rogue"
     room: ember_vein
-    tier: standard
-    level: 4
-  pick_rogue:
-    name: "a rogue pickhand"
+    tier: weak
+    level: 2
+
+  ember_crawler_04:
+    name: "an ember crawler"
     room: foreman_cache
+    tier: weak
+    level: 3
+
+  coal_breaker_05:
+    name: "a coal breaker"
+    room: rustchute
+    tier: weak
+    level: 2
+
+  rust_lurker_06:
+    name: "a rust lurker"
+    room: sump_walk
+    tier: weak
+    level: 3
+
+  chain_ghoul_07:
+    name: "a chain ghoul"
+    room: pickhand_row
+    tier: weak
+    level: 2
+
+  sump_rat_08:
+    name: "a sump rat"
+    room: slag_bridge
+    tier: weak
+    level: 3
+    drops:
+      - itemId: trophy_08
+        chance: 0.25
+
+  furnace_hunter_09:
+    name: "a furnace hunter"
+    room: drift_shaft
+    tier: weak
+    level: 2
+
+  deepcore_mauler_10:
+    name: "a deepcore mauler"
+    room: powder_cut
+    tier: weak
+    level: 4
+    drops:
+      - itemId: trophy_10
+        chance: 0.35
+
+  tunnel_bat_11:
+    name: "a tunnel bat"
+    room: lantern_tunnel
+    tier: weak
+    level: 3
+
+  slag_beetle_12:
+    name: "a slag beetle"
+    room: basalt_drop
     tier: standard
     level: 4
     drops:
-      - itemId: foreman_helm
+      - itemId: trophy_12
+        chance: 0.35
+
+  pick_rogue_13:
+    name: "a pick rogue"
+    room: miners_rest
+    tier: weak
+    level: 3
+
+  ember_crawler_14:
+    name: "an ember crawler"
+    room: flooded_bore
+    tier: weak
+    level: 4
+    drops:
+      - itemId: trophy_02
+        chance: 0.35
+
+  coal_breaker_15:
+    name: "a coal breaker"
+    room: brass_hoist
+    tier: weak
+    level: 3
+
+  rust_lurker_16:
+    name: "a rust lurker"
+    room: pyrite_lane
+    tier: standard
+    level: 4
+    drops:
+      - itemId: trophy_04
+        chance: 0.35
+
+  chain_ghoul_17:
+    name: "a chain ghoul"
+    room: clinker_hall
+    tier: weak
+    level: 3
+
+  sump_rat_18:
+    name: "a sump rat"
+    room: fuse_den
+    tier: weak
+    level: 4
+    drops:
+      - itemId: trophy_06
+        chance: 0.35
+
+  furnace_hunter_19:
+    name: "a furnace hunter"
+    room: blackpowder_vault
+    tier: standard
+    level: 4
+
+  deepcore_mauler_20:
+    name: "a deepcore mauler"
+    room: ironlung_pass
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_08
+        chance: 0.50
+
+  tunnel_bat_21:
+    name: "a tunnel bat"
+    room: chainway
+    tier: standard
+    level: 4
+
+  slag_beetle_22:
+    name: "a slag beetle"
+    room: scree_slot
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_10
+        chance: 0.50
+
+  pick_rogue_23:
+    name: "a pick rogue"
+    room: deep_core
+    tier: standard
+    level: 4
+
+  ember_crawler_24:
+    name: "an ember crawler"
+    room: stonecoil
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_12
+        chance: 0.50
+
+  coal_breaker_25:
+    name: "a coal breaker"
+    room: whisper_fault
+    tier: standard
+    level: 4
+
+  rust_lurker_26:
+    name: "a rust lurker"
+    room: molting_chamber
+    tier: standard
+    level: 5
+    drops:
+      - itemId: trophy_02
+        chance: 0.50
+
+  chain_ghoul_27:
+    name: "a chain ghoul"
+    room: molten_rake
+    tier: standard
+    level: 4
+
+  sump_rat_28:
+    name: "a sump rat"
+    room: caged_lift
+    tier: standard
+    level: 6
+    drops:
+      - itemId: trophy_04
+        chance: 0.70
+
+  furnace_hunter_29:
+    name: "a furnace hunter"
+    room: underforge
+    tier: standard
+    level: 5
+
+  deepcore_mauler_30:
+    name: "a deepcore mauler"
+    room: abyssal_spike
+    tier: elite
+    level: 6
+    drops:
+      - itemId: trophy_06
+        chance: 0.80
+
+  tunnel_bat_31:
+    name: "a tunnel bat"
+    room: slagmouth_turn
+    tier: standard
+    level: 5
+
+  slag_beetle_32:
+    name: "a slag beetle"
+    room: boiler_groove
+    tier: standard
+    level: 6
+    drops:
+      - itemId: trophy_08
+        chance: 0.70
+
+  pick_rogue_33:
+    name: "a pick rogue"
+    room: iron_drift
+    tier: elite
+    level: 5
+
+  ember_crawler_34:
+    name: "an ember crawler"
+    room: sulfur_gallery
+    tier: standard
+    level: 6
+    drops:
+      - itemId: trophy_10
+        chance: 0.70
+
+  coal_breaker_35:
+    name: "a coal breaker"
+    room: red_quarry
+    tier: standard
+    level: 5
+
+  rust_lurker_36:
+    name: "a rust lurker"
+    room: hammerloop
+    tier: elite
+    level: 6
+    drops:
+      - itemId: trophy_12
+        chance: 0.80
+
+  chain_ghoul_37:
+    name: "a chain ghoul"
+    room: void_rail
+    tier: elite
+    level: 6
+
+  sump_rat_38:
+    name: "a sump rat"
+    room: copper_lungs
+    tier: elite
+    level: 7
+    drops:
+      - itemId: trophy_02
         chance: 1.0
 
+  furnace_hunter_39:
+    name: "a furnace hunter"
+    room: crusher_bay
+    tier: elite
+    level: 8
+
+  deepcore_mauler_40:
+    name: "a deepcore mauler"
+    room: furnace_ring
+    tier: elite
+    level: 6
+    drops:
+      - itemId: trophy_04
+        chance: 0.85
+
 items:
-  miner_pick:
-    displayName: "a miner's pick"
+  gear_01:
+    displayName: "a miner pick"
     keyword: "pick"
-    description: "A short-handled pick with a sharpened steel point."
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-1 circuit in this zone."
     slot: hand
-    damage: 3
+    damage: 2
     room: orelift_station
 
-  slagguard_jacket:
+  gear_02:
     displayName: "a slagguard jacket"
     keyword: "jacket"
-    description: "A quilted jacket lined with heat-resistant leather patches."
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-1 circuit in this zone."
     slot: body
     armor: 2
-    constitution: 1
+    room: echo_gallery
+
+  gear_03:
+    displayName: "a foreman helm"
+    keyword: "helm"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-1 circuit in this zone."
+    slot: head
+    armor: 1
     room: ember_vein
 
-  foreman_helm:
-    displayName: "a foreman's iron helm"
-    keyword: "helm"
-    description: "An iron helm with a cracked lamp bracket on the brow."
+  gear_04:
+    displayName: "a quarry torch"
+    keyword: "torch"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-1 circuit in this zone."
+    slot: hand
+    damage: 2
+    room: foreman_cache
+
+  gear_05:
+    displayName: "a tempered hammer"
+    keyword: "hammer"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-1 circuit in this zone."
+    slot: body
+    armor: 1
+    room: rustchute
+
+  gear_06:
+    displayName: "a riveted mask"
+    keyword: "mask"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-1 circuit in this zone."
     slot: head
     armor: 2
+    room: sump_walk
+
+  gear_07:
+    displayName: "a smelted mail"
+    keyword: "mail"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-1 circuit in this zone."
+    slot: hand
+    damage: 2
+    room: pickhand_row
+
+  gear_08:
+    displayName: "a ironbound pauldrons"
+    keyword: "pauldrons"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-1 circuit in this zone."
+    slot: body
+    armor: 2
+    room: slag_bridge
+
+  gear_09:
+    displayName: "a furnace blade"
+    keyword: "blade"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-1 circuit in this zone."
+    slot: head
+    armor: 1
+    room: drift_shaft
+
+  gear_10:
+    displayName: "a deepcore vest"
+    keyword: "vest"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-2 circuit in this zone."
+    slot: hand
+    damage: 3
+    room: powder_cut
+
+  gear_11:
+    displayName: "a miner pick"
+    keyword: "pick"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-2 circuit in this zone."
+    slot: body
+    armor: 2
+    room: lantern_tunnel
+
+  gear_12:
+    displayName: "a slagguard jacket"
+    keyword: "jacket"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-2 circuit in this zone."
+    slot: head
+    armor: 3
+    room: basalt_drop
+
+  gear_13:
+    displayName: "a foreman helm"
+    keyword: "helm"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-2 circuit in this zone."
+    slot: hand
+    damage: 3
+    room: miners_rest
+
+  gear_14:
+    displayName: "a quarry torch"
+    keyword: "torch"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-2 circuit in this zone."
+    slot: body
+    armor: 3
+    room: flooded_bore
+
+  gear_15:
+    displayName: "a tempered hammer"
+    keyword: "hammer"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-2 circuit in this zone."
+    slot: head
+    armor: 2
+    room: brass_hoist
+
+  gear_16:
+    displayName: "a riveted mask"
+    keyword: "mask"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-2 circuit in this zone."
+    slot: hand
+    damage: 3
+    room: pyrite_lane
+
+  gear_17:
+    displayName: "a smelted mail"
+    keyword: "mail"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-2 circuit in this zone."
+    slot: body
+    armor: 2
+    room: clinker_hall
+
+  gear_18:
+    displayName: "a ironbound pauldrons"
+    keyword: "pauldrons"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-2 circuit in this zone."
+    slot: head
+    armor: 3
+    room: fuse_den
+
+  gear_19:
+    displayName: "a furnace blade"
+    keyword: "blade"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
+    slot: hand
+    damage: 4
+    room: blackpowder_vault
+
+  gear_20:
+    displayName: "a deepcore vest"
+    keyword: "vest"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: ironlung_pass
+
+  gear_21:
+    displayName: "a miner pick"
+    keyword: "pick"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
+    slot: head
+    armor: 3
+    constitution: 1
+    room: chainway
+
+  gear_22:
+    displayName: "a slagguard jacket"
+    keyword: "jacket"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
+    slot: hand
+    damage: 4
+    room: scree_slot
+
+  gear_23:
+    displayName: "a foreman helm"
+    keyword: "helm"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
+    slot: body
+    armor: 3
+    constitution: 1
+    room: deep_core
+
+  gear_24:
+    displayName: "a quarry torch"
+    keyword: "torch"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
+    slot: head
+    armor: 4
+    constitution: 1
+    room: stonecoil
+
+  gear_25:
+    displayName: "a tempered hammer"
+    keyword: "hammer"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
+    slot: hand
+    damage: 4
+    room: whisper_fault
+
+  gear_26:
+    displayName: "a riveted mask"
+    keyword: "mask"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: molting_chamber
+
+  gear_27:
+    displayName: "a smelted mail"
+    keyword: "mail"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
+    slot: head
+    armor: 3
+    constitution: 1
+    room: molten_rake
+
+  gear_28:
+    displayName: "a ironbound pauldrons"
+    keyword: "pauldrons"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
+    slot: hand
+    damage: 5
+    room: caged_lift
+
+  gear_29:
+    displayName: "a furnace blade"
+    keyword: "blade"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: underforge
+
+  gear_30:
+    displayName: "a deepcore vest"
+    keyword: "vest"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
+    slot: head
+    armor: 5
+    constitution: 1
+    room: abyssal_spike
+
+  gear_31:
+    displayName: "a miner pick"
+    keyword: "pick"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
+    slot: hand
+    damage: 5
+    room: slagmouth_turn
+
+  gear_32:
+    displayName: "a slagguard jacket"
+    keyword: "jacket"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
+    slot: body
+    armor: 5
+    constitution: 1
+    room: boiler_groove
+
+  gear_33:
+    displayName: "a foreman helm"
+    keyword: "helm"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
+    slot: head
+    armor: 4
+    constitution: 1
+    room: iron_drift
+
+  gear_34:
+    displayName: "a quarry torch"
+    keyword: "torch"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
+    slot: hand
+    damage: 5
+    room: sulfur_gallery
+
+  gear_35:
+    displayName: "a tempered hammer"
+    keyword: "hammer"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
+    slot: body
+    armor: 4
+    constitution: 1
+    room: red_quarry
+
+  gear_36:
+    displayName: "a riveted mask"
+    keyword: "mask"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
+    slot: head
+    armor: 5
+    constitution: 1
+    room: hammerloop
+
+  gear_37:
+    displayName: "a smelted mail"
+    keyword: "mail"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-5 circuit in this zone."
+    slot: hand
+    damage: 6
+    room: void_rail
+
+  gear_38:
+    displayName: "a ironbound pauldrons"
+    keyword: "pauldrons"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-5 circuit in this zone."
+    slot: body
+    armor: 6
+    constitution: 2
+    room: copper_lungs
+
+  gear_39:
+    displayName: "a furnace blade"
+    keyword: "blade"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-5 circuit in this zone."
+    slot: head
+    armor: 5
+    constitution: 2
+    room: crusher_bay
+
+  gear_40:
+    displayName: "a deepcore vest"
+    keyword: "vest"
+    description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-5 circuit in this zone."
+    slot: hand
+    damage: 6
+    room: furnace_ring
+
+  ration_01:
+    displayName: "a field ration pack #1"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 10
+      grantXp: 15
+    room: hammerloop
+
+  ration_02:
+    displayName: "a field ration pack #2"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 2
+    onUse:
+      healHp: 12
+      grantXp: 20
+    room: void_rail
+
+  ration_03:
+    displayName: "a field ration pack #3"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 14
+      grantXp: 25
+    room: copper_lungs
+
+  ration_04:
+    displayName: "a field ration pack #4"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 2
+    onUse:
+      healHp: 16
+      grantXp: 30
+    room: crusher_bay
+
+  ration_05:
+    displayName: "a field ration pack #5"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 1
+    onUse:
+      healHp: 18
+      grantXp: 35
+    room: furnace_ring
+
+  ration_06:
+    displayName: "a field ration pack #6"
+    keyword: "ration"
+    description: "Emergency restorative supplies cached along the deepest patrol routes."
+    consumable: true
+    charges: 2
+    onUse:
+      healHp: 20
+      grantXp: 40
+    room: seamfall
+
+  trophy_01:
+    displayName: "a emberlit core"
+    keyword: "core"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 5
+
+  trophy_02:
+    displayName: "a smoldering idol"
+    keyword: "idol"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 4
+    constitution: 1
+
+  trophy_03:
+    displayName: "a blackiron rivet"
+    keyword: "rivet"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 3
+    constitution: 1
+
+  trophy_04:
+    displayName: "a forged keystone"
+    keyword: "keystone"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 6
+
+  trophy_05:
+    displayName: "a coked brand"
+    keyword: "brand"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 4
+    constitution: 1
+
+  trophy_06:
+    displayName: "a hardened token"
+    keyword: "token"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 5
+    constitution: 1
+
+  trophy_07:
+    displayName: "a deepcore seal"
+    keyword: "seal"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 6
+
+  trophy_08:
+    displayName: "a vaulted sigil"
+    keyword: "sigil"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 5
+    constitution: 1
+
+  trophy_09:
+    displayName: "a pyric crest"
+    keyword: "crest"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 5
+    constitution: 2
+
+  trophy_10:
+    displayName: "a slagforged mark"
+    keyword: "mark"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: hand
+    damage: 8
+
+  trophy_11:
+    displayName: "a emberlit core"
+    keyword: "core"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: body
+    armor: 5
+    constitution: 2
+
+  trophy_12:
+    displayName: "a smoldering idol"
+    keyword: "idol"
+    description: "Advanced drop gear awarded to crews that clear deep routes consistently."
+    slot: head
+    armor: 6
+    constitution: 2
 
 rooms:
   orelift_station:
     title: "Orelift Station"
-    description: "A rusted ore lift hangs silent above old tracks. Chalk arrows on the wall mark a route down the active tunnels and a route back up to safer ground."
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Upper drifts are patrolled constantly and used for fundamentals. Orelift Station anchors one segment of the zone circuit."
     exits:
-      d: echo_gallery
+      n: powder_cut
+      e: echo_gallery
       u: ambon_hub:blank_arches
 
   echo_gallery:
     title: "Echo Gallery"
-    description: "A wide tunnel amplifies every footstep into rolling echoes. Broken support beams lean against glittering mineral seams."
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Upper drifts are patrolled constantly and used for fundamentals. Echo Gallery anchors one segment of the zone circuit."
     exits:
+      n: lantern_tunnel
       e: ember_vein
-      u: orelift_station
+      w: orelift_station
 
   ember_vein:
     title: "Ember Vein"
-    description: "Red-orange ore veins glow faintly through fractured stone. Heat shimmers along the walls, and the air smells of hot metal."
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Upper drifts are patrolled constantly and used for fundamentals. Ember Vein anchors one segment of the zone circuit."
     exits:
+      n: basalt_drop
       e: foreman_cache
       w: echo_gallery
 
   foreman_cache:
     title: "Foreman Cache"
-    description: "A reinforced side chamber once used to store payroll and blasting powder. Most crates are empty, but a few useful pieces remain."
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Upper drifts are patrolled constantly and used for fundamentals. Foreman Cache anchors one segment of the zone circuit."
     exits:
+      n: miners_rest
+      e: rustchute
       w: ember_vein
+
+  rustchute:
+    title: "Rustchute"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Upper drifts are patrolled constantly and used for fundamentals. Rustchute anchors one segment of the zone circuit."
+    exits:
+      n: flooded_bore
+      e: sump_walk
+      w: foreman_cache
+
+  sump_walk:
+    title: "Sump Walk"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Upper drifts are patrolled constantly and used for fundamentals. Sump Walk anchors one segment of the zone circuit."
+    exits:
+      n: brass_hoist
+      e: pickhand_row
+      w: rustchute
+
+  pickhand_row:
+    title: "Pickhand Row"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Upper drifts are patrolled constantly and used for fundamentals. Pickhand Row anchors one segment of the zone circuit."
+    exits:
+      n: pyrite_lane
+      e: slag_bridge
+      w: sump_walk
+
+  slag_bridge:
+    title: "Slag Bridge"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Upper drifts are patrolled constantly and used for fundamentals. Slag Bridge anchors one segment of the zone circuit."
+    exits:
+      n: clinker_hall
+      e: drift_shaft
+      w: pickhand_row
+
+  drift_shaft:
+    title: "Drift Shaft"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Upper drifts are patrolled constantly and used for fundamentals. Drift Shaft anchors one segment of the zone circuit."
+    exits:
+      n: fuse_den
+      w: slag_bridge
+
+  powder_cut:
+    title: "Powder Cut"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Vent heat rises and lane noise makes coordinated calls critical. Powder Cut anchors one segment of the zone circuit."
+    exits:
+      n: blackpowder_vault
+      e: lantern_tunnel
+      s: orelift_station
+
+  lantern_tunnel:
+    title: "Lantern Tunnel"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Vent heat rises and lane noise makes coordinated calls critical. Lantern Tunnel anchors one segment of the zone circuit."
+    exits:
+      n: ironlung_pass
+      e: basalt_drop
+      s: echo_gallery
+      w: powder_cut
+
+  basalt_drop:
+    title: "Basalt Drop"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Vent heat rises and lane noise makes coordinated calls critical. Basalt Drop anchors one segment of the zone circuit."
+    exits:
+      n: chainway
+      e: miners_rest
+      s: ember_vein
+      w: lantern_tunnel
+
+  miners_rest:
+    title: "Miners Rest"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Vent heat rises and lane noise makes coordinated calls critical. Miners Rest anchors one segment of the zone circuit."
+    exits:
+      n: scree_slot
+      e: flooded_bore
+      s: foreman_cache
+      w: basalt_drop
+
+  flooded_bore:
+    title: "Flooded Bore"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Vent heat rises and lane noise makes coordinated calls critical. Flooded Bore anchors one segment of the zone circuit."
+    exits:
+      n: deep_core
+      e: brass_hoist
+      s: rustchute
+      w: miners_rest
+
+  brass_hoist:
+    title: "Brass Hoist"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Vent heat rises and lane noise makes coordinated calls critical. Brass Hoist anchors one segment of the zone circuit."
+    exits:
+      n: stonecoil
+      e: pyrite_lane
+      s: sump_walk
+      w: flooded_bore
+
+  pyrite_lane:
+    title: "Pyrite Lane"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Vent heat rises and lane noise makes coordinated calls critical. Pyrite Lane anchors one segment of the zone circuit."
+    exits:
+      n: whisper_fault
+      e: clinker_hall
+      s: pickhand_row
+      w: brass_hoist
+
+  clinker_hall:
+    title: "Clinker Hall"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Vent heat rises and lane noise makes coordinated calls critical. Clinker Hall anchors one segment of the zone circuit."
+    exits:
+      n: molting_chamber
+      e: fuse_den
+      s: slag_bridge
+      w: pyrite_lane
+
+  fuse_den:
+    title: "Fuse Den"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Vent heat rises and lane noise makes coordinated calls critical. Fuse Den anchors one segment of the zone circuit."
+    exits:
+      n: molten_rake
+      s: drift_shaft
+      w: clinker_hall
+
+  blackpowder_vault:
+    title: "Blackpowder Vault"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Deeper seams carry heavier mobs and fewer fallback alcoves. Blackpowder Vault anchors one segment of the zone circuit."
+    exits:
+      n: caged_lift
+      e: ironlung_pass
+      s: powder_cut
+
+  ironlung_pass:
+    title: "Ironlung Pass"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Deeper seams carry heavier mobs and fewer fallback alcoves. Ironlung Pass anchors one segment of the zone circuit."
+    exits:
+      n: underforge
+      e: chainway
+      s: lantern_tunnel
+      w: blackpowder_vault
+
+  chainway:
+    title: "Chainway"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Deeper seams carry heavier mobs and fewer fallback alcoves. Chainway anchors one segment of the zone circuit."
+    exits:
+      n: abyssal_spike
+      e: scree_slot
+      s: basalt_drop
+      w: ironlung_pass
+
+  scree_slot:
+    title: "Scree Slot"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Deeper seams carry heavier mobs and fewer fallback alcoves. Scree Slot anchors one segment of the zone circuit."
+    exits:
+      n: slagmouth_turn
+      e: deep_core
+      s: miners_rest
+      w: chainway
+
+  deep_core:
+    title: "Deep Core"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Deeper seams carry heavier mobs and fewer fallback alcoves. Deep Core anchors one segment of the zone circuit."
+    exits:
+      n: boiler_groove
+      e: stonecoil
+      s: flooded_bore
+      w: scree_slot
+
+  stonecoil:
+    title: "Stonecoil"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Deeper seams carry heavier mobs and fewer fallback alcoves. Stonecoil anchors one segment of the zone circuit."
+    exits:
+      n: iron_drift
+      e: whisper_fault
+      s: brass_hoist
+      w: deep_core
+
+  whisper_fault:
+    title: "Whisper Fault"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Deeper seams carry heavier mobs and fewer fallback alcoves. Whisper Fault anchors one segment of the zone circuit."
+    exits:
+      n: sulfur_gallery
+      e: molting_chamber
+      s: pyrite_lane
+      w: stonecoil
+
+  molting_chamber:
+    title: "Molting Chamber"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Deeper seams carry heavier mobs and fewer fallback alcoves. Molting Chamber anchors one segment of the zone circuit."
+    exits:
+      n: red_quarry
+      e: molten_rake
+      s: clinker_hall
+      w: whisper_fault
+
+  molten_rake:
+    title: "Molten Rake"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Deeper seams carry heavier mobs and fewer fallback alcoves. Molten Rake anchors one segment of the zone circuit."
+    exits:
+      n: hammerloop
+      s: fuse_den
+      w: molting_chamber
+
+  caged_lift:
+    title: "Caged Lift"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Collapsed cuts and volatile pockets are common in this ring. Caged Lift anchors one segment of the zone circuit."
+    exits:
+      n: void_rail
+      e: underforge
+      s: blackpowder_vault
+
+  underforge:
+    title: "Underforge"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Collapsed cuts and volatile pockets are common in this ring. Underforge anchors one segment of the zone circuit."
+    exits:
+      n: copper_lungs
+      e: abyssal_spike
+      s: ironlung_pass
+      w: caged_lift
+
+  abyssal_spike:
+    title: "Abyssal Spike"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Collapsed cuts and volatile pockets are common in this ring. Abyssal Spike anchors one segment of the zone circuit."
+    exits:
+      n: crusher_bay
+      e: slagmouth_turn
+      s: chainway
+      w: underforge
+
+  slagmouth_turn:
+    title: "Slagmouth Turn"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Collapsed cuts and volatile pockets are common in this ring. Slagmouth Turn anchors one segment of the zone circuit."
+    exits:
+      n: furnace_ring
+      e: boiler_groove
+      s: scree_slot
+      w: abyssal_spike
+
+  boiler_groove:
+    title: "Boiler Groove"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Collapsed cuts and volatile pockets are common in this ring. Boiler Groove anchors one segment of the zone circuit."
+    exits:
+      n: seamfall
+      e: iron_drift
+      s: deep_core
+      w: slagmouth_turn
+
+  iron_drift:
+    title: "Iron Drift"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Collapsed cuts and volatile pockets are common in this ring. Iron Drift anchors one segment of the zone circuit."
+    exits:
+      n: slag_tides
+      e: sulfur_gallery
+      s: stonecoil
+      w: boiler_groove
+
+  sulfur_gallery:
+    title: "Sulfur Gallery"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Collapsed cuts and volatile pockets are common in this ring. Sulfur Gallery anchors one segment of the zone circuit."
+    exits:
+      n: buried_clock
+      e: red_quarry
+      s: whisper_fault
+      w: iron_drift
+
+  red_quarry:
+    title: "Red Quarry"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Collapsed cuts and volatile pockets are common in this ring. Red Quarry anchors one segment of the zone circuit."
+    exits:
+      n: orewound
+      e: hammerloop
+      s: molting_chamber
+      w: sulfur_gallery
+
+  hammerloop:
+    title: "Hammerloop"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. Collapsed cuts and volatile pockets are common in this ring. Hammerloop anchors one segment of the zone circuit."
+    exits:
+      n: terminus_shaft
+      s: molten_rake
+      w: red_quarry
+
+  void_rail:
+    title: "Void Rail"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. The terminal shafts are treated as full live-fire qualification routes. Void Rail anchors one segment of the zone circuit."
+    exits:
+      e: copper_lungs
+      s: caged_lift
+
+  copper_lungs:
+    title: "Copper Lungs"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. The terminal shafts are treated as full live-fire qualification routes. Copper Lungs anchors one segment of the zone circuit."
+    exits:
+      e: crusher_bay
+      s: underforge
+      w: void_rail
+
+  crusher_bay:
+    title: "Crusher Bay"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. The terminal shafts are treated as full live-fire qualification routes. Crusher Bay anchors one segment of the zone circuit."
+    exits:
+      e: furnace_ring
+      s: abyssal_spike
+      w: copper_lungs
+
+  furnace_ring:
+    title: "Furnace Ring"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. The terminal shafts are treated as full live-fire qualification routes. Furnace Ring anchors one segment of the zone circuit."
+    exits:
+      e: seamfall
+      s: slagmouth_turn
+      w: crusher_bay
+
+  seamfall:
+    title: "Seamfall"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. The terminal shafts are treated as full live-fire qualification routes. Seamfall anchors one segment of the zone circuit."
+    exits:
+      e: slag_tides
+      s: boiler_groove
+      w: furnace_ring
+
+  slag_tides:
+    title: "Slag Tides"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. The terminal shafts are treated as full live-fire qualification routes. Slag Tides anchors one segment of the zone circuit."
+    exits:
+      e: buried_clock
+      s: iron_drift
+      w: seamfall
+
+  buried_clock:
+    title: "Buried Clock"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. The terminal shafts are treated as full live-fire qualification routes. Buried Clock anchors one segment of the zone circuit."
+    exits:
+      e: orewound
+      s: sulfur_gallery
+      w: slag_tides
+
+  orewound:
+    title: "Orewound"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. The terminal shafts are treated as full live-fire qualification routes. Orewound anchors one segment of the zone circuit."
+    exits:
+      e: terminus_shaft
+      s: red_quarry
+      w: buried_clock
+
+  terminus_shaft:
+    title: "Terminus Shaft"
+    description: "Timbered tunnels and slag-cut galleries form a sprawling drill network where crews train under dim lantern chains. The terminal shafts are treated as full live-fire qualification routes. Terminus Shaft anchors one segment of the zone circuit."
+    exits:
+      s: hammerloop
+      w: orewound
