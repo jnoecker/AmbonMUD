@@ -22,22 +22,221 @@
     let connected = false;
     let inputBuffer = "";
 
-    // Sidebar elements
+    // ── Sidebar elements ──
+
     const hpBar = document.getElementById("hp-bar");
     const hpText = document.getElementById("hp-text");
     const manaBar = document.getElementById("mana-bar");
     const manaText = document.getElementById("mana-text");
+    const xpBar = document.getElementById("xp-bar");
+    const xpBarText = document.getElementById("xp-bar-text");
     const levelVal = document.getElementById("level-val");
     const xpVal = document.getElementById("xp-val");
     const roomTitle = document.getElementById("room-title");
     const roomDesc = document.getElementById("room-desc");
     const exitsWrap = document.getElementById("exits-wrap");
+    const navExits = document.getElementById("nav-exits");
     const charName = document.getElementById("char-name");
     const charInfo = document.getElementById("char-info");
     const invList = document.getElementById("inv-list");
     const equipList = document.getElementById("equip-list");
     const playersList = document.getElementById("players-list");
     const mobsList = document.getElementById("mobs-list");
+    const mapCanvas = document.getElementById("map-canvas");
+    const mapCtx = mapCanvas.getContext("2d");
+
+    // ── Command history ──
+
+    const MAX_HISTORY = 100;
+    let commandHistory = [];
+    let historyIndex = -1;
+    let savedInput = "";
+
+    try {
+        const stored = localStorage.getItem("ambonmud_history");
+        if (stored) commandHistory = JSON.parse(stored);
+    } catch (_) { /* ignore */ }
+
+    function pushHistory(cmd) {
+        if (!cmd.trim()) return;
+        if (commandHistory.length > 0 && commandHistory[commandHistory.length - 1] === cmd) return;
+        commandHistory.push(cmd);
+        if (commandHistory.length > MAX_HISTORY) commandHistory.shift();
+        historyIndex = -1;
+        try {
+            localStorage.setItem("ambonmud_history", JSON.stringify(commandHistory));
+        } catch (_) { /* ignore */ }
+    }
+
+    // ── Tab completion ──
+
+    const COMMANDS = [
+        "look", "north", "south", "east", "west", "up", "down",
+        "say", "tell", "whisper", "shout", "gossip", "ooc", "emote", "pose",
+        "who", "score", "inventory", "equipment", "exits",
+        "get", "drop", "wear", "remove", "use", "give",
+        "kill", "flee", "cast", "spells", "abilities",
+        "help", "quit", "clear", "colors",
+    ];
+    let tabMatches = [];
+    let tabIndex = 0;
+    let tabOriginalPrefix = "";
+    let tabArgs = "";
+
+    function tabComplete() {
+        const parts = inputBuffer.split(" ");
+        const firstWord = parts[0].toLowerCase();
+
+        if (tabMatches.length > 0 && tabOriginalPrefix
+            && firstWord !== tabOriginalPrefix
+            && tabMatches.includes(firstWord)) {
+            // still cycling — advance to next match
+            tabIndex = (tabIndex + 1) % tabMatches.length;
+        } else {
+            // start a new completion
+            tabOriginalPrefix = firstWord;
+            tabArgs = parts.slice(1).join(" ");
+            if (!tabOriginalPrefix) return;
+            tabMatches = COMMANDS.filter(c => c.startsWith(tabOriginalPrefix) && c !== tabOriginalPrefix);
+            if (tabMatches.length === 0) return;
+            tabIndex = 0;
+        }
+        clearInputLine();
+        inputBuffer = tabMatches[tabIndex] + (tabArgs ? " " + tabArgs : "");
+        term.write(inputBuffer);
+    }
+
+    // ── Mini-map ──
+
+    const visitedRooms = new Map(); // roomId -> { x, y, exits: {dir: roomId} }
+    let currentRoomId = null;
+
+    const DIR_OFFSETS = {
+        north: { dx: 0, dy: -1 },
+        south: { dx: 0, dy: 1 },
+        east: { dx: 1, dy: 0 },
+        west: { dx: -1, dy: 0 },
+        up: { dx: 0.5, dy: -0.5 },
+        down: { dx: -0.5, dy: 0.5 },
+    };
+
+    function updateMap(roomId, exits) {
+        currentRoomId = roomId;
+
+        if (!visitedRooms.has(roomId)) {
+            // place the room; try to infer position from a neighbor
+            let placed = false;
+            for (const [dir, neighborId] of Object.entries(exits)) {
+                const neighbor = visitedRooms.get(neighborId);
+                if (neighbor) {
+                    const off = DIR_OFFSETS[dir];
+                    if (off) {
+                        visitedRooms.set(roomId, {
+                            x: neighbor.x - off.dx,
+                            y: neighbor.y - off.dy,
+                            exits: exits,
+                        });
+                        placed = true;
+                        break;
+                    }
+                }
+            }
+            if (!placed) {
+                // first room or disconnected — place at origin
+                if (visitedRooms.size === 0) {
+                    visitedRooms.set(roomId, { x: 0, y: 0, exits: exits });
+                } else {
+                    // offset from last position
+                    const prev = visitedRooms.get([...visitedRooms.keys()].pop());
+                    visitedRooms.set(roomId, { x: (prev?.x ?? 0) + 1, y: prev?.y ?? 0, exits: exits });
+                }
+            }
+        } else {
+            // update exits for existing room
+            visitedRooms.get(roomId).exits = exits;
+        }
+
+        // ensure all exit targets have placeholder entries
+        for (const [dir, targetId] of Object.entries(exits)) {
+            if (!visitedRooms.has(targetId)) {
+                const current = visitedRooms.get(roomId);
+                const off = DIR_OFFSETS[dir];
+                if (current && off) {
+                    visitedRooms.set(targetId, {
+                        x: current.x + off.dx,
+                        y: current.y + off.dy,
+                        exits: {},
+                    });
+                }
+            }
+        }
+
+        renderMap();
+    }
+
+    function renderMap() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = mapCanvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        mapCanvas.width = w * dpr;
+        mapCanvas.height = h * dpr;
+        mapCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        mapCtx.fillStyle = "#060e18";
+        mapCtx.fillRect(0, 0, w, h);
+
+        if (visitedRooms.size === 0) return;
+
+        const current = visitedRooms.get(currentRoomId);
+        if (!current) return;
+
+        const cellSize = 24;
+        const nodeSize = 8;
+        const cx = w / 2;
+        const cy = h / 2;
+
+        // draw connections
+        mapCtx.strokeStyle = "#2a4a6a";
+        mapCtx.lineWidth = 1.5;
+        for (const [, room] of visitedRooms) {
+            const rx = cx + (room.x - current.x) * cellSize;
+            const ry = cy + (room.y - current.y) * cellSize;
+            for (const [, targetId] of Object.entries(room.exits)) {
+                const target = visitedRooms.get(targetId);
+                if (!target) continue;
+                const tx = cx + (target.x - current.x) * cellSize;
+                const ty = cy + (target.y - current.y) * cellSize;
+                mapCtx.beginPath();
+                mapCtx.moveTo(rx, ry);
+                mapCtx.lineTo(tx, ty);
+                mapCtx.stroke();
+            }
+        }
+
+        // draw room nodes
+        for (const [id, room] of visitedRooms) {
+            const rx = cx + (room.x - current.x) * cellSize;
+            const ry = cy + (room.y - current.y) * cellSize;
+            if (rx < -nodeSize || rx > w + nodeSize || ry < -nodeSize || ry > h + nodeSize) continue;
+
+            const isCurrent = id === currentRoomId;
+            mapCtx.fillStyle = isCurrent ? "#78d8a7" : "#4a7cc7";
+            mapCtx.beginPath();
+            mapCtx.arc(rx, ry, isCurrent ? nodeSize / 2 + 2 : nodeSize / 2, 0, Math.PI * 2);
+            mapCtx.fill();
+
+            if (isCurrent) {
+                mapCtx.strokeStyle = "#78d8a7";
+                mapCtx.lineWidth = 1.5;
+                mapCtx.beginPath();
+                mapCtx.arc(rx, ry, nodeSize / 2 + 5, 0, Math.PI * 2);
+                mapCtx.stroke();
+            }
+        }
+    }
+
+    // ── WebSocket ──
 
     const wsUrl = (() => {
         const scheme = window.location.protocol === "https:" ? "wss" : "ws";
@@ -50,9 +249,41 @@
         statusEl.className = `status ${isConnected ? "connected" : "disconnected"}`;
     }
 
+    function resetHud() {
+        charName.textContent = "—";
+        charInfo.textContent = "—";
+        hpBar.style.width = "0%";
+        hpText.textContent = "— / —";
+        manaBar.style.width = "0%";
+        manaText.textContent = "— / —";
+        xpBar.style.width = "0%";
+        xpBarText.textContent = "— / —";
+        levelVal.textContent = "—";
+        xpVal.textContent = "—";
+        roomTitle.textContent = "—";
+        roomDesc.textContent = "";
+        exitsWrap.innerHTML = "";
+        navExits.innerHTML = "";
+        playersList.innerHTML = '<span class="empty-hint">—</span>';
+        mobsList.innerHTML = '<span class="empty-hint">—</span>';
+        invList.innerHTML = '<span class="empty-hint">—</span>';
+        equipList.innerHTML = '<span class="empty-hint">—</span>';
+        visitedRooms.clear();
+        currentRoomId = null;
+        renderMap();
+    }
+
     function writeSystem(message) {
         term.write(`\r\n\x1b[2m${message}\x1b[0m\r\n`);
     }
+
+    function sendCommand(cmd) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(cmd);
+        }
+    }
+
+    // ── GMCP Handlers ──
 
     function updateVitals(data) {
         const hp = data.hp ?? 0;
@@ -67,24 +298,59 @@
         if (data.xp !== undefined) {
             xpVal.textContent = data.xp.toLocaleString();
         }
+        // XP progress bar
+        const xpInto = data.xpIntoLevel ?? 0;
+        const xpNeeded = data.xpToNextLevel;
+        if (xpNeeded != null && xpNeeded > 0) {
+            const pct = Math.min(100, Math.round((xpInto / xpNeeded) * 100));
+            xpBar.style.width = `${pct}%`;
+            xpBarText.textContent = `${xpInto.toLocaleString()} / ${xpNeeded.toLocaleString()}`;
+        } else if (xpNeeded === null) {
+            xpBar.style.width = "100%";
+            xpBarText.textContent = "MAX";
+        } else {
+            xpBar.style.width = "0%";
+            xpBarText.textContent = "— / —";
+        }
     }
 
     function updateRoomInfo(data) {
         roomTitle.textContent = data.title ?? "—";
         roomDesc.textContent = data.description ?? "";
-        exitsWrap.innerHTML = "";
         const exits = data.exits ?? {};
+
+        // sidebar exits
+        exitsWrap.innerHTML = "";
         for (const [dir, roomId] of Object.entries(exits)) {
             const btn = document.createElement("button");
             btn.className = "exit-btn";
             btn.textContent = dir;
             btn.title = roomId;
-            btn.addEventListener("click", () => {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(dir);
-                }
-            });
+            btn.addEventListener("click", () => sendCommand(dir));
             exitsWrap.appendChild(btn);
+        }
+
+        // nav bar exits (below terminal)
+        navExits.innerHTML = "";
+        const dirOrder = ["north", "south", "east", "west", "up", "down"];
+        const sortedDirs = Object.keys(exits).sort(
+            (a, b) => dirOrder.indexOf(a) - dirOrder.indexOf(b),
+        );
+        for (const dir of sortedDirs) {
+            const btn = document.createElement("button");
+            btn.className = "nav-btn";
+            btn.textContent = dir;
+            btn.title = exits[dir];
+            btn.addEventListener("click", () => {
+                sendCommand(dir);
+                term.focus();
+            });
+            navExits.appendChild(btn);
+        }
+
+        // mini-map
+        if (data.id) {
+            updateMap(data.id, exits);
         }
     }
 
@@ -317,6 +583,8 @@
         return null;
     }
 
+    // ── Connection ──
+
     function connect() {
         if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
             return;
@@ -343,6 +611,7 @@
         ws.addEventListener("close", () => {
             setConnected(false);
             inputBuffer = "";
+            resetHud();
             writeSystem("Connection closed.");
         });
 
@@ -358,16 +627,59 @@
         return code >= 0x20 && code !== 0x7f;
     }
 
+    // ── Terminal input ──
+
+    function clearInputLine() {
+        if (inputBuffer.length > 0) {
+            term.write("\b \b".repeat(inputBuffer.length));
+        }
+    }
+
+    function replaceInput(newText) {
+        clearInputLine();
+        inputBuffer = newText;
+        term.write(inputBuffer);
+    }
+
     term.onData((data) => {
         if (!connected || !ws || ws.readyState !== WebSocket.OPEN) {
             return;
         }
 
+        // detect escape sequences for arrow keys
+        if (data === "\x1b[A") {
+            // up arrow — older history
+            if (commandHistory.length === 0) return;
+            if (historyIndex === -1) {
+                savedInput = inputBuffer;
+                historyIndex = commandHistory.length - 1;
+            } else if (historyIndex > 0) {
+                historyIndex--;
+            }
+            replaceInput(commandHistory[historyIndex]);
+            return;
+        }
+        if (data === "\x1b[B") {
+            // down arrow — newer history
+            if (historyIndex === -1) return;
+            historyIndex++;
+            if (historyIndex >= commandHistory.length) {
+                historyIndex = -1;
+                replaceInput(savedInput);
+            } else {
+                replaceInput(commandHistory[historyIndex]);
+            }
+            return;
+        }
+
         for (const ch of data) {
             if (ch === "\r") {
-                ws.send(inputBuffer);
+                pushHistory(inputBuffer);
+                sendCommand(inputBuffer);
                 term.write("\r\n");
                 inputBuffer = "";
+                historyIndex = -1;
+                tabMatches = [];
                 continue;
             }
 
@@ -376,15 +688,24 @@
                     inputBuffer = inputBuffer.slice(0, -1);
                     term.write("\b \b");
                 }
+                tabMatches = [];
+                continue;
+            }
+
+            if (ch === "\t") {
+                tabComplete();
                 continue;
             }
 
             if (isPrintable(ch)) {
                 inputBuffer += ch;
                 term.write(ch);
+                tabMatches = [];
             }
         }
     });
+
+    // ── UI events ──
 
     reconnectBtn.addEventListener("click", () => {
         if (ws) {
@@ -397,6 +718,10 @@
         if (ws) {
             ws.close();
         }
+    });
+
+    window.addEventListener("resize", () => {
+        if (visitedRooms.size > 0) renderMap();
     });
 
     connect();
