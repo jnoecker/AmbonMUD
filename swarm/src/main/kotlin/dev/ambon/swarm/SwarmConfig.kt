@@ -63,7 +63,7 @@ data class BehaviorConfig(
     val weights: BehaviorWeights = BehaviorWeights(),
     val chatPhrases: List<String> = listOf("hello", "lag?", "nice room", "test ping"),
     val movementCommands: List<String> = listOf("north", "south", "east", "west", "look"),
-    val combatCommands: List<String> = listOf("kill rat", "kill goblin", "attack rat"),
+    val combatCommands: List<String> = listOf("kill rat", "kill goblin", "attack rat", "cast magic_missile rat", "cast heal"),
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -169,40 +169,59 @@ private class BotWorker(
     }
 
     private suspend fun login(connection: BotConnection): Boolean {
-        var stage = 0
+        var sentPassword = false
+        var lookProbeSent = false
         var consecutiveTimeouts = 0
         val started = System.nanoTime()
         while (System.currentTimeMillis() < endAtEpochMs) {
-            val line = connection.pollLine(timeoutMillis = 1500)
+            val rawLine = connection.pollLine(timeoutMillis = 1500)
+            val line = rawLine?.let(::normalizeSwarmLine)
             if (line == null) {
                 consecutiveTimeouts++
+                if (sentPassword && !lookProbeSent) {
+                    connection.sendLine("look")
+                    lookProbeSent = true
+                }
                 if (consecutiveTimeouts >= 3) return false
                 continue
             }
+            if (line.isBlank()) continue
             consecutiveTimeouts = 0
             val lower = line.lowercase()
             when {
                 "enter your name" in lower -> {
                     connection.sendLine(credential.name)
-                    stage = max(stage, 1)
                 }
 
-                "create a new user" in lower -> {
+                "no user named" in lower || "create a new user" in lower || "please answer yes or no" in lower -> {
                     connection.sendLine("yes")
-                    stage = max(stage, 2)
                 }
 
                 "create a password" in lower -> {
                     connection.sendLine(credential.password)
-                    stage = max(stage, 3)
+                    sentPassword = true
                 }
 
-                lower.contains("password:") -> {
+                lower == "password:" || lower.startsWith("password:") -> {
                     connection.sendLine(credential.password)
-                    stage = max(stage, 4)
+                    sentPassword = true
                 }
 
-                "look around" in lower || "hp" in lower || "exits" in lower -> {
+                sentPassword && line == ">" && !lookProbeSent -> {
+                    connection.sendLine("look")
+                    lookProbeSent = true
+                }
+
+                isTerminalLoginFailure(lower) -> {
+                    return false
+                }
+
+                isWorldSignal(lower) -> {
+                    metrics.loginLatency(Duration.ofNanos(System.nanoTime() - started).toMillis())
+                    return true
+                }
+
+                sentPassword && !isLoginPrompt(lower) -> {
                     metrics.loginLatency(Duration.ofNanos(System.nanoTime() - started).toMillis())
                     return true
                 }
@@ -250,6 +269,10 @@ private class TelnetBotConnection(
     host: String,
     port: Int,
 ) : BotConnection {
+    private companion object {
+        const val PROMPT_TOKEN = "> "
+    }
+
     private val socket = Socket()
     private val incoming = Collections.synchronizedList(mutableListOf<String>())
     private val closed = AtomicBoolean(false)
@@ -274,10 +297,18 @@ private class TelnetBotConnection(
                     sb.append(text)
                     while (true) {
                         val idx = sb.indexOf("\n")
-                        if (idx < 0) break
-                        val line = sb.substring(0, idx).replace("\r", "").trim()
-                        sb.delete(0, idx + 1)
-                        if (line.isNotBlank()) incoming += line
+                        if (idx >= 0) {
+                            val line = sb.substring(0, idx).replace("\r", "").trim()
+                            sb.delete(0, idx + 1)
+                            if (line.isNotBlank()) incoming += line
+                            continue
+                        }
+
+                        if (!sb.endsWith(PROMPT_TOKEN)) break
+                        val body = sb.toString().removeSuffix(PROMPT_TOKEN).replace("\r", "").trim()
+                        sb.clear()
+                        if (body.isNotBlank()) incoming += body
+                        incoming += ">"
                     }
                 }
                 closed.set(true)
