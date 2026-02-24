@@ -36,7 +36,14 @@ class YamlPlayerRepository(
         val id: Long,
         val name: String,
         val roomId: String,
-        val constitution: Int = 0,
+        val strength: Int = 10,
+        val dexterity: Int = 10,
+        val constitution: Int = 10,
+        val intelligence: Int = 10,
+        val wisdom: Int = 10,
+        val charisma: Int = 10,
+        val race: String = "HUMAN",
+        val playerClass: String = "ADVENTURER",
         val level: Int = 1,
         val xpTotal: Long = 0L,
         val createdAtEpochMs: Long,
@@ -139,7 +146,14 @@ class YamlPlayerRepository(
                         id = record.id.value,
                         name = record.name,
                         roomId = record.roomId.value,
+                        strength = record.strength,
+                        dexterity = record.dexterity,
                         constitution = record.constitution,
+                        intelligence = record.intelligence,
+                        wisdom = record.wisdom,
+                        charisma = record.charisma,
+                        race = record.race,
+                        playerClass = record.playerClass,
                         level = record.level,
                         xpTotal = record.xpTotal,
                         createdAtEpochMs = record.createdAtEpochMs,
@@ -164,12 +178,21 @@ class YamlPlayerRepository(
 
     // -------- internals --------
 
-    private fun PlayerFile.toDomain(): PlayerRecord =
-        PlayerRecord(
+    private fun PlayerFile.toDomain(): PlayerRecord {
+        // Legacy migration: old files stored constitution=0; remap to base 10
+        val migratedCon = if (constitution == 0) 10 else constitution
+        return PlayerRecord(
             id = PlayerId(id),
             name = name,
             roomId = RoomId(roomId),
-            constitution = constitution,
+            strength = strength,
+            dexterity = dexterity,
+            constitution = migratedCon,
+            intelligence = intelligence,
+            wisdom = wisdom,
+            charisma = charisma,
+            race = race,
+            playerClass = playerClass,
             level = level,
             xpTotal = xpTotal,
             createdAtEpochMs = createdAtEpochMs,
@@ -180,6 +203,7 @@ class YamlPlayerRepository(
             mana = mana,
             maxMana = maxMana,
         )
+    }
 
     private fun pathFor(id: Long): Path = playersDir.resolve(id.toString().padStart(20, '0') + ".yaml")
 
