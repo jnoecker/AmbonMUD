@@ -57,7 +57,11 @@ class SwarmRunner(
 
         creds.forEachIndexed { idx, credential ->
             val botRandom =
-                if (config.run.seed != null) Random(config.run.seed + idx) else Random(Random.nextLong())
+                if (config.run.deterministic && config.run.seed != null) {
+                    Random(config.run.seed + idx)
+                } else {
+                    Random(Random.nextLong())
+                }
             val protocol = selectProtocol(config.run.protocolMix, botRandom)
             jobs +=
                 parent.launch {
@@ -166,7 +170,8 @@ private class BotWorker(
                     performAction(connection, action)
                     delay(random.nextInt(config.behavior.commandIntervalMs.min, config.behavior.commandIntervalMs.max + 1).toLong())
                 }
-            } catch (_: Throwable) {
+            } catch (e: Throwable) {
+                if (e is CancellationException) throw e
                 metrics.connectionDropped()
             } finally {
                 runCatching { connection.close() }
@@ -234,7 +239,7 @@ private class BotWorker(
         action: BotAction,
     ) {
         when (action) {
-            BotAction.IDLE -> Unit
+            BotAction.IDLE -> return
             BotAction.MOVEMENT -> connection.sendLine(config.behavior.movementCommands.random(random))
             BotAction.CHAT -> {
                 val phrase = config.behavior.chatPhrases.random(random)
@@ -242,11 +247,9 @@ private class BotWorker(
             }
 
             BotAction.AUTO_COMBAT -> connection.sendLine(config.behavior.combatCommands.random(random))
-            BotAction.LOGIN_CHURN -> Unit
+            BotAction.LOGIN_CHURN -> error("LOGIN_CHURN should be handled by caller")
         }
-        if (action != BotAction.IDLE) {
-            metrics.commandSent()
-        }
+        metrics.commandSent()
     }
 
     private fun connect(protocol: BotProtocol): BotConnection =
@@ -373,6 +376,7 @@ private class WebSocketBotConnection(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             runCatching { ws.sendClose(WebSocket.NORMAL_CLOSURE, "bye").join() }
+            runCatching { client.close() }
         }
     }
 
@@ -380,18 +384,24 @@ private class WebSocketBotConnection(
         private val incoming: MutableList<String>,
         private val closed: AtomicBoolean,
     ) : WebSocket.Listener {
+        private val frameBuf = StringBuilder()
+
         override fun onText(
             webSocket: WebSocket,
             data: CharSequence,
             last: Boolean,
         ): CompletionStage<*> {
-            synchronized(incoming) {
-                incoming +=
-                    data
-                        .toString()
-                        .split("\n")
-                        .map { cleanLine(it) }
-                        .filter { it.isNotBlank() }
+            frameBuf.append(data)
+            if (last) {
+                val complete = frameBuf.toString()
+                frameBuf.clear()
+                synchronized(incoming) {
+                    incoming +=
+                        complete
+                            .split("\n")
+                            .map { cleanLine(it) }
+                            .filter { it.isNotBlank() }
+                }
             }
             webSocket.request(1)
             return CompletableFuture.completedFuture(null)
