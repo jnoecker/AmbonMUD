@@ -1,6 +1,7 @@
 package dev.ambon.engine.abilities
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
@@ -27,8 +28,10 @@ class AbilitySystem(
     fun syncAbilities(
         sessionId: SessionId,
         level: Int,
+        playerClass: String? = null,
     ): List<AbilityDefinition> {
-        val known = registry.abilitiesForLevel(level).map { it.id }.toMutableSet()
+        val pc = playerClass?.let { PlayerClass.fromString(it) }
+        val known = registry.abilitiesForLevelAndClass(level, pc).map { it.id }.toMutableSet()
         val previous = learnedAbilities[sessionId]
         learnedAbilities[sessionId] = known
 

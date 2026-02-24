@@ -405,7 +405,104 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            assertEquals("NewUser", players.get(sid)?.name)
+            val afterPassword = drainOutbound(outbound)
+            assertTrue(
+                afterPassword.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text == "Choose your race:"
+                },
+                "Expected race selection prompt after password. got=$afterPassword",
+            )
+
+            inbound.send(InboundEvent.LineReceived(sid, "1"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val afterRace = drainOutbound(outbound)
+            assertTrue(
+                afterRace.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text == "Choose your class:"
+                },
+                "Expected class selection prompt after race. got=$afterRace",
+            )
+
+            inbound.send(InboundEvent.LineReceived(sid, "1"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val ps = players.get(sid)
+            assertNotNull(ps)
+            assertEquals("NewUser", ps!!.name)
+            // Human race (choice 1): STR +1, CHA +1, all others +0
+            assertEquals(11, ps.strength, "Human STR should be BASE_STAT + 1")
+            assertEquals(10, ps.dexterity, "Human DEX should be BASE_STAT + 0")
+            assertEquals(10, ps.constitution, "Human CON should be BASE_STAT + 0")
+            assertEquals(10, ps.intelligence, "Human INT should be BASE_STAT + 0")
+            assertEquals(10, ps.wisdom, "Human WIS should be BASE_STAT + 0")
+            assertEquals(11, ps.charisma, "Human CHA should be BASE_STAT + 1")
+            assertEquals("HUMAN", ps.race)
+            assertEquals("WARRIOR", ps.playerClass)
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
+
+    @Test
+    fun `elf mage creation applies correct racial modifiers and class`() =
+        runTest {
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
+
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val repo = InMemoryPlayerRepository()
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, repo, items)
+
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 10L
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
+                )
+            val engineJob = launch { engine.run() }
+
+            val sid = SessionId(1L)
+            runCurrent()
+
+            inbound.send(InboundEvent.Connected(sid))
+            inbound.send(InboundEvent.LineReceived(sid, "ElfMage"))
+            inbound.send(InboundEvent.LineReceived(sid, "yes"))
+            inbound.send(InboundEvent.LineReceived(sid, "password"))
+            inbound.send(InboundEvent.LineReceived(sid, "2")) // race: Elf
+            inbound.send(InboundEvent.LineReceived(sid, "2")) // class: Mage
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val ps = players.get(sid)
+            assertNotNull(ps)
+            // Elf: STR -1, DEX +2, CON -2, INT +1, WIS +0, CHA +0
+            assertEquals(9, ps!!.strength, "Elf STR should be BASE_STAT - 1")
+            assertEquals(12, ps.dexterity, "Elf DEX should be BASE_STAT + 2")
+            assertEquals(8, ps.constitution, "Elf CON should be BASE_STAT - 2")
+            assertEquals(11, ps.intelligence, "Elf INT should be BASE_STAT + 1")
+            assertEquals(10, ps.wisdom, "Elf WIS should be BASE_STAT + 0")
+            assertEquals(10, ps.charisma, "Elf CHA should be BASE_STAT + 0")
+            assertEquals("ELF", ps.race)
+            assertEquals("MAGE", ps.playerClass)
 
             engineJob.cancel()
             inbound.close()

@@ -432,7 +432,7 @@ class CombatSystemTest {
                     .filter { it.sessionId == sid }
                     .map { it.text }
             assertTrue(messages.contains("You gain 50 XP."))
-            assertTrue(messages.contains("You reached level 2! (+3 max HP, +5 max Mana)"))
+            assertTrue(messages.contains("You reached level 2! (+3 max HP, +2 max Mana)"))
         }
 
     private fun equipItem(

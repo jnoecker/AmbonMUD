@@ -439,6 +439,7 @@ data class AbilityDefinitionConfig(
     val levelRequired: Int = 1,
     val targetType: String = "ENEMY",
     val effect: AbilityEffectConfig = AbilityEffectConfig(),
+    val requiredClass: String = "",
 )
 
 data class AbilityEffectConfig(

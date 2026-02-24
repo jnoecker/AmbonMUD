@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -668,7 +669,7 @@ class CommandRouter(
                         .fromString(me.race)
                         ?.displayName ?: me.race
                 val className =
-                    dev.ambon.domain.PlayerClass
+                    PlayerClass
                         .fromString(me.playerClass)
                         ?.displayName ?: me.playerClass
 
@@ -978,11 +979,14 @@ class CommandRouter(
         if (result.levelsGained <= 0) return
         metrics.onLevelUp()
 
-        val oldMaxHp = progression.maxHpForLevel(result.previousLevel, player.constitution)
-        val newMaxHp = progression.maxHpForLevel(result.newLevel, player.constitution)
+        val pc = PlayerClass.fromString(player.playerClass)
+        val classHpPerLevel = pc?.hpPerLevel ?: progression.hpPerLevel
+        val classManaPerLevel = pc?.manaPerLevel ?: progression.manaPerLevel
+        val oldMaxHp = progression.maxHpForLevel(result.previousLevel, player.constitution, classHpPerLevel)
+        val newMaxHp = progression.maxHpForLevel(result.newLevel, player.constitution, classHpPerLevel)
         val hpGain = (newMaxHp - oldMaxHp).coerceAtLeast(0)
-        val oldMaxMana = progression.maxManaForLevel(result.previousLevel, player.intelligence)
-        val newMaxMana = progression.maxManaForLevel(result.newLevel, player.intelligence)
+        val oldMaxMana = progression.maxManaForLevel(result.previousLevel, player.intelligence, classManaPerLevel)
+        val newMaxMana = progression.maxManaForLevel(result.newLevel, player.intelligence, classManaPerLevel)
         val manaGain = (newMaxMana - oldMaxMana).coerceAtLeast(0)
         val bonusParts = mutableListOf<String>()
         if (hpGain > 0) bonusParts += "+$hpGain max HP"
@@ -997,7 +1001,7 @@ class CommandRouter(
         outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
 
         if (abilitySystem != null) {
-            val newAbilities = abilitySystem.syncAbilities(sessionId, result.newLevel)
+            val newAbilities = abilitySystem.syncAbilities(sessionId, result.newLevel, player.playerClass)
             for (ability in newAbilities) {
                 outbound.send(OutboundEvent.SendText(sessionId, "You have learned ${ability.displayName}!"))
             }

@@ -43,7 +43,7 @@ class YamlPlayerRepository(
         val wisdom: Int = 10,
         val charisma: Int = 10,
         val race: String = "HUMAN",
-        val playerClass: String = "ADVENTURER",
+        val playerClass: String = "WARRIOR",
         val level: Int = 1,
         val xpTotal: Long = 0L,
         val createdAtEpochMs: Long,
@@ -109,6 +109,14 @@ class YamlPlayerRepository(
         nowEpochMs: Long,
         passwordHash: String,
         ansiEnabled: Boolean,
+        race: String,
+        playerClass: String,
+        strength: Int,
+        dexterity: Int,
+        constitution: Int,
+        intelligence: Int,
+        wisdom: Int,
+        charisma: Int,
     ): PlayerRecord =
         withContext(Dispatchers.IO) {
             val nm = name.trim()
@@ -131,6 +139,14 @@ class YamlPlayerRepository(
                     lastSeenEpochMs = nowEpochMs,
                     passwordHash = passwordHash,
                     ansiEnabled = ansiEnabled,
+                    race = race,
+                    playerClass = playerClass,
+                    strength = strength,
+                    dexterity = dexterity,
+                    constitution = constitution,
+                    intelligence = intelligence,
+                    wisdom = wisdom,
+                    charisma = charisma,
                 )
 
             save(record)

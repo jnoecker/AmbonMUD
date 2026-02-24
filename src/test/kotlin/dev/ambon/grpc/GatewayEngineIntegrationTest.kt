@@ -166,6 +166,10 @@ class GatewayEngineIntegrationTest {
                                 emit(InboundEvent.LineReceived(sessionId = sid, line = "yes").toProto())
                                 delay(50)
                                 emit(InboundEvent.LineReceived(sessionId = sid, line = "password").toProto())
+                                delay(50)
+                                emit(InboundEvent.LineReceived(sessionId = sid, line = "1").toProto()) // race
+                                delay(50)
+                                emit(InboundEvent.LineReceived(sessionId = sid, line = "1").toProto()) // class
                                 delay(100)
                                 emit(InboundEvent.LineReceived(sessionId = sid, line = "say Hello world!").toProto())
                                 delay(50)
