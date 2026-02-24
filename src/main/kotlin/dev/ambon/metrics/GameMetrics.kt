@@ -206,6 +206,37 @@ class GameMetrics(
 
     fun onPlayerSaveFailure() = playerSaveFailuresCounter.increment()
 
+    /**
+     * Wraps a repository load operation with timing.
+     * Records elapsed time against [playerRepoLoadTimer].
+     */
+    inline fun <T> timedLoad(block: () -> T): T {
+        val sample = Timer.start()
+        return try {
+            block()
+        } finally {
+            sample.stop(playerRepoLoadTimer)
+        }
+    }
+
+    /**
+     * Wraps a repository save operation with timing and success/failure counters.
+     * Records elapsed time against [playerRepoSaveTimer] and increments
+     * [onPlayerSave] or [onPlayerSaveFailure] accordingly.
+     */
+    inline fun timedSave(block: () -> Unit) {
+        val sample = Timer.start()
+        try {
+            block()
+            onPlayerSave()
+        } catch (e: Throwable) {
+            onPlayerSaveFailure()
+            throw e
+        } finally {
+            sample.stop(playerRepoSaveTimer)
+        }
+    }
+
     fun onSessionIdSequenceOverflow() = sessionIdSequenceOverflowCounter.increment()
 
     fun onSessionIdClockRollback() = sessionIdClockRollbackCounter.increment()
