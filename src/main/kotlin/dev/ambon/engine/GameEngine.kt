@@ -91,6 +91,7 @@ class GameEngine(
                     pkg == supported || pkg.startsWith("$supported.")
                 } == true
             },
+            progression = progression,
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
