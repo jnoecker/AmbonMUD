@@ -955,8 +955,14 @@ class CommandRouter(
         val player = players.get(sessionId) ?: return
         val equipCha = items.equipment(sessionId).values.sumOf { it.item.charisma }
         val totalCha = player.charisma + equipCha
-        val chaMultiplier = 1.0 + (totalCha - PlayerState.BASE_STAT) * 0.005
-        val adjustedXp = (scaledXp * chaMultiplier).toLong().coerceAtLeast(1L)
+        val chaBonus = totalCha - PlayerState.BASE_STAT
+        val adjustedXp =
+            if (chaBonus > 0) {
+                val multiplier = 1.0 + chaBonus * 0.005
+                (scaledXp * multiplier).toLong().coerceAtLeast(scaledXp)
+            } else {
+                scaledXp
+            }
 
         val result = players.grantXp(sessionId, adjustedXp, progression) ?: return
         metrics.onXpAwarded(adjustedXp, "item_use")
