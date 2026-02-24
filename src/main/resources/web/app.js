@@ -105,10 +105,7 @@
             invList.innerHTML = '<span class="empty-hint">Nothing carried</span>';
         } else {
             for (const item of inv) {
-                const el = document.createElement("div");
-                el.className = "inv-item";
-                el.textContent = item.name;
-                invList.appendChild(el);
+                invList.appendChild(createInvElement(item));
             }
         }
 
@@ -133,6 +130,28 @@
         }
         if (!hasEquipped) {
             equipList.innerHTML = '<span class="empty-hint">Nothing equipped</span>';
+        }
+    }
+
+    function createInvElement(item) {
+        const el = document.createElement("div");
+        el.className = "inv-item";
+        el.dataset.itemId = item.id;
+        el.textContent = item.name;
+        return el;
+    }
+
+    function addInventoryItem(data) {
+        const hint = invList.querySelector(".empty-hint");
+        if (hint) hint.remove();
+        invList.appendChild(createInvElement(data));
+    }
+
+    function removeInventoryItem(data) {
+        const el = invList.querySelector(`[data-item-id="${CSS.escape(data.id)}"]`);
+        if (el) el.remove();
+        if (invList.children.length === 0) {
+            invList.innerHTML = '<span class="empty-hint">Nothing carried</span>';
         }
     }
 
@@ -198,8 +217,10 @@
                 updateInventory(data);
                 break;
             case "Char.Items.Add":
+                addInventoryItem(data);
+                break;
             case "Char.Items.Remove":
-                // Incremental update not needed — full list is sent on equip/use
+                removeInventoryItem(data);
                 break;
             case "Room.Players":
                 updateRoomPlayers(data);

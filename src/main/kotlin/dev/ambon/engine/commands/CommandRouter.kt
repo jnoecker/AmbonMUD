@@ -316,10 +316,9 @@ class CommandRouter(
                 val zone = me.roomId.zone
                 outbound.send(OutboundEvent.SendText(sessionId, "You shout: ${cmd.message}"))
                 for (p in players.playersInZone(zone)) {
-                    if (p.sessionId == sessionId) continue
-                    outbound.send(OutboundEvent.SendText(p.sessionId, "[SHOUT] ${me.name}: ${cmd.message}"))
-                }
-                for (p in players.playersInZone(zone)) {
+                    if (p.sessionId != sessionId) {
+                        outbound.send(OutboundEvent.SendText(p.sessionId, "[SHOUT] ${me.name}: ${cmd.message}"))
+                    }
                     gmcpEmitter?.sendCommChannel(p.sessionId, "shout", me.name, cmd.message)
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
