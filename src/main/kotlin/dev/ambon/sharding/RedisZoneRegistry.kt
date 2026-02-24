@@ -182,7 +182,7 @@ class RedisZoneRegistry(
         for (key in cursor.keys) {
             val zone = key.removePrefix(instanceHashPrefix)
             val entries = commands.hgetall(key) ?: continue
-            for ((engineId, json) in entries) {
+            for ((engineId, json) in entries.toSortedMap()) {
                 // Only include if lease is still alive
                 val leaseKey = "$leasePrefix$zone:$engineId"
                 if (commands.exists(leaseKey) > 0) {
@@ -210,15 +210,16 @@ class RedisZoneRegistry(
         }
         val commands = redis.commands ?: return emptyList()
         val entries = commands.hgetall("$instanceHashPrefix$zone") ?: return emptyList()
-        return entries.mapNotNull { (engineId, json) ->
-            val leaseKey = "$leasePrefix$zone:$engineId"
-            if (commands.exists(leaseKey) <= 0) return@mapNotNull null
-            try {
-                mapper.readValue<ZoneInstance>(json)
-            } catch (_: Exception) {
-                null
-            }
-        }
+        return entries
+            .mapNotNull { (engineId, json) ->
+                val leaseKey = "$leasePrefix$zone:$engineId"
+                if (commands.exists(leaseKey) <= 0) return@mapNotNull null
+                try {
+                    mapper.readValue<ZoneInstance>(json)
+                } catch (_: Exception) {
+                    null
+                }
+            }.sortedBy { it.engineId }
     }
 
     override fun reportLoad(

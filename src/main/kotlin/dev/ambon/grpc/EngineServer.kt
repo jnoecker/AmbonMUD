@@ -34,7 +34,9 @@ import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.LoadBalancedInstanceSelector
 import dev.ambon.sharding.LocalInterEngineBus
 import dev.ambon.sharding.LoggingScaleDecisionPublisher
+import dev.ambon.sharding.PlayerLocationIndex
 import dev.ambon.sharding.RedisInterEngineBus
+import dev.ambon.sharding.RedisPlayerLocationIndex
 import dev.ambon.sharding.RedisScaleDecisionPublisher
 import dev.ambon.sharding.RedisZoneRegistry
 import dev.ambon.sharding.ScaleDecisionPublisher
@@ -257,6 +259,18 @@ class EngineServer(
             null
         }
 
+    private val playerLocationIndex: PlayerLocationIndex? =
+        if (shardingEnabled && config.sharding.playerIndex.enabled && redisManager != null) {
+            val keyTtlSeconds = (config.sharding.playerIndex.heartbeatMs * 3L / 1_000L).coerceAtLeast(1L)
+            RedisPlayerLocationIndex(
+                engineId = engineId,
+                redis = redisManager,
+                keyTtlSeconds = keyTtlSeconds,
+            )
+        } else {
+            null
+        }
+
     private val handoffManager: HandoffManager? =
         if (shardingEnabled && interEngineBus != null && zoneRegistry != null) {
             HandoffManager(
@@ -279,6 +293,7 @@ class EngineServer(
     private var engineJob: Job? = null
     private var metricsHttpServer: MetricsHttpServer? = null
     private var zoneHeartbeatJob: Job? = null
+    private var playerIndexHeartbeatJob: Job? = null
     private var zoneLoadReportJob: Job? = null
     private var autoScaleJob: Job? = null
 
@@ -303,6 +318,22 @@ class EngineServer(
         // Start inter-engine bus and register zones
         if (interEngineBus != null) {
             interEngineBus.start()
+        }
+
+        // Start player-location index heartbeat
+        if (playerLocationIndex != null) {
+            val heartbeatMs = config.sharding.playerIndex.heartbeatMs
+            playerIndexHeartbeatJob =
+                scope.launch {
+                    while (isActive) {
+                        delay(heartbeatMs)
+                        runCatching {
+                            playerLocationIndex.refreshTtls()
+                        }.onFailure { err ->
+                            log.warn(err) { "Player location index heartbeat failed" }
+                        }
+                    }
+                }
         }
         if (zoneRegistry != null) {
             zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
@@ -402,6 +433,7 @@ class EngineServer(
                     handoffManager = handoffManager,
                     interEngineBus = interEngineBus,
                     engineId = engineId,
+                    playerLocationIndex = playerLocationIndex,
                     zoneRegistry = zoneRegistry,
                     peerEngineCount = {
                         zoneRegistry
@@ -436,6 +468,7 @@ class EngineServer(
         runCatching { metricsHttpServer?.stop() }
         runCatching { grpcServer.stop() }
         runCatching { zoneHeartbeatJob?.cancelAndJoin() }
+        runCatching { playerIndexHeartbeatJob?.cancelAndJoin() }
         runCatching { zoneLoadReportJob?.cancelAndJoin() }
         runCatching { autoScaleJob?.cancelAndJoin() }
         runCatching { engineJob?.cancelAndJoin() }

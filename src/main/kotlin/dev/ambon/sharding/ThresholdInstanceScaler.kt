@@ -1,6 +1,7 @@
 package dev.ambon.sharding
 
 import java.time.Clock
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Threshold-based [InstanceScaler] that produces scale-up and scale-down
@@ -22,7 +23,7 @@ class ThresholdInstanceScaler(
     private val defaultMinInstances: Int = 1,
     private val clock: Clock = Clock.systemUTC(),
 ) : InstanceScaler {
-    private val lastDecisionAt = mutableMapOf<String, Long>()
+    private val lastDecisionAt = ConcurrentHashMap<String, Long>()
 
     override fun evaluate(): List<ScaleDecision> {
         val decisions = mutableListOf<ScaleDecision>()
@@ -41,7 +42,7 @@ class ThresholdInstanceScaler(
             if (totalCapacity <= 0) continue
 
             val utilization = totalPlayers.toDouble() / totalCapacity
-            val minForZone = minInstances.getOrDefault(zone, defaultMinInstances)
+            val minForZone = minInstances.getOrDefault(zone, defaultMinInstances).coerceAtLeast(1)
 
             when {
                 utilization >= scaleUpThreshold -> {

@@ -46,9 +46,11 @@ class RedisScaleDecisionPublisher(
             val payload =
                 when (decision) {
                     is ScaleDecision.ScaleUp ->
-                        """{"type":"scale_up","zone":"${decision.zone}","reason":"${escapeJson(decision.reason)}"}"""
+                        """{"type":"scale_up","zone":"${escapeJson(decision.zone)}","reason":"${escapeJson(decision.reason)}"}"""
                     is ScaleDecision.ScaleDown ->
-                        """{"type":"scale_down","zone":"${decision.zone}","engineId":"${decision.engineId}","reason":"${escapeJson(
+                        """{"type":"scale_down","zone":"${escapeJson(
+                            decision.zone,
+                        )}","engineId":"${escapeJson(decision.engineId)}","reason":"${escapeJson(
                             decision.reason,
                         )}"}"""
                 }
@@ -65,4 +67,10 @@ class RedisScaleDecisionPublisher(
     }
 }
 
-private fun escapeJson(s: String): String = s.replace("\\", "\\\\").replace("\"", "\\\"")
+private fun escapeJson(s: String): String =
+    s
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t")
