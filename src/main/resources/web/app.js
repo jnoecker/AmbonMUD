@@ -32,6 +32,11 @@
     const roomTitle = document.getElementById("room-title");
     const roomDesc = document.getElementById("room-desc");
     const exitsWrap = document.getElementById("exits-wrap");
+    const charName = document.getElementById("char-name");
+    const charInfo = document.getElementById("char-info");
+    const invList = document.getElementById("inv-list");
+    const equipList = document.getElementById("equip-list");
+    const playersList = document.getElementById("players-list");
 
     const wsUrl = (() => {
         const scheme = window.location.protocol === "https:" ? "wss" : "ws";
@@ -82,6 +87,100 @@
         }
     }
 
+    function updateCharName(data) {
+        charName.textContent = data.name ?? "—";
+        const race = data.race ?? "";
+        const cls = data["class"] ?? "";
+        const level = data.level ?? "";
+        charInfo.textContent = level ? `Level ${level} ${race} ${cls}` : "—";
+    }
+
+    function updateInventory(data) {
+        const inv = data.inventory ?? [];
+        const eq = data.equipment ?? {};
+
+        // Inventory panel
+        invList.innerHTML = "";
+        if (inv.length === 0) {
+            invList.innerHTML = '<span class="empty-hint">Nothing carried</span>';
+        } else {
+            for (const item of inv) {
+                const el = document.createElement("div");
+                el.className = "inv-item";
+                el.textContent = item.name;
+                invList.appendChild(el);
+            }
+        }
+
+        // Equipment panel
+        equipList.innerHTML = "";
+        const slots = ["head", "body", "hand"];
+        let hasEquipped = false;
+        for (const slot of slots) {
+            const item = eq[slot];
+            if (!item) continue;
+            hasEquipped = true;
+            const el = document.createElement("div");
+            el.className = "equip-item";
+            const slotSpan = document.createElement("span");
+            slotSpan.className = "equip-slot";
+            slotSpan.textContent = slot;
+            const nameSpan = document.createElement("span");
+            nameSpan.textContent = item.name;
+            el.appendChild(slotSpan);
+            el.appendChild(nameSpan);
+            equipList.appendChild(el);
+        }
+        if (!hasEquipped) {
+            equipList.innerHTML = '<span class="empty-hint">Nothing equipped</span>';
+        }
+    }
+
+    function updateRoomPlayers(data) {
+        playersList.innerHTML = "";
+        if (!Array.isArray(data) || data.length === 0) {
+            playersList.innerHTML = '<span class="empty-hint">Nobody else here</span>';
+            return;
+        }
+        for (const p of data) {
+            const el = document.createElement("div");
+            el.className = "player-item";
+            el.dataset.playerName = p.name;
+            const nameSpan = document.createElement("span");
+            nameSpan.textContent = p.name;
+            const lvlSpan = document.createElement("span");
+            lvlSpan.className = "player-level";
+            lvlSpan.textContent = `Lv${p.level}`;
+            el.appendChild(nameSpan);
+            el.appendChild(lvlSpan);
+            playersList.appendChild(el);
+        }
+    }
+
+    function addRoomPlayer(data) {
+        const hint = playersList.querySelector(".empty-hint");
+        if (hint) hint.remove();
+        const el = document.createElement("div");
+        el.className = "player-item";
+        el.dataset.playerName = data.name;
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = data.name;
+        const lvlSpan = document.createElement("span");
+        lvlSpan.className = "player-level";
+        lvlSpan.textContent = `Lv${data.level}`;
+        el.appendChild(nameSpan);
+        el.appendChild(lvlSpan);
+        playersList.appendChild(el);
+    }
+
+    function removeRoomPlayer(data) {
+        const el = playersList.querySelector(`[data-player-name="${CSS.escape(data.name)}"]`);
+        if (el) el.remove();
+        if (playersList.children.length === 0) {
+            playersList.innerHTML = '<span class="empty-hint">Nobody else here</span>';
+        }
+    }
+
     function handleGmcp(pkg, data) {
         switch (pkg) {
             case "Char.Vitals":
@@ -91,7 +190,29 @@
                 updateRoomInfo(data);
                 break;
             case "Char.StatusVars":
-                // Field label definitions — no UI update needed for now
+                break;
+            case "Char.Name":
+                updateCharName(data);
+                break;
+            case "Char.Items.List":
+                updateInventory(data);
+                break;
+            case "Char.Items.Add":
+            case "Char.Items.Remove":
+                // Incremental update not needed — full list is sent on equip/use
+                break;
+            case "Room.Players":
+                updateRoomPlayers(data);
+                break;
+            case "Room.AddPlayer":
+                addRoomPlayer(data);
+                break;
+            case "Room.RemovePlayer":
+                removeRoomPlayer(data);
+                break;
+            case "Char.Skills":
+            case "Comm.Channel":
+            case "Core.Ping":
                 break;
         }
     }

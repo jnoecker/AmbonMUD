@@ -134,11 +134,13 @@ class CommandRouter(
                     val oldMembers = players.playersInRoom(from).filter { it.sessionId != me.sessionId }
                     for (other in oldMembers) {
                         outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} leaves."))
+                        gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
                     }
                     players.moveTo(sessionId, to)
                     val newMembers = players.playersInRoom(to).filter { it.sessionId != me.sessionId }
                     for (other in newMembers) {
                         outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} enters."))
+                        gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
                     }
                     sendLook(sessionId)
                 }
@@ -185,6 +187,10 @@ class CommandRouter(
                 for (other in members) {
                     if (other == me) continue
                     outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} says: ${cmd.message}"))
+                }
+
+                for (member in members) {
+                    gmcpEmitter?.sendCommChannel(member.sessionId, "say", me.name, cmd.message)
                 }
 
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -250,6 +256,8 @@ class CommandRouter(
                 }
                 outbound.send(OutboundEvent.SendText(sessionId, "You tell ${cmd.target}: ${cmd.message}"))
                 outbound.send(OutboundEvent.SendText(targetSid, "${me.name} tells you: ${cmd.message}"))
+                gmcpEmitter?.sendCommChannel(sessionId, "tell", me.name, cmd.message)
+                gmcpEmitter?.sendCommChannel(targetSid, "tell", me.name, cmd.message)
 
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
@@ -262,6 +270,7 @@ class CommandRouter(
                     } else {
                         outbound.send(OutboundEvent.SendText(p.sessionId, "[GOSSIP] ${me.name}: ${cmd.message}"))
                     }
+                    gmcpEmitter?.sendCommChannel(p.sessionId, "gossip", me.name, cmd.message)
                 }
                 // Broadcast to other engines
                 interEngineBus?.broadcast(
@@ -297,6 +306,8 @@ class CommandRouter(
                 }
                 outbound.send(OutboundEvent.SendText(sessionId, "You whisper to ${target.name}: ${cmd.message}"))
                 outbound.send(OutboundEvent.SendText(targetSid, "${me.name} whispers to you: ${cmd.message}"))
+                gmcpEmitter?.sendCommChannel(sessionId, "whisper", me.name, cmd.message)
+                gmcpEmitter?.sendCommChannel(targetSid, "whisper", me.name, cmd.message)
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -307,6 +318,9 @@ class CommandRouter(
                 for (p in players.playersInZone(zone)) {
                     if (p.sessionId == sessionId) continue
                     outbound.send(OutboundEvent.SendText(p.sessionId, "[SHOUT] ${me.name}: ${cmd.message}"))
+                }
+                for (p in players.playersInZone(zone)) {
+                    gmcpEmitter?.sendCommChannel(p.sessionId, "shout", me.name, cmd.message)
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
@@ -319,6 +333,7 @@ class CommandRouter(
                     } else {
                         outbound.send(OutboundEvent.SendText(p.sessionId, "[OOC] ${me.name}: ${cmd.message}"))
                     }
+                    gmcpEmitter?.sendCommChannel(p.sessionId, "ooc", me.name, cmd.message)
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
@@ -402,6 +417,7 @@ class CommandRouter(
                             ),
                         )
                         combat.syncPlayerDefense(sessionId)
+                        gmcpEmitter?.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
                     }
 
                     is ItemRegistry.EquipResult.NotFound -> {
@@ -440,6 +456,7 @@ class CommandRouter(
                             ),
                         )
                         combat.syncPlayerDefense(sessionId)
+                        gmcpEmitter?.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
                     }
 
                     is ItemRegistry.UnequipResult.SlotEmpty -> {
@@ -466,6 +483,7 @@ class CommandRouter(
                 }
 
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You pick up ${moved.item.displayName}."))
+                gmcpEmitter?.sendCharItemsAdd(sessionId, moved)
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -481,6 +499,7 @@ class CommandRouter(
                 }
 
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${moved.item.displayName}."))
+                gmcpEmitter?.sendCharItemsRemove(sessionId, moved)
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -518,6 +537,7 @@ class CommandRouter(
                             if (result.location == ItemRegistry.HeldItemLocation.EQUIPPED) {
                                 combat.syncPlayerDefense(sessionId)
                             }
+                            gmcpEmitter?.sendCharItemsList(sessionId, items.inventory(me.sessionId), items.equipment(me.sessionId))
                         } else if (result.remainingCharges != null) {
                             outbound.send(
                                 OutboundEvent.SendInfo(
@@ -576,6 +596,8 @@ class CommandRouter(
                         }
                         outbound.send(OutboundEvent.SendInfo(sessionId, "You give ${result.item.item.displayName} to ${target.name}."))
                         outbound.send(OutboundEvent.SendInfo(targetSid, "${me.name} gives you ${result.item.item.displayName}."))
+                        gmcpEmitter?.sendCharItemsRemove(sessionId, result.item)
+                        gmcpEmitter?.sendCharItemsAdd(targetSid, result.item)
                     }
 
                     is ItemRegistry.GiveResult.NotFound -> {
@@ -1059,6 +1081,7 @@ class CommandRouter(
         )
 
         gmcpEmitter?.sendRoomInfo(sessionId, room)
+        gmcpEmitter?.sendRoomPlayers(sessionId, players.playersInRoom(roomId).toList())
     }
 
     private fun currentRoomId(sessionId: SessionId): RoomId =
