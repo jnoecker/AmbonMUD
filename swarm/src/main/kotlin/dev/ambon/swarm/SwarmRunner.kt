@@ -169,7 +169,7 @@ private class BotWorker(
     }
 
     private suspend fun login(connection: BotConnection): Boolean {
-        var stage = 0
+        val interpreter = LoginFlowInterpreter(credential)
         var consecutiveTimeouts = 0
         val started = System.nanoTime()
         while (System.currentTimeMillis() < endAtEpochMs) {
@@ -180,32 +180,15 @@ private class BotWorker(
                 continue
             }
             consecutiveTimeouts = 0
-            val lower = line.lowercase()
-            when {
-                "enter your name" in lower -> {
-                    connection.sendLine(credential.name)
-                    stage = max(stage, 1)
-                }
-
-                "create a new user" in lower -> {
-                    connection.sendLine("yes")
-                    stage = max(stage, 2)
-                }
-
-                "create a password" in lower -> {
-                    connection.sendLine(credential.password)
-                    stage = max(stage, 3)
-                }
-
-                lower.contains("password:") -> {
-                    connection.sendLine(credential.password)
-                    stage = max(stage, 4)
-                }
-
-                "look around" in lower || "hp" in lower || "exits" in lower -> {
+            when (val signal = interpreter.onLine(line)) {
+                LoginSignal.SEND_NAME -> connection.sendLine(credential.name)
+                LoginSignal.SEND_YES -> connection.sendLine("yes")
+                LoginSignal.SEND_PASSWORD -> connection.sendLine(credential.password)
+                LoginSignal.SUCCESS -> {
                     metrics.loginLatency(Duration.ofNanos(System.nanoTime() - started).toMillis())
                     return true
                 }
+                LoginSignal.NOOP -> Unit
             }
         }
         return false
@@ -320,6 +303,7 @@ private class WebSocketBotConnection(
 ) : BotConnection {
     private val client = HttpClient.newHttpClient()
     private val incoming = Collections.synchronizedList(mutableListOf<String>())
+    private val lineBuffer = StringBuilder()
     private val closed = AtomicBoolean(false)
     private val ws: WebSocket
     private val outputLock = Mutex()
@@ -329,7 +313,7 @@ private class WebSocketBotConnection(
             client
                 .newWebSocketBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
-                .buildAsync(URI.create(url), Listener(incoming, closed))
+                .buildAsync(URI.create(url), Listener(incoming, lineBuffer, closed))
                 .join()
     }
 
@@ -360,6 +344,7 @@ private class WebSocketBotConnection(
 
     private class Listener(
         private val incoming: MutableList<String>,
+        private val lineBuffer: StringBuilder,
         private val closed: AtomicBoolean,
     ) : WebSocket.Listener {
         override fun onText(
@@ -368,12 +353,20 @@ private class WebSocketBotConnection(
             last: Boolean,
         ): CompletionStage<*> {
             synchronized(incoming) {
-                incoming +=
-                    data
-                        .toString()
-                        .split("\n")
-                        .map { it.replace("\r", "").trim() }
-                        .filter { it.isNotBlank() }
+                lineBuffer.append(data.toString())
+                while (true) {
+                    val idx = lineBuffer.indexOf("\n")
+                    if (idx < 0) break
+                    val line = lineBuffer.substring(0, idx).replace("\r", "").trim()
+                    lineBuffer.delete(0, idx + 1)
+                    if (line.isNotBlank()) incoming += line
+                }
+
+                if (last && lineBuffer.isNotEmpty()) {
+                    val tail = lineBuffer.toString().replace("\r", "").trim()
+                    lineBuffer.clear()
+                    if (tail.isNotBlank()) incoming += tail
+                }
             }
             webSocket.request(1)
             return CompletableFuture.completedFuture(null)
