@@ -44,9 +44,16 @@ class GrpcOutboundBusTest {
 
             bus = GrpcOutboundBus(delegate = delegate, grpcReceiveFlow = grpcFlow, scope = scope)
             bus.startReceiving()
-            delay(50)
 
-            val received = bus.tryReceive().getOrNull()
+            val received =
+                withTimeout(POLL_TIMEOUT_MS) {
+                    var result: OutboundEvent? = null
+                    while (result == null) {
+                        result = bus.tryReceive().getOrNull()
+                        if (result == null) delay(POLL_INTERVAL_MS)
+                    }
+                    result
+                }
             assertNotNull(received, "Delegate should have received the event from gRPC flow")
             assertEquals(event, received)
         }
@@ -65,13 +72,16 @@ class GrpcOutboundBusTest {
 
             bus = GrpcOutboundBus(delegate = delegate, grpcReceiveFlow = grpcFlow, scope = scope)
             bus.startReceiving()
-            delay(50)
 
-            val received = mutableListOf<OutboundEvent>()
-            repeat(10) {
-                val r = bus.tryReceive()
-                if (r.isSuccess) received += r.getOrNull()!!
-            }
+            val received =
+                withTimeout(POLL_TIMEOUT_MS) {
+                    val acc = mutableListOf<OutboundEvent>()
+                    while (acc.size < events.size) {
+                        val r = bus.tryReceive().getOrNull()
+                        if (r != null) acc += r else delay(POLL_INTERVAL_MS)
+                    }
+                    acc
+                }
             assertEquals(events, received)
         }
 
@@ -85,7 +95,7 @@ class GrpcOutboundBusTest {
 
             bus = GrpcOutboundBus(delegate = delegate, grpcReceiveFlow = grpcFlow, scope = scope)
             bus.startReceiving()
-            delay(50)
+            delay(200)
 
             // Nothing in the delegate
             val result = bus.tryReceive()
@@ -174,4 +184,9 @@ class GrpcOutboundBusTest {
             val result = bus.tryReceive()
             assertTrue(result.isFailure || result.getOrNull() == null)
         }
+
+    companion object {
+        private const val POLL_TIMEOUT_MS = 2_000L
+        private const val POLL_INTERVAL_MS = 10L
+    }
 }
