@@ -29,11 +29,17 @@ import dev.ambon.redis.RedisConnectionManager
 import dev.ambon.redis.redisObjectMapper
 import dev.ambon.sharding.EngineAddress
 import dev.ambon.sharding.HandoffManager
+import dev.ambon.sharding.InstanceSelector
 import dev.ambon.sharding.InterEngineBus
+import dev.ambon.sharding.LoadBalancedInstanceSelector
 import dev.ambon.sharding.LocalInterEngineBus
+import dev.ambon.sharding.LoggingScaleDecisionPublisher
 import dev.ambon.sharding.RedisInterEngineBus
+import dev.ambon.sharding.RedisScaleDecisionPublisher
 import dev.ambon.sharding.RedisZoneRegistry
+import dev.ambon.sharding.ScaleDecisionPublisher
 import dev.ambon.sharding.StaticZoneRegistry
+import dev.ambon.sharding.ThresholdInstanceScaler
 import dev.ambon.sharding.ZoneRegistry
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.lettuce.core.pubsub.RedisPubSubAdapter
@@ -198,6 +204,8 @@ class EngineServer(
                         redis = manager,
                         mapper = redisObjectMapper,
                         leaseTtlSeconds = config.sharding.registry.leaseTtlSeconds,
+                        instancing = config.sharding.instancing.enabled,
+                        defaultCapacity = config.sharding.instancing.defaultCapacity,
                     )
                 }
 
@@ -218,7 +226,10 @@ class EngineServer(
                                     )
                             }
                         }
-                    StaticZoneRegistry(assignmentMap)
+                    StaticZoneRegistry(
+                        assignments = assignmentMap,
+                        instancing = config.sharding.instancing.enabled,
+                    )
                 }
             }
         } else {
@@ -239,6 +250,13 @@ class EngineServer(
             null
         }
 
+    private val instanceSelector: InstanceSelector? =
+        if (shardingEnabled && config.sharding.instancing.enabled && zoneRegistry != null) {
+            LoadBalancedInstanceSelector(zoneRegistry)
+        } else {
+            null
+        }
+
     private val handoffManager: HandoffManager? =
         if (shardingEnabled && interEngineBus != null && zoneRegistry != null) {
             HandoffManager(
@@ -251,6 +269,7 @@ class EngineServer(
                 isTargetRoomLocal = world.rooms::containsKey,
                 clock = clock,
                 ackTimeoutMs = config.sharding.handoff.ackTimeoutMs,
+                instanceSelector = instanceSelector,
             )
         } else {
             null
@@ -260,6 +279,8 @@ class EngineServer(
     private var engineJob: Job? = null
     private var metricsHttpServer: MetricsHttpServer? = null
     private var zoneHeartbeatJob: Job? = null
+    private var zoneLoadReportJob: Job? = null
+    private var autoScaleJob: Job? = null
 
     suspend fun start() {
         redisManager?.connect()
@@ -300,6 +321,64 @@ class EngineServer(
                         }
                     }
                 }
+            if (config.sharding.instancing.enabled) {
+                val loadReportIntervalMs = config.sharding.instancing.loadReportIntervalMs
+                zoneLoadReportJob =
+                    scope.launch {
+                        while (isActive) {
+                            delay(loadReportIntervalMs)
+                            runCatching {
+                                val zoneCounts =
+                                    players
+                                        .allPlayers()
+                                        .groupBy { it.roomId.zone }
+                                        .mapValues { (_, ps) -> ps.size }
+                                zoneRegistry.reportLoad(engineId, zoneCounts)
+                            }.onFailure { err ->
+                                log.warn(err) { "Zone load report failed for engine=$engineId" }
+                            }
+                        }
+                    }
+            }
+            // Auto-scaling signal evaluation
+            if (config.sharding.instancing.autoScale.enabled) {
+                val scaler =
+                    ThresholdInstanceScaler(
+                        registry = zoneRegistry,
+                        scaleUpThreshold = config.sharding.instancing.autoScale.scaleUpThreshold,
+                        scaleDownThreshold = config.sharding.instancing.autoScale.scaleDownThreshold,
+                        cooldownMs = config.sharding.instancing.autoScale.cooldownMs,
+                        minInstances =
+                            if (world.startRoom.value.contains(":")) {
+                                val startZone = world.startRoom.value.substringBefore(":")
+                                mapOf(startZone to config.sharding.instancing.startZoneMinInstances)
+                            } else {
+                                emptyMap()
+                            },
+                        clock = clock,
+                    )
+                val publisher: ScaleDecisionPublisher =
+                    if (redisManager?.commands != null) {
+                        RedisScaleDecisionPublisher(redisManager.commands!!)
+                    } else {
+                        LoggingScaleDecisionPublisher()
+                    }
+                val evalIntervalMs = config.sharding.instancing.autoScale.evaluationIntervalMs
+                autoScaleJob =
+                    scope.launch {
+                        while (isActive) {
+                            delay(evalIntervalMs)
+                            runCatching {
+                                val decisions = scaler.evaluate()
+                                if (decisions.isNotEmpty()) {
+                                    publisher.publish(decisions)
+                                }
+                            }.onFailure { err ->
+                                log.warn(err) { "Auto-scale evaluation failed" }
+                            }
+                        }
+                    }
+            }
         }
 
         engineJob =
@@ -323,6 +402,7 @@ class EngineServer(
                     handoffManager = handoffManager,
                     interEngineBus = interEngineBus,
                     engineId = engineId,
+                    zoneRegistry = zoneRegistry,
                     peerEngineCount = {
                         zoneRegistry
                             ?.allAssignments()
@@ -356,6 +436,8 @@ class EngineServer(
         runCatching { metricsHttpServer?.stop() }
         runCatching { grpcServer.stop() }
         runCatching { zoneHeartbeatJob?.cancelAndJoin() }
+        runCatching { zoneLoadReportJob?.cancelAndJoin() }
+        runCatching { autoScaleJob?.cancelAndJoin() }
         runCatching { engineJob?.cancelAndJoin() }
         runCatching { interEngineBus?.close() }
         runCatching { persistenceWorker?.shutdown() }
