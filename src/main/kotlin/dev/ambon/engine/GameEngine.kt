@@ -16,6 +16,7 @@ import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
+import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -29,6 +30,8 @@ import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.InterEngineMessage
 import dev.ambon.sharding.PlayerLocationIndex
 import dev.ambon.sharding.PlayerSummary
+import dev.ambon.sharding.ZoneInstance
+import dev.ambon.sharding.ZoneRegistry
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.coroutineScope
@@ -62,6 +65,8 @@ class GameEngine(
     private val peerEngineCount: () -> Int = { 0 },
     /** Player-location index for O(1) cross-engine tell routing. */
     private val playerLocationIndex: PlayerLocationIndex? = null,
+    /** Zone registry for instancing-aware phase command. */
+    private val zoneRegistry: ZoneRegistry? = null,
 ) {
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
@@ -175,6 +180,12 @@ class GameEngine(
             playerLocationIndex = playerLocationIndex,
             gmcpEmitter = gmcpEmitter,
             markVitalsDirty = ::markVitalsDirty,
+            onPhase =
+                if (zoneRegistry != null && zoneRegistry.instancingEnabled() && handoffManager != null) {
+                    ::handlePhase
+                } else {
+                    null
+                },
         )
 
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
@@ -429,6 +440,71 @@ class GameEngine(
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
         }
+    }
+
+    private suspend fun handlePhase(
+        sessionId: SessionId,
+        targetHint: String?,
+    ): PhaseResult {
+        val reg = zoneRegistry ?: return PhaseResult.NotEnabled
+        val mgr = handoffManager ?: return PhaseResult.NotEnabled
+
+        val player = players.get(sessionId) ?: return PhaseResult.NoOp("You must be in the world to switch layers.")
+        val currentZone = player.roomId.zone
+        val instances = reg.instancesOf(currentZone)
+
+        if (instances.size <= 1) {
+            return PhaseResult.NoOp("There is only one instance of this zone.")
+        }
+
+        // No target: list available instances
+        if (targetHint == null) {
+            return PhaseResult.InstanceList(
+                currentEngineId = engineId,
+                instances = instances,
+            )
+        }
+
+        // Resolve which instance to switch to
+        val resolvedInstance =
+            resolvePhaseTarget(targetHint, instances)
+                ?: return PhaseResult.NoOp("Unknown instance or player: $targetHint")
+
+        if (resolvedInstance.engineId == engineId) {
+            return PhaseResult.NoOp("You are already on that instance.")
+        }
+
+        // Handoff to same room on the target engine
+        combatSystem.endCombatFor(sessionId)
+        regenSystem.onPlayerDisconnected(sessionId)
+        return when (mgr.initiateHandoff(sessionId, player.roomId, targetEngineOverride = resolvedInstance.address)) {
+            is HandoffResult.Initiated -> PhaseResult.Initiated
+            HandoffResult.AlreadyInTransit -> PhaseResult.NoOp("You are already crossing into new territory.")
+            HandoffResult.PlayerNotFound -> PhaseResult.NoOp("Could not find your player data.")
+            HandoffResult.NoEngineForZone -> PhaseResult.NoOp("That instance is no longer available.")
+        }
+    }
+
+    private suspend fun resolvePhaseTarget(
+        hint: String,
+        instances: List<ZoneInstance>,
+    ): ZoneInstance? {
+        // 1. Match by engine ID
+        instances.firstOrNull { it.engineId == hint }?.let { return it }
+
+        // 2. Match by player name → look up which engine they're on
+        val targetEngineId = playerLocationIndex?.lookupEngineId(hint)
+        if (targetEngineId != null) {
+            instances.firstOrNull { it.engineId == targetEngineId }?.let { return it }
+        }
+
+        // 3. Match by 1-based instance number
+        val idx = hint.toIntOrNull()
+        if (idx != null && idx in 1..instances.size) {
+            return instances[idx - 1]
+        }
+
+        return null
     }
 
     private suspend fun handleRemoteWho(sessionId: SessionId) {

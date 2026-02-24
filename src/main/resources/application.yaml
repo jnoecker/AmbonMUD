@@ -32,6 +32,20 @@ ambonMUD:
     playerIndex:
       enabled: false
       heartbeatMs: 10000
+    # Zone instancing (layering). When enabled, multiple engines may host
+    # copies of the same zone. Players on different instances cannot see each
+    # other in rooms but can still use tell, gossip, and who.
+    instancing:
+      enabled: false
+      defaultCapacity: 200
+      loadReportIntervalMs: 5000
+      startZoneMinInstances: 1
+      autoScale:
+        enabled: false
+        evaluationIntervalMs: 30000
+        scaleUpThreshold: 0.8
+        scaleDownThreshold: 0.2
+        cooldownMs: 60000
 
   grpc:
     server:

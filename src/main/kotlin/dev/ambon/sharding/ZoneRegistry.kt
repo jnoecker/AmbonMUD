@@ -10,7 +10,11 @@ data class EngineAddress(
 )
 
 /**
- * Shared registry mapping zone names to the engine instance that owns them.
+ * Shared registry mapping zone names to the engine instance(s) that own them.
+ *
+ * In classic (non-instanced) mode each zone maps to exactly one engine.
+ * When instancing is enabled, multiple engines may host copies of the same zone;
+ * each (zone, engineId) pair is a distinct [ZoneInstance].
  *
  * Implementations can be backed by static config ([StaticZoneRegistry]) for
  * development or by Redis ([RedisZoneRegistry]) for dynamic deployments.
@@ -37,4 +41,26 @@ interface ZoneRegistry {
         zone: String,
         engineId: String,
     ): Boolean = ownerOf(zone)?.engineId == engineId
+
+    // ---- Instancing-aware methods (default impls for backward compat) ----
+
+    /** All instances of a given zone. Empty list if nobody claims it. */
+    fun instancesOf(zone: String): List<ZoneInstance> =
+        listOfNotNull(
+            ownerOf(zone)?.let {
+                ZoneInstance(engineId = it.engineId, address = it, zone = zone)
+            },
+        )
+
+    /**
+     * Report per-zone player counts from this engine. Called periodically by
+     * engines so the registry can provide load data to [InstanceSelector].
+     */
+    fun reportLoad(
+        engineId: String,
+        zoneCounts: Map<String, Int>,
+    ) { /* no-op by default */ }
+
+    /** Whether instancing is enabled (multiple engines may share a zone). */
+    fun instancingEnabled(): Boolean = false
 }

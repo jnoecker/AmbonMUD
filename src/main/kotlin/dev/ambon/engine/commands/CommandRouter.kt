@@ -24,6 +24,29 @@ import dev.ambon.sharding.BroadcastType
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.InterEngineMessage
 import dev.ambon.sharding.PlayerLocationIndex
+import dev.ambon.sharding.ZoneInstance
+
+/**
+ * Result of a phase (layer-switch) request.
+ */
+sealed interface PhaseResult {
+    /** Instancing is not enabled on this engine. */
+    data object NotEnabled : PhaseResult
+
+    /** Here are the instances of the player's current zone. */
+    data class InstanceList(
+        val currentEngineId: String,
+        val instances: List<ZoneInstance>,
+    ) : PhaseResult
+
+    /** Handoff to a different instance was initiated. */
+    data object Initiated : PhaseResult
+
+    /** Already on the requested instance or no other instance available. */
+    data class NoOp(
+        val reason: String,
+    ) : PhaseResult
+}
 
 class CommandRouter(
     private val world: World,
@@ -44,6 +67,7 @@ class CommandRouter(
     private val playerLocationIndex: PlayerLocationIndex? = null,
     private val gmcpEmitter: GmcpEmitter? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
+    private val onPhase: (suspend (SessionId, String?) -> PhaseResult)? = null,
 ) {
     private var adminSpawnSeq = 0
 
@@ -214,6 +238,45 @@ class CommandRouter(
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Online: $list"))
                 if (onRemoteWho != null) {
                     onRemoteWho.invoke(sessionId)
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Phase -> {
+                if (combat.isInCombat(sessionId)) {
+                    outbound.send(OutboundEvent.SendText(sessionId, "You can't switch layers while in combat!"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                if (onPhase == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Layering is not enabled on this server."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                when (val result = onPhase.invoke(sessionId, cmd.targetHint)) {
+                    is PhaseResult.NotEnabled -> {
+                        outbound.send(OutboundEvent.SendError(sessionId, "Layering is not enabled on this server."))
+                    }
+                    is PhaseResult.InstanceList -> {
+                        val lines =
+                            buildString {
+                                appendLine("Zone instances for '${result.instances.firstOrNull()?.zone ?: "unknown"}':")
+                                for (inst in result.instances) {
+                                    val marker = if (inst.engineId == result.currentEngineId) " <- you are here" else ""
+                                    appendLine(
+                                        "  ${inst.engineId}: ${inst.playerCount}/${inst.capacity} players$marker",
+                                    )
+                                }
+                                append("Use 'phase <instance>' to switch.")
+                            }
+                        outbound.send(OutboundEvent.SendText(sessionId, lines))
+                    }
+                    is PhaseResult.Initiated -> {
+                        // Handoff message already sent by HandoffManager
+                    }
+                    is PhaseResult.NoOp -> {
+                        outbound.send(OutboundEvent.SendText(sessionId, result.reason))
+                    }
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }

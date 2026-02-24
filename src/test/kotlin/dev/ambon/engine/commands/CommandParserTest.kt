@@ -244,4 +244,18 @@ class CommandParserTest {
         assertEquals(Command.Spells, CommandParser.parse("spells"))
         assertEquals(Command.Spells, CommandParser.parse("abilities"))
     }
+
+    @Test
+    fun `parses phase with no target`() {
+        assertEquals(Command.Phase(null), CommandParser.parse("phase"))
+        assertEquals(Command.Phase(null), CommandParser.parse("phase   "))
+        assertEquals(Command.Phase(null), CommandParser.parse("layer"))
+    }
+
+    @Test
+    fun `parses phase with target hint`() {
+        assertEquals(Command.Phase("e2"), CommandParser.parse("phase e2"))
+        assertEquals(Command.Phase("Alice"), CommandParser.parse("layer Alice"))
+        assertEquals(Command.Phase("3"), CommandParser.parse("phase 3"))
+    }
 }
