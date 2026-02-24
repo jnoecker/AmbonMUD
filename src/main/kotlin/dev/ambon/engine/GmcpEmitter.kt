@@ -12,14 +12,18 @@ import dev.ambon.engine.events.OutboundEvent
 class GmcpEmitter(
     private val outbound: OutboundBus,
     private val supportsPackage: (SessionId, String) -> Boolean,
+    private val progression: PlayerProgression? = null,
 ) {
     suspend fun sendCharVitals(
         sessionId: SessionId,
         player: PlayerState,
     ) {
         if (!supportsPackage(sessionId, "Char.Vitals")) return
+        val xpInto = progression?.xpIntoLevel(player.xpTotal) ?: 0L
+        val xpNeeded = progression?.xpToNextLevel(player.xpTotal)
+        val xpNeededJson = if (xpNeeded != null) "$xpNeeded" else "null"
         val json =
-            """{"hp":${player.hp},"maxHp":${player.maxHp},"mana":${player.mana},"maxMana":${player.maxMana},"level":${player.level},"xp":${player.xpTotal}}"""
+            """{"hp":${player.hp},"maxHp":${player.maxHp},"mana":${player.mana},"maxMana":${player.maxMana},"level":${player.level},"xp":${player.xpTotal},"xpIntoLevel":$xpInto,"xpToNextLevel":$xpNeededJson}"""
         outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Vitals", json))
     }
 

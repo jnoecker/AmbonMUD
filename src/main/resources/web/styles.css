@@ -100,6 +100,16 @@ button:hover {
     gap: 0.75rem;
 }
 
+/* ── Terminal Column (terminal + nav bar) ────────────────── */
+
+.terminal-col {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
 #terminal {
     flex: 1;
     min-height: 0;
@@ -111,6 +121,57 @@ button:hover {
 
 #terminal .xterm-viewport {
     scrollbar-color: #34516b #06101b;
+}
+
+/* ── Navigation Bar (below terminal) ─────────────────────── */
+
+.nav-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: 0.6rem;
+    background: var(--panel);
+    padding: 0.4rem 0.7rem;
+    min-height: 2.2rem;
+}
+
+.nav-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #7aa8cc;
+    flex-shrink: 0;
+}
+
+.nav-exits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.nav-btn {
+    border: 1px solid var(--line);
+    border-radius: 0.35rem;
+    background: #152438;
+    color: var(--text);
+    padding: 0.25rem 0.55rem;
+    font-size: 0.78rem;
+    cursor: pointer;
+    text-transform: capitalize;
+    font-weight: 600;
+    min-width: 2rem;
+    text-align: center;
+}
+
+.nav-btn:hover {
+    background: #1e3a58;
+    border-color: #5a8ab0;
+}
+
+.nav-btn:active {
+    background: #264a6e;
 }
 
 /* ── Sidebar ───────────────────────────────────────────────── */
@@ -169,6 +230,10 @@ button:hover {
 
 .bar-fill.mana {
     background: #4a7cc7;
+}
+
+.bar-fill.xp {
+    background: #c7a44a;
 }
 
 .stat-row {
@@ -244,6 +309,15 @@ button:hover {
     color: #7aa8cc;
 }
 
+/* ── Map Panel ─────────────────────────────────────────────── */
+
+#map-canvas {
+    width: 100%;
+    height: 160px;
+    border-radius: 0.3rem;
+    background: #060e18;
+}
+
 /* ── Players / Inventory / Equipment Lists ───────────────── */
 
 .inv-list,
@@ -308,9 +382,15 @@ button:hover {
     transition: width 0.3s ease;
 }
 
+/* ── Responsive ──────────────────────────────────────────── */
+
 @media (max-width: 900px) {
     .game-layout {
         flex-direction: column;
+    }
+
+    .terminal-col {
+        min-height: 300px;
     }
 
     #sidebar {
@@ -324,6 +404,11 @@ button:hover {
         flex: 1;
         min-width: 200px;
     }
+
+    .nav-btn {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.85rem;
+    }
 }
 
 @media (max-width: 700px) {
@@ -335,5 +420,27 @@ button:hover {
     .topbar {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .terminal-col {
+        min-height: 250px;
+    }
+
+    #sidebar {
+        flex-direction: column;
+    }
+
+    .sidebar-panel {
+        min-width: 0;
+    }
+
+    .nav-bar {
+        flex-wrap: wrap;
+    }
+
+    .nav-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+        min-width: 3rem;
     }
 }
