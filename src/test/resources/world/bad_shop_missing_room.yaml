@@ -1,0 +1,16 @@
+zone: bad_shop_room
+startRoom: hall
+items:
+  sword:
+    displayName: "a sword"
+    basePrice: 10
+shops:
+  vendor:
+    name: "Vendor"
+    room: nonexistent
+    items:
+      - sword
+rooms:
+  hall:
+    title: "Hall"
+    description: "A hall."

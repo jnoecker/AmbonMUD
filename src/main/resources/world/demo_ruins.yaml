@@ -61,6 +61,7 @@ items:
     keyword: "lantern"
     description: "A heavy brass lantern with a mica window. It smells faintly of whale oil."
     room: caravan_gate
+    basePrice: 5
 
   travel_cloak:
     displayName: "a weathered travel cloak"
@@ -68,12 +69,14 @@ items:
     description: "A sturdy cloak patched at the hem. It still repels drizzle."
     slot: body
     constitution: 1
+    basePrice: 15
 
   iron_pot:
     displayName: "a dented iron pot"
     keyword: "pot"
     description: "Blackened from many meals. Something herbal clings to the scent."
     room: campfire_ring
+    basePrice: 3
 
   cook_knife:
     displayName: "a camp cook's knife"
@@ -81,6 +84,7 @@ items:
     description: "Sharp enough to make you careful."
     slot: hand
     damage: 1
+    basePrice: 10
 
   river_charm:
     displayName: "a braided river charm"
@@ -88,6 +92,7 @@ items:
     description: "A reed braid wrapped around a smooth river stone, cool to the touch."
     constitution: 1
     room: river_ford
+    basePrice: 8
 
   bandit_dagger:
     displayName: "a nicked dagger"
@@ -95,12 +100,14 @@ items:
     description: "A small blade with a chipped tip and a confident grip."
     slot: hand
     damage: 2
+    basePrice: 20
 
   shrine_censer:
     displayName: "a bronze censer"
     keyword: "censer"
     description: "A little brazier on chains, stained green with age."
     room: shrine_antechamber
+    basePrice: 6
 
   acolyte_mask:
     displayName: "a stitched linen mask"
@@ -108,11 +115,13 @@ items:
     description: "A pale mask with tiny bead eyes. It makes your breath sound far away."
     slot: head
     armor: 1
+    basePrice: 12
 
   beetle_shell:
     displayName: "a beetle shell shard"
     keyword: "shell"
     description: "A shard of iridescent shell that catches light like broken glass."
+    basePrice: 2
 
   sentinel_tablet:
     displayName: "a cracked stone tablet"
@@ -127,6 +136,7 @@ items:
     slot: hand
     armor: 2
     room: guard_post
+    basePrice: 18
 
   archive_key:
     displayName: "a thin iron key"
@@ -145,6 +155,7 @@ items:
     description: "A band set with a cloudy pearl. It gleams faintly when wet."
     slot: hand
     constitution: 2
+    basePrice: 35
 
   vault_mace:
     displayName: "a silt-caked ceremonial mace"
@@ -153,6 +164,7 @@ items:
     slot: hand
     damage: 3
     room: submerged_vault
+    basePrice: 40
 
   mirror_apple:
     displayName: "a mirror-bright apple"
@@ -163,6 +175,7 @@ items:
       healHp: 4
       grantXp: 5
     room: mirror_orchard
+    basePrice: 8
 
   mossy_helm:
     displayName: "a mossy helm"
@@ -171,6 +184,7 @@ items:
     slot: head
     armor: 2
     room: fallen_archway
+    basePrice: 25
 
   rope_gloves:
     displayName: "a pair of rope-worn gloves"
@@ -179,6 +193,27 @@ items:
     slot: hand
     armor: 1
     room: rope_bridge
+    basePrice: 10
+
+  health_potion:
+    displayName: "a small health potion"
+    keyword: "potion"
+    description: "A corked vial of ruby liquid that smells of mint and copper."
+    consumable: true
+    onUse:
+      healHp: 8
+    basePrice: 20
+
+shops:
+  trader_supplies:
+    name: "Caravan Trader's Supplies"
+    room: trader_tents
+    items:
+      - travel_cloak
+      - cook_knife
+      - health_potion
+      - brass_lantern
+      - mirror_apple
 
 rooms:
   caravan_gate:

@@ -8,11 +8,12 @@ It is written for code generators that need to emit valid zone files.
 - One YAML document describes one zone file.
 - Multiple zone files can be merged into one world.
 - YAML files are deserialized into:
-  - `WorldFile` (`zone`, `lifespan`, `startRoom`, `rooms`, `mobs`, `items`)
+  - `WorldFile` (`zone`, `lifespan`, `startRoom`, `rooms`, `mobs`, `items`, `shops`)
   - `RoomFile`
   - `MobFile`
   - `MobDropFile`
   - `ItemFile`
+  - `ShopFile`
 
 ## Top-Level Schema
 
@@ -23,6 +24,7 @@ startRoom: <room-id string, required>
 rooms: <map<string, Room>, required, must be non-empty>
 mobs: <map<string, Mob>, optional, default {}>
 items: <map<string, Item>, optional, default {}>
+shops: <map<string, Shop>, optional, default {}>
 ```
 
 `lifespan` notes:
@@ -32,7 +34,7 @@ items: <map<string, Item>, optional, default {}>
 ### Required vs optional
 
 - Required top-level fields: `zone`, `startRoom`, `rooms`
-- Optional top-level fields: `lifespan`, `mobs`, `items`
+- Optional top-level fields: `lifespan`, `mobs`, `items`, `shops`
 
 ## Nested Schemas
 
@@ -71,6 +73,8 @@ minDamage:      <integer >= 1, optional - overrides tier-computed minDamage>
 maxDamage:      <integer >= minDamage, optional - overrides tier-computed maxDamage>
 armor:          <integer >= 0, optional - overrides tier baseArmor (flat damage reduction, no level scaling)>
 xpReward:       <long >= 0, optional - overrides tier-computed xpReward>
+goldMin:        <long >= 0, optional - overrides tier-computed goldMin>
+goldMax:        <long >= goldMin, optional - overrides tier-computed goldMax>
 drops:          <list<Drop>, optional, default []>
 respawnSeconds: <long > 0, optional - seconds after death before this mob respawns in its origin room;
                 omit to rely on zone-wide reset only>
@@ -97,6 +101,8 @@ minDamage  = T.baseMinDamage + (L-1) * T.damagePerLevel
 maxDamage  = T.baseMaxDamage + (L-1) * T.damagePerLevel
 armor      = T.baseArmor
 xpReward   = T.baseXpReward + (L-1) * T.xpRewardPerLevel
+goldMin    = T.baseGoldMin + (L-1) * T.goldPerLevel
+goldMax    = T.baseGoldMax + (L-1) * T.goldPerLevel
 ```
 
 Any explicit per-mob field overrides the computed value from the tier formula.
@@ -104,12 +110,12 @@ Any explicit per-mob field overrides the computed value from the tier formula.
 Tier default values are operator-configurable via `application.yaml` under `ambonMUD.engine.mob.tiers`.
 The built-in defaults are:
 
-| Tier     | baseHp | hpPerLevel | baseMinDmg | baseMaxDmg | dmgPerLevel | baseArmor | baseXp | xpPerLevel |
-|----------|--------|------------|------------|------------|-------------|-----------|--------|------------|
-| weak     | 5      | 2          | 1          | 2          | 0           | 0         | 15     | 5          |
-| standard | 10     | 3          | 1          | 4          | 1           | 0         | 30     | 10         |
-| elite    | 20     | 5          | 2          | 6          | 1           | 1         | 75     | 20         |
-| boss     | 50     | 10         | 3          | 8          | 2           | 3         | 200    | 50         |
+| Tier     | baseHp | hpPerLevel | baseMinDmg | baseMaxDmg | dmgPerLevel | baseArmor | baseXp | xpPerLevel | baseGoldMin | baseGoldMax | goldPerLevel |
+|----------|--------|------------|------------|------------|-------------|-----------|--------|------------|-------------|-------------|--------------|
+| weak     | 5      | 2          | 1          | 2          | 0           | 0         | 15     | 5          | 1           | 3           | 1            |
+| standard | 10     | 3          | 1          | 4          | 1           | 0         | 30     | 10         | 2           | 8           | 2            |
+| elite    | 20     | 5          | 2          | 6          | 1           | 1         | 75     | 20         | 10          | 25          | 5            |
+| boss     | 50     | 10         | 3          | 8          | 2           | 3         | 200    | 50         | 50          | 100         | 15           |
 
 Mob armor applies as flat damage reduction: `effectiveDamage = max(1, playerRoll - mob.armor)`.
 
@@ -131,7 +137,15 @@ charges: <integer, optional, must be > 0 when present>
 onUse: <OnUse, optional>
 room: <room-id string, optional>
 matchByKey: <boolean, optional, default false>
+basePrice: <integer, optional, default 0, must be >= 0>
 ```
+
+`basePrice` notes:
+- Determines the item's value in the shop economy.
+- `0` (or omitted) means the item cannot be bought or sold.
+- Actual buy/sell prices are computed by applying global multipliers from `application.yaml`:
+  - Buy price = `basePrice * engine.economy.buyMultiplier` (default 1.0)
+  - Sell price = `basePrice * engine.economy.sellMultiplier` (default 0.5)
 
 `matchByKey` is optional (default `false`). When `true`, players must type the exact keyword; substring-based fallback on `displayName` and `description` is disabled.
 
@@ -153,6 +167,28 @@ Location rules for items:
 - `room` may be omitted (item starts unplaced).
 - `mob` placement is deprecated and rejected by the loader.
 
+### `shops` map
+
+Each key is a shop ID (local identifier, not normalized).
+Each value:
+
+```yaml
+name:  <string, required, non-blank after trim>
+room:  <room-id string, required - the room where the shop NPC is located>
+items: <list<string>, optional, default [] - item IDs available for purchase>
+```
+
+Shop notes:
+- A room can have at most one shop. If multiple shops reference the same room, the last one wins.
+- `items` lists item IDs (local or fully qualified) that the shop sells. Each must resolve to an existing merged item.
+- Players use `list`/`shop` to see inventory, `buy <keyword>` to purchase, and `sell <keyword>` to sell back.
+- Items sold to shops are destroyed (not added to shop inventory).
+- Selling requires being in a shop room. The item must have `basePrice > 0`.
+
+Shop ID normalization:
+- `room` follows the same normalization rules as other room references (prefixed with `<zone>:` when unqualified).
+- `items` entries follow the same normalization rules as item references.
+
 ## ID Normalization Rules
 
 The loader normalizes IDs with this logic:
@@ -170,6 +206,8 @@ This applies to:
 - `mobs` keys and `mobs.*.room`
 - `mobs.*.drops.*.itemId`
 - `items` keys and `items.*.room`
+- `shops.*.room`
+- `shops.*.items` entries
 
 Examples with `zone: swamp`:
 
@@ -202,7 +240,9 @@ When loading multiple files:
 5. Every mob `room` must resolve to an existing merged room.
 6. Every item `room` (if set) must resolve to an existing merged room.
 7. Every mob drop `itemId` must resolve to an existing merged item.
-8. For repeated `zone` names across files, `lifespan` merge rule is:
+8. Every shop `room` must resolve to an existing merged room.
+9. Every shop `items` entry must resolve to an existing merged item.
+10. For repeated `zone` names across files, `lifespan` merge rule is:
    - if only one file sets `lifespan`, that value is used
    - if multiple files set it, all non-null values must match
    - conflicting non-null values are rejected
@@ -233,6 +273,10 @@ For each file your tool emits:
 10. Ensure normalized room/mob/item IDs are globally unique across files.
 11. If splitting one zone across files, keep `lifespan` consistent when repeated.
 12. If `respawnSeconds` is present, it must be > 0.
+13. If `basePrice` is present, it must be >= 0.
+14. If `goldMin` or `goldMax` is present, both must be >= 0 and `goldMax` >= `goldMin`.
+15. For every shop, ensure `room` resolves to an existing room and all `items` resolve to existing items.
+16. Shop `name` must be non-blank after trim.
 
 ## Minimal Valid Example
 
@@ -265,6 +309,8 @@ mobs:
     room: entry
     tier: elite
     level: 3
+    goldMin: 15        # explicit gold override (ignores tier formula)
+    goldMax: 30
     # no respawnSeconds — relies on zone-wide reset
 
 items:
@@ -274,10 +320,28 @@ items:
     slot: head
     armor: 1
     room: entry
+    basePrice: 12
   fang:
     displayName: "a rat fang"
+    basePrice: 2
   sigil:
     displayName: "a chalk sigil"
+    # basePrice 0 (default) — cannot be bought or sold
+  health_potion:
+    displayName: "a small health potion"
+    keyword: "potion"
+    consumable: true
+    onUse:
+      healHp: 8
+    basePrice: 20
+
+shops:
+  crypt_vendor:
+    name: "Crypt Keeper's Wares"
+    room: entry
+    items:
+      - helm
+      - health_potion
 
 rooms:
   entry:

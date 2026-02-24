@@ -162,4 +162,44 @@ class YamlPlayerRepositoryTest {
             assertEquals(0L, loaded.xpTotal)
             assertFalse(loaded.isStaff)
         }
+
+    @Test
+    fun `save persists gold and reload restores it`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val now = 1000L
+            val hash = BCrypt.hashpw("password", BCrypt.gensalt())
+
+            val r = repo.create("GoldTest", RoomId("test:a"), now, hash, ansiEnabled = false)
+            assertEquals(0L, r.gold)
+
+            val updated = r.copy(gold = 250L)
+            repo.save(updated)
+
+            val loaded = repo.findById(r.id)!!
+            assertEquals(250L, loaded.gold)
+        }
+
+    @Test
+    fun `legacy yaml without gold field defaults to zero`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val path = tmp.resolve("players").resolve("00000000000000000002.yaml")
+            path.parent.toFile().mkdirs()
+            path.writeText(
+                """
+                id: 2
+                name: LegacyNoGold
+                roomId: test:a
+                createdAtEpochMs: 100
+                lastSeenEpochMs: 200
+                passwordHash: legacy-hash
+                ansiEnabled: false
+                """.trimIndent(),
+            )
+
+            val loaded = repo.findById(PlayerId(2))
+            assertNotNull(loaded)
+            assertEquals(0L, loaded!!.gold)
+        }
 }

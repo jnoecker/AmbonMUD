@@ -97,6 +97,9 @@ data class AppConfig(
 
         require(engine.scheduler.maxActionsPerTick > 0) { "ambonMUD.engine.scheduler.maxActionsPerTick must be > 0" }
 
+        require(engine.economy.buyMultiplier > 0.0) { "ambonMUD.engine.economy.buyMultiplier must be > 0" }
+        require(engine.economy.sellMultiplier >= 0.0) { "ambonMUD.engine.economy.sellMultiplier must be >= 0" }
+
         require(engine.regen.mana.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.baseIntervalMillis must be > 0" }
         require(engine.regen.mana.minIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.minIntervalMillis must be > 0" }
         require(engine.regen.mana.regenAmount > 0) { "ambonMUD.engine.regen.mana.regenAmount must be > 0" }
@@ -323,12 +326,18 @@ data class LoginConfig(
     val maxFailedAttemptsBeforeDisconnect: Int = 3,
 )
 
+data class EconomyConfig(
+    val buyMultiplier: Double = 1.0,
+    val sellMultiplier: Double = 0.5,
+)
+
 data class EngineConfig(
     val mob: MobEngineConfig = MobEngineConfig(),
     val combat: CombatEngineConfig = CombatEngineConfig(),
     val regen: RegenEngineConfig = RegenEngineConfig(),
     val scheduler: SchedulerEngineConfig = SchedulerEngineConfig(),
     val abilities: AbilityEngineConfig = AbilityEngineConfig(),
+    val economy: EconomyConfig = EconomyConfig(),
 )
 
 data class ProgressionConfig(
@@ -361,6 +370,9 @@ data class MobTierConfig(
     val baseArmor: Int = 0,
     val baseXpReward: Long = 30L,
     val xpRewardPerLevel: Long = 10L,
+    val baseGoldMin: Long = 0L,
+    val baseGoldMax: Long = 0L,
+    val goldPerLevel: Long = 0L,
 )
 
 data class MobTiersConfig(
@@ -374,6 +386,9 @@ data class MobTiersConfig(
             baseArmor = 0,
             baseXpReward = 15L,
             xpRewardPerLevel = 5L,
+            baseGoldMin = 1L,
+            baseGoldMax = 3L,
+            goldPerLevel = 1L,
         ),
     val standard: MobTierConfig =
         MobTierConfig(
@@ -385,6 +400,9 @@ data class MobTiersConfig(
             baseArmor = 0,
             baseXpReward = 30L,
             xpRewardPerLevel = 10L,
+            baseGoldMin = 2L,
+            baseGoldMax = 8L,
+            goldPerLevel = 2L,
         ),
     val elite: MobTierConfig =
         MobTierConfig(
@@ -396,6 +414,9 @@ data class MobTiersConfig(
             baseArmor = 1,
             baseXpReward = 75L,
             xpRewardPerLevel = 20L,
+            baseGoldMin = 10L,
+            baseGoldMax = 25L,
+            goldPerLevel = 5L,
         ),
     val boss: MobTierConfig =
         MobTierConfig(
@@ -407,6 +428,9 @@ data class MobTiersConfig(
             baseArmor = 3,
             baseXpReward = 200L,
             xpRewardPerLevel = 50L,
+            baseGoldMin = 50L,
+            baseGoldMax = 100L,
+            goldPerLevel = 15L,
         ),
 ) {
     fun forName(name: String): MobTierConfig? =
@@ -681,4 +705,9 @@ private fun validateMobTier(
     require(tier.baseArmor >= 0) { "ambonMUD.engine.mob.tiers.$name.baseArmor must be >= 0" }
     require(tier.baseXpReward >= 0L) { "ambonMUD.engine.mob.tiers.$name.baseXpReward must be >= 0" }
     require(tier.xpRewardPerLevel >= 0L) { "ambonMUD.engine.mob.tiers.$name.xpRewardPerLevel must be >= 0" }
+    require(tier.baseGoldMin >= 0L) { "ambonMUD.engine.mob.tiers.$name.baseGoldMin must be >= 0" }
+    require(tier.baseGoldMax >= tier.baseGoldMin) {
+        "ambonMUD.engine.mob.tiers.$name.baseGoldMax must be >= baseGoldMin"
+    }
+    require(tier.goldPerLevel >= 0L) { "ambonMUD.engine.mob.tiers.$name.goldPerLevel must be >= 0" }
 }

@@ -24,4 +24,5 @@ data class Item(
     val charges: Int? = null,
     val onUse: ItemUseEffect? = null,
     val matchByKey: Boolean = false,
+    val basePrice: Int = 0,
 )
