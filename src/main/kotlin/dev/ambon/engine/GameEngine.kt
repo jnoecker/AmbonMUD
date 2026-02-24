@@ -89,6 +89,9 @@ class GameEngine(
             onMobRemoved = mobSystem::onMobRemoved,
             progression = progression,
             metrics = metrics,
+            strDivisor = engineConfig.combat.strDivisor,
+            dexDodgePerPoint = engineConfig.combat.dexDodgePerPoint,
+            maxDodgePercent = engineConfig.combat.maxDodgePercent,
             onLevelUp = { sid, level ->
                 val newAbilities = abilitySystem.syncAbilities(sid, level)
                 for (ability in newAbilities) {
@@ -108,6 +111,7 @@ class GameEngine(
             manaBaseIntervalMs = engineConfig.regen.mana.baseIntervalMillis,
             manaMinIntervalMs = engineConfig.regen.mana.minIntervalMillis,
             manaRegenAmount = engineConfig.regen.mana.regenAmount,
+            msPerWisdom = engineConfig.regen.mana.msPerWisdom,
             metrics = metrics,
         )
     private val abilityRegistry =
@@ -121,6 +125,8 @@ class GameEngine(
             outbound = outbound,
             combat = combatSystem,
             clock = clock,
+            items = items,
+            intSpellDivisor = engineConfig.combat.intSpellDivisor,
         )
 
     private val router =

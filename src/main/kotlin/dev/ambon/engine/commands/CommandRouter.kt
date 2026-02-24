@@ -13,6 +13,7 @@ import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -655,23 +656,35 @@ class CommandRouter(
                         "+0"
                     }
 
-                val equipConstitution = equipped.values.sumOf { it.item.constitution }
-                val totalCon = me.constitution + equipConstitution
+                val raceName =
+                    dev.ambon.domain.Race
+                        .fromString(me.race)
+                        ?.displayName ?: me.race
+                val className =
+                    dev.ambon.domain.PlayerClass
+                        .fromString(me.playerClass)
+                        ?.displayName ?: me.playerClass
 
-                outbound.send(OutboundEvent.SendInfo(sessionId, "[ ${me.name} — Level ${me.level} Adventurer ]"))
+                outbound.send(OutboundEvent.SendInfo(sessionId, "[ ${me.name} — Level ${me.level} $raceName $className ]"))
                 outbound.send(OutboundEvent.SendInfo(sessionId, "  HP  : ${me.hp} / ${me.maxHp}      XP : $xpLine"))
                 outbound.send(OutboundEvent.SendInfo(sessionId, "  Mana: ${me.mana} / ${me.maxMana}"))
-                if (totalCon > 0) {
-                    val conParts =
-                        ItemSlot.entries
-                            .filter { slot -> equipped[slot]?.item?.constitution?.let { it > 0 } == true }
-                            .joinToString(", ") { slot -> "${slot.label()}: ${equipped[slot]!!.item.displayName}" }
-                    val conLine = if (conParts.isNotEmpty()) "+$totalCon ($conParts)" else "+$totalCon"
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "  Dmg : $dmgMin–$dmgMax          Armor: $armorDetail"))
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "  Con : $conLine"))
-                } else {
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "  Dmg : $dmgMin–$dmgMax          Armor: $armorDetail"))
-                }
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "  STR: ${formatStat(me.strength, equipped.values.sumOf { it.item.strength })}  " +
+                            "DEX: ${formatStat(me.dexterity, equipped.values.sumOf { it.item.dexterity })}  " +
+                            "CON: ${formatStat(me.constitution, equipped.values.sumOf { it.item.constitution })}",
+                    ),
+                )
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "  INT: ${formatStat(me.intelligence, equipped.values.sumOf { it.item.intelligence })}  " +
+                            "WIS: ${formatStat(me.wisdom, equipped.values.sumOf { it.item.wisdom })}  " +
+                            "CHA: ${formatStat(me.charisma, equipped.values.sumOf { it.item.charisma })}",
+                    ),
+                )
+                outbound.send(OutboundEvent.SendInfo(sessionId, "  Dmg : $dmgMin–$dmgMax          Armor: $armorDetail"))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -939,18 +952,24 @@ class CommandRouter(
         val scaledXp = progression.scaledXp(rawXp)
         if (scaledXp <= 0L) return
 
-        val result = players.grantXp(sessionId, scaledXp, progression) ?: return
-        metrics.onXpAwarded(scaledXp, "item_use")
-        outbound.send(OutboundEvent.SendInfo(sessionId, "You gain $scaledXp XP."))
+        val player = players.get(sessionId) ?: return
+        val equipCha = items.equipment(sessionId).values.sumOf { it.item.charisma }
+        val totalCha = player.charisma + equipCha
+        val chaMultiplier = 1.0 + (totalCha - PlayerState.BASE_STAT) * 0.005
+        val adjustedXp = (scaledXp * chaMultiplier).toLong().coerceAtLeast(1L)
+
+        val result = players.grantXp(sessionId, adjustedXp, progression) ?: return
+        metrics.onXpAwarded(adjustedXp, "item_use")
+        outbound.send(OutboundEvent.SendInfo(sessionId, "You gain $adjustedXp XP."))
 
         if (result.levelsGained <= 0) return
         metrics.onLevelUp()
 
-        val oldMaxHp = progression.maxHpForLevel(result.previousLevel)
-        val newMaxHp = progression.maxHpForLevel(result.newLevel)
+        val oldMaxHp = progression.maxHpForLevel(result.previousLevel, player.constitution)
+        val newMaxHp = progression.maxHpForLevel(result.newLevel, player.constitution)
         val hpGain = (newMaxHp - oldMaxHp).coerceAtLeast(0)
-        val oldMaxMana = progression.maxManaForLevel(result.previousLevel)
-        val newMaxMana = progression.maxManaForLevel(result.newLevel)
+        val oldMaxMana = progression.maxManaForLevel(result.previousLevel, player.intelligence)
+        val newMaxMana = progression.maxManaForLevel(result.newLevel, player.intelligence)
         val manaGain = (newMaxMana - oldMaxMana).coerceAtLeast(0)
         val bonusParts = mutableListOf<String>()
         if (hpGain > 0) bonusParts += "+$hpGain max HP"
@@ -1023,6 +1042,11 @@ class CommandRouter(
         requireNotNull(players.get(sessionId)) { "No player for sessionId=$sessionId" }.roomId
 
     private fun room(roomId: RoomId) = world.rooms.getValue(roomId)
+
+    private fun formatStat(
+        base: Int,
+        equipBonus: Int,
+    ): String = if (equipBonus > 0) "$base (+$equipBonus)" else "$base"
 
     private fun exitsLine(r: Room): String =
         if (r.exits.isEmpty()) {

@@ -5,7 +5,9 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
 import java.time.Clock
 import java.util.Random
 
@@ -16,6 +18,8 @@ class AbilitySystem(
     private val combat: CombatSystem,
     private val clock: Clock,
     private val rng: Random = Random(),
+    private val items: ItemRegistry? = null,
+    private val intSpellDivisor: Int = 3,
 ) {
     private val learnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
     private val cooldowns = mutableMapOf<SessionId, MutableMap<AbilityId, Long>>()
@@ -95,7 +99,9 @@ class AbilitySystem(
                 val effect =
                     ability.effect as? AbilityEffect.DirectDamage
                         ?: return "Spell misconfigured (expected damage effect)."
-                val damage = rollRange(effect.minDamage, effect.maxDamage)
+                val baseDamage = rollRange(effect.minDamage, effect.maxDamage)
+                val intBonus = intSpellBonus(player)
+                val damage = (baseDamage + intBonus).coerceAtLeast(1)
                 // Spell damage bypasses armor
                 mob.hp = (mob.hp - damage).coerceAtLeast(0)
 
@@ -176,6 +182,12 @@ class AbilitySystem(
     ) {
         learnedAbilities.remove(oldSid)?.let { learnedAbilities[newSid] = it }
         cooldowns.remove(oldSid)?.let { cooldowns[newSid] = it }
+    }
+
+    private fun intSpellBonus(player: PlayerState): Int {
+        val equipInt = items?.equipment(player.sessionId)?.values?.sumOf { it.item.intelligence } ?: 0
+        val totalInt = player.intelligence + equipInt
+        return (totalInt - PlayerState.BASE_STAT) / intSpellDivisor
     }
 
     private fun rollRange(
