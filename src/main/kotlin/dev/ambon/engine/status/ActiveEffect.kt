@@ -9,7 +9,6 @@ data class ActiveEffect(
     var lastTickAtMs: Long,
     val sourceSessionId: SessionId?,
     var shieldRemaining: Int = 0,
-    var stacks: Int = 1,
 )
 
 /** Immutable snapshot for display / GMCP. */

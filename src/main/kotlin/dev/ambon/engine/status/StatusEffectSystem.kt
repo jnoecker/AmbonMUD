@@ -59,6 +59,7 @@ class StatusEffectSystem(
                 val active = existing.firstOrNull()
                 if (active != null) {
                     active.expiresAtMs = now + def.durationMs
+                    active.lastTickAtMs = now
                     return true
                 }
             }
@@ -82,7 +83,6 @@ class StatusEffectSystem(
                 lastTickAtMs = now,
                 sourceSessionId = sourceSessionId,
                 shieldRemaining = def.shieldAmount,
-                stacks = 1,
             ),
         )
         return true
@@ -108,7 +108,7 @@ class StatusEffectSystem(
             while (effectItr.hasNext()) {
                 val effect = effectItr.next()
                 val def = registry.get(effect.definitionId)
-                if (def == null || nowMs >= effect.expiresAtMs) {
+                if (def == null || nowMs > effect.expiresAtMs) {
                     effectItr.remove()
                     if (def != null) {
                         outbound.send(
@@ -127,7 +127,7 @@ class StatusEffectSystem(
                     markStatusDirty(sessionId)
                     continue
                 }
-                // Tick DOT/HOT
+                // Tick DOT/HOT (fire the last tick when nowMs == expiresAtMs)
                 if (def.tickIntervalMs > 0 && nowMs - effect.lastTickAtMs >= def.tickIntervalMs) {
                     effect.lastTickAtMs = nowMs
                     val value = rollRange(def.tickMinValue, def.tickMaxValue)
@@ -177,7 +177,7 @@ class StatusEffectSystem(
             while (effectItr.hasNext()) {
                 val effect = effectItr.next()
                 val def = registry.get(effect.definitionId)
-                if (def == null || nowMs >= effect.expiresAtMs) {
+                if (def == null || nowMs > effect.expiresAtMs) {
                     effectItr.remove()
                     continue
                 }
@@ -330,13 +330,20 @@ class StatusEffectSystem(
     /**
      * Returns mob IDs that have DOT effects and whose HP has reached 0
      * (killed by a tick). The caller is responsible for handling the death.
+     * Credits the most recently applied effect's source (most likely the killer).
      */
     fun mobsKilledByDot(): List<Pair<MobId, SessionId?>> {
         val killed = mutableListOf<Pair<MobId, SessionId?>>()
         for ((mobId, effects) in mobEffects) {
             val mob = mobs.get(mobId) ?: continue
             if (mob.hp <= 0) {
-                val source = effects.firstOrNull()?.sourceSessionId
+                // Credit the most recently applied DOT source (likely the killing blow)
+                val source =
+                    effects
+                        .filter { it.sourceSessionId != null }
+                        .maxByOrNull { it.appliedAtMs }
+                        ?.sourceSessionId
+                        ?: effects.firstOrNull()?.sourceSessionId
                 killed.add(mobId to source)
             }
         }

@@ -240,18 +240,27 @@ class CombatSystem(
             } else {
                 val mobRoll = rollDamage(mob.minDamage, mob.maxDamage)
                 var mobDamage = mobRoll
-                val mobFeedbackSuffix =
-                    combatFeedbackSuffix(
-                        roll = mobRoll,
-                        armorAbsorbed = 0,
-                    )
                 // SHIELD absorption
                 if (statusEffects != null) {
                     mobDamage = statusEffects.absorbPlayerDamage(fight.sessionId, mobDamage)
                 }
+                val shieldAbsorbed = mobRoll - mobDamage
+                val mobFeedbackSuffix =
+                    combatFeedbackSuffix(
+                        roll = mobRoll,
+                        armorAbsorbed = 0,
+                        shieldAbsorbed = shieldAbsorbed,
+                    )
                 player.hp = (player.hp - mobDamage).coerceAtLeast(0)
                 markVitalsDirty(fight.sessionId)
-                val mobHitText = "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
+                val mobHitText =
+                    if (shieldAbsorbed > 0 && mobDamage == 0) {
+                        "Your shield absorbs ${mob.name}'s attack$mobFeedbackSuffix."
+                    } else if (shieldAbsorbed > 0) {
+                        "${mob.name} hits you for $mobDamage damage (shield absorbed $shieldAbsorbed)$mobFeedbackSuffix."
+                    } else {
+                        "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
+                    }
                 outbound.send(OutboundEvent.SendText(fight.sessionId, mobHitText))
                 if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
                     broadcastToRoom(
@@ -300,6 +309,7 @@ class CombatSystem(
         attackBonus: Int = 0,
         armorAbsorbed: Int,
         clampedToMinimum: Boolean = false,
+        shieldAbsorbed: Int = 0,
     ): String {
         if (!detailedFeedbackEnabled) return ""
         val parts = mutableListOf<String>()
@@ -309,6 +319,9 @@ class CombatSystem(
         }
         parts += rollSummary
         parts += "armor absorbed $armorAbsorbed"
+        if (shieldAbsorbed > 0) {
+            parts += "shield absorbed $shieldAbsorbed"
+        }
         if (clampedToMinimum) {
             parts += "min 1 applied"
         }

@@ -393,9 +393,12 @@ class GameEngine(
                         if (sourceSessionId != null) {
                             combatSystem.handleSpellKill(sourceSessionId, mob)
                         } else {
+                            // No source — end combat if applicable, broadcast death, clean up
+                            combatSystem.onMobRemovedExternally(mobId)
                             mobs.remove(mobId)
-                            statusEffectSystem.onMobRemoved(mobId)
                             mobSystem.onMobRemoved(mobId)
+                            statusEffectSystem.onMobRemoved(mobId)
+                            broadcastToRoom(mob.roomId, "${mob.name} dies.")
                         }
                     }
 

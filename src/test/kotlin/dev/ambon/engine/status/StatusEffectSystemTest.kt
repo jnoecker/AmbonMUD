@@ -245,28 +245,30 @@ class StatusEffectSystemTest {
         }
 
     @Test
-    fun `DOT expires after duration`() =
+    fun `DOT fires final tick at expiry boundary then expires`() =
         runTest {
             val h = buildSystem()
             h.loginPlayer()
             h.registerDot(durationMs = 4000, tickIntervalMs = 2000, minVal = 5, maxVal = 5)
             val player = h.players.get(sid)!!
+            val initialHp = player.hp
 
             h.system.applyToPlayer(sid, StatusEffectId("ignite"))
 
-            // Tick at 2s -> tick fires
+            // Tick at 2s -> first tick fires
             h.clock.advance(2000)
             h.system.tick(h.clock.millis())
-            val hpAfterFirstTick = player.hp
+            assertEquals(initialHp - 5, player.hp, "First tick at 2s")
 
-            // Tick at 4s -> effect should expire, no more damage
+            // Tick at 4s -> second tick fires at the expiry boundary, then effect expires
             h.clock.advance(2000)
             h.system.tick(h.clock.millis())
+            assertEquals(initialHp - 10, player.hp, "Second tick at 4s (expiry boundary)")
 
-            // Should have expired — no further ticks
+            // Tick at 6s -> effect already expired, no further damage
             h.clock.advance(2000)
             h.system.tick(h.clock.millis())
-            assertEquals(hpAfterFirstTick, player.hp, "No more damage after expiry")
+            assertEquals(initialHp - 10, player.hp, "No more damage after expiry")
         }
 
     // ── HOT Tests ──
@@ -605,6 +607,89 @@ class StatusEffectSystemTest {
         assertEquals("frost_grip", effects[0].id)
         assertEquals("ROOT", effects[0].type)
     }
+
+    // ── Shield Edge Cases ──
+
+    @Test
+    fun `SHIELD absorbs exact matching damage`() {
+        val h = buildSystem()
+        h.loginPlayer()
+        h.registerShield(shieldAmount = 10)
+
+        h.system.applyToPlayer(sid, StatusEffectId("shield"))
+        val remaining = h.system.absorbPlayerDamage(sid, 10)
+
+        assertEquals(0, remaining, "Exact match should absorb fully")
+    }
+
+    @Test
+    fun `depleted SHIELD does not absorb further damage within same tick`() {
+        val h = buildSystem()
+        h.loginPlayer()
+        h.registerShield(shieldAmount = 5)
+
+        h.system.applyToPlayer(sid, StatusEffectId("shield"))
+        h.system.absorbPlayerDamage(sid, 5) // deplete shield
+
+        // Second absorption within the same tick (before cleanup tick runs)
+        val remaining = h.system.absorbPlayerDamage(sid, 10)
+        assertEquals(10, remaining, "Depleted shield should not absorb anything")
+    }
+
+    // ── REFRESH Tick Timer Reset ──
+
+    @Test
+    fun `REFRESH resets tick timer on DOT`() =
+        runTest {
+            val h = buildSystem()
+            h.loginPlayer()
+            h.registerDot(
+                durationMs = 6000,
+                tickIntervalMs = 2000,
+                minVal = 5,
+                maxVal = 5,
+                stackBehavior = StackBehavior.REFRESH,
+            )
+            val player = h.players.get(sid)!!
+            val initialHp = player.hp
+
+            h.system.applyToPlayer(sid, StatusEffectId("ignite"))
+
+            // Advance 1.5s, then refresh
+            h.clock.advance(1500)
+            h.system.applyToPlayer(sid, StatusEffectId("ignite"))
+
+            // Advance 1s after refresh (total 2.5s) — should NOT tick yet
+            // (tick timer was reset, so need 2s from refresh point at 1.5s = 3.5s)
+            h.clock.advance(1000)
+            h.system.tick(h.clock.millis())
+            assertEquals(initialHp, player.hp, "Should not tick yet after refresh reset timer")
+
+            // Advance another 1s (total 3.5s, 2s after refresh) — should tick now
+            h.clock.advance(1000)
+            h.system.tick(h.clock.millis())
+            assertEquals(initialHp - 5, player.hp, "Should tick 2s after refresh")
+        }
+
+    // ── Tick with disconnected player ──
+
+    @Test
+    fun `tick removes effects for disconnected player`() =
+        runTest {
+            val h = buildSystem()
+            h.loginPlayer()
+            h.registerDot(durationMs = 6000, tickIntervalMs = 2000, minVal = 5, maxVal = 5)
+            h.system.applyToPlayer(sid, StatusEffectId("ignite"))
+
+            // Player disconnects
+            h.players.disconnect(sid)
+
+            // Tick should gracefully handle missing player and clean up effects
+            h.clock.advance(2000)
+            h.system.tick(h.clock.millis())
+
+            assertFalse(h.system.hasPlayerEffect(sid, EffectType.DOT))
+        }
 
     // ── StatModifiers Addition ──
 
