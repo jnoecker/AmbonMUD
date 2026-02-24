@@ -146,6 +146,10 @@ ambonMUD:
       feedback:
         enabled: true
         roomBroadcastEnabled: false
+      strDivisor: 3
+      dexDodgePerPoint: 2
+      maxDodgePercent: 30
+      intSpellDivisor: 3
     regen:
       maxPlayersPerTick: 50
       baseIntervalMillis: 5000
@@ -156,6 +160,7 @@ ambonMUD:
         baseIntervalMillis: 3000
         minIntervalMillis: 1000
         regenAmount: 1
+        msPerWisdom: 200
     scheduler:
       maxActionsPerTick: 100
     abilities:

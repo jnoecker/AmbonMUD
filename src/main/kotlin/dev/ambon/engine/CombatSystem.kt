@@ -27,6 +27,9 @@ class CombatSystem(
     private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val onLevelUp: suspend (SessionId, Int) -> Unit = { _, _ -> },
+    private val strDivisor: Int = 3,
+    private val dexDodgePerPoint: Int = 2,
+    private val maxDodgePercent: Int = 30,
 ) {
     private data class Fight(
         val sessionId: SessionId,
@@ -186,8 +189,9 @@ class CombatSystem(
             }
 
             val playerAttack = equippedAttack(player.sessionId)
+            val playerStrBonus = strDamageBonus(player)
             val playerRoll = rollDamage()
-            val rawPlayerDamage = playerRoll + playerAttack
+            val rawPlayerDamage = playerRoll + playerAttack + playerStrBonus
             val preClampPlayerDamage = rawPlayerDamage - mob.armor
             val effectivePlayerDamage = preClampPlayerDamage.coerceAtLeast(1)
             val playerArmorAbsorbed = (rawPlayerDamage - effectivePlayerDamage).coerceAtLeast(0)
@@ -217,22 +221,27 @@ class CombatSystem(
                 continue
             }
 
-            val mobRoll = rollDamage(mob.minDamage, mob.maxDamage)
-            val mobDamage = mobRoll
-            val mobFeedbackSuffix =
-                combatFeedbackSuffix(
-                    roll = mobRoll,
-                    armorAbsorbed = 0,
-                )
-            player.hp = (player.hp - mobDamage).coerceAtLeast(0)
-            val mobHitText = "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
-            outbound.send(OutboundEvent.SendText(fight.sessionId, mobHitText))
-            if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
-                broadcastToRoom(
-                    player.roomId,
-                    "[Combat] ${mob.name} hits ${player.name} for $mobDamage damage$mobFeedbackSuffix.",
-                    exclude = fight.sessionId,
-                )
+            val dodgePct = dodgeChance(player)
+            if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
+                outbound.send(OutboundEvent.SendText(fight.sessionId, "You dodge ${mob.name}'s attack!"))
+            } else {
+                val mobRoll = rollDamage(mob.minDamage, mob.maxDamage)
+                val mobDamage = mobRoll
+                val mobFeedbackSuffix =
+                    combatFeedbackSuffix(
+                        roll = mobRoll,
+                        armorAbsorbed = 0,
+                    )
+                player.hp = (player.hp - mobDamage).coerceAtLeast(0)
+                val mobHitText = "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
+                outbound.send(OutboundEvent.SendText(fight.sessionId, mobHitText))
+                if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
+                    broadcastToRoom(
+                        player.roomId,
+                        "[Combat] ${mob.name} hits ${player.name} for $mobDamage damage$mobFeedbackSuffix.",
+                        exclude = fight.sessionId,
+                    )
+                }
             }
 
             if (player.hp <= 0) {
@@ -291,6 +300,31 @@ class CombatSystem(
     private fun equippedAttack(sessionId: SessionId): Int = items.equipment(sessionId).values.sumOf { it.item.damage }
 
     private fun equippedDefense(sessionId: SessionId): Int = items.equipment(sessionId).values.sumOf { it.item.armor }
+
+    private fun strDamageBonus(player: PlayerState): Int {
+        val equipStr = items.equipment(player.sessionId).values.sumOf { it.item.strength }
+        val totalStr = player.strength + equipStr
+        return (totalStr - PlayerState.BASE_STAT) / strDivisor
+    }
+
+    private fun dodgeChance(player: PlayerState): Int {
+        val equipDex = items.equipment(player.sessionId).values.sumOf { it.item.dexterity }
+        val totalDex = player.dexterity + equipDex
+        val chance = (totalDex - PlayerState.BASE_STAT) * dexDodgePerPoint
+        return chance.coerceIn(0, maxDodgePercent)
+    }
+
+    private fun applyCharismaXpBonus(
+        player: PlayerState,
+        baseXp: Long,
+    ): Long {
+        val equipCha = items.equipment(player.sessionId).values.sumOf { it.item.charisma }
+        val totalCha = player.charisma + equipCha
+        val chaBonus = totalCha - PlayerState.BASE_STAT
+        if (chaBonus <= 0) return baseXp
+        val multiplier = 1.0 + chaBonus * 0.005
+        return (baseXp * multiplier).toLong().coerceAtLeast(baseXp)
+    }
 
     private fun syncPlayerDefense(player: PlayerState) {
         val sessionId = player.sessionId
@@ -357,8 +391,11 @@ class CombatSystem(
         sessionId: SessionId,
         mob: MobState,
     ) {
-        val reward = progression.killXpReward(mob)
-        if (reward <= 0L) return
+        val baseReward = progression.killXpReward(mob)
+        if (baseReward <= 0L) return
+
+        val player = players.get(sessionId) ?: return
+        val reward = applyCharismaXpBonus(player, baseReward)
 
         val result = players.grantXp(sessionId, reward, progression) ?: return
         metrics.onXpAwarded(reward, "kill")
@@ -366,11 +403,13 @@ class CombatSystem(
         if (result.levelsGained <= 0) return
         metrics.onLevelUp()
 
-        val oldMaxHp = progression.maxHpForLevel(result.previousLevel)
-        val newMaxHp = progression.maxHpForLevel(result.newLevel)
+        val con = player.constitution
+        val int = player.intelligence
+        val oldMaxHp = progression.maxHpForLevel(result.previousLevel, con)
+        val newMaxHp = progression.maxHpForLevel(result.newLevel, con)
         val hpGain = (newMaxHp - oldMaxHp).coerceAtLeast(0)
-        val oldMaxMana = progression.maxManaForLevel(result.previousLevel)
-        val newMaxMana = progression.maxManaForLevel(result.newLevel)
+        val oldMaxMana = progression.maxManaForLevel(result.previousLevel, int)
+        val newMaxMana = progression.maxManaForLevel(result.newLevel, int)
         val manaGain = (newMaxMana - oldMaxMana).coerceAtLeast(0)
         val bonusParts = mutableListOf<String>()
         if (hpGain > 0) bonusParts += "+$hpGain max HP"

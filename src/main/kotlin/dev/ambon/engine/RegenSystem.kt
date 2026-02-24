@@ -18,6 +18,7 @@ class RegenSystem(
     private val manaBaseIntervalMs: Long = 3_000L,
     private val manaMinIntervalMs: Long = 1_000L,
     private val manaRegenAmount: Int = 1,
+    private val msPerWisdom: Long = 200L,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     private val lastRegenAtMs = mutableMapOf<SessionId, Long>()
@@ -70,7 +71,8 @@ class RegenSystem(
                 lastManaRegenAtMs[sessionId] = now
             } else {
                 val lastMana = lastManaRegenAtMs[sessionId] ?: now
-                if (now - lastMana >= manaBaseIntervalMs) {
+                val interval = manaRegenIntervalMs(player)
+                if (now - lastMana >= interval) {
                     val updated = (player.mana + manaRegenAmount).coerceAtMost(player.maxMana)
                     if (updated != player.mana) {
                         player.mana = updated
@@ -85,9 +87,18 @@ class RegenSystem(
     }
 
     private fun regenIntervalMs(player: PlayerState): Long {
-        val totalConstitution = totalConstitution(player).toLong()
-        val interval = baseIntervalMs - (totalConstitution * msPerConstitution)
+        val totalCon = totalConstitution(player)
+        val conBonus = (totalCon - PlayerState.BASE_STAT).coerceAtLeast(0).toLong()
+        val interval = baseIntervalMs - (conBonus * msPerConstitution)
         return interval.coerceAtLeast(minIntervalMs)
+    }
+
+    private fun manaRegenIntervalMs(player: PlayerState): Long {
+        val equipWis = items.equipment(player.sessionId).values.sumOf { it.item.wisdom }
+        val totalWis = player.wisdom + equipWis
+        val wisBonus = (totalWis - PlayerState.BASE_STAT).coerceAtLeast(0).toLong()
+        val interval = manaBaseIntervalMs - (wisBonus * msPerWisdom)
+        return interval.coerceAtLeast(manaMinIntervalMs)
     }
 
     private fun totalConstitution(player: PlayerState): Int {

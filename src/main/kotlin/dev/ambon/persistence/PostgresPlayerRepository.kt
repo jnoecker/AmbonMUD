@@ -64,6 +64,7 @@ class PostgresPlayerRepository(
                         it[lastSeenEpochMs] = nowEpochMs
                         it[PlayersTable.passwordHash] = passwordHash
                         it[PlayersTable.ansiEnabled] = ansiEnabled
+                        // New attributes use column defaults (10, HUMAN, ADVENTURER)
                     }
 
                 PlayerRecord(
@@ -94,7 +95,14 @@ class PostgresPlayerRepository(
                     it[name] = record.name
                     it[nameLower] = record.name.lowercase()
                     it[roomId] = record.roomId.value
+                    it[strength] = record.strength
+                    it[dexterity] = record.dexterity
                     it[constitution] = record.constitution
+                    it[intelligence] = record.intelligence
+                    it[wisdom] = record.wisdom
+                    it[charisma] = record.charisma
+                    it[race] = record.race
+                    it[playerClass] = record.playerClass
                     it[level] = record.level
                     it[xpTotal] = record.xpTotal
                     it[createdAtEpochMs] = record.createdAtEpochMs
@@ -115,12 +123,20 @@ class PostgresPlayerRepository(
         }
     }
 
-    private fun ResultRow.toPlayerRecord() =
-        PlayerRecord(
+    private fun ResultRow.toPlayerRecord(): PlayerRecord {
+        val rawCon = this[PlayersTable.constitution]
+        return PlayerRecord(
             id = PlayerId(this[PlayersTable.id]),
             name = this[PlayersTable.name],
             roomId = RoomId(this[PlayersTable.roomId]),
-            constitution = this[PlayersTable.constitution],
+            strength = this[PlayersTable.strength],
+            dexterity = this[PlayersTable.dexterity],
+            constitution = if (rawCon == 0) 10 else rawCon,
+            intelligence = this[PlayersTable.intelligence],
+            wisdom = this[PlayersTable.wisdom],
+            charisma = this[PlayersTable.charisma],
+            race = this[PlayersTable.race],
+            playerClass = this[PlayersTable.playerClass],
             level = this[PlayersTable.level],
             xpTotal = this[PlayersTable.xpTotal],
             createdAtEpochMs = this[PlayersTable.createdAtEpochMs],
@@ -131,4 +147,5 @@ class PostgresPlayerRepository(
             mana = this[PlayersTable.mana],
             maxMana = this[PlayersTable.maxMana],
         )
+    }
 }

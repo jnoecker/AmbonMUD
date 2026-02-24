@@ -133,8 +133,8 @@ class PlayerRegistry(
     ) {
         val xpTotal = boundRecord.xpTotal.coerceAtLeast(0L)
         val level = progression.computeLevel(xpTotal)
-        val maxHp = progression.maxHpForLevel(level)
-        val maxMana = progression.maxManaForLevel(level)
+        val maxHp = progression.maxHpForLevel(level, boundRecord.constitution)
+        val maxMana = progression.maxManaForLevel(level, boundRecord.intelligence)
         val ps =
             PlayerState(
                 sessionId = sessionId,
@@ -144,7 +144,14 @@ class PlayerRegistry(
                 baseMaxHp = maxHp,
                 hp = maxHp,
                 maxHp = maxHp,
+                strength = boundRecord.strength,
+                dexterity = boundRecord.dexterity,
                 constitution = boundRecord.constitution,
+                intelligence = boundRecord.intelligence,
+                wisdom = boundRecord.wisdom,
+                charisma = boundRecord.charisma,
+                race = boundRecord.race,
+                playerClass = boundRecord.playerClass,
                 level = level,
                 xpTotal = xpTotal,
                 ansiEnabled = boundRecord.ansiEnabled,
@@ -324,7 +331,14 @@ class PlayerRegistry(
                 roomId = ps.roomId,
                 lastSeenEpochMs = now,
                 name = ps.name,
+                strength = ps.strength,
+                dexterity = ps.dexterity,
                 constitution = ps.constitution,
+                intelligence = ps.intelligence,
+                wisdom = ps.wisdom,
+                charisma = ps.charisma,
+                race = ps.race,
+                playerClass = ps.playerClass,
                 level = ps.level,
                 xpTotal = ps.xpTotal,
                 ansiEnabled = ps.ansiEnabled,

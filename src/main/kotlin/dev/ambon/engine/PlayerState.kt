@@ -12,7 +12,14 @@ data class PlayerState(
     var baseMaxHp: Int = BASE_MAX_HP,
     var hp: Int = BASE_MAX_HP,
     var maxHp: Int = BASE_MAX_HP,
-    var constitution: Int = 0,
+    var strength: Int = BASE_STAT,
+    var dexterity: Int = BASE_STAT,
+    var constitution: Int = BASE_STAT,
+    var intelligence: Int = BASE_STAT,
+    var wisdom: Int = BASE_STAT,
+    var charisma: Int = BASE_STAT,
+    var race: String = "HUMAN",
+    var playerClass: String = "ADVENTURER",
     var level: Int = 1,
     var xpTotal: Long = 0L,
     var ansiEnabled: Boolean = false,
@@ -24,5 +31,6 @@ data class PlayerState(
     companion object {
         const val BASE_MAX_HP = 10
         const val BASE_MANA = 20
+        const val BASE_STAT = 10
     }
 }
