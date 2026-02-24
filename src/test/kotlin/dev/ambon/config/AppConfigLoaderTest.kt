@@ -77,4 +77,30 @@ class AppConfigLoaderTest {
         val invalid = AppConfig(redis = RedisConfig(enabled = true, cacheTtlSeconds = 0L))
         assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
     }
+
+    @Test
+    fun `redis bus validation rejects blank shared secret when enabled`() {
+        val invalid =
+            AppConfig(
+                redis =
+                    RedisConfig(
+                        enabled = true,
+                        bus = RedisBusConfig(enabled = true, sharedSecret = ""),
+                    ),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `redis bus validation accepts non-blank shared secret`() {
+        val config =
+            AppConfig(
+                redis =
+                    RedisConfig(
+                        enabled = true,
+                        bus = RedisBusConfig(enabled = true, sharedSecret = "secret"),
+                    ),
+            )
+        config.validated()
+    }
 }

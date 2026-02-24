@@ -148,6 +148,7 @@ class MudServer(
                 channelName = config.redis.bus.inboundChannel,
                 instanceId = instanceId,
                 mapper = redisObjectMapper,
+                sharedSecret = config.redis.bus.sharedSecret,
             )
         } else {
             LocalInboundBus(capacity = config.server.inboundChannelCapacity)
@@ -162,6 +163,7 @@ class MudServer(
                 channelName = config.redis.bus.outboundChannel,
                 instanceId = instanceId,
                 mapper = redisObjectMapper,
+                sharedSecret = config.redis.bus.sharedSecret,
             )
         } else {
             LocalOutboundBus(capacity = config.server.outboundChannelCapacity)
@@ -333,8 +335,7 @@ class MudServer(
     suspend fun start() {
         if (config.redis.enabled && config.redis.bus.enabled) {
             log.warn {
-                "Redis bus mode is experimental and may publish sensitive inbound input. " +
-                    "Use only in development until Phase 4 hardening."
+                "Redis bus mode enabled. Ensure ambonMUD.redis.bus.sharedSecret is rotated and managed securely."
             }
         }
         redisManager?.connect()
