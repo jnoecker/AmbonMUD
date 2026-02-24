@@ -31,6 +31,7 @@ class CombatSystem(
     private val strDivisor: Int = 3,
     private val dexDodgePerPoint: Int = 2,
     private val maxDodgePercent: Int = 30,
+    private val markVitalsDirty: (SessionId) -> Unit = {},
 ) {
     private data class Fight(
         val sessionId: SessionId,
@@ -234,6 +235,7 @@ class CombatSystem(
                         armorAbsorbed = 0,
                     )
                 player.hp = (player.hp - mobDamage).coerceAtLeast(0)
+                markVitalsDirty(fight.sessionId)
                 val mobHitText = "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
                 outbound.send(OutboundEvent.SendText(fight.sessionId, mobHitText))
                 if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
@@ -401,6 +403,7 @@ class CombatSystem(
         val result = players.grantXp(sessionId, reward, progression) ?: return
         metrics.onXpAwarded(reward, "kill")
         outbound.send(OutboundEvent.SendText(sessionId, "You gain $reward XP."))
+        markVitalsDirty(sessionId)
         if (result.levelsGained <= 0) return
         metrics.onLevelUp()
 

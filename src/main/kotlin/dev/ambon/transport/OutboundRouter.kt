@@ -32,7 +32,7 @@ class OutboundRouter(
     }
 
     private data class SessionSink(
-        val queue: Channel<String>,
+        val queue: Channel<OutboundFrame>,
         val close: (String) -> Unit,
         val transport: String = "unknown",
         val queueCapacity: Int = 0,
@@ -47,7 +47,7 @@ class OutboundRouter(
 
     fun register(
         sessionId: SessionId,
-        queue: Channel<String>,
+        queue: Channel<OutboundFrame>,
         queueCapacity: Int = 0,
         transport: String = "unknown",
         defaultAnsiEnabled: Boolean = false,
@@ -140,6 +140,10 @@ class OutboundRouter(
                     is OutboundEvent.SessionRedirect -> {
                         // Handled at the gateway routing layer; ignored here.
                     }
+
+                    is OutboundEvent.GmcpData -> {
+                        enqueueGmcp(ev.sessionId, ev.gmcpPackage, ev.jsonData)
+                    }
                 }
             }
         }
@@ -163,7 +167,7 @@ class OutboundRouter(
         if (sink.lastEnqueuedWasPrompt) return
 
         val framed = sink.renderer.renderPrompt(promptSpec)
-        val ok = sink.queue.trySend(framed).isSuccess
+        val ok = sink.queue.trySend(OutboundFrame.Text(framed)).isSuccess
         if (ok) {
             sink.queueDepth.incrementAndGet()
             sink.lastEnqueuedWasPrompt = true
@@ -239,7 +243,7 @@ class OutboundRouter(
         sink: SessionSink,
         framed: String,
     ): Boolean {
-        val ok = sink.queue.trySend(framed).isSuccess
+        val ok = sink.queue.trySend(OutboundFrame.Text(framed)).isSuccess
         if (ok) {
             sink.queueDepth.incrementAndGet()
             metrics.onOutboundFrameEnqueued()
@@ -248,6 +252,20 @@ class OutboundRouter(
         metrics.onOutboundEnqueueFailed()
         disconnectSlowClient(sessionId)
         return false
+    }
+
+    private fun enqueueGmcp(
+        sessionId: SessionId,
+        gmcpPackage: String,
+        jsonData: String,
+    ) {
+        val sink = sinks[sessionId] ?: return
+        // GMCP frames are best-effort; dropped silently on backpressure (no disconnect)
+        val ok = sink.queue.trySend(OutboundFrame.Gmcp(gmcpPackage, jsonData)).isSuccess
+        if (ok) {
+            sink.queueDepth.incrementAndGet()
+            metrics.onOutboundFrameEnqueued()
+        }
     }
 
     fun onSessionQueueFrameConsumed(sessionId: SessionId) {

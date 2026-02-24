@@ -146,6 +146,7 @@ fun OutboundEvent.sessionId(): SessionId =
         is OutboundEvent.SetAnsi -> sessionId
         is OutboundEvent.Close -> sessionId
         is OutboundEvent.ClearScreen -> sessionId
+        is OutboundEvent.GmcpData -> sessionId
         is OutboundEvent.ShowAnsiDemo -> sessionId
         is OutboundEvent.SessionRedirect -> sessionId
     }

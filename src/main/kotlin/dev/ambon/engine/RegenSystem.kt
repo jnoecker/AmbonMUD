@@ -20,6 +20,7 @@ class RegenSystem(
     private val manaRegenAmount: Int = 1,
     private val msPerWisdom: Long = 200L,
     private val metrics: GameMetrics = GameMetrics.noop(),
+    private val markVitalsDirty: (SessionId) -> Unit = {},
 ) {
     private val lastRegenAtMs = mutableMapOf<SessionId, Long>()
     private val lastManaRegenAtMs = mutableMapOf<SessionId, Long>()
@@ -60,6 +61,7 @@ class RegenSystem(
                     val updated = (player.hp + regenAmount).coerceAtMost(player.maxHp)
                     if (updated != player.hp) {
                         player.hp = updated
+                        markVitalsDirty(sessionId)
                     }
                     lastRegenAtMs[sessionId] = now
                     didWork = true
@@ -76,6 +78,7 @@ class RegenSystem(
                     val updated = (player.mana + manaRegenAmount).coerceAtMost(player.maxMana)
                     if (updated != player.mana) {
                         player.mana = updated
+                        markVitalsDirty(sessionId)
                     }
                     lastManaRegenAtMs[sessionId] = now
                     didWork = true
