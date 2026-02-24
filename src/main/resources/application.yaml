@@ -193,6 +193,55 @@ ambonMUD:
         msPerWisdom: 200
     scheduler:
       maxActionsPerTick: 100
+    statusEffects:
+      definitions:
+        ignite:
+          displayName: "Ignite"
+          effectType: DOT
+          durationMs: 6000
+          tickIntervalMs: 2000
+          tickMinValue: 3
+          tickMaxValue: 5
+          stackBehavior: REFRESH
+        poison:
+          displayName: "Poison"
+          effectType: DOT
+          durationMs: 10000
+          tickIntervalMs: 2000
+          tickMinValue: 2
+          tickMaxValue: 4
+          stackBehavior: STACK
+          maxStacks: 3
+        shield_of_faith:
+          displayName: "Shield of Faith"
+          effectType: SHIELD
+          durationMs: 30000
+          shieldAmount: 20
+          stackBehavior: NONE
+        battle_shout:
+          displayName: "Battle Shout"
+          effectType: STAT_BUFF
+          durationMs: 60000
+          strMod: 3
+          stackBehavior: REFRESH
+        rejuvenation:
+          displayName: "Rejuvenation"
+          effectType: HOT
+          durationMs: 10000
+          tickIntervalMs: 2000
+          tickMinValue: 2
+          tickMaxValue: 3
+          stackBehavior: REFRESH
+        frost_grip:
+          displayName: "Frost Grip"
+          effectType: ROOT
+          durationMs: 4000
+          stackBehavior: NONE
+        concuss:
+          displayName: "Concuss"
+          effectType: STUN
+          durationMs: 2000
+          stackBehavior: NONE
     economy:
       buyMultiplier: 1.0
       sellMultiplier: 0.5
@@ -235,6 +284,17 @@ ambonMUD:
             type: DIRECT_HEAL
             minHeal: 8
             maxHeal: 15
+        battle_shout:
+          displayName: "Battle Shout"
+          description: "A war cry that increases your strength."
+          manaCost: 10
+          cooldownMs: 60000
+          levelRequired: 3
+          targetType: SELF
+          requiredClass: WARRIOR
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: battle_shout
         # --- Mage ---
         arcane_bolt:
           displayName: "Arcane Bolt"
@@ -272,6 +332,17 @@ ambonMUD:
             type: DIRECT_DAMAGE
             minDamage: 16
             maxDamage: 28
+        ignite:
+          displayName: "Ignite"
+          description: "Sets the target ablaze, burning them for damage over time."
+          manaCost: 12
+          cooldownMs: 8000
+          levelRequired: 3
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: ignite
         # --- Cleric ---
         minor_heal:
           displayName: "Minor Heal"
@@ -309,6 +380,28 @@ ambonMUD:
             type: DIRECT_HEAL
             minHeal: 15
             maxHeal: 25
+        shield_of_faith:
+          displayName: "Shield of Faith"
+          description: "Grants a shield that absorbs damage."
+          manaCost: 15
+          cooldownMs: 30000
+          levelRequired: 5
+          targetType: SELF
+          requiredClass: CLERIC
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: shield_of_faith
+        rejuvenation:
+          displayName: "Rejuvenation"
+          description: "Heals the caster over time."
+          manaCost: 12
+          cooldownMs: 15000
+          levelRequired: 4
+          targetType: SELF
+          requiredClass: CLERIC
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: rejuvenation
         # --- Rogue ---
         backstab:
           displayName: "Backstab"
@@ -324,16 +417,15 @@ ambonMUD:
             maxDamage: 11
         poison_strike:
           displayName: "Poison Strike"
-          description: "A venomous strike."
-          manaCost: 12
-          cooldownMs: 3000
-          levelRequired: 5
+          description: "A venomous strike that poisons the target. Stacks up to 3 times."
+          manaCost: 8
+          cooldownMs: 5000
+          levelRequired: 3
           targetType: ENEMY
           requiredClass: ROGUE
           effect:
-            type: DIRECT_DAMAGE
-            minDamage: 8
-            maxDamage: 16
+            type: APPLY_STATUS
+            statusEffectId: poison
         shadow_step:
           displayName: "Shadow Step"
           description: "Slip into the shadows to recover."

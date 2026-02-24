@@ -18,6 +18,7 @@ class MobSystem(
     private val clock: Clock = Clock.systemUTC(),
     private val rng: Random = Random(),
     private var isMobInCombat: (MobId) -> Boolean = { false },
+    private var isMobRooted: (MobId) -> Boolean = { false },
     // Tuning knobs (defaults feel “MUD-like”)
     private val minWanderDelayMillis: Long = 5_000L,
     private val maxWanderDelayMillis: Long = 12_000L,
@@ -49,7 +50,7 @@ class MobSystem(
 
             if (now < dueAt) continue
 
-            if (isMobInCombat(m.id)) {
+            if (isMobInCombat(m.id) || isMobRooted(m.id)) {
                 nextActAtMillis[m.id] = now + randomDelay()
                 continue
             }
@@ -89,6 +90,10 @@ class MobSystem(
 
     fun setCombatChecker(checker: (MobId) -> Boolean) {
         isMobInCombat = checker
+    }
+
+    fun setRootChecker(checker: (MobId) -> Boolean) {
+        isMobRooted = checker
     }
 
     private fun randomDelay(): Long {

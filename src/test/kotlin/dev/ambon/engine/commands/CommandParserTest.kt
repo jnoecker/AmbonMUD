@@ -260,6 +260,26 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses effects and aliases`() {
+        assertEquals(Command.Effects, CommandParser.parse("effects"))
+        assertEquals(Command.Effects, CommandParser.parse("buffs"))
+        assertEquals(Command.Effects, CommandParser.parse("debuffs"))
+        assertEquals(Command.Effects, CommandParser.parse("  effects  "))
+    }
+
+    @Test
+    fun `parses dispel with target`() {
+        assertEquals(Command.Dispel("Alice"), CommandParser.parse("dispel Alice"))
+        assertEquals(Command.Dispel("gate_scout"), CommandParser.parse("dispel gate_scout"))
+    }
+
+    @Test
+    fun `dispel with no target returns Invalid`() {
+        assertTrue(CommandParser.parse("dispel") is Command.Invalid)
+        assertTrue(CommandParser.parse("dispel   ") is Command.Invalid)
+    }
+
+    @Test
     fun `parses balance and gold aliases`() {
         assertEquals(Command.Balance, CommandParser.parse("balance"))
         assertEquals(Command.Balance, CommandParser.parse("gold"))

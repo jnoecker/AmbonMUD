@@ -119,6 +119,12 @@ sealed interface Command {
 
     data object Spells : Command
 
+    data object Effects : Command
+
+    data class Dispel(
+        val target: String,
+    ) : Command
+
     data class Whisper(
         val target: String,
         val message: String,
@@ -294,6 +300,11 @@ object CommandParser {
             if (rest.isEmpty()) Command.Invalid(line, "pose <message>") else Command.Pose(rest)
         }?.let { return it }
 
+        // dispel (staff)
+        matchPrefix(line, listOf("dispel")) { rest ->
+            if (rest.isEmpty()) Command.Invalid(line, "dispel <target>") else Command.Dispel(rest)
+        }?.let { return it }
+
         // buy
         matchPrefix(line, listOf("buy", "purchase")) { rest ->
             val kw = rest.trim()
@@ -375,6 +386,7 @@ object CommandParser {
             "flee" -> Command.Flee
             "score", "sc" -> Command.Score
             "spells", "abilities" -> Command.Spells
+            "effects", "buffs", "debuffs" -> Command.Effects
             "shutdown" -> Command.Shutdown
             "gold", "balance", "wealth" -> Command.Balance
             "list", "shop" -> Command.ShopList

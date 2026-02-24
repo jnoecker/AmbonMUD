@@ -8,6 +8,7 @@ import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.Room
 import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.status.ActiveEffectSnapshot
 
 class GmcpEmitter(
     private val outbound: OutboundBus,
@@ -185,6 +186,18 @@ class GmcpEmitter(
         val json =
             """{"channel":"${channel.jsonEscape()}","sender":"${sender.jsonEscape()}","message":"${message.jsonEscape()}"}"""
         outbound.send(OutboundEvent.GmcpData(sessionId, "Comm.Channel", json))
+    }
+
+    suspend fun sendCharStatusEffects(
+        sessionId: SessionId,
+        effects: List<ActiveEffectSnapshot>,
+    ) {
+        if (!supportsPackage(sessionId, "Char.StatusEffects")) return
+        val json =
+            effects.joinToString(",", prefix = "[", postfix = "]") { e ->
+                """{"id":"${e.id.jsonEscape()}","name":"${e.name.jsonEscape()}","type":"${e.type.jsonEscape()}","remainingMs":${e.remainingMs},"stacks":${e.stacks}}"""
+            }
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.StatusEffects", json))
     }
 
     suspend fun sendCorePing(sessionId: SessionId) {
