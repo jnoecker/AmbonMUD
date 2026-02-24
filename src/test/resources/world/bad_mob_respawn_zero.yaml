@@ -1,0 +1,11 @@
+zone: bad_mob_respawn_zero
+startRoom: a
+mobs:
+  rat:
+    name: "a small rat"
+    room: a
+    respawnSeconds: 0
+rooms:
+  a:
+    title: "Room A"
+    description: "A room."

@@ -96,7 +96,35 @@ class GameEngine(
             maxDamage = engineConfig.combat.maxDamage,
             detailedFeedbackEnabled = engineConfig.combat.feedback.enabled,
             detailedFeedbackRoomBroadcastEnabled = engineConfig.combat.feedback.roomBroadcastEnabled,
-            onMobRemoved = mobSystem::onMobRemoved,
+            onMobRemoved = { mobId ->
+                mobSystem.onMobRemoved(mobId)
+                val spawn = world.mobSpawns.find { it.id == mobId }
+                val respawnMs = spawn?.respawnSeconds?.let { it * 1_000L }
+                if (spawn != null && respawnMs != null) {
+                    scheduler.scheduleIn(respawnMs) {
+                        if (mobs.get(spawn.id) != null) return@scheduleIn
+                        if (world.rooms[spawn.roomId] == null) return@scheduleIn
+                        mobs.upsert(
+                            MobState(
+                                id = spawn.id,
+                                name = spawn.name,
+                                roomId = spawn.roomId,
+                                hp = spawn.maxHp,
+                                maxHp = spawn.maxHp,
+                                minDamage = spawn.minDamage,
+                                maxDamage = spawn.maxDamage,
+                                armor = spawn.armor,
+                                xpReward = spawn.xpReward,
+                                drops = spawn.drops,
+                            ),
+                        )
+                        mobSystem.onMobSpawned(spawn.id)
+                        for (p in players.playersInRoom(spawn.roomId)) {
+                            outbound.send(OutboundEvent.SendText(p.sessionId, "${spawn.name} appears."))
+                        }
+                    }
+                }
+            },
             progression = progression,
             metrics = metrics,
             strDivisor = engineConfig.combat.strDivisor,

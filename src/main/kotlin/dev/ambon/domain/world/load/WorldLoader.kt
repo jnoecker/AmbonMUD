@@ -181,6 +181,11 @@ object WorldLoader {
                     throw WorldLoadException("Mob '${mobId.value}' resolved xpReward must be >= 0")
                 }
 
+                val respawnSeconds = mf.respawnSeconds
+                if (respawnSeconds != null && respawnSeconds <= 0L) {
+                    throw WorldLoadException("Mob '${mobId.value}' respawnSeconds must be > 0 (got $respawnSeconds)")
+                }
+
                 mergedMobs[mobId] =
                     MobSpawn(
                         id = mobId,
@@ -192,6 +197,7 @@ object WorldLoader {
                         armor = resolvedArmor,
                         xpReward = resolvedXpReward,
                         drops = drops,
+                        respawnSeconds = respawnSeconds,
                     )
             }
 
