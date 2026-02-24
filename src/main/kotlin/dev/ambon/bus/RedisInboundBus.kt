@@ -25,6 +25,8 @@ class RedisInboundBus(
         val defaultAnsiEnabled: Boolean = false,
         val reason: String = "",
         val line: String = "",
+        val gmcpPackage: String = "",
+        val jsonData: String = "",
         val signature: String = "",
     )
 
@@ -92,6 +94,14 @@ class RedisInboundBus(
                             sessionId = event.sessionId.value,
                             line = event.line,
                         )
+                    is InboundEvent.GmcpReceived ->
+                        Envelope(
+                            instanceId = instanceId,
+                            type = "GmcpReceived",
+                            sessionId = event.sessionId.value,
+                            gmcpPackage = event.gmcpPackage,
+                            jsonData = event.jsonData,
+                        )
                 }.withSignature(sharedSecret)
             publisher.publish(channelName, mapper.writeValueAsString(env))
         } catch (e: Exception) {
@@ -99,7 +109,7 @@ class RedisInboundBus(
         }
     }
 
-    private fun Envelope.payloadToSign(): String = "$instanceId|$type|$sessionId|$defaultAnsiEnabled|$reason|$line"
+    private fun Envelope.payloadToSign(): String = "$instanceId|$type|$sessionId|$defaultAnsiEnabled|$reason|$line|$gmcpPackage|$jsonData"
 
     private fun Envelope.withSignature(secret: String): Envelope = copy(signature = hmacSha256(secret, payloadToSign()))
 
@@ -122,6 +132,12 @@ class RedisInboundBus(
                 InboundEvent.LineReceived(
                     sessionId = SessionId(sessionId),
                     line = line,
+                )
+            "GmcpReceived" ->
+                InboundEvent.GmcpReceived(
+                    sessionId = SessionId(sessionId),
+                    gmcpPackage = gmcpPackage,
+                    jsonData = jsonData,
                 )
             else -> {
                 log.warn { "Unknown inbound event type from Redis: $type" }

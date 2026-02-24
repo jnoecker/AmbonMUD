@@ -51,4 +51,11 @@ sealed interface OutboundEvent {
         val newEngineHost: String,
         val newEnginePort: Int,
     ) : OutboundEvent
+
+    /** Structured GMCP data (package name + raw JSON payload). */
+    data class GmcpData(
+        val sessionId: SessionId,
+        val gmcpPackage: String,
+        val jsonData: String,
+    ) : OutboundEvent
 }

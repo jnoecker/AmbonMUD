@@ -7,6 +7,8 @@ import dev.ambon.grpc.proto.ClearScreenProto
 import dev.ambon.grpc.proto.CloseProto
 import dev.ambon.grpc.proto.ConnectedProto
 import dev.ambon.grpc.proto.DisconnectedProto
+import dev.ambon.grpc.proto.GmcpDataProto
+import dev.ambon.grpc.proto.GmcpReceivedProto
 import dev.ambon.grpc.proto.InboundEventProto
 import dev.ambon.grpc.proto.LineReceivedProto
 import dev.ambon.grpc.proto.OutboundEventProto
@@ -52,6 +54,17 @@ fun InboundEvent.toProto(): InboundEventProto =
                         .setLine(line)
                         .build(),
                 ).build()
+        is InboundEvent.GmcpReceived ->
+            InboundEventProto
+                .newBuilder()
+                .setSessionId(sessionId.value)
+                .setGmcpReceived(
+                    GmcpReceivedProto
+                        .newBuilder()
+                        .setGmcpPackage(gmcpPackage)
+                        .setJsonData(jsonData)
+                        .build(),
+                ).build()
     }
 
 /** Converts [InboundEventProto] → domain [InboundEvent], or null if the oneof is not set. */
@@ -72,6 +85,12 @@ fun InboundEventProto.toDomain(): InboundEvent? {
             InboundEvent.LineReceived(
                 sessionId = sid,
                 line = lineReceived.line,
+            )
+        InboundEventProto.EventCase.GMCP_RECEIVED ->
+            InboundEvent.GmcpReceived(
+                sessionId = sid,
+                gmcpPackage = gmcpReceived.gmcpPackage,
+                jsonData = gmcpReceived.jsonData,
             )
         else -> null
     }
@@ -146,6 +165,17 @@ fun OutboundEvent.toProto(): OutboundEventProto =
                         .setNewEnginePort(newEnginePort)
                         .build(),
                 ).build()
+        is OutboundEvent.GmcpData ->
+            OutboundEventProto
+                .newBuilder()
+                .setSessionId(sessionId.value)
+                .setGmcpData(
+                    GmcpDataProto
+                        .newBuilder()
+                        .setGmcpPackage(gmcpPackage)
+                        .setJsonData(jsonData)
+                        .build(),
+                ).build()
     }
 
 /** Converts [OutboundEventProto] → domain [OutboundEvent], or null if the oneof is not set. */
@@ -176,6 +206,12 @@ fun OutboundEventProto.toDomain(): OutboundEvent? {
                 newEngineId = sessionRedirect.newEngineId,
                 newEngineHost = sessionRedirect.newEngineHost,
                 newEnginePort = sessionRedirect.newEnginePort,
+            )
+        OutboundEventProto.EventCase.GMCP_DATA ->
+            OutboundEvent.GmcpData(
+                sessionId = sid,
+                gmcpPackage = gmcpData.gmcpPackage,
+                jsonData = gmcpData.jsonData,
             )
         else -> null
     }

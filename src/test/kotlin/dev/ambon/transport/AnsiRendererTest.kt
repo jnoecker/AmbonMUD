@@ -37,13 +37,13 @@ class AnsiRendererTest {
             val job = router.start()
 
             val sid = SessionId(1)
-            val q = Channel<String>(10)
+            val q = Channel<OutboundFrame>(10)
             router.register(sid, q) { fail("should not close") }
 
             engineOutbound.send(OutboundEvent.SendPrompt(sid))
             runCurrent()
 
-            val ansiPrompt = q.tryReceive().getOrNull()
+            val ansiPrompt = (q.tryReceive().getOrNull() as? OutboundFrame.Text)?.content
             assertTrue(ansiPrompt!!.contains("> "))
             assertFalse(ansiPrompt.contains("PromptSpec"))
 

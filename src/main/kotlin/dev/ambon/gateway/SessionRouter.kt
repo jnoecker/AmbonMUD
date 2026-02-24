@@ -190,6 +190,7 @@ private fun InboundEvent.sessionId(): SessionId =
     when (this) {
         is InboundEvent.Connected -> sessionId
         is InboundEvent.Disconnected -> sessionId
+        is InboundEvent.GmcpReceived -> sessionId
         is InboundEvent.LineReceived -> sessionId
     }
 

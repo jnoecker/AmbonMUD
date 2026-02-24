@@ -39,7 +39,7 @@ class BlockingSocketTransport(
                     sock.tcpNoDelay = true
                     val sessionId = sessionIdFactory()
                     log.debug { "New telnet connection: remoteAddress=${sock.remoteSocketAddress} sessionId=$sessionId" }
-                    val outboundQueue = Channel<String>(capacity = sessionOutboundQueueCapacity)
+                    val outboundQueue = Channel<OutboundFrame>(capacity = sessionOutboundQueueCapacity)
                     val session =
                         NetworkSession(
                             sessionId = sessionId,

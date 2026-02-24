@@ -11,6 +11,7 @@ import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
@@ -41,6 +42,8 @@ class CommandRouter(
     private val engineId: String = "",
     private val onRemoteWho: (suspend (SessionId) -> Unit)? = null,
     private val playerLocationIndex: PlayerLocationIndex? = null,
+    private val gmcpEmitter: GmcpEmitter? = null,
+    private val markVitalsDirty: (SessionId) -> Unit = {},
 ) {
     private var adminSpawnSeq = 0
 
@@ -500,6 +503,7 @@ class CommandRouter(
                             val healed = (me.hp - previousHp).coerceAtLeast(0)
                             if (healed > 0) {
                                 outbound.send(OutboundEvent.SendInfo(sessionId, "You recover $healed HP."))
+                                markVitalsDirty(sessionId)
                             } else {
                                 outbound.send(OutboundEvent.SendInfo(sessionId, "You are already at full health."))
                             }
@@ -1053,6 +1057,8 @@ class CommandRouter(
                 if (roomMobs.isEmpty()) "You see: nothing" else "You see: ${roomMobs.joinToString(", ")}",
             ),
         )
+
+        gmcpEmitter?.sendRoomInfo(sessionId, room)
     }
 
     private fun currentRoomId(sessionId: SessionId): RoomId =

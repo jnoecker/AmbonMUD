@@ -26,6 +26,8 @@ class RedisOutboundBus(
         val text: String = "",
         val enabled: Boolean = false,
         val reason: String = "",
+        val gmcpPackage: String = "",
+        val jsonData: String = "",
         val signature: String = "",
     )
 
@@ -127,6 +129,14 @@ class RedisOutboundBus(
                         )
                     is OutboundEvent.SessionRedirect ->
                         return // control-plane event, not published to Redis
+                    is OutboundEvent.GmcpData ->
+                        Envelope(
+                            instanceId = instanceId,
+                            type = "GmcpData",
+                            sessionId = event.sessionId.value,
+                            gmcpPackage = event.gmcpPackage,
+                            jsonData = event.jsonData,
+                        )
                 }.withSignature(sharedSecret)
             publisher.publish(channelName, mapper.writeValueAsString(env))
         } catch (e: Exception) {
@@ -134,7 +144,7 @@ class RedisOutboundBus(
         }
     }
 
-    private fun Envelope.payloadToSign(): String = "$instanceId|$type|$sessionId|$text|$enabled|$reason"
+    private fun Envelope.payloadToSign(): String = "$instanceId|$type|$sessionId|$text|$enabled|$reason|$gmcpPackage|$jsonData"
 
     private fun Envelope.withSignature(secret: String): Envelope = copy(signature = hmacSha256(secret, payloadToSign()))
 
@@ -176,6 +186,12 @@ class RedisOutboundBus(
                 OutboundEvent.ClearScreen(sessionId = SessionId(sessionId))
             "ShowAnsiDemo" ->
                 OutboundEvent.ShowAnsiDemo(sessionId = SessionId(sessionId))
+            "GmcpData" ->
+                OutboundEvent.GmcpData(
+                    sessionId = SessionId(sessionId),
+                    gmcpPackage = gmcpPackage,
+                    jsonData = jsonData,
+                )
             else -> {
                 log.warn { "Unknown outbound event type from Redis: $type" }
                 null

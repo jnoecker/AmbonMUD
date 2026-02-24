@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
+private fun Channel<OutboundFrame>.tryReceiveText(): String? = (tryReceive().getOrNull() as? OutboundFrame.Text)?.content
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class OutboundRouterTest {
     @Test
@@ -26,7 +28,7 @@ class OutboundRouterTest {
             val router = OutboundRouter(engineOutbound, this)
 
             val sessionId = SessionId(1L)
-            val perSessionQueue = Channel<String>(capacity = 1)
+            val perSessionQueue = Channel<OutboundFrame>(capacity = 1)
 
             val closedReason = AtomicReference<String?>(null)
             router.register(sessionId, perSessionQueue) { reason ->
@@ -36,7 +38,7 @@ class OutboundRouterTest {
             val job = router.start()
 
             // Fill to capacity
-            assertTrue(perSessionQueue.trySend("first").isSuccess)
+            assertTrue(perSessionQueue.trySend(OutboundFrame.Text("first")).isSuccess)
 
             // Overflow
             engineOutbound.send(OutboundEvent.SendText(sessionId, "second"))
@@ -54,7 +56,7 @@ class OutboundRouterTest {
             engineOutbound.send(OutboundEvent.SendText(sessionId, "third"))
             testScheduler.advanceUntilIdle()
 
-            assertEquals("first", perSessionQueue.tryReceive().getOrNull())
+            assertEquals("first", (perSessionQueue.tryReceive().getOrNull() as? OutboundFrame.Text)?.content)
             assertNull(perSessionQueue.tryReceive().getOrNull())
 
             job.cancel()
@@ -69,8 +71,8 @@ class OutboundRouterTest {
             val router = OutboundRouter(engineOutbound, this)
             val job = router.start()
 
-            val q1 = Channel<String>(capacity = 10)
-            val q2 = Channel<String>(capacity = 10)
+            val q1 = Channel<OutboundFrame>(capacity = 10)
+            val q2 = Channel<OutboundFrame>(capacity = 10)
 
             router.register(SessionId(1), q1) { fail("Session 1 should not close") }
             router.register(SessionId(2), q2) { fail("Session 2 should not close") }
@@ -79,10 +81,10 @@ class OutboundRouterTest {
             engineOutbound.send(OutboundEvent.SendText(SessionId(2), "two"))
             testScheduler.advanceUntilIdle()
 
-            assertEquals("one\r\n", q1.tryReceive().getOrNull())
-            assertEquals("two\r\n", q2.tryReceive().getOrNull())
-            assertNull(q1.tryReceive().getOrNull())
-            assertNull(q2.tryReceive().getOrNull())
+            assertEquals("one\r\n", q1.tryReceiveText())
+            assertEquals("two\r\n", q2.tryReceiveText())
+            assertNull(q1.tryReceiveText())
+            assertNull(q2.tryReceiveText())
 
             job.cancel()
             engineOutbound.close()
@@ -98,7 +100,7 @@ class OutboundRouterTest {
             val job = router.start()
 
             val sessionId = SessionId(42)
-            val q = Channel<String>(capacity = 10)
+            val q = Channel<OutboundFrame>(capacity = 10)
             val closes = AtomicInteger(0)
 
             router.register(sessionId, q) { closes.incrementAndGet() }
@@ -124,7 +126,7 @@ class OutboundRouterTest {
             val job = router.start()
 
             val sessionId = SessionId(84)
-            val q = Channel<String>(capacity = 10)
+            val q = Channel<OutboundFrame>(capacity = 10)
             val closedReason = AtomicReference<String?>(null)
             router.register(sessionId, q) { reason -> closedReason.set(reason) }
 
@@ -150,8 +152,8 @@ class OutboundRouterTest {
 
             val sid1 = SessionId(100)
             val sid2 = SessionId(101)
-            val q1 = Channel<String>(capacity = 10)
-            val q2 = Channel<String>(capacity = 10)
+            val q1 = Channel<OutboundFrame>(capacity = 10)
+            val q2 = Channel<OutboundFrame>(capacity = 10)
             val reason1 = AtomicReference<String?>(null)
             val reason2 = AtomicReference<String?>(null)
             router.register(sid1, q1) { reason -> reason1.set(reason) }
@@ -182,7 +184,7 @@ class OutboundRouterTest {
             val job = router.start()
 
             val sessionId = SessionId(7)
-            val q = Channel<String>(capacity = 10)
+            val q = Channel<OutboundFrame>(capacity = 10)
             val closedReason = AtomicReference<String?>(null)
 
             router.register(sessionId, q) { reason -> closedReason.set(reason) }
@@ -198,9 +200,9 @@ class OutboundRouterTest {
 
             // Depending on your router behavior, there may be a best-effort "bye" in the queue.
             // We'll just assert "nope" didn't arrive.
-            val drained = mutableListOf<String>()
-            while (true) drained += (q.tryReceive().getOrNull() ?: break)
-            assertFalse(drained.any { it.contains("nope") }, "Should not deliver after Close; drained=$drained")
+            val drained = mutableListOf<String?>()
+            while (true) drained += ((q.tryReceive().getOrNull() as? OutboundFrame.Text)?.content ?: break)
+            assertFalse(drained.any { it?.contains("nope") == true }, "Should not deliver after Close; drained=$drained")
 
             job.cancel()
             engineOutbound.close()
@@ -215,20 +217,46 @@ class OutboundRouterTest {
             val job = router.start()
 
             val sid = SessionId(1)
-            val q = Channel<String>(10)
+            val q = Channel<OutboundFrame>(10)
             router.register(sid, q) { fail("should not close") }
 
             engineOutbound.send(OutboundEvent.SendPrompt(sid))
             runCurrent()
-            val plainPrompt = q.tryReceive().getOrNull()
+            val plainPrompt = q.tryReceiveText()
             assertEquals("> ", plainPrompt)
 
             engineOutbound.send(OutboundEvent.SetAnsi(sid, true))
             engineOutbound.send(OutboundEvent.SendPrompt(sid))
             runCurrent()
-            val ansiPrompt = q.tryReceive().getOrNull()
+            val ansiPrompt = q.tryReceiveText()
             assertNotNull(ansiPrompt)
             assertTrue(ansiPrompt!!.contains("\u001B["), "Expected ANSI escape: $ansiPrompt")
+
+            job.cancel()
+            q.close()
+            engineOutbound.close()
+        }
+
+    @Test
+    fun `GmcpData event enqueues Gmcp frame`() =
+        runTest {
+            val engineOutbound = LocalOutboundBus()
+            val router = OutboundRouter(engineOutbound, this)
+            val job = router.start()
+
+            val sid = SessionId(5)
+            val q = Channel<OutboundFrame>(10)
+            router.register(sid, q) { fail("should not close") }
+
+            engineOutbound.send(OutboundEvent.GmcpData(sid, "Char.Vitals", """{"hp":10}"""))
+            testScheduler.advanceUntilIdle()
+
+            val frame = q.tryReceive().getOrNull()
+            assertNotNull(frame)
+            assertTrue(frame is OutboundFrame.Gmcp, "Expected Gmcp frame, got $frame")
+            val gmcp = frame as OutboundFrame.Gmcp
+            assertEquals("Char.Vitals", gmcp.gmcpPackage)
+            assertEquals("""{"hp":10}""", gmcp.jsonData)
 
             job.cancel()
             q.close()

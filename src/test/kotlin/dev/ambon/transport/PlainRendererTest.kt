@@ -38,13 +38,13 @@ class PlainRendererTest {
             val job = router.start()
 
             val sid = SessionId(1)
-            val q = Channel<String>(10)
+            val q = Channel<OutboundFrame>(10)
             router.register(sid, q) { fail("should not close") }
 
             engineOutbound.send(OutboundEvent.SendPrompt(sid))
             runCurrent()
 
-            val prompt = q.tryReceive().getOrNull()
+            val prompt = (q.tryReceive().getOrNull() as? OutboundFrame.Text)?.content
             assertEquals("> ", prompt)
             assertFalse(prompt!!.contains("PromptSpec"))
 

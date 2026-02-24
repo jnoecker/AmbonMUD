@@ -97,7 +97,9 @@ class GameEngine(
             strDivisor = engineConfig.combat.strDivisor,
             dexDodgePerPoint = engineConfig.combat.dexDodgePerPoint,
             maxDodgePercent = engineConfig.combat.maxDodgePercent,
+            markVitalsDirty = ::markVitalsDirty,
             onLevelUp = { sid, level ->
+                markVitalsDirty(sid)
                 val pc = players.get(sid)?.playerClass
                 val newAbilities = abilitySystem.syncAbilities(sid, level, pc)
                 for (ability in newAbilities) {
@@ -119,6 +121,7 @@ class GameEngine(
             manaRegenAmount = engineConfig.regen.mana.regenAmount,
             msPerWisdom = engineConfig.regen.mana.msPerWisdom,
             metrics = metrics,
+            markVitalsDirty = ::markVitalsDirty,
         )
     private val abilityRegistry =
         AbilityRegistry().also { reg ->
@@ -133,7 +136,24 @@ class GameEngine(
             clock = clock,
             items = items,
             intSpellDivisor = engineConfig.combat.intSpellDivisor,
+            markVitalsDirty = ::markVitalsDirty,
         )
+
+    /** GMCP packages each session has opted into (e.g. "Char.Vitals", "Room.Info"). */
+    private val gmcpSessions = mutableMapOf<SessionId, MutableSet<String>>()
+
+    /** Sessions whose vitals changed this tick and need a Char.Vitals push. */
+    private val gmcpDirtyVitals = mutableSetOf<SessionId>()
+
+    val gmcpEmitter =
+        GmcpEmitter(
+            outbound = outbound,
+            supportsPackage = { sid, pkg -> gmcpSessions[sid]?.contains(pkg) == true },
+        )
+
+    fun markVitalsDirty(sessionId: SessionId) {
+        gmcpDirtyVitals.add(sessionId)
+    }
 
     private val router =
         CommandRouter(
@@ -153,7 +173,10 @@ class GameEngine(
             engineId = engineId,
             onRemoteWho = if (interEngineBus != null) ::handleRemoteWho else null,
             playerLocationIndex = playerLocationIndex,
+            gmcpEmitter = gmcpEmitter,
+            markVitalsDirty = ::markVitalsDirty,
         )
+
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
     private val failedLoginAttempts = mutableMapOf<SessionId, Int>()
     private val sessionAnsiDefaults = mutableMapOf<SessionId, Boolean>()
@@ -271,6 +294,9 @@ class GameEngine(
                     val regenSample = Timer.start()
                     regenSystem.tick(maxPlayersPerTick = engineConfig.regen.maxPlayersPerTick)
                     regenSample.stop(metrics.regenTickTimer)
+
+                    // Flush GMCP vitals for sessions that had changes this tick
+                    flushDirtyGmcpVitals()
 
                     // Run scheduled actions (bounded)
                     val schedulerSample = Timer.start()
@@ -627,6 +653,10 @@ class GameEngine(
                 promptForName(sid)
             }
 
+            is InboundEvent.GmcpReceived -> {
+                handleGmcpReceived(ev)
+            }
+
             is InboundEvent.Disconnected -> {
                 val sid = ev.sessionId
                 val me = players.get(sid)
@@ -634,6 +664,8 @@ class GameEngine(
                 pendingLogins.remove(sid)
                 failedLoginAttempts.remove(sid)
                 sessionAnsiDefaults.remove(sid)
+                gmcpSessions.remove(sid)
+                gmcpDirtyVitals.remove(sid)
                 handoffManager?.cancelIfPending(sid)
                 run {
                     val itr = pendingWhoRequests.iterator()
@@ -970,7 +1002,10 @@ class GameEngine(
         if (!suppressEnterBroadcast) {
             broadcastToRoom(me.roomId, "${me.name} enters.", sessionId)
         }
-        router.handle(sessionId, Command.Look) // room + prompt
+        // Send initial GMCP vitals/status for sessions that are already opted-in
+        gmcpEmitter.sendCharStatusVars(sessionId)
+        gmcpEmitter.sendCharVitals(sessionId, me)
+        router.handle(sessionId, Command.Look) // room + prompt (also sends Room.Info)
     }
 
     private suspend fun ensureLoginRoomAvailable(
@@ -1081,6 +1116,55 @@ class GameEngine(
         if (input.equals("name", ignoreCase = true)) return ""
         val match = nameCommandRegex.matchEntire(input)
         return match?.groupValues?.get(1)?.trim() ?: input
+    }
+
+    private suspend fun handleGmcpReceived(ev: InboundEvent.GmcpReceived) {
+        val sid = ev.sessionId
+        when (ev.gmcpPackage) {
+            "Core.Hello" -> {
+                log.debug { "GMCP Core.Hello from session=$sid data=${ev.jsonData}" }
+            }
+            "Core.Supports.Set" -> {
+                val packages = parseGmcpPackageList(ev.jsonData)
+                val supported = gmcpSessions.getOrPut(sid) { mutableSetOf() }
+                supported.addAll(packages)
+                log.debug { "GMCP supports set for session=$sid packages=$packages" }
+                // Send initial data if the player is already logged in
+                val player = players.get(sid) ?: return
+                val room = world.rooms[player.roomId] ?: return
+                gmcpEmitter.sendCharStatusVars(sid)
+                gmcpEmitter.sendCharVitals(sid, player)
+                gmcpEmitter.sendRoomInfo(sid, room)
+            }
+            "Core.Supports.Remove" -> {
+                val packages = parseGmcpPackageList(ev.jsonData)
+                gmcpSessions[sid]?.removeAll(packages.toSet())
+            }
+        }
+    }
+
+    /**
+     * Parses a GMCP package list like `["Char.Vitals 1","Room.Info 1"]`
+     * into a set of package names (version suffix stripped).
+     */
+    private fun parseGmcpPackageList(json: String): List<String> {
+        val content = json.trim().removePrefix("[").removeSuffix("]")
+        if (content.isBlank()) return emptyList()
+        return content
+            .split(",")
+            .map { it.trim().removeSurrounding("\"").trim() }
+            .map { it.substringBefore(' ') }
+            .filter { it.isNotBlank() }
+    }
+
+    private suspend fun flushDirtyGmcpVitals() {
+        if (gmcpDirtyVitals.isEmpty()) return
+        val dirty = gmcpDirtyVitals.toList()
+        gmcpDirtyVitals.clear()
+        for (sid in dirty) {
+            val player = players.get(sid) ?: continue
+            gmcpEmitter.sendCharVitals(sid, player)
+        }
     }
 
     private fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
