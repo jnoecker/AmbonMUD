@@ -4,17 +4,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > The full engineering playbook is in `AGENTS.md`. This file summarizes the most important points for quick orientation.
 
-## PR Review & Fix Workflow
-
-When I ask you to review or fix a PR:
-1. Use `gh pr view <number> --json headRefName` to identify the PR's branch
-2. Run `git checkout <branch>` to switch to that branch and `git pull` to get latest
-3. Make all changes on that branch
-4. Commit and push to that same branch — NEVER create a new branch
-5. The push will automatically update the PR
-
-Never create new branches when fixing PR feedback unless I explicitly ask for one.
-
 ## Commands
 
 ```bash
@@ -39,14 +28,6 @@ Override any config value at runtime with `-Pconfig.<key>=<value>`:
 ```
 
 On Windows use `.\gradlew.bat` instead of `./gradlew`.
-
-## Git Workflow
-
-- **Always create a new feature branch from `main`** for each piece of work. Never reuse an existing topic branch that may carry unrelated commits.
-  ```bash
-  git checkout main && git pull && git checkout -b feature/my-change
-  ```
-- Keep PRs focused: one logical change per PR. If unrelated commits end up on the branch, rebase to remove them before opening the PR.
 
 ## Architecture
 
@@ -118,6 +99,60 @@ Sessions
 - **Config:** update `AppConfig.kt` and `application.yaml` together; keep `validated()` strict.
 - **Persistence:** work through the `PlayerRepository` interface; maintain case-insensitive lookup and atomic writes (YAML) or unique-index enforcement (Postgres). The chain is `WriteCoalescing → RedisCache → Yaml/Postgres` — changes to `PlayerRecord` must survive all three layers. When adding columns to the Postgres backend, add a new Flyway migration in `src/main/resources/db/migration/` and update `PlayersTable.kt`.
 - **Bus/Redis/gRPC:** `InboundBus`/`OutboundBus` are the engine boundaries; do not pass raw channels to engine code. Redis and gRPC variants are optional wrappers — always test with both `LocalInboundBus` and the mock bus in unit tests. When adding new event variants, update both the Redis bus envelope and the proto definitions + `ProtoMapper`.
+
+## Kotlin Style (ktlint)
+
+This project uses **ktlint 1.5.0** with `kotlin.code.style=official` (no `.editorconfig`). All defaults apply. The most commonly violated rules when writing new code:
+
+1. **Trailing commas (REQUIRED)** — Every multiline parameter list, argument list, and collection literal must end with a trailing comma:
+   ```kotlin
+   // Function/constructor parameters (multiline)
+   class Foo(
+       val bar: String,
+       val baz: Int,      // ← trailing comma
+   )
+
+   // Function call arguments (multiline)
+   doSomething(
+       first = 1,
+       second = 2,        // ← trailing comma
+   )
+
+   // Single-parameter data classes still use trailing comma when multiline
+   data class Move(
+       val dir: Direction, // ← trailing comma
+   )
+   ```
+
+2. **No wildcard imports** — Always use explicit imports, never `import foo.bar.*`.
+
+3. **Multiline function signatures** — When a function signature doesn't fit on one line, put each parameter on its own line with a trailing comma:
+   ```kotlin
+   fun doSomething(
+       param1: String,
+       param2: Int,
+   ): ReturnType {
+   ```
+
+4. **Multiline `when` entries** — Arrow and body on the same line when short; braces for multi-statement bodies.
+
+5. **Spacing** — Single space after `if`/`for`/`when`/`while` and around operators/colons. No space before commas or inside parentheses.
+
+6. **Blank lines** — No blank lines at the start or end of a class/function body. No blank lines inside parameter lists.
+
+7. **Chain calls** — When wrapping chained calls, the `.` goes on the new line:
+   ```kotlin
+   val result =
+       list
+           .filter { it > 0 }
+           .map { it * 2 }
+   ```
+
+8. **No max line length enforced** — No `.editorconfig` sets `max_line_length`, so it defaults to unlimited. Keep lines reasonable but don't force-wrap short expressions.
+
+9. **Multiline string templates** — Closing `"""` must be on its own line, with `.trimIndent()` on the same line.
+
+10. **No blank line before first declaration in a class** — The first property/function starts immediately after the opening brace (or after the constructor closing parenthesis).
 
 ## Testing
 
