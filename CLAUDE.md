@@ -40,6 +40,14 @@ Override any config value at runtime with `-Pconfig.<key>=<value>`:
 
 On Windows use `.\gradlew.bat` instead of `./gradlew`.
 
+## Git Workflow
+
+- **Always create a new feature branch from `main`** for each piece of work. Never reuse an existing topic branch that may carry unrelated commits.
+  ```bash
+  git checkout main && git pull && git checkout -b feature/my-change
+  ```
+- Keep PRs focused: one logical change per PR. If unrelated commits end up on the branch, rebase to remove them before opening the PR.
+
 ## Architecture
 
 AmbonMUD supports three deployment modes (set via `ambonMUD.mode`):
