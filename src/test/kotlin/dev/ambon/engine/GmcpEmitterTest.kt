@@ -25,6 +25,8 @@ class GmcpEmitterTest {
     private val sid = SessionId(1L)
     private val outbound = LocalOutboundBus()
 
+    private val progression = PlayerProgression()
+
     private fun emitter(vararg supported: String): GmcpEmitter {
         val packages = supported.toSet()
         return GmcpEmitter(
@@ -32,6 +34,7 @@ class GmcpEmitterTest {
             supportsPackage = { _, pkg ->
                 packages.any { s -> pkg == s || pkg.startsWith("$s.") }
             },
+            progression = progression,
         )
     }
 
@@ -132,6 +135,8 @@ class GmcpEmitterTest {
             assertTrue(data.jsonData.contains("\"mana\":30"))
             assertTrue(data.jsonData.contains("\"level\":5"))
             assertTrue(data.jsonData.contains("\"xp\":1234"))
+            assertTrue(data.jsonData.contains("\"xpIntoLevel\":"))
+            assertTrue(data.jsonData.contains("\"xpToNextLevel\":"))
         }
 
     @Test
