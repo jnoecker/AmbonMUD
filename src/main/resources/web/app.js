@@ -42,6 +42,7 @@
     const equipList = document.getElementById("equip-list");
     const playersList = document.getElementById("players-list");
     const mobsList = document.getElementById("mobs-list");
+    const effectsList = document.getElementById("effects-list");
     const mapCanvas = document.getElementById("map-canvas");
     const mapCtx = mapCanvas.getContext("2d");
 
@@ -75,7 +76,7 @@
         "say", "tell", "whisper", "shout", "gossip", "ooc", "emote", "pose",
         "who", "score", "inventory", "equipment", "exits",
         "get", "drop", "wear", "remove", "use", "give",
-        "kill", "flee", "cast", "spells", "abilities",
+        "kill", "flee", "cast", "spells", "abilities", "effects",
         "help", "quit", "clear", "colors",
     ];
     let tabMatches = [];
@@ -268,6 +269,7 @@
         mobsList.innerHTML = '<span class="empty-hint">—</span>';
         invList.innerHTML = '<span class="empty-hint">—</span>';
         equipList.innerHTML = '<span class="empty-hint">—</span>';
+        effectsList.innerHTML = '<span class="empty-hint">None</span>';
         visitedRooms.clear();
         currentRoomId = null;
         renderMap();
@@ -524,6 +526,32 @@
         }
     }
 
+    function updateStatusEffects(data) {
+        effectsList.innerHTML = "";
+        if (!Array.isArray(data) || data.length === 0) {
+            effectsList.innerHTML = '<span class="empty-hint">None</span>';
+            return;
+        }
+        for (const e of data) {
+            const el = document.createElement("div");
+            el.className = "effect-item";
+            const nameSpan = document.createElement("span");
+            nameSpan.className = "effect-name";
+            nameSpan.textContent = e.name + (e.stacks > 1 ? ` x${e.stacks}` : "");
+            const typeSpan = document.createElement("span");
+            typeSpan.className = `effect-type effect-type-${e.type.toLowerCase()}`;
+            typeSpan.textContent = e.type;
+            const timeSpan = document.createElement("span");
+            timeSpan.className = "effect-time";
+            const secs = Math.max(1, Math.ceil(e.remainingMs / 1000));
+            timeSpan.textContent = `${secs}s`;
+            el.appendChild(nameSpan);
+            el.appendChild(typeSpan);
+            el.appendChild(timeSpan);
+            effectsList.appendChild(el);
+        }
+    }
+
     function handleGmcp(pkg, data) {
         switch (pkg) {
             case "Char.Vitals":
@@ -566,6 +594,9 @@
                 break;
             case "Room.RemoveMob":
                 removeRoomMob(data);
+                break;
+            case "Char.StatusEffects":
+                updateStatusEffects(data);
                 break;
             case "Char.Skills":
             case "Comm.Channel":

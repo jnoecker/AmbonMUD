@@ -382,6 +382,57 @@ button:hover {
     transition: width 0.3s ease;
 }
 
+/* ── Effects Panel ─────────────────────────────────────────── */
+
+.effects-list {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--text);
+}
+
+.effect-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.1rem 0;
+    border-bottom: 1px solid rgba(49, 72, 96, 0.3);
+}
+
+.effect-item:last-child {
+    border-bottom: none;
+}
+
+.effect-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.76rem;
+}
+
+.effect-type {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.2rem;
+    color: #0a1520;
+}
+
+.effect-type-dot { background: #e06050; }
+.effect-type-hot { background: #4caf87; }
+.effect-type-stat_buff { background: #c7a44a; }
+.effect-type-stat_debuff { background: #a06040; }
+.effect-type-stun { background: #9070c0; }
+.effect-type-root { background: #7090a0; }
+.effect-type-shield { background: #4a7cc7; }
+
+.effect-time {
+    font-size: 0.7rem;
+    color: #7aa8cc;
+    min-width: 2rem;
+    text-align: right;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 
 @media (max-width: 900px) {

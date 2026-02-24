@@ -113,9 +113,30 @@ data class AppConfig(
             require(def.targetType.uppercase() in listOf("ENEMY", "SELF")) {
                 "ability '$key' targetType must be ENEMY or SELF, got '${def.targetType}'"
             }
-            require(def.effect.type.uppercase() in listOf("DIRECT_DAMAGE", "DIRECT_HEAL")) {
-                "ability '$key' effect.type must be DIRECT_DAMAGE or DIRECT_HEAL, got '${def.effect.type}'"
+            require(def.effect.type.uppercase() in listOf("DIRECT_DAMAGE", "DIRECT_HEAL", "APPLY_STATUS")) {
+                "ability '$key' effect.type must be DIRECT_DAMAGE, DIRECT_HEAL, or APPLY_STATUS, got '${def.effect.type}'"
             }
+            if (def.effect.type.uppercase() == "APPLY_STATUS") {
+                require(def.effect.statusEffectId.isNotBlank()) {
+                    "ability '$key' effect.statusEffectId must be non-blank for APPLY_STATUS"
+                }
+                require(engine.statusEffects.definitions.containsKey(def.effect.statusEffectId)) {
+                    "ability '$key' references unknown statusEffectId '${def.effect.statusEffectId}'"
+                }
+            }
+        }
+
+        engine.statusEffects.definitions.forEach { (key, def) ->
+            require(def.displayName.isNotBlank()) { "statusEffect '$key' displayName must be non-blank" }
+            require(
+                def.effectType.uppercase() in
+                    listOf("DOT", "HOT", "STAT_BUFF", "STAT_DEBUFF", "STUN", "ROOT", "SHIELD"),
+            ) {
+                "statusEffect '$key' effectType must be DOT, HOT, STAT_BUFF, STAT_DEBUFF, STUN, ROOT, or SHIELD"
+            }
+            require(def.durationMs > 0L) { "statusEffect '$key' durationMs must be > 0" }
+            require(def.tickIntervalMs >= 0L) { "statusEffect '$key' tickIntervalMs must be >= 0" }
+            require(def.maxStacks >= 1) { "statusEffect '$key' maxStacks must be >= 1" }
         }
 
         require(progression.maxLevel > 0) { "ambonMUD.progression.maxLevel must be > 0" }
@@ -337,6 +358,7 @@ data class EngineConfig(
     val regen: RegenEngineConfig = RegenEngineConfig(),
     val scheduler: SchedulerEngineConfig = SchedulerEngineConfig(),
     val abilities: AbilityEngineConfig = AbilityEngineConfig(),
+    val statusEffects: StatusEffectEngineConfig = StatusEffectEngineConfig(),
     val economy: EconomyConfig = EconomyConfig(),
 )
 
@@ -508,6 +530,29 @@ data class AbilityEffectConfig(
     val maxDamage: Int = 0,
     val minHeal: Int = 0,
     val maxHeal: Int = 0,
+    val statusEffectId: String = "",
+)
+
+data class StatusEffectEngineConfig(
+    val definitions: Map<String, StatusEffectDefinitionConfig> = emptyMap(),
+)
+
+data class StatusEffectDefinitionConfig(
+    val displayName: String = "",
+    val effectType: String = "DOT",
+    val durationMs: Long = 5000L,
+    val tickIntervalMs: Long = 0L,
+    val tickMinValue: Int = 0,
+    val tickMaxValue: Int = 0,
+    val shieldAmount: Int = 0,
+    val stackBehavior: String = "REFRESH",
+    val maxStacks: Int = 1,
+    val strMod: Int = 0,
+    val dexMod: Int = 0,
+    val conMod: Int = 0,
+    val intMod: Int = 0,
+    val wisMod: Int = 0,
+    val chaMod: Int = 0,
 )
 
 data class TransportConfig(
