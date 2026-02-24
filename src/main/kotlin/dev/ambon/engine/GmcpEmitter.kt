@@ -2,7 +2,10 @@ package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.Room
+import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.events.OutboundEvent
 
 class GmcpEmitter(
@@ -37,6 +40,121 @@ class GmcpEmitter(
         if (!supportsPackage(sessionId, "Char.StatusVars")) return
         val json = """{"hp":"HP","maxHp":"Max HP","mana":"Mana","maxMana":"Max Mana","level":"Level","xp":"XP"}"""
         outbound.send(OutboundEvent.GmcpData(sessionId, "Char.StatusVars", json))
+    }
+
+    suspend fun sendCharItemsList(
+        sessionId: SessionId,
+        inventory: List<ItemInstance>,
+        equipment: Map<ItemSlot, ItemInstance>,
+    ) {
+        if (!supportsPackage(sessionId, "Char.Items.List")) return
+        val invJson = inventory.joinToString(",") { itemToJson(it) }
+        val eqJson =
+            ItemSlot.entries.joinToString(",") { slot ->
+                val item = equipment[slot]
+                """"${slot.label()}":${if (item != null) itemToJson(item) else "null"}"""
+            }
+        val json = """{"inventory":[$invJson],"equipment":{$eqJson}}"""
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Items.List", json))
+    }
+
+    suspend fun sendCharItemsAdd(
+        sessionId: SessionId,
+        item: ItemInstance,
+    ) {
+        if (!supportsPackage(sessionId, "Char.Items.Add")) return
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Items.Add", itemToJson(item)))
+    }
+
+    suspend fun sendCharItemsRemove(
+        sessionId: SessionId,
+        item: ItemInstance,
+    ) {
+        if (!supportsPackage(sessionId, "Char.Items.Remove")) return
+        val json = """{"id":"${item.id.value.jsonEscape()}","name":"${item.item.displayName.jsonEscape()}"}"""
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Items.Remove", json))
+    }
+
+    suspend fun sendRoomPlayers(
+        sessionId: SessionId,
+        players: List<PlayerState>,
+    ) {
+        if (!supportsPackage(sessionId, "Room.Players")) return
+        val json =
+            players
+                .filter { it.sessionId != sessionId }
+                .joinToString(",", prefix = "[", postfix = "]") { p ->
+                    """{"name":"${p.name.jsonEscape()}","level":${p.level}}"""
+                }
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.Players", json))
+    }
+
+    suspend fun sendRoomAddPlayer(
+        sessionId: SessionId,
+        player: PlayerState,
+    ) {
+        if (!supportsPackage(sessionId, "Room.Players")) return
+        val json = """{"name":"${player.name.jsonEscape()}","level":${player.level}}"""
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.AddPlayer", json))
+    }
+
+    suspend fun sendRoomRemovePlayer(
+        sessionId: SessionId,
+        name: String,
+    ) {
+        if (!supportsPackage(sessionId, "Room.Players")) return
+        val json = """{"name":"${name.jsonEscape()}"}"""
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.RemovePlayer", json))
+    }
+
+    suspend fun sendCharSkills(
+        sessionId: SessionId,
+        abilities: List<AbilityDefinition>,
+    ) {
+        if (!supportsPackage(sessionId, "Char.Skills")) return
+        val json =
+            abilities.joinToString(",", prefix = "[", postfix = "]") { a ->
+                """{"id":"${a.id.value.jsonEscape()}","name":"${a.displayName.jsonEscape()}","manaCost":${a.manaCost},"cooldownMs":${a.cooldownMs}}"""
+            }
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Skills", json))
+    }
+
+    suspend fun sendCharName(
+        sessionId: SessionId,
+        player: PlayerState,
+    ) {
+        if (!supportsPackage(sessionId, "Char.Name")) return
+        val json =
+            """{"name":"${player.name.jsonEscape()}","race":"${player.race.jsonEscape()}","class":"${player.playerClass.jsonEscape()}","level":${player.level}}"""
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Name", json))
+    }
+
+    suspend fun sendCommChannel(
+        sessionId: SessionId,
+        channel: String,
+        sender: String,
+        message: String,
+    ) {
+        if (!supportsPackage(sessionId, "Comm.Channel")) return
+        val json =
+            """{"channel":"${channel.jsonEscape()}","sender":"${sender.jsonEscape()}","message":"${message.jsonEscape()}"}"""
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Comm.Channel", json))
+    }
+
+    suspend fun sendCorePing(sessionId: SessionId) {
+        if (!supportsPackage(sessionId, "Core.Ping")) return
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Core.Ping", "{}"))
+    }
+
+    private fun itemToJson(item: ItemInstance): String {
+        val slot =
+            item.item.slot
+                ?.label()
+                ?.let { "\"${it.jsonEscape()}\"" }
+                ?: "null"
+        val id = item.id.value.jsonEscape()
+        val name = item.item.displayName.jsonEscape()
+        return """{"id":"$id","name":"$name","slot":$slot,"damage":${item.item.damage},"armor":${item.item.armor}}"""
     }
 
     private fun String.jsonEscape(): String =
