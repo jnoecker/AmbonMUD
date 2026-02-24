@@ -4,6 +4,8 @@
 **Scope:** Full codebase — 75 main-source Kotlin files (~10,890 lines), 66 test files
 **Branch:** `claude/review-refactoring-opportunities-NM72v`
 
+> **Implementation note:** Items 1, 2, 3, 5, 7, and 8 were implemented in this same PR (see code changes). Items 4, 6, 9, 10, and 11 are deferred as future work.
+
 ---
 
 ## Summary
@@ -18,7 +20,7 @@ The codebase is well-architected with clear separation of concerns. However, the
 
 ## 🔴 High-Impact Duplication
 
-### 1. Heartbeat Loop Boilerplate in `MudServer.kt` — 4 occurrences, ~50 lines
+### 1. Heartbeat Loop Boilerplate in `MudServer.kt` — 4 occurrences, ~50 lines ✅ Implemented
 
 **Where:**
 - `src/main/kotlin/dev/ambon/MudServer.kt:390–402` — player-index heartbeat
@@ -60,7 +62,7 @@ Each of the four call sites collapses from ~10 lines to 3 lines. **Estimated red
 
 ---
 
-### 2. `PlayerFile` / `PlayerJson` / `PlayerRecord` — Triple DTO Schema, ~46 lines duplicated
+### 2. `PlayerFile` / `PlayerJson` / `PlayerRecord` — Triple DTO Schema, ~46 lines duplicated ✅ Implemented
 
 **Where:**
 - `src/main/kotlin/dev/ambon/persistence/PlayerRecord.kt:10–32` — canonical domain class (21 fields)
@@ -83,7 +85,7 @@ The custom `Jackson` module and `@JvmInline` on `PlayerId` require a value-class
 
 ---
 
-### 3. `toDomain()` Mapping — Duplicated in YAML and Redis repos, ~26 lines each
+### 3. `toDomain()` Mapping — Duplicated in YAML and Redis repos, ~26 lines each ✅ Implemented
 
 **Where:**
 - `src/main/kotlin/dev/ambon/persistence/YamlPlayerRepository.kt:199–225` — `PlayerFile.toDomain()`
@@ -103,7 +105,7 @@ The Postgres variant has the same migration guard at line 158. If this migration
 
 ---
 
-### 4. Redis Bus Subscriber Setup — Identical in Inbound and Outbound, ~16 lines
+### 4. Redis Bus Subscriber Setup — Identical in Inbound and Outbound, ~16 lines 🔲 Deferred
 
 **Where:**
 - `src/main/kotlin/dev/ambon/bus/RedisInboundBus.kt:33–49` — `startSubscribing()`
@@ -140,7 +142,7 @@ fun <Env : Any, Event : Any> startRedisSubscriber(
 
 ## 🟡 Medium-Impact Opportunities
 
-### 5. `LocalInboundBus` / `LocalOutboundBus` — Identical Channel Depth-Tracking, ~35 lines
+### 5. `LocalInboundBus` / `LocalOutboundBus` — Identical Channel Depth-Tracking, ~35 lines ✅ Implemented
 
 **Where:**
 - `src/main/kotlin/dev/ambon/bus/LocalInboundBus.kt:11–45`
@@ -165,7 +167,7 @@ class DepthTrackingChannel<T>(capacity: Int = Channel.UNLIMITED) {
 
 ---
 
-### 6. Redis Envelope Signature Helpers — Duplicated in Inbound and Outbound, ~6 lines
+### 6. Redis Envelope Signature Helpers — Duplicated in Inbound and Outbound, ~6 lines 🔲 Deferred
 
 **Where:**
 - `src/main/kotlin/dev/ambon/bus/RedisInboundBus.kt:112–117`
@@ -185,7 +187,7 @@ The `payloadToSign()` functions remain per-class since their field lists differ.
 
 ---
 
-### 7. Repository Timer/Metrics Scaffolding — Duplicated in YAML and Postgres, ~20 lines
+### 7. Repository Timer/Metrics Scaffolding — Duplicated in YAML and Postgres, ~20 lines ✅ Implemented
 
 **Where:**
 - `src/main/kotlin/dev/ambon/persistence/YamlPlayerRepository.kt:77–93` (`findByName`), `97–105` (`findById`), `159–195` (`save`)
@@ -206,7 +208,7 @@ Both `save()` methods additionally call `metrics.onPlayerSave()` on success and 
 
 ---
 
-### 8. `findByName` / `findById` Cache-Miss Pattern in `RedisCachingPlayerRepository`, ~15 lines
+### 8. `findByName` / `findById` Cache-Miss Pattern in `RedisCachingPlayerRepository`, ~15 lines ✅ Implemented
 
 **Where:** `src/main/kotlin/dev/ambon/persistence/RedisCachingPlayerRepository.kt:47–81`
 
@@ -248,7 +250,7 @@ private suspend fun cachedLookup(
 
 ## 🟢 Minor / Style Improvements
 
-### 9. Registry Loader Boilerplate (`AbilityRegistryLoader` / `StatusEffectRegistryLoader`)
+### 9. Registry Loader Boilerplate (`AbilityRegistryLoader` / `StatusEffectRegistryLoader`) 🔲 Deferred
 
 **Where:**
 - `src/main/kotlin/dev/ambon/engine/abilities/AbilityRegistryLoader.kt:12–56`
@@ -258,7 +260,7 @@ Both are `object` singletons with a single `load(config, registry)` function tha
 
 ---
 
-### 10. `StaticZoneRegistry` No-Op Methods
+### 10. `StaticZoneRegistry` No-Op Methods 🔲 Deferred
 
 **Where:** `src/main/kotlin/dev/ambon/sharding/StaticZoneRegistry.kt:56–66`
 
@@ -268,7 +270,7 @@ Given that `RedisZoneRegistry` must implement these methods non-trivially, leavi
 
 ---
 
-### 11. `const val` String Literals for Redis Event Type Names
+### 11. `const val` String Literals for Redis Event Type Names 🔲 Deferred
 
 **Where:**
 - `src/main/kotlin/dev/ambon/bus/RedisInboundBus.kt:120–145` and `RedisOutboundBus.kt:155–199`
@@ -299,14 +301,14 @@ The `PlayerRecord`/`PlayerFile`/`PlayerJson` triple is the most maintenance-risk
 
 ## Impact Summary
 
-| Finding | Files | Lines Saved | Priority |
-|---------|-------|-------------|----------|
-| 1. Heartbeat loops | 1 | ~40 | High |
-| 2. DTO triple schema | 3 | ~46 | High |
-| 3. `toDomain()` mapping | 3 | ~52 | High |
-| 4. Redis subscriber setup | 2 | ~32 | High |
-| 5. Channel depth tracking | 2 | ~25 | Medium |
-| 6. Envelope signature helpers | 2 | ~4 | Medium |
-| 7. Repository timer scaffolding | 2 | ~20 | Medium |
-| 8. Cache-miss pattern | 1 | ~12 | Medium |
-| **Subtotal** | | **~231 lines** | |
+| Finding | Files | Lines Saved | Priority | Status |
+|---------|-------|-------------|----------|--------|
+| 1. Heartbeat loops | 1 | ~40 | High | ✅ Implemented |
+| 2. DTO triple schema | 3 | ~46 | High | ✅ Implemented |
+| 3. `toDomain()` mapping | 3 | ~52 | High | ✅ Implemented |
+| 4. Redis subscriber setup | 2 | ~32 | High | 🔲 Deferred |
+| 5. Channel depth tracking | 2 | ~25 | Medium | ✅ Implemented |
+| 6. Envelope signature helpers | 2 | ~4 | Medium | 🔲 Deferred |
+| 7. Repository timer scaffolding | 2 | ~20 | Medium | ✅ Implemented |
+| 8. Cache-miss pattern | 1 | ~12 | Medium | ✅ Implemented |
+| **Subtotal** | | **~231 lines** | | |
