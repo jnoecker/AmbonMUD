@@ -183,6 +183,7 @@ class PlayerRegistry(
                 mana = boundRecord.mana.coerceIn(0, maxMana),
                 maxMana = maxMana,
                 baseMana = maxMana,
+                gold = boundRecord.gold,
             )
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
@@ -368,6 +369,7 @@ class PlayerRegistry(
                 ansiEnabled = ps.ansiEnabled,
                 mana = ps.mana,
                 maxMana = ps.maxMana,
+                gold = ps.gold,
             ),
         )
     }

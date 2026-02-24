@@ -28,4 +28,5 @@ data class PlayerRecord(
     val isStaff: Boolean = false,
     val mana: Int = 20,
     val maxMana: Int = 20,
+    val gold: Long = 0L,
 )

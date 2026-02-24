@@ -24,6 +24,7 @@ object PlayersTable : Table("players") {
     val isStaff = bool("is_staff").default(false)
     val mana = integer("mana").default(20)
     val maxMana = integer("max_mana").default(20)
+    val gold = long("gold").default(0L)
 
     override val primaryKey = PrimaryKey(id)
 }

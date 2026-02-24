@@ -14,4 +14,6 @@ data class MobSpawn(
     val xpReward: Long = 30L,
     val drops: List<MobDrop> = emptyList(),
     val respawnSeconds: Long? = null,
+    val goldMin: Long = 0L,
+    val goldMax: Long = 0L,
 )

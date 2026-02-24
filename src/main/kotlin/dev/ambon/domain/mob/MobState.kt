@@ -15,4 +15,6 @@ data class MobState(
     val armor: Int = 0,
     val xpReward: Long = 30L,
     val drops: List<MobDrop> = emptyList(),
+    val goldMin: Long = 0L,
+    val goldMax: Long = 0L,
 )

@@ -12,4 +12,6 @@ data class MobFile(
     val xpReward: Long? = null,
     val drops: List<MobDropFile> = emptyList(),
     val respawnSeconds: Long? = null,
+    val goldMin: Long? = null,
+    val goldMax: Long? = null,
 )

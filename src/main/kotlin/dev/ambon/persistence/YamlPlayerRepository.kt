@@ -53,6 +53,7 @@ class YamlPlayerRepository(
         val isStaff: Boolean = false,
         val mana: Int = 20,
         val maxMana: Int = 20,
+        val gold: Long = 0L,
     )
 
     private val mapper: ObjectMapper =
@@ -179,6 +180,7 @@ class YamlPlayerRepository(
                         isStaff = record.isStaff,
                         mana = record.mana,
                         maxMana = record.maxMana,
+                        gold = record.gold,
                     )
 
                 val outPath = pathFor(record.id.value)
@@ -218,6 +220,7 @@ class YamlPlayerRepository(
             isStaff = isStaff,
             mana = mana,
             maxMana = maxMana,
+            gold = gold,
         )
     }
 

@@ -565,4 +565,68 @@ class WorldLoaderTest {
             assertEquals(RoomId("enchanted_forest:mossy_path"), edge.exits[Direction.WEST])
         }
     }
+
+    class ShopAndGoldWorldLoaderTest {
+        @Test
+        fun `loads shop definitions from zone file`() {
+            val world = WorldLoader.loadFromResource("world/ok_shop.yaml")
+
+            assertEquals(1, world.shopDefinitions.size)
+            val shop = world.shopDefinitions.single()
+            assertEquals("Market Vendor", shop.name)
+            assertEquals(RoomId("ok_shop:market"), shop.roomId)
+            assertEquals(2, shop.itemIds.size)
+        }
+
+        @Test
+        fun `loads item basePrice`() {
+            val world = WorldLoader.loadFromResource("world/ok_shop.yaml")
+            val items = world.itemSpawns.associateBy { it.instance.id.value }
+
+            val sword = items.getValue("ok_shop:sword")
+            assertEquals(50, sword.instance.item.basePrice)
+
+            val trophy = items.getValue("ok_shop:trophy")
+            assertEquals(0, trophy.instance.item.basePrice)
+        }
+
+        @Test
+        fun `loads mob gold range from tier defaults`() {
+            val world = WorldLoader.loadFromResource("world/ok_mob_stats.yaml")
+            val mobs = world.mobSpawns.associateBy { it.id.value }
+
+            // Standard tier level 1: goldMin=2, goldMax=8
+            val rat = mobs.getValue("ok_mob_stats:rat")
+            assertEquals(2L, rat.goldMin)
+            assertEquals(8L, rat.goldMax)
+
+            // Standard tier level 3 (steps=2): goldMin=2+2*2=6, goldMax=8+2*2=12
+            val bandit = mobs.getValue("ok_mob_stats:bandit")
+            assertEquals(6L, bandit.goldMin)
+            assertEquals(12L, bandit.goldMax)
+
+            // Boss tier level 1: goldMin=50, goldMax=100
+            val boss = mobs.getValue("ok_mob_stats:boss_mob")
+            assertEquals(50L, boss.goldMin)
+            assertEquals(100L, boss.goldMax)
+        }
+
+        @Test
+        fun `fails when shop references missing room`() {
+            val ex =
+                assertThrows(WorldLoadException::class.java) {
+                    WorldLoader.loadFromResource("world/bad_shop_missing_room.yaml")
+                }
+            assertTrue(ex.message!!.contains("room", ignoreCase = true), "Got: ${ex.message}")
+        }
+
+        @Test
+        fun `fails when shop references missing item`() {
+            val ex =
+                assertThrows(WorldLoadException::class.java) {
+                    WorldLoader.loadFromResource("world/bad_shop_missing_item.yaml")
+                }
+            assertTrue(ex.message!!.contains("item", ignoreCase = true), "Got: ${ex.message}")
+        }
+    }
 }

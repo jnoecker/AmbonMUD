@@ -17,6 +17,7 @@ import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.MobDrop
 import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
+import dev.ambon.domain.world.ShopDefinition
 import dev.ambon.domain.world.World
 import dev.ambon.domain.world.data.WorldFile
 
@@ -60,6 +61,7 @@ object WorldLoader {
         val allExits = LinkedHashMap<RoomId, Map<Direction, RoomId>>() // staged exits per room
         val mergedMobs = LinkedHashMap<MobId, MobSpawn>()
         val mergedItems = LinkedHashMap<ItemId, ItemSpawn>()
+        val mergedShops = mutableListOf<ShopDefinition>()
         val zoneLifespansMinutes = LinkedHashMap<String, Long?>()
 
         // If multiple files provide startRoom, pick first file’s startRoom as world start.
@@ -146,6 +148,8 @@ object WorldLoader {
                 val resolvedMaxDamage = mf.maxDamage ?: (tier.baseMaxDamage + steps * tier.damagePerLevel)
                 val resolvedArmor = mf.armor ?: tier.baseArmor
                 val resolvedXpReward = mf.xpReward ?: (tier.baseXpReward + steps.toLong() * tier.xpRewardPerLevel)
+                val resolvedGoldMin = mf.goldMin ?: (tier.baseGoldMin + steps.toLong() * tier.goldPerLevel)
+                val resolvedGoldMax = mf.goldMax ?: (tier.baseGoldMax + steps.toLong() * tier.goldPerLevel)
                 val drops =
                     mf.drops.mapIndexed { index, drop ->
                         val rawItemId = drop.itemId.trim()
@@ -180,6 +184,15 @@ object WorldLoader {
                 if (resolvedXpReward < 0L) {
                     throw WorldLoadException("Mob '${mobId.value}' resolved xpReward must be >= 0")
                 }
+                if (resolvedGoldMin < 0L) {
+                    throw WorldLoadException("Mob '${mobId.value}' resolved goldMin must be >= 0")
+                }
+                if (resolvedGoldMax < resolvedGoldMin) {
+                    throw WorldLoadException(
+                        "Mob '${mobId.value}' resolved goldMax ($resolvedGoldMax) must be >= " +
+                            "goldMin ($resolvedGoldMin)",
+                    )
+                }
 
                 val respawnSeconds = mf.respawnSeconds
                 if (respawnSeconds != null && respawnSeconds <= 0L) {
@@ -198,6 +211,8 @@ object WorldLoader {
                         xpReward = resolvedXpReward,
                         drops = drops,
                         respawnSeconds = respawnSeconds,
+                        goldMin = resolvedGoldMin,
+                        goldMax = resolvedGoldMax,
                     )
             }
 
@@ -261,6 +276,11 @@ object WorldLoader {
                         }
                     }
 
+                val basePrice = itemFile.basePrice
+                if (basePrice < 0) {
+                    throw WorldLoadException("Item '${itemId.value}' basePrice cannot be negative")
+                }
+
                 val roomRaw = itemFile.room?.trim()?.takeUnless { it.isEmpty() }
                 val mobRaw = itemFile.mob?.trim()?.takeUnless { it.isEmpty() }
                 if (roomRaw != null && mobRaw != null) {
@@ -301,10 +321,36 @@ object WorldLoader {
                                         charges = charges,
                                         onUse = onUse,
                                         matchByKey = itemFile.matchByKey,
+                                        basePrice = basePrice,
                                     ),
                             ),
                         roomId = roomId,
                     )
+            }
+
+            // Stage shops (normalized)
+            for ((rawId, shopFile) in file.shops) {
+                val shopName = shopFile.name.trim()
+                if (shopName.isEmpty()) {
+                    throw WorldLoadException("Shop '$rawId' in zone '$zone' name cannot be blank")
+                }
+                val shopRoomId = normalizeTarget(zone, shopFile.room)
+                val shopItemIds =
+                    shopFile.items.mapIndexed { index, rawItemId ->
+                        val trimmed = rawItemId.trim()
+                        if (trimmed.isEmpty()) {
+                            throw WorldLoadException("Shop '$rawId' item #${index + 1} cannot be blank")
+                        }
+                        normalizeItemId(zone, trimmed)
+                    }
+                mergedShops.add(
+                    ShopDefinition(
+                        id = "$zone:$rawId",
+                        name = shopName,
+                        roomId = shopRoomId,
+                        itemIds = shopItemIds,
+                    ),
+                )
             }
         }
 
@@ -371,6 +417,22 @@ object WorldLoader {
             }
         }
 
+        // Validate shop references after merge
+        for (shop in mergedShops) {
+            if (!mergedRooms.containsKey(shop.roomId)) {
+                throw WorldLoadException(
+                    "Shop '${shop.id}' references missing room '${shop.roomId.value}'",
+                )
+            }
+            for ((index, itemId) in shop.itemIds.withIndex()) {
+                if (!mergedItems.containsKey(itemId)) {
+                    throw WorldLoadException(
+                        "Shop '${shop.id}' item #${index + 1} references missing item '${itemId.value}'",
+                    )
+                }
+            }
+        }
+
         return World(
             rooms = mergedRooms.toMutableMap(),
             startRoom = worldStart,
@@ -380,6 +442,7 @@ object WorldLoader {
                 zoneLifespansMinutes.entries
                     .mapNotNull { (zone, lifespanMinutes) -> lifespanMinutes?.let { zone to it } }
                     .toMap(),
+            shopDefinitions = mergedShops.toList(),
         )
     }
 

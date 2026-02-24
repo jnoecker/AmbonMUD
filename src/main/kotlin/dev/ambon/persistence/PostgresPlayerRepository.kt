@@ -135,6 +135,7 @@ class PostgresPlayerRepository(
                     it[isStaff] = record.isStaff
                     it[mana] = record.mana
                     it[maxMana] = record.maxMana
+                    it[gold] = record.gold
                 }
             }
             metrics.onPlayerSave()
@@ -169,6 +170,7 @@ class PostgresPlayerRepository(
             isStaff = this[PlayersTable.isStaff],
             mana = this[PlayersTable.mana],
             maxMana = this[PlayersTable.maxMana],
+            gold = this[PlayersTable.gold],
         )
     }
 }
