@@ -28,4 +28,16 @@ class SwarmConfigTest {
         val config = SwarmConfig(run = RunConfig(namespacePrefix = "abcdefghijk"))
         assertThrows<IllegalArgumentException> { config.validated() }
     }
+
+    @Test
+    fun `empty races list fails validation`() {
+        val config = SwarmConfig(behavior = BehaviorConfig(races = emptyList()))
+        assertThrows<IllegalArgumentException> { config.validated() }
+    }
+
+    @Test
+    fun `empty classes list fails validation`() {
+        val config = SwarmConfig(behavior = BehaviorConfig(classes = emptyList()))
+        assertThrows<IllegalArgumentException> { config.validated() }
+    }
 }
