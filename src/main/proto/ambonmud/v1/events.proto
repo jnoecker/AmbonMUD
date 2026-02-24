@@ -13,6 +13,7 @@ message InboundEventProto {
     ConnectedProto connected = 2;
     DisconnectedProto disconnected = 3;
     LineReceivedProto line_received = 4;
+    GmcpReceivedProto gmcp_received = 5;
   }
 }
 
@@ -26,6 +27,11 @@ message DisconnectedProto {
 
 message LineReceivedProto {
   string line = 1;
+}
+
+message GmcpReceivedProto {
+  string gmcp_package = 1;
+  string json_data = 2;
 }
 
 // ── Outbound events (Engine → Gateway) ───────────────────────────────────────
@@ -43,6 +49,7 @@ message OutboundEventProto {
     ClearScreenProto clear_screen = 9;
     ShowAnsiDemoProto show_ansi_demo = 10;
     SessionRedirectProto session_redirect = 11;
+    GmcpDataProto gmcp_data = 12;
   }
 }
 
@@ -78,4 +85,9 @@ message SessionRedirectProto {
   string new_engine_id = 1;
   string new_engine_host = 2;
   int32 new_engine_port = 3;
+}
+
+message GmcpDataProto {
+  string gmcp_package = 1;
+  string json_data = 2;
 }

@@ -53,6 +53,14 @@ class KtorWebSocketTransportTest {
                         withTimeout(3_000) { inbound.awaitReceive() },
                     )
 
+                    // WebSocket transport auto-sends Core.Supports.Set on connect.
+                    val gmcpAutoSend = withTimeout(3_000) { inbound.awaitReceive() }
+                    assertTrue(
+                        gmcpAutoSend is InboundEvent.GmcpReceived &&
+                            gmcpAutoSend.gmcpPackage == "Core.Supports.Set",
+                        "Expected auto Core.Supports.Set, got: $gmcpAutoSend",
+                    )
+
                     send(Frame.Text("look\r\nwho"))
                     assertEquals(
                         InboundEvent.LineReceived(sid, "look"),

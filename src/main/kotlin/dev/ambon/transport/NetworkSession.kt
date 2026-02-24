@@ -19,7 +19,7 @@ class NetworkSession(
     private val socket: Socket,
     private val inbound: InboundBus,
     // per-session
-    private val outboundQueue: Channel<String>,
+    private val outboundQueue: Channel<OutboundFrame>,
     private val onDisconnected: () -> Unit,
     private val scope: CoroutineScope,
     private val onOutboundFrameWritten: () -> Unit = {},
@@ -30,6 +30,10 @@ class NetworkSession(
 ) {
     private val disconnected = AtomicBoolean(false)
     private var inboundBackpressureFailures = 0
+
+    @Volatile
+    var gmcpEnabled = false
+        private set
 
     private val terminalCaps = TerminalCapabilities()
     private val outputLock = Any()
@@ -97,6 +101,8 @@ class NetworkSession(
         // Phase 1: request terminal type and window size.
         sendTelnetCommand(TelnetProtocol.DO, TelnetProtocol.TTYPE)
         sendTelnetCommand(TelnetProtocol.DO, TelnetProtocol.NAWS)
+        // Offer GMCP support.
+        sendTelnetCommand(TelnetProtocol.WILL, TelnetProtocol.GMCP)
     }
 
     private fun onTelnetControlEvent(event: TelnetControlEvent) {
@@ -131,13 +137,34 @@ class NetworkSession(
             terminalCaps.columns = null
             terminalCaps.rows = null
         }
+
+        if (event.command == TelnetProtocol.DO && event.option == TelnetProtocol.GMCP) {
+            gmcpEnabled = true
+            log.debug { "GMCP enabled: sessionId=$sessionId" }
+            return
+        }
+
+        if (event.command == TelnetProtocol.DONT && event.option == TelnetProtocol.GMCP) {
+            gmcpEnabled = false
+            return
+        }
     }
 
     private fun handleTelnetSubnegotiation(event: TelnetControlEvent.Subnegotiation) {
         when (event.option) {
             TelnetProtocol.TTYPE -> parseTerminalType(event.payload)
             TelnetProtocol.NAWS -> parseWindowSize(event.payload)
+            TelnetProtocol.GMCP -> parseGmcpPayload(event.payload)
         }
+    }
+
+    private fun parseGmcpPayload(payload: ByteArray) {
+        val raw = payload.toString(Charsets.UTF_8).trim()
+        val spaceIdx = raw.indexOf(' ')
+        val pkg = if (spaceIdx == -1) raw else raw.substring(0, spaceIdx)
+        val jsonData = if (spaceIdx == -1) "{}" else raw.substring(spaceIdx + 1).trim()
+        if (pkg.isBlank()) return
+        inbound.trySend(InboundEvent.GmcpReceived(sessionId, pkg, jsonData))
     }
 
     private fun parseTerminalType(payload: ByteArray) {
@@ -205,11 +232,23 @@ class NetworkSession(
     private suspend fun writeLoop() {
         try {
             val output = socket.getOutputStream()
-            for (msg in outboundQueue) {
-                val bytes = msg.toByteArray(Charsets.UTF_8)
-                synchronized(outputLock) {
-                    output.write(bytes)
-                    output.flush()
+            for (frame in outboundQueue) {
+                when (frame) {
+                    is OutboundFrame.Text -> {
+                        val bytes = frame.content.toByteArray(Charsets.UTF_8)
+                        synchronized(outputLock) {
+                            output.write(bytes)
+                            output.flush()
+                        }
+                    }
+                    is OutboundFrame.Gmcp -> {
+                        if (gmcpEnabled) {
+                            val pkg = frame.gmcpPackage
+                            val data = frame.jsonData
+                            val payload = "$pkg $data".toByteArray(Charsets.UTF_8)
+                            sendTelnetSubnegotiation(TelnetProtocol.GMCP, payload)
+                        }
+                    }
                 }
                 onOutboundFrameWritten()
             }

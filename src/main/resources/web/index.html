@@ -19,7 +19,33 @@
             <button id="reconnect" type="button">Reconnect</button>
         </div>
     </header>
-    <section id="terminal" aria-label="AmbonMUD terminal"></section>
+    <div class="game-layout">
+        <section id="terminal" aria-label="AmbonMUD terminal"></section>
+        <aside id="sidebar">
+            <div class="sidebar-panel" id="char-panel">
+                <div class="panel-title">Character</div>
+                <div class="bar-label">HP <span id="hp-text">— / —</span></div>
+                <div class="bar-wrap"><div class="bar-fill hp" id="hp-bar" style="width:0%"></div></div>
+                <div class="bar-label">Mana <span id="mana-text">— / —</span></div>
+                <div class="bar-wrap"><div class="bar-fill mana" id="mana-bar" style="width:0%"></div></div>
+                <div class="stat-row">
+                    <span class="stat-key">Level</span>
+                    <span class="stat-val" id="level-val">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-key">XP</span>
+                    <span class="stat-val" id="xp-val">—</span>
+                </div>
+            </div>
+            <div class="sidebar-panel" id="room-panel">
+                <div class="panel-title">Room</div>
+                <div id="room-title" class="room-title">—</div>
+                <div id="room-desc" class="room-desc"></div>
+                <div class="exits-label">Exits</div>
+                <div id="exits-wrap" class="exits-wrap"></div>
+            </div>
+        </aside>
+    </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>

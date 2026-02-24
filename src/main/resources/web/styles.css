@@ -93,6 +93,13 @@ button:hover {
     background: #1e3a58;
 }
 
+.game-layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    gap: 0.75rem;
+}
+
 #terminal {
     flex: 1;
     min-height: 0;
@@ -104,6 +111,136 @@ button:hover {
 
 #terminal .xterm-viewport {
     scrollbar-color: #34516b #06101b;
+}
+
+/* ── Sidebar ───────────────────────────────────────────────── */
+
+#sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    overflow-y: auto;
+}
+
+.sidebar-panel {
+    border: 1px solid var(--line);
+    border-radius: 0.6rem;
+    background: var(--panel);
+    padding: 0.65rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.panel-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #7aa8cc;
+    margin-bottom: 0.2rem;
+}
+
+.bar-label {
+    font-size: 0.78rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.bar-wrap {
+    height: 8px;
+    background: #1a2e42;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.bar-fill.hp {
+    background: #4caf87;
+}
+
+.bar-fill.mana {
+    background: #4a7cc7;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+}
+
+.stat-key {
+    color: #7aa8cc;
+}
+
+.room-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #a8d4f0;
+    word-break: break-word;
+}
+
+.room-desc {
+    font-size: 0.76rem;
+    color: #8facc4;
+    line-height: 1.4;
+    word-break: break-word;
+    margin-bottom: 0.2rem;
+}
+
+.exits-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #7aa8cc;
+}
+
+.exits-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.exit-btn {
+    border: 1px solid var(--line);
+    border-radius: 0.35rem;
+    background: #152438;
+    color: var(--text);
+    padding: 0.2rem 0.45rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    text-transform: lowercase;
+}
+
+.exit-btn:hover {
+    background: #1e3a58;
+}
+
+@media (max-width: 900px) {
+    .game-layout {
+        flex-direction: column;
+    }
+
+    #sidebar {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        overflow-y: visible;
+    }
+
+    .sidebar-panel {
+        flex: 1;
+        min-width: 200px;
+    }
 }
 
 @media (max-width: 700px) {

@@ -21,6 +21,7 @@ class AbilitySystem(
     private val rng: Random = Random(),
     private val items: ItemRegistry? = null,
     private val intSpellDivisor: Int = 3,
+    private val markVitalsDirty: (SessionId) -> Unit = {},
 ) {
     private val learnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
     private val cooldowns = mutableMapOf<SessionId, MutableMap<AbilityId, Long>>()
@@ -92,6 +93,7 @@ class AbilitySystem(
 
                 // 5. Deduct mana
                 player.mana = (player.mana - ability.manaCost).coerceAtLeast(0)
+                markVitalsDirty(sessionId)
 
                 // 6. Set cooldown
                 if (ability.cooldownMs > 0) {
@@ -129,6 +131,7 @@ class AbilitySystem(
             TargetType.SELF -> {
                 // 5. Deduct mana
                 player.mana = (player.mana - ability.manaCost).coerceAtLeast(0)
+                markVitalsDirty(sessionId)
 
                 // 6. Set cooldown
                 if (ability.cooldownMs > 0) {
@@ -143,6 +146,7 @@ class AbilitySystem(
                 val before = player.hp
                 player.hp = (player.hp + healAmount).coerceAtMost(player.maxHp)
                 val healed = player.hp - before
+                if (healed > 0) markVitalsDirty(sessionId)
 
                 outbound.send(
                     OutboundEvent.SendText(

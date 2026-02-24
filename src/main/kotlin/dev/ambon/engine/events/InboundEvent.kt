@@ -17,4 +17,11 @@ sealed interface InboundEvent {
         val sessionId: SessionId,
         val line: String,
     ) : InboundEvent
+
+    /** Structured GMCP data received from the client. */
+    data class GmcpReceived(
+        val sessionId: SessionId,
+        val gmcpPackage: String,
+        val jsonData: String,
+    ) : InboundEvent
 }

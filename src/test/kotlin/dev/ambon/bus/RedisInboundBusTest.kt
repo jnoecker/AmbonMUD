@@ -111,8 +111,10 @@ class RedisInboundBusTest {
         defaultAnsiEnabled: Boolean = false,
         reason: String = "",
         line: String = "",
+        gmcpPackage: String = "",
+        jsonData: String = "",
     ): String {
-        val payload = "$instanceId|$type|$sessionId|$defaultAnsiEnabled|$reason|$line"
+        val payload = "$instanceId|$type|$sessionId|$defaultAnsiEnabled|$reason|$line|$gmcpPackage|$jsonData"
         val signature = hmacSha256(sharedSecret, payload)
         return mapper.writeValueAsString(
             mapOf(
@@ -122,6 +124,8 @@ class RedisInboundBusTest {
                 "defaultAnsiEnabled" to defaultAnsiEnabled,
                 "reason" to reason,
                 "line" to line,
+                "gmcpPackage" to gmcpPackage,
+                "jsonData" to jsonData,
                 "signature" to signature,
             ),
         )
