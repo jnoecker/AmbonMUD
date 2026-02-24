@@ -148,6 +148,17 @@ data class AppConfig(
         if (redis.enabled) {
             require(redis.uri.isNotBlank()) { "ambonMUD.redis.uri must be non-blank when redis.enabled=true" }
             require(redis.cacheTtlSeconds > 0L) { "ambonMUD.redis.cacheTtlSeconds must be > 0" }
+            if (redis.bus.enabled) {
+                require(redis.bus.inboundChannel.isNotBlank()) {
+                    "ambonMUD.redis.bus.inboundChannel must be non-blank when redis.bus.enabled=true"
+                }
+                require(redis.bus.outboundChannel.isNotBlank()) {
+                    "ambonMUD.redis.bus.outboundChannel must be non-blank when redis.bus.enabled=true"
+                }
+                require(redis.bus.sharedSecret.isNotBlank()) {
+                    "ambonMUD.redis.bus.sharedSecret must be non-blank when redis.bus.enabled=true"
+                }
+            }
         }
 
         if (mode == DeploymentMode.ENGINE || mode == DeploymentMode.GATEWAY) {
@@ -524,6 +535,7 @@ data class RedisBusConfig(
     val inboundChannel: String = "ambon:inbound",
     val outboundChannel: String = "ambon:outbound",
     val instanceId: String = "",
+    val sharedSecret: String = "",
 )
 
 data class RedisConfig(
