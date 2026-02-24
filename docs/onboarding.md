@@ -33,16 +33,17 @@ Welcome to AmbonMUD. This guide walks a new developer from zero to productive as
 
 ## 1. What Is This?
 
-AmbonMUD is a **tick-based MUD (Multi-User Dungeon) server** written in Kotlin/JVM. It supports simultaneous telnet and WebSocket clients, YAML-defined world content, bcrypt-hashed player accounts, and real-time combat/mob/regen systems. It can run as a single process or split into separate engine and gateway processes for horizontal scaling.
+AmbonMUD is a **tick-based MUD (Multi-User Dungeon) server** written in Kotlin/JVM. It supports simultaneous telnet and WebSocket clients, GMCP structured data, YAML-defined world content, bcrypt-hashed player accounts, class-based character progression with a spell/ability system, and real-time combat/mob/regen systems. It can run as a single process, split into separate engine and gateway processes for horizontal scaling, or deploy across multiple sharded engines for zone-based partitioning.
 
 The codebase is intentionally designed like a production backend service, not a toy project. The emphasis is on clean architectural boundaries, testability, and incremental extensibility.
 
 Key stats:
-- **Transport**: Telnet (port 4000) + WebSocket / browser demo (port 8080)
+- **Transport**: Telnet (port 4000, NAWS/TTYPE/GMCP negotiation) + WebSocket / browser demo (port 8080, GMCP-aware sidebar panels)
 - **Engine**: Single-threaded coroutine dispatcher, 100 ms ticks
+- **Character**: 4 races (Human, Elf, Dwarf, Halfling), 4 classes (Warrior, Mage, Cleric, Rogue), 6 primary attributes (STR/DEX/CON/INT/WIS/CHA), 12 class-specific abilities with mana/cooldowns
 - **Persistence**: Write-behind coalescing → optional Redis L2 cache → YAML files or PostgreSQL (selectable via config)
-- **World content**: YAML zone files, multi-zone with cross-zone exits
-- **Scalability**: Phases 1–4 complete (bus abstraction, async persistence, Redis integration, gRPC gateway split); three deployment modes: `STANDALONE`, `ENGINE`, `GATEWAY`
+- **World content**: YAML zone files (8 zones), multi-zone with cross-zone exits
+- **Scalability**: Phases 1–5 complete (bus abstraction, async persistence, Redis integration, gRPC gateway split, zone-based engine sharding); three deployment modes: `STANDALONE`, `ENGINE`, `GATEWAY`; zone instancing for hot-zone load distribution
 - **Gateway resilience**: Exponential-backoff reconnect when the engine gRPC stream is lost; Snowflake session IDs with overflow wait and clock-rollback hardening
 
 ---
@@ -138,13 +139,15 @@ AmbonMUD/
 │   │       └── load/              # WorldLoader (YAML → domain)
 │   ├── engine/                    # All gameplay logic
 │   │   ├── GameEngine.kt          # Tick loop + inbound handler
+│   │   ├── GmcpEmitter.kt        # GMCP structured data emitter (13 packages)
 │   │   ├── PlayerRegistry.kt      # Session ↔ PlayerState, login FSM
 │   │   ├── PlayerState.kt         # Per-session mutable player data
-│   │   ├── PlayerProgression.kt   # XP curves, leveling, HP scaling
+│   │   ├── PlayerProgression.kt   # XP curves, leveling, HP/mana scaling
+│   │   ├── AbilitySystem.kt       # Spell/ability resolution, cooldowns, mana
 │   │   ├── MobRegistry.kt         # NPC registry + room membership index
 │   │   ├── MobSystem.kt           # NPC wandering AI
-│   │   ├── CombatSystem.kt        # Fight resolution
-│   │   ├── RegenSystem.kt         # HP regeneration
+│   │   ├── CombatSystem.kt        # Fight resolution (melee + spell kills)
+│   │   ├── RegenSystem.kt         # HP + mana regeneration
 │   │   ├── commands/
 │   │   │   ├── CommandParser.kt   # String → Command (pure function)
 │   │   │   └── CommandRouter.kt   # Command → OutboundEvents (logic)
@@ -160,6 +163,13 @@ AmbonMUD/
 │   │   ├── RedisOutboundBus.kt    # Local + Redis pub/sub (Phase 3)
 │   │   ├── GrpcInboundBus.kt      # Wraps Local + forwards to gRPC stream (Phase 4)
 │   │   └── GrpcOutboundBus.kt     # Wraps Local + receives from gRPC stream (Phase 4)
+│   ├── sharding/                  # Zone-based engine sharding (Phase 5)
+│   │   ├── ZoneRegistry.kt        # Zone → engine mapping (Static or Redis-backed)
+│   │   ├── InterEngineBus.kt      # Cross-engine messaging (Local or Redis)
+│   │   ├── HandoffManager.kt      # Cross-engine player movement with ACK timeout
+│   │   ├── InstanceSelector.kt    # Zone instancing / load-balanced routing
+│   │   ├── ThresholdInstanceScaler.kt  # Auto-scale instances based on capacity
+│   │   └── PlayerLocationIndex.kt # Redis-backed O(1) player lookups for cross-engine tell
 │   ├── grpc/                      # gRPC gateway/engine split (Phase 4)
 │   │   ├── EngineGrpcServer.kt    # gRPC server lifecycle wrapper
 │   │   ├── EngineServiceImpl.kt   # Bidi-streaming service impl; sessionToStream map
@@ -167,7 +177,7 @@ AmbonMUD/
 │   │   ├── EngineServer.kt        # ENGINE-mode composition root
 │   │   └── ProtoMapper.kt         # InboundEvent/OutboundEvent ↔ proto extension functions
 │   ├── gateway/                   # GATEWAY-mode composition root (Phase 4)
-│   │   └── GatewayServer.kt       # Transports + gRPC client; no engine/persistence
+│   │   └── GatewayServer.kt       # Transports + gRPC client; multi-engine session routing
 │   ├── redis/                     # Redis infrastructure (Phase 3)
 │   │   ├── RedisConnectionManager.kt  # Lettuce lifecycle, sync/async commands
 │   │   └── JsonSupport.kt         # Jackson ObjectMapper (KotlinModule)
@@ -201,25 +211,37 @@ AmbonMUD/
 │   └── ui/login/                  # Login banner rendering
 ├── src/main/resources/
 │   ├── application.yaml           # Runtime config (ports, tuning, world files)
-│   ├── db/migration/              # Flyway SQL migrations (Postgres backend)
-│   │   └── V1__create_players_table.sql
+│   ├── db/migration/              # Flyway SQL migrations (Postgres backend, V1–V4)
+│   │   ├── V1__create_players_table.sql
+│   │   ├── V2__add_player_mana.sql
+│   │   ├── V3__add_player_attributes.sql
+│   │   └── V4__update_player_class_default.sql
 │   ├── login.txt                  # Login banner text
 │   ├── login.styles.yaml          # ANSI styles for banner
-│   ├── world/                     # Zone YAML files
+│   ├── world/                     # Zone YAML files (8 zones)
 │   │   ├── ambon_hub.yaml
 │   │   ├── demo_ruins.yaml
-│   │   └── noecker_resume.yaml
-│   └── web/                       # Static browser client (xterm.js)
-├── src/test/kotlin/               # Full test suite (~49 test files)
+│   │   ├── noecker_resume.yaml
+│   │   ├── tutorial_glade.yaml
+│   │   ├── low_training_marsh.yaml
+│   │   ├── low_training_highlands.yaml
+│   │   ├── low_training_mines.yaml
+│   │   └── low_training_barrens.yaml
+│   └── web/                       # Static browser client (xterm.js + GMCP sidebar panels)
+├── src/test/kotlin/               # Full test suite (~66 test files)
 ├── src/test/resources/world/      # World fixtures (valid + invalid)
 ├── data/players/                  # Runtime player saves (git-ignored)
 ├── docs/
 │   ├── world-zone-yaml-spec.md    # World YAML format contract
 │   ├── scalability-plan-brainstorm.md  # 4-phase scaling roadmap
+│   ├── engine-sharding-design.md  # Zone-based sharding architecture (Phase 5)
+│   ├── ability-system-plan.md     # Spell/ability system design
+│   ├── scaling-story.md           # Interview talk track for scaling decisions
+│   ├── DesignDecisions.md         # Architecture rationale (worth reading)
 │   └── onboarding.md              # This file
 ├── AGENTS.md                      # Engineering playbook
 ├── CLAUDE.md                      # Claude Code orientation
-└── DesignDecisions.md             # Architecture rationale (worth reading)
+└── swarm/                         # Load-testing module (:swarm)
 ```
 
 ---
@@ -356,13 +378,15 @@ A pure function `parse(line: String): Command`. No side effects. Returns a seale
 | Group | Commands |
 |-------|----------|
 | Movement | `Move(dir)`, `LookDir(dir)` |
-| Communication | `Say`, `Emote`, `Tell`, `Gossip` |
-| Items | `Get`, `Drop`, `Wear`, `Remove`, `Inventory`, `Equipment` |
+| Communication | `Say`, `Emote`, `Tell`, `Gossip`, `Whisper`, `Shout`, `Ooc`, `Pose` |
+| Items | `Get`, `Drop`, `Wear`, `Remove`, `Inventory`, `Equipment`, `Use`, `Give` |
 | Combat | `Kill`, `Flee` |
+| Abilities | `Cast`, `Spells` |
 | Character | `Score` |
 | Social | `Who`, `Help` |
 | UI / Settings | `Look`, `Exits`, `AnsiOn`, `AnsiOff`, `Clear`, `Colors` |
 | System | `Quit`, `Noop`, `Invalid`, `Unknown` |
+| Sharding | `Phase` (zone instancing) |
 | Staff/Admin | `Goto`, `Transfer`, `Spawn`, `Smite`, `Kick`, `Shutdown` |
 
 Aliases are handled here (e.g. `t` → `tell`, `i` → `inventory`). Direction parsing normalizes `n/north/s/south/e/east/w/west/u/up/d/down`.
@@ -406,7 +430,14 @@ AwaitingExistingPassword         AwaitingCreateConfirmation
     │ → bcrypt verify                │ → yes/no
     │   up to 3 wrong attempts       ▼
     │   then disconnect          AwaitingNewPassword
-    ▼                                │ → bcrypt hash + create record
+    ▼                                │ → bcrypt hash
+                                     ▼
+                                 AwaitingRace
+                                     │ → Human, Elf, Dwarf, Halfling (attribute modifiers)
+                                     ▼
+                                 AwaitingClass
+                                     │ → Warrior, Mage, Cleric, Rogue (HP/mana scaling)
+                                     ▼
 LoggedIn ◄───────────────────────────┘
     │ → broadcast enter, show room, emit prompt
 ```
@@ -461,7 +492,7 @@ data class World(
 
 ```kotlin
 data class Item(
-    val keyword: String,        // used in get/drop/wear commands
+    val keyword: String,        // used in get/drop/wear/use commands
     val displayName: String,    // shown to players
     val description: String,    // "look <item>"
     val slot: ItemSlot?,        // HEAD, BODY, HAND — null means not wearable
@@ -469,6 +500,9 @@ data class Item(
     val armor: Int,             // damage reduction when equipped
     val constitution: Int,      // faster HP regen when equipped
     val matchByKey: Boolean,    // if true, exact keyword only (no substring fallback)
+    val consumable: Boolean,    // if true, removed from inventory when charges deplete
+    val charges: Int?,          // null = infinite, 0+ = limited charges
+    val onUse: ItemUseEffect?,  // effects when used (healHp, grantXp)
 )
 ```
 
@@ -497,10 +531,15 @@ Runtime-only (not persisted directly):
 ```kotlin
 // Key fields:
 sessionId, name, roomId, playerId
-hp, maxHp, baseMaxHp, constitution
+race, playerClass
+strength, dexterity, constitution, intelligence, wisdom, charisma  // base 10, modified by race
+hp, maxHp, baseMaxHp
+mana, maxMana, baseMana
 level, xpTotal
-ansiEnabled
+ansiEnabled, isStaff
 ```
+
+Primary attributes have mechanical effects: STR scales melee damage, DEX adds dodge chance, INT scales spell damage, CON scales HP regen, WIS scales mana regen.
 
 Persisted via `PlayerRecord` to YAML or PostgreSQL on save (depending on configured backend).
 
@@ -513,7 +552,8 @@ Persisted via `PlayerRecord` to YAML or PostgreSQL on save (depending on configu
 **File:** `src/main/kotlin/dev/ambon/engine/CombatSystem.kt`
 
 - 1v1 player-vs-mob only
-- Damage per round: random in `[minDamage, maxDamage]` minus mob's armor; player takes damage minus equipped armor total
+- Melee damage per round: random in `[minDamage, maxDamage]` scaled by STR, minus mob's armor; player takes damage minus equipped armor total; DEX adds dodge chance
+- Spell kills delegated from `AbilitySystem` (spell damage bypasses mob armor, scales with INT)
 - One round per second (configurable)
 - On mob death: drop inventory items to room, grant XP to killer, auto-level if XP threshold crossed
 - `Flee` ends combat immediately (player stays in room)
@@ -527,20 +567,31 @@ Persisted via `PlayerRecord` to YAML or PostgreSQL on save (depending on configu
 - Broadcasts `"<name> leaves <dir>."` / `"<name> enters from <dir>."` to players in affected rooms
 - `maxMovesPerTick` cap prevents tick starvation
 
+### AbilitySystem
+
+**File:** `src/main/kotlin/dev/ambon/engine/AbilitySystem.kt`
+
+- 12 abilities across 4 classes (3 per class), auto-learned on level-up
+- Mana pool resource; mana cost deducted on cast
+- Per-ability cooldowns (tracked per-session)
+- Effect types: `DIRECT_DAMAGE` (enemy target, INT-scaled, bypasses armor) and `DIRECT_HEAL` (self target)
+- Class restrictions: each ability is locked to the defining class
+- `cast <spell> [target]` command, `spells` / `abilities` list command
+- Spell kills delegate to `CombatSystem.handleSpellKill()` for consistent death/XP/loot handling
+
 ### RegenSystem
 
 **File:** `src/main/kotlin/dev/ambon/engine/RegenSystem.kt`
 
-- Base regen interval: 5 s (configurable)
-- Constitution (base + equipped item bonuses) shortens the interval
-- Restores 1 HP per trigger (configurable)
-- Does nothing at full HP
+- HP regen: base interval 5 s (configurable); CON (base + equipment) shortens interval; restores 1 HP per trigger
+- Mana regen: base interval 5 s (configurable); WIS shortens interval; restores 1 mana per trigger
+- Does nothing at full HP/mana
 
 ### Scheduler
 
 **File:** `src/main/kotlin/dev/ambon/engine/scheduler/Scheduler.kt`
 
-General-purpose delayed/recurring callback runner. `Scheduler.runDue()` is called each tick. Used internally by `MobSystem` for per-mob wander timers.
+General-purpose delayed/recurring callback runner. `Scheduler.runDue()` is called each tick. Used internally by `MobSystem` for per-mob wander timers and by the mob respawn system for individual mob respawn timers (each mob can have a `respawnSeconds` value independent of zone-wide resets).
 
 ### ItemRegistry
 
@@ -576,7 +627,9 @@ totalXpForLevel(L) = baseXp * (L-1)^exponent + linearXp * (L-1)
 
 Level is computed from accumulated XP via binary search. Default config: `baseXp=100`, `exponent=2.0` (quadratic), max level 50.
 
-HP scaling: base 10 HP + `hpPerLevel` per level (default +2). Full heal on level-up (configurable).
+HP scaling: class-dependent HP-per-level (Warrior 3, Cleric/Rogue 2, Mage 1). Full heal on level-up (configurable).
+
+Mana scaling: class-dependent mana-per-level (Mage 8, Cleric 6, Rogue 4, Warrior 2). New abilities auto-learned at level thresholds.
 
 ---
 
@@ -588,7 +641,9 @@ HP scaling: base 10 HP + `hpPerLevel` per level (default +2). Full heal on level
 
 - Raw TCP socket on port 4000
 - Blocking I/O on `Dispatchers.IO` — never bleeds into engine
-- `TelnetLineDecoder` strips telnet negotiation bytes and yields clean lines
+- `TelnetLineDecoder` handles telnet negotiation (IAC/SB/SE state machine) and yields clean lines
+- Negotiated options: NAWS (window size, option 31), TTYPE (terminal type, option 24), GMCP (option 201)
+- GMCP subnegotiation parsing and JSON payload delivery
 - Per-session outbound channel with bounded capacity; overflow triggers disconnect
 
 ### KtorWebSocketTransport (Browser)
@@ -597,6 +652,8 @@ HP scaling: base 10 HP + `hpPerLevel` per level (default +2). Full heal on level
 
 - Ktor WebSocket server on port 8080
 - Serves the static xterm.js demo client from `src/main/resources/web/`
+- Auto-opts WebSocket sessions into all GMCP packages (no negotiation needed)
+- Web client sidebar panels (character vitals, room info, inventory, equipment, skills, room players) driven by GMCP data
 - Same event model as telnet; framing is handled by WebSocket protocol
 
 ### OutboundRouter
@@ -653,7 +710,8 @@ interface OutboundBus {
 - `RedisInboundBus` — wraps `LocalInboundBus` as delegate; publishes to Redis on every `send`/`trySend`; subscribes to Redis channel and delivers remote events to the delegate
 - `RedisOutboundBus` — same pattern for outbound events
 - Each instance carries a UUID `instanceId`; events originating from this instance are filtered out on receive to prevent echo
-- Envelope format: JSON with `instanceId`, `type`, `sessionId`, plus type-specific fields
+- Envelope format: JSON with `instanceId`, `type`, `sessionId`, plus type-specific fields, plus HMAC-SHA256 `signature`
+- All envelopes are signed with a shared secret (`redis.bus.sharedSecret`); invalid signatures are dropped with a warning
 - Enabled in `MudServer` when `redis.enabled && redis.bus.enabled`
 
 ### gRPC Implementations (gateway ↔ engine)
@@ -728,7 +786,17 @@ data class PlayerRecord(
     val id: PlayerId,
     val name: String,
     val roomId: RoomId,
+    val race: String,              // HUMAN, ELF, DWARF, HALFLING
+    val playerClass: String,       // WARRIOR, MAGE, CLERIC, ROGUE
+    val strength: Int,
+    val dexterity: Int,
     val constitution: Int,
+    val intelligence: Int,
+    val wisdom: Int,
+    val charisma: Int,
+    val mana: Int,
+    val maxMana: Int,
+    val baseMana: Int,
     val level: Int,
     val xpTotal: Long,
     val createdAtEpochMs: Long,
@@ -784,6 +852,7 @@ ambonMUD:
       inboundChannel: "ambon:inbound"
       outboundChannel: "ambon:outbound"
       instanceId: ""           # auto-UUID if blank
+      sharedSecret: "changeme" # required (non-blank) when bus enabled; used for HMAC envelope signatures
 ```
 
 ### Running with Redis
@@ -1030,12 +1099,14 @@ Edit or add YAML files in `src/main/resources/world/`, then register them in `sr
 | `engine.combat` | `minDamage`, `maxDamage`, `tickMillis`, `maxCombatsPerTick` |
 | `engine.regen` | `baseIntervalMillis` (5000), `regenAmount` (1), `msPerConstitution`, `minIntervalMillis` |
 | `engine.mob` | `minWanderDelayMillis`, `maxWanderDelayMillis`, `maxMovesPerTick`, `tiers` |
+| `engine.abilities` | Spell/ability definitions: displayName, manaCost, cooldownMs, targetType, effect, classRestriction, learnLevel |
 | `progression` | `xp.baseXp`, `xp.exponent`, `xp.linearXp`, `hpPerLevel`, `maxLevel`, `fullHealOnLevelUp` |
 | `persistence.worker` | `flushIntervalMs` (5000), `enabled` (true) |
 | `redis` | `enabled` (false), `uri`, `cacheTtlSeconds`, `bus.*` |
 | `grpc.server` | `port` (9090) — gRPC listen port (engine mode) |
 | `grpc.client` | `engineHost` (localhost), `enginePort` (9090) — engine address (gateway mode) |
-| `gateway` | `id` (0) — 16-bit gateway ID for `SnowflakeSessionIdFactory` (0–65535) |
+| `gateway` | `id` (0) — 16-bit gateway ID for `SnowflakeSessionIdFactory` (0–65535); `engines` list for multi-engine routing |
+| `sharding` | `enabled`, `engineId`, `zones`, `registry` (STATIC/REDIS), `handoff`, `playerIndex`, `instancing` (zone layering with capacity thresholds) |
 | `gateway.snowflake` | `idLeaseTtlSeconds` (300) — TTL for Redis gateway-ID exclusive lease |
 | `gateway.reconnect` | `maxAttempts` (10), `initialDelayMs` (1000), `maxDelayMs` (30000), `jitterFactor` (0.2), `streamVerifyMs` (2000) |
 | `observability` | Prometheus metrics endpoint |
@@ -1107,8 +1178,13 @@ To trace connection lifecycle at runtime:
 | `CommandRouterBroadcastTest` | Room and global broadcast behavior |
 | `CommandRouterItemsTest` | Item get/drop/wear/remove command execution |
 | `CommandRouterScoreTest` | Score command output |
+| `SocialChannelCommandsTest` | Whisper, shout, ooc, pose commands |
+| `PhaseCommandTest` | Zone instancing phase/layer command |
+| `CrossEngineCommandsTest` | Cross-engine tell, gossip, who |
 | `NamesTellGossipTest` | Tell and gossip name resolution edge cases |
+| `AbilitySystemTest` | Spell casting, mana, cooldowns, class restrictions |
 | `CombatSystemTest` | Damage, HP, death, XP grant, armor math |
+| `MobRespawnTest` | Individual mob respawn timers |
 | `GameEngineIntegrationTest` | Full login-to-gameplay integration |
 | `GameEngineLoginFlowTest` | Login FSM edge cases and takeover |
 | `GameEngineAnsiBehaviorTest` | ANSI toggle and rendering integration |
@@ -1151,6 +1227,13 @@ To trace connection lifecycle at runtime:
 | `EngineGrpcServerTest` | gRPC server lifecycle |
 | `GrpcOutboundDispatcherTest` | Per-session stream routing, unknown-session drop |
 | `GatewayEngineIntegrationTest` | Full in-process connect → login → say → quit over gRPC |
+| `HandoffManagerTest` | Cross-engine player handoff protocol |
+| `InterEngineMessageSerializationTest` | Inter-engine message JSON round-trip |
+| `LoadBalancedInstanceSelectorTest` | Zone instancing load-balanced routing |
+| `LocalInterEngineBusTest` | In-process inter-engine bus |
+| `StaticZoneRegistryTest` | Static zone-to-engine mapping |
+| `ThresholdInstanceScalerTest` | Auto-scaling zone instances |
+| `SessionRouterTest` | Gateway multi-engine session routing |
 
 ### Testing Expectations
 
@@ -1263,7 +1346,10 @@ Edit YAML in `src/main/resources/world/`. If adding a new file, register it in `
 
 ## Further Reading
 
-- `DesignDecisions.md` — explains the "why" behind every major architectural choice
+- `docs/DesignDecisions.md` — explains the "why" behind every major architectural choice
 - `AGENTS.md` — the full engineering playbook (change procedures, invariants)
 - `docs/world-zone-yaml-spec.md` — complete YAML world format reference
-- `docs/scalability-plan-brainstorm.md` — 4-phase scalability roadmap (all phases complete)
+- `docs/scalability-plan-brainstorm.md` — original 4-phase scalability roadmap
+- `docs/engine-sharding-design.md` — zone-based sharding architecture (Phase 5)
+- `docs/ability-system-plan.md` — spell/ability system design
+- `docs/scaling-story.md` — interview talk track for scaling decisions

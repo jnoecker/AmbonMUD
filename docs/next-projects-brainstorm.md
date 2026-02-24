@@ -2,9 +2,11 @@
 
 ## Where We Are
 
-The infrastructure story is complete: event-driven engine, dual transports (telnet + WebSocket), event bus abstraction, write-behind persistence, Redis caching/pub-sub, PostgreSQL backend, gRPC gateway split, Prometheus metrics, zone resets, and a 49+ test suite.
+The infrastructure story is comprehensive: event-driven engine, dual transports (telnet + WebSocket) with GMCP structured data, event bus abstraction, write-behind persistence, Redis caching/pub-sub with HMAC-signed envelopes, PostgreSQL backend, gRPC gateway split, zone-based engine sharding with zone instancing, Prometheus metrics, zone resets, individual mob respawn timers, swarm load testing, and a 66+ test suite.
 
-Gameplay has the fundamentals: movement, look, communication (say/tell/gossip/emote), 1v1 combat vs mobs, items (get/drop/wear/remove with 3 equipment slots), XP/leveling (50 levels, quadratic curve), mob AI (random wandering), HP regen, and zone resets. Three zones with ~63 rooms, 20 mobs, and 39 items.
+Gameplay has strong fundamentals: movement, look, rich communication (say/tell/gossip/emote/whisper/shout/ooc/pose), 1v1 combat vs mobs with attribute-based damage scaling, items (get/drop/wear/remove/use/give with 3 equipment slots + consumables with charges), 4 races with attribute modifiers, 4 classes with distinct HP/mana scaling, 12 class-specific abilities (mana costs, cooldowns, damage/heal effects), XP/leveling (50 levels, quadratic curve), mob AI (random wandering), HP + mana regen, zone resets, and a GMCP-aware web client with sidebar panels. Eight zones with content spanning tutorial, hub, training, and exploration areas.
+
+**Implemented since this document was first written:** Spell & Skill System (#3), Player Classes & Races (#4), zone-based engine sharding, GMCP, consumable items, mob respawn timers, additional communication commands, and training zones.
 
 What's notably absent is _depth_. The projects below would each add a meaningful gameplay or tooling dimension.
 
@@ -44,39 +46,26 @@ What's notably absent is _depth_. The projects below would each add a meaningful
 
 ---
 
-## 3. Spell & Skill System (Character Abilities)
+## 3. ~~Spell & Skill System (Character Abilities)~~ — IMPLEMENTED
 
-**What:** Player abilities beyond basic attack — healing spells, offensive magic, buffs/debuffs, passive skills. Possibly tied to a class or skill-tree system.
+**Status:** Implemented. 12 class-specific abilities (3 per class), mana pool with regen, cooldowns, `cast`/`spells` commands, config-driven definitions, auto-learn on level-up. See `AbilitySystem.kt` and `engine.abilities` config.
 
-**Why this is high-impact:** Combat is currently "kill <mob>" and wait. Abilities add tactical depth, resource management (mana/cooldowns), and build diversity. This is the single biggest gameplay depth multiplier.
-
-**Key design questions:**
-- Resource model: mana pool (regen like HP), cooldowns, or both?
-- Skill acquisition: level-based unlocks, trainers (NPCs), skill points?
-- Effect types: direct damage, heal, DoT, HoT, buff (stat boost), debuff (stat reduction), crowd control
-- Status effect system needed as a foundation (timed buffs/debuffs on players and mobs)
-- `cast <spell> [target]` command, `skills`/`spells` list command
-- How spells interact with the tick system (DoTs tick every N engine ticks)
-
-**Scope:** Very large. New `SpellSystem`, `StatusEffectSystem`, mana/cooldown tracking on `PlayerState`, spell definitions in YAML or config, changes to `CombatSystem` for ability-based combat rounds.
+**Remaining expansion opportunities:**
+- Status effect system (DoTs, HoTs, buffs/debuffs)
+- Area-of-effect spells
+- Passive skills
+- Skill points / skill trees
 
 ---
 
-## 4. Player Classes & Races
+## 4. ~~Player Classes & Races~~ — IMPLEMENTED
 
-**What:** Character archetypes (Warrior, Mage, Rogue, Cleric) with distinct stat distributions, abilities, and equipment restrictions. Optionally, races (Human, Elf, Dwarf) for flavor and minor stat bonuses.
+**Status:** Implemented. 4 races (Human, Elf, Dwarf, Halfling) with attribute modifiers. 4 classes (Warrior, Mage, Cleric, Rogue) with distinct HP/mana-per-level scaling and class-specific abilities. 6 primary attributes (STR/DEX/CON/INT/WIS/CHA) with mechanical effects on combat, spells, and regen. Race/class selection during character creation. Persisted on `PlayerRecord` through all persistence layers.
 
-**Why this is high-impact:** Classes create replayability and distinct play styles. They make grouping interesting (tank + healer + DPS). Combined with the spell/skill system, this defines what "your character" means.
-
-**Key design questions:**
-- Class selection during character creation (extend the login flow)
-- Stat differences: base HP, mana, damage scaling, armor proficiency
-- Class-specific abilities (requires spell/skill system first, or build together)
-- Can players change class? Dual-class?
-- Races: cosmetic + minor stat bonuses, or meaningful mechanical differences?
-- Persisted on `PlayerRecord`
-
-**Scope:** Medium-large. Extends character creation flow, `PlayerRecord`, `PlayerProgression`, and the combat/ability systems. Best paired with project #3.
+**Remaining expansion opportunities:**
+- Class-change or dual-class system
+- Class-specific equipment restrictions
+- Racial abilities or bonuses beyond stat modifiers
 
 ---
 
@@ -133,20 +122,20 @@ What's notably absent is _depth_. The projects below would each add a meaningful
 
 ---
 
-## 8. Rich Web Client
+## 8. Rich Web Client (Partially Implemented)
 
 **What:** Evolve the web client beyond a plain xterm.js terminal. Add a graphical map panel, character stats sidebar, inventory/equipment UI, clickable exits, and possibly a chat panel.
 
-**Why this is high-impact:** Lowers the barrier to entry massively. New players can see a map, click to move, and understand the game without memorizing commands. The terminal stays available for power users.
+**Current state:** GMCP structured data channel is implemented (13 packages over WebSocket). The web client has sidebar panels for character vitals, room info, inventory, equipment, skills, and room players — all driven by GMCP data. Clickable exit buttons are functional.
 
-**Key design questions:**
-- Architecture: structured data channel (JSON over WebSocket) alongside the text stream, or parse ANSI output client-side?
-- Tech stack: vanilla JS (current), or introduce React/Vue/Svelte?
-- Map rendering: auto-map from room data sent by server, or hand-drawn zone maps?
-- Mobile-friendly layout?
-- New `OutboundEvent` variants for structured data (room info, inventory, combat status) vs keeping the engine protocol unchanged and parsing on the client
+**Remaining work:**
+- Auto-map rendering from room/exit data
+- Mobile-friendly layout
+- Tech stack upgrade (vanilla JS → React/Vue/Svelte?) for more complex UI
+- Chat panel with channel filtering
+- Richer combat/ability UI
 
-**Scope:** Large. Primarily frontend work, but may require new outbound event types or a parallel structured-data channel. Could be phased: map first, then inventory panel, then clickable commands.
+**Scope:** Medium (reduced from Large since the data channel and basic panels exist). Primarily frontend work — no engine changes needed.
 
 ---
 
@@ -190,30 +179,30 @@ What's notably absent is _depth_. The projects below would each add a meaningful
 ### Tier 1 — Foundation for everything else
 These enable the most downstream projects:
 
-| # | Project | Unlocks |
-|---|---------|---------|
-| 2 | NPC Dialogue & Scripting | Quest givers, shopkeepers, trainers, world flavor |
-| 3 | Spell & Skill System | Tactical combat, class differentiation, group roles |
-| 5 | Economy & Shops | Item value, gold loop, crafting demand |
+| # | Project | Unlocks | Status |
+|---|---------|---------|--------|
+| 2 | NPC Dialogue & Scripting | Quest givers, shopkeepers, trainers, world flavor | Open |
+| 3 | ~~Spell & Skill System~~ | ~~Tactical combat, class differentiation, group roles~~ | **Done** |
+| 5 | Economy & Shops | Item value, gold loop, crafting demand | Open |
 
 ### Tier 2 — Major gameplay depth
 Build on Tier 1 foundations:
 
-| # | Project | Depends on |
-|---|---------|------------|
-| 1 | Quest System | NPC Dialogue (#2) |
-| 4 | Classes & Races | Spells/Skills (#3) |
-| 6 | Group Combat | Spells/Skills (#3) |
+| # | Project | Depends on | Status |
+|---|---------|------------|--------|
+| 1 | Quest System | NPC Dialogue (#2) | Open |
+| 4 | ~~Classes & Races~~ | ~~Spells/Skills (#3)~~ | **Done** |
+| 6 | Group Combat | Spells/Skills (#3) — now available | Open |
 
 ### Tier 3 — Polish & expansion
 High value but less foundational:
 
-| # | Project | Notes |
-|---|---------|-------|
-| 8 | Rich Web Client | Independent; can start anytime |
-| 9 | Crafting | Benefits from Economy (#5) |
-| 7 | OLC / World Builder | Independent; high effort |
-| 10 | Persistent World State | Independent; medium effort |
+| # | Project | Notes | Status |
+|---|---------|-------|--------|
+| 8 | Rich Web Client | Partially done (GMCP sidebar panels); deeper UI remains | Open |
+| 9 | Crafting | Benefits from Economy (#5) | Open |
+| 7 | OLC / World Builder | Independent; high effort | Open |
+| 10 | Persistent World State | Independent; medium effort | Open |
 
 ---
 
@@ -223,10 +212,10 @@ High value but less foundational:
 NPC Dialogue (#2) ──→ Quest System (#1)
                   ──→ Economy & Shops (#5) ──→ Crafting (#9)
 
-Spells & Skills (#3) ──→ Classes & Races (#4)
-                     ──→ Group Combat (#6)
+Spells & Skills (#3) ──→ Classes & Races (#4)     ← BOTH DONE
+                     ──→ Group Combat (#6)         ← unblocked
 
-Rich Web Client (#8)         ← independent
+Rich Web Client (#8)         ← partially done (GMCP panels)
 OLC / World Builder (#7)     ← independent
 Persistent World State (#10) ← independent
 ```

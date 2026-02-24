@@ -75,6 +75,19 @@ Gateways reconnect with backoff, and session IDs are globally safe via Snowflake
 
 **Why it mattered:** connection scale becomes mostly an edge concern; the core remains deterministic.
 
+### Phase 5: Zone-based engine sharding
+
+We partitioned the game world across multiple engine processes by zone:
+
+- Zone registry (Static or Redis-backed) maps zones to owning engines.
+- Inter-engine bus (Local or Redis) handles cross-zone messaging (tell, gossip, who, handoff).
+- Player handoff protocol with serialized state transfer, ACK-based timeout, and rollback on failure.
+- Redis-backed player location index for O(1) cross-engine `tell` routing.
+- Gateway multi-engine support with session routing and `SessionRedirect` handling.
+- Zone instancing (layering) with load-balanced instance selection and auto-scaling based on capacity thresholds.
+
+**Why it mattered:** the engine is no longer a single-process bottleneck. Each shard handles its zones independently, and the system scales horizontally by adding more engine shards.
+
 ---
 
 ## 5) Current scalability state (what exists today)
@@ -96,8 +109,9 @@ Gateways reconnect with backoff, and session IDs are globally safe via Snowflake
 
 ### Sharding status
 
-- The codebase includes engine-sharding design and implementation hooks (zone claims/registry, inter-engine bus, zone handoff flow), plus a follow-up plan for replicated entry zones.
-- Practically, this means the architecture has moved beyond “single node only,” but the highest-confidence production posture remains “authoritative engine + scalable gateways,” with sharding as the advanced path.
+- Zone-based engine sharding is fully implemented (Phase 5): zone registry, inter-engine messaging, player handoff protocol with ACK-based rollback, Redis player location index, gateway multi-engine session routing, and zone instancing with auto-scaling.
+- The system supports deployment from single-process (`STANDALONE`) all the way to multi-engine sharded with zone instancing for hot-zone load distribution.
+- A follow-up plan for replicated entry zones exists in `docs/replicated-entry-zone-plan.md`.
 
 ---
 
@@ -125,7 +139,8 @@ Gateways reconnect with backoff, and session IDs are globally safe via Snowflake
 
 - **Choice:** scale gateways first; shard engine state later.
 - **Benefit:** simpler early wins for connection fan-in and operational resilience.
-- **Cost:** engine CPU/tick loop is still the fundamental gameplay ceiling until sharding is fully operationalized.
+- **Cost:** engine CPU/tick loop was the fundamental gameplay ceiling until sharding was operationalized.
+- **Update:** Zone-based sharding (Phase 5) is now implemented, removing the single-engine bottleneck. Zone instancing further distributes load within hot zones.
 
 ---
 
@@ -133,9 +148,9 @@ Gateways reconnect with backoff, and session IDs are globally safe via Snowflake
 
 If asked “what limits scale right now?”, a strong answer is:
 
-1. **Engine tick budget** (authoritative loop): command routing, combat, mob updates, and world events all share this budget.
-2. **Cross-zone coordination complexity** once sharding/handoffs increase.
-3. **Operational observability depth**: core metrics exist, but saturation-oriented dashboards/alerts can still be expanded.
+1. **Per-shard tick budget** (authoritative loop): command routing, combat, mob updates, and world events share the budget per engine shard. With sharding, this scales horizontally.
+2. **Cross-zone coordination latency**: handoffs and cross-engine messaging add one Redis pub/sub hop (~1-5ms). Zone instancing adds instance-selection overhead.
+3. **Operational observability depth**: core metrics exist per-engine, but saturation-oriented dashboards/alerts and cross-engine correlation can still be expanded.
 4. **Persistence durability vs. latency tuning**: flush interval and backend choices are workload-dependent.
 
 ---
@@ -156,7 +171,7 @@ This positions the project for confident load testing and safer multi-engine ope
 
 ## 9) 90-second interview version
 
-> “We scaled AmbonMUD by separating concerns: gameplay remains deterministic in a single authoritative tick loop, while transports and I/O are abstracted and distributed. First, we introduced bus interfaces so engine code stopped depending on local channels. Next, we moved persistence writes off the tick using a coalescing worker. Then we added Redis as optional cache and pub/sub, with graceful degradation. Finally, we split runtime into engine and gateway roles over gRPC, so we can scale session ingress horizontally without compromising game-state correctness. We also added Snowflake IDs and gateway leasing for distributed session safety. Today, the system is production-friendly in standalone and split edge-scaling modes, with sharding infrastructure in place and observability hardening as the next major scaling multiplier.”
+> “We scaled AmbonMUD by separating concerns: gameplay remains deterministic in a single authoritative tick loop, while transports and I/O are abstracted and distributed. First, we introduced bus interfaces so engine code stopped depending on local channels. Next, we moved persistence writes off the tick using a coalescing worker. Then we added Redis as optional cache and pub/sub with HMAC-signed envelopes and graceful degradation. We split runtime into engine and gateway roles over gRPC for horizontal session ingress, with Snowflake IDs and gateway leasing for distributed session safety. Then we implemented zone-based engine sharding — partitioning the game world across multiple engine processes, with a player handoff protocol for cross-zone movement, an inter-engine bus for global commands, and a Redis player location index for O(1) tell routing. We also added zone instancing with auto-scaling for hot-zone load distribution. Today, the system scales from single-process to multi-engine sharded deployments, with observability hardening as the next major scaling multiplier.”
 
 ---
 
