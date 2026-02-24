@@ -92,7 +92,7 @@ class CommandRouter(
                             exits/ex
                             say <msg> or '<msg>
                             emote <msg>
-                            pose <msg>
+                            pose/po <msg>
                             who
                             tell/t <player> <msg>
                             whisper/wh <player> <msg>
@@ -112,6 +112,7 @@ class CommandRouter(
                             cast/c <spell> [target]
                             spells/abilities
                             score/sc
+                            phase/layer [player|#]
                             ansi on/off
                             colors
                             clear
