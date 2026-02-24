@@ -10,6 +10,7 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.status.StatusEffectSystem
 import java.time.Clock
 import java.util.Random
 
@@ -24,6 +25,8 @@ class AbilitySystem(
     private val intSpellDivisor: Int = 3,
     private val markVitalsDirty: (SessionId) -> Unit = {},
     private val markMobHpDirty: (MobId) -> Unit = {},
+    private val statusEffects: StatusEffectSystem? = null,
+    private val markStatusDirty: (SessionId) -> Unit = {},
 ) {
     private val learnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
     private val cooldowns = mutableMapOf<SessionId, MutableMap<AbilityId, Long>>()
@@ -72,7 +75,7 @@ class AbilitySystem(
             return "${ability.displayName} is on cooldown (${remainingSec}s remaining)."
         }
 
-        // 4. Resolve target
+        // 4. Resolve target and apply
         when (ability.targetType) {
             TargetType.ENEMY -> {
                 val keyword =
@@ -102,33 +105,43 @@ class AbilitySystem(
                     cooldowns.getOrPut(sessionId) { mutableMapOf() }[ability.id] = now + ability.cooldownMs
                 }
 
-                // 7. Apply damage
-                val effect =
-                    ability.effect as? AbilityEffect.DirectDamage
-                        ?: return "Spell misconfigured (expected damage effect)."
-                val baseDamage = rollRange(effect.minDamage, effect.maxDamage)
-                val intBonus = intSpellBonus(player)
-                val damage = (baseDamage + intBonus).coerceAtLeast(1)
-                // Spell damage bypasses armor
-                mob.hp = (mob.hp - damage).coerceAtLeast(0)
-                markMobHpDirty(mob.id)
-
-                outbound.send(
-                    OutboundEvent.SendText(
-                        sessionId,
-                        "Your ${ability.displayName} hits ${mob.name} for $damage damage.",
-                    ),
-                )
+                // 7. Apply effect
+                when (val effect = ability.effect) {
+                    is AbilityEffect.DirectDamage -> {
+                        val baseDamage = rollRange(effect.minDamage, effect.maxDamage)
+                        val intBonus = intSpellBonus(player)
+                        val damage = (baseDamage + intBonus).coerceAtLeast(1)
+                        mob.hp = (mob.hp - damage).coerceAtLeast(0)
+                        markMobHpDirty(mob.id)
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                sessionId,
+                                "Your ${ability.displayName} hits ${mob.name} for $damage damage.",
+                            ),
+                        )
+                        if (mob.hp <= 0) {
+                            combat.handleSpellKill(sessionId, mob)
+                        }
+                    }
+                    is AbilityEffect.ApplyStatus -> {
+                        val sys =
+                            statusEffects
+                                ?: return "Status effects are not available."
+                        sys.applyToMob(mob.id, effect.statusEffectId, sessionId)
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                sessionId,
+                                "Your ${ability.displayName} afflicts ${mob.name}!",
+                            ),
+                        )
+                    }
+                    else -> return "Spell misconfigured (unexpected effect for enemy target)."
+                }
                 broadcastToRoom(
                     player.roomId,
                     "${player.name} casts ${ability.displayName}!",
                     exclude = sessionId,
                 )
-
-                // Check mob death
-                if (mob.hp <= 0) {
-                    combat.handleSpellKill(sessionId, mob)
-                }
             }
 
             TargetType.SELF -> {
@@ -141,22 +154,36 @@ class AbilitySystem(
                     cooldowns.getOrPut(sessionId) { mutableMapOf() }[ability.id] = now + ability.cooldownMs
                 }
 
-                // 7. Apply heal
-                val effect =
-                    ability.effect as? AbilityEffect.DirectHeal
-                        ?: return "Spell misconfigured (expected heal effect)."
-                val healAmount = rollRange(effect.minHeal, effect.maxHeal)
-                val before = player.hp
-                player.hp = (player.hp + healAmount).coerceAtMost(player.maxHp)
-                val healed = player.hp - before
-                if (healed > 0) markVitalsDirty(sessionId)
-
-                outbound.send(
-                    OutboundEvent.SendText(
-                        sessionId,
-                        "Your ${ability.displayName} heals you for $healed HP.",
-                    ),
-                )
+                // 7. Apply effect
+                when (val effect = ability.effect) {
+                    is AbilityEffect.DirectHeal -> {
+                        val healAmount = rollRange(effect.minHeal, effect.maxHeal)
+                        val before = player.hp
+                        player.hp = (player.hp + healAmount).coerceAtMost(player.maxHp)
+                        val healed = player.hp - before
+                        if (healed > 0) markVitalsDirty(sessionId)
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                sessionId,
+                                "Your ${ability.displayName} heals you for $healed HP.",
+                            ),
+                        )
+                    }
+                    is AbilityEffect.ApplyStatus -> {
+                        val sys =
+                            statusEffects
+                                ?: return "Status effects are not available."
+                        sys.applyToPlayer(sessionId, effect.statusEffectId, sessionId)
+                        markStatusDirty(sessionId)
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                sessionId,
+                                "You are empowered by ${ability.displayName}!",
+                            ),
+                        )
+                    }
+                    else -> return "Spell misconfigured (unexpected effect for self target)."
+                }
                 broadcastToRoom(
                     player.roomId,
                     "${player.name} casts ${ability.displayName}.",

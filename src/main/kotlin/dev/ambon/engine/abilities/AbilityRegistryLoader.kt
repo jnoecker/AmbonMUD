@@ -2,6 +2,7 @@ package dev.ambon.engine.abilities
 
 import dev.ambon.config.AbilityEngineConfig
 import dev.ambon.domain.PlayerClass
+import dev.ambon.engine.status.StatusEffectId
 
 object AbilityRegistryLoader {
     fun load(
@@ -26,6 +27,10 @@ object AbilityRegistryLoader {
                         AbilityEffect.DirectHeal(
                             minHeal = defConfig.effect.minHeal,
                             maxHeal = defConfig.effect.maxHeal,
+                        )
+                    "APPLY_STATUS" ->
+                        AbilityEffect.ApplyStatus(
+                            statusEffectId = StatusEffectId(defConfig.effect.statusEffectId),
                         )
                     else -> continue
                 }

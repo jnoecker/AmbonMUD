@@ -1,6 +1,7 @@
 package dev.ambon.engine.abilities
 
 import dev.ambon.domain.PlayerClass
+import dev.ambon.engine.status.StatusEffectId
 
 @JvmInline
 value class AbilityId(
@@ -21,6 +22,10 @@ sealed interface AbilityEffect {
     data class DirectHeal(
         val minHeal: Int,
         val maxHeal: Int,
+    ) : AbilityEffect
+
+    data class ApplyStatus(
+        val statusEffectId: StatusEffectId,
     ) : AbilityEffect
 }
 
