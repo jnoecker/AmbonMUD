@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.grpc.proto.InboundEventProto
 import dev.ambon.grpc.toProto
+import dev.ambon.sharding.InstanceSelector
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
@@ -21,7 +22,8 @@ private val log = KotlinLogging.logger {}
  *
  * Routes inbound events from transports to the correct engine's gRPC channel
  * based on a session-to-engine mapping. New sessions are assigned to engines
- * via round-robin.
+ * via round-robin, or — when zone instancing is enabled — to the least-loaded
+ * instance of the start zone via [instanceSelector].
  *
  * When a [SessionRedirect][dev.ambon.engine.events.OutboundEvent.SessionRedirect]
  * is intercepted on the outbound side, [remapSession] updates the routing so
@@ -29,6 +31,8 @@ private val log = KotlinLogging.logger {}
  */
 class SessionRouter(
     engineIds: List<String>,
+    private val instanceSelector: InstanceSelector? = null,
+    private val startZone: String? = null,
 ) : InboundBus {
     init {
         require(engineIds.isNotEmpty()) { "At least one engine ID is required" }
@@ -71,14 +75,28 @@ class SessionRouter(
     }
 
     /**
-     * Assign a session to an engine (round-robin among available engines).
-     * Returns the engine ID assigned.
+     * Assign a session to an engine. When zone instancing is enabled and the
+     * start zone is known, uses [instanceSelector] to route to the least-loaded
+     * instance. Falls back to round-robin.
      */
     fun assignSession(sessionId: SessionId): String {
+        if (startZone != null && instanceSelector != null) {
+            val instance =
+                instanceSelector.select(
+                    zone = startZone,
+                    playerName = "new_session_${sessionId.value}",
+                )
+            if (instance != null && engineChannels.containsKey(instance.engineId)) {
+                sessionToEngine[sessionId] = instance.engineId
+                log.debug { "Assigned session $sessionId to engine ${instance.engineId} (instanced start zone)" }
+                return instance.engineId
+            }
+        }
+        // Fallback: round-robin
         val idx = roundRobinIndex.getAndIncrement() % orderedEngineIds.size
         val engineId = orderedEngineIds[idx]
         sessionToEngine[sessionId] = engineId
-        log.debug { "Assigned session $sessionId to engine $engineId" }
+        log.debug { "Assigned session $sessionId to engine $engineId (round-robin)" }
         return engineId
     }
 

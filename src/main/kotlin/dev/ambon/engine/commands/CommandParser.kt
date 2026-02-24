@@ -136,6 +136,14 @@ sealed interface Command {
         val message: String,
     ) : Command
 
+    /**
+     * Switch between zone instances (layers). No argument lists instances;
+     * an argument targets a specific player name or instance number.
+     */
+    data class Phase(
+        val targetHint: String?,
+    ) : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -317,6 +325,11 @@ object CommandParser {
         // kick
         matchPrefix(line, listOf("kick")) { rest ->
             if (rest.isEmpty()) Command.Invalid(line, "kick <player>") else Command.Kick(rest)
+        }?.let { return it }
+
+        // phase/layer — switch zone instance
+        matchPrefix(line, listOf("phase", "layer")) { rest ->
+            Command.Phase(rest.trim().ifEmpty { null })
         }?.let { return it }
 
         return when (lower) {

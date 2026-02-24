@@ -260,6 +260,16 @@ class GameMetrics(
         Gauge.builder("scheduler_pending_actions") { supplier().toDouble() }.register(registry)
     }
 
+    fun bindZonePlayerCount(
+        zone: String,
+        supplier: () -> Int,
+    ) {
+        Gauge
+            .builder("zone_player_count") { supplier().toDouble() }
+            .tag("zone", zone)
+            .register(registry)
+    }
+
     companion object {
         fun noop(): GameMetrics = GameMetrics(SimpleMeterRegistry(), bindJvmMetrics = false)
     }
