@@ -6,7 +6,7 @@ This repository is a Kotlin MUD server ("AmbonMUD") with a tick-based event loop
 Use this document as the default engineering playbook when making code or content changes.
 
 ## Environment
-- JDK: 17 toolchain in Gradle (`build.gradle.kts`), CI currently runs on Java 21 (`.github/workflows/ci.yml`).
+- JDK: 21 toolchain in Gradle (`build.gradle.kts`), CI currently runs on Java 21 (`.github/workflows/ci.yml`).
 - Build tool: Gradle wrapper (`gradlew`, `gradlew.bat`).
 - Kotlin style: `kotlin.code.style=official` (`gradle.properties`).
 
