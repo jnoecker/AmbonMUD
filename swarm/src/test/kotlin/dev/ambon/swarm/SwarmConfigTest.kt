@@ -79,23 +79,25 @@ class SwarmConfigTest {
 
     @Test
     fun `long namespace prefix with many bots exceeds name limit`() {
-        val config = SwarmConfig(
-            run = RunConfig(
-                namespacePrefix = "abcdefghij",
-                totalBots = 1_000_000,
-            ),
-        )
+        val config =
+            SwarmConfig(
+                run = RunConfig(
+                    namespacePrefix = "abcdefghij",
+                    totalBots = 1_000_000,
+                ),
+            )
         assertThrows<IllegalArgumentException> { config.validated() }
     }
 
     @Test
     fun `short namespace prefix with moderate bots passes`() {
-        val config = SwarmConfig(
-            run = RunConfig(
-                namespacePrefix = "sw",
-                totalBots = 9999,
-            ),
-        )
+        val config =
+            SwarmConfig(
+                run = RunConfig(
+                    namespacePrefix = "sw",
+                    totalBots = 9999,
+                ),
+            )
         config.validated()
     }
 }
