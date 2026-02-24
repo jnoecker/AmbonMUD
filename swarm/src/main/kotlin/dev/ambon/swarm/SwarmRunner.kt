@@ -27,6 +27,12 @@ import kotlin.random.Random
 
 private val log = KotlinLogging.logger {}
 
+private val ansiRegex = Regex("\u001B\\[[0-9;]*[A-Za-z]")
+
+private fun stripAnsi(text: String): String = ansiRegex.replace(text, "")
+
+private fun cleanLine(raw: String): String = stripAnsi(raw.replace("\r", "").replace("\uFFFD", "")).trim()
+
 class SwarmRunner(
     private val config: SwarmConfig,
 ) {
@@ -197,12 +203,24 @@ private class BotWorker(
                     stage = max(stage, 3)
                 }
 
-                lower.contains("password:") -> {
-                    connection.sendLine(credential.password)
+                "choose your race" in lower -> {
+                    val choice = config.behavior.races.random(random)
+                    connection.sendLine(choice)
                     stage = max(stage, 4)
                 }
 
-                "look around" in lower || "hp" in lower || "exits" in lower -> {
+                "choose your class" in lower -> {
+                    val choice = config.behavior.classes.random(random)
+                    connection.sendLine(choice)
+                    stage = max(stage, 5)
+                }
+
+                lower.contains("password:") -> {
+                    connection.sendLine(credential.password)
+                    stage = max(stage, 6)
+                }
+
+                "exits:" in lower -> {
                     metrics.loginLatency(Duration.ofNanos(System.nanoTime() - started).toMillis())
                     return true
                 }
@@ -275,7 +293,7 @@ private class TelnetBotConnection(
                     while (true) {
                         val idx = sb.indexOf("\n")
                         if (idx < 0) break
-                        val line = sb.substring(0, idx).replace("\r", "").trim()
+                        val line = cleanLine(sb.substring(0, idx))
                         sb.delete(0, idx + 1)
                         if (line.isNotBlank()) incoming += line
                     }
@@ -372,7 +390,7 @@ private class WebSocketBotConnection(
                     data
                         .toString()
                         .split("\n")
-                        .map { it.replace("\r", "").trim() }
+                        .map { cleanLine(it) }
                         .filter { it.isNotBlank() }
             }
             webSocket.request(1)

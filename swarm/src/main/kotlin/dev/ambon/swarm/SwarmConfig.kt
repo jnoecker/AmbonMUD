@@ -25,6 +25,8 @@ data class SwarmConfig(
             "run.basePassword must be non-blank and <= 72 chars"
         }
         behavior.weights.validated()
+        require(behavior.races.isNotEmpty()) { "behavior.races must not be empty" }
+        require(behavior.classes.isNotEmpty()) { "behavior.classes must not be empty" }
         require(behavior.commandIntervalMs.min in 1..60_000) { "behavior.commandIntervalMs.min must be 1..60000" }
         require(behavior.commandIntervalMs.max in behavior.commandIntervalMs.min..60_000) {
             "behavior.commandIntervalMs.max must be >= min and <= 60000"
@@ -64,6 +66,8 @@ data class BehaviorConfig(
     val chatPhrases: List<String> = listOf("hello", "lag?", "nice room", "test ping"),
     val movementCommands: List<String> = listOf("north", "south", "east", "west", "look"),
     val combatCommands: List<String> = listOf("kill rat", "kill goblin", "attack rat"),
+    val races: List<String> = listOf("human", "elf", "dwarf", "halfling"),
+    val classes: List<String> = listOf("warrior", "mage", "cleric", "rogue"),
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

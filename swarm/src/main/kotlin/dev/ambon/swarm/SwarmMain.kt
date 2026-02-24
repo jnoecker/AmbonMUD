@@ -75,6 +75,8 @@ private fun loadConfig(path: String): SwarmConfig {
                     chatPhrases = behavior.strings("chatPhrases", BehaviorConfig().chatPhrases),
                     movementCommands = behavior.strings("movementCommands", BehaviorConfig().movementCommands),
                     combatCommands = behavior.strings("combatCommands", BehaviorConfig().combatCommands),
+                    races = behavior.strings("races", BehaviorConfig().races),
+                    classes = behavior.strings("classes", BehaviorConfig().classes),
                 ),
         )
     return config.validated()

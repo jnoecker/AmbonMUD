@@ -38,3 +38,13 @@ behavior:
     - "kill rat"
     - "kill goblin"
     - "attack rat"
+  races:
+    - "human"
+    - "elf"
+    - "dwarf"
+    - "halfling"
+  classes:
+    - "warrior"
+    - "mage"
+    - "cleric"
+    - "rogue"
