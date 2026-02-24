@@ -159,6 +159,16 @@ This project uses **ktlint 1.5.0** with `kotlin.code.style=official` (no `.edito
 
 Use `MutableClock` and `InMemoryPlayerRepository` for deterministic unit tests. Run `ktlintCheck test` before finalizing any change.
 
+## Cloud / CI Environment
+
+When running in Claude Code cloud sessions (claude.ai/code), be aware of these constraints:
+
+- **JVM Toolchain version:** The `jvmToolchain()` in `build.gradle.kts` must match the JDK installed in the build environment. Cloud sessions provide JDK 21; the toolchain is currently set to `jvmToolchain(21)`. If it ever drifts, update it in `build.gradle.kts` — the Foojay resolver cannot auto-provision through the cloud egress proxy.
+- **Egress proxy:** All outbound HTTP/HTTPS traffic goes through a proxy injected via `JAVA_TOOL_OPTIONS`. Gradle dependency resolution works through this proxy. Do not add `mavenLocal()` or assume direct internet access.
+- **GitHub CLI (`gh`) is not available:** The `gh` command is not installed in cloud sessions. Use `git` commands directly for all repository operations (push, fetch, branch). Git remotes are wired through a local proxy that handles authentication automatically.
+- **No hardcoded timing in tests:** Cloud environments have variable CPU scheduling latency. Never use short `delay()` calls (e.g. `delay(50)`) to synchronize with async coroutines launched on `Dispatchers.Default`. Instead, use polling loops with `withTimeout` and a generous timeout (e.g. 2 seconds), or use proper coroutine synchronization primitives (channels, `CompletableDeferred`). For negative tests (asserting nothing arrives), use at least `delay(200)`.
+- **First build is slow:** The Gradle wrapper downloads the distribution and all dependencies on first run. Subsequent builds use the cached daemon.
+
 ## Known Quirks
 
-- **JVM Toolchain version:** The `jvmToolchain()` in `build.gradle.kts` must match the JDK installed in the build environment. Cloud/CI environments typically provide JDK 21. If the build fails with `Cannot find a Java installation … matching: {languageVersion=17}` (and the Foojay toolchain resolver cannot auto-provision due to network/proxy restrictions), update `jvmToolchain(17)` → `jvmToolchain(21)` in `build.gradle.kts`.
+- **Compiler warnings in tests:** Several test files produce "No cast needed" warnings (e.g. `InterEngineMessageHandlingTest.kt`, `CrossEngineCommandsTest.kt`). These are harmless and do not affect test results.
