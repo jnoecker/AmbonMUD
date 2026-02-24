@@ -22,6 +22,10 @@ import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
+import dev.ambon.engine.status.EffectType
+import dev.ambon.engine.status.StatusEffectRegistry
+import dev.ambon.engine.status.StatusEffectRegistryLoader
+import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.sharding.BroadcastType
 import dev.ambon.sharding.HandoffAckResult
@@ -83,6 +87,9 @@ class GameEngine(
     /** Mobs whose HP changed this tick and need a Room.UpdateMob push. */
     private val gmcpDirtyMobs = mutableSetOf<MobId>()
 
+    /** Sessions whose status effects changed this tick and need a Char.StatusEffects push. */
+    private val gmcpDirtyStatusEffects = mutableSetOf<SessionId>()
+
     val gmcpEmitter =
         GmcpEmitter(
             outbound = outbound,
@@ -102,6 +109,10 @@ class GameEngine(
         gmcpDirtyMobs.add(mobId)
     }
 
+    fun markStatusDirty(sessionId: SessionId) {
+        gmcpDirtyStatusEffects.add(sessionId)
+    }
+
     private val mobSystem =
         MobSystem(
             world = world,
@@ -113,6 +124,21 @@ class GameEngine(
             maxWanderDelayMillis = engineConfig.mob.maxWanderDelayMillis,
             metrics = metrics,
             gmcpEmitter = gmcpEmitter,
+        )
+    private val statusEffectRegistry =
+        StatusEffectRegistry().also { reg ->
+            StatusEffectRegistryLoader.load(engineConfig.statusEffects, reg)
+        }
+    private val statusEffectSystem =
+        StatusEffectSystem(
+            registry = statusEffectRegistry,
+            players = players,
+            mobs = mobs,
+            outbound = outbound,
+            clock = clock,
+            markVitalsDirty = ::markVitalsDirty,
+            markMobHpDirty = ::markMobHpDirty,
+            markStatusDirty = ::markStatusDirty,
         )
     private val combatSystem =
         CombatSystem(
@@ -166,6 +192,7 @@ class GameEngine(
             maxDodgePercent = engineConfig.combat.maxDodgePercent,
             markVitalsDirty = ::markVitalsDirty,
             markMobHpDirty = ::markMobHpDirty,
+            statusEffects = statusEffectSystem,
             onLevelUp = { sid, level ->
                 markVitalsDirty(sid)
                 val pc = players.get(sid)?.playerClass
@@ -211,6 +238,8 @@ class GameEngine(
             intSpellDivisor = engineConfig.combat.intSpellDivisor,
             markVitalsDirty = ::markVitalsDirty,
             markMobHpDirty = ::markMobHpDirty,
+            statusEffects = statusEffectSystem,
+            markStatusDirty = ::markStatusDirty,
         )
 
     private val router =
@@ -239,6 +268,7 @@ class GameEngine(
                 } else {
                     null
                 },
+            statusEffects = statusEffectSystem,
         )
 
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
@@ -307,6 +337,7 @@ class GameEngine(
         }
         items.loadSpawns(world.itemSpawns)
         mobSystem.setCombatChecker(combatSystem::isMobInCombat)
+        mobSystem.setRootChecker { mobId -> statusEffectSystem.hasMobEffect(mobId, EffectType.ROOT) }
     }
 
     suspend fun run() =
@@ -354,6 +385,20 @@ class GameEngine(
                     combatSample.stop(metrics.combatSystemTickTimer)
                     metrics.onCombatsProcessed(combatsRan)
 
+                    // Tick status effects (DOT/HOT/shield/expiry)
+                    statusEffectSystem.tick(clock.millis())
+                    // Handle mob kills from DOT ticks
+                    for ((mobId, sourceSessionId) in statusEffectSystem.mobsKilledByDot()) {
+                        val mob = mobs.get(mobId) ?: continue
+                        if (sourceSessionId != null) {
+                            combatSystem.handleSpellKill(sourceSessionId, mob)
+                        } else {
+                            mobs.remove(mobId)
+                            statusEffectSystem.onMobRemoved(mobId)
+                            mobSystem.onMobRemoved(mobId)
+                        }
+                    }
+
                     // Regenerate player HP (time-gated internally)
                     val regenSample = Timer.start()
                     regenSystem.tick(maxPlayersPerTick = engineConfig.regen.maxPlayersPerTick)
@@ -362,6 +407,7 @@ class GameEngine(
                     // Flush GMCP vitals for sessions that had changes this tick
                     flushDirtyGmcpVitals()
                     flushDirtyGmcpMobs()
+                    flushDirtyGmcpStatusEffects()
 
                     // Run scheduled actions (bounded)
                     val schedulerSample = Timer.start()
@@ -477,6 +523,7 @@ class GameEngine(
         // End combat before handoff (should already be blocked by Move handler, but be safe)
         combatSystem.endCombatFor(sessionId)
         regenSystem.onPlayerDisconnected(sessionId)
+        statusEffectSystem.removeAllFromPlayer(sessionId)
 
         when (val result = mgr.initiateHandoff(sessionId, targetRoomId)) {
             is HandoffResult.Initiated -> {
@@ -536,6 +583,7 @@ class GameEngine(
         // Handoff to same room on the target engine
         combatSystem.endCombatFor(sessionId)
         regenSystem.onPlayerDisconnected(sessionId)
+        statusEffectSystem.removeAllFromPlayer(sessionId)
         return when (mgr.initiateHandoff(sessionId, player.roomId, targetEngineOverride = resolvedInstance.address)) {
             is HandoffResult.Initiated -> PhaseResult.Initiated
             HandoffResult.AlreadyInTransit -> PhaseResult.NoOp("You are already crossing into new territory.")
@@ -743,6 +791,7 @@ class GameEngine(
                     // Room is on another engine — initiate handoff
                     combatSystem.endCombatFor(targetSid)
                     regenSystem.onPlayerDisconnected(targetSid)
+                    statusEffectSystem.removeAllFromPlayer(targetSid)
                     when (handoffManager.initiateHandoff(targetSid, targetRoomId)) {
                         is HandoffResult.Initiated -> Unit
                         HandoffResult.PlayerNotFound -> Unit
@@ -814,6 +863,8 @@ class GameEngine(
                 combatSystem.onPlayerDisconnected(sid)
                 regenSystem.onPlayerDisconnected(sid)
                 abilitySystem.onPlayerDisconnected(sid)
+                statusEffectSystem.onPlayerDisconnected(sid)
+                gmcpDirtyStatusEffects.remove(sid)
 
                 if (me != null) {
                     log.info { "Player logged out: name=${me.name} sessionId=$sid" }
@@ -997,6 +1048,7 @@ class GameEngine(
                 combatSystem.remapSession(oldSid, sessionId)
                 regenSystem.remapSession(oldSid, sessionId)
                 abilitySystem.remapSession(oldSid, sessionId)
+                statusEffectSystem.remapSession(oldSid, sessionId)
                 outbound.send(OutboundEvent.Close(oldSid, "Your account has logged in from another location."))
                 val me = players.get(sessionId)
                 if (me != null) broadcastToRoom(me.roomId, "${me.name} briefly flickers.", sessionId)
@@ -1143,6 +1195,7 @@ class GameEngine(
         gmcpEmitter.sendCharName(sessionId, me)
         gmcpEmitter.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
         gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId))
+        gmcpEmitter.sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
         router.handle(sessionId, Command.Look) // room + prompt (also sends Room.Info + Room.Players)
     }
 
@@ -1278,6 +1331,7 @@ class GameEngine(
                 gmcpEmitter.sendRoomPlayers(sid, players.playersInRoom(player.roomId).toList())
                 gmcpEmitter.sendRoomMobs(sid, mobs.mobsInRoom(player.roomId))
                 gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid))
+                gmcpEmitter.sendCharStatusEffects(sid, statusEffectSystem.activePlayerEffects(sid))
             }
             "Core.Supports.Remove" -> {
                 val packages = parseGmcpPackageList(ev.jsonData)
@@ -1310,6 +1364,16 @@ class GameEngine(
         for (sid in dirty) {
             val player = players.get(sid) ?: continue
             gmcpEmitter.sendCharVitals(sid, player)
+        }
+    }
+
+    private suspend fun flushDirtyGmcpStatusEffects() {
+        if (gmcpDirtyStatusEffects.isEmpty()) return
+        val dirty = gmcpDirtyStatusEffects.toList()
+        gmcpDirtyStatusEffects.clear()
+        for (sid in dirty) {
+            val effects = statusEffectSystem.activePlayerEffects(sid)
+            gmcpEmitter.sendCharStatusEffects(sid, effects)
         }
     }
 

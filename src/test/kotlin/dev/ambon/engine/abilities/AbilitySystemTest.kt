@@ -11,6 +11,12 @@ import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.status.EffectType
+import dev.ambon.engine.status.StackBehavior
+import dev.ambon.engine.status.StatusEffectDefinition
+import dev.ambon.engine.status.StatusEffectId
+import dev.ambon.engine.status.StatusEffectRegistry
+import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -339,4 +345,153 @@ class AbilitySystemTest {
             h.abilitySystem.onPlayerDisconnected(sid)
             assertTrue(h.abilitySystem.knownAbilities(sid).isEmpty())
         }
+
+    @Test
+    fun `cast APPLY_STATUS on enemy mob applies effect`() =
+        runTest {
+            val h = buildSystemWithStatusEffects()
+            login(h.players, sid, "Caster")
+            h.abilitySystem.syncAbilities(sid, 1)
+            val player = h.players.get(sid)!!
+            player.mana = 30
+
+            val mob = MobState(MobId("zone:rat"), "a rat", roomId, hp = 20, maxHp = 20)
+            h.mobs.upsert(mob)
+            drainOutbound(h.outbound)
+
+            val err = h.abilitySystem.cast(sid, "ignite", "rat")
+            assertNull(err)
+
+            assertTrue(player.mana < 30, "Mana should be deducted")
+            assertTrue(
+                h.statusEffects.hasMobEffect(mob.id, EffectType.DOT),
+                "DOT should be applied to mob",
+            )
+        }
+
+    @Test
+    fun `cast APPLY_STATUS on self applies effect to player`() =
+        runTest {
+            val h = buildSystemWithStatusEffects()
+            login(h.players, sid, "Buffer")
+            h.abilitySystem.syncAbilities(sid, 1)
+            val player = h.players.get(sid)!!
+            player.mana = 30
+            drainOutbound(h.outbound)
+
+            val err = h.abilitySystem.cast(sid, "shield", null)
+            assertNull(err)
+
+            assertTrue(player.mana < 30, "Mana should be deducted")
+            assertTrue(
+                h.statusEffects.hasPlayerEffect(sid, EffectType.SHIELD),
+                "SHIELD should be applied to player",
+            )
+        }
+
+    private fun buildSystemWithStatusEffects(
+        clock: MutableClock = MutableClock(0L),
+        rng: Random = Random(42),
+    ): StatusTestHarness {
+        val items = ItemRegistry()
+        val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+        val mobs = MobRegistry()
+        val outbound = LocalOutboundBus()
+        val combat =
+            CombatSystem(
+                players = players,
+                mobs = mobs,
+                items = items,
+                outbound = outbound,
+                clock = clock,
+                rng = rng,
+                tickMillis = 1_000L,
+            )
+        val statusRegistry = StatusEffectRegistry()
+        statusRegistry.register(
+            StatusEffectDefinition(
+                id = StatusEffectId("ignite"),
+                displayName = "Ignite",
+                effectType = EffectType.DOT,
+                durationMs = 6000,
+                tickIntervalMs = 2000,
+                tickMinValue = 5,
+                tickMaxValue = 5,
+            ),
+        )
+        statusRegistry.register(
+            StatusEffectDefinition(
+                id = StatusEffectId("shield"),
+                displayName = "Shield",
+                effectType = EffectType.SHIELD,
+                durationMs = 30000,
+                shieldAmount = 20,
+                stackBehavior = StackBehavior.NONE,
+            ),
+        )
+        val statusEffects =
+            StatusEffectSystem(
+                registry = statusRegistry,
+                players = players,
+                mobs = mobs,
+                outbound = outbound,
+                clock = clock,
+                rng = rng,
+                markVitalsDirty = {},
+                markMobHpDirty = {},
+                markStatusDirty = {},
+            )
+        val registry = AbilityRegistry()
+        registry.register(
+            AbilityDefinition(
+                id = AbilityId("ignite"),
+                displayName = "Ignite",
+                description = "Burns the target.",
+                manaCost = 12,
+                cooldownMs = 0,
+                levelRequired = 1,
+                targetType = TargetType.ENEMY,
+                effect = AbilityEffect.ApplyStatus(StatusEffectId("ignite")),
+            ),
+        )
+        registry.register(
+            AbilityDefinition(
+                id = AbilityId("shield"),
+                displayName = "Shield",
+                description = "Grants a shield.",
+                manaCost = 15,
+                cooldownMs = 0,
+                levelRequired = 1,
+                targetType = TargetType.SELF,
+                effect = AbilityEffect.ApplyStatus(StatusEffectId("shield")),
+            ),
+        )
+        val abilitySystem =
+            AbilitySystem(
+                players = players,
+                registry = registry,
+                outbound = outbound,
+                combat = combat,
+                clock = clock,
+                rng = rng,
+                statusEffects = statusEffects,
+            )
+        return StatusTestHarness(
+            players = players,
+            mobs = mobs,
+            outbound = outbound,
+            abilitySystem = abilitySystem,
+            statusEffects = statusEffects,
+            clock = clock,
+        )
+    }
+
+    private data class StatusTestHarness(
+        val players: PlayerRegistry,
+        val mobs: MobRegistry,
+        val outbound: LocalOutboundBus,
+        val abilitySystem: AbilitySystem,
+        val statusEffects: StatusEffectSystem,
+        val clock: MutableClock,
+    )
 }

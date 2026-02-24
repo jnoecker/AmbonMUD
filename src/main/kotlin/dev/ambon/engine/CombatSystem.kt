@@ -8,6 +8,8 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.status.EffectType
+import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 import java.time.Clock
 import java.util.Random
@@ -33,6 +35,7 @@ class CombatSystem(
     private val maxDodgePercent: Int = 30,
     private val markVitalsDirty: (SessionId) -> Unit = {},
     private val markMobHpDirty: (MobId) -> Unit = {},
+    private val statusEffects: StatusEffectSystem? = null,
 ) {
     private data class Fight(
         val sessionId: SessionId,
@@ -191,38 +194,44 @@ class CombatSystem(
                 continue
             }
 
-            val playerAttack = equippedAttack(player.sessionId)
-            val playerStrBonus = strDamageBonus(player)
-            val playerRoll = rollDamage()
-            val rawPlayerDamage = playerRoll + playerAttack + playerStrBonus
-            val preClampPlayerDamage = rawPlayerDamage - mob.armor
-            val effectivePlayerDamage = preClampPlayerDamage.coerceAtLeast(1)
-            val playerArmorAbsorbed = (rawPlayerDamage - effectivePlayerDamage).coerceAtLeast(0)
-            val playerMinDamageClamped = preClampPlayerDamage < 1
-            val playerFeedbackSuffix =
-                combatFeedbackSuffix(
-                    roll = playerRoll,
-                    attackBonus = playerAttack,
-                    armorAbsorbed = playerArmorAbsorbed,
-                    clampedToMinimum = playerMinDamageClamped,
-                )
-            mob.hp = (mob.hp - effectivePlayerDamage).coerceAtLeast(0)
-            markMobHpDirty(mob.id)
-            val playerHitText = "You hit ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix."
-            outbound.send(OutboundEvent.SendText(fight.sessionId, playerHitText))
-            if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
-                broadcastToRoom(
-                    player.roomId,
-                    "[Combat] ${player.name} hits ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix.",
-                    exclude = fight.sessionId,
-                )
-            }
-            if (mob.hp <= 0) {
-                handleMobDeath(fight.sessionId, mob)
-                endFight(fight)
-                outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
-                ran++
-                continue
+            // STUN check: stunned players skip their attack but the mob still attacks
+            val stunned = statusEffects?.hasPlayerEffect(fight.sessionId, EffectType.STUN) == true
+            if (stunned) {
+                outbound.send(OutboundEvent.SendText(fight.sessionId, "You are stunned and cannot act!"))
+            } else {
+                val playerAttack = equippedAttack(player.sessionId)
+                val playerStrBonus = strDamageBonus(player)
+                val playerRoll = rollDamage()
+                val rawPlayerDamage = playerRoll + playerAttack + playerStrBonus
+                val preClampPlayerDamage = rawPlayerDamage - mob.armor
+                val effectivePlayerDamage = preClampPlayerDamage.coerceAtLeast(1)
+                val playerArmorAbsorbed = (rawPlayerDamage - effectivePlayerDamage).coerceAtLeast(0)
+                val playerMinDamageClamped = preClampPlayerDamage < 1
+                val playerFeedbackSuffix =
+                    combatFeedbackSuffix(
+                        roll = playerRoll,
+                        attackBonus = playerAttack,
+                        armorAbsorbed = playerArmorAbsorbed,
+                        clampedToMinimum = playerMinDamageClamped,
+                    )
+                mob.hp = (mob.hp - effectivePlayerDamage).coerceAtLeast(0)
+                markMobHpDirty(mob.id)
+                val playerHitText = "You hit ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix."
+                outbound.send(OutboundEvent.SendText(fight.sessionId, playerHitText))
+                if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
+                    broadcastToRoom(
+                        player.roomId,
+                        "[Combat] ${player.name} hits ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix.",
+                        exclude = fight.sessionId,
+                    )
+                }
+                if (mob.hp <= 0) {
+                    handleMobDeath(fight.sessionId, mob)
+                    endFight(fight)
+                    outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
+                    ran++
+                    continue
+                }
             }
 
             val dodgePct = dodgeChance(player)
@@ -230,12 +239,16 @@ class CombatSystem(
                 outbound.send(OutboundEvent.SendText(fight.sessionId, "You dodge ${mob.name}'s attack!"))
             } else {
                 val mobRoll = rollDamage(mob.minDamage, mob.maxDamage)
-                val mobDamage = mobRoll
+                var mobDamage = mobRoll
                 val mobFeedbackSuffix =
                     combatFeedbackSuffix(
                         roll = mobRoll,
                         armorAbsorbed = 0,
                     )
+                // SHIELD absorption
+                if (statusEffects != null) {
+                    mobDamage = statusEffects.absorbPlayerDamage(fight.sessionId, mobDamage)
+                }
                 player.hp = (player.hp - mobDamage).coerceAtLeast(0)
                 markVitalsDirty(fight.sessionId)
                 val mobHitText = "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
@@ -308,13 +321,15 @@ class CombatSystem(
 
     private fun strDamageBonus(player: PlayerState): Int {
         val equipStr = items.equipment(player.sessionId).values.sumOf { it.item.strength }
-        val totalStr = player.strength + equipStr
+        val statusStr = statusEffects?.getPlayerStatMods(player.sessionId)?.str ?: 0
+        val totalStr = player.strength + equipStr + statusStr
         return (totalStr - PlayerState.BASE_STAT) / strDivisor
     }
 
     private fun dodgeChance(player: PlayerState): Int {
         val equipDex = items.equipment(player.sessionId).values.sumOf { it.item.dexterity }
-        val totalDex = player.dexterity + equipDex
+        val statusDex = statusEffects?.getPlayerStatMods(player.sessionId)?.dex ?: 0
+        val totalDex = player.dexterity + equipDex + statusDex
         val chance = (totalDex - PlayerState.BASE_STAT) * dexDodgePerPoint
         return chance.coerceIn(0, maxDodgePercent)
     }
@@ -368,6 +383,7 @@ class CombatSystem(
     ) {
         mobs.remove(mob.id)
         onMobRemoved(mob.id, mob.roomId)
+        statusEffects?.onMobRemoved(mob.id)
         items.dropMobItemsToRoom(mob.id, mob.roomId)
         rollDrops(mob)
         broadcastToRoom(mob.roomId, "${mob.name} dies.")

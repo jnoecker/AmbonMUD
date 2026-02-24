@@ -16,6 +16,13 @@ import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.MobDrop
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.status.EffectType
+import dev.ambon.engine.status.StackBehavior
+import dev.ambon.engine.status.StatModifiers
+import dev.ambon.engine.status.StatusEffectDefinition
+import dev.ambon.engine.status.StatusEffectId
+import dev.ambon.engine.status.StatusEffectRegistry
+import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -910,6 +917,206 @@ class CombatSystemTest {
                 messages.any { it.contains("You are safe now") },
                 "Expected safe respawn message, got: $messages",
             )
+        }
+
+    @Test
+    fun `stunned player skips attack but mob still attacks`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, minDamage = 1, maxDamage = 1)
+            mobs.upsert(mob)
+
+            val outbound = LocalOutboundBus()
+            val clock = MutableClock(0L)
+
+            val statusRegistry = StatusEffectRegistry()
+            statusRegistry.register(
+                StatusEffectDefinition(
+                    id = StatusEffectId("stun"),
+                    displayName = "Stun",
+                    effectType = EffectType.STUN,
+                    durationMs = 5000,
+                    stackBehavior = StackBehavior.NONE,
+                ),
+            )
+            val statusEffects =
+                StatusEffectSystem(
+                    registry = statusRegistry,
+                    players = players,
+                    mobs = mobs,
+                    outbound = outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    markVitalsDirty = {},
+                    markMobHpDirty = {},
+                    markStatusDirty = {},
+                )
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 5,
+                    maxDamage = 5,
+                    statusEffects = statusEffects,
+                )
+
+            val sid = SessionId(30L)
+            login(players, sid, "StunTest")
+            combat.startCombat(sid, "rat")
+            drainOutbound(outbound)
+
+            // Apply stun to the player
+            statusEffects.applyToPlayer(sid, StatusEffectId("stun"))
+
+            clock.advance(1_000L)
+            combat.tick()
+
+            // Mob should still be at full HP (stunned player can't attack)
+            assertEquals(10, mob.hp, "Stunned player should not damage mob")
+            // Player should take damage from mob
+            val player = players.get(sid)!!
+            assertTrue(player.hp < player.maxHp, "Mob should still damage stunned player")
+        }
+
+    @Test
+    fun `shield absorbs mob damage in combat`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 100, maxHp = 100, minDamage = 5, maxDamage = 5)
+            mobs.upsert(mob)
+
+            val outbound = LocalOutboundBus()
+            val clock = MutableClock(0L)
+
+            val statusRegistry = StatusEffectRegistry()
+            statusRegistry.register(
+                StatusEffectDefinition(
+                    id = StatusEffectId("shield"),
+                    displayName = "Shield",
+                    effectType = EffectType.SHIELD,
+                    durationMs = 30000,
+                    shieldAmount = 20,
+                    stackBehavior = StackBehavior.NONE,
+                ),
+            )
+            val statusEffects =
+                StatusEffectSystem(
+                    registry = statusRegistry,
+                    players = players,
+                    mobs = mobs,
+                    outbound = outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    markVitalsDirty = {},
+                    markMobHpDirty = {},
+                    markStatusDirty = {},
+                )
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 1,
+                    maxDamage = 1,
+                    statusEffects = statusEffects,
+                )
+
+            val sid = SessionId(31L)
+            login(players, sid, "ShieldTest")
+            combat.startCombat(sid, "rat")
+            drainOutbound(outbound)
+
+            // Apply shield to the player
+            statusEffects.applyToPlayer(sid, StatusEffectId("shield"))
+
+            clock.advance(1_000L)
+            combat.tick()
+
+            // Player should take no damage (shield absorbs the 5 damage)
+            val player = players.get(sid)!!
+            assertEquals(player.maxHp, player.hp, "Shield should absorb all mob damage")
+        }
+
+    @Test
+    fun `stat buff adds to str damage bonus`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            // mob with 0 armor so we can see exact damage
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 50, maxHp = 50, minDamage = 1, maxDamage = 1)
+            mobs.upsert(mob)
+
+            val outbound = LocalOutboundBus()
+            val clock = MutableClock(0L)
+
+            val statusRegistry = StatusEffectRegistry()
+            statusRegistry.register(
+                StatusEffectDefinition(
+                    id = StatusEffectId("buff"),
+                    displayName = "Buff",
+                    effectType = EffectType.STAT_BUFF,
+                    durationMs = 60000,
+                    statMods = StatModifiers(str = 6),
+                ),
+            )
+            val statusEffects =
+                StatusEffectSystem(
+                    registry = statusRegistry,
+                    players = players,
+                    mobs = mobs,
+                    outbound = outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    markVitalsDirty = {},
+                    markMobHpDirty = {},
+                    markStatusDirty = {},
+                )
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 3,
+                    maxDamage = 3,
+                    statusEffects = statusEffects,
+                    strDivisor = 3,
+                )
+
+            val sid = SessionId(32L)
+            login(players, sid, "BuffTest")
+
+            // Apply +6 STR buff → +2 bonus damage (6/3)
+            statusEffects.applyToPlayer(sid, StatusEffectId("buff"))
+
+            combat.startCombat(sid, "rat")
+            drainOutbound(outbound)
+
+            clock.advance(1_000L)
+            combat.tick()
+
+            // Damage should be 3 (base) + 2 (str bonus) = 5
+            assertEquals(45, mob.hp, "STR buff should add bonus damage")
         }
 
     private fun drainOutbound(outbound: LocalOutboundBus): List<OutboundEvent> {

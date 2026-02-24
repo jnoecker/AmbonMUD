@@ -19,6 +19,8 @@ import dev.ambon.engine.PlayerState
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.status.EffectType
+import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.sharding.BroadcastType
 import dev.ambon.sharding.InterEngineBus
@@ -68,6 +70,7 @@ class CommandRouter(
     private val gmcpEmitter: GmcpEmitter? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
     private val onPhase: (suspend (SessionId, String?) -> PhaseResult)? = null,
+    private val statusEffects: StatusEffectSystem? = null,
 ) {
     private var adminSpawnSeq = 0
 
@@ -111,6 +114,7 @@ class CommandRouter(
                             flee
                             cast/c <spell> [target]
                             spells/abilities
+                            effects/buffs/debuffs
                             score/sc
                             ansi on/off
                             colors
@@ -122,6 +126,7 @@ class CommandRouter(
                             spawn <mob-template>
                             smite <player|mob>
                             kick <player>
+                            dispel <player|mob>
                             shutdown
                         """.trimIndent(),
                     ),
@@ -137,6 +142,11 @@ class CommandRouter(
             is Command.Move -> {
                 if (combat.isInCombat(sessionId)) {
                     outbound.send(OutboundEvent.SendText(sessionId, "You are in combat. Try 'flee'."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                if (statusEffects?.hasPlayerEffect(sessionId, EffectType.ROOT) == true) {
+                    outbound.send(OutboundEvent.SendText(sessionId, "You are rooted and cannot move!"))
                     outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
@@ -722,6 +732,62 @@ class CommandRouter(
                         )
                     }
                 }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            Command.Effects -> {
+                if (statusEffects == null) {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "No active effects."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val effects = statusEffects.activePlayerEffects(sessionId)
+                if (effects.isEmpty()) {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "No active effects."))
+                } else {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Active effects:"))
+                    for (e in effects) {
+                        val remainingSec = ((e.remainingMs + 999) / 1000).coerceAtLeast(1)
+                        val stacksText = if (e.stacks > 1) " (x${e.stacks})" else ""
+                        outbound.send(
+                            OutboundEvent.SendInfo(
+                                sessionId,
+                                "  ${e.name}$stacksText [${e.type}] — ${remainingSec}s remaining",
+                            ),
+                        )
+                    }
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Dispel -> {
+                if (!requireStaff(sessionId)) return
+                if (statusEffects == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Status effects are not available."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                // Try player name first
+                val targetSid = players.findSessionByName(cmd.target)
+                if (targetSid != null) {
+                    statusEffects.removeAllFromPlayer(targetSid)
+                    val targetName = players.get(targetSid)?.name ?: cmd.target
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Dispelled all effects from $targetName."))
+                    outbound.send(OutboundEvent.SendText(targetSid, "All your effects have been dispelled."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                // Try mob in room
+                val me = players.get(sessionId) ?: return
+                val lowerTarget = cmd.target.lowercase()
+                val mob = mobs.mobsInRoom(me.roomId).firstOrNull { it.name.lowercase().contains(lowerTarget) }
+                if (mob != null) {
+                    statusEffects.removeAllFromMob(mob.id)
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Dispelled all effects from ${mob.name}."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                outbound.send(OutboundEvent.SendError(sessionId, "No player or mob named '${cmd.target}'."))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
