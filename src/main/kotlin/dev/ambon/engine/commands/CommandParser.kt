@@ -144,6 +144,18 @@ sealed interface Command {
         val targetHint: String?,
     ) : Command
 
+    data object Balance : Command
+
+    data object ShopList : Command
+
+    data class Buy(
+        val keyword: String,
+    ) : Command
+
+    data class Sell(
+        val keyword: String,
+    ) : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -282,6 +294,18 @@ object CommandParser {
             if (rest.isEmpty()) Command.Invalid(line, "pose <message>") else Command.Pose(rest)
         }?.let { return it }
 
+        // buy
+        matchPrefix(line, listOf("buy", "purchase")) { rest ->
+            val kw = rest.trim()
+            if (kw.isEmpty()) Command.Invalid(line, "buy <item>") else Command.Buy(kw)
+        }?.let { return it }
+
+        // sell
+        matchPrefix(line, listOf("sell")) { rest ->
+            val kw = rest.trim()
+            if (kw.isEmpty()) Command.Invalid(line, "sell <item>") else Command.Sell(kw)
+        }?.let { return it }
+
         // cast / c
         matchPrefix(line, listOf("cast", "c")) { rest ->
             if (rest.isEmpty()) return@matchPrefix Command.Invalid(line, "cast <spell> [target]")
@@ -352,6 +376,8 @@ object CommandParser {
             "score", "sc" -> Command.Score
             "spells", "abilities" -> Command.Spells
             "shutdown" -> Command.Shutdown
+            "gold", "balance", "wealth" -> Command.Balance
+            "list", "shop" -> Command.ShopList
             else -> Command.Unknown(line)
         }
     }

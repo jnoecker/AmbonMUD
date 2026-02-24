@@ -312,6 +312,10 @@
             xpBar.style.width = "0%";
             xpBarText.textContent = "— / —";
         }
+        const goldVal = document.getElementById("gold-val");
+        if (goldVal) {
+            goldVal.textContent = (data.gold ?? 0).toLocaleString();
+        }
     }
 
     function updateRoomInfo(data) {

@@ -1,0 +1,37 @@
+zone: ok_shop
+startRoom: market
+items:
+  sword:
+    displayName: "a steel sword"
+    keyword: "sword"
+    slot: hand
+    damage: 3
+    basePrice: 50
+  potion:
+    displayName: "a health potion"
+    keyword: "potion"
+    consumable: true
+    onUse:
+      healHp: 5
+    basePrice: 20
+  trophy:
+    displayName: "a trophy skull"
+    keyword: "trophy"
+shops:
+  market_vendor:
+    name: "Market Vendor"
+    room: market
+    items:
+      - sword
+      - potion
+rooms:
+  market:
+    title: "Market Square"
+    description: "A bustling market."
+    exits:
+      north: alley
+  alley:
+    title: "Back Alley"
+    description: "A dark alley."
+    exits:
+      south: market

@@ -216,6 +216,25 @@ class ItemRegistry {
         unplacedItems[itemId] = item
     }
 
+    fun getTemplate(itemId: ItemId): dev.ambon.domain.items.Item? = itemTemplates[itemId]?.item
+
+    fun createFromTemplate(itemId: ItemId): ItemInstance? {
+        val template = itemTemplates[itemId] ?: return null
+        return ItemInstance(id = template.id, item = template.item.copy())
+    }
+
+    fun removeFromInventory(
+        sessionId: SessionId,
+        keyword: String,
+    ): ItemInstance? {
+        val inv = inventoryItems[sessionId] ?: return null
+        val idx = findMatchingItemIndex(inv, keyword)
+        if (idx < 0) return null
+        val removed = inv.removeAt(idx)
+        if (inv.isEmpty()) inventoryItems.remove(sessionId)
+        return removed
+    }
+
     fun unplacedItems(): Map<ItemId, ItemInstance> = unplacedItems.toMap()
 
     fun ensurePlayer(sessionId: SessionId) {

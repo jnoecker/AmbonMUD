@@ -27,6 +27,7 @@ data class PlayerState(
     var mana: Int = BASE_MANA,
     var maxMana: Int = BASE_MANA,
     var baseMana: Int = BASE_MANA,
+    var gold: Long = 0L,
 ) {
     companion object {
         const val BASE_MAX_HP = 10

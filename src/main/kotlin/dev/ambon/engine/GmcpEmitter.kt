@@ -23,7 +23,7 @@ class GmcpEmitter(
         val xpNeeded = progression?.xpToNextLevel(player.xpTotal)
         val xpNeededJson = if (xpNeeded != null) "$xpNeeded" else "null"
         val json =
-            """{"hp":${player.hp},"maxHp":${player.maxHp},"mana":${player.mana},"maxMana":${player.maxMana},"level":${player.level},"xp":${player.xpTotal},"xpIntoLevel":$xpInto,"xpToNextLevel":$xpNeededJson}"""
+            """{"hp":${player.hp},"maxHp":${player.maxHp},"mana":${player.mana},"maxMana":${player.maxMana},"level":${player.level},"xp":${player.xpTotal},"xpIntoLevel":$xpInto,"xpToNextLevel":$xpNeededJson,"gold":${player.gold}}"""
         outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Vitals", json))
     }
 

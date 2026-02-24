@@ -37,6 +37,7 @@ class RedisCachingPlayerRepository(
         val isStaff: Boolean = false,
         val mana: Int = 20,
         val maxMana: Int = 20,
+        val gold: Long = 0L,
     )
 
     private fun nameKey(name: String) = "player:name:${name.lowercase()}"
@@ -145,6 +146,7 @@ class RedisCachingPlayerRepository(
                             isStaff = record.isStaff,
                             mana = record.mana,
                             maxMana = record.maxMana,
+                            gold = record.gold,
                         ),
                     )
                 cache.setEx(idKey(record.id.value), cacheTtlSeconds, json)
@@ -179,6 +181,7 @@ class RedisCachingPlayerRepository(
             isStaff = isStaff,
             mana = mana,
             maxMana = maxMana,
+            gold = gold,
         )
     }
 }

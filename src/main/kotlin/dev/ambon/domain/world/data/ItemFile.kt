@@ -24,4 +24,5 @@ data class ItemFile(
     val room: String? = null,
     val mob: String? = null,
     val matchByKey: Boolean = false,
+    val basePrice: Int = 0,
 )
