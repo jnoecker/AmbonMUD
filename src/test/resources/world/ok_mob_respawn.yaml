@@ -1,0 +1,16 @@
+zone: ok_mob_respawn
+startRoom: a
+mobs:
+  rat:
+    name: "a small rat"
+    room: a
+    respawnSeconds: 60
+  boss:
+    name: "the boss"
+    room: a
+    tier: boss
+    # no respawnSeconds - relies on zone reset only
+rooms:
+  a:
+    title: "Room A"
+    description: "A room."
