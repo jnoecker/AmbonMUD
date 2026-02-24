@@ -18,7 +18,7 @@ data class PlayerRecord(
     val wisdom: Int = 10,
     val charisma: Int = 10,
     val race: String = "HUMAN",
-    val playerClass: String = "ADVENTURER",
+    val playerClass: String = "WARRIOR",
     val level: Int = 1,
     val xpTotal: Long = 0L,
     val createdAtEpochMs: Long,

@@ -1,5 +1,7 @@
 package dev.ambon.engine.abilities
 
+import dev.ambon.domain.PlayerClass
+
 @JvmInline
 value class AbilityId(
     val value: String,
@@ -31,4 +33,5 @@ data class AbilityDefinition(
     val levelRequired: Int,
     val targetType: TargetType,
     val effect: AbilityEffect,
+    val requiredClass: PlayerClass? = null,
 )

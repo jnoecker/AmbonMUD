@@ -19,7 +19,7 @@ data class PlayerState(
     var wisdom: Int = BASE_STAT,
     var charisma: Int = BASE_STAT,
     var race: String = "HUMAN",
-    var playerClass: String = "ADVENTURER",
+    var playerClass: String = "WARRIOR",
     var level: Int = 1,
     var xpTotal: Long = 0L,
     var ansiEnabled: Boolean = false,

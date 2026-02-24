@@ -1,5 +1,7 @@
 package dev.ambon.engine
 
+import dev.ambon.domain.PlayerClass
+import dev.ambon.domain.Race
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.items.ItemRegistry
@@ -100,6 +102,8 @@ class PlayerRegistry(
         nameRaw: String,
         passwordRaw: String,
         defaultAnsiEnabled: Boolean = false,
+        race: Race = Race.HUMAN,
+        playerClass: PlayerClass = PlayerClass.WARRIOR,
     ): CreateResult {
         if (players.containsKey(sessionId)) return CreateResult.InvalidName
 
@@ -113,6 +117,7 @@ class PlayerRegistry(
 
         if (repo.findByName(name) != null) return CreateResult.Taken
 
+        val baseStat = PlayerState.BASE_STAT
         val now = clock.millis()
         val created =
             repo.create(
@@ -121,6 +126,14 @@ class PlayerRegistry(
                 nowEpochMs = now,
                 passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()),
                 ansiEnabled = defaultAnsiEnabled,
+                race = race.name,
+                playerClass = playerClass.name,
+                strength = baseStat + race.strMod,
+                dexterity = baseStat + race.dexMod,
+                constitution = baseStat + race.conMod,
+                intelligence = baseStat + race.intMod,
+                wisdom = baseStat + race.wisMod,
+                charisma = baseStat + race.chaMod,
             )
         bindSession(sessionId, created, now)
         return CreateResult.Ok
@@ -133,8 +146,19 @@ class PlayerRegistry(
     ) {
         val xpTotal = boundRecord.xpTotal.coerceAtLeast(0L)
         val level = progression.computeLevel(xpTotal)
-        val maxHp = progression.maxHpForLevel(level, boundRecord.constitution)
-        val maxMana = progression.maxManaForLevel(level, boundRecord.intelligence)
+        val pc = PlayerClass.fromString(boundRecord.playerClass)
+        val maxHp =
+            progression.maxHpForLevel(
+                level,
+                boundRecord.constitution,
+                pc?.hpPerLevel ?: progression.hpPerLevel,
+            )
+        val maxMana =
+            progression.maxManaForLevel(
+                level,
+                boundRecord.intelligence,
+                pc?.manaPerLevel ?: progression.manaPerLevel,
+            )
         val ps =
             PlayerState(
                 sessionId = sessionId,

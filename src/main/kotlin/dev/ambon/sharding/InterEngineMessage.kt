@@ -149,7 +149,7 @@ data class SerializedPlayerState(
     val wisdom: Int = PlayerState.BASE_STAT,
     val charisma: Int = PlayerState.BASE_STAT,
     val race: String = "HUMAN",
-    val playerClass: String = "ADVENTURER",
+    val playerClass: String = "WARRIOR",
     val level: Int,
     val xpTotal: Long,
     val ansiEnabled: Boolean,

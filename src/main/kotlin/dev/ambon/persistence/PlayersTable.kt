@@ -14,7 +14,7 @@ object PlayersTable : Table("players") {
     val wisdom = integer("wisdom").default(10)
     val charisma = integer("charisma").default(10)
     val race = varchar("race", 32).default("HUMAN")
-    val playerClass = varchar("player_class", 32).default("ADVENTURER")
+    val playerClass = varchar("player_class", 32).default("WARRIOR")
     val level = integer("level").default(1)
     val xpTotal = long("xp_total").default(0L)
     val createdAtEpochMs = long("created_at_epoch_ms")

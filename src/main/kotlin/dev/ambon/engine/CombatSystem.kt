@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -405,11 +406,14 @@ class CombatSystem(
 
         val con = player.constitution
         val int = player.intelligence
-        val oldMaxHp = progression.maxHpForLevel(result.previousLevel, con)
-        val newMaxHp = progression.maxHpForLevel(result.newLevel, con)
+        val pc = PlayerClass.fromString(player.playerClass)
+        val classHpPerLevel = pc?.hpPerLevel ?: progression.hpPerLevel
+        val classManaPerLevel = pc?.manaPerLevel ?: progression.manaPerLevel
+        val oldMaxHp = progression.maxHpForLevel(result.previousLevel, con, classHpPerLevel)
+        val newMaxHp = progression.maxHpForLevel(result.newLevel, con, classHpPerLevel)
         val hpGain = (newMaxHp - oldMaxHp).coerceAtLeast(0)
-        val oldMaxMana = progression.maxManaForLevel(result.previousLevel, int)
-        val newMaxMana = progression.maxManaForLevel(result.newLevel, int)
+        val oldMaxMana = progression.maxManaForLevel(result.previousLevel, int, classManaPerLevel)
+        val newMaxMana = progression.maxManaForLevel(result.newLevel, int, classManaPerLevel)
         val manaGain = (newMaxMana - oldMaxMana).coerceAtLeast(0)
         val bonusParts = mutableListOf<String>()
         if (hpGain > 0) bonusParts += "+$hpGain max HP"
