@@ -99,6 +99,10 @@ fun JavaExec.applyConfigOverrides() {
 
 tasks.named<JavaExec>("run") {
     applyConfigOverrides()
+    // Work around JDK 21+ Windows bug where Netty's NIO selector fails with
+    // "Unable to establish loopback connection" because PipeImpl defaults to
+    // Unix domain sockets which can fail in some environments.
+    jvmArgs("-Djava.net.preferIPv4Stack=true")
 }
 
 tasks.register<JavaExec>("demo") {
@@ -109,6 +113,7 @@ tasks.register<JavaExec>("demo") {
     standardInput = System.`in`
     systemProperty("config.override.ambonMUD.demo.autoLaunchBrowser", "true")
     applyConfigOverrides()
+    jvmArgs("-Djava.net.preferIPv4Stack=true")
 }
 
 // Suppress ktlint violations in protobuf/grpc generated sources.
