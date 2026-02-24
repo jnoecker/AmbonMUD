@@ -163,19 +163,7 @@ class GameEngine(
                     scheduler.scheduleIn(respawnMs) {
                         if (mobs.get(spawn.id) != null) return@scheduleIn
                         if (world.rooms[spawn.roomId] == null) return@scheduleIn
-                        val respawned =
-                            MobState(
-                                id = spawn.id,
-                                name = spawn.name,
-                                roomId = spawn.roomId,
-                                hp = spawn.maxHp,
-                                maxHp = spawn.maxHp,
-                                minDamage = spawn.minDamage,
-                                maxDamage = spawn.maxDamage,
-                                armor = spawn.armor,
-                                xpReward = spawn.xpReward,
-                                drops = spawn.drops,
-                            )
+                        val respawned = spawnToMobState(spawn)
                         mobs.upsert(respawned)
                         mobSystem.onMobSpawned(spawn.id)
                         for (p in players.playersInRoom(spawn.roomId)) {
@@ -242,6 +230,8 @@ class GameEngine(
             markStatusDirty = ::markStatusDirty,
         )
 
+    private val shopRegistry = ShopRegistry(items)
+
     private val router =
         CommandRouter(
             world = world,
@@ -269,6 +259,8 @@ class GameEngine(
                     null
                 },
             statusEffects = statusEffectSystem,
+            shopRegistry = shopRegistry,
+            economyConfig = engineConfig.economy,
         )
 
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
@@ -320,22 +312,10 @@ class GameEngine(
 
     init {
         world.mobSpawns.forEach { spawn ->
-            mobs.upsert(
-                MobState(
-                    id = spawn.id,
-                    name = spawn.name,
-                    roomId = spawn.roomId,
-                    hp = spawn.maxHp,
-                    maxHp = spawn.maxHp,
-                    minDamage = spawn.minDamage,
-                    maxDamage = spawn.maxDamage,
-                    armor = spawn.armor,
-                    xpReward = spawn.xpReward,
-                    drops = spawn.drops,
-                ),
-            )
+            mobs.upsert(spawnToMobState(spawn))
         }
         items.loadSpawns(world.itemSpawns)
+        shopRegistry.register(world.shopDefinitions)
         mobSystem.setCombatChecker(combatSystem::isMobInCombat)
         mobSystem.setRootChecker { mobId -> statusEffectSystem.hasMobEffect(mobId, EffectType.ROOT) }
     }
@@ -484,20 +464,7 @@ class GameEngine(
         }
 
         for (spawn in zoneMobSpawns) {
-            mobs.upsert(
-                MobState(
-                    id = spawn.id,
-                    name = spawn.name,
-                    roomId = spawn.roomId,
-                    hp = spawn.maxHp,
-                    maxHp = spawn.maxHp,
-                    minDamage = spawn.minDamage,
-                    maxDamage = spawn.maxDamage,
-                    armor = spawn.armor,
-                    xpReward = spawn.xpReward,
-                    drops = spawn.drops,
-                ),
-            )
+            mobs.upsert(spawnToMobState(spawn))
             mobSystem.onMobSpawned(spawn.id)
         }
 
@@ -1391,6 +1358,22 @@ class GameEngine(
             }
         }
     }
+
+    private fun spawnToMobState(spawn: dev.ambon.domain.world.MobSpawn): MobState =
+        MobState(
+            id = spawn.id,
+            name = spawn.name,
+            roomId = spawn.roomId,
+            hp = spawn.maxHp,
+            maxHp = spawn.maxHp,
+            minDamage = spawn.minDamage,
+            maxDamage = spawn.maxDamage,
+            armor = spawn.armor,
+            xpReward = spawn.xpReward,
+            drops = spawn.drops,
+            goldMin = spawn.goldMin,
+            goldMax = spawn.goldMax,
+        )
 
     private fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
 

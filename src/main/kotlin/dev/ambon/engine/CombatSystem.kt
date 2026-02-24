@@ -400,7 +400,26 @@ class CombatSystem(
         items.dropMobItemsToRoom(mob.id, mob.roomId)
         rollDrops(mob)
         broadcastToRoom(mob.roomId, "${mob.name} dies.")
+        grantKillGold(killerSessionId, mob)
         grantKillXp(killerSessionId, mob)
+    }
+
+    private suspend fun grantKillGold(
+        sessionId: SessionId,
+        mob: MobState,
+    ) {
+        if (mob.goldMax <= 0L) return
+        val player = players.get(sessionId) ?: return
+        val goldDrop =
+            if (mob.goldMin >= mob.goldMax) {
+                mob.goldMin
+            } else {
+                mob.goldMin + rng.nextLong(mob.goldMax - mob.goldMin + 1)
+            }
+        if (goldDrop <= 0L) return
+        player.gold += goldDrop
+        markVitalsDirty(sessionId)
+        outbound.send(OutboundEvent.SendText(sessionId, "You find $goldDrop gold."))
     }
 
     suspend fun handleSpellKill(

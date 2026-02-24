@@ -278,4 +278,40 @@ class CommandParserTest {
         assertTrue(CommandParser.parse("dispel") is Command.Invalid)
         assertTrue(CommandParser.parse("dispel   ") is Command.Invalid)
     }
+
+    @Test
+    fun `parses balance and gold aliases`() {
+        assertEquals(Command.Balance, CommandParser.parse("balance"))
+        assertEquals(Command.Balance, CommandParser.parse("gold"))
+        assertEquals(Command.Balance, CommandParser.parse("wealth"))
+    }
+
+    @Test
+    fun `parses shop list aliases`() {
+        assertEquals(Command.ShopList, CommandParser.parse("list"))
+        assertEquals(Command.ShopList, CommandParser.parse("shop"))
+    }
+
+    @Test
+    fun `parses buy command`() {
+        assertEquals(Command.Buy("sword"), CommandParser.parse("buy sword"))
+        assertEquals(Command.Buy("sword"), CommandParser.parse("purchase sword"))
+    }
+
+    @Test
+    fun `buy with no arg returns Invalid`() {
+        assertTrue(CommandParser.parse("buy") is Command.Invalid)
+        assertTrue(CommandParser.parse("buy   ") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses sell command`() {
+        assertEquals(Command.Sell("dagger"), CommandParser.parse("sell dagger"))
+    }
+
+    @Test
+    fun `sell with no arg returns Invalid`() {
+        assertTrue(CommandParser.parse("sell") is Command.Invalid)
+        assertTrue(CommandParser.parse("sell   ") is Command.Invalid)
+    }
 }

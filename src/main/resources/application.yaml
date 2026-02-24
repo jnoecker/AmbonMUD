@@ -129,6 +129,9 @@ ambonMUD:
           baseArmor: 0
           baseXpReward: 15
           xpRewardPerLevel: 5
+          baseGoldMin: 1
+          baseGoldMax: 3
+          goldPerLevel: 1
         standard:
           baseHp: 10
           hpPerLevel: 3
@@ -138,6 +141,9 @@ ambonMUD:
           baseArmor: 0
           baseXpReward: 30
           xpRewardPerLevel: 10
+          baseGoldMin: 2
+          baseGoldMax: 8
+          goldPerLevel: 2
         elite:
           baseHp: 20
           hpPerLevel: 5
@@ -147,6 +153,9 @@ ambonMUD:
           baseArmor: 1
           baseXpReward: 75
           xpRewardPerLevel: 20
+          baseGoldMin: 10
+          baseGoldMax: 25
+          goldPerLevel: 5
         boss:
           baseHp: 50
           hpPerLevel: 10
@@ -156,6 +165,9 @@ ambonMUD:
           baseArmor: 3
           baseXpReward: 200
           xpRewardPerLevel: 50
+          baseGoldMin: 50
+          baseGoldMax: 100
+          goldPerLevel: 15
     combat:
       maxCombatsPerTick: 20
       tickMillis: 1000
@@ -230,6 +242,9 @@ ambonMUD:
           effectType: STUN
           durationMs: 2000
           stackBehavior: NONE
+    economy:
+      buyMultiplier: 1.0
+      sellMultiplier: 0.5
     abilities:
       definitions:
         # --- Warrior ---
