@@ -73,6 +73,26 @@ class GameEngine(
             .filterValues { it > 0L }
             .mapValuesTo(mutableMapOf()) { (_, minutes) -> clock.millis() + minutesToMillis(minutes) }
 
+    /** GMCP packages each session has opted into (e.g. "Char.Vitals", "Room.Info"). */
+    private val gmcpSessions = mutableMapOf<SessionId, MutableSet<String>>()
+
+    /** Sessions whose vitals changed this tick and need a Char.Vitals push. */
+    private val gmcpDirtyVitals = mutableSetOf<SessionId>()
+
+    val gmcpEmitter =
+        GmcpEmitter(
+            outbound = outbound,
+            supportsPackage = { sid, pkg ->
+                gmcpSessions[sid]?.any { supported ->
+                    pkg == supported || pkg.startsWith("$supported.")
+                } == true
+            },
+        )
+
+    fun markVitalsDirty(sessionId: SessionId) {
+        gmcpDirtyVitals.add(sessionId)
+    }
+
     private val mobSystem =
         MobSystem(
             world = world,
@@ -83,6 +103,7 @@ class GameEngine(
             minWanderDelayMillis = engineConfig.mob.minWanderDelayMillis,
             maxWanderDelayMillis = engineConfig.mob.maxWanderDelayMillis,
             metrics = metrics,
+            gmcpEmitter = gmcpEmitter,
         )
     private val combatSystem =
         CombatSystem(
@@ -96,15 +117,18 @@ class GameEngine(
             maxDamage = engineConfig.combat.maxDamage,
             detailedFeedbackEnabled = engineConfig.combat.feedback.enabled,
             detailedFeedbackRoomBroadcastEnabled = engineConfig.combat.feedback.roomBroadcastEnabled,
-            onMobRemoved = { mobId ->
+            onMobRemoved = { mobId, roomId ->
                 mobSystem.onMobRemoved(mobId)
+                for (p in players.playersInRoom(roomId)) {
+                    gmcpEmitter.sendRoomRemoveMob(p.sessionId, mobId.value)
+                }
                 val spawn = world.mobSpawns.find { it.id == mobId }
                 val respawnMs = spawn?.respawnSeconds?.let { it * 1_000L }
                 if (spawn != null && respawnMs != null) {
                     scheduler.scheduleIn(respawnMs) {
                         if (mobs.get(spawn.id) != null) return@scheduleIn
                         if (world.rooms[spawn.roomId] == null) return@scheduleIn
-                        mobs.upsert(
+                        val respawned =
                             MobState(
                                 id = spawn.id,
                                 name = spawn.name,
@@ -116,11 +140,12 @@ class GameEngine(
                                 armor = spawn.armor,
                                 xpReward = spawn.xpReward,
                                 drops = spawn.drops,
-                            ),
-                        )
+                            )
+                        mobs.upsert(respawned)
                         mobSystem.onMobSpawned(spawn.id)
                         for (p in players.playersInRoom(spawn.roomId)) {
                             outbound.send(OutboundEvent.SendText(p.sessionId, "${spawn.name} appears."))
+                            gmcpEmitter.sendRoomAddMob(p.sessionId, respawned)
                         }
                     }
                 }
@@ -176,26 +201,6 @@ class GameEngine(
             intSpellDivisor = engineConfig.combat.intSpellDivisor,
             markVitalsDirty = ::markVitalsDirty,
         )
-
-    /** GMCP packages each session has opted into (e.g. "Char.Vitals", "Room.Info"). */
-    private val gmcpSessions = mutableMapOf<SessionId, MutableSet<String>>()
-
-    /** Sessions whose vitals changed this tick and need a Char.Vitals push. */
-    private val gmcpDirtyVitals = mutableSetOf<SessionId>()
-
-    val gmcpEmitter =
-        GmcpEmitter(
-            outbound = outbound,
-            supportsPackage = { sid, pkg ->
-                gmcpSessions[sid]?.any { supported ->
-                    pkg == supported || pkg.startsWith("$supported.")
-                } == true
-            },
-        )
-
-    fun markVitalsDirty(sessionId: SessionId) {
-        gmcpDirtyVitals.add(sessionId)
-    }
 
     private val router =
         CommandRouter(
@@ -445,6 +450,11 @@ class GameEngine(
             mobIds = zoneMobIds,
             spawns = zoneItemSpawns,
         )
+
+        // Refresh mob GMCP for all players in the reset zone
+        for (player in playersInZone) {
+            gmcpEmitter.sendRoomMobs(player.sessionId, mobs.mobsInRoom(player.roomId))
+        }
     }
 
     private suspend fun handleCrossZoneMove(
@@ -1254,6 +1264,7 @@ class GameEngine(
                 gmcpEmitter.sendCharName(sid, player)
                 gmcpEmitter.sendCharItemsList(sid, items.inventory(sid), items.equipment(sid))
                 gmcpEmitter.sendRoomPlayers(sid, players.playersInRoom(player.roomId).toList())
+                gmcpEmitter.sendRoomMobs(sid, mobs.mobsInRoom(player.roomId))
                 gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid))
             }
             "Core.Supports.Remove" -> {
