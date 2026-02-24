@@ -6,6 +6,7 @@ import dev.ambon.config.EngineConfig
 import dev.ambon.config.LoginConfig
 import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.Race
+import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
@@ -79,6 +80,9 @@ class GameEngine(
     /** Sessions whose vitals changed this tick and need a Char.Vitals push. */
     private val gmcpDirtyVitals = mutableSetOf<SessionId>()
 
+    /** Mobs whose HP changed this tick and need a Room.UpdateMob push. */
+    private val gmcpDirtyMobs = mutableSetOf<MobId>()
+
     val gmcpEmitter =
         GmcpEmitter(
             outbound = outbound,
@@ -91,6 +95,10 @@ class GameEngine(
 
     fun markVitalsDirty(sessionId: SessionId) {
         gmcpDirtyVitals.add(sessionId)
+    }
+
+    fun markMobHpDirty(mobId: MobId) {
+        gmcpDirtyMobs.add(mobId)
     }
 
     private val mobSystem =
@@ -156,6 +164,7 @@ class GameEngine(
             dexDodgePerPoint = engineConfig.combat.dexDodgePerPoint,
             maxDodgePercent = engineConfig.combat.maxDodgePercent,
             markVitalsDirty = ::markVitalsDirty,
+            markMobHpDirty = ::markMobHpDirty,
             onLevelUp = { sid, level ->
                 markVitalsDirty(sid)
                 val pc = players.get(sid)?.playerClass
@@ -200,6 +209,7 @@ class GameEngine(
             items = items,
             intSpellDivisor = engineConfig.combat.intSpellDivisor,
             markVitalsDirty = ::markVitalsDirty,
+            markMobHpDirty = ::markMobHpDirty,
         )
 
     private val router =
@@ -350,6 +360,7 @@ class GameEngine(
 
                     // Flush GMCP vitals for sessions that had changes this tick
                     flushDirtyGmcpVitals()
+                    flushDirtyGmcpMobs()
 
                     // Run scheduled actions (bounded)
                     val schedulerSample = Timer.start()
@@ -1298,6 +1309,18 @@ class GameEngine(
         for (sid in dirty) {
             val player = players.get(sid) ?: continue
             gmcpEmitter.sendCharVitals(sid, player)
+        }
+    }
+
+    private suspend fun flushDirtyGmcpMobs() {
+        if (gmcpDirtyMobs.isEmpty()) return
+        val dirty = gmcpDirtyMobs.toList()
+        gmcpDirtyMobs.clear()
+        for (mobId in dirty) {
+            val mob = mobs.get(mobId) ?: continue
+            for (p in players.playersInRoom(mob.roomId)) {
+                gmcpEmitter.sendRoomUpdateMob(p.sessionId, mob)
+            }
         }
     }
 

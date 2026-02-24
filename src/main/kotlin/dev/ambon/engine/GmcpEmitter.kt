@@ -130,6 +130,16 @@ class GmcpEmitter(
         outbound.send(OutboundEvent.GmcpData(sessionId, "Room.AddMob", json))
     }
 
+    suspend fun sendRoomUpdateMob(
+        sessionId: SessionId,
+        mob: MobState,
+    ) {
+        if (!supportsPackage(sessionId, "Room.Mobs")) return
+        val json =
+            """{"id":"${mob.id.value.jsonEscape()}","name":"${mob.name.jsonEscape()}","hp":${mob.hp},"maxHp":${mob.maxHp}}"""
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.UpdateMob", json))
+    }
+
     suspend fun sendRoomRemoveMob(
         sessionId: SessionId,
         mobId: String,

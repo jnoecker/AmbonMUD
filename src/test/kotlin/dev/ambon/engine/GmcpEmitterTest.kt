@@ -490,6 +490,20 @@ class GmcpEmitterTest {
             assertTrue(data.jsonData.contains("\"maxHp\":20"))
         }
 
+    // ── Room.UpdateMob ──
+
+    @Test
+    fun `sendRoomUpdateMob emits updated mob JSON`() =
+        runTest {
+            val e = emitter("Room.Mobs")
+            e.sendRoomUpdateMob(sid, mob(hp = 3, maxHp = 10))
+            val data = drainGmcp()[0]
+            assertEquals("Room.UpdateMob", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"hp\":3"))
+            assertTrue(data.jsonData.contains("\"maxHp\":10"))
+            assertTrue(data.jsonData.contains("\"id\":\"zone:rat\""))
+        }
+
     // ── Room.RemoveMob ──
 
     @Test
@@ -508,7 +522,8 @@ class GmcpEmitterTest {
             val e = emitter("Room.Mobs")
             e.sendRoomMobs(sid, emptyList())
             e.sendRoomAddMob(sid, mob())
+            e.sendRoomUpdateMob(sid, mob())
             e.sendRoomRemoveMob(sid, "zone:rat")
-            assertEquals(3, drainGmcp().size)
+            assertEquals(4, drainGmcp().size)
         }
 }

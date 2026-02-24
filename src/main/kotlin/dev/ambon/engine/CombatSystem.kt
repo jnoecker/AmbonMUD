@@ -32,6 +32,7 @@ class CombatSystem(
     private val dexDodgePerPoint: Int = 2,
     private val maxDodgePercent: Int = 30,
     private val markVitalsDirty: (SessionId) -> Unit = {},
+    private val markMobHpDirty: (MobId) -> Unit = {},
 ) {
     private data class Fight(
         val sessionId: SessionId,
@@ -206,6 +207,7 @@ class CombatSystem(
                     clampedToMinimum = playerMinDamageClamped,
                 )
             mob.hp = (mob.hp - effectivePlayerDamage).coerceAtLeast(0)
+            markMobHpDirty(mob.id)
             val playerHitText = "You hit ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix."
             outbound.send(OutboundEvent.SendText(fight.sessionId, playerHitText))
             if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {

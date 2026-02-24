@@ -236,6 +236,16 @@
         mobsList.appendChild(createMobElement(data));
     }
 
+    function updateRoomMob(data) {
+        const el = mobsList.querySelector(`[data-mob-id="${CSS.escape(data.id)}"]`);
+        if (!el) return;
+        const hpFill = el.querySelector(".mob-hp-fill");
+        if (hpFill) {
+            const pct = Math.round((data.hp / Math.max(data.maxHp, 1)) * 100);
+            hpFill.style.width = `${pct}%`;
+        }
+    }
+
     function removeRoomMob(data) {
         const el = mobsList.querySelector(`[data-mob-id="${CSS.escape(data.id)}"]`);
         if (el) el.remove();
@@ -280,6 +290,9 @@
                 break;
             case "Room.AddMob":
                 addRoomMob(data);
+                break;
+            case "Room.UpdateMob":
+                updateRoomMob(data);
                 break;
             case "Room.RemoveMob":
                 removeRoomMob(data);
