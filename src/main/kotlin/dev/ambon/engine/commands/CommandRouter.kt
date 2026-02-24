@@ -1102,15 +1102,15 @@ class CommandRouter(
                     outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
-                if (invItem.item.basePrice <= 0) {
+                val sellPrice = (invItem.item.basePrice * economyConfig.sellMultiplier).roundToInt().toLong()
+                if (sellPrice <= 0L) {
                     outbound.send(
                         OutboundEvent.SendText(sessionId, "${invItem.item.displayName} is worthless."),
                     )
                     outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
-                val sellPrice = (invItem.item.basePrice * economyConfig.sellMultiplier).roundToInt().toLong()
-                val removed = items.removeFromInventory(sessionId, keyword)
+                val removed = items.removeFromInventory(sessionId, invItem.item.keyword)
                 if (removed == null) {
                     outbound.send(OutboundEvent.SendText(sessionId, "You don't have '$keyword'."))
                     outbound.send(OutboundEvent.SendPrompt(sessionId))

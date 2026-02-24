@@ -201,7 +201,7 @@ class GameEngine(
             markMobHpDirty = ::markMobHpDirty,
         )
 
-    val shopRegistry = ShopRegistry(items)
+    private val shopRegistry = ShopRegistry(items)
 
     private val router =
         CommandRouter(

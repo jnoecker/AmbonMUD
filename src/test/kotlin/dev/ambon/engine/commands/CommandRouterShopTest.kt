@@ -236,6 +236,33 @@ class CommandRouterShopTest {
         }
 
     @Test
+    fun `sell item with low basePrice that rounds to zero is rejected as worthless`() =
+        runTest {
+            val economy = EconomyConfig(buyMultiplier = 1.0, sellMultiplier = 0.1)
+            val env = setup(economyConfig = economy)
+            env.player.gold = 0L
+            // basePrice=2, sellMultiplier=0.1 → 0.2 → roundToInt = 0
+            env.items.addToInventory(
+                env.sid,
+                ItemInstance(
+                    ItemId("ok_shop:junk"),
+                    Item(keyword = "junk", displayName = "a bit of junk", basePrice = 2),
+                ),
+            )
+
+            env.router.handle(env.sid, Command.Sell("junk"))
+
+            assertEquals(0L, env.player.gold)
+            assertEquals(1, env.items.inventory(env.sid).size)
+
+            val outs = env.drain()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.text.contains("worthless") },
+                "Expected 'worthless' message for 0-value sell. got=$outs",
+            )
+        }
+
+    @Test
     fun `buy with custom economy multiplier applies correct price`() =
         runTest {
             val economy = EconomyConfig(buyMultiplier = 2.0, sellMultiplier = 0.25)
