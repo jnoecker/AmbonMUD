@@ -2,6 +2,7 @@ package dev.ambon.engine.abilities
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.PlayerClass
+import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
@@ -22,6 +23,7 @@ class AbilitySystem(
     private val items: ItemRegistry? = null,
     private val intSpellDivisor: Int = 3,
     private val markVitalsDirty: (SessionId) -> Unit = {},
+    private val markMobHpDirty: (MobId) -> Unit = {},
 ) {
     private val learnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
     private val cooldowns = mutableMapOf<SessionId, MutableMap<AbilityId, Long>>()
@@ -109,6 +111,7 @@ class AbilitySystem(
                 val damage = (baseDamage + intBonus).coerceAtLeast(1)
                 // Spell damage bypasses armor
                 mob.hp = (mob.hp - damage).coerceAtLeast(0)
+                markMobHpDirty(mob.id)
 
                 outbound.send(
                     OutboundEvent.SendText(

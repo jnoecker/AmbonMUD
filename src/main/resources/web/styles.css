@@ -248,7 +248,8 @@ button:hover {
 
 .inv-list,
 .equip-list,
-.players-list {
+.players-list,
+.mobs-list {
     font-size: 0.78rem;
     line-height: 1.5;
     color: var(--text);
@@ -256,7 +257,8 @@ button:hover {
 
 .inv-item,
 .equip-item,
-.player-item {
+.player-item,
+.mob-item {
     display: flex;
     justify-content: space-between;
     padding: 0.1rem 0;
@@ -265,7 +267,8 @@ button:hover {
 
 .inv-item:last-child,
 .equip-item:last-child,
-.player-item:last-child {
+.player-item:last-child,
+.mob-item:last-child {
     border-bottom: none;
 }
 
@@ -284,6 +287,25 @@ button:hover {
 .player-level {
     font-size: 0.7rem;
     color: #7aa8cc;
+}
+
+.mob-item {
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.mob-hp-wrap {
+    height: 5px;
+    background: #1a2e42;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.mob-hp-fill {
+    height: 100%;
+    background: #c75a4a;
+    border-radius: 3px;
+    transition: width 0.3s ease;
 }
 
 @media (max-width: 900px) {

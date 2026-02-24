@@ -2,11 +2,13 @@ package dev.ambon.engine
 
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.ItemId
+import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.Room
 import dev.ambon.engine.abilities.AbilityDefinition
@@ -426,5 +428,102 @@ class GmcpEmitterTest {
             e.sendCharItemsAdd(sid, noSlotItem)
             val data = drainGmcp()[0]
             assertTrue(data.jsonData.contains("\"slot\":null"))
+        }
+
+    // ── Room.Mobs ──
+
+    private fun mob(
+        id: String = "zone:rat",
+        name: String = "a rat",
+        hp: Int = 8,
+        maxHp: Int = 10,
+    ) = MobState(
+        id = MobId(id),
+        name = name,
+        roomId = RoomId("test:room1"),
+        hp = hp,
+        maxHp = maxHp,
+    )
+
+    @Test
+    fun `sendRoomMobs emits mob list JSON`() =
+        runTest {
+            val e = emitter("Room.Mobs")
+            e.sendRoomMobs(sid, listOf(mob(), mob(id = "zone:wolf", name = "a wolf", hp = 20, maxHp = 20)))
+            val data = drainGmcp()[0]
+            assertEquals("Room.Mobs", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"name\":\"a rat\""))
+            assertTrue(data.jsonData.contains("\"hp\":8"))
+            assertTrue(data.jsonData.contains("\"maxHp\":10"))
+            assertTrue(data.jsonData.contains("\"name\":\"a wolf\""))
+            assertTrue(data.jsonData.contains("\"id\":\"zone:rat\""))
+        }
+
+    @Test
+    fun `sendRoomMobs with empty list emits empty array`() =
+        runTest {
+            val e = emitter("Room.Mobs")
+            e.sendRoomMobs(sid, emptyList())
+            val data = drainGmcp()[0]
+            assertEquals("[]", data.jsonData)
+        }
+
+    @Test
+    fun `sendRoomMobs skipped when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendRoomMobs(sid, listOf(mob()))
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    // ── Room.AddMob ──
+
+    @Test
+    fun `sendRoomAddMob emits single mob JSON`() =
+        runTest {
+            val e = emitter("Room.Mobs")
+            e.sendRoomAddMob(sid, mob(name = "a wolf", hp = 15, maxHp = 20))
+            val data = drainGmcp()[0]
+            assertEquals("Room.AddMob", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"name\":\"a wolf\""))
+            assertTrue(data.jsonData.contains("\"hp\":15"))
+            assertTrue(data.jsonData.contains("\"maxHp\":20"))
+        }
+
+    // ── Room.UpdateMob ──
+
+    @Test
+    fun `sendRoomUpdateMob emits updated mob JSON`() =
+        runTest {
+            val e = emitter("Room.Mobs")
+            e.sendRoomUpdateMob(sid, mob(hp = 3, maxHp = 10))
+            val data = drainGmcp()[0]
+            assertEquals("Room.UpdateMob", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"hp\":3"))
+            assertTrue(data.jsonData.contains("\"maxHp\":10"))
+            assertTrue(data.jsonData.contains("\"id\":\"zone:rat\""))
+        }
+
+    // ── Room.RemoveMob ──
+
+    @Test
+    fun `sendRoomRemoveMob emits id only`() =
+        runTest {
+            val e = emitter("Room.Mobs")
+            e.sendRoomRemoveMob(sid, "zone:rat")
+            val data = drainGmcp()[0]
+            assertEquals("Room.RemoveMob", data.gmcpPackage)
+            assertEquals("{\"id\":\"zone:rat\"}", data.jsonData)
+        }
+
+    @Test
+    fun `prefix matching enables Room Mobs sub-packages`() =
+        runTest {
+            val e = emitter("Room.Mobs")
+            e.sendRoomMobs(sid, emptyList())
+            e.sendRoomAddMob(sid, mob())
+            e.sendRoomUpdateMob(sid, mob())
+            e.sendRoomRemoveMob(sid, "zone:rat")
+            assertEquals(4, drainGmcp().size)
         }
 }
