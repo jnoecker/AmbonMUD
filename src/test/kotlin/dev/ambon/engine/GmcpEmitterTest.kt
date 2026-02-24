@@ -135,8 +135,9 @@ class GmcpEmitterTest {
             assertTrue(data.jsonData.contains("\"mana\":30"))
             assertTrue(data.jsonData.contains("\"level\":5"))
             assertTrue(data.jsonData.contains("\"xp\":1234"))
-            assertTrue(data.jsonData.contains("\"xpIntoLevel\":"))
-            assertTrue(data.jsonData.contains("\"xpToNextLevel\":"))
+            // xpTotal=1234: level 4 floor=900, level 5 floor=1600 → into=334, span=700
+            assertTrue(data.jsonData.contains("\"xpIntoLevel\":334"))
+            assertTrue(data.jsonData.contains("\"xpToNextLevel\":700"))
         }
 
     @Test

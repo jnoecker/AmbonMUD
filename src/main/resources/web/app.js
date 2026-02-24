@@ -80,27 +80,29 @@
     ];
     let tabMatches = [];
     let tabIndex = 0;
-    let tabPrefix = "";
+    let tabOriginalPrefix = "";
+    let tabArgs = "";
 
     function tabComplete() {
-        if (tabMatches.length > 0 && tabPrefix === inputBuffer.split(" ")[0]) {
-            // cycle through matches
+        const parts = inputBuffer.split(" ");
+        const firstWord = parts[0].toLowerCase();
+
+        if (tabMatches.length > 0 && tabOriginalPrefix
+            && firstWord !== tabOriginalPrefix
+            && tabMatches.includes(firstWord)) {
+            // still cycling — advance to next match
             tabIndex = (tabIndex + 1) % tabMatches.length;
         } else {
-            const parts = inputBuffer.split(" ");
-            tabPrefix = parts[0].toLowerCase();
-            if (!tabPrefix) return;
-            tabMatches = COMMANDS.filter(c => c.startsWith(tabPrefix) && c !== tabPrefix);
+            // start a new completion
+            tabOriginalPrefix = firstWord;
+            tabArgs = parts.slice(1).join(" ");
+            if (!tabOriginalPrefix) return;
+            tabMatches = COMMANDS.filter(c => c.startsWith(tabOriginalPrefix) && c !== tabOriginalPrefix);
             if (tabMatches.length === 0) return;
             tabIndex = 0;
         }
-        // erase current input from terminal
-        const eraseLen = inputBuffer.length;
-        term.write("\b \b".repeat(eraseLen));
-        // keep args after the first word
-        const parts = inputBuffer.split(" ");
-        const args = parts.slice(1).join(" ");
-        inputBuffer = tabMatches[tabIndex] + (args ? " " + args : "");
+        clearInputLine();
+        inputBuffer = tabMatches[tabIndex] + (tabArgs ? " " + tabArgs : "");
         term.write(inputBuffer);
     }
 
@@ -197,10 +199,10 @@
         // draw connections
         mapCtx.strokeStyle = "#2a4a6a";
         mapCtx.lineWidth = 1.5;
-        for (const [id, room] of visitedRooms) {
+        for (const [, room] of visitedRooms) {
             const rx = cx + (room.x - current.x) * cellSize;
             const ry = cy + (room.y - current.y) * cellSize;
-            for (const [dir, targetId] of Object.entries(room.exits)) {
+            for (const [, targetId] of Object.entries(room.exits)) {
                 const target = visitedRooms.get(targetId);
                 if (!target) continue;
                 const tx = cx + (target.x - current.x) * cellSize;
@@ -247,6 +249,30 @@
         statusEl.className = `status ${isConnected ? "connected" : "disconnected"}`;
     }
 
+    function resetHud() {
+        charName.textContent = "—";
+        charInfo.textContent = "—";
+        hpBar.style.width = "0%";
+        hpText.textContent = "— / —";
+        manaBar.style.width = "0%";
+        manaText.textContent = "— / —";
+        xpBar.style.width = "0%";
+        xpBarText.textContent = "— / —";
+        levelVal.textContent = "—";
+        xpVal.textContent = "—";
+        roomTitle.textContent = "—";
+        roomDesc.textContent = "";
+        exitsWrap.innerHTML = "";
+        navExits.innerHTML = "";
+        playersList.innerHTML = '<span class="empty-hint">—</span>';
+        mobsList.innerHTML = '<span class="empty-hint">—</span>';
+        invList.innerHTML = '<span class="empty-hint">—</span>';
+        equipList.innerHTML = '<span class="empty-hint">—</span>';
+        visitedRooms.clear();
+        currentRoomId = null;
+        renderMap();
+    }
+
     function writeSystem(message) {
         term.write(`\r\n\x1b[2m${message}\x1b[0m\r\n`);
     }
@@ -273,10 +299,10 @@
             xpVal.textContent = data.xp.toLocaleString();
         }
         // XP progress bar
-        const xpInto = data.xpIntoLevel;
+        const xpInto = data.xpIntoLevel ?? 0;
         const xpNeeded = data.xpToNextLevel;
         if (xpNeeded != null && xpNeeded > 0) {
-            const pct = Math.round((xpInto / xpNeeded) * 100);
+            const pct = Math.min(100, Math.round((xpInto / xpNeeded) * 100));
             xpBar.style.width = `${pct}%`;
             xpBarText.textContent = `${xpInto.toLocaleString()} / ${xpNeeded.toLocaleString()}`;
         } else if (xpNeeded === null) {
@@ -585,6 +611,7 @@
         ws.addEventListener("close", () => {
             setConnected(false);
             inputBuffer = "";
+            resetHud();
             writeSystem("Connection closed.");
         });
 
