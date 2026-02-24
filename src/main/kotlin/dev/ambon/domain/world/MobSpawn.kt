@@ -13,4 +13,5 @@ data class MobSpawn(
     val armor: Int = 0,
     val xpReward: Long = 30L,
     val drops: List<MobDrop> = emptyList(),
+    val respawnSeconds: Long? = null,
 )
