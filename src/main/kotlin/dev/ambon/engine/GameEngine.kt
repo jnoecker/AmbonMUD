@@ -1066,8 +1066,7 @@ class GameEngine(
 
     private suspend fun promptForClassSelection(sessionId: SessionId) {
         outbound.send(OutboundEvent.SendInfo(sessionId, "Choose your class:"))
-        for ((index, pc) in PlayerClass.entries
-            .withIndex()) {
+        for ((index, pc) in PlayerClass.entries.withIndex()) {
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,

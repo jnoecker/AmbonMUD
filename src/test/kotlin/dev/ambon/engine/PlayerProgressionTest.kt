@@ -110,6 +110,92 @@ class PlayerProgressionTest {
     }
 
     @Test
+    fun `warrior gains more hp per level than mage`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 50,
+                    xp = XpCurveConfig(baseXp = 100L, exponent = 2.0, linearXp = 0L),
+                    rewards = LevelRewardsConfig(hpPerLevel = 3, manaPerLevel = 5, fullHealOnLevelUp = true),
+                ),
+            )
+
+        val warrior =
+            PlayerState(
+                sessionId = SessionId(10L),
+                name = "War",
+                roomId = RoomId("test:start"),
+                hp = 10,
+                maxHp = 10,
+                playerClass = "WARRIOR",
+            )
+
+        val mage =
+            PlayerState(
+                sessionId = SessionId(11L),
+                name = "Mag",
+                roomId = RoomId("test:start"),
+                hp = 10,
+                maxHp = 10,
+                playerClass = "MAGE",
+            )
+
+        progression.grantXp(warrior, 100L) // level 1 → 2
+        progression.grantXp(mage, 100L) // level 1 → 2
+
+        // Warrior: hpPerLevel=3 → 10 + 3 = 13
+        assertEquals(13, warrior.maxHp, "Warrior HP should use class hpPerLevel=3")
+        // Mage: hpPerLevel=1 → 10 + 1 = 11
+        assertEquals(11, mage.maxHp, "Mage HP should use class hpPerLevel=1")
+    }
+
+    @Test
+    fun `mage gains more mana per level than warrior`() {
+        val progression =
+            PlayerProgression(
+                ProgressionConfig(
+                    maxLevel = 50,
+                    xp = XpCurveConfig(baseXp = 100L, exponent = 2.0, linearXp = 0L),
+                    rewards =
+                        LevelRewardsConfig(
+                            hpPerLevel = 3,
+                            manaPerLevel = 5,
+                            fullHealOnLevelUp = true,
+                            fullManaOnLevelUp = true,
+                        ),
+                ),
+            )
+
+        val warrior =
+            PlayerState(
+                sessionId = SessionId(12L),
+                name = "War",
+                roomId = RoomId("test:start"),
+                hp = 10,
+                maxHp = 10,
+                playerClass = "WARRIOR",
+            )
+
+        val mage =
+            PlayerState(
+                sessionId = SessionId(13L),
+                name = "Mag",
+                roomId = RoomId("test:start"),
+                hp = 10,
+                maxHp = 10,
+                playerClass = "MAGE",
+            )
+
+        progression.grantXp(warrior, 100L) // level 1 → 2
+        progression.grantXp(mage, 100L) // level 1 → 2
+
+        // Warrior: manaPerLevel=2 → 20 + 2 = 22
+        assertEquals(22, warrior.maxMana, "Warrior mana should use class manaPerLevel=2")
+        // Mage: manaPerLevel=8 → 20 + 8 = 28
+        assertEquals(28, mage.maxMana, "Mage mana should use class manaPerLevel=8")
+    }
+
+    @Test
     fun `grantXp uses level formula as max hp source of truth`() {
         val progression =
             PlayerProgression(
