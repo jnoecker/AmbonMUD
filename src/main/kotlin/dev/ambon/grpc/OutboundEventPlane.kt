@@ -16,6 +16,7 @@ fun OutboundEvent.isControlPlane(): Boolean =
         is OutboundEvent.ClearScreen,
         is OutboundEvent.SessionRedirect,
         -> true
+        is OutboundEvent.GmcpData,
         is OutboundEvent.SendText,
         is OutboundEvent.SendInfo,
         is OutboundEvent.SendError,

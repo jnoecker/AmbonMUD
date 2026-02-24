@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 
+private fun Channel<OutboundFrame>.tryReceiveText(): String? = (tryReceive().getOrNull() as? OutboundFrame.Text)?.content
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class OutboundRouterPromptCoalescingTest {
     @Test
@@ -22,7 +24,7 @@ class OutboundRouterPromptCoalescingTest {
             val job = router.start()
 
             val sid = SessionId(1)
-            val q = Channel<String>(capacity = 10)
+            val q = Channel<OutboundFrame>(capacity = 10)
             router.register(sid, q) { fail("should not close") }
 
             engineOutbound.send(OutboundEvent.SendPrompt(sid))
@@ -30,8 +32,8 @@ class OutboundRouterPromptCoalescingTest {
             engineOutbound.send(OutboundEvent.SendPrompt(sid))
             runCurrent()
 
-            assertEquals("> ", q.tryReceive().getOrNull())
-            assertNull(q.tryReceive().getOrNull(), "Only one prompt should be enqueued")
+            assertEquals("> ", q.tryReceiveText())
+            assertNull(q.tryReceiveText(), "Only one prompt should be enqueued")
 
             job.cancel()
             q.close()
@@ -46,7 +48,7 @@ class OutboundRouterPromptCoalescingTest {
             val job = router.start()
 
             val sid = SessionId(2)
-            val q = Channel<String>(capacity = 10)
+            val q = Channel<OutboundFrame>(capacity = 10)
             router.register(sid, q) { fail("should not close") }
 
             engineOutbound.send(OutboundEvent.SendPrompt(sid))
@@ -54,9 +56,9 @@ class OutboundRouterPromptCoalescingTest {
             engineOutbound.send(OutboundEvent.SendPrompt(sid))
             runCurrent()
 
-            assertEquals("> ", q.tryReceive().getOrNull())
-            assertEquals("hello\r\n", q.tryReceive().getOrNull())
-            assertEquals("> ", q.tryReceive().getOrNull())
+            assertEquals("> ", q.tryReceiveText())
+            assertEquals("hello\r\n", q.tryReceiveText())
+            assertEquals("> ", q.tryReceiveText())
 
             job.cancel()
             q.close()

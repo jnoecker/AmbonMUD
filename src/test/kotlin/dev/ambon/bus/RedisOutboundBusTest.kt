@@ -89,8 +89,10 @@ class RedisOutboundBusTest {
         text: String = "",
         enabled: Boolean = false,
         reason: String = "",
+        gmcpPackage: String = "",
+        jsonData: String = "",
     ): String {
-        val payload = "$instanceId|$type|$sessionId|$text|$enabled|$reason"
+        val payload = "$instanceId|$type|$sessionId|$text|$enabled|$reason|$gmcpPackage|$jsonData"
         val signature = hmacSha256(sharedSecret, payload)
         return mapper.writeValueAsString(
             mapOf(
@@ -100,6 +102,8 @@ class RedisOutboundBusTest {
                 "text" to text,
                 "enabled" to enabled,
                 "reason" to reason,
+                "gmcpPackage" to gmcpPackage,
+                "jsonData" to jsonData,
                 "signature" to signature,
             ),
         )

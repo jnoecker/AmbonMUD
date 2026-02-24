@@ -4,7 +4,7 @@ class TelnetLineDecoder(
     private val maxLineLen: Int = 1024,
     // simple abuse guard
     private val maxNonPrintablePerLine: Int = 32,
-    private val maxSubnegotiationLen: Int = 512,
+    private val maxSubnegotiationLen: Int = 4096,
     private val onControlEvent: (TelnetControlEvent) -> Unit = {},
 ) {
     private val sb = StringBuilder()
@@ -192,6 +192,7 @@ object TelnetProtocol {
 
     const val TTYPE = 24
     const val NAWS = 31
+    const val GMCP = 201
     const val TTYPE_IS = 0
     const val TTYPE_SEND = 1
 }

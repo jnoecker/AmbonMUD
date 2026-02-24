@@ -131,7 +131,7 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
     metrics: GameMetrics = GameMetrics.noop(),
 ) {
     val sessionId = sessionIdFactory()
-    val outboundQueue = Channel<String>(capacity = sessionOutboundQueueCapacity)
+    val outboundQueue = Channel<OutboundFrame>(capacity = sessionOutboundQueueCapacity)
     val disconnected = AtomicBoolean(false)
     val disconnectReason = AtomicReference("EOF")
     var inboundBackpressureFailures = 0
@@ -170,14 +170,29 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
         disconnect()
         return
     }
+    // Auto-opt WebSocket sessions into GMCP packages
+    inbound.trySend(
+        InboundEvent.GmcpReceived(
+            sessionId,
+            "Core.Supports.Set",
+            """["Char.Vitals 1","Room.Info 1","Char.StatusVars 1"]""",
+        ),
+    )
     metrics.onWsConnected()
     log.debug { "WebSocket session connected: sessionId=$sessionId" }
 
     val writerJob =
         launch {
             try {
-                for (message in outboundQueue) {
-                    send(Frame.Text(message))
+                for (frame in outboundQueue) {
+                    when (frame) {
+                        is OutboundFrame.Text -> send(Frame.Text(frame.content))
+                        is OutboundFrame.Gmcp -> {
+                            val pkg = frame.gmcpPackage
+                            val data = frame.jsonData
+                            send(Frame.Text("""{"gmcp":"$pkg","data":$data}"""))
+                        }
+                    }
                     outboundRouter.onSessionQueueFrameConsumed(sessionId)
                 }
             } catch (_: Throwable) {
@@ -189,7 +204,14 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
         for (frame in incoming) {
             when (frame) {
                 is Frame.Text -> {
-                    val lines = sanitizeIncomingLines(frame.readText(), maxLineLen, maxNonPrintablePerLine)
+                    val text = frame.readText()
+                    // Detect GMCP JSON envelope: {"gmcp":"Package","data":<anything>}
+                    val gmcpPair = tryParseGmcpEnvelope(text)
+                    if (gmcpPair != null) {
+                        inbound.trySend(InboundEvent.GmcpReceived(sessionId, gmcpPair.first, gmcpPair.second))
+                        continue
+                    }
+                    val lines = sanitizeIncomingLines(text, maxLineLen, maxNonPrintablePerLine)
                     for (line in lines) {
                         val sent = inbound.trySend(InboundEvent.LineReceived(sessionId, line)).isSuccess
                         if (sent) {
@@ -297,6 +319,48 @@ private fun sanitizeCloseReason(reason: String): String {
         cleaned.length <= MAX_CLOSE_REASON_LENGTH -> cleaned
         else -> cleaned.take(MAX_CLOSE_REASON_LENGTH)
     }
+}
+
+/**
+ * Parses a WebSocket GMCP envelope of the form `{"gmcp":"Package","data":<json>}`.
+ * Returns a Pair(package, jsonData) or null if the text is not a GMCP envelope.
+ */
+internal fun tryParseGmcpEnvelope(text: String): Pair<String, String>? {
+    val trimmed = text.trim()
+    if (!trimmed.startsWith('{')) return null
+    // Simple regex-free extraction: look for "gmcp" key
+    val gmcpKey = "\"gmcp\""
+    val dataKey = "\"data\""
+    val gmcpIdx = trimmed.indexOf(gmcpKey)
+    if (gmcpIdx == -1) return null
+
+    // Extract package name value (string after "gmcp":)
+    val colonAfterGmcp = trimmed.indexOf(':', gmcpIdx + gmcpKey.length)
+    if (colonAfterGmcp == -1) return null
+    val quoteStart = trimmed.indexOf('"', colonAfterGmcp + 1)
+    if (quoteStart == -1) return null
+    val quoteEnd = trimmed.indexOf('"', quoteStart + 1)
+    if (quoteEnd == -1) return null
+    val pkg = trimmed.substring(quoteStart + 1, quoteEnd)
+    if (pkg.isBlank()) return null
+
+    // Extract data value (everything after "data":)
+    val dataIdx = trimmed.indexOf(dataKey)
+    val jsonData =
+        if (dataIdx == -1) {
+            "{}"
+        } else {
+            val colonAfterData = trimmed.indexOf(':', dataIdx + dataKey.length)
+            if (colonAfterData == -1) {
+                "{}"
+            } else {
+                // Take everything from after the colon to the end, trimming trailing `}`
+                val raw = trimmed.substring(colonAfterData + 1).trimEnd()
+                if (raw.endsWith('}')) raw.dropLast(1).trimEnd() else raw
+            }
+        }
+
+    return Pair(pkg, jsonData.ifBlank { "{}" })
 }
 
 private const val MAX_CLOSE_REASON_LENGTH = 123

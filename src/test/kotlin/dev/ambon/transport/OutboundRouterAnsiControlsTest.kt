@@ -15,6 +15,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 
+private fun Channel<OutboundFrame>.tryReceiveText(): String? = (tryReceive().getOrNull() as? OutboundFrame.Text)?.content
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class OutboundRouterAnsiControlsTest {
     @Test
@@ -25,14 +27,14 @@ class OutboundRouterAnsiControlsTest {
             val job = router.start()
 
             val sid = SessionId(1)
-            val q = Channel<String>(capacity = 10)
+            val q = Channel<OutboundFrame>(capacity = 10)
             router.register(sid, q) { fail("should not close") }
 
             engineOutbound.send(OutboundEvent.SetAnsi(sid, enabled = true))
             engineOutbound.send(OutboundEvent.ClearScreen(sid))
             runCurrent()
 
-            val out = q.tryReceive().getOrNull()
+            val out = q.tryReceiveText()
             assertNotNull(out, "Expected output for ClearScreen")
             assertEquals("\u001B[2J\u001B[H", out, "Expected exact clear+home sequence")
 
@@ -49,13 +51,13 @@ class OutboundRouterAnsiControlsTest {
             val job = router.start()
 
             val sid = SessionId(2)
-            val q = Channel<String>(capacity = 10)
+            val q = Channel<OutboundFrame>(capacity = 10)
             router.register(sid, q) { fail("should not close") }
 
             engineOutbound.send(OutboundEvent.ClearScreen(sid))
             runCurrent()
 
-            val out = q.tryReceive().getOrNull()
+            val out = q.tryReceiveText()
             assertNotNull(out, "Expected output for ClearScreen fallback")
 
             // sendLine -> renderer.renderLine -> PlainRenderer appends CRLF
@@ -75,13 +77,13 @@ class OutboundRouterAnsiControlsTest {
             val job = router.start()
 
             val sid = SessionId(3)
-            val q = Channel<String>(capacity = 10)
+            val q = Channel<OutboundFrame>(capacity = 10)
             router.register(sid, q) { fail("should not close") }
 
             engineOutbound.send(OutboundEvent.ShowAnsiDemo(sid))
             runCurrent()
 
-            val out = q.tryReceive().getOrNull()
+            val out = q.tryReceiveText()
             assertNotNull(out, "Expected output for ShowAnsiDemo fallback")
             assertTrue(out!!.contains("ANSI is off. Type: ansi on"), "Unexpected fallback text: $out")
             assertTrue(out.endsWith("\r\n"), "Expected CRLF framing. Got: $out")
@@ -99,14 +101,14 @@ class OutboundRouterAnsiControlsTest {
             val job = router.start()
 
             val sid = SessionId(4)
-            val q = Channel<String>(capacity = 10)
+            val q = Channel<OutboundFrame>(capacity = 10)
             router.register(sid, q) { fail("should not close") }
 
             engineOutbound.send(OutboundEvent.SetAnsi(sid, enabled = true))
             engineOutbound.send(OutboundEvent.ShowAnsiDemo(sid))
             runCurrent()
 
-            val out = q.tryReceive().getOrNull()
+            val out = q.tryReceiveText()
             assertNotNull(out, "Expected output for ShowAnsiDemo")
             assertTrue(out!!.contains("\u001B["), "Expected at least one ANSI escape sequence. Got: $out")
             assertTrue(out.contains("bright red"), "Expected demo text content. Got: $out")
@@ -136,14 +138,14 @@ class OutboundRouterAnsiControlsTest {
             val job = router.start()
 
             val sid = SessionId(41)
-            val q = Channel<String>(capacity = 10)
+            val q = Channel<OutboundFrame>(capacity = 10)
             router.register(sid, q) { fail("should not close") }
 
             engineOutbound.send(OutboundEvent.ShowLoginScreen(sid))
             runCurrent()
 
-            assertEquals("a\r\n", q.tryReceive().getOrNull())
-            assertEquals("b\r\n", q.tryReceive().getOrNull())
+            assertEquals("a\r\n", q.tryReceiveText())
+            assertEquals("b\r\n", q.tryReceiveText())
 
             job.cancel()
             q.close()
@@ -167,15 +169,15 @@ class OutboundRouterAnsiControlsTest {
             val job = router.start()
 
             val sid = SessionId(42)
-            val q = Channel<String>(capacity = 10)
+            val q = Channel<OutboundFrame>(capacity = 10)
             router.register(sid, q) { fail("should not close") }
 
             engineOutbound.send(OutboundEvent.SetAnsi(sid, enabled = true))
             engineOutbound.send(OutboundEvent.ShowLoginScreen(sid))
             runCurrent()
 
-            val first = q.tryReceive().getOrNull()
-            val second = q.tryReceive().getOrNull()
+            val first = q.tryReceiveText()
+            val second = q.tryReceiveText()
 
             assertNotNull(first, "Expected first login banner line")
             assertNotNull(second, "Expected second login banner line")
@@ -217,7 +219,7 @@ class OutboundRouterAnsiControlsTest {
             val job = router.start()
 
             val sid = SessionId(5)
-            val q = Channel<String>(capacity = 10)
+            val q = Channel<OutboundFrame>(capacity = 10)
 
             var closeCalls = 0
             var lastCloseReason: String? = null

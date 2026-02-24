@@ -22,6 +22,17 @@
     let connected = false;
     let inputBuffer = "";
 
+    // Sidebar elements
+    const hpBar = document.getElementById("hp-bar");
+    const hpText = document.getElementById("hp-text");
+    const manaBar = document.getElementById("mana-bar");
+    const manaText = document.getElementById("mana-text");
+    const levelVal = document.getElementById("level-val");
+    const xpVal = document.getElementById("xp-val");
+    const roomTitle = document.getElementById("room-title");
+    const roomDesc = document.getElementById("room-desc");
+    const exitsWrap = document.getElementById("exits-wrap");
+
     const wsUrl = (() => {
         const scheme = window.location.protocol === "https:" ? "wss" : "ws";
         return `${scheme}://${window.location.host}/ws`;
@@ -35,6 +46,67 @@
 
     function writeSystem(message) {
         term.write(`\r\n\x1b[2m${message}\x1b[0m\r\n`);
+    }
+
+    function updateVitals(data) {
+        const hp = data.hp ?? 0;
+        const maxHp = data.maxHp ?? 1;
+        const mana = data.mana ?? 0;
+        const maxMana = data.maxMana ?? 1;
+        hpBar.style.width = `${Math.round((hp / Math.max(maxHp, 1)) * 100)}%`;
+        hpText.textContent = `${hp} / ${maxHp}`;
+        manaBar.style.width = `${Math.round((mana / Math.max(maxMana, 1)) * 100)}%`;
+        manaText.textContent = `${mana} / ${maxMana}`;
+        levelVal.textContent = data.level ?? "—";
+        if (data.xp !== undefined) {
+            xpVal.textContent = data.xp.toLocaleString();
+        }
+    }
+
+    function updateRoomInfo(data) {
+        roomTitle.textContent = data.title ?? "—";
+        roomDesc.textContent = data.description ?? "";
+        exitsWrap.innerHTML = "";
+        const exits = data.exits ?? {};
+        for (const [dir, roomId] of Object.entries(exits)) {
+            const btn = document.createElement("button");
+            btn.className = "exit-btn";
+            btn.textContent = dir;
+            btn.title = roomId;
+            btn.addEventListener("click", () => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(dir);
+                }
+            });
+            exitsWrap.appendChild(btn);
+        }
+    }
+
+    function handleGmcp(pkg, data) {
+        switch (pkg) {
+            case "Char.Vitals":
+                updateVitals(data);
+                break;
+            case "Room.Info":
+                updateRoomInfo(data);
+                break;
+            case "Char.StatusVars":
+                // Field label definitions — no UI update needed for now
+                break;
+        }
+    }
+
+    function tryParseGmcp(text) {
+        if (!text.trimStart().startsWith("{")) return null;
+        try {
+            const obj = JSON.parse(text);
+            if (typeof obj.gmcp === "string") {
+                return { pkg: obj.gmcp, data: obj.data ?? {} };
+            }
+        } catch (_) {
+            // not JSON
+        }
+        return null;
     }
 
     function connect() {
@@ -51,7 +123,12 @@
 
         ws.addEventListener("message", (event) => {
             if (typeof event.data === "string") {
-                term.write(event.data);
+                const gmcp = tryParseGmcp(event.data);
+                if (gmcp) {
+                    handleGmcp(gmcp.pkg, gmcp.data);
+                } else {
+                    term.write(event.data);
+                }
             }
         });
 
