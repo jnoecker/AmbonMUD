@@ -1,8 +1,11 @@
 package dev.ambon.domain.world.load
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.Direction
+import dev.ambon.domain.world.WorldFactory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -426,6 +429,58 @@ class WorldLoaderTest {
                     WorldLoader.loadFromResources(listOf("world/mz_bad_missing_target.yaml"))
                 }
             assertTrue(ex.message!!.contains("points to missing room"))
+        }
+    }
+
+    /**
+     * Regression tests for production world integrity.
+     *
+     * These guard against two failure modes:
+     * 1. A cross-zone exit in a production YAML file pointing to a room that does not
+     *    exist (caught by loading via WorldFactory defaults).
+     * 2. application.yaml's world.resources list getting out of sync with the zone files
+     *    referenced by other zones (caught by loading directly from the config file).
+     *
+     * Both tests failed before the fix for the missing training zones in application.yaml.
+     */
+    class ProductionWorldTest {
+        @Test
+        fun `production world loads via WorldFactory defaults`() {
+            // Calls WorldFactory.demoWorld() with its built-in resource list.
+            // Exercises all cross-zone exit validation across every production zone.
+            val world = WorldFactory.demoWorld()
+            assertTrue(world.rooms.isNotEmpty())
+            // Spot-check the cross-zone wiring that was broken in #142:
+            // ambon_hub:blank_arches -> NORTH -> low_training_marsh:reedwalk_landing
+            assertTrue(
+                world.rooms.containsKey(RoomId("low_training_marsh:reedwalk_landing")),
+                "Expected low_training_marsh:reedwalk_landing to be loaded",
+            )
+            assertTrue(
+                world.rooms.containsKey(RoomId("ambon_hub:blank_arches")),
+                "Expected ambon_hub:blank_arches to be loaded",
+            )
+        }
+
+        @Test
+        fun `application yaml world resources load without cross-zone errors`() {
+            // Mimics exactly what MudServer does at startup: reads the resource list
+            // from application.yaml and passes it to WorldLoader. If application.yaml
+            // is missing a zone that another zone references, this test fails with the
+            // same WorldLoadException the server throws.
+            val text =
+                WorldLoader::class.java.classLoader
+                    .getResource("application.yaml")!!
+                    .readText()
+            val root = ObjectMapper(YAMLFactory()).readTree(text)
+            val resources =
+                root
+                    .path("ambonMUD")
+                    .path("world")
+                    .path("resources")
+                    .map { it.textValue() }
+            val world = WorldLoader.loadFromResources(resources)
+            assertTrue(world.rooms.isNotEmpty())
         }
     }
 
