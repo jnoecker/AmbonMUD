@@ -47,8 +47,8 @@ InboundBus / OutboundBus  (interface layer; Local* impls in single-process mode)
     │                      (Grpc* impls for gateway ↔ engine gRPC streaming)
     ▼
 GameEngine  (single-threaded coroutine dispatcher, 100ms tick)
-    │  CommandRouter, CombatSystem, MobSystem, RegenSystem,
-    │  Scheduler, PlayerProgression, Registries
+    │  CommandRouter, CombatSystem, AbilitySystem, MobSystem, RegenSystem,
+    │  Scheduler, PlayerProgression, GmcpEmitter, Registries
     ▼
 OutboundRouter  (per-session queues, backpressure, prompt coalescing)
     │  AnsiRenderer / PlainRenderer
@@ -71,8 +71,9 @@ Sessions
 |------|-------|
 | Entry point / wiring | `src/main/kotlin/dev/ambon/Main.kt`, `MudServer.kt` |
 | Config schema + defaults | `src/main/kotlin/dev/ambon/config/AppConfig.kt`, `src/main/resources/application.yaml` |
-| Game engine + subsystems | `src/main/kotlin/dev/ambon/engine/` |
+| Game engine + subsystems | `src/main/kotlin/dev/ambon/engine/` (includes `AbilitySystem`, `GmcpEmitter`) |
 | Command parsing + routing | `src/main/kotlin/dev/ambon/engine/commands/CommandParser.kt`, `CommandRouter.kt` |
+| Zone sharding + instancing | `src/main/kotlin/dev/ambon/sharding/` (ZoneRegistry, InterEngineBus, HandoffManager, InstanceSelector) |
 | Event bus interfaces + impls | `src/main/kotlin/dev/ambon/bus/` (Local*, Redis*, Grpc*) |
 | gRPC server + engine-mode root | `src/main/kotlin/dev/ambon/grpc/` |
 | Gateway-mode composition root | `src/main/kotlin/dev/ambon/gateway/GatewayServer.kt` |

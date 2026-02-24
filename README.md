@@ -1,27 +1,33 @@
 AmbonMUD
 ========
 
-AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a production-quality, event-driven backend with telnet and WebSocket transports, data-driven world loading, tiered NPC combat, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching.
+AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a production-quality, event-driven backend with telnet and WebSocket transports, data-driven world loading, class-based character progression, a spell/ability system, tiered NPC combat, GMCP structured data, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching.
 
 Current State
 -------------
-- Tick-based engine with NPC wandering and scheduled actions.
+- Tick-based engine with NPC wandering, scheduled actions, and individual mob respawn timers.
 - Three deployment modes: `STANDALONE` (single-process, default), `ENGINE` (game logic + gRPC server), `GATEWAY` (transports + gRPC client) for horizontal scaling.
-- Dual transport support: native telnet and a browser WebSocket client (xterm.js; served by the server at `/` and `/ws`).
-- Login flow with name + password (bcrypt), per-session state, and layered persistence (write-behind coalescing + optional Redis L2 cache).
-- YAML-defined, multi-zone world with validation on load (optional zone `lifespan` resets to respawn mobs/items).
-- Items and mobs loaded from world data; items can be in rooms or on mobs; inventory and equipment supported.
-- Wearable items support basic `damage`, `armor`, and `constitution` stats with slots (head/body/hand).
-- Tiered NPC system (weak/standard/elite/boss) with per-mob stat overrides, XP rewards, and loot tables.
-- Combat with `kill <mob>` and `flee`, resolved over ticks (kills grant XP; players can level up).
-- HP regeneration over time (regen interval scales with constitution + equipment).
-- Chat and social commands (say, emote, tell, gossip), plus basic UI helpers (ANSI, clear, colors).
+- Zone-based engine sharding with zone registry, inter-engine messaging, player handoff protocol, player-location index for O(1) cross-engine `tell` routing, and zone instancing (layering) for hot-zone load distribution.
+- Dual transport support: native telnet (with NAWS/TTYPE negotiation) and a browser WebSocket client (xterm.js; served by the server at `/` and `/ws`).
+- GMCP (Generic MUD Communication Protocol) support: structured JSON data sent alongside text output, with GMCP-aware panels in the web client (vitals, room info, inventory, skills, room players, communication channels).
+- Login flow with name + password (bcrypt), race selection (Human, Elf, Dwarf, Halfling), class selection (Warrior, Mage, Cleric, Rogue), per-session state, and layered persistence (write-behind coalescing + optional Redis L2 cache).
+- Six primary attributes (STR, DEX, CON, INT, WIS, CHA) with race-based modifiers and mechanical effects on combat (STR scales melee damage, DEX adds dodge chance, INT scales spell damage, CON scales HP regen, WIS scales mana regen).
+- YAML-defined, multi-zone world with validation on load (optional zone `lifespan` resets to respawn mobs/items). Eight zones: tutorial glade, central hub, resume showcase, ancient ruins, and four low-level training zones (marsh, highlands, mines, barrens).
+- Consumable items with charges and on-use effects (`healHp`, `grantXp`); `use <item>` command.
+- Wearable items with `damage`, `armor`, and `constitution` stats and slots (head/body/hand).
+- Tiered NPC system (weak/standard/elite/boss) with per-mob stat overrides, XP rewards, loot tables, and individual respawn timers.
+- Spell/ability system with mana pool, mana regen, cooldowns, class-specific abilities (12 abilities across 4 classes), and auto-learn on level-up.
+- Combat with `kill <mob>`, `flee`, and `cast <spell> [target]`; attribute-based damage scaling, dodge mechanics, and spell damage that bypasses mob armor.
+- HP and mana regeneration over time (HP regen scales with CON + equipment; mana regen scales with WIS).
+- Rich social/communication commands: say, emote, tell, gossip, whisper, shout, ooc (out-of-character), pose, and give.
 - Staff/admin commands (goto, transfer, spawn, smite, kick, shutdown) gated behind `isStaff` flag.
 - Abstracted `InboundBus` / `OutboundBus` interfaces with Local, Redis, and gRPC implementations.
-- Optional Redis integration: L2 player cache + pub/sub event bus (disabled by default).
+- Optional Redis integration: L2 player cache + pub/sub event bus with HMAC-signed envelopes (disabled by default).
 - gRPC bidirectional streaming for gateway-to-engine communication with exponential-backoff reconnect.
+- Multi-engine gateway support with session routing for sharded deployments.
 - Snowflake-style session IDs for globally unique allocation across gateways, with overflow wait and clock-rollback hardening.
 - Prometheus metrics endpoint (served by Ktor in `STANDALONE` / `GATEWAY` mode; standalone HTTP server in `ENGINE` mode).
+- Swarm load-testing module (`:swarm`) for bot-driven stress tests.
 
 Screenshots
 -----------
@@ -31,7 +37,7 @@ Web client:
 
 Requirements
 ------------
-- JDK 17
+- JDK 17+ (CI runs on Java 21)
 - Gradle wrapper (included)
 
 Run
@@ -110,14 +116,18 @@ Most day-to-day tuning lives under:
 - `ambonMUD.persistence.rootDir` (where player YAML data is written, YAML backend only)
 - `ambonMUD.persistence.worker` (write-behind flush interval, enable/disable)
 - `ambonMUD.database` (jdbcUrl, username, password, pool size — defaults match docker compose)
-- `ambonMUD.redis` (enabled, URI, cache TTL, pub/sub bus config)
+- `ambonMUD.redis` (enabled, URI, cache TTL, pub/sub bus config, shared-secret for HMAC)
+- `ambonMUD.engine.abilities` (spell/ability definitions, class-specific abilities)
+- `ambonMUD.sharding` (zone-based engine sharding, instancing, player-location index)
 - `ambonMUD.logging` (root log level and per-package overrides)
 
 Login
 -----
-On connect, you will be prompted for a character name and password.
+On connect, you will be prompted for a character name and password. New characters also choose a race and class.
 - Name rules: 2-16 characters, letters/digits/underscore, cannot start with a digit.
 - Password rules: 1-72 characters.
+- Race choices: Human, Elf, Dwarf, Halfling — each with attribute modifiers (STR/DEX/CON/INT/WIS/CHA).
+- Class choices: Warrior, Mage, Cleric, Rogue — each with different HP/mana scaling per level and class-specific abilities.
 - Existing characters require the correct password.
 - Login banner text is loaded from `src/main/resources/login.txt`.
 - Optional login banner styles are loaded from `src/main/resources/login.styles.yaml`.
@@ -137,6 +147,10 @@ Commands
 - `who`: list online players.
 - `tell <player> <msg>` or `t <player> <msg>`: private message.
 - `gossip <msg>` or `gs <msg>`: broadcast to everyone.
+- `whisper <player> <msg>` or `wh <player> <msg>`: whisper to a player in the same room.
+- `shout <msg>` or `sh <msg>`: shout to all players.
+- `ooc <msg>`: out-of-character chat.
+- `pose <msg>` or `po <msg>`: pose/emote variant.
 
 **Items**
 - `inventory` / `inv` / `i`: show inventory.
@@ -145,13 +159,21 @@ Commands
 - `remove <slot>` / `unequip <slot>`: remove an item from a slot (`head`, `body`, `hand`).
 - `get <item>` / `take <item>` / `pickup <item>` / `pick <item>` / `pick up <item>`: take item.
 - `drop <item>`: drop item.
+- `use <item>`: use a consumable item (potions, etc.).
+- `give <item> <player>`: give an item to another player in the room.
 
-**Combat**
+**Combat & Abilities**
 - `kill <mob>`: engage a mob in combat.
 - `flee`: end combat (you stay in the room).
+- `cast <spell> [target]` or `c <spell> [target]`: cast a spell (damage spells need a target; self-heals do not).
+- `spells` or `abilities`: list your known spells with mana cost, cooldown, and description.
 
 **Character**
-- `score` or `sc`: show character sheet (level, HP, XP, constitution, equipment stats).
+- `score` or `sc`: show character sheet (level, HP, mana, XP, attributes, race, class, equipment stats).
+
+**Zone Instancing**
+- `phase` or `layer`: list available zone instances.
+- `phase <target>`: switch to a specific zone instance (by player name or instance number).
 
 **UI / Settings**
 - `ansi on` / `ansi off`: toggle ANSI colors.
@@ -170,7 +192,20 @@ Commands
 
 World Data
 ----------
-World files live in `src/main/resources/world` and are loaded by `dev.ambon.domain.world.WorldFactory`. Each YAML file describes a zone; multiple zones are merged into a single world.
+World files live in `src/main/resources/world` and are loaded by `dev.ambon.domain.world.load.WorldLoader`. Each YAML file describes a zone; multiple zones are merged into a single world.
+
+Current zones (8 files):
+
+| Zone | File | Description |
+|------|------|-------------|
+| `tutorial_glade` | `tutorial_glade.yaml` | Starting area for new players |
+| `ambon_hub` | `ambon_hub.yaml` | Central hub connecting all zones |
+| `noecker_resume` | `noecker_resume.yaml` | Resume showcase zone |
+| `demo_ruins` | `demo_ruins.yaml` | Ancient ruins with varied content |
+| `low_training_marsh` | `low_training_marsh.yaml` | Low-level training zone (marsh) |
+| `low_training_highlands` | `low_training_highlands.yaml` | Low-level training zone (highlands) |
+| `low_training_mines` | `low_training_mines.yaml` | Low-level training zone (mines) |
+| `low_training_barrens` | `low_training_barrens.yaml` | Low-level training zone (barrens) |
 
 Detailed format/validation rules for generators are documented in `docs/world-zone-yaml-spec.md`.
 
@@ -181,11 +216,19 @@ mobs:
   wolf:
     name: "a wary wolf"
     room: trailhead
+    respawnSeconds: 60
 items:
   lantern:
     displayName: "a brass lantern"
     description: "A brass lantern with soot-stained glass."
     room: trailhead
+  potion:
+    displayName: "a healing potion"
+    description: "A small vial of red liquid."
+    consumable: true
+    room: trailhead
+    onUse:
+      healHp: 10
 rooms:
   trailhead:
     title: "Forest Trailhead"
@@ -197,8 +240,10 @@ rooms:
 Notes:
 - Room IDs and exit targets can be local (`trailhead`) or fully qualified (`zone:trailhead`).
 - `mobs` and `items` are optional; `rooms` and `startRoom` are required.
-- Items may be placed in a `room` or on a `mob` (not both).
+- Items may be placed in a `room` (or left unplaced).
 - Items may define `slot` (`head`, `body`, `hand`) and optional `damage`/`armor`/`constitution` stats.
+- Consumable items support `onUse` effects (`healHp`, `grantXp`) and optional `charges`.
+- Mobs support `respawnSeconds` for individual respawn timers independent of zone resets.
 - Exit directions support `north/south/east/west/up/down` in world files.
 - Optional `lifespan` is in minutes; zones with `lifespan > 0` periodically reset mob/item spawns at runtime.
 
@@ -209,19 +254,21 @@ AmbonMUD supports two player persistence backends, selected via `ambonMUD.persis
 | Backend | Description |
 |---------|-------------|
 | `YAML` (default) | Player records stored as YAML files under `data/players/`. No external infrastructure needed. |
-| `POSTGRES` | Player records stored in a PostgreSQL database. Schema managed by Flyway migrations. |
+| `POSTGRES` | Player records stored in a PostgreSQL database. Schema managed by Flyway migrations (V1–V4). |
 
 The persistence stack has three layers regardless of backend:
 
 ```
-WriteCoalescingPlayerRepository  ← dirty-flag write-behind (configurable flush interval)
-  ↓
-RedisCachingPlayerRepository     ← L2 cache (if redis.enabled = true)
-  ↓
-YamlPlayerRepository             ← durable YAML files, atomic writes
-  — or —
-PostgresPlayerRepository         ← Exposed DSL + HikariCP connection pool
+WriteCoalescingPlayerRepository  <- dirty-flag write-behind (configurable flush interval)
+  |
+RedisCachingPlayerRepository     <- L2 cache (if redis.enabled = true)
+  |
+YamlPlayerRepository             <- durable YAML files, atomic writes
+  -- or --
+PostgresPlayerRepository         <- Exposed DSL + HikariCP connection pool
 ```
+
+Player records include: name, race, class, six primary attributes (STR/DEX/CON/INT/WIS/CHA), level, XP, HP/mana, room, staff flag, and timestamps.
 
 ### YAML Backend (default)
 
@@ -330,17 +377,28 @@ Grafana dashboards during load testing:
 
 Scalability Roadmap
 -------------------
-The codebase follows a four-phase scalability plan. Phases 1–4 are implemented:
+The codebase follows a phased scalability plan:
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| 1 | Abstract `InboundBus`/`OutboundBus` interfaces; extract `SessionIdFactory` | ✅ Done |
-| 2 | Async persistence worker with write-behind coalescing | ✅ Done |
-| 3 | Redis L2 player cache + pub/sub event bus | ✅ Done |
-| 4 | gRPC gateway split for true horizontal scaling | ✅ Done |
+| 1 | Abstract `InboundBus`/`OutboundBus` interfaces; extract `SessionIdFactory` | Done |
+| 2 | Async persistence worker with write-behind coalescing | Done |
+| 3 | Redis L2 player cache + pub/sub event bus (HMAC-signed envelopes) | Done |
+| 4 | gRPC gateway split for true horizontal scaling | Done |
+| 5 | Zone-based engine sharding (zone registry, inter-engine bus, player handoff, player-location index, zone instancing) | Done |
 
-See `docs/scalability-plan-brainstorm.md` for detailed design and `DesignDecisions.md` for rationale.
+See `docs/scalability-plan-brainstorm.md` for the original 4-phase design, `docs/engine-sharding-design.md` for the sharding architecture, and `docs/DesignDecisions.md` for rationale.
+
+Load Testing
+------------
+The `swarm/` directory contains a Kotlin-based load testing module:
+
+```bash
+./gradlew :swarm:run --args="--config example.swarm.yaml"
+```
+
+See `swarm/README.md` for configuration and usage.
 
 Design Notes
 ------------
-See `DesignDecisions.md` for architectural rationale and future-direction notes.
+See `docs/DesignDecisions.md` for architectural rationale and future-direction notes.
