@@ -24,7 +24,7 @@ class CombatSystem(
     internal val maxDamage: Int = 4,
     private val detailedFeedbackEnabled: Boolean = false,
     private val detailedFeedbackRoomBroadcastEnabled: Boolean = false,
-    private val onMobRemoved: (MobId) -> Unit = {},
+    private val onMobRemoved: suspend (MobId, RoomId) -> Unit = { _, _ -> },
     private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val onLevelUp: suspend (SessionId, Int) -> Unit = { _, _ -> },
@@ -32,6 +32,7 @@ class CombatSystem(
     private val dexDodgePerPoint: Int = 2,
     private val maxDodgePercent: Int = 30,
     private val markVitalsDirty: (SessionId) -> Unit = {},
+    private val markMobHpDirty: (MobId) -> Unit = {},
 ) {
     private data class Fight(
         val sessionId: SessionId,
@@ -206,6 +207,7 @@ class CombatSystem(
                     clampedToMinimum = playerMinDamageClamped,
                 )
             mob.hp = (mob.hp - effectivePlayerDamage).coerceAtLeast(0)
+            markMobHpDirty(mob.id)
             val playerHitText = "You hit ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix."
             outbound.send(OutboundEvent.SendText(fight.sessionId, playerHitText))
             if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
@@ -365,7 +367,7 @@ class CombatSystem(
         mob: MobState,
     ) {
         mobs.remove(mob.id)
-        onMobRemoved(mob.id)
+        onMobRemoved(mob.id, mob.roomId)
         items.dropMobItemsToRoom(mob.id, mob.roomId)
         rollDrops(mob)
         broadcastToRoom(mob.roomId, "${mob.name} dies.")

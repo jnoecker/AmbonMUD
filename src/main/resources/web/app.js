@@ -37,6 +37,7 @@
     const invList = document.getElementById("inv-list");
     const equipList = document.getElementById("equip-list");
     const playersList = document.getElementById("players-list");
+    const mobsList = document.getElementById("mobs-list");
 
     const wsUrl = (() => {
         const scheme = window.location.protocol === "https:" ? "wss" : "ws";
@@ -200,6 +201,59 @@
         }
     }
 
+    function createMobElement(mob) {
+        const el = document.createElement("div");
+        el.className = "mob-item";
+        el.dataset.mobId = mob.id;
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = mob.name;
+        el.appendChild(nameSpan);
+        const hpWrap = document.createElement("div");
+        hpWrap.className = "mob-hp-wrap";
+        const hpFill = document.createElement("div");
+        hpFill.className = "mob-hp-fill";
+        const pct = Math.round((mob.hp / Math.max(mob.maxHp, 1)) * 100);
+        hpFill.style.width = `${pct}%`;
+        hpWrap.appendChild(hpFill);
+        el.appendChild(hpWrap);
+        return el;
+    }
+
+    function updateRoomMobs(data) {
+        mobsList.innerHTML = "";
+        if (!Array.isArray(data) || data.length === 0) {
+            mobsList.innerHTML = '<span class="empty-hint">No mobs here</span>';
+            return;
+        }
+        for (const m of data) {
+            mobsList.appendChild(createMobElement(m));
+        }
+    }
+
+    function addRoomMob(data) {
+        const hint = mobsList.querySelector(".empty-hint");
+        if (hint) hint.remove();
+        mobsList.appendChild(createMobElement(data));
+    }
+
+    function updateRoomMob(data) {
+        const el = mobsList.querySelector(`[data-mob-id="${CSS.escape(data.id)}"]`);
+        if (!el) return;
+        const hpFill = el.querySelector(".mob-hp-fill");
+        if (hpFill) {
+            const pct = Math.round((data.hp / Math.max(data.maxHp, 1)) * 100);
+            hpFill.style.width = `${pct}%`;
+        }
+    }
+
+    function removeRoomMob(data) {
+        const el = mobsList.querySelector(`[data-mob-id="${CSS.escape(data.id)}"]`);
+        if (el) el.remove();
+        if (mobsList.children.length === 0) {
+            mobsList.innerHTML = '<span class="empty-hint">No mobs here</span>';
+        }
+    }
+
     function handleGmcp(pkg, data) {
         switch (pkg) {
             case "Char.Vitals":
@@ -230,6 +284,18 @@
                 break;
             case "Room.RemovePlayer":
                 removeRoomPlayer(data);
+                break;
+            case "Room.Mobs":
+                updateRoomMobs(data);
+                break;
+            case "Room.AddMob":
+                addRoomMob(data);
+                break;
+            case "Room.UpdateMob":
+                updateRoomMob(data);
+                break;
+            case "Room.RemoveMob":
+                removeRoomMob(data);
                 break;
             case "Char.Skills":
             case "Comm.Channel":
