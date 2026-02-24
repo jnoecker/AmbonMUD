@@ -17,7 +17,11 @@ data class SwarmConfig(
         require(run.totalBots > 0) { "run.totalBots must be > 0" }
         require(run.durationSeconds > 0) { "run.durationSeconds must be > 0" }
         require(run.rampSeconds >= 0) { "run.rampSeconds must be >= 0" }
+        require(run.rampSeconds <= run.durationSeconds) {
+            "run.rampSeconds (${run.rampSeconds}) must be <= run.durationSeconds (${run.durationSeconds})"
+        }
         require(run.protocolMix.telnetPercent in 0..100) { "run.protocolMix.telnetPercent must be in 0..100" }
+        require(!run.deterministic || run.seed != null) { "run.seed is required when run.deterministic is true" }
         require(run.namespacePrefix.matches(Regex("[A-Za-z_][A-Za-z0-9_]{0,9}"))) {
             "run.namespacePrefix must be 1..10 chars (alnum/underscore, not starting with digit) to leave room for _NNNN suffix"
         }
@@ -27,6 +31,13 @@ data class SwarmConfig(
         behavior.weights.validated()
         require(behavior.races.isNotEmpty()) { "behavior.races must not be empty" }
         require(behavior.classes.isNotEmpty()) { "behavior.classes must not be empty" }
+        require(behavior.chatPhrases.isNotEmpty()) { "behavior.chatPhrases must not be empty" }
+        require(behavior.movementCommands.isNotEmpty()) { "behavior.movementCommands must not be empty" }
+        require(behavior.combatCommands.isNotEmpty()) { "behavior.combatCommands must not be empty" }
+        val maxNameLen = run.namespacePrefix.length + 1 + run.totalBots.toString().length
+        require(maxNameLen <= 16) {
+            "namespace prefix '${run.namespacePrefix}' with ${run.totalBots} bots produces names up to $maxNameLen chars (max 16)"
+        }
         require(behavior.commandIntervalMs.min in 1..60_000) { "behavior.commandIntervalMs.min must be 1..60000" }
         require(behavior.commandIntervalMs.max in behavior.commandIntervalMs.min..60_000) {
             "behavior.commandIntervalMs.max must be >= min and <= 60000"
