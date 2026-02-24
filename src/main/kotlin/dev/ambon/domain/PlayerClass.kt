@@ -2,8 +2,13 @@ package dev.ambon.domain
 
 enum class PlayerClass(
     val displayName: String,
+    val hpPerLevel: Int,
+    val manaPerLevel: Int,
 ) {
-    ADVENTURER("Adventurer"),
+    WARRIOR("Warrior", hpPerLevel = 3, manaPerLevel = 2),
+    MAGE("Mage", hpPerLevel = 1, manaPerLevel = 8),
+    CLERIC("Cleric", hpPerLevel = 2, manaPerLevel = 6),
+    ROGUE("Rogue", hpPerLevel = 2, manaPerLevel = 4),
     ;
 
     companion object {

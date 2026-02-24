@@ -66,6 +66,7 @@ class PlayerProgressionTest {
                 roomId = RoomId("test:start"),
                 hp = 3,
                 maxHp = 10,
+                playerClass = "",
             )
 
         val result = progression.grantXp(player, 400L)
@@ -97,6 +98,7 @@ class PlayerProgressionTest {
                 roomId = RoomId("test:start"),
                 hp = 3,
                 maxHp = 10,
+                playerClass = "",
             )
 
         progression.grantXp(player, 100L)
@@ -126,6 +128,7 @@ class PlayerProgressionTest {
                 baseMaxHp = 99,
                 hp = 50,
                 maxHp = 99,
+                playerClass = "",
             )
 
         progression.grantXp(player, 100L)

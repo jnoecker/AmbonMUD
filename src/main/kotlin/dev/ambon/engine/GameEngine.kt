@@ -4,6 +4,8 @@ import dev.ambon.bus.InboundBus
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.EngineConfig
 import dev.ambon.config.LoginConfig
+import dev.ambon.domain.PlayerClass
+import dev.ambon.domain.Race
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
@@ -96,7 +98,8 @@ class GameEngine(
             dexDodgePerPoint = engineConfig.combat.dexDodgePerPoint,
             maxDodgePercent = engineConfig.combat.maxDodgePercent,
             onLevelUp = { sid, level ->
-                val newAbilities = abilitySystem.syncAbilities(sid, level)
+                val pc = players.get(sid)?.playerClass
+                val newAbilities = abilitySystem.syncAbilities(sid, level, pc)
                 for (ability in newAbilities) {
                     outbound.send(OutboundEvent.SendText(sid, "You have learned ${ability.displayName}!"))
                 }
@@ -176,6 +179,17 @@ class GameEngine(
 
         data class AwaitingNewPassword(
             val name: String,
+        ) : LoginState
+
+        data class AwaitingRaceSelection(
+            val name: String,
+            val password: String,
+        ) : LoginState
+
+        data class AwaitingClassSelection(
+            val name: String,
+            val password: String,
+            val race: Race,
         ) : LoginState
     }
 
@@ -686,6 +700,8 @@ class GameEngine(
             is LoginState.AwaitingCreateConfirmation -> handleLoginCreateConfirmation(sessionId, line, state)
             is LoginState.AwaitingExistingPassword -> handleLoginExistingPassword(sessionId, line, state)
             is LoginState.AwaitingNewPassword -> handleLoginNewPassword(sessionId, line, state)
+            is LoginState.AwaitingRaceSelection -> handleLoginRaceSelection(sessionId, line, state)
+            is LoginState.AwaitingClassSelection -> handleLoginClassSelection(sessionId, line, state)
         }
     }
 
@@ -836,7 +852,66 @@ class GameEngine(
             return
         }
 
-        when (players.create(sessionId, state.name, password, defaultAnsiEnabled = sessionAnsiDefaults[sessionId] ?: false)) {
+        if (password.length > 72) {
+            outbound.send(OutboundEvent.SendError(sessionId, invalidPasswordMessage))
+            promptForNewPassword(sessionId)
+            return
+        }
+
+        pendingLogins[sessionId] = LoginState.AwaitingRaceSelection(state.name, password)
+        promptForRaceSelection(sessionId)
+    }
+
+    private suspend fun handleLoginRaceSelection(
+        sessionId: SessionId,
+        line: String,
+        state: LoginState.AwaitingRaceSelection,
+    ) {
+        val input = line.trim()
+        val races = Race.entries
+        val race =
+            input.toIntOrNull()?.let { num ->
+                if (num in 1..races.size) races[num - 1] else null
+            } ?: Race.fromString(input)
+
+        if (race == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Invalid choice. Enter a number or race name."))
+            promptForRaceSelection(sessionId)
+            return
+        }
+
+        pendingLogins[sessionId] = LoginState.AwaitingClassSelection(state.name, state.password, race)
+        promptForClassSelection(sessionId)
+    }
+
+    private suspend fun handleLoginClassSelection(
+        sessionId: SessionId,
+        line: String,
+        state: LoginState.AwaitingClassSelection,
+    ) {
+        val input = line.trim()
+        val classes = PlayerClass.entries
+        val playerClass =
+            input.toIntOrNull()?.let { num ->
+                if (num in 1..classes.size) classes[num - 1] else null
+            } ?: PlayerClass.fromString(input)
+
+        if (playerClass == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Invalid choice. Enter a number or class name."))
+            promptForClassSelection(sessionId)
+            return
+        }
+
+        when (
+            players.create(
+                sessionId,
+                state.name,
+                state.password,
+                defaultAnsiEnabled = sessionAnsiDefaults[sessionId] ?: false,
+                race = state.race,
+                playerClass = playerClass,
+            )
+        ) {
             CreateResult.Ok -> {
                 finalizeSuccessfulLogin(sessionId)
             }
@@ -850,6 +925,7 @@ class GameEngine(
 
             CreateResult.InvalidPassword -> {
                 outbound.send(OutboundEvent.SendError(sessionId, invalidPasswordMessage))
+                pendingLogins[sessionId] = LoginState.AwaitingNewPassword(state.name)
                 promptForNewPassword(sessionId)
             }
 
@@ -888,7 +964,7 @@ class GameEngine(
 
         log.info { "Player logged in: name=${me.name} sessionId=$sessionId" }
         playerLocationIndex?.register(me.name)
-        abilitySystem.syncAbilities(sessionId, me.level)
+        abilitySystem.syncAbilities(sessionId, me.level, me.playerClass)
         outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
         if (!ensureLoginRoomAvailable(sessionId, suppressEnterBroadcast)) return
         if (!suppressEnterBroadcast) {
@@ -967,6 +1043,38 @@ class GameEngine(
         name: String,
     ) {
         outbound.send(OutboundEvent.SendInfo(sessionId, "No user named '$name' was found. Create a new user? (yes/no)"))
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun promptForRaceSelection(sessionId: SessionId) {
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Choose your race:"))
+        for ((index, race) in Race.entries.withIndex()) {
+            val mods =
+                buildList {
+                    if (race.strMod != 0) add("STR %+d".format(race.strMod))
+                    if (race.dexMod != 0) add("DEX %+d".format(race.dexMod))
+                    if (race.conMod != 0) add("CON %+d".format(race.conMod))
+                    if (race.intMod != 0) add("INT %+d".format(race.intMod))
+                    if (race.wisMod != 0) add("WIS %+d".format(race.wisMod))
+                    if (race.chaMod != 0) add("CHA %+d".format(race.chaMod))
+                }.joinToString(", ")
+            val desc = if (mods.isNotEmpty()) " ($mods)" else ""
+            outbound.send(OutboundEvent.SendInfo(sessionId, "  ${index + 1}. ${race.displayName}$desc"))
+        }
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun promptForClassSelection(sessionId: SessionId) {
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Choose your class:"))
+        for ((index, pc) in PlayerClass.entries
+            .withIndex()) {
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "  ${index + 1}. ${pc.displayName} (+${pc.hpPerLevel} HP/lvl, +${pc.manaPerLevel} Mana/lvl)",
+                ),
+            )
+        }
         outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 

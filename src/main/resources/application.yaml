@@ -165,50 +165,154 @@ ambonMUD:
       maxActionsPerTick: 100
     abilities:
       definitions:
-        magic_missile:
-          displayName: "Magic Missile"
-          description: "Hurls a bolt of arcane energy at your foe."
-          manaCost: 8
+        # --- Warrior ---
+        power_strike:
+          displayName: "Power Strike"
+          description: "A powerful melee strike."
+          manaCost: 5
           cooldownMs: 0
           levelRequired: 1
           targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 5
+            maxDamage: 10
+        shield_bash:
+          displayName: "Shield Bash"
+          description: "Bash your foe with your shield."
+          manaCost: 10
+          cooldownMs: 3000
+          levelRequired: 5
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 8
+            maxDamage: 14
+        war_cry:
+          displayName: "War Cry"
+          description: "Rally yourself with a battle cry."
+          manaCost: 15
+          cooldownMs: 8000
+          levelRequired: 10
+          targetType: SELF
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 8
+            maxHeal: 15
+        # --- Mage ---
+        arcane_bolt:
+          displayName: "Arcane Bolt"
+          description: "Hurl a bolt of arcane energy."
+          manaCost: 6
+          cooldownMs: 0
+          levelRequired: 1
+          targetType: ENEMY
+          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
             minDamage: 4
-            maxDamage: 8
-        heal:
-          displayName: "Heal"
-          description: "Mend your wounds with restorative magic."
-          manaCost: 10
-          cooldownMs: 5000
-          levelRequired: 1
-          targetType: SELF
-          effect:
-            type: DIRECT_HEAL
-            minHeal: 6
-            maxHeal: 10
-        fireball:
-          displayName: "Fireball"
-          description: "Engulf your enemy in flames."
+            maxDamage: 9
+        frost_nova:
+          displayName: "Frost Nova"
+          description: "Blast your enemy with freezing cold."
           manaCost: 15
           cooldownMs: 3000
           levelRequired: 5
           targetType: ENEMY
+          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 8
-            maxDamage: 16
-        mend:
-          displayName: "Mend"
-          description: "A powerful healing spell that restores significant health."
+            minDamage: 10
+            maxDamage: 18
+        inferno:
+          displayName: "Inferno"
+          description: "Engulf your foe in searing flames."
           manaCost: 25
+          cooldownMs: 5000
+          levelRequired: 10
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 16
+            maxDamage: 28
+        # --- Cleric ---
+        minor_heal:
+          displayName: "Minor Heal"
+          description: "Mend your wounds with holy light."
+          manaCost: 8
+          cooldownMs: 0
+          levelRequired: 1
+          targetType: SELF
+          requiredClass: CLERIC
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 6
+            maxHeal: 10
+        smite:
+          displayName: "Smite"
+          description: "Strike your foe with divine wrath."
+          manaCost: 12
+          cooldownMs: 3000
+          levelRequired: 5
+          targetType: ENEMY
+          requiredClass: CLERIC
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 6
+            maxDamage: 12
+        greater_heal:
+          displayName: "Greater Heal"
+          description: "A powerful wave of restorative energy."
+          manaCost: 22
           cooldownMs: 8000
           levelRequired: 10
           targetType: SELF
+          requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
             minHeal: 15
             maxHeal: 25
+        # --- Rogue ---
+        backstab:
+          displayName: "Backstab"
+          description: "Strike from the shadows."
+          manaCost: 6
+          cooldownMs: 0
+          levelRequired: 1
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 5
+            maxDamage: 11
+        poison_strike:
+          displayName: "Poison Strike"
+          description: "A venomous strike."
+          manaCost: 12
+          cooldownMs: 3000
+          levelRequired: 5
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 8
+            maxDamage: 16
+        shadow_step:
+          displayName: "Shadow Step"
+          description: "Slip into the shadows to recover."
+          manaCost: 18
+          cooldownMs: 6000
+          levelRequired: 10
+          targetType: SELF
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 10
+            maxHeal: 18
 
   progression:
     maxLevel: 50
