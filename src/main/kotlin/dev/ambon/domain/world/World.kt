@@ -8,4 +8,5 @@ class World(
     val mobSpawns: List<MobSpawn> = emptyList(),
     val itemSpawns: List<ItemSpawn> = emptyList(),
     val zoneLifespansMinutes: Map<String, Long> = emptyMap(),
+    val shopDefinitions: List<ShopDefinition> = emptyList(),
 )

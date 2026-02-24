@@ -1,0 +1,12 @@
+zone: bad_shop_item
+startRoom: hall
+shops:
+  vendor:
+    name: "Vendor"
+    room: hall
+    items:
+      - nonexistent_item
+rooms:
+  hall:
+    title: "Hall"
+    description: "A hall."

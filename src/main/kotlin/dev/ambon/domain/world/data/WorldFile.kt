@@ -7,4 +7,5 @@ data class WorldFile(
     val rooms: Map<String, RoomFile>,
     val mobs: Map<String, MobFile> = emptyMap(),
     val items: Map<String, ItemFile> = emptyMap(),
+    val shops: Map<String, ShopFile> = emptyMap(),
 )

@@ -912,6 +912,114 @@ class CombatSystemTest {
             )
         }
 
+    @Test
+    fun `mob kill awards gold from gold range`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob =
+                MobState(
+                    MobId("demo:rat"),
+                    "a rat",
+                    roomId,
+                    hp = 1,
+                    maxHp = 1,
+                    goldMin = 5L,
+                    goldMax = 5L,
+                )
+            mobs.upsert(mob)
+
+            val outbound = LocalOutboundBus()
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 1,
+                    maxDamage = 1,
+                )
+
+            val sid = SessionId(30L)
+            login(players, sid, "GoldHunter")
+            val err = combat.startCombat(sid, "rat")
+            assertNull(err)
+
+            clock.advance(1_000L)
+            combat.tick()
+
+            val player = players.get(sid)
+            assertNotNull(player)
+            assertEquals(5L, player!!.gold)
+
+            val messages =
+                drainOutbound(outbound)
+                    .filterIsInstance<OutboundEvent.SendText>()
+                    .filter { it.sessionId == sid }
+                    .map { it.text }
+            assertTrue(messages.any { it.contains("You find 5 gold") }, "Expected gold drop message, got: $messages")
+        }
+
+    @Test
+    fun `mob with zero gold range awards no gold`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob =
+                MobState(
+                    MobId("demo:rat"),
+                    "a rat",
+                    roomId,
+                    hp = 1,
+                    maxHp = 1,
+                    goldMin = 0L,
+                    goldMax = 0L,
+                )
+            mobs.upsert(mob)
+
+            val outbound = LocalOutboundBus()
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                    minDamage = 1,
+                    maxDamage = 1,
+                )
+
+            val sid = SessionId(31L)
+            login(players, sid, "NoGold")
+            val err = combat.startCombat(sid, "rat")
+            assertNull(err)
+
+            clock.advance(1_000L)
+            combat.tick()
+
+            val player = players.get(sid)
+            assertNotNull(player)
+            assertEquals(0L, player!!.gold)
+
+            val messages =
+                drainOutbound(outbound)
+                    .filterIsInstance<OutboundEvent.SendText>()
+                    .filter { it.sessionId == sid }
+                    .map { it.text }
+            assertTrue(messages.none { it.contains("gold") && it.contains("find") }, "Expected no gold message, got: $messages")
+        }
+
     private fun drainOutbound(outbound: LocalOutboundBus): List<OutboundEvent> {
         val events = mutableListOf<OutboundEvent>()
         while (true) {
