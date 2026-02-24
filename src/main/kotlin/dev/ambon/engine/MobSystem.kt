@@ -22,6 +22,7 @@ class MobSystem(
     private val minWanderDelayMillis: Long = 5_000L,
     private val maxWanderDelayMillis: Long = 12_000L,
     private val metrics: GameMetrics = GameMetrics.noop(),
+    private val gmcpEmitter: GmcpEmitter? = null,
 ) {
     // Next scheduled action time per mob
     private val nextActAtMillis = mutableMapOf<MobId, Long>()
@@ -112,6 +113,7 @@ class MobSystem(
         // notify players in old room
         for (p in players.playersInRoom(from)) {
             outbound.send(OutboundEvent.SendText(p.sessionId, "${m.name} leaves."))
+            gmcpEmitter?.sendRoomRemoveMob(p.sessionId, m.id.value)
         }
 
         mobs.moveTo(m.id, to)
@@ -119,6 +121,7 @@ class MobSystem(
         // notify players in new room
         for (p in players.playersInRoom(to)) {
             outbound.send(OutboundEvent.SendText(p.sessionId, "${m.name} enters."))
+            gmcpEmitter?.sendRoomAddMob(p.sessionId, m)
         }
     }
 }

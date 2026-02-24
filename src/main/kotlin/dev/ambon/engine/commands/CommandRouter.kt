@@ -937,6 +937,9 @@ class CommandRouter(
                 mobs.remove(targetMob.id)
                 onMobSmited(targetMob.id)
                 broadcastToRoom(me.roomId, "${targetMob.name} is struck down by divine wrath.")
+                for (p in players.playersInRoom(me.roomId)) {
+                    gmcpEmitter?.sendRoomRemoveMob(p.sessionId, targetMob.id.value)
+                }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -1144,6 +1147,7 @@ class CommandRouter(
 
         gmcpEmitter?.sendRoomInfo(sessionId, room)
         gmcpEmitter?.sendRoomPlayers(sessionId, players.playersInRoom(roomId).toList())
+        gmcpEmitter?.sendRoomMobs(sessionId, mobs.mobsInRoom(roomId))
     }
 
     private fun currentRoomId(sessionId: SessionId): RoomId =

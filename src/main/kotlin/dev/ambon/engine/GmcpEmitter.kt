@@ -4,6 +4,7 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.Room
 import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.events.OutboundEvent
@@ -105,6 +106,47 @@ class GmcpEmitter(
         if (!supportsPackage(sessionId, "Room.Players")) return
         val json = """{"name":"${name.jsonEscape()}"}"""
         outbound.send(OutboundEvent.GmcpData(sessionId, "Room.RemovePlayer", json))
+    }
+
+    suspend fun sendRoomMobs(
+        sessionId: SessionId,
+        mobs: List<MobState>,
+    ) {
+        if (!supportsPackage(sessionId, "Room.Mobs")) return
+        val json =
+            mobs.joinToString(",", prefix = "[", postfix = "]") { m ->
+                """{"id":"${m.id.value.jsonEscape()}","name":"${m.name.jsonEscape()}","hp":${m.hp},"maxHp":${m.maxHp}}"""
+            }
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.Mobs", json))
+    }
+
+    suspend fun sendRoomAddMob(
+        sessionId: SessionId,
+        mob: MobState,
+    ) {
+        if (!supportsPackage(sessionId, "Room.Mobs")) return
+        val json =
+            """{"id":"${mob.id.value.jsonEscape()}","name":"${mob.name.jsonEscape()}","hp":${mob.hp},"maxHp":${mob.maxHp}}"""
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.AddMob", json))
+    }
+
+    suspend fun sendRoomUpdateMob(
+        sessionId: SessionId,
+        mob: MobState,
+    ) {
+        if (!supportsPackage(sessionId, "Room.Mobs")) return
+        val json =
+            """{"id":"${mob.id.value.jsonEscape()}","name":"${mob.name.jsonEscape()}","hp":${mob.hp},"maxHp":${mob.maxHp}}"""
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.UpdateMob", json))
+    }
+
+    suspend fun sendRoomRemoveMob(
+        sessionId: SessionId,
+        mobId: String,
+    ) {
+        if (!supportsPackage(sessionId, "Room.Mobs")) return
+        val json = """{"id":"${mobId.jsonEscape()}"}"""
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.RemoveMob", json))
     }
 
     suspend fun sendCharSkills(

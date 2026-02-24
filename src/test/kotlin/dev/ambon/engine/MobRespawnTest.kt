@@ -36,8 +36,8 @@ class MobRespawnTest {
         scheduler: Scheduler,
         players: PlayerRegistry,
         outbound: LocalOutboundBus,
-    ): (MobId) -> Unit =
-        { id ->
+    ): suspend (MobId, RoomId) -> Unit =
+        { id, _ ->
             mobSystem.onMobRemoved(id)
             val spawn = world.mobSpawns.find { it.id == id }
             val respawnMs = spawn?.respawnSeconds?.let { it * 1_000L }
@@ -85,7 +85,7 @@ class MobRespawnTest {
 
             mobs.upsert(MobState(mobId, "a rat", roomId))
             mobs.remove(mobId)
-            onMobRemoved(mobId)
+            onMobRemoved(mobId, roomId)
 
             assertNull(mobs.get(mobId), "Mob should be gone immediately after removal")
             assertEquals(1, scheduler.size(), "Respawn should be scheduled")
@@ -122,7 +122,7 @@ class MobRespawnTest {
 
             mobs.upsert(MobState(mobId, "a rat", roomId))
             mobs.remove(mobId)
-            onMobRemoved(mobId)
+            onMobRemoved(mobId, roomId)
 
             // Simulate zone reset re-adding the mob before the scheduler fires
             mobs.upsert(MobState(mobId, "a rat", roomId, hp = 5, maxHp = 10))
@@ -155,7 +155,7 @@ class MobRespawnTest {
 
             val onMobRemoved = buildOnMobRemoved(world, mobs, mobSystem, scheduler, players, outbound)
 
-            onMobRemoved(mobId)
+            onMobRemoved(mobId, roomId)
 
             clock.advance(30_000L)
             scheduler.runDue()
@@ -181,7 +181,7 @@ class MobRespawnTest {
 
             mobs.upsert(MobState(mobId, "a rat", roomId))
             mobs.remove(mobId)
-            onMobRemoved(mobId)
+            onMobRemoved(mobId, roomId)
 
             assertEquals(0, scheduler.size(), "No respawn should be scheduled when respawnSeconds is null")
         }
@@ -209,7 +209,7 @@ class MobRespawnTest {
 
             mobs.upsert(MobState(mobId, "a rat", roomId))
             mobs.remove(mobId)
-            onMobRemoved(mobId)
+            onMobRemoved(mobId, roomId)
 
             clock.advance(10_000L)
             scheduler.runDue()
