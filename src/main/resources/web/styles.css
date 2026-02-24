@@ -225,6 +225,67 @@ button:hover {
     background: #1e3a58;
 }
 
+/* ── Character Identity ──────────────────────────────────── */
+
+.char-identity {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.3rem;
+}
+
+#char-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #a8d4f0;
+}
+
+.char-info-sub {
+    font-size: 0.72rem;
+    color: #7aa8cc;
+}
+
+/* ── Players / Inventory / Equipment Lists ───────────────── */
+
+.inv-list,
+.equip-list,
+.players-list {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--text);
+}
+
+.inv-item,
+.equip-item,
+.player-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.1rem 0;
+    border-bottom: 1px solid rgba(49, 72, 96, 0.3);
+}
+
+.inv-item:last-child,
+.equip-item:last-child,
+.player-item:last-child {
+    border-bottom: none;
+}
+
+.equip-slot {
+    color: #7aa8cc;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+}
+
+.empty-hint {
+    color: #5a7a94;
+    font-style: italic;
+    font-size: 0.76rem;
+}
+
+.player-level {
+    font-size: 0.7rem;
+    color: #7aa8cc;
+}
+
 @media (max-width: 900px) {
     .game-layout {
         flex-direction: column;
