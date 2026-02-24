@@ -3,6 +3,9 @@ package dev.ambon.gateway
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.grpc.proto.InboundEventProto
+import dev.ambon.sharding.EngineAddress
+import dev.ambon.sharding.LoadBalancedInstanceSelector
+import dev.ambon.sharding.StaticZoneRegistry
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -172,5 +175,63 @@ class SessionRouterTest {
             val proto = newChannel.tryReceive().getOrNull()
             assertNotNull(proto)
             assertEquals("after reattach", proto!!.lineReceived.line)
+        }
+
+    @Test
+    fun `instance-aware routing sends to least-loaded start zone instance`() =
+        runBlocking {
+            val e1 = EngineAddress("e1", "host1", 9090)
+            val e2 = EngineAddress("e2", "host2", 9091)
+            val registry =
+                StaticZoneRegistry(
+                    assignments =
+                        mapOf(
+                            "e1" to Pair(e1, setOf("start_zone")),
+                            "e2" to Pair(e2, setOf("start_zone")),
+                        ),
+                    instancing = true,
+                )
+            registry.reportLoad("e1", mapOf("start_zone" to 100))
+            registry.reportLoad("e2", mapOf("start_zone" to 20))
+
+            val selector = LoadBalancedInstanceSelector(registry)
+            val router =
+                SessionRouter(
+                    engineIds = listOf("e1", "e2"),
+                    instanceSelector = selector,
+                    startZone = "start_zone",
+                )
+            val ch1 = Channel<InboundEventProto>(100)
+            val ch2 = Channel<InboundEventProto>(100)
+            router.registerEngine("e1", ch1)
+            router.registerEngine("e2", ch2)
+
+            // Should route to e2 (least loaded)
+            val sid = SessionId(1)
+            router.send(InboundEvent.Connected(sid))
+            assertEquals("e2", router.engineFor(sid))
+        }
+
+    @Test
+    fun `instance-aware routing falls back to round-robin when no selector`() =
+        runBlocking {
+            val router =
+                SessionRouter(
+                    engineIds = listOf("e1", "e2"),
+                    instanceSelector = null,
+                    startZone = null,
+                )
+            val ch1 = Channel<InboundEventProto>(100)
+            val ch2 = Channel<InboundEventProto>(100)
+            router.registerEngine("e1", ch1)
+            router.registerEngine("e2", ch2)
+
+            val sid1 = SessionId(1)
+            val sid2 = SessionId(2)
+            router.send(InboundEvent.Connected(sid1))
+            router.send(InboundEvent.Connected(sid2))
+
+            assertEquals("e1", router.engineFor(sid1))
+            assertEquals("e2", router.engineFor(sid2))
         }
 }

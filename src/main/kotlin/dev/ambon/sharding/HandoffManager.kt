@@ -70,6 +70,7 @@ class HandoffManager(
     private val isTargetRoomLocal: (RoomId) -> Boolean = { true },
     private val clock: Clock = Clock.systemUTC(),
     private val ackTimeoutMs: Long = 2_000L,
+    private val instanceSelector: InstanceSelector? = null,
 ) {
     init {
         require(ackTimeoutMs > 0L) { "ackTimeoutMs must be > 0" }
@@ -94,13 +95,25 @@ class HandoffManager(
     suspend fun initiateHandoff(
         sessionId: SessionId,
         targetRoomId: RoomId,
+        targetEngineOverride: EngineAddress? = null,
     ): HandoffResult {
         if (pendingBySession.containsKey(sessionId)) {
             return HandoffResult.AlreadyInTransit
         }
 
         val player = players.get(sessionId) ?: return HandoffResult.PlayerNotFound
-        val targetEngine = zoneRegistry.ownerOf(targetRoomId.zone) ?: return HandoffResult.NoEngineForZone
+        val targetEngine =
+            if (targetEngineOverride != null) {
+                targetEngineOverride
+            } else if (instanceSelector != null) {
+                instanceSelector
+                    .select(
+                        zone = targetRoomId.zone,
+                        playerName = player.name,
+                    )?.address ?: return HandoffResult.NoEngineForZone
+            } else {
+                zoneRegistry.ownerOf(targetRoomId.zone) ?: return HandoffResult.NoEngineForZone
+            }
 
         val serialized =
             serializePlayer(

@@ -232,8 +232,12 @@ data class AppConfig(
                     require(zone.isNotBlank()) {
                         "ambonMUD.sharding.registry.assignments[$idx].zones entries must be non-blank"
                     }
-                    require(seenAssignedZones.add(zone)) {
-                        "Zone '$zone' is assigned more than once in ambonMUD.sharding.registry.assignments"
+                    if (!sharding.instancing.enabled) {
+                        require(seenAssignedZones.add(zone)) {
+                            "Zone '$zone' is assigned more than once in ambonMUD.sharding.registry.assignments"
+                        }
+                    } else {
+                        seenAssignedZones.add(zone)
                     }
                 }
             }
@@ -241,6 +245,38 @@ data class AppConfig(
             if (sharding.playerIndex.enabled) {
                 require(sharding.playerIndex.heartbeatMs > 0L) {
                     "ambonMUD.sharding.playerIndex.heartbeatMs must be > 0"
+                }
+            }
+
+            if (sharding.instancing.enabled) {
+                require(sharding.instancing.defaultCapacity > 0) {
+                    "ambonMUD.sharding.instancing.defaultCapacity must be > 0"
+                }
+                require(sharding.instancing.loadReportIntervalMs > 0L) {
+                    "ambonMUD.sharding.instancing.loadReportIntervalMs must be > 0"
+                }
+                require(sharding.instancing.startZoneMinInstances >= 1) {
+                    "ambonMUD.sharding.instancing.startZoneMinInstances must be >= 1"
+                }
+                if (sharding.instancing.autoScale.enabled) {
+                    require(sharding.instancing.autoScale.evaluationIntervalMs > 0L) {
+                        "ambonMUD.sharding.instancing.autoScale.evaluationIntervalMs must be > 0"
+                    }
+                    require(sharding.instancing.autoScale.scaleUpThreshold in 0.0..1.0) {
+                        "ambonMUD.sharding.instancing.autoScale.scaleUpThreshold must be in 0.0..1.0"
+                    }
+                    require(sharding.instancing.autoScale.scaleDownThreshold in 0.0..1.0) {
+                        "ambonMUD.sharding.instancing.autoScale.scaleDownThreshold must be in 0.0..1.0"
+                    }
+                    require(
+                        sharding.instancing.autoScale.scaleDownThreshold <
+                            sharding.instancing.autoScale.scaleUpThreshold,
+                    ) {
+                        "ambonMUD.sharding.instancing.autoScale.scaleDownThreshold must be < scaleUpThreshold"
+                    }
+                    require(sharding.instancing.autoScale.cooldownMs > 0L) {
+                        "ambonMUD.sharding.instancing.autoScale.cooldownMs must be > 0"
+                    }
                 }
             }
         }
@@ -522,6 +558,12 @@ data class GatewayConfig(
     val reconnect: GatewayReconnectConfig = GatewayReconnectConfig(),
     /** Static list of engines for multi-engine mode. Empty = single engine via grpc.client config. */
     val engines: List<GatewayEngineEntry> = emptyList(),
+    /**
+     * Start zone for instance-aware session routing.
+     * When set alongside `sharding.instancing.enabled`, new sessions are routed to
+     * the least-loaded instance of this zone instead of round-robin.
+     */
+    val startZone: String = "",
 )
 
 /** Address entry for a remote engine in multi-engine gateway mode. */
@@ -575,6 +617,34 @@ data class PlayerIndexConfig(
     val heartbeatMs: Long = 10_000L,
 )
 
+/** Zone instancing (layering) settings. */
+data class InstanceConfig(
+    /** Enable zone instancing. When true, multiple engines may host copies of the same zone. */
+    val enabled: Boolean = false,
+    /** Default per-instance player capacity. */
+    val defaultCapacity: Int = 200,
+    /** How often (ms) engines report their per-zone player counts to the registry. */
+    val loadReportIntervalMs: Long = 5_000L,
+    /** Minimum number of instances to maintain for the start zone. */
+    val startZoneMinInstances: Int = 1,
+    /** Auto-scaling settings. */
+    val autoScale: AutoScaleConfig = AutoScaleConfig(),
+)
+
+/** Auto-scaling signal configuration for zone instances. */
+data class AutoScaleConfig(
+    /** Enable auto-scale evaluation. Produces signals; does not manage processes. */
+    val enabled: Boolean = false,
+    /** How often (ms) to evaluate scaling decisions. */
+    val evaluationIntervalMs: Long = 30_000L,
+    /** Fraction of total capacity above which a scale-up is signalled. */
+    val scaleUpThreshold: Double = 0.8,
+    /** Fraction of total capacity below which a scale-down is signalled. */
+    val scaleDownThreshold: Double = 0.2,
+    /** Cooldown (ms) between scaling decisions for the same zone. */
+    val cooldownMs: Long = 60_000L,
+)
+
 /** Zone-based engine sharding settings. */
 data class ShardingConfig(
     /** Enable zone-based sharding. When false, the engine loads all zones (default). */
@@ -593,6 +663,8 @@ data class ShardingConfig(
     val advertisePort: Int? = null,
     /** Redis player-location index for O(1) cross-engine tell routing. */
     val playerIndex: PlayerIndexConfig = PlayerIndexConfig(),
+    /** Zone instancing (layering) settings. */
+    val instancing: InstanceConfig = InstanceConfig(),
 )
 
 private fun validateMobTier(

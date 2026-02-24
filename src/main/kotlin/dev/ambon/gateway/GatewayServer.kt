@@ -17,9 +17,13 @@ import dev.ambon.grpc.proto.InboundEventProto
 import dev.ambon.grpc.toDomain
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.redis.RedisConnectionManager
+import dev.ambon.redis.redisObjectMapper
 import dev.ambon.session.GatewayIdLeaseManager
 import dev.ambon.session.SessionIdFactory
 import dev.ambon.session.SnowflakeSessionIdFactory
+import dev.ambon.sharding.InstanceSelector
+import dev.ambon.sharding.LoadBalancedInstanceSelector
+import dev.ambon.sharding.RedisZoneRegistry
 import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.KtorWebSocketTransport
 import dev.ambon.transport.OutboundRouter
@@ -292,9 +296,34 @@ class GatewayServer(
         activeOutbound = ob
     }
 
+    /**
+     * Build an [InstanceSelector] for start-zone-aware session routing when
+     * instancing is enabled and Redis is available. Returns null otherwise.
+     */
+    private fun buildInstanceSelector(): InstanceSelector? {
+        if (!config.sharding.instancing.enabled) return null
+        val rm = redisManager ?: return null
+        val registry =
+            RedisZoneRegistry(
+                redis = rm,
+                mapper = redisObjectMapper,
+                leaseTtlSeconds = config.sharding.registry.leaseTtlSeconds,
+                instancing = true,
+                defaultCapacity = config.sharding.instancing.defaultCapacity,
+            )
+        return LoadBalancedInstanceSelector(registry)
+    }
+
     private suspend fun startMultiEngine() {
         val engines = config.gateway.engines
-        val router = SessionRouter(engines.map { it.id })
+        val instSelector = buildInstanceSelector()
+        val startZone = config.gateway.startZone.takeIf { it.isNotBlank() }
+        val router =
+            SessionRouter(
+                engineIds = engines.map { it.id },
+                instanceSelector = instSelector,
+                startZone = startZone,
+            )
         sessionRouter = router
 
         val merged = LocalOutboundBus(capacity = config.server.outboundChannelCapacity)
