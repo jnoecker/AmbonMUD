@@ -62,17 +62,25 @@ Each key is a mob ID (local or fully qualified).
 Each value:
 
 ```yaml
-name:       <string, required>
-room:       <room-id string, required>
-tier:       <string, optional - one of weak|standard|elite|boss (case-insensitive); default standard>
-level:      <integer >= 1, optional; default 1>
-hp:         <integer >= 1, optional - overrides tier-computed hp>
-minDamage:  <integer >= 1, optional - overrides tier-computed minDamage>
-maxDamage:  <integer >= minDamage, optional - overrides tier-computed maxDamage>
-armor:      <integer >= 0, optional - overrides tier baseArmor (flat damage reduction, no level scaling)>
-xpReward:   <long >= 0, optional - overrides tier-computed xpReward>
-drops:      <list<Drop>, optional, default []>
+name:           <string, required>
+room:           <room-id string, required>
+tier:           <string, optional - one of weak|standard|elite|boss (case-insensitive); default standard>
+level:          <integer >= 1, optional; default 1>
+hp:             <integer >= 1, optional - overrides tier-computed hp>
+minDamage:      <integer >= 1, optional - overrides tier-computed minDamage>
+maxDamage:      <integer >= minDamage, optional - overrides tier-computed maxDamage>
+armor:          <integer >= 0, optional - overrides tier baseArmor (flat damage reduction, no level scaling)>
+xpReward:       <long >= 0, optional - overrides tier-computed xpReward>
+drops:          <list<Drop>, optional, default []>
+respawnSeconds: <long > 0, optional - seconds after death before this mob respawns in its origin room;
+                omit to rely on zone-wide reset only>
 ```
+
+`respawnSeconds` notes:
+- When set, the mob is scheduled to respawn independently of any zone-wide reset.
+- The respawn is silently cancelled if the zone resets first (the mob is already back in the registry).
+- If the origin room no longer exists at respawn time the respawn is silently skipped.
+- Players in the origin room see an arrival message when the mob reappears.
 
 `Drop` entry:
 
@@ -224,6 +232,7 @@ For each file your tool emits:
 9. Ensure all local/qualified references resolve in the merged set of files.
 10. Ensure normalized room/mob/item IDs are globally unique across files.
 11. If splitting one zone across files, keep `lifespan` consistent when repeated.
+12. If `respawnSeconds` is present, it must be > 0.
 
 ## Minimal Valid Example
 
@@ -247,6 +256,7 @@ mobs:
   rat:
     name: "a cave rat"
     room: hall
+    respawnSeconds: 30 # reappears 30 s after being killed
     drops:
       - itemId: fang
         chance: 1.0
@@ -255,6 +265,7 @@ mobs:
     room: entry
     tier: elite
     level: 3
+    # no respawnSeconds — relies on zone-wide reset
 
 items:
   helm:

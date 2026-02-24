@@ -346,6 +346,28 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `loads mob with respawnSeconds`() {
+        val world = WorldLoader.loadFromResource("world/ok_mob_respawn.yaml")
+        val mobs = world.mobSpawns.associateBy { it.id.value }
+
+        val rat = mobs.getValue("ok_mob_respawn:rat")
+        assertEquals(60L, rat.respawnSeconds)
+
+        val boss = mobs.getValue("ok_mob_respawn:boss")
+        assertEquals(null, boss.respawnSeconds)
+    }
+
+    @Test
+    fun `fails when mob respawnSeconds is zero`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_mob_respawn_zero.yaml")
+            }
+        assertTrue(ex.message!!.contains("respawnSeconds", ignoreCase = true), "Got: ${ex.message}")
+        assertTrue(ex.message!!.contains("> 0", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
     fun `loads tutorial glade zone with all rooms mobs and items`() {
         val world =
             WorldLoader.loadFromResources(
