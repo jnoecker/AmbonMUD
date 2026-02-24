@@ -7,7 +7,6 @@ import dev.ambon.engine.events.OutboundEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.channels.ChannelResult
 import kotlinx.coroutines.channels.ReceiveChannel
-import java.nio.charset.StandardCharsets
 
 private val log = KotlinLogging.logger {}
 
@@ -141,17 +140,6 @@ class RedisOutboundBus(
 
     private fun Envelope.hasValidSignature(secret: String): Boolean =
         signature.isNotBlank() && signature == hmacSha256(secret, payloadToSign())
-
-    private fun hmacSha256(
-        secret: String,
-        payload: String,
-    ): String {
-        val mac = javax.crypto.Mac.getInstance("HmacSHA256")
-        mac.init(javax.crypto.spec.SecretKeySpec(secret.toByteArray(StandardCharsets.UTF_8), "HmacSHA256"))
-        return mac.doFinal(payload.toByteArray(StandardCharsets.UTF_8)).toHex()
-    }
-
-    private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
 
     private fun Envelope.toEvent(): OutboundEvent? =
         when (type) {

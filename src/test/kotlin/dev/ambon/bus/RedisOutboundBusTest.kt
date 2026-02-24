@@ -104,15 +104,6 @@ class RedisOutboundBusTest {
             ),
         )
     }
-
-    private fun hmacSha256(
-        secret: String,
-        payload: String,
-    ): String {
-        val mac = javax.crypto.Mac.getInstance("HmacSHA256")
-        mac.init(javax.crypto.spec.SecretKeySpec(secret.toByteArray(), "HmacSHA256"))
-        return mac.doFinal(payload.toByteArray()).joinToString("") { "%02x".format(it) }
-    }
 }
 
 private class FakeOutboundPublisher : BusPublisher {
