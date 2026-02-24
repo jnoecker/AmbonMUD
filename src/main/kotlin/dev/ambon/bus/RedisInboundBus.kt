@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.channels.ChannelResult
+import java.nio.charset.StandardCharsets
 
 private val log = KotlinLogging.logger {}
 
@@ -16,6 +17,7 @@ class RedisInboundBus(
     private val channelName: String,
     private val instanceId: String,
     private val mapper: ObjectMapper,
+    private val sharedSecret: String,
 ) : InboundBus {
     private data class Envelope(
         val instanceId: String = "",
@@ -24,6 +26,7 @@ class RedisInboundBus(
         val defaultAnsiEnabled: Boolean = false,
         val reason: String = "",
         val line: String = "",
+        val signature: String = "",
     )
 
     fun startSubscribing() {
@@ -31,6 +34,10 @@ class RedisInboundBus(
             try {
                 val env = mapper.readValue<Envelope>(message)
                 if (env.instanceId == instanceId) return@startListening
+                if (!env.hasValidSignature(sharedSecret)) {
+                    log.warn { "Dropping inbound Redis event with invalid signature (type=${env.type})" }
+                    return@startListening
+                }
                 val event = env.toEvent() ?: return@startListening
                 delegate.trySend(event)
             } catch (e: Exception) {
@@ -86,12 +93,30 @@ class RedisInboundBus(
                             sessionId = event.sessionId.value,
                             line = event.line,
                         )
-                }
+                }.withSignature(sharedSecret)
             publisher.publish(channelName, mapper.writeValueAsString(env))
         } catch (e: Exception) {
             log.warn(e) { "Failed to publish inbound event to Redis" }
         }
     }
+
+    private fun Envelope.payloadToSign(): String = "$instanceId|$type|$sessionId|$defaultAnsiEnabled|$reason|$line"
+
+    private fun Envelope.withSignature(secret: String): Envelope = copy(signature = hmacSha256(secret, payloadToSign()))
+
+    private fun Envelope.hasValidSignature(secret: String): Boolean =
+        signature.isNotBlank() && signature == hmacSha256(secret, payloadToSign())
+
+    private fun hmacSha256(
+        secret: String,
+        payload: String,
+    ): String {
+        val mac = javax.crypto.Mac.getInstance("HmacSHA256")
+        mac.init(javax.crypto.spec.SecretKeySpec(secret.toByteArray(StandardCharsets.UTF_8), "HmacSHA256"))
+        return mac.doFinal(payload.toByteArray(StandardCharsets.UTF_8)).toHex()
+    }
+
+    private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
 
     private fun Envelope.toEvent(): InboundEvent? =
         when (type) {

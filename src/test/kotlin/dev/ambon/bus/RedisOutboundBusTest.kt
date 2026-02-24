@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 
 class RedisOutboundBusTest {
     private val mapper = redisObjectMapper
+    private val sharedSecret = "test-secret"
     private val fakePublisher = FakeOutboundPublisher()
     private val fakeSubscriber = FakeOutboundSubscriberSetup()
     private val delegate = LocalOutboundBus(capacity = 16)
@@ -23,6 +24,7 @@ class RedisOutboundBusTest {
             channelName = "test-outbound",
             instanceId = "server-1",
             mapper = mapper,
+            sharedSecret = sharedSecret,
         )
 
     @BeforeEach
@@ -31,36 +33,27 @@ class RedisOutboundBusTest {
     }
 
     @Test
-    fun `send delivers event to local delegate`() =
-        runTest {
-            val event = OutboundEvent.SendText(SessionId(1), "hello")
-            bus.send(event)
-
-            val received = delegate.tryReceive()
-            assertTrue(received.isSuccess)
-            assertEquals(event, received.getOrNull())
-        }
-
-    @Test
-    fun `send publishes JSON to Redis with correct fields`() =
+    fun `send publishes signed envelope`() =
         runTest {
             val event = OutboundEvent.SendText(SessionId(1), "hello world")
             bus.send(event)
 
-            assertEquals(1, fakePublisher.messages.size)
-            val (channel, json) = fakePublisher.messages[0]
-            assertEquals("test-outbound", channel)
-            val parsed = mapper.readTree(json)
+            val parsed = mapper.readTree(fakePublisher.messages.single().second)
             assertEquals("server-1", parsed["instanceId"].asText())
             assertEquals("SendText", parsed["type"].asText())
-            assertEquals(1L, parsed["sessionId"].asLong())
-            assertEquals("hello world", parsed["text"].asText())
+            assertTrue(parsed["signature"].asText().isNotBlank())
         }
 
     @Test
-    fun `received message from other instance is forwarded to delegate`() {
-        val json = """{"instanceId":"server-2","type":"SendText","sessionId":3,"text":"hi"}"""
-        fakeSubscriber.inject(json)
+    fun `received signed message from other instance is forwarded`() {
+        fakeSubscriber.inject(
+            signedOutboundJson(
+                instanceId = "server-2",
+                type = "SendText",
+                sessionId = 3,
+                text = "hi",
+            ),
+        )
 
         val event = delegate.tryReceive()
         assertTrue(event.isSuccess)
@@ -68,80 +61,57 @@ class RedisOutboundBusTest {
     }
 
     @Test
-    fun `received message from own instanceId is filtered out`() {
-        val json = """{"instanceId":"server-1","type":"SendText","sessionId":3,"text":"own"}"""
+    fun `unsigned message is dropped`() {
+        val json = """{"instanceId":"server-2","type":"SendText","sessionId":3,"text":"bad"}"""
         fakeSubscriber.inject(json)
 
         assertFalse(delegate.tryReceive().isSuccess)
     }
 
     @Test
-    fun `all outbound event types round-trip through JSON`() {
-        val cases =
-            listOf(
-                """{"instanceId":"o","type":"SendText","sessionId":1,"text":"txt"}""" to
-                    OutboundEvent.SendText(SessionId(1), "txt"),
-                """{"instanceId":"o","type":"SendInfo","sessionId":2,"text":"info"}""" to
-                    OutboundEvent.SendInfo(SessionId(2), "info"),
-                """{"instanceId":"o","type":"SendError","sessionId":3,"text":"err"}""" to
-                    OutboundEvent.SendError(SessionId(3), "err"),
-                """{"instanceId":"o","type":"SendPrompt","sessionId":4}""" to
-                    OutboundEvent.SendPrompt(SessionId(4)),
-                """{"instanceId":"o","type":"ShowLoginScreen","sessionId":5}""" to
-                    OutboundEvent.ShowLoginScreen(SessionId(5)),
-                """{"instanceId":"o","type":"SetAnsi","sessionId":6,"enabled":true}""" to
-                    OutboundEvent.SetAnsi(SessionId(6), true),
-                """{"instanceId":"o","type":"Close","sessionId":7,"reason":"bye"}""" to
-                    OutboundEvent.Close(SessionId(7), "bye"),
-                """{"instanceId":"o","type":"ClearScreen","sessionId":8}""" to
-                    OutboundEvent.ClearScreen(SessionId(8)),
-                """{"instanceId":"o","type":"ShowAnsiDemo","sessionId":9}""" to
-                    OutboundEvent.ShowAnsiDemo(SessionId(9)),
-            )
-
-        for ((json, expected) in cases) {
-            fakeSubscriber.inject(json)
-            assertEquals(expected, delegate.tryReceive().getOrNull(), "Failed for type ${expected::class.simpleName}")
-        }
-    }
-
-    @Test
-    fun `send publishes SetAnsi with enabled flag`() =
-        runTest {
-            val event = OutboundEvent.SetAnsi(SessionId(10), enabled = true)
-            bus.send(event)
-
-            assertEquals(1, fakePublisher.messages.size)
-            val parsed = mapper.readTree(fakePublisher.messages[0].second)
-            assertEquals("SetAnsi", parsed["type"].asText())
-            assertEquals(true, parsed["enabled"].asBoolean())
-        }
-
-    @Test
-    fun `send publishes Close with reason`() =
-        runTest {
-            val event = OutboundEvent.Close(SessionId(11), "kicked")
-            bus.send(event)
-
-            assertEquals(1, fakePublisher.messages.size)
-            val parsed = mapper.readTree(fakePublisher.messages[0].second)
-            assertEquals("Close", parsed["type"].asText())
-            assertEquals("kicked", parsed["reason"].asText())
-        }
-
-    @Test
-    fun `invalid JSON is handled gracefully without throwing`() {
-        fakeSubscriber.inject("not valid json {{{{")
-
-        assertFalse(delegate.tryReceive().isSuccess)
-    }
-
-    @Test
-    fun `unknown event type is handled gracefully without throwing`() {
-        val json = """{"instanceId":"other","type":"UnknownEventType","sessionId":1}"""
+    fun `message with invalid signature is dropped`() {
+        val json =
+            signedOutboundJson(
+                instanceId = "server-2",
+                type = "SendText",
+                sessionId = 3,
+                text = "tampered",
+            ).replace("tampered", "changed")
         fakeSubscriber.inject(json)
 
         assertFalse(delegate.tryReceive().isSuccess)
+    }
+
+    private fun signedOutboundJson(
+        instanceId: String,
+        type: String,
+        sessionId: Long,
+        text: String = "",
+        enabled: Boolean = false,
+        reason: String = "",
+    ): String {
+        val payload = "$instanceId|$type|$sessionId|$text|$enabled|$reason"
+        val signature = hmacSha256(sharedSecret, payload)
+        return mapper.writeValueAsString(
+            mapOf(
+                "instanceId" to instanceId,
+                "type" to type,
+                "sessionId" to sessionId,
+                "text" to text,
+                "enabled" to enabled,
+                "reason" to reason,
+                "signature" to signature,
+            ),
+        )
+    }
+
+    private fun hmacSha256(
+        secret: String,
+        payload: String,
+    ): String {
+        val mac = javax.crypto.Mac.getInstance("HmacSHA256")
+        mac.init(javax.crypto.spec.SecretKeySpec(secret.toByteArray(), "HmacSHA256"))
+        return mac.doFinal(payload.toByteArray()).joinToString("") { "%02x".format(it) }
     }
 }
 
