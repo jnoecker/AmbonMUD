@@ -18,6 +18,11 @@ The goal is to keep the codebase easy to extend (world content, commands, transp
 11. Write-behind persistence worker (async, coalescing)
 12. Redis as opt-in infrastructure (not a hard dependency)
 13. Gateway reconnect with bounded backoff (not unbounded retry)
+14. GMCP as a structured data channel (not parsed ANSI)
+15. Config-driven abilities (not hardcoded spells)
+16. Zone-based sharding (zone as the shard unit)
+17. Zone instancing for hot-zone load distribution
+18. HMAC-signed Redis bus envelopes
 
 ---
 
@@ -209,3 +214,84 @@ Why:
 Tradeoff:
 - All sessions on a gateway are lost on stream failure (each reconnect starts fresh). Session migration would require engine-side session state serialization, which is significantly more complex and deferred for now.
 - The `streamVerifyMs` health-check window adds latency to each reconnect attempt, but prevents false-positive "reconnected" states from immediately-dying streams.
+
+---
+
+## 14) GMCP as a structured data channel (not parsed ANSI)
+
+Decision: Send structured JSON data (vitals, room info, inventory, skills) via GMCP subnegotiation alongside plain-text output, rather than requiring clients to parse ANSI text.
+
+Why:
+- Rich clients (web, graphical) need machine-readable data for sidebar panels — parsing ANSI text is fragile and version-dependent.
+- GMCP is a well-established MUD protocol (telnet option 201) supported by most modern MUD clients (Mudlet, Nexus, etc.).
+- The engine's `GmcpEmitter` emits data alongside existing `OutboundEvent`s — no changes to the engine/transport boundary.
+- WebSocket clients auto-opt into all GMCP packages; telnet clients negotiate via standard `WILL`/`DO`.
+- 13 packages cover character, room, inventory, skills, and communication channels.
+
+Tradeoff:
+- GMCP adds telnet subnegotiation complexity (IAC/SB/SE framing), but this is isolated to `TelnetLineDecoder` and `NetworkSession`.
+- Maintaining JSON payloads in sync with game state requires emitting GMCP events at every state change point, but the `GmcpEmitter` centralizes this.
+
+---
+
+## 15) Config-driven abilities (not hardcoded spells)
+
+Decision: Define spell/ability definitions in `application.yaml` configuration rather than hardcoding them in Kotlin source.
+
+Why:
+- Adding, tuning, or rebalancing abilities should not require recompilation — the same philosophy as world content being data.
+- Config validation at startup (`AppConfig.validated()`) catches misconfigured abilities early.
+- Class restrictions, mana costs, cooldowns, and effect values are all tunable per-deployment.
+- `AbilityRegistryLoader` transforms config into an `AbilityRegistry` that the engine consumes.
+
+Tradeoff:
+- Config-driven means no compile-time type safety for ability definitions — misconfigured `targetType` or `effect.type` could be caught only at startup.
+- Complex spell effects (multi-hit, area-of-effect) may eventually outgrow flat config and require a scripting layer.
+
+---
+
+## 16) Zone-based sharding (zone as the shard unit)
+
+Decision: Partition the game world across multiple engine processes by zone, using asynchronous inter-engine messaging for cross-zone operations.
+
+Why:
+- Zones are natural boundaries: rooms are namespaced (`zone:room`), mobs/items belong to zones, zone resets are independent.
+- Most game operations (combat, movement, communication) are zone-local, minimizing cross-shard traffic.
+- A player handoff protocol handles cross-zone movement with serialized state transfer and ACK-based rollback on failure.
+- Single-engine deployment (`STANDALONE`) remains valid — sharding is opt-in configuration.
+
+Tradeoff:
+- Cross-zone operations (`tell`, `gossip`, `who`, `goto`, `transfer`) require inter-engine messaging, adding latency.
+- Player handoff creates a brief transit window (~100ms) where the session is in limbo.
+- Redis becomes a hard dependency for sharded deployments (ZoneRegistry, InterEngineBus, PlayerLocationIndex).
+
+---
+
+## 17) Zone instancing for hot-zone load distribution
+
+Decision: Allow popular zones to run multiple instances on the same or different engines, with players assigned via load-balanced instance selection and able to switch instances with the `phase` command.
+
+Why:
+- A single zone (e.g., the starting hub) can become a bottleneck if all players concentrate there.
+- Instancing adds horizontal capacity within a zone without splitting it into artificial sub-zones.
+- Auto-scaling based on capacity thresholds (`ThresholdInstanceScaler`) handles load spikes without manual intervention.
+- Players on different instances can still use cross-instance communication (`gossip`, `tell`, `who`).
+
+Tradeoff:
+- Players on different instances of the same zone cannot see each other in rooms, which can be confusing.
+- Instance state (mob spawns, items) is per-instance, increasing total memory footprint.
+
+---
+
+## 18) HMAC-signed Redis bus envelopes
+
+Decision: Sign all Redis pub/sub bus messages with HMAC-SHA256 using a shared secret, and drop messages with invalid signatures.
+
+Why:
+- In a multi-process deployment sharing a Redis instance, unsigned messages could allow event injection from unauthorized processes.
+- HMAC is computationally cheap and provides message integrity without encryption overhead.
+- The shared secret is validated as non-blank at startup when the Redis bus is enabled.
+
+Tradeoff:
+- All processes must share the same secret, which is an operational requirement (but standard for shared infrastructure).
+- HMAC adds a small per-message overhead (~microseconds), negligible compared to Redis pub/sub latency.

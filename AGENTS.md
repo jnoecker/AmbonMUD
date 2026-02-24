@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Purpose
-This repository is a Kotlin MUD server ("AmbonMUD") with a tick-based event loop, telnet + WebSocket transports, YAML world loading, a small browser demo client, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching and pub/sub. It supports three deployment modes: `STANDALONE` (single-process, default), `ENGINE` (game logic + gRPC server), and `GATEWAY` (transports + gRPC client) for horizontal scaling.
+This repository is a Kotlin MUD server ("AmbonMUD") with a tick-based event loop, telnet + WebSocket transports (with GMCP structured data), YAML world loading, class-based character progression with a spell/ability system, a GMCP-aware browser demo client, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching and pub/sub. It supports three deployment modes: `STANDALONE` (single-process, default), `ENGINE` (game logic + gRPC server), and `GATEWAY` (transports + gRPC client) for horizontal scaling, plus zone-based engine sharding with zone instancing for load distribution.
 
 Use this document as the default engineering playbook when making code or content changes.
 
@@ -25,7 +25,8 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 ## Project Map
 - Bootstrap/runtime wiring: `src/main/kotlin/dev/ambon/Main.kt`, `src/main/kotlin/dev/ambon/MudServer.kt`
 - Configuration: `src/main/kotlin/dev/ambon/config`, `src/main/resources/application.yaml`
-- Engine and gameplay: `src/main/kotlin/dev/ambon/engine`
+- Engine and gameplay: `src/main/kotlin/dev/ambon/engine` (includes `GmcpEmitter`, `AbilitySystem`)
+- Zone-based engine sharding: `src/main/kotlin/dev/ambon/sharding` (ZoneRegistry, InterEngineBus, HandoffManager, InstanceSelector)
 - Transport and protocol: `src/main/kotlin/dev/ambon/transport`
 - Event bus interfaces + impls: `src/main/kotlin/dev/ambon/bus` (`InboundBus`, `OutboundBus`, `Local*Bus`, `Redis*Bus`, `Grpc*Bus`)
 - Redis connection management + JSON: `src/main/kotlin/dev/ambon/redis`
@@ -34,11 +35,12 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Web demo client (static): `src/main/resources/web`
 - Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
-- World content: `src/main/resources/world`
+- World content: `src/main/resources/world` (8 zones: hub, ruins, resume, tutorial, 4 training zones)
 - World format contract: `docs/world-zone-yaml-spec.md`
 - Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence` (`PlayerRepository`, `YamlPlayerRepository`, `PostgresPlayerRepository`, `DatabaseManager`, `PlayersTable`)
-- Flyway schema migrations: `src/main/resources/db/migration`
-- Tests: `src/test/kotlin`, fixtures in `src/test/resources/world`
+- Flyway schema migrations: `src/main/resources/db/migration` (V1–V4: players table, mana, attributes/race/class, defaults)
+- Load-testing module: `swarm/` (`:swarm` Gradle subproject)
+- Tests: `src/test/kotlin` (~66 test files), fixtures in `src/test/resources/world`
 - Runtime player data (git-ignored): `data/players`
 
 ## Architecture Contracts (Do Not Break)
@@ -68,7 +70,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Password validation: non-blank, max 72 chars (BCrypt-safe).
 - Case-insensitive online-name uniqueness is enforced.
 - Player room/last-seen persistence must stay intact.
-- Player progression persistence must stay intact (level/xp/constitution).
+- Player progression persistence must stay intact (level/xp/attributes/mana/race/class).
 - Keep atomic-write behavior for YAML persistence files.
 - The persistence backend is selectable via `ambonMUD.persistence.backend` (`YAML` or `POSTGRES`). Database connection defaults match the docker compose stack, so switching to Postgres only requires flipping the backend flag.
 - The persistence chain is: `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (optional) → `YamlPlayerRepository` or `PostgresPlayerRepository`. Changes to `PlayerRecord` must survive all three layers including JSON round-trip through Redis.
@@ -112,6 +114,25 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - When adding fields to `PlayerRecord`: add with a default value so existing YAML files still deserialize; verify the field round-trips through Jackson/Redis JSON (`RedisCachingPlayerRepositoryTest`). For Postgres, add a new Flyway migration (`V<N>__description.sql`) and update `PlayersTable.kt` + `PostgresPlayerRepository.kt` (mapping in `toPlayerRecord()`, `insert`, and `upsert`).
 - Do not add persistence logic directly to `GameEngine` or `PlayerRegistry` — all writes go through `repo.save()` which the coalescing wrapper intercepts.
 
+### Abilities / spells
+- Ability definitions live in `AppConfig.kt` under `engine.abilities.definitions`.
+- `AbilitySystem.kt` resolves casting, mana, cooldowns, and delegates kills to `CombatSystem.handleSpellKill()`.
+- New abilities: add to config, update `AbilityRegistryLoader` if new effect types are needed, add tests in `AbilitySystemTest`.
+- Class restrictions: each ability has a `classRestriction` field; players only learn abilities for their class.
+
+### Sharding / zone instancing
+- Zone-based sharding code lives in `src/main/kotlin/dev/ambon/sharding/`.
+- `ZoneRegistry` (Static or Redis) maps zones to engines; `InterEngineBus` (Local or Redis) handles cross-engine messaging.
+- `HandoffManager` handles cross-zone player movement with ACK timeout and rollback.
+- Zone instancing uses `InstanceSelector` and `ThresholdInstanceScaler` for load-balanced routing; `phase` command lets players switch instances.
+- When adding new `InterEngineMessage` variants, update serialization in `InterEngineMessage.kt` and add tests.
+
+### GMCP
+- `GmcpEmitter.kt` sends structured JSON data via GMCP subnegotiation (13 packages: Char.Vitals, Char.Name, Room.Info, etc.).
+- Telnet GMCP negotiation is handled in `NetworkSession.kt` (WILL GMCP) and `TelnetLineDecoder.kt` (subnegotiation parsing).
+- WebSocket sessions auto-opt into all GMCP packages via `KtorWebSocketTransport.kt`.
+- When adding new GMCP packages, update `GmcpEmitter` and the web client's `app.js` handler.
+
 ### Staff/Admin commands
 - Add parse logic in `CommandParser.kt` (alongside existing admin block).
 - Gate with `if (!playerState.isStaff)` check in `CommandRouter.kt`.
@@ -122,7 +143,9 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - When adding new `InboundEvent` or `OutboundEvent` variants, also add them to:
   - the Redis bus envelope in `RedisInboundBus`/`RedisOutboundBus` (type discriminator string + new data class)
   - the proto definitions in `src/main/proto/ambonmud/v1/events.proto` and mapping in `ProtoMapper.kt`
+- Redis bus envelopes are HMAC-SHA256 signed with `redis.bus.sharedSecret`; invalid signatures are dropped. When adding new event variants, ensure the signature covers the full payload.
 - `RedisConnectionManager` degrades gracefully when Redis is unavailable — never let a Redis failure crash the engine.
+- `InterEngineBus` (in `sharding/`) is the cross-engine messaging layer (separate from InboundBus/OutboundBus). When adding new `InterEngineMessage` variants, update both the Redis and Local implementations.
 
 ## Testing Expectations
 - Minimum verification for any meaningful change: `ktlintCheck` and `test`.

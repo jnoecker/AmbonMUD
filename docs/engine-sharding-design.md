@@ -454,61 +454,63 @@ If the target engine is unreachable during a cross-zone move:
 
 ## Phased Implementation
 
-### Phase 5a: Zone-Partitioned World Loading
+All phases are implemented. Code lives in `src/main/kotlin/dev/ambon/sharding/` with comprehensive tests.
+
+### Phase 5a: Zone-Partitioned World Loading — DONE
 
 **Goal:** Engines load only their assigned zones. Cross-zone exits become stubs.
 
 **Changes:**
-- `AppConfig.kt`: Add `ShardingConfig`
-- `WorldLoader.kt`: Accept a zone filter. Load only matching zones. For cross-zone exits, create `ExitStub` entries instead of validating target rooms.
-- `GameEngine.kt`: No change — it operates on whatever `World` it receives.
+- `AppConfig.kt`: Added `ShardingConfig`
+- `WorldLoader.kt`: Accepts a zone filter. Loads only matching zones. Cross-zone exits resolve to stubs.
+- `GameEngine.kt`: No change — operates on whatever `World` it receives.
 
-**Verification:** Single engine with `zones: []` (all zones) behaves identically to today. Engine with `zones: ["demo_ruins"]` loads only that zone. Cross-zone exits resolve to stubs.
-
-### Phase 5b: Zone Registry & Inter-Engine Bus
+### Phase 5b: Zone Registry & Inter-Engine Bus — DONE
 
 **Goal:** Engines register their zones and can exchange messages.
 
 **Changes:**
-- New `ZoneRegistry` interface + `StaticZoneRegistry` + `RedisZoneRegistry`
-- New `InterEngineBus` interface + `LocalInterEngineBus` + `RedisInterEngineBus`
-- Engine startup: register zones with ZoneRegistry, start InterEngineBus listener
-- Engine tick: renew lease (heartbeat)
+- `ZoneRegistry` interface + `StaticZoneRegistry` + `RedisZoneRegistry`
+- `InterEngineBus` interface + `LocalInterEngineBus` + `RedisInterEngineBus`
+- Engine startup: registers zones with ZoneRegistry, starts InterEngineBus listener
+- Engine tick: renews lease (heartbeat)
 
-**Verification:** Two engines in separate processes, each owning different zones, both register in Redis. Each can send/receive messages.
-
-### Phase 5c: Player Handoff Protocol
+### Phase 5c: Player Handoff Protocol — DONE
 
 **Goal:** Players can move between zones owned by different engines.
 
 **Changes:**
-- `CommandRouter.kt`: On cross-zone move, check ZoneRegistry. If target zone is remote, initiate handoff instead of local move.
-- New `HandoffManager` — serializes player state, sends `PlayerHandoff`, handles timeout/rollback.
-- `GameEngine.kt`: Handle incoming `PlayerHandoff` — deserialize, add to local registries, send room look.
-- `GatewayServer.kt`: Handle `SessionRedirect` — remap session to new engine stream.
+- `CommandRouter.kt`: On cross-zone move, checks ZoneRegistry. If target zone is remote, initiates handoff.
+- `HandoffManager` — serializes player state, sends `PlayerHandoff`, handles timeout/rollback.
+- `GameEngine.kt`: Handles incoming `PlayerHandoff` — deserializes, adds to local registries, sends room look.
+- `GatewayServer.kt`: Handles `SessionRedirect` — remaps session to new engine stream.
 
-**Verification:** Player walks from `ambon_hub` (Engine-1) to `demo_ruins` (Engine-2). Session seamlessly continues on Engine-2. Walking back works. Handoff timeout (kill Engine-2) gracefully fails.
-
-### Phase 5d: Global Commands
+### Phase 5d: Global Commands — DONE
 
 **Goal:** `gossip`, `tell`, `who`, and staff commands work across engines.
 
 **Changes:**
-- `CommandRouter.kt`: `gossip` → `InterEngineBus.broadcast(GlobalBroadcast)`. `tell` → look up player location index, send `TellMessage`. `who` → gather from all engines.
-- New Redis player location index (updated on login/logout/handoff)
+- `CommandRouter.kt`: `gossip` → `InterEngineBus.broadcast(GlobalBroadcast)`. `tell` → player location index lookup. `who` → gather from all engines.
+- Redis player location index (updated on login/logout/handoff)
 - Staff commands (`goto`, `transfer`, `kick`) route via InterEngineBus when target is remote.
 
-**Verification:** Two players on different engines can gossip, tell, see each other in `who`. Staff can `goto` and `transfer` across engines.
-
-### Phase 5e: Gateway Multi-Engine Support
+### Phase 5e: Gateway Multi-Engine Support — DONE
 
 **Goal:** Gateways connect to multiple engines and route sessions correctly.
 
 **Changes:**
-- `GatewayServer.kt`: Multiple engine connections. Session-to-engine routing map. Handle `SessionRedirect`.
-- Login flow: connect to any engine, post-login handoff if needed.
+- `GatewayServer.kt`: Multiple engine connections. Session-to-engine routing map. Handles `SessionRedirect`.
+- Login flow: connects to any engine, post-login handoff if needed.
 
-**Verification:** Single gateway connects to two engines. Players log in, are routed to correct engine based on saved room. Cross-zone movement updates gateway routing. Gateway handles one engine going down (only affected sessions disconnect).
+### Phase 5f: Zone Instancing — DONE (bonus)
+
+**Goal:** Hot zones can run multiple instances for load distribution.
+
+**Changes:**
+- `InstanceSelector` interface + `LoadBalancedInstanceSelector` for routing players to instances.
+- `ThresholdInstanceScaler` for auto-scaling based on capacity thresholds.
+- `phase`/`layer` command for players to switch instances manually.
+- Cross-instance communication (gossip, tell, who) works across instances.
 
 ---
 
