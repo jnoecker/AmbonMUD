@@ -24,6 +24,10 @@
         <aside id="sidebar">
             <div class="sidebar-panel" id="char-panel">
                 <div class="panel-title">Character</div>
+                <div class="char-identity">
+                    <span id="char-name">—</span>
+                    <span id="char-info" class="char-info-sub">—</span>
+                </div>
                 <div class="bar-label">HP <span id="hp-text">— / —</span></div>
                 <div class="bar-wrap"><div class="bar-fill hp" id="hp-bar" style="width:0%"></div></div>
                 <div class="bar-label">Mana <span id="mana-text">— / —</span></div>
@@ -43,6 +47,18 @@
                 <div id="room-desc" class="room-desc"></div>
                 <div class="exits-label">Exits</div>
                 <div id="exits-wrap" class="exits-wrap"></div>
+            </div>
+            <div class="sidebar-panel" id="players-panel">
+                <div class="panel-title">Players Here</div>
+                <div id="players-list" class="players-list"><span class="empty-hint">—</span></div>
+            </div>
+            <div class="sidebar-panel" id="inv-panel">
+                <div class="panel-title">Inventory</div>
+                <div id="inv-list" class="inv-list"><span class="empty-hint">—</span></div>
+            </div>
+            <div class="sidebar-panel" id="equip-panel">
+                <div class="panel-title">Equipment</div>
+                <div id="equip-list" class="equip-list"><span class="empty-hint">—</span></div>
             </div>
         </aside>
     </div>

@@ -138,6 +138,11 @@ class GameEngine(
                 for (ability in newAbilities) {
                     outbound.send(OutboundEvent.SendText(sid, "You have learned ${ability.displayName}!"))
                 }
+                val p = players.get(sid)
+                if (p != null) {
+                    gmcpEmitter.sendCharName(sid, p)
+                    gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid))
+                }
             },
         )
     private val regenSystem =
@@ -181,7 +186,11 @@ class GameEngine(
     val gmcpEmitter =
         GmcpEmitter(
             outbound = outbound,
-            supportsPackage = { sid, pkg -> gmcpSessions[sid]?.contains(pkg) == true },
+            supportsPackage = { sid, pkg ->
+                gmcpSessions[sid]?.any { supported ->
+                    pkg == supported || pkg.startsWith("$supported.")
+                } == true
+            },
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -1109,7 +1118,10 @@ class GameEngine(
         // Send initial GMCP vitals/status for sessions that are already opted-in
         gmcpEmitter.sendCharStatusVars(sessionId)
         gmcpEmitter.sendCharVitals(sessionId, me)
-        router.handle(sessionId, Command.Look) // room + prompt (also sends Room.Info)
+        gmcpEmitter.sendCharName(sessionId, me)
+        gmcpEmitter.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
+        gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId))
+        router.handle(sessionId, Command.Look) // room + prompt (also sends Room.Info + Room.Players)
     }
 
     private suspend fun ensureLoginRoomAvailable(
@@ -1239,10 +1251,17 @@ class GameEngine(
                 gmcpEmitter.sendCharStatusVars(sid)
                 gmcpEmitter.sendCharVitals(sid, player)
                 gmcpEmitter.sendRoomInfo(sid, room)
+                gmcpEmitter.sendCharName(sid, player)
+                gmcpEmitter.sendCharItemsList(sid, items.inventory(sid), items.equipment(sid))
+                gmcpEmitter.sendRoomPlayers(sid, players.playersInRoom(player.roomId).toList())
+                gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid))
             }
             "Core.Supports.Remove" -> {
                 val packages = parseGmcpPackageList(ev.jsonData)
                 gmcpSessions[sid]?.removeAll(packages.toSet())
+            }
+            "Core.Ping" -> {
+                gmcpEmitter.sendCorePing(sid)
             }
         }
     }
