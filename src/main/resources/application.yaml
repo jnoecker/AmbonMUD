@@ -259,3 +259,4 @@ ambonMUD:
       inboundChannel: ambon:inbound
       outboundChannel: ambon:outbound
       instanceId: ""
+      sharedSecret: "CHANGE_ME"
