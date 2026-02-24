@@ -1,5 +1,7 @@
 package dev.ambon.engine.abilities
 
+import dev.ambon.domain.PlayerClass
+
 class AbilityRegistry {
     private val abilities = mutableMapOf<AbilityId, AbilityDefinition>()
 
@@ -27,6 +29,14 @@ class AbilityRegistry {
     fun abilitiesForLevel(level: Int): List<AbilityDefinition> =
         abilities.values
             .filter { it.levelRequired <= level }
+            .sortedBy { it.levelRequired }
+
+    fun abilitiesForLevelAndClass(
+        level: Int,
+        playerClass: PlayerClass?,
+    ): List<AbilityDefinition> =
+        abilities.values
+            .filter { it.levelRequired <= level && (it.requiredClass == null || it.requiredClass == playerClass) }
             .sortedBy { it.levelRequired }
 
     fun all(): Collection<AbilityDefinition> = abilities.values

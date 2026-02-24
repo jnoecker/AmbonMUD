@@ -57,8 +57,31 @@ class WriteCoalescingPlayerRepository(
         nowEpochMs: Long,
         passwordHash: String,
         ansiEnabled: Boolean,
+        race: String,
+        playerClass: String,
+        strength: Int,
+        dexterity: Int,
+        constitution: Int,
+        intelligence: Int,
+        wisdom: Int,
+        charisma: Int,
     ): PlayerRecord {
-        val record = delegate.create(name, startRoomId, nowEpochMs, passwordHash, ansiEnabled)
+        val record =
+            delegate.create(
+                name,
+                startRoomId,
+                nowEpochMs,
+                passwordHash,
+                ansiEnabled,
+                race,
+                playerClass,
+                strength,
+                dexterity,
+                constitution,
+                intelligence,
+                wisdom,
+                charisma,
+            )
         lock.withLock {
             cache[record.id] = record
             if (versions[record.id] == null) {

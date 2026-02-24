@@ -1,6 +1,7 @@
 package dev.ambon.engine.abilities
 
 import dev.ambon.config.AbilityEngineConfig
+import dev.ambon.domain.PlayerClass
 
 object AbilityRegistryLoader {
     fun load(
@@ -28,6 +29,12 @@ object AbilityRegistryLoader {
                         )
                     else -> continue
                 }
+            val requiredClass =
+                if (defConfig.requiredClass.isNotBlank()) {
+                    PlayerClass.fromString(defConfig.requiredClass)
+                } else {
+                    null
+                }
             registry.register(
                 AbilityDefinition(
                     id = AbilityId(key),
@@ -38,6 +45,7 @@ object AbilityRegistryLoader {
                     levelRequired = defConfig.levelRequired,
                     targetType = targetType,
                     effect = effect,
+                    requiredClass = requiredClass,
                 ),
             )
         }

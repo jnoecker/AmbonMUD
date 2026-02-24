@@ -51,6 +51,14 @@ class PostgresPlayerRepository(
         nowEpochMs: Long,
         passwordHash: String,
         ansiEnabled: Boolean,
+        race: String,
+        playerClass: String,
+        strength: Int,
+        dexterity: Int,
+        constitution: Int,
+        intelligence: Int,
+        wisdom: Int,
+        charisma: Int,
     ): PlayerRecord {
         val trimmed = name.trim()
         try {
@@ -64,7 +72,14 @@ class PostgresPlayerRepository(
                         it[lastSeenEpochMs] = nowEpochMs
                         it[PlayersTable.passwordHash] = passwordHash
                         it[PlayersTable.ansiEnabled] = ansiEnabled
-                        // New attributes use column defaults (10, HUMAN, ADVENTURER)
+                        it[PlayersTable.race] = race
+                        it[PlayersTable.playerClass] = playerClass
+                        it[PlayersTable.strength] = strength
+                        it[PlayersTable.dexterity] = dexterity
+                        it[PlayersTable.constitution] = constitution
+                        it[PlayersTable.intelligence] = intelligence
+                        it[PlayersTable.wisdom] = wisdom
+                        it[PlayersTable.charisma] = charisma
                     }
 
                 PlayerRecord(
@@ -75,6 +90,14 @@ class PostgresPlayerRepository(
                     lastSeenEpochMs = nowEpochMs,
                     passwordHash = passwordHash,
                     ansiEnabled = ansiEnabled,
+                    race = race,
+                    playerClass = playerClass,
+                    strength = strength,
+                    dexterity = dexterity,
+                    constitution = constitution,
+                    intelligence = intelligence,
+                    wisdom = wisdom,
+                    charisma = charisma,
                 )
             }
         } catch (e: Exception) {

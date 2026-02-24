@@ -27,7 +27,7 @@ class RedisCachingPlayerRepository(
         val wisdom: Int = 10,
         val charisma: Int = 10,
         val race: String = "HUMAN",
-        val playerClass: String = "ADVENTURER",
+        val playerClass: String = "WARRIOR",
         val level: Int = 1,
         val xpTotal: Long = 0L,
         val createdAtEpochMs: Long,
@@ -85,8 +85,31 @@ class RedisCachingPlayerRepository(
         nowEpochMs: Long,
         passwordHash: String,
         ansiEnabled: Boolean,
+        race: String,
+        playerClass: String,
+        strength: Int,
+        dexterity: Int,
+        constitution: Int,
+        intelligence: Int,
+        wisdom: Int,
+        charisma: Int,
     ): PlayerRecord {
-        val record = delegate.create(name, startRoomId, nowEpochMs, passwordHash, ansiEnabled)
+        val record =
+            delegate.create(
+                name,
+                startRoomId,
+                nowEpochMs,
+                passwordHash,
+                ansiEnabled,
+                race,
+                playerClass,
+                strength,
+                dexterity,
+                constitution,
+                intelligence,
+                wisdom,
+                charisma,
+            )
         cacheRecord(record)
         return record
     }
