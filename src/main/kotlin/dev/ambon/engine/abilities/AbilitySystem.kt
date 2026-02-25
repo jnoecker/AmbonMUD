@@ -3,13 +3,14 @@ package dev.ambon.engine.abilities
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.MobId
-import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
+import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.rollRange
 import dev.ambon.engine.status.StatusEffectSystem
 import java.time.Clock
 import java.util.Random
@@ -108,7 +109,7 @@ class AbilitySystem(
                 // 7. Apply effect
                 when (val effect = ability.effect) {
                     is AbilityEffect.DirectDamage -> {
-                        val baseDamage = rollRange(effect.minDamage, effect.maxDamage)
+                        val baseDamage = rollRange(rng, effect.minDamage, effect.maxDamage)
                         val intBonus = intSpellBonus(player)
                         val damage = (baseDamage + intBonus).coerceAtLeast(1)
                         mob.hp = (mob.hp - damage).coerceAtLeast(0)
@@ -138,6 +139,8 @@ class AbilitySystem(
                     else -> return "Spell misconfigured (unexpected effect for enemy target)."
                 }
                 broadcastToRoom(
+                    players,
+                    outbound,
                     player.roomId,
                     "${player.name} casts ${ability.displayName}!",
                     exclude = sessionId,
@@ -157,7 +160,7 @@ class AbilitySystem(
                 // 7. Apply effect
                 when (val effect = ability.effect) {
                     is AbilityEffect.DirectHeal -> {
-                        val healAmount = rollRange(effect.minHeal, effect.maxHeal)
+                        val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
                         val before = player.hp
                         player.hp = (player.hp + healAmount).coerceAtMost(player.maxHp)
                         val healed = player.hp - before
@@ -185,6 +188,8 @@ class AbilitySystem(
                     else -> return "Spell misconfigured (unexpected effect for self target)."
                 }
                 broadcastToRoom(
+                    players,
+                    outbound,
                     player.roomId,
                     "${player.name} casts ${ability.displayName}.",
                     exclude = sessionId,
@@ -225,24 +230,5 @@ class AbilitySystem(
         val equipInt = items?.equipment(player.sessionId)?.values?.sumOf { it.item.intelligence } ?: 0
         val totalInt = player.intelligence + equipInt
         return (totalInt - PlayerState.BASE_STAT) / intSpellDivisor
-    }
-
-    private fun rollRange(
-        min: Int,
-        max: Int,
-    ): Int {
-        if (max <= min) return min
-        return min + rng.nextInt((max - min) + 1)
-    }
-
-    private suspend fun broadcastToRoom(
-        roomId: RoomId,
-        text: String,
-        exclude: SessionId? = null,
-    ) {
-        for (p in players.playersInRoom(roomId)) {
-            if (exclude != null && p.sessionId == exclude) continue
-            outbound.send(OutboundEvent.SendText(p.sessionId, text))
-        }
     }
 }

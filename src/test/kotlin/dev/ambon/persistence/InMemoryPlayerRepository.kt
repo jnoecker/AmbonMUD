@@ -1,6 +1,5 @@
 package dev.ambon.persistence
 
-import dev.ambon.domain.ids.RoomId
 import java.util.concurrent.atomic.AtomicLong
 
 class InMemoryPlayerRepository : PlayerRepository {
@@ -11,40 +10,9 @@ class InMemoryPlayerRepository : PlayerRepository {
 
     override suspend fun findById(id: PlayerId): PlayerRecord? = players[id]
 
-    override suspend fun create(
-        name: String,
-        startRoomId: RoomId,
-        nowEpochMs: Long,
-        passwordHash: String,
-        ansiEnabled: Boolean,
-        race: String,
-        playerClass: String,
-        strength: Int,
-        dexterity: Int,
-        constitution: Int,
-        intelligence: Int,
-        wisdom: Int,
-        charisma: Int,
-    ): PlayerRecord {
+    override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
         val id = PlayerId(nextId.getAndIncrement())
-        val record =
-            PlayerRecord(
-                id = id,
-                name = name,
-                roomId = startRoomId,
-                createdAtEpochMs = nowEpochMs,
-                lastSeenEpochMs = nowEpochMs,
-                passwordHash = passwordHash,
-                ansiEnabled = ansiEnabled,
-                race = race,
-                playerClass = playerClass,
-                strength = strength,
-                dexterity = dexterity,
-                constitution = constitution,
-                intelligence = intelligence,
-                wisdom = wisdom,
-                charisma = charisma,
-            )
+        val record = request.toNewPlayerRecord(id)
         players[id] = record
         return record
     }

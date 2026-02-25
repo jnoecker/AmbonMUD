@@ -10,6 +10,7 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
+import dev.ambon.test.drainAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
@@ -217,10 +218,10 @@ class GameEngineIntegrationTest {
             assertTrue(items.inventory(sid).any { it.item.keyword == "coin" })
             assertTrue(items.itemsInRoom(world.startRoom).none { it.item.keyword == "coin" })
 
-            drainOutbound(outbound)
+            outbound.drainAll()
 
             step(60_000L)
-            val resetEvents = drainOutbound(outbound)
+            val resetEvents = outbound.drainAll()
 
             assertTrue(
                 resetEvents.any {
@@ -291,7 +292,7 @@ class GameEngineIntegrationTest {
             inbound.send(InboundEvent.Disconnected(sid1, "test"))
             step()
 
-            drainOutbound(outbound)
+            outbound.drainAll()
 
             val sid2 = SessionId(2L)
             inbound.send(InboundEvent.Connected(sid2))
@@ -299,7 +300,7 @@ class GameEngineIntegrationTest {
             inbound.send(InboundEvent.LineReceived(sid2, "password"))
             step()
 
-            val outs = drainOutbound(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SetAnsi && it.sessionId == sid2 && it.enabled },
                 "Expected ANSI preference to be restored on login; got=$outs",
@@ -309,13 +310,4 @@ class GameEngineIntegrationTest {
             inbound.close()
             outbound.close()
         }
-
-    private fun drainOutbound(outbound: LocalOutboundBus): List<OutboundEvent> {
-        val out = mutableListOf<OutboundEvent>()
-        while (true) {
-            val ev = outbound.tryReceive().getOrNull() ?: break
-            out += ev
-        }
-        return out
-    }
 }

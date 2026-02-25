@@ -5,12 +5,13 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.drainAll
+import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -29,24 +30,6 @@ class SocialChannelCommandsTest {
         return Triple(router, players, outbound)
     }
 
-    private fun drain(ch: LocalOutboundBus): List<OutboundEvent> {
-        val out = mutableListOf<OutboundEvent>()
-        while (true) {
-            val ev = ch.tryReceive().getOrNull() ?: break
-            out += ev
-        }
-        return out
-    }
-
-    private suspend fun login(
-        players: PlayerRegistry,
-        sessionId: SessionId,
-        name: String,
-    ) {
-        val res = players.login(sessionId, name, "password")
-        require(res == LoginResult.Ok) { "Login failed: $res" }
-    }
-
     // ─── Whisper ────────────────────────────────────────────────────────────────
 
     @Test
@@ -55,11 +38,11 @@ class SocialChannelCommandsTest {
             val (router, players, outbound) = buildFixture()
             val a = SessionId(1)
             val b = SessionId(2)
-            login(players, a, "Alice")
-            login(players, b, "Bob")
+            players.loginOrFail(a, "Alice")
+            players.loginOrFail(b, "Bob")
 
             router.handle(a, Command.Whisper("Bob", "hey secret"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "You whisper to Bob: hey secret" },
@@ -77,15 +60,15 @@ class SocialChannelCommandsTest {
             val (router, players, outbound) = buildFixture()
             val a = SessionId(1)
             val b = SessionId(2)
-            login(players, a, "Alice")
-            login(players, b, "Bob")
+            players.loginOrFail(a, "Alice")
+            players.loginOrFail(b, "Bob")
 
             // Move Bob north into a different room
             router.handle(b, Command.Move(Direction.NORTH))
-            drain(outbound)
+            outbound.drainAll()
 
             router.handle(a, Command.Whisper("Bob", "hey"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendError && it.sessionId == a && it.text.contains("not here") },
@@ -102,10 +85,10 @@ class SocialChannelCommandsTest {
         runTest {
             val (router, players, outbound) = buildFixture()
             val a = SessionId(1)
-            login(players, a, "Alice")
+            players.loginOrFail(a, "Alice")
 
             router.handle(a, Command.Whisper("Nobody", "hello"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendError && it.sessionId == a },
@@ -118,10 +101,10 @@ class SocialChannelCommandsTest {
         runTest {
             val (router, players, outbound) = buildFixture()
             val a = SessionId(1)
-            login(players, a, "Alice")
+            players.loginOrFail(a, "Alice")
 
             router.handle(a, Command.Whisper("Alice", "talking to myself"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.sessionId == a && it.text.contains("yourself") },
@@ -137,15 +120,15 @@ class SocialChannelCommandsTest {
             val (router, players, outbound) = buildFixture()
             val a = SessionId(1)
             val b = SessionId(2)
-            login(players, a, "Alice")
-            login(players, b, "Bob")
+            players.loginOrFail(a, "Alice")
+            players.loginOrFail(b, "Bob")
 
             // Move Bob to a different room but same zone
             router.handle(b, Command.Move(Direction.NORTH))
-            drain(outbound)
+            outbound.drainAll()
 
             router.handle(a, Command.Shout("zone shout"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "You shout: zone shout" },
@@ -163,12 +146,12 @@ class SocialChannelCommandsTest {
             val (router, players, outbound) = buildFixture()
             val a = SessionId(1)
             val b = SessionId(2)
-            login(players, a, "Alice")
-            login(players, b, "Bob")
-            drain(outbound)
+            players.loginOrFail(a, "Alice")
+            players.loginOrFail(b, "Bob")
+            outbound.drainAll()
 
             router.handle(a, Command.Shout("hello zone"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == b && it.text.startsWith("[SHOUT]") },
@@ -184,15 +167,15 @@ class SocialChannelCommandsTest {
             val (router, players, outbound) = buildFixture()
             val a = SessionId(1)
             val b = SessionId(2)
-            login(players, a, "Alice")
-            login(players, b, "Bob")
+            players.loginOrFail(a, "Alice")
+            players.loginOrFail(b, "Bob")
 
             // Move Bob to a different room
             router.handle(b, Command.Move(Direction.NORTH))
-            drain(outbound)
+            outbound.drainAll()
 
             router.handle(a, Command.Ooc("hello everyone"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text.contains("You say OOC") },
@@ -210,12 +193,12 @@ class SocialChannelCommandsTest {
             val (router, players, outbound) = buildFixture()
             val a = SessionId(1)
             val b = SessionId(2)
-            login(players, a, "Alice")
-            login(players, b, "Bob")
-            drain(outbound)
+            players.loginOrFail(a, "Alice")
+            players.loginOrFail(b, "Bob")
+            outbound.drainAll()
 
             router.handle(a, Command.Ooc("out of character"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == b && it.text.startsWith("[OOC]") },
@@ -231,12 +214,12 @@ class SocialChannelCommandsTest {
             val (router, players, outbound) = buildFixture()
             val a = SessionId(1)
             val b = SessionId(2)
-            login(players, a, "Alice")
-            login(players, b, "Bob")
-            drain(outbound)
+            players.loginOrFail(a, "Alice")
+            players.loginOrFail(b, "Bob")
+            outbound.drainAll()
 
             router.handle(a, Command.Pose("Alice coughs loudly."))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "Alice coughs loudly." },
@@ -253,11 +236,11 @@ class SocialChannelCommandsTest {
         runTest {
             val (router, players, outbound) = buildFixture()
             val a = SessionId(1)
-            login(players, a, "Alice")
-            drain(outbound)
+            players.loginOrFail(a, "Alice")
+            outbound.drainAll()
 
             router.handle(a, Command.Pose("The old man coughs loudly."))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendError && it.sessionId == a },
@@ -275,15 +258,15 @@ class SocialChannelCommandsTest {
             val (router, players, outbound) = buildFixture()
             val a = SessionId(1)
             val b = SessionId(2)
-            login(players, a, "Alice")
-            login(players, b, "Bob")
+            players.loginOrFail(a, "Alice")
+            players.loginOrFail(b, "Bob")
 
             // Move Bob away
             router.handle(b, Command.Move(Direction.NORTH))
-            drain(outbound)
+            outbound.drainAll()
 
             router.handle(a, Command.Pose("Alice dances alone."))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "Alice dances alone." },

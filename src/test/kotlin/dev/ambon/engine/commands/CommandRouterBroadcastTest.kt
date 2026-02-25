@@ -4,12 +4,13 @@ import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.drainAll
+import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -31,12 +32,12 @@ class CommandRouterBroadcastTest {
 
             val a = SessionId(1)
             val b = SessionId(2)
-            login(players, a, "Player1")
-            login(players, b, "Player2")
+            players.loginOrFail(a, "Player1")
+            players.loginOrFail(b, "Player2")
 
             router.handle(a, Command.Say("hello"))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "You say: hello" },
@@ -62,15 +63,15 @@ class CommandRouterBroadcastTest {
 
             val a = SessionId(1)
             val b = SessionId(2)
-            login(players, a, "Player1")
-            login(players, b, "Player2")
+            players.loginOrFail(a, "Player1")
+            players.loginOrFail(b, "Player2")
 
             // Move b north into a different room
             router.handle(b, Command.Move(dev.ambon.domain.world.Direction.NORTH))
-            drain(outbound) // ignore look output
+            outbound.drainAll() // ignore look output
 
             router.handle(a, Command.Say("psst"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "You say: psst" },
@@ -94,11 +95,11 @@ class CommandRouterBroadcastTest {
 
             val a = SessionId(1)
             val b = SessionId(2)
-            login(players, a, "Player1")
-            login(players, b, "Player2")
+            players.loginOrFail(a, "Player1")
+            players.loginOrFail(b, "Player2")
 
             router.handle(a, Command.Who)
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             val msg =
                 outs
@@ -110,22 +111,4 @@ class CommandRouterBroadcastTest {
             assertTrue(msg!!.contains("Player1"), "Expected Player1 in who output. got=$msg")
             assertTrue(msg.contains("Player2"), "Expected Player2 in who output. got=$msg")
         }
-
-    private fun drain(ch: LocalOutboundBus): List<OutboundEvent> {
-        val out = mutableListOf<OutboundEvent>()
-        while (true) {
-            val ev = ch.tryReceive().getOrNull() ?: break
-            out += ev
-        }
-        return out
-    }
-
-    private suspend fun login(
-        players: PlayerRegistry,
-        sessionId: SessionId,
-        name: String,
-    ) {
-        val res = players.login(sessionId, name, "password")
-        require(res == LoginResult.Ok) { "Login failed: $res" }
-    }
 }

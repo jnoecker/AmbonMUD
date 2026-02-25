@@ -9,6 +9,7 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.drainAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -88,7 +89,7 @@ class GameEngineAnsiBehaviorTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val outs = drainOutbound(outbound)
+            val outs = outbound.drainAll()
 
             // Sanity: we should have asked transport to enable ANSI at some point
             assertTrue(
@@ -170,7 +171,7 @@ class GameEngineAnsiBehaviorTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val outs = drainOutbound(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SetAnsi && it.sessionId == sid && !it.enabled },
@@ -191,13 +192,4 @@ class GameEngineAnsiBehaviorTest {
             inbound.close()
             outbound.close()
         }
-
-    private fun drainOutbound(outbound: LocalOutboundBus): List<OutboundEvent> {
-        val out = mutableListOf<OutboundEvent>()
-        while (true) {
-            val ev = outbound.tryReceive().getOrNull() ?: break
-            out += ev
-        }
-        return out
-    }
 }

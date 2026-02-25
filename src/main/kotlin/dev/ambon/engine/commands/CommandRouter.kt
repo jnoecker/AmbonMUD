@@ -16,9 +16,9 @@ import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
-import dev.ambon.engine.PlayerState
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.abilities.AbilitySystem
+import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.EffectType
@@ -788,8 +788,7 @@ class CommandRouter(
                 }
                 // Try mob in room
                 val me = players.get(sessionId) ?: return
-                val lowerTarget = cmd.target.lowercase()
-                val mob = mobs.mobsInRoom(me.roomId).firstOrNull { it.name.lowercase().contains(lowerTarget) }
+                val mob = combat.findMobInRoom(me.roomId, cmd.target)
                 if (mob != null) {
                     statusEffects.removeAllFromMob(mob.id)
                     outbound.send(OutboundEvent.SendInfo(sessionId, "Dispelled all effects from ${mob.name}."))
@@ -1000,8 +999,7 @@ class CommandRouter(
                 }
 
                 // Try mob in current room (partial name match)
-                val lowerTarget = cmd.target.lowercase()
-                val targetMob = mobs.mobsInRoom(me.roomId).firstOrNull { it.name.lowercase().contains(lowerTarget) }
+                val targetMob = combat.findMobInRoom(me.roomId, cmd.target)
                 if (targetMob == null) {
                     outbound.send(OutboundEvent.SendError(sessionId, "No player or mob named '${cmd.target}'."))
                     outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -1011,7 +1009,7 @@ class CommandRouter(
                 items.removeMobItems(targetMob.id)
                 mobs.remove(targetMob.id)
                 onMobSmited(targetMob.id)
-                broadcastToRoom(me.roomId, "${targetMob.name} is struck down by divine wrath.")
+                broadcastToRoom(players, outbound, me.roomId, "${targetMob.name} is struck down by divine wrath.")
                 for (p in players.playersInRoom(me.roomId)) {
                     gmcpEmitter?.sendRoomRemoveMob(p.sessionId, targetMob.id.value)
                 }
@@ -1247,17 +1245,6 @@ class CommandRouter(
         }
     }
 
-    private suspend fun broadcastToRoom(
-        roomId: RoomId,
-        text: String,
-        exclude: SessionId? = null,
-    ) {
-        for (p in players.playersInRoom(roomId)) {
-            if (exclude != null && p.sessionId == exclude) continue
-            outbound.send(OutboundEvent.SendText(p.sessionId, text))
-        }
-    }
-
     private suspend fun grantScaledItemXp(
         sessionId: SessionId,
         rawXp: Long,
@@ -1267,15 +1254,7 @@ class CommandRouter(
 
         val player = players.get(sessionId) ?: return
         val equipCha = items.equipment(sessionId).values.sumOf { it.item.charisma }
-        val totalCha = player.charisma + equipCha
-        val chaBonus = totalCha - PlayerState.BASE_STAT
-        val adjustedXp =
-            if (chaBonus > 0) {
-                val multiplier = 1.0 + chaBonus * 0.005
-                (scaledXp * multiplier).toLong().coerceAtLeast(scaledXp)
-            } else {
-                scaledXp
-            }
+        val adjustedXp = progression.applyCharismaXpBonus(player.charisma + equipCha, scaledXp)
 
         val result = players.grantXp(sessionId, adjustedXp, progression) ?: return
         metrics.onXpAwarded(adjustedXp, "item_use")
@@ -1284,25 +1263,7 @@ class CommandRouter(
         if (result.levelsGained <= 0) return
         metrics.onLevelUp()
 
-        val pc = PlayerClass.fromString(player.playerClass)
-        val classHpPerLevel = pc?.hpPerLevel ?: progression.hpPerLevel
-        val classManaPerLevel = pc?.manaPerLevel ?: progression.manaPerLevel
-        val oldMaxHp = progression.maxHpForLevel(result.previousLevel, player.constitution, classHpPerLevel)
-        val newMaxHp = progression.maxHpForLevel(result.newLevel, player.constitution, classHpPerLevel)
-        val hpGain = (newMaxHp - oldMaxHp).coerceAtLeast(0)
-        val oldMaxMana = progression.maxManaForLevel(result.previousLevel, player.intelligence, classManaPerLevel)
-        val newMaxMana = progression.maxManaForLevel(result.newLevel, player.intelligence, classManaPerLevel)
-        val manaGain = (newMaxMana - oldMaxMana).coerceAtLeast(0)
-        val bonusParts = mutableListOf<String>()
-        if (hpGain > 0) bonusParts += "+$hpGain max HP"
-        if (manaGain > 0) bonusParts += "+$manaGain max Mana"
-
-        val levelUpMessage =
-            if (bonusParts.isNotEmpty()) {
-                "You reached level ${result.newLevel}! (${bonusParts.joinToString(", ")})"
-            } else {
-                "You reached level ${result.newLevel}!"
-            }
+        val levelUpMessage = progression.buildLevelUpMessage(result, player.constitution, player.intelligence, player.playerClass)
         outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
 
         if (abilitySystem != null) {

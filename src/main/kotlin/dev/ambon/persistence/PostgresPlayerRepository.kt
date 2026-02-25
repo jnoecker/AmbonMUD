@@ -36,60 +36,30 @@ class PostgresPlayerRepository(
             }
         }
 
-    override suspend fun create(
-        name: String,
-        startRoomId: RoomId,
-        nowEpochMs: Long,
-        passwordHash: String,
-        ansiEnabled: Boolean,
-        race: String,
-        playerClass: String,
-        strength: Int,
-        dexterity: Int,
-        constitution: Int,
-        intelligence: Int,
-        wisdom: Int,
-        charisma: Int,
-    ): PlayerRecord {
-        val trimmed = name.trim()
+    override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
+        val trimmed = request.name.trim()
         try {
             return newSuspendedTransaction(Dispatchers.IO, database) {
                 val result =
                     PlayersTable.insert {
                         it[PlayersTable.name] = trimmed
                         it[nameLower] = trimmed.lowercase()
-                        it[roomId] = startRoomId.value
-                        it[createdAtEpochMs] = nowEpochMs
-                        it[lastSeenEpochMs] = nowEpochMs
-                        it[PlayersTable.passwordHash] = passwordHash
-                        it[PlayersTable.ansiEnabled] = ansiEnabled
-                        it[PlayersTable.race] = race
-                        it[PlayersTable.playerClass] = playerClass
-                        it[PlayersTable.strength] = strength
-                        it[PlayersTable.dexterity] = dexterity
-                        it[PlayersTable.constitution] = constitution
-                        it[PlayersTable.intelligence] = intelligence
-                        it[PlayersTable.wisdom] = wisdom
-                        it[PlayersTable.charisma] = charisma
+                        it[roomId] = request.startRoomId.value
+                        it[createdAtEpochMs] = request.nowEpochMs
+                        it[lastSeenEpochMs] = request.nowEpochMs
+                        it[PlayersTable.passwordHash] = request.passwordHash
+                        it[PlayersTable.ansiEnabled] = request.ansiEnabled
+                        it[PlayersTable.race] = request.race
+                        it[PlayersTable.playerClass] = request.playerClass
+                        it[PlayersTable.strength] = request.strength
+                        it[PlayersTable.dexterity] = request.dexterity
+                        it[PlayersTable.constitution] = request.constitution
+                        it[PlayersTable.intelligence] = request.intelligence
+                        it[PlayersTable.wisdom] = request.wisdom
+                        it[PlayersTable.charisma] = request.charisma
                     }
 
-                PlayerRecord(
-                    id = PlayerId(result[PlayersTable.id]),
-                    name = trimmed,
-                    roomId = startRoomId,
-                    createdAtEpochMs = nowEpochMs,
-                    lastSeenEpochMs = nowEpochMs,
-                    passwordHash = passwordHash,
-                    ansiEnabled = ansiEnabled,
-                    race = race,
-                    playerClass = playerClass,
-                    strength = strength,
-                    dexterity = dexterity,
-                    constitution = constitution,
-                    intelligence = intelligence,
-                    wisdom = wisdom,
-                    charisma = charisma,
-                )
+                request.toNewPlayerRecord(PlayerId(result[PlayersTable.id]))
             }
         } catch (e: Exception) {
             // Unique-index violation on name_lower → treat as duplicate name

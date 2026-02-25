@@ -29,7 +29,7 @@ class PersistenceWorkerTest {
                     dispatcher = testDispatcher,
                 )
 
-            val record = delegate.create("Alice", startRoom, 1000L, "hash", false)
+            val record = delegate.create(PlayerCreationRequest("Alice", startRoom, 1000L, "hash", false))
             repo.save(record.copy(roomId = RoomId("zone:room2")))
             assertEquals(1, repo.dirtyCount())
 
@@ -60,7 +60,7 @@ class PersistenceWorkerTest {
                     dispatcher = testDispatcher,
                 )
 
-            val record = delegate.create("Bob", startRoom, 1000L, "hash", false)
+            val record = delegate.create(PlayerCreationRequest("Bob", startRoom, 1000L, "hash", false))
             repo.save(record.copy(roomId = RoomId("zone:final")))
 
             worker.start()
@@ -89,7 +89,7 @@ class PersistenceWorkerTest {
                     dispatcher = testDispatcher,
                 )
 
-            val record = delegate.create("Charlie", startRoom, 1000L, "hash", false)
+            val record = delegate.create(PlayerCreationRequest("Charlie", startRoom, 1000L, "hash", false))
 
             worker.start()
             runCurrent()

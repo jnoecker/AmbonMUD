@@ -18,7 +18,7 @@ class WriteCoalescingPlayerRepositoryTest {
             val delegate = InMemoryPlayerRepository()
             val repo = WriteCoalescingPlayerRepository(delegate)
 
-            val record = delegate.create("Alice", startRoom, 1000L, "hash", false)
+            val record = delegate.create(PlayerCreationRequest("Alice", startRoom, 1000L, "hash", false))
             val updated = record.copy(roomId = RoomId("zone:room2"), lastSeenEpochMs = 2000L)
 
             // Clear the delegate so we can verify save doesn't write through
@@ -44,7 +44,7 @@ class WriteCoalescingPlayerRepositoryTest {
             val delegate = InMemoryPlayerRepository()
             val repo = WriteCoalescingPlayerRepository(delegate)
 
-            val record = delegate.create("Alice", startRoom, 1000L, "hash", false)
+            val record = delegate.create(PlayerCreationRequest("Alice", startRoom, 1000L, "hash", false))
             val updated = record.copy(roomId = RoomId("zone:room2"))
             repo.save(updated)
 
@@ -62,7 +62,7 @@ class WriteCoalescingPlayerRepositoryTest {
             val counter = SaveCountingRepository(InMemoryPlayerRepository())
             val repo = WriteCoalescingPlayerRepository(counter)
 
-            val record = counter.create("Alice", startRoom, 1000L, "hash", false)
+            val record = counter.create(PlayerCreationRequest("Alice", startRoom, 1000L, "hash", false))
 
             repo.save(record.copy(roomId = RoomId("zone:r1")))
             repo.save(record.copy(roomId = RoomId("zone:r2")))
@@ -85,7 +85,7 @@ class WriteCoalescingPlayerRepositoryTest {
         runTest {
             val delegate = BlockingSaveRepository(InMemoryPlayerRepository())
             val repo = WriteCoalescingPlayerRepository(delegate)
-            val record = delegate.create("Alice", startRoom, 1000L, "hash", false)
+            val record = delegate.create(PlayerCreationRequest("Alice", startRoom, 1000L, "hash", false))
 
             repo.save(record.copy(roomId = RoomId("zone:r1")))
 
@@ -112,7 +112,7 @@ class WriteCoalescingPlayerRepositoryTest {
             val delegate = InMemoryPlayerRepository()
             val repo = WriteCoalescingPlayerRepository(delegate)
 
-            val record = delegate.create("Alice", startRoom, 1000L, "hash", false)
+            val record = delegate.create(PlayerCreationRequest("Alice", startRoom, 1000L, "hash", false))
             val updated = record.copy(roomId = RoomId("zone:cached"))
             repo.save(updated)
 
@@ -127,7 +127,7 @@ class WriteCoalescingPlayerRepositoryTest {
             val delegate = InMemoryPlayerRepository()
             val repo = WriteCoalescingPlayerRepository(delegate)
 
-            delegate.create("Bob", startRoom, 1000L, "hash", false)
+            delegate.create(PlayerCreationRequest("Bob", startRoom, 1000L, "hash", false))
 
             val found = repo.findByName("Bob")
             assertNotNull(found)
@@ -140,7 +140,7 @@ class WriteCoalescingPlayerRepositoryTest {
             val delegate = InMemoryPlayerRepository()
             val repo = WriteCoalescingPlayerRepository(delegate)
 
-            val record = delegate.create("Charlie", startRoom, 1000L, "hash", false)
+            val record = delegate.create(PlayerCreationRequest("Charlie", startRoom, 1000L, "hash", false))
 
             val found = repo.findById(record.id)
             assertNotNull(found)
@@ -162,7 +162,7 @@ class WriteCoalescingPlayerRepositoryTest {
             val delegate = InMemoryPlayerRepository()
             val repo = WriteCoalescingPlayerRepository(delegate)
 
-            val record = repo.create("Dave", startRoom, 1000L, "hash", false)
+            val record = repo.create(PlayerCreationRequest("Dave", startRoom, 1000L, "hash", false))
             assertNotNull(record)
 
             val cached = repo.findById(record.id)
@@ -187,7 +187,7 @@ class WriteCoalescingPlayerRepositoryTest {
             val delegate = InMemoryPlayerRepository()
             val repo = WriteCoalescingPlayerRepository(delegate)
 
-            val record = delegate.create("Eve", startRoom, 1000L, "hash", false)
+            val record = delegate.create(PlayerCreationRequest("Eve", startRoom, 1000L, "hash", false))
             repo.save(record.copy(roomId = RoomId("zone:new")))
 
             val flushed = repo.flushAll()
