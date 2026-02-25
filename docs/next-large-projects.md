@@ -6,9 +6,11 @@ AmbonMUD has a mature infrastructure and solid gameplay foundation:
 
 **Infrastructure:** Event-driven tick engine, dual transports (telnet with NAWS/TTYPE/GMCP negotiation, WebSocket with GMCP sidebar panels), event bus abstraction (Local/Redis/gRPC), write-behind coalescing persistence, selectable YAML or PostgreSQL backends, Redis L2 cache with HMAC-signed pub/sub envelopes, gRPC engine/gateway split, zone-based engine sharding with zone instancing and auto-scaling, Prometheus/Grafana observability, Snowflake session IDs, and a swarm load-testing module. 66+ test files.
 
-**Gameplay:** 4 races, 4 classes, 6 primary attributes with mechanical effects, 12 class-specific abilities with mana/cooldowns, status effects (DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD with stacking rules), 1v1 combat with attribute-based damage scaling, items (equippable + consumable with charges), gold currency with mob drops and in-room shops (buy/sell/list), rich communication (say/tell/gossip/emote/whisper/shout/ooc/pose), individual mob respawn timers, NPC dialogue trees with conditional branches, behavior tree AI (aggro guards, patrol sentries, cowardly mobs, wandering aggressors), mob-initiated combat, HP + mana regen, zone resets, and XP/leveling across 50 levels. 8 zones including tutorial, hub, training, and exploration areas.
+**Gameplay:** 4 races, 4 classes, 6 primary attributes with mechanical effects, 12 class-specific abilities with mana/cooldowns, status effects (DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD with stacking rules), group/party system with N:M multi-combatant combat and threat tables, items (equippable + consumable with charges), gold currency with mob drops and in-room shops (buy/sell/list), rich communication (say/tell/gossip/emote/whisper/shout/ooc/pose), individual mob respawn timers, NPC dialogue trees with conditional branches, behavior tree AI (aggro guards, patrol sentries, cowardly mobs, wandering aggressors), mob-initiated combat, HP + mana regen, zone resets, quest system with multi-step objectives and rewards, achievements with titles and cosmetic rewards, and XP/leveling across 50 levels. 8 zones including tutorial, hub, training, and exploration areas.
 
-**What's missing is depth.** The engine can run the game, but the game needs more _game_. The projects below each add a substantial new dimension.
+**Recent completions (Feb 2026):** Group/party system with threat mechanics (#5), quest system with objective tracking (#3), achievement & title system (#11), web-based admin dashboard (#14).
+
+**What's missing is depth and breadth.** The engine can run complex gameplay, but the game needs more replayable content and world interactivity. The projects below each add a substantial new dimension.
 
 ---
 
@@ -42,26 +44,19 @@ AmbonMUD has a mature infrastructure and solid gameplay foundation:
 
 ---
 
-## 3. Quest System
+## 3. Quest System — IMPLEMENTED
 
-**What:** A data-driven quest framework with multi-step objectives, state tracking, prerequisite chains, and rewards.
+**Status:** Phase 1 complete. `QuestSystem` ticked in the engine loop. Quest definitions loaded from YAML. Quest state on `PlayerRecord`: `Map<QuestId, QuestProgress>` persisted through all three persistence layers. Quest lifecycle: `AVAILABLE` → `ACTIVE` → `COMPLETED`; repeatable quests reset to `AVAILABLE`. Prerequisites: quest B requires quest A completed; level requirements; class restrictions. Objective types: `KILL_MOB(templateId, count)`, `VISIT_ROOM(roomId)`, `COLLECT_ITEM(itemKeyword, count)`, `TALK_TO_NPC(mobTemplateId)`, `REACH_LEVEL(level)`, `USE_ABILITY(abilityId, count)`. Rewards: XP, gold, items. Commands: `quest accept <id>`, `quest list`, `quest journal`, `quest complete <id>` (when conditions met). GMCP `Quest.*` packages for web client. Trigger hooks: quest progress tracked on mob kills, room visits, item collection, dialogue choices.
 
-**Why now:** Quests provide structured progression and narrative purpose. With abilities, classes, and training zones already in place, players need goals beyond "grind mobs for XP." The quest system gives the world meaning.
+**Remaining opportunities:**
+- `CRAFT_ITEM` objective type for crafting system integration (#7)
+- Quest chains with branching paths and alternate endings
+- Optional bonus objectives for extra rewards
+- Time-limited quests with failure states
+- Dynamic quest scaling (difficulty based on party level)
+- Quest-givers that move/wander (currently static)
 
-**Key design decisions:**
-- Quest definitions in YAML (`quests/` directory or embedded in zone YAML)
-- Objective types: `KILL_MOB(templateId, count)`, `VISIT_ROOM(roomId)`, `COLLECT_ITEM(itemKeyword, count)`, `TALK_TO_NPC(mobTemplateId)`, `REACH_LEVEL(level)`, `USE_ABILITY(abilityId, count)`
-- Quest state on `PlayerRecord`: `Map<QuestId, QuestProgress>` — persisted through all three persistence layers
-- Quest lifecycle: `AVAILABLE` → `ACTIVE` → `COMPLETED` (or `FAILED`); repeatable quests reset to `AVAILABLE`
-- Prerequisites: quest B requires quest A completed; level requirements; class restrictions
-- Rewards: XP, gold (if economy exists), items, unlocking new zones/areas, title grants
-- `quest` / `journal` commands to view active/completed quests
-- GMCP `Quest.List` and `Quest.Update` packages for web client
-- Trigger hooks: `onMobKill`, `onRoomEnter`, `onItemPickup`, `onDialogueChoice` — quest system subscribes to engine events
-
-**Scope:** Large. New `QuestSystem`, `PlayerRecord` extension (+ Flyway migration), YAML loader changes, new commands, GMCP packages. Benefits enormously from NPC Dialogue (#2) for quest givers.
-
-**Depends on:** Ideally NPC Dialogue (#2) for quest-giver NPCs, but can be built standalone with room-triggered quests and item-based quest starts.
+**Depends on:** Nothing. Enhanced by NPC Dialogue (#2) for interactive quest-giver conversations and Crafting (#7) for craft objectives.
 
 ---
 
@@ -78,26 +73,19 @@ AmbonMUD has a mature infrastructure and solid gameplay foundation:
 
 ---
 
-## 5. Group/Party System & Multi-Combatant Combat
+## 5. Group/Party System & Multi-Combatant Combat — IMPLEMENTED
 
-**What:** Players form groups, share XP, and fight together. Combat expands from 1v1 player-vs-mob to N-players-vs-M-mobs with aggro/threat mechanics.
+**Status:** Fully implemented. Players form groups via `group invite <player>`, `group accept`, `group leave`, `group list`, `group kick <player>`. Group state: leader, member list, max size (configurable, default 5). Aggro/threat table per mob: tracks cumulative threat from each attacker (damage dealt + threat from healing + taunt mechanics). Mob target selection: attacks highest-threat target in the threat table; can switch targets mid-fight. N:M multi-target combat: each mob picks its own target; each player contributes damage to one mob at a time. Combat rounds run in parallel for independent mob-vs-player matchups. XP distribution: configurable split among group members in the room (equal split or proportional to damage). Loot distribution: configurable per-drop (round-robin, random, or leader-assigns). Cross-instance grouping: group members must be on the same zone instance (enforced). `CombatSystem` fully reworked: `fightsByPlayer` now maps each player to a list of mobs; threat tables replace 1:1 fight pairs. Commands: `group *`, `gtell <message>` (group chat), `group disband`. GMCP `Group.*` packages for web client group management panel.
 
-**Why now:** The class system (tank, healer, DPS, utility) is implemented but meaningless without grouping. Warriors should hold aggro; Clerics should heal the party; Mages should deal area damage. Group combat makes classes matter and makes the game social.
+**Remaining opportunities:**
+- Threat scaling based on class (tanks generate more threat, healers less)
+- Rend/bleed abilities that scale with group DPS
+- Area-of-effect abilities that hit multiple mobs (requires Status Effects #1)
+- Taunts with cooldowns and threat multipliers
+- Cross-shard group support (groups spanning multiple engines in sharded deployments)
+- Raid-size groups (20+ players) with role-based targeting
 
-**Key design decisions:**
-- Commands: `group invite <player>`, `group accept`, `group leave`, `group list`, `group kick <player>`, `gtell <message>` (group chat)
-- Group state: leader, member list, max size (configurable, default 5)
-- Aggro/threat table per mob: tracks cumulative threat from each attacker (damage dealt + healing threat + taunt)
-- Mob target selection: attacks highest-threat target; can switch targets mid-fight
-- Multi-target combat rounds: each mob in a fight picks a target independently; each player contributes damage to one mob at a time
-- XP distribution: split among group members in the room (configurable: equal split vs. proportional to damage)
-- Loot distribution: round-robin, random, or leader-assigns
-- Cross-instance grouping: group members on different zone instances? (Probably not — require same instance)
-- `CombatSystem` rework: `fightsByPlayer` becomes N:M instead of 1:1; threat tables replace simple fight pairs
-
-**Scope:** Very large. Major `CombatSystem` rework (threat tables, multi-target, area abilities), new group state tracking, XP distribution overhaul, new commands, GMCP `Group.*` packages.
-
-**Depends on:** Nothing, but significantly enhanced by Status Effects (#1) for area spells and group utility.
+**Depends on:** Nothing. Enhanced by Status Effects (#1) for area effects and group utility spells.
 
 ---
 
@@ -212,23 +200,17 @@ AmbonMUD has a mature infrastructure and solid gameplay foundation:
 
 ---
 
-## 11. Achievement & Title System
+## 11. Achievement & Title System — IMPLEMENTED
 
-**What:** Tracked accomplishments (kill 100 goblins, visit every room in a zone, reach level 25, complete all tutorial quests) that award titles, cosmetic rewards, and minor stat bonuses.
+**Status:** Fully implemented. Achievement definitions in YAML with `id`, `displayName`, `description`, `criteria` (same types as quest objectives: `KILL_MOB`, `VISIT_ROOM`, `COLLECT_ITEM`, `REACH_LEVEL`, `USE_ABILITY`, `COMPLETE_QUEST`), and `reward` (title, XP, item, gold). Tracking on `PlayerRecord`: `achievements: Set<AchievementId>` (completed) + progress counters for in-progress achievements persisted through all three persistence layers. Title system: players choose a display title from earned titles via `title <titleId>` or `title clear`; shown in `who` list and `look` at player. Commands: `achievements` (list all with progress and descriptions), `achievement info <id>`, `title <titleId>`, `title clear`. Categories: Combat, Exploration, Social, Class-specific. Hidden achievements: not shown until completed (discovery reward). Server-wide first: "First player to X" achievements auto-announce when completed. GMCP `Char.Achievements` package for web client achievements panel with progress bars.
 
-**Key design decisions:**
-- Achievement definitions in YAML: `id`, `displayName`, `description`, `criteria` (same types as quest objectives), `reward` (title, XP, item, gold, stat bonus)
-- Tracking on `PlayerRecord`: `achievements: Set<AchievementId>` (completed) + progress counters for in-progress achievements
-- Title system: players choose a display title from earned titles; shown in `who` list and `look` at player; stored on `PlayerRecord`
-- Commands: `achievements` (list all with progress), `title <titleId>` (set display title), `title clear`
-- Categories: Combat, Exploration, Social, Crafting, Class-specific
-- Hidden achievements: not shown until completed (discovery reward)
-- Server-wide first: "First player to kill the Dragon" — unique title, announced server-wide
-- GMCP: `Char.Achievements` package for web client panel
+**Remaining opportunities:**
+- Stat bonuses (+1% crit, +5 health per achievement) — currently titles are cosmetic only
+- Leaderboards for specific achievements (fastest kill time, most explored rooms)
+- Achievement tiers (bronze/silver/gold) with escalating difficulty
+- Community events tied to achievements (e.g., "10% of players reach level 30" triggers a server event)
 
-**Scope:** Medium. New `AchievementSystem`, `PlayerRecord` extension (+ migration), YAML definitions, new commands, GMCP package. Self-contained.
-
-**Depends on:** Nothing. Richer with Quest System (#3) for quest-based achievements.
+**Depends on:** Nothing. Synergizes well with Quest System (#3) for quest-based achievements.
 
 ---
 
@@ -275,74 +257,79 @@ AmbonMUD has a mature infrastructure and solid gameplay foundation:
 
 ---
 
-## 14. Comprehensive Admin Dashboard
+## 14. Comprehensive Admin Dashboard — PARTIALLY IMPLEMENTED
 
-**What:** A web-based admin dashboard for server management — player lookup, live metrics visualization, world state inspection, event log viewer, and operational controls — separate from the in-game staff commands.
+**Status:** Basic HTTP server and dashboard structure implemented. Served on a configurable admin port (default 9091), opt-in via `ambonMUD.admin.enabled: true` in config. Current features:
+- **Player lookup:** search by name, view basic stats
+- **Server metrics:** session count, player count, zone distribution
+- **Basic admin controls:** optional early implementation; can ban/unban players, grant roles
+- **Live metrics:** basic tick health and event counts
+- **Tech stack:** Ktor HTTP server with server-rendered HTML (not a full SPA)
 
-**Key design decisions:**
-- Separate web app served on a configurable admin port (e.g., 9091), protected by authentication
-- Panels:
-  - **Player management:** search by name, view stats/inventory/quest state, grant staff/builder, ban/unban, edit attributes
-  - **Live metrics:** embedded Grafana dashboards or custom charts (session count, tick latency, combat activity, shard health)
-  - **World inspector:** browse zones/rooms/mobs/items in a tree view; see current player positions on a zone map
-  - **Event log:** real-time feed of login/logout, combat kills, level-ups, admin actions, errors
-  - **Shard health:** per-engine status (zones owned, player count, tick budget usage, instance count) for sharded deployments
-  - **Config editor:** view and hot-reload select config values without restart
-- Tech stack: Ktor serving a small SPA (could be React, Vue, or server-rendered HTML)
-- API layer: REST endpoints backed by engine queries (read-only for most; write for admin actions)
-- Authentication: simple password or token-based; configurable in `application.yaml`
+**Implemented panels:**
+- Dashboard home with server status and quick stats
+- Player browser and lookup
+- Basic metrics visualization
 
-**Scope:** Large. New web application, REST API layer, frontend SPA, authentication. Primarily additive — reads from existing metrics, registries, and persistence. No engine changes needed.
+**Remaining opportunities:**
+- **Live metrics visualization:** embed Grafana dashboards or add custom charts (session count, tick latency, combat activity)
+- **Advanced world inspector:** browse zones/rooms/mobs/items in a tree view; see current player positions on a zone map
+- **Event log viewer:** real-time feed of login/logout, combat kills, level-ups, admin actions, errors
+- **Shard health page:** per-engine status (zones owned, player count, tick budget usage, instance count) for sharded deployments
+- **Config editor:** view and hot-reload select config values without restart
+- **Upgrade to SPA:** migrate to React/Vue for better interactivity and offline-capable UI
+- **Advanced player management:** view/edit quest state, inventory, achievement state, modify attributes
+- **Audit log:** persistent record of all admin actions with timestamps and user attribution
 
-**Depends on:** Nothing.
+**Depends on:** Nothing. Primarily additive — reads from existing metrics, registries, and persistence.
 
 ---
 
 ## Suggested Priority & Sequencing
 
 ### Phase A — Deepen the combat/ability system
-These build on the existing ability infrastructure and make combat tactically interesting:
+✅ **COMPLETE** — All projects in this phase are implemented.
 
-| # | Project | Effort | Unlocks |
+| # | Project | Status | Unlocks |
 |---|---------|--------|---------|
-| 1 | Status Effects & Buffs | **Done** | Dispel mechanic and CC immunity remain |
-| 5 | Group/Party Combat | Very large | Multiplayer cooperation, class roles matter, harder content |
+| 1 | Status Effects & Buffs | ✅ Done | Dispel mechanic and CC immunity remain |
+| 5 | Group/Party Combat | ✅ Done | Multiplayer cooperation, class roles matter, harder content |
 
 ### Phase B — Build a living world
-These transform the world from a combat arena into a narrative experience:
+✅ **COMPLETE** — All projects in this phase are implemented.
 
-| # | Project | Effort | Unlocks |
+| # | Project | Status | Unlocks |
 |---|---------|--------|---------|
-| 2 | NPC Dialogue & Behaviors | **Done** | CALL_FOR_HELP, VENDOR/TRAINER behaviors, quest-gated aggro remain |
-| 3 | Quest System | Large | Structured progression, narrative arcs, achievement triggers |
-| 4 | Economy & Shops | **Done (core)** | Player-to-player trading, gold sinks, GMCP gold panel remain |
+| 2 | NPC Dialogue & Behaviors | ✅ Done | CALL_FOR_HELP, VENDOR/TRAINER behaviors, quest-gated aggro remain |
+| 3 | Quest System | ✅ Done (Phase 1) | Structured progression, narrative arcs, achievement triggers |
+| 4 | Economy & Shops | ✅ Done (core) | Player-to-player trading, gold sinks, GMCP gold panel remain |
 
 ### Phase C — Endgame & replayability
-These create reasons to keep playing after reaching max level:
+⏳ **IN PROGRESS** — Ready for development.
 
-| # | Project | Effort | Unlocks |
-|---|---------|--------|---------|
-| 6 | Procedural Dungeons | Very large | Infinite replayable content, group challenges |
-| 7 | Crafting & Gathering | Medium-large | Non-combat progression, economic depth |
-| 11 | Achievements & Titles | Medium | Collection goals, cosmetic rewards |
+| # | Project | Status | Effort | Unlocks |
+|---|---------|--------|--------|---------|
+| 6 | Procedural Dungeons | ⏳ Pending | Very large | Infinite replayable content, group challenges |
+| 7 | Crafting & Gathering | ⏳ Pending | Medium-large | Non-combat progression, economic depth |
+| 11 | Achievements & Titles | ✅ Done | Medium | Collection goals, cosmetic rewards ✓ |
 
 ### Phase D — Community & polish
-These make the game social and accessible:
+⏳ **IN PROGRESS** — Ready for development.
 
-| # | Project | Effort | Unlocks |
-|---|---------|--------|---------|
-| 10 | Auto-Map & Enhanced Web Client | Medium | Player accessibility, modern UI |
-| 13 | Social Systems (Guilds/Friends/Mail) | Large | Community building, offline interaction |
-| 12 | Player Housing | Medium-large | Personal investment, long-term retention |
+| # | Project | Status | Effort | Unlocks |
+|---|---------|--------|--------|---------|
+| 10 | Auto-Map & Enhanced Web Client | ⏳ Pending | Medium | Player accessibility, modern UI |
+| 13 | Social Systems (Guilds/Friends/Mail) | ⏳ Pending | Large | Community building, offline interaction |
+| 12 | Player Housing | ⏳ Pending | Medium-large | Personal investment, long-term retention |
 
 ### Phase E — Builder & operator tooling
-These accelerate content creation and operations:
+⏳ **IN PROGRESS** — Ready for development.
 
-| # | Project | Effort | Unlocks |
-|---|---------|--------|---------|
-| 8 | OLC / World Builder | Very large | Rapid content creation, builder community |
-| 9 | Persistent World State & Events | Medium-large | Dynamic world, seasonal content |
-| 14 | Admin Dashboard | Large | Operational visibility, player support |
+| # | Project | Status | Effort | Unlocks |
+|---|---------|--------|--------|---------|
+| 8 | OLC / World Builder | ⏳ Pending | Very large | Rapid content creation, builder community |
+| 9 | Persistent World State & Events | ⏳ Pending | Medium-large | Dynamic world, seasonal content |
+| 14 | Admin Dashboard | ✅ Partial | Large | Operational visibility, player support (basic version live) |
 
 ---
 
