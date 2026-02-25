@@ -83,24 +83,7 @@ class YamlPlayerRepository(
             val id = nextId.getAndIncrement()
             persistNextId(nextId.get())
 
-            val record =
-                PlayerRecord(
-                    id = PlayerId(id),
-                    name = nm,
-                    roomId = request.startRoomId,
-                    createdAtEpochMs = request.nowEpochMs,
-                    lastSeenEpochMs = request.nowEpochMs,
-                    passwordHash = request.passwordHash,
-                    ansiEnabled = request.ansiEnabled,
-                    race = request.race,
-                    playerClass = request.playerClass,
-                    strength = request.strength,
-                    dexterity = request.dexterity,
-                    constitution = request.constitution,
-                    intelligence = request.intelligence,
-                    wisdom = request.wisdom,
-                    charisma = request.charisma,
-                )
+            val record = request.toNewPlayerRecord(PlayerId(id))
 
             save(record)
             record

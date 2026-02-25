@@ -115,26 +115,27 @@ class RedisInboundBus(
 
     private fun Envelope.hasValidSignature(secret: String): Boolean = isValidHmac(secret, payloadToSign(), signature)
 
-    private fun Envelope.toEvent(): InboundEvent? =
-        when (type) {
+    private fun Envelope.toEvent(): InboundEvent? {
+        val sid = SessionId(sessionId)
+        return when (type) {
             "Connected" ->
                 InboundEvent.Connected(
-                    sessionId = SessionId(sessionId),
+                    sessionId = sid,
                     defaultAnsiEnabled = defaultAnsiEnabled,
                 )
             "Disconnected" ->
                 InboundEvent.Disconnected(
-                    sessionId = SessionId(sessionId),
+                    sessionId = sid,
                     reason = reason,
                 )
             "LineReceived" ->
                 InboundEvent.LineReceived(
-                    sessionId = SessionId(sessionId),
+                    sessionId = sid,
                     line = line,
                 )
             "GmcpReceived" ->
                 InboundEvent.GmcpReceived(
-                    sessionId = SessionId(sessionId),
+                    sessionId = sid,
                     gmcpPackage = gmcpPackage,
                     jsonData = jsonData,
                 )
@@ -143,4 +144,5 @@ class RedisInboundBus(
                 null
             }
         }
+    }
 }

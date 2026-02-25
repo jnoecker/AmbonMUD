@@ -150,44 +150,45 @@ class RedisOutboundBus(
 
     private fun Envelope.hasValidSignature(secret: String): Boolean = isValidHmac(secret, payloadToSign(), signature)
 
-    private fun Envelope.toEvent(): OutboundEvent? =
-        when (type) {
+    private fun Envelope.toEvent(): OutboundEvent? {
+        val sid = SessionId(sessionId)
+        return when (type) {
             "SendText" ->
                 OutboundEvent.SendText(
-                    sessionId = SessionId(sessionId),
+                    sessionId = sid,
                     text = text,
                 )
             "SendInfo" ->
                 OutboundEvent.SendInfo(
-                    sessionId = SessionId(sessionId),
+                    sessionId = sid,
                     text = text,
                 )
             "SendError" ->
                 OutboundEvent.SendError(
-                    sessionId = SessionId(sessionId),
+                    sessionId = sid,
                     text = text,
                 )
             "SendPrompt" ->
-                OutboundEvent.SendPrompt(sessionId = SessionId(sessionId))
+                OutboundEvent.SendPrompt(sessionId = sid)
             "ShowLoginScreen" ->
-                OutboundEvent.ShowLoginScreen(sessionId = SessionId(sessionId))
+                OutboundEvent.ShowLoginScreen(sessionId = sid)
             "SetAnsi" ->
                 OutboundEvent.SetAnsi(
-                    sessionId = SessionId(sessionId),
+                    sessionId = sid,
                     enabled = enabled,
                 )
             "Close" ->
                 OutboundEvent.Close(
-                    sessionId = SessionId(sessionId),
+                    sessionId = sid,
                     reason = reason,
                 )
             "ClearScreen" ->
-                OutboundEvent.ClearScreen(sessionId = SessionId(sessionId))
+                OutboundEvent.ClearScreen(sessionId = sid)
             "ShowAnsiDemo" ->
-                OutboundEvent.ShowAnsiDemo(sessionId = SessionId(sessionId))
+                OutboundEvent.ShowAnsiDemo(sessionId = sid)
             "GmcpData" ->
                 OutboundEvent.GmcpData(
-                    sessionId = SessionId(sessionId),
+                    sessionId = sid,
                     gmcpPackage = gmcpPackage,
                     jsonData = jsonData,
                 )
@@ -196,4 +197,5 @@ class RedisOutboundBus(
                 null
             }
         }
+    }
 }

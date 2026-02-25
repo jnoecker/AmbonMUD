@@ -59,23 +59,7 @@ class PostgresPlayerRepository(
                         it[PlayersTable.charisma] = request.charisma
                     }
 
-                PlayerRecord(
-                    id = PlayerId(result[PlayersTable.id]),
-                    name = trimmed,
-                    roomId = request.startRoomId,
-                    createdAtEpochMs = request.nowEpochMs,
-                    lastSeenEpochMs = request.nowEpochMs,
-                    passwordHash = request.passwordHash,
-                    ansiEnabled = request.ansiEnabled,
-                    race = request.race,
-                    playerClass = request.playerClass,
-                    strength = request.strength,
-                    dexterity = request.dexterity,
-                    constitution = request.constitution,
-                    intelligence = request.intelligence,
-                    wisdom = request.wisdom,
-                    charisma = request.charisma,
-                )
+                request.toNewPlayerRecord(PlayerId(result[PlayersTable.id]))
             }
         } catch (e: Exception) {
             // Unique-index violation on name_lower → treat as duplicate name

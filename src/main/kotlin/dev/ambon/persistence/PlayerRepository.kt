@@ -22,6 +22,29 @@ data class PlayerCreationRequest(
     val charisma: Int = 10,
 )
 
+/**
+ * Constructs a brand-new [PlayerRecord] from this request, assigning the given [id].
+ * All repositories should use this to avoid diverging default logic.
+ */
+fun PlayerCreationRequest.toNewPlayerRecord(id: PlayerId): PlayerRecord =
+    PlayerRecord(
+        id = id,
+        name = name.trim(),
+        roomId = startRoomId,
+        createdAtEpochMs = nowEpochMs,
+        lastSeenEpochMs = nowEpochMs,
+        passwordHash = passwordHash,
+        ansiEnabled = ansiEnabled,
+        race = race,
+        playerClass = playerClass,
+        strength = strength,
+        dexterity = dexterity,
+        constitution = constitution,
+        intelligence = intelligence,
+        wisdom = wisdom,
+        charisma = charisma,
+    )
+
 interface PlayerRepository {
     suspend fun findByName(name: String): PlayerRecord?
 

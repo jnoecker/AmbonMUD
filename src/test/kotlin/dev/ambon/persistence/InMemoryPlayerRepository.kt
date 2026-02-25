@@ -12,24 +12,7 @@ class InMemoryPlayerRepository : PlayerRepository {
 
     override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
         val id = PlayerId(nextId.getAndIncrement())
-        val record =
-            PlayerRecord(
-                id = id,
-                name = request.name,
-                roomId = request.startRoomId,
-                createdAtEpochMs = request.nowEpochMs,
-                lastSeenEpochMs = request.nowEpochMs,
-                passwordHash = request.passwordHash,
-                ansiEnabled = request.ansiEnabled,
-                race = request.race,
-                playerClass = request.playerClass,
-                strength = request.strength,
-                dexterity = request.dexterity,
-                constitution = request.constitution,
-                intelligence = request.intelligence,
-                wisdom = request.wisdom,
-                charisma = request.charisma,
-            )
+        val record = request.toNewPlayerRecord(id)
         players[id] = record
         return record
     }
