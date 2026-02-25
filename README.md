@@ -1,7 +1,7 @@
 AmbonMUD
 ========
 
-AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a production-quality, event-driven backend with telnet and WebSocket transports, data-driven world loading, class-based character progression, a spell/ability system, tiered NPC combat, GMCP structured data, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching.
+AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a production-quality, event-driven backend with telnet and WebSocket transports, data-driven world loading, class-based character progression, a spell/ability system with status effects (DoT, HoT, STUN, ROOT, SHIELD), tiered NPC combat, a shop/economy system, GMCP structured data, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching.
 
 Current State
 -------------
@@ -15,9 +15,12 @@ Current State
 - YAML-defined, multi-zone world with validation on load (optional zone `lifespan` resets to respawn mobs/items). Eight zones: tutorial glade, central hub, resume showcase, ancient ruins, and four low-level training zones (marsh, highlands, mines, barrens).
 - Consumable items with charges and on-use effects (`healHp`, `grantXp`); `use <item>` command.
 - Wearable items with `damage`, `armor`, and `constitution` stats and slots (head/body/hand).
-- Tiered NPC system (weak/standard/elite/boss) with per-mob stat overrides, XP rewards, loot tables, and individual respawn timers.
+- Tiered NPC system (weak/standard/elite/boss) with per-mob stat overrides, XP rewards, gold drops (`goldMin`/`goldMax`), loot tables, and individual respawn timers.
+- Gold currency system: mobs drop gold on death, items have a `basePrice` for shop pricing, players carry a persistent gold balance.
+- Shop system: shops defined per-room in zone YAML (`shops` map), `buy`/`sell`/`list` commands, configurable buy/sell price multipliers (`engine.economy.*`).
 - Spell/ability system with mana pool, mana regen, cooldowns, class-specific abilities (12 abilities across 4 classes), and auto-learn on level-up.
-- Combat with `kill <mob>`, `flee`, and `cast <spell> [target]`; attribute-based damage scaling, dodge mechanics, and spell damage that bypasses mob armor.
+- Status effect system: DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD types; configurable stacking rules; player and mob targets; `effects`/`buffs`/`debuffs` command; `Char.StatusEffects` GMCP package.
+- Combat with `kill <mob>`, `flee`, and `cast <spell> [target]`; attribute-based damage scaling, dodge mechanics, stun/root handling, and spell damage that bypasses mob armor.
 - HP and mana regeneration over time (HP regen scales with CON + equipment; mana regen scales with WIS).
 - Rich social/communication commands: say, emote, tell, gossip, whisper, shout, ooc (out-of-character), pose, and give.
 - Staff/admin commands (goto, transfer, spawn, smite, kick, shutdown) gated behind `isStaff` flag.
@@ -37,7 +40,7 @@ Web client:
 
 Requirements
 ------------
-- JDK 17+ (CI runs on Java 21)
+- JDK 21 (CI runs on Java 21; the Gradle toolchain targets 21)
 - Gradle wrapper (included)
 
 Run
@@ -167,9 +170,16 @@ Commands
 - `flee`: end combat (you stay in the room).
 - `cast <spell> [target]` or `c <spell> [target]`: cast a spell (damage spells need a target; self-heals do not).
 - `spells` or `abilities`: list your known spells with mana cost, cooldown, and description.
+- `effects`, `buffs`, or `debuffs`: list active status effects on your character.
 
 **Character**
-- `score` or `sc`: show character sheet (level, HP, mana, XP, attributes, race, class, equipment stats).
+- `score` or `sc`: show character sheet (level, HP, mana, XP, gold, attributes, race, class, equipment stats).
+
+**Economy**
+- `gold` or `balance`: show your current gold balance.
+- `list` or `shop`: list items for sale in the current room (when a shop is present).
+- `buy <item>`: purchase an item from the shop in the current room.
+- `sell <item>`: sell an item from your inventory to the shop.
 
 **Zone Instancing**
 - `phase` or `layer`: list available zone instances.
@@ -242,8 +252,12 @@ Notes:
 - `mobs` and `items` are optional; `rooms` and `startRoom` are required.
 - Items may be placed in a `room` (or left unplaced).
 - Items may define `slot` (`head`, `body`, `hand`) and optional `damage`/`armor`/`constitution` stats.
+- Items support `basePrice` (integer, default 0) for shop pricing; 0 means not buyable/sellable.
 - Consumable items support `onUse` effects (`healHp`, `grantXp`) and optional `charges`.
 - Mobs support `respawnSeconds` for individual respawn timers independent of zone resets.
+- Mobs support `goldMin`/`goldMax` for gold drops on kill; computed from tier formula if omitted.
+- Mobs support a `drops` list for item loot tables (each entry: `itemId` + `chance`).
+- Shops are defined with a `shops` map at the zone level; each shop is bound to a room.
 - Exit directions support `north/south/east/west/up/down` in world files.
 - Optional `lifespan` is in minutes; zones with `lifespan > 0` periodically reset mob/item spawns at runtime.
 
@@ -387,7 +401,7 @@ The codebase follows a phased scalability plan:
 | 4 | gRPC gateway split for true horizontal scaling | Done |
 | 5 | Zone-based engine sharding (zone registry, inter-engine bus, player handoff, player-location index, zone instancing) | Done |
 
-See `docs/scalability-plan-brainstorm.md` for the original 4-phase design, `docs/engine-sharding-design.md` for the sharding architecture, and `docs/DesignDecisions.md` for rationale.
+See `docs/engine-sharding-design.md` for the sharding architecture, `docs/DesignDecisions.md` for rationale, and `docs/scalability-plan-brainstorm.md` for the historical phase-by-phase plan.
 
 Load Testing
 ------------
