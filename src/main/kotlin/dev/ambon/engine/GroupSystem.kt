@@ -27,6 +27,7 @@ class GroupSystem(
     private val clock: Clock = Clock.systemUTC(),
     private val maxGroupSize: Int = 5,
     private val inviteTimeoutMs: Long = 60_000L,
+    private val markGroupDirty: (SessionId) -> Unit = {},
 ) {
     private val groupBySession = mutableMapOf<SessionId, Group>()
     private val pendingInvites = mutableMapOf<SessionId, PendingInvite>()
@@ -152,6 +153,7 @@ class GroupSystem(
 
         // Notify all group members
         for (sid in group.members) {
+            markGroupDirty(sid)
             if (sid == inviteeSid) {
                 outbound.send(OutboundEvent.SendText(sid, "You join ${inviter.name}'s group."))
             } else {
@@ -172,6 +174,7 @@ class GroupSystem(
 
         group.members.remove(sessionId)
         groupBySession.remove(sessionId)
+        markGroupDirty(sessionId)
 
         outbound.send(OutboundEvent.SendText(sessionId, "You leave the group."))
 
@@ -180,6 +183,7 @@ class GroupSystem(
             val remaining = group.members.firstOrNull()
             if (remaining != null) {
                 groupBySession.remove(remaining)
+                markGroupDirty(remaining)
                 outbound.send(OutboundEvent.SendText(remaining, "$playerName leaves the group. The group has been disbanded."))
             }
             return null
@@ -190,10 +194,12 @@ class GroupSystem(
             group.leader = group.members.first()
             val newLeaderName = players.get(group.leader)?.name ?: "Someone"
             for (sid in group.members) {
+                markGroupDirty(sid)
                 outbound.send(OutboundEvent.SendText(sid, "$playerName leaves the group. $newLeaderName is now the leader."))
             }
         } else {
             for (sid in group.members) {
+                markGroupDirty(sid)
                 outbound.send(OutboundEvent.SendText(sid, "$playerName leaves the group."))
             }
         }
@@ -224,6 +230,7 @@ class GroupSystem(
 
         group.members.remove(targetSid)
         groupBySession.remove(targetSid)
+        markGroupDirty(targetSid)
 
         outbound.send(OutboundEvent.SendText(targetSid, "You have been kicked from the group."))
 
@@ -232,6 +239,7 @@ class GroupSystem(
             val remaining = group.members.firstOrNull()
             if (remaining != null) {
                 groupBySession.remove(remaining)
+                markGroupDirty(remaining)
                 outbound.send(
                     OutboundEvent.SendText(
                         remaining,
@@ -243,6 +251,7 @@ class GroupSystem(
         }
 
         for (sid in group.members) {
+            markGroupDirty(sid)
             outbound.send(OutboundEvent.SendText(sid, "$kickedName has been kicked from the group."))
         }
 
@@ -305,6 +314,7 @@ class GroupSystem(
             val remaining = group.members.firstOrNull()
             if (remaining != null) {
                 groupBySession.remove(remaining)
+                markGroupDirty(remaining)
             }
             return
         }
@@ -312,6 +322,9 @@ class GroupSystem(
         // Transfer leadership if needed
         if (group.leader == sessionId) {
             group.leader = group.members.first()
+        }
+        for (sid in group.members) {
+            markGroupDirty(sid)
         }
     }
 

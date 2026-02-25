@@ -200,6 +200,21 @@ class GmcpEmitter(
         outbound.send(OutboundEvent.GmcpData(sessionId, "Char.StatusEffects", json))
     }
 
+    suspend fun sendGroupInfo(
+        sessionId: SessionId,
+        leader: String?,
+        members: List<PlayerState>,
+    ) {
+        if (!supportsPackage(sessionId, "Group.Info")) return
+        val leaderJson = if (leader != null) "\"${leader.jsonEscape()}\"" else "null"
+        val membersJson =
+            members.joinToString(",", prefix = "[", postfix = "]") { p ->
+                """{"name":"${p.name.jsonEscape()}","level":${p.level},"hp":${p.hp},"maxHp":${p.maxHp},"class":"${p.playerClass.jsonEscape()}"}"""
+            }
+        val json = """{"leader":$leaderJson,"members":$membersJson}"""
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Group.Info", json))
+    }
+
     suspend fun sendCorePing(sessionId: SessionId) {
         if (!supportsPackage(sessionId, "Core.Ping")) return
         outbound.send(OutboundEvent.GmcpData(sessionId, "Core.Ping", "{}"))

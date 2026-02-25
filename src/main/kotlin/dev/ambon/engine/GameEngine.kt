@@ -96,6 +96,9 @@ class GameEngine(
     /** Sessions whose status effects changed this tick and need a Char.StatusEffects push. */
     private val gmcpDirtyStatusEffects = mutableSetOf<SessionId>()
 
+    /** Sessions whose group membership changed this tick and need a Group.Info push. */
+    private val gmcpDirtyGroup = mutableSetOf<SessionId>()
+
     val gmcpEmitter =
         GmcpEmitter(
             outbound = outbound,
@@ -117,6 +120,10 @@ class GameEngine(
 
     fun markStatusDirty(sessionId: SessionId) {
         gmcpDirtyStatusEffects.add(sessionId)
+    }
+
+    fun markGroupDirty(sessionId: SessionId) {
+        gmcpDirtyGroup.add(sessionId)
     }
 
     private val mobSystem = MobSystem()
@@ -142,6 +149,7 @@ class GameEngine(
             clock = clock,
             maxGroupSize = engineConfig.group.maxSize,
             inviteTimeoutMs = engineConfig.group.inviteTimeoutMs,
+            markGroupDirty = ::markGroupDirty,
         )
     private val combatSystem =
         CombatSystem(
@@ -468,6 +476,7 @@ class GameEngine(
                     flushDirtyGmcpVitals()
                     flushDirtyGmcpMobs()
                     flushDirtyGmcpStatusEffects()
+                    flushDirtyGmcpGroup()
 
                     // Run scheduled actions (bounded)
                     val schedulerSample = Timer.start()
@@ -918,6 +927,7 @@ class GameEngine(
                 dialogueSystem.onPlayerDisconnected(sid)
                 groupSystem.onPlayerDisconnected(sid)
                 gmcpDirtyStatusEffects.remove(sid)
+                gmcpDirtyGroup.remove(sid)
 
                 if (me != null) {
                     log.info { "Player logged out: name=${me.name} sessionId=$sid" }
@@ -1240,6 +1250,12 @@ class GameEngine(
         gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId))
         gmcpEmitter.sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
         gmcpEmitter.sendCharAchievements(sessionId, me, achievementRegistry)
+        val group = groupSystem.getGroup(sessionId)
+        if (group != null) {
+            val leader = players.get(group.leader)?.name
+            val members = group.members.mapNotNull { players.get(it) }
+            gmcpEmitter.sendGroupInfo(sessionId, leader, members)
+        }
         router.handle(sessionId, Command.Look) // room + prompt (also sends Room.Info + Room.Players)
     }
 
@@ -1377,6 +1393,12 @@ class GameEngine(
                 gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid))
                 gmcpEmitter.sendCharStatusEffects(sid, statusEffectSystem.activePlayerEffects(sid))
                 gmcpEmitter.sendCharAchievements(sid, player, achievementRegistry)
+                val group = groupSystem.getGroup(sid)
+                if (group != null) {
+                    val leader = players.get(group.leader)?.name
+                    val members = group.members.mapNotNull { players.get(it) }
+                    gmcpEmitter.sendGroupInfo(sid, leader, members)
+                }
             }
             "Core.Supports.Remove" -> {
                 val packages = parseGmcpPackageList(ev.jsonData)
@@ -1429,6 +1451,19 @@ class GameEngine(
             val mob = mobs.get(mobId) ?: continue
             for (p in players.playersInRoom(mob.roomId)) {
                 gmcpEmitter.sendRoomUpdateMob(p.sessionId, mob)
+            }
+        }
+    }
+
+    private suspend fun flushDirtyGmcpGroup() {
+        for (sid in drainDirty(gmcpDirtyGroup)) {
+            val group = groupSystem.getGroup(sid)
+            if (group == null) {
+                gmcpEmitter.sendGroupInfo(sid, null, emptyList())
+            } else {
+                val leader = players.get(group.leader)?.name
+                val members = group.members.mapNotNull { players.get(it) }
+                gmcpEmitter.sendGroupInfo(sid, leader, members)
             }
         }
     }

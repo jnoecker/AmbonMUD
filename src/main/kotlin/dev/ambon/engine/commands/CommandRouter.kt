@@ -287,7 +287,18 @@ class CommandRouter(
                         .sortedBy { it.name }
                         .joinToString(separator = ", ") { p ->
                             val t = p.activeTitle
-                            if (t != null) "[$t] ${p.name}" else p.name
+                            val grouped = groupSystem?.isGrouped(p.sessionId) == true
+                            val prefix =
+                                if (t != null && grouped) {
+                                    "[$t] [G] "
+                                } else if (t != null) {
+                                    "[$t] "
+                                } else if (grouped) {
+                                    "[G] "
+                                } else {
+                                    ""
+                                }
+                            "$prefix${p.name}"
                         }
 
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Online: $list"))
@@ -887,6 +898,16 @@ class CommandRouter(
                     ),
                 )
                 outbound.send(OutboundEvent.SendInfo(sessionId, "  Dmg : $dmgMin–$dmgMax          Armor: $armorDetail"))
+                val group = groupSystem?.getGroup(sessionId)
+                if (group != null) {
+                    val leaderName = players.get(group.leader)?.name ?: "?"
+                    outbound.send(
+                        OutboundEvent.SendInfo(
+                            sessionId,
+                            "  Group: ${group.members.size} members (leader: $leaderName)",
+                        ),
+                    )
+                }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
