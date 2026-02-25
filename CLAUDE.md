@@ -107,57 +107,41 @@ Sessions
 
 ## Kotlin Style (ktlint)
 
-This project uses **ktlint 1.5.0** with `kotlin.code.style=official` (no `.editorconfig`). All defaults apply. The most commonly violated rules when writing new code:
+This project uses **ktlint 1.5.0** with `kotlin.code.style=official`. Rule overrides live in the root `.editorconfig`. The following rules are **disabled** to reduce formatting friction (see `.editorconfig` for rationale):
+
+- `multiline-expression-wrapping` — no forced newline after `=` for multiline RHS.
+- `string-template-indent` — disabled as a dependency of the above.
+- `chain-method-continuation` — short chains can stay on fewer lines.
+- `function-signature` — parameters don't have to be one-per-line.
+
+All other standard rules remain enforced. The most important ones to know:
 
 1. **Trailing commas (REQUIRED)** — Every multiline parameter list, argument list, and collection literal must end with a trailing comma:
    ```kotlin
-   // Function/constructor parameters (multiline)
    class Foo(
        val bar: String,
        val baz: Int,      // ← trailing comma
    )
 
-   // Function call arguments (multiline)
    doSomething(
        first = 1,
        second = 2,        // ← trailing comma
-   )
-
-   // Single-parameter data classes still use trailing comma when multiline
-   data class Move(
-       val dir: Direction, // ← trailing comma
    )
    ```
 
 2. **No wildcard imports** — Always use explicit imports, never `import foo.bar.*`.
 
-3. **Multiline function signatures** — When a function signature doesn't fit on one line, put each parameter on its own line with a trailing comma:
-   ```kotlin
-   fun doSomething(
-       param1: String,
-       param2: Int,
-   ): ReturnType {
-   ```
+3. **Multiline `when` entries** — Arrow and body on the same line when short; braces for multi-statement bodies.
 
-4. **Multiline `when` entries** — Arrow and body on the same line when short; braces for multi-statement bodies.
+4. **Spacing** — Single space after `if`/`for`/`when`/`while` and around operators/colons. No space before commas or inside parentheses.
 
-5. **Spacing** — Single space after `if`/`for`/`when`/`while` and around operators/colons. No space before commas or inside parentheses.
+5. **Blank lines** — No blank lines at the start or end of a class/function body. No blank lines inside parameter lists.
 
-6. **Blank lines** — No blank lines at the start or end of a class/function body. No blank lines inside parameter lists.
+6. **No max line length enforced** — Keep lines reasonable but don't force-wrap short expressions.
 
-7. **Chain calls** — When wrapping chained calls, the `.` goes on the new line:
-   ```kotlin
-   val result =
-       list
-           .filter { it > 0 }
-           .map { it * 2 }
-   ```
+7. **Multiline string templates** — Closing `"""` must be on its own line, with `.trimIndent()` on the same line.
 
-8. **No max line length enforced** — No `.editorconfig` sets `max_line_length`, so it defaults to unlimited. Keep lines reasonable but don't force-wrap short expressions.
-
-9. **Multiline string templates** — Closing `"""` must be on its own line, with `.trimIndent()` on the same line.
-
-10. **No blank line before first declaration in a class** — The first property/function starts immediately after the opening brace (or after the constructor closing parenthesis).
+8. **No blank line before first declaration in a class** — The first property/function starts immediately after the opening brace (or after the constructor closing parenthesis).
 
 ## Testing
 
