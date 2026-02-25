@@ -25,6 +25,8 @@ import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
+import dev.ambon.test.drainAll
+import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -60,7 +62,7 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(1L)
-            login(players, sid, "Player1")
+            players.loginOrFail(sid, "Player1")
 
             val err = combat.startCombat(sid, "rat")
             assertNull(err)
@@ -103,7 +105,7 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(3L)
-            login(players, sid, "Player3")
+            players.loginOrFail(sid, "Player3")
 
             equipItem(
                 items,
@@ -152,7 +154,7 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(4L)
-            login(players, sid, "Player4")
+            players.loginOrFail(sid, "Player4")
 
             equipItem(
                 items,
@@ -200,7 +202,7 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(6L)
-            login(players, sid, "Player6")
+            players.loginOrFail(sid, "Player6")
 
             equipItem(
                 items,
@@ -251,7 +253,7 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(2L)
-            login(players, sid, "Player2")
+            players.loginOrFail(sid, "Player2")
 
             val err = combat.startCombat(sid, "owl")
             assertNull(err)
@@ -307,7 +309,7 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(7L)
-            login(players, sid, "Player7")
+            players.loginOrFail(sid, "Player7")
             val err = combat.startCombat(sid, "wolf")
             assertNull(err)
 
@@ -360,7 +362,7 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(8L)
-            login(players, sid, "Player8")
+            players.loginOrFail(sid, "Player8")
             val err = combat.startCombat(sid, "wolf")
             assertNull(err)
 
@@ -418,7 +420,7 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(5L)
-            login(players, sid, "Player5")
+            players.loginOrFail(sid, "Player5")
 
             val err = combat.startCombat(sid, "rat")
             assertNull(err)
@@ -434,7 +436,8 @@ class CombatSystemTest {
             assertEquals(13, player.hp)
 
             val messages =
-                drainOutbound(outbound)
+                outbound
+                    .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
                     .map { it.text }
@@ -453,15 +456,6 @@ class CombatSystemTest {
         requireNotNull(moved) { "Expected to move item '${instance.item.keyword}' into inventory" }
         val result = items.equipFromInventory(sessionId, instance.item.keyword)
         require(result is ItemRegistry.EquipResult.Equipped) { "Expected to equip '${instance.item.keyword}', got $result" }
-    }
-
-    private suspend fun login(
-        players: PlayerRegistry,
-        sessionId: SessionId,
-        name: String,
-    ) {
-        val res = players.login(sessionId, name, "password")
-        require(res == LoginResult.Ok) { "Login failed: $res" }
     }
 
     @Test
@@ -491,7 +485,7 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(1L)
-            login(players, sid, "Tester1")
+            players.loginOrFail(sid, "Tester1")
             combat.startCombat(sid, "rat")
             clock.advance(1_000L)
             combat.tick()
@@ -500,7 +494,7 @@ class CombatSystemTest {
             assertTrue(mob.hp <= 9, "Expected mob hp <= 9, got ${mob.hp}")
             assertEquals(9, mob.hp)
 
-            val messages = drainOutbound(outbound).filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            val messages = outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
             assertTrue(messages.any { it.contains("for 1 damage") }, "Expected 'for 1 damage' in: $messages")
         }
 
@@ -531,13 +525,13 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(2L)
-            login(players, sid, "Tester2")
+            players.loginOrFail(sid, "Tester2")
             combat.startCombat(sid, "rat")
             clock.advance(1_000L)
             combat.tick()
 
             assertEquals(7, mob.hp, "Expected mob hp=7 (10 - (5-2)=3)")
-            val messages = drainOutbound(outbound).filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            val messages = outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
             assertTrue(messages.any { it.contains("for 3 damage") }, "Expected 'for 3 damage' in: $messages")
         }
 
@@ -577,7 +571,7 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(3L)
-            login(players, sid, "Tester3")
+            players.loginOrFail(sid, "Tester3")
             combat.startCombat(sid, "rat")
             clock.advance(1_000L)
             combat.tick()
@@ -585,7 +579,7 @@ class CombatSystemTest {
             val player = players.get(sid)
             assertNotNull(player)
             // mob should have hit player for 10 (its own damage), not 1 (global config)
-            val messages = drainOutbound(outbound).filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            val messages = outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
             assertTrue(messages.any { it.contains("hits you for 10 damage") }, "Expected mob hit for 10, messages: $messages")
         }
 
@@ -626,13 +620,14 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(9L)
-            login(players, sid, "Tester9")
+            players.loginOrFail(sid, "Tester9")
             combat.startCombat(sid, "rat")
             clock.advance(1_000L)
             combat.tick()
 
             val messages =
-                drainOutbound(outbound)
+                outbound
+                    .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
                     .map { it.text }
@@ -674,13 +669,14 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(10L)
-            login(players, sid, "Tester10")
+            players.loginOrFail(sid, "Tester10")
             combat.startCombat(sid, "rat")
             clock.advance(1_000L)
             combat.tick()
 
             val messages =
-                drainOutbound(outbound)
+                outbound
+                    .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
                     .map { it.text }
@@ -730,14 +726,15 @@ class CombatSystemTest {
 
             val fighterSid = SessionId(11L)
             val observerSid = SessionId(12L)
-            login(players, fighterSid, "Fighter")
-            login(players, observerSid, "Observer")
+            players.loginOrFail(fighterSid, "Fighter")
+            players.loginOrFail(observerSid, "Observer")
             combat.startCombat(fighterSid, "rat")
             clock.advance(1_000L)
             combat.tick()
 
             val observerMessages =
-                drainOutbound(outbound)
+                outbound
+                    .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == observerSid }
                     .map { it.text }
@@ -788,16 +785,17 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(20L)
-            login(players, sid, "Victim")
+            players.loginOrFail(sid, "Victim")
             combat.startCombat(sid, "ogre")
             // drain the "You attack an ogre." message
-            drainOutbound(outbound)
+            outbound.drainAll()
 
             clock.advance(1_000L)
             combat.tick()
 
             val messages =
-                drainOutbound(outbound)
+                outbound
+                    .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
                     .map { it.text }
@@ -848,16 +846,17 @@ class CombatSystemTest {
 
             val fighterSid = SessionId(21L)
             val observerSid = SessionId(22L)
-            login(players, fighterSid, "Fighter")
-            login(players, observerSid, "Observer")
+            players.loginOrFail(fighterSid, "Fighter")
+            players.loginOrFail(observerSid, "Observer")
             combat.startCombat(fighterSid, "ogre")
-            drainOutbound(outbound)
+            outbound.drainAll()
 
             clock.advance(1_000L)
             combat.tick()
 
             val observerMessages =
-                drainOutbound(outbound)
+                outbound
+                    .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == observerSid }
                     .map { it.text }
@@ -894,17 +893,18 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(23L)
-            login(players, sid, "Wounded")
+            players.loginOrFail(sid, "Wounded")
             // manually set HP to 0 before the combat tick
             players.get(sid)!!.hp = 0
             combat.startCombat(sid, "rat")
-            drainOutbound(outbound)
+            outbound.drainAll()
 
             clock.advance(1_000L)
             combat.tick()
 
             val messages =
-                drainOutbound(outbound)
+                outbound
+                    .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
                     .map { it.text }
@@ -969,9 +969,9 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(30L)
-            login(players, sid, "StunTest")
+            players.loginOrFail(sid, "StunTest")
             combat.startCombat(sid, "rat")
-            drainOutbound(outbound)
+            outbound.drainAll()
 
             // Apply stun to the player
             statusEffects.applyToPlayer(sid, StatusEffectId("stun"))
@@ -1037,9 +1037,9 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(31L)
-            login(players, sid, "ShieldTest")
+            players.loginOrFail(sid, "ShieldTest")
             combat.startCombat(sid, "rat")
-            drainOutbound(outbound)
+            outbound.drainAll()
 
             // Apply shield to the player
             statusEffects.applyToPlayer(sid, StatusEffectId("shield"))
@@ -1104,13 +1104,13 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(32L)
-            login(players, sid, "BuffTest")
+            players.loginOrFail(sid, "BuffTest")
 
             // Apply +6 STR buff → +2 bonus damage (6/3)
             statusEffects.applyToPlayer(sid, StatusEffectId("buff"))
 
             combat.startCombat(sid, "rat")
-            drainOutbound(outbound)
+            outbound.drainAll()
 
             clock.advance(1_000L)
             combat.tick()
@@ -1154,7 +1154,7 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(30L)
-            login(players, sid, "GoldHunter")
+            players.loginOrFail(sid, "GoldHunter")
             val err = combat.startCombat(sid, "rat")
             assertNull(err)
 
@@ -1166,7 +1166,8 @@ class CombatSystemTest {
             assertEquals(5L, player!!.gold)
 
             val messages =
-                drainOutbound(outbound)
+                outbound
+                    .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
                     .map { it.text }
@@ -1208,7 +1209,7 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(31L)
-            login(players, sid, "NoGold")
+            players.loginOrFail(sid, "NoGold")
             val err = combat.startCombat(sid, "rat")
             assertNull(err)
 
@@ -1220,19 +1221,11 @@ class CombatSystemTest {
             assertEquals(0L, player!!.gold)
 
             val messages =
-                drainOutbound(outbound)
+                outbound
+                    .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
                     .map { it.text }
             assertTrue(messages.none { it.contains("gold") && it.contains("find") }, "Expected no gold message, got: $messages")
         }
-
-    private fun drainOutbound(outbound: LocalOutboundBus): List<OutboundEvent> {
-        val events = mutableListOf<OutboundEvent>()
-        while (true) {
-            val event = outbound.tryReceive().getOrNull() ?: break
-            events.add(event)
-        }
-        return events
-    }
 }
