@@ -1,0 +1,17 @@
+zone: bad_dialogue_missing_root
+startRoom: plaza
+
+mobs:
+  npc:
+    name: "a confused npc"
+    room: plaza
+    dialogue:
+      greeting:
+        text: "Hello!"
+        choices:
+          - text: "Hi."
+
+rooms:
+  plaza:
+    title: "Plaza"
+    description: "A plaza."

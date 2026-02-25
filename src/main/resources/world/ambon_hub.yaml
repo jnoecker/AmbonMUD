@@ -2,6 +2,44 @@ zone: ambon_hub
 lifespan: 0
 startRoom: hall_of_portals
 
+mobs:
+  portal_keeper:
+    name: "the Portal Keeper"
+    room: hall_of_portals
+    stationary: true
+    dialogue:
+      root:
+        text: "Welcome, traveler! I am the Portal Keeper. I watch over the passages between realms. How may I help you?"
+        choices:
+          - text: "Tell me about the portals."
+            next: about_portals
+          - text: "Any advice for a new adventurer?"
+            next: advice
+          - text: "Goodbye."
+      about_portals:
+        text: "Each archway leads to a different realm. The northern passage leads to ancient ruins, perfect for seasoned warriors. To the south lies a peaceful forest glade — ideal for those just starting their journey. East leads to a scholar's retreat."
+        choices:
+          - text: "What about the western passages?"
+            next: western
+          - text: "Thank you."
+      western:
+        text: "The western gallery has more archways, some still unkeyed. The ones that work lead to training grounds of various difficulty. Speak to the instructors there if you wish to hone your skills."
+        choices:
+          - text: "I'll explore them. Thanks!"
+          - text: "Tell me more about the training grounds."
+            next: training
+            minLevel: 3
+      training:
+        text: "The training grounds are divided by difficulty. The marshlands and highlands are suitable for novice adventurers, while the mines and barrens offer stiffer challenges. Each has its own creatures and rewards."
+        choices:
+          - text: "Sounds dangerous. I'll be careful."
+      advice:
+        text: "Head south to the Tutorial Glade first. Pick up equipment as you find it, and don't be afraid to flee from fights you can't win. Leveling up makes you stronger — check your 'score' often."
+        choices:
+          - text: "Thanks for the advice!"
+          - text: "Tell me about the portals."
+            next: about_portals
+
 rooms:
   hall_of_portals:
     title: "Hall of Portals"

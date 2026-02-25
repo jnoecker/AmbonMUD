@@ -1,0 +1,51 @@
+zone: ok_dialogue
+startRoom: plaza
+
+mobs:
+  sage:
+    name: "a wise sage"
+    room: plaza
+    stationary: true
+    dialogue:
+      root:
+        text: "Greetings, young one. What would you like to know?"
+        choices:
+          - text: "Tell me about this place."
+            next: about
+          - text: "I seek training."
+            next: training
+            minLevel: 3
+          - text: "Only a warrior may ask."
+            next: warrior_secret
+            requiredClass: WARRIOR
+          - text: "Goodbye."
+      about:
+        text: "This is an ancient plaza, built long before your time."
+        choices:
+          - text: "Interesting. Tell me more."
+            next: more
+          - text: "Thanks."
+      more:
+        text: "The stones beneath your feet have witnessed a thousand battles."
+        choices:
+          - text: "I see."
+      training:
+        text: "You have grown strong enough to learn the advanced arts."
+        choices:
+          - text: "Teach me."
+      warrior_secret:
+        text: "Ah, a warrior! The blade remembers those who wield it."
+        choices:
+          - text: "I understand."
+
+rooms:
+  plaza:
+    title: "Town Plaza"
+    description: "A quiet town plaza."
+    exits:
+      n: alley
+  alley:
+    title: "Back Alley"
+    description: "A dark alley."
+    exits:
+      s: plaza

@@ -314,4 +314,31 @@ class CommandParserTest {
         assertTrue(CommandParser.parse("sell") is Command.Invalid)
         assertTrue(CommandParser.parse("sell   ") is Command.Invalid)
     }
+
+    @Test
+    fun `parses talk command`() {
+        assertEquals(Command.Talk("keeper"), CommandParser.parse("talk keeper"))
+        assertEquals(Command.Talk("portal keeper"), CommandParser.parse("talk portal keeper"))
+    }
+
+    @Test
+    fun `talk with no arg returns Invalid`() {
+        assertTrue(CommandParser.parse("talk") is Command.Invalid)
+        assertTrue(CommandParser.parse("talk   ") is Command.Invalid)
+    }
+
+    @Test
+    fun `bare numbers parse as DialogueChoice`() {
+        assertEquals(Command.DialogueChoice(1), CommandParser.parse("1"))
+        assertEquals(Command.DialogueChoice(2), CommandParser.parse("2"))
+        assertEquals(Command.DialogueChoice(9), CommandParser.parse("9"))
+        assertEquals(Command.DialogueChoice(1), CommandParser.parse("  1  "))
+    }
+
+    @Test
+    fun `numbers outside 1-9 are Unknown`() {
+        assertTrue(CommandParser.parse("0") is Command.Unknown)
+        assertTrue(CommandParser.parse("10") is Command.Unknown)
+        assertTrue(CommandParser.parse("99") is Command.Unknown)
+    }
 }

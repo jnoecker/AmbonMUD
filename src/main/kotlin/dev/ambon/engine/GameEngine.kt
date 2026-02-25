@@ -18,6 +18,7 @@ import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
+import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -154,6 +155,7 @@ class GameEngine(
             detailedFeedbackRoomBroadcastEnabled = engineConfig.combat.feedback.roomBroadcastEnabled,
             onMobRemoved = { mobId, roomId ->
                 mobSystem.onMobRemoved(mobId)
+                dialogueSystem.onMobRemoved(mobId)
                 for (p in players.playersInRoom(roomId)) {
                     gmcpEmitter.sendRoomRemoveMob(p.sessionId, mobId.value)
                 }
@@ -232,6 +234,13 @@ class GameEngine(
 
     private val shopRegistry = ShopRegistry(items)
 
+    private val dialogueSystem =
+        DialogueSystem(
+            mobs = mobs,
+            players = players,
+            outbound = outbound,
+        )
+
     private val router =
         CommandRouter(
             world = world,
@@ -261,6 +270,7 @@ class GameEngine(
             statusEffects = statusEffectSystem,
             shopRegistry = shopRegistry,
             economyConfig = engineConfig.economy,
+            dialogueSystem = dialogueSystem,
         )
 
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
@@ -375,6 +385,7 @@ class GameEngine(
                         } else {
                             // No source — end combat if applicable, broadcast death, clean up
                             combatSystem.onMobRemovedExternally(mobId)
+                            dialogueSystem.onMobRemoved(mobId)
                             mobs.remove(mobId)
                             mobSystem.onMobRemoved(mobId)
                             statusEffectSystem.onMobRemoved(mobId)
@@ -459,6 +470,7 @@ class GameEngine(
 
         for (mobId in zoneMobIds) {
             combatSystem.onMobRemovedExternally(mobId)
+            dialogueSystem.onMobRemoved(mobId)
             mobs.remove(mobId)
             mobSystem.onMobRemoved(mobId)
         }
@@ -834,6 +846,7 @@ class GameEngine(
                 regenSystem.onPlayerDisconnected(sid)
                 abilitySystem.onPlayerDisconnected(sid)
                 statusEffectSystem.onPlayerDisconnected(sid)
+                dialogueSystem.onPlayerDisconnected(sid)
                 gmcpDirtyStatusEffects.remove(sid)
 
                 if (me != null) {
@@ -1361,6 +1374,8 @@ class GameEngine(
             drops = spawn.drops,
             goldMin = spawn.goldMin,
             goldMax = spawn.goldMax,
+            stationary = spawn.stationary,
+            dialogue = spawn.dialogue,
         )
 
     private fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)

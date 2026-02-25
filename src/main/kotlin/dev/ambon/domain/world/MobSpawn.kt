@@ -2,6 +2,7 @@ package dev.ambon.domain.world
 
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.engine.dialogue.DialogueTree
 
 data class MobSpawn(
     val id: MobId,
@@ -16,4 +17,6 @@ data class MobSpawn(
     val respawnSeconds: Long? = null,
     val goldMin: Long = 0L,
     val goldMax: Long = 0L,
+    val stationary: Boolean = false,
+    val dialogue: DialogueTree? = null,
 )
