@@ -41,9 +41,10 @@ Key stats:
 - **Transport**: Telnet (port 4000, NAWS/TTYPE/GMCP negotiation) + WebSocket / browser demo (port 8080, GMCP-aware sidebar panels)
 - **Engine**: Single-threaded coroutine dispatcher, 100 ms ticks
 - **Character**: 4 races (Human, Elf, Dwarf, Halfling), 4 classes (Warrior, Mage, Cleric, Rogue), 6 primary attributes (STR/DEX/CON/INT/WIS/CHA), 12 class-specific abilities with mana/cooldowns
+- **Economy**: Gold currency (persistent on `PlayerRecord`), mob gold drops, items with `basePrice`, in-room shops with `buy`/`sell`/`list` commands and configurable price multipliers
 - **Persistence**: Write-behind coalescing → optional Redis L2 cache → YAML files or PostgreSQL (selectable via config)
-- **World content**: YAML zone files (8 zones), multi-zone with cross-zone exits
-- **Scalability**: Phases 1–5 complete (bus abstraction, async persistence, Redis integration, gRPC gateway split, zone-based engine sharding); three deployment modes: `STANDALONE`, `ENGINE`, `GATEWAY`; zone instancing for hot-zone load distribution
+- **World content**: YAML zone files (8 zones), multi-zone with cross-zone exits, optional `shops` map per zone
+- **Scalability**: Phases 1–5 complete (bus abstraction, async persistence, Redis integration, gRPC gateway split, zone-based engine sharding with zone instancing); three deployment modes: `STANDALONE`, `ENGINE`, `GATEWAY`
 - **Gateway resilience**: Exponential-backoff reconnect when the engine gRPC stream is lost; Snowflake session IDs with overflow wait and clock-rollback hardening
 
 ---
@@ -52,7 +53,7 @@ Key stats:
 
 ### Prerequisites
 
-- JDK 17+ (CI runs Java 21; the Gradle toolchain targets 17)
+- JDK 21 (CI runs Java 21; the Gradle toolchain targets 21)
 - Docker (optional — for PostgreSQL, Redis, and observability stack)
 - No other infrastructure needed for the default YAML persistence mode
 
@@ -141,13 +142,14 @@ AmbonMUD/
 │   │   ├── GameEngine.kt          # Tick loop + inbound handler
 │   │   ├── GmcpEmitter.kt        # GMCP structured data emitter (13 packages)
 │   │   ├── PlayerRegistry.kt      # Session ↔ PlayerState, login FSM
-│   │   ├── PlayerState.kt         # Per-session mutable player data
+│   │   ├── PlayerState.kt         # Per-session mutable player data (includes gold)
 │   │   ├── PlayerProgression.kt   # XP curves, leveling, HP/mana scaling
 │   │   ├── AbilitySystem.kt       # Spell/ability resolution, cooldowns, mana
 │   │   ├── MobRegistry.kt         # NPC registry + room membership index
 │   │   ├── MobSystem.kt           # NPC wandering AI
-│   │   ├── CombatSystem.kt        # Fight resolution (melee + spell kills)
+│   │   ├── CombatSystem.kt        # Fight resolution (melee + spell kills + gold drops)
 │   │   ├── RegenSystem.kt         # HP + mana regeneration
+│   │   ├── ShopRegistry.kt        # Shop lookup by room; buy/sell price computation
 │   │   ├── commands/
 │   │   │   ├── CommandParser.kt   # String → Command (pure function)
 │   │   │   └── CommandRouter.kt   # Command → OutboundEvents (logic)
@@ -208,7 +210,12 @@ AmbonMUD/
 │   │   ├── WriteCoalescingPlayerRepository.kt  # Write-behind (Phase 2)
 │   │   ├── PersistenceWorker.kt   # Background flush coroutine
 │   │   └── PlayerRecord.kt        # Serializable player data
-│   └── ui/login/                  # Login banner rendering
+│   ├── ui/login/                  # Login banner rendering
+│   └── domain/
+│       ├── world/
+│       │   ├── ShopDefinition.kt  # Shop domain type (room binding, item list)
+│       │   └── data/ShopFile.kt   # YAML deserialization model for shops
+│       └── ...
 ├── src/main/resources/
 │   ├── application.yaml           # Runtime config (ports, tuning, world files)
 │   ├── db/migration/              # Flyway SQL migrations (Postgres backend, V1–V4)
@@ -233,11 +240,13 @@ AmbonMUD/
 ├── data/players/                  # Runtime player saves (git-ignored)
 ├── docs/
 │   ├── world-zone-yaml-spec.md    # World YAML format contract
-│   ├── scalability-plan-brainstorm.md  # 4-phase scaling roadmap
-│   ├── engine-sharding-design.md  # Zone-based sharding architecture (Phase 5)
-│   ├── ability-system-plan.md     # Spell/ability system design
-│   ├── scaling-story.md           # Interview talk track for scaling decisions
+│   ├── engine-sharding-design.md  # Zone-based sharding architecture
 │   ├── DesignDecisions.md         # Architecture rationale (worth reading)
+│   ├── next-large-projects.md     # Roadmap: future feature projects
+│   ├── observability-review.md    # Metrics/monitoring gap analysis
+│   ├── scalability-plan-brainstorm.md  # Historical: 4-phase scalability plan (all done)
+│   ├── ability-system-plan.md     # Historical: spell/ability system design (implemented)
+│   ├── scaling-story.md           # Interview talk track for scaling decisions
 │   └── onboarding.md              # This file
 ├── AGENTS.md                      # Engineering playbook
 ├── CLAUDE.md                      # Claude Code orientation
@@ -383,6 +392,7 @@ A pure function `parse(line: String): Command`. No side effects. Returns a seale
 | Combat | `Kill`, `Flee` |
 | Abilities | `Cast`, `Spells` |
 | Character | `Score` |
+| Economy | `Balance` (gold), `ShopList` (list/shop), `Buy`, `Sell` |
 | Social | `Who`, `Help` |
 | UI / Settings | `Look`, `Exits`, `AnsiOn`, `AnsiOff`, `Clear`, `Colors` |
 | System | `Quit`, `Noop`, `Invalid`, `Unknown` |
@@ -499,6 +509,7 @@ data class Item(
     val damage: Int,            // bonus damage when equipped
     val armor: Int,             // damage reduction when equipped
     val constitution: Int,      // faster HP regen when equipped
+    val basePrice: Int,         // shop price (0 = not buyable/sellable); buy/sell prices apply multipliers
     val matchByKey: Boolean,    // if true, exact keyword only (no substring fallback)
     val consumable: Boolean,    // if true, removed from inventory when charges deplete
     val charges: Int?,          // null = infinite, 0+ = limited charges
@@ -536,6 +547,7 @@ strength, dexterity, constitution, intelligence, wisdom, charisma  // base 10, m
 hp, maxHp, baseMaxHp
 mana, maxMana, baseMana
 level, xpTotal
+gold           // persistent currency balance
 ansiEnabled, isStaff
 ```
 
@@ -615,6 +627,14 @@ Key operations:
 - `dropMobItemsToRoom(mobId, roomId)` — loot drop on mob death
 
 **Keyword matching:** Case-insensitive substring match on `displayName` first, then `description` as fallback. If `matchByKey = true`, only exact `keyword` match is accepted.
+
+### ShopRegistry
+
+**File:** `src/main/kotlin/dev/ambon/engine/ShopRegistry.kt`
+
+Loaded from zone YAML (`shops` map). Each shop is bound to a room; `shopInRoom(roomId)` returns the shop for the current room or `null` if none is present. `shopItems(shop)` returns the items available for purchase (those with `basePrice > 0`). Buy and sell prices are computed by applying `engine.economy.buyMultiplier` and `engine.economy.sellMultiplier` to each item's `basePrice`.
+
+Gold drops from mob kills are handled by `CombatSystem` using per-mob `goldMin`/`goldMax` values (derived from the tier formula unless overridden in the zone YAML).
 
 ### PlayerProgression
 
@@ -1287,6 +1307,14 @@ Edit YAML in `src/main/resources/world/`. If adding a new file, register it in `
 2. `CommandRouter.kt` — add `when` branch; gate with `if (!playerState.isStaff) { ... return }`
 3. `CommandRouterAdminTest` — add tests for gated + ungated behavior
 
+### Add a Shop to the World
+
+1. In the zone YAML, add a `shops` entry with a room binding and the item IDs to stock
+2. Set `basePrice > 0` on items you want to be buyable/sellable
+3. Set `goldMin`/`goldMax` on mobs that should drop gold (or rely on tier defaults)
+4. Run `./gradlew test` to confirm the world loads cleanly
+5. No code changes needed — `ShopRegistry` is populated from YAML at startup
+
 ### Add a New Transport
 
 1. Implement a class that reads from the `inbound: InboundBus` and writes to `outbound: OutboundBus`
@@ -1348,8 +1376,10 @@ Edit YAML in `src/main/resources/world/`. If adding a new file, register it in `
 
 - `docs/DesignDecisions.md` — explains the "why" behind every major architectural choice
 - `AGENTS.md` — the full engineering playbook (change procedures, invariants)
-- `docs/world-zone-yaml-spec.md` — complete YAML world format reference
-- `docs/scalability-plan-brainstorm.md` — original 4-phase scalability roadmap
-- `docs/engine-sharding-design.md` — zone-based sharding architecture (Phase 5)
-- `docs/ability-system-plan.md` — spell/ability system design
+- `docs/world-zone-yaml-spec.md` — complete YAML world format reference (rooms, mobs, items, shops)
+- `docs/engine-sharding-design.md` — zone-based sharding architecture
+- `docs/next-large-projects.md` — roadmap of future gameplay and tooling projects
+- `docs/observability-review.md` — metrics/monitoring gap analysis and improvement roadmap
 - `docs/scaling-story.md` — interview talk track for scaling decisions
+- `docs/scalability-plan-brainstorm.md` — historical: original 4-phase scalability plan (all phases complete)
+- `docs/ability-system-plan.md` — historical: spell/ability system design (implemented)

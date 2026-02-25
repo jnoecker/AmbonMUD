@@ -76,25 +76,16 @@ AmbonMUD has a mature infrastructure and solid gameplay foundation:
 
 ---
 
-## 4. Economy, Currency & Shops
+## 4. Economy, Currency & Shops — IMPLEMENTED (core)
 
-**What:** A gold currency system, NPC shopkeepers, loot-table gold drops, and player-to-player trading.
+**Status:** Core economy is implemented. `PlayerRecord.gold` is persisted through all backends. Mob gold drops use `goldMin`/`goldMax` from the tier formula (per-mob override supported in zone YAML). Items have a `basePrice` field; shops are defined per-zone in the `shops` YAML map. Commands `buy`/`sell`/`list`/`gold` are live. Buy/sell price multipliers are configurable via `engine.economy.*`.
 
-**Why now:** Items currently have no tangible value — you pick them up, equip them, and that's it. An economy creates demand, enables shops as discovery mechanisms, and provides a gold sink/faucet loop that gives grinding purpose beyond XP.
-
-**Key design decisions:**
-- `gold: Long` field on `PlayerRecord` (persisted) — new Flyway migration
-- Mob loot tables: `goldMin` / `goldMax` per mob template (in zone YAML); gold drops on kill
-- Shop NPCs: `vendor` behavior type (from #2), or simpler room-based shops with `ShopDefinition` in zone YAML
-- Commands: `buy <item>`, `sell <item>`, `list` (when in a shop room/talking to vendor), `trade <player>` with confirmation flow
-- Gold sinks: consumable item purchases, ability training fees, fast-travel costs, item repairs
-- Gold sources: mob drops, quest rewards, selling loot to vendors (at reduced price)
-- Economic balance: configurable buy/sell price ratios; vendor inventory refresh on zone reset
-- GMCP: `Char.Vitals` extended with gold; shop UI in web client
-
-**Scope:** Medium. New `ShopSystem`, `PlayerRecord.gold` field (+ migration), loot-table extension in zone YAML, new commands. Self-contained but richer with NPC Dialogue (#2).
-
-**Depends on:** Nothing (can use room-based shops without NPC Dialogue).
+**Remaining opportunities:**
+- Player-to-player trading (`trade <player>` with confirmation flow)
+- Gold sinks beyond shop purchases (ability training fees, fast-travel costs, item repair)
+- Vendor inventory refresh on zone reset (currently static)
+- GMCP `Char.Vitals` extension with gold balance for web client sidebar
+- Shop UI panel in the web client (currently only the in-game `list` command)
 
 ---
 
@@ -333,9 +324,9 @@ These transform the world from a combat arena into a narrative experience:
 
 | # | Project | Effort | Unlocks |
 |---|---------|--------|---------|
-| 2 | NPC Dialogue & Behaviors | Very large | Quest givers, shops, trainers, world flavor |
+| 2 | NPC Dialogue & Behaviors | Very large | Quest givers, trainers, world flavor |
 | 3 | Quest System | Large | Structured progression, narrative arcs, achievement triggers |
-| 4 | Economy & Shops | Medium | Item value, gold loop, crafting demand |
+| 4 | Economy & Shops | **Done (core)** | Player-to-player trading, gold sinks, GMCP gold panel remain |
 
 ### Phase C — Endgame & replayability
 These create reasons to keep playing after reaching max level:
