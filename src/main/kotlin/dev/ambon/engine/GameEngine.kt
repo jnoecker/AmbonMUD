@@ -10,6 +10,7 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
+import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
 import dev.ambon.engine.QuestRegistry
 import dev.ambon.engine.QuestSystem
@@ -31,6 +32,7 @@ import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.engine.status.StatusEffectRegistryLoader
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
+import dev.ambon.persistence.WorldStateRepository
 import dev.ambon.sharding.BroadcastType
 import dev.ambon.sharding.HandoffAckResult
 import dev.ambon.sharding.HandoffManager
@@ -78,6 +80,10 @@ class GameEngine(
     private val zoneRegistry: ZoneRegistry? = null,
     private val questRegistry: QuestRegistry = QuestRegistry(),
     private val achievementRegistry: AchievementRegistry = AchievementRegistry(),
+    /** Mutable world feature state (doors, containers, levers). Caller owns and must pass the same instance to the persistence worker. */
+    private val worldState: WorldStateRegistry = WorldStateRegistry(world),
+    /** Repository for persisting world feature states across restarts. */
+    private val worldStateRepository: WorldStateRepository? = null,
 ) {
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
@@ -343,6 +349,7 @@ class GameEngine(
             achievementSystem = achievementSystem,
             achievementRegistry = achievementRegistry,
             groupSystem = groupSystem,
+            worldState = worldState,
         )
 
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
@@ -398,10 +405,25 @@ class GameEngine(
         }
         items.loadSpawns(world.itemSpawns)
         shopRegistry.register(world.shopDefinitions)
+        // Seed container initial items from feature definitions (snapshot may override below in run()).
+        for (room in world.rooms.values) {
+            for (feature in room.features.filterIsInstance<RoomFeature.Container>()) {
+                val instances = feature.initialItems.mapNotNull { items.createFromTemplate(it) }
+                if (instances.isNotEmpty()) {
+                    for (inst in instances) worldState.addToContainer(feature.id, inst)
+                }
+            }
+        }
+        worldState.clearDirty()
     }
 
     suspend fun run() =
         coroutineScope {
+            // Restore persisted world state, overriding in-memory defaults.
+            worldStateRepository?.load()?.let { snapshot ->
+                worldState.applySnapshot(snapshot) { itemId -> items.createFromTemplate(itemId) }
+            }
+
             while (isActive) {
                 val tickStart = clock.millis()
                 val tickSample = Timer.start()
@@ -567,6 +589,16 @@ class GameEngine(
             mobIds = zoneMobIds,
             spawns = zoneItemSpawns,
         )
+
+        // Reset stateful room features (doors, containers, levers) for this zone.
+        worldState.resetZone(zone)
+        for (room in world.rooms.values.filter { it.id.zone == zone }) {
+            for (feature in room.features.filterIsInstance<RoomFeature.Container>()) {
+                if (!feature.resetWithZone) continue
+                val instances = feature.initialItems.mapNotNull { items.createFromTemplate(it) }
+                worldState.resetContainer(feature.id, instances)
+            }
+        }
 
         // Refresh mob GMCP for all players in the reset zone
         for (player in playersInZone) {

@@ -9,4 +9,6 @@ data class Room(
     val exits: Map<Direction, RoomId>,
     /** Directions whose targets are in zones not loaded on this engine (cross-zone stubs). */
     val remoteExits: Set<Direction> = emptySet(),
+    /** Stateful features in this room: doors, containers, levers, signs. */
+    val features: List<RoomFeature> = emptyList(),
 )
