@@ -1,0 +1,62 @@
+zone: ok_features
+startRoom: entrance
+
+items:
+  brass_key:
+    displayName: "a brass key"
+    keyword: key
+    description: "A small brass key."
+  silver_coin:
+    displayName: "a silver coin"
+    keyword: coin
+    description: "A shiny coin."
+
+rooms:
+  entrance:
+    title: "Entrance Hall"
+    description: "A hallway with doors and features."
+    exits:
+      north:
+        to: vault
+        door:
+          initialState: locked
+          keyItemId: brass_key
+          keyConsumed: false
+          resetWithZone: true
+      east: storeroom
+    features:
+      notice_board:
+        type: SIGN
+        displayName: "a notice board"
+        keyword: board
+        text: "Welcome to the test zone."
+
+  vault:
+    title: "Vault"
+    description: "A secure vault."
+    exits:
+      south: entrance
+    features:
+      iron_lever:
+        type: LEVER
+        displayName: "an iron lever"
+        keyword: lever
+        initialState: up
+        resetWithZone: true
+
+  storeroom:
+    title: "Storeroom"
+    description: "A dusty storeroom."
+    exits:
+      west: entrance
+    features:
+      supply_chest:
+        type: CONTAINER
+        displayName: "a supply chest"
+        keyword: chest
+        initialState: closed
+        keyItemId: null
+        keyConsumed: false
+        resetWithZone: true
+        items:
+          - silver_coin

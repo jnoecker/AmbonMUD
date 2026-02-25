@@ -17,6 +17,7 @@ import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
@@ -24,9 +25,13 @@ import dev.ambon.persistence.DatabaseManager
 import dev.ambon.persistence.PersistenceWorker
 import dev.ambon.persistence.PlayerRepository
 import dev.ambon.persistence.PostgresPlayerRepository
+import dev.ambon.persistence.PostgresWorldStateRepository
 import dev.ambon.persistence.RedisCachingPlayerRepository
+import dev.ambon.persistence.WorldStatePersistenceWorker
+import dev.ambon.persistence.WorldStateRepository
 import dev.ambon.persistence.WriteCoalescingPlayerRepository
 import dev.ambon.persistence.YamlPlayerRepository
+import dev.ambon.persistence.YamlWorldStateRepository
 import dev.ambon.redis.RedisConnectionManager
 import dev.ambon.redis.redisObjectMapper
 import dev.ambon.session.AtomicSessionIdFactory
@@ -140,6 +145,20 @@ class MudServer(
 
     private val playerRepo = coalescingRepo ?: l2Repo
 
+    private val worldStateRepo: WorldStateRepository =
+        when (config.persistence.backend) {
+            PersistenceBackend.YAML ->
+                YamlWorldStateRepository(
+                    rootDir = Paths.get(config.persistence.rootDir),
+                )
+            PersistenceBackend.POSTGRES ->
+                PostgresWorldStateRepository(
+                    database = databaseManager!!.database,
+                )
+        }
+
+    private var worldStatePersistenceWorker: WorldStatePersistenceWorker? = null
+
     private val instanceId: String =
         config.redis.bus.instanceId
             .takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
@@ -199,6 +218,7 @@ class MudServer(
             tiers = config.engine.mob.tiers,
             zoneFilter = zoneFilter,
         )
+    private val worldState = WorldStateRegistry(world)
     private val tickMillis: Long = config.server.tickMillis
     private val scheduler: Scheduler = Scheduler(clock)
     private val localZones: Set<String> =
@@ -395,6 +415,20 @@ class MudServer(
             log.info { "Persistence worker started (flushIntervalMs=${config.persistence.worker.flushIntervalMs})" }
         }
 
+        if (config.persistence.worker.enabled) {
+            val wsWorker =
+                WorldStatePersistenceWorker(
+                    registry = worldState,
+                    repo = worldStateRepo,
+                    flushIntervalMs = config.persistence.worker.flushIntervalMs,
+                    scope = scope,
+                    engineDispatcher = engineDispatcher,
+                )
+            wsWorker.start()
+            worldStatePersistenceWorker = wsWorker
+            log.info { "World state persistence worker started" }
+        }
+
         outboundRouter = OutboundRouter(outbound, scope, metrics = gameMetrics)
         routerJob = outboundRouter.start()
 
@@ -503,6 +537,8 @@ class MudServer(
                             ?.size
                             ?: 0
                     },
+                    worldState = worldState,
+                    worldStateRepository = worldStateRepo,
                 ).run()
             }
 
@@ -593,6 +629,7 @@ class MudServer(
         runCatching { engineJob?.cancelAndJoin() }
         runCatching { interEngineBus?.close() }
         runCatching { persistenceWorker?.shutdown() }
+        runCatching { worldStatePersistenceWorker?.shutdown() }
         runCatching { redisManager?.close() }
         runCatching { databaseManager?.close() }
         scope.cancel()
