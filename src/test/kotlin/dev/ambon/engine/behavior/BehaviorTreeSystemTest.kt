@@ -35,6 +35,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.util.Random
@@ -490,7 +492,7 @@ class BehaviorTreeSystemTest {
                 BehaviorParamsFile(),
                 "zone",
             )
-        assertTrue(result != null)
+        assertNotNull(result)
     }
 
     @Test
@@ -501,7 +503,7 @@ class BehaviorTreeSystemTest {
                 BehaviorParamsFile(),
                 "zone",
             )
-        assertTrue(result == null)
+        assertNull(result)
     }
 
     @Test

@@ -245,6 +245,8 @@ class GameEngine(
             startMobCombat = { mobId, sessionId -> combatSystem.startMobCombat(mobId, sessionId) },
             fleeMob = { mobId -> combatSystem.fleeMob(mobId) },
             gmcpEmitter = gmcpEmitter,
+            minActionDelayMs = engineConfig.mob.minActionDelayMillis,
+            maxActionDelayMs = engineConfig.mob.maxActionDelayMillis,
             metrics = metrics,
         )
 

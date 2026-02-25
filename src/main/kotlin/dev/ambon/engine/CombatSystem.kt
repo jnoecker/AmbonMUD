@@ -185,12 +185,10 @@ class CombatSystem(
 
     suspend fun fleeMob(mobId: MobId): Boolean {
         val fight = fightsByMob[mobId] ?: return false
-        val mob = mobs.get(mobId)
-        val mobName = mob?.name ?: "your foe"
 
         endFight(fight)
 
-        outbound.send(OutboundEvent.SendText(fight.sessionId, "$mobName flees!"))
+        // FleeAction sends the room-wide "flees!" message; we only need to return the prompt.
         outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
 
         return true
