@@ -46,7 +46,10 @@ Thumbs.db
 *.log
 /data/players/players/
 /data/players/next_player_id.txt
-/.claude/
+# Claude Code – track settings/hooks/skills; exclude local overrides and working trees
+/.claude/settings.local.json
+/.claude/worktrees/
+/.claude/memory/
 /findings.md
 /progress.md
 /task_plan.md
