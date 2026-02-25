@@ -1,5 +1,7 @@
 # Ability System Design (Issue #114)
 
+> **Status: Phases 1 and 2 are fully implemented.** This document is a historical design record. The `AbilitySystem`, `AbilityRegistry`, mana persistence, `cast`/`spells` commands, and auto-learn-on-levelup are all in production. Phase 2 (the `StatusEffectSystem`) is also implemented, with effect types DOT, HOT, STAT_BUFF, STAT_DEBUFF, STUN, ROOT, and SHIELD; stacking rules; player and mob targets; `effects`/`buffs`/`debuffs` command; and the `Char.StatusEffects` GMCP package.
+
 > This document captures the design for AmbonMUD's spell/skill system. It is intended as a reference for implementation. The system adds tactical depth, resource management, and build diversity to combat.
 
 ## 1. Overview
