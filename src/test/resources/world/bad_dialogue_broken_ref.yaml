@@ -1,0 +1,18 @@
+zone: bad_dialogue_broken_ref
+startRoom: plaza
+
+mobs:
+  npc:
+    name: "a broken npc"
+    room: plaza
+    dialogue:
+      root:
+        text: "Hello!"
+        choices:
+          - text: "Tell me more."
+            next: nonexistent_node
+
+rooms:
+  plaza:
+    title: "Plaza"
+    description: "A plaza."

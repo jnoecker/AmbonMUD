@@ -629,4 +629,48 @@ class WorldLoaderTest {
             assertTrue(ex.message!!.contains("item", ignoreCase = true), "Got: ${ex.message}")
         }
     }
+
+    @Test
+    fun `loads mob with dialogue tree`() {
+        val world = WorldLoader.loadFromResource("world/ok_dialogue.yaml")
+        val mob = world.mobSpawns.single()
+        val dialogue = mob.dialogue
+        assertTrue(dialogue != null, "Dialogue should be loaded")
+        assertEquals("root", dialogue!!.rootNodeId)
+        assertEquals(5, dialogue.nodes.size)
+        val rootNode = dialogue.nodes["root"]!!
+        assertEquals(4, rootNode.choices.size)
+        assertEquals("about", rootNode.choices[0].nextNodeId)
+        assertEquals(3, rootNode.choices[1].minLevel)
+        assertEquals("WARRIOR", rootNode.choices[2].requiredClass)
+        assertTrue(rootNode.choices[3].nextNodeId == null)
+    }
+
+    @Test
+    fun `loads mob with stationary flag`() {
+        val world = WorldLoader.loadFromResource("world/ok_dialogue.yaml")
+        val mob = world.mobSpawns.single()
+        assertTrue(mob.stationary, "Mob should be stationary")
+    }
+
+    @Test
+    fun `fails when dialogue is missing root node`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_dialogue_missing_root.yaml")
+            }
+        assertTrue(ex.message!!.contains("root", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `fails when dialogue has broken node reference`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResource("world/bad_dialogue_broken_ref.yaml")
+            }
+        assertTrue(
+            ex.message!!.contains("nonexistent_node", ignoreCase = true),
+            "Got: ${ex.message}",
+        )
+    }
 }

@@ -55,6 +55,12 @@ class MobSystem(
                 continue
             }
 
+            // Stationary mobs never wander
+            if (m.stationary) {
+                nextActAtMillis[m.id] = now + randomDelay()
+                continue
+            }
+
             // If mob has no exits, just reschedule
             val room = world.rooms[m.roomId]
             if (room == null || room.exits.isEmpty()) {

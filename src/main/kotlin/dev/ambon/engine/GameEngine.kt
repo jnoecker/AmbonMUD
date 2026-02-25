@@ -18,6 +18,7 @@ import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
+import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -232,6 +233,13 @@ class GameEngine(
 
     private val shopRegistry = ShopRegistry(items)
 
+    private val dialogueSystem =
+        DialogueSystem(
+            mobs = mobs,
+            players = players,
+            outbound = outbound,
+        )
+
     private val router =
         CommandRouter(
             world = world,
@@ -261,6 +269,7 @@ class GameEngine(
             statusEffects = statusEffectSystem,
             shopRegistry = shopRegistry,
             economyConfig = engineConfig.economy,
+            dialogueSystem = dialogueSystem,
         )
 
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
@@ -834,6 +843,7 @@ class GameEngine(
                 regenSystem.onPlayerDisconnected(sid)
                 abilitySystem.onPlayerDisconnected(sid)
                 statusEffectSystem.onPlayerDisconnected(sid)
+                dialogueSystem.onPlayerDisconnected(sid)
                 gmcpDirtyStatusEffects.remove(sid)
 
                 if (me != null) {
@@ -1361,6 +1371,8 @@ class GameEngine(
             drops = spawn.drops,
             goldMin = spawn.goldMin,
             goldMax = spawn.goldMax,
+            stationary = spawn.stationary,
+            dialogue = spawn.dialogue,
         )
 
     private fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)

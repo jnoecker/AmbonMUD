@@ -19,6 +19,7 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.broadcastToRoom
+import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.EffectType
@@ -76,6 +77,7 @@ class CommandRouter(
     private val statusEffects: StatusEffectSystem? = null,
     private val shopRegistry: ShopRegistry? = null,
     private val economyConfig: EconomyConfig = EconomyConfig(),
+    private val dialogueSystem: DialogueSystem? = null,
 ) {
     private var adminSpawnSeq = 0
 
@@ -115,6 +117,7 @@ class CommandRouter(
                             drop <item>
                             use <item>
                             give <item> <player>
+                            talk <npc>
                             kill <mob>
                             flee
                             cast/c <spell> [target]
@@ -179,6 +182,7 @@ class CommandRouter(
                         outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} leaves."))
                         gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
                     }
+                    dialogueSystem?.onPlayerMoved(sessionId)
                     players.moveTo(sessionId, to)
                     val newMembers = players.playersInRoom(to).filter { it.sessionId != me.sessionId }
                     for (other in newMembers) {
@@ -1189,6 +1193,32 @@ class CommandRouter(
                     ),
                 )
                 gmcpEmitter?.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Talk -> {
+                if (dialogueSystem == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Nobody here wants to talk."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val err = dialogueSystem.startConversation(sessionId, cmd.target)
+                if (err != null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, err))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.DialogueChoice -> {
+                if (dialogueSystem?.isInConversation(sessionId) != true) {
+                    outbound.send(OutboundEvent.SendText(sessionId, "Huh?"))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val err = dialogueSystem.selectChoice(sessionId, cmd.optionNumber)
+                if (err != null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, err))
+                }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
