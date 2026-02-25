@@ -1486,10 +1486,21 @@ class GameEngine(
     }
 
     private suspend fun flushDirtyGmcpMobs() {
-        for (mobId in drainDirty(gmcpDirtyMobs)) {
+        val dirtyMobIds = drainDirty(gmcpDirtyMobs)
+        if (dirtyMobIds.isEmpty()) return
+        // Group dirty mobs by room so playersInRoom() is called once per room
+        // rather than once per mob, reducing O(mobs × players_per_room) to
+        // O(dirty_mobs + players_in_affected_rooms).
+        val mobsByRoom = mutableMapOf<RoomId, MutableList<MobState>>()
+        for (mobId in dirtyMobIds) {
             val mob = mobs.get(mobId) ?: continue
-            for (p in players.playersInRoom(mob.roomId)) {
-                gmcpEmitter.sendRoomUpdateMob(p.sessionId, mob)
+            mobsByRoom.getOrPut(mob.roomId) { mutableListOf() }.add(mob)
+        }
+        for ((roomId, roomMobs) in mobsByRoom) {
+            for (p in players.playersInRoom(roomId)) {
+                for (mob in roomMobs) {
+                    gmcpEmitter.sendRoomUpdateMob(p.sessionId, mob)
+                }
             }
         }
     }
