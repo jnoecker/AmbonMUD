@@ -42,11 +42,13 @@ class RegenSystem(
         val now = clock.millis()
         var ran = 0
 
-        val list = players.allPlayers().toMutableList()
-        list.shuffle(rng)
+        val list = players.allPlayers()
+        if (list.isEmpty()) return
+        val start = rng.nextInt(list.size)
 
-        for (player in list) {
+        for (i in list.indices) {
             if (ran >= maxPlayersPerTick) break
+            val player = list[(start + i) % list.size]
 
             val sessionId = player.sessionId
             var didWork = false
