@@ -30,6 +30,7 @@ data class AppConfig(
     val transport: TransportConfig = TransportConfig(),
     val demo: DemoConfig = DemoConfig(),
     val observability: ObservabilityConfig = ObservabilityConfig(),
+    val admin: AdminConfig = AdminConfig(),
     val logging: LoggingConfig = LoggingConfig(),
     val database: DatabaseConfig = DatabaseConfig(),
     val redis: RedisConfig = RedisConfig(),
@@ -166,6 +167,11 @@ data class AppConfig(
         }
         require(observability.metricsHttpPort in 1..65535) {
             "ambonMUD.observability.metricsHttpPort must be between 1 and 65535"
+        }
+
+        if (admin.enabled) {
+            require(admin.port in 1..65535) { "ambonMUD.admin.port must be between 1 and 65535" }
+            require(admin.token.isNotBlank()) { "ambonMUD.admin.token must be non-blank when admin.enabled=true" }
         }
 
         if (redis.enabled) {
@@ -581,6 +587,17 @@ data class ObservabilityConfig(
     val metricsEndpoint: String = "/metrics",
     val metricsHttpPort: Int = 9090,
     val staticTags: Map<String, String> = emptyMap(),
+)
+
+data class AdminConfig(
+    /** Enable the admin HTTP dashboard. Requires a non-blank [token]. */
+    val enabled: Boolean = false,
+    /** Port the admin dashboard listens on. */
+    val port: Int = 9091,
+    /** Bearer/Basic-auth password required for every admin request. */
+    val token: String = "",
+    /** Optional Grafana dashboard URL shown as a link on the overview page. */
+    val grafanaUrl: String = "",
 )
 
 data class LoggingConfig(
