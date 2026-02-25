@@ -21,6 +21,12 @@ object AppConfigLoader {
         for (source in extraSources) {
             builder = builder.addSource(source)
         }
+
+        val profileName = System.getProperty("ambon.profile")
+        if (profileName != null) {
+            builder = builder.addSource(PropertySource.resource("/application-$profileName.yaml", optional = true))
+        }
+
         builder = builder.addResourceSource(resourcePath, optional = false)
 
         return builder
