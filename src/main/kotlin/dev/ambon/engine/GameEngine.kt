@@ -14,6 +14,7 @@ import dev.ambon.domain.world.World
 import dev.ambon.engine.abilities.AbilityRegistry
 import dev.ambon.engine.abilities.AbilityRegistryLoader
 import dev.ambon.engine.abilities.AbilitySystem
+import dev.ambon.engine.behavior.BehaviorTreeSystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
@@ -156,6 +157,7 @@ class GameEngine(
             onMobRemoved = { mobId, roomId ->
                 mobSystem.onMobRemoved(mobId)
                 dialogueSystem.onMobRemoved(mobId)
+                behaviorTreeSystem.onMobRemoved(mobId)
                 for (p in players.playersInRoom(roomId)) {
                     gmcpEmitter.sendRoomRemoveMob(p.sessionId, mobId.value)
                 }
@@ -168,6 +170,7 @@ class GameEngine(
                         val respawned = spawnToMobState(spawn)
                         mobs.upsert(respawned)
                         mobSystem.onMobSpawned(spawn.id)
+                        behaviorTreeSystem.onMobSpawned(spawn.id)
                         for (p in players.playersInRoom(spawn.roomId)) {
                             outbound.send(OutboundEvent.SendText(p.sessionId, "${spawn.name} appears."))
                             gmcpEmitter.sendRoomAddMob(p.sessionId, respawned)
@@ -239,6 +242,21 @@ class GameEngine(
             mobs = mobs,
             players = players,
             outbound = outbound,
+        )
+
+    private val behaviorTreeSystem: BehaviorTreeSystem =
+        BehaviorTreeSystem(
+            world = world,
+            mobs = mobs,
+            players = players,
+            outbound = outbound,
+            clock = clock,
+            isMobInCombat = { mobId -> combatSystem.isMobInCombat(mobId) },
+            isMobRooted = { mobId -> statusEffectSystem.hasMobEffect(mobId, EffectType.ROOT) },
+            startMobCombat = { mobId, sessionId -> combatSystem.startMobCombat(mobId, sessionId) },
+            fleeMob = { mobId -> combatSystem.fleeMob(mobId) },
+            gmcpEmitter = gmcpEmitter,
+            metrics = metrics,
         )
 
     private val router =
@@ -328,6 +346,7 @@ class GameEngine(
         shopRegistry.register(world.shopDefinitions)
         mobSystem.setCombatChecker(combatSystem::isMobInCombat)
         mobSystem.setRootChecker { mobId -> statusEffectSystem.hasMobEffect(mobId, EffectType.ROOT) }
+        mobSystem.setBehaviorTreeChecker(behaviorTreeSystem::hasBehaviorTree)
     }
 
     suspend fun run() =
@@ -369,6 +388,9 @@ class GameEngine(
                     mobSample.stop(metrics.mobSystemTickTimer)
                     metrics.onMobMoves(mobMoves)
 
+                    // Tick behavior trees for mobs with AI (time-gated internally)
+                    behaviorTreeSystem.tick()
+
                     // Simulate combat (time-gated internally)
                     val combatSample = Timer.start()
                     val combatsRan = combatSystem.tick(maxCombatsPerTick = engineConfig.combat.maxCombatsPerTick)
@@ -386,6 +408,7 @@ class GameEngine(
                             // No source — end combat if applicable, broadcast death, clean up
                             combatSystem.onMobRemovedExternally(mobId)
                             dialogueSystem.onMobRemoved(mobId)
+                            behaviorTreeSystem.onMobRemoved(mobId)
                             mobs.remove(mobId)
                             mobSystem.onMobRemoved(mobId)
                             statusEffectSystem.onMobRemoved(mobId)
@@ -471,6 +494,7 @@ class GameEngine(
         for (mobId in zoneMobIds) {
             combatSystem.onMobRemovedExternally(mobId)
             dialogueSystem.onMobRemoved(mobId)
+            behaviorTreeSystem.onMobRemoved(mobId)
             mobs.remove(mobId)
             mobSystem.onMobRemoved(mobId)
         }
@@ -478,6 +502,7 @@ class GameEngine(
         for (spawn in zoneMobSpawns) {
             mobs.upsert(spawnToMobState(spawn))
             mobSystem.onMobSpawned(spawn.id)
+            behaviorTreeSystem.onMobSpawned(spawn.id)
         }
 
         val zoneItemSpawns =
@@ -1376,6 +1401,7 @@ class GameEngine(
             goldMax = spawn.goldMax,
             stationary = spawn.stationary,
             dialogue = spawn.dialogue,
+            behaviorTree = spawn.behaviorTree,
         )
 
     private fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)

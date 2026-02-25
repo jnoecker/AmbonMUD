@@ -19,6 +19,7 @@ class MobSystem(
     private val rng: Random = Random(),
     private var isMobInCombat: (MobId) -> Boolean = { false },
     private var isMobRooted: (MobId) -> Boolean = { false },
+    private var hasBehaviorTree: (MobId) -> Boolean = { false },
     // Tuning knobs (defaults feel “MUD-like”)
     private val minWanderDelayMillis: Long = 5_000L,
     private val maxWanderDelayMillis: Long = 12_000L,
@@ -57,6 +58,12 @@ class MobSystem(
 
             // Stationary mobs never wander
             if (m.stationary) {
+                nextActAtMillis[m.id] = now + randomDelay()
+                continue
+            }
+
+            // Mobs with behavior trees are handled by BehaviorTreeSystem
+            if (hasBehaviorTree(m.id)) {
                 nextActAtMillis[m.id] = now + randomDelay()
                 continue
             }
@@ -100,6 +107,10 @@ class MobSystem(
 
     fun setRootChecker(checker: (MobId) -> Boolean) {
         isMobRooted = checker
+    }
+
+    fun setBehaviorTreeChecker(checker: (MobId) -> Boolean) {
+        hasBehaviorTree = checker
     }
 
     private fun randomDelay(): Long {

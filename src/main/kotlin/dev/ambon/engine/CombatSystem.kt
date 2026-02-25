@@ -156,6 +156,46 @@ class CombatSystem(
         outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
     }
 
+    suspend fun startMobCombat(
+        mobId: MobId,
+        sessionId: SessionId,
+    ): Boolean {
+        val player = players.get(sessionId) ?: return false
+        val mob = mobs.get(mobId) ?: return false
+
+        if (fightsByPlayer.containsKey(sessionId)) return false
+        if (fightsByMob.containsKey(mobId)) return false
+        if (player.roomId != mob.roomId) return false
+
+        val fight =
+            Fight(
+                sessionId = sessionId,
+                mobId = mobId,
+                nextTickAtMs = clock.millis() + tickMillis,
+            )
+        fightsByPlayer[sessionId] = fight
+        fightsByMob[mobId] = fight
+
+        outbound.send(OutboundEvent.SendText(sessionId, "${mob.name} attacks you!"))
+        broadcastToRoom(players, outbound, player.roomId, "${mob.name} attacks ${player.name}.", exclude = sessionId)
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+
+        return true
+    }
+
+    suspend fun fleeMob(mobId: MobId): Boolean {
+        val fight = fightsByMob[mobId] ?: return false
+        val mob = mobs.get(mobId)
+        val mobName = mob?.name ?: "your foe"
+
+        endFight(fight)
+
+        outbound.send(OutboundEvent.SendText(fight.sessionId, "$mobName flees!"))
+        outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
+
+        return true
+    }
+
     suspend fun tick(maxCombatsPerTick: Int = 20): Int {
         val now = clock.millis()
         var ran = 0
