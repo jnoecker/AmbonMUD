@@ -29,12 +29,22 @@ data class PlayerState(
     var baseMana: Int = BASE_MANA,
     var gold: Long = 0L,
     // Immutable after creation — cached here so persistIfClaimed avoids a repo lookup.
-    var createdAtEpochMs: Long = 0L,
-    var passwordHash: String = "",
+    val createdAtEpochMs: Long = 0L,
+    val passwordHash: String = "",
 ) {
     companion object {
         const val BASE_MAX_HP = 10
         const val BASE_MANA = 20
         const val BASE_STAT = 10
     }
+
+    override fun toString(): String =
+        "PlayerState(sessionId=$sessionId, name=$name, roomId=$roomId, playerId=$playerId, " +
+            "baseMaxHp=$baseMaxHp, hp=$hp, maxHp=$maxHp, " +
+            "strength=$strength, dexterity=$dexterity, constitution=$constitution, " +
+            "intelligence=$intelligence, wisdom=$wisdom, charisma=$charisma, " +
+            "race=$race, playerClass=$playerClass, level=$level, xpTotal=$xpTotal, " +
+            "ansiEnabled=$ansiEnabled, isStaff=$isStaff, " +
+            "mana=$mana, maxMana=$maxMana, baseMana=$baseMana, gold=$gold, " +
+            "createdAtEpochMs=$createdAtEpochMs, passwordHash=<redacted>)"
 }
