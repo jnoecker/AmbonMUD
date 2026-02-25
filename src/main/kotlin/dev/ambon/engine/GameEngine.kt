@@ -64,6 +64,7 @@ class GameEngine(
     private val tickMillis: Long,
     private val scheduler: Scheduler,
     private val maxInboundEventsPerTick: Int = Int.MAX_VALUE,
+    private val inboundBudgetMs: Long = 30L,
     private val loginConfig: LoginConfig = LoginConfig(),
     private val engineConfig: EngineConfig = EngineConfig(),
     private val progression: PlayerProgression = PlayerProgression(),
@@ -429,9 +430,14 @@ class GameEngine(
                 val tickSample = Timer.start()
 
                 try {
-                    // Drain inbound without blocking
+                    // Drain inbound without blocking, time-budgeted to leave room for simulation.
                     var inboundProcessed = 0
+                    val inboundDeadline = tickStart + inboundBudgetMs
                     while (inboundProcessed < maxInboundEventsPerTick) {
+                        if (clock.millis() >= inboundDeadline) {
+                            metrics.onInboundDrainBudgetExceeded()
+                            break
+                        }
                         val ev = inbound.tryReceive().getOrNull() ?: break
                         handle(ev)
                         inboundProcessed++
@@ -442,6 +448,7 @@ class GameEngine(
                     if (interEngineBus != null) {
                         var interEngineProcessed = 0
                         while (interEngineProcessed < maxInboundEventsPerTick) {
+                            if (clock.millis() >= inboundDeadline) break
                             val msg = interEngineBus.incoming().tryReceive().getOrNull() ?: break
                             handleInterEngineMessage(msg)
                             interEngineProcessed++

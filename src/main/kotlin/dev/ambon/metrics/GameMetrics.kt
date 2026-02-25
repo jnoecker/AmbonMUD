@@ -68,6 +68,8 @@ class GameMetrics(
     private val engineTickOverrunCounter = Counter.builder("engine_tick_overrun_total").register(registry)
     private val inboundEventsProcessedCounter =
         Counter.builder("engine_inbound_events_processed_total").register(registry)
+    private val inboundDrainBudgetExceededCounter =
+        Counter.builder("engine_inbound_drain_budget_exceeded_total").register(registry)
 
     val mobSystemTickTimer: Timer =
         Timer
@@ -176,6 +178,8 @@ class GameMetrics(
     fun onEngineTickOverrun() = engineTickOverrunCounter.increment()
 
     fun onInboundEventsProcessed(count: Int) = inboundEventsProcessedCounter.increment(count.toDouble())
+
+    fun onInboundDrainBudgetExceeded() = inboundDrainBudgetExceededCounter.increment()
 
     fun onMobMoves(count: Int) = mobMovesCounter.increment(count.toDouble())
 
