@@ -19,7 +19,6 @@ data class MobState(
     val drops: List<MobDrop> = emptyList(),
     val goldMin: Long = 0L,
     val goldMax: Long = 0L,
-    val stationary: Boolean = false,
     val dialogue: DialogueTree? = null,
     val behaviorTree: BtNode? = null,
 )

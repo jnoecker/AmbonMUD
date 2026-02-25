@@ -115,18 +115,7 @@ class GameEngine(
         gmcpDirtyStatusEffects.add(sessionId)
     }
 
-    private val mobSystem =
-        MobSystem(
-            world = world,
-            mobs = mobs,
-            players = players,
-            outbound = outbound,
-            clock = clock,
-            minWanderDelayMillis = engineConfig.mob.minWanderDelayMillis,
-            maxWanderDelayMillis = engineConfig.mob.maxWanderDelayMillis,
-            metrics = metrics,
-            gmcpEmitter = gmcpEmitter,
-        )
+    private val mobSystem = MobSystem()
     private val statusEffectRegistry =
         StatusEffectRegistry().also { reg ->
             StatusEffectRegistryLoader.load(engineConfig.statusEffects, reg)
@@ -344,9 +333,6 @@ class GameEngine(
         }
         items.loadSpawns(world.itemSpawns)
         shopRegistry.register(world.shopDefinitions)
-        mobSystem.setCombatChecker(combatSystem::isMobInCombat)
-        mobSystem.setRootChecker { mobId -> statusEffectSystem.hasMobEffect(mobId, EffectType.ROOT) }
-        mobSystem.setBehaviorTreeChecker(behaviorTreeSystem::hasBehaviorTree)
     }
 
     suspend fun run() =
@@ -382,9 +368,9 @@ class GameEngine(
                     }
                     flushDueWhoResponses()
 
-                    // Simulate NPC actions (time-gated internally)
+                    // Mob movement is handled entirely by BehaviorTreeSystem below
                     val mobSample = Timer.start()
-                    val mobMoves = mobSystem.tick(maxMovesPerTick = engineConfig.mob.maxMovesPerTick)
+                    val mobMoves = mobSystem.tick()
                     mobSample.stop(metrics.mobSystemTickTimer)
                     metrics.onMobMoves(mobMoves)
 
@@ -1399,7 +1385,6 @@ class GameEngine(
             drops = spawn.drops,
             goldMin = spawn.goldMin,
             goldMax = spawn.goldMax,
-            stationary = spawn.stationary,
             dialogue = spawn.dialogue,
             behaviorTree = spawn.behaviorTree,
         )

@@ -18,7 +18,6 @@ data class MobSpawn(
     val respawnSeconds: Long? = null,
     val goldMin: Long = 0L,
     val goldMax: Long = 0L,
-    val stationary: Boolean = false,
     val dialogue: DialogueTree? = null,
     val behaviorTree: BtNode? = null,
 )

@@ -14,7 +14,6 @@ data class MobFile(
     val respawnSeconds: Long? = null,
     val goldMin: Long? = null,
     val goldMax: Long? = null,
-    val stationary: Boolean = false,
     val dialogue: Map<String, DialogueNodeFile> = emptyMap(),
     val behavior: BehaviorFile? = null,
 )

@@ -62,14 +62,6 @@ data class AppConfig(
             "ambonMUD.login.maxFailedAttemptsBeforeDisconnect must be > 0"
         }
 
-        require(engine.mob.maxMovesPerTick > 0) { "ambonMUD.engine.mob.maxMovesPerTick must be > 0" }
-        require(engine.mob.minWanderDelayMillis >= 0L) { "ambonMUD.engine.mob.minWanderDelayMillis must be >= 0" }
-        require(engine.mob.maxWanderDelayMillis >= engine.mob.minWanderDelayMillis) {
-            "ambonMUD.engine.mob.maxWanderDelayMillis must be >= minWanderDelayMillis"
-        }
-        require(engine.mob.maxWanderDelayMillis - engine.mob.minWanderDelayMillis <= Int.MAX_VALUE.toLong()) {
-            "ambonMUD.engine.mob wander delay range (max - min) must not exceed Int.MAX_VALUE ms"
-        }
         validateMobTier("weak", engine.mob.tiers.weak)
         validateMobTier("standard", engine.mob.tiers.standard)
         validateMobTier("elite", engine.mob.tiers.elite)
@@ -466,9 +458,6 @@ data class MobTiersConfig(
 }
 
 data class MobEngineConfig(
-    val maxMovesPerTick: Int = 10,
-    val minWanderDelayMillis: Long = 5_000L,
-    val maxWanderDelayMillis: Long = 12_000L,
     val tiers: MobTiersConfig = MobTiersConfig(),
 )
 

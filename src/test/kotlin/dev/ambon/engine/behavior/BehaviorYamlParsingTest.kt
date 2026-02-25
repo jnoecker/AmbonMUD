@@ -43,14 +43,4 @@ class BehaviorYamlParsingTest {
         assertTrue(ex.message!!.contains("unknown behavior template"))
         assertTrue(ex.message!!.contains("nonexistent_behavior"))
     }
-
-    @Test
-    fun `behavior with stationary true causes load error`() {
-        val ex =
-            assertThrows<WorldLoadException> {
-                WorldLoader.loadFromResource("world/bad_behavior_stationary_conflict.yaml")
-            }
-        assertTrue(ex.message!!.contains("stationary"))
-        assertTrue(ex.message!!.contains("behavior"))
-    }
 }

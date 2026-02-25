@@ -18,7 +18,6 @@ object BehaviorTemplates {
     val templateNames: Set<String> =
         setOf(
             "aggro_guard",
-            "stationary_aggro",
             "patrol",
             "patrol_aggro",
             "wander",
@@ -33,7 +32,6 @@ object BehaviorTemplates {
     ): BtNode? =
         when (name.lowercase()) {
             "aggro_guard" -> aggroGuard(params)
-            "stationary_aggro" -> stationaryAggro(params)
             "patrol" -> patrol(params, zone)
             "patrol_aggro" -> patrolAggro(params, zone)
             "wander" -> wander()
@@ -43,15 +41,6 @@ object BehaviorTemplates {
         }
 
     private fun aggroGuard(params: BehaviorParamsFile): BtNode =
-        SelectorNode(
-            listOf(
-                IsInCombat,
-                aggroSequence(params),
-                StationaryAction,
-            ),
-        )
-
-    private fun stationaryAggro(params: BehaviorParamsFile): BtNode =
         SelectorNode(
             listOf(
                 IsInCombat,

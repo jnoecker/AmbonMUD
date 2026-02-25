@@ -205,7 +205,7 @@ object WorldLoader {
                 }
 
                 val dialogue = parseDialogue(mobId, mf.dialogue)
-                val behaviorTree = parseBehavior(mobId, zone, mf.behavior, mf.stationary)
+                val behaviorTree = parseBehavior(mobId, zone, mf.behavior)
 
                 mergedMobs[mobId] =
                     MobSpawn(
@@ -221,7 +221,6 @@ object WorldLoader {
                         respawnSeconds = respawnSeconds,
                         goldMin = resolvedGoldMin,
                         goldMax = resolvedGoldMax,
-                        stationary = mf.stationary,
                         dialogue = dialogue,
                         behaviorTree = behaviorTree,
                     )
@@ -575,15 +574,8 @@ object WorldLoader {
         mobId: MobId,
         zone: String,
         behaviorFile: dev.ambon.domain.world.data.BehaviorFile?,
-        stationary: Boolean,
     ): BtNode? {
         if (behaviorFile == null) return null
-
-        if (stationary) {
-            throw WorldLoadException(
-                "Mob '${mobId.value}' cannot have both 'stationary: true' and a 'behavior' definition",
-            )
-        }
 
         val tree =
             BehaviorTemplates.resolve(

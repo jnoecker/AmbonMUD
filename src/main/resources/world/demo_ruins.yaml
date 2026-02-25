@@ -57,7 +57,7 @@ mobs:
     name: "a drowned warder"
     room: flooded_steps
     behavior:
-      template: stationary_aggro
+      template: aggro_guard
   orchard_keeper:
     name: "an orchard keeper"
     room: mirror_orchard
