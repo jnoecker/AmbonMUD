@@ -60,8 +60,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.nio.file.Paths
 import java.time.Clock
@@ -387,18 +385,11 @@ class MudServer(
         // Start player-location index heartbeat
         if (playerLocationIndex != null) {
             val heartbeatMs = config.sharding.playerIndex.heartbeatMs
+            // refreshTtls uses the index's own internal name tracking —
+            // no access to PlayerRegistry needed, avoiding a cross-thread read.
             playerIndexHeartbeatJob =
-                scope.launch {
-                    while (isActive) {
-                        delay(heartbeatMs)
-                        runCatching {
-                            // refreshTtls uses the index's own internal name tracking —
-                            // no access to PlayerRegistry needed, avoiding a cross-thread read.
-                            playerLocationIndex.refreshTtls()
-                        }.onFailure { err ->
-                            log.warn(err) { "Player location index heartbeat failed" }
-                        }
-                    }
+                scope.launchPeriodic(heartbeatMs, "Player location index heartbeat") {
+                    playerLocationIndex.refreshTtls()
                 }
         }
         if (zoneRegistry != null) {
@@ -407,35 +398,21 @@ class MudServer(
                 ((config.sharding.registry.leaseTtlSeconds * 1_000L) / 3L)
                     .coerceAtLeast(1_000L)
             zoneHeartbeatJob =
-                scope.launch {
-                    while (isActive) {
-                        delay(heartbeatIntervalMs)
-                        runCatching {
-                            zoneRegistry.renewLease(engineId)
-                            zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
-                        }.onFailure { err ->
-                            log.warn(err) { "Zone lease heartbeat failed for engine=$engineId" }
-                        }
-                    }
+                scope.launchPeriodic(heartbeatIntervalMs, "Zone lease heartbeat (engine=$engineId)") {
+                    zoneRegistry.renewLease(engineId)
+                    zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
                 }
             // Zone load reporting for instance-aware routing
             if (config.sharding.instancing.enabled) {
                 val loadReportIntervalMs = config.sharding.instancing.loadReportIntervalMs
                 zoneLoadReportJob =
-                    scope.launch {
-                        while (isActive) {
-                            delay(loadReportIntervalMs)
-                            runCatching {
-                                val zoneCounts =
-                                    players
-                                        .allPlayers()
-                                        .groupBy { it.roomId.zone }
-                                        .mapValues { (_, ps) -> ps.size }
-                                zoneRegistry.reportLoad(engineId, zoneCounts)
-                            }.onFailure { err ->
-                                log.warn(err) { "Zone load report failed for engine=$engineId" }
-                            }
-                        }
+                    scope.launchPeriodic(loadReportIntervalMs, "Zone load report (engine=$engineId)") {
+                        val zoneCounts =
+                            players
+                                .allPlayers()
+                                .groupBy { it.roomId.zone }
+                                .mapValues { (_, ps) -> ps.size }
+                        zoneRegistry.reportLoad(engineId, zoneCounts)
                     }
             }
             // Auto-scaling signal evaluation
@@ -463,17 +440,10 @@ class MudServer(
                     }
                 val evalIntervalMs = config.sharding.instancing.autoScale.evaluationIntervalMs
                 autoScaleJob =
-                    scope.launch {
-                        while (isActive) {
-                            delay(evalIntervalMs)
-                            runCatching {
-                                val decisions = scaler.evaluate()
-                                if (decisions.isNotEmpty()) {
-                                    publisher.publish(decisions)
-                                }
-                            }.onFailure { err ->
-                                log.warn(err) { "Auto-scale evaluation failed" }
-                            }
+                    scope.launchPeriodic(evalIntervalMs, "Auto-scale evaluation") {
+                        val decisions = scaler.evaluate()
+                        if (decisions.isNotEmpty()) {
+                            publisher.publish(decisions)
                         }
                     }
             }
