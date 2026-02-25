@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.quest.CompletionType
 import dev.ambon.domain.quest.ObjectiveProgress
 import dev.ambon.domain.quest.ObjectiveType
 import dev.ambon.domain.quest.QuestDef
@@ -205,8 +206,7 @@ class QuestSystem(
                 for ((index, objDef) in (quest?.objectives ?: emptyList()).withIndex()) {
                     val prog = state.objectives.getOrNull(index) ?: continue
                     val status = if (prog.isComplete) "DONE" else "${prog.current}/${prog.required}"
-                    append("    - ${objDef.description}: $status")
-                    if (index < (quest?.objectives?.size ?: 1) - 1) appendLine()
+                    appendLine("    - ${objDef.description}: $status")
                 }
             }
         }.trimEnd()
@@ -246,7 +246,7 @@ class QuestSystem(
     ) {
         for ((questId, state) in activeQuests) {
             val quest = registry.get(questId) ?: continue
-            if (quest.completionType != dev.ambon.domain.quest.CompletionType.AUTO) continue
+            if (quest.completionType != CompletionType.AUTO) continue
             if (state.objectives.all { it.isComplete }) {
                 completeQuest(sessionId, questId, quest.rewards)
             }

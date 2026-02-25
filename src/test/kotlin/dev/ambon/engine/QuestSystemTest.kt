@@ -1,8 +1,11 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.quest.CompletionType
 import dev.ambon.domain.quest.ObjectiveType
 import dev.ambon.domain.quest.QuestDef
@@ -122,6 +125,7 @@ class QuestSystemTest {
             assertFalse(ps.activeQuests.containsKey(questId), "Quest should be removed from active")
             assertTrue(ps.completedQuestIds.contains(questId), "Quest should be in completed set")
             assertEquals(20L, ps.gold, "Player should have received gold reward")
+            assertEquals(100L, ps.xpTotal, "Player should have received XP reward")
 
             val events = outbound.drainAll()
             val texts =
@@ -225,5 +229,107 @@ class QuestSystemTest {
 
             val err = qs.acceptQuest(sid, questId)
             assertNotNull(err, "Should not be able to accept a completed quest")
+        }
+
+    @Test
+    fun `onItemCollected increments collect objective`() =
+        runTest {
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val outbound = LocalOutboundBus()
+            val registry = QuestRegistry()
+            val collectItemId = "zone:shiny_rock"
+            val collectQuestId = "zone:collect_quest"
+            val collectQuest =
+                QuestDef(
+                    id = collectQuestId,
+                    name = "Collect Rocks",
+                    description = "Gather shiny rocks.",
+                    giverMobId = "zone:quest_giver",
+                    objectives =
+                        listOf(
+                            QuestObjectiveDef(
+                                type = ObjectiveType.COLLECT,
+                                targetId = collectItemId,
+                                count = 2,
+                                description = "Collect 2 shiny rocks",
+                            ),
+                        ),
+                    rewards = QuestRewards(xp = 50L, gold = 10L),
+                    completionType = CompletionType.AUTO,
+                )
+            registry.register(collectQuest)
+            val qs =
+                QuestSystem(
+                    registry = registry,
+                    players = players,
+                    items = items,
+                    outbound = outbound,
+                    clock = MutableClock(1_000L),
+                )
+
+            val sid = SessionId(2L)
+            players.loginOrFail(sid, "Gatherer")
+            qs.acceptQuest(sid, collectQuestId)
+
+            val rock = ItemInstance(id = ItemId(collectItemId), item = Item(keyword = "rock", displayName = "a shiny rock"))
+            items.addToInventory(sid, rock)
+            qs.onItemCollected(sid, rock)
+
+            val ps = players.get(sid)!!
+            assertEquals(1, ps.activeQuests[collectQuestId]!!.objectives[0].current, "Collecting one item should advance progress to 1")
+        }
+
+    @Test
+    fun `formatQuestLog shows multiple quests on separate lines`() =
+        runTest {
+            val (qs, players, _) = setup()
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            val secondQuestId = "zone:bonus_quest"
+            val registry = QuestRegistry()
+            registry.register(killQuest)
+            val secondQuest =
+                QuestDef(
+                    id = secondQuestId,
+                    name = "Bonus Quest",
+                    description = "Do extra stuff.",
+                    giverMobId = "zone:quest_giver",
+                    objectives =
+                        listOf(
+                            QuestObjectiveDef(
+                                type = ObjectiveType.KILL,
+                                targetId = mobTemplateKey,
+                                count = 1,
+                                description = "Kill 1 target mob",
+                            ),
+                        ),
+                    rewards = QuestRewards(xp = 50L),
+                    completionType = CompletionType.AUTO,
+                )
+            registry.register(secondQuest)
+            val items = ItemRegistry()
+            val players2 = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val outbound2 = LocalOutboundBus()
+            val qs2 =
+                QuestSystem(
+                    registry = registry,
+                    players = players2,
+                    items = items,
+                    outbound = outbound2,
+                    clock = MutableClock(1_000L),
+                )
+
+            val sid2 = SessionId(3L)
+            players2.loginOrFail(sid2, "Hero2")
+            qs2.acceptQuest(sid2, questId)
+            qs2.acceptQuest(sid2, secondQuestId)
+
+            val log = qs2.formatQuestLog(sid2)
+            assertTrue(log.contains("Kill Quest"), "Log should contain Kill Quest")
+            assertTrue(log.contains("Bonus Quest"), "Log should contain Bonus Quest")
+            // Each quest name must appear on its own line (preceded by a newline + indent)
+            assertTrue(log.contains("\n  Bonus Quest"), "Bonus Quest must start on its own line")
         }
 }
