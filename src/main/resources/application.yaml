@@ -298,6 +298,18 @@ ambonMUD:
           effect:
             type: APPLY_STATUS
             statusEffectId: battle_shout
+        taunt:
+          displayName: "Taunt"
+          description: "Force a mob to attack you by generating massive threat."
+          manaCost: 5
+          cooldownMs: 10000
+          levelRequired: 2
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: TAUNT
+            flatThreat: 50.0
+            margin: 10.0
         # --- Mage ---
         arcane_bolt:
           displayName: "Arcane Bolt"
@@ -346,14 +358,26 @@ ambonMUD:
           effect:
             type: APPLY_STATUS
             statusEffectId: ignite
+        fireball:
+          displayName: "Fireball"
+          description: "Hurl a ball of fire that hits all enemies in combat with your group."
+          manaCost: 25
+          cooldownMs: 8000
+          levelRequired: 5
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 3
+            maxDamage: 7
         # --- Cleric ---
         minor_heal:
           displayName: "Minor Heal"
-          description: "Mend your wounds with holy light."
+          description: "Mend wounds with holy light. Target a group member or self."
           manaCost: 8
           cooldownMs: 0
           levelRequired: 1
-          targetType: SELF
+          targetType: ALLY
           requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
@@ -373,11 +397,11 @@ ambonMUD:
             maxDamage: 12
         greater_heal:
           displayName: "Greater Heal"
-          description: "A powerful wave of restorative energy."
+          description: "A powerful wave of restorative energy. Target a group member or self."
           manaCost: 22
           cooldownMs: 8000
           levelRequired: 10
-          targetType: SELF
+          targetType: ALLY
           requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
@@ -385,22 +409,22 @@ ambonMUD:
             maxHeal: 25
         shield_of_faith:
           displayName: "Shield of Faith"
-          description: "Grants a shield that absorbs damage."
+          description: "Grants a shield that absorbs damage. Target a group member or self."
           manaCost: 15
           cooldownMs: 30000
           levelRequired: 5
-          targetType: SELF
+          targetType: ALLY
           requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: shield_of_faith
         rejuvenation:
           displayName: "Rejuvenation"
-          description: "Heals the caster over time."
+          description: "Heals a target over time. Target a group member or self."
           manaCost: 12
           cooldownMs: 15000
           levelRequired: 4
-          targetType: SELF
+          targetType: ALLY
           requiredClass: CLERIC
           effect:
             type: APPLY_STATUS

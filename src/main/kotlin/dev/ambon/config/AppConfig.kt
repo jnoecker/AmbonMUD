@@ -114,11 +114,12 @@ data class AppConfig(
             require(def.manaCost >= 0) { "ability '$key' manaCost must be >= 0" }
             require(def.cooldownMs >= 0L) { "ability '$key' cooldownMs must be >= 0" }
             require(def.levelRequired >= 1) { "ability '$key' levelRequired must be >= 1" }
-            require(def.targetType.uppercase() in listOf("ENEMY", "SELF")) {
-                "ability '$key' targetType must be ENEMY or SELF, got '${def.targetType}'"
+            require(def.targetType.uppercase() in listOf("ENEMY", "SELF", "ALLY")) {
+                "ability '$key' targetType must be ENEMY, SELF, or ALLY, got '${def.targetType}'"
             }
-            require(def.effect.type.uppercase() in listOf("DIRECT_DAMAGE", "DIRECT_HEAL", "APPLY_STATUS")) {
-                "ability '$key' effect.type must be DIRECT_DAMAGE, DIRECT_HEAL, or APPLY_STATUS, got '${def.effect.type}'"
+            val validEffectTypes = listOf("DIRECT_DAMAGE", "DIRECT_HEAL", "APPLY_STATUS", "AREA_DAMAGE", "TAUNT")
+            require(def.effect.type.uppercase() in validEffectTypes) {
+                "ability '$key' effect.type must be one of $validEffectTypes, got '${def.effect.type}'"
             }
             if (def.effect.type.uppercase() == "APPLY_STATUS") {
                 require(def.effect.statusEffectId.isNotBlank()) {
@@ -546,6 +547,8 @@ data class AbilityEffectConfig(
     val minHeal: Int = 0,
     val maxHeal: Int = 0,
     val statusEffectId: String = "",
+    val flatThreat: Double = 50.0,
+    val margin: Double = 10.0,
 )
 
 data class StatusEffectEngineConfig(

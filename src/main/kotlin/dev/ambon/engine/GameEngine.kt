@@ -241,6 +241,8 @@ class GameEngine(
             markMobHpDirty = ::markMobHpDirty,
             statusEffects = statusEffectSystem,
             markStatusDirty = ::markStatusDirty,
+            groupSystem = groupSystem,
+            mobs = mobs,
         )
 
     private val shopRegistry = ShopRegistry(items)

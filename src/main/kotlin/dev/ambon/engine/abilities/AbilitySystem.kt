@@ -5,6 +5,8 @@ import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.GroupSystem
+import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.broadcastToRoom
@@ -28,6 +30,8 @@ class AbilitySystem(
     private val markMobHpDirty: (MobId) -> Unit = {},
     private val statusEffects: StatusEffectSystem? = null,
     private val markStatusDirty: (SessionId) -> Unit = {},
+    private val groupSystem: GroupSystem? = null,
+    private val mobs: MobRegistry? = null,
 ) {
     private val learnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
     private val cooldowns = mutableMapOf<SessionId, MutableMap<AbilityId, Long>>()
@@ -49,6 +53,7 @@ class AbilitySystem(
             .mapNotNull { registry.get(it) }
     }
 
+    @Suppress("CyclomaticComplexity", "LongMethod")
     suspend fun cast(
         sessionId: SessionId,
         spellName: String,
@@ -79,125 +84,303 @@ class AbilitySystem(
         // 4. Resolve target and apply
         when (ability.targetType) {
             TargetType.ENEMY -> {
-                val keyword =
-                    targetKeyword
-                        ?: if (combat.isInCombat(sessionId)) {
-                            // Auto-target current combat mob
-                            null
-                        } else {
-                            return "Cast ${ability.displayName} on whom?"
-                        }
-
-                val mob =
-                    if (keyword != null) {
-                        combat.findMobInRoom(player.roomId, keyword)
-                            ?: return "You don't see '$keyword' here."
-                    } else {
-                        combat.getCombatTarget(sessionId)
-                            ?: return "Cast ${ability.displayName} on whom?"
-                    }
-
-                // 5. Deduct mana
-                player.mana = (player.mana - ability.manaCost).coerceAtLeast(0)
-                markVitalsDirty(sessionId)
-
-                // 6. Set cooldown
-                if (ability.cooldownMs > 0) {
-                    cooldowns.getOrPut(sessionId) { mutableMapOf() }[ability.id] = now + ability.cooldownMs
-                }
-
-                // 7. Apply effect
-                when (val effect = ability.effect) {
-                    is AbilityEffect.DirectDamage -> {
-                        val baseDamage = rollRange(rng, effect.minDamage, effect.maxDamage)
-                        val intBonus = intSpellBonus(player)
-                        val damage = (baseDamage + intBonus).coerceAtLeast(1)
-                        mob.hp = (mob.hp - damage).coerceAtLeast(0)
-                        markMobHpDirty(mob.id)
-                        outbound.send(
-                            OutboundEvent.SendText(
-                                sessionId,
-                                "Your ${ability.displayName} hits ${mob.name} for $damage damage.",
-                            ),
-                        )
-                        if (mob.hp <= 0) {
-                            combat.handleSpellKill(sessionId, mob)
-                        }
-                    }
-                    is AbilityEffect.ApplyStatus -> {
-                        val sys =
-                            statusEffects
-                                ?: return "Status effects are not available."
-                        sys.applyToMob(mob.id, effect.statusEffectId, sessionId)
-                        outbound.send(
-                            OutboundEvent.SendText(
-                                sessionId,
-                                "Your ${ability.displayName} afflicts ${mob.name}!",
-                            ),
-                        )
-                    }
-                    else -> return "Spell misconfigured (unexpected effect for enemy target)."
-                }
-                broadcastToRoom(
-                    players,
-                    outbound,
-                    player.roomId,
-                    "${player.name} casts ${ability.displayName}!",
-                    exclude = sessionId,
-                )
+                return handleEnemyCast(sessionId, player, ability, targetKeyword, now)
             }
 
             TargetType.SELF -> {
-                // 5. Deduct mana
-                player.mana = (player.mana - ability.manaCost).coerceAtLeast(0)
-                markVitalsDirty(sessionId)
+                return handleSelfCast(sessionId, player, ability, now)
+            }
 
-                // 6. Set cooldown
-                if (ability.cooldownMs > 0) {
-                    cooldowns.getOrPut(sessionId) { mutableMapOf() }[ability.id] = now + ability.cooldownMs
-                }
-
-                // 7. Apply effect
-                when (val effect = ability.effect) {
-                    is AbilityEffect.DirectHeal -> {
-                        val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
-                        val before = player.hp
-                        player.hp = (player.hp + healAmount).coerceAtMost(player.maxHp)
-                        val healed = player.hp - before
-                        if (healed > 0) markVitalsDirty(sessionId)
-                        outbound.send(
-                            OutboundEvent.SendText(
-                                sessionId,
-                                "Your ${ability.displayName} heals you for $healed HP.",
-                            ),
-                        )
-                    }
-                    is AbilityEffect.ApplyStatus -> {
-                        val sys =
-                            statusEffects
-                                ?: return "Status effects are not available."
-                        sys.applyToPlayer(sessionId, effect.statusEffectId, sessionId)
-                        markStatusDirty(sessionId)
-                        outbound.send(
-                            OutboundEvent.SendText(
-                                sessionId,
-                                "You are empowered by ${ability.displayName}!",
-                            ),
-                        )
-                    }
-                    else -> return "Spell misconfigured (unexpected effect for self target)."
-                }
-                broadcastToRoom(
-                    players,
-                    outbound,
-                    player.roomId,
-                    "${player.name} casts ${ability.displayName}.",
-                    exclude = sessionId,
-                )
+            TargetType.ALLY -> {
+                return handleAllyCast(sessionId, player, ability, targetKeyword, now)
             }
         }
+    }
 
+    @Suppress("CyclomaticComplexity", "LongMethod")
+    private suspend fun handleEnemyCast(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        targetKeyword: String?,
+        now: Long,
+    ): String? {
+        val keyword =
+            targetKeyword
+                ?: if (combat.isInCombat(sessionId)) {
+                    null
+                } else {
+                    return "Cast ${ability.displayName} on whom?"
+                }
+
+        val mob =
+            if (keyword != null) {
+                combat.findMobInRoom(player.roomId, keyword)
+                    ?: return "You don't see '$keyword' here."
+            } else {
+                combat.getCombatTarget(sessionId)
+                    ?: return "Cast ${ability.displayName} on whom?"
+            }
+
+        deductManaAndCooldown(sessionId, player, ability, now)
+
+        when (val effect = ability.effect) {
+            is AbilityEffect.DirectDamage -> {
+                val baseDamage = rollRange(rng, effect.minDamage, effect.maxDamage)
+                val intBonus = intSpellBonus(player)
+                val damage = (baseDamage + intBonus).coerceAtLeast(1)
+                mob.hp = (mob.hp - damage).coerceAtLeast(0)
+                markMobHpDirty(mob.id)
+                combat.addThreat(mob.id, sessionId, damage.toDouble())
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "Your ${ability.displayName} hits ${mob.name} for $damage damage.",
+                    ),
+                )
+                if (mob.hp <= 0) {
+                    combat.handleSpellKill(sessionId, mob)
+                }
+            }
+            is AbilityEffect.AreaDamage -> {
+                val mobRegistry = mobs ?: return "Area damage is not available."
+                val groupMembers =
+                    groupSystem?.membersInRoom(sessionId, player.roomId)
+                        ?: listOf(sessionId)
+
+                // Find all mobs in room that are in combat with any group member
+                val targetMobs =
+                    mobRegistry.mobsInRoom(player.roomId).filter { m ->
+                        combat.isMobInCombat(m.id) &&
+                            groupMembers.any { sid -> combat.threatTable.hasThreat(m.id, sid) }
+                    }
+
+                if (targetMobs.isEmpty()) {
+                    return "No enemies in combat to hit."
+                }
+
+                val intBonus = intSpellBonus(player)
+                for (m in targetMobs) {
+                    val baseDamage = rollRange(rng, effect.minDamage, effect.maxDamage)
+                    val damage = (baseDamage + intBonus).coerceAtLeast(1)
+                    m.hp = (m.hp - damage).coerceAtLeast(0)
+                    markMobHpDirty(m.id)
+                    combat.addThreat(m.id, sessionId, damage.toDouble())
+                    outbound.send(
+                        OutboundEvent.SendText(
+                            sessionId,
+                            "Your ${ability.displayName} hits ${m.name} for $damage damage.",
+                        ),
+                    )
+                    if (m.hp <= 0) {
+                        combat.handleSpellKill(sessionId, m)
+                    }
+                }
+            }
+            is AbilityEffect.Taunt -> {
+                if (!combat.isMobInCombat(mob.id)) {
+                    return "${mob.name} is not in combat."
+                }
+                val currentMax = combat.threatTable.maxThreatValue(mob.id)
+                combat.threatTable.setThreat(mob.id, sessionId, currentMax + effect.margin + effect.flatThreat)
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "You taunt ${mob.name}! It turns to face you.",
+                    ),
+                )
+            }
+            is AbilityEffect.ApplyStatus -> {
+                val sys =
+                    statusEffects
+                        ?: return "Status effects are not available."
+                sys.applyToMob(mob.id, effect.statusEffectId, sessionId)
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "Your ${ability.displayName} afflicts ${mob.name}!",
+                    ),
+                )
+            }
+            else -> return "Spell misconfigured (unexpected effect for enemy target)."
+        }
+        broadcastToRoom(
+            players,
+            outbound,
+            player.roomId,
+            "${player.name} casts ${ability.displayName}!",
+            exclude = sessionId,
+        )
         return null
+    }
+
+    private suspend fun handleSelfCast(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        now: Long,
+    ): String? {
+        deductManaAndCooldown(sessionId, player, ability, now)
+
+        when (val effect = ability.effect) {
+            is AbilityEffect.DirectHeal -> {
+                val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
+                val before = player.hp
+                player.hp = (player.hp + healAmount).coerceAtMost(player.maxHp)
+                val healed = player.hp - before
+                if (healed > 0) {
+                    markVitalsDirty(sessionId)
+                    combat.addHealingThreat(sessionId, healed)
+                }
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "Your ${ability.displayName} heals you for $healed HP.",
+                    ),
+                )
+            }
+            is AbilityEffect.ApplyStatus -> {
+                val sys =
+                    statusEffects
+                        ?: return "Status effects are not available."
+                sys.applyToPlayer(sessionId, effect.statusEffectId, sessionId)
+                markStatusDirty(sessionId)
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "You are empowered by ${ability.displayName}!",
+                    ),
+                )
+            }
+            else -> return "Spell misconfigured (unexpected effect for self target)."
+        }
+        broadcastToRoom(
+            players,
+            outbound,
+            player.roomId,
+            "${player.name} casts ${ability.displayName}.",
+            exclude = sessionId,
+        )
+        return null
+    }
+
+    private suspend fun handleAllyCast(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        targetKeyword: String?,
+        now: Long,
+    ): String? {
+        val targetSid =
+            if (targetKeyword == null || targetKeyword.isBlank()) {
+                sessionId
+            } else {
+                val targetSession =
+                    players.findSessionByName(targetKeyword)
+                        ?: return "Player '$targetKeyword' is not online."
+
+                val targetPlayer = players.get(targetSession) ?: return "Player '$targetKeyword' is not online."
+                if (targetPlayer.roomId != player.roomId) {
+                    return "${targetPlayer.name} is not in the same room."
+                }
+
+                val group = groupSystem?.getGroup(sessionId)
+                if (group != null && !group.members.contains(targetSession)) {
+                    return "${targetPlayer.name} is not in your group."
+                }
+                if (group == null && targetSession != sessionId) {
+                    return "You must be in a group to heal others."
+                }
+                targetSession
+            }
+
+        val target = players.get(targetSid) ?: return "Target not found."
+
+        deductManaAndCooldown(sessionId, player, ability, now)
+
+        when (val effect = ability.effect) {
+            is AbilityEffect.DirectHeal -> {
+                val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
+                val before = target.hp
+                target.hp = (target.hp + healAmount).coerceAtMost(target.maxHp)
+                val healed = target.hp - before
+                if (healed > 0) {
+                    markVitalsDirty(targetSid)
+                    combat.addHealingThreat(sessionId, healed)
+                }
+                if (targetSid == sessionId) {
+                    outbound.send(
+                        OutboundEvent.SendText(
+                            sessionId,
+                            "Your ${ability.displayName} heals you for $healed HP.",
+                        ),
+                    )
+                } else {
+                    outbound.send(
+                        OutboundEvent.SendText(
+                            sessionId,
+                            "Your ${ability.displayName} heals ${target.name} for $healed HP.",
+                        ),
+                    )
+                    outbound.send(
+                        OutboundEvent.SendText(
+                            targetSid,
+                            "${player.name}'s ${ability.displayName} heals you for $healed HP.",
+                        ),
+                    )
+                }
+            }
+            is AbilityEffect.ApplyStatus -> {
+                val sys =
+                    statusEffects
+                        ?: return "Status effects are not available."
+                sys.applyToPlayer(targetSid, effect.statusEffectId, sessionId)
+                markStatusDirty(targetSid)
+                if (targetSid == sessionId) {
+                    outbound.send(
+                        OutboundEvent.SendText(
+                            sessionId,
+                            "You are empowered by ${ability.displayName}!",
+                        ),
+                    )
+                } else {
+                    outbound.send(
+                        OutboundEvent.SendText(
+                            sessionId,
+                            "Your ${ability.displayName} empowers ${target.name}!",
+                        ),
+                    )
+                    outbound.send(
+                        OutboundEvent.SendText(
+                            targetSid,
+                            "${player.name}'s ${ability.displayName} empowers you!",
+                        ),
+                    )
+                }
+            }
+            else -> return "Spell misconfigured (unexpected effect for ally target)."
+        }
+        broadcastToRoom(
+            players,
+            outbound,
+            player.roomId,
+            "${player.name} casts ${ability.displayName}.",
+            exclude = sessionId,
+        )
+        return null
+    }
+
+    private fun deductManaAndCooldown(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        now: Long,
+    ) {
+        player.mana = (player.mana - ability.manaCost).coerceAtLeast(0)
+        markVitalsDirty(sessionId)
+        if (ability.cooldownMs > 0) {
+            cooldowns.getOrPut(sessionId) { mutableMapOf() }[ability.id] = now + ability.cooldownMs
+        }
     }
 
     fun knownAbilities(sessionId: SessionId): List<AbilityDefinition> {
