@@ -212,6 +212,50 @@ sealed interface Command {
         val message: String,
     ) : Command
 
+    // ---- World feature commands ----
+
+    data class OpenFeature(
+        val keyword: String,
+    ) : Command
+
+    data class CloseFeature(
+        val keyword: String,
+    ) : Command
+
+    data class UnlockFeature(
+        val keyword: String,
+    ) : Command
+
+    data class LockFeature(
+        val keyword: String,
+    ) : Command
+
+    data class SearchContainer(
+        val keyword: String,
+    ) : Command
+
+    /** Take an item from an open container: "get <item> from <container>". */
+    data class GetFrom(
+        val itemKeyword: String,
+        val containerKeyword: String,
+    ) : Command
+
+    /** Place an item into an open container: "put <item> <container>" or "put <item> in <container>". */
+    data class PutIn(
+        val itemKeyword: String,
+        val containerKeyword: String,
+    ) : Command
+
+    /** Toggle a lever/switch. */
+    data class Pull(
+        val keyword: String,
+    ) : Command
+
+    /** Read a sign. */
+    data class ReadSign(
+        val keyword: String,
+    ) : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -286,8 +330,22 @@ object CommandParser {
             if (slot == null) Command.Invalid(line, "remove <head|body|hand>") else Command.Remove(slot)
         }?.let { return it }
 
-        // get/take
-        requiredArg(line, listOf("get", "take", "pickup", "pick", "pick up"), "get <item>", { Command.Get(it) })?.let { return it }
+        // get/take — supports "get <item>" and "get <item> from <container>"
+        matchPrefix(line, listOf("get", "take", "pickup", "pick up", "pick")) { rest ->
+            if (rest.isEmpty()) return@matchPrefix Command.Invalid(line, "get <item>  or  get <item> from <container>")
+            val fromIdx = rest.lowercase().indexOf(" from ")
+            if (fromIdx >= 0) {
+                val itemKw = rest.substring(0, fromIdx).trim()
+                val containerKw = rest.substring(fromIdx + 6).trim()
+                when {
+                    itemKw.isEmpty() || containerKw.isEmpty() ->
+                        Command.Invalid(line, "get <item> from <container>")
+                    else -> Command.GetFrom(itemKw, containerKw)
+                }
+            } else {
+                Command.Get(rest)
+            }
+        }?.let { return it }
 
         // drop
         requiredArg(line, listOf("drop"), "drop <item>", { Command.Drop(it) })?.let { return it }
@@ -369,6 +427,43 @@ object CommandParser {
             val target = parts.getOrNull(1)?.trim()?.takeIf { it.isNotEmpty() }
             Command.Cast(spellName, target)
         }?.let { return it }
+
+        // open / close / unlock / lock
+        requiredArg(line, listOf("open"), "open <door|container>", { Command.OpenFeature(it) })?.let { return it }
+        requiredArg(line, listOf("close"), "close <door|container>", { Command.CloseFeature(it) })?.let { return it }
+        requiredArg(line, listOf("unlock"), "unlock <door|container>", { Command.UnlockFeature(it) })?.let { return it }
+        requiredArg(line, listOf("lock"), "lock <door|container>", { Command.LockFeature(it) })?.let { return it }
+
+        // search <container>
+        requiredArg(line, listOf("search"), "search <container>", { Command.SearchContainer(it) })?.let { return it }
+
+        // put <item> in <container> or put <item> <container>
+        matchPrefix(line, listOf("put")) { rest ->
+            if (rest.isEmpty()) return@matchPrefix Command.Invalid(line, "put <item> <container>")
+            val inIdx = rest.lowercase().indexOf(" in ")
+            if (inIdx >= 0) {
+                val itemKw = rest.substring(0, inIdx).trim()
+                val containerKw = rest.substring(inIdx + 4).trim()
+                if (itemKw.isEmpty() || containerKw.isEmpty()) {
+                    Command.Invalid(line, "put <item> in <container>")
+                } else {
+                    Command.PutIn(itemKw, containerKw)
+                }
+            } else {
+                val parts = rest.split(Regex("\\s+"), limit = 2)
+                if (parts.size < 2) {
+                    Command.Invalid(line, "put <item> <container>")
+                } else {
+                    Command.PutIn(parts[0], parts[1].trim())
+                }
+            }
+        }?.let { return it }
+
+        // pull <lever>
+        requiredArg(line, listOf("pull"), "pull <lever>", { Command.Pull(it) })?.let { return it }
+
+        // read <sign>
+        requiredArg(line, listOf("read"), "read <sign>", { Command.ReadSign(it) })?.let { return it }
 
         // kill
         requiredArg(line, listOf("kill"), "kill <mob>", { Command.Kill(it) })?.let { return it }

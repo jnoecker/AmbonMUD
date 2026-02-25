@@ -1,0 +1,22 @@
+zone: bad_feature_key_missing
+startRoom: room_a
+
+rooms:
+  room_a:
+    title: "Room A"
+    description: "A room."
+    exits:
+      north: room_b
+    features:
+      locked_box:
+        type: CONTAINER
+        displayName: "a locked box"
+        keyword: box
+        initialState: locked
+        keyItemId: nonexistent_key
+
+  room_b:
+    title: "Room B"
+    description: "Another room."
+    exits:
+      south: room_a
