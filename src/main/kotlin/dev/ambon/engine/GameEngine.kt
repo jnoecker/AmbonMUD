@@ -135,6 +135,14 @@ class GameEngine(
             markMobHpDirty = ::markMobHpDirty,
             markStatusDirty = ::markStatusDirty,
         )
+    private val groupSystem =
+        GroupSystem(
+            players = players,
+            outbound = outbound,
+            clock = clock,
+            maxGroupSize = engineConfig.group.maxSize,
+            inviteTimeoutMs = engineConfig.group.inviteTimeoutMs,
+        )
     private val combatSystem =
         CombatSystem(
             players = players,
@@ -179,6 +187,8 @@ class GameEngine(
             markVitalsDirty = ::markVitalsDirty,
             markMobHpDirty = ::markMobHpDirty,
             statusEffects = statusEffectSystem,
+            groupSystem = groupSystem,
+            groupXpBonusPerMember = engineConfig.group.xpBonusPerMember,
             onLevelUp = { sid, level ->
                 markVitalsDirty(sid)
                 val pc = players.get(sid)?.playerClass
@@ -270,15 +280,6 @@ class GameEngine(
             achievementSystem.onQuestCompleted(sid, questId)
         }
     }
-
-    private val groupSystem =
-        GroupSystem(
-            players = players,
-            outbound = outbound,
-            clock = clock,
-            maxGroupSize = engineConfig.group.maxSize,
-            inviteTimeoutMs = engineConfig.group.inviteTimeoutMs,
-        )
 
     private val behaviorTreeSystem: BehaviorTreeSystem =
         BehaviorTreeSystem(
