@@ -1,0 +1,51 @@
+zone: behavior_test
+startRoom: plaza
+
+rooms:
+  plaza:
+    title: "Town Plaza"
+    description: "A bustling town plaza."
+    exits:
+      north: gate
+  gate:
+    title: "Town Gate"
+    description: "The fortified gate."
+    exits:
+      south: plaza
+      east: road
+  road:
+    title: "East Road"
+    description: "A dusty road."
+    exits:
+      west: gate
+
+mobs:
+  guard:
+    name: "a gate guard"
+    room: gate
+    tier: elite
+    level: 3
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The guard draws a sword!"
+  sentry:
+    name: "a patrolling sentry"
+    room: plaza
+    behavior:
+      template: patrol_aggro
+      params:
+        patrolRoute:
+          - plaza
+          - gate
+          - road
+          - gate
+  rat:
+    name: "a timid rat"
+    room: plaza
+    tier: weak
+    behavior:
+      template: coward
+      params:
+        fleeHpPercent: 30
+        fleeMessage: "The rat squeals!"

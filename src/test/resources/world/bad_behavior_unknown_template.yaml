@@ -1,0 +1,14 @@
+zone: bad_bt
+startRoom: room
+
+rooms:
+  room:
+    title: "A Room"
+    description: "desc"
+
+mobs:
+  test:
+    name: "a test mob"
+    room: room
+    behavior:
+      template: nonexistent_behavior

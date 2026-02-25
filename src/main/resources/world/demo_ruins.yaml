@@ -6,6 +6,10 @@ mobs:
   gate_scout:
     name: "a wary caravan scout"
     room: caravan_gate
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The scout shouts: You shouldn't be here!"
     drops:
       - itemId: travel_cloak
         chance: 1.0
@@ -24,21 +28,36 @@ mobs:
   beetle_swarm:
     name: "a swarm of glassy beetles"
     room: beetle_grotto
+    behavior:
+      template: coward
+      params:
+        fleeHpPercent: 40
+        fleeMessage: "The beetles scatter in a panic!"
     drops:
       - itemId: beetle_shell
         chance: 1.0
   stone_sentinel:
     name: "a cracked stone sentinel"
     room: cracked_sanctum
+    behavior:
+      template: patrol
+      params:
+        patrolRoute: [cracked_sanctum, shrine_antechamber, shrine_approach, shrine_antechamber]
   bridge_bandit:
     name: "a bridge bandit"
     room: rope_bridge
+    behavior:
+      template: wander_aggro
+      params:
+        aggroMessage: "The bandit snarls: Your coin or your life!"
     drops:
       - itemId: bandit_dagger
         chance: 1.0
   drowned_warder:
     name: "a drowned warder"
     room: flooded_steps
+    behavior:
+      template: aggro_guard
   orchard_keeper:
     name: "an orchard keeper"
     room: mirror_orchard
