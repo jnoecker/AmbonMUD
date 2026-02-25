@@ -122,10 +122,9 @@ class AbilitySystem(
                     ?: return "Cast ${ability.displayName} on whom?"
             }
 
-        deductManaAndCooldown(sessionId, player, ability, now)
-
         when (val effect = ability.effect) {
             is AbilityEffect.DirectDamage -> {
+                deductManaAndCooldown(sessionId, player, ability, now)
                 val baseDamage = rollRange(rng, effect.minDamage, effect.maxDamage)
                 val intBonus = intSpellBonus(player)
                 val damage = (baseDamage + intBonus).coerceAtLeast(1)
@@ -159,6 +158,7 @@ class AbilitySystem(
                     return "No enemies in combat to hit."
                 }
 
+                deductManaAndCooldown(sessionId, player, ability, now)
                 val intBonus = intSpellBonus(player)
                 for (m in targetMobs) {
                     val baseDamage = rollRange(rng, effect.minDamage, effect.maxDamage)
@@ -181,6 +181,7 @@ class AbilitySystem(
                 if (!combat.isMobInCombat(mob.id)) {
                     return "${mob.name} is not in combat."
                 }
+                deductManaAndCooldown(sessionId, player, ability, now)
                 val currentMax = combat.threatTable.maxThreatValue(mob.id)
                 combat.threatTable.setThreat(mob.id, sessionId, currentMax + effect.margin + effect.flatThreat)
                 outbound.send(
@@ -194,6 +195,7 @@ class AbilitySystem(
                 val sys =
                     statusEffects
                         ?: return "Status effects are not available."
+                deductManaAndCooldown(sessionId, player, ability, now)
                 sys.applyToMob(mob.id, effect.statusEffectId, sessionId)
                 outbound.send(
                     OutboundEvent.SendText(
@@ -220,10 +222,9 @@ class AbilitySystem(
         ability: AbilityDefinition,
         now: Long,
     ): String? {
-        deductManaAndCooldown(sessionId, player, ability, now)
-
         when (val effect = ability.effect) {
             is AbilityEffect.DirectHeal -> {
+                deductManaAndCooldown(sessionId, player, ability, now)
                 val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
                 val before = player.hp
                 player.hp = (player.hp + healAmount).coerceAtMost(player.maxHp)
@@ -243,6 +244,7 @@ class AbilitySystem(
                 val sys =
                     statusEffects
                         ?: return "Status effects are not available."
+                deductManaAndCooldown(sessionId, player, ability, now)
                 sys.applyToPlayer(sessionId, effect.statusEffectId, sessionId)
                 markStatusDirty(sessionId)
                 outbound.send(
@@ -296,10 +298,9 @@ class AbilitySystem(
 
         val target = players.get(targetSid) ?: return "Target not found."
 
-        deductManaAndCooldown(sessionId, player, ability, now)
-
         when (val effect = ability.effect) {
             is AbilityEffect.DirectHeal -> {
+                deductManaAndCooldown(sessionId, player, ability, now)
                 val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
                 val before = target.hp
                 target.hp = (target.hp + healAmount).coerceAtMost(target.maxHp)
@@ -334,6 +335,7 @@ class AbilitySystem(
                 val sys =
                     statusEffects
                         ?: return "Status effects are not available."
+                deductManaAndCooldown(sessionId, player, ability, now)
                 sys.applyToPlayer(targetSid, effect.statusEffectId, sessionId)
                 markStatusDirty(targetSid)
                 if (targetSid == sessionId) {
