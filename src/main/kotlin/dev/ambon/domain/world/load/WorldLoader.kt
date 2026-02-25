@@ -12,6 +12,11 @@ import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.items.ItemUseEffect
+import dev.ambon.domain.quest.CompletionType
+import dev.ambon.domain.quest.ObjectiveType
+import dev.ambon.domain.quest.QuestDef
+import dev.ambon.domain.quest.QuestObjectiveDef
+import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.MobDrop
@@ -67,6 +72,7 @@ object WorldLoader {
         val mergedMobs = LinkedHashMap<MobId, MobSpawn>()
         val mergedItems = LinkedHashMap<ItemId, ItemSpawn>()
         val mergedShops = mutableListOf<ShopDefinition>()
+        val mergedQuests = mutableListOf<QuestDef>()
         val zoneLifespansMinutes = LinkedHashMap<String, Long?>()
 
         // If multiple files provide startRoom, pick first file’s startRoom as world start.
@@ -206,6 +212,11 @@ object WorldLoader {
 
                 val dialogue = parseDialogue(mobId, mf.dialogue)
                 val behaviorTree = parseBehavior(mobId, zone, mf.behavior)
+                val questIds =
+                    mf.quests.map { rawQuestId ->
+                        val s = rawQuestId.trim()
+                        if (':' in s) s else "$zone:$s"
+                    }
 
                 mergedMobs[mobId] =
                     MobSpawn(
@@ -223,6 +234,7 @@ object WorldLoader {
                         goldMax = resolvedGoldMax,
                         dialogue = dialogue,
                         behaviorTree = behaviorTree,
+                        questIds = questIds,
                     )
             }
 
@@ -362,6 +374,70 @@ object WorldLoader {
                     ),
                 )
             }
+
+            // Stage quests (normalized)
+            for ((rawId, questFile) in file.quests) {
+                val questId = "$zone:$rawId"
+                val questName = questFile.name.trim()
+                if (questName.isEmpty()) {
+                    throw WorldLoadException("Quest '$questId' name cannot be blank")
+                }
+                val giver = questFile.giver.trim()
+                if (giver.isEmpty()) {
+                    throw WorldLoadException("Quest '$questId' giver cannot be blank")
+                }
+                val completionType =
+                    when (questFile.completionType.uppercase()) {
+                        "AUTO" -> CompletionType.AUTO
+                        "NPC_TURN_IN" -> CompletionType.NPC_TURN_IN
+                        else -> throw WorldLoadException(
+                            "Quest '$questId' has unknown completionType '${questFile.completionType}'",
+                        )
+                    }
+                if (questFile.objectives.isEmpty()) {
+                    throw WorldLoadException("Quest '$questId' must have at least one objective")
+                }
+                val objectives =
+                    questFile.objectives.mapIndexed { index, obj ->
+                        val objectiveType =
+                            when (obj.type.uppercase()) {
+                                "KILL" -> ObjectiveType.KILL
+                                "COLLECT" -> ObjectiveType.COLLECT
+                                else -> throw WorldLoadException(
+                                    "Quest '$questId' objective #${index + 1} has unknown type '${obj.type}'",
+                                )
+                            }
+                        val targetKeyRaw = obj.targetKey.trim()
+                        if (targetKeyRaw.isEmpty()) {
+                            throw WorldLoadException(
+                                "Quest '$questId' objective #${index + 1} targetKey cannot be blank",
+                            )
+                        }
+                        val targetId = if (':' in targetKeyRaw) targetKeyRaw else "$zone:$targetKeyRaw"
+                        if (obj.count < 1) {
+                            throw WorldLoadException(
+                                "Quest '$questId' objective #${index + 1} count must be >= 1",
+                            )
+                        }
+                        QuestObjectiveDef(
+                            type = objectiveType,
+                            targetId = targetId,
+                            count = obj.count,
+                            description = obj.description.ifBlank { "${objectiveType.name.lowercase()} $targetKeyRaw x${obj.count}" },
+                        )
+                    }
+                mergedQuests.add(
+                    QuestDef(
+                        id = questId,
+                        name = questName,
+                        description = questFile.description,
+                        giverMobId = if (':' in giver) giver else "$zone:$giver",
+                        objectives = objectives,
+                        rewards = QuestRewards(xp = questFile.rewards.xp, gold = questFile.rewards.gold),
+                        completionType = completionType,
+                    ),
+                )
+            }
         }
 
         // Now validate that all exit targets exist in the merged room set.
@@ -453,6 +529,7 @@ object WorldLoader {
                     .mapNotNull { (zone, lifespanMinutes) -> lifespanMinutes?.let { zone to it } }
                     .toMap(),
             shopDefinitions = mergedShops.toList(),
+            questDefinitions = mergedQuests.toList(),
         )
     }
 

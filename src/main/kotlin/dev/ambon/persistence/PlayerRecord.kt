@@ -1,6 +1,7 @@
 package dev.ambon.persistence
 
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.quest.QuestState
 
 @JvmInline
 value class PlayerId(
@@ -29,4 +30,6 @@ data class PlayerRecord(
     val mana: Int = 20,
     val maxMana: Int = 20,
     val gold: Long = 0L,
+    val activeQuests: Map<String, QuestState> = emptyMap(),
+    val completedQuestIds: Set<String> = emptySet(),
 )

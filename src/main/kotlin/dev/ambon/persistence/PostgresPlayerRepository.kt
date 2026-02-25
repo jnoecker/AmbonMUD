@@ -1,6 +1,10 @@
 package dev.ambon.persistence
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.quest.QuestState
 import dev.ambon.metrics.GameMetrics
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
@@ -9,6 +13,12 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.upsert
+
+private val questMapper: ObjectMapper =
+    ObjectMapper().registerModule(KotlinModule.Builder().build())
+
+private val activeQuestsType = object : TypeReference<Map<String, QuestState>>() {}
+private val completedQuestIdsType = object : TypeReference<Set<String>>() {}
 
 class PostgresPlayerRepository(
     private val database: Database,
@@ -96,6 +106,8 @@ class PostgresPlayerRepository(
                     it[mana] = record.mana
                     it[maxMana] = record.maxMana
                     it[gold] = record.gold
+                    it[activeQuests] = questMapper.writeValueAsString(record.activeQuests)
+                    it[completedQuestIds] = questMapper.writeValueAsString(record.completedQuestIds)
                 }
             }
         }
@@ -125,6 +137,14 @@ class PostgresPlayerRepository(
             mana = this[PlayersTable.mana],
             maxMana = this[PlayersTable.maxMana],
             gold = this[PlayersTable.gold],
+            activeQuests =
+                runCatching {
+                    questMapper.readValue(this[PlayersTable.activeQuests], activeQuestsType)
+                }.getOrDefault(emptyMap()),
+            completedQuestIds =
+                runCatching {
+                    questMapper.readValue(this[PlayersTable.completedQuestIds], completedQuestIdsType)
+                }.getOrDefault(emptySet()),
         )
     }
 }
