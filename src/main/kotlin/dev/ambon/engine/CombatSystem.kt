@@ -36,26 +36,38 @@ class CombatSystem(
     private val markMobHpDirty: (MobId) -> Unit = {},
     private val statusEffects: StatusEffectSystem? = null,
     private val onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
+    private val groupSystem: GroupSystem? = null,
+    private val groupXpBonusPerMember: Double = 0.10,
+    private val threatMultiplierWarrior: Double = 1.5,
+    private val threatMultiplierDefault: Double = 1.0,
+    private val healingThreatMultiplier: Double = 0.5,
 ) {
-    private data class Fight(
-        val sessionId: SessionId,
+    // Per-mob combat state (tracks tick timing)
+    private data class MobCombatState(
         val mobId: MobId,
         var nextTickAtMs: Long,
     )
 
-    private val fightsByPlayer = mutableMapOf<SessionId, Fight>()
-    private val fightsByMob = mutableMapOf<MobId, Fight>()
+    // Which mob each player is attacking
+    private val playerTarget = mutableMapOf<SessionId, MobId>()
+
+    // Active mobs in combat (with tick timing)
+    private val activeMobs = mutableMapOf<MobId, MobCombatState>()
+
+    // Threat table: per-mob, tracks cumulative threat from each player
+    internal val threatTable = ThreatTable()
+
     private val defenseByPlayer = mutableMapOf<SessionId, Int>()
 
-    fun isInCombat(sessionId: SessionId): Boolean = fightsByPlayer.containsKey(sessionId)
+    fun isInCombat(sessionId: SessionId): Boolean = playerTarget.containsKey(sessionId)
 
-    fun isMobInCombat(mobId: MobId): Boolean = fightsByMob.containsKey(mobId)
+    fun isMobInCombat(mobId: MobId): Boolean = activeMobs.containsKey(mobId)
 
-    fun currentTarget(sessionId: SessionId): MobId? = fightsByPlayer[sessionId]?.mobId
+    fun currentTarget(sessionId: SessionId): MobId? = playerTarget[sessionId]
 
     fun getCombatTarget(sessionId: SessionId): MobState? {
-        val fight = fightsByPlayer[sessionId] ?: return null
-        return mobs.get(fight.mobId)
+        val mobId = playerTarget[sessionId] ?: return null
+        return mobs.get(mobId)
     }
 
     fun findMobInRoom(
@@ -76,9 +88,9 @@ class CombatSystem(
         val keyword = keywordRaw.trim()
         if (keyword.isEmpty()) return "Kill what?"
 
-        val existing = fightsByPlayer[sessionId]
-        if (existing != null) {
-            val mobName = mobs.get(existing.mobId)?.name ?: "your target"
+        val existingTarget = playerTarget[sessionId]
+        if (existingTarget != null) {
+            val mobName = mobs.get(existingTarget)?.name ?: "your target"
             return "You are already fighting $mobName."
         }
 
@@ -86,18 +98,25 @@ class CombatSystem(
         val matches = findMobsInRoom(roomId, keyword)
         if (matches.isEmpty()) return "You don't see '$keyword' here."
 
-        val mob =
-            matches.firstOrNull { !fightsByMob.containsKey(it.id) }
-                ?: return "${matches.first().name} is already fighting someone."
+        val mob = matches.first()
 
-        val fight =
-            Fight(
-                sessionId = sessionId,
-                mobId = mob.id,
-                nextTickAtMs = clock.millis() + tickMillis,
-            )
-        fightsByPlayer[sessionId] = fight
-        fightsByMob[mob.id] = fight
+        val now = clock.millis()
+
+        // Register player's target
+        playerTarget[sessionId] = mob.id
+
+        // Ensure mob is in active combat
+        if (!activeMobs.containsKey(mob.id)) {
+            activeMobs[mob.id] =
+                MobCombatState(
+                    mobId = mob.id,
+                    nextTickAtMs = now + tickMillis,
+                )
+        }
+
+        // Add initial threat
+        val multiplier = threatMultiplier(player)
+        threatTable.addThreat(mob.id, sessionId, multiplier)
 
         outbound.send(OutboundEvent.SendText(sessionId, "You attack ${mob.name}."))
         broadcastToRoom(players, outbound, roomId, "${player.name} attacks ${mob.name}.", exclude = sessionId)
@@ -109,9 +128,10 @@ class CombatSystem(
         sessionId: SessionId,
         forced: Boolean = false,
     ): String? {
-        val fight = fightsByPlayer[sessionId] ?: return "You are not in combat."
-        val mobName = mobs.get(fight.mobId)?.name ?: "your foe"
-        endFight(fight)
+        val mobId = playerTarget[sessionId] ?: return "You are not in combat."
+        val mobName = mobs.get(mobId)?.name ?: "your foe"
+
+        removePlayerFromCombat(sessionId)
 
         val msg =
             if (forced) {
@@ -128,33 +148,30 @@ class CombatSystem(
         oldSid: SessionId,
         newSid: SessionId,
     ) {
-        val fight = fightsByPlayer.remove(oldSid)
-        if (fight != null) {
-            val newFight = fight.copy(sessionId = newSid)
-            fightsByPlayer[newSid] = newFight
-            fightsByMob[fight.mobId] = newFight
+        val mobId = playerTarget.remove(oldSid)
+        if (mobId != null) {
+            playerTarget[newSid] = mobId
         }
+        threatTable.remapSession(oldSid, newSid)
         defenseByPlayer.remove(oldSid)?.let { defenseByPlayer[newSid] = it }
     }
 
     fun onPlayerDisconnected(sessionId: SessionId) {
-        val fight = fightsByPlayer[sessionId]
-        if (fight != null) {
-            endFight(fight)
-        }
+        removePlayerFromCombat(sessionId)
         defenseByPlayer.remove(sessionId)
     }
 
     fun endCombatFor(sessionId: SessionId) {
-        val fight = fightsByPlayer[sessionId] ?: return
-        endFight(fight)
+        removePlayerFromCombat(sessionId)
     }
 
     suspend fun onMobRemovedExternally(mobId: MobId) {
-        val fight = fightsByMob[mobId] ?: return
-        endFight(fight)
-        outbound.send(OutboundEvent.SendText(fight.sessionId, "Your opponent vanishes."))
-        outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
+        val affectedPlayers = threatTable.playersThreateningMob(mobId)
+        removeMobFromCombat(mobId)
+        for (sid in affectedPlayers) {
+            outbound.send(OutboundEvent.SendText(sid, "Your opponent vanishes."))
+            outbound.send(OutboundEvent.SendPrompt(sid))
+        }
     }
 
     suspend fun startMobCombat(
@@ -164,18 +181,21 @@ class CombatSystem(
         val player = players.get(sessionId) ?: return false
         val mob = mobs.get(mobId) ?: return false
 
-        if (fightsByPlayer.containsKey(sessionId)) return false
-        if (fightsByMob.containsKey(mobId)) return false
+        if (playerTarget.containsKey(sessionId)) return false
         if (player.roomId != mob.roomId) return false
 
-        val fight =
-            Fight(
-                sessionId = sessionId,
-                mobId = mobId,
-                nextTickAtMs = clock.millis() + tickMillis,
-            )
-        fightsByPlayer[sessionId] = fight
-        fightsByMob[mobId] = fight
+        val now = clock.millis()
+
+        playerTarget[sessionId] = mobId
+        if (!activeMobs.containsKey(mobId)) {
+            activeMobs[mobId] =
+                MobCombatState(
+                    mobId = mobId,
+                    nextTickAtMs = now + tickMillis,
+                )
+        }
+        val multiplier = threatMultiplier(player)
+        threatTable.addThreat(mobId, sessionId, multiplier)
 
         outbound.send(OutboundEvent.SendText(sessionId, "${mob.name} attacks you!"))
         broadcastToRoom(players, outbound, player.roomId, "${mob.name} attacks ${player.name}.", exclude = sessionId)
@@ -185,36 +205,78 @@ class CombatSystem(
     }
 
     suspend fun fleeMob(mobId: MobId): Boolean {
-        val fight = fightsByMob[mobId] ?: return false
+        if (!activeMobs.containsKey(mobId)) return false
 
-        endFight(fight)
+        // Find all players fighting this mob and notify them
+        val affectedPlayers =
+            playerTarget.entries
+                .filter { it.value == mobId }
+                .map { it.key }
 
-        // FleeAction sends the room-wide "flees!" message; we only need to return the prompt.
-        outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
+        removeMobFromCombat(mobId)
+
+        for (sid in affectedPlayers) {
+            outbound.send(OutboundEvent.SendPrompt(sid))
+        }
 
         return true
     }
 
+    fun addThreat(
+        mobId: MobId,
+        sessionId: SessionId,
+        amount: Double,
+    ) {
+        if (!activeMobs.containsKey(mobId)) return
+        threatTable.addThreat(mobId, sessionId, amount)
+    }
+
+    fun addHealingThreat(
+        sessionId: SessionId,
+        healAmount: Int,
+    ) {
+        val threat = healAmount.toDouble() * healingThreatMultiplier
+        if (threat <= 0.0) return
+
+        // Add healing threat to all mobs that are engaged with the healer's group members in the room
+        val player = players.get(sessionId) ?: return
+        val groupMembers =
+            groupSystem?.membersInRoom(sessionId, player.roomId)
+                ?: listOf(sessionId)
+
+        for ((mobId, _) in activeMobs) {
+            val mob = mobs.get(mobId) ?: continue
+            if (mob.roomId != player.roomId) continue
+            // Only add threat if the mob is fighting someone in the group
+            val hasGroupThreat = groupMembers.any { threatTable.hasThreat(mobId, it) }
+            if (hasGroupThreat) {
+                threatTable.addThreat(mobId, sessionId, threat)
+            }
+        }
+    }
+
+    @Suppress("CyclomaticComplexity", "LongMethod")
     suspend fun tick(maxCombatsPerTick: Int = 20): Int {
         val now = clock.millis()
         var ran = 0
-        val fights = fightsByPlayer.values.toMutableList()
-        fights.shuffle(rng)
-        for (fight in fights) {
-            if (ran >= maxCombatsPerTick) break
-            if (now < fight.nextTickAtMs) continue
 
-            val player = players.get(fight.sessionId)
-            val mob = mobs.get(fight.mobId)
+        // --- Player attack phase ---
+        val playerEntries = playerTarget.entries.toMutableList()
+        playerEntries.shuffle(rng)
+        for ((sessionId, mobId) in playerEntries) {
+            if (ran >= maxCombatsPerTick) break
+
+            val player = players.get(sessionId)
+            val mob = mobs.get(mobId)
             if (player == null || mob == null) {
-                endFight(fight)
+                removePlayerFromCombat(sessionId)
                 continue
             }
 
             if (player.roomId != mob.roomId) {
-                endFight(fight)
-                outbound.send(OutboundEvent.SendText(fight.sessionId, "${mob.name} is no longer here."))
-                outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
+                removePlayerFromCombat(sessionId)
+                outbound.send(OutboundEvent.SendText(sessionId, "${mob.name} is no longer here."))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
                 ran++
                 continue
             }
@@ -223,20 +285,18 @@ class CombatSystem(
 
             if (player.hp <= 0) {
                 metrics.onPlayerDeath()
-                endFight(fight)
-                outbound.send(OutboundEvent.SendText(fight.sessionId, "You collapse, too wounded to keep fighting."))
-                outbound.send(OutboundEvent.SendText(fight.sessionId, "You are safe now — rest and your wounds will mend."))
-                broadcastToRoom(players, outbound, player.roomId, "${player.name} has fallen in battle.", exclude = fight.sessionId)
-                outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
+                removePlayerFromCombat(sessionId)
+                outbound.send(OutboundEvent.SendText(sessionId, "You collapse, too wounded to keep fighting."))
+                outbound.send(OutboundEvent.SendText(sessionId, "You are safe now — rest and your wounds will mend."))
+                broadcastToRoom(players, outbound, player.roomId, "${player.name} has fallen in battle.", exclude = sessionId)
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
                 ran++
                 continue
             }
 
-            // STUN check: stunned players skip their attack but the mob still attacks
-            val stunned = statusEffects?.hasPlayerEffect(fight.sessionId, EffectType.STUN) == true
-            if (stunned) {
-                outbound.send(OutboundEvent.SendText(fight.sessionId, "You are stunned and cannot act!"))
-            } else {
+            // STUN check
+            val stunned = statusEffects?.hasPlayerEffect(sessionId, EffectType.STUN) == true
+            if (!stunned) {
                 val playerAttack = equippedAttack(player.sessionId)
                 val playerStrBonus = strDamageBonus(player)
                 val playerRoll = rollDamage()
@@ -254,35 +314,71 @@ class CombatSystem(
                     )
                 mob.hp = (mob.hp - effectivePlayerDamage).coerceAtLeast(0)
                 markMobHpDirty(mob.id)
+
+                // Add threat (damage * class multiplier)
+                val multiplier = threatMultiplier(player)
+                threatTable.addThreat(mob.id, sessionId, effectivePlayerDamage.toDouble() * multiplier)
+
                 val playerHitText = "You hit ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix."
-                outbound.send(OutboundEvent.SendText(fight.sessionId, playerHitText))
+                outbound.send(OutboundEvent.SendText(sessionId, playerHitText))
                 if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
                     broadcastToRoom(
                         players,
                         outbound,
                         player.roomId,
                         "[Combat] ${player.name} hits ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix.",
-                        exclude = fight.sessionId,
+                        exclude = sessionId,
                     )
                 }
                 if (mob.hp <= 0) {
-                    handleMobDeath(fight.sessionId, mob)
-                    endFight(fight)
-                    outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
+                    handleMobDeath(sessionId, mob)
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
                     ran++
                     continue
                 }
+            } else {
+                outbound.send(OutboundEvent.SendText(sessionId, "You are stunned and cannot act!"))
             }
 
-            val dodgePct = dodgeChance(player)
+            ran++
+        }
+
+        // --- Mob attack phase ---
+        val mobEntries = activeMobs.values.toMutableList()
+        mobEntries.shuffle(rng)
+        for (mobState in mobEntries) {
+            if (ran >= maxCombatsPerTick) break
+            if (now < mobState.nextTickAtMs) continue
+
+            val mob = mobs.get(mobState.mobId)
+            if (mob == null) {
+                removeMobFromCombat(mobState.mobId)
+                continue
+            }
+
+            // Pick target = highest threat in same room
+            val targetSid =
+                threatTable.topThreatInRoom(mobState.mobId) { sid ->
+                    val p = players.get(sid)
+                    p != null && p.roomId == mob.roomId
+                }
+
+            if (targetSid == null) {
+                // No valid targets — mob exits combat
+                removeMobFromCombat(mobState.mobId)
+                continue
+            }
+
+            val target = players.get(targetSid) ?: continue
+
+            val dodgePct = dodgeChance(target)
             if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
-                outbound.send(OutboundEvent.SendText(fight.sessionId, "You dodge ${mob.name}'s attack!"))
+                outbound.send(OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s attack!"))
             } else {
                 val mobRoll = rollDamage(mob.minDamage, mob.maxDamage)
                 var mobDamage = mobRoll
-                // SHIELD absorption
                 if (statusEffects != null) {
-                    mobDamage = statusEffects.absorbPlayerDamage(fight.sessionId, mobDamage)
+                    mobDamage = statusEffects.absorbPlayerDamage(targetSid, mobDamage)
                 }
                 val shieldAbsorbed = mobRoll - mobDamage
                 val mobFeedbackSuffix =
@@ -291,8 +387,8 @@ class CombatSystem(
                         armorAbsorbed = 0,
                         shieldAbsorbed = shieldAbsorbed,
                     )
-                player.hp = (player.hp - mobDamage).coerceAtLeast(0)
-                markVitalsDirty(fight.sessionId)
+                target.hp = (target.hp - mobDamage).coerceAtLeast(0)
+                markVitalsDirty(targetSid)
                 val mobHitText =
                     if (shieldAbsorbed > 0 && mobDamage == 0) {
                         "Your shield absorbs ${mob.name}'s attack$mobFeedbackSuffix."
@@ -301,46 +397,86 @@ class CombatSystem(
                     } else {
                         "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
                     }
-                outbound.send(OutboundEvent.SendText(fight.sessionId, mobHitText))
+                outbound.send(OutboundEvent.SendText(targetSid, mobHitText))
                 if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
                     broadcastToRoom(
                         players,
                         outbound,
-                        player.roomId,
-                        "[Combat] ${mob.name} hits ${player.name} for $mobDamage damage$mobFeedbackSuffix.",
-                        exclude = fight.sessionId,
+                        target.roomId,
+                        "[Combat] ${mob.name} hits ${target.name} for $mobDamage damage$mobFeedbackSuffix.",
+                        exclude = targetSid,
                     )
                 }
             }
 
-            if (player.hp <= 0) {
+            if (target.hp <= 0) {
                 metrics.onPlayerDeath()
-                endFight(fight)
-                outbound.send(OutboundEvent.SendText(fight.sessionId, "You have been slain by ${mob.name}."))
-                outbound.send(OutboundEvent.SendText(fight.sessionId, "You are safe now — rest and your wounds will mend."))
+                removePlayerFromCombat(targetSid)
+                outbound.send(OutboundEvent.SendText(targetSid, "You have been slain by ${mob.name}."))
+                outbound.send(OutboundEvent.SendText(targetSid, "You are safe now — rest and your wounds will mend."))
                 broadcastToRoom(
                     players,
                     outbound,
-                    player.roomId,
-                    "${player.name} has been slain by ${mob.name}.",
-                    exclude = fight.sessionId,
+                    target.roomId,
+                    "${target.name} has been slain by ${mob.name}.",
+                    exclude = targetSid,
                 )
-                outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
-                ran++
-                continue
+                outbound.send(OutboundEvent.SendPrompt(targetSid))
             }
 
-            fight.nextTickAtMs = now + tickMillis
-            outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
+            mobState.nextTickAtMs = now + tickMillis
+            // Send prompt to all players targeting this mob
+            for ((sid, mid) in playerTarget) {
+                if (mid == mobState.mobId) {
+                    outbound.send(OutboundEvent.SendPrompt(sid))
+                }
+            }
             ran++
         }
         return ran
     }
 
-    private fun endFight(fight: Fight) {
-        fightsByPlayer.remove(fight.sessionId)
-        fightsByMob.remove(fight.mobId)
+    suspend fun handleSpellKill(
+        killerSessionId: SessionId,
+        mob: MobState,
+    ) {
+        handleMobDeath(killerSessionId, mob)
     }
+
+    // --- Private helpers ---
+
+    private fun removePlayerFromCombat(sessionId: SessionId) {
+        playerTarget.remove(sessionId)
+        threatTable.removePlayer(sessionId)
+        cleanupEmptyMobs()
+    }
+
+    private fun removeMobFromCombat(mobId: MobId) {
+        activeMobs.remove(mobId)
+        // Remove all players targeting this mob
+        val toRemove = playerTarget.entries.filter { it.value == mobId }.map { it.key }
+        for (sid in toRemove) {
+            playerTarget.remove(sid)
+        }
+        threatTable.removeMob(mobId)
+    }
+
+    private fun cleanupEmptyMobs() {
+        val emptyMobs =
+            activeMobs.keys.filter { mobId ->
+                !threatTable.hasMobEntry(mobId)
+            }
+        for (mobId in emptyMobs) {
+            activeMobs.remove(mobId)
+        }
+    }
+
+    private fun threatMultiplier(player: PlayerState): Double =
+        if (player.playerClass.equals("WARRIOR", ignoreCase = true)) {
+            threatMultiplierWarrior
+        } else {
+            threatMultiplierDefault
+        }
 
     private fun rollDamage(
         min: Int = minDamage,
@@ -430,6 +566,12 @@ class CombatSystem(
         killerSessionId: SessionId,
         mob: MobState,
     ) {
+        // Collect all players who had threat on this mob (for quest/achievement callbacks)
+        val contributors = threatTable.playersThreateningMob(mob.id)
+
+        // Clean up combat state
+        removeMobFromCombat(mob.id)
+
         mobs.remove(mob.id)
         onMobRemoved(mob.id, mob.roomId)
         statusEffects?.onMobRemoved(mob.id)
@@ -437,9 +579,13 @@ class CombatSystem(
         rollDrops(mob)
         broadcastToRoom(players, outbound, mob.roomId, "${mob.name} dies.")
         grantKillGold(killerSessionId, mob)
-        grantKillXp(killerSessionId, mob)
+        grantGroupKillXp(killerSessionId, mob)
+
+        // Fire quest/achievement callbacks for all contributors
         if (mob.templateKey.isNotEmpty()) {
-            onMobKilledByPlayer(killerSessionId, mob.templateKey)
+            for (sid in contributors) {
+                onMobKilledByPlayer(sid, mob.templateKey)
+            }
         }
     }
 
@@ -461,13 +607,50 @@ class CombatSystem(
         outbound.send(OutboundEvent.SendText(sessionId, "You find $goldDrop gold."))
     }
 
-    suspend fun handleSpellKill(
+    private suspend fun grantGroupKillXp(
         killerSessionId: SessionId,
         mob: MobState,
     ) {
-        val fight = fightsByMob[mob.id]
-        if (fight != null) endFight(fight)
-        handleMobDeath(killerSessionId, mob)
+        val baseReward = progression.killXpReward(mob)
+        if (baseReward <= 0L) return
+
+        val group = groupSystem?.getGroup(killerSessionId)
+        val recipients =
+            if (group != null) {
+                group.members.filter { sid ->
+                    val p = players.get(sid)
+                    p != null && p.roomId == mob.roomId
+                }
+            } else {
+                listOf(killerSessionId)
+            }
+
+        val memberCount = recipients.size
+        val groupBonus =
+            if (memberCount > 1) {
+                1.0 + (memberCount - 1) * groupXpBonusPerMember
+            } else {
+                1.0
+            }
+        val perPlayerXp = ((baseReward.toDouble() / memberCount) * groupBonus).toLong().coerceAtLeast(1L)
+
+        for (sid in recipients) {
+            val player = players.get(sid) ?: continue
+            val equipCha = items.equipment(sid).values.sumOf { it.item.charisma }
+            val reward = progression.applyCharismaXpBonus(player.charisma + equipCha, perPlayerXp)
+
+            val result = players.grantXp(sid, reward, progression) ?: continue
+            metrics.onXpAwarded(reward, "kill")
+            outbound.send(OutboundEvent.SendText(sid, "You gain $reward XP."))
+            markVitalsDirty(sid)
+            if (result.levelsGained > 0) {
+                metrics.onLevelUp()
+                val levelUpMessage =
+                    progression.buildLevelUpMessage(result, player.constitution, player.intelligence, player.playerClass)
+                outbound.send(OutboundEvent.SendText(sid, levelUpMessage))
+                onLevelUp(sid, result.newLevel)
+            }
+        }
     }
 
     private fun rollDrops(mob: MobState) {
@@ -477,28 +660,5 @@ class CombatSystem(
             if (!shouldDrop) continue
             items.placeMobDrop(drop.itemId, mob.roomId)
         }
-    }
-
-    private suspend fun grantKillXp(
-        sessionId: SessionId,
-        mob: MobState,
-    ) {
-        val baseReward = progression.killXpReward(mob)
-        if (baseReward <= 0L) return
-
-        val player = players.get(sessionId) ?: return
-        val equipCha = items.equipment(sessionId).values.sumOf { it.item.charisma }
-        val reward = progression.applyCharismaXpBonus(player.charisma + equipCha, baseReward)
-
-        val result = players.grantXp(sessionId, reward, progression) ?: return
-        metrics.onXpAwarded(reward, "kill")
-        outbound.send(OutboundEvent.SendText(sessionId, "You gain $reward XP."))
-        markVitalsDirty(sessionId)
-        if (result.levelsGained <= 0) return
-        metrics.onLevelUp()
-
-        val levelUpMessage = progression.buildLevelUpMessage(result, player.constitution, player.intelligence, player.playerClass)
-        outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
-        onLevelUp(sessionId, result.newLevel)
     }
 }

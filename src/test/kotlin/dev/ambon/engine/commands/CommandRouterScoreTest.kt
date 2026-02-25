@@ -8,6 +8,7 @@ import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
@@ -117,6 +118,78 @@ class CommandRouterScoreTest {
         val res = players.login(sessionId, name, "password")
         require(res == LoginResult.Ok) { "Login failed: $res" }
     }
+
+    @Test
+    fun `score shows group info when in a group`() =
+        runTest {
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val outbound = LocalOutboundBus()
+            val groupSystem = GroupSystem(players, outbound)
+            val combat = CombatSystem(players, mobs, items, outbound)
+            val router =
+                CommandRouter(
+                    world,
+                    players,
+                    mobs,
+                    items,
+                    combat,
+                    outbound,
+                    groupSystem = groupSystem,
+                )
+
+            val sid1 = SessionId(1)
+            val sid2 = SessionId(2)
+            login(players, sid1, "Alice")
+            login(players, sid2, "Bob")
+            drain(outbound)
+
+            groupSystem.invite(sid1, "Bob")
+            groupSystem.accept(sid2)
+            drain(outbound)
+
+            router.handle(sid1, Command.Score)
+
+            val outs = drain(outbound)
+            val text = outs.filterIsInstance<OutboundEvent.SendInfo>().joinToString("\n") { it.text }
+            assertTrue(text.contains("Group"), "Expected Group line. text=$text")
+            assertTrue(text.contains("2 members"), "Expected member count. text=$text")
+            assertTrue(text.contains("Alice"), "Expected leader name. text=$text")
+        }
+
+    @Test
+    fun `score does not show group line when ungrouped`() =
+        runTest {
+            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val outbound = LocalOutboundBus()
+            val groupSystem = GroupSystem(players, outbound)
+            val combat = CombatSystem(players, mobs, items, outbound)
+            val router =
+                CommandRouter(
+                    world,
+                    players,
+                    mobs,
+                    items,
+                    combat,
+                    outbound,
+                    groupSystem = groupSystem,
+                )
+
+            val sid = SessionId(1)
+            login(players, sid, "Alice")
+            drain(outbound)
+
+            router.handle(sid, Command.Score)
+
+            val outs = drain(outbound)
+            val text = outs.filterIsInstance<OutboundEvent.SendInfo>().joinToString("\n") { it.text }
+            assertTrue(!text.contains("Group:"), "Should not contain Group line. text=$text")
+        }
 
     private fun equipItem(
         items: ItemRegistry,

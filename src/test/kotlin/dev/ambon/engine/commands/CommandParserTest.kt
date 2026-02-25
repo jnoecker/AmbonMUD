@@ -341,4 +341,55 @@ class CommandParserTest {
         assertTrue(CommandParser.parse("10") is Command.Unknown)
         assertTrue(CommandParser.parse("99") is Command.Unknown)
     }
+
+    @Test
+    fun `parses group invite`() {
+        assertEquals(Command.GroupCmd.Invite("Bob"), CommandParser.parse("group invite Bob"))
+        assertEquals(Command.GroupCmd.Invite("Bob"), CommandParser.parse("group inv Bob"))
+    }
+
+    @Test
+    fun `parses group accept`() {
+        assertEquals(Command.GroupCmd.Accept, CommandParser.parse("group accept"))
+        assertEquals(Command.GroupCmd.Accept, CommandParser.parse("group acc"))
+    }
+
+    @Test
+    fun `parses group leave`() {
+        assertEquals(Command.GroupCmd.Leave, CommandParser.parse("group leave"))
+    }
+
+    @Test
+    fun `parses group kick`() {
+        assertEquals(Command.GroupCmd.Kick("Bob"), CommandParser.parse("group kick Bob"))
+    }
+
+    @Test
+    fun `parses group list`() {
+        assertEquals(Command.GroupCmd.List, CommandParser.parse("group list"))
+        assertEquals(Command.GroupCmd.List, CommandParser.parse("group"))
+    }
+
+    @Test
+    fun `parses gtell`() {
+        assertEquals(Command.Gtell("hello group"), CommandParser.parse("gtell hello group"))
+        assertEquals(Command.Gtell("hello group"), CommandParser.parse("gt hello group"))
+    }
+
+    @Test
+    fun `group invite without target is Invalid`() {
+        assertTrue(CommandParser.parse("group invite") is Command.Invalid)
+        assertTrue(CommandParser.parse("group inv") is Command.Invalid)
+    }
+
+    @Test
+    fun `group kick without target is Invalid`() {
+        assertTrue(CommandParser.parse("group kick") is Command.Invalid)
+    }
+
+    @Test
+    fun `gtell without message is Invalid`() {
+        assertTrue(CommandParser.parse("gtell") is Command.Invalid)
+        assertTrue(CommandParser.parse("gt") is Command.Invalid)
+    }
 }

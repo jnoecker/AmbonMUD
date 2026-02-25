@@ -375,6 +375,111 @@ class AbilitySystemTest {
             )
         }
 
+    @Test
+    fun `AreaDamage does not consume mana when no enemies in combat`() =
+        runTest {
+            val h = buildAreaDamageSystem()
+            h.players.loginOrFail(sid, "Mage")
+            h.abilitySystem.syncAbilities(sid, 5)
+            val player = h.players.get(sid)!!
+            player.mana = 50
+
+            // Mob in room but NOT in combat
+            val mob = MobState(MobId("zone:rat"), "a rat", roomId, hp = 20, maxHp = 20)
+            h.mobs.upsert(mob)
+            h.outbound.drainAll()
+
+            val err = h.abilitySystem.cast(sid, "area_blast", "rat")
+            assertNotNull(err)
+            assertTrue(err!!.contains("No enemies in combat"))
+            assertEquals(50, player.mana, "Mana should not be consumed on failed AreaDamage")
+        }
+
+    @Test
+    fun `Taunt does not consume mana when mob is not in combat`() =
+        runTest {
+            val h = buildAreaDamageSystem()
+            h.players.loginOrFail(sid, "Tank")
+            h.abilitySystem.syncAbilities(sid, 1)
+            val player = h.players.get(sid)!!
+            player.mana = 50
+
+            // Mob in room but NOT in combat
+            val mob = MobState(MobId("zone:rat"), "a rat", roomId, hp = 20, maxHp = 20)
+            h.mobs.upsert(mob)
+            h.outbound.drainAll()
+
+            val err = h.abilitySystem.cast(sid, "taunt_ability", "rat")
+            assertNotNull(err)
+            assertTrue(err!!.contains("not in combat"))
+            assertEquals(50, player.mana, "Mana should not be consumed on failed Taunt")
+        }
+
+    private fun buildAreaDamageSystem(
+        clock: MutableClock = MutableClock(0L),
+        rng: Random = Random(42),
+    ): TestHarness {
+        val items = ItemRegistry()
+        val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+        val mobs = MobRegistry()
+        val outbound = LocalOutboundBus()
+        val combat =
+            CombatSystem(
+                players = players,
+                mobs = mobs,
+                items = items,
+                outbound = outbound,
+                clock = clock,
+                rng = rng,
+                tickMillis = 1_000L,
+            )
+        val registry = AbilityRegistry()
+        registry.register(
+            AbilityDefinition(
+                id = AbilityId("area_blast"),
+                displayName = "Area Blast",
+                description = "Hits all enemies in combat.",
+                manaCost = 25,
+                cooldownMs = 0,
+                levelRequired = 5,
+                targetType = TargetType.ENEMY,
+                effect = AbilityEffect.AreaDamage(minDamage = 3, maxDamage = 7),
+            ),
+        )
+        registry.register(
+            AbilityDefinition(
+                id = AbilityId("taunt_ability"),
+                displayName = "Taunt",
+                description = "Force mob to attack you.",
+                manaCost = 5,
+                cooldownMs = 0,
+                levelRequired = 1,
+                targetType = TargetType.ENEMY,
+                effect = AbilityEffect.Taunt(flatThreat = 50.0, margin = 10.0),
+            ),
+        )
+        val abilitySystem =
+            AbilitySystem(
+                players = players,
+                registry = registry,
+                outbound = outbound,
+                combat = combat,
+                clock = clock,
+                rng = rng,
+                mobs = mobs,
+            )
+        return TestHarness(
+            players = players,
+            mobs = mobs,
+            items = items,
+            outbound = outbound,
+            combat = combat,
+            registry = registry,
+            abilitySystem = abilitySystem,
+            clock = clock,
+        )
+    }
+
     private fun buildSystemWithStatusEffects(
         clock: MutableClock = MutableClock(0L),
         rng: Random = Random(42),
