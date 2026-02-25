@@ -13,6 +13,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
@@ -37,6 +39,11 @@ class YamlPlayerRepository(
     private val nextIdFile: Path = rootDir.resolve("next_player_id.txt")
     private val nextId: AtomicLong by lazy { AtomicLong(loadNextId()) }
 
+    // In-memory name→id index.  Built lazily on first findByName call (one-time directory scan),
+    // then kept up-to-date by save() and create().  Eliminates repeated full-directory scans.
+    private val nameIndex = ConcurrentHashMap<String, Long>()
+    private val nameIndexReady = AtomicBoolean(false)
+
     init {
         playersDir.createDirectories()
         if (!nextIdFile.exists()) {
@@ -51,12 +58,11 @@ class YamlPlayerRepository(
                 val target = name.trim()
                 if (target.isEmpty()) return@timedLoad null
 
-                // Simple scan. Fine for Phase 1. Later: index file or SQLite.
-                playersDir.listDirectoryEntries("*.yaml").forEach { p ->
-                    val dto = readPlayerDto(p) ?: return@forEach
-                    if (dto.name.equals(target, ignoreCase = true)) {
-                        return@timedLoad dto.toDomain()
-                    }
+                ensureNameIndexReady()
+
+                val id = nameIndex[target.lowercase()]
+                if (id != null) {
+                    return@timedLoad readPlayerDto(pathFor(id))?.toDomain()
                 }
                 null
             }
@@ -93,10 +99,28 @@ class YamlPlayerRepository(
         withContext(Dispatchers.IO) {
             metrics.timedSave {
                 atomicWriteText(pathFor(record.id.value), mapper.writeValueAsString(PlayerDto.from(record)))
+                nameIndex[record.name.lowercase()] = record.id.value
             }
         }
 
     // -------- internals --------
+
+    /**
+     * Builds the name index from disk exactly once.  After this call [nameIndex] reflects all
+     * persisted players.  Subsequent calls are no-ops.
+     */
+    private fun ensureNameIndexReady() {
+        if (nameIndexReady.get()) return
+        // Double-checked: if another thread beat us here, the index is already populated.
+        synchronized(nameIndexReady) {
+            if (nameIndexReady.get()) return
+            playersDir.listDirectoryEntries("*.yaml").forEach { p ->
+                val dto = runCatching { readPlayerDto(p) }.getOrNull() ?: return@forEach
+                nameIndex[dto.name.lowercase()] = dto.id
+            }
+            nameIndexReady.set(true)
+        }
+    }
 
     private fun pathFor(id: Long): Path = playersDir.resolve(id.toString().padStart(20, '0') + ".yaml")
 
