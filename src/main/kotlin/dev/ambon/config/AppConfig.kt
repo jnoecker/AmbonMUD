@@ -97,6 +97,10 @@ data class AppConfig(
 
         require(engine.scheduler.maxActionsPerTick > 0) { "ambonMUD.engine.scheduler.maxActionsPerTick must be > 0" }
 
+        require(engine.group.maxSize in 2..20) { "ambonMUD.engine.group.maxSize must be in 2..20" }
+        require(engine.group.inviteTimeoutMs > 0L) { "ambonMUD.engine.group.inviteTimeoutMs must be > 0" }
+        require(engine.group.xpBonusPerMember >= 0.0) { "ambonMUD.engine.group.xpBonusPerMember must be >= 0" }
+
         require(engine.economy.buyMultiplier > 0.0) { "ambonMUD.engine.economy.buyMultiplier must be > 0" }
         require(engine.economy.sellMultiplier > 0.0) { "ambonMUD.engine.economy.sellMultiplier must be > 0" }
 
@@ -365,6 +369,7 @@ data class EngineConfig(
     val abilities: AbilityEngineConfig = AbilityEngineConfig(),
     val statusEffects: StatusEffectEngineConfig = StatusEffectEngineConfig(),
     val economy: EconomyConfig = EconomyConfig(),
+    val group: GroupConfig = GroupConfig(),
 )
 
 data class ProgressionConfig(
@@ -511,6 +516,12 @@ data class ManaRegenConfig(
 
 data class SchedulerEngineConfig(
     val maxActionsPerTick: Int = 100,
+)
+
+data class GroupConfig(
+    val maxSize: Int = 5,
+    val inviteTimeoutMs: Long = 60_000L,
+    val xpBonusPerMember: Double = 0.10,
 )
 
 data class AbilityEngineConfig(

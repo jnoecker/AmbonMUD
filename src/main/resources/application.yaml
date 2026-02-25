@@ -244,6 +244,10 @@ ambonMUD:
     economy:
       buyMultiplier: 1.0
       sellMultiplier: 0.5
+    group:
+      maxSize: 5
+      inviteTimeoutMs: 60000
+      xpBonusPerMember: 0.10
     abilities:
       definitions:
         # --- Warrior ---

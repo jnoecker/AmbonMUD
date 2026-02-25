@@ -15,6 +15,7 @@ import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.AchievementSystem
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
+import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
@@ -86,6 +87,7 @@ class CommandRouter(
     private val registry: QuestRegistry = QuestRegistry(),
     private val achievementSystem: AchievementSystem? = null,
     private val achievementRegistry: AchievementRegistry = AchievementRegistry(),
+    private val groupSystem: GroupSystem? = null,
 ) {
     private var adminSpawnSeq = 0
 
@@ -141,6 +143,12 @@ class CommandRouter(
                             quest abandon <name>
                             accept <quest>
                             achievements/ach
+                            group invite <player>
+                            group accept
+                            group leave
+                            group kick <player>
+                            group list (or just 'group')
+                            gtell/gt <message>
                             title <titleName>
                             title clear
                             ansi on/off
@@ -1363,6 +1371,39 @@ class CommandRouter(
             Command.TitleClear -> {
                 players.setDisplayTitle(sessionId, null)
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Title cleared."))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.GroupCmd -> {
+                if (groupSystem == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Groups are not available."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val err =
+                    when (cmd) {
+                        is Command.GroupCmd.Invite -> groupSystem.invite(sessionId, cmd.target)
+                        Command.GroupCmd.Accept -> groupSystem.accept(sessionId)
+                        Command.GroupCmd.Leave -> groupSystem.leave(sessionId)
+                        is Command.GroupCmd.Kick -> groupSystem.kick(sessionId, cmd.target)
+                        Command.GroupCmd.List -> groupSystem.list(sessionId)
+                    }
+                if (err != null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, err))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.Gtell -> {
+                if (groupSystem == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Groups are not available."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val err = groupSystem.gtell(sessionId, cmd.message)
+                if (err != null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, err))
+                }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 

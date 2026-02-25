@@ -271,6 +271,15 @@ class GameEngine(
         }
     }
 
+    private val groupSystem =
+        GroupSystem(
+            players = players,
+            outbound = outbound,
+            clock = clock,
+            maxGroupSize = engineConfig.group.maxSize,
+            inviteTimeoutMs = engineConfig.group.inviteTimeoutMs,
+        )
+
     private val behaviorTreeSystem: BehaviorTreeSystem =
         BehaviorTreeSystem(
             world = world,
@@ -322,6 +331,7 @@ class GameEngine(
             registry = questRegistry,
             achievementSystem = achievementSystem,
             achievementRegistry = achievementRegistry,
+            groupSystem = groupSystem,
         )
 
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
@@ -557,10 +567,11 @@ class GameEngine(
         targetRoomId: RoomId,
     ) {
         val mgr = handoffManager ?: return
-        // End combat before handoff (should already be blocked by Move handler, but be safe)
+        // End combat and leave group before handoff
         combatSystem.endCombatFor(sessionId)
         regenSystem.onPlayerDisconnected(sessionId)
         statusEffectSystem.removeAllFromPlayer(sessionId)
+        groupSystem.onPlayerDisconnected(sessionId)
 
         when (val result = mgr.initiateHandoff(sessionId, targetRoomId)) {
             is HandoffResult.Initiated -> {
@@ -902,6 +913,7 @@ class GameEngine(
                 abilitySystem.onPlayerDisconnected(sid)
                 statusEffectSystem.onPlayerDisconnected(sid)
                 dialogueSystem.onPlayerDisconnected(sid)
+                groupSystem.onPlayerDisconnected(sid)
                 gmcpDirtyStatusEffects.remove(sid)
 
                 if (me != null) {
@@ -1076,6 +1088,7 @@ class GameEngine(
                 regenSystem.remapSession(oldSid, sessionId)
                 abilitySystem.remapSession(oldSid, sessionId)
                 statusEffectSystem.remapSession(oldSid, sessionId)
+                groupSystem.remapSession(oldSid, sessionId)
                 outbound.send(OutboundEvent.Close(oldSid, "Your account has logged in from another location."))
                 val me = players.get(sessionId)
                 if (me != null) broadcastToRoom(players, outbound, me.roomId, "${me.name} briefly flickers.", sessionId)
