@@ -11,6 +11,7 @@ value class AbilityId(
 enum class TargetType {
     ENEMY,
     SELF,
+    ALLY,
 }
 
 sealed interface AbilityEffect {
@@ -26,6 +27,16 @@ sealed interface AbilityEffect {
 
     data class ApplyStatus(
         val statusEffectId: StatusEffectId,
+    ) : AbilityEffect
+
+    data class AreaDamage(
+        val minDamage: Int,
+        val maxDamage: Int,
+    ) : AbilityEffect
+
+    data class Taunt(
+        val flatThreat: Double,
+        val margin: Double,
     ) : AbilityEffect
 }
 

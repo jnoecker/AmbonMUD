@@ -532,4 +532,52 @@ class GmcpEmitterTest {
             e.sendRoomRemoveMob(sid, "zone:rat")
             assertEquals(4, drainGmcp().size)
         }
+
+    // ── Group.Info ──
+
+    @Test
+    fun `sendGroupInfo emits leader and members JSON when supported`() =
+        runTest {
+            val e = emitter("Group.Info")
+            val alice = player(name = "Alice", level = 5, hp = 50, maxHp = 100, playerClass = "WARRIOR")
+            val bob =
+                PlayerState(
+                    sessionId = SessionId(2L),
+                    name = "Bob",
+                    roomId = RoomId("test:room1"),
+                    level = 3,
+                    hp = 30,
+                    maxHp = 80,
+                    playerClass = "MAGE",
+                )
+            e.sendGroupInfo(sid, "Alice", listOf(alice, bob))
+            val data = drainGmcp()[0]
+            assertEquals("Group.Info", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"leader\":\"Alice\""))
+            assertTrue(data.jsonData.contains("\"name\":\"Alice\""))
+            assertTrue(data.jsonData.contains("\"name\":\"Bob\""))
+            assertTrue(data.jsonData.contains("\"level\":3"))
+            assertTrue(data.jsonData.contains("\"hp\":30"))
+            assertTrue(data.jsonData.contains("\"maxHp\":80"))
+            assertTrue(data.jsonData.contains("\"class\":\"MAGE\""))
+        }
+
+    @Test
+    fun `sendGroupInfo with null leader emits null`() =
+        runTest {
+            val e = emitter("Group.Info")
+            e.sendGroupInfo(sid, null, emptyList())
+            val data = drainGmcp()[0]
+            assertEquals("Group.Info", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"leader\":null"))
+            assertTrue(data.jsonData.contains("\"members\":[]"))
+        }
+
+    @Test
+    fun `sendGroupInfo skipped when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendGroupInfo(sid, "Alice", listOf(player()))
+            assertTrue(drainGmcp().isEmpty())
+        }
 }
