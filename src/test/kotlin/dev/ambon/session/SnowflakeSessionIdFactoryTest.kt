@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -126,17 +127,24 @@ class SnowflakeSessionIdFactoryTest {
     @Test
     fun `sequence overflow waits then resumes with new timestamp`() {
         val clock = AtomicLong(0L)
-        val factory = SnowflakeSessionIdFactory(gatewayId = 1, clockSeconds = { clock.get() })
+        val overflowSignal = CountDownLatch(1)
+        val factory =
+            SnowflakeSessionIdFactory(
+                gatewayId = 1,
+                clockSeconds = { clock.get() },
+                onSequenceOverflow = { overflowSignal.countDown() },
+            )
 
         // Fill the sequence for second 0 (seq 0..65535 = 65536 allocations)
         repeat(65536) { factory.allocate() }
 
-        // 65537th call will overflow. Advance the clock from a background thread after a short delay.
+        // 65537th call will overflow. Advance the clock only after the overflow callback confirms
+        // the factory is inside the wait loop — avoids a Thread.sleep race on slow schedulers.
         val future =
             CompletableFuture.supplyAsync {
                 factory.allocate()
             }
-        Thread.sleep(15) // give the factory time to enter the wait loop
+        assertTrue(overflowSignal.await(2, TimeUnit.SECONDS), "Overflow should fire within 2 seconds")
         clock.set(1L) // advance the clock to unblock the wait
 
         val id = future.get(2, TimeUnit.SECONDS)
@@ -151,19 +159,24 @@ class SnowflakeSessionIdFactoryTest {
     fun `sequence overflow fires callback`() {
         val clock = AtomicLong(0L)
         val overflowCount = AtomicInteger(0)
+        val overflowSignal = CountDownLatch(1)
         val factory =
             SnowflakeSessionIdFactory(
                 gatewayId = 1,
                 clockSeconds = { clock.get() },
-                onSequenceOverflow = { overflowCount.incrementAndGet() },
+                onSequenceOverflow = {
+                    overflowCount.incrementAndGet()
+                    overflowSignal.countDown()
+                },
             )
 
         // Fill the sequence
         repeat(65536) { factory.allocate() }
 
-        // Trigger overflow in a background thread
+        // Trigger overflow in a background thread; advance the clock only after the callback
+        // confirms the factory is inside the wait loop — avoids a Thread.sleep race on slow schedulers.
         val future = CompletableFuture.supplyAsync { factory.allocate() }
-        Thread.sleep(15)
+        assertTrue(overflowSignal.await(2, TimeUnit.SECONDS), "Overflow should fire within 2 seconds")
         clock.set(1L)
         future.get(2, TimeUnit.SECONDS)
 
