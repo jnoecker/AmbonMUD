@@ -1,0 +1,24 @@
+root = true
+
+[*.{kt,kts}]
+# ── Relaxed ktlint rules ─────────────────────────────────────────────
+#
+# These three standard rules cause excessive reformatting friction
+# (especially in PRs and AI-assisted workflows) without meaningful
+# readability benefit for this project.  Disabling them allows authors
+# to use their judgement for wrapping while ktlint still enforces the
+# high-value rules: trailing commas, no wildcard imports, spacing,
+# blank-line placement, indentation, etc.
+#
+# multiline-expression-wrapping: forced newline after `=` when the RHS
+#   wraps to multiple lines.
+# string-template-indent: depends on multiline-expression-wrapping
+#   being loaded; must be disabled together (ktlint #2288).
+# chain-method-continuation: every `.call()` in a chain must be on its
+#   own line — too aggressive for short 2-3 element chains.
+# function-signature: forces each parameter onto its own line when the
+#   signature doesn't fit on one line — inflates single-param functions.
+ktlint_standard_multiline-expression-wrapping = disabled
+ktlint_standard_string-template-indent = disabled
+ktlint_standard_chain-method-continuation = disabled
+ktlint_standard_function-signature = disabled
