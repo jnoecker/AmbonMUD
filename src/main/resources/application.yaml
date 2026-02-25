@@ -84,6 +84,7 @@ ambonMUD:
     sessionOutboundQueueCapacity: 200
     maxInboundEventsPerTick: 1000
     tickMillis: 100
+    inboundBudgetMs: 30
 
   world:
     resources:
