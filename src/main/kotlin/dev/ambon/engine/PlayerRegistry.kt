@@ -201,6 +201,9 @@ class PlayerRegistry(
                 passwordHash = boundRecord.passwordHash,
                 activeQuests = boundRecord.activeQuests,
                 completedQuestIds = boundRecord.completedQuestIds,
+                unlockedAchievementIds = boundRecord.unlockedAchievementIds,
+                achievementProgress = boundRecord.achievementProgress,
+                activeTitle = boundRecord.activeTitle,
             )
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
@@ -291,6 +294,20 @@ class PlayerRegistry(
 
     suspend fun saveQuestState(sessionId: SessionId) {
         val ps = players[sessionId] ?: return
+        persistIfClaimed(ps)
+    }
+
+    suspend fun saveAchievementState(sessionId: SessionId) {
+        val ps = players[sessionId] ?: return
+        persistIfClaimed(ps)
+    }
+
+    suspend fun setDisplayTitle(
+        sessionId: SessionId,
+        title: String?,
+    ) {
+        val ps = players[sessionId] ?: return
+        ps.activeTitle = title
         persistIfClaimed(ps)
     }
 
@@ -396,6 +413,9 @@ class PlayerRegistry(
                 gold = ps.gold,
                 activeQuests = ps.activeQuests,
                 completedQuestIds = ps.completedQuestIds,
+                unlockedAchievementIds = ps.unlockedAchievementIds,
+                achievementProgress = ps.achievementProgress,
+                activeTitle = ps.activeTitle,
             ),
         )
     }
