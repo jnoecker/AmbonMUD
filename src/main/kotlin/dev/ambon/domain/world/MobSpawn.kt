@@ -20,4 +20,5 @@ data class MobSpawn(
     val goldMax: Long = 0L,
     val dialogue: DialogueTree? = null,
     val behaviorTree: BtNode? = null,
+    val questIds: List<String> = emptyList(),
 )
