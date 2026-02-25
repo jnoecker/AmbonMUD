@@ -1,9 +1,3 @@
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-      }
-    ]
-  }
+  "includeCoAuthoredBy": false
 }
