@@ -222,6 +222,7 @@ class GmcpEmitter(
                 }
         val inProgressJson =
             player.achievementProgress.entries
+                .filter { (id, _) -> registry.get(id)?.hidden != true }
                 .joinToString(",", prefix = "[", postfix = "]") { (id, state) ->
                     val def = registry.get(id)
                     val name = def?.displayName?.jsonEscape() ?: id.jsonEscape()

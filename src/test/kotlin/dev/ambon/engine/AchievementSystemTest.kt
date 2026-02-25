@@ -397,6 +397,90 @@ class AchievementSystemTest {
         }
 
     @Test
+    fun `two achievements both unlock from the same mob kill`() =
+        runTest {
+            val ach1 =
+                AchievementDef(
+                    id = "combat/first_blood",
+                    displayName = "First Blood",
+                    description = "Kill anything.",
+                    category = AchievementCategory.COMBAT,
+                    criteria =
+                        listOf(
+                            AchievementCriterion(
+                                type = CriterionType.KILL,
+                                targetId = "",
+                                count = 1,
+                            ),
+                        ),
+                    rewards = AchievementRewards(gold = 10L),
+                )
+            val ach2 =
+                AchievementDef(
+                    id = "combat/rat_slayer",
+                    displayName = "Rat Slayer",
+                    description = "Kill a rat.",
+                    category = AchievementCategory.COMBAT,
+                    criteria =
+                        listOf(
+                            AchievementCriterion(
+                                type = CriterionType.KILL,
+                                targetId = "zone:rat",
+                                count = 1,
+                            ),
+                        ),
+                    rewards = AchievementRewards(gold = 5L),
+                )
+            val (sys, players, _) = setup(ach1, ach2)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            sys.onMobKilled(sid, "zone:rat")
+
+            val ps = players.get(sid)!!
+            assertTrue(ps.unlockedAchievementIds.contains("combat/first_blood"))
+            assertTrue(ps.unlockedAchievementIds.contains("combat/rat_slayer"))
+            assertEquals(15L, ps.gold) // both rewards granted
+        }
+
+    @Test
+    fun `achievement with multiple criteria unlocks only when all criteria are met`() =
+        runTest {
+            val ach =
+                AchievementDef(
+                    id = "elite/veteran",
+                    displayName = "Veteran",
+                    description = "Kill 3 rats and reach level 5.",
+                    category = AchievementCategory.COMBAT,
+                    criteria =
+                        listOf(
+                            AchievementCriterion(
+                                type = CriterionType.KILL,
+                                targetId = "zone:rat",
+                                count = 3,
+                                description = "Kill 3 rats",
+                            ),
+                            AchievementCriterion(
+                                type = CriterionType.REACH_LEVEL,
+                                count = 5,
+                                description = "Reach level 5",
+                            ),
+                        ),
+                )
+            val (sys, players, _) = setup(ach)
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Hero")
+
+            // KILL criterion met but REACH_LEVEL still pending — must not unlock
+            repeat(3) { sys.onMobKilled(sid, "zone:rat") }
+            assertFalse(players.get(sid)!!.unlockedAchievementIds.contains("elite/veteran"))
+
+            // Both criteria now met — must unlock
+            sys.onLevelReached(sid, 5)
+            assertTrue(players.get(sid)!!.unlockedAchievementIds.contains("elite/veteran"))
+        }
+
+    @Test
     fun `setDisplayTitle updates player active title`() =
         runTest {
             val items = ItemRegistry()
