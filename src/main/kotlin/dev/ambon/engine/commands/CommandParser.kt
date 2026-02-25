@@ -162,6 +162,14 @@ sealed interface Command {
         val keyword: String,
     ) : Command
 
+    data class Talk(
+        val target: String,
+    ) : Command
+
+    data class DialogueChoice(
+        val optionNumber: Int,
+    ) : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -285,6 +293,9 @@ object CommandParser {
         // sell
         requiredArg(line, listOf("sell"), "sell <item>", { Command.Sell(it) })?.let { return it }
 
+        // talk
+        requiredArg(line, listOf("talk"), "talk <npc>", { Command.Talk(it) })?.let { return it }
+
         // cast / c
         matchPrefix(line, listOf("cast", "c")) { rest ->
             if (rest.isEmpty()) return@matchPrefix Command.Invalid(line, "cast <spell> [target]")
@@ -323,6 +334,11 @@ object CommandParser {
         matchPrefix(line, listOf("phase", "layer")) { rest ->
             Command.Phase(rest.trim().ifEmpty { null })
         }?.let { return it }
+
+        // Bare number → dialogue choice (CommandRouter decides if applicable)
+        lower.toIntOrNull()?.let { n ->
+            if (n in 1..9) return Command.DialogueChoice(n)
+        }
 
         return when (lower) {
             "help", "?" -> Command.Help

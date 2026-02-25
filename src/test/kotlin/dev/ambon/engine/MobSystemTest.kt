@@ -161,6 +161,42 @@ class MobSystemTest {
             assertTrue(outbound.tryReceive().getOrNull() == null)
         }
 
+    @Test
+    fun `stationary mob does not wander`() =
+        runTest {
+            val roomA = Room(RoomId("zone:a"), "A", "A", mapOf(Direction.NORTH to RoomId("zone:b")))
+            val roomB = Room(RoomId("zone:b"), "B", "B", mapOf(Direction.SOUTH to RoomId("zone:a")))
+            val world = World(mapOf(roomA.id to roomA, roomB.id to roomB), roomA.id)
+            val mobs = MobRegistry()
+            val mob = MobState(MobId("demo:npc"), "a friendly npc", roomA.id, stationary = true)
+            mobs.upsert(mob)
+
+            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), ItemRegistry())
+            val outbound = LocalOutboundBus()
+            val clock = MutableClock(0L)
+            val system =
+                MobSystem(
+                    world,
+                    mobs,
+                    players,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    minWanderDelayMillis = 0L,
+                    maxWanderDelayMillis = 0L,
+                )
+
+            // Tick multiple times — stationary mob should never move
+            system.tick()
+            clock.advance(1_000L)
+            system.tick()
+            clock.advance(1_000L)
+            system.tick()
+
+            assertEquals(roomA.id, mob.roomId)
+            assertTrue(outbound.tryReceive().getOrNull() == null)
+        }
+
     private suspend fun login(
         players: PlayerRegistry,
         sessionId: SessionId,

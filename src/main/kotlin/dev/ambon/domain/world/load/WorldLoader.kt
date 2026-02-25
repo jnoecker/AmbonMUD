@@ -20,6 +20,9 @@ import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.ShopDefinition
 import dev.ambon.domain.world.World
 import dev.ambon.domain.world.data.WorldFile
+import dev.ambon.engine.dialogue.DialogueChoice
+import dev.ambon.engine.dialogue.DialogueNode
+import dev.ambon.engine.dialogue.DialogueTree
 
 class WorldLoadException(
     message: String,
@@ -199,6 +202,8 @@ object WorldLoader {
                     throw WorldLoadException("Mob '${mobId.value}' respawnSeconds must be > 0 (got $respawnSeconds)")
                 }
 
+                val dialogue = parseDialogue(mobId, mf.dialogue)
+
                 mergedMobs[mobId] =
                     MobSpawn(
                         id = mobId,
@@ -213,6 +218,8 @@ object WorldLoader {
                         respawnSeconds = respawnSeconds,
                         goldMin = resolvedGoldMin,
                         goldMax = resolvedGoldMax,
+                        stationary = mf.stationary,
+                        dialogue = dialogue,
                     )
             }
 
@@ -559,4 +566,41 @@ object WorldLoader {
             "d", "down" -> Direction.DOWN
             else -> null
         }
+
+    private fun parseDialogue(
+        mobId: MobId,
+        raw: Map<String, dev.ambon.domain.world.data.DialogueNodeFile>,
+    ): DialogueTree? {
+        if (raw.isEmpty()) return null
+
+        val rootKey = "root"
+        if (!raw.containsKey(rootKey)) {
+            throw WorldLoadException(
+                "Mob '${mobId.value}' dialogue must contain a '$rootKey' node",
+            )
+        }
+
+        val nodes = mutableMapOf<String, DialogueNode>()
+        for ((key, nodeFile) in raw) {
+            val choices =
+                nodeFile.choices.map { choiceFile ->
+                    val nextNodeId = choiceFile.next
+                    if (nextNodeId != null && !raw.containsKey(nextNodeId)) {
+                        throw WorldLoadException(
+                            "Mob '${mobId.value}' dialogue node '$key' choice references " +
+                                "missing node '$nextNodeId'",
+                        )
+                    }
+                    DialogueChoice(
+                        text = choiceFile.text,
+                        nextNodeId = nextNodeId,
+                        minLevel = choiceFile.minLevel,
+                        requiredClass = choiceFile.requiredClass,
+                    )
+                }
+            nodes[key] = DialogueNode(text = nodeFile.text, choices = choices)
+        }
+
+        return DialogueTree(rootNodeId = rootKey, nodes = nodes)
+    }
 }
