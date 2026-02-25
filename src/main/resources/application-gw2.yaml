@@ -1,0 +1,20 @@
+# Gateway 2 profile for multi-instance local testing.
+# Run with: ./gradlew runGateway2
+# Telnet: 4001  |  Web: 8081  |  metrics: 9181
+# Connects to engine-1 (:9091) and engine-2 (:9092)
+ambonMUD:
+  mode: GATEWAY
+  gateway:
+    id: 1
+    engines:
+      - id: engine-1
+        host: localhost
+        port: 9091
+      - id: engine-2
+        host: localhost
+        port: 9092
+  server:
+    telnetPort: 4001
+    webPort: 8081
+  observability:
+    metricsHttpPort: 9181

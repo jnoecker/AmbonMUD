@@ -180,3 +180,65 @@ tasks.register("swarmRun") {
     description = "Runs the swarm load-testing utility (use :swarm:run with --args for arguments)."
     dependsOn(":swarm:run")
 }
+
+// ---------------------------------------------------------------------------
+// Multi-instance local test configurations
+//
+// These tasks wire up a two-engine / two-gateway topology on localhost:
+//
+//   runEngine1   ENGINE  gRPC :9091  zones: tutorial_glade, ambon_hub, demo_ruins,
+//                                          low_training_marsh, low_training_highlands
+//   runEngine2   ENGINE  gRPC :9092  zones: noecker_resume, low_training_mines,
+//                                          low_training_barrens
+//   runGateway1  GATEWAY telnet :4000  web :8080  connects to engine-1 + engine-2
+//   runGateway2  GATEWAY telnet :4001  web :8081  connects to engine-1 + engine-2
+//
+// Start order: engines first, then gateways. Each task runs in a separate terminal.
+// The profile YAML files live in src/main/resources/application-{profile}.yaml and
+// are loaded as a higher-priority overlay on top of application.yaml.
+// You can still append -Pconfig.* overrides to any of these tasks.
+// ---------------------------------------------------------------------------
+
+tasks.register<JavaExec>("runEngine1") {
+    group = "application"
+    description = "Run Engine 1 (gRPC :9091) for multi-instance local testing."
+    mainClass.set(application.mainClass)
+    classpath = project.extensions.getByType(org.gradle.api.tasks.SourceSetContainer::class.java)["main"].runtimeClasspath
+    standardInput = System.`in`
+    jvmArgs("-Djava.net.preferIPv4Stack=true")
+    systemProperty("ambon.profile", "engine1")
+    applyConfigOverrides()
+}
+
+tasks.register<JavaExec>("runEngine2") {
+    group = "application"
+    description = "Run Engine 2 (gRPC :9092) for multi-instance local testing."
+    mainClass.set(application.mainClass)
+    classpath = project.extensions.getByType(org.gradle.api.tasks.SourceSetContainer::class.java)["main"].runtimeClasspath
+    standardInput = System.`in`
+    jvmArgs("-Djava.net.preferIPv4Stack=true")
+    systemProperty("ambon.profile", "engine2")
+    applyConfigOverrides()
+}
+
+tasks.register<JavaExec>("runGateway1") {
+    group = "application"
+    description = "Run Gateway 1 (telnet :4000, web :8080) for multi-instance local testing."
+    mainClass.set(application.mainClass)
+    classpath = project.extensions.getByType(org.gradle.api.tasks.SourceSetContainer::class.java)["main"].runtimeClasspath
+    standardInput = System.`in`
+    jvmArgs("-Djava.net.preferIPv4Stack=true")
+    systemProperty("ambon.profile", "gw1")
+    applyConfigOverrides()
+}
+
+tasks.register<JavaExec>("runGateway2") {
+    group = "application"
+    description = "Run Gateway 2 (telnet :4001, web :8081) for multi-instance local testing."
+    mainClass.set(application.mainClass)
+    classpath = project.extensions.getByType(org.gradle.api.tasks.SourceSetContainer::class.java)["main"].runtimeClasspath
+    standardInput = System.`in`
+    jvmArgs("-Djava.net.preferIPv4Stack=true")
+    systemProperty("ambon.profile", "gw2")
+    applyConfigOverrides()
+}

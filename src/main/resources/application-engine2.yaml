@@ -1,0 +1,38 @@
+# Engine 2 profile for multi-instance local testing.
+# Run with: ./gradlew runEngine2
+# Owns: noecker_resume, low_training_mines, low_training_barrens
+# gRPC server: 9092  |  metrics: 9192
+ambonMUD:
+  mode: ENGINE
+  sharding:
+    enabled: true
+    engineId: engine-2
+    zones:
+      - noecker_resume
+      - low_training_mines
+      - low_training_barrens
+    advertiseHost: localhost
+    registry:
+      type: STATIC
+      assignments:
+        - engineId: engine-1
+          host: localhost
+          port: 9091
+          zones:
+            - tutorial_glade
+            - ambon_hub
+            - demo_ruins
+            - low_training_marsh
+            - low_training_highlands
+        - engineId: engine-2
+          host: localhost
+          port: 9092
+          zones:
+            - noecker_resume
+            - low_training_mines
+            - low_training_barrens
+  grpc:
+    server:
+      port: 9092
+  observability:
+    metricsHttpPort: 9192
