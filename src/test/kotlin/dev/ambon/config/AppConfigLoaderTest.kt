@@ -61,6 +61,30 @@ class AppConfigLoaderTest {
     }
 
     @Test
+    fun `validation rejects inboundBudgetMs of zero`() {
+        val invalid = AppConfig(server = ServerConfig(inboundBudgetMs = 0L))
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation rejects inboundBudgetMs equal to tickMillis`() {
+        val invalid = AppConfig(server = ServerConfig(tickMillis = 100L, inboundBudgetMs = 100L))
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation rejects inboundBudgetMs greater than tickMillis`() {
+        val invalid = AppConfig(server = ServerConfig(tickMillis = 100L, inboundBudgetMs = 101L))
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validation accepts valid inboundBudgetMs`() {
+        val valid = AppConfig(server = ServerConfig(tickMillis = 100L, inboundBudgetMs = 30L))
+        valid.validated() // should not throw
+    }
+
+    @Test
     fun `redis validation skipped when disabled`() {
         val config = AppConfig(redis = RedisConfig(enabled = false, uri = ""))
         config.validated()

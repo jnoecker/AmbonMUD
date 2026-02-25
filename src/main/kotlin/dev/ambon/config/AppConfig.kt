@@ -46,6 +46,8 @@ data class AppConfig(
         require(server.sessionOutboundQueueCapacity > 0) { "ambonMUD.server.sessionOutboundQueueCapacity must be > 0" }
         require(server.maxInboundEventsPerTick > 0) { "ambonMUD.server.maxInboundEventsPerTick must be > 0" }
         require(server.tickMillis > 0L) { "ambonMUD.server.tickMillis must be > 0" }
+        require(server.inboundBudgetMs > 0L) { "ambonMUD.server.inboundBudgetMs must be > 0" }
+        require(server.inboundBudgetMs < server.tickMillis) { "ambonMUD.server.inboundBudgetMs must be < tickMillis" }
 
         require(world.resources.isNotEmpty()) { "ambonMUD.world.resources must not be empty" }
         require(world.resources.all { it.isNotBlank() }) { "ambonMUD.world.resources entries must be non-blank" }
@@ -327,6 +329,7 @@ data class ServerConfig(
     val sessionOutboundQueueCapacity: Int = 200,
     val maxInboundEventsPerTick: Int = 1_000,
     val tickMillis: Long = 100L,
+    val inboundBudgetMs: Long = 30L,
 )
 
 data class WorldConfig(

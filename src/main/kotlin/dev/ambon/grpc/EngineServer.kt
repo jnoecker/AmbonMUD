@@ -426,6 +426,7 @@ class EngineServer(
                     tickMillis = config.server.tickMillis,
                     scheduler = scheduler,
                     maxInboundEventsPerTick = config.server.maxInboundEventsPerTick,
+                    inboundBudgetMs = config.server.inboundBudgetMs,
                     loginConfig = config.login,
                     engineConfig = config.engine,
                     progression = progression,
