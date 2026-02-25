@@ -424,6 +424,12 @@ rooms:
       s: courtyard_of_thorns
       n: archive_stacks
       w: mossy_passage
+    features:
+      archive_notice:
+        type: SIGN
+        displayName: "a weathered notice"
+        keyword: notice
+        text: "The Archive of the River Compact. Handle all documents with care. Unauthorized access to the sealed vault is a punishable offense. — The Last Curator"
 
   archive_stacks:
     title: "Archive Stacks"
@@ -439,6 +445,15 @@ rooms:
     exits:
       w: archive_stacks
       e: curator_cell
+    features:
+      reading_chest:
+        type: CONTAINER
+        displayName: "a locked iron chest"
+        keyword: chest
+        initialState: locked
+        keyItemId: archive_key
+        keyConsumed: false
+        resetWithZone: true
 
   curator_cell:
     title: "Curator's Cell"
@@ -453,13 +468,26 @@ rooms:
       s: archive_stacks
       e: fissure_descent
       n: hidden_vault_door
+    features:
+      ledger_lever:
+        type: LEVER
+        displayName: "a stone lever"
+        keyword: lever
+        initialState: up
+        resetWithZone: true
 
   hidden_vault_door:
     title: "Hidden Vault Door"
     description: "A round door of stone with a keyhole carved into the shape of a river delta. The surrounding stone is etched with tiny names, most too worn to read."
     exits:
       s: ledger_room
-      d: submerged_vault
+      d:
+        to: submerged_vault
+        door:
+          initialState: locked
+          keyItemId: archive_key
+          keyConsumed: false
+          resetWithZone: true
 
   fissure_descent:
     title: "Fissure Descent"

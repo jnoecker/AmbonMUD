@@ -3,13 +3,19 @@ package dev.ambon.engine.commands
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.EconomyConfig
 import dev.ambon.domain.PlayerClass
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
+import dev.ambon.domain.world.ContainerState
+import dev.ambon.domain.world.Direction
+import dev.ambon.domain.world.DoorState
+import dev.ambon.domain.world.LeverState
 import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
+import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
 import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.AchievementSystem
@@ -22,6 +28,7 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.QuestRegistry
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.ShopRegistry
+import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.dialogue.DialogueSystem
@@ -88,6 +95,7 @@ class CommandRouter(
     private val achievementSystem: AchievementSystem? = null,
     private val achievementRegistry: AchievementRegistry = AchievementRegistry(),
     private val groupSystem: GroupSystem? = null,
+    private val worldState: WorldStateRegistry? = null,
 ) {
     private var adminSpawnSeq = 0
 
@@ -191,6 +199,41 @@ class CommandRouter(
                 val to = room.exits[cmd.dir]
                 if (to == null) {
                     outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
+                } else if (worldState != null) {
+                    val door = worldState.doorOnExit(from, cmd.dir)
+                    if (door != null) {
+                        val doorState = worldState.getDoorState(door.id)
+                        if (doorState != DoorState.OPEN) {
+                            val reason = if (doorState == DoorState.LOCKED) "locked" else "closed"
+                            outbound.send(OutboundEvent.SendText(sessionId, "The ${door.displayName} is $reason."))
+                            outbound.send(OutboundEvent.SendPrompt(sessionId))
+                            return
+                        }
+                    }
+                    if (room.remoteExits.contains(cmd.dir) || !world.rooms.containsKey(to)) {
+                        if (onCrossZoneMove != null) {
+                            onCrossZoneMove.invoke(sessionId, to)
+                            return
+                        } else {
+                            outbound.send(OutboundEvent.SendText(sessionId, "The way shimmers but does not yield."))
+                        }
+                    } else {
+                        val oldMembers = players.playersInRoom(from).filter { it.sessionId != me.sessionId }
+                        for (other in oldMembers) {
+                            outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} leaves."))
+                            gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
+                        }
+                        dialogueSystem?.onPlayerMoved(sessionId)
+                        players.moveTo(sessionId, to)
+                        val newMembers = players.playersInRoom(to).filter { it.sessionId != me.sessionId }
+                        for (other in newMembers) {
+                            outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} enters."))
+                            gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
+                        }
+                        sendLook(sessionId)
+                    }
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
                 } else if (room.remoteExits.contains(cmd.dir) || !world.rooms.containsKey(to)) {
                     // Cross-zone exit — hand off to the owning engine if sharding is active
                     if (onCrossZoneMove != null) {
@@ -1428,6 +1471,24 @@ class CommandRouter(
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
+            is Command.OpenFeature -> handleOpenFeature(sessionId, cmd.keyword)
+
+            is Command.CloseFeature -> handleCloseFeature(sessionId, cmd.keyword)
+
+            is Command.UnlockFeature -> handleUnlockFeature(sessionId, cmd.keyword)
+
+            is Command.LockFeature -> handleLockFeature(sessionId, cmd.keyword)
+
+            is Command.SearchContainer -> handleSearchContainer(sessionId, cmd.keyword)
+
+            is Command.GetFrom -> handleGetFrom(sessionId, cmd.itemKeyword, cmd.containerKeyword)
+
+            is Command.PutIn -> handlePutIn(sessionId, cmd.itemKeyword, cmd.containerKeyword)
+
+            is Command.Pull -> handlePull(sessionId, cmd.keyword)
+
+            is Command.ReadSign -> handleReadSign(sessionId, cmd.keyword)
+
             is Command.Unknown -> {
                 outbound.send(OutboundEvent.SendText(sessionId, "Huh?"))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -1518,8 +1579,43 @@ class CommandRouter(
         outbound.send(OutboundEvent.SendText(sessionId, room.title))
         outbound.send(OutboundEvent.SendText(sessionId, room.description))
 
-        val exits = if (room.exits.isEmpty()) "none" else room.exits.keys.joinToString(", ") { it.name.lowercase() }
+        val exits =
+            if (room.exits.isEmpty()) {
+                "none"
+            } else {
+                room.exits.keys.joinToString(", ") { dir ->
+                    val label = dir.name.lowercase()
+                    val door = worldState?.doorOnExit(roomId, dir)
+                    if (door != null) {
+                        val state = worldState.getDoorState(door.id)
+                        if (state == DoorState.OPEN) label else "$label [${state.name.lowercase()}]"
+                    } else {
+                        label
+                    }
+                }
+            }
         outbound.send(OutboundEvent.SendInfo(sessionId, "Exits: $exits"))
+
+        // Non-door room features
+        val roomFeatures = room.features.filter { it !is RoomFeature.Door }
+        if (roomFeatures.isNotEmpty()) {
+            val featureDesc =
+                roomFeatures.joinToString(", ") { feature ->
+                    when (feature) {
+                        is RoomFeature.Container -> {
+                            val state = worldState?.getContainerState(feature.id) ?: feature.initialState
+                            "${feature.displayName} (${state.name.lowercase()})"
+                        }
+                        is RoomFeature.Lever -> {
+                            val state = worldState?.getLeverState(feature.id) ?: feature.initialState
+                            "${feature.displayName} (${state.name.lowercase()})"
+                        }
+                        is RoomFeature.Sign -> feature.displayName
+                        is RoomFeature.Door -> feature.displayName
+                    }
+                }
+            outbound.send(OutboundEvent.SendInfo(sessionId, "You notice: $featureDesc"))
+        }
 
         // Items
         val here = items.itemsInRoom(roomId)
@@ -1583,4 +1679,412 @@ class CommandRouter(
                     .joinToString(", ") { it.name.lowercase() }
             "Exits: $names"
         }
+
+    /**
+     * Find any feature (door, container, lever, sign) in a room matching the given keyword.
+     * Matches exact keyword first, then direction name or abbreviation for doors, then
+     * substring of displayName.
+     */
+    private fun findFeatureByKeyword(
+        room: Room,
+        keyword: String,
+    ): RoomFeature? {
+        val lower = keyword.lowercase()
+        // Exact keyword match first
+        room.features.firstOrNull { it.keyword.lowercase() == lower }?.let { return it }
+        // Also match doors by direction name or single-letter abbreviation (n/s/e/w/u/d)
+        room.features.filterIsInstance<RoomFeature.Door>().firstOrNull {
+            it.direction.name.lowercase() == lower || dirAbbrev(it.direction) == lower
+        }?.let { return it }
+        // Substring match on displayName (3+ chars)
+        if (lower.length >= 3) {
+            room.features.firstOrNull { it.displayName.lowercase().contains(lower) }?.let { return it }
+        }
+        return null
+    }
+
+    private fun dirAbbrev(dir: Direction): String =
+        when (dir) {
+            Direction.NORTH -> "n"
+            Direction.SOUTH -> "s"
+            Direction.EAST -> "e"
+            Direction.WEST -> "w"
+            Direction.UP -> "u"
+            Direction.DOWN -> "d"
+        }
+
+    /**
+     * Find a key item matching [keyItemId] in a player's inventory.
+     */
+    private fun findKeyInInventory(
+        sessionId: SessionId,
+        keyItemId: ItemId,
+    ) = items.inventory(sessionId).firstOrNull { it.id == keyItemId }
+
+    /**
+     * Broadcast a message to all players in a room except [excludeSessionId].
+     */
+    private suspend fun broadcastToRoomExcept(
+        roomId: RoomId,
+        excludeSessionId: SessionId,
+        message: String,
+    ) {
+        for (other in players.playersInRoom(roomId)) {
+            if (other.sessionId != excludeSessionId) {
+                outbound.send(OutboundEvent.SendText(other.sessionId, message))
+            }
+        }
+    }
+
+    private suspend fun handleOpenFeature(
+        sessionId: SessionId,
+        keyword: String,
+    ) {
+        val me = players.get(sessionId) ?: return
+        val room = world.rooms[me.roomId] ?: return
+        val feature = findFeatureByKeyword(room, keyword)
+        if (feature == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't see any '$keyword' to open here."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        when (feature) {
+            is RoomFeature.Door -> {
+                val state = worldState?.getDoorState(feature.id) ?: feature.initialState
+                when (state) {
+                    DoorState.LOCKED ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is locked."))
+                    DoorState.OPEN ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is already open."))
+                    DoorState.CLOSED -> {
+                        worldState?.setDoorState(feature.id, DoorState.OPEN)
+                        outbound.send(OutboundEvent.SendInfo(sessionId, "You open the ${feature.displayName}."))
+                        broadcastToRoomExcept(me.roomId, sessionId, "${me.name} opens the ${feature.displayName}.")
+                    }
+                }
+            }
+            is RoomFeature.Container -> {
+                val state = worldState?.getContainerState(feature.id) ?: feature.initialState
+                when (state) {
+                    ContainerState.LOCKED ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is locked."))
+                    ContainerState.OPEN ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is already open."))
+                    ContainerState.CLOSED -> {
+                        worldState?.setContainerState(feature.id, ContainerState.OPEN)
+                        outbound.send(OutboundEvent.SendInfo(sessionId, "You open the ${feature.displayName}."))
+                        broadcastToRoomExcept(me.roomId, sessionId, "${me.name} opens the ${feature.displayName}.")
+                    }
+                }
+            }
+            else -> outbound.send(OutboundEvent.SendError(sessionId, "You can't open that."))
+        }
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun handleCloseFeature(
+        sessionId: SessionId,
+        keyword: String,
+    ) {
+        val me = players.get(sessionId) ?: return
+        val room = world.rooms[me.roomId] ?: return
+        val feature = findFeatureByKeyword(room, keyword)
+        if (feature == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't see any '$keyword' to close here."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        when (feature) {
+            is RoomFeature.Door -> {
+                val state = worldState?.getDoorState(feature.id) ?: feature.initialState
+                when (state) {
+                    DoorState.OPEN -> {
+                        worldState?.setDoorState(feature.id, DoorState.CLOSED)
+                        outbound.send(OutboundEvent.SendInfo(sessionId, "You close the ${feature.displayName}."))
+                        broadcastToRoomExcept(me.roomId, sessionId, "${me.name} closes the ${feature.displayName}.")
+                    }
+                    DoorState.CLOSED ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is already closed."))
+                    DoorState.LOCKED ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is already closed and locked."))
+                }
+            }
+            is RoomFeature.Container -> {
+                val state = worldState?.getContainerState(feature.id) ?: feature.initialState
+                when (state) {
+                    ContainerState.OPEN -> {
+                        worldState?.setContainerState(feature.id, ContainerState.CLOSED)
+                        outbound.send(OutboundEvent.SendInfo(sessionId, "You close the ${feature.displayName}."))
+                        broadcastToRoomExcept(me.roomId, sessionId, "${me.name} closes the ${feature.displayName}.")
+                    }
+                    ContainerState.CLOSED ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is already closed."))
+                    ContainerState.LOCKED ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is already closed and locked."))
+                }
+            }
+            else -> outbound.send(OutboundEvent.SendError(sessionId, "You can't close that."))
+        }
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun handleUnlockFeature(
+        sessionId: SessionId,
+        keyword: String,
+    ) {
+        val me = players.get(sessionId) ?: return
+        val room = world.rooms[me.roomId] ?: return
+        val feature = findFeatureByKeyword(room, keyword)
+        if (feature == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't see any '$keyword' to unlock here."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        when (feature) {
+            is RoomFeature.Door -> {
+                val state = worldState?.getDoorState(feature.id) ?: feature.initialState
+                when {
+                    state != DoorState.LOCKED ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not locked."))
+                    feature.keyItemId == null ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "That doesn't need a key."))
+                    else -> {
+                        val key = findKeyInInventory(sessionId, feature.keyItemId)
+                        if (key == null) {
+                            outbound.send(
+                                OutboundEvent.SendError(
+                                    sessionId,
+                                    "You don't have the key for the ${feature.displayName}.",
+                                ),
+                            )
+                        } else {
+                            worldState?.setDoorState(feature.id, DoorState.CLOSED)
+                            if (feature.keyConsumed) items.removeFromInventory(sessionId, key.item.keyword)
+                            outbound.send(OutboundEvent.SendInfo(sessionId, "You unlock the ${feature.displayName}."))
+                            broadcastToRoomExcept(me.roomId, sessionId, "${me.name} unlocks the ${feature.displayName}.")
+                        }
+                    }
+                }
+            }
+            is RoomFeature.Container -> {
+                val state = worldState?.getContainerState(feature.id) ?: feature.initialState
+                when {
+                    state != ContainerState.LOCKED ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not locked."))
+                    feature.keyItemId == null ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "That doesn't need a key."))
+                    else -> {
+                        val key = findKeyInInventory(sessionId, feature.keyItemId)
+                        if (key == null) {
+                            outbound.send(
+                                OutboundEvent.SendError(
+                                    sessionId,
+                                    "You don't have the key for the ${feature.displayName}.",
+                                ),
+                            )
+                        } else {
+                            worldState?.setContainerState(feature.id, ContainerState.CLOSED)
+                            if (feature.keyConsumed) items.removeFromInventory(sessionId, key.item.keyword)
+                            outbound.send(OutboundEvent.SendInfo(sessionId, "You unlock the ${feature.displayName}."))
+                            broadcastToRoomExcept(me.roomId, sessionId, "${me.name} unlocks the ${feature.displayName}.")
+                        }
+                    }
+                }
+            }
+            else -> outbound.send(OutboundEvent.SendError(sessionId, "You can't unlock that."))
+        }
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun handleLockFeature(
+        sessionId: SessionId,
+        keyword: String,
+    ) {
+        val me = players.get(sessionId) ?: return
+        val room = world.rooms[me.roomId] ?: return
+        val feature = findFeatureByKeyword(room, keyword)
+        if (feature == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't see any '$keyword' to lock here."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        when (feature) {
+            is RoomFeature.Door -> {
+                val state = worldState?.getDoorState(feature.id) ?: feature.initialState
+                when {
+                    state != DoorState.CLOSED ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} must be closed before locking."))
+                    feature.keyItemId == null ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "That doesn't need a key."))
+                    else -> {
+                        val key = findKeyInInventory(sessionId, feature.keyItemId)
+                        if (key == null) {
+                            outbound.send(
+                                OutboundEvent.SendError(
+                                    sessionId,
+                                    "You don't have the key for the ${feature.displayName}.",
+                                ),
+                            )
+                        } else {
+                            worldState?.setDoorState(feature.id, DoorState.LOCKED)
+                            if (feature.keyConsumed) items.removeFromInventory(sessionId, key.item.keyword)
+                            outbound.send(OutboundEvent.SendInfo(sessionId, "You lock the ${feature.displayName}."))
+                            broadcastToRoomExcept(me.roomId, sessionId, "${me.name} locks the ${feature.displayName}.")
+                        }
+                    }
+                }
+            }
+            is RoomFeature.Container -> {
+                val state = worldState?.getContainerState(feature.id) ?: feature.initialState
+                when {
+                    state != ContainerState.CLOSED ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} must be closed before locking."))
+                    feature.keyItemId == null ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "That doesn't need a key."))
+                    else -> {
+                        val key = findKeyInInventory(sessionId, feature.keyItemId)
+                        if (key == null) {
+                            outbound.send(
+                                OutboundEvent.SendError(
+                                    sessionId,
+                                    "You don't have the key for the ${feature.displayName}.",
+                                ),
+                            )
+                        } else {
+                            worldState?.setContainerState(feature.id, ContainerState.LOCKED)
+                            if (feature.keyConsumed) items.removeFromInventory(sessionId, key.item.keyword)
+                            outbound.send(OutboundEvent.SendInfo(sessionId, "You lock the ${feature.displayName}."))
+                            broadcastToRoomExcept(me.roomId, sessionId, "${me.name} locks the ${feature.displayName}.")
+                        }
+                    }
+                }
+            }
+            else -> outbound.send(OutboundEvent.SendError(sessionId, "You can't lock that."))
+        }
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun handleSearchContainer(
+        sessionId: SessionId,
+        keyword: String,
+    ) {
+        val me = players.get(sessionId) ?: return
+        val room = world.rooms[me.roomId] ?: return
+        val feature = findFeatureByKeyword(room, keyword)
+        if (feature == null || feature !is RoomFeature.Container) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$keyword' here."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        val state = worldState?.getContainerState(feature.id) ?: feature.initialState
+        if (state != ContainerState.OPEN) {
+            outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not open."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        val contents = worldState?.getContainerContents(feature.id) ?: emptyList()
+        if (contents.isEmpty()) {
+            outbound.send(OutboundEvent.SendInfo(sessionId, "The ${feature.displayName} is empty."))
+        } else {
+            val list = contents.map { it.item.displayName }.sorted().joinToString(", ")
+            outbound.send(OutboundEvent.SendInfo(sessionId, "In the ${feature.displayName}: $list"))
+        }
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun handleGetFrom(
+        sessionId: SessionId,
+        itemKeyword: String,
+        containerKeyword: String,
+    ) {
+        val me = players.get(sessionId) ?: return
+        val room = world.rooms[me.roomId] ?: return
+        val feature = findFeatureByKeyword(room, containerKeyword)
+        if (feature == null || feature !is RoomFeature.Container) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$containerKeyword' here."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        val state = worldState?.getContainerState(feature.id) ?: feature.initialState
+        if (state != ContainerState.OPEN) {
+            outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not open."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        val item = worldState?.removeFromContainer(feature.id, itemKeyword)
+        if (item == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "There is no '$itemKeyword' in the ${feature.displayName}."))
+        } else {
+            items.addToInventory(sessionId, item)
+            outbound.send(OutboundEvent.SendInfo(sessionId, "You take ${item.item.displayName} from the ${feature.displayName}."))
+            broadcastToRoomExcept(me.roomId, sessionId, "${me.name} takes ${item.item.displayName} from the ${feature.displayName}.")
+        }
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun handlePutIn(
+        sessionId: SessionId,
+        itemKeyword: String,
+        containerKeyword: String,
+    ) {
+        val me = players.get(sessionId) ?: return
+        val room = world.rooms[me.roomId] ?: return
+        val feature = findFeatureByKeyword(room, containerKeyword)
+        if (feature == null || feature !is RoomFeature.Container) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$containerKeyword' here."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        val state = worldState?.getContainerState(feature.id) ?: feature.initialState
+        if (state != ContainerState.OPEN) {
+            outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not open."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        val item = items.removeFromInventory(sessionId, itemKeyword)
+        if (item == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't have any '$itemKeyword'."))
+        } else {
+            worldState?.addToContainer(feature.id, item)
+            outbound.send(OutboundEvent.SendInfo(sessionId, "You put ${item.item.displayName} in the ${feature.displayName}."))
+            broadcastToRoomExcept(me.roomId, sessionId, "${me.name} puts ${item.item.displayName} in the ${feature.displayName}.")
+        }
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun handlePull(
+        sessionId: SessionId,
+        keyword: String,
+    ) {
+        val me = players.get(sessionId) ?: return
+        val room = world.rooms[me.roomId] ?: return
+        val feature = findFeatureByKeyword(room, keyword)
+        if (feature == null || feature !is RoomFeature.Lever) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't see any lever called '$keyword' here."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        val state = worldState?.getLeverState(feature.id) ?: feature.initialState
+        val newState = if (state == LeverState.UP) LeverState.DOWN else LeverState.UP
+        worldState?.setLeverState(feature.id, newState)
+        outbound.send(OutboundEvent.SendInfo(sessionId, "You pull the ${feature.displayName}. It moves ${newState.name.lowercase()}."))
+        broadcastToRoomExcept(me.roomId, sessionId, "${me.name} pulls the ${feature.displayName}.")
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun handleReadSign(
+        sessionId: SessionId,
+        keyword: String,
+    ) {
+        val me = players.get(sessionId) ?: return
+        val room = world.rooms[me.roomId] ?: return
+        val feature = findFeatureByKeyword(room, keyword)
+        if (feature == null || feature !is RoomFeature.Sign) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't see anything called '$keyword' to read here."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        outbound.send(OutboundEvent.SendInfo(sessionId, feature.text))
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
 }

@@ -1,6 +1,7 @@
 package dev.ambon.domain.world.load
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -17,13 +18,20 @@ import dev.ambon.domain.quest.ObjectiveType
 import dev.ambon.domain.quest.QuestDef
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
+import dev.ambon.domain.world.ContainerState
 import dev.ambon.domain.world.Direction
+import dev.ambon.domain.world.DoorState
 import dev.ambon.domain.world.ItemSpawn
+import dev.ambon.domain.world.LeverState
 import dev.ambon.domain.world.MobDrop
 import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
+import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.ShopDefinition
 import dev.ambon.domain.world.World
+import dev.ambon.domain.world.data.ExitValue
+import dev.ambon.domain.world.data.ExitValueDeserializer
+import dev.ambon.domain.world.data.FeatureFile
 import dev.ambon.domain.world.data.WorldFile
 import dev.ambon.engine.behavior.BehaviorTemplates
 import dev.ambon.engine.behavior.BtNode
@@ -39,6 +47,9 @@ object WorldLoader {
     private val mapper =
         ObjectMapper(YAMLFactory())
             .registerModule(KotlinModule.Builder().build())
+            .registerModule(
+                SimpleModule().addDeserializer(ExitValue::class.java, ExitValueDeserializer()),
+            )
 
     fun loadFromResource(
         path: String,
@@ -69,6 +80,7 @@ object WorldLoader {
         // Normalize + merge all rooms
         val mergedRooms = LinkedHashMap<RoomId, Room>()
         val allExits = LinkedHashMap<RoomId, Map<Direction, RoomId>>() // staged exits per room
+        val allRoomFeatures = LinkedHashMap<RoomId, MutableList<RoomFeature>>() // staged features per room
         val mergedMobs = LinkedHashMap<MobId, MobSpawn>()
         val mergedItems = LinkedHashMap<ItemId, ItemSpawn>()
         val mergedShops = mutableListOf<ShopDefinition>()
@@ -113,19 +125,56 @@ object WorldLoader {
                     )
             }
 
-            // Stage exits (normalized), but don’t validate targets until after merge
+            // Stage exits + door features (normalized), but don’t validate targets until after merge
             for ((rawId, rf) in file.rooms) {
                 val fromId = normalizeId(zone, rawId)
+                val featList = allRoomFeatures.getOrPut(fromId) { mutableListOf() }
                 val exits: Map<Direction, RoomId> =
                     rf.exits
-                        .map { (dirStr, targetRaw) ->
+                        .map { (dirStr, exitValue) ->
                             val dir =
                                 parseDirectionOrNull(dirStr)
-                                    ?: throw WorldLoadException("Room '${fromId.value}' has invalid direction '$dirStr'")
-                            dir to normalizeTarget(zone, targetRaw)
+                                    ?: throw WorldLoadException("Room ‘${fromId.value}’ has invalid direction ‘$dirStr’")
+                            val doorFile = exitValue.door
+                            if (doorFile != null) {
+                                val doorKeyItemId =
+                                    doorFile.keyItemId?.trim()?.takeUnless { it.isEmpty() }?.let {
+                                        normalizeItemId(zone, it)
+                                    }
+                                val doorState =
+                                    parseDoorState(
+                                        doorFile.initialState,
+                                        "Room ‘${fromId.value}’ door at ‘$dirStr’",
+                                    )
+                                val dirAbbrev = dirAbbrev(dir)
+                                featList.add(
+                                    RoomFeature.Door(
+                                        id = "${fromId.value}/$dirAbbrev",
+                                        roomId = fromId,
+                                        displayName = "door to the ${dir.name.lowercase()}",
+                                        keyword = dir.name.lowercase(),
+                                        direction = dir,
+                                        initialState = doorState,
+                                        keyItemId = doorKeyItemId,
+                                        keyConsumed = doorFile.keyConsumed,
+                                        resetWithZone = doorFile.resetWithZone,
+                                    ),
+                                )
+                            }
+                            dir to normalizeTarget(zone, exitValue.to)
                         }.toMap()
 
                 allExits[fromId] = exits
+            }
+
+            // Stage non-exit features (containers, levers, signs)
+            for ((rawId, rf) in file.rooms) {
+                val fromId = normalizeId(zone, rawId)
+                val featList = allRoomFeatures.getOrPut(fromId) { mutableListOf() }
+                for ((featLocalId, ff) in rf.features) {
+                    val featId = "${fromId.value}/$featLocalId"
+                    featList.add(parseFeatureFile(featId, fromId, zone, ff))
+                }
             }
 
             // Stage mobs (normalized), validate uniqueness
@@ -456,7 +505,7 @@ object WorldLoader {
             }
         }
 
-        // Apply exits by copying rooms (immutable style)
+        // Apply exits + features by copying rooms (immutable style)
         for ((fromId, exits) in allExits) {
             val room = mergedRooms.getValue(fromId)
             val remoteExits =
@@ -465,7 +514,11 @@ object WorldLoader {
                 } else {
                     emptySet()
                 }
-            mergedRooms[fromId] = room.copy(exits = exits, remoteExits = remoteExits)
+            mergedRooms[fromId] = room.copy(
+                exits = exits,
+                remoteExits = remoteExits,
+                features = allRoomFeatures[fromId] ?: emptyList(),
+            )
         }
 
         // Validate worldStart exists
@@ -515,6 +568,40 @@ object WorldLoader {
                     throw WorldLoadException(
                         "Shop '${shop.id}' item #${index + 1} references missing item '${itemId.value}'",
                     )
+                }
+            }
+        }
+
+        // Validate feature item cross-references after merge
+        for (features in allRoomFeatures.values) {
+            for (feature in features) {
+                when (feature) {
+                    is RoomFeature.Door -> {
+                        feature.keyItemId?.let { keyId ->
+                            if (!mergedItems.containsKey(keyId)) {
+                                throw WorldLoadException(
+                                    "Door '${feature.id}' keyItemId references unknown item '${keyId.value}'",
+                                )
+                            }
+                        }
+                    }
+                    is RoomFeature.Container -> {
+                        feature.keyItemId?.let { keyId ->
+                            if (!mergedItems.containsKey(keyId)) {
+                                throw WorldLoadException(
+                                    "Container '${feature.id}' keyItemId references unknown item '${keyId.value}'",
+                                )
+                            }
+                        }
+                        for ((index, itemId) in feature.initialItems.withIndex()) {
+                            if (!mergedItems.containsKey(itemId)) {
+                                throw WorldLoadException(
+                                    "Container '${feature.id}' item #${index + 1} references unknown item '${itemId.value}'",
+                                )
+                            }
+                        }
+                    }
+                    is RoomFeature.Lever, is RoomFeature.Sign -> Unit
                 }
             }
         }
@@ -665,6 +752,117 @@ object WorldLoader {
             )
 
         return tree
+    }
+
+    private fun dirAbbrev(dir: Direction): String =
+        when (dir) {
+            Direction.NORTH -> "n"
+            Direction.SOUTH -> "s"
+            Direction.EAST -> "e"
+            Direction.WEST -> "w"
+            Direction.UP -> "u"
+            Direction.DOWN -> "d"
+        }
+
+    private fun parseDoorState(
+        raw: String,
+        context: String,
+    ): DoorState =
+        when (raw.trim().lowercase()) {
+            "open" -> DoorState.OPEN
+            "closed" -> DoorState.CLOSED
+            "locked" -> DoorState.LOCKED
+            else -> throw WorldLoadException("$context has invalid door initialState '$raw' (expected: open, closed, locked)")
+        }
+
+    private fun parseContainerState(
+        raw: String?,
+        context: String,
+    ): ContainerState =
+        when (raw?.trim()?.lowercase() ?: "closed") {
+            "open" -> ContainerState.OPEN
+            "closed" -> ContainerState.CLOSED
+            "locked" -> ContainerState.LOCKED
+            else -> throw WorldLoadException("$context has invalid container initialState '$raw' (expected: open, closed, locked)")
+        }
+
+    private fun parseLeverState(
+        raw: String?,
+        context: String,
+    ): LeverState =
+        when (raw?.trim()?.lowercase() ?: "up") {
+            "up" -> LeverState.UP
+            "down" -> LeverState.DOWN
+            else -> throw WorldLoadException("$context has invalid lever initialState '$raw' (expected: up, down)")
+        }
+
+    private fun parseFeatureFile(
+        featId: String,
+        roomId: RoomId,
+        zone: String,
+        ff: FeatureFile,
+    ): RoomFeature {
+        val type = ff.type.trim().uppercase()
+        val displayName = ff.displayName.trim()
+        if (displayName.isEmpty()) {
+            throw WorldLoadException("Feature '$featId' displayName cannot be blank")
+        }
+        val keyword = ff.keyword.trim()
+        if (keyword.isEmpty()) {
+            throw WorldLoadException("Feature '$featId' keyword cannot be blank")
+        }
+        return when (type) {
+            "CONTAINER" -> {
+                val keyItemId =
+                    ff.keyItemId?.trim()?.takeUnless { it.isEmpty() }?.let {
+                        normalizeItemId(zone, it)
+                    }
+                val initialState = parseContainerState(ff.initialState, "Container '$featId'")
+                val initialItems =
+                    ff.items.mapIndexed { index, rawItemId ->
+                        val s = rawItemId.trim()
+                        if (s.isEmpty()) {
+                            throw WorldLoadException("Container '$featId' item #${index + 1} cannot be blank")
+                        }
+                        normalizeItemId(zone, s)
+                    }
+                RoomFeature.Container(
+                    id = featId,
+                    roomId = roomId,
+                    displayName = displayName,
+                    keyword = keyword,
+                    initialState = initialState,
+                    keyItemId = keyItemId,
+                    keyConsumed = ff.keyConsumed,
+                    resetWithZone = ff.resetWithZone,
+                    initialItems = initialItems,
+                )
+            }
+            "LEVER" -> {
+                val initialState = parseLeverState(ff.initialState, "Lever '$featId'")
+                RoomFeature.Lever(
+                    id = featId,
+                    roomId = roomId,
+                    displayName = displayName,
+                    keyword = keyword,
+                    initialState = initialState,
+                    resetWithZone = ff.resetWithZone,
+                )
+            }
+            "SIGN" -> {
+                val text = ff.text ?: throw WorldLoadException("Sign '$featId' must have a 'text' field")
+                RoomFeature.Sign(
+                    id = featId,
+                    roomId = roomId,
+                    displayName = displayName,
+                    keyword = keyword,
+                    text = text,
+                )
+            }
+            else -> throw WorldLoadException(
+                "Feature '$featId' has unknown type '$type' (expected: CONTAINER, LEVER, SIGN)",
+            )
+        }
     }
 
     private fun parseDialogue(
