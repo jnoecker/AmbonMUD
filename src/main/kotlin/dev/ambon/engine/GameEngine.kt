@@ -11,6 +11,8 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.World
+import dev.ambon.engine.QuestRegistry
+import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.abilities.AbilityRegistry
 import dev.ambon.engine.abilities.AbilityRegistryLoader
 import dev.ambon.engine.abilities.AbilitySystem
@@ -74,6 +76,7 @@ class GameEngine(
     private val playerLocationIndex: PlayerLocationIndex? = null,
     /** Zone registry for instancing-aware phase command. */
     private val zoneRegistry: ZoneRegistry? = null,
+    private val questRegistry: QuestRegistry = QuestRegistry(),
 ) {
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
@@ -188,6 +191,7 @@ class GameEngine(
                     gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid))
                 }
             },
+            onMobKilledByPlayer = { sid, templateKey -> questSystem.onMobKilled(sid, templateKey) },
         )
     private val regenSystem =
         RegenSystem(
@@ -231,6 +235,18 @@ class GameEngine(
             mobs = mobs,
             players = players,
             outbound = outbound,
+        )
+
+    private val questSystem =
+        QuestSystem(
+            registry =
+                questRegistry.also { reg ->
+                    world.questDefinitions.forEach { reg.register(it) }
+                },
+            players = players,
+            items = items,
+            outbound = outbound,
+            clock = clock,
         )
 
     private val behaviorTreeSystem: BehaviorTreeSystem =
@@ -280,6 +296,8 @@ class GameEngine(
             shopRegistry = shopRegistry,
             economyConfig = engineConfig.economy,
             dialogueSystem = dialogueSystem,
+            questSystem = questSystem,
+            registry = questRegistry,
         )
 
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
@@ -1389,6 +1407,8 @@ class GameEngine(
             goldMax = spawn.goldMax,
             dialogue = spawn.dialogue,
             behaviorTree = spawn.behaviorTree,
+            templateKey = spawn.id.value,
+            questIds = spawn.questIds,
         )
 
     private fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)

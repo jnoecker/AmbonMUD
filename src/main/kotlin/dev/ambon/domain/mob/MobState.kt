@@ -21,4 +21,6 @@ data class MobState(
     val goldMax: Long = 0L,
     val dialogue: DialogueTree? = null,
     val behaviorTree: BtNode? = null,
+    val templateKey: String = "",
+    val questIds: List<String> = emptyList(),
 )

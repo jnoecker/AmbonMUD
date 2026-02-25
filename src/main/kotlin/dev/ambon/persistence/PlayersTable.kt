@@ -25,6 +25,8 @@ object PlayersTable : Table("players") {
     val mana = integer("mana").default(20)
     val maxMana = integer("max_mana").default(20)
     val gold = long("gold").default(0L)
+    val activeQuests = text("active_quests").default("{}")
+    val completedQuestIds = text("completed_quest_ids").default("[]")
 
     override val primaryKey = PrimaryKey(id)
 }
