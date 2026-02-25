@@ -10,6 +10,9 @@ import dev.ambon.domain.world.LeverState
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
 import dev.ambon.persistence.WorldStateSnapshot
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val log = KotlinLogging.logger {}
 
 /**
  * Mutable runtime state for all stateful room features (doors, containers, levers).
@@ -228,7 +231,16 @@ class WorldStateRegistry(
             leverStates[id] = state
         }
         for ((featureId, itemIds) in snapshot.containerItems) {
-            val instances = itemIds.mapNotNull { rawId -> resolveItem(ItemId(rawId)) }
+            val instances =
+                itemIds.mapNotNull { rawId ->
+                    val instance = resolveItem(ItemId(rawId))
+                    if (instance == null) {
+                        log.warn {
+                            "WorldStateRegistry.applySnapshot: item '$rawId' in container '$featureId' could not be resolved — item removed from game?"
+                        }
+                    }
+                    instance
+                }
             // Always overwrite — empty list means container was deliberately emptied.
             containerContents[featureId] = instances.toMutableList()
         }

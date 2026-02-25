@@ -1579,15 +1579,16 @@ class CommandRouter(
         outbound.send(OutboundEvent.SendText(sessionId, room.title))
         outbound.send(OutboundEvent.SendText(sessionId, room.description))
 
+        val ws = worldState
         val exits =
             if (room.exits.isEmpty()) {
                 "none"
             } else {
                 room.exits.keys.joinToString(", ") { dir ->
                     val label = dir.name.lowercase()
-                    val door = worldState?.doorOnExit(roomId, dir)
-                    if (door != null) {
-                        val state = worldState.getDoorState(door.id)
+                    val door = ws?.doorOnExit(roomId, dir)
+                    if (door != null && ws != null) {
+                        val state = ws.getDoorState(door.id)
                         if (state == DoorState.OPEN) label else "$label [${state.name.lowercase()}]"
                     } else {
                         label
@@ -1912,6 +1913,8 @@ class CommandRouter(
             is RoomFeature.Door -> {
                 val state = worldState?.getDoorState(feature.id) ?: feature.initialState
                 when {
+                    state == DoorState.LOCKED ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is already locked."))
                     state != DoorState.CLOSED ->
                         outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} must be closed before locking."))
                     feature.keyItemId == null ->
@@ -1937,6 +1940,8 @@ class CommandRouter(
             is RoomFeature.Container -> {
                 val state = worldState?.getContainerState(feature.id) ?: feature.initialState
                 when {
+                    state == ContainerState.LOCKED ->
+                        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is already locked."))
                     state != ContainerState.CLOSED ->
                         outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} must be closed before locking."))
                     feature.keyItemId == null ->
