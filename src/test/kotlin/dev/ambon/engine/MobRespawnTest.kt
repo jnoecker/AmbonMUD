@@ -79,7 +79,7 @@ class MobRespawnTest {
             val clock = MutableClock(0L)
             val scheduler = Scheduler(clock)
             val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), ItemRegistry())
-            val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
+            val mobSystem = MobSystem()
 
             val onMobRemoved = buildOnMobRemoved(world, mobs, mobSystem, scheduler, players, outbound)
 
@@ -116,7 +116,7 @@ class MobRespawnTest {
             val clock = MutableClock(0L)
             val scheduler = Scheduler(clock)
             val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), ItemRegistry())
-            val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
+            val mobSystem = MobSystem()
 
             val onMobRemoved = buildOnMobRemoved(world, mobs, mobSystem, scheduler, players, outbound)
 
@@ -151,7 +151,7 @@ class MobRespawnTest {
             val clock = MutableClock(0L)
             val scheduler = Scheduler(clock)
             val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), ItemRegistry())
-            val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
+            val mobSystem = MobSystem()
 
             val onMobRemoved = buildOnMobRemoved(world, mobs, mobSystem, scheduler, players, outbound)
 
@@ -175,7 +175,7 @@ class MobRespawnTest {
             val clock = MutableClock(0L)
             val scheduler = Scheduler(clock)
             val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), ItemRegistry())
-            val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
+            val mobSystem = MobSystem()
 
             val onMobRemoved = buildOnMobRemoved(world, mobs, mobSystem, scheduler, players, outbound)
 
@@ -198,7 +198,7 @@ class MobRespawnTest {
             val clock = MutableClock(0L)
             val scheduler = Scheduler(clock)
             val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), ItemRegistry())
-            val mobSystem = MobSystem(world, mobs, players, outbound, clock = clock)
+            val mobSystem = MobSystem()
 
             val onMobRemoved = buildOnMobRemoved(world, mobs, mobSystem, scheduler, players, outbound)
 

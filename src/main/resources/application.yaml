@@ -116,9 +116,8 @@ ambonMUD:
 
   engine:
     mob:
-      maxMovesPerTick: 10
-      minWanderDelayMillis: 5000
-      maxWanderDelayMillis: 12000
+      minActionDelayMillis: 2000
+      maxActionDelayMillis: 5000
       tiers:
         weak:
           baseHp: 5

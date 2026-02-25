@@ -5,7 +5,6 @@ mobs:
   sage:
     name: "a wise sage"
     room: plaza
-    stationary: true
     dialogue:
       root:
         text: "Greetings, young one. What would you like to know?"

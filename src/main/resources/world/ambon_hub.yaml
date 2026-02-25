@@ -6,7 +6,6 @@ mobs:
   portal_keeper:
     name: "the Portal Keeper"
     room: hall_of_portals
-    stationary: true
     dialogue:
       root:
         text: "Welcome, traveler! I am the Portal Keeper. I watch over the passages between realms. How may I help you?"
