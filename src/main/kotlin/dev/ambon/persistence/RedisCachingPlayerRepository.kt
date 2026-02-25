@@ -2,7 +2,6 @@ package dev.ambon.persistence
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import dev.ambon.domain.ids.RoomId
 import dev.ambon.redis.redisObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
@@ -42,37 +41,8 @@ class RedisCachingPlayerRepository(
             fromDelegate = { delegate.findById(id) },
         )
 
-    override suspend fun create(
-        name: String,
-        startRoomId: RoomId,
-        nowEpochMs: Long,
-        passwordHash: String,
-        ansiEnabled: Boolean,
-        race: String,
-        playerClass: String,
-        strength: Int,
-        dexterity: Int,
-        constitution: Int,
-        intelligence: Int,
-        wisdom: Int,
-        charisma: Int,
-    ): PlayerRecord {
-        val record =
-            delegate.create(
-                name,
-                startRoomId,
-                nowEpochMs,
-                passwordHash,
-                ansiEnabled,
-                race,
-                playerClass,
-                strength,
-                dexterity,
-                constitution,
-                intelligence,
-                wisdom,
-                charisma,
-            )
+    override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
+        val record = delegate.create(request)
         cacheRecord(record)
         return record
     }

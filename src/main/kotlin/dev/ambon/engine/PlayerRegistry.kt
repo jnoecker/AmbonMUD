@@ -5,6 +5,7 @@ import dev.ambon.domain.Race
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.persistence.PlayerCreationRequest
 import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
 import org.mindrot.jbcrypt.BCrypt
@@ -121,19 +122,21 @@ class PlayerRegistry(
         val now = clock.millis()
         val created =
             repo.create(
-                name = name,
-                startRoomId = startRoom,
-                nowEpochMs = now,
-                passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()),
-                ansiEnabled = defaultAnsiEnabled,
-                race = race.name,
-                playerClass = playerClass.name,
-                strength = baseStat + race.strMod,
-                dexterity = baseStat + race.dexMod,
-                constitution = baseStat + race.conMod,
-                intelligence = baseStat + race.intMod,
-                wisdom = baseStat + race.wisMod,
-                charisma = baseStat + race.chaMod,
+                PlayerCreationRequest(
+                    name = name,
+                    startRoomId = startRoom,
+                    nowEpochMs = now,
+                    passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()),
+                    ansiEnabled = defaultAnsiEnabled,
+                    race = race.name,
+                    playerClass = playerClass.name,
+                    strength = baseStat + race.strMod,
+                    dexterity = baseStat + race.dexMod,
+                    constitution = baseStat + race.conMod,
+                    intelligence = baseStat + race.intMod,
+                    wisdom = baseStat + race.wisMod,
+                    charisma = baseStat + race.chaMod,
+                ),
             )
         bindSession(sessionId, created, now)
         return CreateResult.Ok

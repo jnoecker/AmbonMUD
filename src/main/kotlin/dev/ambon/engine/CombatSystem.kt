@@ -1,7 +1,6 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
-import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -100,7 +99,7 @@ class CombatSystem(
         fightsByMob[mob.id] = fight
 
         outbound.send(OutboundEvent.SendText(sessionId, "You attack ${mob.name}."))
-        broadcastToRoom(roomId, "${player.name} attacks ${mob.name}.", exclude = sessionId)
+        broadcastToRoom(players, outbound, roomId, "${player.name} attacks ${mob.name}.", exclude = sessionId)
 
         return null
     }
@@ -188,7 +187,7 @@ class CombatSystem(
                 endFight(fight)
                 outbound.send(OutboundEvent.SendText(fight.sessionId, "You collapse, too wounded to keep fighting."))
                 outbound.send(OutboundEvent.SendText(fight.sessionId, "You are safe now — rest and your wounds will mend."))
-                broadcastToRoom(player.roomId, "${player.name} has fallen in battle.", exclude = fight.sessionId)
+                broadcastToRoom(players, outbound, player.roomId, "${player.name} has fallen in battle.", exclude = fight.sessionId)
                 outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
                 ran++
                 continue
@@ -220,6 +219,8 @@ class CombatSystem(
                 outbound.send(OutboundEvent.SendText(fight.sessionId, playerHitText))
                 if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
                     broadcastToRoom(
+                        players,
+                        outbound,
                         player.roomId,
                         "[Combat] ${player.name} hits ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix.",
                         exclude = fight.sessionId,
@@ -264,6 +265,8 @@ class CombatSystem(
                 outbound.send(OutboundEvent.SendText(fight.sessionId, mobHitText))
                 if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
                     broadcastToRoom(
+                        players,
+                        outbound,
                         player.roomId,
                         "[Combat] ${mob.name} hits ${player.name} for $mobDamage damage$mobFeedbackSuffix.",
                         exclude = fight.sessionId,
@@ -276,7 +279,13 @@ class CombatSystem(
                 endFight(fight)
                 outbound.send(OutboundEvent.SendText(fight.sessionId, "You have been slain by ${mob.name}."))
                 outbound.send(OutboundEvent.SendText(fight.sessionId, "You are safe now — rest and your wounds will mend."))
-                broadcastToRoom(player.roomId, "${player.name} has been slain by ${mob.name}.", exclude = fight.sessionId)
+                broadcastToRoom(
+                    players,
+                    outbound,
+                    player.roomId,
+                    "${player.name} has been slain by ${mob.name}.",
+                    exclude = fight.sessionId,
+                )
                 outbound.send(OutboundEvent.SendPrompt(fight.sessionId))
                 ran++
                 continue
@@ -347,18 +356,6 @@ class CombatSystem(
         return chance.coerceIn(0, maxDodgePercent)
     }
 
-    private fun applyCharismaXpBonus(
-        player: PlayerState,
-        baseXp: Long,
-    ): Long {
-        val equipCha = items.equipment(player.sessionId).values.sumOf { it.item.charisma }
-        val totalCha = player.charisma + equipCha
-        val chaBonus = totalCha - PlayerState.BASE_STAT
-        if (chaBonus <= 0) return baseXp
-        val multiplier = 1.0 + chaBonus * 0.005
-        return (baseXp * multiplier).toLong().coerceAtLeast(baseXp)
-    }
-
     private fun syncPlayerDefense(player: PlayerState) {
         val sessionId = player.sessionId
         val currentDefense = equippedDefense(sessionId)
@@ -399,7 +396,7 @@ class CombatSystem(
         statusEffects?.onMobRemoved(mob.id)
         items.dropMobItemsToRoom(mob.id, mob.roomId)
         rollDrops(mob)
-        broadcastToRoom(mob.roomId, "${mob.name} dies.")
+        broadcastToRoom(players, outbound, mob.roomId, "${mob.name} dies.")
         grantKillGold(killerSessionId, mob)
         grantKillXp(killerSessionId, mob)
     }
@@ -448,7 +445,8 @@ class CombatSystem(
         if (baseReward <= 0L) return
 
         val player = players.get(sessionId) ?: return
-        val reward = applyCharismaXpBonus(player, baseReward)
+        val equipCha = items.equipment(sessionId).values.sumOf { it.item.charisma }
+        val reward = progression.applyCharismaXpBonus(player.charisma + equipCha, baseReward)
 
         val result = players.grantXp(sessionId, reward, progression) ?: return
         metrics.onXpAwarded(reward, "kill")
@@ -457,38 +455,8 @@ class CombatSystem(
         if (result.levelsGained <= 0) return
         metrics.onLevelUp()
 
-        val con = player.constitution
-        val int = player.intelligence
-        val pc = PlayerClass.fromString(player.playerClass)
-        val classHpPerLevel = pc?.hpPerLevel ?: progression.hpPerLevel
-        val classManaPerLevel = pc?.manaPerLevel ?: progression.manaPerLevel
-        val oldMaxHp = progression.maxHpForLevel(result.previousLevel, con, classHpPerLevel)
-        val newMaxHp = progression.maxHpForLevel(result.newLevel, con, classHpPerLevel)
-        val hpGain = (newMaxHp - oldMaxHp).coerceAtLeast(0)
-        val oldMaxMana = progression.maxManaForLevel(result.previousLevel, int, classManaPerLevel)
-        val newMaxMana = progression.maxManaForLevel(result.newLevel, int, classManaPerLevel)
-        val manaGain = (newMaxMana - oldMaxMana).coerceAtLeast(0)
-        val bonusParts = mutableListOf<String>()
-        if (hpGain > 0) bonusParts += "+$hpGain max HP"
-        if (manaGain > 0) bonusParts += "+$manaGain max Mana"
-        val levelUpMessage =
-            if (bonusParts.isNotEmpty()) {
-                "You reached level ${result.newLevel}! (${bonusParts.joinToString(", ")})"
-            } else {
-                "You reached level ${result.newLevel}!"
-            }
+        val levelUpMessage = progression.buildLevelUpMessage(result, player.constitution, player.intelligence, player.playerClass)
         outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
         onLevelUp(sessionId, result.newLevel)
-    }
-
-    private suspend fun broadcastToRoom(
-        roomId: RoomId,
-        text: String,
-        exclude: SessionId? = null,
-    ) {
-        for (p in players.playersInRoom(roomId)) {
-            if (exclude != null && p.sessionId == exclude) continue
-            outbound.send(OutboundEvent.SendText(p.sessionId, text))
-        }
     }
 }

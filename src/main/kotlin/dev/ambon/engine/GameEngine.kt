@@ -378,7 +378,7 @@ class GameEngine(
                             mobs.remove(mobId)
                             mobSystem.onMobRemoved(mobId)
                             statusEffectSystem.onMobRemoved(mobId)
-                            broadcastToRoom(mob.roomId, "${mob.name} dies.")
+                            broadcastToRoom(players, outbound, mob.roomId, "${mob.name} dies.")
                         }
                     }
 
@@ -839,7 +839,7 @@ class GameEngine(
                 if (me != null) {
                     log.info { "Player logged out: name=${me.name} sessionId=$sid" }
                     playerLocationIndex?.unregister(me.name)
-                    broadcastToRoom(me.roomId, "${me.name} leaves.", sid)
+                    broadcastToRoom(players, outbound, me.roomId, "${me.name} leaves.", sid)
                 }
 
                 players.disconnect(sid) // idempotent; safe even if me == null
@@ -864,17 +864,6 @@ class GameEngine(
 
                 router.handle(sid, CommandParser.parse(ev.line))
             }
-        }
-    }
-
-    private suspend fun broadcastToRoom(
-        roomId: RoomId,
-        text: String,
-        excludeSid: SessionId? = null,
-    ) {
-        for (p in players.playersInRoom(roomId)) {
-            if (excludeSid != null && p.sessionId == excludeSid) continue
-            outbound.send(OutboundEvent.SendText(p.sessionId, text))
         }
     }
 
@@ -1021,7 +1010,7 @@ class GameEngine(
                 statusEffectSystem.remapSession(oldSid, sessionId)
                 outbound.send(OutboundEvent.Close(oldSid, "Your account has logged in from another location."))
                 val me = players.get(sessionId)
-                if (me != null) broadcastToRoom(me.roomId, "${me.name} briefly flickers.", sessionId)
+                if (me != null) broadcastToRoom(players, outbound, me.roomId, "${me.name} briefly flickers.", sessionId)
                 finalizeSuccessfulLogin(sessionId, suppressEnterBroadcast = true)
             }
         }
@@ -1157,7 +1146,7 @@ class GameEngine(
         outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
         if (!ensureLoginRoomAvailable(sessionId, suppressEnterBroadcast)) return
         if (!suppressEnterBroadcast) {
-            broadcastToRoom(me.roomId, "${me.name} enters.", sessionId)
+            broadcastToRoom(players, outbound, me.roomId, "${me.name} enters.", sessionId)
         }
         // Send initial GMCP vitals/status for sessions that are already opted-in
         gmcpEmitter.sendCharStatusVars(sessionId)
@@ -1207,7 +1196,7 @@ class GameEngine(
         players.moveTo(sessionId, world.startRoom)
         val relocated = players.get(sessionId) ?: return false
         if (!suppressEnterBroadcast) {
-            broadcastToRoom(relocated.roomId, "${relocated.name} enters.", sessionId)
+            broadcastToRoom(players, outbound, relocated.roomId, "${relocated.name} enters.", sessionId)
         }
         outbound.send(
             OutboundEvent.SendError(
@@ -1327,31 +1316,30 @@ class GameEngine(
             .filter { it.isNotBlank() }
     }
 
+    /** Atomically snapshots and clears [set], returning the snapshot. */
+    private fun <T> drainDirty(set: MutableSet<T>): List<T> {
+        if (set.isEmpty()) return emptyList()
+        val snapshot = set.toList()
+        set.clear()
+        return snapshot
+    }
+
     private suspend fun flushDirtyGmcpVitals() {
-        if (gmcpDirtyVitals.isEmpty()) return
-        val dirty = gmcpDirtyVitals.toList()
-        gmcpDirtyVitals.clear()
-        for (sid in dirty) {
+        for (sid in drainDirty(gmcpDirtyVitals)) {
             val player = players.get(sid) ?: continue
             gmcpEmitter.sendCharVitals(sid, player)
         }
     }
 
     private suspend fun flushDirtyGmcpStatusEffects() {
-        if (gmcpDirtyStatusEffects.isEmpty()) return
-        val dirty = gmcpDirtyStatusEffects.toList()
-        gmcpDirtyStatusEffects.clear()
-        for (sid in dirty) {
+        for (sid in drainDirty(gmcpDirtyStatusEffects)) {
             val effects = statusEffectSystem.activePlayerEffects(sid)
             gmcpEmitter.sendCharStatusEffects(sid, effects)
         }
     }
 
     private suspend fun flushDirtyGmcpMobs() {
-        if (gmcpDirtyMobs.isEmpty()) return
-        val dirty = gmcpDirtyMobs.toList()
-        gmcpDirtyMobs.clear()
-        for (mobId in dirty) {
+        for (mobId in drainDirty(gmcpDirtyMobs)) {
             val mob = mobs.get(mobId) ?: continue
             for (p in players.playersInRoom(mob.roomId)) {
                 gmcpEmitter.sendRoomUpdateMob(p.sessionId, mob)

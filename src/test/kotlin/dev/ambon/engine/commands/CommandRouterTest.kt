@@ -11,6 +11,8 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.drainAll
+import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions
@@ -32,13 +34,13 @@ class CommandRouterTest {
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(1)
-            login(players, sid, "Player1")
+            players.loginOrFail(sid, "Player1")
 
             val startRoom = world.rooms.getValue(world.startRoom)
 
             router.handle(sid, Command.Look)
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             // Expected: SendText(title), SendText(desc), SendInfo(exits), SendPrompt
             assertTrue(
@@ -71,13 +73,13 @@ class CommandRouterTest {
 
             val alice = SessionId(1)
             val bob = SessionId(2)
-            login(players, alice, "Alice")
-            login(players, bob, "Bob")
-            drain(outbound)
+            players.loginOrFail(alice, "Alice")
+            players.loginOrFail(bob, "Bob")
+            outbound.drainAll()
 
             router.handle(alice, Command.Look)
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any {
                     it is OutboundEvent.SendInfo && it.text == "Players here: Alice, Bob"
@@ -97,7 +99,7 @@ class CommandRouterTest {
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(2)
-            login(players, sid, "Player2")
+            players.loginOrFail(sid, "Player2")
 
             val startRoom = world.rooms.getValue(world.startRoom)
             val northTargetId = startRoom.exits[Direction.NORTH]
@@ -112,7 +114,7 @@ class CommandRouterTest {
 
             router.handle(sid, Command.Move(Direction.NORTH))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text == northRoom.title },
@@ -137,9 +139,9 @@ class CommandRouterTest {
             val alice = SessionId(1)
             val bob = SessionId(2)
             val charlie = SessionId(3)
-            login(players, alice, "Alice")
-            login(players, bob, "Bob")
-            login(players, charlie, "Charlie")
+            players.loginOrFail(alice, "Alice")
+            players.loginOrFail(bob, "Bob")
+            players.loginOrFail(charlie, "Charlie")
 
             val startRoom = world.rooms.getValue(world.startRoom)
             val northTargetId = startRoom.exits[Direction.NORTH]
@@ -150,10 +152,10 @@ class CommandRouterTest {
 
             // Move Charlie to the north room so Alice will "enter" his room.
             router.handle(charlie, Command.Move(Direction.NORTH))
-            drain(outbound)
+            outbound.drainAll()
 
             router.handle(alice, Command.Move(Direction.NORTH))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any {
@@ -180,7 +182,7 @@ class CommandRouterTest {
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(3)
-            login(players, sid, "Player3")
+            players.loginOrFail(sid, "Player3")
 
             val startRoom = world.rooms.getValue(world.startRoom)
             val missingDir =
@@ -189,7 +191,7 @@ class CommandRouterTest {
 
             router.handle(sid, Command.Move(missingDir))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("can't go that way", ignoreCase = true) },
@@ -210,12 +212,12 @@ class CommandRouterTest {
 
             val alice = SessionId(1)
             val bob = SessionId(2)
-            login(players, alice, "Alice")
-            login(players, bob, "Bob")
-            drain(outbound)
+            players.loginOrFail(alice, "Alice")
+            players.loginOrFail(bob, "Bob")
+            outbound.drainAll()
 
             router.handle(alice, Command.Tell("Charlie", "hi"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any {
@@ -247,13 +249,13 @@ class CommandRouterTest {
             val alice = SessionId(1)
             val bob = SessionId(2)
             val eve = SessionId(3)
-            login(players, alice, "Alice")
-            login(players, bob, "Bob")
-            login(players, eve, "Eve")
-            drain(outbound)
+            players.loginOrFail(alice, "Alice")
+            players.loginOrFail(bob, "Bob")
+            players.loginOrFail(eve, "Eve")
+            outbound.drainAll()
 
             router.handle(alice, Command.Tell("Bob", "secret"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any {
@@ -291,12 +293,12 @@ class CommandRouterTest {
 
             val alice = SessionId(1)
             val bob = SessionId(2)
-            login(players, alice, "Alice")
-            login(players, bob, "Bob")
-            drain(outbound)
+            players.loginOrFail(alice, "Alice")
+            players.loginOrFail(bob, "Bob")
+            outbound.drainAll()
 
             router.handle(alice, Command.Say("hello"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == alice && it.text == "You say: hello" },
@@ -321,13 +323,13 @@ class CommandRouterTest {
             val alice = SessionId(1)
             val bob = SessionId(2)
             val eve = SessionId(3)
-            login(players, alice, "Alice")
-            login(players, bob, "Bob")
-            login(players, eve, "Eve")
-            drain(outbound)
+            players.loginOrFail(alice, "Alice")
+            players.loginOrFail(bob, "Bob")
+            players.loginOrFail(eve, "Eve")
+            outbound.drainAll()
 
             router.handle(alice, Command.Gossip("hello all"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == alice && it.text.contains("You gossip: hello all") },
@@ -371,11 +373,11 @@ class CommandRouterTest {
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(10)
-            login(players, sid, "Player10")
+            players.loginOrFail(sid, "Player10")
 
             router.handle(sid, Command.Exits)
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             // Only exits + prompt (no title/description)
             assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.startsWith("Exits:") }, "Missing exits line. got=$outs")
@@ -394,7 +396,7 @@ class CommandRouterTest {
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(11)
-            login(players, sid, "Player11")
+            players.loginOrFail(sid, "Player11")
 
             val startRoom = world.rooms.getValue(world.startRoom)
             val (dir, targetId) =
@@ -405,7 +407,7 @@ class CommandRouterTest {
 
             router.handle(sid, Command.LookDir(dir))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text == target.title },
                 "Expected target title '${target.title}'. got=$outs",
@@ -424,7 +426,7 @@ class CommandRouterTest {
             val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(12)
-            login(players, sid, "Player12")
+            players.loginOrFail(sid, "Player12")
 
             val startRoom = world.rooms.getValue(world.startRoom)
             val missingDir =
@@ -433,7 +435,7 @@ class CommandRouterTest {
 
             router.handle(sid, Command.LookDir(missingDir))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any {
                     it is OutboundEvent.SendError && it.text.contains("nothing", ignoreCase = true)
@@ -442,22 +444,4 @@ class CommandRouterTest {
             )
             assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
         }
-
-    private fun drain(ch: LocalOutboundBus): List<OutboundEvent> {
-        val out = mutableListOf<OutboundEvent>()
-        while (true) {
-            val ev = ch.tryReceive().getOrNull() ?: break
-            out += ev
-        }
-        return out
-    }
-
-    private suspend fun login(
-        players: PlayerRegistry,
-        sessionId: SessionId,
-        name: String,
-    ) {
-        val res = players.login(sessionId, name, "password")
-        require(res == LoginResult.Ok) { "Login failed: $res" }
-    }
 }

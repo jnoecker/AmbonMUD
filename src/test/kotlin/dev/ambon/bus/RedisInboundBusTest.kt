@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test
 class RedisInboundBusTest {
     private val mapper = redisObjectMapper
     private val sharedSecret = "test-secret"
-    private val fakePublisher = FakeInboundPublisher()
-    private val fakeSubscriber = FakeInboundSubscriberSetup()
+    private val fakePublisher = FakePublisher()
+    private val fakeSubscriber = FakeSubscriberSetup()
     private val delegate = LocalInboundBus(capacity = 16)
     private val bus =
         RedisInboundBus(
@@ -86,7 +86,7 @@ class RedisInboundBusTest {
     fun `trySend does not publish when delegate channel is full`() {
         val fullDelegate = LocalInboundBus(capacity = 1)
         fullDelegate.trySend(InboundEvent.Connected(SessionId(99)))
-        val localPublisher = FakeInboundPublisher()
+        val localPublisher = FakePublisher()
         val fullBus =
             RedisInboundBus(
                 delegate = fullDelegate,
@@ -129,31 +129,5 @@ class RedisInboundBusTest {
                 "signature" to signature,
             ),
         )
-    }
-}
-
-private class FakeInboundPublisher : BusPublisher {
-    val messages = mutableListOf<Pair<String, String>>()
-
-    override fun publish(
-        channel: String,
-        message: String,
-    ) {
-        messages += channel to message
-    }
-}
-
-private class FakeInboundSubscriberSetup : BusSubscriberSetup {
-    private var listener: ((String) -> Unit)? = null
-
-    fun inject(message: String) {
-        listener?.invoke(message)
-    }
-
-    override fun startListening(
-        channelName: String,
-        onMessage: (String) -> Unit,
-    ) {
-        listener = onMessage
     }
 }

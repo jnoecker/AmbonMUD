@@ -6,7 +6,6 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -19,6 +18,8 @@ import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
+import dev.ambon.test.drainAll
+import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -120,36 +121,18 @@ class AbilitySystemTest {
         val clock: MutableClock,
     )
 
-    private suspend fun login(
-        players: PlayerRegistry,
-        sessionId: SessionId,
-        name: String,
-    ) {
-        val res = players.login(sessionId, name, "password")
-        require(res == LoginResult.Ok) { "Login failed: $res" }
-    }
-
-    private fun drainOutbound(outbound: LocalOutboundBus): List<OutboundEvent> {
-        val events = mutableListOf<OutboundEvent>()
-        while (true) {
-            val event = outbound.tryReceive().getOrNull() ?: break
-            events.add(event)
-        }
-        return events
-    }
-
     @Test
     fun `cast damage spell reduces mob hp and deducts mana`() =
         runTest {
             val h = buildSystem()
-            login(h.players, sid, "Caster")
+            h.players.loginOrFail(sid, "Caster")
             h.abilitySystem.syncAbilities(sid, 1)
             val player = h.players.get(sid)!!
             player.mana = 20
 
             val mob = MobState(MobId("zone:rat"), "a rat", roomId, hp = 20, maxHp = 20)
             h.mobs.upsert(mob)
-            drainOutbound(h.outbound)
+            h.outbound.drainAll()
 
             val err = h.abilitySystem.cast(sid, "magic_missile", "rat")
             assertNull(err)
@@ -158,7 +141,8 @@ class AbilitySystemTest {
             assertEquals(15, mob.hp)
 
             val messages =
-                drainOutbound(h.outbound)
+                h.outbound
+                    .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .map { it.text }
             assertTrue(messages.any { it.contains("Magic Missile hits a rat for 5 damage") })
@@ -168,12 +152,12 @@ class AbilitySystemTest {
     fun `cast heal restores hp and deducts mana`() =
         runTest {
             val h = buildSystem()
-            login(h.players, sid, "Healer")
+            h.players.loginOrFail(sid, "Healer")
             h.abilitySystem.syncAbilities(sid, 1)
             val player = h.players.get(sid)!!
             player.mana = 20
             player.hp = 5
-            drainOutbound(h.outbound)
+            h.outbound.drainAll()
 
             val err = h.abilitySystem.cast(sid, "heal", null)
             assertNull(err)
@@ -182,7 +166,8 @@ class AbilitySystemTest {
             assertEquals(10, player.hp)
 
             val messages =
-                drainOutbound(h.outbound)
+                h.outbound
+                    .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .map { it.text }
             assertTrue(messages.any { it.contains("Heal heals you for 5 HP") })
@@ -192,7 +177,7 @@ class AbilitySystemTest {
     fun `cast fails with insufficient mana`() =
         runTest {
             val h = buildSystem()
-            login(h.players, sid, "LowMana")
+            h.players.loginOrFail(sid, "LowMana")
             h.abilitySystem.syncAbilities(sid, 1)
             val player = h.players.get(sid)!!
             player.mana = 5
@@ -210,12 +195,12 @@ class AbilitySystemTest {
     fun `cast fails when spell on cooldown`() =
         runTest {
             val h = buildSystem()
-            login(h.players, sid, "Cooldown")
+            h.players.loginOrFail(sid, "Cooldown")
             h.abilitySystem.syncAbilities(sid, 1)
             val player = h.players.get(sid)!!
             player.mana = 50
             player.hp = 5
-            drainOutbound(h.outbound)
+            h.outbound.drainAll()
 
             // First cast should work
             val err1 = h.abilitySystem.cast(sid, "heal", null)
@@ -238,7 +223,7 @@ class AbilitySystemTest {
     fun `unknown spell returns error`() =
         runTest {
             val h = buildSystem()
-            login(h.players, sid, "Unknown")
+            h.players.loginOrFail(sid, "Unknown")
             h.abilitySystem.syncAbilities(sid, 1)
 
             val err = h.abilitySystem.cast(sid, "thunderbolt", "rat")
@@ -250,7 +235,7 @@ class AbilitySystemTest {
     fun `level-gated spell not available at low level`() =
         runTest {
             val h = buildSystem()
-            login(h.players, sid, "LowLevel")
+            h.players.loginOrFail(sid, "LowLevel")
             h.abilitySystem.syncAbilities(sid, 1)
 
             val mob = MobState(MobId("zone:rat"), "a rat", roomId, hp = 20, maxHp = 20)
@@ -266,7 +251,7 @@ class AbilitySystemTest {
     fun `level-gated spell available at correct level`() =
         runTest {
             val h = buildSystem()
-            login(h.players, sid, "HighLevel")
+            h.players.loginOrFail(sid, "HighLevel")
             h.abilitySystem.syncAbilities(sid, 5)
             val player = h.players.get(sid)!!
             player.mana = 30
@@ -284,14 +269,14 @@ class AbilitySystemTest {
     fun `spell kills mob triggers handleSpellKill`() =
         runTest {
             val h = buildSystem()
-            login(h.players, sid, "Killer")
+            h.players.loginOrFail(sid, "Killer")
             h.abilitySystem.syncAbilities(sid, 1)
             val player = h.players.get(sid)!!
             player.mana = 20
 
             val mob = MobState(MobId("zone:rat"), "a rat", roomId, hp = 3, maxHp = 20)
             h.mobs.upsert(mob)
-            drainOutbound(h.outbound)
+            h.outbound.drainAll()
 
             val err = h.abilitySystem.cast(sid, "magic_missile", "rat")
             assertNull(err)
@@ -299,7 +284,8 @@ class AbilitySystemTest {
             // Mob should be dead
             assertNull(h.mobs.get(MobId("zone:rat")))
             val messages =
-                drainOutbound(h.outbound)
+                h.outbound
+                    .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .map { it.text }
             assertTrue(messages.any { it.contains("dies") })
@@ -309,7 +295,7 @@ class AbilitySystemTest {
     fun `knownAbilities reflects level`() =
         runTest {
             val h = buildSystem()
-            login(h.players, sid, "Lister")
+            h.players.loginOrFail(sid, "Lister")
             h.abilitySystem.syncAbilities(sid, 1)
 
             val level1 = h.abilitySystem.knownAbilities(sid)
@@ -324,7 +310,7 @@ class AbilitySystemTest {
     fun `cast enemy spell without target and not in combat returns error`() =
         runTest {
             val h = buildSystem()
-            login(h.players, sid, "NoTarget")
+            h.players.loginOrFail(sid, "NoTarget")
             h.abilitySystem.syncAbilities(sid, 1)
             val player = h.players.get(sid)!!
             player.mana = 20
@@ -338,7 +324,7 @@ class AbilitySystemTest {
     fun `session cleanup removes learned abilities and cooldowns`() =
         runTest {
             val h = buildSystem()
-            login(h.players, sid, "Cleanup")
+            h.players.loginOrFail(sid, "Cleanup")
             h.abilitySystem.syncAbilities(sid, 1)
 
             assertTrue(h.abilitySystem.knownAbilities(sid).isNotEmpty())
@@ -350,14 +336,14 @@ class AbilitySystemTest {
     fun `cast APPLY_STATUS on enemy mob applies effect`() =
         runTest {
             val h = buildSystemWithStatusEffects()
-            login(h.players, sid, "Caster")
+            h.players.loginOrFail(sid, "Caster")
             h.abilitySystem.syncAbilities(sid, 1)
             val player = h.players.get(sid)!!
             player.mana = 30
 
             val mob = MobState(MobId("zone:rat"), "a rat", roomId, hp = 20, maxHp = 20)
             h.mobs.upsert(mob)
-            drainOutbound(h.outbound)
+            h.outbound.drainAll()
 
             val err = h.abilitySystem.cast(sid, "ignite", "rat")
             assertNull(err)
@@ -373,11 +359,11 @@ class AbilitySystemTest {
     fun `cast APPLY_STATUS on self applies effect to player`() =
         runTest {
             val h = buildSystemWithStatusEffects()
-            login(h.players, sid, "Buffer")
+            h.players.loginOrFail(sid, "Buffer")
             h.abilitySystem.syncAbilities(sid, 1)
             val player = h.players.get(sid)!!
             player.mana = 30
-            drainOutbound(h.outbound)
+            h.outbound.drainAll()
 
             val err = h.abilitySystem.cast(sid, "shield", null)
             assertNull(err)

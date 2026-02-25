@@ -111,6 +111,49 @@ class PlayerProgression(
 
     fun killXpReward(mob: MobState): Long = scaledXp(mob.xpReward)
 
+    /**
+     * Applies a charisma-based XP multiplier (+0.5% per point above [PlayerState.BASE_STAT])
+     * to [baseXp] and returns the adjusted amount. Returns [baseXp] unchanged if there is no bonus.
+     */
+    fun applyCharismaXpBonus(
+        totalCha: Int,
+        baseXp: Long,
+    ): Long {
+        val chaBonus = totalCha - PlayerState.BASE_STAT
+        if (chaBonus <= 0) return baseXp
+        val multiplier = 1.0 + chaBonus * 0.005
+        return (baseXp * multiplier).toLong().coerceAtLeast(baseXp)
+    }
+
+    /**
+     * Builds the level-up congratulation message shown to the player,
+     * including HP and mana gains derived from the level transition.
+     */
+    fun buildLevelUpMessage(
+        result: LevelUpResult,
+        constitution: Int,
+        intelligence: Int,
+        playerClass: String?,
+    ): String {
+        val pc = PlayerClass.fromString(playerClass ?: "")
+        val classHpPerLevel = pc?.hpPerLevel ?: hpPerLevel
+        val classManaPerLevel = pc?.manaPerLevel ?: manaPerLevel
+        val newMaxHp = maxHpForLevel(result.newLevel, constitution, classHpPerLevel)
+        val oldMaxHp = maxHpForLevel(result.previousLevel, constitution, classHpPerLevel)
+        val hpGain = (newMaxHp - oldMaxHp).coerceAtLeast(0)
+        val newMaxMana = maxManaForLevel(result.newLevel, intelligence, classManaPerLevel)
+        val oldMaxMana = maxManaForLevel(result.previousLevel, intelligence, classManaPerLevel)
+        val manaGain = (newMaxMana - oldMaxMana).coerceAtLeast(0)
+        val bonusParts = mutableListOf<String>()
+        if (hpGain > 0) bonusParts += "+$hpGain max HP"
+        if (manaGain > 0) bonusParts += "+$manaGain max Mana"
+        return if (bonusParts.isNotEmpty()) {
+            "You reached level ${result.newLevel}! (${bonusParts.joinToString(", ")})"
+        } else {
+            "You reached level ${result.newLevel}!"
+        }
+    }
+
     fun grantXp(
         player: PlayerState,
         amount: Long,

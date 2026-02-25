@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test
 class RedisOutboundBusTest {
     private val mapper = redisObjectMapper
     private val sharedSecret = "test-secret"
-    private val fakePublisher = FakeOutboundPublisher()
-    private val fakeSubscriber = FakeOutboundSubscriberSetup()
+    private val fakePublisher = FakePublisher()
+    private val fakeSubscriber = FakeSubscriberSetup()
     private val delegate = LocalOutboundBus(capacity = 16)
     private val bus =
         RedisOutboundBus(
@@ -107,31 +107,5 @@ class RedisOutboundBusTest {
                 "signature" to signature,
             ),
         )
-    }
-}
-
-private class FakeOutboundPublisher : BusPublisher {
-    val messages = mutableListOf<Pair<String, String>>()
-
-    override fun publish(
-        channel: String,
-        message: String,
-    ) {
-        messages += channel to message
-    }
-}
-
-private class FakeOutboundSubscriberSetup : BusSubscriberSetup {
-    private var listener: ((String) -> Unit)? = null
-
-    fun inject(message: String) {
-        listener?.invoke(message)
-    }
-
-    override fun startListening(
-        channelName: String,
-        onMessage: (String) -> Unit,
-    ) {
-        listener = onMessage
     }
 }

@@ -6,7 +6,6 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -14,6 +13,8 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.sharding.EngineAddress
 import dev.ambon.sharding.ZoneInstance
+import dev.ambon.test.drainAll
+import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNull
@@ -28,24 +29,6 @@ class PhaseCommandTest {
     private val players = PlayerRegistry(world.startRoom, repo, items)
     private val mobs = MobRegistry()
     private val outbound = LocalOutboundBus()
-
-    private fun drain(ch: LocalOutboundBus): List<OutboundEvent> {
-        val out = mutableListOf<OutboundEvent>()
-        while (true) {
-            val ev = ch.tryReceive().getOrNull() ?: break
-            out += ev
-        }
-        return out
-    }
-
-    private suspend fun login(
-        players: PlayerRegistry,
-        sessionId: SessionId,
-        name: String,
-    ) {
-        val res = players.login(sessionId, name, "password")
-        require(res == LoginResult.Ok) { "Login failed: $res" }
-    }
 
     @Test
     fun `phase when not enabled shows error`() =
@@ -62,12 +45,12 @@ class PhaseCommandTest {
                 )
 
             val sid = SessionId(1)
-            login(players, sid, "Alice")
-            drain(outbound)
+            players.loginOrFail(sid, "Alice")
+            outbound.drainAll()
 
             router.handle(sid, Command.Phase(null))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendError && "not enabled" in it.text.lowercase() },
                 "Expected 'not enabled' error. got=$outs",
@@ -97,12 +80,12 @@ class PhaseCommandTest {
                 )
 
             val sid = SessionId(1)
-            login(players, sid, "Alice")
-            drain(outbound)
+            players.loginOrFail(sid, "Alice")
+            outbound.drainAll()
 
             router.handle(sid, Command.Phase(null))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && "you are here" in it.text.lowercase() },
                 "Expected instance list with 'you are here' marker. got=$outs",
@@ -128,12 +111,12 @@ class PhaseCommandTest {
                 )
 
             val sid = SessionId(1)
-            login(players, sid, "Alice")
-            drain(outbound)
+            players.loginOrFail(sid, "Alice")
+            outbound.drainAll()
 
             router.handle(sid, Command.Phase("e2"))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             // Initiated means handoff message already sent by HandoffManager — only prompt expected
             assertTrue(
                 outs.any { it is OutboundEvent.SendPrompt },
@@ -156,12 +139,12 @@ class PhaseCommandTest {
                 )
 
             val sid = SessionId(1)
-            login(players, sid, "Alice")
-            drain(outbound)
+            players.loginOrFail(sid, "Alice")
+            outbound.drainAll()
 
             router.handle(sid, Command.Phase("e1"))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && "already on that instance" in it.text.lowercase() },
                 "Expected noop message. got=$outs",
@@ -184,8 +167,8 @@ class PhaseCommandTest {
                 )
 
             val sid = SessionId(1)
-            login(players, sid, "Alice")
-            drain(outbound)
+            players.loginOrFail(sid, "Alice")
+            outbound.drainAll()
 
             // Put Alice in combat by adding a mob and attacking it
             mobs.upsert(
@@ -199,11 +182,11 @@ class PhaseCommandTest {
             )
             val combatErr = combat.startCombat(sid, "rat")
             assertNull(combatErr, "Expected combat start to succeed")
-            drain(outbound)
+            outbound.drainAll()
 
             router.handle(sid, Command.Phase("e2"))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && "combat" in it.text.lowercase() },
                 "Expected combat-blocked message. got=$outs",

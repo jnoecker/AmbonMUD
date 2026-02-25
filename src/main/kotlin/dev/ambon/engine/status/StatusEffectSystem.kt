@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.rollRange
 import java.time.Clock
 import java.util.Random
 
@@ -130,7 +131,7 @@ class StatusEffectSystem(
                 // Tick DOT/HOT (fire the last tick when nowMs == expiresAtMs)
                 if (def.tickIntervalMs > 0 && nowMs - effect.lastTickAtMs >= def.tickIntervalMs) {
                     effect.lastTickAtMs = nowMs
-                    val value = rollRange(def.tickMinValue, def.tickMaxValue)
+                    val value = rollRange(rng, def.tickMinValue, def.tickMaxValue)
                     when (def.effectType) {
                         EffectType.DOT -> {
                             player.hp = (player.hp - value).coerceAtLeast(0)
@@ -187,7 +188,7 @@ class StatusEffectSystem(
                     nowMs - effect.lastTickAtMs >= def.tickIntervalMs
                 ) {
                     effect.lastTickAtMs = nowMs
-                    val value = rollRange(def.tickMinValue, def.tickMaxValue)
+                    val value = rollRange(rng, def.tickMinValue, def.tickMaxValue)
                     mob.hp = (mob.hp - value).coerceAtLeast(0)
                     markMobHpDirty(mobId)
                     // Notify the player who applied it
@@ -218,22 +219,14 @@ class StatusEffectSystem(
         effectType: EffectType,
     ): Boolean = mobEffects[mobId]?.any { registry.get(it.definitionId)?.effectType == effectType } == true
 
-    fun getPlayerStatMods(sessionId: SessionId): StatModifiers {
-        val effects = playerEffects[sessionId] ?: return StatModifiers.ZERO
-        var result = StatModifiers.ZERO
-        for (effect in effects) {
-            val def = registry.get(effect.definitionId) ?: continue
-            if (def.effectType == EffectType.STAT_BUFF || def.effectType == EffectType.STAT_DEBUFF) {
-                result = result + def.statMods
-            }
-        }
-        return result
-    }
+    fun getPlayerStatMods(sessionId: SessionId): StatModifiers = computeStatMods(playerEffects[sessionId])
 
-    fun getMobStatMods(mobId: MobId): StatModifiers {
-        val effects = mobEffects[mobId] ?: return StatModifiers.ZERO
+    fun getMobStatMods(mobId: MobId): StatModifiers = computeStatMods(mobEffects[mobId])
+
+    private fun computeStatMods(effects: List<ActiveEffect>?): StatModifiers {
+        val activeEffects = effects ?: return StatModifiers.ZERO
         var result = StatModifiers.ZERO
-        for (effect in effects) {
+        for (effect in activeEffects) {
             val def = registry.get(effect.definitionId) ?: continue
             if (def.effectType == EffectType.STAT_BUFF || def.effectType == EffectType.STAT_DEBUFF) {
                 result = result + def.statMods
@@ -264,26 +257,16 @@ class StatusEffectSystem(
         return remaining
     }
 
-    fun activePlayerEffects(sessionId: SessionId): List<ActiveEffectSnapshot> {
-        val now = clock.millis()
-        val effects = playerEffects[sessionId] ?: return emptyList()
-        return effects
-            .mapNotNull { effect ->
-                val def = registry.get(effect.definitionId) ?: return@mapNotNull null
-                ActiveEffectSnapshot(
-                    id = def.id.value,
-                    name = def.displayName,
-                    type = def.effectType.name,
-                    remainingMs = (effect.expiresAtMs - now).coerceAtLeast(0),
-                    stacks = countStacks(playerEffects[sessionId], def.id),
-                )
-            }.distinctBy { it.id }
-    }
+    fun activePlayerEffects(sessionId: SessionId): List<ActiveEffectSnapshot> = snapshotEffects(playerEffects[sessionId], clock.millis())
 
-    fun activeMobEffects(mobId: MobId): List<ActiveEffectSnapshot> {
-        val now = clock.millis()
-        val effects = mobEffects[mobId] ?: return emptyList()
-        return effects
+    fun activeMobEffects(mobId: MobId): List<ActiveEffectSnapshot> = snapshotEffects(mobEffects[mobId], clock.millis())
+
+    private fun snapshotEffects(
+        effects: List<ActiveEffect>?,
+        now: Long,
+    ): List<ActiveEffectSnapshot> {
+        val list = effects ?: return emptyList()
+        return list
             .mapNotNull { effect ->
                 val def = registry.get(effect.definitionId) ?: return@mapNotNull null
                 ActiveEffectSnapshot(
@@ -291,7 +274,7 @@ class StatusEffectSystem(
                     name = def.displayName,
                     type = def.effectType.name,
                     remainingMs = (effect.expiresAtMs - now).coerceAtLeast(0),
-                    stacks = countStacks(mobEffects[mobId], def.id),
+                    stacks = countStacks(list, def.id),
                 )
             }.distinctBy { it.id }
     }
@@ -348,13 +331,5 @@ class StatusEffectSystem(
             }
         }
         return killed
-    }
-
-    private fun rollRange(
-        min: Int,
-        max: Int,
-    ): Int {
-        if (max <= min) return min
-        return min + rng.nextInt((max - min) + 1)
     }
 }

@@ -30,11 +30,13 @@ class RedisCachingPlayerRepositoryTest {
         runBlocking {
             val record =
                 repo.create(
-                    name = "Aragorn",
-                    startRoomId = RoomId("demo:start"),
-                    nowEpochMs = 1000L,
-                    passwordHash = "hash1",
-                    ansiEnabled = false,
+                    PlayerCreationRequest(
+                        name = "Aragorn",
+                        startRoomId = RoomId("demo:start"),
+                        nowEpochMs = 1000L,
+                        passwordHash = "hash1",
+                        ansiEnabled = false,
+                    ),
                 )
             delegate.clear()
 
@@ -48,11 +50,13 @@ class RedisCachingPlayerRepositoryTest {
     fun `cache miss falls through to delegate`() =
         runBlocking {
             delegate.create(
-                name = "Legolas",
-                startRoomId = RoomId("demo:start"),
-                nowEpochMs = 2000L,
-                passwordHash = "hash2",
-                ansiEnabled = false,
+                PlayerCreationRequest(
+                    name = "Legolas",
+                    startRoomId = RoomId("demo:start"),
+                    nowEpochMs = 2000L,
+                    passwordHash = "hash2",
+                    ansiEnabled = false,
+                ),
             )
 
             val found = repo.findByName("Legolas")
@@ -65,11 +69,13 @@ class RedisCachingPlayerRepositoryTest {
         runBlocking {
             val record =
                 repo.create(
-                    name = "Gimli",
-                    startRoomId = RoomId("demo:start"),
-                    nowEpochMs = 3000L,
-                    passwordHash = "hash3",
-                    ansiEnabled = true,
+                    PlayerCreationRequest(
+                        name = "Gimli",
+                        startRoomId = RoomId("demo:start"),
+                        nowEpochMs = 3000L,
+                        passwordHash = "hash3",
+                        ansiEnabled = true,
+                    ),
                 )
             delegate.clear()
 
@@ -84,11 +90,13 @@ class RedisCachingPlayerRepositoryTest {
         runBlocking {
             val record =
                 repo.create(
-                    name = "Frodo",
-                    startRoomId = RoomId("demo:shire"),
-                    nowEpochMs = 4000L,
-                    passwordHash = "hash4",
-                    ansiEnabled = false,
+                    PlayerCreationRequest(
+                        name = "Frodo",
+                        startRoomId = RoomId("demo:shire"),
+                        nowEpochMs = 4000L,
+                        passwordHash = "hash4",
+                        ansiEnabled = false,
+                    ),
                 )
             delegate.clear()
 
@@ -106,11 +114,13 @@ class RedisCachingPlayerRepositoryTest {
         runBlocking {
             val record =
                 repo.create(
-                    name = "Samwise",
-                    startRoomId = RoomId("demo:shire"),
-                    nowEpochMs = 5000L,
-                    passwordHash = "hash5",
-                    ansiEnabled = false,
+                    PlayerCreationRequest(
+                        name = "Samwise",
+                        startRoomId = RoomId("demo:shire"),
+                        nowEpochMs = 5000L,
+                        passwordHash = "hash5",
+                        ansiEnabled = false,
+                    ),
                 )
             val updated = record.copy(level = 5, xpTotal = 500L)
             repo.save(updated)
@@ -130,11 +140,13 @@ class RedisCachingPlayerRepositoryTest {
     fun `cache failure degrades gracefully`() =
         runBlocking {
             delegate.create(
-                name = "Gandalf",
-                startRoomId = RoomId("demo:start"),
-                nowEpochMs = 6000L,
-                passwordHash = "hash6",
-                ansiEnabled = false,
+                PlayerCreationRequest(
+                    name = "Gandalf",
+                    startRoomId = RoomId("demo:start"),
+                    nowEpochMs = 6000L,
+                    passwordHash = "hash6",
+                    ansiEnabled = false,
+                ),
             )
             cache.failAllRequests = true
 
@@ -158,11 +170,13 @@ class RedisCachingPlayerRepositoryTest {
         runBlocking {
             val created =
                 repo.create(
-                    name = "Sauron",
-                    startRoomId = RoomId("demo:mordor"),
-                    nowEpochMs = 7000L,
-                    passwordHash = "darkHash",
-                    ansiEnabled = true,
+                    PlayerCreationRequest(
+                        name = "Sauron",
+                        startRoomId = RoomId("demo:mordor"),
+                        nowEpochMs = 7000L,
+                        passwordHash = "darkHash",
+                        ansiEnabled = true,
+                    ),
                 )
             val staffRecord =
                 created.copy(
