@@ -192,6 +192,26 @@ sealed interface Command {
 
     data object TitleClear : Command
 
+    sealed interface GroupCmd : Command {
+        data class Invite(
+            val target: String,
+        ) : GroupCmd
+
+        data object Accept : GroupCmd
+
+        data object Leave : GroupCmd
+
+        data class Kick(
+            val target: String,
+        ) : GroupCmd
+
+        data object List : GroupCmd
+    }
+
+    data class Gtell(
+        val message: String,
+    ) : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -305,6 +325,29 @@ object CommandParser {
 
         // pose: "pose <msg>" or "po <msg>"
         requiredArg(line, listOf("pose", "po"), "pose <message>", { Command.Pose(it) })?.let { return it }
+
+        // gtell: "gtell <msg>" or "gt <msg>"
+        requiredArg(line, listOf("gtell", "gt"), "gtell <message>", { Command.Gtell(it) })?.let { return it }
+
+        // group subcommands: "group invite <player>", "group accept", "group leave", etc.
+        matchPrefix(line, listOf("group")) { rest ->
+            if (rest.isEmpty()) return@matchPrefix Command.GroupCmd.List
+            val parts = rest.split(Regex("\\s+"), limit = 2)
+            when (parts[0].lowercase()) {
+                "invite", "inv" -> {
+                    val target = parts.getOrNull(1)?.trim() ?: ""
+                    if (target.isEmpty()) Command.Invalid(line, "group invite <player>") else Command.GroupCmd.Invite(target)
+                }
+                "accept", "acc" -> Command.GroupCmd.Accept
+                "leave" -> Command.GroupCmd.Leave
+                "kick" -> {
+                    val target = parts.getOrNull(1)?.trim() ?: ""
+                    if (target.isEmpty()) Command.Invalid(line, "group kick <player>") else Command.GroupCmd.Kick(target)
+                }
+                "list" -> Command.GroupCmd.List
+                else -> Command.GroupCmd.List
+            }
+        }?.let { return it }
 
         // dispel (staff)
         requiredArg(line, listOf("dispel"), "dispel <target>", { Command.Dispel(it) })?.let { return it }

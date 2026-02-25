@@ -14,6 +14,7 @@ object AbilityRegistryLoader {
                 when (defConfig.targetType.uppercase()) {
                     "ENEMY" -> TargetType.ENEMY
                     "SELF" -> TargetType.SELF
+                    "ALLY" -> TargetType.ALLY
                     else -> continue
                 }
             val effect =
@@ -31,6 +32,16 @@ object AbilityRegistryLoader {
                     "APPLY_STATUS" ->
                         AbilityEffect.ApplyStatus(
                             statusEffectId = StatusEffectId(defConfig.effect.statusEffectId),
+                        )
+                    "AREA_DAMAGE" ->
+                        AbilityEffect.AreaDamage(
+                            minDamage = defConfig.effect.minDamage,
+                            maxDamage = defConfig.effect.maxDamage,
+                        )
+                    "TAUNT" ->
+                        AbilityEffect.Taunt(
+                            flatThreat = defConfig.effect.flatThreat,
+                            margin = defConfig.effect.margin,
                         )
                     else -> continue
                 }
