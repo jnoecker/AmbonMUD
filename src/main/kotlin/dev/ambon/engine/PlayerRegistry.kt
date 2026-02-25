@@ -8,8 +8,11 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PlayerCreationRequest
 import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
+import kotlinx.coroutines.withContext
 import org.mindrot.jbcrypt.BCrypt
 import java.time.Clock
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 sealed interface LoginResult {
     data object Ok : LoginResult
@@ -43,6 +46,10 @@ class PlayerRegistry(
     private val items: ItemRegistry,
     private val clock: Clock = Clock.systemUTC(),
     private val progression: PlayerProgression = PlayerProgression(),
+    // Context for BCrypt operations (CPU-intensive blocking).
+    // Production callers should pass Dispatchers.IO to avoid blocking the engine thread.
+    // Defaults to EmptyCoroutineContext so tests run synchronously on the test scheduler.
+    private val hashingContext: CoroutineContext = EmptyCoroutineContext,
 ) {
     private val players = mutableMapOf<SessionId, PlayerState>()
     private val roomMembers = mutableMapOf<RoomId, MutableSet<SessionId>>()
@@ -72,12 +79,15 @@ class PlayerRegistry(
             if (existingRecord != null) {
                 if (existingRecord.passwordHash.isNotBlank()) {
                     val ok =
-                        runCatching { BCrypt.checkpw(password, existingRecord.passwordHash) }
-                            .getOrDefault(false)
+                        withContext(hashingContext) {
+                            runCatching { BCrypt.checkpw(password, existingRecord.passwordHash) }
+                                .getOrDefault(false)
+                        }
                     if (!ok) return LoginResult.WrongPassword
                     existingRecord.copy(lastSeenEpochMs = now)
                 } else {
-                    existingRecord.copy(lastSeenEpochMs = now, passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()))
+                    val hash = withContext(hashingContext) { BCrypt.hashpw(password, BCrypt.gensalt()) }
+                    existingRecord.copy(lastSeenEpochMs = now, passwordHash = hash)
                 }
             } else {
                 return when (create(sessionId, name, password, defaultAnsiEnabled)) {
@@ -126,7 +136,7 @@ class PlayerRegistry(
                     name = name,
                     startRoomId = startRoom,
                     nowEpochMs = now,
-                    passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()),
+                    passwordHash = withContext(hashingContext) { BCrypt.hashpw(password, BCrypt.gensalt()) },
                     ansiEnabled = defaultAnsiEnabled,
                     race = race.name,
                     playerClass = playerClass.name,
@@ -187,6 +197,8 @@ class PlayerRegistry(
                 maxMana = maxMana,
                 baseMana = maxMana,
                 gold = boundRecord.gold,
+                createdAtEpochMs = boundRecord.createdAtEpochMs,
+                passwordHash = boundRecord.passwordHash,
             )
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
@@ -251,11 +263,10 @@ class PlayerRegistry(
 
     fun allPlayers(): List<PlayerState> = players.values.toList()
 
-    fun playersInRoom(roomId: RoomId): Set<PlayerState> =
+    fun playersInRoom(roomId: RoomId): List<PlayerState> =
         roomMembers[roomId]
             ?.mapNotNull { sessionId -> players[sessionId] }
-            ?.toSet()
-            ?: emptySet()
+            ?: emptyList()
 
     fun playersInZone(zone: String): List<PlayerState> = players.values.filter { it.roomId.zone == zone }
 
@@ -353,12 +364,11 @@ class PlayerRegistry(
         val pid = ps.playerId ?: return
         val now = clock.millis()
 
-        val existing = repo.findById(pid) ?: return
         repo.save(
-            existing.copy(
-                roomId = ps.roomId,
-                lastSeenEpochMs = now,
+            PlayerRecord(
+                id = pid,
                 name = ps.name,
+                roomId = ps.roomId,
                 strength = ps.strength,
                 dexterity = ps.dexterity,
                 constitution = ps.constitution,
@@ -369,7 +379,11 @@ class PlayerRegistry(
                 playerClass = ps.playerClass,
                 level = ps.level,
                 xpTotal = ps.xpTotal,
+                createdAtEpochMs = ps.createdAtEpochMs,
+                lastSeenEpochMs = now,
+                passwordHash = ps.passwordHash,
                 ansiEnabled = ps.ansiEnabled,
+                isStaff = ps.isStaff,
                 mana = ps.mana,
                 maxMana = ps.maxMana,
                 gold = ps.gold,

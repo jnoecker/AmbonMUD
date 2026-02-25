@@ -28,6 +28,9 @@ data class PlayerState(
     var maxMana: Int = BASE_MANA,
     var baseMana: Int = BASE_MANA,
     var gold: Long = 0L,
+    // Immutable after creation — cached here so persistIfClaimed avoids a repo lookup.
+    var createdAtEpochMs: Long = 0L,
+    var passwordHash: String = "",
 ) {
     companion object {
         const val BASE_MAX_HP = 10

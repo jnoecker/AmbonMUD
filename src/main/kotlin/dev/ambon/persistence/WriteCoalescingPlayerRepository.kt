@@ -1,6 +1,7 @@
 package dev.ambon.persistence
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -17,6 +18,10 @@ class WriteCoalescingPlayerRepository(
 ) : PlayerRepository {
     private val lock = ReentrantLock()
     private val cache = mutableMapOf<PlayerId, PlayerRecord>()
+
+    // Secondary index: lowercase name → PlayerId for O(1) findByName on cache hit.
+    // Updated whenever a record is inserted or replaced in cache.
+    private val nameIndex = ConcurrentHashMap<String, PlayerId>()
     private val dirtyVersions = mutableMapOf<PlayerId, Long>()
     private val versions = mutableMapOf<PlayerId, Long>()
 
@@ -27,12 +32,16 @@ class WriteCoalescingPlayerRepository(
     )
 
     override suspend fun findByName(name: String): PlayerRecord? {
-        val cached = lock.withLock { cache.values.find { it.name.equals(name, ignoreCase = true) } }
+        val key = name.lowercase()
+        val cached =
+            nameIndex[key]?.let { pid ->
+                lock.withLock { cache[pid] }
+            }
         if (cached != null) return cached
         val loaded = delegate.findByName(name) ?: return null
         lock.withLock {
             if (cache[loaded.id] == null) {
-                cache[loaded.id] = loaded
+                putIntoCache(loaded)
             }
         }
         return loaded
@@ -44,7 +53,7 @@ class WriteCoalescingPlayerRepository(
         val loaded = delegate.findById(id) ?: return null
         lock.withLock {
             if (cache[loaded.id] == null) {
-                cache[loaded.id] = loaded
+                putIntoCache(loaded)
             }
         }
         return loaded
@@ -53,7 +62,7 @@ class WriteCoalescingPlayerRepository(
     override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
         val record = delegate.create(request)
         lock.withLock {
-            cache[record.id] = record
+            putIntoCache(record)
             if (versions[record.id] == null) {
                 versions[record.id] = 0L
             }
@@ -63,11 +72,20 @@ class WriteCoalescingPlayerRepository(
 
     override suspend fun save(record: PlayerRecord) {
         lock.withLock {
-            cache[record.id] = record
+            putIntoCache(record)
             val nextVersion = (versions[record.id] ?: 0L) + 1L
             versions[record.id] = nextVersion
             dirtyVersions[record.id] = nextVersion
         }
+    }
+
+    // Must be called under lock.
+    private fun putIntoCache(record: PlayerRecord) {
+        val old = cache.put(record.id, record)
+        if (old != null && !old.name.equals(record.name, ignoreCase = true)) {
+            nameIndex.remove(old.name.lowercase())
+        }
+        nameIndex[record.name.lowercase()] = record.id
     }
 
     suspend fun flushDirty(): Int {

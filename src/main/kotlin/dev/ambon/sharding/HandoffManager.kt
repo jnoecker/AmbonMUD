@@ -253,6 +253,8 @@ class HandoffManager(
                 mana = state.mana,
                 maxMana = state.maxMana,
                 baseMana = state.baseMana,
+                createdAtEpochMs = state.createdEpochMs,
+                passwordHash = state.passwordHash,
             )
 
         try {
@@ -339,8 +341,8 @@ class HandoffManager(
                 xpTotal = player.xpTotal,
                 ansiEnabled = player.ansiEnabled,
                 isStaff = player.isStaff,
-                passwordHash = "",
-                createdEpochMs = 0L,
+                passwordHash = player.passwordHash,
+                createdEpochMs = player.createdAtEpochMs,
                 lastSeenEpochMs = 0L,
                 mana = player.mana,
                 maxMana = player.maxMana,

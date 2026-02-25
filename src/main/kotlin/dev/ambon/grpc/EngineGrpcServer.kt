@@ -38,6 +38,10 @@ class EngineGrpcServer(
         ServerBuilder
             .forPort(port)
             .addService(serviceImpl)
+            // Keep idle gRPC streams alive through NAT/firewall timeouts.
+            .keepAliveTime(30, TimeUnit.SECONDS)
+            .keepAliveTimeout(10, TimeUnit.SECONDS)
+            .permitKeepAliveWithoutCalls(true)
             .build()
 
     fun start() {
