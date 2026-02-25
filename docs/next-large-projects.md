@@ -6,7 +6,7 @@ AmbonMUD has a mature infrastructure and solid gameplay foundation:
 
 **Infrastructure:** Event-driven tick engine, dual transports (telnet with NAWS/TTYPE/GMCP negotiation, WebSocket with GMCP sidebar panels), event bus abstraction (Local/Redis/gRPC), write-behind coalescing persistence, selectable YAML or PostgreSQL backends, Redis L2 cache with HMAC-signed pub/sub envelopes, gRPC engine/gateway split, zone-based engine sharding with zone instancing and auto-scaling, Prometheus/Grafana observability, Snowflake session IDs, and a swarm load-testing module. 66+ test files.
 
-**Gameplay:** 4 races, 4 classes, 6 primary attributes with mechanical effects, 12 class-specific abilities with mana/cooldowns, status effects (DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD with stacking rules), 1v1 combat with attribute-based damage scaling, items (equippable + consumable with charges), gold currency with mob drops and in-room shops (buy/sell/list), rich communication (say/tell/gossip/emote/whisper/shout/ooc/pose), individual mob respawn timers, mob wandering AI, HP + mana regen, zone resets, and XP/leveling across 50 levels. 8 zones including tutorial, hub, training, and exploration areas.
+**Gameplay:** 4 races, 4 classes, 6 primary attributes with mechanical effects, 12 class-specific abilities with mana/cooldowns, status effects (DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD with stacking rules), 1v1 combat with attribute-based damage scaling, items (equippable + consumable with charges), gold currency with mob drops and in-room shops (buy/sell/list), rich communication (say/tell/gossip/emote/whisper/shout/ooc/pose), individual mob respawn timers, NPC dialogue trees with conditional branches, behavior tree AI (aggro guards, patrol sentries, cowardly mobs, wandering aggressors), mob-initiated combat, HP + mana regen, zone resets, and XP/leveling across 50 levels. 8 zones including tutorial, hub, training, and exploration areas.
 
 **What's missing is depth.** The engine can run the game, but the game needs more _game_. The projects below each add a substantial new dimension.
 
@@ -23,21 +23,20 @@ AmbonMUD has a mature infrastructure and solid gameplay foundation:
 
 ---
 
-## 2. NPC Dialogue & Behavior Trees
+## 2. NPC Dialogue & Behavior Trees — IMPLEMENTED
 
-**What:** Transform mobs from silent wandering combat targets into interactive NPCs with dialogue trees, scripted behaviors, and trigger-based reactions.
+**Status:** Fully implemented in two phases.
 
-**Why now:** NPCs are the prerequisite for quest givers, shopkeepers, trainers, and faction representatives. Without dialogue, the world feels like a combat arena rather than a living place. The mob system already has per-mob timers and the scheduler for delayed actions — behavior trees extend this naturally.
+**Phase 1 — NPC Dialogue (complete):** `DialogueSystem` with YAML-defined dialogue trees. `talk <npc>` command initiates conversation; `1`/`2`/`3` selects options. Conditional branches check level, class, and flags. Conversation state per-session (resets on logout). GMCP `Dialogue.*` packages for web client.
 
-**Key design decisions:**
-- Dialogue trees defined in zone YAML: nodes with NPC text, player choices, conditional branches (check quest state, check level, check class)
-- `talk <npc>` command initiates dialogue; `1`/`2`/`3` selects options during a conversation
-- Conversation state per-session (not persisted — resets on logout)
-- Behavior types beyond wandering: `PATROL` (follow a fixed path), `AGGRO_ON_SIGHT` (attack players entering room), `FLEE_LOW_HP` (run when below threshold), `CALL_FOR_HELP` (alert nearby mobs), `STATIONARY` (never wander), `VENDOR` (open shop interface), `TRAINER` (teach abilities)
-- Behavior tree YAML schema: conditions → actions, composable and data-driven
-- Guard NPCs: attack players who enter without a flag/quest completion
+**Phase 2 — Behavior Trees (complete):** `BehaviorTreeSystem` with composable BT nodes. Predefined YAML templates: `aggro_guard`, `stationary_aggro`, `patrol`, `patrol_aggro`, `wander`, `wander_aggro`, `coward`. Node types: `SequenceNode`, `SelectorNode`, `InverterNode`, `CooldownNode` (composites/decorators); `IsPlayerInRoom`, `IsInCombat`, `IsHpBelow` (conditions); `AggroAction`, `FleeAction`, `WanderAction`, `PatrolAction`, `SayAction`, `StationaryAction` (actions). Mob-initiated combat via `CombatSystem.startMobCombat()`. Flee mechanic via `CombatSystem.fleeMob()` (disengage + move). Per-mob memory for patrol indices and cooldown timestamps. `MobSystem` guards BT mobs from random wandering. Time-gated execution (2-5s ticks, configurable).
 
-**Scope:** Very large. New `DialogueSystem`, `BehaviorTree` engine, YAML schema extensions, changes to `MobSystem` for richer AI, new commands (`talk`, conversation number selection). Foundation for quests, shops, and trainers.
+**Remaining opportunities:**
+- `CALL_FOR_HELP` behavior (alert nearby mobs to join combat)
+- `VENDOR` and `TRAINER` behavior types (open shop/training interface automatically)
+- Guard NPCs gated by quest flags or faction standing
+- Inline composable BT YAML (full tree definition instead of templates)
+- Conditional aggro (only attack certain classes/levels)
 
 **Depends on:** Nothing.
 
@@ -314,7 +313,7 @@ These transform the world from a combat arena into a narrative experience:
 
 | # | Project | Effort | Unlocks |
 |---|---------|--------|---------|
-| 2 | NPC Dialogue & Behaviors | Very large | Quest givers, trainers, world flavor |
+| 2 | NPC Dialogue & Behaviors | **Done** | CALL_FOR_HELP, VENDOR/TRAINER behaviors, quest-gated aggro remain |
 | 3 | Quest System | Large | Structured progression, narrative arcs, achievement triggers |
 | 4 | Economy & Shops | **Done (core)** | Player-to-player trading, gold sinks, GMCP gold panel remain |
 

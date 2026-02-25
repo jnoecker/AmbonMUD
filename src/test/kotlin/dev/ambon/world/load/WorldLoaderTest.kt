@@ -647,13 +647,6 @@ class WorldLoaderTest {
     }
 
     @Test
-    fun `loads mob with stationary flag`() {
-        val world = WorldLoader.loadFromResource("world/ok_dialogue.yaml")
-        val mob = world.mobSpawns.single()
-        assertTrue(mob.stationary, "Mob should be stationary")
-    }
-
-    @Test
     fun `fails when dialogue is missing root node`() {
         val ex =
             assertThrows(WorldLoadException::class.java) {

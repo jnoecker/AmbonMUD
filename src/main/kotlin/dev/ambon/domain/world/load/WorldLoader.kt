@@ -20,6 +20,8 @@ import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.ShopDefinition
 import dev.ambon.domain.world.World
 import dev.ambon.domain.world.data.WorldFile
+import dev.ambon.engine.behavior.BehaviorTemplates
+import dev.ambon.engine.behavior.BtNode
 import dev.ambon.engine.dialogue.DialogueChoice
 import dev.ambon.engine.dialogue.DialogueNode
 import dev.ambon.engine.dialogue.DialogueTree
@@ -203,6 +205,7 @@ object WorldLoader {
                 }
 
                 val dialogue = parseDialogue(mobId, mf.dialogue)
+                val behaviorTree = parseBehavior(mobId, zone, mf.behavior)
 
                 mergedMobs[mobId] =
                     MobSpawn(
@@ -218,8 +221,8 @@ object WorldLoader {
                         respawnSeconds = respawnSeconds,
                         goldMin = resolvedGoldMin,
                         goldMax = resolvedGoldMax,
-                        stationary = mf.stationary,
                         dialogue = dialogue,
+                        behaviorTree = behaviorTree,
                     )
             }
 
@@ -566,6 +569,26 @@ object WorldLoader {
             "d", "down" -> Direction.DOWN
             else -> null
         }
+
+    private fun parseBehavior(
+        mobId: MobId,
+        zone: String,
+        behaviorFile: dev.ambon.domain.world.data.BehaviorFile?,
+    ): BtNode? {
+        if (behaviorFile == null) return null
+
+        val tree =
+            BehaviorTemplates.resolve(
+                behaviorFile.template,
+                behaviorFile.params,
+                zone,
+            ) ?: throw WorldLoadException(
+                "Mob '${mobId.value}' references unknown behavior template '${behaviorFile.template}'. " +
+                    "Known templates: ${BehaviorTemplates.templateNames.sorted().joinToString(", ")}",
+            )
+
+        return tree
+    }
 
     private fun parseDialogue(
         mobId: MobId,

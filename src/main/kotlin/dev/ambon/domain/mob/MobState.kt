@@ -3,6 +3,7 @@ package dev.ambon.domain.mob
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.world.MobDrop
+import dev.ambon.engine.behavior.BtNode
 import dev.ambon.engine.dialogue.DialogueTree
 
 data class MobState(
@@ -18,6 +19,6 @@ data class MobState(
     val drops: List<MobDrop> = emptyList(),
     val goldMin: Long = 0L,
     val goldMax: Long = 0L,
-    val stationary: Boolean = false,
     val dialogue: DialogueTree? = null,
+    val behaviorTree: BtNode? = null,
 )

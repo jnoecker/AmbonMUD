@@ -76,6 +76,7 @@ xpReward:       <long >= 0, optional - overrides tier-computed xpReward>
 goldMin:        <long >= 0, optional - overrides tier-computed goldMin>
 goldMax:        <long >= goldMin, optional - overrides tier-computed goldMax>
 drops:          <list<Drop>, optional, default []>
+behavior:       <Behavior, optional - assigns a behavior tree to this mob; see Behavior section>
 respawnSeconds: <long > 0, optional - seconds after death before this mob respawns in its origin room;
                 omit to rely on zone-wide reset only>
 ```
@@ -92,6 +93,40 @@ respawnSeconds: <long > 0, optional - seconds after death before this mob respaw
 itemId: <item-id string, required>
 chance: <double in [0.0, 1.0], required>
 ```
+
+`Behavior` entry:
+
+```yaml
+template: <string, required - one of the predefined behavior templates>
+params:   <BehaviorParams, optional, default {}>
+```
+
+`BehaviorParams` entry:
+
+```yaml
+patrolRoute:    <list<string>, optional, default [] - room IDs for patrol waypoints>
+fleeHpPercent:  <integer, optional, default 20 - HP percentage threshold for fleeing>
+aggroMessage:   <string, optional - message the mob says before attacking>
+fleeMessage:    <string, optional - message the mob says before fleeing>
+```
+
+Available behavior templates:
+
+| Template | Description |
+|----------|------------|
+| `aggro_guard` | Stays in place, attacks any player in the room on sight |
+| `stationary_aggro` | Same as `aggro_guard` |
+| `patrol` | Cycles through `patrolRoute` rooms; pauses during combat |
+| `patrol_aggro` | Patrols and attacks players on sight |
+| `wander` | Moves randomly between adjacent rooms; pauses during combat |
+| `wander_aggro` | Wanders and attacks players on sight |
+| `coward` | Wanders randomly, flees when HP drops below `fleeHpPercent` |
+
+Behavior validation rules:
+- `behavior` and `stationary: true` are mutually exclusive (load error).
+- `patrolRoute` room IDs follow standard ID normalization (prefixed with `<zone>:` when unqualified).
+- Unknown template names cause a load error.
+- Templates requiring `patrolRoute` (`patrol`, `patrol_aggro`) should have a non-empty route.
 
 Tier formula (for tier `T` and level `L`, where `L` defaults to 1):
 
@@ -277,6 +312,9 @@ For each file your tool emits:
 14. If `goldMin` or `goldMax` is present, both must be >= 0 and `goldMax` >= `goldMin`.
 15. For every shop, ensure `room` resolves to an existing room and all `items` resolve to existing items.
 16. Shop `name` must be non-blank after trim.
+17. If `behavior` is present, `template` must be one of the known templates.
+18. Do not combine `behavior` with `stationary: true` — they are mutually exclusive.
+19. If using `patrol` or `patrol_aggro` templates, `patrolRoute` must be non-empty and all room IDs must resolve.
 
 ## Minimal Valid Example
 
@@ -311,6 +349,10 @@ mobs:
     level: 3
     goldMin: 15        # explicit gold override (ignores tier formula)
     goldMax: 30
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The sentinel's eyes glow red!"
     # no respawnSeconds — relies on zone-wide reset
 
 items:

@@ -133,7 +133,6 @@ class DialogueSystemTest {
                 name = "a wise sage",
                 roomId = room,
                 dialogue = dialogue,
-                stationary = true,
             ),
         )
         return mobId
