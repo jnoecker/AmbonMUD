@@ -77,6 +77,7 @@ class GameEngine(
     /** Zone registry for instancing-aware phase command. */
     private val zoneRegistry: ZoneRegistry? = null,
     private val questRegistry: QuestRegistry = QuestRegistry(),
+    private val achievementRegistry: AchievementRegistry = AchievementRegistry(),
 ) {
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
@@ -190,8 +191,12 @@ class GameEngine(
                     gmcpEmitter.sendCharName(sid, p)
                     gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid))
                 }
+                achievementSystem.onLevelReached(sid, level)
             },
-            onMobKilledByPlayer = { sid, templateKey -> questSystem.onMobKilled(sid, templateKey) },
+            onMobKilledByPlayer = { sid, templateKey ->
+                questSystem.onMobKilled(sid, templateKey)
+                achievementSystem.onMobKilled(sid, templateKey)
+            },
         )
     private val regenSystem =
         RegenSystem(
@@ -249,6 +254,23 @@ class GameEngine(
             clock = clock,
         )
 
+    private val achievementSystem =
+        AchievementSystem(
+            registry =
+                achievementRegistry.also { reg ->
+                    AchievementLoader.loadFromResource("world/achievements.yaml", reg)
+                },
+            players = players,
+            outbound = outbound,
+            gmcpEmitter = gmcpEmitter,
+        )
+
+    init {
+        questSystem.onQuestCompleted = { sid, questId ->
+            achievementSystem.onQuestCompleted(sid, questId)
+        }
+    }
+
     private val behaviorTreeSystem: BehaviorTreeSystem =
         BehaviorTreeSystem(
             world = world,
@@ -298,6 +320,8 @@ class GameEngine(
             dialogueSystem = dialogueSystem,
             questSystem = questSystem,
             registry = questRegistry,
+            achievementSystem = achievementSystem,
+            achievementRegistry = achievementRegistry,
         )
 
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
@@ -1199,6 +1223,7 @@ class GameEngine(
         gmcpEmitter.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
         gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId))
         gmcpEmitter.sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
+        gmcpEmitter.sendCharAchievements(sessionId, me, achievementRegistry)
         router.handle(sessionId, Command.Look) // room + prompt (also sends Room.Info + Room.Players)
     }
 
@@ -1335,6 +1360,7 @@ class GameEngine(
                 gmcpEmitter.sendRoomMobs(sid, mobs.mobsInRoom(player.roomId))
                 gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid))
                 gmcpEmitter.sendCharStatusEffects(sid, statusEffectSystem.activePlayerEffects(sid))
+                gmcpEmitter.sendCharAchievements(sid, player, achievementRegistry)
             }
             "Core.Supports.Remove" -> {
                 val packages = parseGmcpPackageList(ev.jsonData)

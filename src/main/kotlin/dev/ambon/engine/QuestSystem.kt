@@ -20,6 +20,9 @@ class QuestSystem(
     private val outbound: OutboundBus,
     private val clock: Clock = Clock.systemUTC(),
 ) {
+    /** Invoked after a quest is successfully completed; used by AchievementSystem. */
+    var onQuestCompleted: (suspend (SessionId, String) -> Unit)? = null
+
     /**
      * Returns quests offered by this mob that the player can accept
      * (not already active, not already completed).
@@ -265,6 +268,7 @@ class QuestSystem(
         ps.completedQuestIds = ps.completedQuestIds + questId
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest complete: ${quest.name}!"))
+        onQuestCompleted?.invoke(sessionId, questId)
 
         if (rewards.gold > 0) {
             ps.gold += rewards.gold

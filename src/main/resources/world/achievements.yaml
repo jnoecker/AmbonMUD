@@ -1,0 +1,97 @@
+achievements:
+  combat/first_blood:
+    displayName: "First Blood"
+    description: "Kill your first enemy."
+    category: COMBAT
+    hidden: false
+    criteria:
+      - type: KILL
+        targetId: ""
+        count: 1
+        description: "Kill any mob"
+    rewards:
+      xp: 50
+
+  combat/beetle_exterminator:
+    displayName: "Beetle Exterminator"
+    description: "Defeat 5 beetle swarms."
+    category: COMBAT
+    hidden: false
+    criteria:
+      - type: KILL
+        targetId: "demo_ruins:beetle_swarm"
+        count: 5
+        description: "Kill 5 beetle swarms"
+    rewards:
+      xp: 200
+      gold: 25
+      title: "Beetle Slayer"
+
+  combat/spider_hunter:
+    displayName: "Spider Hunter"
+    description: "Defeat 5 cave spiders."
+    category: COMBAT
+    hidden: false
+    criteria:
+      - type: KILL
+        targetId: "demo_ruins:cave_spider"
+        count: 5
+        description: "Kill 5 cave spiders"
+    rewards:
+      xp: 200
+      gold: 25
+      title: "Spider Hunter"
+
+  milestone/level_5:
+    displayName: "Seasoned Adventurer"
+    description: "Reach level 5."
+    category: CLASS
+    hidden: false
+    criteria:
+      - type: REACH_LEVEL
+        count: 5
+        description: "Reach level 5"
+    rewards:
+      xp: 300
+      title: "Adventurer"
+
+  milestone/level_10:
+    displayName: "Veteran"
+    description: "Reach level 10."
+    category: CLASS
+    hidden: false
+    criteria:
+      - type: REACH_LEVEL
+        count: 10
+        description: "Reach level 10"
+    rewards:
+      xp: 1000
+      title: "Veteran"
+
+  quests/ruins_helper:
+    displayName: "Ruins Helper"
+    description: "Complete the beetle culling quest."
+    category: SOCIAL
+    hidden: false
+    criteria:
+      - type: QUEST_COMPLETE
+        targetId: "demo_ruins:cull_the_beetles"
+        count: 1
+        description: "Complete Cull the Beetles"
+    rewards:
+      xp: 150
+      title: "Helper"
+
+  combat/secret_slayer:
+    displayName: "?????"
+    description: "You have uncovered a secret."
+    category: COMBAT
+    hidden: true
+    criteria:
+      - type: KILL
+        targetId: "demo_ruins:ancient_golem"
+        count: 1
+        description: "Defeat the ancient golem"
+    rewards:
+      xp: 500
+      title: "Golem Slayer"

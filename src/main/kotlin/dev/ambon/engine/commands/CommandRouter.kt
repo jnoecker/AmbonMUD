@@ -11,6 +11,8 @@ import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
+import dev.ambon.engine.AchievementRegistry
+import dev.ambon.engine.AchievementSystem
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
@@ -82,6 +84,8 @@ class CommandRouter(
     private val dialogueSystem: DialogueSystem? = null,
     private val questSystem: QuestSystem? = null,
     private val registry: QuestRegistry = QuestRegistry(),
+    private val achievementSystem: AchievementSystem? = null,
+    private val achievementRegistry: AchievementRegistry = AchievementRegistry(),
 ) {
     private var adminSpawnSeq = 0
 
@@ -136,6 +140,9 @@ class CommandRouter(
                             quest info <name>
                             quest abandon <name>
                             accept <quest>
+                            achievements/ach
+                            title <titleName>
+                            title clear
                             ansi on/off
                             colors
                             clear
@@ -270,7 +277,10 @@ class CommandRouter(
                     players
                         .allPlayers()
                         .sortedBy { it.name }
-                        .joinToString(separator = ", ") { it.name }
+                        .joinToString(separator = ", ") { p ->
+                            val t = p.activeTitle
+                            if (t != null) "[$t] ${p.name}" else p.name
+                        }
 
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Online: $list"))
                 if (onRemoteWho != null) {
@@ -1317,6 +1327,45 @@ class CommandRouter(
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
+            Command.AchievementList -> {
+                val list =
+                    achievementSystem?.formatAchievements(sessionId)
+                        ?: "Achievement system is not available."
+                outbound.send(OutboundEvent.SendInfo(sessionId, list))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.TitleSet -> {
+                if (achievementSystem == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Achievement system is not available."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val available = achievementSystem.availableTitles(sessionId)
+                val match =
+                    available.firstOrNull { (_, title) ->
+                        title.equals(cmd.titleArg, ignoreCase = true)
+                    }
+                if (match == null) {
+                    outbound.send(
+                        OutboundEvent.SendError(
+                            sessionId,
+                            "No title '${cmd.titleArg}' available. Use 'achievements' to see earned titles.",
+                        ),
+                    )
+                } else {
+                    players.setDisplayTitle(sessionId, match.second)
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Title set to: ${match.second}"))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            Command.TitleClear -> {
+                players.setDisplayTitle(sessionId, null)
+                outbound.send(OutboundEvent.SendInfo(sessionId, "Title cleared."))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
             is Command.Unknown -> {
                 outbound.send(OutboundEvent.SendText(sessionId, "Huh?"))
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -1422,8 +1471,10 @@ class CommandRouter(
         val roomPlayers =
             players
                 .playersInRoom(roomId)
-                .map { it.name }
-                .sorted()
+                .map { p ->
+                    val t = p.activeTitle
+                    if (t != null) "[$t] ${p.name}" else p.name
+                }.sorted()
 
         val roomMobs =
             mobs

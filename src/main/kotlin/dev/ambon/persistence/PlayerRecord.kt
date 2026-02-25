@@ -1,5 +1,6 @@
 package dev.ambon.persistence
 
+import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.quest.QuestState
 
@@ -32,4 +33,7 @@ data class PlayerRecord(
     val gold: Long = 0L,
     val activeQuests: Map<String, QuestState> = emptyMap(),
     val completedQuestIds: Set<String> = emptySet(),
+    val unlockedAchievementIds: Set<String> = emptySet(),
+    val achievementProgress: Map<String, AchievementState> = emptyMap(),
+    val activeTitle: String? = null,
 )

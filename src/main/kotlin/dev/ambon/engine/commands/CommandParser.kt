@@ -184,6 +184,14 @@ sealed interface Command {
         val nameHint: String,
     ) : Command
 
+    data object AchievementList : Command
+
+    data class TitleSet(
+        val titleArg: String,
+    ) : Command
+
+    data object TitleClear : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -368,6 +376,19 @@ object CommandParser {
                     if (hint.isEmpty()) Command.Invalid(line, "quest abandon <quest-name>") else Command.QuestAbandon(hint)
                 }
                 else -> Command.QuestLog
+            }
+        }?.let { return it }
+
+        // achievements / ach
+        matchPrefix(line, listOf("achievements", "achievement", "ach")) { Command.AchievementList }
+            ?.let { return it }
+
+        // title clear / title <arg>
+        matchPrefix(line, listOf("title")) { rest ->
+            when {
+                rest.isBlank() -> Command.Invalid(line, "title <titleName>  or  title clear")
+                rest.trim().equals("clear", ignoreCase = true) -> Command.TitleClear
+                else -> Command.TitleSet(rest.trim())
             }
         }?.let { return it }
 

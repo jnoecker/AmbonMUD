@@ -205,6 +205,35 @@ class GmcpEmitter(
         outbound.send(OutboundEvent.GmcpData(sessionId, "Core.Ping", "{}"))
     }
 
+    suspend fun sendCharAchievements(
+        sessionId: SessionId,
+        player: PlayerState,
+        registry: AchievementRegistry,
+    ) {
+        if (!supportsPackage(sessionId, "Char.Achievements")) return
+        val completedJson =
+            player.unlockedAchievementIds
+                .joinToString(",", prefix = "[", postfix = "]") { id ->
+                    val def = registry.get(id)
+                    val name = def?.displayName?.jsonEscape() ?: id.jsonEscape()
+                    val titleJson =
+                        def?.rewards?.title?.let { "\"${it.jsonEscape()}\"" } ?: "null"
+                    """{"id":"${id.jsonEscape()}","name":"$name","title":$titleJson}"""
+                }
+        val inProgressJson =
+            player.achievementProgress.entries
+                .filter { (id, _) -> registry.get(id)?.hidden != true }
+                .joinToString(",", prefix = "[", postfix = "]") { (id, state) ->
+                    val def = registry.get(id)
+                    val name = def?.displayName?.jsonEscape() ?: id.jsonEscape()
+                    val totalCurrent = state.progress.sumOf { it.current }
+                    val totalRequired = state.progress.sumOf { it.required }
+                    """{"id":"${id.jsonEscape()}","name":"$name","current":$totalCurrent,"required":$totalRequired}"""
+                }
+        val json = """{"completed":$completedJson,"inProgress":$inProgressJson}"""
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Achievements", json))
+    }
+
     private fun itemToJson(item: ItemInstance): String {
         val slot =
             item.item.slot
