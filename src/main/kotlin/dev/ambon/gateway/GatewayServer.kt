@@ -409,32 +409,44 @@ class GatewayServer(
         }
     }
 
-    private suspend fun attemptMultiEngineReconnect(
-        entry: GatewayEngineEntry,
-        router: SessionRouter,
+    /**
+     * Shared reconnect scaffolding: delays per backoff config, fires metrics per attempt, and
+     * calls [block] for each try. [block] returns true on success.
+     * Fires [onGatewayReconnectBudgetExhausted] and returns false when budget is exhausted.
+     */
+    private suspend fun retryReconnect(
+        label: String,
+        block: suspend (attempt: Int) -> Boolean,
     ): Boolean {
-        val reconnectConfig = config.gateway.reconnect
-        for (attempt in 0 until reconnectConfig.maxAttempts) {
-            val delayMs = computeBackoffDelay(attempt, reconnectConfig)
-            log.info {
-                "Engine ${entry.id} reconnect attempt ${attempt + 1}/${reconnectConfig.maxAttempts} in ${delayMs}ms"
-            }
+        val rc = config.gateway.reconnect
+        for (attempt in 0 until rc.maxAttempts) {
+            val delayMs = computeBackoffDelay(attempt, rc)
+            log.info { "$label attempt ${attempt + 1}/${rc.maxAttempts} in ${delayMs}ms" }
             gameMetrics.onGatewayReconnectAttempt()
             delay(delayMs)
-
-            try {
-                connectMultiEngine(entry, router, initial = false)
-                log.info { "Engine ${entry.id} reconnected on attempt ${attempt + 1}" }
+            if (block(attempt)) {
                 gameMetrics.onGatewayReconnectSuccess()
                 return true
-            } catch (e: Exception) {
-                log.warn(e) { "Engine ${entry.id} reconnect attempt ${attempt + 1} failed" }
             }
         }
-
         gameMetrics.onGatewayReconnectBudgetExhausted()
         return false
     }
+
+    private suspend fun attemptMultiEngineReconnect(
+        entry: GatewayEngineEntry,
+        router: SessionRouter,
+    ): Boolean =
+        retryReconnect("Engine ${entry.id} reconnect") { attempt ->
+            try {
+                connectMultiEngine(entry, router, initial = false)
+                log.info { "Engine ${entry.id} reconnected on attempt ${attempt + 1}" }
+                true
+            } catch (e: Exception) {
+                log.warn(e) { "Engine ${entry.id} reconnect attempt ${attempt + 1} failed" }
+                false
+            }
+        }
 
     suspend fun stop() {
         runCatching { telnetTransport.stop() }
@@ -491,35 +503,34 @@ class GatewayServer(
 
         log.info { "Starting gateway reconnect sequence" }
         inboundProtoChannel?.close()
-        val reconnectConfig = config.gateway.reconnect
-        for (attempt in 0 until reconnectConfig.maxAttempts) {
-            val delayMs = computeBackoffDelay(attempt, reconnectConfig)
-            log.info { "Reconnect attempt ${attempt + 1}/${reconnectConfig.maxAttempts} in ${delayMs}ms" }
-            gameMetrics.onGatewayReconnectAttempt()
-            delay(delayMs)
-            val newChannel = Channel<InboundEventProto>(capacity = config.server.inboundChannelCapacity)
-            val newFlow = stub.eventStream(newChannel.receiveAsFlow())
-            ob.reattach(newFlow)
-            // Wait up to streamVerifyMs for the receiver to die (stream failure) or stay alive (healthy).
-            val receiverDied =
-                withTimeoutOrNull(reconnectConfig.streamVerifyMs) {
-                    ob.awaitReceiverCompletion()
+
+        val reconnected =
+            retryReconnect("Reconnect") { attempt ->
+                val newChannel = Channel<InboundEventProto>(capacity = config.server.inboundChannelCapacity)
+                val newFlow = stub.eventStream(newChannel.receiveAsFlow())
+                ob.reattach(newFlow)
+                // Wait up to streamVerifyMs for the receiver to die (stream failure) or stay alive (healthy).
+                val receiverDied =
+                    withTimeoutOrNull(config.gateway.reconnect.streamVerifyMs) {
+                        ob.awaitReceiverCompletion()
+                    }
+                if (receiverDied == null) {
+                    // Timeout elapsed — receiver still running, stream is healthy.
+                    inboundProtoChannel = newChannel
+                    ib.reattach(newChannel)
+                    log.info { "Gateway reconnected to engine on attempt ${attempt + 1}" }
+                    reconnecting.set(false)
+                    true
+                } else {
+                    log.warn { "New gRPC stream failed immediately on attempt ${attempt + 1}" }
+                    newChannel.close()
+                    false
                 }
-            if (receiverDied == null) {
-                // Timeout elapsed — receiver still running, stream is healthy.
-                inboundProtoChannel = newChannel
-                ib.reattach(newChannel)
-                log.info { "Gateway reconnected to engine on attempt ${attempt + 1}" }
-                gameMetrics.onGatewayReconnectSuccess()
-                reconnecting.set(false)
-                return
             }
-            log.warn { "New gRPC stream failed immediately on attempt ${attempt + 1}" }
-            newChannel.close()
+        if (!reconnected) {
+            log.error { "Reconnect budget exhausted after ${config.gateway.reconnect.maxAttempts} attempts; stopping gateway" }
+            scope.launch { stop() }
         }
-        log.error { "Reconnect budget exhausted after ${reconnectConfig.maxAttempts} attempts; stopping gateway" }
-        gameMetrics.onGatewayReconnectBudgetExhausted()
-        scope.launch { stop() }
     }
 }
 

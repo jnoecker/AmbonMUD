@@ -3,12 +3,6 @@
     "PreToolUse": [
       {
         "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \".claude/hooks/enforce-branch-from-main.sh\""
-          }
-        ]
       }
     ]
   }

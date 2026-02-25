@@ -183,19 +183,13 @@ object CommandParser {
         }
 
         // say: "say <msg>"
-        matchPrefix(line, listOf("say")) { rest ->
-            if (rest.isEmpty()) Command.Invalid(line, "say <message>") else Command.Say(rest)
-        }?.let { return it }
+        requiredArg(line, listOf("say"), "say <message>", { Command.Say(it) })?.let { return it }
 
-        // say: "emote <msg>"
-        matchPrefix(line, listOf("emote")) { rest ->
-            if (rest.isEmpty()) Command.Invalid(line, "emote <message>") else Command.Emote(rest)
-        }?.let { return it }
+        // emote: "emote <msg>"
+        requiredArg(line, listOf("emote"), "emote <message>", { Command.Emote(it) })?.let { return it }
 
         // gossip: "gossip <msg>" or "gs <msg>"
-        matchPrefix(line, listOf("gossip", "gs")) { rest ->
-            if (rest.isEmpty()) Command.Invalid(line, "gossip <msg> or gs <msg>") else Command.Gossip(rest)
-        }?.let { return it }
+        requiredArg(line, listOf("gossip", "gs"), "gossip <msg> or gs <msg>", { Command.Gossip(it) })?.let { return it }
 
         // tell: "tell <target> <msg>" or "t <target> <msg>"
         matchPrefix(line, listOf("tell", "t")) { rest ->
@@ -230,10 +224,7 @@ object CommandParser {
         }?.let { return it }
 
         // wear/equip
-        matchPrefix(line, listOf("wear", "equip")) { rest ->
-            val kw = rest.trim()
-            if (kw.isEmpty()) Command.Invalid(line, "wear <item>") else Command.Wear(kw)
-        }?.let { return it }
+        requiredArg(line, listOf("wear", "equip"), "wear <item>", { Command.Wear(it) })?.let { return it }
 
         // remove/unequip
         matchPrefix(line, listOf("remove", "unequip")) { rest ->
@@ -246,22 +237,13 @@ object CommandParser {
         }?.let { return it }
 
         // get/take
-        matchPrefix(line, listOf("get", "take", "pickup", "pick", "pick up")) { rest ->
-            val kw = rest.trim()
-            if (kw.isEmpty()) Command.Invalid(line, "get <item>") else Command.Get(kw)
-        }?.let { return it }
+        requiredArg(line, listOf("get", "take", "pickup", "pick", "pick up"), "get <item>", { Command.Get(it) })?.let { return it }
 
         // drop
-        matchPrefix(line, listOf("drop")) { rest ->
-            val kw = rest.trim()
-            if (kw.isEmpty()) Command.Invalid(line, "drop <item>") else Command.Drop(kw)
-        }?.let { return it }
+        requiredArg(line, listOf("drop"), "drop <item>", { Command.Drop(it) })?.let { return it }
 
         // use
-        matchPrefix(line, listOf("use")) { rest ->
-            val kw = rest.trim()
-            if (kw.isEmpty()) Command.Invalid(line, "use <item>") else Command.Use(kw)
-        }?.let { return it }
+        requiredArg(line, listOf("use"), "use <item>", { Command.Use(it) })?.let { return it }
 
         // give
         matchPrefix(line, listOf("give")) { rest ->
@@ -286,36 +268,22 @@ object CommandParser {
         }?.let { return it }
 
         // shout: "shout <msg>" or "sh <msg>"
-        matchPrefix(line, listOf("shout", "sh")) { rest ->
-            if (rest.isEmpty()) Command.Invalid(line, "shout <message>") else Command.Shout(rest)
-        }?.let { return it }
+        requiredArg(line, listOf("shout", "sh"), "shout <message>", { Command.Shout(it) })?.let { return it }
 
         // ooc: "ooc <msg>"
-        matchPrefix(line, listOf("ooc")) { rest ->
-            if (rest.isEmpty()) Command.Invalid(line, "ooc <message>") else Command.Ooc(rest)
-        }?.let { return it }
+        requiredArg(line, listOf("ooc"), "ooc <message>", { Command.Ooc(it) })?.let { return it }
 
         // pose: "pose <msg>" or "po <msg>"
-        matchPrefix(line, listOf("pose", "po")) { rest ->
-            if (rest.isEmpty()) Command.Invalid(line, "pose <message>") else Command.Pose(rest)
-        }?.let { return it }
+        requiredArg(line, listOf("pose", "po"), "pose <message>", { Command.Pose(it) })?.let { return it }
 
         // dispel (staff)
-        matchPrefix(line, listOf("dispel")) { rest ->
-            if (rest.isEmpty()) Command.Invalid(line, "dispel <target>") else Command.Dispel(rest)
-        }?.let { return it }
+        requiredArg(line, listOf("dispel"), "dispel <target>", { Command.Dispel(it) })?.let { return it }
 
         // buy
-        matchPrefix(line, listOf("buy", "purchase")) { rest ->
-            val kw = rest.trim()
-            if (kw.isEmpty()) Command.Invalid(line, "buy <item>") else Command.Buy(kw)
-        }?.let { return it }
+        requiredArg(line, listOf("buy", "purchase"), "buy <item>", { Command.Buy(it) })?.let { return it }
 
         // sell
-        matchPrefix(line, listOf("sell")) { rest ->
-            val kw = rest.trim()
-            if (kw.isEmpty()) Command.Invalid(line, "sell <item>") else Command.Sell(kw)
-        }?.let { return it }
+        requiredArg(line, listOf("sell"), "sell <item>", { Command.Sell(it) })?.let { return it }
 
         // cast / c
         matchPrefix(line, listOf("cast", "c")) { rest ->
@@ -327,15 +295,10 @@ object CommandParser {
         }?.let { return it }
 
         // kill
-        matchPrefix(line, listOf("kill")) { rest ->
-            val target = rest.trim()
-            if (target.isEmpty()) Command.Invalid(line, "kill <mob>") else Command.Kill(target)
-        }?.let { return it }
+        requiredArg(line, listOf("kill"), "kill <mob>", { Command.Kill(it) })?.let { return it }
 
         // goto
-        matchPrefix(line, listOf("goto")) { rest ->
-            if (rest.isEmpty()) Command.Invalid(line, "goto <zone:room | room | zone:>") else Command.Goto(rest)
-        }?.let { return it }
+        requiredArg(line, listOf("goto"), "goto <zone:room | room | zone:>", { Command.Goto(it) })?.let { return it }
 
         // transfer
         matchPrefix(line, listOf("transfer")) { rest ->
@@ -348,19 +311,13 @@ object CommandParser {
         }?.let { return it }
 
         // spawn
-        matchPrefix(line, listOf("spawn")) { rest ->
-            if (rest.isEmpty()) Command.Invalid(line, "spawn <mob-template>") else Command.Spawn(rest)
-        }?.let { return it }
+        requiredArg(line, listOf("spawn"), "spawn <mob-template>", { Command.Spawn(it) })?.let { return it }
 
         // smite
-        matchPrefix(line, listOf("smite")) { rest ->
-            if (rest.isEmpty()) Command.Invalid(line, "smite <player|mob>") else Command.Smite(rest)
-        }?.let { return it }
+        requiredArg(line, listOf("smite"), "smite <player|mob>", { Command.Smite(it) })?.let { return it }
 
         // kick
-        matchPrefix(line, listOf("kick")) { rest ->
-            if (rest.isEmpty()) Command.Invalid(line, "kick <player>") else Command.Kick(rest)
-        }?.let { return it }
+        requiredArg(line, listOf("kick"), "kick <player>", { Command.Kick(it) })?.let { return it }
 
         // phase/layer — switch zone instance
         matchPrefix(line, listOf("phase", "layer")) { rest ->
@@ -393,6 +350,17 @@ object CommandParser {
             else -> Command.Unknown(line)
         }
     }
+
+    /** Matches [aliases] prefix; returns Invalid(usage) if rest is blank, else [ctor](rest). */
+    private inline fun requiredArg(
+        line: String,
+        aliases: List<String>,
+        usage: String,
+        ctor: (String) -> Command,
+    ): Command? =
+        matchPrefix(line, aliases) { rest ->
+            if (rest.isEmpty()) Command.Invalid(line, usage) else ctor(rest)
+        }
 
     private inline fun matchPrefix(
         line: String,

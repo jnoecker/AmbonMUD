@@ -6,30 +6,20 @@ AmbonMUD has a mature infrastructure and solid gameplay foundation:
 
 **Infrastructure:** Event-driven tick engine, dual transports (telnet with NAWS/TTYPE/GMCP negotiation, WebSocket with GMCP sidebar panels), event bus abstraction (Local/Redis/gRPC), write-behind coalescing persistence, selectable YAML or PostgreSQL backends, Redis L2 cache with HMAC-signed pub/sub envelopes, gRPC engine/gateway split, zone-based engine sharding with zone instancing and auto-scaling, Prometheus/Grafana observability, Snowflake session IDs, and a swarm load-testing module. 66+ test files.
 
-**Gameplay:** 4 races, 4 classes, 6 primary attributes with mechanical effects, 12 class-specific abilities with mana/cooldowns, 1v1 combat with attribute-based damage scaling, items (equippable + consumable with charges), rich communication (say/tell/gossip/emote/whisper/shout/ooc/pose), individual mob respawn timers, mob wandering AI, HP + mana regen, zone resets, and XP/leveling across 50 levels. 8 zones including tutorial, hub, training, and exploration areas.
+**Gameplay:** 4 races, 4 classes, 6 primary attributes with mechanical effects, 12 class-specific abilities with mana/cooldowns, status effects (DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD with stacking rules), 1v1 combat with attribute-based damage scaling, items (equippable + consumable with charges), gold currency with mob drops and in-room shops (buy/sell/list), rich communication (say/tell/gossip/emote/whisper/shout/ooc/pose), individual mob respawn timers, mob wandering AI, HP + mana regen, zone resets, and XP/leveling across 50 levels. 8 zones including tutorial, hub, training, and exploration areas.
 
 **What's missing is depth.** The engine can run the game, but the game needs more _game_. The projects below each add a substantial new dimension.
 
 ---
 
-## 1. Status Effect & Buff/Debuff System
+## 1. Status Effect & Buff/Debuff System — IMPLEMENTED
 
-**What:** A timed-effect framework that applies modifiers to players and mobs — damage-over-time (DoT), heal-over-time (HoT), stat buffs, stat debuffs, crowd control (stun, root, slow), and immunity windows.
+**Status:** Fully implemented. `StatusEffectSystem` ticked in the engine loop. Effect types: `DOT`, `HOT`, `STAT_BUFF`, `STAT_DEBUFF`, `STUN` (skips combat round), `ROOT` (prevents movement), `SHIELD` (absorbs incoming damage). Configurable stacking rules (`REFRESH`, `STACK`, `MAX_STACKS`). Player and mob targets. `CombatSystem` applies stat mods and stun handling; `MobSystem` respects ROOT. `effects`/`buffs`/`debuffs` command for telnet. `Char.StatusEffects` GMCP package for web client. Effect definitions are config-driven in `application.yaml` alongside ability definitions.
 
-**Why now:** The ability system (12 spells, mana, cooldowns) is implemented but limited to instant effects (`DIRECT_DAMAGE`, `DIRECT_HEAL`). Status effects are the natural next step, and they unblock the majority of interesting spell design space: a Mage's Ignite that burns for 3 ticks, a Cleric's Shield of Faith that reduces incoming damage for 30 seconds, a Rogue's Poison that stacks.
-
-**Key design decisions:**
-- Status effects as a first-class data type: `StatusEffect(id, source, target, effectType, magnitude, durationMs, tickIntervalMs, stackable)`
-- New `StatusEffectSystem` ticked alongside combat/regen — processes active effects, removes expired ones, broadcasts messages
-- Effect types: `DOT`, `HOT`, `STAT_BUFF`, `STAT_DEBUFF`, `STUN` (skip combat round), `ROOT` (prevent movement), `SHIELD` (absorb N damage)
-- Stacking rules: same-source refresh duration vs. independent stacks vs. max-stack cap
-- Dispel mechanic: `dispel` command or specific counter-spells
-- Visual: GMCP `Char.StatusEffects` package for web client display; `effects` command for telnet
-- Config-driven: effect definitions in `application.yaml` alongside ability definitions, linked via ability `effect.type` extension
-
-**Scope:** Large. New `StatusEffectSystem`, effect tracking on `PlayerState` and `MobState`, new ability effect types in config, GMCP package, `effects` command, persistence of long-duration buffs across login/logout. Touches `CombatSystem` (damage modifiers, stun handling), `MobSystem` (root prevents movement), `RegenSystem` (HoT integration).
-
-**Depends on:** Nothing (builds on existing AbilitySystem).
+**Remaining opportunities:**
+- Dispel mechanic (`dispel` command or counter-spell ability type)
+- Immunity/resistance windows after crowd control expires
+- Persistence of long-duration buffs across login/logout
 
 ---
 
@@ -76,25 +66,16 @@ AmbonMUD has a mature infrastructure and solid gameplay foundation:
 
 ---
 
-## 4. Economy, Currency & Shops
+## 4. Economy, Currency & Shops — IMPLEMENTED (core)
 
-**What:** A gold currency system, NPC shopkeepers, loot-table gold drops, and player-to-player trading.
+**Status:** Core economy is implemented. `PlayerRecord.gold` is persisted through all backends. Mob gold drops use `goldMin`/`goldMax` from the tier formula (per-mob override supported in zone YAML). Items have a `basePrice` field; shops are defined per-zone in the `shops` YAML map. Commands `buy`/`sell`/`list`/`gold` are live. Buy/sell price multipliers are configurable via `engine.economy.*`.
 
-**Why now:** Items currently have no tangible value — you pick them up, equip them, and that's it. An economy creates demand, enables shops as discovery mechanisms, and provides a gold sink/faucet loop that gives grinding purpose beyond XP.
-
-**Key design decisions:**
-- `gold: Long` field on `PlayerRecord` (persisted) — new Flyway migration
-- Mob loot tables: `goldMin` / `goldMax` per mob template (in zone YAML); gold drops on kill
-- Shop NPCs: `vendor` behavior type (from #2), or simpler room-based shops with `ShopDefinition` in zone YAML
-- Commands: `buy <item>`, `sell <item>`, `list` (when in a shop room/talking to vendor), `trade <player>` with confirmation flow
-- Gold sinks: consumable item purchases, ability training fees, fast-travel costs, item repairs
-- Gold sources: mob drops, quest rewards, selling loot to vendors (at reduced price)
-- Economic balance: configurable buy/sell price ratios; vendor inventory refresh on zone reset
-- GMCP: `Char.Vitals` extended with gold; shop UI in web client
-
-**Scope:** Medium. New `ShopSystem`, `PlayerRecord.gold` field (+ migration), loot-table extension in zone YAML, new commands. Self-contained but richer with NPC Dialogue (#2).
-
-**Depends on:** Nothing (can use room-based shops without NPC Dialogue).
+**Remaining opportunities:**
+- Player-to-player trading (`trade <player>` with confirmation flow)
+- Gold sinks beyond shop purchases (ability training fees, fast-travel costs, item repair)
+- Vendor inventory refresh on zone reset (currently static)
+- GMCP `Char.Vitals` extension with gold balance for web client sidebar
+- Shop UI panel in the web client (currently only the in-game `list` command)
 
 ---
 
@@ -325,7 +306,7 @@ These build on the existing ability infrastructure and make combat tactically in
 
 | # | Project | Effort | Unlocks |
 |---|---------|--------|---------|
-| 1 | Status Effects & Buffs | Large | Rich spell design, interesting boss fights, group utility |
+| 1 | Status Effects & Buffs | **Done** | Dispel mechanic and CC immunity remain |
 | 5 | Group/Party Combat | Very large | Multiplayer cooperation, class roles matter, harder content |
 
 ### Phase B — Build a living world
@@ -333,9 +314,9 @@ These transform the world from a combat arena into a narrative experience:
 
 | # | Project | Effort | Unlocks |
 |---|---------|--------|---------|
-| 2 | NPC Dialogue & Behaviors | Very large | Quest givers, shops, trainers, world flavor |
+| 2 | NPC Dialogue & Behaviors | Very large | Quest givers, trainers, world flavor |
 | 3 | Quest System | Large | Structured progression, narrative arcs, achievement triggers |
-| 4 | Economy & Shops | Medium | Item value, gold loop, crafting demand |
+| 4 | Economy & Shops | **Done (core)** | Player-to-player trading, gold sinks, GMCP gold panel remain |
 
 ### Phase C — Endgame & replayability
 These create reasons to keep playing after reaching max level:

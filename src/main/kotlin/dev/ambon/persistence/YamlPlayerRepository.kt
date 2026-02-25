@@ -4,9 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
-import dev.ambon.domain.ids.RoomId
 import dev.ambon.metrics.GameMetrics
-import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -31,31 +29,6 @@ class YamlPlayerRepository(
     private val rootDir: Path,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) : PlayerRepository {
-    // DTO uses plain types so Jackson doesn't need special Map key handling etc.
-    private data class PlayerFile(
-        val id: Long,
-        val name: String,
-        val roomId: String,
-        val strength: Int = 10,
-        val dexterity: Int = 10,
-        val constitution: Int = 10,
-        val intelligence: Int = 10,
-        val wisdom: Int = 10,
-        val charisma: Int = 10,
-        val race: String = "HUMAN",
-        val playerClass: String = "WARRIOR",
-        val level: Int = 1,
-        val xpTotal: Long = 0L,
-        val createdAtEpochMs: Long,
-        val lastSeenEpochMs: Long,
-        val passwordHash: String = "",
-        val ansiEnabled: Boolean = false,
-        val isStaff: Boolean = false,
-        val mana: Int = 20,
-        val maxMana: Int = 20,
-        val gold: Long = 0L,
-    )
-
     private val mapper: ObjectMapper =
         ObjectMapper(YAMLFactory())
             .registerModule(KotlinModule.Builder().build())
@@ -74,55 +47,34 @@ class YamlPlayerRepository(
 
     override suspend fun findByName(name: String): PlayerRecord? =
         withContext(Dispatchers.IO) {
-            val sample = Timer.start()
-            try {
+            metrics.timedLoad {
                 val target = name.trim()
-                if (target.isEmpty()) return@withContext null
+                if (target.isEmpty()) return@timedLoad null
 
                 // Simple scan. Fine for Phase 1. Later: index file or SQLite.
                 playersDir.listDirectoryEntries("*.yaml").forEach { p ->
-                    val pf = readPlayerFile(p) ?: return@forEach
-                    if (pf.name.equals(target, ignoreCase = true)) {
-                        return@withContext pf.toDomain()
+                    val dto = readPlayerDto(p) ?: return@forEach
+                    if (dto.name.equals(target, ignoreCase = true)) {
+                        return@timedLoad dto.toDomain()
                     }
                 }
                 null
-            } finally {
-                sample.stop(metrics.playerRepoLoadTimer)
             }
         }
 
     override suspend fun findById(id: PlayerId): PlayerRecord? =
         withContext(Dispatchers.IO) {
-            val sample = Timer.start()
-            try {
+            metrics.timedLoad {
                 val path = pathFor(id.value)
-                val pf = readPlayerFile(path) ?: return@withContext null
-                pf.toDomain()
-            } finally {
-                sample.stop(metrics.playerRepoLoadTimer)
+                readPlayerDto(path)?.toDomain()
             }
         }
 
-    override suspend fun create(
-        name: String,
-        startRoomId: RoomId,
-        nowEpochMs: Long,
-        passwordHash: String,
-        ansiEnabled: Boolean,
-        race: String,
-        playerClass: String,
-        strength: Int,
-        dexterity: Int,
-        constitution: Int,
-        intelligence: Int,
-        wisdom: Int,
-        charisma: Int,
-    ): PlayerRecord =
+    override suspend fun create(request: PlayerCreationRequest): PlayerRecord =
         withContext(Dispatchers.IO) {
-            val nm = name.trim()
+            val nm = request.name.trim()
             require(nm.isNotEmpty()) { "name cannot be blank" }
-            require(passwordHash.isNotEmpty()) { "passwordHash cannot be blank" }
+            require(request.passwordHash.isNotEmpty()) { "passwordHash cannot be blank" }
 
             // Enforce unique name (case-insensitive) for now
             val existing = findByName(nm)
@@ -131,24 +83,7 @@ class YamlPlayerRepository(
             val id = nextId.getAndIncrement()
             persistNextId(nextId.get())
 
-            val record =
-                PlayerRecord(
-                    id = PlayerId(id),
-                    name = nm,
-                    roomId = startRoomId,
-                    createdAtEpochMs = nowEpochMs,
-                    lastSeenEpochMs = nowEpochMs,
-                    passwordHash = passwordHash,
-                    ansiEnabled = ansiEnabled,
-                    race = race,
-                    playerClass = playerClass,
-                    strength = strength,
-                    dexterity = dexterity,
-                    constitution = constitution,
-                    intelligence = intelligence,
-                    wisdom = wisdom,
-                    charisma = charisma,
-                )
+            val record = request.toNewPlayerRecord(PlayerId(id))
 
             save(record)
             record
@@ -156,80 +91,19 @@ class YamlPlayerRepository(
 
     override suspend fun save(record: PlayerRecord): Unit =
         withContext(Dispatchers.IO) {
-            val sample = Timer.start()
-            try {
-                val pf =
-                    PlayerFile(
-                        id = record.id.value,
-                        name = record.name,
-                        roomId = record.roomId.value,
-                        strength = record.strength,
-                        dexterity = record.dexterity,
-                        constitution = record.constitution,
-                        intelligence = record.intelligence,
-                        wisdom = record.wisdom,
-                        charisma = record.charisma,
-                        race = record.race,
-                        playerClass = record.playerClass,
-                        level = record.level,
-                        xpTotal = record.xpTotal,
-                        createdAtEpochMs = record.createdAtEpochMs,
-                        lastSeenEpochMs = record.lastSeenEpochMs,
-                        passwordHash = record.passwordHash,
-                        ansiEnabled = record.ansiEnabled,
-                        isStaff = record.isStaff,
-                        mana = record.mana,
-                        maxMana = record.maxMana,
-                        gold = record.gold,
-                    )
-
-                val outPath = pathFor(record.id.value)
-                atomicWriteText(outPath, mapper.writeValueAsString(pf))
-                metrics.onPlayerSave()
-            } catch (e: Throwable) {
-                metrics.onPlayerSaveFailure()
-                throw e
-            } finally {
-                sample.stop(metrics.playerRepoSaveTimer)
+            metrics.timedSave {
+                atomicWriteText(pathFor(record.id.value), mapper.writeValueAsString(PlayerDto.from(record)))
             }
         }
 
     // -------- internals --------
 
-    private fun PlayerFile.toDomain(): PlayerRecord {
-        // Legacy migration: old files stored constitution=0; remap to base 10
-        val migratedCon = if (constitution == 0) 10 else constitution
-        return PlayerRecord(
-            id = PlayerId(id),
-            name = name,
-            roomId = RoomId(roomId),
-            strength = strength,
-            dexterity = dexterity,
-            constitution = migratedCon,
-            intelligence = intelligence,
-            wisdom = wisdom,
-            charisma = charisma,
-            race = race,
-            playerClass = playerClass,
-            level = level,
-            xpTotal = xpTotal,
-            createdAtEpochMs = createdAtEpochMs,
-            lastSeenEpochMs = lastSeenEpochMs,
-            passwordHash = passwordHash,
-            ansiEnabled = ansiEnabled,
-            isStaff = isStaff,
-            mana = mana,
-            maxMana = maxMana,
-            gold = gold,
-        )
-    }
-
     private fun pathFor(id: Long): Path = playersDir.resolve(id.toString().padStart(20, '0') + ".yaml")
 
-    private fun readPlayerFile(path: Path): PlayerFile? {
+    private fun readPlayerDto(path: Path): PlayerDto? {
         if (!path.exists()) return null
         return try {
-            mapper.readValue<PlayerFile>(path.readText())
+            mapper.readValue<PlayerDto>(path.readText())
         } catch (e: Exception) {
             throw PlayerPersistenceException("Failed to read player file: $path", e)
         }

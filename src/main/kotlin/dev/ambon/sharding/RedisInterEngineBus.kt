@@ -46,27 +46,25 @@ class RedisInterEngineBus(
         targetEngineId: String,
         message: InterEngineMessage,
     ) {
-        val payloadJson = mapper.writeValueAsString(message)
+        publishEnvelope("$channelPrefix:$targetEngineId", targetEngineId, message)
+    }
+
+    override suspend fun broadcast(message: InterEngineMessage) {
+        publishEnvelope(broadcastChannel, null, message)
+    }
+
+    private fun publishEnvelope(
+        channel: String,
+        targetEngineId: String?,
+        message: InterEngineMessage,
+    ) {
         val envelope =
             InterEngineEnvelope(
                 senderEngineId = engineId,
                 targetEngineId = targetEngineId,
-                payload = payloadJson,
+                payload = mapper.writeValueAsString(message),
             )
-        val json = mapper.writeValueAsString(envelope)
-        publisher.publish("$channelPrefix:$targetEngineId", json)
-    }
-
-    override suspend fun broadcast(message: InterEngineMessage) {
-        val payloadJson = mapper.writeValueAsString(message)
-        val envelope =
-            InterEngineEnvelope(
-                senderEngineId = engineId,
-                targetEngineId = null,
-                payload = payloadJson,
-            )
-        val json = mapper.writeValueAsString(envelope)
-        publisher.publish(broadcastChannel, json)
+        publisher.publish(channel, mapper.writeValueAsString(envelope))
     }
 
     override fun incoming(): ReceiveChannel<InterEngineMessage> = channel

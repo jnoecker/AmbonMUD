@@ -9,6 +9,8 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.persistence.PlayerCreationRequest
+import dev.ambon.test.drainAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
@@ -64,7 +66,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val outs = drainOutbound(outbound)
+            val outs = outbound.drainAll()
             val loginIndex = outs.indexOfFirst { it is OutboundEvent.ShowLoginScreen && it.sessionId == sid }
             val namePromptIndex =
                 outs.indexOfFirst {
@@ -96,7 +98,7 @@ class GameEngineLoginFlowTest {
 
             val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
@@ -128,7 +130,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val outs = drainOutbound(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.sessionId == sid && it.text == "Password:" },
@@ -168,7 +170,7 @@ class GameEngineLoginFlowTest {
 
             val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
@@ -200,7 +202,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val outs = drainOutbound(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any {
@@ -260,7 +262,7 @@ class GameEngineLoginFlowTest {
 
             val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
@@ -346,7 +348,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val beforeConfirm = drainOutbound(outbound)
+            val beforeConfirm = outbound.drainAll()
             assertTrue(
                 beforeConfirm.any {
                     it is OutboundEvent.SendInfo &&
@@ -368,7 +370,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val afterNo = drainOutbound(outbound)
+            val afterNo = outbound.drainAll()
             assertTrue(
                 afterNo.any {
                     it is OutboundEvent.SendInfo &&
@@ -383,7 +385,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val afterYes = drainOutbound(outbound)
+            val afterYes = outbound.drainAll()
             assertTrue(
                 afterYes.any {
                     it is OutboundEvent.SendInfo &&
@@ -405,7 +407,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val afterPassword = drainOutbound(outbound)
+            val afterPassword = outbound.drainAll()
             assertTrue(
                 afterPassword.any {
                     it is OutboundEvent.SendInfo &&
@@ -419,7 +421,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val afterRace = drainOutbound(outbound)
+            val afterRace = outbound.drainAll()
             assertTrue(
                 afterRace.any {
                     it is OutboundEvent.SendInfo &&
@@ -517,8 +519,8 @@ class GameEngineLoginFlowTest {
 
             val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
-            repo.create("Observer", world.startRoom, 0L, BCrypt.hashpw("pw", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
+            repo.create(PlayerCreationRequest("Observer", world.startRoom, 0L, BCrypt.hashpw("pw", BCrypt.gensalt()), ansiEnabled = false))
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, repo, items)
 
@@ -557,7 +559,7 @@ class GameEngineLoginFlowTest {
             runCurrent()
 
             assertEquals("Alice", players.get(sid1)?.name, "Expected Alice logged in on sid1")
-            drainOutbound(outbound)
+            outbound.drainAll()
 
             // Second session takes over Alice with correct password
             inbound.send(InboundEvent.Connected(sid2))
@@ -567,7 +569,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val outs = drainOutbound(outbound)
+            val outs = outbound.drainAll()
 
             // Old session is closed with kick message
             val kick = outs.filterIsInstance<OutboundEvent.Close>().firstOrNull { it.sessionId == sid1 }
@@ -606,7 +608,7 @@ class GameEngineLoginFlowTest {
 
             val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, repo, items)
 
@@ -641,7 +643,7 @@ class GameEngineLoginFlowTest {
             runCurrent()
 
             assertEquals("Alice", players.get(sid1)?.name)
-            drainOutbound(outbound)
+            outbound.drainAll()
 
             // Second session attempts takeover with wrong password
             inbound.send(InboundEvent.Connected(sid2))
@@ -651,7 +653,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val outs = drainOutbound(outbound)
+            val outs = outbound.drainAll()
 
             // Original session is NOT closed
             assertFalse(
@@ -677,7 +679,7 @@ class GameEngineLoginFlowTest {
             // ok_small world: start room 'ok_small:a', mob 'rat' in 'ok_small:b', exit north from a to b
             val world = WorldLoader.loadFromResource("world/ok_small.yaml")
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, repo, items)
 
@@ -713,7 +715,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            drainOutbound(outbound)
+            outbound.drainAll()
 
             // Take over Alice on sid2
             inbound.send(InboundEvent.Connected(sid2))
@@ -723,7 +725,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            drainOutbound(outbound)
+            outbound.drainAll()
 
             // Flee on sid2 — succeeds only if combat was inherited
             inbound.send(InboundEvent.LineReceived(sid2, "flee"))
@@ -731,7 +733,7 @@ class GameEngineLoginFlowTest {
             advanceTimeBy(tickMillis)
             runCurrent()
 
-            val outs = drainOutbound(outbound)
+            val outs = outbound.drainAll()
 
             assertFalse(
                 outs.any { it is OutboundEvent.SendError && it.sessionId == sid2 && it.text == "You are not in combat." },
@@ -748,13 +750,4 @@ class GameEngineLoginFlowTest {
             inbound.close()
             outbound.close()
         }
-
-    private fun drainOutbound(outbound: LocalOutboundBus): List<OutboundEvent> {
-        val out = mutableListOf<OutboundEvent>()
-        while (true) {
-            val ev = outbound.tryReceive().getOrNull() ?: break
-            out += ev
-        }
-        return out
-    }
 }
