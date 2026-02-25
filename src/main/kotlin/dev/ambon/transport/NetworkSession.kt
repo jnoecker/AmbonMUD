@@ -14,6 +14,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 private val log = KotlinLogging.logger {}
 
+// Maximum number of extra frames to drain per write iteration before flushing.
+// Keeps latency bounded while amortising flush()/syscall overhead across bursts.
+private const val MAX_FRAMES_PER_FLUSH = 64
+
 class NetworkSession(
     val sessionId: SessionId,
     private val socket: Socket,
@@ -233,29 +237,48 @@ class NetworkSession(
         try {
             val output = socket.getOutputStream()
             for (frame in outboundQueue) {
-                when (frame) {
-                    is OutboundFrame.Text -> {
-                        val bytes = frame.content.toByteArray(Charsets.UTF_8)
-                        synchronized(outputLock) {
-                            output.write(bytes)
-                            output.flush()
-                        }
-                    }
-                    is OutboundFrame.Gmcp -> {
-                        if (gmcpEnabled) {
-                            val pkg = frame.gmcpPackage
-                            val data = frame.jsonData
-                            val payload = "$pkg $data".toByteArray(Charsets.UTF_8)
-                            sendTelnetSubnegotiation(TelnetProtocol.GMCP, payload)
-                        }
-                    }
+                // Write first frame, then drain any immediately available frames before flushing.
+                var needFlush = writeFrame(output, frame)
+                var drained = 0
+                while (drained < MAX_FRAMES_PER_FLUSH) {
+                    val next = outboundQueue.tryReceive().getOrNull() ?: break
+                    val wrote = writeFrame(output, next)
+                    if (wrote) needFlush = true
+                    drained++
                 }
-                onOutboundFrameWritten()
+                if (needFlush) {
+                    synchronized(outputLock) { output.flush() }
+                }
             }
         } catch (_: Throwable) {
             // ignore; reader loop will close socket
         } finally {
             runCatching { socket.close() }
+        }
+    }
+
+    /**
+     * Writes a single frame to [output] without flushing.
+     * Returns true if bytes were written (i.e. a flush is needed).
+     */
+    private fun writeFrame(
+        output: java.io.OutputStream,
+        frame: OutboundFrame,
+    ): Boolean {
+        onOutboundFrameWritten()
+        return when (frame) {
+            is OutboundFrame.Text -> {
+                val bytes = frame.content.toByteArray(Charsets.UTF_8)
+                synchronized(outputLock) { output.write(bytes) }
+                true
+            }
+            is OutboundFrame.Gmcp -> {
+                if (gmcpEnabled) {
+                    val payload = "${frame.gmcpPackage} ${frame.jsonData}".toByteArray(Charsets.UTF_8)
+                    sendTelnetSubnegotiation(TelnetProtocol.GMCP, payload)
+                }
+                false
+            }
         }
     }
 
