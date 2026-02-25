@@ -1,6 +1,7 @@
 package dev.ambon.persistence
 
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.quest.QuestState
 
 /**
  * Flat-field DTO for YAML and Redis (JSON) serialization.
@@ -29,6 +30,8 @@ internal data class PlayerDto(
     val mana: Int = 20,
     val maxMana: Int = 20,
     val gold: Long = 0L,
+    val activeQuests: Map<String, QuestState> = emptyMap(),
+    val completedQuestIds: Set<String> = emptySet(),
 ) {
     fun toDomain(): PlayerRecord {
         // Legacy migration: old files/cache stored constitution=0; remap to base 10
@@ -55,6 +58,8 @@ internal data class PlayerDto(
             mana = mana,
             maxMana = maxMana,
             gold = gold,
+            activeQuests = activeQuests,
+            completedQuestIds = completedQuestIds,
         )
     }
 
@@ -82,6 +87,8 @@ internal data class PlayerDto(
                 mana = record.mana,
                 maxMana = record.maxMana,
                 gold = record.gold,
+                activeQuests = record.activeQuests,
+                completedQuestIds = record.completedQuestIds,
             )
     }
 }

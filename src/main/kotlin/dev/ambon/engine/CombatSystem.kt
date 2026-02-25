@@ -35,6 +35,7 @@ class CombatSystem(
     private val markVitalsDirty: (SessionId) -> Unit = {},
     private val markMobHpDirty: (MobId) -> Unit = {},
     private val statusEffects: StatusEffectSystem? = null,
+    private val onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
 ) {
     private data class Fight(
         val sessionId: SessionId,
@@ -437,6 +438,9 @@ class CombatSystem(
         broadcastToRoom(players, outbound, mob.roomId, "${mob.name} dies.")
         grantKillGold(killerSessionId, mob)
         grantKillXp(killerSessionId, mob)
+        if (mob.templateKey.isNotEmpty()) {
+            onMobKilledByPlayer(killerSessionId, mob.templateKey)
+        }
     }
 
     private suspend fun grantKillGold(

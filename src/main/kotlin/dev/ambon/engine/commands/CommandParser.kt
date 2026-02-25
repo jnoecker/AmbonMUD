@@ -170,6 +170,20 @@ sealed interface Command {
         val optionNumber: Int,
     ) : Command
 
+    data object QuestLog : Command
+
+    data class QuestInfo(
+        val nameHint: String,
+    ) : Command
+
+    data class QuestAbandon(
+        val nameHint: String,
+    ) : Command
+
+    data class QuestAccept(
+        val nameHint: String,
+    ) : Command
+
     data class Unknown(
         val raw: String,
     ) : Command
@@ -333,6 +347,28 @@ object CommandParser {
         // phase/layer — switch zone instance
         matchPrefix(line, listOf("phase", "layer")) { rest ->
             Command.Phase(rest.trim().ifEmpty { null })
+        }?.let { return it }
+
+        // accept: "accept <quest-name>" (for accepting quests offered by NPCs)
+        requiredArg(line, listOf("accept"), "accept <quest>", { Command.QuestAccept(it) })?.let { return it }
+
+        // quest subcommands: "quest log", "quest info <name>", "quest abandon <name>"
+        // also "quests" as alias for "quest log"
+        matchPrefix(line, listOf("quest", "quests")) { rest ->
+            if (rest.isEmpty()) return@matchPrefix Command.QuestLog
+            val parts = rest.split(Regex("\\s+"), limit = 2)
+            when (parts[0].lowercase()) {
+                "log", "list" -> Command.QuestLog
+                "info" -> {
+                    val hint = parts.getOrNull(1)?.trim() ?: ""
+                    if (hint.isEmpty()) Command.Invalid(line, "quest info <quest-name>") else Command.QuestInfo(hint)
+                }
+                "abandon" -> {
+                    val hint = parts.getOrNull(1)?.trim() ?: ""
+                    if (hint.isEmpty()) Command.Invalid(line, "quest abandon <quest-name>") else Command.QuestAbandon(hint)
+                }
+                else -> Command.QuestLog
+            }
         }?.let { return it }
 
         // Bare number → dialogue choice (CommandRouter decides if applicable)

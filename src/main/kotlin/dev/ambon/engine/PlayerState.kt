@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.quest.QuestState
 import dev.ambon.persistence.PlayerId
 
 data class PlayerState(
@@ -31,6 +32,8 @@ data class PlayerState(
     // Immutable after creation — cached here so persistIfClaimed avoids a repo lookup.
     val createdAtEpochMs: Long = 0L,
     val passwordHash: String = "",
+    var activeQuests: Map<String, QuestState> = emptyMap(),
+    var completedQuestIds: Set<String> = emptySet(),
 ) {
     companion object {
         const val BASE_MAX_HP = 10
@@ -46,5 +49,6 @@ data class PlayerState(
             "race=$race, playerClass=$playerClass, level=$level, xpTotal=$xpTotal, " +
             "ansiEnabled=$ansiEnabled, isStaff=$isStaff, " +
             "mana=$mana, maxMana=$maxMana, baseMana=$baseMana, gold=$gold, " +
+            "activeQuests=${activeQuests.keys}, completedQuestIds=$completedQuestIds, " +
             "createdAtEpochMs=$createdAtEpochMs, passwordHash=<redacted>)"
 }

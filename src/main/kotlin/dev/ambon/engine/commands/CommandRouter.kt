@@ -16,6 +16,8 @@ import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.QuestRegistry
+import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.broadcastToRoom
@@ -78,6 +80,8 @@ class CommandRouter(
     private val shopRegistry: ShopRegistry? = null,
     private val economyConfig: EconomyConfig = EconomyConfig(),
     private val dialogueSystem: DialogueSystem? = null,
+    private val questSystem: QuestSystem? = null,
+    private val registry: QuestRegistry = QuestRegistry(),
 ) {
     private var adminSpawnSeq = 0
 
@@ -128,6 +132,10 @@ class CommandRouter(
                             list/shop
                             buy <item>
                             sell <item>
+                            quest log/list
+                            quest info <name>
+                            quest abandon <name>
+                            accept <quest>
                             ansi on/off
                             colors
                             clear
@@ -569,6 +577,7 @@ class CommandRouter(
 
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You pick up ${moved.item.displayName}."))
                 gmcpEmitter?.sendCharItemsAdd(sessionId, moved)
+                questSystem?.onItemCollected(sessionId, moved)
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
 
@@ -1199,6 +1208,7 @@ class CommandRouter(
             }
 
             is Command.Talk -> {
+                val me = players.get(sessionId)
                 if (dialogueSystem == null) {
                     outbound.send(OutboundEvent.SendError(sessionId, "Nobody here wants to talk."))
                     outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -1207,6 +1217,30 @@ class CommandRouter(
                 val err = dialogueSystem.startConversation(sessionId, cmd.target)
                 if (err != null) {
                     outbound.send(OutboundEvent.SendError(sessionId, err))
+                }
+                if (questSystem != null && me != null) {
+                    val targetLower = cmd.target.trim().lowercase()
+                    val mob =
+                        mobs.mobsInRoom(me.roomId).firstOrNull { m ->
+                            m.name.lowercase().contains(targetLower)
+                        }
+                    if (mob != null) {
+                        val available = questSystem.availableQuests(sessionId, mob.id.value)
+                        for (quest in available) {
+                            outbound.send(
+                                OutboundEvent.SendText(
+                                    sessionId,
+                                    "[Quest] ${quest.name} — ${quest.description}",
+                                ),
+                            )
+                            outbound.send(
+                                OutboundEvent.SendText(
+                                    sessionId,
+                                    "  Type 'accept ${quest.name}' to accept.",
+                                ),
+                            )
+                        }
+                    }
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }
@@ -1220,6 +1254,65 @@ class CommandRouter(
                 val err = dialogueSystem.selectChoice(sessionId, cmd.optionNumber)
                 if (err != null) {
                     outbound.send(OutboundEvent.SendError(sessionId, err))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            Command.QuestLog -> {
+                val log = questSystem?.formatQuestLog(sessionId) ?: "Quest system is not available."
+                outbound.send(OutboundEvent.SendInfo(sessionId, log))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.QuestInfo -> {
+                val info = questSystem?.formatQuestInfo(sessionId, cmd.nameHint) ?: "Quest system is not available."
+                outbound.send(OutboundEvent.SendInfo(sessionId, info))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.QuestAbandon -> {
+                if (questSystem == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Quest system is not available."))
+                } else {
+                    val err = questSystem.abandonQuest(sessionId, cmd.nameHint)
+                    if (err != null) outbound.send(OutboundEvent.SendError(sessionId, err))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+
+            is Command.QuestAccept -> {
+                if (questSystem == null) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "Quest system is not available."))
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val me2 = players.get(sessionId)
+                if (me2 == null) {
+                    outbound.send(OutboundEvent.SendPrompt(sessionId))
+                    return
+                }
+                val nameHintLower = cmd.nameHint.trim().lowercase()
+                val roomMobIds = mobs.mobsInRoom(me2.roomId).map { it.id.value }.toSet()
+                val matchingQuest =
+                    registry
+                        .all()
+                        .filter { quest ->
+                            quest.name.lowercase().contains(nameHintLower) ||
+                                quest.id
+                                    .substringAfterLast(':')
+                                    .lowercase()
+                                    .contains(nameHintLower)
+                        }.firstOrNull { quest -> quest.giverMobId in roomMobIds }
+                if (matchingQuest == null) {
+                    outbound.send(
+                        OutboundEvent.SendError(
+                            sessionId,
+                            "No quest-giver here offers a quest matching '${cmd.nameHint}'.",
+                        ),
+                    )
+                } else {
+                    val err = questSystem.acceptQuest(sessionId, matchingQuest.id)
+                    if (err != null) outbound.send(OutboundEvent.SendError(sessionId, err))
                 }
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
             }

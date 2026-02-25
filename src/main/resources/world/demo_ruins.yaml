@@ -61,6 +61,11 @@ mobs:
   orchard_keeper:
     name: "an orchard keeper"
     room: mirror_orchard
+    quests:
+      - cull_the_beetles
+    dialogue:
+      root:
+        text: "These beetles are ruining my orchard. If you have time, I could use some help."
   archive_scribe:
     name: "a dust-choked archive scribe"
     room: archive_stacks
@@ -222,6 +227,20 @@ items:
     onUse:
       healHp: 8
     basePrice: 20
+
+quests:
+  cull_the_beetles:
+    name: "Cull the Beetles"
+    description: "The orchard keeper needs the beetle population thinned out to save the mirror orchard."
+    giver: orchard_keeper
+    objectives:
+      - type: KILL
+        targetKey: beetle_swarm
+        count: 3
+        description: "Kill 3 beetle swarms"
+    rewards:
+      xp: 200
+      gold: 30
 
 shops:
   trader_supplies:

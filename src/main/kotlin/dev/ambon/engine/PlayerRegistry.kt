@@ -199,6 +199,8 @@ class PlayerRegistry(
                 gold = boundRecord.gold,
                 createdAtEpochMs = boundRecord.createdAtEpochMs,
                 passwordHash = boundRecord.passwordHash,
+                activeQuests = boundRecord.activeQuests,
+                completedQuestIds = boundRecord.completedQuestIds,
             )
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
@@ -284,6 +286,11 @@ class PlayerRegistry(
         roomMembers.getOrPut(newRoom) { mutableSetOf() }.add(sessionId)
 
         // Save room change if claimed
+        persistIfClaimed(ps)
+    }
+
+    suspend fun saveQuestState(sessionId: SessionId) {
+        val ps = players[sessionId] ?: return
         persistIfClaimed(ps)
     }
 
@@ -387,6 +394,8 @@ class PlayerRegistry(
                 mana = ps.mana,
                 maxMana = ps.maxMana,
                 gold = ps.gold,
+                activeQuests = ps.activeQuests,
+                completedQuestIds = ps.completedQuestIds,
             ),
         )
     }
