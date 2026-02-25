@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.quest.QuestState
@@ -34,6 +35,9 @@ data class PlayerState(
     val passwordHash: String = "",
     var activeQuests: Map<String, QuestState> = emptyMap(),
     var completedQuestIds: Set<String> = emptySet(),
+    var unlockedAchievementIds: Set<String> = emptySet(),
+    var achievementProgress: Map<String, AchievementState> = emptyMap(),
+    var activeTitle: String? = null,
 ) {
     companion object {
         const val BASE_MAX_HP = 10
@@ -50,5 +54,6 @@ data class PlayerState(
             "ansiEnabled=$ansiEnabled, isStaff=$isStaff, " +
             "mana=$mana, maxMana=$maxMana, baseMana=$baseMana, gold=$gold, " +
             "activeQuests=${activeQuests.keys}, completedQuestIds=$completedQuestIds, " +
+            "unlockedAchievementIds=$unlockedAchievementIds, activeTitle=$activeTitle, " +
             "createdAtEpochMs=$createdAtEpochMs, passwordHash=<redacted>)"
 }

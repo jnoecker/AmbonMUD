@@ -1,5 +1,6 @@
 package dev.ambon.persistence
 
+import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.quest.QuestState
 
@@ -32,6 +33,9 @@ internal data class PlayerDto(
     val gold: Long = 0L,
     val activeQuests: Map<String, QuestState> = emptyMap(),
     val completedQuestIds: Set<String> = emptySet(),
+    val unlockedAchievementIds: Set<String> = emptySet(),
+    val achievementProgress: Map<String, AchievementState> = emptyMap(),
+    val activeTitle: String? = null,
 ) {
     fun toDomain(): PlayerRecord {
         // Legacy migration: old files/cache stored constitution=0; remap to base 10
@@ -60,6 +64,9 @@ internal data class PlayerDto(
             gold = gold,
             activeQuests = activeQuests,
             completedQuestIds = completedQuestIds,
+            unlockedAchievementIds = unlockedAchievementIds,
+            achievementProgress = achievementProgress,
+            activeTitle = activeTitle,
         )
     }
 
@@ -89,6 +96,9 @@ internal data class PlayerDto(
                 gold = record.gold,
                 activeQuests = record.activeQuests,
                 completedQuestIds = record.completedQuestIds,
+                unlockedAchievementIds = record.unlockedAchievementIds,
+                achievementProgress = record.achievementProgress,
+                activeTitle = record.activeTitle,
             )
     }
 }

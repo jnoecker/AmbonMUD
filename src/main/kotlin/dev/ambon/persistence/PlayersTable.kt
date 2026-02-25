@@ -27,6 +27,9 @@ object PlayersTable : Table("players") {
     val gold = long("gold").default(0L)
     val activeQuests = text("active_quests").default("{}")
     val completedQuestIds = text("completed_quest_ids").default("[]")
+    val unlockedAchievementIds = text("unlocked_achievement_ids").default("[]")
+    val achievementProgress = text("achievement_progress").default("{}")
+    val activeTitle = varchar("active_title", 64).nullable()
 
     override val primaryKey = PrimaryKey(id)
 }

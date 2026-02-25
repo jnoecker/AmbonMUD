@@ -3,6 +3,7 @@ package dev.ambon.persistence
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.quest.QuestState
 import dev.ambon.metrics.GameMetrics
@@ -19,6 +20,8 @@ private val questMapper: ObjectMapper =
 
 private val activeQuestsType = object : TypeReference<Map<String, QuestState>>() {}
 private val completedQuestIdsType = object : TypeReference<Set<String>>() {}
+private val unlockedAchievementIdsType = object : TypeReference<Set<String>>() {}
+private val achievementProgressType = object : TypeReference<Map<String, AchievementState>>() {}
 
 class PostgresPlayerRepository(
     private val database: Database,
@@ -108,6 +111,9 @@ class PostgresPlayerRepository(
                     it[gold] = record.gold
                     it[activeQuests] = questMapper.writeValueAsString(record.activeQuests)
                     it[completedQuestIds] = questMapper.writeValueAsString(record.completedQuestIds)
+                    it[unlockedAchievementIds] = questMapper.writeValueAsString(record.unlockedAchievementIds)
+                    it[achievementProgress] = questMapper.writeValueAsString(record.achievementProgress)
+                    it[activeTitle] = record.activeTitle
                 }
             }
         }
@@ -145,6 +151,15 @@ class PostgresPlayerRepository(
                 runCatching {
                     questMapper.readValue(this[PlayersTable.completedQuestIds], completedQuestIdsType)
                 }.getOrDefault(emptySet()),
+            unlockedAchievementIds =
+                runCatching {
+                    questMapper.readValue(this[PlayersTable.unlockedAchievementIds], unlockedAchievementIdsType)
+                }.getOrDefault(emptySet()),
+            achievementProgress =
+                runCatching {
+                    questMapper.readValue(this[PlayersTable.achievementProgress], achievementProgressType)
+                }.getOrDefault(emptyMap()),
+            activeTitle = this[PlayersTable.activeTitle],
         )
     }
 }
