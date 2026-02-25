@@ -1,5 +1,6 @@
 package dev.ambon
 
+import dev.ambon.admin.AdminHttpServer
 import dev.ambon.bus.BusPublisher
 import dev.ambon.bus.BusSubscriberSetup
 import dev.ambon.bus.InboundBus
@@ -319,6 +320,25 @@ class MudServer(
             null
         }
 
+    private val adminServer: AdminHttpServer? =
+        if (config.admin.enabled) {
+            AdminHttpServer(
+                config = config.admin,
+                players = players,
+                playerRepo = playerRepo,
+                mobs = mobs,
+                world = world,
+                metricsUrl =
+                    if (config.observability.metricsEnabled) {
+                        "http://localhost:${config.server.webPort}${config.observability.metricsEndpoint}"
+                    } else {
+                        ""
+                    },
+            )
+        } else {
+            null
+        }
+
     private var zoneHeartbeatJob: Job? = null
     private var playerIndexHeartbeatJob: Job? = null
     private var zoneLoadReportJob: Job? = null
@@ -524,6 +544,7 @@ class MudServer(
         if (config.observability.metricsEnabled) {
             log.info { "Metrics enabled at ${config.observability.metricsEndpoint}" }
         }
+        adminServer?.start()
     }
 
     private fun makeBusPublisher(manager: RedisConnectionManager): BusPublisher =
@@ -562,6 +583,7 @@ class MudServer(
     suspend fun awaitShutdown() = shutdownSignal.await()
 
     suspend fun stop() {
+        runCatching { adminServer?.stop() }
         runCatching { telnetTransport.stop() }
         runCatching { webTransport.stop() }
         runCatching { zoneHeartbeatJob?.cancelAndJoin() }
