@@ -694,6 +694,7 @@ class CommandRouter(
             }
 
             is Command.Kill -> {
+                dialogueSystem?.endConversation(sessionId)
                 val err = combat.startCombat(sessionId, cmd.target)
                 if (err != null) {
                     outbound.send(OutboundEvent.SendError(sessionId, err))
@@ -1010,6 +1011,7 @@ class CommandRouter(
                     return
                 }
                 combat.onMobRemovedExternally(targetMob.id)
+                dialogueSystem?.onMobRemoved(targetMob.id)
                 items.removeMobItems(targetMob.id)
                 mobs.remove(targetMob.id)
                 onMobSmited(targetMob.id)

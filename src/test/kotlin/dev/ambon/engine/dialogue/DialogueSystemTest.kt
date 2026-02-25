@@ -320,7 +320,7 @@ class DialogueSystemTest {
         }
 
     @Test
-    fun `conversation ends on player move`() =
+    fun `conversation ends on player move with notification`() =
         runTest {
             val env = createEnv()
             val sid = env.loginPlayer()
@@ -331,6 +331,12 @@ class DialogueSystemTest {
             assertTrue(env.system.isInConversation(sid))
             env.system.onPlayerMoved(sid)
             assertFalse(env.system.isInConversation(sid))
+
+            val outs = env.drain()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.text.contains("walk away") },
+                "Expected walk-away notification. got=$outs",
+            )
         }
 
     @Test
@@ -370,7 +376,7 @@ class DialogueSystemTest {
         }
 
     @Test
-    fun `onMobRemoved ends conversations with that mob`() =
+    fun `onMobRemoved ends conversations with that mob and notifies player`() =
         runTest {
             val env = createEnv()
             val sid = env.loginPlayer()
@@ -381,6 +387,12 @@ class DialogueSystemTest {
             assertTrue(env.system.isInConversation(sid))
             env.system.onMobRemoved(mobId)
             assertFalse(env.system.isInConversation(sid))
+
+            val outs = env.drain()
+            assertTrue(
+                outs.any { it is OutboundEvent.SendText && it.text.contains("no longer available") },
+                "Expected mob-removed notification. got=$outs",
+            )
         }
 
     @Test

@@ -115,14 +115,23 @@ class DialogueSystem(
         conversations.remove(sessionId)
     }
 
-    fun onPlayerMoved(sessionId: SessionId) {
-        conversations.remove(sessionId)
+    suspend fun onPlayerMoved(sessionId: SessionId) {
+        val state = conversations.remove(sessionId) ?: return
+        outbound.send(
+            OutboundEvent.SendText(
+                sessionId,
+                "You walk away from your conversation with ${state.mobName}.",
+            ),
+        )
     }
 
-    fun onMobRemoved(mobId: MobId) {
+    suspend fun onMobRemoved(mobId: MobId) {
         val toRemove = conversations.entries.filter { it.value.mobId == mobId }.map { it.key }
         for (sid in toRemove) {
-            conversations.remove(sid)
+            val state = conversations.remove(sid) ?: continue
+            outbound.send(
+                OutboundEvent.SendText(sid, "${state.mobName} is no longer available."),
+            )
         }
     }
 

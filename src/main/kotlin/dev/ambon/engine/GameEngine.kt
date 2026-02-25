@@ -155,6 +155,7 @@ class GameEngine(
             detailedFeedbackRoomBroadcastEnabled = engineConfig.combat.feedback.roomBroadcastEnabled,
             onMobRemoved = { mobId, roomId ->
                 mobSystem.onMobRemoved(mobId)
+                dialogueSystem.onMobRemoved(mobId)
                 for (p in players.playersInRoom(roomId)) {
                     gmcpEmitter.sendRoomRemoveMob(p.sessionId, mobId.value)
                 }
@@ -384,6 +385,7 @@ class GameEngine(
                         } else {
                             // No source — end combat if applicable, broadcast death, clean up
                             combatSystem.onMobRemovedExternally(mobId)
+                            dialogueSystem.onMobRemoved(mobId)
                             mobs.remove(mobId)
                             mobSystem.onMobRemoved(mobId)
                             statusEffectSystem.onMobRemoved(mobId)
@@ -468,6 +470,7 @@ class GameEngine(
 
         for (mobId in zoneMobIds) {
             combatSystem.onMobRemovedExternally(mobId)
+            dialogueSystem.onMobRemoved(mobId)
             mobs.remove(mobId)
             mobSystem.onMobRemoved(mobId)
         }
