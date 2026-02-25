@@ -1,5 +1,7 @@
 # AmbonMUD Scalability Refactor Plan
 
+> **Status: All four phases are fully implemented.** This document is a historical record of the original design. For the current architecture see `docs/engine-sharding-design.md` (zone-based sharding) and `docs/DesignDecisions.md` (rationale).
+
 ## Context
 
 AmbonMUD is currently a single-process MUD server. We want to evolve toward a horizontally-scaled gateway architecture ("scale the edge") with one authoritative game engine, async workers for heavy I/O, and Redis for caching/pub-sub — while keeping the single-process mode fully functional at every step.

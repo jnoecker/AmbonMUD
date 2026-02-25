@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Purpose
-This repository is a Kotlin MUD server ("AmbonMUD") with a tick-based event loop, telnet + WebSocket transports (with GMCP structured data), YAML world loading, class-based character progression with a spell/ability system, a GMCP-aware browser demo client, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching and pub/sub. It supports three deployment modes: `STANDALONE` (single-process, default), `ENGINE` (game logic + gRPC server), and `GATEWAY` (transports + gRPC client) for horizontal scaling, plus zone-based engine sharding with zone instancing for load distribution.
+This repository is a Kotlin MUD server ("AmbonMUD") with a tick-based event loop, telnet + WebSocket transports (with GMCP structured data), YAML world loading, class-based character progression with a spell/ability system, a shop/economy system (gold currency, mob gold drops, `buy`/`sell`/`list` commands), a GMCP-aware browser demo client, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching and pub/sub. It supports three deployment modes: `STANDALONE` (single-process, default), `ENGINE` (game logic + gRPC server), and `GATEWAY` (transports + gRPC client) for horizontal scaling, plus zone-based engine sharding with zone instancing for load distribution.
 
 Use this document as the default engineering playbook when making code or content changes.
 
@@ -70,7 +70,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Password validation: non-blank, max 72 chars (BCrypt-safe).
 - Case-insensitive online-name uniqueness is enforced.
 - Player room/last-seen persistence must stay intact.
-- Player progression persistence must stay intact (level/xp/attributes/mana/race/class).
+- Player progression persistence must stay intact (level/xp/attributes/mana/race/class/gold).
 - Keep atomic-write behavior for YAML persistence files.
 - The persistence backend is selectable via `ambonMUD.persistence.backend` (`YAML` or `POSTGRES`). Database connection defaults match the docker compose stack, so switching to Postgres only requires flipping the backend flag.
 - The persistence chain is: `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (optional) → `YamlPlayerRepository` or `PostgresPlayerRepository`. Changes to `PlayerRecord` must survive all three layers including JSON round-trip through Redis.
@@ -120,6 +120,20 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - New abilities: add to config, update `AbilityRegistryLoader` if new effect types are needed, add tests in `AbilitySystemTest`.
 - Class restrictions: each ability has a `classRestriction` field; players only learn abilities for their class.
 
+### Status effects
+- Effect definitions live in `AppConfig.kt` under `engine.statusEffects.definitions` and are loaded by `StatusEffectRegistryLoader`.
+- `StatusEffectSystem.kt` (in `engine/status/`) applies, ticks, and expires effects; call `applyToPlayer` or `applyToMob` from an ability handler.
+- To link an ability to a status effect, set `effect.type = APPLY_STATUS` and `effect.statusEffectId` in the ability definition; validate that the referenced ID exists (the config validator already checks this).
+- `CombatSystem` calls `getPlayerStatMods`, `hasMobEffect(STUN)`, and `absorbPlayerDamage` — keep these call sites in sync if you add new effect mechanics.
+- New effect types require updating the `EffectType` enum and the `tickPlayerEffects`/`tickMobEffects` branches in `StatusEffectSystem`.
+
+### Economy / shops
+- Shop definitions live in zone YAML under the `shops` map; `ShopRegistry` loads them at startup.
+- Items with `basePrice > 0` can be bought/sold; `engine.economy.buyMultiplier` and `sellMultiplier` scale prices.
+- Mob gold drops use `goldMin`/`goldMax` from the tier formula (overridable per mob in YAML).
+- Gold is stored on `PlayerRecord.gold` (a `Long`); it flows through all persistence layers automatically.
+- `buy`/`sell`/`list`/`gold` commands are in `CommandParser` and `CommandRouter` — adjust there for economy rule changes.
+
 ### Sharding / zone instancing
 - Zone-based sharding code lives in `src/main/kotlin/dev/ambon/sharding/`.
 - `ZoneRegistry` (Static or Redis) maps zones to engines; `InterEngineBus` (Local or Redis) handles cross-engine messaging.
@@ -160,3 +174,4 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - The scheduler is at `src/main/kotlin/dev/ambon/engine/scheduler/Scheduler.kt`.
 - Micrometer metrics use package `io.micrometer.prometheusmetrics` (not the deprecated `io.micrometer.prometheus`).
 - Staff access is granted by setting `isStaff: true` in the player's YAML file (or updating the `is_staff` column in the `players` table when using Postgres) — there is no in-game promotion command.
+- `ShopRegistry` is at `src/main/kotlin/dev/ambon/engine/ShopRegistry.kt`; shop domain types are in `src/main/kotlin/dev/ambon/domain/world/`.
