@@ -37,7 +37,7 @@ internal class DepthTrackingChannel<T>(
     fun tryReceive(): ChannelResult<T> {
         val result = channel.tryReceive()
         if (result.isSuccess) {
-            depth.updateAndGet { current -> (current - 1).coerceAtLeast(0) }
+            depth.decrementAndGet()
         }
         return result
     }

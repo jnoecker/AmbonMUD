@@ -220,6 +220,7 @@ class MudServer(
             items = items,
             clock = clock,
             progression = progression,
+            hashingContext = Dispatchers.IO,
         )
 
     // --- Sharding infrastructure (null when sharding is disabled) ---
