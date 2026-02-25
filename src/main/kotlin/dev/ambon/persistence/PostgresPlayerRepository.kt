@@ -2,7 +2,6 @@ package dev.ambon.persistence
 
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.metrics.GameMetrics
-import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ResultRow
@@ -15,35 +14,27 @@ class PostgresPlayerRepository(
     private val database: Database,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) : PlayerRepository {
-    override suspend fun findByName(name: String): PlayerRecord? {
-        val sample = Timer.start()
-        try {
-            return newSuspendedTransaction(Dispatchers.IO, database) {
+    override suspend fun findByName(name: String): PlayerRecord? =
+        metrics.timedLoad {
+            newSuspendedTransaction(Dispatchers.IO, database) {
                 PlayersTable
                     .selectAll()
                     .where { PlayersTable.nameLower eq name.trim().lowercase() }
                     .firstOrNull()
                     ?.toPlayerRecord()
             }
-        } finally {
-            sample.stop(metrics.playerRepoLoadTimer)
         }
-    }
 
-    override suspend fun findById(id: PlayerId): PlayerRecord? {
-        val sample = Timer.start()
-        try {
-            return newSuspendedTransaction(Dispatchers.IO, database) {
+    override suspend fun findById(id: PlayerId): PlayerRecord? =
+        metrics.timedLoad {
+            newSuspendedTransaction(Dispatchers.IO, database) {
                 PlayersTable
                     .selectAll()
                     .where { PlayersTable.id eq id.value }
                     .firstOrNull()
                     ?.toPlayerRecord()
             }
-        } finally {
-            sample.stop(metrics.playerRepoLoadTimer)
         }
-    }
 
     override suspend fun create(
         name: String,
@@ -110,8 +101,7 @@ class PostgresPlayerRepository(
     }
 
     override suspend fun save(record: PlayerRecord) {
-        val sample = Timer.start()
-        try {
+        metrics.timedSave {
             newSuspendedTransaction(Dispatchers.IO, database) {
                 PlayersTable.upsert(PlayersTable.id) {
                     it[id] = record.id.value
@@ -138,12 +128,6 @@ class PostgresPlayerRepository(
                     it[gold] = record.gold
                 }
             }
-            metrics.onPlayerSave()
-        } catch (e: Throwable) {
-            metrics.onPlayerSaveFailure()
-            throw e
-        } finally {
-            sample.stop(metrics.playerRepoSaveTimer)
         }
     }
 
