@@ -1,7 +1,7 @@
 AmbonMUD
 ========
 
-AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a production-quality, event-driven backend with telnet and WebSocket transports, data-driven world loading, class-based character progression, a spell/ability system, tiered NPC combat, a shop/economy system, GMCP structured data, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching.
+AmbonMUD is a Kotlin MUD server (runtime banner: "AmbonMUD"). It is a production-quality, event-driven backend with telnet and WebSocket transports, data-driven world loading, class-based character progression, a spell/ability system with status effects (DoT, HoT, STUN, ROOT, SHIELD), tiered NPC combat, a shop/economy system, GMCP structured data, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching.
 
 Current State
 -------------
@@ -19,7 +19,8 @@ Current State
 - Gold currency system: mobs drop gold on death, items have a `basePrice` for shop pricing, players carry a persistent gold balance.
 - Shop system: shops defined per-room in zone YAML (`shops` map), `buy`/`sell`/`list` commands, configurable buy/sell price multipliers (`engine.economy.*`).
 - Spell/ability system with mana pool, mana regen, cooldowns, class-specific abilities (12 abilities across 4 classes), and auto-learn on level-up.
-- Combat with `kill <mob>`, `flee`, and `cast <spell> [target]`; attribute-based damage scaling, dodge mechanics, and spell damage that bypasses mob armor.
+- Status effect system: DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD types; configurable stacking rules; player and mob targets; `effects`/`buffs`/`debuffs` command; `Char.StatusEffects` GMCP package.
+- Combat with `kill <mob>`, `flee`, and `cast <spell> [target]`; attribute-based damage scaling, dodge mechanics, stun/root handling, and spell damage that bypasses mob armor.
 - HP and mana regeneration over time (HP regen scales with CON + equipment; mana regen scales with WIS).
 - Rich social/communication commands: say, emote, tell, gossip, whisper, shout, ooc (out-of-character), pose, and give.
 - Staff/admin commands (goto, transfer, spawn, smite, kick, shutdown) gated behind `isStaff` flag.
@@ -169,6 +170,7 @@ Commands
 - `flee`: end combat (you stay in the room).
 - `cast <spell> [target]` or `c <spell> [target]`: cast a spell (damage spells need a target; self-heals do not).
 - `spells` or `abilities`: list your known spells with mana cost, cooldown, and description.
+- `effects`, `buffs`, or `debuffs`: list active status effects on your character.
 
 **Character**
 - `score` or `sc`: show character sheet (level, HP, mana, XP, gold, attributes, race, class, equipment stats).

@@ -120,6 +120,13 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - New abilities: add to config, update `AbilityRegistryLoader` if new effect types are needed, add tests in `AbilitySystemTest`.
 - Class restrictions: each ability has a `classRestriction` field; players only learn abilities for their class.
 
+### Status effects
+- Effect definitions live in `AppConfig.kt` under `engine.statusEffects.definitions` and are loaded by `StatusEffectRegistryLoader`.
+- `StatusEffectSystem.kt` (in `engine/status/`) applies, ticks, and expires effects; call `applyToPlayer` or `applyToMob` from an ability handler.
+- To link an ability to a status effect, set `effect.type = APPLY_STATUS` and `effect.statusEffectId` in the ability definition; validate that the referenced ID exists (the config validator already checks this).
+- `CombatSystem` calls `getPlayerStatMods`, `hasMobEffect(STUN)`, and `absorbPlayerDamage` — keep these call sites in sync if you add new effect mechanics.
+- New effect types require updating the `EffectType` enum and the `tickPlayerEffects`/`tickMobEffects` branches in `StatusEffectSystem`.
+
 ### Economy / shops
 - Shop definitions live in zone YAML under the `shops` map; `ShopRegistry` loads them at startup.
 - Items with `basePrice > 0` can be bought/sold; `engine.economy.buyMultiplier` and `sellMultiplier` scale prices.

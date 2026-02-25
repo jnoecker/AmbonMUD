@@ -41,6 +41,7 @@ Key stats:
 - **Transport**: Telnet (port 4000, NAWS/TTYPE/GMCP negotiation) + WebSocket / browser demo (port 8080, GMCP-aware sidebar panels)
 - **Engine**: Single-threaded coroutine dispatcher, 100 ms ticks
 - **Character**: 4 races (Human, Elf, Dwarf, Halfling), 4 classes (Warrior, Mage, Cleric, Rogue), 6 primary attributes (STR/DEX/CON/INT/WIS/CHA), 12 class-specific abilities with mana/cooldowns
+- **Status effects**: DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD; configurable stacking rules; `effects`/`buffs`/`debuffs` command; `Char.StatusEffects` GMCP package
 - **Economy**: Gold currency (persistent on `PlayerRecord`), mob gold drops, items with `basePrice`, in-room shops with `buy`/`sell`/`list` commands and configurable price multipliers
 - **Persistence**: Write-behind coalescing → optional Redis L2 cache → YAML files or PostgreSQL (selectable via config)
 - **World content**: YAML zone files (8 zones), multi-zone with cross-zone exits, optional `shops` map per zone
@@ -150,6 +151,10 @@ AmbonMUD/
 │   │   ├── CombatSystem.kt        # Fight resolution (melee + spell kills + gold drops)
 │   │   ├── RegenSystem.kt         # HP + mana regeneration
 │   │   ├── ShopRegistry.kt        # Shop lookup by room; buy/sell price computation
+│   │   ├── status/
+│   │   │   ├── StatusEffectSystem.kt     # Timed effects engine (DoT/HoT/STUN/ROOT/SHIELD/buffs)
+│   │   │   ├── StatusEffectDefinition.kt # Immutable effect type definitions
+│   │   │   └── StatusEffectRegistry.kt   # Config-driven effect lookup
 │   │   ├── commands/
 │   │   │   ├── CommandParser.kt   # String → Command (pure function)
 │   │   │   └── CommandRouter.kt   # Command → OutboundEvents (logic)
@@ -390,7 +395,7 @@ A pure function `parse(line: String): Command`. No side effects. Returns a seale
 | Communication | `Say`, `Emote`, `Tell`, `Gossip`, `Whisper`, `Shout`, `Ooc`, `Pose` |
 | Items | `Get`, `Drop`, `Wear`, `Remove`, `Inventory`, `Equipment`, `Use`, `Give` |
 | Combat | `Kill`, `Flee` |
-| Abilities | `Cast`, `Spells` |
+| Abilities | `Cast`, `Spells`, `Effects` (list active status effects) |
 | Character | `Score` |
 | Economy | `Balance` (gold), `ShopList` (list/shop), `Buy`, `Sell` |
 | Social | `Who`, `Help` |
@@ -627,6 +632,12 @@ Key operations:
 - `dropMobItemsToRoom(mobId, roomId)` — loot drop on mob death
 
 **Keyword matching:** Case-insensitive substring match on `displayName` first, then `description` as fallback. If `matchByKey = true`, only exact `keyword` match is accepted.
+
+### StatusEffectSystem
+
+**File:** `src/main/kotlin/dev/ambon/engine/status/StatusEffectSystem.kt`
+
+Manages timed status effects on players and mobs. Ticked in the engine loop between combat and regen. Effect types — `DOT`, `HOT`, `STAT_BUFF`, `STAT_DEBUFF`, `STUN`, `ROOT`, `SHIELD` — are defined in `application.yaml` under `ambonMUD.engine.statusEffects.definitions`. Stacking behavior is configurable per effect (`REFRESH`, `STACK`, `MAX_STACKS`). `CombatSystem` consults `StatusEffectSystem` for stat modifiers, stun checks, and damage absorption; `MobSystem` consults it to skip movement for rooted mobs. The `effects`/`buffs`/`debuffs` command and `Char.StatusEffects` GMCP package expose active effects to players.
 
 ### ShopRegistry
 
