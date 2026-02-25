@@ -148,8 +148,7 @@ class RedisOutboundBus(
 
     private fun Envelope.withSignature(secret: String): Envelope = copy(signature = hmacSha256(secret, payloadToSign()))
 
-    private fun Envelope.hasValidSignature(secret: String): Boolean =
-        signature.isNotBlank() && signature == hmacSha256(secret, payloadToSign())
+    private fun Envelope.hasValidSignature(secret: String): Boolean = isValidHmac(secret, payloadToSign(), signature)
 
     private fun Envelope.toEvent(): OutboundEvent? =
         when (type) {

@@ -9,6 +9,7 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.persistence.PlayerCreationRequest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
@@ -96,7 +97,7 @@ class GameEngineLoginFlowTest {
 
             val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
@@ -168,7 +169,7 @@ class GameEngineLoginFlowTest {
 
             val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
@@ -260,7 +261,7 @@ class GameEngineLoginFlowTest {
 
             val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
             val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
@@ -517,8 +518,8 @@ class GameEngineLoginFlowTest {
 
             val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
-            repo.create("Observer", world.startRoom, 0L, BCrypt.hashpw("pw", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
+            repo.create(PlayerCreationRequest("Observer", world.startRoom, 0L, BCrypt.hashpw("pw", BCrypt.gensalt()), ansiEnabled = false))
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, repo, items)
 
@@ -606,7 +607,7 @@ class GameEngineLoginFlowTest {
 
             val world = WorldLoader.loadFromResource("world/test_world.yaml")
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, repo, items)
 
@@ -677,7 +678,7 @@ class GameEngineLoginFlowTest {
             // ok_small world: start room 'ok_small:a', mob 'rat' in 'ok_small:b', exit north from a to b
             val world = WorldLoader.loadFromResource("world/ok_small.yaml")
             val repo = InMemoryPlayerRepository()
-            repo.create("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
             val items = ItemRegistry()
             val players = PlayerRegistry(world.startRoom, repo, items)
 

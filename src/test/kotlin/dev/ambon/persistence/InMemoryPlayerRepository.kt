@@ -1,6 +1,5 @@
 package dev.ambon.persistence
 
-import dev.ambon.domain.ids.RoomId
 import java.util.concurrent.atomic.AtomicLong
 
 class InMemoryPlayerRepository : PlayerRepository {
@@ -11,39 +10,25 @@ class InMemoryPlayerRepository : PlayerRepository {
 
     override suspend fun findById(id: PlayerId): PlayerRecord? = players[id]
 
-    override suspend fun create(
-        name: String,
-        startRoomId: RoomId,
-        nowEpochMs: Long,
-        passwordHash: String,
-        ansiEnabled: Boolean,
-        race: String,
-        playerClass: String,
-        strength: Int,
-        dexterity: Int,
-        constitution: Int,
-        intelligence: Int,
-        wisdom: Int,
-        charisma: Int,
-    ): PlayerRecord {
+    override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
         val id = PlayerId(nextId.getAndIncrement())
         val record =
             PlayerRecord(
                 id = id,
-                name = name,
-                roomId = startRoomId,
-                createdAtEpochMs = nowEpochMs,
-                lastSeenEpochMs = nowEpochMs,
-                passwordHash = passwordHash,
-                ansiEnabled = ansiEnabled,
-                race = race,
-                playerClass = playerClass,
-                strength = strength,
-                dexterity = dexterity,
-                constitution = constitution,
-                intelligence = intelligence,
-                wisdom = wisdom,
-                charisma = charisma,
+                name = request.name,
+                roomId = request.startRoomId,
+                createdAtEpochMs = request.nowEpochMs,
+                lastSeenEpochMs = request.nowEpochMs,
+                passwordHash = request.passwordHash,
+                ansiEnabled = request.ansiEnabled,
+                race = request.race,
+                playerClass = request.playerClass,
+                strength = request.strength,
+                dexterity = request.dexterity,
+                constitution = request.constitution,
+                intelligence = request.intelligence,
+                wisdom = request.wisdom,
+                charisma = request.charisma,
             )
         players[id] = record
         return record

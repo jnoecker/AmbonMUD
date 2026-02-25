@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
-import dev.ambon.domain.ids.RoomId
 import dev.ambon.metrics.GameMetrics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -71,25 +70,11 @@ class YamlPlayerRepository(
             }
         }
 
-    override suspend fun create(
-        name: String,
-        startRoomId: RoomId,
-        nowEpochMs: Long,
-        passwordHash: String,
-        ansiEnabled: Boolean,
-        race: String,
-        playerClass: String,
-        strength: Int,
-        dexterity: Int,
-        constitution: Int,
-        intelligence: Int,
-        wisdom: Int,
-        charisma: Int,
-    ): PlayerRecord =
+    override suspend fun create(request: PlayerCreationRequest): PlayerRecord =
         withContext(Dispatchers.IO) {
-            val nm = name.trim()
+            val nm = request.name.trim()
             require(nm.isNotEmpty()) { "name cannot be blank" }
-            require(passwordHash.isNotEmpty()) { "passwordHash cannot be blank" }
+            require(request.passwordHash.isNotEmpty()) { "passwordHash cannot be blank" }
 
             // Enforce unique name (case-insensitive) for now
             val existing = findByName(nm)
@@ -102,19 +87,19 @@ class YamlPlayerRepository(
                 PlayerRecord(
                     id = PlayerId(id),
                     name = nm,
-                    roomId = startRoomId,
-                    createdAtEpochMs = nowEpochMs,
-                    lastSeenEpochMs = nowEpochMs,
-                    passwordHash = passwordHash,
-                    ansiEnabled = ansiEnabled,
-                    race = race,
-                    playerClass = playerClass,
-                    strength = strength,
-                    dexterity = dexterity,
-                    constitution = constitution,
-                    intelligence = intelligence,
-                    wisdom = wisdom,
-                    charisma = charisma,
+                    roomId = request.startRoomId,
+                    createdAtEpochMs = request.nowEpochMs,
+                    lastSeenEpochMs = request.nowEpochMs,
+                    passwordHash = request.passwordHash,
+                    ansiEnabled = request.ansiEnabled,
+                    race = request.race,
+                    playerClass = request.playerClass,
+                    strength = request.strength,
+                    dexterity = request.dexterity,
+                    constitution = request.constitution,
+                    intelligence = request.intelligence,
+                    wisdom = request.wisdom,
+                    charisma = request.charisma,
                 )
 
             save(record)

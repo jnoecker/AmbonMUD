@@ -59,7 +59,7 @@ class PostgresPlayerRepositoryTest {
         runTest {
             val repo = PostgresPlayerRepository(database)
 
-            val created = repo.create("Alice", RoomId("test:a"), 1234L, "hash123", ansiEnabled = false)
+            val created = repo.create(PlayerCreationRequest("Alice", RoomId("test:a"), 1234L, "hash123", ansiEnabled = false))
 
             assertEquals("Alice", created.name)
             assertEquals(RoomId("test:a"), created.roomId)
@@ -80,7 +80,7 @@ class PostgresPlayerRepositoryTest {
         runTest {
             val repo = PostgresPlayerRepository(database)
 
-            val created = repo.create("Bob", RoomId("test:a"), 1000L, "hash456", ansiEnabled = false)
+            val created = repo.create(PlayerCreationRequest("Bob", RoomId("test:a"), 1000L, "hash456", ansiEnabled = false))
             val updated =
                 created.copy(
                     roomId = RoomId("test:b"),
@@ -107,11 +107,11 @@ class PostgresPlayerRepositoryTest {
         runTest {
             val repo = PostgresPlayerRepository(database)
 
-            repo.create("Carol", RoomId("test:a"), 1L, "hash789", ansiEnabled = false)
+            repo.create(PlayerCreationRequest("Carol", RoomId("test:a"), 1L, "hash789", ansiEnabled = false))
 
             val ex =
                 try {
-                    repo.create("carol", RoomId("test:a"), 1L, "hash789", ansiEnabled = false)
+                    repo.create(PlayerCreationRequest("carol", RoomId("test:a"), 1L, "hash789", ansiEnabled = false))
                     fail("Expected PlayerPersistenceException")
                 } catch (e: PlayerPersistenceException) {
                     e
