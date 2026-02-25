@@ -472,6 +472,14 @@ ambonMUD:
     metricsHttpPort: 9090
     staticTags: {}
 
+  admin:
+    enabled: false
+    port: 9091
+    # token must be non-blank when enabled=true
+    token: ""
+    # Optional Grafana URL shown as a link on the overview page
+    grafanaUrl: ""
+
   logging:
     level: INFO
     packageLevels:
