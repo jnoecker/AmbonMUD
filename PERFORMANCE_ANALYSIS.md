@@ -8,15 +8,21 @@
 
 ## Executive Summary
 
-AmbonMUD's STANDALONE mode is reasonably well-architected for moderate scale (~500 concurrent players, ~100 combats) but suffers from **medium-severity inefficiencies** that cause unnecessary CPU burn and GC pressure under load. The single-threaded game engine (100ms ticks) relies on efficient hot-path execution, but current implementations contain:
+AmbonMUD's STANDALONE mode is reasonably well-architected for moderate scale (~500 concurrent players, ~100 combats) but suffers from **algorithmic inefficiencies and architectural fairness risks** that cause unnecessary CPU burn, GC pressure, and latency spikes under load. The single-threaded game engine (100ms ticks) relies on efficient hot-path execution, but current implementations contain:
 
+**Algorithmic inefficiencies:**
 - **Hidden O(n²) complexity** in combat and effect flushing
 - **Redundant data structure allocations** every tick
 - **Inefficient string operations** in high-frequency GMCP serialization
 - **Suboptimal transport buffering** for GMCP frames
 - **Unnecessary collections conversions** in dirty-tracking
 
-Performance degrades without proportional resource usage because the engine thread becomes CPU-bound due to **algorithmic inefficiency** rather than raw computation. A 30-50% improvement in allocation rate and tick-time variance is achievable through targeted optimizations.
+**Fairness & latency risks (independent of CPU utilization):**
+- **Inbound drain monopolization:** Event processing can consume entire tick budget, blocking simulation
+- **Auth loop stalls:** Login/auth calls suspend the authoritative loop, blocking all players during burst login events
+- **Scheduler overload amplification:** O(n) recount when already backlogged worsens perceived lag during spikes
+
+Performance degrades without proportional resource usage because the engine thread experiences both **algorithmic inefficiency** (unnecessary allocations/computations) and **scheduling unfairness** (some phases starving others). A 30-50% improvement in allocation rate and tick-time variance is achievable through targeted optimizations; additional 20-30% improvement in worst-case latency through fairness guardrails.
 
 ---
 
@@ -184,9 +190,188 @@ private fun countStacks(list: List<ActiveEffect>?, defId: StatusEffectId): Int =
 
 ---
 
+### 4. Engine Tick Fairness Risk: Inbound Drain Monopolization
+
+**Location:** `src/main/kotlin/dev/ambon/engine/GameEngine.kt:380-395` (inbound drain phase)
+
+**Problem:**
+The tick loop drains the inbound event queue without time budget awareness:
+
+```kotlin
+suspend fun run() {
+    while (isActive) {
+        // Process inbound events (unbounded)
+        var eventsProcessed = 0
+        while (true) {
+            val event = inbound.tryReceive().getOrNull() ?: break
+            handle(event)
+            if (++eventsProcessed >= maxInboundEventsPerTick) break  // Only cap exists
+        }
+
+        // Simulation phases (may be starved)
+        tick()  // Combat, regen, behavior trees, etc.
+        flushDirtyGmcpVitals()
+        // ... other flushes
+    }
+}
+```
+
+**Fairness issue:**
+- **Inbound phase:** Can consume entire 100ms tick budget if queue is deep
+- **Simulation phase:** Pushed towards the tick deadline, compressed, or incomplete
+- **Perception:** "Server is laggy" even though inbound is processed quickly
+
+**Scenario:**
+- 100 players log in simultaneously → 100 `Connected` events queued
+- With `maxInboundEventsPerTick = Int.MAX_VALUE`, all 100 processed
+- Each triggers login/auth → 100ms spent in inbound phase
+- Simulation compressed into remaining time → visible latency
+
+**Cost:**
+- Under burst login: Auth/DB calls block the tick loop
+- All players see delayed combat ticks, movement updates, GMCP flushes
+- Perceived lag even though login itself completes "quickly"
+
+**Why it's a fairness problem (not just a CPU problem):**
+- CPU utilization may be **low** (single-threaded, mostly waiting on I/O)
+- But tick variance is **high** (some ticks 5ms, others 95ms)
+- Players experience jitter and delayed feedback independent of server load
+
+**Impact:**
+- Login bursts (peak hours, restart events) cause visible lag for all players
+- Responsiveness feels "unfair" across phases within a tick
+- No feedback to players/admin about what's causing stall
+
+**Severity:** **HIGH** - Affects user perception independent of CPU/RAM availability
+
+---
+
+### 5. Authoritative Loop Stall Risk: Login/Auth Blocking Simulation
+
+**Location:** `src/main/kotlin/dev/ambon/engine/GameEngine.kt:1100-1250` (login sequence in `handle(Connected)`)
+
+**Problem:**
+The login path executes synchronously on the engine thread:
+
+```kotlin
+InboundEvent.Connected(sid, ansiEnabled) -> {
+    val player = playerRepo.findByName(name)  // ← Suspends, but blocks loop
+    // ... password check
+    val record = playerRepo.create(request)   // ← More I/O wait
+    // ... Initialize systems
+    finalizeSuccessfulLogin(sid)
+    outbound.send(...)  // Finally ready
+}
+```
+
+Although the work runs on `Dispatchers.IO`, the **engine coroutine itself suspends** until completion. While suspended:
+- All other players' ticks are **blocked**
+- Combat ticks don't advance
+- GMCP flushes don't happen
+- Simulation appears frozen
+
+**Scenario:**
+- 50 players online, in combat
+- 10 new players connect simultaneously
+- Each login: `playerRepo.findByName()` + `create()` = 100-500ms per login
+- 10 logins × 200ms = 2000ms of suspension total
+- Combat loop suspended for ~2 seconds
+- All 50 players see 20 ticks skipped
+
+**Cost:**
+- **Per login burst:** 100-500ms per new player
+- **Multiplier:** Sequential logins multiply stall duration
+- **Perception:** "Entire server froze, then resumed" (catastrophic to player experience)
+
+**Why suspension blocks simulation:**
+```kotlin
+suspend fun handle(event: InboundEvent) = when (event) {
+    is Connected -> {
+        val player = playerRepo.findByName(event.name)  // Engine suspended HERE
+        // No simulation progress until this returns
+    }
+}
+```
+
+The authoritative loop **awaits** the login completion before proceeding to tick simulation.
+
+**Impact:**
+- Peak-hour login events cause server-wide stall
+- Hard to debug (low CPU/memory during stall, but high latency)
+- No graceful degradation (either login succeeds or server hangs)
+
+**Severity:** **HIGH** - Affects all players when login burst occurs, not just login requester
+
+---
+
+### 6. Scheduler Overload: O(n) Recount When Backlogged
+
+**Location:** `src/main/kotlin/dev/ambon/engine/scheduler/Scheduler.kt` (runDue, overload path)
+
+**Problem:**
+When the scheduler detects backlog (overdue actions), it recomputes overrun metrics:
+
+```kotlin
+fun runDue(now: Long, maxPerTick: Int = 50): List<ScheduledAction> {
+    val due = mutableListOf<ScheduledAction>()
+    var ran = 0
+
+    // Process up to max
+    for (action in queue) {  // ← Iteration in insertion order
+        if (ran >= maxPerTick) break
+        if (action.runAtMs <= now) {
+            due.add(action)
+            ran++
+        }
+    }
+
+    // Overload accounting (runs during backlog, when already stressed)
+    if (queue.size > BACKLOG_THRESHOLD) {
+        // Count overdue actions for metrics/logging
+        val overdue = queue.count { it.runAtMs <= now }  // ← O(queue size)
+        val ages = queue.map { now - it.runAtMs }         // ← O(queue size)
+        metrics.recordOverload(overdue, ages.maxOrNull() ?: 0)
+    }
+
+    return due
+}
+```
+
+**Why it's pathological:**
+- Scheduler is backlogged when the server is already under stress
+- At worst-case moment, you add O(n) scan work
+- This increases tick time exactly when you want to clear the backlog faster
+
+**Scenario:**
+- Heavy spell casting / ability spam → 1000+ scheduled actions queued
+- Scheduler hits cap: `maxPerTick = 50` → only 50 run per tick
+- Queue grows faster than it drains → backlog
+- Each tick: 50 actions run + O(1000) recount = latency increases
+- Backlog grows → worse performance → actions take longer → spiral
+
+**Cost:**
+- **Per tick when backlogged:** 1000 extra iterations
+- **During spike:** Happens for 10-20 consecutive ticks
+- **Total:** 10,000-20,000 "wasted" iterations during overload (exactly when CPU is precious)
+
+**Why it's an overload problem specifically:**
+- Under normal load: backlog never reaches threshold, no scanning
+- Under overload: scanning amplifies the stall
+- Makes overload events longer and more visible to players
+- "Graceful degradation" becomes "cascading failure"
+
+**Impact:**
+- Spell spam / ability burst events trigger visible lag
+- Scheduler backlog grows instead of clearing
+- Players experience "jank" even though underlying work is bounded
+
+**Severity:** **MEDIUM-HIGH** - Doesn't happen often, but when it does, makes things worse
+
+---
+
 ## Major Findings (MEDIUM Priority)
 
-### 4. CombatSystem: Repeated Equipment Lookups
+### 7. CombatSystem: Repeated Equipment Lookups
 
 **Location:** `src/main/kotlin/dev/ambon/engine/CombatSystem.kt:515-532`
 
@@ -241,7 +426,7 @@ private fun strDamageBonus(player: PlayerState): Int {
 
 ---
 
-### 5. GMCP: String Interpolation + O(n) jsonEscape() Per Field
+### 8. GMCP: String Interpolation + O(n) jsonEscape() Per Field
 
 **Location:** `src/main/kotlin/dev/ambon/engine/GmcpEmitter.kt:27-269`
 
@@ -304,7 +489,7 @@ private fun String.jsonEscape(): String =
 
 ---
 
-### 6. OutboundRouter: Multiple HashMap Lookups Per Frame
+### 9. OutboundRouter: Multiple HashMap Lookups Per Frame
 
 **Location:** `src/main/kotlin/dev/ambon/transport/OutboundRouter.kt:156-177`
 
@@ -356,7 +541,7 @@ private fun sendPrompt(sessionId: SessionId) {
 
 ---
 
-### 7. Transport: GMCP Frame Bypass Batch Flush
+### 10. Transport: GMCP Frame Bypass Batch Flush
 
 **Location:** `src/main/kotlin/dev/ambon/transport/NetworkSession.kt:278, 236-258`
 
@@ -416,7 +601,7 @@ is OutboundFrame.Gmcp -> {
 
 ---
 
-### 8. WebSocket Transport: O(n) Line Parsing + Double Scan
+### 11. WebSocket Transport: O(n) Line Parsing + Double Scan
 
 **Location:** `src/main/kotlin/dev/ambon/transport/KtorWebSocketTransport.kt:214-309`
 
@@ -494,7 +679,7 @@ internal fun splitIncomingLines(payload: String): List<String> {
 
 ---
 
-### 9. GMCP Envelope Parsing: String Search Chain
+### 12. GMCP Envelope Parsing: String Search Chain
 
 **Location:** `src/main/kotlin/dev/ambon/transport/KtorWebSocketTransport.kt:328-364`
 
@@ -548,7 +733,7 @@ internal fun tryParseGmcpEnvelope(text: String): Pair<String, String>? {
 
 ## Minor Findings (LOW Priority)
 
-### 10. drainDirty() Set-to-List Conversions
+### 13. drainDirty() Set-to-List Conversions
 
 **Location:** `src/main/kotlin/dev/ambon/engine/GameEngine.kt:1430, 1436, 1443, 1450, 1459`
 
@@ -588,7 +773,7 @@ private fun <T> drainDirty(set: MutableSet<T>): List<T> {
 
 ---
 
-### 11. AnsiRenderer: String Concatenation Per Frame
+### 14. AnsiRenderer: String Concatenation Per Frame
 
 **Location:** `src/main/kotlin/dev/ambon/transport/AnsiRenderer.kt:10-21`
 
@@ -638,7 +823,7 @@ private val brightRed = "\u001B[91m"
 
 ---
 
-### 12. ThreatTable: Filter Allocation Per Mob Action
+### 15. ThreatTable: Filter Allocation Per Mob Action
 
 **Location:** `src/main/kotlin/dev/ambon/engine/ThreatTable.kt:37-44`
 
@@ -772,6 +957,102 @@ Before implementing optimizations, run profiling to confirm:
 3. **CPU allocation rate** (objects/sec)
 4. **Engine thread CPU usage** (should be <<100%)
 5. **GMCP message throughput** (messages/sec)
+6. **Inbound queue age / event delay** (time from enqueue → processing, p50/p95/p99)
+7. **Outbound queue age / backlog per session** (time from enqueue → flush, p50/p95/p99)
+8. **Per-phase tick breakdown** (inbound drain, simulation phases, dirty flush, outbound flush)
+9. **Tick phase debt counters** (how often a phase exceeds budget or is skipped due to overrun)
+
+---
+
+## Observability Gaps to Close
+
+The current metrics infrastructure is strong for answering "**how long did work take**", but diagnosing STANDALONE degradation under **low CPU/RAM utilization** requires visibility into "**how long did work wait**".
+
+### Gap 1: Queue Latency Signals
+
+**Missing metrics:**
+- Inbound queue age (p50/p95/p99 age of events when processed)
+- Outbound queue age per session (how long do GMCP frames wait to flush)
+- Queue depth over time (detect accumulation patterns)
+
+**Why this matters:**
+- Current symptom: "Server feels laggy, but CPU is 20% and RAM is fine"
+- Root cause could be: Inbound queue backed up by slow auth, blocking simulation
+- Without visibility, you can't diagnose (looks like a non-issue to monitoring)
+
+**Implementation:**
+```kotlin
+// In GameEngine/OutboundRouter
+private val inboundQueueAge = mutableListOf<Long>()  // Track event age when processed
+private val outboundQueueDepth = metrics.gauge("outbound.queue.depth")
+
+fun onEventProcessed(event: InboundEvent, ageMs: Long) {
+    metrics.recordInboundLatency(ageMs)  // p50/p95/p99
+}
+```
+
+### Gap 2: Per-Phase Tick Attribution
+
+**Missing metrics:**
+- Time spent in inbound drain phase
+- Time spent in simulation phase
+- Time spent in GMCP flush phase
+- Time spent in outbound flush phase
+
+**Why this matters:**
+- Knowing "tick took 120ms total" doesn't tell you where the time went
+- Inbound phase could be 100ms (auth stalled), simulation 10ms, flushes 10ms
+- Without breakdown, you can't identify which phase to optimize
+
+**Implementation:**
+```kotlin
+// In GameEngine.run()
+val inboundTimer = Timer.start()
+// ... drain inbound
+val inboundMs = inboundTimer.stop()
+
+val simulationTimer = Timer.start()
+// ... run tick systems
+val simulationMs = simulationTimer.stop()
+
+metrics.recordTickPhase("inbound", inboundMs)
+metrics.recordTickPhase("simulation", simulationMs)
+metrics.recordTickPhase("flush", flushMs)
+```
+
+### Gap 3: Debt Signals (Phase Budget Overruns)
+
+**Missing metrics:**
+- How often does inbound drain exceed its budget
+- How often is simulation phase compressed or skipped
+- How often does GMCP flush exceed tick deadline
+- Queue depth when overruns happen
+
+**Why this matters:**
+- A fairness issue (inbound starves simulation) is invisible without debt tracking
+- Phase budget overruns are the **first symptom** of fairness degradation
+- Detection is the prerequisite for both diagnosis and alerting
+
+**Implementation:**
+```kotlin
+// In GameEngine.run()
+if (inboundMs > INBOUND_BUDGET) {
+    metrics.incrementCounter("tick.phase.overrun.inbound")
+    metrics.gauge("tick.inbound.debt", inboundMs - INBOUND_BUDGET)
+}
+
+if (totalTickMs > TICK_BUDGET) {
+    metrics.incrementCounter("tick.overrun")
+    metrics.gauge("tick.debt", totalTickMs - TICK_BUDGET)
+}
+```
+
+### Integration with Alerting
+
+Once these metrics are captured, add alerts:
+- **Alert:** Inbound queue age p95 > 50ms → investigate login/auth bottleneck
+- **Alert:** Tick phase overrun counter increasing → fairness issue, need rebalancing
+- **Alert:** Outbound queue depth peak per session > 100 frames → backpressure happening
 
 ---
 
@@ -796,6 +1077,69 @@ Before implementing optimizations, run profiling to confirm:
 8. Combine WebSocket line parsing + sanitization
 
 **Expected improvement:** 10-20% further reduction
+
+### Phase 0: Latency/Fairness Guardrails (CRITICAL - Implement First)
+
+**Problem:** Phases 1-3 address algorithmic efficiency, but the **fairness risks** (inbound monopolization, auth stalls, overload amplification) can cause severe latency spikes **even after optimizations**. These require architectural guardrails, not just tweaks.
+
+**Recommended changes:**
+
+1. **Add observability** (see "Observability Gaps to Close" section)
+   - Metrics for queue age, per-phase tick breakdown, phase debt
+   - Enables diagnosis of "laggy but low CPU" scenarios
+   - **Effort:** 2-3 hours
+   - **Benefit:** Visibility to understand other phases' impact
+
+2. **Implement time-budgeted inbound drain**
+   ```kotlin
+   // In GameEngine.run()
+   val inboundBudgetMs = 30L  // Reserve 30ms for inbound
+   val inboundDeadline = clock.millis() + inboundBudgetMs
+
+   while (clock.millis() < inboundDeadline) {
+       val event = inbound.tryReceive().getOrNull() ?: break
+       handle(event)
+   }
+
+   // Simulation gets remaining 70ms, guaranteed
+   tick()
+   ```
+   - **Effort:** 1-2 hours
+   - **Benefit:** Prevents inbound from starving simulation under burst traffic
+   - **Impact:** Reduced tick variance, fairer responsiveness during login bursts
+
+3. **Decouple auth/login from authoritative loop**
+   ```kotlin
+   // Current: Login blocks entire loop
+   is Connected(name) -> {
+       val player = playerRepo.findByName(name)  // Suspends engine loop
+   }
+
+   // Proposed: Complete async, notify when ready
+   is Connected(name) -> {
+       launch(Dispatchers.IO) {
+           val player = playerRepo.findByName(name)
+           // Async completion → Send LoginComplete event
+           inbound.send(InboundEvent.LoginCompleted(sid, player))
+       }
+   }
+   ```
+   - **Effort:** 3-4 hours (requires event hierarchy changes)
+   - **Benefit:** Auth/DB stalls don't block simulation for other players
+   - **Impact:** Eliminates server-wide freeze during login bursts
+
+4. **Fix Scheduler overload amplification**
+   - Replace O(n) recount with O(1) tracking
+   - Track queue age as items enter/leave
+   - Record metrics on backlog detection
+   - **Effort:** 1-2 hours
+   - **Benefit:** Overload events don't self-amplify
+
+**Expected improvement from Phase 0:**
+- Worst-case tick latency: 100+ ms → 40-50 ms
+- "Laggy but low CPU" becomes diagnosable
+- Graceful degradation instead of cascading failure during spikes
+- Prioritizes responsiveness fairness over throughput
 
 ---
 
@@ -825,8 +1169,39 @@ All identified optimizations are **low-risk** because:
 
 ## Conclusion
 
-AmbonMUD's performance is primarily limited by **algorithmic inefficiency** rather than raw computational cost. The single-threaded engine design is sound, but multiple subsystems contain O(n²) loops, redundant allocations, and inefficient string operations that compound under load.
+AmbonMUD's STANDALONE mode suffers from **two distinct performance problems** that require different solutions:
 
-**30-50% improvement is achievable** through targeted optimizations without major architectural changes. Recommend starting with the three "critical fixes" (RegenSystem, flushDirtyGmcpMobs, jsonEscape) which are low-effort, low-risk, and high-impact.
+### Problem 1: Algorithmic Inefficiency (CPU/GC pressure)
+- Root cause: O(n²) loops, redundant allocations, inefficient string operations in hot paths
+- **Symptom:** High CPU utilization (70%+) proportional to load
+- **Solution:** Phases 1-3 optimizations (30-50% improvement achievable)
+- **Risk:** Low (localized changes, existing tests validate)
 
-The current STANDALONE mode can realistically support **800-1000 concurrent players** (up from ~500) with these optimizations, and **2000+ with full optimization suite**.
+### Problem 2: Scheduling Unfairness (latency variance)
+- Root cause: Inbound drain monopolizes tick budget; auth/login blocks authoritative loop; overload amplification
+- **Symptom:** "Laggy but low CPU" (10-30% utilization); worst-case latency spikes; login bursts freeze server
+- **Solution:** Phase 0 guardrails (architectural fairness, observability, time budgets)
+- **Risk:** Medium (requires event model changes for auth decoupling, but high-value)
+
+### Recommended Sequence
+
+1. **Implement Phase 0 first** (observability + fairness guardrails)
+   - Adds visibility to diagnose "low utilization lag"
+   - Time-budgets prevent inbound monopolization
+   - Async auth decoupling eliminates server-wide freezes
+   - **Payoff:** 50-70% reduction in worst-case latency
+   - **Effort:** 6-8 hours (modest architectural change)
+
+2. **Then implement Phases 1-3** (algorithmic optimizations)
+   - No longer fighting fairness issues while optimizing
+   - Focus on eliminating redundant work
+   - **Payoff:** 30-50% reduction in average tick time and allocations
+   - **Effort:** 4-6 hours
+
+### Performance Ceiling
+
+- **Current:** ~500 concurrent players, ~50 combats, visible lag during login/combat bursts
+- **With Phase 0 only:** ~800-1000 players, ~100 combats, fair responsiveness under load
+- **With Phases 0+1+2+3:** ~2000+ players, ~200+ combats, consistent sub-20ms tick times
+
+The single-threaded engine design is fundamentally sound. Both problems are **solvable without architectural redesign** — they're about algorithmic efficiency and scheduling fairness within the current model.
