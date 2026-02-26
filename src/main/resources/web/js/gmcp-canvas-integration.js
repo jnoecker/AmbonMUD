@@ -211,10 +211,12 @@ class GMCPCanvasIntegration {
 
         // If AoE, show area
         if (data.radius) {
+            const aoeId = `aoe-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
             this.renderer.updateGameState({
                 activeAoE: [
                     ...this.renderer.gameState.activeAoE,
                     {
+                        id: aoeId,
                         x: pos.x,
                         y: pos.y,
                         radius: data.radius * 20,
@@ -223,10 +225,10 @@ class GMCPCanvasIntegration {
                 ],
             });
 
-            // Remove AoE after duration
+            // Remove this specific AoE after duration
             setTimeout(() => {
                 const aoe = this.renderer.gameState.activeAoE;
-                const updated = aoe.filter(a => !(a.x === pos.x && a.y === pos.y));
+                const updated = aoe.filter(a => a.id !== aoeId);
                 this.renderer.updateGameState({ activeAoE: updated });
             }, data.duration || 1000);
         }
@@ -246,19 +248,28 @@ class GMCPCanvasIntegration {
         };
 
         switch (data.type) {
-            case 'aoe':
-                // Show pulsing circle
+            case 'aoe': {
+                // Show pulsing circle with auto-cleanup
+                const groundAoeId = `ground-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                const duration = data.duration || 3000;
                 this.renderer.updateGameState({
                     activeAoE: [
                         ...this.renderer.gameState.activeAoE,
                         {
+                            id: groundAoeId,
                             x: pos.x,
                             y: pos.y,
                             radius: data.radius * 20,
                         },
                     ],
                 });
+                setTimeout(() => {
+                    const aoe = this.renderer.gameState.activeAoE;
+                    const updated = aoe.filter(a => a.id !== groundAoeId);
+                    this.renderer.updateGameState({ activeAoE: updated });
+                }, duration);
                 break;
+            }
 
             case 'projectile':
                 // Could add projectile animation here

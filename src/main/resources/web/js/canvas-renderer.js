@@ -257,8 +257,11 @@ class CanvasWorldRenderer {
         this.width = rect.width;
         this.height = rect.height;
 
-        // Handle window resize
-        window.addEventListener('resize', () => this.setupCanvas());
+        // Handle window resize (bind once to avoid exponential listener leak)
+        if (!this._resizeHandler) {
+            this._resizeHandler = () => this.setupCanvas();
+            window.addEventListener('resize', this._resizeHandler);
+        }
     }
 
     updateGameState(state) {
@@ -651,32 +654,34 @@ class EntityLayer extends Layer {
         const hpPercent = Math.max(0, Math.min(1, hp / maxHp));
 
         // Background (dark)
+        ctx.beginPath();
         ctx.fillStyle = 'rgba(107, 107, 123, 0.5)';
         ctx.roundRect(barX, barY, barWidth, barHeight, 2);
         ctx.fill();
 
         // Health gradient
-        const gradient = ctx.createLinearGradient(barX, barY, barX + barWidth * hpPercent, barY);
+        if (hpPercent > 0) {
+            const gradient = ctx.createLinearGradient(barX, barY, barX + barWidth * hpPercent, barY);
 
-        if (hpPercent > 0.5) {
-            // Green: healthy
-            gradient.addColorStop(0, '#C5D8A8');
-            gradient.addColorStop(1, '#B8D8A0');
-        } else if (hpPercent > 0.25) {
-            // Yellow: wounded
-            gradient.addColorStop(0, '#E8D8A8');
-            gradient.addColorStop(1, '#D8C8A0');
-        } else {
-            // Red: critical
-            gradient.addColorStop(0, '#E8C5A8');
-            gradient.addColorStop(1, '#D8B5A0');
+            if (hpPercent > 0.5) {
+                gradient.addColorStop(0, '#C5D8A8');
+                gradient.addColorStop(1, '#B8D8A0');
+            } else if (hpPercent > 0.25) {
+                gradient.addColorStop(0, '#E8D8A8');
+                gradient.addColorStop(1, '#D8C8A0');
+            } else {
+                gradient.addColorStop(0, '#E8C5A8');
+                gradient.addColorStop(1, '#D8B5A0');
+            }
+
+            ctx.beginPath();
+            ctx.fillStyle = gradient;
+            ctx.roundRect(barX, barY, barWidth * hpPercent, barHeight, 2);
+            ctx.fill();
         }
 
-        ctx.fillStyle = gradient;
-        ctx.roundRect(barX, barY, barWidth * hpPercent, barHeight, 2);
-        ctx.fill();
-
         // Border
+        ctx.beginPath();
         ctx.strokeStyle = 'rgba(107, 107, 123, 0.4)';
         ctx.lineWidth = 1;
         ctx.roundRect(barX, barY, barWidth, barHeight, 2);

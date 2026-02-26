@@ -107,6 +107,7 @@
     // Canvas animation loop with performance monitoring
     let frameCount = 0;
     let lastFpsUpdate = performance.now();
+    let lastAdaptiveCheck = performance.now();
     let fps = 60;
 
     function canvasAnimationLoop() {
@@ -153,8 +154,9 @@
             performanceProfiler.updateMemoryUsage();
 
             // Adaptive quality adjustment every 2 seconds
-            if (now - lastFpsUpdate > 2000 && performanceProfiler.fps > 0) {
+            if (now - lastAdaptiveCheck > 2000 && performanceProfiler.fps > 0) {
                 qualitySettings.adaptiveAdjustment(performanceProfiler.fps);
+                lastAdaptiveCheck = now;
             }
         }
 
@@ -994,10 +996,11 @@
                         const text = event.data.toLowerCase();
                         if (text.includes("password") && (text.includes("enter") || text.includes(":"))) {
                             // Server is asking for password, send it automatically
+                            // Clear value immediately to prevent duplicate sends from subsequent messages
                             const password = loginPassword.value;
+                            loginPassword.value = "";
                             setTimeout(() => {
                                 sendCommand(password);
-                                if (loginPassword) loginPassword.value = ""; // Clear from UI for security
                                 showLoginMessage("Authenticating...", "info");
                             }, 50);
                         }

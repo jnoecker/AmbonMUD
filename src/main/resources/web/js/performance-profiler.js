@@ -53,7 +53,7 @@ class PerformanceProfiler {
         this.warningThresholds = {
             fps: 50,           // FPS < 50
             frameTime: 20,     // Frame time > 20ms
-            memory: 10 * 1024, // Memory > 10MB
+            memory: 10 * 1024 * 1024, // Memory > 10MB
             particles: 100,    // Particles > 100
         };
     }
@@ -172,8 +172,8 @@ class PerformanceProfiler {
     getMetrics() {
         return {
             fps: this.fps,
-            fpsMin: Math.min(...this.fpsHistory),
-            fpsMax: Math.max(...this.fpsHistory),
+            fpsMin: this.fpsHistory.length > 0 ? Math.min(...this.fpsHistory) : 0,
+            fpsMax: this.fpsHistory.length > 0 ? Math.max(...this.fpsHistory) : 0,
             fpsAvg: this.getFpsAverage(),
             frameTime: this.currentFrameTime,
             frameTimeAvg: this.getAverageFrameTime(),

@@ -158,7 +158,7 @@ class PerformanceDashboard {
 
         const leftMetrics = [
             `FPS: ${metricsFormatted.fps}`,
-            `  Min: ${metricsFormatted.fpsMin} Max: ${metricsFormatted.fpsMax}`,
+            `  Range: ${metricsFormatted.fpsRange}`,
             `  Avg: ${metricsFormatted.fpsAvg}`,
             `Frame Time: ${metricsFormatted.frameTime}`,
             `  Avg: ${metricsFormatted.frameTimeAvg}`,

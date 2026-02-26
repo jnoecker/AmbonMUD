@@ -123,7 +123,7 @@ class TimeOfDaySystem {
 
         // Sine wave for smooth day/night cycle
         // Peak (1.0) at noon (0.5), minimum (0.3) at midnight (0 or 1)
-        const lightingCurve = Math.sin((normalizedTime - 0.25) * Math.PI);
+        const lightingCurve = Math.max(0, Math.sin((normalizedTime - 0.25) * Math.PI));
         return 0.3 + (lightingCurve * 0.7); // Range: 0.3-1.0
     }
 

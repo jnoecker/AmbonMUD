@@ -86,7 +86,7 @@ class WeatherSystem {
             this.weatherTransition += (dt / this.transitionDuration);
             if (this.weatherTransition >= 1) {
                 this.currentWeather = this.targetWeather;
-                this.weatherTransition = 0;
+                this.weatherTransition = 1;
             }
         }
 
@@ -260,7 +260,7 @@ class WeatherSystem {
             storm: 0.6,
         };
 
-        return baseModulation * weatherModifiers[weather];
+        return baseModulation * (weatherModifiers[weather] || 1.0);
     }
 
     /**

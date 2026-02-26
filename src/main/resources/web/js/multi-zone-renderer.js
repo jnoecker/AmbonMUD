@@ -290,7 +290,7 @@ class MultiZoneRenderer {
         const height = boundary.height;
 
         // Right edge
-        if (boundary.col < 2) {
+        if (boundary.column < 2) {
             ctx.strokeStyle = 'rgba(216, 197, 232, 0.2)';
             ctx.lineWidth = 2;
             ctx.beginPath();

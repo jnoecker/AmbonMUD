@@ -135,23 +135,29 @@ class QualitySettings {
      * Determine if device is high-end
      */
     isHighEndDevice() {
+        // Cache result to avoid leaking WebGL contexts on repeated calls
+        if (this._highEndCached !== undefined) return this._highEndCached;
+
         // Check for high-end GPU support
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl2');
 
         if (gl) {
             const renderer = gl.getParameter(gl.RENDERER);
-            const vendor = gl.getParameter(gl.VENDOR);
 
             // Heuristic: dedicated GPU (not integrated)
             const isDedicatedGpu = !(renderer.includes('Intel') ||
-                                    renderer.includes('AMD Radeon') ||
                                     renderer.includes('Vega'));
 
+            // Release WebGL context
+            gl.getExtension('WEBGL_lose_context')?.loseContext();
+
+            this._highEndCached = isDedicatedGpu;
             return isDedicatedGpu;
         }
 
         // Fallback: assume high-end
+        this._highEndCached = true;
         return true;
     }
 
@@ -247,8 +253,8 @@ class QualitySettings {
             if (stored) {
                 const settings = JSON.parse(stored);
                 if (settings.qualityLevel) this.setQualityLevel(settings.qualityLevel);
-                if (settings.effectIntensity) this.effectIntensity = settings.effectIntensity;
-                if (settings.particleLimit) this.particleLimit = settings.particleLimit;
+                if (settings.effectIntensity !== undefined) this.effectIntensity = settings.effectIntensity;
+                if (settings.particleLimit !== undefined) this.particleLimit = settings.particleLimit;
                 if (settings.multiZoneEnabled !== undefined) this.multiZoneEnabled = settings.multiZoneEnabled;
                 if (settings.zoneRenderDistance !== undefined) this.zoneRenderDistance = settings.zoneRenderDistance;
                 return true;

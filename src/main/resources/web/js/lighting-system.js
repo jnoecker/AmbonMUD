@@ -231,11 +231,12 @@ class LightingSystem {
     }
 
     lerpColor(colorA, colorB, t) {
+        const clamped = Math.max(0, Math.min(1, t));
         const a = this.hexToRgb(colorA);
         const b = this.hexToRgb(colorB);
-        const r = Math.floor(a.r + (b.r - a.r) * t);
-        const g = Math.floor(a.g + (b.g - a.g) * t);
-        const bl = Math.floor(a.b + (b.b - a.b) * t);
+        const r = Math.max(0, Math.min(255, Math.floor(a.r + (b.r - a.r) * clamped)));
+        const g = Math.max(0, Math.min(255, Math.floor(a.g + (b.g - a.g) * clamped)));
+        const bl = Math.max(0, Math.min(255, Math.floor(a.b + (b.b - a.b) * clamped)));
         return this.rgbToHex(r, g, bl);
     }
 }
