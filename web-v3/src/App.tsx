@@ -87,6 +87,7 @@ const MAP_PREVIEW_POINTS: Record<(typeof COMPASS_DIRECTIONS)[number], { x: numbe
   up: { x: 73, y: 28, label: "U" },
   down: { x: 73, y: 72, label: "D" },
 };
+type Direction = (typeof COMPASS_DIRECTIONS)[number];
 const SLOT_ORDER = ["head", "body", "hand"];
 const TABS: Array<{ id: MobileTab; label: string }> = [
   { id: "play", label: "Play" },
@@ -219,6 +220,102 @@ function Bar({
         <span className={`meter-fill meter-fill-${tone}`} style={{ width: `${width}%` }} />
       </div>
     </div>
+  );
+}
+
+function isDirection(value: string): value is Direction {
+  return (COMPASS_DIRECTIONS as readonly string[]).includes(value);
+}
+
+function DirectionIcon({ direction, className }: { direction: Direction; className?: string }) {
+  switch (direction) {
+    case "north":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+          <path d="M12 19V7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M8.6 10.4 12 7l3.4 3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9 6.7c.9-.6 1.9-.9 3-.9s2.1.3 3 .9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+        </svg>
+      );
+    case "east":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+          <path d="M5 12h12" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M13.6 8.6 17 12l-3.4 3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M17.3 9c.6.9.9 1.9.9 3s-.3 2.1-.9 3" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+        </svg>
+      );
+    case "south":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+          <path d="M12 5v12" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M15.4 13.6 12 17l-3.4-3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M15 17.3c-.9.6-1.9.9-3 .9s-2.1-.3-3-.9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+        </svg>
+      );
+    case "west":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+          <path d="M19 12H7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M10.4 15.4 7 12l3.4-3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M6.7 15c-.6-.9-.9-1.9-.9-3s.3-2.1.9-3" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+        </svg>
+      );
+    case "up":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+          <path d="M12 20V9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M8.6 12.4 12 9l3.4 3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M7.8 7.2h8.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+          <path d="M9.2 6 12 3.8 14.8 6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+        </svg>
+      );
+    case "down":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+          <path d="M12 4v11" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M15.4 11.6 12 15l-3.4-3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M7.8 16.8h8.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+          <path d="M9.2 17.8 12 20l2.8-2.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+function EquipmentIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M8 8.5a4 4 0 0 1 8 0" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 9h10a3 3 0 0 1 3 3v5.2a3.8 3.8 0 0 1-3.8 3.8H7.8A3.8 3.8 0 0 1 4 17.2V12a3 3 0 0 1 3-3Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 13.2h4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 13.2v1.9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.4 6.9c.8-.9 1.7-1.4 2.6-1.4s1.8.5 2.6 1.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
+    </svg>
+  );
+}
+
+function WearingIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M9 5.5c1 .9 2 1.4 3 1.4s2-.5 3-1.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.2 6.4 6 7.9v4.6l1.2-.8V20h9.6v-8.3l1.2.8V7.9l-2.2-1.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.2 12.2h5.6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
+      <path d="M9.2 12.2v2.2c0 .9.7 1.6 1.6 1.6h2.4c.9 0 1.6-.7 1.6-1.6v-2.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
+    </svg>
+  );
+}
+
+function CompassCoreIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M12 7.3v9.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7.3 12h9.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 9.4 14.6 12 12 14.6 9.4 12 12 9.4Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
+      <path d="M5.8 12a6.2 6.2 0 0 1 12.4 0" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
+      <path d="M18.2 12a6.2 6.2 0 0 1-12.4 0" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
+    </svg>
   );
 }
 
@@ -1001,20 +1098,25 @@ function App() {
             {exits.length === 0 ? (
               <span className="empty-note">{preLogin ? "Log in to unlock movement." : connected ? "No exits available." : "Reconnect to view exits."}</span>
             ) : (
-              exits.map(([direction, target]) => (
-                <button
-                  key={direction}
-                  type="button"
-                  className="chip-button"
-                  title={`Move ${direction} (${target})`}
-                  onClick={() => {
-                    sendCommand(direction, true);
-                    terminalRef.current?.focus();
-                  }}
-                >
-                  {direction}
-                </button>
-              ))
+              exits.map(([direction, target]) => {
+                const normalized = direction.toLowerCase();
+                const knownDirection = isDirection(normalized);
+                return (
+                  <button
+                    key={direction}
+                    type="button"
+                    className="chip-button"
+                    title={`Move ${direction} (${target})`}
+                    onClick={() => {
+                      sendCommand(direction, true);
+                      terminalRef.current?.focus();
+                    }}
+                  >
+                    {knownDirection && <DirectionIcon direction={normalized} className="chip-direction-icon" />}
+                    <span className="chip-label">{direction}</span>
+                  </button>
+                );
+              })
             )}
           </div>
 
@@ -1115,11 +1217,13 @@ function App() {
                               terminalRef.current?.focus();
                             }}
                           >
-                            {direction === "up" ? "U" : direction === "down" ? "D" : direction[0]?.toUpperCase()}
+                            <DirectionIcon direction={direction} className="compass-node-icon" />
                           </button>
                         );
                       })}
-                      <span className="compass-core" aria-hidden="true">A</span>
+                      <span className="compass-core" aria-hidden="true">
+                        <CompassCoreIcon className="compass-core-icon" />
+                      </span>
                     </div>
                     <p className="compass-caption">
                       {exits.length === 0 ? "No exits listed." : `Available: ${exits.map(([direction]) => direction).join(", ")}`}
@@ -1187,10 +1291,12 @@ function App() {
             </div>
             <div className="panel-action-row">
               <button type="button" className="panel-action-button" onClick={() => setActivePopout("equipment")} disabled={!canOpenEquipment}>
-                Equipment
+                <EquipmentIcon className="panel-action-icon" />
+                <span>Equipment</span>
               </button>
               <button type="button" className="panel-action-button" onClick={() => setActivePopout("wearing")} disabled={!canOpenEquipment}>
-                Currently Wearing
+                <WearingIcon className="panel-action-icon" />
+                <span>Currently Wearing</span>
               </button>
             </div>
           </header>

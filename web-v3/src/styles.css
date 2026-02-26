@@ -332,6 +332,9 @@ body {
 }
 
 .panel-action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 1px solid var(--line-soft);
   border-radius: 999px;
   background: linear-gradient(135deg, rgb(234 221 246 / 82%), rgb(218 233 247 / 76%));
@@ -370,6 +373,12 @@ body {
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
     0 0 0 4px rgb(216 197 232 / 30%);
+}
+
+.panel-action-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 .map-preview-trigger {
@@ -526,6 +535,9 @@ body {
 }
 
 .chip-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 1px solid var(--line-soft);
   border-radius: 999px;
   background: linear-gradient(135deg, rgb(224 236 248 / 88%), rgb(229 215 246 / 78%));
@@ -549,6 +561,16 @@ body {
 
 .chip-button:active {
   transform: scale(0.98);
+}
+
+.chip-direction-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.chip-label {
+  line-height: 1;
 }
 
 .command-form {
@@ -745,18 +767,24 @@ body {
   border-radius: 999px;
   display: grid;
   place-items: center;
-  font-family: "Cormorant Garamond", "Georgia", serif;
-  font-weight: 700;
   color: #6d6f83;
   border: 1px solid rgb(106 96 136 / 24%);
   background: linear-gradient(145deg, rgb(238 227 248 / 92%), rgb(223 237 248 / 90%));
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 56%), var(--shadow-sm);
 }
 
+.compass-core-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .compass-node {
+  display: grid;
+  place-items: center;
   position: absolute;
   width: 34px;
   height: 34px;
+  padding: 0;
   border-radius: 999px;
   border: 1px solid rgb(106 96 136 / 24%);
   background: linear-gradient(140deg, rgb(235 224 247 / 90%), rgb(212 231 246 / 86%));
@@ -792,6 +820,11 @@ body {
   opacity: 0.45;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.compass-node-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .compass-node-north {
