@@ -288,14 +288,22 @@ internal fun sanitizeIncomingLines(
     maxLineLen: Int,
     maxNonPrintablePerLine: Int,
 ): List<String> {
-    val lines = splitIncomingLines(payload)
-    for (line in lines) {
-        if (line.length > maxLineLen) {
-            throw ProtocolViolation("Line too long (>$maxLineLen)")
-        }
+    if (payload.isEmpty()) return listOf("")
 
-        var nonPrintableCount = 0
-        for (ch in line) {
+    val lines = mutableListOf<String>()
+    var start = 0
+    var nonPrintableCount = 0
+    var i = 0
+
+    while (i < payload.length) {
+        val ch = payload[i]
+        if (ch == '\r' || ch == '\n') {
+            lines.add(payload.substring(start, i))
+            if (ch == '\r' && i + 1 < payload.length && payload[i + 1] == '\n') i++
+            start = i + 1
+            nonPrintableCount = 0
+        } else {
+            if (i - start >= maxLineLen) throw ProtocolViolation("Line too long (>$maxLineLen)")
             val printable = (ch in ' '..'~') || ch == '\t'
             if (!printable) {
                 nonPrintableCount++
@@ -304,8 +312,14 @@ internal fun sanitizeIncomingLines(
                 }
             }
         }
+        i++
     }
-    return lines
+
+    if (start < payload.length) {
+        lines.add(payload.substring(start))
+    }
+
+    return if (lines.isEmpty()) listOf(payload) else lines
 }
 
 private fun sanitizeCloseReason(reason: String): String {
