@@ -9,7 +9,6 @@ import dev.ambon.domain.Race
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
 import dev.ambon.engine.QuestRegistry
@@ -271,10 +270,22 @@ class GameEngine(
             onLineReceived = ::handleLineReceived,
         )
 
-    private val zoneResetDueAtMillis =
-        world.zoneLifespansMinutes
-            .filterValues { it > 0L }
-            .mapValuesTo(mutableMapOf()) { (_, minutes) -> clock.millis() + minutesToMillis(minutes) }
+    private val zoneResetHandler by lazy {
+        ZoneResetHandler(
+            world = world,
+            mobs = mobs,
+            items = items,
+            players = players,
+            outbound = outbound,
+            worldState = worldState,
+            combatSystem = combatSystem,
+            dialogueSystem = dialogueSystem,
+            behaviorTreeSystem = behaviorTreeSystem,
+            mobSystem = mobSystem,
+            gmcpEmitter = gmcpEmitter,
+            clock = clock,
+        )
+    }
 
     /** GMCP packages each session has opted into (e.g. "Char.Vitals", "Room.Info"). */
     private val gmcpSessions = mutableMapOf<SessionId, MutableSet<String>>()
@@ -875,7 +886,7 @@ class GameEngine(
                     metrics.onSchedulerActionsDropped(actionsDropped)
 
                     // Reset zones when their lifespan elapses.
-                    resetZonesIfDue()
+                    zoneResetHandler.tick()
                     metrics.recordTickPhase("outbound_flush", outboundFlushPhaseSample)
                 } catch (t: Throwable) {
                     if (t is kotlinx.coroutines.CancellationException) throw t
@@ -895,86 +906,6 @@ class GameEngine(
                 delay(sleep)
             }
         }
-
-    private suspend fun resetZonesIfDue() {
-        if (zoneResetDueAtMillis.isEmpty()) return
-
-        val now = clock.millis()
-        for ((zone, dueAtMillis) in zoneResetDueAtMillis) {
-            if (now < dueAtMillis) continue
-
-            resetZone(zone)
-
-            val lifespanMinutes = world.zoneLifespansMinutes[zone] ?: continue
-            val lifespanMillis = minutesToMillis(lifespanMinutes)
-            val elapsedCycles = ((now - dueAtMillis) / lifespanMillis) + 1
-            zoneResetDueAtMillis[zone] = dueAtMillis + (elapsedCycles * lifespanMillis)
-        }
-    }
-
-    private suspend fun resetZone(zone: String) {
-        val playersInZone = players.allPlayers().filter { player -> player.roomId.zone == zone }
-        for (player in playersInZone) {
-            outbound.send(OutboundEvent.SendText(player.sessionId, "The air shimmers as the area resets around you."))
-        }
-
-        val zoneRoomIds =
-            world.rooms.keys
-                .filterTo(linkedSetOf()) { roomId -> roomId.zone == zone }
-
-        val zoneMobSpawns =
-            world.mobSpawns
-                .filter { spawn -> idZone(spawn.id.value) == zone }
-        val activeZoneMobIds =
-            mobs
-                .all()
-                .map { mob -> mob.id }
-                .filter { mobId -> idZone(mobId.value) == zone }
-
-        val zoneMobIds =
-            (zoneMobSpawns.map { spawn -> spawn.id } + activeZoneMobIds)
-                .toSet()
-
-        for (mobId in zoneMobIds) {
-            combatSystem.onMobRemovedExternally(mobId)
-            dialogueSystem.onMobRemoved(mobId)
-            behaviorTreeSystem.onMobRemoved(mobId)
-            mobs.remove(mobId)
-            mobSystem.onMobRemoved(mobId)
-        }
-
-        for (spawn in zoneMobSpawns) {
-            mobs.upsert(spawnToMobState(spawn))
-            mobSystem.onMobSpawned(spawn.id)
-            behaviorTreeSystem.onMobSpawned(spawn.id)
-        }
-
-        val zoneItemSpawns =
-            world.itemSpawns
-                .filter { spawn -> idZone(spawn.instance.id.value) == zone }
-
-        items.resetZone(
-            zone = zone,
-            roomIds = zoneRoomIds,
-            mobIds = zoneMobIds,
-            spawns = zoneItemSpawns,
-        )
-
-        // Reset stateful room features (doors, containers, levers) for this zone.
-        worldState.resetZone(zone)
-        for (room in world.rooms.values.filter { it.id.zone == zone }) {
-            for (feature in room.features.filterIsInstance<RoomFeature.Container>()) {
-                if (!feature.resetWithZone) continue
-                val instances = feature.initialItems.mapNotNull { items.createFromTemplate(it) }
-                worldState.resetContainer(feature.id, instances)
-            }
-        }
-
-        // Refresh mob GMCP for all players in the reset zone
-        for (player in playersInZone) {
-            gmcpEmitter.sendRoomMobs(player.sessionId, mobs.mobsInRoom(player.roomId))
-        }
-    }
 
     private suspend fun handleCrossZoneMove(
         sessionId: SessionId,
@@ -1563,30 +1494,6 @@ class GameEngine(
     private suspend fun flushDirtyGmcpGroup() {
         gmcpFlushHandler.flushDirtyGroup()
     }
-
-    private fun spawnToMobState(spawn: dev.ambon.domain.world.MobSpawn): MobState =
-        MobState(
-            id = spawn.id,
-            name = spawn.name,
-            roomId = spawn.roomId,
-            hp = spawn.maxHp,
-            maxHp = spawn.maxHp,
-            minDamage = spawn.minDamage,
-            maxDamage = spawn.maxDamage,
-            armor = spawn.armor,
-            xpReward = spawn.xpReward,
-            drops = spawn.drops,
-            goldMin = spawn.goldMin,
-            goldMax = spawn.goldMax,
-            dialogue = spawn.dialogue,
-            behaviorTree = spawn.behaviorTree,
-            templateKey = spawn.id.value,
-            questIds = spawn.questIds,
-        )
-
-    private fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
-
-    private fun minutesToMillis(minutes: Long): Long = minutes * 60_000L
 
     companion object {
         private const val WHO_RESPONSE_WAIT_MS = 300L
