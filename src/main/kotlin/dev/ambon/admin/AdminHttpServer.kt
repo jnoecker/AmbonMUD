@@ -151,11 +151,25 @@ internal fun Application.adminModule(
             val online = players.allPlayers()
             val zones = world.rooms.keys.mapTo(mutableSetOf()) { it.zone }
             val mobCount = mobs.all().size
+            val zoneSummaries =
+                world.rooms.keys
+                    .groupBy { it.zone }
+                    .entries
+                    .map { (zone, rooms) ->
+                        ZoneInfoDto(
+                            name = zone,
+                            roomCount = rooms.size,
+                            playersOnline = players.playersInZone(zone).size,
+                            mobsAlive = rooms.sumOf { roomId -> mobs.mobsInRoom(roomId).size },
+                        )
+                    }
+                    .sortedWith(compareByDescending<ZoneInfoDto> { it.playersOnline }.thenBy { it.name })
             val body =
                 buildString {
                     append("<h1>Overview</h1>")
                     append("<div class=\"stats\">")
                     appendStatCard("Players Online", online.size.toString())
+                    appendStatCard("Staff Online", online.count { it.isStaff }.toString())
                     appendStatCard("Mobs Alive", mobCount.toString())
                     appendStatCard("Zones", zones.size.toString())
                     appendStatCard("Rooms", world.rooms.size.toString())
@@ -184,6 +198,19 @@ internal fun Application.adminModule(
                         }
                         append("</table>")
                     }
+                    append("<div class=\"section\">")
+                    append("<h2>Zone Activity</h2>")
+                    append("<table><tr><th>Zone</th><th>Players</th><th>Mobs</th><th>Rooms</th></tr>")
+                    for (zone in zoneSummaries) {
+                        append("<tr>")
+                        append("<td><a href=\"/world/${zone.name.esc()}\">${zone.name.esc()}</a></td>")
+                        append("<td>${zone.playersOnline}</td>")
+                        append("<td>${zone.mobsAlive}</td>")
+                        append("<td>${zone.roomCount}</td>")
+                        append("</tr>")
+                    }
+                    append("</table>")
+                    append("</div>")
                 }
             call.respondText(htmlPage("Overview", body), ContentType.Text.Html)
         }
@@ -192,6 +219,9 @@ internal fun Application.adminModule(
         get("/players") {
             if (!call.requireBasicAuth(token)) return@get
             val query = call.request.queryParameters["q"]?.trim() ?: ""
+            val onlineOnly = call.request.queryParameters["online"] == "1"
+            val staffOnly = call.request.queryParameters["staff"] == "1"
+            val sort = call.request.queryParameters["sort"]?.trim()?.lowercase() ?: "name"
             val online = players.allPlayers()
             val onlineNames = online.associateBy { it.name.lowercase() }
             val searched: PlayerListItemDto? =
@@ -233,12 +263,24 @@ internal fun Application.adminModule(
                     append("<h1>Players</h1>")
                     append("<form method=\"get\" action=\"/players\" class=\"search-row\">")
                     append("<input type=\"text\" name=\"q\" placeholder=\"Search by name\" value=\"${query.esc()}\">")
+                    append(
+                        "<label><input type=\"checkbox\" name=\"online\" value=\"1\"${if (onlineOnly) " checked" else ""}> Online only</label>",
+                    )
+                    append(
+                        "<label><input type=\"checkbox\" name=\"staff\" value=\"1\"${if (staffOnly) " checked" else ""}> Staff only</label>",
+                    )
+                    append("<label>Sort <select name=\"sort\">")
+                    append("<option value=\"name\"${if (sort == "name") " selected" else ""}>Name</option>")
+                    append("<option value=\"level\"${if (sort == "level") " selected" else ""}>Level</option>")
+                    append("<option value=\"class\"${if (sort == "class") " selected" else ""}>Class</option>")
+                    append("</select></label>")
                     append("<button type=\"submit\">Search</button>")
                     append("</form>")
+                    append("<p class=\"muted\">Online: ${online.size} • Staff online: ${online.count { it.isStaff }}</p>")
                     if (query.isNotBlank() && searched == null) {
                         append("<p>No player found with name <strong>${query.esc()}</strong>.</p>")
                     }
-                    if (searched != null) {
+                    if (searched != null && (!onlineOnly || searched.isOnline) && (!staffOnly || searched.isStaff)) {
                         append("<h2>Search Result</h2>")
                         append(playerRowsHtml(listOf(searched)))
                     }
@@ -246,9 +288,10 @@ internal fun Application.adminModule(
                     if (online.isEmpty()) {
                         append("<p>No players currently online.</p>")
                     } else {
+                        val filteredOnline =
+                            online.filter { !staffOnly || it.isStaff }
                         val items =
-                            online
-                                .sortedBy { it.name }
+                            filteredOnline
                                 .map { p ->
                                     PlayerListItemDto(
                                         name = p.name,
@@ -262,6 +305,7 @@ internal fun Application.adminModule(
                                         maxHp = p.maxHp,
                                     )
                                 }
+                                .sortedWith(playerComparator(sort))
                         append(playerRowsHtml(items))
                     }
                 }
@@ -421,13 +465,22 @@ internal fun Application.adminModule(
         // ── World inspector ───────────────────────────────────────────────────
         get("/world") {
             if (!call.requireBasicAuth(token)) return@get
+            val query = call.request.queryParameters["q"]?.trim()?.lowercase() ?: ""
             val roomsByZone = world.rooms.keys.groupBy { it.zone }
             val body =
                 buildString {
                     append("<h1>World</h1>")
+                    append("<form method=\"get\" action=\"/world\" class=\"search-row\">")
+                    append("<input type=\"text\" name=\"q\" placeholder=\"Filter zones\" value=\"${query.esc()}\">")
+                    append("<button type=\"submit\">Filter</button>")
+                    append("</form>")
                     append("<table>")
                     append("<tr><th>Zone</th><th>Rooms</th><th>Players Online</th><th>Mobs Alive</th></tr>")
-                    for ((zone, rooms) in roomsByZone.entries.sortedBy { it.key }) {
+                    val filtered =
+                        roomsByZone.entries
+                            .sortedBy { it.key }
+                            .filter { query.isBlank() || it.key.lowercase().contains(query) }
+                    for ((zone, rooms) in filtered) {
                         val zonePlayers = players.playersInZone(zone).size
                         val zoneMobs = rooms.sumOf { roomId -> mobs.mobsInRoom(roomId).size }
                         append("<tr>")
@@ -436,6 +489,9 @@ internal fun Application.adminModule(
                         append("<td>$zonePlayers</td>")
                         append("<td>$zoneMobs</td>")
                         append("</tr>")
+                    }
+                    if (filtered.isEmpty()) {
+                        append("<tr><td colspan=\"4\" class=\"muted\">No zones matched that filter.</td></tr>")
                     }
                     append("</table>")
                 }
@@ -688,8 +744,11 @@ private fun htmlPage(
     button:hover{background:#0f3460}
     button.danger{border-color:#e94560;color:#e94560}
     button.danger:hover{background:#e94560;color:#fff}
-    input[type=text]{background:#16213e;color:#e0e0e0;border:1px solid #444;padding:6px 10px;border-radius:3px;font-family:monospace;width:240px}
-    .search-row{margin-bottom:16px;display:flex;gap:8px;align-items:center}
+    input[type=text],select{background:#16213e;color:#e0e0e0;border:1px solid #444;padding:6px 10px;border-radius:3px;font-family:monospace}
+    input[type=text]{width:240px}
+    .search-row{margin-bottom:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .search-row label{font-size:0.9em;color:#b5b5b5}
+    .muted{color:#888}
     .dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;margin-bottom:8px}
     .dl .key{color:#888;font-size:0.85em;align-self:baseline;padding-top:2px}
     .section{background:#16213e;border-radius:6px;padding:16px;margin-bottom:16px}
@@ -744,6 +803,13 @@ private fun playerRowsHtml(items: List<PlayerListItemDto>): String =
             append("</tr>")
         }
         append("</table>")
+    }
+
+private fun playerComparator(sort: String): Comparator<PlayerListItemDto> =
+    when (sort) {
+        "level" -> compareByDescending<PlayerListItemDto> { it.level }.thenBy { it.name.lowercase() }
+        "class" -> compareBy<PlayerListItemDto> { it.playerClass.lowercase() }.thenBy { it.name.lowercase() }
+        else -> compareBy<PlayerListItemDto> { it.name.lowercase() }
     }
 
 private fun String.esc(): String =
