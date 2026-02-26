@@ -367,6 +367,7 @@ class MudServer(
     init {
         bindQueueMetrics()
         gameMetrics.bindSchedulerPendingActions(scheduler::size)
+        gameMetrics.bindSchedulerOverdueActions(scheduler::overdueSize)
         coalescingRepo?.let { gameMetrics.bindWriteCoalescerDirtyCount(it::dirtyCount) }
     }
 
