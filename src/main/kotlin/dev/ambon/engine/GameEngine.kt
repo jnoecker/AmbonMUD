@@ -38,6 +38,7 @@ import dev.ambon.engine.events.DefaultEngineEventDispatcher
 import dev.ambon.engine.events.EngineEventDispatcher
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.InputEventHandler
+import dev.ambon.engine.events.LoginEventHandler
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.events.SessionEventHandler
 import dev.ambon.engine.items.ItemRegistry
@@ -152,6 +153,31 @@ class GameEngine(
                 outbound.send(OutboundEvent.SendPrompt(sid))
             },
             routeCommandLine = { sid, line -> router.handle(sid, CommandParser.parse(line)) },
+        )
+    }
+
+    private val loginEventHandler by lazy {
+        LoginEventHandler<
+            LoginState,
+            LoginState,
+            LoginState.AwaitingCreateConfirmation,
+            LoginState.AwaitingExistingPassword,
+            LoginState.AwaitingNewPassword,
+            LoginState.AwaitingRaceSelection,
+            LoginState.AwaitingClassSelection,
+        >(
+            onAwaitingName = ::handleLoginName,
+            onAwaitingCreateConfirmation = ::handleLoginCreateConfirmation,
+            onAwaitingExistingPassword = ::handleLoginExistingPassword,
+            onAwaitingNewPassword = ::handleLoginNewPassword,
+            onAwaitingRaceSelection = ::handleLoginRaceSelection,
+            onAwaitingClassSelection = ::handleLoginClassSelection,
+            asAwaitingCreateConfirmation = { state -> state as? LoginState.AwaitingCreateConfirmation },
+            asAwaitingExistingPassword = { state -> state as? LoginState.AwaitingExistingPassword },
+            asAwaitingNewPassword = { state -> state as? LoginState.AwaitingNewPassword },
+            asAwaitingRaceSelection = { state -> state as? LoginState.AwaitingRaceSelection },
+            asAwaitingClassSelection = { state -> state as? LoginState.AwaitingClassSelection },
+            isAwaitingName = { state -> state == LoginState.AwaitingName },
         )
     }
 
@@ -1202,19 +1228,7 @@ class GameEngine(
         line: String,
         state: LoginState,
     ) {
-        when (state) {
-            LoginState.AwaitingName -> handleLoginName(sessionId, line)
-            is LoginState.AwaitingCreateConfirmation -> handleLoginCreateConfirmation(sessionId, line, state)
-            is LoginState.AwaitingExistingPassword -> handleLoginExistingPassword(sessionId, line, state)
-            is LoginState.AwaitingNewPassword -> handleLoginNewPassword(sessionId, line, state)
-            is LoginState.AwaitingRaceSelection -> handleLoginRaceSelection(sessionId, line, state)
-            is LoginState.AwaitingClassSelection -> handleLoginClassSelection(sessionId, line, state)
-            // Auth in-flight — ignore further input until the background coroutine posts its result.
-            is LoginState.AwaitingNameLookup,
-            is LoginState.AwaitingPasswordAuth,
-            is LoginState.AwaitingCreateAuth,
-            -> Unit
-        }
+        loginEventHandler.onLoginLine(sessionId, line, state)
     }
 
     private suspend fun handleLoginName(
