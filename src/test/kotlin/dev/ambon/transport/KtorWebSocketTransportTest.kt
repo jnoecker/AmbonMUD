@@ -116,6 +116,31 @@ class KtorWebSocketTransportTest {
         }
 
     @Test
+    fun `serves v3 web client index page`(): Unit =
+        runBlocking {
+            val inbound = LocalInboundBus()
+            val engineOutbound = LocalOutboundBus()
+            val outboundRouter = OutboundRouter(engineOutbound, this)
+
+            testApplication {
+                application {
+                    ambonMUDWebModule(
+                        inbound = inbound,
+                        outboundRouter = outboundRouter,
+                        sessionIdFactory = { SessionId(1) },
+                    )
+                }
+
+                val response = client.get("/v3/")
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertTrue(response.bodyAsText().contains("AmbonMUD Web Client v3"))
+            }
+
+            inbound.close()
+            engineOutbound.close()
+        }
+
+    @Test
     fun `splitIncomingLines supports mixed newlines`() {
         assertEquals(
             listOf("alpha", "bravo", "charlie", "delta"),
