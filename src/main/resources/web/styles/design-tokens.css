@@ -1,0 +1,124 @@
+/**
+ * AmbonMUD Design System: Surreal Gentle Magic (surreal_softmagic_v1)
+ * Design Tokens - CSS Custom Properties
+ *
+ * Usage: Import this file first in all stylesheets
+ * Example: @import 'design-tokens.css';
+ *          color: var(--color-primary-lavender);
+ */
+
+:root {
+  /* ========== COLORS: PRIMARY ========== */
+  --color-primary-lavender: #D8C5E8;
+  --color-primary-pale-blue: #B8D8E8;
+  --color-primary-dusty-rose: #E8C5D8;
+  --color-primary-moss-green: #C5D8A8;
+  --color-primary-soft-gold: #E8D8A8;
+
+  /* ========== COLORS: NEUTRALS ========== */
+  --color-neutral-deep-mist: #6B6B7B;
+  --color-neutral-soft-fog: #A8A8B8;
+  --color-neutral-cloud: #E8E8F0;
+
+  /* ========== COLORS: SEMANTIC ========== */
+  --color-success: var(--color-primary-moss-green);
+  --color-warning: var(--color-primary-dusty-rose);
+  --color-error: #C5A8A8;
+  --color-info: var(--color-primary-pale-blue);
+
+  /* ========== BACKGROUNDS ========== */
+  --bg-primary: var(--color-neutral-cloud);
+  --bg-secondary: #F8F8FC;
+  --bg-elevated: #FFFFFF;
+  --bg-overlay: rgba(255, 255, 255, 0.85);
+  --bg-dark-overlay: rgba(107, 107, 123, 0.4);
+
+  /* ========== TEXT ========== */
+  --text-primary: var(--color-neutral-deep-mist);
+  --text-secondary: var(--color-neutral-soft-fog);
+  --text-disabled: #C8C8D0;
+  --text-inverse: #FFFFFF;
+
+  /* ========== SPACING ========== */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+
+  /* ========== BORDER RADIUS ========== */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-round: 50%;
+
+  /* ========== SHADOWS ========== */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.16);
+
+  /* ========== SHADOWS: MAGIC GLOW ========== */
+  --shadow-glow-sm: 0 0 8px rgba(216, 197, 232, 0.4);
+  --shadow-glow-md: 0 0 16px rgba(216, 197, 232, 0.3);
+  --shadow-glow-lg: 0 0 24px rgba(216, 197, 232, 0.2);
+  --shadow-glow-focus: 0 0 0 3px rgba(216, 197, 232, 0.5);
+
+  /* ========== Z-INDEX ========== */
+  --z-hidden: -1;
+  --z-base: 0;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-modal-backdrop: 40;
+  --z-modal: 50;
+  --z-tooltip: 60;
+  --z-notification: 70;
+
+  /* ========== TRANSITIONS & ANIMATIONS ========== */
+  --duration-fast: 100ms;
+  --duration-default: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+  --duration-slowest: 800ms;
+
+  /* ========== TYPOGRAPHY ========== */
+  --font-display: Georgia, 'Crimson Text', serif;
+  --font-body: 'Segoe UI', Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Courier New', monospace;
+
+  /* Font sizes */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-md: 18px;
+  --font-size-lg: 24px;
+  --font-size-xl: 32px;
+
+  /* Line heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+
+  /* ========== OPACITY ========== */
+  --opacity-disabled: 0.6;
+  --opacity-hover: 0.85;
+  --opacity-subtle: 0.3;
+  --opacity-faint: 0.15;
+}
+
+/**
+ * Accessibility: Reduced motion preference
+ * Disables animations for users who prefer reduced motion
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-default: 0ms;
+    --duration-slow: 0ms;
+    --duration-slower: 0ms;
+    --duration-slowest: 0ms;
+  }
+}
