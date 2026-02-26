@@ -1609,37 +1609,37 @@ class GameEngine(
             .filter { it.isNotBlank() }
     }
 
-    /** Atomically snapshots and clears [set], returning the snapshot. */
-    private fun <T> drainDirty(set: MutableSet<T>): List<T> {
-        if (set.isEmpty()) return emptyList()
-        val snapshot = set.toList()
+    /** Iterates [set] with [action] then clears it, avoiding an intermediate list allocation. */
+    private inline fun <T> drainDirty(set: MutableSet<T>, action: (T) -> Unit) {
+        if (set.isEmpty()) return
+        for (item in set) {
+            action(item)
+        }
         set.clear()
-        return snapshot
     }
 
     private suspend fun flushDirtyGmcpVitals() {
-        for (sid in drainDirty(gmcpDirtyVitals)) {
-            val player = players.get(sid) ?: continue
+        drainDirty(gmcpDirtyVitals) { sid ->
+            val player = players.get(sid) ?: return@drainDirty
             gmcpEmitter.sendCharVitals(sid, player)
         }
     }
 
     private suspend fun flushDirtyGmcpStatusEffects() {
-        for (sid in drainDirty(gmcpDirtyStatusEffects)) {
+        drainDirty(gmcpDirtyStatusEffects) { sid ->
             val effects = statusEffectSystem.activePlayerEffects(sid)
             gmcpEmitter.sendCharStatusEffects(sid, effects)
         }
     }
 
     private suspend fun flushDirtyGmcpMobs() {
-        val dirtyMobIds = drainDirty(gmcpDirtyMobs)
-        if (dirtyMobIds.isEmpty()) return
+        if (gmcpDirtyMobs.isEmpty()) return
         // Group dirty mobs by room so playersInRoom() is called once per room
         // rather than once per mob, reducing O(mobs × players_per_room) to
         // O(dirty_mobs + players_in_affected_rooms).
         val mobsByRoom = mutableMapOf<RoomId, MutableList<MobState>>()
-        for (mobId in dirtyMobIds) {
-            val mob = mobs.get(mobId) ?: continue
+        drainDirty(gmcpDirtyMobs) { mobId ->
+            val mob = mobs.get(mobId) ?: return@drainDirty
             mobsByRoom.getOrPut(mob.roomId) { mutableListOf() }.add(mob)
         }
         for ((roomId, roomMobs) in mobsByRoom) {
@@ -1652,7 +1652,7 @@ class GameEngine(
     }
 
     private suspend fun flushDirtyGmcpGroup() {
-        for (sid in drainDirty(gmcpDirtyGroup)) {
+        drainDirty(gmcpDirtyGroup) { sid ->
             val group = groupSystem.getGroup(sid)
             if (group == null) {
                 gmcpEmitter.sendGroupInfo(sid, null, emptyList())
