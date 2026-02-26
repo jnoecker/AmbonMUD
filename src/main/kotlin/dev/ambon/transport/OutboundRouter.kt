@@ -285,8 +285,12 @@ class OutboundRouter(
         }
     }
 
-    fun onSessionQueueFrameConsumed(sessionId: SessionId) {
+    fun onSessionQueueFrameConsumed(
+        sessionId: SessionId,
+        enqueuedAt: Long,
+    ) {
         sinks[sessionId]?.queueDepth?.updateAndGet { current -> (current - 1).coerceAtLeast(0) }
+        metrics.recordOutboundLatency(sessionId, System.currentTimeMillis() - enqueuedAt)
     }
 
     private fun disconnectSlowClient(sessionId: SessionId) {

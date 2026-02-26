@@ -193,7 +193,7 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
                             send(Frame.Text("""{"gmcp":"$pkg","data":$data}"""))
                         }
                     }
-                    outboundRouter.onSessionQueueFrameConsumed(sessionId)
+                    outboundRouter.onSessionQueueFrameConsumed(sessionId, frame.enqueuedAt)
                 }
             } catch (_: Throwable) {
                 // best effort

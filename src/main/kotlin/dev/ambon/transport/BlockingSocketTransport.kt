@@ -48,7 +48,7 @@ class BlockingSocketTransport(
                             outboundQueue = outboundQueue,
                             onDisconnected = { outboundRouter.unregister(sessionId) },
                             scope = scope,
-                            onOutboundFrameWritten = { outboundRouter.onSessionQueueFrameConsumed(sessionId) },
+                            onOutboundFrameWritten = { enqueuedAt -> outboundRouter.onSessionQueueFrameConsumed(sessionId, enqueuedAt) },
                             maxLineLen = maxLineLen,
                             maxNonPrintablePerLine = maxNonPrintablePerLine,
                             maxInboundBackpressureFailures = maxInboundBackpressureFailures,
