@@ -102,7 +102,7 @@ class CommunicationHandler(
             return
         }
         val target = players.get(targetSid) ?: return
-        outbound.send(OutboundEvent.SendText(sessionId, "You tell ${cmd.target}: ${cmd.message}"))
+        outbound.send(OutboundEvent.SendText(sessionId, "You tell ${target.name}: ${cmd.message}"))
         outbound.send(OutboundEvent.SendText(targetSid, "${me.name} tells you: ${cmd.message}"))
         gmcpEmitter?.sendCommChannel(sessionId, "tell", me.name, cmd.message)
         gmcpEmitter?.sendCommChannel(targetSid, "tell", me.name, cmd.message)
