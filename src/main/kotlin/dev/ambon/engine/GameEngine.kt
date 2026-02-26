@@ -371,30 +371,7 @@ class GameEngine(
             maxDamage = engineConfig.combat.maxDamage,
             detailedFeedbackEnabled = engineConfig.combat.feedback.enabled,
             detailedFeedbackRoomBroadcastEnabled = engineConfig.combat.feedback.roomBroadcastEnabled,
-            onMobRemoved = { mobId, roomId ->
-                mobSystem.onMobRemoved(mobId)
-                dialogueSystem.onMobRemoved(mobId)
-                behaviorTreeSystem.onMobRemoved(mobId)
-                for (p in players.playersInRoom(roomId)) {
-                    gmcpEmitter.sendRoomRemoveMob(p.sessionId, mobId.value)
-                }
-                val spawn = world.mobSpawns.find { it.id == mobId }
-                val respawnMs = spawn?.respawnSeconds?.let { it * 1_000L }
-                if (spawn != null && respawnMs != null) {
-                    scheduler.scheduleIn(respawnMs) {
-                        if (mobs.get(spawn.id) != null) return@scheduleIn
-                        if (world.rooms[spawn.roomId] == null) return@scheduleIn
-                        val respawned = spawnToMobState(spawn)
-                        mobs.upsert(respawned)
-                        mobSystem.onMobSpawned(spawn.id)
-                        behaviorTreeSystem.onMobSpawned(spawn.id)
-                        for (p in players.playersInRoom(spawn.roomId)) {
-                            outbound.send(OutboundEvent.SendText(p.sessionId, "${spawn.name} appears."))
-                            gmcpEmitter.sendRoomAddMob(p.sessionId, respawned)
-                        }
-                    }
-                }
-            },
+            onMobRemoved = ::onCombatMobRemoved,
             progression = progression,
             metrics = metrics,
             strDivisor = engineConfig.combat.strDivisor,
@@ -405,24 +382,8 @@ class GameEngine(
             statusEffects = statusEffectSystem,
             groupSystem = groupSystem,
             groupXpBonusPerMember = engineConfig.group.xpBonusPerMember,
-            onLevelUp = { sid, level ->
-                markVitalsDirty(sid)
-                val pc = players.get(sid)?.playerClass
-                val newAbilities = abilitySystem.syncAbilities(sid, level, pc)
-                for (ability in newAbilities) {
-                    outbound.send(OutboundEvent.SendText(sid, "You have learned ${ability.displayName}!"))
-                }
-                val p = players.get(sid)
-                if (p != null) {
-                    gmcpEmitter.sendCharName(sid, p)
-                    gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid))
-                }
-                achievementSystem.onLevelReached(sid, level)
-            },
-            onMobKilledByPlayer = { sid, templateKey ->
-                questSystem.onMobKilled(sid, templateKey)
-                achievementSystem.onMobKilled(sid, templateKey)
-            },
+            onLevelUp = ::onCombatLevelUp,
+            onMobKilledByPlayer = ::onCombatMobKilledByPlayer,
         )
     private val regenSystem =
         RegenSystem(
@@ -897,4 +858,57 @@ class GameEngine(
         gmcpFlushHandler.flushDirtyGroup()
     }
 
+    private suspend fun onCombatMobRemoved(
+        mobId: MobId,
+        roomId: RoomId,
+    ) {
+        mobSystem.onMobRemoved(mobId)
+        dialogueSystem.onMobRemoved(mobId)
+        behaviorTreeSystem.onMobRemoved(mobId)
+        for (p in players.playersInRoom(roomId)) {
+            gmcpEmitter.sendRoomRemoveMob(p.sessionId, mobId.value)
+        }
+        val spawn = world.mobSpawns.find { it.id == mobId }
+        val respawnMs = spawn?.respawnSeconds?.let { it * 1_000L }
+        if (spawn != null && respawnMs != null) {
+            scheduler.scheduleIn(respawnMs) {
+                if (mobs.get(spawn.id) != null) return@scheduleIn
+                if (world.rooms[spawn.roomId] == null) return@scheduleIn
+                val respawned = spawnToMobState(spawn)
+                mobs.upsert(respawned)
+                mobSystem.onMobSpawned(spawn.id)
+                behaviorTreeSystem.onMobSpawned(spawn.id)
+                for (p in players.playersInRoom(spawn.roomId)) {
+                    outbound.send(OutboundEvent.SendText(p.sessionId, "${spawn.name} appears."))
+                    gmcpEmitter.sendRoomAddMob(p.sessionId, respawned)
+                }
+            }
+        }
+    }
+
+    private suspend fun onCombatLevelUp(
+        sessionId: SessionId,
+        level: Int,
+    ) {
+        markVitalsDirty(sessionId)
+        val pc = players.get(sessionId)?.playerClass
+        val newAbilities = abilitySystem.syncAbilities(sessionId, level, pc)
+        for (ability in newAbilities) {
+            outbound.send(OutboundEvent.SendText(sessionId, "You have learned ${ability.displayName}!"))
+        }
+        val p = players.get(sessionId)
+        if (p != null) {
+            gmcpEmitter.sendCharName(sessionId, p)
+            gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId))
+        }
+        achievementSystem.onLevelReached(sessionId, level)
+    }
+
+    private suspend fun onCombatMobKilledByPlayer(
+        sessionId: SessionId,
+        templateKey: String,
+    ) {
+        questSystem.onMobKilled(sessionId, templateKey)
+        achievementSystem.onMobKilled(sessionId, templateKey)
+    }
 }
