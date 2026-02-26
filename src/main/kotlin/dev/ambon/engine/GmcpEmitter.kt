@@ -260,11 +260,18 @@ class GmcpEmitter(
         return """{"id":"$id","name":"$name","slot":$slot,"damage":${item.item.damage},"armor":${item.item.armor}}"""
     }
 
-    private fun String.jsonEscape(): String =
-        this
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
+    private fun String.jsonEscape(): String {
+        val sb = StringBuilder(length + 4)
+        for (ch in this) {
+            when (ch) {
+                '\\' -> sb.append("\\\\")
+                '"' -> sb.append("\\\"")
+                '\n' -> sb.append("\\n")
+                '\r' -> sb.append("\\r")
+                '\t' -> sb.append("\\t")
+                else -> sb.append(ch)
+            }
+        }
+        return sb.toString()
+    }
 }
