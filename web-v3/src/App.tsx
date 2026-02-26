@@ -5,7 +5,8 @@ import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import "./styles.css";
 
-type MobileTab = "play" | "world" | "character" | "inventory";
+type MobileTab = "play" | "world" | "character";
+type PopoutPanel = "map" | "equipment" | "wearing" | null;
 
 interface Vitals {
   hp: number;
@@ -79,7 +80,6 @@ const TABS: Array<{ id: MobileTab; label: string }> = [
   { id: "play", label: "Play" },
   { id: "world", label: "World" },
   { id: "character", label: "Character" },
-  { id: "inventory", label: "Inventory" },
 ];
 
 const COMMANDS = [
@@ -232,6 +232,7 @@ function App() {
   const currentRoomIdRef = useRef<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<MobileTab>("play");
+  const [activePopout, setActivePopout] = useState<PopoutPanel>(null);
   const [connected, setConnected] = useState(false);
   const [liveMessage, setLiveMessage] = useState("Disconnected.");
   const [composerValue, setComposerValue] = useState("");
@@ -836,6 +837,25 @@ function App() {
     };
   }, [connect, disconnect, drawMap]);
 
+  useEffect(() => {
+    if (!activePopout) return;
+
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActivePopout(null);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activePopout]);
+
+  useEffect(() => {
+    if (activePopout !== "map") return;
+    const handle = window.requestAnimationFrame(() => drawMap());
+    return () => window.cancelAnimationFrame(handle);
+  }, [activePopout, drawMap]);
+
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 
   const equipmentSlots = useMemo(() => {
@@ -856,6 +876,12 @@ function App() {
       : `${vitals.xpIntoLevel.toLocaleString()} / ${vitals.xpToNextLevel.toLocaleString()}`;
   const xpValue = vitals.xpToNextLevel === null ? 1 : vitals.xpIntoLevel;
   const xpMax = vitals.xpToNextLevel === null ? 1 : Math.max(1, vitals.xpToNextLevel);
+  const popoutTitle =
+    activePopout === "map"
+      ? "Mini-map"
+      : activePopout === "equipment"
+        ? "Equipment"
+        : "Currently Wearing";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -978,12 +1004,15 @@ function App() {
         </section>
 
         <section className="panel panel-world" aria-label="World state">
-          <header className="panel-header"><h2>World</h2><p>Room context, map, and local entities.</p></header>
-
-          <article className="subpanel">
-            <h3>Mini-map</h3>
-            <canvas ref={mapCanvasRef} className="mini-map" width={320} height={220} aria-label="Visited room map" />
-          </article>
+          <header className="panel-header panel-header-with-actions">
+            <div>
+              <h2>World</h2>
+              <p>Room context, exits, and local entities.</p>
+            </div>
+            <button type="button" className="panel-action-button" onClick={() => setActivePopout("map")}>
+              Open Map
+            </button>
+          </header>
 
           <article className="subpanel">
             <h3>Room</h3>
@@ -1023,7 +1052,20 @@ function App() {
         </section>
 
         <section className="panel panel-character" aria-label="Character status">
-          <header className="panel-header"><h2>Character</h2><p>Identity, progression, and active effects.</p></header>
+          <header className="panel-header panel-header-with-actions">
+            <div>
+              <h2>Character</h2>
+              <p>Identity, progression, and active effects.</p>
+            </div>
+            <div className="panel-action-row">
+              <button type="button" className="panel-action-button" onClick={() => setActivePopout("equipment")}>
+                Equipment
+              </button>
+              <button type="button" className="panel-action-button" onClick={() => setActivePopout("wearing")}>
+                Currently Wearing
+              </button>
+            </div>
+          </header>
 
           <article className="subpanel">
             <h3>Identity</h3>
@@ -1066,30 +1108,85 @@ function App() {
               </ul>
             )}
           </article>
-        </section>
-
-        <section className="panel panel-inventory" aria-label="Inventory and equipment">
-          <header className="panel-header"><h2>Inventory</h2><p>Carried items and equipped gear.</p></header>
 
           <article className="subpanel">
-            <h3>Carried Items</h3>
-            {inventory.length === 0 ? <p className="empty-note">Nothing carried.</p> : (
-              <ul className="item-list">{inventory.map((item) => <li key={item.id}>{item.name}</li>)}</ul>
-            )}
-          </article>
-
-          <article className="subpanel">
-            <h3>Equipment</h3>
-            {equipmentSlots.length === 0 ? <p className="empty-note">Nothing equipped.</p> : (
-              <ul className="equipment-list">
-                {equipmentSlots.map((slot) => (
-                  <li key={slot}><span className="equipment-slot">{slot}</span><span>{equipment[slot]?.name ?? "Unknown"}</span></li>
-                ))}
-              </ul>
-            )}
+            <h3>Loadout Access</h3>
+            <ul className="entity-list">
+              <li className="entity-item">
+                <span>Equipment Slots</span>
+                <span className="entity-meta">{equipmentSlots.length}</span>
+              </li>
+              <li className="entity-item">
+                <span>Carried Items</span>
+                <span className="entity-meta">{inventory.length}</span>
+              </li>
+            </ul>
+            <p className="empty-note">Open pop-outs to inspect full equipment and currently worn gear.</p>
           </article>
         </section>
       </div>
+
+      {activePopout && (
+        <div className="popout-backdrop" onClick={() => setActivePopout(null)}>
+          <section
+            className="popout-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label={popoutTitle}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="popout-header">
+              <h2>{popoutTitle}</h2>
+              <button type="button" className="soft-button popout-close" onClick={() => setActivePopout(null)}>
+                Close
+              </button>
+            </header>
+
+            {activePopout === "map" && (
+              <div className="popout-content">
+                <canvas
+                  ref={mapCanvasRef}
+                  className="mini-map mini-map-popout"
+                  width={900}
+                  height={560}
+                  aria-label="Visited room map"
+                />
+              </div>
+            )}
+
+            {activePopout === "equipment" && (
+              <div className="popout-content">
+                {inventory.length === 0 ? (
+                  <p className="empty-note">No equipment in bags right now.</p>
+                ) : (
+                  <ul className="item-list">
+                    {inventory.map((item) => (
+                      <li key={item.id}>{item.name}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {activePopout === "wearing" && (
+              <div className="popout-content">
+                {equipmentSlots.length === 0 ? (
+                  <p className="empty-note">Nothing currently worn.</p>
+                ) : (
+                  <ul className="equipment-list">
+                    {equipmentSlots.map((slot) => (
+                      <li key={slot}>
+                        <span className="equipment-slot">{slot}</span>
+                        <span>{equipment[slot]?.name ?? "Unknown"}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
 
       <nav className="mobile-tab-bar" aria-label="Mobile sections">
         {TABS.map((tab) => (
