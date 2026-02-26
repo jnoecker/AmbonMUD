@@ -40,6 +40,43 @@ sealed interface CreateResult {
     data object Taken : CreateResult
 }
 
+/**
+ * Result of the async credential-resolution phase of login.
+ * No in-memory engine state is modified during this phase.
+ */
+internal sealed interface LoginCredentialPrep {
+    /** Password verified; record ready to be bound to the session. */
+    data class Verified(
+        val record: PlayerRecord,
+    ) : LoginCredentialPrep
+
+    /** Password did not match the stored hash. */
+    data object WrongPassword : LoginCredentialPrep
+
+    /** No player record found for the requested name. */
+    data object NotFound : LoginCredentialPrep
+
+    /** Name or password failed basic validation. */
+    data object InvalidInput : LoginCredentialPrep
+}
+
+/**
+ * Result of the async account-creation preparation phase.
+ * No in-memory engine state is modified during this phase.
+ */
+internal sealed interface CreateAccountPrep {
+    /** Account record created in the repository; ready to be bound to the session. */
+    data class Ready(
+        val record: PlayerRecord,
+    ) : CreateAccountPrep
+
+    /** Name or password failed basic validation. */
+    data object InvalidInput : CreateAccountPrep
+
+    /** A player with this name already exists. */
+    data object Taken : CreateAccountPrep
+}
+
 class PlayerRegistry(
     private val startRoom: RoomId,
     private val repo: PlayerRepository,
@@ -56,6 +93,111 @@ class PlayerRegistry(
 
     // Case-insensitive name index (online only)
     private val sessionByLowerName = mutableMapOf<String, SessionId>()
+
+    /**
+     * Async phase 1 of login: look up the player record and verify credentials.
+     *
+     * Does **not** mutate any in-memory state — safe to call from a background coroutine
+     * concurrently with the engine tick loop.
+     */
+    internal suspend fun prepareLoginCredentials(nameRaw: String, passwordRaw: String): LoginCredentialPrep {
+        val name = normalizeName(nameRaw)
+        val password = normalizePassword(passwordRaw)
+        if (!isValidName(name)) return LoginCredentialPrep.InvalidInput
+        if (!isValidPassword(password)) return LoginCredentialPrep.InvalidInput
+
+        val record = repo.findByName(name) ?: return LoginCredentialPrep.NotFound
+        val now = clock.millis()
+
+        return if (record.passwordHash.isNotBlank()) {
+            val ok =
+                withContext(hashingContext) {
+                    runCatching { BCrypt.checkpw(password, record.passwordHash) }.getOrDefault(false)
+                }
+            if (ok) LoginCredentialPrep.Verified(record.copy(lastSeenEpochMs = now)) else LoginCredentialPrep.WrongPassword
+        } else {
+            val hash = withContext(hashingContext) { BCrypt.hashpw(password, BCrypt.gensalt()) }
+            LoginCredentialPrep.Verified(record.copy(lastSeenEpochMs = now, passwordHash = hash))
+        }
+    }
+
+    /**
+     * Sync phase 2 of login: bind a verified record to the session.
+     *
+     * Mutates in-memory state — must be called on the engine thread.
+     */
+    internal suspend fun applyLoginCredentials(
+        sessionId: SessionId,
+        record: PlayerRecord,
+        defaultAnsiEnabled: Boolean,
+    ): LoginResult {
+        if (players.containsKey(sessionId)) return LoginResult.InvalidName
+        val now = clock.millis()
+        return if (isNameOnline(record.name, sessionId)) {
+            val oldSid = findSessionByName(record.name)!!
+            takeoverSession(oldSid, sessionId, record, now)
+            LoginResult.Takeover(oldSid)
+        } else {
+            bindSession(sessionId, record, now)
+            LoginResult.Ok
+        }
+    }
+
+    /**
+     * Async phase 1 of account creation: hash the password and persist the new record.
+     *
+     * Does **not** mutate any in-memory state — safe to call from a background coroutine
+     * concurrently with the engine tick loop.
+     */
+    internal suspend fun prepareCreateAccount(
+        nameRaw: String,
+        passwordRaw: String,
+        defaultAnsiEnabled: Boolean,
+        race: Race,
+        playerClass: PlayerClass,
+    ): CreateAccountPrep {
+        val name = normalizeName(nameRaw)
+        val password = normalizePassword(passwordRaw)
+        if (!isValidName(name)) return CreateAccountPrep.InvalidInput
+        if (!isValidPassword(password)) return CreateAccountPrep.InvalidInput
+        if (repo.findByName(name) != null) return CreateAccountPrep.Taken
+
+        val now = clock.millis()
+        val hash = withContext(hashingContext) { BCrypt.hashpw(password, BCrypt.gensalt()) }
+        val baseStat = PlayerState.BASE_STAT
+        val record =
+            repo.create(
+                PlayerCreationRequest(
+                    name = name,
+                    startRoomId = startRoom,
+                    nowEpochMs = now,
+                    passwordHash = hash,
+                    ansiEnabled = defaultAnsiEnabled,
+                    race = race.name,
+                    playerClass = playerClass.name,
+                    strength = baseStat + race.strMod,
+                    dexterity = baseStat + race.dexMod,
+                    constitution = baseStat + race.conMod,
+                    intelligence = baseStat + race.intMod,
+                    wisdom = baseStat + race.wisMod,
+                    charisma = baseStat + race.chaMod,
+                ),
+            )
+        return CreateAccountPrep.Ready(record)
+    }
+
+    /**
+     * Sync phase 2 of account creation: bind the prepared record to the session.
+     *
+     * Mutates in-memory state — must be called on the engine thread.
+     */
+    internal suspend fun applyCreateAccount(sessionId: SessionId, record: PlayerRecord): CreateResult {
+        if (players.containsKey(sessionId)) return CreateResult.InvalidName
+        if (isNameOnline(record.name, sessionId)) return CreateResult.Taken
+        val now = clock.millis()
+        bindSession(sessionId, record, now)
+        return CreateResult.Ok
+    }
 
     suspend fun login(
         sessionId: SessionId,
