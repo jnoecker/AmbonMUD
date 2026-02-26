@@ -90,6 +90,10 @@ class NetworkSession(
             log.warn { "Telnet session disconnected due to protocol violation: sessionId=$sessionId message=${v.message}" }
             metrics.onTelnetDisconnected("error")
             inbound.send(InboundEvent.Disconnected(sessionId, "protocol violation: ${v.message}"))
+        } catch (s: java.net.SocketException) {
+            log.debug { "Telnet session connection reset: sessionId=$sessionId" }
+            metrics.onTelnetDisconnected("connection reset")
+            inbound.send(InboundEvent.Disconnected(sessionId, "connection reset"))
         } catch (t: Throwable) {
             log.error(t) { "Unexpected read error: sessionId=$sessionId" }
             metrics.onTelnetDisconnected("error")
