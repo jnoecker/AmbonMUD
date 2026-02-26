@@ -43,6 +43,7 @@ import dev.ambon.engine.events.InputEventHandler
 import dev.ambon.engine.events.InterEngineEventHandler
 import dev.ambon.engine.events.LoginEventHandler
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.events.PhaseEventHandler
 import dev.ambon.engine.events.SessionEventHandler
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
@@ -58,7 +59,6 @@ import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.InterEngineMessage
 import dev.ambon.sharding.PlayerLocationIndex
 import dev.ambon.sharding.PlayerSummary
-import dev.ambon.sharding.ZoneInstance
 import dev.ambon.sharding.ZoneRegistry
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Timer
@@ -179,6 +179,22 @@ class GameEngine(
             asAwaitingRaceSelection = { state -> state as? LoginState.AwaitingRaceSelection },
             asAwaitingClassSelection = { state -> state as? LoginState.AwaitingClassSelection },
             isAwaitingName = { state -> state == LoginState.AwaitingName },
+        )
+    }
+
+    private val phaseEventHandler by lazy {
+        PhaseEventHandler(
+            handoffManager = handoffManager,
+            zoneRegistry = zoneRegistry,
+            players = players,
+            combatSystem = combatSystem,
+            regenSystem = regenSystem,
+            statusEffectSystem = statusEffectSystem,
+            playerLocationIndex = playerLocationIndex,
+            engineId = engineId,
+            sendInfo = { sid, msg -> outbound.send(OutboundEvent.SendInfo(sid, msg)) },
+            sendPrompt = { sid -> outbound.send(OutboundEvent.SendPrompt(sid)) },
+            logger = log,
         )
     }
 
@@ -957,101 +973,14 @@ class GameEngine(
         sessionId: SessionId,
         targetRoomId: RoomId,
     ) {
-        val mgr = handoffManager ?: return
-        // End combat and leave group before handoff
-        combatSystem.endCombatFor(sessionId)
-        regenSystem.onPlayerDisconnected(sessionId)
-        statusEffectSystem.removeAllFromPlayer(sessionId)
-        groupSystem.onPlayerDisconnected(sessionId)
-
-        when (val result = mgr.initiateHandoff(sessionId, targetRoomId)) {
-            is HandoffResult.Initiated -> {
-                log.info { "Cross-zone handoff initiated to engine=${result.targetEngine.engineId}" }
-            }
-            HandoffResult.AlreadyInTransit -> {
-                outbound.send(
-                    OutboundEvent.SendInfo(sessionId, "You are already crossing into new territory."),
-                )
-                outbound.send(OutboundEvent.SendPrompt(sessionId))
-            }
-            HandoffResult.PlayerNotFound -> {
-                log.warn { "Cross-zone move failed: player not found for session=$sessionId" }
-            }
-            HandoffResult.NoEngineForZone -> {
-                // No engine owns the target zone — fall back to shimmer message
-                outbound.send(
-                    OutboundEvent.SendText(sessionId, "The way shimmers but does not yield."),
-                )
-                outbound.send(OutboundEvent.SendPrompt(sessionId))
-            }
-        }
+        phaseEventHandler.handleCrossZoneMove(sessionId, targetRoomId)
     }
 
     private suspend fun handlePhase(
         sessionId: SessionId,
         targetHint: String?,
-    ): PhaseResult {
-        val reg = zoneRegistry ?: return PhaseResult.NotEnabled
-        val mgr = handoffManager ?: return PhaseResult.NotEnabled
-
-        val player = players.get(sessionId) ?: return PhaseResult.NoOp("You must be in the world to switch layers.")
-        val currentZone = player.roomId.zone
-        val instances = reg.instancesOf(currentZone)
-
-        if (instances.size <= 1) {
-            return PhaseResult.NoOp("There is only one instance of this zone.")
-        }
-
-        // No target: list available instances
-        if (targetHint == null) {
-            return PhaseResult.InstanceList(
-                currentEngineId = engineId,
-                instances = instances,
-            )
-        }
-
-        // Resolve which instance to switch to
-        val resolvedInstance =
-            resolvePhaseTarget(targetHint, instances)
-                ?: return PhaseResult.NoOp("Unknown instance or player: $targetHint")
-
-        if (resolvedInstance.engineId == engineId) {
-            return PhaseResult.NoOp("You are already on that instance.")
-        }
-
-        // Handoff to same room on the target engine
-        combatSystem.endCombatFor(sessionId)
-        regenSystem.onPlayerDisconnected(sessionId)
-        statusEffectSystem.removeAllFromPlayer(sessionId)
-        return when (mgr.initiateHandoff(sessionId, player.roomId, targetEngineOverride = resolvedInstance.address)) {
-            is HandoffResult.Initiated -> PhaseResult.Initiated
-            HandoffResult.AlreadyInTransit -> PhaseResult.NoOp("You are already crossing into new territory.")
-            HandoffResult.PlayerNotFound -> PhaseResult.NoOp("Could not find your player data.")
-            HandoffResult.NoEngineForZone -> PhaseResult.NoOp("That instance is no longer available.")
-        }
-    }
-
-    private suspend fun resolvePhaseTarget(
-        hint: String,
-        instances: List<ZoneInstance>,
-    ): ZoneInstance? {
-        // 1. Match by engine ID
-        instances.firstOrNull { it.engineId == hint }?.let { return it }
-
-        // 2. Match by player name → look up which engine they're on
-        val targetEngineId = playerLocationIndex?.lookupEngineId(hint)
-        if (targetEngineId != null) {
-            instances.firstOrNull { it.engineId == targetEngineId }?.let { return it }
-        }
-
-        // 3. Match by 1-based instance number
-        val idx = hint.toIntOrNull()
-        if (idx != null && idx in 1..instances.size) {
-            return instances[idx - 1]
-        }
-
-        return null
-    }
+    ): PhaseResult =
+        phaseEventHandler.handlePhase(sessionId, targetHint)
 
     private suspend fun handleRemoteWho(sessionId: SessionId) {
         val bus = interEngineBus ?: return
