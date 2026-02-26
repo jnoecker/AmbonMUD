@@ -36,6 +36,7 @@ import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.DefaultEngineEventDispatcher
 import dev.ambon.engine.events.EngineEventDispatcher
+import dev.ambon.engine.events.GmcpEventHandler
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.InputEventHandler
 import dev.ambon.engine.events.LoginEventHandler
@@ -178,6 +179,22 @@ class GameEngine(
             asAwaitingRaceSelection = { state -> state as? LoginState.AwaitingRaceSelection },
             asAwaitingClassSelection = { state -> state as? LoginState.AwaitingClassSelection },
             isAwaitingName = { state -> state == LoginState.AwaitingName },
+        )
+    }
+
+    private val gmcpEventHandler by lazy {
+        GmcpEventHandler(
+            gmcpSessions = gmcpSessions,
+            players = players,
+            world = world,
+            items = items,
+            mobs = mobs,
+            abilitySystem = abilitySystem,
+            statusEffectSystem = statusEffectSystem,
+            achievementRegistry = achievementRegistry,
+            groupSystem = groupSystem,
+            gmcpEmitter = gmcpEmitter,
+            logger = log,
         )
     }
 
@@ -1692,58 +1709,7 @@ class GameEngine(
     }
 
     private suspend fun handleGmcpReceived(ev: InboundEvent.GmcpReceived) {
-        val sid = ev.sessionId
-        when (ev.gmcpPackage) {
-            "Core.Hello" -> {
-                log.debug { "GMCP Core.Hello from session=$sid data=${ev.jsonData}" }
-            }
-            "Core.Supports.Set" -> {
-                val packages = parseGmcpPackageList(ev.jsonData)
-                val supported = gmcpSessions.getOrPut(sid) { mutableSetOf() }
-                supported.addAll(packages)
-                log.debug { "GMCP supports set for session=$sid packages=$packages" }
-                // Send initial data if the player is already logged in
-                val player = players.get(sid) ?: return
-                val room = world.rooms[player.roomId] ?: return
-                gmcpEmitter.sendCharStatusVars(sid)
-                gmcpEmitter.sendCharVitals(sid, player)
-                gmcpEmitter.sendRoomInfo(sid, room)
-                gmcpEmitter.sendCharName(sid, player)
-                gmcpEmitter.sendCharItemsList(sid, items.inventory(sid), items.equipment(sid))
-                gmcpEmitter.sendRoomPlayers(sid, players.playersInRoom(player.roomId).toList())
-                gmcpEmitter.sendRoomMobs(sid, mobs.mobsInRoom(player.roomId))
-                gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid))
-                gmcpEmitter.sendCharStatusEffects(sid, statusEffectSystem.activePlayerEffects(sid))
-                gmcpEmitter.sendCharAchievements(sid, player, achievementRegistry)
-                val group = groupSystem.getGroup(sid)
-                if (group != null) {
-                    val leader = players.get(group.leader)?.name
-                    val members = group.members.mapNotNull { players.get(it) }
-                    gmcpEmitter.sendGroupInfo(sid, leader, members)
-                }
-            }
-            "Core.Supports.Remove" -> {
-                val packages = parseGmcpPackageList(ev.jsonData)
-                gmcpSessions[sid]?.removeAll(packages.toSet())
-            }
-            "Core.Ping" -> {
-                gmcpEmitter.sendCorePing(sid)
-            }
-        }
-    }
-
-    /**
-     * Parses a GMCP package list like `["Char.Vitals 1","Room.Info 1"]`
-     * into a set of package names (version suffix stripped).
-     */
-    private fun parseGmcpPackageList(json: String): List<String> {
-        val content = json.trim().removePrefix("[").removeSuffix("]")
-        if (content.isBlank()) return emptyList()
-        return content
-            .split(",")
-            .map { it.trim().removeSurrounding("\"").trim() }
-            .map { it.substringBefore(' ') }
-            .filter { it.isNotBlank() }
+        gmcpEventHandler.onGmcpReceived(ev)
     }
 
     /** Iterates [set] with [action] then clears it, avoiding an intermediate list allocation. */
