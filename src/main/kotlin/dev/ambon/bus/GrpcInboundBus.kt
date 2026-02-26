@@ -72,5 +72,7 @@ class GrpcInboundBus(
         delegate.close()
     }
 
+    override fun depth(): Int = delegate.depth()
+
     fun delegateForMetrics(): LocalInboundBus = delegate
 }

@@ -67,6 +67,8 @@ class RedisInboundBus(
         delegate.close()
     }
 
+    override fun depth(): Int = delegate.depth()
+
     fun delegateForMetrics(): LocalInboundBus = delegate
 
     private fun publish(event: InboundEvent) {

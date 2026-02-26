@@ -490,6 +490,7 @@ class GameEngine(
                 worldState.applySnapshot(snapshot) { itemId -> items.createFromTemplate(itemId) }
             }
 
+            var tickDebtMs = 0L
             while (isActive) {
                 val tickStart = clock.millis()
                 val tickSample = Timer.start()
@@ -607,9 +608,11 @@ class GameEngine(
 
                 val elapsed = clock.millis() - tickStart
                 val sleep = (tickMillis - elapsed).coerceAtLeast(0)
+                tickDebtMs = maxOf(0L, tickDebtMs + elapsed - tickMillis)
 
                 metrics.onEngineTick()
-                if (elapsed > tickMillis) metrics.onEngineTickOverrun()
+                metrics.updateTickDebt(tickDebtMs)
+                if (elapsed > tickMillis) metrics.onEngineTickOverrun(inbound.depth())
                 if (elapsed > tickMillis * 2) log.warn { "Slow tick: elapsed=${elapsed}ms (threshold=${tickMillis * 2}ms)" }
                 tickSample.stop(metrics.engineTickTimer)
 
