@@ -37,6 +37,7 @@ import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.DefaultEngineEventDispatcher
 import dev.ambon.engine.events.EngineEventDispatcher
 import dev.ambon.engine.events.GmcpEventHandler
+import dev.ambon.engine.events.GmcpFlushHandler
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.InputEventHandler
 import dev.ambon.engine.events.InterEngineEventHandler
@@ -194,6 +195,20 @@ class GameEngine(
             groupSystem = groupSystem,
             gmcpEmitter = gmcpEmitter,
             logger = log,
+        )
+    }
+
+    private val gmcpFlushHandler by lazy {
+        GmcpFlushHandler(
+            gmcpDirtyVitals = gmcpDirtyVitals,
+            gmcpDirtyStatusEffects = gmcpDirtyStatusEffects,
+            gmcpDirtyMobs = gmcpDirtyMobs,
+            gmcpDirtyGroup = gmcpDirtyGroup,
+            players = players,
+            mobs = mobs,
+            statusEffectSystem = statusEffectSystem,
+            groupSystem = groupSystem,
+            gmcpEmitter = gmcpEmitter,
         )
     }
 
@@ -1597,59 +1612,20 @@ class GameEngine(
         gmcpEventHandler.onGmcpReceived(ev)
     }
 
-    /** Iterates [set] with [action] then clears it, avoiding an intermediate list allocation. */
-    private inline fun <T> drainDirty(set: MutableSet<T>, action: (T) -> Unit) {
-        if (set.isEmpty()) return
-        for (item in set) {
-            action(item)
-        }
-        set.clear()
-    }
-
     private suspend fun flushDirtyGmcpVitals() {
-        drainDirty(gmcpDirtyVitals) { sid ->
-            val player = players.get(sid) ?: return@drainDirty
-            gmcpEmitter.sendCharVitals(sid, player)
-        }
+        gmcpFlushHandler.flushDirtyVitals()
     }
 
     private suspend fun flushDirtyGmcpStatusEffects() {
-        drainDirty(gmcpDirtyStatusEffects) { sid ->
-            val effects = statusEffectSystem.activePlayerEffects(sid)
-            gmcpEmitter.sendCharStatusEffects(sid, effects)
-        }
+        gmcpFlushHandler.flushDirtyStatusEffects()
     }
 
     private suspend fun flushDirtyGmcpMobs() {
-        if (gmcpDirtyMobs.isEmpty()) return
-        // Group dirty mobs by room so playersInRoom() is called once per room
-        // rather than once per mob, reducing O(mobs × players_per_room) to
-        // O(dirty_mobs + players_in_affected_rooms).
-        val mobsByRoom = mutableMapOf<RoomId, MutableList<MobState>>()
-        drainDirty(gmcpDirtyMobs) { mobId ->
-            val mob = mobs.get(mobId) ?: return@drainDirty
-            mobsByRoom.getOrPut(mob.roomId) { mutableListOf() }.add(mob)
-        }
-        for ((roomId, roomMobs) in mobsByRoom) {
-            for (p in players.playersInRoom(roomId)) {
-                for (mob in roomMobs) {
-                    gmcpEmitter.sendRoomUpdateMob(p.sessionId, mob)
-                }
-            }
-        }
+        gmcpFlushHandler.flushDirtyMobs()
     }
 
     private suspend fun flushDirtyGmcpGroup() {
-        drainDirty(gmcpDirtyGroup) { sid ->
-            val group = groupSystem.getGroup(sid)
-            if (group == null) {
-                gmcpEmitter.sendGroupInfo(sid, null, emptyList())
-            } else {
-                val leader = players.get(group.leader)?.name
-                val members = group.members.mapNotNull { players.get(it) }
-                gmcpEmitter.sendGroupInfo(sid, leader, members)
-            }
-        }
+        gmcpFlushHandler.flushDirtyGroup()
     }
 
     private fun spawnToMobState(spawn: dev.ambon.domain.world.MobSpawn): MobState =
