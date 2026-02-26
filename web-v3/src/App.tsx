@@ -78,6 +78,7 @@ const MAX_VISIBLE_WORLD_PLAYERS = 4;
 const MAX_VISIBLE_WORLD_MOBS = 4;
 const MAX_VISIBLE_EFFECTS = 4;
 const EXIT_ORDER = ["north", "south", "east", "west", "up", "down"];
+const COMPASS_DIRECTIONS = ["north", "east", "south", "west", "up", "down"] as const;
 const SLOT_ORDER = ["head", "body", "hand"];
 const TABS: Array<{ id: MobileTab; label: string }> = [
   { id: "play", label: "Play" },
@@ -888,6 +889,7 @@ function App() {
   const hasCharacterProfile = character.name !== "-";
   const hasRoomDetails = room.id !== null || room.title !== "-";
   const preLogin = connected && !hasCharacterProfile && !hasRoomDetails;
+  const availableExitSet = useMemo(() => new Set(exits.map(([direction]) => direction.toLowerCase())), [exits]);
   const canOpenMap = hasRoomDetails;
   const canOpenEquipment = hasCharacterProfile;
   const commandPlaceholder = connected
@@ -1046,8 +1048,32 @@ function App() {
                   <h3>Room</h3>
                   <p className="room-title">{room.title}</p>
                   <p className="room-description">{room.description || "No room description available yet."}</p>
-                  <div className="exit-cloud" aria-label="Current exits">
-                    {exits.length === 0 ? <span className="empty-note">No exits listed.</span> : exits.map(([direction]) => <span key={direction} className="exit-pill">{direction}</span>)}
+                  <div className="compass-block" aria-label="Current exits">
+                    <div className="compass-rose" role="group" aria-label="Directional exits">
+                      {COMPASS_DIRECTIONS.map((direction) => {
+                        const enabled = availableExitSet.has(direction);
+                        return (
+                          <button
+                            key={direction}
+                            type="button"
+                            className={`compass-node compass-node-${direction}`}
+                            disabled={!enabled}
+                            aria-label={enabled ? `Move ${direction}` : `${direction} exit unavailable`}
+                            title={enabled ? `Move ${direction}` : `${direction} unavailable`}
+                            onClick={() => {
+                              sendCommand(direction, true);
+                              terminalRef.current?.focus();
+                            }}
+                          >
+                            {direction === "up" ? "U" : direction === "down" ? "D" : direction[0]?.toUpperCase()}
+                          </button>
+                        );
+                      })}
+                      <span className="compass-core" aria-hidden="true">A</span>
+                    </div>
+                    <p className="compass-caption">
+                      {exits.length === 0 ? "No exits listed." : `Available: ${exits.map(([direction]) => direction).join(", ")}`}
+                    </p>
                   </div>
                 </>
               ) : (
