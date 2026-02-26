@@ -34,7 +34,7 @@ class CommandRouterItemsTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(1L)
             login(players, sid, "Player1")
@@ -65,7 +65,7 @@ class CommandRouterItemsTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(2L)
             login(players, sid, "Player2")
@@ -92,7 +92,7 @@ class CommandRouterItemsTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(3L)
             login(players, sid, "Player3")
@@ -129,7 +129,7 @@ class CommandRouterItemsTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(4L)
             login(players, sid, "Player4")
@@ -165,7 +165,7 @@ class CommandRouterItemsTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(5L)
             login(players, sid, "Player5")
@@ -206,7 +206,7 @@ class CommandRouterItemsTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(6L)
             login(players, sid, "Player6")
@@ -248,7 +248,7 @@ class CommandRouterItemsTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(7L)
             login(players, sid, "Player7")
@@ -291,7 +291,7 @@ class CommandRouterItemsTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(8L)
             login(players, sid, "Player8")
@@ -343,7 +343,7 @@ class CommandRouterItemsTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val sid = SessionId(9L)
             login(players, sid, "Player9")
@@ -388,7 +388,7 @@ class CommandRouterItemsTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val aliceSid = SessionId(10L)
             val bobSid = SessionId(11L)
@@ -421,7 +421,7 @@ class CommandRouterItemsTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val aliceSid = SessionId(12L)
             val bobSid = SessionId(13L)
@@ -462,7 +462,7 @@ class CommandRouterItemsTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val aliceSid = SessionId(14L)
             val bobSid = SessionId(15L)

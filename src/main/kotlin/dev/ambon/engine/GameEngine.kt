@@ -22,6 +22,17 @@ import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
+import dev.ambon.engine.commands.handlers.AdminHandler
+import dev.ambon.engine.commands.handlers.CombatHandler
+import dev.ambon.engine.commands.handlers.CommunicationHandler
+import dev.ambon.engine.commands.handlers.DialogueQuestHandler
+import dev.ambon.engine.commands.handlers.GroupHandler
+import dev.ambon.engine.commands.handlers.ItemHandler
+import dev.ambon.engine.commands.handlers.NavigationHandler
+import dev.ambon.engine.commands.handlers.ProgressionHandler
+import dev.ambon.engine.commands.handlers.ShopHandler
+import dev.ambon.engine.commands.handlers.UiHandler
+import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
@@ -319,43 +330,137 @@ class GameEngine(
             metrics = metrics,
         )
 
-    private val router =
-        CommandRouter(
+    private val router = CommandRouter()
+
+    init {
+        val crossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = if (handoffManager != null) ::handleCrossZoneMove else null
+        val phaseCallback: (suspend (SessionId, String?) -> PhaseResult)? =
+            if (zoneRegistry != null && zoneRegistry.instancingEnabled() && handoffManager != null) {
+                ::handlePhase
+            } else {
+                null
+            }
+
+        NavigationHandler(
+            router = router,
             world = world,
             players = players,
             mobs = mobs,
             items = items,
             combat = combatSystem,
             outbound = outbound,
-            progression = progression,
-            abilitySystem = abilitySystem,
-            metrics = metrics,
-            onShutdown = onShutdown,
-            onMobSmited = mobSystem::onMobRemoved,
-            onCrossZoneMove = if (handoffManager != null) ::handleCrossZoneMove else null,
+            worldState = worldState,
+            gmcpEmitter = gmcpEmitter,
+            statusEffects = statusEffectSystem,
+            dialogueSystem = dialogueSystem,
+            onCrossZoneMove = crossZoneMove,
+        )
+        CommunicationHandler(
+            router = router,
+            players = players,
+            outbound = outbound,
+            gmcpEmitter = gmcpEmitter,
+            groupSystem = groupSystem,
             interEngineBus = interEngineBus,
+            playerLocationIndex = playerLocationIndex,
             engineId = engineId,
             onRemoteWho = if (interEngineBus != null) ::handleRemoteWho else null,
-            playerLocationIndex = playerLocationIndex,
+        )
+        CombatHandler(
+            router = router,
+            players = players,
+            mobs = mobs,
+            combat = combatSystem,
+            outbound = outbound,
+            abilitySystem = abilitySystem,
+            statusEffects = statusEffectSystem,
+            dialogueSystem = dialogueSystem,
+        )
+        ProgressionHandler(
+            router = router,
+            players = players,
+            items = items,
+            combat = combatSystem,
+            outbound = outbound,
+            progression = progression,
+            abilitySystem = abilitySystem,
+            statusEffects = statusEffectSystem,
+            groupSystem = groupSystem,
+        )
+        ItemHandler(
+            router = router,
+            players = players,
+            items = items,
+            combat = combatSystem,
+            outbound = outbound,
+            gmcpEmitter = gmcpEmitter,
+            questSystem = questSystem,
+            abilitySystem = abilitySystem,
+            markVitalsDirty = ::markVitalsDirty,
+            metrics = metrics,
+            progression = progression,
+        )
+        ShopHandler(
+            router = router,
+            players = players,
+            items = items,
+            outbound = outbound,
+            shopRegistry = shopRegistry,
             gmcpEmitter = gmcpEmitter,
             markVitalsDirty = ::markVitalsDirty,
-            onPhase =
-                if (zoneRegistry != null && zoneRegistry.instancingEnabled() && handoffManager != null) {
-                    ::handlePhase
-                } else {
-                    null
-                },
-            statusEffects = statusEffectSystem,
-            shopRegistry = shopRegistry,
             economyConfig = engineConfig.economy,
+        )
+        DialogueQuestHandler(
+            router = router,
+            players = players,
+            mobs = mobs,
+            outbound = outbound,
             dialogueSystem = dialogueSystem,
             questSystem = questSystem,
-            registry = questRegistry,
+            questRegistry = questRegistry,
             achievementSystem = achievementSystem,
             achievementRegistry = achievementRegistry,
+        )
+        GroupHandler(
+            router = router,
+            outbound = outbound,
             groupSystem = groupSystem,
+        )
+        WorldFeaturesHandler(
+            router = router,
+            world = world,
+            players = players,
+            items = items,
+            outbound = outbound,
             worldState = worldState,
         )
+        AdminHandler(
+            router = router,
+            world = world,
+            players = players,
+            mobs = mobs,
+            items = items,
+            combat = combatSystem,
+            outbound = outbound,
+            onShutdown = onShutdown,
+            onMobSmited = mobSystem::onMobRemoved,
+            onCrossZoneMove = crossZoneMove,
+            dialogueSystem = dialogueSystem,
+            gmcpEmitter = gmcpEmitter,
+            statusEffects = statusEffectSystem,
+            interEngineBus = interEngineBus,
+            engineId = engineId,
+            metrics = metrics,
+            worldState = worldState,
+        )
+        UiHandler(
+            router = router,
+            players = players,
+            outbound = outbound,
+            combat = combatSystem,
+            onPhase = phaseCallback,
+        )
+    }
 
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
     private val failedLoginAttempts = mutableMapOf<SessionId, Int>()

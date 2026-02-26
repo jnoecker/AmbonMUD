@@ -26,7 +26,7 @@ class SocialChannelCommandsTest {
         val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
         val mobs = MobRegistry()
         val outbound = LocalOutboundBus()
-        val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+        val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
         return Triple(router, players, outbound)
     }
 
