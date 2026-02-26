@@ -69,6 +69,7 @@ class InterEngineMessageHandlingTest {
     private fun buildEngine(
         engineId: String = "engine-1",
         bus: InterEngineBus = LocalInterEngineBus(),
+        peerEngineCount: () -> Int = { 0 },
         onShutdown: suspend () -> Unit = {},
     ): EngineTestHarness {
         val clock = MutableClock(0L)
@@ -94,6 +95,7 @@ class InterEngineMessageHandlingTest {
                 scheduler = scheduler,
                 interEngineBus = bus,
                 engineId = engineId,
+                peerEngineCount = peerEngineCount,
                 onShutdown = onShutdown,
             )
 
@@ -325,6 +327,162 @@ class InterEngineMessageHandlingTest {
             assertTrue(
                 outs.none { it is OutboundEvent.SendInfo && "Bob" in (it as OutboundEvent.SendInfo).text },
                 "Unknown requestId WhoResponse should be dropped",
+            )
+
+            job.cancelAndJoin()
+        }
+
+    @Test
+    fun `who command broadcasts WhoRequest for remote fanout`() =
+        runTest {
+            val capturingBus = CapturingInterEngineBus()
+            val h = buildEngine("engine-1", bus = capturingBus)
+            val sid = SessionId(1)
+
+            val job = launch { h.engine.run() }
+
+            loginViaEngine(h, sid, "Alice")
+            pumpEngine(h)
+            drain(h.outbound)
+            capturingBus.sent.clear()
+
+            h.inbound.send(InboundEvent.LineReceived(sid, "who"))
+            pumpEngine(h)
+
+            val whoRequests =
+                capturingBus.sent
+                    .filter { (_, msg) -> msg is InterEngineMessage.WhoRequest }
+            assertEquals(1, whoRequests.size, "Expected one WhoRequest broadcast. sent=${capturingBus.sent}")
+            val (targetEngine, msg) = whoRequests.first()
+            assertEquals(null, targetEngine)
+            val request = msg as InterEngineMessage.WhoRequest
+            assertEquals("engine-1", request.replyToEngineId)
+
+            job.cancelAndJoin()
+        }
+
+    @Test
+    fun `known WhoResponse is aggregated and flush sends sorted also online list`() =
+        runTest {
+            val h = buildEngine("engine-1", bus = LocalInterEngineBus(), peerEngineCount = { 1 })
+            val sid = SessionId(1)
+
+            val job = launch { h.engine.run() }
+
+            loginViaEngine(h, sid, "Alice")
+            pumpEngine(h)
+            drain(h.outbound)
+
+            h.inbound.send(InboundEvent.LineReceived(sid, "who"))
+            pumpEngine(h)
+
+            val whoRequest =
+                (h.bus as LocalInterEngineBus).incoming().tryReceive().getOrNull() as? InterEngineMessage.WhoRequest
+            requireNotNull(whoRequest)
+
+            (h.bus as LocalInterEngineBus).broadcast(
+                InterEngineMessage.WhoResponse(
+                    requestId = whoRequest.requestId,
+                    players = listOf(PlayerSummary("Zed", "ruins:entry", 3), PlayerSummary("Bob", "hub:plaza", 4)),
+                ),
+            )
+
+            // Cross WHO_RESPONSE_WAIT_MS deadline in engine and test schedulers.
+            pumpEngine(h, 400L)
+
+            val infoLines =
+                drain(h.outbound)
+                    .filterIsInstance<OutboundEvent.SendInfo>()
+                    .map { it.text }
+            assertTrue(
+                infoLines.any { it == "Also online: Bob, Zed" },
+                "Expected sorted remote who list. got=$infoLines",
+            )
+
+            job.cancelAndJoin()
+        }
+
+    @Test
+    fun `disconnect clears pending who request and later response is ignored`() =
+        runTest {
+            val h = buildEngine("engine-1", bus = LocalInterEngineBus(), peerEngineCount = { 1 })
+            val sid = SessionId(1)
+
+            val job = launch { h.engine.run() }
+
+            loginViaEngine(h, sid, "Alice")
+            pumpEngine(h)
+            drain(h.outbound)
+
+            h.inbound.send(InboundEvent.LineReceived(sid, "who"))
+            pumpEngine(h)
+
+            val bus = h.bus as LocalInterEngineBus
+            val whoRequest = bus.incoming().tryReceive().getOrNull() as? InterEngineMessage.WhoRequest
+            requireNotNull(whoRequest)
+
+            h.inbound.send(InboundEvent.Disconnected(sid))
+            pumpEngine(h)
+            drain(h.outbound)
+
+            bus.broadcast(
+                InterEngineMessage.WhoResponse(
+                    requestId = whoRequest.requestId,
+                    players = listOf(PlayerSummary("Bob", "hub:plaza", 4)),
+                ),
+            )
+            pumpEngine(h, 400L)
+
+            val infoLines =
+                drain(h.outbound)
+                    .filterIsInstance<OutboundEvent.SendInfo>()
+                    .map { it.text }
+            assertTrue(
+                infoLines.none { it.contains("Also online") || it.contains("results may be incomplete") },
+                "Expected no pending who output after disconnect cleanup. got=$infoLines",
+            )
+
+            job.cancelAndJoin()
+        }
+
+    @Test
+    fun `who flush warns when not all peer shards respond`() =
+        runTest {
+            val h = buildEngine("engine-1", bus = LocalInterEngineBus(), peerEngineCount = { 2 })
+            val sid = SessionId(1)
+
+            val job = launch { h.engine.run() }
+
+            loginViaEngine(h, sid, "Alice")
+            pumpEngine(h)
+            drain(h.outbound)
+
+            h.inbound.send(InboundEvent.LineReceived(sid, "who"))
+            pumpEngine(h)
+
+            val bus = h.bus as LocalInterEngineBus
+            val whoRequest = bus.incoming().tryReceive().getOrNull() as? InterEngineMessage.WhoRequest
+            requireNotNull(whoRequest)
+
+            bus.broadcast(
+                InterEngineMessage.WhoResponse(
+                    requestId = whoRequest.requestId,
+                    players = listOf(PlayerSummary("Bob", "hub:plaza", 4)),
+                ),
+            )
+            pumpEngine(h, 400L)
+
+            val infoLines =
+                drain(h.outbound)
+                    .filterIsInstance<OutboundEvent.SendInfo>()
+                    .map { it.text }
+            assertTrue(
+                infoLines.any { it == "Also online: Bob" },
+                "Expected remote who names line. got=$infoLines",
+            )
+            assertTrue(
+                infoLines.any { it.contains("some game shards did not respond") },
+                "Expected incomplete-shard warning line. got=$infoLines",
             )
 
             job.cancelAndJoin()

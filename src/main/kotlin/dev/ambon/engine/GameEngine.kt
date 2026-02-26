@@ -43,8 +43,10 @@ import dev.ambon.engine.events.InputEventHandler
 import dev.ambon.engine.events.InterEngineEventHandler
 import dev.ambon.engine.events.LoginEventHandler
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.events.PendingWhoRequest
 import dev.ambon.engine.events.PhaseEventHandler
 import dev.ambon.engine.events.SessionEventHandler
+import dev.ambon.engine.events.WhoEventHandler
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.engine.status.EffectType
@@ -58,7 +60,6 @@ import dev.ambon.sharding.HandoffResult
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.InterEngineMessage
 import dev.ambon.sharding.PlayerLocationIndex
-import dev.ambon.sharding.PlayerSummary
 import dev.ambon.sharding.ZoneRegistry
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Timer
@@ -70,7 +71,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 import java.time.Clock
-import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 
@@ -234,6 +234,19 @@ class GameEngine(
         )
     }
 
+    private val whoEventHandler by lazy {
+        WhoEventHandler(
+            interEngineBus = interEngineBus,
+            engineId = engineId,
+            peerEngineCount = peerEngineCount,
+            nowMillis = clock::millis,
+            players = players,
+            sendInfo = { sid, msg -> outbound.send(OutboundEvent.SendInfo(sid, msg)) },
+            pendingWhoRequests = pendingWhoRequests,
+            responseWaitMs = WHO_RESPONSE_WAIT_MS,
+        )
+    }
+
     private val interEngineEventHandler by lazy {
         InterEngineEventHandler(
             handoffManager = handoffManager,
@@ -249,15 +262,7 @@ class GameEngine(
             regenSystem = regenSystem,
             statusEffectSystem = statusEffectSystem,
             resolveRoomId = ::resolveRoomId,
-            onWhoResponse = { response ->
-                val pending = pendingWhoRequests[response.requestId] ?: return@InterEngineEventHandler
-                if (players.get(pending.sessionId) == null) {
-                    pendingWhoRequests.remove(response.requestId)
-                    return@InterEngineEventHandler
-                }
-                pending.respondedCount++
-                pending.remotePlayerNames += response.players.map(PlayerSummary::name)
-            },
+            onWhoResponse = whoEventHandler::onWhoResponse,
             logger = log,
             metrics = metrics,
         )
@@ -730,14 +735,6 @@ class GameEngine(
         ) : LoginState
     }
 
-    private data class PendingWhoRequest(
-        val sessionId: SessionId,
-        val deadlineEpochMs: Long,
-        val expectedPeerCount: Int,
-        val remotePlayerNames: MutableSet<String> = linkedSetOf(),
-        var respondedCount: Int = 0,
-    )
-
     init {
         world.mobSpawns.forEach { spawn ->
             mobs.upsert(spawnToMobState(spawn))
@@ -990,46 +987,11 @@ class GameEngine(
         phaseEventHandler.handlePhase(sessionId, targetHint)
 
     private suspend fun handleRemoteWho(sessionId: SessionId) {
-        val bus = interEngineBus ?: return
-        val requestId = UUID.randomUUID().toString()
-        pendingWhoRequests[requestId] =
-            PendingWhoRequest(
-                sessionId = sessionId,
-                deadlineEpochMs = clock.millis() + WHO_RESPONSE_WAIT_MS,
-                expectedPeerCount = peerEngineCount(),
-            )
-        bus.broadcast(
-            InterEngineMessage.WhoRequest(
-                requestId = requestId,
-                replyToEngineId = engineId,
-            ),
-        )
+        whoEventHandler.handleRemoteWho(sessionId)
     }
 
     private suspend fun flushDueWhoResponses(nowEpochMs: Long = clock.millis()) {
-        if (pendingWhoRequests.isEmpty()) return
-
-        val itr = pendingWhoRequests.iterator()
-        while (itr.hasNext()) {
-            val (_, pending) = itr.next()
-            if (nowEpochMs < pending.deadlineEpochMs) continue
-
-            if (players.get(pending.sessionId) != null) {
-                if (pending.remotePlayerNames.isNotEmpty()) {
-                    val names = pending.remotePlayerNames.sorted().joinToString(", ")
-                    outbound.send(OutboundEvent.SendInfo(pending.sessionId, "Also online: $names"))
-                }
-                if (pending.expectedPeerCount > 0 && pending.respondedCount < pending.expectedPeerCount) {
-                    outbound.send(
-                        OutboundEvent.SendInfo(
-                            pending.sessionId,
-                            "(Note: some game shards did not respond — results may be incomplete.)",
-                        ),
-                    )
-                }
-            }
-            itr.remove()
-        }
+        whoEventHandler.flushDueWhoResponses(nowEpochMs)
     }
 
     private suspend fun handleHandoffTimeout(sessionId: SessionId) {
