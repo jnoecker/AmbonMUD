@@ -63,12 +63,18 @@
         }
     }, 100);
 
-    // Canvas animation loop
+    // Canvas animation loop with performance monitoring
+    let frameCount = 0;
+    let lastFpsUpdate = performance.now();
+    let fps = 60;
+
     function canvasAnimationLoop() {
         if (!canvasRenderer || !canvasCamera) {
             animationFrameId = requestAnimationFrame(canvasAnimationLoop);
             return;
         }
+
+        const now = performance.now();
 
         // Update camera to follow player
         const playerPos = canvasRenderer.gameState.playerPos;
@@ -76,11 +82,29 @@
             canvasCamera.setTarget(playerPos.x, playerPos.y);
         }
 
-        // Update camera
+        // Update camera with smooth easing
         canvasCamera.update();
+
+        // Update compass direction
+        if (canvasRenderer.gameState.exits) {
+            canvasRenderer.updateCompass();
+        }
 
         // Schedule render
         canvasRenderer.scheduleRender();
+
+        // FPS monitoring (only in debug mode, every 500ms)
+        frameCount++;
+        if (now - lastFpsUpdate > 500) {
+            fps = Math.round((frameCount * 1000) / (now - lastFpsUpdate));
+            frameCount = 0;
+            lastFpsUpdate = now;
+
+            // Warn if FPS drops below 50
+            if (fps < 50) {
+                console.warn(`Canvas FPS: ${fps} (performance warning)`);
+            }
+        }
 
         // Continue loop
         animationFrameId = requestAnimationFrame(canvasAnimationLoop);

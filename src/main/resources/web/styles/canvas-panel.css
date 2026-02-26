@@ -289,3 +289,123 @@
         transform: translate(-50%, -50%) rotate(360deg);
     }
 }
+
+/* ========== ENHANCED POLISH ========== */
+
+/* Canvas visibility states */
+#world-canvas {
+    opacity: 1;
+    transition: opacity 300ms ease-out-soft;
+}
+
+#world-canvas.connecting {
+    opacity: 0.5;
+}
+
+#world-canvas.ready {
+    opacity: 1;
+}
+
+/* Performance indicator (optional debug mode) */
+.canvas-fps-counter {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    padding: 4px 8px;
+    background: rgba(107, 107, 123, 0.7);
+    border: 1px solid var(--color-primary-pale-blue);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    font-family: monospace;
+    pointer-events: none;
+    display: none;
+}
+
+.canvas-fps-counter.debug {
+    display: block;
+}
+
+/* Minimap overlay (for dual-canvas support) */
+.minimap-overlay {
+    position: absolute;
+    bottom: 60px;
+    right: 4px;
+    width: 80px;
+    height: 60px;
+    border: 1px solid var(--color-primary-pale-blue);
+    border-radius: var(--radius-sm);
+    background: rgba(216, 197, 232, 0.05);
+    opacity: 0.7;
+    transition: opacity 200ms ease-out-soft;
+}
+
+.minimap-overlay:hover {
+    opacity: 1;
+}
+
+/* Connection status indicator */
+.connection-status-indicator {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #C5A8A8;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    animation: pulse-status 2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.connection-status-indicator.connected {
+    background: #C5D8A8;
+    animation: pulse-status-healthy 1.5s ease-in-out infinite;
+}
+
+.connection-status-indicator.disconnected {
+    background: #E8C5A8;
+    animation: none;
+}
+
+@keyframes pulse-status {
+    0%, 100% {
+        box-shadow: 0 0 4px rgba(232, 168, 168, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 8px rgba(232, 168, 168, 0.8);
+    }
+}
+
+@keyframes pulse-status-healthy {
+    0%, 100% {
+        box-shadow: 0 0 4px rgba(197, 216, 168, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 8px rgba(197, 216, 168, 0.8);
+    }
+}
+
+/* Frame rate adaptive rendering hint */
+@media (max-width: 768px) {
+    #world-canvas {
+        /* Reduced quality on mobile for better performance */
+        image-rendering: auto;
+    }
+}
+
+/* Touch feedback for zoom buttons */
+.zoom-btn:active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+}
+
+/* Smooth transitions for all interactive elements */
+.compass,
+.zoom-btn,
+.exit-indicator {
+    will-change: transform, box-shadow;
+}

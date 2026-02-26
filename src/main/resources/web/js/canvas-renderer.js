@@ -301,6 +301,25 @@ class CanvasWorldRenderer {
         }
         this.particleSystem.clear();
     }
+
+    /**
+     * Update compass element based on room exits
+     */
+    updateCompass() {
+        const compass = document.getElementById('compass');
+        if (!compass || !this.gameState.exits) return;
+
+        const exits = this.gameState.exits;
+        const directions = Object.keys(exits);
+
+        // Determine primary direction (for compass display)
+        let directionText = 'N';
+        if (directions.length > 0) {
+            directionText = directions[0].toUpperCase();
+        }
+
+        compass.textContent = directionText;
+    }
 }
 
 // ========== BACKGROUND LAYER ==========
@@ -311,36 +330,123 @@ class BackgroundLayer extends Layer {
         this.designTokens = designTokens;
         this.parallaxDepth = 0;
         this.scrollOffset = { x: 0, y: 0 };
+        this.time = 0; // For animated effects
     }
 
     render(ctx, gameState) {
-        // Sky gradient (warm golden to lavender)
+        this.time += 0.016; // ~60fps delta
+
+        // Main sky gradient (warm golden to lavender)
         const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-        gradient.addColorStop(0, '#E8D8D0');   // Sky top
-        gradient.addColorStop(0.5, '#F8F0E8'); // Sky middle
-        gradient.addColorStop(1, '#E8E8F0');   // Ground
+        gradient.addColorStop(0, '#E8D8D0');   // Sky top (warm)
+        gradient.addColorStop(0.3, '#F0E8E0'); // Upper air
+        gradient.addColorStop(0.6, '#F8F0F0'); // Mid air
+        gradient.addColorStop(1, '#E8E8F0');   // Ground (lavender tint)
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-        // Parallax layers
+        // Parallax background layers
         const playerPos = gameState.playerPos || { x: 200, y: 150 };
-        for (let depth = 1; depth <= 3; depth++) {
-            const parallaxX = (playerPos.x / depth) % ctx.canvas.width;
-            const parallaxY = (playerPos.y / depth) % ctx.canvas.height;
-            this.renderParallaxLayer(ctx, depth, parallaxX, parallaxY, ctx.canvas.width, ctx.canvas.height);
-        }
+
+        // Far layer (mountains/landscape)
+        this.renderFarLayer(ctx, playerPos, ctx.canvas.width, ctx.canvas.height);
+
+        // Mid layer (hills/trees)
+        this.renderMidLayer(ctx, playerPos, ctx.canvas.width, ctx.canvas.height);
+
+        // Near layer (close objects)
+        this.renderNearLayer(ctx, playerPos, ctx.canvas.width, ctx.canvas.height);
+
+        // Ambient fog effect (subtle)
+        this.renderFog(ctx, ctx.canvas.width, ctx.canvas.height);
     }
 
-    renderParallaxLayer(ctx, depth, offsetX, offsetY, width, height) {
-        // Opacity decreases with depth (aerial perspective)
-        ctx.globalAlpha = 1 - (depth * 0.15);
+    renderFarLayer(ctx, playerPos, width, height) {
+        // Far mountains - parallax at 1/4 speed
+        ctx.globalAlpha = 0.15;
 
-        // Background elements (simplified for now)
-        // Could be enhanced with actual parallax images
-        ctx.fillStyle = `rgba(184, 216, 232, ${0.1 * (1 - depth * 0.1)})`;
-        ctx.fillRect(0, 0, width, height);
+        const parallaxX = (playerPos.x / 4) % (width * 2);
+        const parallaxY = (playerPos.y / 4) % (height * 2);
+
+        // Draw distant horizon line
+        ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0 - parallaxX, height * 0.4 - parallaxY);
+        ctx.lineTo(width - parallaxX, height * 0.4 - parallaxY);
+        ctx.stroke();
+
+        // Distant hills
+        ctx.fillStyle = 'rgba(184, 200, 216, 0.2)';
+        for (let i = 0; i < 3; i++) {
+            const x = (i * 400 - parallaxX) % (width + 400);
+            const y = height * 0.35;
+            ctx.beginPath();
+            ctx.arc(x, y, 80, Math.PI, 0);
+            ctx.fill();
+        }
 
         ctx.globalAlpha = 1;
+    }
+
+    renderMidLayer(ctx, playerPos, width, height) {
+        // Mid-distance trees/objects - parallax at 1/2 speed
+        ctx.globalAlpha = 0.25;
+
+        const parallaxX = (playerPos.x / 2) % (width * 2);
+        const parallaxY = (playerPos.y / 2) % (height * 2);
+
+        ctx.fillStyle = 'rgba(168, 200, 168, 0.25)';
+
+        // Tree clusters
+        for (let i = 0; i < 4; i++) {
+            const x = (i * 250 - parallaxX) % (width + 300);
+            const y = height * 0.5;
+
+            // Tree trunk
+            ctx.fillRect(x - 8, y, 16, 40);
+
+            // Tree canopy
+            ctx.beginPath();
+            ctx.arc(x, y - 10, 30, Math.PI, 0);
+            ctx.fill();
+        }
+
+        ctx.globalAlpha = 1;
+    }
+
+    renderNearLayer(ctx, playerPos, width, height) {
+        // Close foreground - parallax at 3/4 speed (almost full)
+        ctx.globalAlpha = 0.35;
+
+        const parallaxX = (playerPos.x * 0.75) % (width * 1.5);
+        const parallaxY = (playerPos.y * 0.75) % (height * 1.5);
+
+        // Ground vegetation
+        ctx.fillStyle = 'rgba(197, 216, 168, 0.3)';
+
+        for (let i = 0; i < 8; i++) {
+            const x = (i * 150 - parallaxX) % (width + 200);
+            const y = height * 0.7;
+
+            // Flower/plant cluster
+            ctx.beginPath();
+            ctx.ellipse(x, y, 15, 25, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.globalAlpha = 1;
+    }
+
+    renderFog(ctx, width, height) {
+        // Ambient fog effect (very subtle)
+        const gradient = ctx.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, 'rgba(232, 224, 216, 0)');
+        gradient.addColorStop(0.7, 'rgba(232, 224, 216, 0.02)');
+        gradient.addColorStop(1, 'rgba(232, 224, 216, 0.05)');
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
     }
 }
 
