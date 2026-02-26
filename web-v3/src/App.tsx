@@ -319,6 +319,40 @@ function CompassCoreIcon({ className }: { className?: string }) {
   );
 }
 
+function AttackIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M14.5 4.8 19.2 9.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M18.8 5.2 9.6 14.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.2 15.8 6 18l2.2 2.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.6 14.4 7.3 16.7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12.7 11.3h3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
+      <path d="M6.6 7.8 10.2 6.4 13.8 7.8v4.2c0 3.7-2.2 6.1-3.6 6.9-1.4-.8-3.6-3.2-3.6-6.9V7.8Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.2 7.4v10.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
+      <path d="M10.2 10.1h0" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+    </svg>
+  );
+}
+
+function FleeIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M9.2 6.8a2.1 2.1 0 1 0 0 .1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.3 9.2 7.9 12.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.6 9.7 12 11.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7.9 12.1 6.2 15.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6.2 15.4 4.9 18.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.9 12.3 9.1 14.9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.1 14.9 9.8 18.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.8 10.4 6.3 10.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
+      <path d="M13.8 8.8c1.2 1 2 2.5 2 4.2s-.8 3.2-2 4.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
+      <path d="M16.9 9.9c.7.7 1.1 1.7 1.1 2.9s-.4 2.2-1.1 2.9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.65" />
+      <path d="M18.7 12h2.3" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19.9 10.8 21 12l-1.1 1.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function App() {
   const terminalHostRef = useRef<HTMLDivElement | null>(null);
   const mapCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -1118,6 +1152,20 @@ function App() {
                 );
               })
             )}
+            {connected && hasRoomDetails && (
+              <button
+                type="button"
+                className="chip-button chip-button-utility"
+                title="Attempt to flee from combat"
+                onClick={() => {
+                  sendCommand("flee", true);
+                  terminalRef.current?.focus();
+                }}
+              >
+                <FleeIcon className="chip-direction-icon" />
+                <span className="chip-label">flee</span>
+              </button>
+            )}
           </div>
 
           <form className="command-form" onSubmit={submitComposer}>
@@ -1270,7 +1318,24 @@ function App() {
                     <ul className="entity-list">
                       {visibleMobs.map((mob) => (
                         <li key={mob.id} className="mob-card">
-                          <div className="entity-item"><span>{mob.name}</span><span className="entity-meta">{mob.hp}/{mob.maxHp}</span></div>
+                          <div className="entity-item">
+                            <span>{mob.name}</span>
+                            <span className="mob-meta-actions">
+                              <span className="entity-meta">{mob.hp}/{mob.maxHp}</span>
+                              <button
+                                type="button"
+                                className="mob-command-button"
+                                title={`Attack ${mob.name}`}
+                                aria-label={`Attack ${mob.name}`}
+                                onClick={() => {
+                                  sendCommand(`kill ${mob.name}`, true);
+                                  terminalRef.current?.focus();
+                                }}
+                              >
+                                <AttackIcon className="mob-command-icon" />
+                              </button>
+                            </span>
+                          </div>
                           <div className="meter-track"><span className="meter-fill meter-fill-hp" style={{ width: `${percent(mob.hp, mob.maxHp)}%` }} /></div>
                         </li>
                       ))}

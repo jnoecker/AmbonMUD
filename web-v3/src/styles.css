@@ -594,6 +594,14 @@ body {
   transform: scale(0.98);
 }
 
+.chip-button-utility {
+  background: linear-gradient(135deg, rgb(233 215 246 / 88%), rgb(243 220 229 / 84%));
+}
+
+.chip-button-utility:hover {
+  background: linear-gradient(135deg, rgb(228 201 244 / 90%), rgb(244 202 218 / 88%));
+}
+
 .chip-direction-icon {
   width: 14px;
   height: 14px;
@@ -962,6 +970,52 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+
+.mob-meta-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mob-command-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid rgb(106 96 136 / 24%);
+  background: linear-gradient(140deg, rgb(239 214 228 / 90%), rgb(224 238 248 / 86%));
+  color: #6b4f5d;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 50%), var(--shadow-sm);
+  transition:
+    transform 160ms var(--ease-out-soft),
+    box-shadow 160ms var(--ease-out-soft),
+    background-color 160ms var(--ease-out-soft);
+}
+
+.mob-command-button:hover {
+  transform: translateY(-1px) scale(1.03);
+  background: linear-gradient(140deg, rgb(241 194 213 / 92%), rgb(208 231 245 / 88%));
+  box-shadow: var(--shadow-md), 0 0 10px rgb(232 197 216 / 34%);
+}
+
+.mob-command-button:active {
+  transform: scale(0.97);
+}
+
+.mob-command-button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgb(184 216 232 / 58%),
+    0 0 0 4px rgb(216 197 232 / 30%);
+}
+
+.mob-command-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .identity-name {
