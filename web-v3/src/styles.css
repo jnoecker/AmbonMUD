@@ -355,7 +355,7 @@ body {
 .split-list {
   display: grid;
   gap: var(--space-2);
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .entity-list,
@@ -382,6 +382,15 @@ body {
   padding: 8px 10px;
   background: rgb(255 255 255 / 75%);
   border: 1px solid rgb(107 107 123 / 11%);
+}
+
+.entity-item > span:first-child,
+.equipment-list li > span:last-child,
+.item-list li {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .entity-meta,
@@ -605,24 +614,24 @@ body {
 
   .panel-world {
     grid-area: world;
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1.1fr);
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
   }
 
   .panel-character {
     grid-area: character;
-    display: grid;
-    grid-template-rows: auto minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
-  }
-
-  .panel-world .subpanel,
-  .panel-character .subpanel {
-    min-height: 0;
+    display: flex;
+    flex-direction: column;
     overflow: auto;
   }
 
   .panel-world .mini-map {
     height: clamp(110px, 17vh, 160px);
+  }
+
+  .panel-world .split-list {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .connection-pill {

@@ -1108,21 +1108,6 @@ function App() {
               </ul>
             )}
           </article>
-
-          <article className="subpanel">
-            <h3>Loadout Access</h3>
-            <ul className="entity-list">
-              <li className="entity-item">
-                <span>Equipment Slots</span>
-                <span className="entity-meta">{equipmentSlots.length}</span>
-              </li>
-              <li className="entity-item">
-                <span>Carried Items</span>
-                <span className="entity-meta">{inventory.length}</span>
-              </li>
-            </ul>
-            <p className="empty-note">Open pop-outs to inspect full equipment and currently worn gear.</p>
-          </article>
         </section>
       </div>
 
