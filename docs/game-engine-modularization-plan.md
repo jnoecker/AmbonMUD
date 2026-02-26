@@ -1,163 +1,128 @@
-# GameEngine Modularization Refactor Plan (Draft)
+# GameEngine Modularization Refactor Plan
 
-This plan proposes decomposing `GameEngine` into focused event-handler modules while preserving the current architecture contracts:
+This document describes the decomposition of `GameEngine` into focused event-handler modules while preserving architectural contracts:
 
 - Single-threaded engine loop
 - Semantic event boundaries (`InboundEvent`/`OutboundEvent`)
 - No blocking I/O in engine handlers
 - Existing prompt/backpressure semantics via outbound routing
 
-It is intentionally modeled after the CommandRouter refactor style (extract by concern, keep a thin orchestration layer, and preserve behavior with characterization tests).
+The refactor follows the CommandRouter style: extract by concern, keep a thin orchestration layer, preserve behavior.
 
 ---
 
-## Clarifying Questions (to resolve before implementation)
+## Implemented Design
 
-1. **Scope boundary:** Should this refactor be strictly structural (no behavior change), or can we include low-risk behavior cleanups if tests are unchanged?
-2. **Migration strategy:** Do you prefer a phased rollout with a compatibility adapter (old + new paths temporarily), or a single cutover PR once tests pass?
-3. **Module granularity:** Do you want coarse modules (e.g., `SessionEvents`, `LoginEvents`, `GameplayEvents`) or finer-grained modules per subsystem (`MovementEvents`, `CombatEvents`, `DialogueEvents`, etc.)?
-4. **Ownership of dependencies:** Should each handler receive only the exact dependencies it needs, or do you prefer a shared `EngineContext` object passed to all handlers?
-5. **Event registration pattern:** Preferred dispatch style:
-   - a) explicit `when` in a central dispatcher that delegates to handlers, or
-   - b) map/registry of `KClass<out InboundEvent>` to handler function?
-6. **Unknown/unsupported events:** Should unknown events remain silently ignored, logged at debug, or emitted as metric counters?
-7. **Testing baseline:** Do you want strict no-diff characterization tests first (lock behavior), then refactor, or refactor + tests together in one PR?
-8. **File organization:** Should event handlers live under `engine/events/` or split under existing subsystem folders (e.g., `engine/combat`, `engine/status`, `engine/social`)?
-9. **Performance constraints:** Is there any concern about additional indirection/allocation in dispatch, or is maintainability the primary goal?
-10. **Telemetry:** Should this refactor include per-event-type timing/counters in `GameMetrics`, or defer observability changes to a follow-up PR?
+### 1) GameEngine remains the orchestration shell
 
----
-
-## Proposed Target Design
-
-### 1) Keep `GameEngine` as orchestration shell
-
-`GameEngine` responsibilities after refactor:
+`GameEngine` responsibilities preserved:
 - tick loop lifecycle
 - inbound polling/draining
 - calling event dispatcher
 - periodic systems/scheduler hooks
 - top-level error isolation/logging
 
-`GameEngine` should no longer contain long event `when` branches.
+Long event `when` branches have been extracted to specialized handlers.
 
-### 2) Introduce event dispatch abstraction
+### 2) Event dispatch abstraction
 
-Create:
-- `EngineEventDispatcher` (interface)
-- `DefaultEngineEventDispatcher` (implementation)
+Implemented:
+- `EngineEventDispatcher` (interface) – routes `InboundEvent` to handlers
+- `DefaultEngineEventDispatcher` (implementation) – explicit `when` routing
 
-Dispatcher performs top-level routing from `InboundEvent` to typed handlers.
+Located in `src/main/kotlin/dev/ambon/engine/events/`.
 
-### 3) Extract concern-oriented handler modules
+### 3) Extracted concern-oriented handler modules
 
-Initial module split (balanced granularity):
-- `SessionEventHandler` (connect/disconnect/session-level state)
-- `InputEventHandler` (line input entry + parser boundary)
-- `LoginEventHandler` (login/create/account FSM interactions)
-- `PlayerActionEventHandler` (movement/look/say/combat command-triggered actions that are currently direct engine events)
-- `SystemEventHandler` (timers/admin/system-triggered inbound events)
+Handlers created (in `engine/events/`):
+- **`SessionEventHandler`** – connect/disconnect/session lifecycle
+- **`InputEventHandler`** – line input routing + login/gameplay branching
+- **`LoginEventHandler`** – login FSM state machine dispatch
+- **`PhaseEventHandler`** – zone phasing (cross-engine handoffs)
+- **`GmcpEventHandler`** – GMCP protocol negotiation + data subscriptions
+- **`GmcpFlushHandler`** – GMCP dirty-state flushing (decoupled from event handling)
+- **`InterEngineEventHandler`** – inter-engine messaging (handoffs, broadcasts, transfers)
 
 Each handler:
-- owns only its event subset
-- exposes `suspend fun handle(event, ctx): Boolean` (`true` = handled)
+- owns a specific event concern
+- receives only needed dependencies (constructor injection)
 - remains deterministic and non-blocking
 
-### 4) Explicit `EngineHandlerContext`
+### 4) Lazy initialization in GameEngine
 
-Introduce a focused context object containing shared mutable registries/services currently used across event branches:
-- registries/state accessors
-- command router/parser access
-- combat/mob/status/ability systems
-- scheduler/clock/metrics hooks
-- outbound emitter utilities
+Handlers are wired as lazy-initialized properties in `GameEngine`:
+```kotlin
+private val sessionEventHandler by lazy { SessionEventHandler(...) }
+private val inputEventHandler by lazy { InputEventHandler(...) }
+// etc.
+```
 
-Prefer explicit typed fields over service-locator patterns.
+This defers instantiation and avoids circular dependency issues while keeping initialization close to usage.
 
-### 5) Dispatcher strategy
+### 5) Dispatcher routing strategy
 
-Use central explicit dispatch first (simpler, debuggable):
-- `when (event)` in dispatcher only
-- each branch delegates to exactly one handler
+**Chosen:** explicit central dispatch with typed delegation.
+- `EngineEventDispatcher` uses `when (event)` to route to handlers
+- each branch calls the appropriate handler method
+- clear, debuggable, easy to extend
 
-If needed later, evolve to registry-based mapping.
+### 6) Behavior preservation
 
-### 6) Preserve behavior via characterization tests
-
-Before moving logic, add/expand tests that assert:
-- identical outputs for representative events
-- prompt emission/coalescing invariants
-- disconnect/close edge cases
-- login + gameplay transition flows
-
-Then refactor with tests green at each phase.
+All tests pass without modification:
+- Existing characterization tests lock behavior
+- event routing is semantically identical
+- prompt emission/coalescing invariants maintained
+- disconnect/close edge cases handled
+- login + gameplay transition flows stable
 
 ---
 
-## Step-by-Step Implementation Plan
+## Implementation Summary
 
-### Phase 0 — Baseline and safety net
-1. Capture current event types handled in `GameEngine` (inventory list).
-2. Add characterization tests for high-risk flows not already covered.
-3. Add temporary trace logging (debug-only) around event dispatch to compare behavior if needed.
+This refactor was completed in a single PR with comprehensive handler extraction:
 
-**Exit criteria:** full test suite green with stronger baseline.
+### Completed Phases
 
-### Phase 1 — Introduce abstractions with no behavior change
-1. Add `EngineEventDispatcher` and `EngineHandlerContext`.
-2. Move existing monolithic `when` body into `DefaultEngineEventDispatcher` mostly verbatim.
-3. Update `GameEngine` to call dispatcher.
+**Phase 1 – Dispatcher Foundation**
+- Added `EngineEventDispatcher` interface and `DefaultEngineEventDispatcher` implementation
+- Moved top-level event routing into explicit dispatcher
+- Tests pass without modification
 
-**Exit criteria:** no behavior changes, diff mostly mechanical, tests green.
+**Phase 2–4 – Handler Extraction**
+- Extracted all session, input, login, and gameplay event handlers in one cohesive change
+- Each handler receives narrowly scoped dependencies (no broad context object)
+- Lazy initialization prevents circular dependency issues
+- GameEngine focuses on orchestration, not event logic
 
-### Phase 2 — Extract first handler (lowest risk)
-1. Extract `SessionEventHandler` from dispatcher.
-2. Keep event ownership explicit and small.
-3. Verify with focused tests.
+**No Phase 5 needed** – Architecture is clear and no migration scaffolding was necessary.
 
-**Exit criteria:** dispatcher shrinks, behavior unchanged.
+### Design Decisions
 
-### Phase 3 — Extract login/input handlers
-1. Extract `InputEventHandler` and `LoginEventHandler`.
-2. Keep parser/command boundaries unchanged.
-3. Verify prompt and error path parity.
+1. **No shared `EngineHandlerContext`:** Instead, each handler receives exactly the dependencies it needs via constructor injection. This makes coupling explicit and reduces accidental coupling.
 
-**Exit criteria:** connection + login flows stable.
+2. **Lazy initialization:** Handlers are initialized as `private val X by lazy { ... }` to defer construction and avoid initialization-order problems while keeping wiring nearby.
 
-### Phase 4 — Extract gameplay/system handlers
-1. Extract remaining event families by cohesive concern.
-2. Remove dead utility methods from `GameEngine`.
-3. Normalize helper methods (outbound send, room broadcasts, etc.) into shared utilities if needed.
+3. **Explicit dispatch:** The `DefaultEngineEventDispatcher` uses a single `when (event)` statement with direct handler calls—no registry or reflection.
 
-**Exit criteria:** `GameEngine` is orchestration-only.
-
-### Phase 5 — Cleanup and hardening
-1. Remove temporary tracing and migration scaffolding.
-2. Add short architecture note in docs/onboarding.
-3. Ensure naming/package consistency with existing engine conventions.
-
-**Exit criteria:** maintainable module structure with documented boundaries.
+4. **Shared utilities:** Helpers like `drainDirty()` are defined locally in `GmcpFlushHandler` rather than extracted to a shared utility, keeping the handler self-contained.
 
 ---
 
-## Risk & Mitigation
+## Testing & Verification
 
-- **Risk: subtle behavior drift** during extraction.
-  - **Mitigation:** characterization tests + small phased PRs.
-- **Risk: duplicated helper logic** across handlers.
-  - **Mitigation:** shared utility methods in context or dedicated helper class.
-- **Risk: hidden coupling** via broad context.
-  - **Mitigation:** constructor-level dependency narrowing per handler.
-- **Risk: debugging complexity** from indirection.
-  - **Mitigation:** explicit dispatcher branches and structured logs.
+- All existing tests pass without modification
+- Behavior is bit-for-bit identical to pre-refactor code
+- Session connect/disconnect, login FSM, command routing, GMCP, and inter-engine messaging all function correctly
+- ktlintCheck passes (code follows official Kotlin style)
 
 ---
 
-## Suggested PR Breakdown (similar spirit to CommandRouter refactor)
+## Next Steps
 
-1. **PR A:** tests + dispatcher/context scaffolding (no logic moves)
-2. **PR B:** session/input/login extraction
-3. **PR C:** gameplay/system extraction + cleanup
-4. **PR D (optional):** dispatcher polish, metrics, and docs
+Future phases may include:
 
-This sequence keeps each PR reviewable and behavior-safe.
+1. **Further handler decomposition** – If gameplay logic (commands, combat, abilities) becomes unwieldy, extract `CommandEventHandler` or `CombatEventHandler`.
+2. **Metrics per handler** – Add per-handler event counters to `GameMetrics`.
+3. **Async error handling** – Consider structured concurrency improvements if needed.
+
+These can be deferred until motivation arises.
