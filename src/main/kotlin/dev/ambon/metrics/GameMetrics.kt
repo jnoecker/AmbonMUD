@@ -251,6 +251,23 @@ class GameMetrics(
 
     fun onGatewayReconnectBudgetExhausted() = gatewayReconnectBudgetExhaustedCounter.increment()
 
+    /**
+     * Records the duration of a named tick phase (inbound_drain, simulation, gmcp_flush, outbound_flush).
+     * Emits a histogram under `engine_tick_phase_duration_seconds{phase=<phase>}`.
+     */
+    fun recordTickPhase(
+        phase: String,
+        sample: Timer.Sample,
+    ) {
+        sample.stop(
+            Timer
+                .builder("engine_tick_phase_duration_seconds")
+                .tag("phase", phase)
+                .publishPercentileHistogram()
+                .register(registry),
+        )
+    }
+
     fun bindPlayerRegistry(supplier: () -> Int) {
         Gauge.builder("players_online") { supplier().toDouble() }.register(registry)
     }

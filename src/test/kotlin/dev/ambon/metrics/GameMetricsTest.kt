@@ -1,5 +1,6 @@
 package dev.ambon.metrics
 
+import io.micrometer.core.instrument.Timer
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -39,6 +40,7 @@ class GameMetricsTest {
             noop.onPlayerDeath()
             noop.onPlayerSave()
             noop.onPlayerSaveFailure()
+            noop.recordTickPhase("inbound_drain", Timer.start())
         }
     }
 
@@ -184,6 +186,32 @@ class GameMetricsTest {
 
         assertEquals(9.0, registry.get("inbound_bus_queue_depth").gauge().value())
         assertEquals(7.0, registry.get("scheduler_pending_actions").gauge().value())
+    }
+
+    @Test
+    fun `recordTickPhase records histogram samples per phase`() {
+        metrics.recordTickPhase("inbound_drain", Timer.start())
+        metrics.recordTickPhase("inbound_drain", Timer.start())
+        metrics.recordTickPhase("simulation", Timer.start())
+        metrics.recordTickPhase("gmcp_flush", Timer.start())
+        metrics.recordTickPhase("outbound_flush", Timer.start())
+
+        assertEquals(
+            2L,
+            registry.get("engine_tick_phase_duration_seconds").tag("phase", "inbound_drain").timer().count(),
+        )
+        assertEquals(
+            1L,
+            registry.get("engine_tick_phase_duration_seconds").tag("phase", "simulation").timer().count(),
+        )
+        assertEquals(
+            1L,
+            registry.get("engine_tick_phase_duration_seconds").tag("phase", "gmcp_flush").timer().count(),
+        )
+        assertEquals(
+            1L,
+            registry.get("engine_tick_phase_duration_seconds").tag("phase", "outbound_flush").timer().count(),
+        )
     }
 
     @Test
