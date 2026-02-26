@@ -1,5 +1,6 @@
 package dev.ambon.metrics
 
+import dev.ambon.domain.ids.SessionId
 import io.micrometer.core.instrument.Timer
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
@@ -42,6 +43,8 @@ class GameMetricsTest {
             noop.onPlayerSave()
             noop.onPlayerSaveFailure()
             noop.recordTickPhase("inbound_drain", Timer.start())
+            noop.recordInboundLatency(5L)
+            noop.recordOutboundLatency(SessionId(1L), 10L)
         }
     }
 
@@ -266,5 +269,25 @@ class GameMetricsTest {
             1.0,
             registry.counter("grpc_forced_disconnect_control_plane_total", "reason", "stream_full_timeout").count(),
         )
+    }
+
+    @Test
+    fun `recordInboundLatency records to histogram timer`() {
+        metrics.recordInboundLatency(10L)
+        metrics.recordInboundLatency(50L)
+        metrics.recordInboundLatency(200L)
+
+        val timer = registry.get("inbound_event_queue_age_seconds").timer()
+        assertEquals(3L, timer.count())
+    }
+
+    @Test
+    fun `recordOutboundLatency records to histogram timer`() {
+        val sessionId = SessionId(42L)
+        metrics.recordOutboundLatency(sessionId, 5L)
+        metrics.recordOutboundLatency(sessionId, 20L)
+
+        val timer = registry.get("outbound_event_queue_age_seconds").timer()
+        assertEquals(2L, timer.count())
     }
 }
