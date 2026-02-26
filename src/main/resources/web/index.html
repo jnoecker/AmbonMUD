@@ -11,10 +11,62 @@
     <link rel="stylesheet" href="/styles/design-tokens.css">
     <link rel="stylesheet" href="/styles/typography.css">
     <link rel="stylesheet" href="/styles/animations.css">
+    <link rel="stylesheet" href="/styles/components.css">
     <link rel="stylesheet" href="/styles/canvas-panel.css">
+    <link rel="stylesheet" href="/styles/login.css">
+    <link rel="stylesheet" href="/styles/web-client.css">
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+<!-- Login Overlay (Phase 3) -->
+<div id="login-overlay" class="login-overlay">
+    <div class="login-container">
+        <div id="login-banner" class="login-banner">
+            <h1 class="login-banner-title">AmbonMUD</h1>
+        </div>
+        <div class="login-form-wrapper">
+            <div id="login-message" class="form-message" style="display: none;"></div>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input
+                        id="login-username"
+                        type="text"
+                        name="username"
+                        placeholder="Enter your username"
+                        autocomplete="username"
+                        required
+                        minlength="2"
+                        maxlength="16"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input
+                        id="login-password"
+                        type="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+                <div class="login-buttons">
+                    <button type="submit" class="btn-login">Login</button>
+                    <button type="button" id="btn-register" class="btn-register">Register</button>
+                </div>
+            </form>
+            <div class="login-footer">
+                <a href="#help">Help</a>
+                <span>•</span>
+                <a href="#status">Server Status</a>
+                <span>•</span>
+                <a href="#about">About</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <main class="shell">
     <header class="topbar">
         <h1>AmbonMUD Demo</h1>
@@ -110,6 +162,18 @@
 <script src="/js/camera.js"></script>
 <script src="/js/canvas-interaction.js"></script>
 <script src="/js/gmcp-canvas-integration.js"></script>
+<!-- Advanced Effects (Phase 5a) -->
+<script src="/js/time-of-day.js"></script>
+<script src="/js/lighting-system.js"></script>
+<script src="/js/weather-system.js"></script>
+<script src="/js/ambient-effects.js"></script>
+<!-- Multi-Zone Rendering (Phase 5b) -->
+<script src="/js/zone-manager.js"></script>
+<script src="/js/multi-zone-renderer.js"></script>
+<!-- Performance Dashboard (Phase 5c) -->
+<script src="/js/performance-profiler.js"></script>
+<script src="/js/quality-settings.js"></script>
+<script src="/js/performance-dashboard.js"></script>
 <!-- Main Application -->
 <script src="/app.js"></script>
 </body>

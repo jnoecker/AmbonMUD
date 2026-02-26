@@ -1,6 +1,7 @@
 /**
  * AmbonMUD GMCP ↔ Canvas Integration
  * Phase 4b: Wire GMCP data to canvas rendering
+ * Phase 5a: Ambient effects integration
  *
  * Handles GMCP messages and updates the canvas world state
  */
@@ -11,6 +12,44 @@ class GMCPCanvasIntegration {
         this.camera = camera;
         this.interaction = interaction;
         this.effectsLayer = null;
+
+        // Phase 5a ambient systems
+        this.timeOfDaySystem = null;
+        this.lightingSystem = null;
+        this.weatherSystem = null;
+        this.ambientEffectsSystem = null;
+
+        this.currentSeason = 'spring';
+    }
+
+    /**
+     * Initialize ambient effect systems (called after renderer is ready)
+     */
+    initializeAmbientSystems() {
+        if (!this.timeOfDaySystem && typeof TimeOfDaySystem !== 'undefined') {
+            this.timeOfDaySystem = new TimeOfDaySystem();
+            this.lightingSystem = new LightingSystem(this.timeOfDaySystem);
+            this.weatherSystem = new WeatherSystem(this.renderer.particleSystem, this.timeOfDaySystem);
+            this.ambientEffectsSystem = new AmbientEffectsSystem(
+                this.renderer.particleSystem,
+                this.timeOfDaySystem,
+                this.weatherSystem
+            );
+        }
+    }
+
+    /**
+     * Initialize multi-zone rendering systems (Phase 5b)
+     */
+    initializeMultiZoneSystems() {
+        if (!this.zoneManager && typeof ZoneManager !== 'undefined') {
+            this.zoneManager = new ZoneManager();
+            this.multiZoneRenderer = new MultiZoneRenderer(
+                this.renderer,
+                this.camera,
+                this.zoneManager
+            );
+        }
     }
 
     /**
@@ -29,12 +68,23 @@ class GMCPCanvasIntegration {
      * Handle GMCP.Room.Info - Room description and basic data
      */
     handleRoomInfo(data) {
+        // Initialize multi-zone systems on first room load
+        this.initializeMultiZoneSystems();
+
         const room = {
             id: data.id,
             title: data.title,
             description: data.description,
             exits: data.exits || {},
+            width: data.width || 40,
+            height: data.height || 30,
+            terrain: data.terrain || [],
         };
+
+        // Update zone manager with current zone
+        if (this.zoneManager) {
+            this.zoneManager.setCurrentZone(data.id, room);
+        }
 
         this.renderer.updateGameState({
             currentRoom: room,
@@ -82,9 +132,42 @@ class GMCPCanvasIntegration {
             pos: { x: (p.gridX || 0) * 20 + 10, y: (p.gridY || 0) * 20 + 10 },
         }));
 
+        // Update zone manager with current zone entities
+        if (this.zoneManager) {
+            const currentZone = this.zoneManager.getCurrentZone();
+            if (currentZone) {
+                currentZone.mobs = data.mobs || [];
+                currentZone.players = data.players || [];
+            }
+        }
+
         this.renderer.updateGameState({
             mobs,
             playersHere,
+        });
+    }
+
+    /**
+     * Handle GMCP.Room.Adjacent - Adjacent room data (Phase 5b)
+     * Data structure from server:
+     * {
+     *   north: { roomId, title, description, mobs: [...] },
+     *   south: { roomId, title, description, mobs: [...] },
+     *   east: { roomId, title, description, mobs: [...] },
+     *   west: { roomId, title, description, mobs: [...] }
+     * }
+     */
+    handleRoomAdjacent(data) {
+        this.initializeMultiZoneSystems();
+
+        if (!this.zoneManager) return;
+
+        // Update zone manager with adjacent zone data
+        this.zoneManager.updateAdjacentZones(data);
+
+        // Store for reference
+        this.renderer.updateGameState({
+            adjacentRooms: data,
         });
     }
 
@@ -190,19 +273,72 @@ class GMCPCanvasIntegration {
     }
 
     /**
-     * Handle GMCP.Room.Ambiance - Lighting, weather effects
-     * (For future: background effects, lighting changes)
+     * Handle GMCP.Room.Ambiance - Lighting, weather effects (Phase 5a)
+     * Data structure from server:
+     * {
+     *   weather: 'clear' | 'cloudy' | 'rain' | 'fog' | 'snow' | 'storm',
+     *   timeOfDay: 0-1440 (minutes since midnight),
+     *   lighting: 'bright' | 'normal' | 'dim' | 'dark',
+     *   lightSources: [{ x, y, color, intensity, radius }, ...],
+     *   season: 'spring' | 'summer' | 'autumn' | 'winter'
+     * }
      */
     handleRoomAmbiance(data) {
-        // Could update background layer based on weather/lighting
-        const ambiance = {
-            lighting: data.lighting,
-            weather: data.weather,
-            timeOfDay: data.timeOfDay,
-        };
+        this.initializeAmbientSystems();
 
-        // Store for future ambient effect implementation
-        // this.renderer.ambiance = ambiance;
+        if (!this.timeOfDaySystem) return; // Systems not loaded yet
+
+        // Update time of day
+        if (data.timeOfDay !== undefined) {
+            this.timeOfDaySystem.update(data.timeOfDay);
+            this.lightingSystem.update(data.timeOfDay);
+        }
+
+        // Update weather
+        if (data.weather) {
+            this.weatherSystem.update(data.weather);
+        }
+
+        // Update season
+        if (data.season) {
+            this.currentSeason = data.season;
+        }
+
+        // Update light sources
+        if (data.lightSources && Array.isArray(data.lightSources)) {
+            // Clear previous light sources
+            this.lightingSystem.lightSources = [];
+
+            // Add new light sources
+            for (const lightData of data.lightSources) {
+                this.lightingSystem.addLightSource(lightData.x, lightData.y, {
+                    color: lightData.color || '#f0d080',
+                    intensity: lightData.intensity || 1.0,
+                    radius: lightData.radius || 50,
+                });
+            }
+        }
+
+        // Update ambient effects
+        this.ambientEffectsSystem.update(
+            data.timeOfDay || this.timeOfDaySystem.timeOfDay,
+            this.currentSeason,
+            data.weather || this.weatherSystem.currentWeather
+        );
+
+        // Update game state with sky gradient and lighting
+        this.renderer.updateGameState({
+            skyGradient: this.timeOfDaySystem.skyGradient,
+            lightingLevel: this.timeOfDaySystem.lightingLevel,
+            weather: data.weather || this.weatherSystem.currentWeather,
+            timeOfDay: data.timeOfDay || this.timeOfDaySystem.timeOfDay,
+            ambiance: {
+                weather: data.weather,
+                timeOfDay: data.timeOfDay,
+                lighting: data.lighting,
+                season: data.season,
+            },
+        });
     }
 
     /**

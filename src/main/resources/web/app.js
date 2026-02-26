@@ -26,6 +26,12 @@
     let gmcpIntegration = null;
     let animationFrameId = null;
 
+    // ── Performance Monitoring (Phase 5c) ──
+
+    let performanceProfiler = null;
+    let qualitySettings = null;
+    let performanceDashboard = null;
+
     // Initialize canvas system when DOM is ready
     setTimeout(() => {
         const worldCanvas = document.getElementById("world-canvas");
@@ -53,11 +59,46 @@
                 canvasInteraction
             );
 
+            // Initialize multi-zone rendering systems (Phase 5b)
+            gmcpIntegration.initializeMultiZoneSystems();
+            if (gmcpIntegration.multiZoneRenderer) {
+                canvasRenderer.updateGameState({
+                    multiZoneRenderer: gmcpIntegration.multiZoneRenderer,
+                });
+                console.log('Multi-zone rendering system initialized');
+            }
+
+            // Initialize performance monitoring (Phase 5c)
+            performanceProfiler = new PerformanceProfiler();
+            qualitySettings = new QualitySettings();
+            performanceDashboard = new PerformanceDashboard(performanceProfiler, qualitySettings);
+
+            // Auto-detect quality level based on device
+            qualitySettings.autoDetectQualityLevel();
+            qualitySettings.checkMotionPreferences();
+
+            // Try to load saved settings
+            if (!qualitySettings.loadFromLocalStorage()) {
+                console.log(`Auto-detected quality level: ${qualitySettings.getQualityLevelName()}`);
+            }
+
+            canvasRenderer.updateGameState({
+                performanceDashboard: performanceDashboard,
+            });
+
+            // Toggle dashboard with keyboard shortcut (Alt+D)
+            document.addEventListener('keydown', (e) => {
+                if (e.altKey && e.key === 'd') {
+                    performanceDashboard.toggle();
+                    console.log(`Dashboard ${performanceDashboard.isVisible ? 'shown' : 'hidden'}`);
+                }
+            });
+
             // Start animation loop
             canvasRenderer.scheduleRender();
             animationFrameId = requestAnimationFrame(canvasAnimationLoop);
 
-            console.log('Canvas rendering system initialized');
+            console.log('Canvas rendering system initialized (press Alt+D to show performance dashboard)');
         } catch (e) {
             console.error('Failed to initialize canvas:', e);
         }
@@ -90,10 +131,34 @@
             canvasRenderer.updateCompass();
         }
 
+        // Update ambient effects (Phase 5a)
+        if (gmcpIntegration && gmcpIntegration.timeOfDaySystem) {
+            const dt = 16; // ~60fps delta
+            gmcpIntegration.timeOfDaySystem.update();
+            gmcpIntegration.weatherSystem.update(undefined, dt);
+            gmcpIntegration.ambientEffectsSystem.update(
+                gmcpIntegration.timeOfDaySystem.timeOfDay,
+                gmcpIntegration.currentSeason,
+                gmcpIntegration.weatherSystem.currentWeather,
+                dt
+            );
+        }
+
         // Schedule render
         canvasRenderer.scheduleRender();
 
-        // FPS monitoring (only in debug mode, every 500ms)
+        // Performance profiling (Phase 5c)
+        if (performanceProfiler) {
+            performanceProfiler.updateFrameTiming();
+            performanceProfiler.updateMemoryUsage();
+
+            // Adaptive quality adjustment every 2 seconds
+            if (now - lastFpsUpdate > 2000 && performanceProfiler.fps > 0) {
+                qualitySettings.adaptiveAdjustment(performanceProfiler.fps);
+            }
+        }
+
+        // FPS monitoring
         frameCount++;
         if (now - lastFpsUpdate > 500) {
             fps = Math.round((frameCount * 1000) / (now - lastFpsUpdate));
@@ -101,7 +166,7 @@
             lastFpsUpdate = now;
 
             // Warn if FPS drops below 50
-            if (fps < 50) {
+            if (fps < 50 && performanceProfiler) {
                 console.warn(`Canvas FPS: ${fps} (performance warning)`);
             }
         }
@@ -112,7 +177,104 @@
 
     let ws = null;
     let connected = false;
+    let authenticated = false; // Track actual game authentication, not just connection
     let inputBuffer = "";
+
+    // ── Login Screen Handlers (Phase 3) ──
+
+    const loginOverlay = document.getElementById("login-overlay");
+    const loginForm = document.getElementById("login-form");
+    const loginMessage = document.getElementById("login-message");
+    const loginUsername = document.getElementById("login-username");
+    const loginPassword = document.getElementById("login-password");
+    const btnRegister = document.getElementById("btn-register");
+
+    // Initialize login overlay hidden (show after connection)
+    if (loginOverlay) {
+        loginOverlay.style.display = "none";
+    }
+
+    function showLoginMessage(message, type = "info") {
+        if (loginMessage) {
+            loginMessage.textContent = message;
+            loginMessage.className = `form-message ${type}`;
+            loginMessage.style.display = "block";
+        }
+    }
+
+    function hideLogin() {
+        if (loginOverlay) {
+            loginOverlay.classList.add("hidden");
+            loginOverlay.classList.remove("loading");
+            loginOverlay.style.display = "none";
+        }
+        // Clear form for next login attempt
+        if (loginUsername) {
+            loginUsername.value = "";
+            loginUsername.disabled = false;
+        }
+        if (loginPassword) {
+            loginPassword.value = "";
+            loginPassword.disabled = false;
+        }
+        if (loginMessage) {
+            loginMessage.style.display = "none";
+        }
+    }
+
+    function showLogin() {
+        if (loginOverlay) {
+            loginOverlay.classList.remove("hidden");
+            loginOverlay.style.display = "flex";
+            if (loginUsername) {
+                setTimeout(() => loginUsername.focus(), 100);
+            }
+        }
+    }
+
+    if (loginForm) {
+        loginForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const username = loginUsername.value.trim();
+            const password = loginPassword.value;
+
+            if (!username || !password) {
+                showLoginMessage("Please enter username and password", "error");
+                return;
+            }
+
+            // Disable inputs and show loading state (apply to overlay for CSS)
+            if (loginOverlay) {
+                loginOverlay.classList.add("loading");
+            }
+            if (loginUsername) loginUsername.disabled = true;
+            if (loginPassword) loginPassword.disabled = true;
+
+            // Send username first (server will prompt for password)
+            sendCommand(username);
+            showLoginMessage("Sending credentials...", "info");
+
+            // Password will be sent automatically when server prompts for it
+            // (see message handler below)
+        });
+    }
+
+    if (btnRegister) {
+        btnRegister.addEventListener("click", (e) => {
+            e.preventDefault();
+            // Placeholder for registration flow
+            showLoginMessage("Registration coming soon", "info");
+        });
+    }
+
+    // Show login when not authenticated (connection may be open but player not logged in yet)
+    function updateLoginUI() {
+        if (!authenticated) {
+            showLogin();
+        } else {
+            hideLogin();
+        }
+    }
 
     // ── Sidebar elements ──
 
@@ -340,6 +502,16 @@
         connected = isConnected;
         statusEl.textContent = isConnected ? "Connected" : "Disconnected";
         statusEl.className = `status ${isConnected ? "connected" : "disconnected"}`;
+
+        // When disconnected, clear auth state
+        if (!isConnected) {
+            authenticated = false;
+        }
+
+        // Update login UI (stays visible until authenticated)
+        if (typeof updateLoginUI === "function") {
+            updateLoginUI();
+        }
     }
 
     function resetHud() {
@@ -365,6 +537,22 @@
         visitedRooms.clear();
         currentRoomId = null;
         renderMap();
+
+        // Re-enable login form for next attempt
+        if (loginOverlay) {
+            loginOverlay.classList.remove("loading");
+        }
+        if (loginUsername) {
+            loginUsername.disabled = false;
+            loginUsername.value = "";
+        }
+        if (loginPassword) {
+            loginPassword.disabled = false;
+            loginPassword.value = "";
+        }
+        if (loginMessage) {
+            loginMessage.style.display = "none";
+        }
     }
 
     function writeSystem(message) {
@@ -470,6 +658,13 @@
         const cls = data["class"] ?? "";
         const level = data.level ?? "";
         charInfo.textContent = level ? `Level ${level} ${race} ${cls}` : "—";
+
+        // Mark as authenticated once we receive character name (login successful)
+        if (data.name && !authenticated) {
+            authenticated = true;
+            updateLoginUI();
+            console.log("Authentication successful, hiding login overlay");
+        }
     }
 
     function updateInventory(data) {
@@ -748,6 +943,10 @@
             case "Room.Ambiance":
                 if (gmcpIntegration) gmcpIntegration.handleRoomAmbiance(data);
                 break;
+            case "Room.Adjacent":
+                if (gmcpIntegration) gmcpIntegration.handleRoomAdjacent(data);
+                if (gmcpIntegration) gmcpIntegration.scheduleRender();
+                break;
 
             // Existing default cases
             case "Char.Skills":
@@ -790,6 +989,19 @@
                 if (gmcp) {
                     handleGmcp(gmcp.pkg, gmcp.data);
                 } else {
+                    // Check for password prompt and auto-submit if password is available
+                    if (!authenticated && loginPassword && loginPassword.value) {
+                        const text = event.data.toLowerCase();
+                        if (text.includes("password") && (text.includes("enter") || text.includes(":"))) {
+                            // Server is asking for password, send it automatically
+                            const password = loginPassword.value;
+                            setTimeout(() => {
+                                sendCommand(password);
+                                if (loginPassword) loginPassword.value = ""; // Clear from UI for security
+                                showLoginMessage("Authenticating...", "info");
+                            }, 50);
+                        }
+                    }
                     term.write(event.data);
                 }
             }
