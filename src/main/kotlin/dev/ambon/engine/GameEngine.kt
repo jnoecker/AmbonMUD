@@ -23,6 +23,8 @@ import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.dialogue.DialogueSystem
+import dev.ambon.engine.events.DefaultEngineEventDispatcher
+import dev.ambon.engine.events.EngineEventDispatcher
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -90,6 +92,14 @@ class GameEngine(
     /** Repository for persisting world feature states across restarts. */
     private val worldStateRepository: WorldStateRepository? = null,
 ) {
+    private val eventDispatcher: EngineEventDispatcher =
+        DefaultEngineEventDispatcher(
+            onConnected = ::handleConnected,
+            onGmcpReceived = ::handleGmcpReceived,
+            onDisconnected = ::handleDisconnected,
+            onLineReceived = ::handleLineReceived,
+        )
+
     private val zoneResetDueAtMillis =
         world.zoneLifespansMinutes
             .filterValues { it > 0L }
@@ -511,7 +521,7 @@ class GameEngine(
                         drainPendingAuthResults()
                         val ev = inbound.tryReceive().getOrNull() ?: break
                         metrics.recordInboundLatency(clock.millis() - ev.enqueuedAt)
-                        handle(ev)
+                        eventDispatcher.dispatch(ev)
                         // Yield so that launched auth coroutines (BCrypt / DB) can post
                         // their results before we process the next event for this session.
                         yield()
@@ -1012,79 +1022,72 @@ class GameEngine(
             runCatching { RoomId("$currentZone:$arg") }.getOrNull()
         }
 
-    private suspend fun handle(ev: InboundEvent) {
-        when (ev) {
-            is InboundEvent.Connected -> {
-                val sid = ev.sessionId
+    private suspend fun handleConnected(
+        sessionId: SessionId,
+        defaultAnsiEnabled: Boolean,
+    ) {
+        pendingLogins[sessionId] = LoginState.AwaitingName
+        failedLoginAttempts[sessionId] = 0
+        sessionAnsiDefaults[sessionId] = defaultAnsiEnabled
+        outbound.send(OutboundEvent.ShowLoginScreen(sessionId))
+        promptForName(sessionId)
+    }
 
-                pendingLogins[sid] = LoginState.AwaitingName
-                failedLoginAttempts[sid] = 0
-                sessionAnsiDefaults[sid] = ev.defaultAnsiEnabled
-                outbound.send(OutboundEvent.ShowLoginScreen(sid))
-                promptForName(sid)
-            }
+    private suspend fun handleDisconnected(sessionId: SessionId) {
+        val me = players.get(sessionId)
 
-            is InboundEvent.GmcpReceived -> {
-                handleGmcpReceived(ev)
-            }
-
-            is InboundEvent.Disconnected -> {
-                val sid = ev.sessionId
-                val me = players.get(sid)
-
-                pendingLogins.remove(sid)
-                failedLoginAttempts.remove(sid)
-                sessionAnsiDefaults.remove(sid)
-                gmcpSessions.remove(sid)
-                gmcpDirtyVitals.remove(sid)
-                handoffManager?.cancelIfPending(sid)
-                run {
-                    val itr = pendingWhoRequests.iterator()
-                    while (itr.hasNext()) {
-                        if (itr.next().value.sessionId == sid) {
-                            itr.remove()
-                        }
-                    }
+        pendingLogins.remove(sessionId)
+        failedLoginAttempts.remove(sessionId)
+        sessionAnsiDefaults.remove(sessionId)
+        gmcpSessions.remove(sessionId)
+        gmcpDirtyVitals.remove(sessionId)
+        handoffManager?.cancelIfPending(sessionId)
+        run {
+            val itr = pendingWhoRequests.iterator()
+            while (itr.hasNext()) {
+                if (itr.next().value.sessionId == sessionId) {
+                    itr.remove()
                 }
-
-                combatSystem.onPlayerDisconnected(sid)
-                regenSystem.onPlayerDisconnected(sid)
-                abilitySystem.onPlayerDisconnected(sid)
-                statusEffectSystem.onPlayerDisconnected(sid)
-                dialogueSystem.onPlayerDisconnected(sid)
-                groupSystem.onPlayerDisconnected(sid)
-                gmcpDirtyStatusEffects.remove(sid)
-                gmcpDirtyGroup.remove(sid)
-
-                if (me != null) {
-                    log.info { "Player logged out: name=${me.name} sessionId=$sid" }
-                    playerLocationIndex?.unregister(me.name)
-                    broadcastToRoom(players, outbound, me.roomId, "${me.name} leaves.", sid)
-                }
-
-                players.disconnect(sid) // idempotent; safe even if me == null
-            }
-
-            is InboundEvent.LineReceived -> {
-                val sid = ev.sessionId
-
-                val loginState = pendingLogins[sid]
-                if (loginState != null) {
-                    handleLoginLine(sid, ev.line, loginState)
-                    return
-                }
-
-                // Optional safety: ignore input from unknown sessions
-                if (players.get(sid) == null) return
-                if (handoffManager?.isInTransit(sid) == true) {
-                    outbound.send(OutboundEvent.SendInfo(sid, "You are between zones. Please wait..."))
-                    outbound.send(OutboundEvent.SendPrompt(sid))
-                    return
-                }
-
-                router.handle(sid, CommandParser.parse(ev.line))
             }
         }
+
+        combatSystem.onPlayerDisconnected(sessionId)
+        regenSystem.onPlayerDisconnected(sessionId)
+        abilitySystem.onPlayerDisconnected(sessionId)
+        statusEffectSystem.onPlayerDisconnected(sessionId)
+        dialogueSystem.onPlayerDisconnected(sessionId)
+        groupSystem.onPlayerDisconnected(sessionId)
+        gmcpDirtyStatusEffects.remove(sessionId)
+        gmcpDirtyGroup.remove(sessionId)
+
+        if (me != null) {
+            log.info { "Player logged out: name=${me.name} sessionId=$sessionId" }
+            playerLocationIndex?.unregister(me.name)
+            broadcastToRoom(players, outbound, me.roomId, "${me.name} leaves.", sessionId)
+        }
+
+        players.disconnect(sessionId) // idempotent; safe even if me == null
+    }
+
+    private suspend fun handleLineReceived(
+        sessionId: SessionId,
+        line: String,
+    ) {
+        val loginState = pendingLogins[sessionId]
+        if (loginState != null) {
+            handleLoginLine(sessionId, line, loginState)
+            return
+        }
+
+        // Optional safety: ignore input from unknown sessions
+        if (players.get(sessionId) == null) return
+        if (handoffManager?.isInTransit(sessionId) == true) {
+            outbound.send(OutboundEvent.SendInfo(sessionId, "You are between zones. Please wait..."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+
+        router.handle(sessionId, CommandParser.parse(line))
     }
 
     private suspend fun handleLoginLine(
