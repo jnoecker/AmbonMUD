@@ -295,6 +295,10 @@ class GameMetrics(
         Gauge.builder("scheduler_pending_actions") { supplier().toDouble() }.register(registry)
     }
 
+    fun bindSchedulerOverdueActions(supplier: () -> Int) {
+        Gauge.builder("scheduler_overdue_actions") { supplier().toDouble() }.register(registry)
+    }
+
     fun bindZonePlayerCount(
         zone: String,
         supplier: () -> Int,
