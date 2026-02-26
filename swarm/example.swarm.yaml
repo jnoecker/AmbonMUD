@@ -37,7 +37,7 @@ behavior:
   combatCommands:
     - "kill rat"
     - "kill goblin"
-    - "attack rat"
+    - "kill snake"
   races:
     - "human"
     - "elf"
