@@ -13,18 +13,17 @@ It is intentionally modeled after the CommandRouter refactor style (extract by c
 
 ## Clarifying Questions (to resolve before implementation)
 
-1. **Scope boundary:** Should this refactor be strictly structural (no behavior change), or can we include low-risk behavior cleanups if tests are unchanged?
-2. **Migration strategy:** Do you prefer a phased rollout with a compatibility adapter (old + new paths temporarily), or a single cutover PR once tests pass?
-3. **Module granularity:** Do you want coarse modules (e.g., `SessionEvents`, `LoginEvents`, `GameplayEvents`) or finer-grained modules per subsystem (`MovementEvents`, `CombatEvents`, `DialogueEvents`, etc.)?
-4. **Ownership of dependencies:** Should each handler receive only the exact dependencies it needs, or do you prefer a shared `EngineContext` object passed to all handlers?
+1. **Scope boundary:** Should this refactor be strictly structural (no behavior change), or can we include low-risk behavior cleanups if tests are unchanged? It's acceptable to include low-risk behavior cleanups.
+2. **Migration strategy:** Do you prefer a phased rollout with a compatibility adapter (old + new paths temporarily), or a single cutover PR once tests pass? Single cutover PR.
+3. **Module granularity:** Do you want coarse modules (e.g., `SessionEvents`, `LoginEvents`, `GameplayEvents`) or finer-grained modules per subsystem (`MovementEvents`, `CombatEvents`, `DialogueEvents`, etc.)? Finer-grained modules per subsystem.
+4. **Ownership of dependencies:** Should each handler receive only the exact dependencies it needs, or do you prefer a shared `EngineContext` object passed to all handlers? Unless you think otherwise, let's pass the full engine context to avoid changes later if we decide we need more dependencies in a given system, and to reduce duplication.
 5. **Event registration pattern:** Preferred dispatch style:
-   - a) explicit `when` in a central dispatcher that delegates to handlers, or
-   - b) map/registry of `KClass<out InboundEvent>` to handler function?
-6. **Unknown/unsupported events:** Should unknown events remain silently ignored, logged at debug, or emitted as metric counters?
-7. **Testing baseline:** Do you want strict no-diff characterization tests first (lock behavior), then refactor, or refactor + tests together in one PR?
-8. **File organization:** Should event handlers live under `engine/events/` or split under existing subsystem folders (e.g., `engine/combat`, `engine/status`, `engine/social`)?
-9. **Performance constraints:** Is there any concern about additional indirection/allocation in dispatch, or is maintainability the primary goal?
-10. **Telemetry:** Should this refactor include per-event-type timing/counters in `GameMetrics`, or defer observability changes to a follow-up PR?
+   - *map/registry of `KClass<out InboundEvent>` to handler function* go with the registry approach here
+6. **Unknown/unsupported events:** Should unknown events remain silently ignored, logged at debug, or emitted as metric counters? debug log + metrics
+7. **Testing baseline:** Do you want strict no-diff characterization tests first (lock behavior), then refactor, or refactor + tests together in one PR? refactor+tests is fine.
+8. **File organization:** Should event handlers live under `engine/events/` or split under existing subsystem folders (e.g., `engine/combat`, `engine/status`, `engine/social`)? subsystem folders
+9. **Performance constraints:** Is there any concern about additional indirection/allocation in dispatch, or is maintainability the primary goal? maintainability is the primary goal
+10. **Telemetry:** Should this refactor include per-event-type timing/counters in `GameMetrics`, or defer observability changes to a follow-up PR? include telemetry changes
 
 ---
 
