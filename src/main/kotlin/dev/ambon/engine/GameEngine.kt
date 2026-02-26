@@ -537,7 +537,7 @@ class GameEngine(
         if (zoneResetDueAtMillis.isEmpty()) return
 
         val now = clock.millis()
-        for ((zone, dueAtMillis) in zoneResetDueAtMillis.toMap()) {
+        for ((zone, dueAtMillis) in zoneResetDueAtMillis) {
             if (now < dueAtMillis) continue
 
             resetZone(zone)
