@@ -510,6 +510,7 @@ class GameEngine(
                         // Drain any auth results that have arrived since the last event.
                         drainPendingAuthResults()
                         val ev = inbound.tryReceive().getOrNull() ?: break
+                        metrics.recordInboundLatency(clock.millis() - ev.enqueuedAt)
                         handle(ev)
                         // Yield so that launched auth coroutines (BCrypt / DB) can post
                         // their results before we process the next event for this session.

@@ -1,5 +1,6 @@
 package dev.ambon.metrics
 
+import dev.ambon.domain.ids.SessionId
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.DistributionSummary
 import io.micrometer.core.instrument.Gauge
@@ -12,6 +13,7 @@ import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.core.instrument.binder.system.UptimeMetrics
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
@@ -90,6 +92,20 @@ class GameMetrics(
     private val inboundQueueDepthAtOverrunSummary: DistributionSummary =
         DistributionSummary
             .builder("engine_inbound_queue_depth_at_overrun")
+            .publishPercentileHistogram()
+            .register(registry)
+
+    private val inboundEventQueueAgeTimer: Timer =
+        Timer
+            .builder("inbound_event_queue_age_seconds")
+            .description("Age of inbound events from enqueue to engine processing")
+            .publishPercentileHistogram()
+            .register(registry)
+
+    private val outboundEventQueueAgeTimer: Timer =
+        Timer
+            .builder("outbound_event_queue_age_seconds")
+            .description("Age of outbound frames from enqueue to flush")
             .publishPercentileHistogram()
             .register(registry)
 
@@ -207,6 +223,14 @@ class GameMetrics(
     fun onInboundEventsProcessed(count: Int) = inboundEventsProcessedCounter.increment(count.toDouble())
 
     fun onInboundDrainBudgetExceeded() = inboundDrainBudgetExceededCounter.increment()
+
+    fun recordInboundLatency(ageMs: Long) =
+        inboundEventQueueAgeTimer.record(ageMs, TimeUnit.MILLISECONDS)
+
+    fun recordOutboundLatency(
+        sessionId: SessionId,
+        ageMs: Long,
+    ) = outboundEventQueueAgeTimer.record(ageMs, TimeUnit.MILLISECONDS)
 
     fun onMobMoves(count: Int) = mobMovesCounter.increment(count.toDouble())
 
