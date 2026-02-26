@@ -1,0 +1,9 @@
+---
+doorStates:
+  demo_ruins:hidden_vault_door/d: "LOCKED"
+containerStates:
+  demo_ruins:reading_nook/reading_chest: "LOCKED"
+leverStates:
+  demo_ruins:ledger_room/ledger_lever: "UP"
+containerItems:
+  demo_ruins:reading_nook/reading_chest: []

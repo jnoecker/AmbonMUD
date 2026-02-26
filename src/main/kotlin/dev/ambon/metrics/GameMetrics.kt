@@ -84,6 +84,21 @@ class GameMetrics(
     private val inboundDrainBudgetExceededCounter =
         Counter.builder("engine_inbound_drain_budget_exceeded_total").register(registry)
 
+    private val sessionHandlerEventsCounter =
+        Counter.builder("event_handler_events_total").tag("handler", "session").register(registry)
+    private val inputHandlerEventsCounter =
+        Counter.builder("event_handler_events_total").tag("handler", "input").register(registry)
+    private val loginHandlerEventsCounter =
+        Counter.builder("event_handler_events_total").tag("handler", "login").register(registry)
+    private val phaseHandlerEventsCounter =
+        Counter.builder("event_handler_events_total").tag("handler", "phase").register(registry)
+    private val gmcpHandlerEventsCounter =
+        Counter.builder("event_handler_events_total").tag("handler", "gmcp").register(registry)
+    private val gmcpFlushHandlerEventsCounter =
+        Counter.builder("event_handler_events_total").tag("handler", "gmcp_flush").register(registry)
+    private val interEngineHandlerEventsCounter =
+        Counter.builder("event_handler_events_total").tag("handler", "inter_engine").register(registry)
+
     /**
      * Distribution of inbound queue depths observed at the moment each tick overrun is detected.
      * High p99 values here indicate the inbound queue is consistently deep when the engine falls
@@ -223,6 +238,20 @@ class GameMetrics(
     fun onInboundEventsProcessed(count: Int) = inboundEventsProcessedCounter.increment(count.toDouble())
 
     fun onInboundDrainBudgetExceeded() = inboundDrainBudgetExceededCounter.increment()
+
+    fun onSessionHandlerEvent() = sessionHandlerEventsCounter.increment()
+
+    fun onInputHandlerEvent() = inputHandlerEventsCounter.increment()
+
+    fun onLoginHandlerEvent() = loginHandlerEventsCounter.increment()
+
+    fun onPhaseHandlerEvent() = phaseHandlerEventsCounter.increment()
+
+    fun onGmcpHandlerEvent() = gmcpHandlerEventsCounter.increment()
+
+    fun onGmcpFlushHandlerEvent() = gmcpFlushHandlerEventsCounter.increment()
+
+    fun onInterEngineHandlerEvent() = interEngineHandlerEventsCounter.increment()
 
     fun recordInboundLatency(ageMs: Long) =
         inboundEventQueueAgeTimer.record(ageMs, TimeUnit.MILLISECONDS)

@@ -9,6 +9,7 @@ import dev.ambon.engine.RegenSystem
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.status.StatusEffectSystem
+import dev.ambon.metrics.GameMetrics
 import dev.ambon.sharding.HandoffManager
 
 class SessionEventHandler(
@@ -32,11 +33,13 @@ class SessionEventHandler(
     private val promptForName: suspend (SessionId) -> Unit,
     private val showLoginScreen: suspend (SessionId) -> Unit,
     private val onPlayerLoggedOut: suspend (PlayerState, SessionId) -> Unit,
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     suspend fun onConnected(
         sessionId: SessionId,
         defaultAnsiEnabled: Boolean,
     ) {
+        metrics.onSessionHandlerEvent()
         markAwaitingName(sessionId)
         failedLoginAttempts[sessionId] = 0
         sessionAnsiDefaults[sessionId] = defaultAnsiEnabled
@@ -45,6 +48,7 @@ class SessionEventHandler(
     }
 
     suspend fun onDisconnected(sessionId: SessionId) {
+        metrics.onSessionHandlerEvent()
         val me = players.get(sessionId)
 
         clearLoginState(sessionId)
