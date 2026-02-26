@@ -43,7 +43,6 @@ import dev.ambon.engine.events.InputEventHandler
 import dev.ambon.engine.events.InterEngineEventHandler
 import dev.ambon.engine.events.LoginEventHandler
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.events.PendingWhoRequest
 import dev.ambon.engine.events.PhaseEventHandler
 import dev.ambon.engine.events.SessionEventHandler
 import dev.ambon.engine.events.WhoEventHandler
@@ -119,14 +118,7 @@ class GameEngine(
             gmcpDirtyStatusEffects = gmcpDirtyStatusEffects,
             gmcpDirtyGroup = gmcpDirtyGroup,
             handoffManager = handoffManager,
-            removePendingWhoRequestsFor = { sid ->
-                val itr = pendingWhoRequests.iterator()
-                while (itr.hasNext()) {
-                    if (itr.next().value.sessionId == sid) {
-                        itr.remove()
-                    }
-                }
-            },
+            removePendingWhoRequestsFor = whoEventHandler::removeForSession,
             combatSystem = combatSystem,
             regenSystem = regenSystem,
             abilitySystem = abilitySystem,
@@ -242,7 +234,6 @@ class GameEngine(
             nowMillis = clock::millis,
             players = players,
             sendInfo = { sid, msg -> outbound.send(OutboundEvent.SendInfo(sid, msg)) },
-            pendingWhoRequests = pendingWhoRequests,
             responseWaitMs = WHO_RESPONSE_WAIT_MS,
         )
     }
@@ -640,7 +631,6 @@ class GameEngine(
     private val pendingLogins = mutableMapOf<SessionId, LoginState>()
     private val failedLoginAttempts = mutableMapOf<SessionId, Int>()
     private val sessionAnsiDefaults = mutableMapOf<SessionId, Boolean>()
-    private val pendingWhoRequests = mutableMapOf<String, PendingWhoRequest>()
     private val nameCommandRegex = Regex("^name\\s+(.+)$", RegexOption.IGNORE_CASE)
     private val invalidNameMessage =
         "Invalid name. Use 2-16 chars: letters/digits/_ and cannot start with digit."

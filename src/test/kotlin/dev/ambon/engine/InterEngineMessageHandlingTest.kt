@@ -429,7 +429,7 @@ class InterEngineMessageHandlingTest {
                     .filterIsInstance<InterEngineMessage.WhoRequest>()
                     .single()
 
-            h.inbound.send(InboundEvent.Disconnected(sid))
+            h.inbound.send(InboundEvent.Disconnected(sid, "test disconnect"))
             pumpEngine(h)
             drain(h.outbound)
 

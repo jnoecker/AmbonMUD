@@ -7,16 +7,17 @@ import dev.ambon.sharding.InterEngineMessage
 import dev.ambon.sharding.PlayerSummary
 import java.util.UUID
 
-class WhoEventHandler(
+internal class WhoEventHandler(
     private val interEngineBus: InterEngineBus?,
     private val engineId: String,
     private val peerEngineCount: () -> Int,
     private val nowMillis: () -> Long,
     private val players: PlayerRegistry,
     private val sendInfo: suspend (SessionId, String) -> Unit,
-    private val pendingWhoRequests: MutableMap<String, PendingWhoRequest>,
     private val responseWaitMs: Long,
 ) {
+    private val pendingWhoRequests = mutableMapOf<String, PendingWhoRequest>()
+
     suspend fun handleRemoteWho(sessionId: SessionId) {
         val bus = interEngineBus ?: return
         val requestId = UUID.randomUUID().toString()
@@ -58,6 +59,15 @@ class WhoEventHandler(
         }
     }
 
+    fun removeForSession(sessionId: SessionId) {
+        val itr = pendingWhoRequests.iterator()
+        while (itr.hasNext()) {
+            if (itr.next().value.sessionId == sessionId) {
+                itr.remove()
+            }
+        }
+    }
+
     fun onWhoResponse(response: InterEngineMessage.WhoResponse) {
         val pending = pendingWhoRequests[response.requestId] ?: return
         if (players.get(pending.sessionId) == null) {
@@ -69,7 +79,7 @@ class WhoEventHandler(
     }
 }
 
-data class PendingWhoRequest(
+internal data class PendingWhoRequest(
     val sessionId: SessionId,
     val deadlineEpochMs: Long,
     val expectedPeerCount: Int,
