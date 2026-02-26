@@ -37,6 +37,7 @@ import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.DefaultEngineEventDispatcher
 import dev.ambon.engine.events.EngineEventDispatcher
 import dev.ambon.engine.events.InboundEvent
+import dev.ambon.engine.events.InputEventHandler
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.events.SessionEventHandler
 import dev.ambon.engine.items.ItemRegistry
@@ -137,6 +138,20 @@ class GameEngine(
                 playerLocationIndex?.unregister(player.name)
                 broadcastToRoom(players, outbound, player.roomId, "${player.name} leaves.", sid)
             },
+        )
+    }
+
+    private val inputEventHandler by lazy {
+        InputEventHandler<LoginState>(
+            getLoginState = { sid -> pendingLogins[sid] },
+            hasActivePlayer = { sid -> players.get(sid) != null },
+            isInTransit = { sid -> handoffManager?.isInTransit(sid) == true },
+            handleLoginLine = ::handleLoginLine,
+            onSessionInTransit = { sid ->
+                outbound.send(OutboundEvent.SendInfo(sid, "You are between zones. Please wait..."))
+                outbound.send(OutboundEvent.SendPrompt(sid))
+            },
+            routeCommandLine = { sid, line -> router.handle(sid, CommandParser.parse(line)) },
         )
     }
 
@@ -1179,21 +1194,7 @@ class GameEngine(
         sessionId: SessionId,
         line: String,
     ) {
-        val loginState = pendingLogins[sessionId]
-        if (loginState != null) {
-            handleLoginLine(sessionId, line, loginState)
-            return
-        }
-
-        // Optional safety: ignore input from unknown sessions
-        if (players.get(sessionId) == null) return
-        if (handoffManager?.isInTransit(sessionId) == true) {
-            outbound.send(OutboundEvent.SendInfo(sessionId, "You are between zones. Please wait..."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
-            return
-        }
-
-        router.handle(sessionId, CommandParser.parse(line))
+        inputEventHandler.onLineReceived(sessionId, line)
     }
 
     private suspend fun handleLoginLine(
