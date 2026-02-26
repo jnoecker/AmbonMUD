@@ -76,7 +76,7 @@ data class BehaviorConfig(
     val weights: BehaviorWeights = BehaviorWeights(),
     val chatPhrases: List<String> = listOf("hello", "lag?", "nice room", "test ping"),
     val movementCommands: List<String> = listOf("north", "south", "east", "west", "look"),
-    val combatCommands: List<String> = listOf("kill rat", "kill goblin", "attack rat"),
+    val combatCommands: List<String> = listOf("kill rat", "kill goblin", "kill snake"),
     val races: List<String> = listOf("human", "elf", "dwarf", "halfling"),
     val classes: List<String> = listOf("warrior", "mage", "cleric", "rogue"),
 )

@@ -16,6 +16,7 @@ Kotlin-based load testing utility for AmbonMUD that runs many simple bots with c
   - credentials retained while running so a bot can disconnect/relogin
 - Behavior model:
   - weighted random actions: idle, login churn, movement, chat, auto-combat
+  - bots track room awareness from `look` output (`Exits:` + `You see:`) to prefer valid movement and present combat targets
   - deterministic mode with seed for reproducible runs
 - Load model:
   - linear ramp-up over configurable seconds

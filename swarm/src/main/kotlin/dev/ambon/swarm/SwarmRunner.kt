@@ -130,6 +130,65 @@ data class BotCredential(
     val password: String,
 )
 
+data class BotEnvironment(
+    val exits: List<String> = emptyList(),
+    val visibleMobs: List<String> = emptyList(),
+) {
+    val hasCombatTarget: Boolean
+        get() = visibleMobs.isNotEmpty()
+
+    val hasMovementTarget: Boolean
+        get() = exits.isNotEmpty()
+}
+
+internal object BotEnvironmentTracker {
+    private val exitsRegex = Regex("(?i)^Exits:\\s*(.*)$")
+    private val youSeeRegex = Regex("(?i)^You see:\\s*(.*)$")
+
+    fun update(
+        env: BotEnvironment,
+        line: String,
+    ): BotEnvironment {
+        val exitsMatch = exitsRegex.find(line)
+        if (exitsMatch != null) {
+            val exits = parseCsvList(exitsMatch.groupValues[1]).filterNot { it.equals("none", ignoreCase = true) }
+            return env.copy(exits = exits)
+        }
+
+        val youSeeMatch = youSeeRegex.find(line)
+        if (youSeeMatch != null) {
+            val mobs = parseCsvList(youSeeMatch.groupValues[1]).filterNot { it.equals("nothing", ignoreCase = true) }
+            return env.copy(visibleMobs = mobs)
+        }
+
+        if (line.contains("You see nothing that way.", ignoreCase = true)) {
+            return env.copy(exits = emptyList())
+        }
+
+        if (line.contains("No such target here.", ignoreCase = true) || line.contains("No one here by that name.", ignoreCase = true)) {
+            return env.copy(visibleMobs = emptyList())
+        }
+
+        return env
+    }
+
+    fun extractMobKeyword(mobLine: String): String {
+        val tokens =
+            mobLine
+                .replace(Regex("[^A-Za-z0-9_\\s-]"), " ")
+                .trim()
+                .split(Regex("\\s+"))
+                .filter { it.isNotBlank() }
+        return tokens.firstOrNull()?.lowercase() ?: "rat"
+    }
+
+    private fun parseCsvList(raw: String): List<String> =
+        raw
+            .split(',')
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+}
+
 private class BotWorker(
     private val id: Int,
     private val protocol: BotProtocol,
@@ -160,15 +219,27 @@ private class BotWorker(
                 }
                 metrics.loginSucceeded()
 
+                var env = BotEnvironment()
+                connection.sendLine("look")
+                metrics.commandSent()
+
                 while (System.currentTimeMillis() < endAtEpochMs) {
+                    drainInbound(connection) { line ->
+                        env = BotEnvironmentTracker.update(env, line)
+                    }
+
                     val action = WeightedActionPicker.pick(config.behavior.weights, random)
                     if (action == BotAction.LOGIN_CHURN) {
                         metrics.intentionalDisconnect()
                         connection.close()
                         break
                     }
-                    performAction(connection, action)
-                    delay(random.nextInt(config.behavior.commandIntervalMs.min, config.behavior.commandIntervalMs.max + 1).toLong())
+                    val executed = performAction(connection, action, env)
+                    if (executed) {
+                        delay(random.nextInt(config.behavior.commandIntervalMs.min, config.behavior.commandIntervalMs.max + 1).toLong())
+                    } else {
+                        delay(150)
+                    }
                 }
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
@@ -179,8 +250,17 @@ private class BotWorker(
         }
     }
 
+    private suspend fun drainInbound(
+        connection: BotConnection,
+        onLine: (String) -> Unit,
+    ) {
+        while (true) {
+            val line = connection.pollLine(timeoutMillis = 5) ?: break
+            onLine(line)
+        }
+    }
+
     private suspend fun login(connection: BotConnection): Boolean {
-        var stage = 0
         var consecutiveTimeouts = 0
         val started = System.nanoTime()
         while (System.currentTimeMillis() < endAtEpochMs) {
@@ -193,39 +273,13 @@ private class BotWorker(
             consecutiveTimeouts = 0
             val lower = line.lowercase()
             when {
-                "enter your name" in lower -> {
-                    connection.sendLine(credential.name)
-                    stage = max(stage, 1)
-                }
-
-                "create a new user" in lower -> {
-                    connection.sendLine("yes")
-                    stage = max(stage, 2)
-                }
-
-                "create a password" in lower -> {
-                    connection.sendLine(credential.password)
-                    stage = max(stage, 3)
-                }
-
-                "choose your race" in lower -> {
-                    val choice = config.behavior.races.random(random)
-                    connection.sendLine(choice)
-                    stage = max(stage, 4)
-                }
-
-                "choose your class" in lower -> {
-                    val choice = config.behavior.classes.random(random)
-                    connection.sendLine(choice)
-                    stage = max(stage, 5)
-                }
-
-                lower.contains("password:") -> {
-                    connection.sendLine(credential.password)
-                    stage = max(stage, 6)
-                }
-
-                "exits:" in lower -> {
+                "enter your name" in lower -> connection.sendLine(credential.name)
+                "create a new user" in lower -> connection.sendLine("yes")
+                "create a password" in lower -> connection.sendLine(credential.password)
+                "choose your race" in lower -> connection.sendLine(config.behavior.races.random(random))
+                "choose your class" in lower -> connection.sendLine(config.behavior.classes.random(random))
+                lower.contains("password:") -> connection.sendLine(credential.password)
+                "exits:" in lower || "you are in" in lower -> {
                     metrics.loginLatency(Duration.ofNanos(System.nanoTime() - started).toMillis())
                     return true
                 }
@@ -237,19 +291,36 @@ private class BotWorker(
     private suspend fun performAction(
         connection: BotConnection,
         action: BotAction,
-    ) {
+        env: BotEnvironment,
+    ): Boolean {
         when (action) {
-            BotAction.IDLE -> return
-            BotAction.MOVEMENT -> connection.sendLine(config.behavior.movementCommands.random(random))
+            BotAction.IDLE -> return false
+            BotAction.MOVEMENT -> {
+                if (!env.hasMovementTarget) {
+                    connection.sendLine(config.behavior.movementCommands.random(random))
+                } else {
+                    connection.sendLine(env.exits.random(random))
+                }
+            }
+
             BotAction.CHAT -> {
                 val phrase = config.behavior.chatPhrases.random(random)
                 connection.sendLine("say [swarm-$id] $phrase")
             }
 
-            BotAction.AUTO_COMBAT -> connection.sendLine(config.behavior.combatCommands.random(random))
+            BotAction.AUTO_COMBAT -> {
+                if (env.hasCombatTarget) {
+                    val mobKeyword = BotEnvironmentTracker.extractMobKeyword(env.visibleMobs.random(random))
+                    connection.sendLine("kill $mobKeyword")
+                } else {
+                    connection.sendLine(config.behavior.combatCommands.random(random))
+                }
+            }
+
             BotAction.LOGIN_CHURN -> error("LOGIN_CHURN should be handled by caller")
         }
         metrics.commandSent()
+        return true
     }
 
     private fun connect(protocol: BotProtocol): BotConnection =
