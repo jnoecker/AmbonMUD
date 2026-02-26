@@ -79,6 +79,14 @@ const MAX_VISIBLE_WORLD_MOBS = 4;
 const MAX_VISIBLE_EFFECTS = 4;
 const EXIT_ORDER = ["north", "south", "east", "west", "up", "down"];
 const COMPASS_DIRECTIONS = ["north", "east", "south", "west", "up", "down"] as const;
+const MAP_PREVIEW_POINTS: Record<(typeof COMPASS_DIRECTIONS)[number], { x: number; y: number; label: string }> = {
+  north: { x: 50, y: 17, label: "N" },
+  east: { x: 83, y: 50, label: "E" },
+  south: { x: 50, y: 83, label: "S" },
+  west: { x: 17, y: 50, label: "W" },
+  up: { x: 73, y: 28, label: "U" },
+  down: { x: 73, y: 72, label: "D" },
+};
 const SLOT_ORDER = ["head", "body", "hand"];
 const TABS: Array<{ id: MobileTab; label: string }> = [
   { id: "play", label: "Play" },
@@ -1036,8 +1044,50 @@ function App() {
               <h2>World</h2>
               <p>Room context, exits, and local entities.</p>
             </div>
-            <button type="button" className="panel-action-button" onClick={() => setActivePopout("map")} disabled={!canOpenMap}>
-              Open Map
+            <button
+              type="button"
+              className="map-preview-trigger"
+              onClick={() => setActivePopout("map")}
+              disabled={!canOpenMap}
+              aria-label={canOpenMap ? "Open full map" : "Map unavailable before login"}
+              title={canOpenMap ? "Open full map" : "Map unavailable before login"}
+            >
+              <svg className="map-preview-svg" viewBox="0 0 100 100" aria-hidden="true">
+                <circle className="map-preview-orbit" cx="50" cy="50" r="42" />
+                {COMPASS_DIRECTIONS.map((direction) => {
+                  const point = MAP_PREVIEW_POINTS[direction];
+                  const active = availableExitSet.has(direction);
+                  return (
+                    <line
+                      key={`${direction}-line`}
+                      className={`map-preview-line ${active ? "map-preview-line-active" : ""}`}
+                      x1="50"
+                      y1="50"
+                      x2={point.x}
+                      y2={point.y}
+                    />
+                  );
+                })}
+                {COMPASS_DIRECTIONS.map((direction) => {
+                  const point = MAP_PREVIEW_POINTS[direction];
+                  const active = availableExitSet.has(direction);
+                  return (
+                    <g key={direction}>
+                      <circle
+                        className={`map-preview-node ${active ? "map-preview-node-active" : ""}`}
+                        cx={point.x}
+                        cy={point.y}
+                        r={active ? 6.5 : 5.2}
+                      />
+                      <text className="map-preview-label" x={point.x} y={point.y + 2} textAnchor="middle">
+                        {point.label}
+                      </text>
+                    </g>
+                  );
+                })}
+                <circle className="map-preview-center-ring" cx="50" cy="50" r="12" />
+                <circle className="map-preview-center-dot" cx="50" cy="50" r="5.5" />
+              </svg>
             </button>
           </header>
 
