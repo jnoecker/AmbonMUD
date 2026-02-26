@@ -90,6 +90,19 @@
             canvasRenderer.updateCompass();
         }
 
+        // Update ambient effects (Phase 5a)
+        if (gmcpIntegration && gmcpIntegration.timeOfDaySystem) {
+            const dt = 16; // ~60fps delta
+            gmcpIntegration.timeOfDaySystem.update();
+            gmcpIntegration.weatherSystem.update(undefined, dt);
+            gmcpIntegration.ambientEffectsSystem.update(
+                gmcpIntegration.timeOfDaySystem.timeOfDay,
+                gmcpIntegration.currentSeason,
+                gmcpIntegration.weatherSystem.currentWeather,
+                dt
+            );
+        }
+
         // Schedule render
         canvasRenderer.scheduleRender();
 

@@ -336,12 +336,22 @@ class BackgroundLayer extends Layer {
     render(ctx, gameState) {
         this.time += 0.016; // ~60fps delta
 
-        // Main sky gradient (warm golden to lavender)
+        // Main sky gradient (use Phase 5a time-of-day if available, otherwise default)
         const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
-        gradient.addColorStop(0, '#E8D8D0');   // Sky top (warm)
-        gradient.addColorStop(0.3, '#F0E8E0'); // Upper air
-        gradient.addColorStop(0.6, '#F8F0F0'); // Mid air
-        gradient.addColorStop(1, '#E8E8F0');   // Ground (lavender tint)
+
+        if (gameState.skyGradient && Array.isArray(gameState.skyGradient)) {
+            // Use dynamic gradient from TimeOfDaySystem
+            for (const stop of gameState.skyGradient) {
+                gradient.addColorStop(stop.offset, stop.color);
+            }
+        } else {
+            // Default fallback gradient (warm golden to lavender)
+            gradient.addColorStop(0, '#E8D8D0');   // Sky top (warm)
+            gradient.addColorStop(0.3, '#F0E8E0'); // Upper air
+            gradient.addColorStop(0.6, '#F8F0F0'); // Mid air
+            gradient.addColorStop(1, '#E8E8F0');   // Ground (lavender tint)
+        }
+
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 

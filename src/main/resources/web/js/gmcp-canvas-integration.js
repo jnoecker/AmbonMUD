@@ -1,6 +1,7 @@
 /**
  * AmbonMUD GMCP ↔ Canvas Integration
  * Phase 4b: Wire GMCP data to canvas rendering
+ * Phase 5a: Ambient effects integration
  *
  * Handles GMCP messages and updates the canvas world state
  */
@@ -11,6 +12,30 @@ class GMCPCanvasIntegration {
         this.camera = camera;
         this.interaction = interaction;
         this.effectsLayer = null;
+
+        // Phase 5a ambient systems
+        this.timeOfDaySystem = null;
+        this.lightingSystem = null;
+        this.weatherSystem = null;
+        this.ambientEffectsSystem = null;
+
+        this.currentSeason = 'spring';
+    }
+
+    /**
+     * Initialize ambient effect systems (called after renderer is ready)
+     */
+    initializeAmbientSystems() {
+        if (!this.timeOfDaySystem && typeof TimeOfDaySystem !== 'undefined') {
+            this.timeOfDaySystem = new TimeOfDaySystem();
+            this.lightingSystem = new LightingSystem(this.timeOfDaySystem);
+            this.weatherSystem = new WeatherSystem(this.renderer.particleSystem, this.timeOfDaySystem);
+            this.ambientEffectsSystem = new AmbientEffectsSystem(
+                this.renderer.particleSystem,
+                this.timeOfDaySystem,
+                this.weatherSystem
+            );
+        }
     }
 
     /**
@@ -190,19 +215,72 @@ class GMCPCanvasIntegration {
     }
 
     /**
-     * Handle GMCP.Room.Ambiance - Lighting, weather effects
-     * (For future: background effects, lighting changes)
+     * Handle GMCP.Room.Ambiance - Lighting, weather effects (Phase 5a)
+     * Data structure from server:
+     * {
+     *   weather: 'clear' | 'cloudy' | 'rain' | 'fog' | 'snow' | 'storm',
+     *   timeOfDay: 0-1440 (minutes since midnight),
+     *   lighting: 'bright' | 'normal' | 'dim' | 'dark',
+     *   lightSources: [{ x, y, color, intensity, radius }, ...],
+     *   season: 'spring' | 'summer' | 'autumn' | 'winter'
+     * }
      */
     handleRoomAmbiance(data) {
-        // Could update background layer based on weather/lighting
-        const ambiance = {
-            lighting: data.lighting,
-            weather: data.weather,
-            timeOfDay: data.timeOfDay,
-        };
+        this.initializeAmbientSystems();
 
-        // Store for future ambient effect implementation
-        // this.renderer.ambiance = ambiance;
+        if (!this.timeOfDaySystem) return; // Systems not loaded yet
+
+        // Update time of day
+        if (data.timeOfDay !== undefined) {
+            this.timeOfDaySystem.update(data.timeOfDay);
+            this.lightingSystem.update(data.timeOfDay);
+        }
+
+        // Update weather
+        if (data.weather) {
+            this.weatherSystem.update(data.weather);
+        }
+
+        // Update season
+        if (data.season) {
+            this.currentSeason = data.season;
+        }
+
+        // Update light sources
+        if (data.lightSources && Array.isArray(data.lightSources)) {
+            // Clear previous light sources
+            this.lightingSystem.lightSources = [];
+
+            // Add new light sources
+            for (const lightData of data.lightSources) {
+                this.lightingSystem.addLightSource(lightData.x, lightData.y, {
+                    color: lightData.color || '#f0d080',
+                    intensity: lightData.intensity || 1.0,
+                    radius: lightData.radius || 50,
+                });
+            }
+        }
+
+        // Update ambient effects
+        this.ambientEffectsSystem.update(
+            data.timeOfDay || this.timeOfDaySystem.timeOfDay,
+            this.currentSeason,
+            data.weather || this.weatherSystem.currentWeather
+        );
+
+        // Update game state with sky gradient and lighting
+        this.renderer.updateGameState({
+            skyGradient: this.timeOfDaySystem.skyGradient,
+            lightingLevel: this.timeOfDaySystem.lightingLevel,
+            weather: data.weather || this.weatherSystem.currentWeather,
+            timeOfDay: data.timeOfDay || this.timeOfDaySystem.timeOfDay,
+            ambiance: {
+                weather: data.weather,
+                timeOfDay: data.timeOfDay,
+                lighting: data.lighting,
+                season: data.season,
+            },
+        });
     }
 
     /**
