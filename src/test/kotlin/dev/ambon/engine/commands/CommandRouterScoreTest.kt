@@ -30,7 +30,7 @@ class CommandRouterScoreTest {
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val combat = CombatSystem(players, mobs, items, outbound, minDamage = 1, maxDamage = 4)
-            val router = CommandRouter(world, players, mobs, items, combat, outbound)
+            val router = buildTestRouter(world, players, mobs, items, combat, outbound)
 
             val sid = SessionId(1)
             login(players, sid, "Arandel")
@@ -57,7 +57,7 @@ class CommandRouterScoreTest {
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val combat = CombatSystem(players, mobs, items, outbound, minDamage = 1, maxDamage = 4)
-            val router = CommandRouter(world, players, mobs, items, combat, outbound)
+            val router = buildTestRouter(world, players, mobs, items, combat, outbound)
 
             val sid = SessionId(2)
             login(players, sid, "Brenna")
@@ -84,7 +84,7 @@ class CommandRouterScoreTest {
             val outbound = LocalOutboundBus()
             val combat = CombatSystem(players, mobs, items, outbound)
             val progression = PlayerProgression()
-            val router = CommandRouter(world, players, mobs, items, combat, outbound, progression = progression)
+            val router = buildTestRouter(world, players, mobs, items, combat, outbound, progression = progression)
 
             val sid = SessionId(3)
             login(players, sid, "Zara")
@@ -130,7 +130,7 @@ class CommandRouterScoreTest {
             val groupSystem = GroupSystem(players, outbound)
             val combat = CombatSystem(players, mobs, items, outbound)
             val router =
-                CommandRouter(
+                buildTestRouter(
                     world,
                     players,
                     mobs,
@@ -170,7 +170,7 @@ class CommandRouterScoreTest {
             val groupSystem = GroupSystem(players, outbound)
             val combat = CombatSystem(players, mobs, items, outbound)
             val router =
-                CommandRouter(
+                buildTestRouter(
                     world,
                     players,
                     mobs,

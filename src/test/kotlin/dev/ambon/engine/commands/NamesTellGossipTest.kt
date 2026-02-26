@@ -27,7 +27,7 @@ class NamesTellGossipTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
             login(players, a, "Alice")
@@ -64,7 +64,7 @@ class NamesTellGossipTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
@@ -106,7 +106,7 @@ class NamesTellGossipTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
@@ -135,7 +135,7 @@ class NamesTellGossipTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)

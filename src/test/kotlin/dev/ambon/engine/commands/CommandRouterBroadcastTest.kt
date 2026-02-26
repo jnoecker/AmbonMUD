@@ -29,7 +29,7 @@ class CommandRouterBroadcastTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
@@ -60,7 +60,7 @@ class CommandRouterBroadcastTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
@@ -92,7 +92,7 @@ class CommandRouterBroadcastTest {
             val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
-            val router = CommandRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
 
             val a = SessionId(1)
             val b = SessionId(2)
@@ -123,7 +123,7 @@ class CommandRouterBroadcastTest {
             val outbound = LocalOutboundBus()
             val groupSystem = GroupSystem(players, outbound)
             val router =
-                CommandRouter(
+                buildTestRouter(
                     world,
                     players,
                     mobs,
