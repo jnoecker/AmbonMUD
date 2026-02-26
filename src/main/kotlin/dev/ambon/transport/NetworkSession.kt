@@ -26,7 +26,7 @@ class NetworkSession(
     private val outboundQueue: Channel<OutboundFrame>,
     private val onDisconnected: () -> Unit,
     private val scope: CoroutineScope,
-    private val onOutboundFrameWritten: () -> Unit = {},
+    private val onOutboundFrameWritten: (enqueuedAt: Long) -> Unit = {},
     private val maxLineLen: Int = 1024,
     private val maxNonPrintablePerLine: Int = 32,
     private val maxInboundBackpressureFailures: Int = 3,
@@ -272,7 +272,7 @@ class NetworkSession(
         output: java.io.OutputStream,
         frame: OutboundFrame,
     ): Boolean {
-        onOutboundFrameWritten()
+        onOutboundFrameWritten(frame.enqueuedAt)
         return when (frame) {
             is OutboundFrame.Text -> {
                 val bytes = frame.content.toByteArray(Charsets.UTF_8)
