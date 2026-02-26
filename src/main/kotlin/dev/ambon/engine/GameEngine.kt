@@ -495,9 +495,10 @@ class GameEngine(
                 val tickSample = Timer.start()
 
                 try {
-                    // Drain inbound events with a time budget to leave room for simulation,
+                    // Phase 1: Drain inbound events with a time budget to leave room for simulation,
                     // interleaving auth-result processing so a session whose async auth just
                     // completed is in the correct state before its next queued input is handled.
+                    val inboundPhaseSample = Timer.start()
                     var inboundProcessed = 0
                     val inboundDeadline = tickStart + inboundBudgetMs
                     while (inboundProcessed < maxInboundEventsPerTick) {
@@ -536,7 +537,10 @@ class GameEngine(
                         }
                     }
                     flushDueWhoResponses()
+                    metrics.recordTickPhase("inbound_drain", inboundPhaseSample)
 
+                    // Phase 2: Simulation — mob movement, behavior, combat, status effects, regen.
+                    val simulationPhaseSample = Timer.start()
                     // Mob movement is handled entirely by BehaviorTreeSystem below
                     val mobSample = Timer.start()
                     val mobMoves = mobSystem.tick()
@@ -575,14 +579,18 @@ class GameEngine(
                     val regenSample = Timer.start()
                     regenSystem.tick(maxPlayersPerTick = engineConfig.regen.maxPlayersPerTick)
                     regenSample.stop(metrics.regenTickTimer)
+                    metrics.recordTickPhase("simulation", simulationPhaseSample)
 
-                    // Flush GMCP vitals for sessions that had changes this tick
+                    // Phase 3: Flush GMCP vitals for sessions that had changes this tick.
+                    val gmcpFlushPhaseSample = Timer.start()
                     flushDirtyGmcpVitals()
                     flushDirtyGmcpMobs()
                     flushDirtyGmcpStatusEffects()
                     flushDirtyGmcpGroup()
+                    metrics.recordTickPhase("gmcp_flush", gmcpFlushPhaseSample)
 
-                    // Run scheduled actions (bounded)
+                    // Phase 4: Outbound flush — run scheduled actions and reset expired zones.
+                    val outboundFlushPhaseSample = Timer.start()
                     val schedulerSample = Timer.start()
                     val (actionsRan, actionsDropped) = scheduler.runDue(maxActions = engineConfig.scheduler.maxActionsPerTick)
                     schedulerSample.stop(metrics.schedulerRunDueTimer)
@@ -591,6 +599,7 @@ class GameEngine(
 
                     // Reset zones when their lifespan elapses.
                     resetZonesIfDue()
+                    metrics.recordTickPhase("outbound_flush", outboundFlushPhaseSample)
                 } catch (t: Throwable) {
                     if (t is kotlinx.coroutines.CancellationException) throw t
                     log.error(t) { "Unhandled exception during tick processing" }
