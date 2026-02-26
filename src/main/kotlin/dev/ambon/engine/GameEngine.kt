@@ -39,6 +39,7 @@ import dev.ambon.engine.events.EngineEventDispatcher
 import dev.ambon.engine.events.GmcpEventHandler
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.InputEventHandler
+import dev.ambon.engine.events.InterEngineEventHandler
 import dev.ambon.engine.events.LoginEventHandler
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.events.SessionEventHandler
@@ -50,8 +51,6 @@ import dev.ambon.engine.status.StatusEffectRegistryLoader
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.WorldStateRepository
-import dev.ambon.sharding.BroadcastType
-import dev.ambon.sharding.HandoffAckResult
 import dev.ambon.sharding.HandoffManager
 import dev.ambon.sharding.HandoffResult
 import dev.ambon.sharding.InterEngineBus
@@ -194,6 +193,34 @@ class GameEngine(
             achievementRegistry = achievementRegistry,
             groupSystem = groupSystem,
             gmcpEmitter = gmcpEmitter,
+            logger = log,
+        )
+    }
+
+    private val interEngineEventHandler by lazy {
+        InterEngineEventHandler(
+            handoffManager = handoffManager,
+            playerLocationIndex = playerLocationIndex,
+            players = players,
+            router = router,
+            outbound = outbound,
+            engineId = engineId,
+            interEngineBus = interEngineBus,
+            onShutdown = onShutdown,
+            world = world,
+            combatSystem = combatSystem,
+            regenSystem = regenSystem,
+            statusEffectSystem = statusEffectSystem,
+            resolveRoomId = ::resolveRoomId,
+            onWhoResponse = { response ->
+                val pending = pendingWhoRequests[response.requestId] ?: return@InterEngineEventHandler
+                if (players.get(pending.sessionId) == null) {
+                    pendingWhoRequests.remove(response.requestId)
+                    return@InterEngineEventHandler
+                }
+                pending.respondedCount++
+                pending.remotePlayerNames += response.players.map(PlayerSummary::name)
+            },
             logger = log,
         )
     }
@@ -1066,149 +1093,7 @@ class GameEngine(
     }
 
     private suspend fun handleInterEngineMessage(msg: InterEngineMessage) {
-        when (msg) {
-            is InterEngineMessage.PlayerHandoff -> {
-                val mgr = handoffManager ?: return
-                val sid = mgr.acceptHandoff(msg) ?: return
-                // Register player on this engine (O(1) tell routing)
-                playerLocationIndex?.register(msg.playerState.name)
-                // Show the player their new surroundings
-                router.handle(sid, Command.Look)
-            }
-            is InterEngineMessage.HandoffAck -> {
-                val mgr = handoffManager ?: return
-                when (val result = mgr.handleAck(msg)) {
-                    is HandoffAckResult.Completed -> {
-                        // Deregister from this engine; target engine will register on its side
-                        playerLocationIndex?.unregister(result.playerName)
-                        log.debug {
-                            "Handoff ack completed: session=${msg.sessionId} " +
-                                "targetEngine=${result.targetEngine.engineId}"
-                        }
-                    }
-                    is HandoffAckResult.Failed -> {
-                        val sid = SessionId(msg.sessionId)
-                        if (players.get(sid) != null) {
-                            val reason =
-                                result.errorMessage
-                                    ?.takeIf { it.isNotBlank() }
-                                    ?: "Target engine rejected handoff."
-                            outbound.send(OutboundEvent.SendError(sid, "Cross-zone move failed: $reason"))
-                            outbound.send(OutboundEvent.SendPrompt(sid))
-                        }
-                        log.warn { "Handoff failed: session=${msg.sessionId} error=${result.errorMessage}" }
-                    }
-                    HandoffAckResult.NotPending -> {
-                        log.debug { "Ignoring handoff ack for non-pending session=${msg.sessionId}" }
-                    }
-                }
-            }
-            is InterEngineMessage.GlobalBroadcast -> {
-                // Skip broadcasts from ourselves (already delivered locally)
-                if (msg.sourceEngineId == engineId) return
-                when (msg.broadcastType) {
-                    BroadcastType.GOSSIP -> {
-                        for (p in players.allPlayers()) {
-                            outbound.send(
-                                OutboundEvent.SendText(p.sessionId, "[GOSSIP] ${msg.senderName}: ${msg.text}"),
-                            )
-                        }
-                    }
-                    BroadcastType.SHUTDOWN -> {
-                        for (p in players.allPlayers()) {
-                            outbound.send(
-                                OutboundEvent.SendText(p.sessionId, "[SYSTEM] ${msg.text}"),
-                            )
-                        }
-                        onShutdown()
-                    }
-                    BroadcastType.ANNOUNCEMENT -> {
-                        for (p in players.allPlayers()) {
-                            outbound.send(
-                                OutboundEvent.SendText(p.sessionId, "[ANNOUNCEMENT] ${msg.text}"),
-                            )
-                        }
-                    }
-                }
-            }
-            is InterEngineMessage.TellMessage -> {
-                // Deliver to local player if present
-                val targetSid = players.findSessionByName(msg.toName) ?: return
-                outbound.send(OutboundEvent.SendText(targetSid, "${msg.fromName} tells you: ${msg.text}"))
-            }
-            is InterEngineMessage.WhoRequest -> {
-                // Don't reply to our own requests
-                if (msg.replyToEngineId == engineId) return
-                val localPlayers =
-                    players.allPlayers().map {
-                        PlayerSummary(name = it.name, roomId = it.roomId.value, level = it.level)
-                    }
-                interEngineBus?.sendTo(
-                    msg.replyToEngineId,
-                    InterEngineMessage.WhoResponse(
-                        requestId = msg.requestId,
-                        players = localPlayers,
-                    ),
-                )
-            }
-            is InterEngineMessage.WhoResponse -> {
-                val pending = pendingWhoRequests[msg.requestId] ?: return
-                if (players.get(pending.sessionId) == null) {
-                    pendingWhoRequests.remove(msg.requestId)
-                    return
-                }
-                pending.respondedCount++
-                pending.remotePlayerNames += msg.players.map(PlayerSummary::name)
-            }
-            is InterEngineMessage.KickRequest -> {
-                val targetSid = players.findSessionByName(msg.targetPlayerName) ?: return
-                outbound.send(OutboundEvent.Close(targetSid, "Kicked by staff."))
-            }
-            is InterEngineMessage.ShutdownRequest -> {
-                for (p in players.allPlayers()) {
-                    outbound.send(
-                        OutboundEvent.SendText(
-                            p.sessionId,
-                            "[SYSTEM] ${msg.initiatorName} has initiated a server shutdown. Goodbye!",
-                        ),
-                    )
-                }
-                onShutdown()
-            }
-            is InterEngineMessage.TransferRequest -> {
-                val targetSid = players.findSessionByName(msg.targetPlayerName) ?: return
-                val targetPlayer = players.get(targetSid) ?: return
-                val targetRoomId = resolveRoomId(msg.targetRoomId, targetPlayer.roomId.zone) ?: return
-                if (world.rooms.containsKey(targetRoomId)) {
-                    // Room is on this engine — move locally
-                    players.moveTo(targetSid, targetRoomId)
-                    outbound.send(OutboundEvent.SendText(targetSid, "You are transported by a divine hand."))
-                    router.handle(targetSid, Command.Look)
-                } else if (handoffManager != null) {
-                    // Room is on another engine — initiate handoff
-                    combatSystem.endCombatFor(targetSid)
-                    regenSystem.onPlayerDisconnected(targetSid)
-                    statusEffectSystem.removeAllFromPlayer(targetSid)
-                    when (handoffManager.initiateHandoff(targetSid, targetRoomId)) {
-                        is HandoffResult.Initiated -> Unit
-                        HandoffResult.PlayerNotFound -> Unit
-                        HandoffResult.AlreadyInTransit -> Unit
-                        HandoffResult.NoEngineForZone -> {
-                            outbound.send(
-                                OutboundEvent.SendError(
-                                    targetSid,
-                                    "The transfer destination is not currently available.",
-                                ),
-                            )
-                            outbound.send(OutboundEvent.SendPrompt(targetSid))
-                        }
-                    }
-                }
-            }
-            is InterEngineMessage.SessionRedirect -> {
-                log.debug { "SessionRedirect received (handled at gateway layer)" }
-            }
-        }
+        interEngineEventHandler.onInterEngineMessage(msg)
     }
 
     /** Resolve a room ID string, adding current zone prefix if needed. */
