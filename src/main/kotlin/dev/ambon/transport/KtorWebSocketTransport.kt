@@ -335,46 +335,22 @@ private fun sanitizeCloseReason(reason: String): String {
     }
 }
 
+// Matches {"gmcp":"Package"} or {"gmcp":"Package","data":<json>} with optional whitespace.
+// Group 1 = package name, Group 2 = data value (absent when no "data" key present).
+private val GMCP_ENVELOPE_REGEX = Regex(
+    """^\s*\{\s*"gmcp"\s*:\s*"([^"]+)"\s*(?:,\s*"data"\s*:\s*([\s\S]*))?\s*\}\s*$""",
+)
+
 /**
  * Parses a WebSocket GMCP envelope of the form `{"gmcp":"Package","data":<json>}`.
  * Returns a Pair(package, jsonData) or null if the text is not a GMCP envelope.
  */
 internal fun tryParseGmcpEnvelope(text: String): Pair<String, String>? {
-    val trimmed = text.trim()
-    if (!trimmed.startsWith('{')) return null
-    // Simple regex-free extraction: look for "gmcp" key
-    val gmcpKey = "\"gmcp\""
-    val dataKey = "\"data\""
-    val gmcpIdx = trimmed.indexOf(gmcpKey)
-    if (gmcpIdx == -1) return null
-
-    // Extract package name value (string after "gmcp":)
-    val colonAfterGmcp = trimmed.indexOf(':', gmcpIdx + gmcpKey.length)
-    if (colonAfterGmcp == -1) return null
-    val quoteStart = trimmed.indexOf('"', colonAfterGmcp + 1)
-    if (quoteStart == -1) return null
-    val quoteEnd = trimmed.indexOf('"', quoteStart + 1)
-    if (quoteEnd == -1) return null
-    val pkg = trimmed.substring(quoteStart + 1, quoteEnd)
+    val match = GMCP_ENVELOPE_REGEX.matchEntire(text) ?: return null
+    val pkg = match.groupValues[1]
     if (pkg.isBlank()) return null
-
-    // Extract data value (everything after "data":)
-    val dataIdx = trimmed.indexOf(dataKey)
-    val jsonData =
-        if (dataIdx == -1) {
-            "{}"
-        } else {
-            val colonAfterData = trimmed.indexOf(':', dataIdx + dataKey.length)
-            if (colonAfterData == -1) {
-                "{}"
-            } else {
-                // Take everything from after the colon to the end, trimming trailing `}`
-                val raw = trimmed.substring(colonAfterData + 1).trimEnd()
-                if (raw.endsWith('}')) raw.dropLast(1).trimEnd() else raw
-            }
-        }
-
-    return Pair(pkg, jsonData.ifBlank { "{}" })
+    val jsonData = match.groupValues[2].trimEnd().ifBlank { "{}" }
+    return Pair(pkg, jsonData)
 }
 
 private const val MAX_CLOSE_REASON_LENGTH = 123
