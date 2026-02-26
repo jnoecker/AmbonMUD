@@ -18,6 +18,74 @@
     term.open(terminalEl);
     term.focus();
 
+    // ── Canvas Rendering System (Phase 4) ──
+
+    let canvasRenderer = null;
+    let canvasCamera = null;
+    let canvasInteraction = null;
+    let gmcpIntegration = null;
+    let animationFrameId = null;
+
+    // Initialize canvas system when DOM is ready
+    setTimeout(() => {
+        const worldCanvas = document.getElementById("world-canvas");
+        const mapCanvas = document.getElementById("map-canvas");
+
+        if (!worldCanvas) return; // Canvas not available yet
+
+        try {
+            // Initialize design tokens (loads CSS variables)
+            const designTokens = new DesignTokens();
+
+            // Create renderer, camera, interaction
+            canvasRenderer = new CanvasWorldRenderer(worldCanvas, designTokens);
+            canvasCamera = new Camera(worldCanvas);
+            canvasInteraction = new CanvasInteraction(worldCanvas, canvasCamera, {
+                onExitClick: (exit) => sendCommand(exit.direction),
+                onMobClick: (mob) => sendCommand(`kill ${mob.name}`),
+                onTileClick: (pos) => console.log('Clicked tile:', pos),
+            });
+
+            // Create GMCP integration
+            gmcpIntegration = new GMCPCanvasIntegration(
+                canvasRenderer,
+                canvasCamera,
+                canvasInteraction
+            );
+
+            // Start animation loop
+            canvasRenderer.scheduleRender();
+            animationFrameId = requestAnimationFrame(canvasAnimationLoop);
+
+            console.log('Canvas rendering system initialized');
+        } catch (e) {
+            console.error('Failed to initialize canvas:', e);
+        }
+    }, 100);
+
+    // Canvas animation loop
+    function canvasAnimationLoop() {
+        if (!canvasRenderer || !canvasCamera) {
+            animationFrameId = requestAnimationFrame(canvasAnimationLoop);
+            return;
+        }
+
+        // Update camera to follow player
+        const playerPos = canvasRenderer.gameState.playerPos;
+        if (playerPos) {
+            canvasCamera.setTarget(playerPos.x, playerPos.y);
+        }
+
+        // Update camera
+        canvasCamera.update();
+
+        // Schedule render
+        canvasRenderer.scheduleRender();
+
+        // Continue loop
+        animationFrameId = requestAnimationFrame(canvasAnimationLoop);
+    }
+
     let ws = null;
     let connected = false;
     let inputBuffer = "";
@@ -318,6 +386,12 @@
         if (goldVal) {
             goldVal.textContent = (data.gold ?? 0).toLocaleString();
         }
+
+        // Canvas integration: update player vitals
+        if (canvasRenderer && gmcpIntegration) {
+            gmcpIntegration.handleCharVitals(data);
+            canvasRenderer.scheduleRender();
+        }
     }
 
     function updateRoomInfo(data) {
@@ -357,6 +431,12 @@
         // mini-map
         if (data.id) {
             updateMap(data.id, exits);
+        }
+
+        // Canvas integration: update room data
+        if (canvasRenderer && gmcpIntegration) {
+            gmcpIntegration.handleRoomInfo(data);
+            canvasRenderer.scheduleRender();
         }
     }
 
@@ -432,6 +512,11 @@
         playersList.innerHTML = "";
         if (!Array.isArray(data) || data.length === 0) {
             playersList.innerHTML = '<span class="empty-hint">Nobody else here</span>';
+            // Update canvas with empty players
+            if (canvasRenderer && gmcpIntegration) {
+                gmcpIntegration.handleRoomEntities({ players: [] });
+                canvasRenderer.scheduleRender();
+            }
             return;
         }
         for (const p of data) {
@@ -446,6 +531,12 @@
             el.appendChild(nameSpan);
             el.appendChild(lvlSpan);
             playersList.appendChild(el);
+        }
+
+        // Canvas integration: update players here
+        if (canvasRenderer && gmcpIntegration) {
+            gmcpIntegration.handleRoomEntities({ players: data });
+            canvasRenderer.scheduleRender();
         }
     }
 
@@ -495,10 +586,21 @@
         mobsList.innerHTML = "";
         if (!Array.isArray(data) || data.length === 0) {
             mobsList.innerHTML = '<span class="empty-hint">No mobs here</span>';
+            // Update canvas with empty mobs
+            if (canvasRenderer && gmcpIntegration) {
+                gmcpIntegration.handleRoomEntities({ mobs: [] });
+                canvasRenderer.scheduleRender();
+            }
             return;
         }
         for (const m of data) {
             mobsList.appendChild(createMobElement(m));
+        }
+
+        // Canvas integration: update mobs
+        if (canvasRenderer && gmcpIntegration) {
+            gmcpIntegration.handleRoomEntities({ mobs: data });
+            canvasRenderer.scheduleRender();
         }
     }
 
@@ -598,6 +700,32 @@
             case "Char.StatusEffects":
                 updateStatusEffects(data);
                 break;
+
+            // Canvas rendering integration (Phase 4)
+            case "Room.Map":
+                if (gmcpIntegration) gmcpIntegration.handleRoomMap(data);
+                break;
+            case "Room.Entities":
+                if (gmcpIntegration) gmcpIntegration.handleRoomEntities(data);
+                if (gmcpIntegration) gmcpIntegration.scheduleRender();
+                break;
+            case "Combat.Damage":
+                if (gmcpIntegration) gmcpIntegration.handleCombatDamage(data);
+                if (gmcpIntegration) gmcpIntegration.scheduleRender();
+                break;
+            case "Abilities.Cast":
+                if (gmcpIntegration) gmcpIntegration.handleAbilityCast(data);
+                if (gmcpIntegration) gmcpIntegration.scheduleRender();
+                break;
+            case "Combat.GroundEffect":
+                if (gmcpIntegration) gmcpIntegration.handleGroundEffect(data);
+                if (gmcpIntegration) gmcpIntegration.scheduleRender();
+                break;
+            case "Room.Ambiance":
+                if (gmcpIntegration) gmcpIntegration.handleRoomAmbiance(data);
+                break;
+
+            // Existing default cases
             case "Char.Skills":
             case "Comm.Channel":
             case "Core.Ping":

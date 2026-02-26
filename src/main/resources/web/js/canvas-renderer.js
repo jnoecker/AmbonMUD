@@ -384,14 +384,36 @@ class TerrainLayer extends Layer {
             stone: '#D8D8D0',
             water: '#B8D8E8',
             dirt: '#D8C8A8',
+            sand: '#E8D8A8',
+            forest: '#B8C8A8',
+            mountain: '#C8C8C0',
         };
+
+        // Base tile color
         ctx.fillStyle = colors[type] || colors.grass;
         ctx.fillRect(x, y, size, size);
 
-        // Subtle grid
-        ctx.strokeStyle = 'rgba(184, 216, 232, 0.1)';
-        ctx.lineWidth = 1;
+        // Add subtle texture pattern
+        ctx.strokeStyle = 'rgba(184, 216, 232, 0.15)';
+        ctx.lineWidth = 0.5;
         ctx.strokeRect(x, y, size, size);
+
+        // Diagonal pattern for special tiles
+        if (type === 'water') {
+            ctx.strokeStyle = 'rgba(168, 200, 232, 0.2)';
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + size, y + size);
+            ctx.stroke();
+        }
+
+        if (type === 'forest') {
+            // Add dot to indicate forest
+            ctx.fillStyle = 'rgba(168, 200, 168, 0.3)';
+            ctx.beginPath();
+            ctx.arc(x + size / 2, y + size / 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 
     drawObstacle(ctx, obstacle) {
@@ -453,42 +475,84 @@ class EntityLayer extends Layer {
     }
 
     drawEntity(ctx, pos, config) {
-        const size = 12;
+        const size = config.type === 'player' ? 14 : 12;
+        const isPlayer = config.type === 'player' || config.type === 'player-other';
+
+        // Draw entity circle
         ctx.fillStyle = config.color;
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
         ctx.fill();
 
+        // Border
+        ctx.strokeStyle = isPlayer ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.2)';
+        ctx.lineWidth = isPlayer ? 2 : 1;
+        ctx.stroke();
+
         // Glow effect if threatened/important
         if (config.glow) {
-            ctx.strokeStyle = 'rgba(232, 168, 168, 0.5)';
+            // Pulsing threat indicator
+            const pulse = Math.sin(performance.now() / 150) * 0.5 + 0.5;
+            ctx.strokeStyle = `rgba(232, 168, 168, ${0.3 + pulse * 0.3})`;
             ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, size + 3, 0, Math.PI * 2);
             ctx.stroke();
         }
 
         // Health bar above entity
-        if (config.hp !== undefined) {
-            this.drawHealthBar(ctx, pos, config.hp, config.maxHp);
+        if (config.hp !== undefined && config.hp > 0) {
+            this.drawHealthBar(ctx, pos, config.hp, config.maxHp, size);
+        }
+
+        // Player indicator (crown for player, asterisk for others)
+        if (isPlayer) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.font = 'bold 8px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(config.type === 'player' ? '●' : '◯', pos.x, pos.y - size - 10);
         }
     }
 
-    drawHealthBar(ctx, pos, hp, maxHp) {
-        const barWidth = 20;
-        const barHeight = 3;
+    drawHealthBar(ctx, pos, hp, maxHp, entitySize = 12) {
+        const barWidth = 24;
+        const barHeight = 4;
         const barX = pos.x - barWidth / 2;
-        const barY = pos.y - 20;
-
-        // Background
-        ctx.fillStyle = 'rgba(107, 107, 123, 0.3)';
-        ctx.fillRect(barX, barY, barWidth, barHeight);
-
-        // Health
+        const barY = pos.y - entitySize - 10;
         const hpPercent = Math.max(0, Math.min(1, hp / maxHp));
+
+        // Background (dark)
+        ctx.fillStyle = 'rgba(107, 107, 123, 0.5)';
+        ctx.roundRect(barX, barY, barWidth, barHeight, 2);
+        ctx.fill();
+
+        // Health gradient
         const gradient = ctx.createLinearGradient(barX, barY, barX + barWidth * hpPercent, barY);
-        gradient.addColorStop(0, '#C5D8A8');   // Moss green start
-        gradient.addColorStop(1, '#A8C5A8');   // Darker green end
+
+        if (hpPercent > 0.5) {
+            // Green: healthy
+            gradient.addColorStop(0, '#C5D8A8');
+            gradient.addColorStop(1, '#B8D8A0');
+        } else if (hpPercent > 0.25) {
+            // Yellow: wounded
+            gradient.addColorStop(0, '#E8D8A8');
+            gradient.addColorStop(1, '#D8C8A0');
+        } else {
+            // Red: critical
+            gradient.addColorStop(0, '#E8C5A8');
+            gradient.addColorStop(1, '#D8B5A0');
+        }
+
         ctx.fillStyle = gradient;
-        ctx.fillRect(barX, barY, barWidth * hpPercent, barHeight);
+        ctx.roundRect(barX, barY, barWidth * hpPercent, barHeight, 2);
+        ctx.fill();
+
+        // Border
+        ctx.strokeStyle = 'rgba(107, 107, 123, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.roundRect(barX, barY, barWidth, barHeight, 2);
+        ctx.stroke();
     }
 
     getMobColor(mob) {
