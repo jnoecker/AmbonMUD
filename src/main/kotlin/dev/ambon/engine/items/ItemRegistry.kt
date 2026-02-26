@@ -166,6 +166,31 @@ class ItemRegistry {
 
     fun equipment(sessionId: SessionId): Map<ItemSlot, ItemInstance> = equippedItems[sessionId]?.toMap() ?: emptyMap()
 
+    data class EquipmentBonuses(
+        val attack: Int = 0,
+        val armor: Int = 0,
+        val strength: Int = 0,
+        val dexterity: Int = 0,
+        val charisma: Int = 0,
+    )
+
+    fun equipmentBonuses(sessionId: SessionId): EquipmentBonuses {
+        val equipped = equippedItems[sessionId]?.values ?: return EquipmentBonuses()
+        var attack = 0
+        var armor = 0
+        var strength = 0
+        var dexterity = 0
+        var charisma = 0
+        for (inst in equipped) {
+            attack += inst.item.damage
+            armor += inst.item.armor
+            strength += inst.item.strength
+            dexterity += inst.item.dexterity
+            charisma += inst.item.charisma
+        }
+        return EquipmentBonuses(attack, armor, strength, dexterity, charisma)
+    }
+
     fun addMobItem(
         mobId: MobId,
         item: ItemInstance,
