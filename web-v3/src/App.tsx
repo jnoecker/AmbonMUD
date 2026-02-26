@@ -790,10 +790,10 @@ function App() {
       rows: 30,
       convertEol: false,
       theme: {
-        background: "#fcfbff",
-        foreground: "#505162",
-        cursor: "#8a7ca6",
-        selectionBackground: "rgba(216, 197, 232, 0.34)",
+        background: "#ede8f4",
+        foreground: "#56586d",
+        cursor: "#8c79a7",
+        selectionBackground: "rgba(216, 197, 232, 0.3)",
       },
     });
 
