@@ -245,6 +245,38 @@ body {
   outline-offset: 2px;
 }
 
+.panel-tabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid rgb(107 107 123 / 16%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 62%);
+  width: fit-content;
+}
+
+.panel-tab {
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-neutral-soft-fog);
+  background: transparent;
+  cursor: pointer;
+}
+
+.panel-tab-active {
+  color: var(--color-neutral-deep-mist);
+  background: linear-gradient(135deg, rgb(216 197 232 / 72%), rgb(184 216 232 / 62%));
+}
+
+.panel-tab-content {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+}
+
 .terminal-card {
   border-radius: var(--radius-lg);
   border: 1px solid rgb(107 107 123 / 12%);
@@ -311,6 +343,11 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+.subpanel-fill {
+  width: 100%;
+  height: 100%;
+}
+
 .subpanel h3 {
   margin: 0 0 var(--space-1);
   font-family: "Cormorant Garamond", "Georgia", serif;
@@ -326,6 +363,10 @@ body {
   margin: var(--space-1) 0 0;
   color: var(--color-neutral-deep-mist);
   font-size: 0.92rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 7;
+  -webkit-box-orient: vertical;
 }
 
 .exit-cloud {
@@ -614,16 +655,16 @@ body {
 
   .panel-world {
     grid-area: world;
-    display: flex;
-    flex-direction: column;
-    overflow: auto;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    overflow: hidden;
   }
 
   .panel-character {
     grid-area: character;
-    display: flex;
-    flex-direction: column;
-    overflow: auto;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    overflow: hidden;
   }
 
   .panel-world .mini-map {
