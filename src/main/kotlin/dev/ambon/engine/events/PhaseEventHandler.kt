@@ -7,6 +7,7 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.RegenSystem
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.status.StatusEffectSystem
+import dev.ambon.metrics.GameMetrics
 import dev.ambon.sharding.HandoffManager
 import dev.ambon.sharding.HandoffResult
 import dev.ambon.sharding.PlayerLocationIndex
@@ -26,11 +27,13 @@ class PhaseEventHandler(
     private val sendInfo: suspend (SessionId, String) -> Unit,
     private val sendPrompt: suspend (SessionId) -> Unit,
     private val logger: KLogger,
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     suspend fun handleCrossZoneMove(
         sessionId: SessionId,
         targetRoomId: RoomId,
     ) {
+        metrics.onPhaseHandlerEvent()
         val mgr = handoffManager ?: return
         combatSystem.endCombatFor(sessionId)
         regenSystem.onPlayerDisconnected(sessionId)

@@ -10,6 +10,7 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.StatusEffectSystem
+import dev.ambon.metrics.GameMetrics
 import io.github.oshai.kotlinlogging.KLogger
 
 class GmcpEventHandler(
@@ -24,8 +25,10 @@ class GmcpEventHandler(
     private val groupSystem: GroupSystem,
     private val gmcpEmitter: GmcpEmitter,
     private val logger: KLogger,
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     suspend fun onGmcpReceived(ev: InboundEvent.GmcpReceived) {
+        metrics.onGmcpHandlerEvent()
         val sid = ev.sessionId
         when (ev.gmcpPackage) {
             "Core.Hello" -> {

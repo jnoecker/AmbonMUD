@@ -140,6 +140,7 @@ class GameEngine(
                 playerLocationIndex?.unregister(player.name)
                 broadcastToRoom(players, outbound, player.roomId, "${player.name} leaves.", sid)
             },
+            metrics = metrics,
         )
     }
 
@@ -154,6 +155,7 @@ class GameEngine(
                 outbound.send(OutboundEvent.SendPrompt(sid))
             },
             routeCommandLine = { sid, line -> router.handle(sid, CommandParser.parse(line)) },
+            metrics = metrics,
         )
     }
 
@@ -179,6 +181,7 @@ class GameEngine(
             asAwaitingRaceSelection = { state -> state as? LoginState.AwaitingRaceSelection },
             asAwaitingClassSelection = { state -> state as? LoginState.AwaitingClassSelection },
             isAwaitingName = { state -> state == LoginState.AwaitingName },
+            metrics = metrics,
         )
     }
 
@@ -195,6 +198,7 @@ class GameEngine(
             sendInfo = { sid, msg -> outbound.send(OutboundEvent.SendInfo(sid, msg)) },
             sendPrompt = { sid -> outbound.send(OutboundEvent.SendPrompt(sid)) },
             logger = log,
+            metrics = metrics,
         )
     }
 
@@ -211,6 +215,7 @@ class GameEngine(
             groupSystem = groupSystem,
             gmcpEmitter = gmcpEmitter,
             logger = log,
+            metrics = metrics,
         )
     }
 
@@ -225,6 +230,7 @@ class GameEngine(
             statusEffectSystem = statusEffectSystem,
             groupSystem = groupSystem,
             gmcpEmitter = gmcpEmitter,
+            metrics = metrics,
         )
     }
 
@@ -253,6 +259,7 @@ class GameEngine(
                 pending.remotePlayerNames += response.players.map(PlayerSummary::name)
             },
             logger = log,
+            metrics = metrics,
         )
     }
 

@@ -10,6 +10,7 @@ import dev.ambon.engine.RegenSystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.status.StatusEffectSystem
+import dev.ambon.metrics.GameMetrics
 import dev.ambon.sharding.BroadcastType
 import dev.ambon.sharding.HandoffAckResult
 import dev.ambon.sharding.HandoffManager
@@ -36,8 +37,10 @@ class InterEngineEventHandler(
     private val resolveRoomId: (String, String) -> RoomId?,
     private val onWhoResponse: (InterEngineMessage.WhoResponse) -> Unit,
     private val logger: KLogger,
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     suspend fun onInterEngineMessage(msg: InterEngineMessage) {
+        metrics.onInterEngineHandlerEvent()
         when (msg) {
             is InterEngineMessage.PlayerHandoff -> {
                 val mgr = handoffManager ?: return

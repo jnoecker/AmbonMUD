@@ -9,6 +9,7 @@ import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.status.StatusEffectSystem
+import dev.ambon.metrics.GameMetrics
 
 class GmcpFlushHandler(
     private val gmcpDirtyVitals: MutableSet<SessionId>,
@@ -20,8 +21,10 @@ class GmcpFlushHandler(
     private val statusEffectSystem: StatusEffectSystem,
     private val groupSystem: GroupSystem,
     private val gmcpEmitter: GmcpEmitter,
+    private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     suspend fun flushDirtyVitals() {
+        metrics.onGmcpFlushHandlerEvent()
         drainDirty(gmcpDirtyVitals) { sid ->
             val player = players.get(sid) ?: return@drainDirty
             gmcpEmitter.sendCharVitals(sid, player)
