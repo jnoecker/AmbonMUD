@@ -117,6 +117,12 @@ internal fun Application.ambonMUDWebModule(
             basePackage = "web",
             index = "index.html",
         )
+
+        staticResources(
+            remotePath = "/v2",
+            basePackage = "web2",
+            index = "index.html",
+        )
     }
 }
 

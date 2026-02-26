@@ -1,0 +1,78 @@
+/* ─── AmbonMUD v2 Design Tokens — Surreal Gentle Magic ─────────────────── */
+
+:root {
+    /* ─── Primary Colors ─── */
+    --color-primary-lavender:   #D8C5E8;
+    --color-primary-pale-blue:  #B8D8E8;
+    --color-primary-dusty-rose: #E8C5D8;
+    --color-primary-moss-green: #C5D8A8;
+    --color-primary-soft-gold:  #E8D8A8;
+
+    /* ─── Neutrals ─── */
+    --color-neutral-deep-mist:  #6B6B7B;
+    --color-neutral-soft-fog:   #A8A8B8;
+    --color-neutral-cloud:      #E8E8F0;
+
+    /* ─── Semantic ─── */
+    --color-success: var(--color-primary-moss-green);
+    --color-warning: var(--color-primary-dusty-rose);
+    --color-error:   #C5A8A8;
+    --color-info:    var(--color-primary-pale-blue);
+
+    /* ─── Backgrounds ─── */
+    --bg-primary:   var(--color-neutral-cloud);
+    --bg-secondary: #F8F8FC;
+    --bg-elevated:  #FFFFFF;
+    --bg-overlay:   rgba(255, 255, 255, 0.85);
+
+    /* ─── Terminal ─── */
+    --bg-terminal: #1C1C2A;
+
+    /* ─── Text ─── */
+    --text-primary:   var(--color-neutral-deep-mist);
+    --text-secondary: var(--color-neutral-soft-fog);
+    --text-disabled:  #C8C8D0;
+
+    /* ─── Spacing ─── */
+    --spacing-xs:  4px;
+    --spacing-sm:  8px;
+    --spacing-md:  16px;
+    --spacing-lg:  24px;
+    --spacing-xl:  32px;
+    --spacing-2xl: 48px;
+
+    /* ─── Border Radius ─── */
+    --radius-sm:    2px;
+    --radius-md:    4px;
+    --radius-lg:    8px;
+    --radius-xl:    12px;
+    --radius-round: 9999px;
+
+    /* ─── Shadows ─── */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.12);
+    --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.16);
+
+    /* Magic glow — soft, diffused, lavender-tinted */
+    --shadow-glow-sm: 0 0 8px  rgba(216, 197, 232, 0.4);
+    --shadow-glow-md: 0 0 16px rgba(216, 197, 232, 0.3);
+    --shadow-glow-lg: 0 0 24px rgba(216, 197, 232, 0.2);
+
+    /* ─── Z-Index Scale ─── */
+    --z-hidden:          -1;
+    --z-base:             0;
+    --z-dropdown:        10;
+    --z-sticky:          20;
+    --z-fixed:           30;
+    --z-modal-backdrop:  40;
+    --z-modal:           50;
+    --z-tooltip:         60;
+    --z-notification:    70;
+
+    /* ─── Easing Functions ─── */
+    --ease-in-soft:       cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --ease-out-soft:      cubic-bezier(0.33, 0.66, 0.66, 1);
+    --ease-bounce-soft:   cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-in-out-smooth: cubic-bezier(0.40, 0.00, 0.20, 1);
+}

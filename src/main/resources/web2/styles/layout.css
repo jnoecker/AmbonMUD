@@ -1,0 +1,143 @@
+/* ─── Layout — Surreal Gentle Magic ─────────────────────────────────────── */
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg-primary);
+}
+
+/* ─── App Shell ─── */
+.shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    min-height: 0;
+}
+
+/* ─── Top Bar ─── */
+.topbar {
+    flex-shrink: 0;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--spacing-md);
+    background: linear-gradient(
+        135deg,
+        var(--color-primary-lavender) 0%,
+        var(--color-primary-pale-blue) 100%
+    );
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-sticky);
+}
+
+/* ─── Game Body ─── */
+.game-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ─── Terminal Column ─── */
+.terminal-col {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    gap: var(--spacing-xs);
+}
+
+#terminal {
+    flex: 1;
+    min-height: 0;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    background: var(--bg-terminal);
+}
+
+/* ─── Nav Bar (exits below terminal) ─── */
+.nav-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(184, 216, 232, 0.3);
+    min-height: 36px;
+}
+
+.nav-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.nav-exits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+}
+
+/* ─── Sidebar ─── */
+#sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    overflow-y: auto;
+    min-height: 0;
+    padding-right: 2px;
+}
+
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb {
+    background: var(--color-primary-pale-blue);
+    border-radius: var(--radius-round);
+}
+
+/* ─── Login Overlay ─── */
+.login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(
+        ellipse at 40% 40%,
+        rgba(216, 197, 232, 0.55) 0%,
+        rgba(184, 216, 232, 0.60) 50%,
+        rgba(197, 216, 168, 0.35) 100%
+    );
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.login-overlay.is-hiding {
+    animation: fade-out 400ms var(--ease-in-out-smooth) forwards;
+    pointer-events: none;
+}
+
+/* ─── Responsive Breakpoints ─── */
+@media (max-width: 599px) {
+    .game-layout {
+        grid-template-columns: 1fr;
+    }
+    #sidebar {
+        display: none;
+    }
+}
+
+@media (min-width: 600px) and (max-width: 1023px) {
+    .game-layout {
+        grid-template-columns: 1fr 200px;
+    }
+}

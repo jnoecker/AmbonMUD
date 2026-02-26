@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AmbonMUD</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.css">
+    <link rel="stylesheet" href="/v2/styles/design-tokens.css">
+    <link rel="stylesheet" href="/v2/styles/reset.css">
+    <link rel="stylesheet" href="/v2/styles/typography.css">
+    <link rel="stylesheet" href="/v2/styles/animations.css">
+    <link rel="stylesheet" href="/v2/styles/layout.css">
+    <link rel="stylesheet" href="/v2/styles/components.css">
+</head>
+<body>
+
+<!-- ─── Login Overlay ──────────────────────────────────────────────────── -->
+<div id="login-overlay" class="login-overlay">
+    <div class="login-card">
+        <h1>AmbonMUD</h1>
+        <p class="login-subtitle">A realm of surreal gentle magic awaits</p>
+        <form id="login-form" novalidate>
+            <div class="form-group">
+                <label for="login-name">Character Name</label>
+                <input
+                    type="text"
+                    id="login-name"
+                    name="login-name"
+                    placeholder="Enter your name…"
+                    autocomplete="username"
+                    maxlength="16"
+                    required
+                >
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input
+                    type="password"
+                    id="login-password"
+                    name="login-password"
+                    placeholder="Enter your password…"
+                    autocomplete="current-password"
+                    maxlength="72"
+                    required
+                >
+            </div>
+            <div id="login-error" class="login-error" hidden></div>
+            <button type="submit" id="login-btn" class="btn btn-full">Enter the World</button>
+        </form>
+    </div>
+</div>
+
+<!-- ─── Game Shell ─────────────────────────────────────────────────────── -->
+<main class="shell">
+    <header class="topbar">
+        <div class="topbar-brand">AmbonMUD</div>
+        <div class="topbar-right">
+            <span id="status" class="status-pill disconnected">Disconnected</span>
+            <button id="reconnect" type="button" class="btn btn-sm">Reconnect</button>
+        </div>
+    </header>
+
+    <div class="game-layout">
+
+        <!-- Terminal Column -->
+        <div class="terminal-col">
+            <section id="terminal" aria-label="AmbonMUD terminal"></section>
+            <nav id="nav-bar" class="nav-bar" aria-label="Room exits">
+                <span class="nav-label">Exits:</span>
+                <div id="nav-exits" class="nav-exits"></div>
+            </nav>
+        </div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar">
+
+            <!-- Character Panel -->
+            <div class="panel" id="char-panel">
+                <div class="panel-header">Character</div>
+                <div class="panel-body">
+                    <div class="char-identity">
+                        <span id="char-name" class="char-name">—</span>
+                        <span id="char-info" class="char-info">—</span>
+                    </div>
+                    <div class="stat-bar-group">
+                        <div class="bar-label">HP <span id="hp-text">— / —</span></div>
+                        <div class="bar-track"><div class="bar-fill bar-hp" id="hp-bar"></div></div>
+                        <div class="bar-label">Mana <span id="mana-text">— / —</span></div>
+                        <div class="bar-track"><div class="bar-fill bar-mana" id="mana-bar"></div></div>
+                        <div class="bar-label">XP <span id="xp-bar-text">— / —</span></div>
+                        <div class="bar-track"><div class="bar-fill bar-xp" id="xp-bar"></div></div>
+                    </div>
+                    <div class="stat-rows">
+                        <div class="stat-row">
+                            <span class="stat-key">Level</span>
+                            <span class="stat-val" id="level-val">—</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-key">XP Total</span>
+                            <span class="stat-val" id="xp-val">—</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-key">Gold</span>
+                            <span class="stat-val" id="gold-val">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Panel -->
+            <div class="panel" id="map-panel">
+                <div class="panel-header">Map</div>
+                <div class="panel-body panel-body--map">
+                    <canvas id="map-canvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Room Panel -->
+            <div class="panel" id="room-panel">
+                <div class="panel-header">Room</div>
+                <div class="panel-body">
+                    <div id="room-title" class="room-title">—</div>
+                    <div id="room-desc" class="room-desc"></div>
+                    <div class="exits-label">Exits</div>
+                    <div id="exits-wrap" class="exits-wrap"></div>
+                </div>
+            </div>
+
+            <!-- Players Panel -->
+            <div class="panel" id="players-panel">
+                <div class="panel-header">Players Here</div>
+                <div class="panel-body">
+                    <div id="players-list" class="entity-list"><span class="empty-hint">—</span></div>
+                </div>
+            </div>
+
+            <!-- Mobs Panel -->
+            <div class="panel" id="mobs-panel">
+                <div class="panel-header">Mobs Here</div>
+                <div class="panel-body">
+                    <div id="mobs-list" class="entity-list"><span class="empty-hint">—</span></div>
+                </div>
+            </div>
+
+            <!-- Effects Panel -->
+            <div class="panel" id="effects-panel">
+                <div class="panel-header">Effects</div>
+                <div class="panel-body">
+                    <div id="effects-list" class="effects-list"><span class="empty-hint">None</span></div>
+                </div>
+            </div>
+
+            <!-- Inventory Panel -->
+            <div class="panel" id="inv-panel">
+                <div class="panel-header">Inventory</div>
+                <div class="panel-body">
+                    <div id="inv-list" class="entity-list"><span class="empty-hint">—</span></div>
+                </div>
+            </div>
+
+            <!-- Equipment Panel -->
+            <div class="panel" id="equip-panel">
+                <div class="panel-header">Equipment</div>
+                <div class="panel-body">
+                    <div id="equip-list" class="equip-list"><span class="empty-hint">—</span></div>
+                </div>
+            </div>
+
+        </aside>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>
+<script src="/v2/app.js"></script>
+</body>
+</html>

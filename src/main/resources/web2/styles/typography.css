@@ -1,0 +1,39 @@
+/* ─── Typography — Surreal Gentle Magic ─────────────────────────────────── */
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+
+/* Heading typeface — elegant warmth */
+h1, h2, h3, h4 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+h1 { font-size: 32px; letter-spacing: 0.5px; }
+h2 { font-size: 24px; }
+h3 { font-size: 18px; }
+h4 { font-size: 14px; }
+
+/* Utility classes */
+.font-serif { font-family: Georgia, 'Times New Roman', serif; }
+.font-mono  { font-family: 'Courier New', Courier, monospace; }
+.font-sans  { font-family: 'Segoe UI', system-ui, sans-serif; }
+
+.text-xs      { font-size: 11px; }
+.text-sm      { font-size: 12px; }
+.text-body    { font-size: 14px; }
+.text-caption { font-size: 12px; color: var(--text-secondary); }
+
+.text-primary   { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-disabled  { color: var(--text-disabled); }
+
+.italic { font-style: italic; }
+.uppercase { text-transform: uppercase; letter-spacing: 0.5px; }

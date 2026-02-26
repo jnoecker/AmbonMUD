@@ -1,0 +1,65 @@
+/* ─── Animations & Keyframes — Surreal Gentle Magic ─────────────────────── */
+/* Easing variables live in design-tokens.css                               */
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes fade-out {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Ambient breathing glow — 2–4s rhythm, suggests life */
+@keyframes breathing-glow {
+    0%, 100% { box-shadow: var(--shadow-glow-sm); }
+    50%       { box-shadow: var(--shadow-glow-md); }
+}
+
+/* Gentle pulse — for magical elements */
+@keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.75; }
+}
+
+/* Topbar shimmer — slow, ambient */
+@keyframes topbar-shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
+}
+
+/* Status pill connecting pulse */
+@keyframes connecting-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.5; }
+}
+
+/* Utility animation classes */
+.anim-fade-in  { animation: fade-in  300ms var(--ease-out-soft)      both; }
+.anim-fade-out { animation: fade-out 300ms var(--ease-in-soft)       both; }
+.anim-slide-up { animation: slide-up 400ms var(--ease-out-soft)      both; }
+
+.anim-glow {
+    animation: breathing-glow 3s var(--ease-in-out-smooth) infinite;
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
