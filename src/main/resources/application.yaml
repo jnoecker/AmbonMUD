@@ -242,6 +242,140 @@ ambonMUD:
           effectType: STUN
           durationMs: 2000
           stackBehavior: NONE
+        # --- Warrior Status Effects ---
+        whirlwind_rage:
+          displayName: "Whirlwind Rage"
+          effectType: STAT_BUFF
+          durationMs: 8000
+          tickIntervalMs: 1000
+          tickMinValue: 1
+          tickMaxValue: 2
+          strMod: 5
+          dexMod: 2
+          stackBehavior: REFRESH
+        berserker_state:
+          displayName: "Berserker State"
+          effectType: STAT_BUFF
+          durationMs: 10000
+          strMod: 7
+          conMod: 3
+          stackBehavior: REFRESH
+        thornhide_armor:
+          displayName: "Thornhide Armor"
+          effectType: SHIELD
+          durationMs: 15000
+          shieldAmount: 30
+          stackBehavior: REFRESH
+        weakened:
+          displayName: "Weakened"
+          effectType: STAT_DEBUFF
+          durationMs: 8000
+          strMod: -3
+          stackBehavior: REFRESH
+        # --- Mage Status Effects ---
+        mana_shield:
+          displayName: "Mana Shield"
+          effectType: SHIELD
+          durationMs: 20000
+          shieldAmount: 25
+          stackBehavior: REFRESH
+        flame_armor:
+          displayName: "Flame Armor"
+          effectType: STAT_BUFF
+          durationMs: 12000
+          intMod: 4
+          stackBehavior: REFRESH
+        frost_armor:
+          displayName: "Frost Armor"
+          effectType: SHIELD
+          durationMs: 12000
+          shieldAmount: 28
+          stackBehavior: REFRESH
+        frozen:
+          displayName: "Frozen"
+          effectType: STUN
+          durationMs: 3000
+          stackBehavior: NONE
+        chilled:
+          displayName: "Chilled"
+          effectType: STAT_DEBUFF
+          durationMs: 6000
+          dexMod: -2
+          stackBehavior: REFRESH
+        arcane_burn:
+          displayName: "Arcane Burn"
+          effectType: DOT
+          durationMs: 8000
+          tickIntervalMs: 2000
+          tickMinValue: 4
+          tickMaxValue: 6
+          stackBehavior: STACK
+          maxStacks: 2
+        # --- Cleric Status Effects ---
+        holy_light:
+          displayName: "Holy Light"
+          effectType: HOT
+          durationMs: 12000
+          tickIntervalMs: 2000
+          tickMinValue: 3
+          tickMaxValue: 5
+          stackBehavior: REFRESH
+        divine_blessing:
+          displayName: "Divine Blessing"
+          effectType: STAT_BUFF
+          durationMs: 15000
+          wisMod: 4
+          conMod: 2
+          stackBehavior: REFRESH
+        consecrated_ground:
+          displayName: "Consecrated Ground"
+          effectType: HOT
+          durationMs: 20000
+          tickIntervalMs: 2000
+          tickMinValue: 2
+          tickMaxValue: 3
+          stackBehavior: REFRESH
+        purified:
+          displayName: "Purified"
+          effectType: STAT_BUFF
+          durationMs: 10000
+          wisMod: 3
+          stackBehavior: REFRESH
+        # --- Rogue Status Effects ---
+        shadow_veil:
+          displayName: "Shadow Veil"
+          effectType: SHIELD
+          durationMs: 10000
+          shieldAmount: 15
+          stackBehavior: REFRESH
+        venomous:
+          displayName: "Venomous"
+          effectType: DOT
+          durationMs: 12000
+          tickIntervalMs: 2000
+          tickMinValue: 3
+          tickMaxValue: 5
+          stackBehavior: STACK
+          maxStacks: 4
+        shadow_mark:
+          displayName: "Shadow Mark"
+          effectType: STAT_DEBUFF
+          durationMs: 8000
+          dexMod: -3
+          stackBehavior: REFRESH
+        death_mark:
+          displayName: "Death Mark"
+          effectType: STAT_DEBUFF
+          durationMs: 10000
+          dexMod: -4
+          strMod: -2
+          stackBehavior: REFRESH
+        blinded:
+          displayName: "Blinded"
+          effectType: STAT_DEBUFF
+          durationMs: 5000
+          dexMod: -5
+          stackBehavior: NONE
     economy:
       buyMultiplier: 1.0
       sellMultiplier: 0.5
@@ -251,7 +385,7 @@ ambonMUD:
       xpBonusPerMember: 0.10
     abilities:
       definitions:
-        # --- Warrior ---
+        # --- Warrior (26 abilities) ---
         power_strike:
           displayName: "Power Strike"
           description: "A powerful melee strike."
@@ -264,41 +398,6 @@ ambonMUD:
             type: DIRECT_DAMAGE
             minDamage: 5
             maxDamage: 10
-        shield_bash:
-          displayName: "Shield Bash"
-          description: "Bash your foe with your shield."
-          manaCost: 10
-          cooldownMs: 3000
-          levelRequired: 5
-          targetType: ENEMY
-          requiredClass: WARRIOR
-          effect:
-            type: DIRECT_DAMAGE
-            minDamage: 8
-            maxDamage: 14
-        war_cry:
-          displayName: "War Cry"
-          description: "Rally yourself with a battle cry."
-          manaCost: 15
-          cooldownMs: 8000
-          levelRequired: 10
-          targetType: SELF
-          requiredClass: WARRIOR
-          effect:
-            type: DIRECT_HEAL
-            minHeal: 8
-            maxHeal: 15
-        battle_shout:
-          displayName: "Battle Shout"
-          description: "A war cry that increases your strength."
-          manaCost: 10
-          cooldownMs: 60000
-          levelRequired: 3
-          targetType: SELF
-          requiredClass: WARRIOR
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: battle_shout
         taunt:
           displayName: "Taunt"
           description: "Force a mob to attack you by generating massive threat."
@@ -311,7 +410,276 @@ ambonMUD:
             type: TAUNT
             flatThreat: 50.0
             margin: 10.0
-        # --- Mage ---
+        battle_shout:
+          displayName: "Battle Shout"
+          description: "A war cry that increases your strength."
+          manaCost: 10
+          cooldownMs: 60000
+          levelRequired: 3
+          targetType: SELF
+          requiredClass: WARRIOR
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: battle_shout
+        shield_bash:
+          displayName: "Shield Bash"
+          description: "Bash your foe with your shield."
+          manaCost: 10
+          cooldownMs: 3000
+          levelRequired: 5
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 8
+            maxDamage: 14
+        whirlwind_strike:
+          displayName: "Whirlwind Strike"
+          description: "Spin around hitting nearby enemies in combat."
+          manaCost: 12
+          cooldownMs: 4000
+          levelRequired: 7
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 6
+            maxDamage: 11
+        war_cry:
+          displayName: "War Cry"
+          description: "Rally yourself with a battle cry."
+          manaCost: 15
+          cooldownMs: 8000
+          levelRequired: 10
+          targetType: SELF
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 8
+            maxHeal: 15
+        riposte:
+          displayName: "Riposte"
+          description: "A skilled counter-attack against your foe."
+          manaCost: 8
+          cooldownMs: 2000
+          levelRequired: 12
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 10
+            maxDamage: 16
+        block:
+          displayName: "Block"
+          description: "Protect yourself with a defensive stance."
+          manaCost: 10
+          cooldownMs: 5000
+          levelRequired: 14
+          targetType: SELF
+          requiredClass: WARRIOR
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: thornhide_armor
+        cleave:
+          displayName: "Cleave"
+          description: "Split your enemy with a heavy overhead strike."
+          manaCost: 14
+          cooldownMs: 6000
+          levelRequired: 16
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 14
+            maxDamage: 24
+        counter_attack:
+          displayName: "Counter Attack"
+          description: "Strike your opponent as they attack you."
+          manaCost: 6
+          cooldownMs: 3000
+          levelRequired: 18
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 9
+            maxDamage: 15
+        berserker_rage:
+          displayName: "Berserker Rage"
+          description: "Enter a state of primal fury, increasing damage output."
+          manaCost: 20
+          cooldownMs: 10000
+          levelRequired: 20
+          targetType: SELF
+          requiredClass: WARRIOR
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: berserker_state
+        charge:
+          displayName: "Charge"
+          description: "Rush forward and slam your enemy."
+          manaCost: 12
+          cooldownMs: 7000
+          levelRequired: 22
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 16
+            maxDamage: 26
+        parry:
+          displayName: "Parry"
+          description: "Deflect incoming attacks with your weapon."
+          manaCost: 8
+          cooldownMs: 4000
+          levelRequired: 24
+          targetType: SELF
+          requiredClass: WARRIOR
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: thornhide_armor
+        crushing_blow:
+          displayName: "Crushing Blow"
+          description: "Deliver a devastating blow with all your might."
+          manaCost: 18
+          cooldownMs: 8000
+          levelRequired: 26
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 20
+            maxDamage: 32
+        revenge:
+          displayName: "Revenge"
+          description: "Strike back at an enemy that just hurt you."
+          manaCost: 10
+          cooldownMs: 5000
+          levelRequired: 28
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 12
+            maxDamage: 22
+        last_stand:
+          displayName: "Last Stand"
+          description: "Make a final desperate defense against all attacks."
+          manaCost: 25
+          cooldownMs: 12000
+          levelRequired: 30
+          targetType: SELF
+          requiredClass: WARRIOR
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: thornhide_armor
+        execution:
+          displayName: "Execution"
+          description: "A finishing move to strike down weakened foes."
+          manaCost: 16
+          cooldownMs: 6000
+          levelRequired: 34
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 24
+            maxDamage: 40
+        second_wind:
+          displayName: "Second Wind"
+          description: "Push through your exhaustion and recover."
+          manaCost: 20
+          cooldownMs: 10000
+          levelRequired: 36
+          targetType: SELF
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 20
+            maxHeal: 35
+        unbreakable:
+          displayName: "Unbreakable"
+          description: "Strengthen your resolve to become an immovable force."
+          manaCost: 22
+          cooldownMs: 15000
+          levelRequired: 38
+          targetType: SELF
+          requiredClass: WARRIOR
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: berserker_state
+        mass_taunt:
+          displayName: "Mass Taunt"
+          description: "Taunt all nearby enemies."
+          manaCost: 15
+          cooldownMs: 12000
+          levelRequired: 40
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: TAUNT
+            flatThreat: 75.0
+            margin: 15.0
+        whirlwind_assault:
+          displayName: "Whirlwind Assault"
+          description: "Execute a devastating spin attack hitting all foes."
+          manaCost: 28
+          cooldownMs: 10000
+          levelRequired: 42
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 12
+            maxDamage: 20
+        savage_charge:
+          displayName: "Savage Charge"
+          description: "A relentless assault that knocks back enemies."
+          manaCost: 24
+          cooldownMs: 8000
+          levelRequired: 44
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 28
+            maxDamage: 44
+        iron_resolve:
+          displayName: "Iron Resolve"
+          description: "Harden your body against damage."
+          manaCost: 20
+          cooldownMs: 12000
+          levelRequired: 46
+          targetType: SELF
+          requiredClass: WARRIOR
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: thornhide_armor
+        endgame_strike:
+          displayName: "Endgame Strike"
+          description: "A powerful attack reserved for experienced warriors."
+          manaCost: 26
+          cooldownMs: 9000
+          levelRequired: 48
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 32
+            maxDamage: 50
+        champions_triumph:
+          displayName: "Champion's Triumph"
+          description: "The ultimate warrior ability—strike with glory."
+          manaCost: 30
+          cooldownMs: 15000
+          levelRequired: 50
+          targetType: ENEMY
+          requiredClass: WARRIOR
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 38
+            maxDamage: 58
+        # --- Mage (26 abilities) ---
         arcane_bolt:
           displayName: "Arcane Bolt"
           description: "Hurl a bolt of arcane energy."
@@ -324,6 +692,17 @@ ambonMUD:
             type: DIRECT_DAMAGE
             minDamage: 4
             maxDamage: 9
+        ignite:
+          displayName: "Ignite"
+          description: "Sets the target ablaze, burning them for damage over time."
+          manaCost: 12
+          cooldownMs: 8000
+          levelRequired: 3
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: ignite
         frost_nova:
           displayName: "Frost Nova"
           description: "Blast your enemy with freezing cold."
@@ -336,29 +715,6 @@ ambonMUD:
             type: DIRECT_DAMAGE
             minDamage: 10
             maxDamage: 18
-        inferno:
-          displayName: "Inferno"
-          description: "Engulf your foe in searing flames."
-          manaCost: 25
-          cooldownMs: 5000
-          levelRequired: 10
-          targetType: ENEMY
-          requiredClass: MAGE
-          effect:
-            type: DIRECT_DAMAGE
-            minDamage: 16
-            maxDamage: 28
-        ignite:
-          displayName: "Ignite"
-          description: "Sets the target ablaze, burning them for damage over time."
-          manaCost: 12
-          cooldownMs: 8000
-          levelRequired: 3
-          targetType: ENEMY
-          requiredClass: MAGE
-          effect:
-            type: APPLY_STATUS
-            statusEffectId: ignite
         fireball:
           displayName: "Fireball"
           description: "Hurl a ball of fire that hits all enemies in combat with your group."
@@ -371,7 +727,255 @@ ambonMUD:
             type: AREA_DAMAGE
             minDamage: 3
             maxDamage: 7
-        # --- Cleric ---
+        mana_bolt:
+          displayName: "Mana Bolt"
+          description: "Drain mana from your foe and hurl it as a projectile."
+          manaCost: 10
+          cooldownMs: 4000
+          levelRequired: 7
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 8
+            maxDamage: 14
+        inferno:
+          displayName: "Inferno"
+          description: "Engulf your foe in searing flames."
+          manaCost: 25
+          cooldownMs: 5000
+          levelRequired: 10
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 16
+            maxDamage: 28
+        flame_armor:
+          displayName: "Flame Armor"
+          description: "Surround yourself with protective flames."
+          manaCost: 14
+          cooldownMs: 10000
+          levelRequired: 12
+          targetType: SELF
+          requiredClass: MAGE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: flame_armor
+        frost_armor:
+          displayName: "Frost Armor"
+          description: "Encase yourself in a shield of ice."
+          manaCost: 14
+          cooldownMs: 10000
+          levelRequired: 14
+          targetType: SELF
+          requiredClass: MAGE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: frost_armor
+        chain_lightning:
+          displayName: "Chain Lightning"
+          description: "Hurl lightning that bounces between enemies."
+          manaCost: 18
+          cooldownMs: 6000
+          levelRequired: 16
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 8
+            maxDamage: 14
+        blizzard:
+          displayName: "Blizzard"
+          description: "Summon a whirlwind of snow and ice."
+          manaCost: 28
+          cooldownMs: 9000
+          levelRequired: 18
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 10
+            maxDamage: 18
+        pyroclasm:
+          displayName: "Pyroclasm"
+          description: "Unleash explosive volcanic energy."
+          manaCost: 30
+          cooldownMs: 10000
+          levelRequired: 20
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 22
+            maxDamage: 36
+        ice_storm:
+          displayName: "Ice Storm"
+          description: "Create a deadly storm of icicles."
+          manaCost: 26
+          cooldownMs: 8000
+          levelRequired: 24
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 12
+            maxDamage: 20
+        meteor_shower:
+          displayName: "Meteor Shower"
+          description: "Rain meteors down upon your enemies."
+          manaCost: 32
+          cooldownMs: 12000
+          levelRequired: 26
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 14
+            maxDamage: 24
+        arcane_explosion:
+          displayName: "Arcane Explosion"
+          description: "Detonate raw arcane energy in all directions."
+          manaCost: 28
+          cooldownMs: 10000
+          levelRequired: 28
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 13
+            maxDamage: 22
+        temporal_warp:
+          displayName: "Temporal Warp"
+          description: "Twist spacetime to damage your foe."
+          manaCost: 24
+          cooldownMs: 7000
+          levelRequired: 30
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 20
+            maxDamage: 32
+        flame_burst:
+          displayName: "Flame Burst"
+          description: "Create a controlled explosion of fire."
+          manaCost: 20
+          cooldownMs: 6000
+          levelRequired: 32
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 18
+            maxDamage: 28
+        absolute_zero:
+          displayName: "Absolute Zero"
+          description: "Freeze your enemy solid with absolute cold."
+          manaCost: 26
+          cooldownMs: 9000
+          levelRequired: 34
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: frozen
+        inferno_nova:
+          displayName: "Inferno Nova"
+          description: "Detonate a miniature inferno."
+          manaCost: 28
+          cooldownMs: 10000
+          levelRequired: 36
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 26
+            maxDamage: 40
+        time_fracture:
+          displayName: "Time Fracture"
+          description: "Shatter time around your enemy."
+          manaCost: 30
+          cooldownMs: 11000
+          levelRequired: 38
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 28
+            maxDamage: 44
+        mana_shield:
+          displayName: "Mana Shield"
+          description: "Shield yourself with pure magical energy."
+          manaCost: 22
+          cooldownMs: 8000
+          levelRequired: 40
+          targetType: SELF
+          requiredClass: MAGE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: mana_shield
+        arcane_overload:
+          displayName: "Arcane Overload"
+          description: "Charge yourself with dangerous arcane power."
+          manaCost: 34
+          cooldownMs: 13000
+          levelRequired: 42
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 30
+            maxDamage: 48
+        cataclysm:
+          displayName: "Cataclysm"
+          description: "Bring total destruction to a wide area."
+          manaCost: 36
+          cooldownMs: 14000
+          levelRequired: 44
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 18
+            maxDamage: 30
+        temporal_twist:
+          displayName: "Temporal Twist"
+          description: "Manipulate time itself against your enemies."
+          manaCost: 28
+          cooldownMs: 10000
+          levelRequired: 46
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 32
+            maxDamage: 50
+        spellsteal:
+          displayName: "Spellsteal"
+          description: "Drain the magical essence from your enemy."
+          manaCost: 20
+          cooldownMs: 8000
+          levelRequired: 48
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 26
+            maxDamage: 40
+        arcane_mastery:
+          displayName: "Arcane Mastery"
+          description: "The apex of magical power—absolute arcane dominion."
+          manaCost: 38
+          cooldownMs: 15000
+          levelRequired: 50
+          targetType: ENEMY
+          requiredClass: MAGE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 40
+            maxDamage: 62
+        # --- Cleric (26 abilities) ---
         minor_heal:
           displayName: "Minor Heal"
           description: "Mend wounds with holy light. Target a group member or self."
@@ -384,6 +988,40 @@ ambonMUD:
             type: DIRECT_HEAL
             minHeal: 6
             maxHeal: 10
+        holy_light:
+          displayName: "Holy Light"
+          description: "Blessed healing light washes over the target."
+          manaCost: 10
+          cooldownMs: 2000
+          levelRequired: 2
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 8
+            maxHeal: 13
+        rejuvenation:
+          displayName: "Rejuvenation"
+          description: "Heals a target over time. Target a group member or self."
+          manaCost: 12
+          cooldownMs: 15000
+          levelRequired: 4
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: rejuvenation
+        shield_of_faith:
+          displayName: "Shield of Faith"
+          description: "Grants a shield that absorbs damage. Target a group member or self."
+          manaCost: 15
+          cooldownMs: 30000
+          levelRequired: 5
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: shield_of_faith
         smite:
           displayName: "Smite"
           description: "Strike your foe with divine wrath."
@@ -396,6 +1034,17 @@ ambonMUD:
             type: DIRECT_DAMAGE
             minDamage: 6
             maxDamage: 12
+        consecration:
+          displayName: "Consecration"
+          description: "Bless the ground beneath you with holy power."
+          manaCost: 16
+          cooldownMs: 12000
+          levelRequired: 7
+          targetType: SELF
+          requiredClass: CLERIC
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: consecrated_ground
         greater_heal:
           displayName: "Greater Heal"
           description: "A powerful wave of restorative energy. Target a group member or self."
@@ -408,29 +1057,239 @@ ambonMUD:
             type: DIRECT_HEAL
             minHeal: 15
             maxHeal: 25
-        shield_of_faith:
-          displayName: "Shield of Faith"
-          description: "Grants a shield that absorbs damage. Target a group member or self."
-          manaCost: 15
-          cooldownMs: 30000
-          levelRequired: 5
+        holy_fire:
+          displayName: "Holy Fire"
+          description: "Strike with holy flames that burn over time."
+          manaCost: 14
+          cooldownMs: 6000
+          levelRequired: 12
+          targetType: ENEMY
+          requiredClass: CLERIC
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: ignite
+        blessing_of_protection:
+          displayName: "Blessing of Protection"
+          description: "Grant a blessing that protects the target."
+          manaCost: 18
+          cooldownMs: 20000
+          levelRequired: 14
           targetType: ALLY
           requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: shield_of_faith
-        rejuvenation:
-          displayName: "Rejuvenation"
-          description: "Heals a target over time. Target a group member or self."
-          manaCost: 12
+        divine_light:
+          displayName: "Divine Light"
+          description: "Channel the light of the divine to heal."
+          manaCost: 20
+          cooldownMs: 6000
+          levelRequired: 16
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 18
+            maxHeal: 30
+        resurrection:
+          displayName: "Resurrection"
+          description: "Return a fallen ally to life with holy power."
+          manaCost: 40
+          cooldownMs: 30000
+          levelRequired: 18
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 25
+            maxHeal: 40
+        holy_nova:
+          displayName: "Holy Nova"
+          description: "Unleash a wave of holy energy healing nearby allies."
+          manaCost: 26
+          cooldownMs: 10000
+          levelRequired: 20
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 8
+            maxDamage: 14
+        sanctified_heal:
+          displayName: "Sanctified Heal"
+          description: "A more powerful healing spell blessed by the divine."
+          manaCost: 28
+          cooldownMs: 10000
+          levelRequired: 22
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 22
+            maxHeal: 36
+        guardian_angel:
+          displayName: "Guardian Angel"
+          description: "Call upon a guardian spirit to protect an ally."
+          manaCost: 24
           cooldownMs: 15000
-          levelRequired: 4
+          levelRequired: 24
           targetType: ALLY
           requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
-            statusEffectId: rejuvenation
-        # --- Rogue ---
+            statusEffectId: divine_blessing
+        divine_intervention:
+          displayName: "Divine Intervention"
+          description: "Perform a miraculous intervention to heal."
+          manaCost: 30
+          cooldownMs: 12000
+          levelRequired: 26
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 28
+            maxHeal: 44
+        mass_heal:
+          displayName: "Mass Heal"
+          description: "Heal multiple allies at once with holy light."
+          manaCost: 32
+          cooldownMs: 14000
+          levelRequired: 28
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 10
+            maxDamage: 18
+        holy_wrath:
+          displayName: "Holy Wrath"
+          description: "Strike enemies with the wrath of the holy."
+          manaCost: 22
+          cooldownMs: 7000
+          levelRequired: 30
+          targetType: ENEMY
+          requiredClass: CLERIC
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 16
+            maxDamage: 28
+        divine_aegis:
+          displayName: "Divine Aegis"
+          description: "Surround yourself with divine protection."
+          manaCost: 26
+          cooldownMs: 12000
+          levelRequired: 32
+          targetType: SELF
+          requiredClass: CLERIC
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: divine_blessing
+        benediction:
+          displayName: "Benediction"
+          description: "Bestow a blessing that heals over time."
+          manaCost: 20
+          cooldownMs: 10000
+          levelRequired: 34
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: holy_light
+        holy_shield:
+          displayName: "Holy Shield"
+          description: "Create a shield of pure holy energy."
+          manaCost: 24
+          cooldownMs: 15000
+          levelRequired: 36
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: shield_of_faith
+        illumination:
+          displayName: "Illumination"
+          description: "Flood an area with brilliant holy light."
+          manaCost: 28
+          cooldownMs: 11000
+          levelRequired: 38
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 12
+            maxDamage: 20
+        consecrated_ground:
+          displayName: "Consecrated Ground (Spell)"
+          description: "Sanctify the ground for continuous healing."
+          manaCost: 30
+          cooldownMs: 12000
+          levelRequired: 40
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: consecrated_ground
+        divine_favor:
+          displayName: "Divine Favor"
+          description: "Call down the favor of the divine."
+          manaCost: 28
+          cooldownMs: 10000
+          levelRequired: 42
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 32
+            maxHeal: 50
+        holy_vengeance:
+          displayName: "Holy Vengeance"
+          description: "Strike your enemies with divine vengeance."
+          manaCost: 26
+          cooldownMs: 9000
+          levelRequired: 44
+          targetType: ENEMY
+          requiredClass: CLERIC
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 22
+            maxDamage: 36
+        divine_protection:
+          displayName: "Divine Protection"
+          description: "The ultimate protective blessing."
+          manaCost: 32
+          cooldownMs: 15000
+          levelRequired: 46
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: shield_of_faith
+        salvation:
+          displayName: "Salvation"
+          description: "Perform a miraculous salvation of an ally."
+          manaCost: 36
+          cooldownMs: 16000
+          levelRequired: 48
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 40
+            maxHeal: 60
+        divine_ascension:
+          displayName: "Divine Ascension"
+          description: "The ultimate cleric ability—ascend to divine power."
+          manaCost: 40
+          cooldownMs: 18000
+          levelRequired: 50
+          targetType: ALLY
+          requiredClass: CLERIC
+          effect:
+            type: DIRECT_HEAL
+            minHeal: 50
+            maxHeal: 75
+        # --- Rogue (26 abilities) ---
         backstab:
           displayName: "Backstab"
           description: "Strike from the shadows."
@@ -445,7 +1304,7 @@ ambonMUD:
             maxDamage: 11
         poison_strike:
           displayName: "Poison Strike"
-          description: "A venomous strike that poisons the target. Stacks up to 3 times."
+          description: "A venomous strike that poisons the target. Stacks up to 4 times."
           manaCost: 8
           cooldownMs: 5000
           levelRequired: 3
@@ -454,6 +1313,28 @@ ambonMUD:
           effect:
             type: APPLY_STATUS
             statusEffectId: poison
+        evasion:
+          displayName: "Evasion"
+          description: "Dodge attacks with enhanced reflexes."
+          manaCost: 10
+          cooldownMs: 8000
+          levelRequired: 5
+          targetType: SELF
+          requiredClass: ROGUE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: shadow_veil
+        shadow_clone:
+          displayName: "Shadow Clone"
+          description: "Create a shadow duplicate of yourself to confuse enemies."
+          manaCost: 14
+          cooldownMs: 10000
+          levelRequired: 7
+          targetType: SELF
+          requiredClass: ROGUE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: shadow_veil
         shadow_step:
           displayName: "Shadow Step"
           description: "Slip into the shadows to recover."
@@ -466,6 +1347,238 @@ ambonMUD:
             type: DIRECT_HEAL
             minHeal: 10
             maxHeal: 18
+        ambush:
+          displayName: "Ambush"
+          description: "Attack from hiding with a surprise strike."
+          manaCost: 12
+          cooldownMs: 4000
+          levelRequired: 12
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 12
+            maxDamage: 20
+        death_mark:
+          displayName: "Death Mark"
+          description: "Mark a target for death, weakening their defenses."
+          manaCost: 10
+          cooldownMs: 6000
+          levelRequired: 14
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: death_mark
+        smoke_bomb:
+          displayName: "Smoke Bomb"
+          description: "Create a cloud of smoke to obscure vision."
+          manaCost: 12
+          cooldownMs: 8000
+          levelRequired: 16
+          targetType: SELF
+          requiredClass: ROGUE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: shadow_veil
+        shadow_dance:
+          displayName: "Shadow Dance"
+          description: "Dance through the shadows, striking from within."
+          manaCost: 16
+          cooldownMs: 7000
+          levelRequired: 18
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 14
+            maxDamage: 24
+        assassinate:
+          displayName: "Assassinate"
+          description: "Perform a swift execution strike."
+          manaCost: 20
+          cooldownMs: 8000
+          levelRequired: 20
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 18
+            maxDamage: 30
+        blindside:
+          displayName: "Blindside"
+          description: "Attack from an unexpected angle."
+          manaCost: 14
+          cooldownMs: 5000
+          levelRequired: 22
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 16
+            maxDamage: 26
+        silent_killer:
+          displayName: "Silent Killer"
+          description: "Strike without a sound, leaving no trace."
+          manaCost: 18
+          cooldownMs: 7000
+          levelRequired: 24
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 20
+            maxDamage: 32
+        shadow_mastery:
+          displayName: "Shadow Mastery"
+          description: "Master the art of shadow manipulation."
+          manaCost: 22
+          cooldownMs: 9000
+          levelRequired: 26
+          targetType: SELF
+          requiredClass: ROGUE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: shadow_veil
+        venomous_blade:
+          displayName: "Venomous Blade"
+          description: "Coat your weapon in deadly venom."
+          manaCost: 16
+          cooldownMs: 6000
+          levelRequired: 28
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: venomous
+        death_from_above:
+          displayName: "Death From Above"
+          description: "Strike from a height with lethal force."
+          manaCost: 20
+          cooldownMs: 8000
+          levelRequired: 30
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 24
+            maxDamage: 38
+        smoke_screen:
+          displayName: "Smoke Screen"
+          description: "Create a thick curtain of smoke."
+          manaCost: 14
+          cooldownMs: 7000
+          levelRequired: 32
+          targetType: SELF
+          requiredClass: ROGUE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: shadow_veil
+        nightfall:
+          displayName: "Nightfall"
+          description: "Shroud yourself in darkness."
+          manaCost: 24
+          cooldownMs: 10000
+          levelRequired: 34
+          targetType: SELF
+          requiredClass: ROGUE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: blinded
+        death_sentence:
+          displayName: "Death Sentence"
+          description: "Condemn a target to death with a blade."
+          manaCost: 22
+          cooldownMs: 9000
+          levelRequired: 36
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: death_mark
+        shadow_clone_assault:
+          displayName: "Shadow Clone Assault"
+          description: "Send shadow clones to attack your enemies."
+          manaCost: 26
+          cooldownMs: 11000
+          levelRequired: 38
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 12
+            maxDamage: 20
+        crimson_blade:
+          displayName: "Crimson Blade"
+          description: "Strike with a blade that thirsts for blood."
+          manaCost: 24
+          cooldownMs: 8000
+          levelRequired: 40
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 28
+            maxDamage: 44
+        deadly_precision:
+          displayName: "Deadly Precision"
+          description: "Strike with surgical precision."
+          manaCost: 20
+          cooldownMs: 7000
+          levelRequired: 42
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 26
+            maxDamage: 42
+        lethal_strike:
+          displayName: "Lethal Strike"
+          description: "A strike aimed at vital points."
+          manaCost: 28
+          cooldownMs: 10000
+          levelRequired: 44
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 32
+            maxDamage: 50
+        deaths_embrace:
+          displayName: "Death's Embrace"
+          description: "Embrace the shadows to become unstoppable."
+          manaCost: 30
+          cooldownMs: 12000
+          levelRequired: 46
+          targetType: SELF
+          requiredClass: ROGUE
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: shadow_veil
+        shadow_finale:
+          displayName: "Shadow Finale"
+          description: "Execute a devastating shadow technique."
+          manaCost: 32
+          cooldownMs: 12000
+          levelRequired: 48
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 38
+            maxDamage: 58
+        assassins_triumph:
+          displayName: "Assassin's Triumph"
+          description: "The ultimate rogue ability—become the shadow itself."
+          manaCost: 36
+          cooldownMs: 15000
+          levelRequired: 50
+          targetType: ENEMY
+          requiredClass: ROGUE
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 44
+            maxDamage: 68
 
   progression:
     maxLevel: 50
