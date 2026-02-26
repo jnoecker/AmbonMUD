@@ -1,0 +1,380 @@
+/**
+ * AmbonMUD Login Screen Styles
+ * Phase 3: Web Client Redesign
+ *
+ * Beautiful login overlay with epic banner support
+ * Fully responsive and accessible
+ */
+
+/* ========== LOGIN OVERLAY ========== */
+
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(20, 20, 40, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    font-family: inherit;
+}
+
+.login-overlay.hidden {
+    display: none;
+}
+
+/* ========== LOGIN CONTAINER ========== */
+
+.login-container {
+    background: rgba(30, 30, 50, 0.95);
+    border: 2px solid var(--color-primary-lavender);
+    border-radius: var(--radius-lg);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 0 40px rgba(216, 197, 232, 0.2),
+                0 0 80px rgba(200, 150, 232, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========== LOGIN BANNER ========== */
+
+.login-banner {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, #6a4c93 0%, #4a3a7a 100%);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-bottom: 2px solid var(--color-primary-lavender);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Banner image if provided */
+.login-banner[style*="background-image"] {
+    background-blend-mode: overlay;
+}
+
+/* Banner overlay for text readability */
+.login-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+    z-index: 1;
+}
+
+.login-banner-title {
+    position: relative;
+    z-index: 2;
+    color: #FFFFFF;
+    font-size: 2.5em;
+    font-weight: bold;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+                 0 0 16px rgba(216, 197, 232, 0.3);
+    text-align: center;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* ========== FORM CONTAINER ========== */
+
+.login-form-wrapper {
+    padding: 2rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-primary-pale-blue);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 200ms ease-out-soft;
+}
+
+.form-group input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--color-primary-lavender);
+    box-shadow: 0 0 12px rgba(216, 197, 232, 0.2);
+}
+
+.form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* ========== BUTTONS ========== */
+
+.login-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-login,
+.btn-register {
+    flex: 1;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 200ms ease-out-soft;
+    font-family: inherit;
+}
+
+.btn-login {
+    background: linear-gradient(135deg, var(--color-primary-lavender), var(--color-primary-pale-blue));
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(216, 197, 232, 0.3);
+}
+
+.btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(216, 197, 232, 0.4);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(216, 197, 232, 0.2);
+}
+
+.btn-register {
+    background: transparent;
+    color: var(--color-primary-lavender);
+    border: 2px solid var(--color-primary-pale-blue);
+}
+
+.btn-register:hover {
+    background: rgba(184, 216, 232, 0.1);
+    border-color: var(--color-primary-lavender);
+}
+
+/* ========== FORM MESSAGES ========== */
+
+.form-message {
+    padding: 0.875rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    animation: slideDown 300ms ease-out-soft;
+    margin-bottom: 1rem;
+}
+
+.form-message.error {
+    background: rgba(232, 165, 165, 0.15);
+    border: 1px solid var(--color-error);
+    color: #FFB8B8;
+}
+
+.form-message.success {
+    background: rgba(197, 216, 168, 0.15);
+    border: 1px solid var(--color-primary-moss-green);
+    color: #D8E8A8;
+}
+
+.form-message.info {
+    background: rgba(184, 216, 232, 0.15);
+    border: 1px solid var(--color-primary-pale-blue);
+    color: #B8D8E8;
+}
+
+/* ========== FOOTER LINKS ========== */
+
+.login-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid rgba(216, 197, 232, 0.1);
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+}
+
+.login-footer a {
+    color: var(--color-primary-pale-blue);
+    text-decoration: none;
+    transition: color 200ms ease-out-soft;
+}
+
+.login-footer a:hover {
+    color: var(--color-primary-lavender);
+    text-decoration: underline;
+}
+
+/* ========== LOADING STATE ========== */
+
+.login-overlay.loading .btn-login,
+.login-overlay.loading .btn-register {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.login-overlay.loading .btn-login::after,
+.login-overlay.loading .btn-register::after {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-left: 0.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #FFFFFF;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========== ACCESSIBILITY ========== */
+
+@media (prefers-reduced-motion: reduce) {
+    .form-message,
+    .btn-login,
+    .btn-register,
+    .form-group input {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: more) {
+    .login-container {
+        border-width: 3px;
+    }
+
+    .form-group input:focus {
+        box-shadow: 0 0 8px #FFFFFF, 0 0 16px var(--color-primary-lavender);
+    }
+
+    .btn-login,
+    .btn-register {
+        border: 2px solid currentColor;
+    }
+}
+
+/* ========== RESPONSIVE ========== */
+
+@media (max-width: 600px) {
+    .login-container {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .login-form-wrapper {
+        padding: 1.5rem;
+    }
+
+    .login-banner {
+        height: 150px;
+    }
+
+    .login-banner-title {
+        font-size: 1.8em;
+        letter-spacing: 1px;
+    }
+
+    .login-buttons {
+        flex-direction: column;
+    }
+
+    .login-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 375px) {
+    .login-form-wrapper {
+        padding: 1rem;
+    }
+
+    .login-footer {
+        font-size: 0.75rem;
+    }
+
+    .btn-login,
+    .btn-register {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* ========== DARK MODE SUPPORT ========== */
+
+@media (prefers-color-scheme: dark) {
+    .login-container {
+        background: rgba(20, 20, 30, 0.98);
+    }
+
+    .form-group input {
+        background: rgba(255, 255, 255, 0.04);
+        color: #E8E8F0;
+    }
+
+    .form-group input:focus {
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+
+/* ========== FOCUS VISIBLE FOR KEYBOARD NAVIGATION ========== */
+
+.btn-login:focus-visible,
+.btn-register:focus-visible,
+.form-group input:focus-visible {
+    outline: 2px solid var(--color-primary-lavender);
+    outline-offset: 2px;
+}

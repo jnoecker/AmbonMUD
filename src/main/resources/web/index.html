@@ -12,9 +12,59 @@
     <link rel="stylesheet" href="/styles/typography.css">
     <link rel="stylesheet" href="/styles/animations.css">
     <link rel="stylesheet" href="/styles/canvas-panel.css">
+    <link rel="stylesheet" href="/styles/login.css">
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+<!-- Login Overlay (Phase 3) -->
+<div id="login-overlay" class="login-overlay">
+    <div class="login-container">
+        <div id="login-banner" class="login-banner">
+            <h1 class="login-banner-title">AmbonMUD</h1>
+        </div>
+        <div class="login-form-wrapper">
+            <div id="login-message" class="form-message" style="display: none;"></div>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input
+                        id="login-username"
+                        type="text"
+                        name="username"
+                        placeholder="Enter your username"
+                        autocomplete="username"
+                        required
+                        minlength="2"
+                        maxlength="16"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input
+                        id="login-password"
+                        type="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+                <div class="login-buttons">
+                    <button type="submit" class="btn-login">Login</button>
+                    <button type="button" id="btn-register" class="btn-register">Register</button>
+                </div>
+            </form>
+            <div class="login-footer">
+                <a href="#help">Help</a>
+                <span>•</span>
+                <a href="#status">Server Status</a>
+                <span>•</span>
+                <a href="#about">About</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <main class="shell">
     <header class="topbar">
         <h1>AmbonMUD Demo</h1>

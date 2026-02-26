@@ -175,6 +175,72 @@
     let connected = false;
     let inputBuffer = "";
 
+    // ── Login Screen Handlers (Phase 3) ──
+
+    const loginOverlay = document.getElementById("login-overlay");
+    const loginForm = document.getElementById("login-form");
+    const loginMessage = document.getElementById("login-message");
+    const loginUsername = document.getElementById("login-username");
+    const loginPassword = document.getElementById("login-password");
+    const btnRegister = document.getElementById("btn-register");
+
+    function showLoginMessage(message, type = "info") {
+        loginMessage.textContent = message;
+        loginMessage.className = `form-message ${type}`;
+        loginMessage.style.display = "block";
+    }
+
+    function hideLogin() {
+        if (loginOverlay) {
+            loginOverlay.style.display = "none";
+        }
+    }
+
+    function showLogin() {
+        if (loginOverlay) {
+            loginOverlay.style.display = "flex";
+            loginUsername.focus();
+        }
+    }
+
+    if (loginForm) {
+        loginForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const username = loginUsername.value.trim();
+            const password = loginPassword.value;
+
+            if (!username || !password) {
+                showLoginMessage("Please enter username and password", "error");
+                return;
+            }
+
+            // Send login command via terminal
+            sendCommand(`login ${username}`);
+            loginForm.classList.add("loading");
+            loginPassword.value = ""; // Clear password from UI
+
+            // Show that we're connecting
+            showLoginMessage("Connecting...", "info");
+        });
+    }
+
+    if (btnRegister) {
+        btnRegister.addEventListener("click", (e) => {
+            e.preventDefault();
+            // Placeholder for registration flow
+            showLoginMessage("Registration coming soon", "info");
+        });
+    }
+
+    // Show login when connected but not authenticated
+    function updateLoginUI() {
+        if (!connected) {
+            showLogin();
+        } else {
+            hideLogin();
+        }
+    }
+
     // ── Sidebar elements ──
 
     const hpBar = document.getElementById("hp-bar");
@@ -401,6 +467,11 @@
         connected = isConnected;
         statusEl.textContent = isConnected ? "Connected" : "Disconnected";
         statusEl.className = `status ${isConnected ? "connected" : "disconnected"}`;
+
+        // Update login UI (Phase 3)
+        if (typeof updateLoginUI === "function") {
+            updateLoginUI();
+        }
     }
 
     function resetHud() {
