@@ -224,6 +224,14 @@ body {
   background: linear-gradient(135deg, rgb(207 222 241 / 90%), rgb(223 207 240 / 88%));
 }
 
+.soft-button:disabled {
+  transform: none;
+  cursor: not-allowed;
+  opacity: 0.62;
+  background: linear-gradient(135deg, rgb(230 230 238 / 86%), rgb(221 227 236 / 84%));
+  box-shadow: none;
+}
+
 .soft-button:focus-visible,
 .command-input:focus-visible,
 .chip-button:focus-visible,
@@ -349,6 +357,14 @@ body {
   background: linear-gradient(135deg, rgb(203 222 240 / 88%), rgb(225 209 242 / 88%));
 }
 
+.panel-action-button:disabled {
+  transform: none;
+  cursor: not-allowed;
+  opacity: 0.62;
+  background: linear-gradient(135deg, rgb(230 230 238 / 86%), rgb(221 227 236 / 84%));
+  box-shadow: none;
+}
+
 .panel-action-button:focus-visible {
   outline: none;
   box-shadow:
@@ -368,6 +384,30 @@ body {
     0 0 0 1px rgb(255 255 255 / 28%),
     var(--shadow-sm);
   padding: var(--space-2);
+}
+
+.prelogin-banner {
+  border: 1px solid rgb(106 96 136 / 22%);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(140deg, rgb(233 220 246 / 84%), rgb(219 237 248 / 80%)),
+    linear-gradient(0deg, rgb(255 255 255 / 20%), rgb(255 255 255 / 20%));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 44%), var(--shadow-sm);
+  padding: 10px 12px;
+}
+
+.prelogin-banner-title {
+  margin: 0;
+  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #54566a;
+}
+
+.prelogin-banner-text {
+  margin: 3px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
 }
 
 .terminal-host {
@@ -492,6 +532,46 @@ body {
 .subpanel:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md), inset 0 1px 0 rgb(255 255 255 / 58%);
+}
+
+.prelogin-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.prelogin-card-title {
+  margin: 0;
+  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-size: 1.38rem;
+  line-height: 1.2;
+  color: #54556a;
+}
+
+.prelogin-runes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+.prelogin-runes span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgb(232 216 168 / 92%), rgb(216 197 232 / 88%));
+  box-shadow: 0 0 10px rgb(232 216 168 / 38%);
+  opacity: 0.7;
+  animation: runePulse 2.9s var(--ease-in-out-smooth) infinite;
+}
+
+.prelogin-runes span:nth-child(2) {
+  animation-delay: 260ms;
+}
+
+.prelogin-runes span:nth-child(3) {
+  animation-delay: 520ms;
 }
 
 .subpanel h3 {
@@ -620,6 +700,27 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+}
+
+.meter-placeholder-stack {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.meter-placeholder-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.meter-track-placeholder {
+  background: rgb(107 107 123 / 16%);
+}
+
+.meter-fill-placeholder {
+  width: 38%;
+  background: linear-gradient(90deg, rgb(223 210 238 / 74%), rgb(191 217 236 / 72%));
 }
 
 .meter-block {
@@ -968,5 +1069,18 @@ body {
 
   to {
     transform: translateY(12px) scale(1.04);
+  }
+}
+
+@keyframes runePulse {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.08);
   }
 }

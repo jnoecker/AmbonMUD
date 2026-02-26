@@ -885,6 +885,16 @@ function App() {
   const hiddenMobsCount = Math.max(0, mobs.length - visibleMobs.length);
   const visibleEffects = effects.slice(0, MAX_VISIBLE_EFFECTS);
   const hiddenEffectsCount = Math.max(0, effects.length - visibleEffects.length);
+  const hasCharacterProfile = character.name !== "-";
+  const hasRoomDetails = room.id !== null || room.title !== "-";
+  const preLogin = connected && !hasCharacterProfile && !hasRoomDetails;
+  const canOpenMap = hasRoomDetails;
+  const canOpenEquipment = hasCharacterProfile;
+  const commandPlaceholder = connected
+    ? preLogin
+      ? "Login through the terminal to begin your journey"
+      : "Type a command"
+    : "Reconnect to start playing";
   const popoutTitle =
     activePopout === "map"
       ? "Mini-map"
@@ -969,11 +979,17 @@ function App() {
       <div className="dashboard" data-active-tab={activeTab}>
         <section className="panel panel-play" aria-label="Gameplay console">
           <header className="panel-header"><h2>Play</h2><p>Terminal output and direct command flow.</p></header>
+          {preLogin && (
+            <section className="prelogin-banner" aria-label="Login guidance">
+              <p className="prelogin-banner-title">Welcome back. Your session is connected.</p>
+              <p className="prelogin-banner-text">Use the terminal to enter your character name and password. World and character panels will populate right after login.</p>
+            </section>
+          )}
           <div className="terminal-card"><div ref={terminalHostRef} className="terminal-host" aria-label="AmbonMUD terminal" /></div>
 
           <div className="movement-grid" role="toolbar" aria-label="Room exits">
             {exits.length === 0 ? (
-              <span className="empty-note">No exits available.</span>
+              <span className="empty-note">{preLogin ? "Log in to unlock movement." : connected ? "No exits available." : "Reconnect to view exits."}</span>
             ) : (
               exits.map(([direction, target]) => (
                 <button
@@ -1004,11 +1020,11 @@ function App() {
                 composerTabCycleRef.current = EMPTY_TAB;
               }}
               onKeyDown={onComposerKeyDown}
-              placeholder="Type a command"
+              placeholder={commandPlaceholder}
               autoComplete="off"
               spellCheck={false}
             />
-            <button type="submit" className="soft-button">Send</button>
+            <button type="submit" className="soft-button" disabled={!connected}>Send</button>
           </form>
         </section>
 
@@ -1018,25 +1034,44 @@ function App() {
               <h2>World</h2>
               <p>Room context, exits, and local entities.</p>
             </div>
-            <button type="button" className="panel-action-button" onClick={() => setActivePopout("map")}>
+            <button type="button" className="panel-action-button" onClick={() => setActivePopout("map")} disabled={!canOpenMap}>
               Open Map
             </button>
           </header>
 
           <div className="world-stack">
             <article className="subpanel">
-              <h3>Room</h3>
-              <p className="room-title">{room.title}</p>
-              <p className="room-description">{room.description || "No room description available yet."}</p>
-              <div className="exit-cloud" aria-label="Current exits">
-                {exits.length === 0 ? <span className="empty-note">No exits listed.</span> : exits.map(([direction]) => <span key={direction} className="exit-pill">{direction}</span>)}
-              </div>
+              {hasRoomDetails ? (
+                <>
+                  <h3>Room</h3>
+                  <p className="room-title">{room.title}</p>
+                  <p className="room-description">{room.description || "No room description available yet."}</p>
+                  <div className="exit-cloud" aria-label="Current exits">
+                    {exits.length === 0 ? <span className="empty-note">No exits listed.</span> : exits.map(([direction]) => <span key={direction} className="exit-pill">{direction}</span>)}
+                  </div>
+                </>
+              ) : (
+                <div className="prelogin-card">
+                  <h3>{connected ? "World Gate" : "World Offline"}</h3>
+                  <p className="prelogin-card-title">{connected ? "Awaiting your credentials" : "Disconnected from AmbonMUD"}</p>
+                  <p className="room-description">
+                    {connected
+                      ? "Once you finish login in the terminal, this panel will show your current room, exits, players, and nearby mobs."
+                      : "Reconnect to establish a session. The world map and local room context will appear as soon as a session is active."}
+                  </p>
+                  <div className="prelogin-runes" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                </div>
+              )}
             </article>
 
             <article className="subpanel split-list">
               <div>
                 <h3>Players</h3>
-                {players.length === 0 ? <p className="empty-note">Nobody else is here.</p> : (
+                {players.length === 0 ? <p className="empty-note">{hasRoomDetails ? "Nobody else is here." : "Online players will appear here after login."}</p> : (
                   <>
                     <ul className="entity-list">
                       {visiblePlayers.map((player) => (
@@ -1050,7 +1085,7 @@ function App() {
 
               <div>
                 <h3>Mobs</h3>
-                {mobs.length === 0 ? <p className="empty-note">No mobs in this room.</p> : (
+                {mobs.length === 0 ? <p className="empty-note">{hasRoomDetails ? "No mobs in this room." : "Nearby creatures will appear here after login."}</p> : (
                   <>
                     <ul className="entity-list">
                       {visibleMobs.map((mob) => (
@@ -1075,10 +1110,10 @@ function App() {
               <p>Identity, progression, and active effects.</p>
             </div>
             <div className="panel-action-row">
-              <button type="button" className="panel-action-button" onClick={() => setActivePopout("equipment")}>
+              <button type="button" className="panel-action-button" onClick={() => setActivePopout("equipment")} disabled={!canOpenEquipment}>
                 Equipment
               </button>
-              <button type="button" className="panel-action-button" onClick={() => setActivePopout("wearing")}>
+              <button type="button" className="panel-action-button" onClick={() => setActivePopout("wearing")} disabled={!canOpenEquipment}>
                 Currently Wearing
               </button>
             </div>
@@ -1086,31 +1121,58 @@ function App() {
 
           <div className="character-stack">
             <article className="subpanel">
-              <h3>Identity</h3>
-              <p className="identity-name">{character.name}</p>
-              <p className="identity-detail">
-                {character.level ? `Level ${character.level}` : "Level -"}
-                {character.race ? ` ${character.race}` : ""}
-                {character.className ? ` ${character.className}` : ""}
-              </p>
+              {hasCharacterProfile ? (
+                <>
+                  <h3>Identity</h3>
+                  <p className="identity-name">{character.name}</p>
+                  <p className="identity-detail">
+                    {character.level ? `Level ${character.level}` : "Level -"}
+                    {character.race ? ` ${character.race}` : ""}
+                    {character.className ? ` ${character.className}` : ""}
+                  </p>
+                </>
+              ) : (
+                <div className="prelogin-card">
+                  <h3>Identity</h3>
+                  <p className="prelogin-card-title">{connected ? "Character profile pending" : "No active character"}</p>
+                  <p className="room-description">
+                    {connected
+                      ? "After login, your name, class, race, and level will appear here."
+                      : "Reconnect and log in to load your character profile."}
+                  </p>
+                </div>
+              )}
             </article>
 
             <article className="subpanel meter-stack">
               <h3>Vitals</h3>
-              <Bar label="HP" tone="hp" value={vitals.hp} max={Math.max(1, vitals.maxHp)} text={`${vitals.hp} / ${vitals.maxHp}`} />
-              <Bar label="Mana" tone="mana" value={vitals.mana} max={Math.max(1, vitals.maxMana)} text={`${vitals.mana} / ${vitals.maxMana}`} />
-              <Bar label="XP" tone="xp" value={xpValue} max={xpMax} text={xpText} />
+              {hasCharacterProfile ? (
+                <>
+                  <Bar label="HP" tone="hp" value={vitals.hp} max={Math.max(1, vitals.maxHp)} text={`${vitals.hp} / ${vitals.maxHp}`} />
+                  <Bar label="Mana" tone="mana" value={vitals.mana} max={Math.max(1, vitals.maxMana)} text={`${vitals.mana} / ${vitals.maxMana}`} />
+                  <Bar label="XP" tone="xp" value={xpValue} max={xpMax} text={xpText} />
 
-              <dl className="stat-grid">
-                <div><dt>Level</dt><dd>{vitals.level ?? "-"}</dd></div>
-                <div><dt>Total XP</dt><dd>{vitals.xp.toLocaleString()}</dd></div>
-                <div><dt>Gold</dt><dd>{vitals.gold.toLocaleString()}</dd></div>
-              </dl>
+                  <dl className="stat-grid">
+                    <div><dt>Level</dt><dd>{vitals.level ?? "-"}</dd></div>
+                    <div><dt>Total XP</dt><dd>{vitals.xp.toLocaleString()}</dd></div>
+                    <div><dt>Gold</dt><dd>{vitals.gold.toLocaleString()}</dd></div>
+                  </dl>
+                </>
+              ) : (
+                <div className="meter-placeholder-stack">
+                  <div className="meter-placeholder-row"><span>HP</span><span>- / -</span></div>
+                  <div className="meter-track meter-track-placeholder"><span className="meter-fill meter-fill-placeholder" /></div>
+                  <div className="meter-placeholder-row"><span>Mana</span><span>- / -</span></div>
+                  <div className="meter-track meter-track-placeholder"><span className="meter-fill meter-fill-placeholder" /></div>
+                  <div className="meter-placeholder-row"><span>XP</span><span>- / -</span></div>
+                  <div className="meter-track meter-track-placeholder"><span className="meter-fill meter-fill-placeholder" /></div>
+                </div>
+              )}
             </article>
 
             <article className="subpanel character-effects">
               <h3>Effects</h3>
-              {effects.length === 0 ? <p className="empty-note">No active effects.</p> : (
+              {effects.length === 0 ? <p className="empty-note">{hasCharacterProfile ? "No active effects." : "Effects will appear here during gameplay."}</p> : (
                 <>
                   <ul className="effects-list">
                     {visibleEffects.map((effect, index) => {
