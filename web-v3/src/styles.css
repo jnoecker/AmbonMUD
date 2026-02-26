@@ -278,39 +278,6 @@ body {
   outline-offset: 2px;
 }
 
-.panel-tabs {
-  display: inline-flex;
-  gap: 6px;
-  padding: 4px;
-  border: 1px solid var(--line-soft);
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgb(238 230 248 / 88%), rgb(233 241 250 / 82%));
-  width: fit-content;
-}
-
-.panel-tab {
-  border: 0;
-  border-radius: 999px;
-  padding: 5px 11px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--color-neutral-soft-fog);
-  background: transparent;
-  cursor: pointer;
-}
-
-.panel-tab-active {
-  color: var(--color-neutral-deep-mist);
-  background: linear-gradient(135deg, rgb(218 194 238 / 80%), rgb(187 218 239 / 74%));
-  box-shadow: inset 0 0 0 1px rgb(107 107 123 / 10%), 0 0 10px rgb(216 197 232 / 28%);
-}
-
-.panel-tab-content {
-  min-height: 0;
-  flex: 1;
-  display: flex;
-}
-
 .terminal-card {
   border-radius: var(--radius-lg);
   border: 1px solid rgb(106 96 136 / 24%);
@@ -380,11 +347,18 @@ body {
   padding: 10px;
   background: linear-gradient(170deg, var(--surface-subpanel), rgb(237 245 252 / 88%));
   box-shadow: var(--shadow-sm), inset 0 1px 0 rgb(255 255 255 / 48%);
+  min-width: 0;
 }
 
 .subpanel-fill {
   width: 100%;
   height: 100%;
+}
+
+.world-stack,
+.character-stack {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .subpanel h3 {
@@ -439,6 +413,10 @@ body {
   display: grid;
   gap: var(--space-2);
   grid-template-columns: minmax(0, 1fr);
+}
+
+.character-effects {
+  align-content: start;
 }
 
 .entity-list,
@@ -698,15 +676,29 @@ body {
   .panel-world {
     grid-area: world;
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
     overflow: hidden;
   }
 
   .panel-character {
     grid-area: character;
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
     overflow: hidden;
+  }
+
+  .world-stack,
+  .character-stack {
+    min-height: 0;
+    align-content: start;
+  }
+
+  .world-stack {
+    grid-template-rows: auto auto;
+  }
+
+  .character-stack {
+    grid-template-rows: auto auto auto;
   }
 
   .panel-world .mini-map {

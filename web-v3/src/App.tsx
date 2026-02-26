@@ -7,8 +7,6 @@ import "./styles.css";
 
 type MobileTab = "play" | "world" | "character";
 type PopoutPanel = "map" | "equipment" | "wearing" | null;
-type WorldSection = "room" | "entities";
-type CharacterSection = "vitals" | "effects" | "identity";
 
 interface Vitals {
   hp: number;
@@ -238,8 +236,6 @@ function App() {
 
   const [activeTab, setActiveTab] = useState<MobileTab>("play");
   const [activePopout, setActivePopout] = useState<PopoutPanel>(null);
-  const [worldSection, setWorldSection] = useState<WorldSection>("room");
-  const [characterSection, setCharacterSection] = useState<CharacterSection>("vitals");
   const [connected, setConnected] = useState(false);
   const [liveMessage, setLiveMessage] = useState("Disconnected.");
   const [composerValue, setComposerValue] = useState("");
@@ -1027,71 +1023,48 @@ function App() {
             </button>
           </header>
 
-          <div className="panel-tabs" role="tablist" aria-label="World sections">
-            <button
-              type="button"
-              className={`panel-tab ${worldSection === "room" ? "panel-tab-active" : ""}`}
-              aria-pressed={worldSection === "room"}
-              onClick={() => setWorldSection("room")}
-            >
-              Room
-            </button>
-            <button
-              type="button"
-              className={`panel-tab ${worldSection === "entities" ? "panel-tab-active" : ""}`}
-              aria-pressed={worldSection === "entities"}
-              onClick={() => setWorldSection("entities")}
-            >
-              Entities
-            </button>
-          </div>
+          <div className="world-stack">
+            <article className="subpanel">
+              <h3>Room</h3>
+              <p className="room-title">{room.title}</p>
+              <p className="room-description">{room.description || "No room description available yet."}</p>
+              <div className="exit-cloud" aria-label="Current exits">
+                {exits.length === 0 ? <span className="empty-note">No exits listed.</span> : exits.map(([direction]) => <span key={direction} className="exit-pill">{direction}</span>)}
+              </div>
+            </article>
 
-          <div className="panel-tab-content">
-            {worldSection === "room" && (
-              <article className="subpanel subpanel-fill">
-                <h3>Room</h3>
-                <p className="room-title">{room.title}</p>
-                <p className="room-description">{room.description || "No room description available yet."}</p>
-                <div className="exit-cloud" aria-label="Current exits">
-                  {exits.length === 0 ? <span className="empty-note">No exits listed.</span> : exits.map(([direction]) => <span key={direction} className="exit-pill">{direction}</span>)}
-                </div>
-              </article>
-            )}
+            <article className="subpanel split-list">
+              <div>
+                <h3>Players</h3>
+                {players.length === 0 ? <p className="empty-note">Nobody else is here.</p> : (
+                  <>
+                    <ul className="entity-list">
+                      {visiblePlayers.map((player) => (
+                        <li key={player.name} className="entity-item"><span>{player.name}</span><span className="entity-meta">Lv {player.level}</span></li>
+                      ))}
+                    </ul>
+                    {hiddenPlayersCount > 0 && <p className="empty-note">+{hiddenPlayersCount} more players</p>}
+                  </>
+                )}
+              </div>
 
-            {worldSection === "entities" && (
-              <article className="subpanel subpanel-fill split-list">
-                <div>
-                  <h3>Players</h3>
-                  {players.length === 0 ? <p className="empty-note">Nobody else is here.</p> : (
-                    <>
-                      <ul className="entity-list">
-                        {visiblePlayers.map((player) => (
-                          <li key={player.name} className="entity-item"><span>{player.name}</span><span className="entity-meta">Lv {player.level}</span></li>
-                        ))}
-                      </ul>
-                      {hiddenPlayersCount > 0 && <p className="empty-note">+{hiddenPlayersCount} more players</p>}
-                    </>
-                  )}
-                </div>
-
-                <div>
-                  <h3>Mobs</h3>
-                  {mobs.length === 0 ? <p className="empty-note">No mobs in this room.</p> : (
-                    <>
-                      <ul className="entity-list">
-                        {visibleMobs.map((mob) => (
-                          <li key={mob.id} className="mob-card">
-                            <div className="entity-item"><span>{mob.name}</span><span className="entity-meta">{mob.hp}/{mob.maxHp}</span></div>
-                            <div className="meter-track"><span className="meter-fill meter-fill-hp" style={{ width: `${percent(mob.hp, mob.maxHp)}%` }} /></div>
-                          </li>
-                        ))}
-                      </ul>
-                      {hiddenMobsCount > 0 && <p className="empty-note">+{hiddenMobsCount} more mobs</p>}
-                    </>
-                  )}
-                </div>
-              </article>
-            )}
+              <div>
+                <h3>Mobs</h3>
+                {mobs.length === 0 ? <p className="empty-note">No mobs in this room.</p> : (
+                  <>
+                    <ul className="entity-list">
+                      {visibleMobs.map((mob) => (
+                        <li key={mob.id} className="mob-card">
+                          <div className="entity-item"><span>{mob.name}</span><span className="entity-meta">{mob.hp}/{mob.maxHp}</span></div>
+                          <div className="meter-track"><span className="meter-fill meter-fill-hp" style={{ width: `${percent(mob.hp, mob.maxHp)}%` }} /></div>
+                        </li>
+                      ))}
+                    </ul>
+                    {hiddenMobsCount > 0 && <p className="empty-note">+{hiddenMobsCount} more mobs</p>}
+                  </>
+                )}
+              </div>
+            </article>
           </div>
         </section>
 
@@ -1111,84 +1084,51 @@ function App() {
             </div>
           </header>
 
-          <div className="panel-tabs" role="tablist" aria-label="Character sections">
-            <button
-              type="button"
-              className={`panel-tab ${characterSection === "vitals" ? "panel-tab-active" : ""}`}
-              aria-pressed={characterSection === "vitals"}
-              onClick={() => setCharacterSection("vitals")}
-            >
-              Vitals
-            </button>
-            <button
-              type="button"
-              className={`panel-tab ${characterSection === "effects" ? "panel-tab-active" : ""}`}
-              aria-pressed={characterSection === "effects"}
-              onClick={() => setCharacterSection("effects")}
-            >
-              Effects
-            </button>
-            <button
-              type="button"
-              className={`panel-tab ${characterSection === "identity" ? "panel-tab-active" : ""}`}
-              aria-pressed={characterSection === "identity"}
-              onClick={() => setCharacterSection("identity")}
-            >
-              Identity
-            </button>
-          </div>
+          <div className="character-stack">
+            <article className="subpanel">
+              <h3>Identity</h3>
+              <p className="identity-name">{character.name}</p>
+              <p className="identity-detail">
+                {character.level ? `Level ${character.level}` : "Level -"}
+                {character.race ? ` ${character.race}` : ""}
+                {character.className ? ` ${character.className}` : ""}
+              </p>
+            </article>
 
-          <div className="panel-tab-content">
-            {characterSection === "identity" && (
-              <article className="subpanel subpanel-fill">
-                <h3>Identity</h3>
-                <p className="identity-name">{character.name}</p>
-                <p className="identity-detail">
-                  {character.level ? `Level ${character.level}` : "Level -"}
-                  {character.race ? ` ${character.race}` : ""}
-                  {character.className ? ` ${character.className}` : ""}
-                </p>
-              </article>
-            )}
+            <article className="subpanel meter-stack">
+              <h3>Vitals</h3>
+              <Bar label="HP" tone="hp" value={vitals.hp} max={Math.max(1, vitals.maxHp)} text={`${vitals.hp} / ${vitals.maxHp}`} />
+              <Bar label="Mana" tone="mana" value={vitals.mana} max={Math.max(1, vitals.maxMana)} text={`${vitals.mana} / ${vitals.maxMana}`} />
+              <Bar label="XP" tone="xp" value={xpValue} max={xpMax} text={xpText} />
 
-            {characterSection === "vitals" && (
-              <article className="subpanel subpanel-fill meter-stack">
-                <h3>Vitals</h3>
-                <Bar label="HP" tone="hp" value={vitals.hp} max={Math.max(1, vitals.maxHp)} text={`${vitals.hp} / ${vitals.maxHp}`} />
-                <Bar label="Mana" tone="mana" value={vitals.mana} max={Math.max(1, vitals.maxMana)} text={`${vitals.mana} / ${vitals.maxMana}`} />
-                <Bar label="XP" tone="xp" value={xpValue} max={xpMax} text={xpText} />
+              <dl className="stat-grid">
+                <div><dt>Level</dt><dd>{vitals.level ?? "-"}</dd></div>
+                <div><dt>Total XP</dt><dd>{vitals.xp.toLocaleString()}</dd></div>
+                <div><dt>Gold</dt><dd>{vitals.gold.toLocaleString()}</dd></div>
+              </dl>
+            </article>
 
-                <dl className="stat-grid">
-                  <div><dt>Level</dt><dd>{vitals.level ?? "-"}</dd></div>
-                  <div><dt>Total XP</dt><dd>{vitals.xp.toLocaleString()}</dd></div>
-                  <div><dt>Gold</dt><dd>{vitals.gold.toLocaleString()}</dd></div>
-                </dl>
-              </article>
-            )}
-
-            {characterSection === "effects" && (
-              <article className="subpanel subpanel-fill">
-                <h3>Effects</h3>
-                {effects.length === 0 ? <p className="empty-note">No active effects.</p> : (
-                  <>
-                    <ul className="effects-list">
-                      {visibleEffects.map((effect, index) => {
-                        const seconds = Math.max(1, Math.ceil(effect.remainingMs / 1000));
-                        const stack = effect.stacks > 1 ? ` x${effect.stacks}` : "";
-                        return (
-                          <li key={`${effect.name}-${index}`} className="effect-item">
-                            <span className="effect-name">{effect.name}{stack}</span>
-                            <span className="effect-type">{effect.type}</span>
-                            <span className="effect-time">{seconds}s</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    {hiddenEffectsCount > 0 && <p className="empty-note">+{hiddenEffectsCount} more effects</p>}
-                  </>
-                )}
-              </article>
-            )}
+            <article className="subpanel character-effects">
+              <h3>Effects</h3>
+              {effects.length === 0 ? <p className="empty-note">No active effects.</p> : (
+                <>
+                  <ul className="effects-list">
+                    {visibleEffects.map((effect, index) => {
+                      const seconds = Math.max(1, Math.ceil(effect.remainingMs / 1000));
+                      const stack = effect.stacks > 1 ? ` x${effect.stacks}` : "";
+                      return (
+                        <li key={`${effect.name}-${index}`} className="effect-item">
+                          <span className="effect-name">{effect.name}{stack}</span>
+                          <span className="effect-type">{effect.type}</span>
+                          <span className="effect-time">{seconds}s</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  {hiddenEffectsCount > 0 && <p className="empty-note">+{hiddenEffectsCount} more effects</p>}
+                </>
+              )}
+            </article>
           </div>
         </section>
       </div>
