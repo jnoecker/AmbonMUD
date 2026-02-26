@@ -39,6 +39,20 @@ class GMCPCanvasIntegration {
     }
 
     /**
+     * Initialize multi-zone rendering systems (Phase 5b)
+     */
+    initializeMultiZoneSystems() {
+        if (!this.zoneManager && typeof ZoneManager !== 'undefined') {
+            this.zoneManager = new ZoneManager();
+            this.multiZoneRenderer = new MultiZoneRenderer(
+                this.renderer,
+                this.camera,
+                this.zoneManager
+            );
+        }
+    }
+
+    /**
      * Handle GMCP.Char.Vitals - Character HP/Mana/XP updates
      */
     handleCharVitals(data) {
@@ -54,12 +68,23 @@ class GMCPCanvasIntegration {
      * Handle GMCP.Room.Info - Room description and basic data
      */
     handleRoomInfo(data) {
+        // Initialize multi-zone systems on first room load
+        this.initializeMultiZoneSystems();
+
         const room = {
             id: data.id,
             title: data.title,
             description: data.description,
             exits: data.exits || {},
+            width: data.width || 40,
+            height: data.height || 30,
+            terrain: data.terrain || [],
         };
+
+        // Update zone manager with current zone
+        if (this.zoneManager) {
+            this.zoneManager.setCurrentZone(data.id, room);
+        }
 
         this.renderer.updateGameState({
             currentRoom: room,
@@ -107,9 +132,42 @@ class GMCPCanvasIntegration {
             pos: { x: (p.gridX || 0) * 20 + 10, y: (p.gridY || 0) * 20 + 10 },
         }));
 
+        // Update zone manager with current zone entities
+        if (this.zoneManager) {
+            const currentZone = this.zoneManager.getCurrentZone();
+            if (currentZone) {
+                currentZone.mobs = data.mobs || [];
+                currentZone.players = data.players || [];
+            }
+        }
+
         this.renderer.updateGameState({
             mobs,
             playersHere,
+        });
+    }
+
+    /**
+     * Handle GMCP.Room.Adjacent - Adjacent room data (Phase 5b)
+     * Data structure from server:
+     * {
+     *   north: { roomId, title, description, mobs: [...] },
+     *   south: { roomId, title, description, mobs: [...] },
+     *   east: { roomId, title, description, mobs: [...] },
+     *   west: { roomId, title, description, mobs: [...] }
+     * }
+     */
+    handleRoomAdjacent(data) {
+        this.initializeMultiZoneSystems();
+
+        if (!this.zoneManager) return;
+
+        // Update zone manager with adjacent zone data
+        this.zoneManager.updateAdjacentZones(data);
+
+        // Store for reference
+        this.renderer.updateGameState({
+            adjacentRooms: data,
         });
     }
 

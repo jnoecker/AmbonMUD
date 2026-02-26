@@ -53,6 +53,15 @@
                 canvasInteraction
             );
 
+            // Initialize multi-zone rendering systems (Phase 5b)
+            gmcpIntegration.initializeMultiZoneSystems();
+            if (gmcpIntegration.multiZoneRenderer) {
+                canvasRenderer.updateGameState({
+                    multiZoneRenderer: gmcpIntegration.multiZoneRenderer,
+                });
+                console.log('Multi-zone rendering system initialized');
+            }
+
             // Start animation loop
             canvasRenderer.scheduleRender();
             animationFrameId = requestAnimationFrame(canvasAnimationLoop);
@@ -760,6 +769,10 @@
                 break;
             case "Room.Ambiance":
                 if (gmcpIntegration) gmcpIntegration.handleRoomAmbiance(data);
+                break;
+            case "Room.Adjacent":
+                if (gmcpIntegration) gmcpIntegration.handleRoomAdjacent(data);
+                if (gmcpIntegration) gmcpIntegration.scheduleRender();
                 break;
 
             // Existing default cases

@@ -271,11 +271,18 @@ class CanvasWorldRenderer {
         this.ctx.fillStyle = bgColor;
         this.ctx.fillRect(0, 0, this.width, this.height);
 
-        // Render layers in order
-        this.layers.background.render(this.ctx, this.gameState);
-        this.layers.terrain.render(this.ctx, this.gameState);
-        this.layers.entities.render(this.ctx, this.gameState);
-        this.layers.effects.render(this.ctx, this.gameState);
+        // Check for multi-zone rendering (Phase 5b)
+        if (this.gameState.multiZoneRenderer) {
+            // Multi-zone rendering path
+            this.gameState.multiZoneRenderer.renderZones(this.ctx, this.gameState);
+        } else {
+            // Single-zone rendering path (default, Phase 4)
+            this.layers.background.render(this.ctx, this.gameState);
+            this.layers.terrain.render(this.ctx, this.gameState);
+            this.layers.entities.render(this.ctx, this.gameState);
+            this.layers.effects.render(this.ctx, this.gameState);
+        }
+
         this.particleSystem.render(this.ctx);
         this.layers.ui.render(this.ctx, this.gameState);
     }
