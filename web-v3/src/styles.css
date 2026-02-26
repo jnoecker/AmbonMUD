@@ -151,11 +151,11 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image: url("./assets/banner-magic.png");
+  background-image: url("./assets/banner-magic-v2.png");
   background-size: cover;
-  background-position: center 34%;
+  background-position: center 36%;
   background-repeat: no-repeat;
-  opacity: 0.42;
+  opacity: 0.72;
 }
 
 .top-banner::after {
@@ -165,8 +165,8 @@ body {
   pointer-events: none;
   z-index: 0;
   background:
-    linear-gradient(102deg, rgb(246 239 252 / 82%) 0%, rgb(242 237 251 / 68%) 34%, rgb(234 244 252 / 64%) 63%, rgb(236 247 252 / 78%) 100%),
-    linear-gradient(180deg, rgb(255 255 255 / 26%), rgb(255 255 255 / 14%));
+    linear-gradient(102deg, rgb(247 241 253 / 66%) 0%, rgb(243 238 252 / 46%) 34%, rgb(235 245 252 / 42%) 63%, rgb(236 247 252 / 58%) 100%),
+    linear-gradient(180deg, rgb(255 255 255 / 20%), rgb(255 255 255 / 10%));
 }
 
 .top-banner > * {
@@ -1151,7 +1151,15 @@ body {
   }
 
   .top-banner::before {
-    background-position: center center;
+    background-image: url("./assets/banner-magic-mobile.png");
+    background-position: center 46%;
+    opacity: 0.7;
+  }
+
+  .top-banner::after {
+    background:
+      linear-gradient(180deg, rgb(247 241 253 / 58%), rgb(238 245 252 / 46%)),
+      linear-gradient(180deg, rgb(255 255 255 / 16%), rgb(255 255 255 / 8%));
   }
 
   .connection-cluster {
