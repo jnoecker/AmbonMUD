@@ -1,6 +1,7 @@
 package dev.ambon.metrics
 
 import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.DistributionSummary
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
@@ -12,6 +13,7 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.core.instrument.binder.system.UptimeMetrics
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 class GameMetrics(
     private val registry: MeterRegistry,
@@ -32,10 +34,19 @@ class GameMetrics(
     private val telnetOnlineCount = AtomicInteger(0)
     private val wsOnlineCount = AtomicInteger(0)
 
+    /**
+     * Accumulated tick debt in milliseconds. Increases when a tick exceeds [tickMillis] and
+     * decreases (toward zero) when a tick completes early enough to recover. A non-zero debt
+     * means the engine is running behind its ideal schedule — the first observable symptom of
+     * simulation fairness degradation.
+     */
+    private val tickDebtMs = AtomicLong(0)
+
     init {
         Gauge.builder("sessions_online") { sessionsOnlineCount.get().toDouble() }.register(registry)
         Gauge.builder("telnet_connections_online") { telnetOnlineCount.get().toDouble() }.register(registry)
         Gauge.builder("ws_connections_online") { wsOnlineCount.get().toDouble() }.register(registry)
+        Gauge.builder("engine_tick_debt_ms") { tickDebtMs.get().toDouble() }.register(registry)
     }
 
     private val telnetConnectedCounter =
@@ -70,6 +81,17 @@ class GameMetrics(
         Counter.builder("engine_inbound_events_processed_total").register(registry)
     private val inboundDrainBudgetExceededCounter =
         Counter.builder("engine_inbound_drain_budget_exceeded_total").register(registry)
+
+    /**
+     * Distribution of inbound queue depths observed at the moment each tick overrun is detected.
+     * High p99 values here indicate the inbound queue is consistently deep when the engine falls
+     * behind — a sign that inbound drain is starving the simulation phase.
+     */
+    private val inboundQueueDepthAtOverrunSummary: DistributionSummary =
+        DistributionSummary
+            .builder("engine_inbound_queue_depth_at_overrun")
+            .publishPercentileHistogram()
+            .register(registry)
 
     val mobSystemTickTimer: Timer =
         Timer
@@ -175,7 +197,12 @@ class GameMetrics(
 
     fun onEngineTick() = engineTicksCounter.increment()
 
-    fun onEngineTickOverrun() = engineTickOverrunCounter.increment()
+    fun onEngineTickOverrun(inboundQueueDepth: Int = 0) {
+        engineTickOverrunCounter.increment()
+        inboundQueueDepthAtOverrunSummary.record(inboundQueueDepth.toDouble())
+    }
+
+    fun updateTickDebt(debtMs: Long) = tickDebtMs.set(debtMs)
 
     fun onInboundEventsProcessed(count: Int) = inboundEventsProcessedCounter.increment(count.toDouble())
 
