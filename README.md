@@ -210,7 +210,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#infrastructure) for detailed se
 
 **Architecture & Design**
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) — Architectural principles and design decisions
-- [docs/engine-sharding-design.md](docs/engine-sharding-design.md) — Zone-based sharding technical design
+- [docs/engine-sharding-design.md](docs/historical/engine-sharding-design.md) — Zone-based sharding technical design
 - [docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) — Zone YAML format specification
 
 **Developer Resources**
