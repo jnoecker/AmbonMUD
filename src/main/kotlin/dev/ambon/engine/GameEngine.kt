@@ -27,6 +27,7 @@ import dev.ambon.engine.events.DefaultEngineEventDispatcher
 import dev.ambon.engine.events.EngineEventDispatcher
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.events.SessionEventHandler
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.engine.status.EffectType
@@ -92,6 +93,42 @@ class GameEngine(
     /** Repository for persisting world feature states across restarts. */
     private val worldStateRepository: WorldStateRepository? = null,
 ) {
+    private val sessionEventHandler by lazy {
+        SessionEventHandler(
+            players = players,
+            markAwaitingName = { sid -> pendingLogins[sid] = LoginState.AwaitingName },
+            clearLoginState = { sid -> pendingLogins.remove(sid) },
+            failedLoginAttempts = failedLoginAttempts,
+            sessionAnsiDefaults = sessionAnsiDefaults,
+            gmcpSessions = gmcpSessions,
+            gmcpDirtyVitals = gmcpDirtyVitals,
+            gmcpDirtyStatusEffects = gmcpDirtyStatusEffects,
+            gmcpDirtyGroup = gmcpDirtyGroup,
+            handoffManager = handoffManager,
+            removePendingWhoRequestsFor = { sid ->
+                val itr = pendingWhoRequests.iterator()
+                while (itr.hasNext()) {
+                    if (itr.next().value.sessionId == sid) {
+                        itr.remove()
+                    }
+                }
+            },
+            combatSystem = combatSystem,
+            regenSystem = regenSystem,
+            abilitySystem = abilitySystem,
+            statusEffectSystem = statusEffectSystem,
+            dialogueSystem = dialogueSystem,
+            groupSystem = groupSystem,
+            promptForName = ::promptForName,
+            showLoginScreen = { sid -> outbound.send(OutboundEvent.ShowLoginScreen(sid)) },
+            onPlayerLoggedOut = { player, sid ->
+                log.info { "Player logged out: name=${player.name} sessionId=$sid" }
+                playerLocationIndex?.unregister(player.name)
+                broadcastToRoom(players, outbound, player.roomId, "${player.name} leaves.", sid)
+            },
+        )
+    }
+
     private val eventDispatcher: EngineEventDispatcher =
         DefaultEngineEventDispatcher(
             onConnected = ::handleConnected,
@@ -1026,47 +1063,11 @@ class GameEngine(
         sessionId: SessionId,
         defaultAnsiEnabled: Boolean,
     ) {
-        pendingLogins[sessionId] = LoginState.AwaitingName
-        failedLoginAttempts[sessionId] = 0
-        sessionAnsiDefaults[sessionId] = defaultAnsiEnabled
-        outbound.send(OutboundEvent.ShowLoginScreen(sessionId))
-        promptForName(sessionId)
+        sessionEventHandler.onConnected(sessionId, defaultAnsiEnabled)
     }
 
     private suspend fun handleDisconnected(sessionId: SessionId) {
-        val me = players.get(sessionId)
-
-        pendingLogins.remove(sessionId)
-        failedLoginAttempts.remove(sessionId)
-        sessionAnsiDefaults.remove(sessionId)
-        gmcpSessions.remove(sessionId)
-        gmcpDirtyVitals.remove(sessionId)
-        handoffManager?.cancelIfPending(sessionId)
-        run {
-            val itr = pendingWhoRequests.iterator()
-            while (itr.hasNext()) {
-                if (itr.next().value.sessionId == sessionId) {
-                    itr.remove()
-                }
-            }
-        }
-
-        combatSystem.onPlayerDisconnected(sessionId)
-        regenSystem.onPlayerDisconnected(sessionId)
-        abilitySystem.onPlayerDisconnected(sessionId)
-        statusEffectSystem.onPlayerDisconnected(sessionId)
-        dialogueSystem.onPlayerDisconnected(sessionId)
-        groupSystem.onPlayerDisconnected(sessionId)
-        gmcpDirtyStatusEffects.remove(sessionId)
-        gmcpDirtyGroup.remove(sessionId)
-
-        if (me != null) {
-            log.info { "Player logged out: name=${me.name} sessionId=$sessionId" }
-            playerLocationIndex?.unregister(me.name)
-            broadcastToRoom(players, outbound, me.roomId, "${me.name} leaves.", sessionId)
-        }
-
-        players.disconnect(sessionId) // idempotent; safe even if me == null
+        sessionEventHandler.onDisconnected(sessionId)
     }
 
     private suspend fun handleLineReceived(
