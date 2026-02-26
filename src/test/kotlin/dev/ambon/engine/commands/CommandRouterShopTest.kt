@@ -311,17 +311,17 @@ class CommandRouterShopTest {
         val outbound = LocalOutboundBus()
         val shopRegistry = ShopRegistry(items)
         shopRegistry.register(world.shopDefinitions)
-        val router =
-            CommandRouter(
-                world,
-                players,
-                mobs,
-                items,
-                CombatSystem(players, mobs, items, outbound),
-                outbound,
-                shopRegistry = shopRegistry,
-                economyConfig = economyConfig,
-            )
+        val combat = CombatSystem(players, mobs, items, outbound)
+        val router = buildTestRouter(
+            world = world,
+            players = players,
+            mobs = mobs,
+            items = items,
+            combat = combat,
+            outbound = outbound,
+            shopRegistry = shopRegistry,
+            economyConfig = economyConfig,
+        )
 
         val sid = SessionId(1L)
         val res = players.login(sid, "Shopper", "password")

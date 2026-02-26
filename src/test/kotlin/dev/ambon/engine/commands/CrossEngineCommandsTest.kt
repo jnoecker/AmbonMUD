@@ -31,7 +31,7 @@ class CrossEngineCommandsTest {
     private val engineId = "engine-1"
 
     private val router =
-        CommandRouter(
+        buildTestRouter(
             world = world,
             players = players,
             mobs = mobs,
@@ -100,7 +100,7 @@ class CrossEngineCommandsTest {
         runTest {
             // Router without bus
             val noBusRouter =
-                CommandRouter(
+                buildTestRouter(
                     world = world,
                     players = players,
                     mobs = mobs,
@@ -151,7 +151,7 @@ class CrossEngineCommandsTest {
 
             var shutdownCalled = false
             val shutdownRouter =
-                CommandRouter(
+                buildTestRouter(
                     world = world,
                     players = players,
                     mobs = mobs,
@@ -225,7 +225,7 @@ class CrossEngineCommandsTest {
             val capturingBus = CapturingInterEngineBus()
             val index = MapPlayerLocationIndex(mapOf("bob" to "engine-2"))
             val indexRouter =
-                CommandRouter(
+                buildTestRouter(
                     world = world,
                     players = players,
                     mobs = mobs,
@@ -263,7 +263,7 @@ class CrossEngineCommandsTest {
             val capturingBus = CapturingInterEngineBus()
             val emptyIndex = MapPlayerLocationIndex(emptyMap())
             val indexRouter =
-                CommandRouter(
+                buildTestRouter(
                     world = world,
                     players = players,
                     mobs = mobs,
@@ -293,7 +293,7 @@ class CrossEngineCommandsTest {
             // index says "Bob" is on engine-1 (same engine), should still broadcast
             val sameEngineIndex = MapPlayerLocationIndex(mapOf("bob" to "engine-1"))
             val indexRouter =
-                CommandRouter(
+                buildTestRouter(
                     world = world,
                     players = players,
                     mobs = mobs,

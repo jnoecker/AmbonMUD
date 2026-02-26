@@ -34,7 +34,7 @@ class PhaseCommandTest {
     fun `phase when not enabled shows error`() =
         runTest {
             val router =
-                CommandRouter(
+                buildTestRouter(
                     world = world,
                     players = players,
                     mobs = mobs,
@@ -66,7 +66,7 @@ class PhaseCommandTest {
                     ZoneInstance("e2", EngineAddress("e2", "h2", 9091), "test_zone", playerCount = 25),
                 )
             val router =
-                CommandRouter(
+                buildTestRouter(
                     world = world,
                     players = players,
                     mobs = mobs,
@@ -100,7 +100,7 @@ class PhaseCommandTest {
     fun `phase returns initiated when switching instance`() =
         runTest {
             val router =
-                CommandRouter(
+                buildTestRouter(
                     world = world,
                     players = players,
                     mobs = mobs,
@@ -128,7 +128,7 @@ class PhaseCommandTest {
     fun `phase shows noop reason`() =
         runTest {
             val router =
-                CommandRouter(
+                buildTestRouter(
                     world = world,
                     players = players,
                     mobs = mobs,
@@ -156,7 +156,7 @@ class PhaseCommandTest {
         runTest {
             val combat = CombatSystem(players, mobs, items, outbound)
             val router =
-                CommandRouter(
+                buildTestRouter(
                     world = world,
                     players = players,
                     mobs = mobs,

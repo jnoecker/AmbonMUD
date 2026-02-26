@@ -62,7 +62,7 @@ class CommandRouterAdminTest {
     ): CommandRouter {
         val world = WorldLoader.loadFromResource("world/test_world.yaml")
         val combat = CombatSystem(players, mobs, items, outbound)
-        return CommandRouter(
+        return buildTestRouter(
             world = world,
             players = players,
             mobs = mobs,

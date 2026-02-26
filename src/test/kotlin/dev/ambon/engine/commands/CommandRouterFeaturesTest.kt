@@ -49,7 +49,7 @@ class CommandRouterFeaturesTest {
         val mobs = MobRegistry()
         val worldState = WorldStateRegistry(world)
         val router =
-            CommandRouter(
+            buildTestRouter(
                 world = world,
                 players = players,
                 mobs = mobs,
