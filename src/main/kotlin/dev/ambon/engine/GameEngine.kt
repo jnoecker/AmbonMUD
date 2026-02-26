@@ -45,9 +45,13 @@ import dev.ambon.sharding.ZoneInstance
 import dev.ambon.sharding.ZoneRegistry
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Timer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import java.time.Clock
 import java.util.UUID
 
@@ -364,6 +368,46 @@ class GameEngine(
     private val maxWrongPasswordRetries = loginConfig.maxWrongPasswordRetries
     private val maxFailedLoginAttemptsBeforeDisconnect = loginConfig.maxFailedAttemptsBeforeDisconnect
 
+    /**
+     * Channel for auth results produced by background coroutines.
+     * Results are drained on the engine thread at the start of each event-processing
+     * iteration so auth completions unblock the next queued input for the same session
+     * within the same tick.
+     */
+    private val pendingAuthResults = Channel<PendingAuthResult>(Channel.UNLIMITED)
+
+    /**
+     * Coroutine scope provided by [run]; used to launch background auth coroutines
+     * without blocking the engine tick loop.
+     */
+    private lateinit var engineScope: CoroutineScope
+
+    /** Result posted to [pendingAuthResults] by a background auth coroutine. */
+    private sealed interface PendingAuthResult {
+        val sessionId: SessionId
+
+        /** DB name-existence check finished. */
+        data class NameLookup(
+            override val sessionId: SessionId,
+            val name: String,
+            val exists: Boolean,
+        ) : PendingAuthResult
+
+        /** Password verification (BCrypt + DB) finished. */
+        data class PasswordAuth(
+            override val sessionId: SessionId,
+            val prep: LoginCredentialPrep,
+            val wrongPasswordAttempts: Int,
+            val defaultAnsiEnabled: Boolean,
+        ) : PendingAuthResult
+
+        /** New-account creation (hash + DB write) finished. */
+        data class NewAccountAuth(
+            override val sessionId: SessionId,
+            val prep: CreateAccountPrep,
+        ) : PendingAuthResult
+    }
+
     private sealed interface LoginState {
         data object AwaitingName : LoginState
 
@@ -389,6 +433,25 @@ class GameEngine(
             val name: String,
             val password: String,
             val race: Race,
+        ) : LoginState
+
+        /** Name-existence check in-flight; player input is buffered until complete. */
+        data class AwaitingNameLookup(
+            val name: String,
+        ) : LoginState
+
+        /** BCrypt password verification in-flight; player input is ignored until complete. */
+        data class AwaitingPasswordAuth(
+            val name: String,
+            val wrongPasswordAttempts: Int = 0,
+        ) : LoginState
+
+        /** Account creation (hash + DB) in-flight; player input is ignored until complete. */
+        data class AwaitingCreateAuth(
+            val name: String,
+            val password: String,
+            val race: Race,
+            val playerClass: PlayerClass,
         ) : LoginState
     }
 
@@ -420,6 +483,8 @@ class GameEngine(
 
     suspend fun run() =
         coroutineScope {
+            engineScope = this
+
             // Restore persisted world state, overriding in-memory defaults.
             worldStateRepository?.load()?.let { snapshot ->
                 worldState.applySnapshot(snapshot) { itemId -> items.createFromTemplate(itemId) }
@@ -430,7 +495,9 @@ class GameEngine(
                 val tickSample = Timer.start()
 
                 try {
-                    // Drain inbound without blocking, time-budgeted to leave room for simulation.
+                    // Drain inbound events with a time budget to leave room for simulation,
+                    // interleaving auth-result processing so a session whose async auth just
+                    // completed is in the correct state before its next queued input is handled.
                     var inboundProcessed = 0
                     val inboundDeadline = tickStart + inboundBudgetMs
                     while (inboundProcessed < maxInboundEventsPerTick) {
@@ -438,10 +505,18 @@ class GameEngine(
                             metrics.onInboundDrainBudgetExceeded()
                             break
                         }
+                        // Drain any auth results that have arrived since the last event.
+                        drainPendingAuthResults()
                         val ev = inbound.tryReceive().getOrNull() ?: break
                         handle(ev)
+                        // Yield so that launched auth coroutines (BCrypt / DB) can post
+                        // their results before we process the next event for this session.
+                        yield()
                         inboundProcessed++
                     }
+                    // Final drain: pick up results from the last event or from auth
+                    // operations that completed between ticks.
+                    drainPendingAuthResults()
                     metrics.onInboundEventsProcessed(inboundProcessed)
 
                     // Drain inter-engine messages (cross-zone handoffs, global commands)
@@ -1011,6 +1086,11 @@ class GameEngine(
             is LoginState.AwaitingNewPassword -> handleLoginNewPassword(sessionId, line, state)
             is LoginState.AwaitingRaceSelection -> handleLoginRaceSelection(sessionId, line, state)
             is LoginState.AwaitingClassSelection -> handleLoginClassSelection(sessionId, line, state)
+            // Auth in-flight — ignore further input until the background coroutine posts its result.
+            is LoginState.AwaitingNameLookup,
+            is LoginState.AwaitingPasswordAuth,
+            is LoginState.AwaitingCreateAuth,
+            -> Unit
         }
     }
 
@@ -1038,14 +1118,13 @@ class GameEngine(
             return
         }
 
-        if (players.hasRegisteredName(name)) {
-            pendingLogins[sessionId] = LoginState.AwaitingExistingPassword(name)
-            promptForExistingPassword(sessionId)
-            return
+        // Kick off the DB lookup on a background coroutine so the engine tick loop
+        // is not blocked while waiting for the repository.
+        pendingLogins[sessionId] = LoginState.AwaitingNameLookup(name)
+        engineScope.launch {
+            val exists = players.hasRegisteredName(name)
+            pendingAuthResults.send(PendingAuthResult.NameLookup(sessionId, name, exists))
         }
-
-        pendingLogins[sessionId] = LoginState.AwaitingCreateConfirmation(name)
-        promptForCreateConfirmation(sessionId, name)
     }
 
     private suspend fun handleLoginCreateConfirmation(
@@ -1090,62 +1169,14 @@ class GameEngine(
             return
         }
 
-        when (val result = players.login(sessionId, name, password, defaultAnsiEnabled = sessionAnsiDefaults[sessionId] ?: false)) {
-            LoginResult.Ok -> {
-                finalizeSuccessfulLogin(sessionId)
-            }
-
-            LoginResult.InvalidName -> {
-                outbound.send(OutboundEvent.SendError(sessionId, invalidNameMessage))
-                if (recordFailedLoginAttemptAndCloseIfNeeded(sessionId)) return
-                pendingLogins[sessionId] = LoginState.AwaitingName
-                promptForName(sessionId)
-            }
-
-            LoginResult.InvalidPassword -> {
-                outbound.send(OutboundEvent.SendError(sessionId, invalidPasswordMessage))
-                promptForExistingPassword(sessionId)
-            }
-
-            LoginResult.Taken -> {
-                outbound.send(OutboundEvent.SendError(sessionId, "That name is already taken."))
-                pendingLogins[sessionId] = LoginState.AwaitingName
-                promptForName(sessionId)
-            }
-
-            LoginResult.WrongPassword -> {
-                val attempts = state.wrongPasswordAttempts + 1
-                if (attempts > maxWrongPasswordRetries) {
-                    outbound.send(OutboundEvent.SendError(sessionId, "Incorrect password too many times. Returning to login."))
-                    if (recordFailedLoginAttemptAndCloseIfNeeded(sessionId)) return
-                    pendingLogins[sessionId] = LoginState.AwaitingName
-                    promptForName(sessionId)
-                    return
-                }
-
-                val attemptsRemaining = (maxWrongPasswordRetries + 1) - attempts
-                outbound.send(
-                    OutboundEvent.SendError(
-                        sessionId,
-                        "Incorrect password. $attemptsRemaining attempt(s) before returning to login.",
-                    ),
-                )
-                pendingLogins[sessionId] = state.copy(wrongPasswordAttempts = attempts)
-                promptForExistingPassword(sessionId)
-            }
-
-            is LoginResult.Takeover -> {
-                val oldSid = result.oldSessionId
-                combatSystem.remapSession(oldSid, sessionId)
-                regenSystem.remapSession(oldSid, sessionId)
-                abilitySystem.remapSession(oldSid, sessionId)
-                statusEffectSystem.remapSession(oldSid, sessionId)
-                groupSystem.remapSession(oldSid, sessionId)
-                outbound.send(OutboundEvent.Close(oldSid, "Your account has logged in from another location."))
-                val me = players.get(sessionId)
-                if (me != null) broadcastToRoom(players, outbound, me.roomId, "${me.name} briefly flickers.", sessionId)
-                finalizeSuccessfulLogin(sessionId, suppressEnterBroadcast = true)
-            }
+        // Capture ANSI preference on the engine thread before handing off to background.
+        val ansiDefault = sessionAnsiDefaults[sessionId] ?: false
+        pendingLogins[sessionId] = LoginState.AwaitingPasswordAuth(name, state.wrongPasswordAttempts)
+        engineScope.launch {
+            val prep = players.prepareLoginCredentials(name, password)
+            pendingAuthResults.send(
+                PendingAuthResult.PasswordAuth(sessionId, prep, state.wrongPasswordAttempts, ansiDefault),
+            )
         }
     }
 
@@ -1213,38 +1244,153 @@ class GameEngine(
             return
         }
 
-        when (
-            players.create(
-                sessionId,
-                state.name,
-                state.password,
-                defaultAnsiEnabled = sessionAnsiDefaults[sessionId] ?: false,
-                race = state.race,
-                playerClass = playerClass,
-            )
-        ) {
-            CreateResult.Ok -> {
-                finalizeSuccessfulLogin(sessionId)
+        // Capture ANSI preference on the engine thread before handing off to background.
+        val ansiDefault = sessionAnsiDefaults[sessionId] ?: false
+        pendingLogins[sessionId] = LoginState.AwaitingCreateAuth(state.name, state.password, state.race, playerClass)
+        engineScope.launch {
+            val prep = players.prepareCreateAccount(state.name, state.password, ansiDefault, state.race, playerClass)
+            pendingAuthResults.send(PendingAuthResult.NewAccountAuth(sessionId, prep))
+        }
+    }
+
+    /** Drains all results from [pendingAuthResults] that are immediately available. */
+    private suspend fun drainPendingAuthResults() {
+        while (true) {
+            val result = pendingAuthResults.tryReceive().getOrNull() ?: break
+            handlePendingAuthResult(result)
+        }
+    }
+
+    /** Processes a single auth result produced by a background coroutine. */
+    private suspend fun handlePendingAuthResult(result: PendingAuthResult) {
+        val sid = result.sessionId
+        when (result) {
+            is PendingAuthResult.NameLookup -> {
+                // Ignore stale results (session disconnected or re-used).
+                if (pendingLogins[sid] !is LoginState.AwaitingNameLookup) return
+                if (result.exists) {
+                    pendingLogins[sid] = LoginState.AwaitingExistingPassword(result.name)
+                    promptForExistingPassword(sid)
+                } else {
+                    pendingLogins[sid] = LoginState.AwaitingCreateConfirmation(result.name)
+                    promptForCreateConfirmation(sid, result.name)
+                }
             }
 
-            CreateResult.InvalidName -> {
-                outbound.send(OutboundEvent.SendError(sessionId, invalidNameMessage))
-                if (recordFailedLoginAttemptAndCloseIfNeeded(sessionId)) return
-                pendingLogins[sessionId] = LoginState.AwaitingName
-                promptForName(sessionId)
+            is PendingAuthResult.PasswordAuth -> {
+                val currentState = pendingLogins[sid] as? LoginState.AwaitingPasswordAuth ?: return
+                when (result.prep) {
+                    is LoginCredentialPrep.Verified -> {
+                        when (val loginResult = players.applyLoginCredentials(sid, result.prep.record, result.defaultAnsiEnabled)) {
+                            LoginResult.Ok -> finalizeSuccessfulLogin(sid)
+                            is LoginResult.Takeover -> {
+                                val oldSid = loginResult.oldSessionId
+                                combatSystem.remapSession(oldSid, sid)
+                                regenSystem.remapSession(oldSid, sid)
+                                abilitySystem.remapSession(oldSid, sid)
+                                statusEffectSystem.remapSession(oldSid, sid)
+                                groupSystem.remapSession(oldSid, sid)
+                                outbound.send(OutboundEvent.Close(oldSid, "Your account has logged in from another location."))
+                                val me = players.get(sid)
+                                if (me != null) broadcastToRoom(players, outbound, me.roomId, "${me.name} briefly flickers.", sid)
+                                finalizeSuccessfulLogin(sid, suppressEnterBroadcast = true)
+                            }
+                            LoginResult.InvalidName -> {
+                                outbound.send(OutboundEvent.SendError(sid, invalidNameMessage))
+                                if (recordFailedLoginAttemptAndCloseIfNeeded(sid)) return
+                                pendingLogins[sid] = LoginState.AwaitingName
+                                promptForName(sid)
+                            }
+                            LoginResult.InvalidPassword -> {
+                                outbound.send(OutboundEvent.SendError(sid, invalidPasswordMessage))
+                                if (recordFailedLoginAttemptAndCloseIfNeeded(sid)) return
+                                pendingLogins[sid] = LoginState.AwaitingName
+                                promptForName(sid)
+                            }
+                            LoginResult.Taken -> {
+                                outbound.send(OutboundEvent.SendError(sid, "That name is already taken."))
+                                pendingLogins[sid] = LoginState.AwaitingName
+                                promptForName(sid)
+                            }
+                            LoginResult.WrongPassword -> {
+                                // Should not happen: WrongPassword is handled by LoginCredentialPrep below.
+                            }
+                        }
+                    }
+                    LoginCredentialPrep.WrongPassword -> {
+                        val attempts = currentState.wrongPasswordAttempts + 1
+                        if (attempts > maxWrongPasswordRetries) {
+                            outbound.send(OutboundEvent.SendError(sid, "Incorrect password too many times. Returning to login."))
+                            if (recordFailedLoginAttemptAndCloseIfNeeded(sid)) return
+                            pendingLogins[sid] = LoginState.AwaitingName
+                            promptForName(sid)
+                            return
+                        }
+                        val attemptsRemaining = (maxWrongPasswordRetries + 1) - attempts
+                        outbound.send(
+                            OutboundEvent.SendError(
+                                sid,
+                                "Incorrect password. $attemptsRemaining attempt(s) before returning to login.",
+                            ),
+                        )
+                        pendingLogins[sid] = LoginState.AwaitingExistingPassword(currentState.name, attempts)
+                        promptForExistingPassword(sid)
+                    }
+                    LoginCredentialPrep.NotFound -> {
+                        // Account was removed between name-check and password entry.
+                        outbound.send(OutboundEvent.SendError(sid, "Account not found. Please try again."))
+                        if (recordFailedLoginAttemptAndCloseIfNeeded(sid)) return
+                        pendingLogins[sid] = LoginState.AwaitingName
+                        promptForName(sid)
+                    }
+                    LoginCredentialPrep.InvalidInput -> {
+                        outbound.send(OutboundEvent.SendError(sid, invalidNameMessage))
+                        if (recordFailedLoginAttemptAndCloseIfNeeded(sid)) return
+                        pendingLogins[sid] = LoginState.AwaitingName
+                        promptForName(sid)
+                    }
+                }
             }
 
-            CreateResult.InvalidPassword -> {
-                outbound.send(OutboundEvent.SendError(sessionId, invalidPasswordMessage))
-                pendingLogins[sessionId] = LoginState.AwaitingNewPassword(state.name)
-                promptForNewPassword(sessionId)
-            }
-
-            CreateResult.Taken -> {
-                outbound.send(OutboundEvent.SendError(sessionId, "That name is already taken."))
-                if (recordFailedLoginAttemptAndCloseIfNeeded(sessionId)) return
-                pendingLogins[sessionId] = LoginState.AwaitingName
-                promptForName(sessionId)
+            is PendingAuthResult.NewAccountAuth -> {
+                if (pendingLogins[sid] !is LoginState.AwaitingCreateAuth) return
+                val createState = pendingLogins[sid] as LoginState.AwaitingCreateAuth
+                when (result.prep) {
+                    is CreateAccountPrep.Ready -> {
+                        when (players.applyCreateAccount(sid, result.prep.record)) {
+                            CreateResult.Ok -> finalizeSuccessfulLogin(sid)
+                            CreateResult.InvalidName -> {
+                                outbound.send(OutboundEvent.SendError(sid, invalidNameMessage))
+                                if (recordFailedLoginAttemptAndCloseIfNeeded(sid)) return
+                                pendingLogins[sid] = LoginState.AwaitingName
+                                promptForName(sid)
+                            }
+                            CreateResult.InvalidPassword -> {
+                                outbound.send(OutboundEvent.SendError(sid, invalidPasswordMessage))
+                                pendingLogins[sid] = LoginState.AwaitingNewPassword(createState.name)
+                                promptForNewPassword(sid)
+                            }
+                            CreateResult.Taken -> {
+                                outbound.send(OutboundEvent.SendError(sid, "That name is already taken."))
+                                if (recordFailedLoginAttemptAndCloseIfNeeded(sid)) return
+                                pendingLogins[sid] = LoginState.AwaitingName
+                                promptForName(sid)
+                            }
+                        }
+                    }
+                    CreateAccountPrep.Taken -> {
+                        outbound.send(OutboundEvent.SendError(sid, "That name is already taken."))
+                        if (recordFailedLoginAttemptAndCloseIfNeeded(sid)) return
+                        pendingLogins[sid] = LoginState.AwaitingName
+                        promptForName(sid)
+                    }
+                    CreateAccountPrep.InvalidInput -> {
+                        outbound.send(OutboundEvent.SendError(sid, invalidNameMessage))
+                        if (recordFailedLoginAttemptAndCloseIfNeeded(sid)) return
+                        pendingLogins[sid] = LoginState.AwaitingName
+                        promptForName(sid)
+                    }
+                }
             }
         }
     }
