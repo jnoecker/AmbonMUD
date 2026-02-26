@@ -8,6 +8,10 @@
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.css"
     >
+    <link rel="stylesheet" href="/styles/design-tokens.css">
+    <link rel="stylesheet" href="/styles/typography.css">
+    <link rel="stylesheet" href="/styles/animations.css">
+    <link rel="stylesheet" href="/styles/canvas-panel.css">
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -53,9 +57,21 @@
                     <span class="stat-val" id="gold-val">0</span>
                 </div>
             </div>
-            <div class="sidebar-panel" id="map-panel">
-                <div class="panel-title">Map</div>
-                <canvas id="map-canvas" width="210" height="160"></canvas>
+            <div class="sidebar-panel map-panel-enhanced" id="map-panel">
+                <div class="panel-title">World Map</div>
+                <div class="canvas-container">
+                    <canvas id="world-canvas" width="400" height="300" style="display: none;"></canvas>
+                    <!-- Fallback to original map while canvas rendering in development -->
+                    <canvas id="map-canvas" width="210" height="160"></canvas>
+                    <div class="canvas-hud">
+                        <div class="compass" id="compass">N</div>
+                        <div class="zoom-controls">
+                            <button id="zoom-in" class="zoom-btn" title="Zoom in (scroll)">+</button>
+                            <button id="zoom-out" class="zoom-btn" title="Zoom out (scroll)">−</button>
+                            <button id="zoom-reset" class="zoom-btn" title="Reset zoom">◐</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="sidebar-panel" id="room-panel">
                 <div class="panel-title">Room</div>
@@ -89,6 +105,11 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>
+<!-- Canvas Rendering System (Phase 4) -->
+<script src="/js/canvas-renderer.js"></script>
+<script src="/js/camera.js"></script>
+<script src="/js/canvas-interaction.js"></script>
+<!-- Main Application -->
 <script src="/app.js"></script>
 </body>
 </html>

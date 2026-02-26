@@ -1,0 +1,291 @@
+/**
+ * AmbonMUD Canvas Panel Styling
+ * Phase 4: Enhanced Map Panel with Canvas Controls
+ *
+ * Styles for the expanded world map canvas and interactive HUD elements
+ */
+
+@import 'design-tokens.css';
+@import 'animations.css';
+
+/* ========== MAP PANEL ENHANCED ========== */
+
+.map-panel-enhanced {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+}
+
+.canvas-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: linear-gradient(135deg, #F8F8FC 0%, #E8E8F0 100%);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* ========== CANVAS ========== */
+
+#world-canvas,
+#map-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: default;
+    transition: cursor 200ms ease-out;
+}
+
+#world-canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+/* ========== COMPASS ROSE ========== */
+
+.compass {
+    position: absolute;
+    top: var(--spacing-sm);
+    left: var(--spacing-sm);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(216, 197, 232, 0.1);
+    border: 1px solid var(--color-primary-pale-blue);
+    border-radius: var(--radius-lg);
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+    transition: all 200ms ease-out-soft;
+}
+
+.compass:hover {
+    background: rgba(216, 197, 232, 0.15);
+    border-color: var(--color-primary-lavender);
+    box-shadow: 0 0 12px rgba(216, 197, 232, 0.2);
+}
+
+/* ========== ZOOM CONTROLS ========== */
+
+.zoom-controls {
+    position: absolute;
+    bottom: var(--spacing-sm);
+    right: var(--spacing-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: rgba(216, 197, 232, 0.1);
+    border: 1px solid var(--color-primary-pale-blue);
+    border-radius: var(--radius-md);
+    padding: 2px;
+    backdrop-filter: blur(4px);
+}
+
+.zoom-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all 150ms ease-out-soft;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.zoom-btn:hover {
+    background: rgba(216, 197, 232, 0.3);
+    color: var(--color-primary-lavender);
+}
+
+.zoom-btn:active {
+    transform: scale(0.95);
+    background: rgba(216, 197, 232, 0.5);
+}
+
+.zoom-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Separator between buttons */
+.zoom-btn:not(:last-child) {
+    border-bottom: 1px solid rgba(216, 197, 232, 0.2);
+}
+
+/* ========== CANVAS HUD ========== */
+
+.canvas-hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+/* Exit portal overlay indicators */
+.exit-indicator {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--color-primary-lavender);
+    border-radius: var(--radius-sm);
+    background: rgba(216, 197, 232, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-primary-lavender);
+    pointer-events: auto;
+    cursor: pointer;
+    transition: all 200ms ease-out-soft;
+    box-shadow: 0 0 8px rgba(216, 197, 232, 0.2);
+}
+
+.exit-indicator:hover {
+    background: rgba(216, 197, 232, 0.2);
+    box-shadow: 0 0 16px rgba(216, 197, 232, 0.4);
+    transform: scale(1.05);
+}
+
+/* Entity tooltips */
+.entity-tooltip {
+    position: absolute;
+    padding: 4px 8px;
+    background: rgba(107, 107, 123, 0.9);
+    border: 1px solid var(--color-primary-pale-blue);
+    border-radius: var(--radius-sm);
+    color: #E8E8F0;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 150ms ease-out;
+}
+
+/* ========== RESPONSIVE ========== */
+
+@media (max-width: 768px) {
+    .canvas-container {
+        aspect-ratio: 16 / 12;
+    }
+
+    .compass {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .zoom-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.85rem;
+    }
+
+    .exit-indicator {
+        width: 32px;
+        height: 32px;
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .canvas-container {
+        aspect-ratio: 16 / 12;
+    }
+
+    .map-panel-enhanced {
+        padding: var(--spacing-sm);
+        gap: var(--spacing-sm);
+    }
+
+    .compass {
+        width: 36px;
+        height: 36px;
+        top: 4px;
+        left: 4px;
+        font-size: 0.9rem;
+    }
+
+    .zoom-controls {
+        bottom: 4px;
+        right: 4px;
+    }
+
+    .zoom-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ========== ACCESSIBILITY ========== */
+
+@media (prefers-reduced-motion: reduce) {
+    .compass,
+    .zoom-btn,
+    .exit-indicator,
+    .entity-tooltip {
+        transition: none;
+        animation: none;
+    }
+}
+
+@media (prefers-contrast: more) {
+    .compass {
+        border-width: 2px;
+        background: rgba(216, 197, 232, 0.2);
+    }
+
+    .zoom-btn {
+        border: 1px solid var(--text-primary);
+    }
+
+    .exit-indicator {
+        border-width: 2px;
+    }
+}
+
+/* ========== UTILITY ANIMATIONS ========== */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Loading spinner for canvas initialization */
+.canvas-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(216, 197, 232, 0.2);
+    border-top-color: var(--color-primary-lavender);
+    border-radius: 50%;
+    animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
