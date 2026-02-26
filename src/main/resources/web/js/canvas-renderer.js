@@ -285,6 +285,11 @@ class CanvasWorldRenderer {
 
         this.particleSystem.render(this.ctx);
         this.layers.ui.render(this.ctx, this.gameState);
+
+        // Render performance dashboard if available (Phase 5c)
+        if (this.gameState.performanceDashboard) {
+            this.gameState.performanceDashboard.render(this.ctx, this.width, this.height);
+        }
     }
 
     update() {
