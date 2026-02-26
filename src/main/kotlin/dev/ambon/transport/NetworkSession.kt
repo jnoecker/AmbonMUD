@@ -208,10 +208,10 @@ class NetworkSession(
         sendRaw(bytes)
     }
 
-    private fun sendTelnetSubnegotiation(
+    private fun buildTelnetSubnegotiationBytes(
         option: Int,
         payload: ByteArray,
-    ) {
+    ): ByteArray {
         val buffer = ByteArray(3 + payload.size + 2)
         buffer[0] = TelnetProtocol.IAC.toByte()
         buffer[1] = TelnetProtocol.SB.toByte()
@@ -219,7 +219,14 @@ class NetworkSession(
         payload.copyInto(buffer, destinationOffset = 3)
         buffer[buffer.size - 2] = TelnetProtocol.IAC.toByte()
         buffer[buffer.size - 1] = TelnetProtocol.SE.toByte()
-        sendRaw(buffer)
+        return buffer
+    }
+
+    private fun sendTelnetSubnegotiation(
+        option: Int,
+        payload: ByteArray,
+    ) {
+        sendRaw(buildTelnetSubnegotiationBytes(option, payload))
     }
 
     private fun sendRaw(bytes: ByteArray) {
@@ -275,9 +282,12 @@ class NetworkSession(
             is OutboundFrame.Gmcp -> {
                 if (gmcpEnabled) {
                     val payload = "${frame.gmcpPackage} ${frame.jsonData}".toByteArray(Charsets.UTF_8)
-                    sendTelnetSubnegotiation(TelnetProtocol.GMCP, payload)
+                    val bytes = buildTelnetSubnegotiationBytes(TelnetProtocol.GMCP, payload)
+                    synchronized(outputLock) { output.write(bytes) }
+                    true
+                } else {
+                    false
                 }
-                false
             }
         }
     }
