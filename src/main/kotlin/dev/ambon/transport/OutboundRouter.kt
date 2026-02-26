@@ -98,43 +98,54 @@ class OutboundRouter(
     fun start(): Job =
         scope.launch {
             for (ev in engineOutbound.asReceiveChannel()) {
+                // Single map lookup per event — resolved sink is passed directly to helpers.
                 when (ev) {
                     is OutboundEvent.SendText -> {
-                        sendLine(ev.sessionId, ev.text, TextKind.NORMAL)
+                        val sink = sinks[ev.sessionId] ?: continue
+                        sendLine(ev.sessionId, sink, ev.text, TextKind.NORMAL)
                     }
 
                     is OutboundEvent.SendInfo -> {
-                        sendLine(ev.sessionId, ev.text, TextKind.INFO)
+                        val sink = sinks[ev.sessionId] ?: continue
+                        sendLine(ev.sessionId, sink, ev.text, TextKind.INFO)
                     }
 
                     is OutboundEvent.SendError -> {
-                        sendLine(ev.sessionId, ev.text, TextKind.ERROR)
+                        val sink = sinks[ev.sessionId] ?: continue
+                        sendLine(ev.sessionId, sink, ev.text, TextKind.ERROR)
                     }
 
                     is OutboundEvent.SendPrompt -> {
-                        sendPrompt(ev.sessionId)
+                        val sink = sinks[ev.sessionId] ?: continue
+                        sendPrompt(ev.sessionId, sink)
                     }
 
                     is OutboundEvent.ShowLoginScreen -> {
-                        showLoginScreen(ev.sessionId)
+                        val sink = sinks[ev.sessionId] ?: continue
+                        showLoginScreen(ev.sessionId, sink)
                     }
 
                     is OutboundEvent.SetAnsi -> {
-                        setAnsi(ev.sessionId, ev.enabled)
+                        val sink = sinks[ev.sessionId] ?: continue
+                        setAnsi(sink, ev.enabled)
                     }
 
                     is OutboundEvent.ClearScreen -> {
-                        clearScreen(ev.sessionId)
+                        val sink = sinks[ev.sessionId] ?: continue
+                        clearScreen(ev.sessionId, sink)
                     }
 
                     is OutboundEvent.ShowAnsiDemo -> {
-                        showAnsiDemo(ev.sessionId)
+                        val sink = sinks[ev.sessionId] ?: continue
+                        showAnsiDemo(ev.sessionId, sink)
                     }
 
                     is OutboundEvent.Close -> {
+                        // Remove first so no further events route to this sink.
+                        val sink = sinks.remove(ev.sessionId) ?: continue
                         // Best-effort goodbye text; then close.
-                        sendLine(ev.sessionId, ev.reason + "", TextKind.ERROR)
-                        sinks.remove(ev.sessionId)?.close?.invoke(ev.reason)
+                        sendLine(ev.sessionId, sink, ev.reason, TextKind.ERROR)
+                        sink.close(ev.reason)
                     }
 
                     is OutboundEvent.SessionRedirect -> {
@@ -142,7 +153,8 @@ class OutboundRouter(
                     }
 
                     is OutboundEvent.GmcpData -> {
-                        enqueueGmcp(ev.sessionId, ev.gmcpPackage, ev.jsonData)
+                        val sink = sinks[ev.sessionId] ?: continue
+                        enqueueGmcp(sink, ev.gmcpPackage, ev.jsonData)
                     }
                 }
             }
@@ -150,19 +162,20 @@ class OutboundRouter(
 
     private fun sendLine(
         sessionId: SessionId,
+        sink: SessionSink,
         text: String,
         kind: TextKind,
     ) {
-        val sink = sinks[sessionId] ?: return
         val framed = sink.renderer.renderLine(text, kind)
         if (enqueueFramed(sessionId, sink, framed)) {
             sink.lastEnqueuedWasPrompt = false
         }
     }
 
-    private fun sendPrompt(sessionId: SessionId) {
-        val sink = sinks[sessionId] ?: return
-
+    private fun sendPrompt(
+        sessionId: SessionId,
+        sink: SessionSink,
+    ) {
         // Coalesce prompts
         if (sink.lastEnqueuedWasPrompt) return
 
@@ -177,16 +190,17 @@ class OutboundRouter(
     }
 
     private fun setAnsi(
-        sessionId: SessionId,
+        sink: SessionSink,
         enabled: Boolean,
     ) {
-        val sink = sinks[sessionId] ?: return
         sink.renderer = if (enabled) AnsiRenderer() else PlainRenderer()
         sink.lastEnqueuedWasPrompt = false
     }
 
-    private fun showLoginScreen(sessionId: SessionId) {
-        val sink = sinks[sessionId] ?: return
+    private fun showLoginScreen(
+        sessionId: SessionId,
+        sink: SessionSink,
+    ) {
         val ansiEnabled = sink.renderer is AnsiRenderer
         val frames = loginScreenRenderer.render(loginScreen, ansiEnabled)
 
@@ -199,11 +213,13 @@ class OutboundRouter(
         sink.lastEnqueuedWasPrompt = false
     }
 
-    private fun clearScreen(sessionId: SessionId) {
-        val sink = sinks[sessionId] ?: return
+    private fun clearScreen(
+        sessionId: SessionId,
+        sink: SessionSink,
+    ) {
         val isAnsi = sink.renderer is AnsiRenderer
         if (!isAnsi) {
-            sendLine(sessionId, "----------------", TextKind.NORMAL)
+            sendLine(sessionId, sink, "----------------", TextKind.NORMAL)
             return
         }
         // ESC[2J clears, ESC[H homes cursor
@@ -212,11 +228,13 @@ class OutboundRouter(
         }
     }
 
-    private fun showAnsiDemo(sessionId: SessionId) {
-        val sink = sinks[sessionId] ?: return
+    private fun showAnsiDemo(
+        sessionId: SessionId,
+        sink: SessionSink,
+    ) {
         val isAnsi = sink.renderer is AnsiRenderer
         if (!isAnsi) {
-            sendLine(sessionId, "ANSI is off. Type: ansi on", TextKind.INFO)
+            sendLine(sessionId, sink, "ANSI is off. Type: ansi on", TextKind.INFO)
             return
         }
 
@@ -255,11 +273,10 @@ class OutboundRouter(
     }
 
     private fun enqueueGmcp(
-        sessionId: SessionId,
+        sink: SessionSink,
         gmcpPackage: String,
         jsonData: String,
     ) {
-        val sink = sinks[sessionId] ?: return
         // GMCP frames are best-effort; dropped silently on backpressure (no disconnect)
         val ok = sink.queue.trySend(OutboundFrame.Gmcp(gmcpPackage, jsonData)).isSuccess
         if (ok) {
