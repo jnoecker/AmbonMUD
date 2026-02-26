@@ -17,5 +17,5 @@ class LocalInboundBus(
 
     override fun close() = channel.close()
 
-    fun depth(): Int = channel.depth()
+    override fun depth(): Int = channel.depth()
 }

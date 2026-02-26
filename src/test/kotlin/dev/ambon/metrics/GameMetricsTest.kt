@@ -29,6 +29,7 @@ class GameMetricsTest {
             noop.onGrpcControlPlaneFallbackSend()
             noop.onGrpcForcedDisconnectDueToControlDeliveryFailure("stream_full_timeout")
             noop.onEngineTickOverrun()
+            noop.updateTickDebt(25L)
             noop.onInboundEventsProcessed(5)
             noop.onMobMoves(3)
             noop.onCombatsProcessed(2)
@@ -184,6 +185,33 @@ class GameMetricsTest {
 
         assertEquals(9.0, registry.get("inbound_bus_queue_depth").gauge().value())
         assertEquals(7.0, registry.get("scheduler_pending_actions").gauge().value())
+    }
+
+    @Test
+    fun `tick debt gauge reflects current accumulated debt and recovers to zero`() {
+        assertEquals(0.0, registry.get("engine_tick_debt_ms").gauge().value())
+
+        metrics.updateTickDebt(40L)
+        assertEquals(40.0, registry.get("engine_tick_debt_ms").gauge().value())
+
+        metrics.updateTickDebt(65L)
+        assertEquals(65.0, registry.get("engine_tick_debt_ms").gauge().value())
+
+        metrics.updateTickDebt(0L)
+        assertEquals(0.0, registry.get("engine_tick_debt_ms").gauge().value())
+    }
+
+    @Test
+    fun `overrun records queue depth in distribution summary and increments overrun counter`() {
+        metrics.onEngineTickOverrun(inboundQueueDepth = 10)
+        metrics.onEngineTickOverrun(inboundQueueDepth = 20)
+        metrics.onEngineTickOverrun()
+
+        assertEquals(3.0, registry.counter("engine_tick_overrun_total").count())
+
+        val summary = registry.get("engine_inbound_queue_depth_at_overrun").summary()
+        assertEquals(3L, summary.count())
+        assertEquals(30.0, summary.totalAmount())
     }
 
     @Test
