@@ -364,7 +364,8 @@ class InterEngineMessageHandlingTest {
     @Test
     fun `known WhoResponse is aggregated and flush sends sorted also online list`() =
         runTest {
-            val h = buildEngine("engine-1", bus = LocalInterEngineBus(), peerEngineCount = { 1 })
+            val capturingBus = CapturingInterEngineBus()
+            val h = buildEngine("engine-1", bus = capturingBus, peerEngineCount = { 1 })
             val sid = SessionId(1)
 
             val job = launch { h.engine.run() }
@@ -372,15 +373,18 @@ class InterEngineMessageHandlingTest {
             loginViaEngine(h, sid, "Alice")
             pumpEngine(h)
             drain(h.outbound)
+            capturingBus.sent.clear()
 
             h.inbound.send(InboundEvent.LineReceived(sid, "who"))
             pumpEngine(h)
 
             val whoRequest =
-                (h.bus as LocalInterEngineBus).incoming().tryReceive().getOrNull() as? InterEngineMessage.WhoRequest
-            requireNotNull(whoRequest)
+                capturingBus.sent
+                    .map { it.second }
+                    .filterIsInstance<InterEngineMessage.WhoRequest>()
+                    .single()
 
-            (h.bus as LocalInterEngineBus).broadcast(
+            capturingBus.inject(
                 InterEngineMessage.WhoResponse(
                     requestId = whoRequest.requestId,
                     players = listOf(PlayerSummary("Zed", "ruins:entry", 3), PlayerSummary("Bob", "hub:plaza", 4)),
@@ -405,7 +409,8 @@ class InterEngineMessageHandlingTest {
     @Test
     fun `disconnect clears pending who request and later response is ignored`() =
         runTest {
-            val h = buildEngine("engine-1", bus = LocalInterEngineBus(), peerEngineCount = { 1 })
+            val capturingBus = CapturingInterEngineBus()
+            val h = buildEngine("engine-1", bus = capturingBus, peerEngineCount = { 1 })
             val sid = SessionId(1)
 
             val job = launch { h.engine.run() }
@@ -413,19 +418,22 @@ class InterEngineMessageHandlingTest {
             loginViaEngine(h, sid, "Alice")
             pumpEngine(h)
             drain(h.outbound)
+            capturingBus.sent.clear()
 
             h.inbound.send(InboundEvent.LineReceived(sid, "who"))
             pumpEngine(h)
 
-            val bus = h.bus as LocalInterEngineBus
-            val whoRequest = bus.incoming().tryReceive().getOrNull() as? InterEngineMessage.WhoRequest
-            requireNotNull(whoRequest)
+            val whoRequest =
+                capturingBus.sent
+                    .map { it.second }
+                    .filterIsInstance<InterEngineMessage.WhoRequest>()
+                    .single()
 
             h.inbound.send(InboundEvent.Disconnected(sid))
             pumpEngine(h)
             drain(h.outbound)
 
-            bus.broadcast(
+            capturingBus.inject(
                 InterEngineMessage.WhoResponse(
                     requestId = whoRequest.requestId,
                     players = listOf(PlayerSummary("Bob", "hub:plaza", 4)),
@@ -448,7 +456,8 @@ class InterEngineMessageHandlingTest {
     @Test
     fun `who flush warns when not all peer shards respond`() =
         runTest {
-            val h = buildEngine("engine-1", bus = LocalInterEngineBus(), peerEngineCount = { 2 })
+            val capturingBus = CapturingInterEngineBus()
+            val h = buildEngine("engine-1", bus = capturingBus, peerEngineCount = { 2 })
             val sid = SessionId(1)
 
             val job = launch { h.engine.run() }
@@ -456,15 +465,18 @@ class InterEngineMessageHandlingTest {
             loginViaEngine(h, sid, "Alice")
             pumpEngine(h)
             drain(h.outbound)
+            capturingBus.sent.clear()
 
             h.inbound.send(InboundEvent.LineReceived(sid, "who"))
             pumpEngine(h)
 
-            val bus = h.bus as LocalInterEngineBus
-            val whoRequest = bus.incoming().tryReceive().getOrNull() as? InterEngineMessage.WhoRequest
-            requireNotNull(whoRequest)
+            val whoRequest =
+                capturingBus.sent
+                    .map { it.second }
+                    .filterIsInstance<InterEngineMessage.WhoRequest>()
+                    .single()
 
-            bus.broadcast(
+            capturingBus.inject(
                 InterEngineMessage.WhoResponse(
                     requestId = whoRequest.requestId,
                     players = listOf(PlayerSummary("Bob", "hub:plaza", 4)),
