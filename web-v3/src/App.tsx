@@ -267,7 +267,7 @@ function DirectionIcon({ direction, className }: { direction: Direction; classNa
           <path d="M12 20V9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M8.6 12.4 12 9l3.4 3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M7.8 7.2h8.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-          <path d="M9.2 6 12 3.8 14.8 6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+          <path d="M9.2 6.2 12 4l2.8 2.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
         </svg>
       );
     case "down":
