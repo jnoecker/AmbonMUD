@@ -55,9 +55,9 @@ body {
 
 .app-shell {
   position: relative;
-  max-width: 1400px;
+  max-width: 1560px;
   margin: 0 auto;
-  padding: var(--space-6) var(--space-5) calc(var(--space-6) + 72px);
+  padding: var(--space-4) var(--space-4) calc(var(--space-4) + 72px);
 }
 
 .ambient-orb {
@@ -97,9 +97,9 @@ body {
 .top-banner {
   display: flex;
   justify-content: space-between;
-  gap: var(--space-5);
+  gap: var(--space-4);
   align-items: flex-start;
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-4);
 }
 
 .top-banner-kicker {
@@ -113,15 +113,16 @@ body {
 .top-banner-title {
   margin: var(--space-1) 0 0;
   font-family: "Cormorant Garamond", "Georgia", serif;
-  font-size: clamp(2.1rem, 3vw, 3rem);
+  font-size: clamp(1.8rem, 2.5vw, 2.5rem);
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
 .top-banner-subtitle {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-1) 0 0;
   max-width: 58ch;
   color: var(--color-neutral-soft-fog);
+  font-size: 0.92rem;
 }
 
 .connection-cluster {
@@ -179,19 +180,19 @@ body {
 
 .dashboard {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
   border: 1px solid rgb(107 107 123 / 14%);
   background: linear-gradient(160deg, rgb(255 255 255 / 83%), rgb(255 255 255 / 65%));
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
   backdrop-filter: blur(6px);
-  padding: var(--space-4);
+  padding: var(--space-3);
 }
 
 .panel-header h2,
@@ -201,13 +202,13 @@ body {
 
 .panel-header h2 {
   font-family: "Cormorant Garamond", "Georgia", serif;
-  font-size: 1.55rem;
+  font-size: 1.3rem;
 }
 
 .panel-header p {
   margin-top: var(--space-1);
   color: var(--color-neutral-soft-fog);
-  font-size: 0.92rem;
+  font-size: 0.84rem;
 }
 
 .terminal-card {
@@ -215,13 +216,13 @@ body {
   border: 1px solid rgb(107 107 123 / 12%);
   background: linear-gradient(180deg, rgb(255 255 255 / 94%), rgb(245 244 252 / 95%));
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 65%), var(--shadow-sm);
-  padding: var(--space-3);
+  padding: var(--space-2);
 }
 
 .terminal-host {
   width: 100%;
-  min-height: 42vh;
-  max-height: 62vh;
+  min-height: 34vh;
+  max-height: 52vh;
 }
 
 .terminal-host .xterm,
@@ -246,9 +247,10 @@ body {
   background: linear-gradient(135deg, rgb(184 216 232 / 62%), rgb(216 197 232 / 48%));
   color: var(--color-neutral-deep-mist);
   font-weight: 700;
-  padding: 8px 14px;
+  padding: 6px 12px;
   text-transform: capitalize;
   cursor: pointer;
+  font-size: 0.84rem;
 }
 
 .command-form {
@@ -262,22 +264,23 @@ body {
   border: 1px solid rgb(107 107 123 / 26%);
   background: rgb(255 255 255 / 86%);
   color: var(--color-neutral-deep-mist);
-  padding: 10px 14px;
+  padding: 8px 12px;
   font: inherit;
+  font-size: 0.93rem;
 }
 
 .subpanel {
   border: 1px solid rgb(107 107 123 / 13%);
   border-radius: var(--radius-lg);
-  padding: var(--space-3);
+  padding: 10px;
   background: rgb(255 255 255 / 72%);
   box-shadow: var(--shadow-sm);
 }
 
 .subpanel h3 {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-1);
   font-family: "Cormorant Garamond", "Georgia", serif;
-  font-size: 1.2rem;
+  font-size: 1.08rem;
 }
 
 .room-title {
@@ -286,8 +289,9 @@ body {
 }
 
 .room-description {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-1) 0 0;
   color: var(--color-neutral-deep-mist);
+  font-size: 0.92rem;
 }
 
 .exit-cloud {
@@ -309,14 +313,14 @@ body {
 .mini-map {
   display: block;
   width: 100%;
-  height: 220px;
+  height: 180px;
   border-radius: var(--radius-md);
   border: 1px solid rgb(107 107 123 / 20%);
 }
 
 .split-list {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-2);
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
@@ -387,13 +391,13 @@ body {
 .meter-label-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   color: var(--color-neutral-soft-fog);
 }
 
 .meter-track {
   width: 100%;
-  height: 10px;
+  height: 8px;
   border-radius: 999px;
   background: rgb(107 107 123 / 14%);
   overflow: hidden;
@@ -427,7 +431,7 @@ body {
 
 .stat-grid dt {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   color: var(--color-neutral-soft-fog);
 }
 
@@ -504,14 +508,29 @@ body {
   }
 
   .terminal-host {
-    min-height: 48vh;
-    max-height: 54vh;
+    min-height: 46vh;
+    max-height: 52vh;
   }
 }
 
 @media (min-width: 960px) {
   .app-shell {
-    padding-bottom: var(--space-6);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    overflow: hidden;
+    padding-bottom: var(--space-3);
+  }
+
+  .top-banner {
+    margin-bottom: 0;
+    align-items: center;
+  }
+
+  .top-banner-subtitle {
+    max-width: 46ch;
+    font-size: 0.85rem;
   }
 
   .mobile-tab-bar {
@@ -519,31 +538,75 @@ body {
   }
 
   .dashboard {
-    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
-      "play world"
-      "play character"
-      "play inventory";
+      "play world character"
+      "play world inventory";
   }
 
   .panel {
     display: flex;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .panel-play {
     grid-area: play;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+  }
+
+  .panel-play .terminal-card {
+    min-height: 0;
+    padding: var(--space-2);
+  }
+
+  .panel-play .terminal-host {
+    height: 100%;
+    min-height: 0;
+    max-height: none;
   }
 
   .panel-world {
     grid-area: world;
+    display: grid;
+    grid-template-rows: auto minmax(0, 0.95fr) minmax(0, 0.9fr) minmax(0, 1.1fr);
   }
 
   .panel-character {
     grid-area: character;
+    display: grid;
+    grid-template-rows: auto minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .panel-inventory {
     grid-area: inventory;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .panel-world .subpanel,
+  .panel-character .subpanel,
+  .panel-inventory .subpanel {
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .panel-world .mini-map {
+    height: clamp(110px, 17vh, 160px);
+  }
+
+  .connection-pill {
+    font-size: 0.8rem;
+    padding: 5px 12px;
+  }
+
+  .soft-button {
+    padding: 7px 14px;
+    font-size: 0.84rem;
   }
 }
 
