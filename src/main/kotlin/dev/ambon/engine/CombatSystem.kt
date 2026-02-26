@@ -77,7 +77,7 @@ class CombatSystem(
 
     fun syncPlayerDefense(sessionId: SessionId) {
         val player = players.get(sessionId) ?: return
-        syncPlayerDefense(player)
+        syncPlayerDefense(player, items.equipmentBonuses(sessionId).armor)
     }
 
     suspend fun startCombat(
@@ -281,7 +281,8 @@ class CombatSystem(
                 continue
             }
 
-            syncPlayerDefense(player)
+            val playerBonuses = items.equipmentBonuses(sessionId)
+            syncPlayerDefense(player, playerBonuses.armor)
 
             if (player.hp <= 0) {
                 metrics.onPlayerDeath()
@@ -297,8 +298,8 @@ class CombatSystem(
             // STUN check
             val stunned = statusEffects?.hasPlayerEffect(sessionId, EffectType.STUN) == true
             if (!stunned) {
-                val playerAttack = equippedAttack(player.sessionId)
-                val playerStrBonus = strDamageBonus(player)
+                val playerAttack = playerBonuses.attack
+                val playerStrBonus = strDamageBonus(player, playerBonuses.strength)
                 val playerRoll = rollDamage()
                 val rawPlayerDamage = playerRoll + playerAttack + playerStrBonus
                 val preClampPlayerDamage = rawPlayerDamage - mob.armor
@@ -371,7 +372,8 @@ class CombatSystem(
 
             val target = players.get(targetSid) ?: continue
 
-            val dodgePct = dodgeChance(target)
+            val targetBonuses = items.equipmentBonuses(targetSid)
+            val dodgePct = dodgeChance(target, targetBonuses.dexterity)
             if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
                 outbound.send(OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s attack!"))
             } else {
@@ -512,28 +514,21 @@ class CombatSystem(
         return " (${parts.joinToString(", ")})"
     }
 
-    private fun equippedAttack(sessionId: SessionId): Int = items.equipment(sessionId).values.sumOf { it.item.damage }
-
-    private fun equippedDefense(sessionId: SessionId): Int = items.equipment(sessionId).values.sumOf { it.item.armor }
-
-    private fun strDamageBonus(player: PlayerState): Int {
-        val equipStr = items.equipment(player.sessionId).values.sumOf { it.item.strength }
+    private fun strDamageBonus(player: PlayerState, equipStr: Int): Int {
         val statusStr = statusEffects?.getPlayerStatMods(player.sessionId)?.str ?: 0
         val totalStr = player.strength + equipStr + statusStr
         return (totalStr - PlayerState.BASE_STAT) / strDivisor
     }
 
-    private fun dodgeChance(player: PlayerState): Int {
-        val equipDex = items.equipment(player.sessionId).values.sumOf { it.item.dexterity }
+    private fun dodgeChance(player: PlayerState, equipDex: Int): Int {
         val statusDex = statusEffects?.getPlayerStatMods(player.sessionId)?.dex ?: 0
         val totalDex = player.dexterity + equipDex + statusDex
         val chance = (totalDex - PlayerState.BASE_STAT) * dexDodgePerPoint
         return chance.coerceIn(0, maxDodgePercent)
     }
 
-    private fun syncPlayerDefense(player: PlayerState) {
+    private fun syncPlayerDefense(player: PlayerState, currentDefense: Int) {
         val sessionId = player.sessionId
-        val currentDefense = equippedDefense(sessionId)
         val previousDefense = defenseByPlayer[sessionId] ?: 0
         if (currentDefense == previousDefense) return
 
@@ -636,7 +631,7 @@ class CombatSystem(
 
         for (sid in recipients) {
             val player = players.get(sid) ?: continue
-            val equipCha = items.equipment(sid).values.sumOf { it.item.charisma }
+            val equipCha = items.equipmentBonuses(sid).charisma
             val reward = progression.applyCharismaXpBonus(player.charisma + equipCha, perPlayerXp)
 
             val result = players.grantXp(sid, reward, progression) ?: continue
