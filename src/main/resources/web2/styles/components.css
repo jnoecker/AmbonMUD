@@ -537,6 +537,28 @@
 
 .form-group input::placeholder { color: var(--text-disabled); }
 
+.form-group--check {
+    margin-bottom: var(--spacing-sm);
+}
+
+.check-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+
+.check-label input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    accent-color: var(--color-primary-lavender);
+    cursor: pointer;
+}
+
 .login-error {
     padding: var(--spacing-sm);
     margin-bottom: var(--spacing-md);

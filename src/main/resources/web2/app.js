@@ -63,9 +63,10 @@
      *  idle → connecting → awaiting_prompt → sent_name → sent_password → authenticated
      *  Any error/disconnect resets back to idle.
      */
-    let loginState   = 'idle';
-    let loginName    = '';
+    let loginState    = 'idle';
+    let loginName     = '';
     let loginPassword = '';
+    let loginIsNewUser = false;
 
     let ws = null;
     let inputBuffer = '';
@@ -90,7 +91,8 @@
     const loginNameInput  = document.getElementById('login-name');
     const loginPassInput  = document.getElementById('login-password');
     const loginError      = document.getElementById('login-error');
-    const loginBtn        = document.getElementById('login-btn');
+    const loginBtn         = document.getElementById('login-btn');
+    const loginNewUserCheck = document.getElementById('login-new-user');
 
     const statusPill      = document.getElementById('status');
     const reconnectBtn    = document.getElementById('reconnect');
@@ -588,16 +590,24 @@
     }
 
     function hideLoginOverlay() {
+        if (loginOverlay.hidden) return;
         loginOverlay.classList.add('is-hiding');
-        loginOverlay.addEventListener('animationend', () => {
+        let dismissed = false;
+        function dismiss() {
+            if (dismissed) return;
+            dismissed = true;
             loginOverlay.hidden = true;
             term.focus();
-        }, { once: true });
+        }
+        // Belt-and-suspenders: use both animationend and a timeout fallback
+        loginOverlay.addEventListener('animationend', dismiss, { once: true });
+        setTimeout(dismiss, 450);
     }
 
     function resetLoginForm() {
         loginNameInput.value  = '';
         loginPassInput.value  = '';
+        loginNewUserCheck.checked = false;
         clearLoginError();
         loginBtn.disabled = false;
         loginBtn.textContent = 'Enter the World';
@@ -608,27 +618,41 @@
 
     function onAuthenticated() {
         loginState = 'authenticated';
-        hideLoginOverlay();
         setStatus('connected');
+        // Overlay already dismissed in onWsOpenedForLogin; just update the status pill.
     }
 
     /** Called when the WS first opens during a login attempt. */
     function onWsOpenedForLogin() {
         loginState = 'awaiting_prompt';
         setStatus('connecting');
+        // Hide the overlay as soon as the socket is live.
+        // The auto-login state machine sends credentials as server prompts arrive.
+        // If it stalls the user can still type freely in the terminal.
+        hideLoginOverlay();
     }
 
     /** Inspect server text lines during the login handshake. */
     function handleLoginText(text) {
         if (loginState === 'awaiting_prompt') {
             // Server has sent something — send the character name
-            sendRaw(loginName + '\r\n');
+            sendRaw(loginName);
             loginState = 'sent_name';
         } else if (loginState === 'sent_name') {
-            // Watch for password prompt
             if (/password/i.test(text)) {
-                sendRaw(loginPassword + '\r\n');
+                // "Password:" (existing user) or "Create a password:" (new user)
+                sendRaw(loginPassword);
                 loginState = 'sent_password';
+            } else if (/\(yes\/no\)/i.test(text)) {
+                // "No user named '...' was found. Create a new user? (yes/no)"
+                if (loginIsNewUser) {
+                    sendRaw('yes');
+                    // stay in 'sent_name' — password prompt follows
+                } else {
+                    sendRaw('no');
+                    loginState = 'rejected_new_user';
+                    // server will close the connection; ws 'close' handler restores the overlay
+                }
             }
         }
         // In 'sent_password' we wait for Char.Name GMCP — nothing more to auto-send.
@@ -676,12 +700,13 @@
         renderMap();
     }
 
-    function connect(name, password) {
+    function connect(name, password, isNewUser) {
         if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
 
-        loginName     = name;
-        loginPassword = password;
-        loginState    = 'connecting';
+        loginName      = name;
+        loginPassword  = password;
+        loginIsNewUser = isNewUser;
+        loginState     = 'connecting';
         setStatus('connecting');
 
         ws = new WebSocket(WS_URL);
@@ -705,14 +730,22 @@
         });
 
         ws.addEventListener('close', () => {
-            const wasAuthenticated = loginState === 'authenticated';
+            const wasAuthenticated  = loginState === 'authenticated';
+            const rejectedNewUser   = loginState === 'rejected_new_user';
             loginState = 'idle';
             setStatus('disconnected');
             inputBuffer = '';
             tabMatches  = [];
             resetHud();
             writeSystem('Connection closed.');
-            if (!wasAuthenticated) {
+            if (rejectedNewUser) {
+                // User not found and they didn't want to register — restore overlay with hint
+                resetLoginForm();
+                loginNameInput.value = loginName;
+                showLoginError('No user found with that name. Tick "New character" to register.');
+            } else if (!wasAuthenticated) {
+                // Connection dropped during login — restore overlay
+                resetLoginForm();
                 showLoginError('Connection closed. Please try again.');
             } else {
                 // Authenticated session disconnected — show overlay for reconnect
@@ -751,27 +784,28 @@
     }
 
     term.onData((data) => {
-        if (loginState !== 'authenticated') return;
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
-        // Arrow keys
-        if (data === '\x1b[A') {
-            if (commandHistory.length === 0) return;
-            if (historyIndex === -1) { savedInput = inputBuffer; historyIndex = commandHistory.length - 1; }
-            else if (historyIndex > 0) historyIndex--;
-            replaceInput(commandHistory[historyIndex]);
-            return;
-        }
-        if (data === '\x1b[B') {
-            if (historyIndex === -1) return;
-            historyIndex++;
-            replaceInput(historyIndex >= commandHistory.length ? (historyIndex = -1, savedInput) : commandHistory[historyIndex]);
-            return;
+        // History navigation only available once authenticated
+        if (loginState === 'authenticated') {
+            if (data === '\x1b[A') {
+                if (commandHistory.length === 0) return;
+                if (historyIndex === -1) { savedInput = inputBuffer; historyIndex = commandHistory.length - 1; }
+                else if (historyIndex > 0) historyIndex--;
+                replaceInput(commandHistory[historyIndex]);
+                return;
+            }
+            if (data === '\x1b[B') {
+                if (historyIndex === -1) return;
+                historyIndex++;
+                replaceInput(historyIndex >= commandHistory.length ? (historyIndex = -1, savedInput) : commandHistory[historyIndex]);
+                return;
+            }
         }
 
         for (const ch of data) {
             if (ch === '\r') {
-                pushHistory(inputBuffer);
+                if (loginState === 'authenticated') pushHistory(inputBuffer);
                 sendCommand(inputBuffer);
                 term.write('\r\n');
                 inputBuffer  = '';
@@ -784,7 +818,10 @@
                 tabMatches = [];
                 continue;
             }
-            if (ch === '\t') { tabComplete(); continue; }
+            if (ch === '\t') {
+                if (loginState === 'authenticated') tabComplete();
+                continue;
+            }
             if (isPrintable(ch)) { inputBuffer += ch; term.write(ch); tabMatches = []; }
         }
     });
@@ -813,7 +850,7 @@
 
         loginBtn.disabled = true;
         loginBtn.textContent = 'Connecting…';
-        connect(name, password);
+        connect(name, password, loginNewUserCheck.checked);
     });
 
     reconnectBtn.addEventListener('click', () => {
