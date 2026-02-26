@@ -97,6 +97,14 @@ class AdminModuleTest {
         }
 
     @Test
+    fun `GET overview page shows zone activity table`() =
+        testAdmin {
+            val body = client.get("/") { header(HttpHeaders.Authorization, authHeader) }.bodyAsText()
+            assertTrue(body.contains("Zone Activity"), "Should show zone activity section")
+            assertTrue(body.contains("Staff Online"), "Should show staff online stat")
+        }
+
+    @Test
     fun `GET overview page shows Grafana link when configured`() =
         testAdmin {
             val body = client.get("/") { header(HttpHeaders.Authorization, authHeader) }.bodyAsText()
@@ -125,6 +133,15 @@ class AdminModuleTest {
             val resp = client.get("/players") { header(HttpHeaders.Authorization, authHeader) }
             assertEquals(HttpStatusCode.OK, resp.status)
             assertTrue(resp.bodyAsText().contains("Players"))
+        }
+
+    @Test
+    fun `GET players page includes filtering controls`() =
+        testAdmin {
+            val body = client.get("/players") { header(HttpHeaders.Authorization, authHeader) }.bodyAsText()
+            assertTrue(body.contains("Online only"))
+            assertTrue(body.contains("Staff only"))
+            assertTrue(body.contains("Sort"))
         }
 
     @Test
@@ -259,6 +276,13 @@ class AdminModuleTest {
         testAdmin {
             val resp = client.get("/world/nozone") { header(HttpHeaders.Authorization, authHeader) }
             assertEquals(HttpStatusCode.NotFound, resp.status)
+        }
+
+    @Test
+    fun `GET world page with non matching filter shows empty-state row`() =
+        testAdmin {
+            val body = client.get("/world?q=missing") { header(HttpHeaders.Authorization, authHeader) }.bodyAsText()
+            assertTrue(body.contains("No zones matched that filter."))
         }
 
     // ── JSON API - world ──────────────────────────────────────────────────────
