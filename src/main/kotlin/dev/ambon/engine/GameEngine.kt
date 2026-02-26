@@ -55,7 +55,6 @@ import dev.ambon.sharding.HandoffManager
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.InterEngineMessage
 import dev.ambon.sharding.PlayerLocationIndex
-import dev.ambon.sharding.PlayerSummary
 import dev.ambon.sharding.ZoneRegistry
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Timer
@@ -67,7 +66,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 import java.time.Clock
-import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 
@@ -139,14 +137,7 @@ class GameEngine(
             gmcpDirtyStatusEffects = gmcpDirtyStatusEffects,
             gmcpDirtyGroup = gmcpDirtyGroup,
             handoffManager = handoffManager,
-            removePendingWhoRequestsFor = { sid ->
-                val itr = pendingWhoRequests.iterator()
-                while (itr.hasNext()) {
-                    if (itr.next().value.sessionId == sid) {
-                        itr.remove()
-                    }
-                }
-            },
+            removePendingWhoRequestsFor = interEngineEventHandler::removePendingWhoRequestsFor,
             combatSystem = combatSystem,
             regenSystem = regenSystem,
             abilitySystem = abilitySystem,
@@ -269,15 +260,8 @@ class GameEngine(
             regenSystem = regenSystem,
             statusEffectSystem = statusEffectSystem,
             resolveRoomId = ::resolveRoomId,
-            onWhoResponse = { response ->
-                val pending = pendingWhoRequests[response.requestId] ?: return@InterEngineEventHandler
-                if (players.get(pending.sessionId) == null) {
-                    pendingWhoRequests.remove(response.requestId)
-                    return@InterEngineEventHandler
-                }
-                pending.respondedCount++
-                pending.remotePlayerNames += response.players.map(PlayerSummary::name)
-            },
+            clock = clock,
+            peerEngineCount = peerEngineCount,
             logger = log,
             metrics = metrics,
         )
@@ -566,7 +550,7 @@ class GameEngine(
             interEngineBus = interEngineBus,
             playerLocationIndex = playerLocationIndex,
             engineId = engineId,
-            onRemoteWho = if (interEngineBus != null) ::handleRemoteWho else null,
+            onRemoteWho = if (interEngineBus != null) interEngineEventHandler::handleRemoteWho else null,
         )
         CombatHandler(
             router = router,
@@ -664,21 +648,11 @@ class GameEngine(
         )
     }
 
-    private val pendingWhoRequests = mutableMapOf<String, PendingWhoRequest>()
-
     /**
      * Coroutine scope provided by [run]; used to launch background auth coroutines
      * without blocking the engine tick loop.
      */
     private lateinit var engineScope: CoroutineScope
-
-    private data class PendingWhoRequest(
-        val sessionId: SessionId,
-        val deadlineEpochMs: Long,
-        val expectedPeerCount: Int,
-        val remotePlayerNames: MutableSet<String> = linkedSetOf(),
-        var respondedCount: Int = 0,
-    )
 
     init {
         world.mobSpawns.forEach { spawn ->
@@ -755,7 +729,7 @@ class GameEngine(
                             handleHandoffTimeout(timedOut.sessionId)
                         }
                     }
-                    flushDueWhoResponses()
+                    interEngineEventHandler.flushDueWhoResponses()
                     metrics.recordTickPhase("inbound_drain", inboundPhaseSample)
 
                     // Phase 2: Simulation — mob movement, behavior, combat, status effects, regen.
@@ -851,49 +825,6 @@ class GameEngine(
     ): PhaseResult =
         phaseEventHandler.handlePhase(sessionId, targetHint)
 
-    private suspend fun handleRemoteWho(sessionId: SessionId) {
-        val bus = interEngineBus ?: return
-        val requestId = UUID.randomUUID().toString()
-        pendingWhoRequests[requestId] =
-            PendingWhoRequest(
-                sessionId = sessionId,
-                deadlineEpochMs = clock.millis() + WHO_RESPONSE_WAIT_MS,
-                expectedPeerCount = peerEngineCount(),
-            )
-        bus.broadcast(
-            InterEngineMessage.WhoRequest(
-                requestId = requestId,
-                replyToEngineId = engineId,
-            ),
-        )
-    }
-
-    private suspend fun flushDueWhoResponses(nowEpochMs: Long = clock.millis()) {
-        if (pendingWhoRequests.isEmpty()) return
-
-        val itr = pendingWhoRequests.iterator()
-        while (itr.hasNext()) {
-            val (_, pending) = itr.next()
-            if (nowEpochMs < pending.deadlineEpochMs) continue
-
-            if (players.get(pending.sessionId) != null) {
-                if (pending.remotePlayerNames.isNotEmpty()) {
-                    val names = pending.remotePlayerNames.sorted().joinToString(", ")
-                    outbound.send(OutboundEvent.SendInfo(pending.sessionId, "Also online: $names"))
-                }
-                if (pending.expectedPeerCount > 0 && pending.respondedCount < pending.expectedPeerCount) {
-                    outbound.send(
-                        OutboundEvent.SendInfo(
-                            pending.sessionId,
-                            "(Note: some game shards did not respond — results may be incomplete.)",
-                        ),
-                    )
-                }
-            }
-            itr.remove()
-        }
-    }
-
     private suspend fun handleHandoffTimeout(sessionId: SessionId) {
         if (players.get(sessionId) == null) return
         outbound.send(
@@ -966,7 +897,4 @@ class GameEngine(
         gmcpFlushHandler.flushDirtyGroup()
     }
 
-    companion object {
-        private const val WHO_RESPONSE_WAIT_MS = 300L
-    }
 }
