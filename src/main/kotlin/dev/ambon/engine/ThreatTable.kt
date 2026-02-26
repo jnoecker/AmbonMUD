@@ -39,8 +39,9 @@ class ThreatTable {
         isInRoom: (SessionId) -> Boolean,
     ): SessionId? =
         tables[mobId]
-            ?.filter { isInRoom(it.key) }
-            ?.maxByOrNull { it.value }
+            ?.entries
+            ?.maxByOrNull { if (isInRoom(it.key)) it.value else Double.NEGATIVE_INFINITY }
+            ?.takeIf { isInRoom(it.key) }
             ?.key
 
     fun getThreats(mobId: MobId): Map<SessionId, Double> = tables[mobId]?.toMap() ?: emptyMap()
