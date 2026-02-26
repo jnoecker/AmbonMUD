@@ -981,17 +981,17 @@ function App() {
           <header className="panel-header"><h2>World</h2><p>Room context, map, and local entities.</p></header>
 
           <article className="subpanel">
+            <h3>Mini-map</h3>
+            <canvas ref={mapCanvasRef} className="mini-map" width={320} height={220} aria-label="Visited room map" />
+          </article>
+
+          <article className="subpanel">
             <h3>Room</h3>
             <p className="room-title">{room.title}</p>
             <p className="room-description">{room.description || "No room description available yet."}</p>
             <div className="exit-cloud" aria-label="Current exits">
               {exits.length === 0 ? <span className="empty-note">No exits listed.</span> : exits.map(([direction]) => <span key={direction} className="exit-pill">{direction}</span>)}
             </div>
-          </article>
-
-          <article className="subpanel">
-            <h3>Mini-map</h3>
-            <canvas ref={mapCanvasRef} className="mini-map" width={320} height={220} aria-label="Visited room map" />
           </article>
 
           <article className="subpanel split-list">

@@ -540,11 +540,11 @@ body {
   .dashboard {
     flex: 1;
     min-height: 0;
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
-      "play world character"
-      "play world inventory";
+      "world play character"
+      "world play inventory";
   }
 
   .panel {
@@ -573,7 +573,7 @@ body {
   .panel-world {
     grid-area: world;
     display: grid;
-    grid-template-rows: auto minmax(0, 0.95fr) minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-rows: auto minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1.1fr);
   }
 
   .panel-character {
