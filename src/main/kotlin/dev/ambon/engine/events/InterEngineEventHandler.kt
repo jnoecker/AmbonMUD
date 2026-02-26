@@ -115,7 +115,6 @@ class InterEngineEventHandler(
         pending.remotePlayerNames += msg.players.map(PlayerSummary::name)
     }
 
-
     suspend fun onInterEngineMessage(msg: InterEngineMessage) {
         metrics.onInterEngineHandlerEvent()
         when (msg) {
@@ -201,7 +200,6 @@ class InterEngineEventHandler(
             }
 
             is InterEngineMessage.WhoResponse -> onWhoResponse(msg)
-
 
             is InterEngineMessage.KickRequest -> {
                 val targetSid = players.findSessionByName(msg.targetPlayerName) ?: return
