@@ -40,7 +40,6 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - World format contract: `docs/WORLD_YAML_SPEC.md`
 - Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence` (`PlayerRepository`, `YamlPlayerRepository`, `PostgresPlayerRepository`, `DatabaseManager`, `PlayersTable`)
 - Flyway schema migrations: `src/main/resources/db/migration` (V1–V7: players table through achievements)
-- Load-testing module: `swarm/` (`:swarm` Gradle subproject)
 - Tests: `src/test/kotlin` (~78 test files), fixtures in `src/test/resources/world`
 - Runtime player data (git-ignored): `data/players`
 
