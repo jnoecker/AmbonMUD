@@ -32,15 +32,15 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Redis connection management + JSON: `src/main/kotlin/dev/ambon/redis`
 - Session ID allocation + gateway lease: `src/main/kotlin/dev/ambon/session` (`AtomicSessionIdFactory`, `SnowflakeSessionIdFactory`, `GatewayIdLeaseManager`)
 - Metrics (Micrometer / Prometheus): `src/main/kotlin/dev/ambon/metrics` (`GameMetrics`, `MetricsHttpServer`)
-- Web demo client (static): `src/main/resources/web`
+- Web client v3 (static, current): `src/main/resources/web-v3` (built from `web-v3/` with `bun run build`); legacy assets remain in `src/main/resources/web` but are no longer served
 - Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
-- World content: `src/main/resources/world` (8 zones: hub, ruins, resume, tutorial, 4 training zones)
-- World format contract: `docs/world-zone-yaml-spec.md`
+- World content: `src/main/resources/world` (9 zones: ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements)
+- World format contract: `docs/WORLD_YAML_SPEC.md`
 - Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence` (`PlayerRepository`, `YamlPlayerRepository`, `PostgresPlayerRepository`, `DatabaseManager`, `PlayersTable`)
-- Flyway schema migrations: `src/main/resources/db/migration` (V1–V4: players table, mana, attributes/race/class, defaults)
+- Flyway schema migrations: `src/main/resources/db/migration` (V1–V7: players table through achievements)
 - Load-testing module: `swarm/` (`:swarm` Gradle subproject)
-- Tests: `src/test/kotlin` (~66 test files), fixtures in `src/test/resources/world`
+- Tests: `src/test/kotlin` (~78 test files), fixtures in `src/test/resources/world`
 - Runtime player data (git-ignored): `data/players`
 
 ## Architecture Contracts (Do Not Break)
@@ -88,7 +88,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 ### Commands
 1. Update parse behavior in `src/main/kotlin/dev/ambon/engine/commands/CommandParser.kt`.
 2. Add/adjust command variant in `src/main/kotlin/dev/ambon/engine/commands/CommandParser.kt` (`Command` sealed interface).
-3. Implement behavior in `src/main/kotlin/dev/ambon/engine/commands/CommandRouter.kt`.
+3. Implement behavior in the appropriate handler file under `src/main/kotlin/dev/ambon/engine/commands/handlers/` (e.g. `NavigationHandler`, `CombatHandler`, `ItemHandler`, etc.).
 4. Preserve prompt behavior for success/failure paths.
 5. Add/adjust parser tests and router/integration tests under `src/test/kotlin/dev/ambon/engine`.
 
@@ -104,7 +104,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 
 ### Configuration / demo client
 - Config schema changes: update `src/main/kotlin/dev/ambon/config/AppConfig.kt` and `src/main/resources/application.yaml` together; keep `validated()` strict.
-- Web demo client changes: update `src/main/resources/web` and sanity-check connect/disconnect against `KtorWebSocketTransport`.
+- Web client v3 changes: edit source in `web-v3/`, run `bun run build` to write assets to `src/main/resources/web-v3/`, sanity-check via `KtorWebSocketTransportTest`.
 - Runtime config overrides use `-Pconfig.<key>=<value>` (e.g. `./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG`). This works in all shells including Windows PowerShell.
 
 ### Persistence
@@ -145,11 +145,11 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - `GmcpEmitter.kt` sends structured JSON data via GMCP subnegotiation (13 packages: Char.Vitals, Char.Name, Room.Info, etc.).
 - Telnet GMCP negotiation is handled in `NetworkSession.kt` (WILL GMCP) and `TelnetLineDecoder.kt` (subnegotiation parsing).
 - WebSocket sessions auto-opt into all GMCP packages via `KtorWebSocketTransport.kt`.
-- When adding new GMCP packages, update `GmcpEmitter` and the web client's `app.js` handler.
+- When adding new GMCP packages, update `GmcpEmitter` and the v3 client's GMCP handler at `web-v3/src/gmcp/applyGmcpPackage.ts`.
 
 ### Staff/Admin commands
 - Add parse logic in `CommandParser.kt` (alongside existing admin block).
-- Gate with `if (!playerState.isStaff)` check in `CommandRouter.kt`.
+- Gate with `if (!playerState.isStaff)` check in `AdminHandler.kt`.
 - Add tests in `CommandRouterAdminTest`.
 
 ### Event bus / Redis / gRPC

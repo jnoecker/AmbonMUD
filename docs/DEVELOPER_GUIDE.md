@@ -173,7 +173,9 @@ docs/
 ├── ARCHITECTURE.md              # Design decisions & architectural principles
 ├── WORLD_YAML_SPEC.md           # Zone YAML format specification
 ├── ROADMAP.md                   # Planned features & roadmap
-└── reference/                   # Archive & reference docs
+├── WEB_CLIENT_V3.md             # Web client v3 architecture & gaps
+├── SCALING_STORY.md             # Scaling narrative (interview talk track)
+└── STYLE_GUIDE.md               # UI design system spec
 
 CLAUDE.md                         # Claude Code orientation (DO NOT MODIFY)
 AGENTS.md                         # Engineering playbook (DO NOT MODIFY)
@@ -366,7 +368,7 @@ Serializable DTO; same fields as `PlayerState` plus timestamps.
 
 ### AbilitySystem
 
-**File:** `src/main/kotlin/dev/ambon/engine/AbilitySystem.kt`
+**File:** `src/main/kotlin/dev/ambon/engine/abilities/AbilitySystem.kt`
 
 - **102 abilities** across 4 classes (25+ per class, levels 1–50)
 - Mana pool; mana cost deducted on cast
@@ -681,7 +683,7 @@ ambonMUD:
 3. Reference in `application.yaml` under `world.resources`
 4. Use `WorldLoader` validation to catch errors early
 
-See [WORLD_YAML_SPEC.md](../WORLD_YAML_SPEC.md) for full schema.
+See [WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md) for full schema.
 
 ### Run with PostgreSQL Backend
 
@@ -790,7 +792,7 @@ git push -u origin feature/my-feature
 ## Next Steps
 
 - Read [ARCHITECTURE.md](../docs/ARCHITECTURE.md) for design rationale
-- Read [WORLD_YAML_SPEC.md](../WORLD_YAML_SPEC.md) to understand zone creation
+- Read [WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md) to understand zone creation
 - Read [CLAUDE.md](../CLAUDE.md) for architectural contracts and change playbooks
 - Explore `src/main/kotlin/dev/ambon/engine/` to understand the engine
 - Run the full test suite to build confidence: `./gradlew ktlintCheck test`
