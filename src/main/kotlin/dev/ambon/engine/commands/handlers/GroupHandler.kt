@@ -39,9 +39,7 @@ class GroupHandler(
                 is Command.GroupCmd.Kick -> groupSystem.kick(sessionId, cmd.target)
                 Command.GroupCmd.List -> groupSystem.list(sessionId)
             }
-        if (err != null) {
-            outbound.send(OutboundEvent.SendError(sessionId, err))
-        }
+        outbound.sendIfError(sessionId, err)
     }
 
     private suspend fun handleGtell(
@@ -52,9 +50,6 @@ class GroupHandler(
             outbound.send(OutboundEvent.SendError(sessionId, "Groups are not available."))
             return
         }
-        val err = groupSystem.gtell(sessionId, cmd.message)
-        if (err != null) {
-            outbound.send(OutboundEvent.SendError(sessionId, err))
-        }
+        outbound.sendIfError(sessionId, groupSystem.gtell(sessionId, cmd.message))
     }
 }

@@ -45,10 +45,7 @@ class DialogueQuestHandler(
             outbound.send(OutboundEvent.SendError(sessionId, "Nobody here wants to talk."))
             return
         }
-        val err = dialogueSystem.startConversation(sessionId, cmd.target)
-        if (err != null) {
-            outbound.send(OutboundEvent.SendError(sessionId, err))
-        }
+        outbound.sendIfError(sessionId, dialogueSystem.startConversation(sessionId, cmd.target))
         if (questSystem != null && me != null) {
             val targetLower = cmd.target.trim().lowercase()
             val mob = mobs.mobsInRoom(me.roomId).firstOrNull { m -> m.name.lowercase().contains(targetLower) }
@@ -70,10 +67,7 @@ class DialogueQuestHandler(
             outbound.send(OutboundEvent.SendText(sessionId, "Huh?"))
             return
         }
-        val err = dialogueSystem.selectChoice(sessionId, cmd.optionNumber)
-        if (err != null) {
-            outbound.send(OutboundEvent.SendError(sessionId, err))
-        }
+        outbound.sendIfError(sessionId, dialogueSystem.selectChoice(sessionId, cmd.optionNumber))
     }
 
     private suspend fun handleQuestLog(sessionId: SessionId) {
@@ -96,8 +90,7 @@ class DialogueQuestHandler(
         if (questSystem == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Quest system is not available."))
         } else {
-            val err = questSystem.abandonQuest(sessionId, cmd.nameHint)
-            if (err != null) outbound.send(OutboundEvent.SendError(sessionId, err))
+            outbound.sendIfError(sessionId, questSystem.abandonQuest(sessionId, cmd.nameHint))
         }
     }
 
@@ -127,8 +120,7 @@ class DialogueQuestHandler(
                     ),
                 )
             } else {
-                val err = questSystem.acceptQuest(sessionId, matchingQuest.id)
-                if (err != null) outbound.send(OutboundEvent.SendError(sessionId, err))
+                outbound.sendIfError(sessionId, questSystem.acceptQuest(sessionId, matchingQuest.id))
             }
         }
     }
