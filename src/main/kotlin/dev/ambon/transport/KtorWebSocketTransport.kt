@@ -14,6 +14,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -111,6 +112,16 @@ internal fun Application.ambonMUDWebModule(
                 metrics = metrics,
             )
         }
+
+        get("/v3") {
+            call.respondRedirect("/v3/")
+        }
+
+        staticResources(
+            remotePath = "/v3",
+            basePackage = "web-v3",
+            index = "index.html",
+        )
 
         staticResources(
             remotePath = "/",
