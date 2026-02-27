@@ -5,7 +5,7 @@ AmbonMUD
 
 **Key Features**
 - 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **25+ unique abilities** per class, distributed across 50 levels
-- 🌍 **8 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
+- 🌍 **9 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
 - ⚔️ **Real-time combat system** with attribute-based damage, dodge mechanics, and tactical status effects (DoT, HoT, STUN, ROOT, SHIELD, buffs/debuffs)
 - 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands
 - 🔌 **Dual transports**: telnet (NAWS/TTYPE/GMCP negotiation) + browser WebSocket with GMCP-aware UI panels
@@ -18,7 +18,7 @@ AmbonMUD
 
 **Current State** (Feb 2026)
 - ✅ All 5 scalability phases complete (bus abstraction, async persistence, Redis, gRPC gateway, zone sharding)
-- ✅ 102 abilities across 4 classes (newly expanded this session)
+- ✅ 102 abilities across 4 classes (25+ per class, levels 1–50)
 - ✅ GMCP support with 13 data packages
 - ✅ Quest system (basic implementation; see [roadmap](docs/ROADMAP.md))
 - ✅ Achievement system, group/party system, dialogue trees, NPC behavior trees
@@ -103,7 +103,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 
 **World files** live in `src/main/resources/world/` and are loaded by `WorldLoader`. Each YAML file describes one zone; multiple zones are merged into a single world.
 
-**Current Zones (8 regions):**
+**Current Zones (9 regions):**
 | Zone | Description |
 |------|-------------|
 | `tutorial_glade` | Starting area for new players |
@@ -114,6 +114,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 | `low_training_highlands` | Low-level training zone (highlands) |
 | `low_training_mines` | Low-level training zone (mines) |
 | `low_training_barrens` | Low-level training zone (barrens) |
+| `achievements` | Achievement trigger zone |
 
 **Zone YAML Format**
 ```yaml
@@ -210,8 +211,8 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#infrastructure) for detailed se
 
 **Architecture & Design**
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) — Architectural principles and design decisions
-- [docs/engine-sharding-design.md](docs/historical/engine-sharding-design.md) — Zone-based sharding technical design
 - [docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) — Zone YAML format specification
+- [docs/WEB_CLIENT_V3.md](docs/WEB_CLIENT_V3.md) — Web client v3 architecture, wiring, and known gaps
 
 **Developer Resources**
 - [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) — Complete onboarding from zero to productive
