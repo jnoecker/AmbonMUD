@@ -132,7 +132,7 @@ bun run build
 
 ## CI Status
 
-Current CI (`.github/workflows/ci.yml`) runs only `./gradlew ktlintCheck test`. No v3 frontend lint/build job is wired into CI yet.
+CI (`.github/workflows/ci.yml`) runs two parallel jobs: `test` (`./gradlew ktlintCheck test`) and `frontend` (`bun install --frozen-lockfile && bun run lint && bun run build`). The frontend job catches lint errors, TypeScript errors, and build failures on every push and PR.
 
 ---
 
@@ -141,8 +141,7 @@ Current CI (`.github/workflows/ci.yml`) runs only `./gradlew ktlintCheck test`. 
 ### Known Gaps
 
 1. **Unused GMCP surface** — Server emits `Group.Info`, `Char.Achievements`, `Core.Ping`, `Char.StatusVars`; none are rendered in v3 yet.
-2. **No frontend CI** — Frontend breakage can merge undetected.
-3. **Local dev ergonomics** — v3 dev server setup does not document a WS proxy to backend `/ws`; local iteration may require manual setup.
+2. **Local dev ergonomics** — v3 dev server setup does not document a WS proxy to backend `/ws`; local iteration may require manual setup.
 4. **Limited frontend test coverage** — UI and GMCP reducer regressions rely on manual testing; no dedicated automated tests for v3 React behavior.
 5. **Heuristic client map** — Map graph is inferred from observed exits/room IDs; no persistence or reconciliation across reconnects.
 6. **Large frontend bundle** — Main JS chunk exceeds 500 kB; initial load can degrade on slower clients.
@@ -151,10 +150,9 @@ Current CI (`.github/workflows/ci.yml`) runs only `./gradlew ktlintCheck test`. 
 
 1. **`Group.Info` party panel** — Best first GMCP feature: compact party widget with reducer support and manual test checklist.
 2. **Frontend tests for GMCP handling** — Unit tests for parser + package mapping (`applyGmcpPackage`); smoke tests for key render states.
-3. **Wire frontend into CI** — Add a CI step in `web-v3/`: install deps → lint → typecheck/build.
-4. **Local dev workflow docs** — Document exact commands and topology for running backend + v3 dev server together; document how `/ws` is reached during dev.
-5. **Expand GMCP package support** — `Char.Achievements`, then `Core.Ping` telemetry.
-6. **Bundle size reduction** — Route/panel-level lazy loading; manual chunking for terminal-heavy dependencies.
+3. **Local dev workflow docs** — Document exact commands and topology for running backend + v3 dev server together; document how `/ws` is reached during dev.
+4. **Expand GMCP package support** — `Char.Achievements`, then `Core.Ping` telemetry.
+5. **Bundle size reduction** — Route/panel-level lazy loading; manual chunking for terminal-heavy dependencies.
 
 ### Definition of Done for New v3 Features
 
