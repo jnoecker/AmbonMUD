@@ -31,6 +31,12 @@ export interface RoomState {
 export interface ItemSummary {
   id: string;
   name: string;
+  slot: string | null;
+}
+
+export interface RoomItem {
+  id: string;
+  name: string;
 }
 
 export interface RoomPlayer {

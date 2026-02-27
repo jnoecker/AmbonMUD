@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.engine.CombatSystem
@@ -141,6 +142,7 @@ class ItemHandler(
         }
         outbound.send(OutboundEvent.SendInfo(sessionId, "You pick up ${moved.item.displayName}."))
         gmcpEmitter?.sendCharItemsAdd(sessionId, moved)
+        syncRoomItemsGmcp(roomId)
         questSystem?.onItemCollected(sessionId, moved)
         outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
@@ -159,6 +161,7 @@ class ItemHandler(
         }
         outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${moved.item.displayName}."))
         gmcpEmitter?.sendCharItemsRemove(sessionId, moved)
+        syncRoomItemsGmcp(roomId)
         outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
@@ -284,6 +287,14 @@ class ItemHandler(
             for (ability in newAbilities) {
                 outbound.send(OutboundEvent.SendText(sessionId, "You have learned ${ability.displayName}!"))
             }
+        }
+    }
+
+    private suspend fun syncRoomItemsGmcp(roomId: RoomId) {
+        val emitter = gmcpEmitter ?: return
+        val roomItems = items.itemsInRoom(roomId)
+        for (player in players.playersInRoom(roomId)) {
+            emitter.sendRoomItems(player.sessionId, roomItems)
         }
     }
 }

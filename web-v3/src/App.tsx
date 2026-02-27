@@ -14,6 +14,7 @@ import {
   EMPTY_ROOM,
   EMPTY_VITALS,
   MAX_VISIBLE_EFFECTS,
+  MAX_VISIBLE_WORLD_ITEMS,
   MAX_VISIBLE_WORLD_MOBS,
   MAX_VISIBLE_WORLD_PLAYERS,
   SLOT_ORDER,
@@ -29,6 +30,7 @@ import type {
   MobileTab,
   PopoutPanel,
   RoomMob,
+  RoomItem,
   RoomPlayer,
   RoomState,
   StatusEffect,
@@ -100,6 +102,7 @@ function App() {
   const [room, setRoom] = useState<RoomState>(EMPTY_ROOM);
   const [players, setPlayers] = useState<RoomPlayer[]>([]);
   const [mobs, setMobs] = useState<RoomMob[]>([]);
+  const [roomItems, setRoomItems] = useState<RoomItem[]>([]);
   const [effects, setEffects] = useState<StatusEffect[]>([]);
   const [inventory, setInventory] = useState<ItemSummary[]>([]);
   const [equipment, setEquipment] = useState<Record<string, ItemSummary>>({});
@@ -146,6 +149,7 @@ function App() {
     setRoom(EMPTY_ROOM);
     setPlayers([]);
     setMobs([]);
+    setRoomItems([]);
     setEffects([]);
     setInventory([]);
     setEquipment({});
@@ -164,6 +168,7 @@ function App() {
           setVitals,
           setCharacter,
           setRoom,
+          setRoomItems,
           setInventory,
           setEquipment,
           setPlayers,
@@ -344,6 +349,8 @@ function App() {
   const hiddenPlayersCount = Math.max(0, players.length - visiblePlayers.length);
   const visibleMobs = mobs.slice(0, MAX_VISIBLE_WORLD_MOBS);
   const hiddenMobsCount = Math.max(0, mobs.length - visibleMobs.length);
+  const visibleRoomItems = roomItems.slice(0, MAX_VISIBLE_WORLD_ITEMS);
+  const hiddenRoomItemsCount = Math.max(0, roomItems.length - visibleRoomItems.length);
   const visibleEffects = effects.slice(0, MAX_VISIBLE_EFFECTS);
   const hiddenEffectsCount = Math.max(0, effects.length - visibleEffects.length);
   const displayRace = character.race ? titleCaseWords(character.race) : "";
@@ -491,6 +498,9 @@ function App() {
           hiddenPlayersCount={hiddenPlayersCount}
           visibleMobs={visibleMobs}
           hiddenMobsCount={hiddenMobsCount}
+          roomItems={roomItems}
+          visibleRoomItems={visibleRoomItems}
+          hiddenRoomItemsCount={hiddenRoomItemsCount}
           onOpenMap={() => setActivePopout("map")}
           onOpenRoom={() => setActivePopout("room")}
           onMove={(direction) => {
@@ -499,6 +509,10 @@ function App() {
           }}
           onAttackMob={(mobName) => {
             sendCommand(`kill ${mobName}`, true);
+            focusComposer();
+          }}
+          onPickUpItem={(itemName) => {
+            sendCommand(`get ${itemName}`, true);
             focusComposer();
           }}
         />
@@ -546,6 +560,19 @@ function App() {
         equipment={equipment}
         equipmentSlots={equipmentSlots}
         mapCanvasRef={mapCanvasRef}
+        canManageItems={connected && hasCharacterProfile}
+        onWearItem={(itemName) => {
+          sendCommand(`wear ${itemName}`, true);
+          focusComposer();
+        }}
+        onDropItem={(itemName) => {
+          sendCommand(`drop ${itemName}`, true);
+          focusComposer();
+        }}
+        onRemoveItem={(slot) => {
+          sendCommand(`remove ${slot}`, true);
+          focusComposer();
+        }}
         onClose={() => setActivePopout(null)}
       />
 
