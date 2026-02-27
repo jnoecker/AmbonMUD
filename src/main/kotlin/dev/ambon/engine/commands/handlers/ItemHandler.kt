@@ -7,6 +7,7 @@ import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
+import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
@@ -14,21 +15,20 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.metrics.GameMetrics
 
 class ItemHandler(
-    router: CommandRouter,
     ctx: EngineContext,
     private val questSystem: QuestSystem? = null,
     private val abilitySystem: AbilitySystem? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val progression: PlayerProgression = PlayerProgression(),
-) {
+) : CommandHandler {
     private val players = ctx.players
     private val items = ctx.items
     private val combat = ctx.combat
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
 
-    init {
+    override fun register(router: CommandRouter) {
         router.on<Command.Inventory> { sid, _ -> handleInventory(sid) }
         router.on<Command.Equipment> { sid, _ -> handleEquipment(sid) }
         router.on<Command.Wear> { sid, cmd -> handleWear(sid, cmd) }
