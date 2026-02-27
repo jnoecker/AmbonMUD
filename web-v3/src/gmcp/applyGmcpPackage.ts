@@ -1,5 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import type {
+  ChatChannel,
+  ChatMessage,
   CharacterInfo,
   ItemSummary,
   RoomMob,
@@ -8,6 +10,7 @@ import type {
   StatusEffect,
   Vitals,
 } from "../types";
+import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
 
 interface GmcpContext {
@@ -19,7 +22,14 @@ interface GmcpContext {
   setPlayers: Dispatch<SetStateAction<RoomPlayer[]>>;
   setMobs: Dispatch<SetStateAction<RoomMob[]>>;
   setEffects: Dispatch<SetStateAction<StatusEffect[]>>;
+  setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>) => void;
+}
+
+const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc"]);
+
+function isChatChannel(value: string): value is ChatChannel {
+  return CHAT_CHANNEL_SET.has(value as ChatChannel);
 }
 
 export function applyGmcpPackage(
@@ -224,6 +234,34 @@ export function applyGmcpPackage(
             remainingMs: Math.max(0, safeNumber(entry.remainingMs, 0)),
           })),
       );
+      break;
+    }
+
+    case "Comm.Channel": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const incomingChannel = typeof packet.channel === "string" ? packet.channel.toLowerCase() : "";
+      const mappedChannel = incomingChannel === "whisper" ? "tell" : incomingChannel;
+      if (!isChatChannel(mappedChannel)) break;
+
+      const sender = typeof packet.sender === "string" && packet.sender.length > 0 ? packet.sender : "Unknown";
+      const message = typeof packet.message === "string" ? packet.message.trim() : "";
+      if (message.length === 0) break;
+
+      const entry: ChatMessage = {
+        id: `${Date.now()}-${Math.random()}`,
+        channel: mappedChannel,
+        sender,
+        message,
+        receivedAt: Date.now(),
+      };
+
+      ctx.setChatByChannel((prev) => {
+        const next = [...prev[mappedChannel], entry];
+        if (next.length > MAX_CHAT_MESSAGES_PER_CHANNEL) {
+          next.splice(0, next.length - MAX_CHAT_MESSAGES_PER_CHANNEL);
+        }
+        return { ...prev, [mappedChannel]: next };
+      });
       break;
     }
 

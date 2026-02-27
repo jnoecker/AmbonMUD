@@ -1,4 +1,5 @@
 import type {
+  ChatChannel,
   CharacterInfo,
   MobileTab,
   RoomState,
@@ -19,8 +20,53 @@ export const SLOT_ORDER = ["head", "body", "hand"];
 export const TABS: Array<{ id: MobileTab; label: string }> = [
   { id: "play", label: "Play" },
   { id: "world", label: "World" },
+  { id: "chat", label: "Social" },
   { id: "character", label: "Character" },
 ];
+export const CHAT_CHANNELS: Array<{
+  id: ChatChannel;
+  label: string;
+  requiresTarget: boolean;
+  messagePlaceholder: string;
+  targetPlaceholder: string | null;
+}> = [
+  {
+    id: "say",
+    label: "Say",
+    requiresTarget: false,
+    messagePlaceholder: "Say something in the room",
+    targetPlaceholder: null,
+  },
+  {
+    id: "tell",
+    label: "Tell",
+    requiresTarget: true,
+    messagePlaceholder: "Private message",
+    targetPlaceholder: "Player name",
+  },
+  {
+    id: "gossip",
+    label: "Gossip",
+    requiresTarget: false,
+    messagePlaceholder: "Global gossip message",
+    targetPlaceholder: null,
+  },
+  {
+    id: "shout",
+    label: "Shout",
+    requiresTarget: false,
+    messagePlaceholder: "Shout to your zone",
+    targetPlaceholder: null,
+  },
+  {
+    id: "ooc",
+    label: "OOC",
+    requiresTarget: false,
+    messagePlaceholder: "Out of character message",
+    targetPlaceholder: null,
+  },
+];
+export const MAX_CHAT_MESSAGES_PER_CHANNEL = 120;
 
 export const COMMANDS = [
   "look", "north", "south", "east", "west", "up", "down", "say", "tell", "whisper", "shout",
