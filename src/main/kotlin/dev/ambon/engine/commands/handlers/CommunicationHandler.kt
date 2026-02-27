@@ -45,10 +45,7 @@ class CommunicationHandler(
             val members = players.playersInRoom(roomId)
 
             outbound.send(OutboundEvent.SendText(sessionId, "You say: ${cmd.message}"))
-            for (other in members) {
-                if (other == me) continue
-                outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} says: ${cmd.message}"))
-            }
+            broadcastToRoomExcept(roomId, sessionId, "${me.name} says: ${cmd.message}", players, outbound)
             for (member in members) {
                 gmcpEmitter?.sendCommChannel(member.sessionId, "say", me.name, cmd.message)
             }
@@ -61,10 +58,7 @@ class CommunicationHandler(
     ) {
         players.withPlayer(sessionId) { me ->
             val roomId = me.roomId
-            val members = players.playersInRoom(roomId)
-            for (other in members) {
-                outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} ${cmd.message}"))
-            }
+            broadcastToRoom(roomId, "${me.name} ${cmd.message}", players, outbound)
         }
     }
 
@@ -200,10 +194,7 @@ class CommunicationHandler(
                 return
             }
             val roomId = me.roomId
-            val members = players.playersInRoom(roomId)
-            for (other in members) {
-                outbound.send(OutboundEvent.SendText(other.sessionId, cmd.message))
-            }
+            broadcastToRoom(roomId, cmd.message, players, outbound)
         }
     }
 
