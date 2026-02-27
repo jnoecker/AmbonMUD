@@ -1,4 +1,4 @@
-import type { FormEvent, KeyboardEvent, RefObject } from "react";
+import type { FormEvent, KeyboardEvent, MouseEvent, RefObject } from "react";
 import { DirectionIcon, FleeIcon } from "../Icons";
 import { isDirection } from "../isDirection";
 
@@ -8,8 +8,10 @@ interface PlayPanelProps {
   hasRoomDetails: boolean;
   exits: Array<[string, string]>;
   terminalHostRef: RefObject<HTMLDivElement | null>;
+  commandInputRef: RefObject<HTMLInputElement | null>;
   composerValue: string;
   commandPlaceholder: string;
+  onTerminalMouseDown: (event: MouseEvent<HTMLDivElement>) => void;
   onComposerChange: (value: string) => void;
   onComposerKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   onSubmitComposer: (event: FormEvent<HTMLFormElement>) => void;
@@ -23,8 +25,10 @@ export function PlayPanel({
   hasRoomDetails,
   exits,
   terminalHostRef,
+  commandInputRef,
   composerValue,
   commandPlaceholder,
+  onTerminalMouseDown,
   onComposerChange,
   onComposerKeyDown,
   onSubmitComposer,
@@ -37,10 +41,27 @@ export function PlayPanel({
       {preLogin && (
         <section className="prelogin-banner" aria-label="Login guidance">
           <p className="prelogin-banner-title">Welcome back. Your session is connected.</p>
-          <p className="prelogin-banner-text">Use the terminal to enter your character name and password. World and character panels will populate right after login.</p>
+          <p className="prelogin-banner-text">Use the command bar below to enter your character name and password. World and character panels will populate right after login.</p>
         </section>
       )}
-      <div className="terminal-card"><div ref={terminalHostRef} className="terminal-host" aria-label="AmbonMUD terminal" /></div>
+      <div className="terminal-card" onMouseDown={onTerminalMouseDown}><div ref={terminalHostRef} className="terminal-host" aria-label="AmbonMUD terminal" /></div>
+
+      <form className="command-form" onSubmit={onSubmitComposer}>
+        <label htmlFor="command-input" className="sr-only">Command input</label>
+        <input
+          ref={commandInputRef}
+          id="command-input"
+          className="command-input"
+          type="text"
+          value={composerValue}
+          onChange={(event) => onComposerChange(event.target.value)}
+          onKeyDown={onComposerKeyDown}
+          placeholder={commandPlaceholder}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        <button type="submit" className="soft-button" disabled={!connected}>Send</button>
+      </form>
 
       <div className="movement-grid" role="toolbar" aria-label="Room exits">
         {exits.length === 0 ? (
@@ -75,22 +96,6 @@ export function PlayPanel({
           </button>
         )}
       </div>
-
-      <form className="command-form" onSubmit={onSubmitComposer}>
-        <label htmlFor="command-input" className="sr-only">Command input</label>
-        <input
-          id="command-input"
-          className="command-input"
-          type="text"
-          value={composerValue}
-          onChange={(event) => onComposerChange(event.target.value)}
-          onKeyDown={onComposerKeyDown}
-          placeholder={commandPlaceholder}
-          autoComplete="off"
-          spellCheck={false}
-        />
-        <button type="submit" className="soft-button" disabled={!connected}>Send</button>
-      </form>
     </section>
   );
 }

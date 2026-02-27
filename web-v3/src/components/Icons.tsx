@@ -164,6 +164,16 @@ export function FleeIcon({ className }: { className?: string }) {
   );
 }
 
+export function TellIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M5.8 7.2h12.4A2.8 2.8 0 0 1 21 10v5a2.8 2.8 0 0 1-2.8 2.8H10l-4.2 2.9v-2.9H5.8A2.8 2.8 0 0 1 3 15v-5a2.8 2.8 0 0 1 2.8-2.8Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 12.3h7.9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
+      <path d="M8 9.8h4.6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
+    </svg>
+  );
+}
+
 export function MapScrollIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
