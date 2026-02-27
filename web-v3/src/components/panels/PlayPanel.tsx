@@ -46,6 +46,23 @@ export function PlayPanel({
       )}
       <div className="terminal-card" onMouseDown={onTerminalMouseDown}><div ref={terminalHostRef} className="terminal-host" aria-label="AmbonMUD terminal" /></div>
 
+      <form className="command-form" onSubmit={onSubmitComposer}>
+        <label htmlFor="command-input" className="sr-only">Command input</label>
+        <input
+          ref={commandInputRef}
+          id="command-input"
+          className="command-input"
+          type="text"
+          value={composerValue}
+          onChange={(event) => onComposerChange(event.target.value)}
+          onKeyDown={onComposerKeyDown}
+          placeholder={commandPlaceholder}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        <button type="submit" className="soft-button" disabled={!connected}>Send</button>
+      </form>
+
       <div className="movement-grid" role="toolbar" aria-label="Room exits">
         {exits.length === 0 ? (
           preLogin ? null : <span className="empty-note">{connected ? "No exits available." : "Reconnect to view exits."}</span>
@@ -79,23 +96,6 @@ export function PlayPanel({
           </button>
         )}
       </div>
-
-      <form className="command-form" onSubmit={onSubmitComposer}>
-        <label htmlFor="command-input" className="sr-only">Command input</label>
-        <input
-          ref={commandInputRef}
-          id="command-input"
-          className="command-input"
-          type="text"
-          value={composerValue}
-          onChange={(event) => onComposerChange(event.target.value)}
-          onKeyDown={onComposerKeyDown}
-          placeholder={commandPlaceholder}
-          autoComplete="off"
-          spellCheck={false}
-        />
-        <button type="submit" className="soft-button" disabled={!connected}>Send</button>
-      </form>
     </section>
   );
 }

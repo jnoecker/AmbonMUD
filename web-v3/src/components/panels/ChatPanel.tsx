@@ -52,6 +52,7 @@ export function ChatPanel({
   onSendMessage,
 }: ChatPanelProps) {
   const feedRef = useRef<HTMLDivElement | null>(null);
+  const messageInputRef = useRef<HTMLInputElement | null>(null);
   const [draftByChannel, setDraftByChannel] = useState<Record<ChatChannel, string>>(createEmptyDrafts);
   const [targets, setTargets] = useState<Record<"tell", string>>(createEmptyTargets);
   const [activeSocialTab, setActiveSocialTab] = useState<SocialSubTab>(activeChannel);
@@ -136,6 +137,7 @@ export function ChatPanel({
                             setTargets((prev) => ({ ...prev, tell: target }));
                             setActiveSocialTab("tell");
                             onChannelChange("tell");
+                            window.requestAnimationFrame(() => messageInputRef.current?.focus());
                           }}
                         >
                           <TellIcon className="who-tell-icon" />
@@ -206,6 +208,7 @@ export function ChatPanel({
               />
             )}
             <input
+              ref={messageInputRef}
               className="chat-input"
               type="text"
               value={draft}

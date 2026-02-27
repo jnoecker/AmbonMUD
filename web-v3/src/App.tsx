@@ -346,7 +346,8 @@ function App() {
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const command = composerValue.trim();
+    const liveValue = composerInputRef.current?.value ?? composerValue;
+    const command = liveValue.trim();
     if (!command) return;
     sendCommand(command, true);
     setComposerValue("");
@@ -354,9 +355,11 @@ function App() {
   };
 
   const onComposerKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    const liveValue = event.currentTarget.value;
+
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      applyComposerHistoryUp(composerValue, setComposerValue);
+      applyComposerHistoryUp(liveValue, setComposerValue);
       return;
     }
 
@@ -368,7 +371,7 @@ function App() {
 
     if (event.key === "Tab") {
       event.preventDefault();
-      applyComposerCompletion(composerValue, setComposerValue);
+      applyComposerCompletion(liveValue, setComposerValue);
       return;
     }
 
