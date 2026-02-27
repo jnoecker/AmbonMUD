@@ -129,7 +129,7 @@ function App() {
     const fitAddon = fitAddonRef.current;
     const host = terminalHostRef.current;
     if (!term || !fitAddon || !host) return;
-    if (host.clientWidth < 220 || host.clientHeight < 120) return;
+    if (host.clientWidth <= 0 || host.clientHeight <= 0) return;
 
     const width = host.clientWidth;
     const nextFontSize = width < 560 ? 12 : width < 760 ? 13 : 14;
@@ -244,9 +244,13 @@ function App() {
       drawMap();
     });
     resizeObserver.observe(terminalHostRef.current);
+    const firstFrameFit = window.requestAnimationFrame(() => fitTerminal());
+    const delayedFit = window.setTimeout(() => fitTerminal(), 80);
 
     return () => {
       resizeObserver.disconnect();
+      window.cancelAnimationFrame(firstFrameFit);
+      window.clearTimeout(delayedFit);
       term.dispose();
       fitAddonRef.current = null;
       terminalRef.current = null;
@@ -273,9 +277,29 @@ function App() {
 
   useEffect(() => {
     if (activeTab !== "play") return;
-    const handle = window.requestAnimationFrame(() => fitTerminal());
-    return () => window.cancelAnimationFrame(handle);
-  }, [activeTab, fitTerminal]);
+    const frameFit = window.requestAnimationFrame(() => fitTerminal());
+    const delayedFit = window.setTimeout(() => fitTerminal(), 90);
+    return () => {
+      window.cancelAnimationFrame(frameFit);
+      window.clearTimeout(delayedFit);
+    };
+  }, [activeTab, connected, character.name, room.id, room.title, fitTerminal]);
+
+  useEffect(() => {
+    const fontSet = document.fonts;
+    if (!fontSet) return;
+    let cancelled = false;
+    const refit = () => {
+      if (cancelled) return;
+      fitTerminal();
+    };
+    fontSet.ready.then(refit).catch(() => undefined);
+    fontSet.addEventListener("loadingdone", refit);
+    return () => {
+      cancelled = true;
+      fontSet.removeEventListener("loadingdone", refit);
+    };
+  }, [fitTerminal]);
 
   useEffect(() => {
     if (!activePopout) return;
