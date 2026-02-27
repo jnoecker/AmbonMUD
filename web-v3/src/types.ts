@@ -12,6 +12,7 @@ export interface Vitals {
   xpIntoLevel: number;
   xpToNextLevel: number | null;
   gold: number;
+  inCombat: boolean;
 }
 
 export interface CharacterInfo {
@@ -76,6 +77,19 @@ export interface ChatMessage {
   channel: ChatChannel;
   sender: string;
   message: string;
+  receivedAt: number;
+}
+
+export interface SkillSummary {
+  id: string;
+  name: string;
+  description: string;
+  manaCost: number;
+  cooldownMs: number;
+  cooldownRemainingMs: number;
+  levelRequired: number;
+  targetType: string;
+  classRestriction: string | null;
   receivedAt: number;
 }
 

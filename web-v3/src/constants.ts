@@ -72,7 +72,7 @@ export const MAX_CHAT_MESSAGES_PER_CHANNEL = 120;
 export const COMMANDS = [
   "look", "north", "south", "east", "west", "up", "down", "say", "tell", "whisper", "shout",
   "gossip", "ooc", "emote", "pose", "who", "score", "inventory", "equipment", "exits", "get", "drop",
-  "wear", "remove", "use", "give", "kill", "flee", "cast", "spells", "abilities", "effects", "help",
+  "wear", "remove", "use", "give", "kill", "flee", "cast", "spells", "abilities", "skills", "effects", "help",
   "phase", "gold", "list", "buy", "sell", "quit", "clear", "colors",
 ];
 
@@ -95,6 +95,7 @@ export const EMPTY_VITALS: Vitals = {
   xpIntoLevel: 0,
   xpToNextLevel: 0,
   gold: 0,
+  inCombat: false,
 };
 
 export const EMPTY_CHAR: CharacterInfo = { name: "-", race: "", className: "", level: null };
