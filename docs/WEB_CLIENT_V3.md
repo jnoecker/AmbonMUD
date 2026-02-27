@@ -8,6 +8,37 @@ The v3 web client is a modular React + Vite + TypeScript single-page application
 
 ---
 
+## Visual Progression
+
+Five generations of the client, from the earliest telnet proof-of-concept to the current v3 UI.
+
+### v0 — Telnet (PuTTY)
+Plain telnet, no web client. The very first proof of concept running as "QuickMUD".
+
+![v0 telnet](screenshots/v0-telnet.png)
+
+### v0.5 — Telnet with ANSI
+Same telnet client with ANSI color support enabled — the first sign of life for the room/look system.
+
+![v0.5 telnet with ANSI](screenshots/v0-5-telnet-ansi.png)
+
+### v1 — First Web Client
+A single-page web terminal. Dark background, ASCII art login banner, basic Connected/Reconnect buttons. No panels.
+
+![v1 web client](screenshots/v1-web-client.png)
+
+### v2 — Web Client + Panels
+Added a character sidebar (HP/mana/XP bars), a mini-map (dot tracking visited rooms), and a room info panel on the right.
+
+![v2 web client with panels](screenshots/v2-web-panels.png)
+
+### v3 — Current (Surreal Gentle Magic)
+Full redesign: dark glassmorphism panels, banner artwork, tabbed Play/Character/Social/World layout, GMCP-driven skills and combat view.
+
+![v3 web client](screenshots/v3-web-client.jpg)
+
+---
+
 ## High-Level Wiring
 
 The server serves v3 static assets from classpath package `web-v3` at the root path (`/`). Compatibility routes `/v3` and `/v3/` redirect to `/`.
