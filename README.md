@@ -26,9 +26,11 @@ AmbonMUD
 
 Screenshots
 -----------
-Web client:
-![Web client login](src/main/resources/screenshots/Login.png)
-![Web client combat](src/main/resources/screenshots/Combat.png)
+Current web client (v3):
+
+![AmbonMUD web client v3](docs/screenshots/v3-web-client.jpg)
+
+See [docs/WEB_CLIENT_V3.md](docs/WEB_CLIENT_V3.md#visual-progression) for the full progression from telnet proof-of-concept to the current UI.
 
 ## Quick Start
 

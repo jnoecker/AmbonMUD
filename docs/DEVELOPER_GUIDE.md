@@ -91,7 +91,8 @@ src/main/kotlin/dev/ambon/
 ├── GatewayServer.kt             # Bootstrap for GATEWAY mode
 ├── config/                      # Configuration schema (AppConfig.kt)
 ├── engine/                      # Game logic (GameEngine.kt, CommandRouter, systems)
-│   ├── commands/                # CommandParser.kt, CommandRouter.kt
+│   ├── commands/                # CommandParser.kt, CommandRouter.kt, CommandHandler.kt
+│   │   └── handlers/            # NavigationHandler, CombatHandler, ItemHandler, etc.
 │   ├── abilities/               # AbilitySystem, spell definitions
 │   ├── status/                  # StatusEffectSystem, status effect definitions
 │   ├── events/                  # InboundEvent, OutboundEvent (sealed types)
@@ -281,17 +282,25 @@ Pure function `parse(line: String): Command` that returns a sealed `Command` var
 
 **File:** `src/main/kotlin/dev/ambon/engine/commands/CommandRouter.kt`
 
-Receives `(playerState, command)` and emits `OutboundEvent`s. Contains all gameplay logic:
-- Room descriptions, exits, item pickup/drop/equip
-- Combat initiation, status checks
-- Broadcasts to other players in the room
-- Prompt after each command
+Thin dispatch layer (~62 lines) that routes each `Command` variant to the appropriate handler. All gameplay logic lives in handler classes under `commands/handlers/`, each implementing the `CommandHandler` interface:
+
+- `NavigationHandler` — movement, look, exits
+- `CombatHandler` — kill, flee, cast
+- `CommunicationHandler` — say, tell, gossip, emote
+- `ItemHandler` — get, drop, wear, remove, inventory, equipment
+- `ShopHandler` — buy, sell, list
+- `DialogueQuestHandler` — talk, choice, quest commands
+- `GroupHandler` — party invite/accept/leave/kick
+- `ProgressionHandler` — score, spells, effects, achievements
+- `WorldFeaturesHandler` — zone-specific interactions
+- `AdminHandler` — goto, transfer, spawn, smite, kick, shutdown (staff only)
+- `UiHandler` — help, clear, colors, ansi, phase
 
 ### Adding a New Command
 
 1. Add variant to `Command` sealed interface in `CommandParser.kt`
 2. Add parsing logic in `CommandParser.parse()`
-3. Add handler in `CommandRouter.handle()`
+3. Implement the handler in the appropriate file under `commands/handlers/` (or add a new handler class implementing `CommandHandler` and wire it in `GameEngine.kt`)
 4. Add tests in `CommandParserTest` and `CommandRouterTest`
 
 ---
@@ -604,7 +613,7 @@ val jdbcUrl = "jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"
 
 1. Add variant to `Command` sealed interface in `CommandParser.kt`
 2. Add parsing logic in `CommandParser.parse()`
-3. Implement handler in `CommandRouter.kt`
+3. Implement the handler in the appropriate file under `commands/handlers/`
 4. Preserve prompt behavior for success/failure
 5. Add tests in `CommandParserTest` and `CommandRouterTest`
 
@@ -616,19 +625,15 @@ sealed interface Command { ... }
 data class LookItem(val itemKeyword: String) : Command
 // parse("look potion") → LookItem("potion")
 
-// CommandRouter.kt
-when (cmd) {
-    is LookItem -> handleLookItem(playerState, cmd)
-}
-
-fun handleLookItem(playerState: PlayerState, cmd: LookItem) {
-    val item = itemRegistry.findInRoom(playerState.roomId, cmd.itemKeyword)
+// commands/handlers/NavigationHandler.kt (or wherever it belongs)
+router.on<Command.LookItem> { sid, cmd ->
+    val item = ctx.items.findInRoom(ctx.players.get(sid)!!.roomId, cmd.itemKeyword)
     if (item == null) {
-        outbound.send(SendError(sessionId, "Item not found."))
+        ctx.outbound.send(SendError(sid, "Item not found."))
     } else {
-        outbound.send(SendText(sessionId, item.description))
+        ctx.outbound.send(SendText(sid, item.description))
     }
-    outbound.send(SendPrompt(sessionId))
+    ctx.outbound.send(SendPrompt(sid))
 }
 ```
 

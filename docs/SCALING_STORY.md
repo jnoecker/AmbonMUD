@@ -111,7 +111,6 @@ We partitioned the game world across multiple engine processes by zone:
 
 - Zone-based engine sharding is fully implemented (Phase 5): zone registry, inter-engine messaging, player handoff protocol with ACK-based rollback, Redis player location index, gateway multi-engine session routing, and zone instancing with auto-scaling.
 - The system supports deployment from single-process (`STANDALONE`) all the way to multi-engine sharded with zone instancing for hot-zone load distribution.
-- The system supports deployment from single-process (`STANDALONE`) all the way to multi-engine sharded with zone instancing for hot-zone load distribution.
 
 ---
 

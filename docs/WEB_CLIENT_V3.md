@@ -8,6 +8,37 @@ The v3 web client is a modular React + Vite + TypeScript single-page application
 
 ---
 
+## Visual Progression
+
+Five generations of the client, from the earliest telnet proof-of-concept to the current v3 UI.
+
+### v0 — Telnet (PuTTY)
+Plain telnet, no web client. The very first proof of concept running as "QuickMUD".
+
+![v0 telnet](screenshots/v0-telnet.png)
+
+### v0.5 — Telnet with ANSI
+Same telnet client with ANSI color support enabled — the first sign of life for the room/look system.
+
+![v0.5 telnet with ANSI](screenshots/v0-5-telnet-ansi.png)
+
+### v1 — First Web Client
+A single-page web terminal. Dark background, ASCII art login banner, basic Connected/Reconnect buttons. No panels.
+
+![v1 web client](screenshots/v1-web-client.png)
+
+### v2 — Web Client + Panels
+Added a character sidebar (HP/mana/XP bars), a mini-map (dot tracking visited rooms), and a room info panel on the right.
+
+![v2 web client with panels](screenshots/v2-web-panels.png)
+
+### v3 — Current (Surreal Gentle Magic)
+Full redesign: dark glassmorphism panels, banner artwork, tabbed Play/Character/Social/World layout, GMCP-driven skills and combat view.
+
+![v3 web client](screenshots/v3-web-client.jpg)
+
+---
+
 ## High-Level Wiring
 
 The server serves v3 static assets from classpath package `web-v3` at the root path (`/`). Compatibility routes `/v3` and `/v3/` redirect to `/`.
@@ -132,7 +163,7 @@ bun run build
 
 ## CI Status
 
-Current CI (`.github/workflows/ci.yml`) runs backend verification with `./gradlew ktlintCheck test integrationTest` and a separate frontend job for `bun install`, `bun run lint`, and `bun run build`.
+CI (`.github/workflows/ci.yml`) runs two parallel jobs: `test` (`./gradlew ktlintCheck test`) and `frontend` (`bun install --frozen-lockfile && bun run lint && bun run build`). The frontend job catches lint errors, TypeScript errors, and build failures on every push and PR.
 
 ---
 
@@ -141,8 +172,7 @@ Current CI (`.github/workflows/ci.yml`) runs backend verification with `./gradle
 ### Known Gaps
 
 1. **Unused GMCP surface** — Server emits `Group.Info`, `Char.Achievements`, `Core.Ping`, `Char.StatusVars`; none are rendered in v3 yet.
-2. **No frontend CI** — Frontend breakage can merge undetected.
-3. **Local dev ergonomics** — v3 dev server setup does not document a WS proxy to backend `/ws`; local iteration may require manual setup.
+2. **Local dev ergonomics** — v3 dev server setup does not document a WS proxy to backend `/ws`; local iteration may require manual setup.
 4. **Limited frontend test coverage** — UI and GMCP reducer regressions rely on manual testing; no dedicated automated tests for v3 React behavior.
 5. **Heuristic client map** — Map graph is inferred from observed exits/room IDs; no persistence or reconciliation across reconnects.
 6. **Large frontend bundle** — Main JS chunk exceeds 500 kB; initial load can degrade on slower clients.
@@ -151,10 +181,9 @@ Current CI (`.github/workflows/ci.yml`) runs backend verification with `./gradle
 
 1. **`Group.Info` party panel** — Best first GMCP feature: compact party widget with reducer support and manual test checklist.
 2. **Frontend tests for GMCP handling** — Unit tests for parser + package mapping (`applyGmcpPackage`); smoke tests for key render states.
-3. **Wire frontend into CI** — Add a CI step in `web-v3/`: install deps → lint → typecheck/build.
-4. **Local dev workflow docs** — Document exact commands and topology for running backend + v3 dev server together; document how `/ws` is reached during dev.
-5. **Expand GMCP package support** — `Char.Achievements`, then `Core.Ping` telemetry.
-6. **Bundle size reduction** — Route/panel-level lazy loading; manual chunking for terminal-heavy dependencies.
+3. **Local dev workflow docs** — Document exact commands and topology for running backend + v3 dev server together; document how `/ws` is reached during dev.
+4. **Expand GMCP package support** — `Char.Achievements`, then `Core.Ping` telemetry.
+5. **Bundle size reduction** — Route/panel-level lazy loading; manual chunking for terminal-heavy dependencies.
 
 ### Definition of Done for New v3 Features
 
