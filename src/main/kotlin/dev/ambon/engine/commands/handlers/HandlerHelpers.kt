@@ -147,6 +147,16 @@ internal suspend fun broadcastToRoomExcept(
     }
 }
 
+/**
+ * Sends a [OutboundEvent.SendError] to [sessionId] if [error] is non-null; no-op otherwise.
+ *
+ * Reduces the repeated `if (err != null) { outbound.send(SendError(sessionId, err)) }` pattern
+ * at system call sites to a single expression.
+ */
+internal suspend fun OutboundBus.sendIfError(sessionId: SessionId, error: String?) {
+    if (error != null) send(OutboundEvent.SendError(sessionId, error))
+}
+
 /** Checks if [sessionId] has staff privileges; sends an error and returns false if not. */
 internal suspend fun requireStaff(
     sessionId: SessionId,

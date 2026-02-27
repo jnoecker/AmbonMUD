@@ -32,17 +32,11 @@ class CombatHandler(
         cmd: Command.Kill,
     ) {
         dialogueSystem?.endConversation(sessionId)
-        val err = combat.startCombat(sessionId, cmd.target)
-        if (err != null) {
-            outbound.send(OutboundEvent.SendError(sessionId, err))
-        }
+        outbound.sendIfError(sessionId, combat.startCombat(sessionId, cmd.target))
     }
 
     private suspend fun handleFlee(sessionId: SessionId) {
-        val err = combat.flee(sessionId)
-        if (err != null) {
-            outbound.send(OutboundEvent.SendError(sessionId, err))
-        }
+        outbound.sendIfError(sessionId, combat.flee(sessionId))
     }
 
     private suspend fun handleCast(
@@ -53,9 +47,6 @@ class CombatHandler(
             outbound.send(OutboundEvent.SendError(sessionId, "Abilities are not available."))
             return
         }
-        val err = abilitySystem.cast(sessionId, cmd.spellName, cmd.target)
-        if (err != null) {
-            outbound.send(OutboundEvent.SendError(sessionId, err))
-        }
+        outbound.sendIfError(sessionId, abilitySystem.cast(sessionId, cmd.spellName, cmd.target))
     }
 }
