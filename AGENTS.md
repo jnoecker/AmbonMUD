@@ -16,9 +16,10 @@ Use this document as the default engineering playbook when making code or conten
 - Demo (Windows): `.\gradlew.bat demo`
 - Demo (Unix): `./gradlew demo`
 - Lint: `.\gradlew.bat ktlintCheck`
-- Tests: `.\gradlew.bat test`
-- CI parity (Unix/CI): `./gradlew ktlintCheck test`
-- CI parity (Windows): `.\gradlew.bat ktlintCheck test`
+- Unit tests: `.\gradlew.bat test`
+- Integration tests: `.\gradlew.bat integrationTest`
+- CI parity (Unix/CI): `./gradlew ktlintCheck test integrationTest`
+- CI parity (Windows): `.\gradlew.bat ktlintCheck test integrationTest`
 
 By default the server listens on telnet port `4000` and web port `8080` (configured in `src/main/resources/application.yaml`, printed by `src/main/kotlin/dev/ambon/Main.kt`).
 
@@ -163,6 +164,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 
 ## Testing Expectations
 - Minimum verification for any meaningful change: `ktlintCheck` and `test`.
+- Run `integrationTest` when touching integration-tagged areas (HTTP/gRPC/database/production-resource wiring) and before finalizing broad cross-cutting changes.
 - Prefer focused test runs while iterating, then run full suite before finalizing.
 - Add tests for every behavioral change; this codebase treats tests as design constraints.
 

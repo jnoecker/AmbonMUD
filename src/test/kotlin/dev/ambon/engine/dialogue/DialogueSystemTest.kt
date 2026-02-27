@@ -85,7 +85,7 @@ class DialogueSystemTest {
         val mobs = MobRegistry()
         val outbound = LocalOutboundBus()
         val items = ItemRegistry()
-        val players = PlayerRegistry(testRoom, InMemoryPlayerRepository(), items)
+        val players = dev.ambon.test.buildTestPlayerRegistry(testRoom, InMemoryPlayerRepository(), items)
         val system = DialogueSystem(mobs, players, outbound)
         return TestEnv(mobs, players, outbound, system, items)
     }

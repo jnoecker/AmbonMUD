@@ -5,7 +5,6 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
@@ -60,7 +59,7 @@ class CommandRouterAdminTest {
         onShutdown: suspend () -> Unit = {},
         onMobSmited: (MobId) -> Unit = {},
     ): CommandRouter {
-        val world = WorldLoader.loadFromResource("world/test_world.yaml")
+        val world = dev.ambon.test.TestWorlds.testWorld
         val combat = CombatSystem(players, mobs, items, outbound)
         return buildTestRouter(
             world = world,
@@ -79,9 +78,9 @@ class CommandRouterAdminTest {
     @Test
     fun `non-staff player receives error on goto`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -105,9 +104,9 @@ class CommandRouterAdminTest {
     @Test
     fun `goto moves staff player to exact room`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -126,9 +125,9 @@ class CommandRouterAdminTest {
     @Test
     fun `goto with local room resolves in current zone`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -151,9 +150,9 @@ class CommandRouterAdminTest {
     @Test
     fun `goto zone-colon resolves to a room in that zone`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -172,9 +171,9 @@ class CommandRouterAdminTest {
     @Test
     fun `goto unknown room emits error and prompt`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -198,9 +197,9 @@ class CommandRouterAdminTest {
     @Test
     fun `transfer moves target player and sends them a look`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -228,9 +227,9 @@ class CommandRouterAdminTest {
     @Test
     fun `transfer unknown player emits error`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -253,9 +252,9 @@ class CommandRouterAdminTest {
     @Test
     fun `spawn creates mob in staff room`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -279,9 +278,9 @@ class CommandRouterAdminTest {
     @Test
     fun `spawn with fully qualified name works`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -300,9 +299,9 @@ class CommandRouterAdminTest {
     @Test
     fun `spawn unknown template emits error`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -325,9 +324,9 @@ class CommandRouterAdminTest {
     @Test
     fun `shutdown broadcasts to all players and calls onShutdown callback`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             var shutdownCalled = false
@@ -356,9 +355,9 @@ class CommandRouterAdminTest {
     @Test
     fun `non-staff cannot trigger shutdown`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             var shutdownCalled = false
@@ -377,9 +376,9 @@ class CommandRouterAdminTest {
     @Test
     fun `smite player sets hp to 1 and moves to start room`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -404,9 +403,9 @@ class CommandRouterAdminTest {
     @Test
     fun `smite player sends divine message to target`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -429,9 +428,9 @@ class CommandRouterAdminTest {
     @Test
     fun `smite mob removes it from registry`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             var smitedMobId: MobId? = null
@@ -456,9 +455,9 @@ class CommandRouterAdminTest {
     @Test
     fun `smite mob not found emits error`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -481,9 +480,9 @@ class CommandRouterAdminTest {
     @Test
     fun `kick sends Close event to target session`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -510,9 +509,9 @@ class CommandRouterAdminTest {
     @Test
     fun `kick self emits error`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)
@@ -537,9 +536,9 @@ class CommandRouterAdminTest {
     @Test
     fun `kick unknown player emits error`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = makeRouter(players, mobs, items, outbound)

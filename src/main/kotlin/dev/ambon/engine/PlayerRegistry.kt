@@ -9,7 +9,6 @@ import dev.ambon.persistence.PlayerCreationRequest
 import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
 import kotlinx.coroutines.withContext
-import org.mindrot.jbcrypt.BCrypt
 import java.time.Clock
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
@@ -87,6 +86,7 @@ class PlayerRegistry(
     // Production callers should pass Dispatchers.IO to avoid blocking the engine thread.
     // Defaults to EmptyCoroutineContext so tests run synchronously on the test scheduler.
     private val hashingContext: CoroutineContext = EmptyCoroutineContext,
+    private val passwordHasher: PasswordHasher = BCryptPasswordHasher,
 ) {
     private val players = mutableMapOf<SessionId, PlayerState>()
     private val roomMembers = mutableMapOf<RoomId, MutableSet<SessionId>>()
@@ -112,11 +112,11 @@ class PlayerRegistry(
         return if (record.passwordHash.isNotBlank()) {
             val ok =
                 withContext(hashingContext) {
-                    runCatching { BCrypt.checkpw(password, record.passwordHash) }.getOrDefault(false)
+                    passwordHasher.verify(password, record.passwordHash)
                 }
             if (ok) LoginCredentialPrep.Verified(record.copy(lastSeenEpochMs = now)) else LoginCredentialPrep.WrongPassword
         } else {
-            val hash = withContext(hashingContext) { BCrypt.hashpw(password, BCrypt.gensalt()) }
+            val hash = withContext(hashingContext) { passwordHasher.hash(password) }
             LoginCredentialPrep.Verified(record.copy(lastSeenEpochMs = now, passwordHash = hash))
         }
     }
@@ -163,7 +163,7 @@ class PlayerRegistry(
         if (repo.findByName(name) != null) return CreateAccountPrep.Taken
 
         val now = clock.millis()
-        val hash = withContext(hashingContext) { BCrypt.hashpw(password, BCrypt.gensalt()) }
+        val hash = withContext(hashingContext) { passwordHasher.hash(password) }
         val baseStat = PlayerState.BASE_STAT
         val record =
             repo.create(
@@ -222,13 +222,12 @@ class PlayerRegistry(
                 if (existingRecord.passwordHash.isNotBlank()) {
                     val ok =
                         withContext(hashingContext) {
-                            runCatching { BCrypt.checkpw(password, existingRecord.passwordHash) }
-                                .getOrDefault(false)
+                            passwordHasher.verify(password, existingRecord.passwordHash)
                         }
                     if (!ok) return LoginResult.WrongPassword
                     existingRecord.copy(lastSeenEpochMs = now)
                 } else {
-                    val hash = withContext(hashingContext) { BCrypt.hashpw(password, BCrypt.gensalt()) }
+                    val hash = withContext(hashingContext) { passwordHasher.hash(password) }
                     existingRecord.copy(lastSeenEpochMs = now, passwordHash = hash)
                 }
             } else {
@@ -278,7 +277,7 @@ class PlayerRegistry(
                     name = name,
                     startRoomId = startRoom,
                     nowEpochMs = now,
-                    passwordHash = withContext(hashingContext) { BCrypt.hashpw(password, BCrypt.gensalt()) },
+                    passwordHash = withContext(hashingContext) { passwordHasher.hash(password) },
                     ansiEnabled = defaultAnsiEnabled,
                     race = race.name,
                     playerClass = playerClass.name,

@@ -8,7 +8,6 @@ import dev.ambon.domain.world.ContainerState
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.DoorState
 import dev.ambon.domain.world.LeverState
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.persistence.WorldStateSnapshot
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -18,7 +17,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class WorldStateRegistryTest {
-    private val world = WorldLoader.loadFromResource("world/ok_features.yaml")
+    private val world = dev.ambon.test.TestWorlds.okFeatures
     private val registry = WorldStateRegistry(world)
 
     @Test

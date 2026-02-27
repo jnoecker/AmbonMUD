@@ -3,7 +3,6 @@ package dev.ambon.engine
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -72,10 +71,10 @@ class InterEngineMessageHandlingTest {
         onShutdown: suspend () -> Unit = {},
     ): EngineTestHarness {
         val clock = MutableClock(0L)
-        val world = WorldLoader.loadFromResource("world/test_world.yaml")
+        val world = dev.ambon.test.TestWorlds.testWorld
         val items = ItemRegistry()
         val repo = InMemoryPlayerRepository()
-        val players = PlayerRegistry(world.startRoom, repo, items, clock = clock)
+        val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items, clock = clock)
         val mobs = MobRegistry()
         val inbound = LocalInboundBus()
         val outbound = LocalOutboundBus()

@@ -22,7 +22,7 @@ class AbilityTestFixture(
     val rng: Random = Random(42),
     val items: ItemRegistry = ItemRegistry(),
     val repo: InMemoryPlayerRepository = InMemoryPlayerRepository(),
-    val players: PlayerRegistry = PlayerRegistry(roomId, repo, items),
+    val players: PlayerRegistry = buildTestPlayerRegistry(roomId, repo, items, clock = clock),
     val mobs: MobRegistry = MobRegistry(),
     val outbound: LocalOutboundBus = LocalOutboundBus(),
 ) {

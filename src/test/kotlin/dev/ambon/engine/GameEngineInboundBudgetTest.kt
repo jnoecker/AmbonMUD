@@ -3,7 +3,6 @@ package dev.ambon.engine
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
@@ -59,10 +58,10 @@ class GameEngineInboundBudgetTest {
         runTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, repo, items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
             val mobs = MobRegistry()
             val clock = TickingClock(nowMs = 0L, stepMs = 1L)
             val scheduler = Scheduler(clock)
@@ -106,10 +105,10 @@ class GameEngineInboundBudgetTest {
         runTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, repo, items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
             val mobs = MobRegistry()
             // Fixed clock: millis() always returns 0, so 0 < deadline always → budget never fires.
             val clock = Clock.fixed(Instant.EPOCH, ZoneId.of("UTC"))

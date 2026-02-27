@@ -33,7 +33,7 @@ class RegenSystemTest {
         )
 
     private fun makeRegistry(): PlayerRegistry =
-        PlayerRegistry(roomId, InMemoryPlayerRepository(), ItemRegistry())
+        dev.ambon.test.buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), ItemRegistry())
 
     @Test
     fun `tick with no players does not crash`() =

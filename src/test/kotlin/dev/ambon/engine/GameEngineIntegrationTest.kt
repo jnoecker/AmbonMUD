@@ -3,7 +3,6 @@ package dev.ambon.engine
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -19,12 +18,14 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Tag("integration")
 class GameEngineIntegrationTest {
     @Test
     fun `connect then say hello then quit`() =
@@ -32,9 +33,9 @@ class GameEngineIntegrationTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
-            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
@@ -99,9 +100,9 @@ class GameEngineIntegrationTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
-            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
@@ -171,10 +172,10 @@ class GameEngineIntegrationTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+            val world = dev.ambon.test.TestWorlds.okSmall
             val items = ItemRegistry()
             val repo = InMemoryPlayerRepository()
-            val players = PlayerRegistry(world.startRoom, repo, items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
             val mobs = MobRegistry()
             val clock = MutableClock(0L)
             val scheduler = Scheduler(clock)
@@ -247,9 +248,9 @@ class GameEngineIntegrationTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
-            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()

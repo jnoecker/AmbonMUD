@@ -1,11 +1,11 @@
 package dev.ambon.admin
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
 import dev.ambon.engine.MobRegistry
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.persistence.PlayerId
@@ -13,17 +13,27 @@ import dev.ambon.persistence.PlayerRecord
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.testing.testApplication
+import io.ktor.server.testing.TestApplication
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import java.net.URLEncoder
 import java.util.Base64
+import io.ktor.server.testing.TestApplication as buildTestApplication
 
+@Tag("integration")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AdminModuleTest {
     private val token = "super-secret-token"
     private val authHeader = "Basic " + Base64.getEncoder().encodeToString("admin:$token".toByteArray())
@@ -33,302 +43,204 @@ class AdminModuleTest {
     private val world = World(rooms = mapOf(roomId to room), startRoom = roomId)
     private val repo = InMemoryPlayerRepository()
     private val mobs = MobRegistry()
-    private val players = PlayerRegistry(startRoom = roomId, repo = repo, items = ItemRegistry())
+    private val players = dev.ambon.test.buildTestPlayerRegistry(startRoom = roomId, repo = repo, items = ItemRegistry())
     private val json = jacksonObjectMapper()
+    private lateinit var app: TestApplication
+
+    @BeforeAll
+    fun startApp() =
+        runBlocking {
+            app =
+                buildTestApplication {
+                    application {
+                        adminModule(
+                            token = token,
+                            players = players,
+                            playerRepo = repo,
+                            mobs = mobs,
+                            world = world,
+                            grafanaUrl = "http://grafana.example.com",
+                            metricsUrl = "http://localhost:8080/metrics",
+                            json = json,
+                        )
+                    }
+                }
+            app.start()
+        }
+
+    @AfterAll
+    fun stopApp() =
+        runBlocking {
+            app.stop()
+        }
 
     @BeforeEach
     fun resetRepo() {
         repo.clear()
     }
 
-    private fun testAdmin(block: suspend io.ktor.server.testing.ApplicationTestBuilder.() -> Unit) =
-        testApplication {
-            application {
-                adminModule(
-                    token = token,
-                    players = players,
-                    playerRepo = repo,
-                    mobs = mobs,
-                    world = world,
-                    grafanaUrl = "http://grafana.example.com",
-                    metricsUrl = "http://localhost:8080/metrics",
-                    json = json,
-                )
+    @Test
+    fun `authentication is enforced on admin endpoints`() {
+        val noAuth = get("/", auth = null)
+        assertEquals(HttpStatusCode.Unauthorized, noAuth.status)
+
+        val badAuth = "Basic " + Base64.getEncoder().encodeToString("admin:wrong".toByteArray())
+        val wrongToken = get("/", auth = badAuth)
+        assertEquals(HttpStatusCode.Unauthorized, wrongToken.status)
+
+        val ok = get("/")
+        assertEquals(HttpStatusCode.OK, ok.status)
+        assertTrue(bodyText(ok).contains("Overview"))
+    }
+
+    @Test
+    fun `overview endpoints expose summary stats and configured links`() {
+        val overview = get("/")
+        assertEquals(HttpStatusCode.OK, overview.status)
+        val html = bodyText(overview)
+        assertTrue(html.contains("AmbonMUD"))
+        assertTrue(html.contains("Zones"))
+        assertTrue(html.contains("Rooms"))
+        assertTrue(html.contains("Zone Activity"))
+        assertTrue(html.contains("Staff Online"))
+        assertTrue(html.contains("http://grafana.example.com"))
+
+        val api = getJson("/api/overview")
+        assertEquals(1, api["roomsTotal"].intValue())
+        assertEquals(1, api["zonesLoaded"].intValue())
+        assertEquals(0, api["playersOnline"].intValue())
+        assertEquals("http://grafana.example.com", api["grafanaUrl"].textValue())
+    }
+
+    @Test
+    fun `player pages api and staff actions work for offline players`() {
+        savePlayer(offlinePlayerRecord("Lexa", level = 7, isStaff = true))
+        savePlayer(offlinePlayerRecord("Mira", isStaff = false))
+        savePlayer(offlinePlayerRecord("Gorn", isStaff = true))
+
+        val playersPage = get("/players")
+        assertEquals(HttpStatusCode.OK, playersPage.status)
+        val playersHtml = bodyText(playersPage)
+        assertTrue(playersHtml.contains("Players"))
+        assertTrue(playersHtml.contains("Online only"))
+        assertTrue(playersHtml.contains("Staff only"))
+        assertTrue(playersHtml.contains("Sort"))
+
+        val missingSearch = get("/players?q=nobody")
+        assertEquals(HttpStatusCode.OK, missingSearch.status)
+        assertTrue(bodyText(missingSearch).contains("nobody"))
+
+        val foundSearch = get("/players?q=Lexa")
+        assertTrue(bodyText(foundSearch).contains("Lexa"))
+
+        val lexaDetail = get("/players/Lexa")
+        assertEquals(HttpStatusCode.OK, lexaDetail.status)
+        val lexaHtml = bodyText(lexaDetail)
+        assertTrue(lexaHtml.contains("Lexa"))
+        assertTrue(lexaHtml.contains("Revoke Staff"))
+
+        val missingDetail = get("/players/nobody")
+        assertEquals(HttpStatusCode.NotFound, missingDetail.status)
+
+        val grantStaff = post("/players/Mira/staff")
+        assertEquals(HttpStatusCode.Found, grantStaff.status)
+        assertTrue(findPlayer("Mira")?.isStaff == true)
+
+        val revokeStaff = post("/players/Gorn/staff")
+        assertEquals(HttpStatusCode.Found, revokeStaff.status)
+        assertFalse(findPlayer("Gorn")?.isStaff == true)
+
+        val missingToggle = post("/players/nobody/staff")
+        assertEquals(HttpStatusCode.NotFound, missingToggle.status)
+
+        val playersApi = getJson("/api/players")
+        assertTrue(playersApi.isArray)
+
+        val lexaApi = getJson("/api/players/Lexa")
+        assertEquals("Lexa", lexaApi["name"].textValue())
+        assertEquals(7, lexaApi["level"].intValue())
+        assertTrue(lexaApi["isStaff"].booleanValue())
+        assertFalse(lexaApi["isOnline"].booleanValue())
+
+        val missingApi = get("/api/players/nobody")
+        assertEquals(HttpStatusCode.NotFound, missingApi.status)
+    }
+
+    @Test
+    fun `world pages and api expose zones rooms and empty states`() {
+        val worldPage = get("/world")
+        assertEquals(HttpStatusCode.OK, worldPage.status)
+        assertTrue(bodyText(worldPage).contains("testzone"))
+
+        val filteredWorld = get("/world?q=missing")
+        assertTrue(bodyText(filteredWorld).contains("No zones matched that filter."))
+
+        val zoneDetail = get("/world/testzone")
+        assertEquals(HttpStatusCode.OK, zoneDetail.status)
+        val zoneHtml = bodyText(zoneDetail)
+        assertTrue(zoneHtml.contains("testzone:start"))
+        assertTrue(zoneHtml.contains("Test Start Room"))
+
+        val missingZone = get("/world/nozone")
+        assertEquals(HttpStatusCode.NotFound, missingZone.status)
+
+        val zonesApi = getJson("/api/world/zones")
+        assertTrue(zonesApi.isArray)
+        assertEquals(1, zonesApi.size())
+        assertEquals("testzone", zonesApi[0]["name"].textValue())
+        assertEquals(1, zonesApi[0]["roomCount"].intValue())
+
+        val zoneApi = getJson("/api/world/zones/testzone")
+        assertEquals("testzone", zoneApi["name"].textValue())
+        assertEquals("testzone:start", zoneApi["rooms"][0]["id"].textValue())
+        assertEquals("Test Start Room", zoneApi["rooms"][0]["title"].textValue())
+    }
+
+    @Test
+    fun `html pages escape special characters in player names`() {
+        savePlayer(offlinePlayerRecord("<script>alert(1)</script>"))
+
+        val encoded = URLEncoder.encode("<script>alert(1)</script>", Charsets.UTF_8)
+        val response = get("/players?q=$encoded")
+        val body = bodyText(response)
+
+        assertFalse(body.contains("<script>"), "Raw script tag must not appear in HTML")
+        assertTrue(body.contains("&lt;script&gt;"), "Script tag should be HTML-escaped")
+    }
+
+    private fun get(
+        path: String,
+        auth: String? = authHeader,
+    ): HttpResponse =
+        runBlocking {
+            app.client.get(path) {
+                auth?.let { header(HttpHeaders.Authorization, it) }
             }
-            block()
         }
 
-    // ── Auth ─────────────────────────────────────────────────────────────────
-
-    @Test
-    fun `GET overview without credentials returns 401`() =
-        testAdmin {
-            val resp = client.get("/")
-            assertEquals(HttpStatusCode.Unauthorized, resp.status)
+    private fun post(
+        path: String,
+        auth: String? = authHeader,
+    ): HttpResponse =
+        runBlocking {
+            app.client.post(path) {
+                auth?.let { header(HttpHeaders.Authorization, it) }
+            }
         }
 
-    @Test
-    fun `GET overview with wrong token returns 401`() =
-        testAdmin {
-            val badAuth = "Basic " + Base64.getEncoder().encodeToString("admin:wrong".toByteArray())
-            val resp = client.get("/") { header(HttpHeaders.Authorization, badAuth) }
-            assertEquals(HttpStatusCode.Unauthorized, resp.status)
+    private fun bodyText(response: HttpResponse): String = runBlocking { response.bodyAsText() }
+
+    private fun getJson(path: String): JsonNode = json.readTree(bodyText(get(path)))
+
+    private fun savePlayer(record: PlayerRecord) =
+        runBlocking {
+            repo.save(record)
         }
 
-    @Test
-    fun `GET overview with correct token returns 200 and HTML`() =
-        testAdmin {
-            val resp = client.get("/") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.OK, resp.status)
-            val body = resp.bodyAsText()
-            assertTrue(body.contains("Overview"))
-            assertTrue(body.contains("AmbonMUD"))
+    private fun findPlayer(name: String): PlayerRecord? =
+        runBlocking {
+            repo.findByName(name)
         }
-
-    // ── Overview page ─────────────────────────────────────────────────────────
-
-    @Test
-    fun `GET overview page shows world stats`() =
-        testAdmin {
-            val resp = client.get("/") { header(HttpHeaders.Authorization, authHeader) }
-            val body = resp.bodyAsText()
-            assertTrue(body.contains("Zones"), "Should show Zones stat")
-            assertTrue(body.contains("Rooms"), "Should show Rooms stat")
-        }
-
-    @Test
-    fun `GET overview page shows zone activity table`() =
-        testAdmin {
-            val body = client.get("/") { header(HttpHeaders.Authorization, authHeader) }.bodyAsText()
-            assertTrue(body.contains("Zone Activity"), "Should show zone activity section")
-            assertTrue(body.contains("Staff Online"), "Should show staff online stat")
-        }
-
-    @Test
-    fun `GET overview page shows Grafana link when configured`() =
-        testAdmin {
-            val body = client.get("/") { header(HttpHeaders.Authorization, authHeader) }.bodyAsText()
-            assertTrue(body.contains("http://grafana.example.com"), "Should include Grafana URL")
-        }
-
-    // ── JSON API - overview ───────────────────────────────────────────────────
-
-    @Test
-    fun `GET api-overview returns JSON with correct room count`() =
-        testAdmin {
-            val resp = client.get("/api/overview") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.OK, resp.status)
-            val node = json.readTree(resp.bodyAsText())
-            assertEquals(1, node["roomsTotal"].intValue())
-            assertEquals(1, node["zonesLoaded"].intValue())
-            assertEquals(0, node["playersOnline"].intValue())
-            assertEquals("http://grafana.example.com", node["grafanaUrl"].textValue())
-        }
-
-    // ── Players page ──────────────────────────────────────────────────────────
-
-    @Test
-    fun `GET players page returns 200`() =
-        testAdmin {
-            val resp = client.get("/players") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.OK, resp.status)
-            assertTrue(resp.bodyAsText().contains("Players"))
-        }
-
-    @Test
-    fun `GET players page includes filtering controls`() =
-        testAdmin {
-            val body = client.get("/players") { header(HttpHeaders.Authorization, authHeader) }.bodyAsText()
-            assertTrue(body.contains("Online only"))
-            assertTrue(body.contains("Staff only"))
-            assertTrue(body.contains("Sort"))
-        }
-
-    @Test
-    fun `GET players page search for unknown player shows not-found message`() =
-        testAdmin {
-            val resp = client.get("/players?q=nobody") { header(HttpHeaders.Authorization, authHeader) }
-            val body = resp.bodyAsText()
-            assertEquals(HttpStatusCode.OK, resp.status)
-            assertTrue(body.contains("nobody"), "Should echo the search term")
-        }
-
-    @Test
-    fun `GET players page search finds offline player in repo`() =
-        testAdmin {
-            repo.save(offlinePlayerRecord("Xandar"))
-            val resp = client.get("/players?q=Xandar") { header(HttpHeaders.Authorization, authHeader) }
-            val body = resp.bodyAsText()
-            assertEquals(HttpStatusCode.OK, resp.status)
-            assertTrue(body.contains("Xandar"), "Should show found player name")
-        }
-
-    // ── Player detail page ────────────────────────────────────────────────────
-
-    @Test
-    fun `GET player detail for unknown player returns 404`() =
-        testAdmin {
-            val resp = client.get("/players/nobody") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.NotFound, resp.status)
-        }
-
-    @Test
-    fun `GET player detail for existing offline player returns 200 with stats`() =
-        testAdmin {
-            repo.save(offlinePlayerRecord("Theron", level = 5, isStaff = false))
-            val resp = client.get("/players/Theron") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.OK, resp.status)
-            val body = resp.bodyAsText()
-            assertTrue(body.contains("Theron"), "Should show player name")
-            assertTrue(body.contains("Grant Staff"), "Should have staff grant button")
-        }
-
-    @Test
-    fun `GET player detail for staff player shows revoke button`() =
-        testAdmin {
-            repo.save(offlinePlayerRecord("Zorak", isStaff = true))
-            val resp = client.get("/players/Zorak") { header(HttpHeaders.Authorization, authHeader) }
-            val body = resp.bodyAsText()
-            assertTrue(body.contains("Revoke Staff"), "Should have staff revoke button")
-        }
-
-    // ── Staff toggle ──────────────────────────────────────────────────────────
-
-    @Test
-    fun `POST staff toggle grants staff to non-staff player`() =
-        testAdmin {
-            repo.save(offlinePlayerRecord("Mira", isStaff = false))
-            val resp = client.post("/players/Mira/staff") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.Found, resp.status)
-            val updated = repo.findByName("Mira")
-            assertTrue(updated?.isStaff == true, "Player should have been granted staff")
-        }
-
-    @Test
-    fun `POST staff toggle revokes staff from staff player`() =
-        testAdmin {
-            repo.save(offlinePlayerRecord("Gorn", isStaff = true))
-            client.post("/players/Gorn/staff") { header(HttpHeaders.Authorization, authHeader) }
-            val updated = repo.findByName("Gorn")
-            assertFalse(updated?.isStaff == true, "Player staff should have been revoked")
-        }
-
-    @Test
-    fun `POST staff toggle for unknown player returns 404`() =
-        testAdmin {
-            val resp = client.post("/players/nobody/staff") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.NotFound, resp.status)
-        }
-
-    // ── JSON API - players ─────────────────────────────────────────────────────
-
-    @Test
-    fun `GET api players returns JSON array of online players`() =
-        testAdmin {
-            val resp = client.get("/api/players") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.OK, resp.status)
-            val node = json.readTree(resp.bodyAsText())
-            assertTrue(node.isArray)
-        }
-
-    @Test
-    fun `GET api player detail for unknown returns 404`() =
-        testAdmin {
-            val resp = client.get("/api/players/nobody") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.NotFound, resp.status)
-        }
-
-    @Test
-    fun `GET api player detail for repo player returns correct JSON`() =
-        testAdmin {
-            repo.save(offlinePlayerRecord("Lexa", level = 7, isStaff = true))
-            val resp = client.get("/api/players/Lexa") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.OK, resp.status)
-            val node = json.readTree(resp.bodyAsText())
-            assertEquals("Lexa", node["name"].textValue())
-            assertEquals(7, node["level"].intValue())
-            assertTrue(node["isStaff"].booleanValue())
-            assertFalse(node["isOnline"].booleanValue())
-        }
-
-    // ── World page ────────────────────────────────────────────────────────────
-
-    @Test
-    fun `GET world page returns 200 with zone table`() =
-        testAdmin {
-            val resp = client.get("/world") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.OK, resp.status)
-            assertTrue(resp.bodyAsText().contains("testzone"))
-        }
-
-    @Test
-    fun `GET world zone detail returns 200 with room rows`() =
-        testAdmin {
-            val resp = client.get("/world/testzone") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.OK, resp.status)
-            val body = resp.bodyAsText()
-            assertTrue(body.contains("testzone:start"), "Should show room ID")
-            assertTrue(body.contains("Test Start Room"), "Should show room title")
-        }
-
-    @Test
-    fun `GET world zone detail for unknown zone returns 404`() =
-        testAdmin {
-            val resp = client.get("/world/nozone") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.NotFound, resp.status)
-        }
-
-    @Test
-    fun `GET world page with non matching filter shows empty-state row`() =
-        testAdmin {
-            val body = client.get("/world?q=missing") { header(HttpHeaders.Authorization, authHeader) }.bodyAsText()
-            assertTrue(body.contains("No zones matched that filter."))
-        }
-
-    // ── JSON API - world ──────────────────────────────────────────────────────
-
-    @Test
-    fun `GET api world zones returns JSON zone list`() =
-        testAdmin {
-            val resp = client.get("/api/world/zones") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.OK, resp.status)
-            val node = json.readTree(resp.bodyAsText())
-            assertTrue(node.isArray)
-            assertEquals(1, node.size())
-            assertEquals("testzone", node[0]["name"].textValue())
-            assertEquals(1, node[0]["roomCount"].intValue())
-        }
-
-    @Test
-    fun `GET api world zone detail returns rooms`() =
-        testAdmin {
-            val resp = client.get("/api/world/zones/testzone") { header(HttpHeaders.Authorization, authHeader) }
-            assertEquals(HttpStatusCode.OK, resp.status)
-            val node = json.readTree(resp.bodyAsText())
-            assertEquals("testzone", node["name"].textValue())
-            val rooms = node["rooms"]
-            assertTrue(rooms.isArray)
-            assertEquals(1, rooms.size())
-            assertEquals("testzone:start", rooms[0]["id"].textValue())
-            assertEquals("Test Start Room", rooms[0]["title"].textValue())
-        }
-
-    // ── XSS safety ───────────────────────────────────────────────────────────
-
-    @Test
-    fun `HTML pages escape special characters in player names`() =
-        testAdmin {
-            repo.save(offlinePlayerRecord("<script>alert(1)</script>"))
-            val resp =
-                client.get("/players?q=${java.net.URLEncoder.encode("<script>alert(1)</script>", "UTF-8")}") {
-                    header(HttpHeaders.Authorization, authHeader)
-                }
-            val body = resp.bodyAsText()
-            assertFalse(body.contains("<script>"), "Raw script tag must not appear in HTML")
-            assertTrue(body.contains("&lt;script&gt;"), "Script tag should be HTML-escaped")
-        }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private fun offlinePlayerRecord(
         name: String,

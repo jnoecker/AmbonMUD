@@ -3,8 +3,9 @@ package dev.ambon.persistence
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.LoginResult
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.test.TestPasswordHasher
+import dev.ambon.test.buildTestPlayerRegistry
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.mindrot.jbcrypt.BCrypt
 import java.nio.file.Path
 import java.time.Clock
 import java.time.Instant
@@ -24,12 +24,14 @@ class YamlPlayerRepositoryTest {
     @TempDir
     lateinit var tmp: Path
 
+    private val testHash = TestPasswordHasher.hash("password")
+
     @Test
     fun `create then findById and findByName`() =
         runTest {
             val repo = YamlPlayerRepository(tmp)
             val now = 1234L
-            val hash = BCrypt.hashpw("password", BCrypt.gensalt())
+            val hash = testHash
 
             val r = repo.create(PlayerCreationRequest("Alice", RoomId("test:a"), now, hash, ansiEnabled = false))
 
@@ -48,7 +50,7 @@ class YamlPlayerRepositoryTest {
         runTest {
             val repo = YamlPlayerRepository(tmp)
             val now = 1000L
-            val hash = BCrypt.hashpw("password", BCrypt.gensalt())
+            val hash = testHash
 
             val r = repo.create(PlayerCreationRequest("Bob", RoomId("test:a"), now, hash, ansiEnabled = false))
             val updated =
@@ -77,7 +79,7 @@ class YamlPlayerRepositoryTest {
         runTest {
             val repo = YamlPlayerRepository(tmp)
             val now = 1L
-            val hash = BCrypt.hashpw("password", BCrypt.gensalt())
+            val hash = testHash
 
             repo.create(PlayerCreationRequest("Carol", RoomId("test:a"), now, hash, ansiEnabled = false))
 
@@ -106,12 +108,12 @@ class YamlPlayerRepositoryTest {
                         name = "Alice",
                         startRoomId = RoomId("test:b"),
                         nowEpochMs = 1000,
-                        passwordHash = BCrypt.hashpw("password", BCrypt.gensalt()),
+                        passwordHash = testHash,
                         ansiEnabled = false,
                     ),
                 )
 
-            val players = PlayerRegistry(start, repo, ItemRegistry(), clock)
+            val players = buildTestPlayerRegistry(start, repo, ItemRegistry(), clock)
             val sid = SessionId(1)
             val res = players.login(sid, "Alice", "password")
             assertEquals(LoginResult.Ok, res)
@@ -128,7 +130,7 @@ class YamlPlayerRepositoryTest {
             val start = RoomId("test:a")
             val clock = Clock.fixed(Instant.ofEpochMilli(1000), ZoneOffset.UTC)
 
-            val players = PlayerRegistry(start, repo, ItemRegistry(), clock)
+            val players = buildTestPlayerRegistry(start, repo, ItemRegistry(), clock)
             val sid = SessionId(1)
             val res = players.login(sid, "Bob", "password")
             assertEquals(LoginResult.Ok, res)
@@ -170,7 +172,7 @@ class YamlPlayerRepositoryTest {
         runTest {
             val repo = YamlPlayerRepository(tmp)
             val now = 1000L
-            val hash = BCrypt.hashpw("password", BCrypt.gensalt())
+            val hash = testHash
 
             val r = repo.create(PlayerCreationRequest("GoldTest", RoomId("test:a"), now, hash, ansiEnabled = false))
             assertEquals(0L, r.gold)

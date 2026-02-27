@@ -6,11 +6,9 @@ import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.GatewayReconnectConfig
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -29,7 +27,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -39,6 +36,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
@@ -57,6 +55,7 @@ import java.util.concurrent.TimeUnit
  *
  * Exercises: connect → login (new player) → say → quit
  */
+@Tag("integration")
 class GatewayEngineIntegrationTest {
     private val serverName = "integration-test-${System.nanoTime()}"
 
@@ -101,13 +100,13 @@ class GatewayEngineIntegrationTest {
         dispatcher.start()
 
         // Start the game engine on its own thread.
-        val world = WorldLoader.loadFromResource("world/test_world.yaml")
+        val world = dev.ambon.test.TestWorlds.testWorld
         val repo = InMemoryPlayerRepository()
         val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
         val items = ItemRegistry()
         val progression = PlayerProgression()
         val players =
-            PlayerRegistry(
+            dev.ambon.test.buildTestPlayerRegistry(
                 startRoom = world.startRoom,
                 repo = repo,
                 items = items,
@@ -152,36 +151,27 @@ class GatewayEngineIntegrationTest {
             val sid = SessionId(1L)
 
             val received = Channel<OutboundEventProto>(Channel.UNLIMITED)
+            val inboundEvents = Channel<InboundEventProto>(Channel.UNLIMITED)
 
-            // Gateway stream: emit inbound events then keep stream open for responses.
             val gatewayJob =
                 launch {
                     stub
-                        .eventStream(
-                            flow {
-                                emit(InboundEvent.Connected(sessionId = sid, defaultAnsiEnabled = false).toProto())
-                                delay(50)
-                                emit(InboundEvent.LineReceived(sessionId = sid, line = "Alice").toProto())
-                                delay(50)
-                                emit(InboundEvent.LineReceived(sessionId = sid, line = "yes").toProto())
-                                delay(50)
-                                emit(InboundEvent.LineReceived(sessionId = sid, line = "password").toProto())
-                                delay(50)
-                                emit(InboundEvent.LineReceived(sessionId = sid, line = "1").toProto()) // race
-                                delay(50)
-                                emit(InboundEvent.LineReceived(sessionId = sid, line = "1").toProto()) // class
-                                delay(100)
-                                emit(InboundEvent.LineReceived(sessionId = sid, line = "say Hello world!").toProto())
-                                delay(50)
-                                emit(InboundEvent.LineReceived(sessionId = sid, line = "quit").toProto())
-                                delay(500)
-                            },
-                        ).collect { proto ->
+                        .eventStream(inboundEvents.receiveAsFlow())
+                        .collect { proto ->
                             received.trySend(proto)
                         }
                 }
 
             try {
+                inboundEvents.send(InboundEvent.Connected(sessionId = sid, defaultAnsiEnabled = false).toProto())
+                inboundEvents.send(InboundEvent.LineReceived(sessionId = sid, line = "Alice").toProto())
+                inboundEvents.send(InboundEvent.LineReceived(sessionId = sid, line = "yes").toProto())
+                inboundEvents.send(InboundEvent.LineReceived(sessionId = sid, line = "password").toProto())
+                inboundEvents.send(InboundEvent.LineReceived(sessionId = sid, line = "1").toProto())
+                inboundEvents.send(InboundEvent.LineReceived(sessionId = sid, line = "1").toProto())
+                inboundEvents.send(InboundEvent.LineReceived(sessionId = sid, line = "say Hello world!").toProto())
+                inboundEvents.send(InboundEvent.LineReceived(sessionId = sid, line = "quit").toProto())
+
                 // Wait for the full flow to complete (or timeout after 5 seconds).
                 val events = mutableListOf<OutboundEvent>()
                 withTimeout(5000L) {
@@ -206,6 +196,7 @@ class GatewayEngineIntegrationTest {
                 )
             } finally {
                 gatewayJob.cancel()
+                inboundEvents.close()
                 received.close()
                 grpcChannel.shutdownNow()
             }
@@ -285,11 +276,7 @@ class GatewayEngineIntegrationTest {
                 ch.send(proto)
 
                 // Verify the event reaches the delegate.
-                withTimeout(2_000L) {
-                    while (delegate.tryReceive().isFailure) {
-                        delay(10)
-                    }
-                }
+                withTimeout(2_000L) { delegate.asReceiveChannel().receive() }
             } finally {
                 busScope.cancel()
                 workingChannel?.close()
@@ -339,11 +326,7 @@ class GatewayEngineIntegrationTest {
                 )
 
                 // Wait for at least one outbound event — confirms stream is live.
-                withTimeout(3_000L) {
-                    while (delegate.tryReceive().isFailure) {
-                        delay(10)
-                    }
-                }
+                withTimeout(3_000L) { delegate.asReceiveChannel().receive() }
 
                 // Simulate engine death: shut down the gRPC server and close inbound.
                 grpcServer.shutdownNow()
@@ -374,11 +357,7 @@ class GatewayEngineIntegrationTest {
                 newInboundChannel.send(
                     InboundEvent.Connected(sessionId = sid2, defaultAnsiEnabled = false).toProto(),
                 )
-                withTimeout(3_000L) {
-                    while (delegate.tryReceive().isFailure) {
-                        delay(10)
-                    }
-                }
+                withTimeout(3_000L) { delegate.asReceiveChannel().receive() }
 
                 newInboundChannel.close()
                 grpcChannel.shutdownNow()

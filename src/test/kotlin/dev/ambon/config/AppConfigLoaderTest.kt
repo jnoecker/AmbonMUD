@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class AppConfigLoaderTest {
+    private val testResourcePath = "/test-application.yaml"
+
     @Test
     fun `system property overrides default config`() {
         val key = "config.override.ambonMUD.server.telnetPort"
@@ -12,7 +14,7 @@ class AppConfigLoaderTest {
         System.setProperty(key, "4444")
 
         try {
-            val config = AppConfigLoader.load()
+            val config = AppConfigLoader.load(resourcePath = testResourcePath)
             assertEquals(4444, config.server.telnetPort)
         } finally {
             if (previous == null) {

@@ -7,6 +7,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertArrayEquals
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.net.ServerSocket
 import java.net.Socket
@@ -16,6 +17,7 @@ import java.net.Socket
  * flushed immediately via sendRaw) so that GMCP and text frames coalesce into a single flush
  * per batch cycle.
  */
+@Tag("integration")
 class NetworkSessionGmcpBatchTest {
     /** Reads exactly [n] bytes from [input], blocking until all arrive. */
     private fun readNBytes(
