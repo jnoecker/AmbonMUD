@@ -503,88 +503,77 @@ class GameEngine(
             worldState = worldState,
         )
 
-        NavigationHandler(
-            router = router,
-            ctx = ctx,
-            statusEffects = statusEffectSystem,
-            dialogueSystem = dialogueSystem,
-            onCrossZoneMove = crossZoneMove,
-        )
-        CommunicationHandler(
-            router = router,
-            ctx = ctx,
-            groupSystem = groupSystem,
-            interEngineBus = interEngineBus,
-            playerLocationIndex = playerLocationIndex,
-            engineId = engineId,
-            onRemoteWho = if (interEngineBus != null) interEngineEventHandler::handleRemoteWho else null,
-        )
-        CombatHandler(
-            router = router,
-            ctx = ctx,
-            abilitySystem = abilitySystem,
-            statusEffects = statusEffectSystem,
-            dialogueSystem = dialogueSystem,
-        )
-        ProgressionHandler(
-            router = router,
-            ctx = ctx,
-            progression = progression,
-            abilitySystem = abilitySystem,
-            statusEffects = statusEffectSystem,
-            groupSystem = groupSystem,
-        )
-        ItemHandler(
-            router = router,
-            ctx = ctx,
-            questSystem = questSystem,
-            abilitySystem = abilitySystem,
-            markVitalsDirty = ::markVitalsDirty,
-            metrics = metrics,
-            progression = progression,
-        )
-        ShopHandler(
-            router = router,
-            ctx = ctx,
-            shopRegistry = shopRegistry,
-            markVitalsDirty = ::markVitalsDirty,
-            economyConfig = engineConfig.economy,
-        )
-        DialogueQuestHandler(
-            router = router,
-            ctx = ctx,
-            dialogueSystem = dialogueSystem,
-            questSystem = questSystem,
-            questRegistry = questRegistry,
-            achievementSystem = achievementSystem,
-            achievementRegistry = achievementRegistry,
-        )
-        GroupHandler(
-            router = router,
-            ctx = ctx,
-            groupSystem = groupSystem,
-        )
-        WorldFeaturesHandler(
-            router = router,
-            ctx = ctx,
-        )
-        AdminHandler(
-            router = router,
-            ctx = ctx,
-            onShutdown = onShutdown,
-            onMobSmited = mobSystem::onMobRemoved,
-            onCrossZoneMove = crossZoneMove,
-            dialogueSystem = dialogueSystem,
-            statusEffects = statusEffectSystem,
-            interEngineBus = interEngineBus,
-            engineId = engineId,
-            metrics = metrics,
-        )
-        UiHandler(
-            router = router,
-            ctx = ctx,
-            onPhase = phaseCallback,
-        )
+        listOf(
+            NavigationHandler(
+                ctx = ctx,
+                statusEffects = statusEffectSystem,
+                dialogueSystem = dialogueSystem,
+                onCrossZoneMove = crossZoneMove,
+            ),
+            CommunicationHandler(
+                ctx = ctx,
+                groupSystem = groupSystem,
+                interEngineBus = interEngineBus,
+                playerLocationIndex = playerLocationIndex,
+                engineId = engineId,
+                onRemoteWho = if (interEngineBus != null) interEngineEventHandler::handleRemoteWho else null,
+            ),
+            CombatHandler(
+                ctx = ctx,
+                abilitySystem = abilitySystem,
+                statusEffects = statusEffectSystem,
+                dialogueSystem = dialogueSystem,
+            ),
+            ProgressionHandler(
+                ctx = ctx,
+                progression = progression,
+                abilitySystem = abilitySystem,
+                statusEffects = statusEffectSystem,
+                groupSystem = groupSystem,
+            ),
+            ItemHandler(
+                ctx = ctx,
+                questSystem = questSystem,
+                abilitySystem = abilitySystem,
+                markVitalsDirty = ::markVitalsDirty,
+                metrics = metrics,
+                progression = progression,
+            ),
+            ShopHandler(
+                ctx = ctx,
+                shopRegistry = shopRegistry,
+                markVitalsDirty = ::markVitalsDirty,
+                economyConfig = engineConfig.economy,
+            ),
+            DialogueQuestHandler(
+                ctx = ctx,
+                dialogueSystem = dialogueSystem,
+                questSystem = questSystem,
+                questRegistry = questRegistry,
+                achievementSystem = achievementSystem,
+                achievementRegistry = achievementRegistry,
+            ),
+            GroupHandler(
+                ctx = ctx,
+                groupSystem = groupSystem,
+            ),
+            WorldFeaturesHandler(ctx = ctx),
+            AdminHandler(
+                ctx = ctx,
+                onShutdown = onShutdown,
+                onMobSmited = mobSystem::onMobRemoved,
+                onCrossZoneMove = crossZoneMove,
+                dialogueSystem = dialogueSystem,
+                statusEffects = statusEffectSystem,
+                interEngineBus = interEngineBus,
+                engineId = engineId,
+                metrics = metrics,
+            ),
+            UiHandler(
+                ctx = ctx,
+                onPhase = phaseCallback,
+            ),
+        ).forEach { it.register(router) }
     }
 
     /**

@@ -3,18 +3,18 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.commands.Command
+import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
 
 class GroupHandler(
-    router: CommandRouter,
     ctx: EngineContext,
     private val groupSystem: GroupSystem? = null,
-) {
+) : CommandHandler {
     private val outbound = ctx.outbound
 
-    init {
+    override fun register(router: CommandRouter) {
         router.on<Command.GroupCmd.Invite> { sid, cmd -> handleGroupCmd(sid, cmd) }
         router.on<Command.GroupCmd.Accept> { sid, _ -> handleGroupCmd(sid, Command.GroupCmd.Accept) }
         router.on<Command.GroupCmd.Leave> { sid, _ -> handleGroupCmd(sid, Command.GroupCmd.Leave) }

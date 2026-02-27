@@ -4,24 +4,24 @@ import dev.ambon.config.EconomyConfig
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.commands.Command
+import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
 import kotlin.math.roundToInt
 
 class ShopHandler(
-    router: CommandRouter,
     ctx: EngineContext,
     private val shopRegistry: ShopRegistry? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
     private val economyConfig: EconomyConfig = EconomyConfig(),
-) {
+) : CommandHandler {
     private val players = ctx.players
     private val items = ctx.items
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
 
-    init {
+    override fun register(router: CommandRouter) {
         router.on<Command.ShopList> { sid, _ -> handleShopList(sid) }
         router.on<Command.Buy> { sid, cmd -> handleBuy(sid, cmd) }
         router.on<Command.Sell> { sid, cmd -> handleSell(sid, cmd) }

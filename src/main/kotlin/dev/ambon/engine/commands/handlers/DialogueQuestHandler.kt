@@ -6,25 +6,25 @@ import dev.ambon.engine.AchievementSystem
 import dev.ambon.engine.QuestRegistry
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.commands.Command
+import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
 
 class DialogueQuestHandler(
-    router: CommandRouter,
     ctx: EngineContext,
     private val dialogueSystem: DialogueSystem? = null,
     private val questSystem: QuestSystem? = null,
     private val questRegistry: QuestRegistry = QuestRegistry(),
     private val achievementSystem: AchievementSystem? = null,
     private val achievementRegistry: AchievementRegistry = AchievementRegistry(),
-) {
+) : CommandHandler {
     private val players = ctx.players
     private val mobs = ctx.mobs
     private val outbound = ctx.outbound
 
-    init {
+    override fun register(router: CommandRouter) {
         router.on<Command.Talk> { sid, cmd -> handleTalk(sid, cmd) }
         router.on<Command.DialogueChoice> { sid, cmd -> handleDialogueChoice(sid, cmd) }
         router.on<Command.QuestLog> { sid, _ -> handleQuestLog(sid) }

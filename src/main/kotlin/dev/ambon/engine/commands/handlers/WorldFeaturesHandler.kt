@@ -6,21 +6,21 @@ import dev.ambon.domain.world.DoorState
 import dev.ambon.domain.world.LeverState
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.engine.commands.Command
+import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
 
 class WorldFeaturesHandler(
-    router: CommandRouter,
     ctx: EngineContext,
-) {
+) : CommandHandler {
     private val world = ctx.world
     private val players = ctx.players
     private val items = ctx.items
     private val outbound = ctx.outbound
     private val worldState = ctx.worldState
 
-    init {
+    override fun register(router: CommandRouter) {
         router.on<Command.OpenFeature> { sid, cmd -> handleOpenFeature(sid, cmd.keyword) }
         router.on<Command.CloseFeature> { sid, cmd -> handleCloseFeature(sid, cmd.keyword) }
         router.on<Command.UnlockFeature> { sid, cmd -> handleUnlockFeature(sid, cmd.keyword) }
