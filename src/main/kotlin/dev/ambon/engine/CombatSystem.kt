@@ -312,7 +312,7 @@ class CombatSystem(
                         armorAbsorbed = playerArmorAbsorbed,
                         clampedToMinimum = playerMinDamageClamped,
                     )
-                mob.hp = (mob.hp - effectivePlayerDamage).coerceAtLeast(0)
+                mob.takeDamage(effectivePlayerDamage)
                 markMobHpDirty(mob.id)
 
                 // Add threat (damage * class multiplier)
@@ -388,7 +388,7 @@ class CombatSystem(
                         armorAbsorbed = 0,
                         shieldAbsorbed = shieldAbsorbed,
                     )
-                target.hp = (target.hp - mobDamage).coerceAtLeast(0)
+                target.takeDamage(mobDamage)
                 markVitalsDirty(targetSid)
                 val mobHitText =
                     if (shieldAbsorbed > 0 && mobDamage == 0) {
