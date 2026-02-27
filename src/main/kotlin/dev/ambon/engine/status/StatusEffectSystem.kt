@@ -3,6 +3,7 @@ package dev.ambon.engine.status
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -19,9 +20,7 @@ class StatusEffectSystem(
     private val outbound: OutboundBus,
     private val clock: Clock,
     private val rng: Random = Random(),
-    private val markVitalsDirty: (SessionId) -> Unit = {},
-    private val markMobHpDirty: (MobId) -> Unit = {},
-    private val markStatusDirty: (SessionId) -> Unit = {},
+    private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
 ) {
     private val playerEffects = mutableMapOf<SessionId, MutableList<ActiveEffect>>()
     private val mobEffects = mutableMapOf<MobId, MutableList<ActiveEffect>>()
@@ -118,7 +117,7 @@ class StatusEffectSystem(
                             OutboundEvent.SendText(sessionId, "${def.displayName} fades."),
                         )
                     }
-                    markStatusDirty(sessionId)
+                    dirtyNotifier.playerStatusDirty(sessionId)
                     continue
                 }
                 // Depleted shields
@@ -127,7 +126,7 @@ class StatusEffectSystem(
                     outbound.send(
                         OutboundEvent.SendText(sessionId, "${def.displayName} shatters!"),
                     )
-                    markStatusDirty(sessionId)
+                    dirtyNotifier.playerStatusDirty(sessionId)
                     continue
                 }
                 // Tick DOT/HOT (fire the last tick when nowMs == expiresAtMs)
@@ -137,7 +136,7 @@ class StatusEffectSystem(
                     when (def.effectType) {
                         EffectType.DOT -> {
                             player.takeDamage(value)
-                            markVitalsDirty(sessionId)
+                            dirtyNotifier.playerVitalsDirty(sessionId)
                             outbound.send(
                                 OutboundEvent.SendText(
                                     sessionId,
@@ -150,7 +149,7 @@ class StatusEffectSystem(
                             player.healHp(value)
                             val healed = player.hp - before
                             if (healed > 0) {
-                                markVitalsDirty(sessionId)
+                                dirtyNotifier.playerVitalsDirty(sessionId)
                                 outbound.send(
                                     OutboundEvent.SendText(
                                         sessionId,
@@ -192,7 +191,7 @@ class StatusEffectSystem(
                     effect.lastTickAtMs = nowMs
                     val value = rollRange(rng, def.tickMinValue, def.tickMaxValue)
                     mob.takeDamage(value)
-                    markMobHpDirty(mobId)
+                    dirtyNotifier.mobHpDirty(mobId)
                     // Notify the player who applied it
                     val source = effect.sourceSessionId
                     if (source != null) {
@@ -255,7 +254,7 @@ class StatusEffectSystem(
             effect.shieldRemaining -= absorbed
             remaining -= absorbed
         }
-        if (remaining != rawDamage) markStatusDirty(sessionId)
+        if (remaining != rawDamage) dirtyNotifier.playerStatusDirty(sessionId)
         return remaining
     }
 
@@ -298,7 +297,7 @@ class StatusEffectSystem(
 
     fun removeAllFromPlayer(sessionId: SessionId) {
         playerEffects.remove(sessionId)
-        markStatusDirty(sessionId)
+        dirtyNotifier.playerStatusDirty(sessionId)
     }
 
     fun removeAllFromMob(mobId: MobId) {

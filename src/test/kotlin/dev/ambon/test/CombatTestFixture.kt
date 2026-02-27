@@ -7,6 +7,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
@@ -46,8 +47,7 @@ class CombatTestFixture(
         strDivisor: Int = 3,
         dexDodgePerPoint: Int = 2,
         maxDodgePercent: Int = 30,
-        markVitalsDirty: (SessionId) -> Unit = {},
-        markMobHpDirty: (MobId) -> Unit = {},
+        dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
         statusEffects: StatusEffectSystem? = null,
         onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
         groupSystem: GroupSystem? = null,
@@ -76,8 +76,7 @@ class CombatTestFixture(
             strDivisor = strDivisor,
             dexDodgePerPoint = dexDodgePerPoint,
             maxDodgePercent = maxDodgePercent,
-            markVitalsDirty = markVitalsDirty,
-            markMobHpDirty = markMobHpDirty,
+            dirtyNotifier = dirtyNotifier,
             statusEffects = statusEffects,
             onMobKilledByPlayer = onMobKilledByPlayer,
             groupSystem = groupSystem,

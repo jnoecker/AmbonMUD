@@ -33,8 +33,7 @@ class CombatSystem(
     private val strDivisor: Int = 3,
     private val dexDodgePerPoint: Int = 2,
     private val maxDodgePercent: Int = 30,
-    private val markVitalsDirty: (SessionId) -> Unit = {},
-    private val markMobHpDirty: (MobId) -> Unit = {},
+    private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
     private val statusEffects: StatusEffectSystem? = null,
     private val onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
     private val groupSystem: GroupSystem? = null,
@@ -190,7 +189,7 @@ class CombatSystem(
         now: Long,
     ) {
         playerTarget[sessionId] = mobId
-        markVitalsDirty(sessionId)
+        dirtyNotifier.playerVitalsDirty(sessionId)
         if (!activeMobs.containsKey(mobId)) {
             activeMobs[mobId] = MobCombatState(mobId = mobId, nextTickAtMs = now + tickMillis)
         }
@@ -316,7 +315,7 @@ class CombatSystem(
                         clampedToMinimum = playerMinDamageClamped,
                     )
                 mob.takeDamage(effectivePlayerDamage)
-                markMobHpDirty(mob.id)
+                dirtyNotifier.mobHpDirty(mob.id)
 
                 // Add threat (damage * class multiplier)
                 val multiplier = threatMultiplier(player)
@@ -394,7 +393,7 @@ class CombatSystem(
                         shieldAbsorbed = shieldAbsorbed,
                     )
                 target.takeDamage(mobDamage)
-                markVitalsDirty(targetSid)
+                dirtyNotifier.playerVitalsDirty(targetSid)
                 val mobHitText =
                     if (shieldAbsorbed > 0 && mobDamage == 0) {
                         "Your shield absorbs ${mob.name}'s attack$mobFeedbackSuffix."
@@ -454,7 +453,7 @@ class CombatSystem(
     private fun removePlayerFromCombat(sessionId: SessionId) {
         playerTarget.remove(sessionId)
         threatTable.removePlayer(sessionId)
-        markVitalsDirty(sessionId)
+        dirtyNotifier.playerVitalsDirty(sessionId)
         cleanupEmptyMobs()
     }
 
@@ -464,7 +463,7 @@ class CombatSystem(
         val toRemove = playerTarget.entries.filter { it.value == mobId }.map { it.key }
         for (sid in toRemove) {
             playerTarget.remove(sid)
-            markVitalsDirty(sid)
+            dirtyNotifier.playerVitalsDirty(sid)
         }
         threatTable.removeMob(mobId)
     }
@@ -592,7 +591,7 @@ class CombatSystem(
             }
         if (goldDrop <= 0L) return
         player.gold += goldDrop
-        markVitalsDirty(sessionId)
+        dirtyNotifier.playerVitalsDirty(sessionId)
         outbound.send(OutboundEvent.SendText(sessionId, "You find $goldDrop gold."))
     }
 
@@ -631,7 +630,7 @@ class CombatSystem(
             val result = players.grantXp(sid, reward, progression) ?: continue
             metrics.onXpAwarded(reward, "kill")
             outbound.send(OutboundEvent.SendText(sid, "You gain $reward XP."))
-            markVitalsDirty(sid)
+            dirtyNotifier.playerVitalsDirty(sid)
             if (result.levelsGained > 0) {
                 metrics.onLevelUp()
                 val levelUpMessage =
