@@ -50,6 +50,7 @@ class GmcpEventHandler(
                 gmcpEmitter.sendCharItemsList(sid, items.inventory(sid), items.equipment(sid))
                 gmcpEmitter.sendRoomPlayers(sid, players.playersInRoom(player.roomId).toList())
                 gmcpEmitter.sendRoomMobs(sid, mobs.mobsInRoom(player.roomId))
+                gmcpEmitter.sendRoomItems(sid, items.itemsInRoom(player.roomId))
                 gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid))
                 gmcpEmitter.sendCharStatusEffects(sid, statusEffectSystem.activePlayerEffects(sid))
                 gmcpEmitter.sendCharAchievements(sid, player, achievementRegistry)

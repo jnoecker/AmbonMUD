@@ -1372,6 +1372,13 @@ body {
   white-space: nowrap;
 }
 
+.item-list li > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .entity-meta,
 .effect-time,
 .effect-type,
@@ -1430,6 +1437,29 @@ body {
 .mob-command-icon {
   width: 14px;
   height: 14px;
+}
+
+.item-popout-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.equipment-popout-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: visible;
+  white-space: normal;
+}
+
+.equipment-popout-row > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .identity-name {

@@ -427,6 +427,42 @@ class GmcpEmitterTest {
         }
 
     @Test
+    fun `sendRoomItems emits item list JSON`() =
+        runTest {
+            val e = emitter("Room.Items")
+            e.sendRoomItems(
+                sid,
+                listOf(
+                    item(id = "zone:apple", name = "a red apple", slot = null),
+                    item(id = "zone:helm", name = "an iron helm", slot = ItemSlot.HEAD),
+                ),
+            )
+            val data = drainGmcp()[0]
+            assertEquals("Room.Items", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"id\":\"zone:apple\""))
+            assertTrue(data.jsonData.contains("\"name\":\"a red apple\""))
+            assertTrue(data.jsonData.contains("\"id\":\"zone:helm\""))
+        }
+
+    @Test
+    fun `sendRoomItems with empty list emits empty array`() =
+        runTest {
+            val e = emitter("Room.Items")
+            e.sendRoomItems(sid, emptyList())
+            val data = drainGmcp()[0]
+            assertEquals("Room.Items", data.gmcpPackage)
+            assertEquals("[]", data.jsonData)
+        }
+
+    @Test
+    fun `sendRoomItems skipped when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendRoomItems(sid, listOf(item()))
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    @Test
     fun `item without slot emits null for slot`() =
         runTest {
             val e = emitter("Char.Items")

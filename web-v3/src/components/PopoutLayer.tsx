@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import type { ItemSummary, PopoutPanel, RoomState } from "../types";
+import { DropItemIcon, RemoveItemIcon, WearItemIcon } from "./Icons";
 
 interface PopoutLayerProps {
   activePopout: PopoutPanel;
@@ -10,6 +11,10 @@ interface PopoutLayerProps {
   equipment: Record<string, ItemSummary>;
   equipmentSlots: string[];
   mapCanvasRef: RefObject<HTMLCanvasElement | null>;
+  canManageItems: boolean;
+  onWearItem: (itemName: string) => void;
+  onDropItem: (itemName: string) => void;
+  onRemoveItem: (slot: string) => void;
   onClose: () => void;
 }
 
@@ -22,6 +27,10 @@ export function PopoutLayer({
   equipment,
   equipmentSlots,
   mapCanvasRef,
+  canManageItems,
+  onWearItem,
+  onDropItem,
+  onRemoveItem,
   onClose,
 }: PopoutLayerProps) {
   if (!activePopout) return null;
@@ -75,7 +84,33 @@ export function PopoutLayer({
             ) : (
               <ul className="item-list">
                 {inventory.map((item) => (
-                  <li key={item.id}>{item.name}</li>
+                  <li key={item.id}>
+                    <span>{item.name}</span>
+                    <span className="item-popout-actions">
+                      {item.slot && (
+                        <button
+                          type="button"
+                          className="mob-command-button"
+                          title={`Wear ${item.name}`}
+                          aria-label={`Wear ${item.name}`}
+                          disabled={!canManageItems}
+                          onClick={() => onWearItem(item.name)}
+                        >
+                          <WearItemIcon className="mob-command-icon" />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="mob-command-button"
+                        title={`Drop ${item.name}`}
+                        aria-label={`Drop ${item.name}`}
+                        disabled={!canManageItems}
+                        onClick={() => onDropItem(item.name)}
+                      >
+                        <DropItemIcon className="mob-command-icon" />
+                      </button>
+                    </span>
+                  </li>
                 ))}
               </ul>
             )}
@@ -87,14 +122,26 @@ export function PopoutLayer({
             {equipmentSlots.length === 0 ? (
               <p className="empty-note">Nothing currently worn.</p>
             ) : (
-              <ul className="equipment-list">
-                {equipmentSlots.map((slot) => (
-                  <li key={slot}>
-                    <span className="equipment-slot">{slot}</span>
-                    <span>{equipment[slot]?.name ?? "Unknown"}</span>
-                  </li>
-                ))}
-              </ul>
+                <ul className="equipment-list">
+                  {equipmentSlots.map((slot) => (
+                    <li key={slot}>
+                      <span className="equipment-slot">{slot}</span>
+                      <span className="equipment-popout-row">
+                        <span>{equipment[slot]?.name ?? "Unknown"}</span>
+                        <button
+                          type="button"
+                          className="mob-command-button"
+                          title={`Remove ${slot}`}
+                          aria-label={`Remove ${slot}`}
+                          disabled={!canManageItems}
+                          onClick={() => onRemoveItem(slot)}
+                        >
+                          <RemoveItemIcon className="mob-command-icon" />
+                        </button>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
             )}
           </div>
         )}
