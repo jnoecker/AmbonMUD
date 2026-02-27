@@ -171,6 +171,9 @@ class ItemRegistry {
         val armor: Int = 0,
         val strength: Int = 0,
         val dexterity: Int = 0,
+        val constitution: Int = 0,
+        val intelligence: Int = 0,
+        val wisdom: Int = 0,
         val charisma: Int = 0,
     )
 
@@ -180,15 +183,21 @@ class ItemRegistry {
         var armor = 0
         var strength = 0
         var dexterity = 0
+        var constitution = 0
+        var intelligence = 0
+        var wisdom = 0
         var charisma = 0
         for (inst in equipped) {
             attack += inst.item.damage
             armor += inst.item.armor
             strength += inst.item.strength
             dexterity += inst.item.dexterity
+            constitution += inst.item.constitution
+            intelligence += inst.item.intelligence
+            wisdom += inst.item.wisdom
             charisma += inst.item.charisma
         }
-        return EquipmentBonuses(attack, armor, strength, dexterity, charisma)
+        return EquipmentBonuses(attack, armor, strength, dexterity, constitution, intelligence, wisdom, charisma)
     }
 
     fun addMobItem(

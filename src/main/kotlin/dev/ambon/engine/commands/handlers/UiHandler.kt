@@ -1,9 +1,6 @@
 package dev.ambon.engine.commands.handlers
 
-import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
@@ -12,16 +9,17 @@ import dev.ambon.engine.events.OutboundEvent
 
 class UiHandler(
     router: CommandRouter,
-    private val players: PlayerRegistry,
-    private val outbound: OutboundBus,
-    private val combat: CombatSystem? = null,
+    ctx: EngineContext,
     private val onPhase: (suspend (SessionId, String?) -> PhaseResult)? = null,
 ) {
+    private val players = ctx.players
+    private val outbound = ctx.outbound
+    private val combat = ctx.combat
+
     init {
-        router.on<Command.Noop> { sid, _ -> outbound.send(OutboundEvent.SendPrompt(sid)) }
+        router.on<Command.Noop> { _, _ -> }
         router.on<Command.Unknown> { sid, _ ->
             outbound.send(OutboundEvent.SendText(sid, "Huh?"))
-            outbound.send(OutboundEvent.SendPrompt(sid))
         }
         router.on<Command.Invalid> { sid, cmd ->
             outbound.send(OutboundEvent.SendText(sid, "Invalid command: ${cmd.command}"))
@@ -30,7 +28,6 @@ class UiHandler(
             } else {
                 outbound.send(OutboundEvent.SendText(sid, "Try 'help' for a list of commands."))
             }
-            outbound.send(OutboundEvent.SendPrompt(sid))
         }
         router.on<Command.Help> { sid, _ -> handleHelp(sid) }
         router.on<Command.Quit> { sid, _ -> outbound.send(OutboundEvent.Close(sid, "Goodbye!")) }
@@ -38,11 +35,9 @@ class UiHandler(
         router.on<Command.AnsiOff> { sid, _ -> handleAnsiOff(sid) }
         router.on<Command.Clear> { sid, _ ->
             outbound.send(OutboundEvent.ClearScreen(sid))
-            outbound.send(OutboundEvent.SendPrompt(sid))
         }
         router.on<Command.Colors> { sid, _ ->
             outbound.send(OutboundEvent.ShowAnsiDemo(sid))
-            outbound.send(OutboundEvent.SendPrompt(sid))
         }
         router.on<Command.Phase> { sid, cmd -> handlePhase(sid, cmd) }
     }
@@ -113,35 +108,30 @@ class UiHandler(
                 """.trimIndent(),
             ),
         )
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleAnsiOn(sessionId: SessionId) {
         outbound.send(OutboundEvent.SetAnsi(sessionId, true))
         players.setAnsiEnabled(sessionId, true)
         outbound.send(OutboundEvent.SendInfo(sessionId, "ANSI enabled"))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleAnsiOff(sessionId: SessionId) {
         outbound.send(OutboundEvent.SetAnsi(sessionId, false))
         players.setAnsiEnabled(sessionId, false)
         outbound.send(OutboundEvent.SendInfo(sessionId, "ANSI disabled"))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handlePhase(
         sessionId: SessionId,
         cmd: Command.Phase,
     ) {
-        if (combat?.isInCombat(sessionId) == true) {
+        if (combat.isInCombat(sessionId)) {
             outbound.send(OutboundEvent.SendText(sessionId, "You can't switch layers while in combat!"))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         if (onPhase == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Layering is not enabled on this server."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         when (val result = onPhase.invoke(sessionId, cmd.targetHint)) {
@@ -169,6 +159,5 @@ class UiHandler(
                 outbound.send(OutboundEvent.SendText(sessionId, result.reason))
             }
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 }

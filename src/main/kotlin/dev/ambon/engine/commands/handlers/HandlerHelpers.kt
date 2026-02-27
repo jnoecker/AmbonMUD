@@ -12,9 +12,25 @@ import dev.ambon.domain.world.World
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+
+/**
+ * Resolves [sessionId] to a [PlayerState] and executes [block] with it.
+ * Returns early from the enclosing function if the player is not found.
+ *
+ * Because this function is `inline`, the lambda is inlined at the call site,
+ * so [block] may call suspend functions and use non-local `return` statements.
+ */
+internal inline fun PlayerRegistry.withPlayer(
+    sessionId: SessionId,
+    block: (PlayerState) -> Unit,
+) {
+    val player = get(sessionId) ?: return
+    block(player)
+}
 
 /** Sends a full room description (title, description, exits, items, players, mobs) to [sessionId]. */
 internal suspend fun sendLook(
@@ -140,7 +156,6 @@ internal suspend fun requireStaff(
     val me = players.get(sessionId) ?: return false
     if (!me.isStaff) {
         outbound.send(OutboundEvent.SendError(sessionId, "You are not staff."))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
         return false
     }
     return true

@@ -1,6 +1,5 @@
 package dev.ambon.engine.commands.handlers
 
-import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.commands.Command
@@ -10,9 +9,11 @@ import dev.ambon.engine.events.OutboundEvent
 
 class GroupHandler(
     router: CommandRouter,
-    private val outbound: OutboundBus,
+    ctx: EngineContext,
     private val groupSystem: GroupSystem? = null,
 ) {
+    private val outbound = ctx.outbound
+
     init {
         router.on<Command.GroupCmd.Invite> { sid, cmd -> handleGroupCmd(sid, cmd) }
         router.on<Command.GroupCmd.Accept> { sid, _ -> handleGroupCmd(sid, Command.GroupCmd.Accept) }
@@ -28,7 +29,6 @@ class GroupHandler(
     ) {
         if (groupSystem == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Groups are not available."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val err =
@@ -42,7 +42,6 @@ class GroupHandler(
         if (err != null) {
             outbound.send(OutboundEvent.SendError(sessionId, err))
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleGtell(
@@ -51,13 +50,11 @@ class GroupHandler(
     ) {
         if (groupSystem == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Groups are not available."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val err = groupSystem.gtell(sessionId, cmd.message)
         if (err != null) {
             outbound.send(OutboundEvent.SendError(sessionId, err))
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 }

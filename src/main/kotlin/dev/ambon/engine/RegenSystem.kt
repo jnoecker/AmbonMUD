@@ -99,7 +99,7 @@ class RegenSystem(
     }
 
     private fun manaRegenIntervalMs(player: PlayerState): Long {
-        val equipWis = items.equipment(player.sessionId).values.sumOf { it.item.wisdom }
+        val equipWis = items.equipmentBonuses(player.sessionId).wisdom
         val totalWis = player.wisdom + equipWis
         val wisBonus = (totalWis - PlayerState.BASE_STAT).coerceAtLeast(0).toLong()
         val interval = manaBaseIntervalMs - (wisBonus * msPerWisdom)
@@ -107,8 +107,7 @@ class RegenSystem(
     }
 
     private fun totalConstitution(player: PlayerState): Int {
-        val equipmentConstitution = items.equipment(player.sessionId).values.sumOf { it.item.constitution }
-        val total = player.constitution + equipmentConstitution
-        return total.coerceAtLeast(0)
+        val equipCon = items.equipmentBonuses(player.sessionId).constitution
+        return (player.constitution + equipCon).coerceAtLeast(0)
     }
 }

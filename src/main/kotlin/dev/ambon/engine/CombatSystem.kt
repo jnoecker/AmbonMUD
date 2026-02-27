@@ -518,13 +518,13 @@ class CombatSystem(
     private fun strDamageBonus(player: PlayerState, equipStr: Int): Int {
         val statusStr = statusEffects?.getPlayerStatMods(player.sessionId)?.str ?: 0
         val totalStr = player.strength + equipStr + statusStr
-        return (totalStr - PlayerState.BASE_STAT) / strDivisor
+        return PlayerState.statBonus(totalStr, strDivisor)
     }
 
     private fun dodgeChance(player: PlayerState, equipDex: Int): Int {
         val statusDex = statusEffects?.getPlayerStatMods(player.sessionId)?.dex ?: 0
         val totalDex = player.dexterity + equipDex + statusDex
-        val chance = (totalDex - PlayerState.BASE_STAT) * dexDodgePerPoint
+        val chance = PlayerState.statBonus(totalDex, 1) * dexDodgePerPoint
         return chance.coerceIn(0, maxDodgePercent)
     }
 
