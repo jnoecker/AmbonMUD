@@ -102,23 +102,7 @@ class CombatSystem(
         val mob = matches.first()
 
         val now = clock.millis()
-
-        // Register player's target
-        playerTarget[sessionId] = mob.id
-        markVitalsDirty(sessionId)
-
-        // Ensure mob is in active combat
-        if (!activeMobs.containsKey(mob.id)) {
-            activeMobs[mob.id] =
-                MobCombatState(
-                    mobId = mob.id,
-                    nextTickAtMs = now + tickMillis,
-                )
-        }
-
-        // Add initial threat
-        val multiplier = threatMultiplier(player)
-        threatTable.addThreat(mob.id, sessionId, multiplier)
+        registerCombatant(sessionId, mob.id, player, now)
 
         outbound.send(OutboundEvent.SendText(sessionId, "You attack ${mob.name}."))
         broadcastToRoom(players, outbound, roomId, "${player.name} attacks ${mob.name}.", exclude = sessionId)
@@ -187,24 +171,30 @@ class CombatSystem(
         if (player.roomId != mob.roomId) return false
 
         val now = clock.millis()
-
-        playerTarget[sessionId] = mobId
-        markVitalsDirty(sessionId)
-        if (!activeMobs.containsKey(mobId)) {
-            activeMobs[mobId] =
-                MobCombatState(
-                    mobId = mobId,
-                    nextTickAtMs = now + tickMillis,
-                )
-        }
-        val multiplier = threatMultiplier(player)
-        threatTable.addThreat(mobId, sessionId, multiplier)
+        registerCombatant(sessionId, mobId, player, now)
 
         outbound.send(OutboundEvent.SendText(sessionId, "${mob.name} attacks you!"))
         broadcastToRoom(players, outbound, player.roomId, "${mob.name} attacks ${player.name}.", exclude = sessionId)
         outbound.send(OutboundEvent.SendPrompt(sessionId))
 
         return true
+    }
+
+    /** Links [sessionId] as a combatant targeting [mobId]: records the target, marks vitals dirty,
+     *  activates the mob in the combat tick loop (if not already active), and seeds the threat table. */
+    private fun registerCombatant(
+        sessionId: SessionId,
+        mobId: MobId,
+        player: PlayerState,
+        now: Long,
+    ) {
+        playerTarget[sessionId] = mobId
+        markVitalsDirty(sessionId)
+        if (!activeMobs.containsKey(mobId)) {
+            activeMobs[mobId] = MobCombatState(mobId = mobId, nextTickAtMs = now + tickMillis)
+        }
+        val multiplier = threatMultiplier(player)
+        threatTable.addThreat(mobId, sessionId, multiplier)
     }
 
     suspend fun fleeMob(mobId: MobId): Boolean {
