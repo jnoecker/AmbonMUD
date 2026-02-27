@@ -141,14 +141,14 @@ Sessions
 
 ## Project Map
 
-### Source Files (~163 Kotlin files in main, ~78 test files)
+### Source Files (~197 Kotlin files in main, ~86 test files)
 
 | Package | Purpose | Key Files |
 |---------|---------|-----------|
 | `dev.ambon` | Entry point, wiring | `Main.kt` (bootstrap), `MudServer.kt` (25K, composition root), `CoroutineExtensions.kt` |
 | `dev.ambon.config` | Configuration | `AppConfig.kt` (33K, full schema + `validated()`), `AppConfigLoader.kt` |
-| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (62K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (25K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (12K), `GroupSystem.kt` (12K), `QuestSystem.kt` (12K), `AchievementSystem.kt` (11K), `ThreatTable.kt`, `ShopRegistry.kt`, `EngineUtil.kt` |
-| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (17K, sealed Command hierarchy), `CommandRouter.kt` (74K, all command handlers) |
+| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (38K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (25K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (15K), `GroupSystem.kt` (12K), `QuestSystem.kt` (11K), `AchievementSystem.kt` (10K), `ThreatTable.kt`, `ShopRegistry.kt`, `EngineUtil.kt` |
+| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (17K, sealed Command hierarchy), `CommandRouter.kt` (dispatch infrastructure only); handlers in `handlers/` subpackage: `NavigationHandler`, `CommunicationHandler`, `CombatHandler`, `ItemHandler`, `WorldFeaturesHandler`, `ProgressionHandler`, `DialogueQuestHandler`, `ShopHandler`, `GroupHandler`, `UiHandler`, `AdminHandler`, `HandlerHelpers` |
 | `dev.ambon.engine.abilities` | Ability/spell system | `AbilitySystem.kt` (16K), `AbilityRegistry.kt`, `AbilityRegistryLoader.kt`, `AbilityDefinition.kt` |
 | `dev.ambon.engine.status` | Status effects | `StatusEffectSystem.kt` (13K), `StatusEffectRegistry.kt`, `StatusEffectRegistryLoader.kt`, `StatusEffectDefinition.kt`, `ActiveEffect.kt` |
 | `dev.ambon.engine.behavior` | Mob behavior trees | `BehaviorTreeSystem.kt`, `BtNode.kt`, `BtResult.kt`, `BtContext.kt`, `BehaviorTemplates.kt`, `MobBehaviorMemory.kt`; nodes/conditions/actions subdirs |
@@ -365,7 +365,7 @@ When running in Claude Code cloud sessions (claude.ai/code), be aware of these c
 ## Known Quirks
 
 - **Compiler warnings in tests:** Several test files produce "No cast needed" warnings (e.g. `InterEngineMessageHandlingTest.kt`, `CrossEngineCommandsTest.kt`). These are harmless and do not affect test results.
-- **Largest files:** `CommandRouter.kt` (74K) and `GameEngine.kt` (62K) are intentionally large — they are the central dispatch hubs. Navigate by command/event name.
+- **Largest files:** `GameEngine.kt` (38K, tick loop) and `WorldLoader.kt` (30K) are the largest remaining files. Command handlers are split across `handlers/` subpackage — navigate by handler class name. `CommandRouter.kt` itself is now just 62 lines of dispatch infrastructure.
 - **Generated sources:** Protobuf/gRPC generates code under `build/generated/`. A child `.editorconfig` suppresses ktlint for these files.
 - **Gradle daemon idle timeout:** Set to 10 minutes (`gradle.properties`) to reclaim stale daemons faster than the 3-hour default.
 - **Staff access:** Granted by editing `isStaff: true` in the player YAML file (or `is_staff` column in Postgres) — there is no in-game promotion command.

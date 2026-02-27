@@ -17,6 +17,7 @@ import dev.ambon.engine.commands.handlers.AdminHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
+import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.GroupHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
@@ -55,12 +56,21 @@ internal fun buildTestRouter(
     shopRegistry: ShopRegistry? = null,
     economyConfig: EconomyConfig = EconomyConfig(),
 ): CommandRouter {
-    val router = CommandRouter()
-    UiHandler(router = router, players = players, outbound = outbound, combat = combat, onPhase = onPhase)
+    val router = CommandRouter(outbound = outbound, players = players)
+    val ctx = EngineContext(
+        players = players,
+        mobs = mobs,
+        world = world,
+        items = items,
+        outbound = outbound,
+        combat = combat,
+        gmcpEmitter = null,
+        worldState = worldState,
+    )
+    UiHandler(router = router, ctx = ctx, onPhase = onPhase)
     CommunicationHandler(
         router = router,
-        players = players,
-        outbound = outbound,
+        ctx = ctx,
         groupSystem = groupSystem,
         interEngineBus = interEngineBus,
         playerLocationIndex = playerLocationIndex,
@@ -69,45 +79,29 @@ internal fun buildTestRouter(
     )
     NavigationHandler(
         router = router,
-        world = world,
-        players = players,
-        mobs = mobs,
-        items = items,
-        combat = combat,
-        outbound = outbound,
-        worldState = worldState,
+        ctx = ctx,
         onCrossZoneMove = onCrossZoneMove,
     )
-    CombatHandler(router = router, players = players, mobs = mobs, combat = combat, outbound = outbound)
+    CombatHandler(router = router, ctx = ctx)
     ProgressionHandler(
         router = router,
-        players = players,
-        items = items,
-        combat = combat,
-        outbound = outbound,
+        ctx = ctx,
         progression = progression,
         groupSystem = groupSystem,
     )
-    ItemHandler(router = router, players = players, items = items, combat = combat, outbound = outbound)
+    ItemHandler(router = router, ctx = ctx)
     ShopHandler(
         router = router,
-        players = players,
-        items = items,
-        outbound = outbound,
+        ctx = ctx,
         shopRegistry = shopRegistry,
         economyConfig = economyConfig,
     )
-    DialogueQuestHandler(router = router, players = players, mobs = mobs, outbound = outbound)
-    GroupHandler(router = router, outbound = outbound, groupSystem = groupSystem)
-    WorldFeaturesHandler(router = router, world = world, players = players, items = items, outbound = outbound, worldState = worldState)
+    DialogueQuestHandler(router = router, ctx = ctx)
+    GroupHandler(router = router, ctx = ctx, groupSystem = groupSystem)
+    WorldFeaturesHandler(router = router, ctx = ctx)
     AdminHandler(
         router = router,
-        world = world,
-        players = players,
-        mobs = mobs,
-        items = items,
-        combat = combat,
-        outbound = outbound,
+        ctx = ctx,
         onShutdown = onShutdown,
         onMobSmited = onMobSmited,
         interEngineBus = interEngineBus,
