@@ -14,8 +14,8 @@ private val log = KotlinLogging.logger {}
  * Call [flushDirty] or [flushAll] to write dirty records to the delegate.
  */
 class WriteCoalescingPlayerRepository(
-    private val delegate: PlayerRepository,
-) : PlayerRepository {
+    delegate: PlayerRepository,
+) : DelegatingPlayerRepository(delegate) {
     private val lock = ReentrantLock()
     private val cache = mutableMapOf<PlayerId, PlayerRecord>()
 
@@ -31,46 +31,43 @@ class WriteCoalescingPlayerRepository(
         val record: PlayerRecord,
     )
 
-    override suspend fun findByName(name: String): PlayerRecord? {
+    override suspend fun lookupCachedByName(name: String): PlayerRecord? {
         val key = name.lowercase()
-        val cached =
-            nameIndex[key]?.let { pid ->
-                lock.withLock { cache[pid] }
-            }
-        if (cached != null) return cached
-        val loaded = delegate.findByName(name) ?: return null
-        lock.withLock {
-            if (cache[loaded.id] == null) {
-                putIntoCache(loaded)
-            }
+        return nameIndex[key]?.let { pid ->
+            lock.withLock { cache[pid] }
         }
-        return loaded
     }
 
-    override suspend fun findById(id: PlayerId): PlayerRecord? {
-        val cached = lock.withLock { cache[id] }
-        if (cached != null) return cached
-        val loaded = delegate.findById(id) ?: return null
+    override suspend fun lookupCachedById(id: PlayerId): PlayerRecord? = lock.withLock { cache[id] }
+
+    override suspend fun storeInCache(record: PlayerRecord) {
         lock.withLock {
-            if (cache[loaded.id] == null) {
-                putIntoCache(loaded)
-            }
+            putIntoCache(record)
         }
-        return loaded
     }
 
-    override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
-        val record = delegate.create(request)
+    override suspend fun storeOnReadMiss(record: PlayerRecord) {
+        lock.withLock {
+            if (cache[record.id] == null) {
+                putIntoCache(record)
+            }
+        }
+    }
+
+    override suspend fun storeOnCreate(record: PlayerRecord) {
         lock.withLock {
             putIntoCache(record)
             if (versions[record.id] == null) {
                 versions[record.id] = 0L
             }
         }
-        return record
     }
 
-    override suspend fun save(record: PlayerRecord) {
+    override suspend fun persistSave(record: PlayerRecord) {
+        // Save is intentionally coalesced and flushed asynchronously.
+    }
+
+    override suspend fun storeOnSave(record: PlayerRecord) {
         lock.withLock {
             putIntoCache(record)
             val nextVersion = (versions[record.id] ?: 0L) + 1L
