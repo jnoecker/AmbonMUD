@@ -1,16 +1,11 @@
 package dev.ambon.engine.status
 
-import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
-import dev.ambon.engine.LoginResult
-import dev.ambon.engine.MobRegistry
-import dev.ambon.engine.PlayerRegistry
-import dev.ambon.engine.items.ItemRegistry
-import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
+import dev.ambon.test.StatusEffectTestFixture
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -28,63 +23,17 @@ class StatusEffectSystemTest {
     private fun buildSystem(
         clock: MutableClock = MutableClock(0L),
         rng: Random = Random(42),
-    ): TestHarness {
-        val items = ItemRegistry()
-        val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-        val mobs = MobRegistry()
-        val outbound = LocalOutboundBus()
-        val registry = StatusEffectRegistry()
-        val vitalsDirty = mutableListOf<SessionId>()
-        val mobHpDirty = mutableListOf<MobId>()
-        val statusDirty = mutableListOf<SessionId>()
+    ): StatusEffectTestFixture = StatusEffectTestFixture(roomId = roomId, clock = clock, rng = rng)
 
-        val system =
-            StatusEffectSystem(
-                registry = registry,
-                players = players,
-                mobs = mobs,
-                outbound = outbound,
-                clock = clock,
-                rng = rng,
-                markVitalsDirty = { vitalsDirty.add(it) },
-                markMobHpDirty = { mobHpDirty.add(it) },
-                markStatusDirty = { statusDirty.add(it) },
-            )
-
-        return TestHarness(
-            players = players,
-            mobs = mobs,
-            outbound = outbound,
-            registry = registry,
-            system = system,
-            clock = clock,
-            vitalsDirty = vitalsDirty,
-            mobHpDirty = mobHpDirty,
-            statusDirty = statusDirty,
-        )
-    }
-
-    private data class TestHarness(
-        val players: PlayerRegistry,
-        val mobs: MobRegistry,
-        val outbound: LocalOutboundBus,
-        val registry: StatusEffectRegistry,
-        val system: StatusEffectSystem,
-        val clock: MutableClock,
-        val vitalsDirty: MutableList<SessionId>,
-        val mobHpDirty: MutableList<MobId>,
-        val statusDirty: MutableList<SessionId>,
-    )
-
-    private fun TestHarness.loginPlayer() {
+    private fun StatusEffectTestFixture.loginPlayer() {
         val result =
             kotlinx.coroutines.runBlocking {
                 players.login(sid, "TestPlayer", "pass", defaultAnsiEnabled = false)
             }
-        assertEquals(LoginResult.Ok, result)
+        assertEquals(dev.ambon.engine.LoginResult.Ok, result)
     }
 
-    private fun TestHarness.spawnMob(
+    private fun StatusEffectTestFixture.spawnMob(
         hp: Int = 50,
         id: MobId = mobId,
     ): MobState {
@@ -102,7 +51,7 @@ class StatusEffectSystemTest {
         return mob
     }
 
-    private fun TestHarness.registerDot(
+    private fun StatusEffectTestFixture.registerDot(
         id: String = "ignite",
         durationMs: Long = 6000,
         tickIntervalMs: Long = 2000,
@@ -126,7 +75,7 @@ class StatusEffectSystemTest {
         )
     }
 
-    private fun TestHarness.registerHot(
+    private fun StatusEffectTestFixture.registerHot(
         id: String = "rejuvenation",
         durationMs: Long = 6000,
         tickIntervalMs: Long = 2000,
@@ -146,7 +95,7 @@ class StatusEffectSystemTest {
         )
     }
 
-    private fun TestHarness.registerShield(
+    private fun StatusEffectTestFixture.registerShield(
         id: String = "shield",
         durationMs: Long = 30000,
         shieldAmount: Int = 20,
@@ -163,7 +112,7 @@ class StatusEffectSystemTest {
         )
     }
 
-    private fun TestHarness.registerStatBuff(
+    private fun StatusEffectTestFixture.registerStatBuff(
         id: String = "battle_shout",
         durationMs: Long = 60000,
         str: Int = 3,
@@ -179,7 +128,7 @@ class StatusEffectSystemTest {
         )
     }
 
-    private fun TestHarness.registerStun(
+    private fun StatusEffectTestFixture.registerStun(
         id: String = "concuss",
         durationMs: Long = 2000,
     ) {
@@ -194,7 +143,7 @@ class StatusEffectSystemTest {
         )
     }
 
-    private fun TestHarness.registerRoot(
+    private fun StatusEffectTestFixture.registerRoot(
         id: String = "frost_grip",
         durationMs: Long = 4000,
     ) {
