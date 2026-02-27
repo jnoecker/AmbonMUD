@@ -21,53 +21,16 @@ import dev.ambon.grpc.proto.SetAnsiProto
 import dev.ambon.grpc.proto.ShowAnsiDemoProto
 import dev.ambon.grpc.proto.ShowLoginScreenProto
 
-/** Converts domain [InboundEvent] → [InboundEventProto]. */
+/** Converts domain [InboundEvent] to [InboundEventProto]. */
 fun InboundEvent.toProto(): InboundEventProto =
     when (this) {
-        is InboundEvent.Connected ->
-            InboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setConnected(
-                    ConnectedProto
-                        .newBuilder()
-                        .setDefaultAnsiEnabled(defaultAnsiEnabled)
-                        .build(),
-                ).build()
-        is InboundEvent.Disconnected ->
-            InboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setDisconnected(
-                    DisconnectedProto
-                        .newBuilder()
-                        .setReason(reason)
-                        .build(),
-                ).build()
-        is InboundEvent.LineReceived ->
-            InboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setLineReceived(
-                    LineReceivedProto
-                        .newBuilder()
-                        .setLine(line)
-                        .build(),
-                ).build()
-        is InboundEvent.GmcpReceived ->
-            InboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setGmcpReceived(
-                    GmcpReceivedProto
-                        .newBuilder()
-                        .setGmcpPackage(gmcpPackage)
-                        .setJsonData(jsonData)
-                        .build(),
-                ).build()
+        is InboundEvent.Connected -> inboundProto(sessionId) { setConnected(toConnectedProto()) }
+        is InboundEvent.Disconnected -> inboundProto(sessionId) { setDisconnected(toDisconnectedProto()) }
+        is InboundEvent.LineReceived -> inboundProto(sessionId) { setLineReceived(toLineReceivedProto()) }
+        is InboundEvent.GmcpReceived -> inboundProto(sessionId) { setGmcpReceived(toGmcpReceivedProto()) }
     }
 
-/** Converts [InboundEventProto] → domain [InboundEvent], or null if the oneof is not set. */
+/** Converts [InboundEventProto] to domain [InboundEvent], or null if the oneof is not set. */
 fun InboundEventProto.toDomain(): InboundEvent? {
     val sid = SessionId(sessionId)
     return when (eventCase) {
@@ -96,89 +59,24 @@ fun InboundEventProto.toDomain(): InboundEvent? {
     }
 }
 
-/** Converts domain [OutboundEvent] → [OutboundEventProto]. */
+/** Converts domain [OutboundEvent] to [OutboundEventProto]. */
 fun OutboundEvent.toProto(): OutboundEventProto =
     when (this) {
-        is OutboundEvent.SendText ->
-            OutboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setSendText(SendTextProto.newBuilder().setText(text).build())
-                .build()
-        is OutboundEvent.SendInfo ->
-            OutboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setSendInfo(SendInfoProto.newBuilder().setText(text).build())
-                .build()
-        is OutboundEvent.SendError ->
-            OutboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setSendError(SendErrorProto.newBuilder().setText(text).build())
-                .build()
-        is OutboundEvent.SendPrompt ->
-            OutboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setSendPrompt(SendPromptProto.getDefaultInstance())
-                .build()
+        is OutboundEvent.SendText -> outboundProto(sessionId) { setSendText(toSendTextProto()) }
+        is OutboundEvent.SendInfo -> outboundProto(sessionId) { setSendInfo(toSendInfoProto()) }
+        is OutboundEvent.SendError -> outboundProto(sessionId) { setSendError(toSendErrorProto()) }
+        is OutboundEvent.SendPrompt -> outboundProto(sessionId) { setSendPrompt(SendPromptProto.getDefaultInstance()) }
         is OutboundEvent.ShowLoginScreen ->
-            OutboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setShowLoginScreen(ShowLoginScreenProto.getDefaultInstance())
-                .build()
-        is OutboundEvent.SetAnsi ->
-            OutboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setSetAnsi(SetAnsiProto.newBuilder().setEnabled(enabled).build())
-                .build()
-        is OutboundEvent.Close ->
-            OutboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setClose(CloseProto.newBuilder().setReason(reason).build())
-                .build()
-        is OutboundEvent.ClearScreen ->
-            OutboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setClearScreen(ClearScreenProto.getDefaultInstance())
-                .build()
-        is OutboundEvent.ShowAnsiDemo ->
-            OutboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setShowAnsiDemo(ShowAnsiDemoProto.getDefaultInstance())
-                .build()
-        is OutboundEvent.SessionRedirect ->
-            OutboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setSessionRedirect(
-                    SessionRedirectProto
-                        .newBuilder()
-                        .setNewEngineId(newEngineId)
-                        .setNewEngineHost(newEngineHost)
-                        .setNewEnginePort(newEnginePort)
-                        .build(),
-                ).build()
-        is OutboundEvent.GmcpData ->
-            OutboundEventProto
-                .newBuilder()
-                .setSessionId(sessionId.value)
-                .setGmcpData(
-                    GmcpDataProto
-                        .newBuilder()
-                        .setGmcpPackage(gmcpPackage)
-                        .setJsonData(jsonData)
-                        .build(),
-                ).build()
+            outboundProto(sessionId) { setShowLoginScreen(ShowLoginScreenProto.getDefaultInstance()) }
+        is OutboundEvent.SetAnsi -> outboundProto(sessionId) { setSetAnsi(toSetAnsiProto()) }
+        is OutboundEvent.Close -> outboundProto(sessionId) { setClose(toCloseProto()) }
+        is OutboundEvent.ClearScreen -> outboundProto(sessionId) { setClearScreen(ClearScreenProto.getDefaultInstance()) }
+        is OutboundEvent.ShowAnsiDemo -> outboundProto(sessionId) { setShowAnsiDemo(ShowAnsiDemoProto.getDefaultInstance()) }
+        is OutboundEvent.SessionRedirect -> outboundProto(sessionId) { setSessionRedirect(toSessionRedirectProto()) }
+        is OutboundEvent.GmcpData -> outboundProto(sessionId) { setGmcpData(toGmcpDataProto()) }
     }
 
-/** Converts [OutboundEventProto] → domain [OutboundEvent], or null if the oneof is not set. */
+/** Converts [OutboundEventProto] to domain [OutboundEvent], or null if the oneof is not set. */
 fun OutboundEventProto.toDomain(): OutboundEvent? {
     val sid = SessionId(sessionId)
     return when (eventCase) {
@@ -216,3 +114,93 @@ fun OutboundEventProto.toDomain(): OutboundEvent? {
         else -> null
     }
 }
+
+private fun inboundProto(
+    sessionId: SessionId,
+    block: InboundEventProto.Builder.() -> Unit,
+): InboundEventProto =
+    InboundEventProto
+        .newBuilder()
+        .setSessionId(sessionId.value)
+        .apply(block)
+        .build()
+
+private fun outboundProto(
+    sessionId: SessionId,
+    block: OutboundEventProto.Builder.() -> Unit,
+): OutboundEventProto =
+    OutboundEventProto
+        .newBuilder()
+        .setSessionId(sessionId.value)
+        .apply(block)
+        .build()
+
+private fun InboundEvent.Connected.toConnectedProto(): ConnectedProto =
+    ConnectedProto
+        .newBuilder()
+        .setDefaultAnsiEnabled(defaultAnsiEnabled)
+        .build()
+
+private fun InboundEvent.Disconnected.toDisconnectedProto(): DisconnectedProto =
+    DisconnectedProto
+        .newBuilder()
+        .setReason(reason)
+        .build()
+
+private fun InboundEvent.LineReceived.toLineReceivedProto(): LineReceivedProto =
+    LineReceivedProto
+        .newBuilder()
+        .setLine(line)
+        .build()
+
+private fun InboundEvent.GmcpReceived.toGmcpReceivedProto(): GmcpReceivedProto =
+    GmcpReceivedProto
+        .newBuilder()
+        .setGmcpPackage(gmcpPackage)
+        .setJsonData(jsonData)
+        .build()
+
+private fun OutboundEvent.SendText.toSendTextProto(): SendTextProto =
+    SendTextProto
+        .newBuilder()
+        .setText(text)
+        .build()
+
+private fun OutboundEvent.SendInfo.toSendInfoProto(): SendInfoProto =
+    SendInfoProto
+        .newBuilder()
+        .setText(text)
+        .build()
+
+private fun OutboundEvent.SendError.toSendErrorProto(): SendErrorProto =
+    SendErrorProto
+        .newBuilder()
+        .setText(text)
+        .build()
+
+private fun OutboundEvent.SetAnsi.toSetAnsiProto(): SetAnsiProto =
+    SetAnsiProto
+        .newBuilder()
+        .setEnabled(enabled)
+        .build()
+
+private fun OutboundEvent.Close.toCloseProto(): CloseProto =
+    CloseProto
+        .newBuilder()
+        .setReason(reason)
+        .build()
+
+private fun OutboundEvent.SessionRedirect.toSessionRedirectProto(): SessionRedirectProto =
+    SessionRedirectProto
+        .newBuilder()
+        .setNewEngineId(newEngineId)
+        .setNewEngineHost(newEngineHost)
+        .setNewEnginePort(newEnginePort)
+        .build()
+
+private fun OutboundEvent.GmcpData.toGmcpDataProto(): GmcpDataProto =
+    GmcpDataProto
+        .newBuilder()
+        .setGmcpPackage(gmcpPackage)
+        .setJsonData(jsonData)
+        .build()

@@ -37,6 +37,17 @@ class ProtoMapperTest {
     }
 
     @Test
+    fun `GmcpReceived round-trips`() {
+        val event =
+            InboundEvent.GmcpReceived(
+                sessionId = sid,
+                gmcpPackage = "Char.Vitals",
+                jsonData = "{\"hp\":10}",
+            )
+        assertEquals(event, event.toProto().toDomain())
+    }
+
+    @Test
     fun `Empty InboundEventProto toDomain returns null`() {
         val proto =
             dev.ambon.grpc.proto.InboundEventProto
@@ -114,6 +125,17 @@ class ProtoMapperTest {
                 newEngineId = "engine-2",
                 newEngineHost = "host2.example.com",
                 newEnginePort = 9092,
+            )
+        assertEquals(event, event.toProto().toDomain())
+    }
+
+    @Test
+    fun `GmcpData round-trips`() {
+        val event =
+            OutboundEvent.GmcpData(
+                sessionId = sid,
+                gmcpPackage = "Room.Info",
+                jsonData = "{\"id\":\"zone:start\"}",
             )
         assertEquals(event, event.toProto().toDomain())
     }
