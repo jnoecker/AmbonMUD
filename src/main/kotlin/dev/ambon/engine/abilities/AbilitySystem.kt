@@ -11,9 +11,12 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.healHp
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.rollRange
+import dev.ambon.engine.spendMana
 import dev.ambon.engine.status.StatusEffectSystem
+import dev.ambon.engine.takeDamage
 import java.time.Clock
 import java.util.Random
 
@@ -128,7 +131,7 @@ class AbilitySystem(
                 val baseDamage = rollRange(rng, effect.minDamage, effect.maxDamage)
                 val intBonus = intSpellBonus(player)
                 val damage = (baseDamage + intBonus).coerceAtLeast(1)
-                mob.hp = (mob.hp - damage).coerceAtLeast(0)
+                mob.takeDamage(damage)
                 markMobHpDirty(mob.id)
                 combat.addThreat(mob.id, sessionId, damage.toDouble())
                 outbound.send(
@@ -163,7 +166,7 @@ class AbilitySystem(
                 for (m in targetMobs) {
                     val baseDamage = rollRange(rng, effect.minDamage, effect.maxDamage)
                     val damage = (baseDamage + intBonus).coerceAtLeast(1)
-                    m.hp = (m.hp - damage).coerceAtLeast(0)
+                    m.takeDamage(damage)
                     markMobHpDirty(m.id)
                     combat.addThreat(m.id, sessionId, damage.toDouble())
                     outbound.send(
@@ -227,7 +230,7 @@ class AbilitySystem(
                 deductManaAndCooldown(sessionId, player, ability, now)
                 val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
                 val before = player.hp
-                player.hp = (player.hp + healAmount).coerceAtMost(player.maxHp)
+                player.healHp(healAmount)
                 val healed = player.hp - before
                 if (healed > 0) {
                     markVitalsDirty(sessionId)
@@ -303,7 +306,7 @@ class AbilitySystem(
                 deductManaAndCooldown(sessionId, player, ability, now)
                 val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
                 val before = target.hp
-                target.hp = (target.hp + healAmount).coerceAtMost(target.maxHp)
+                target.healHp(healAmount)
                 val healed = target.hp - before
                 if (healed > 0) {
                     markVitalsDirty(targetSid)
@@ -378,7 +381,7 @@ class AbilitySystem(
         ability: AbilityDefinition,
         now: Long,
     ) {
-        player.mana = (player.mana - ability.manaCost).coerceAtLeast(0)
+        player.spendMana(ability.manaCost)
         markVitalsDirty(sessionId)
         if (ability.cooldownMs > 0) {
             cooldowns.getOrPut(sessionId) { mutableMapOf() }[ability.id] = now + ability.cooldownMs
