@@ -20,7 +20,7 @@ class AnsiRenderer : TextRenderer {
             }
         return buildString {
             append(prefix)
-            append(text)
+            append(text.normalizeToCrlf())
             append(reset)
             append("\r\n")
         }
