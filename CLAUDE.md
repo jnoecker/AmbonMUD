@@ -183,7 +183,7 @@ Sessions
 | Flyway migrations | `src/main/resources/db/migration/` (V1–V7: players table through achievements) |
 | Proto definitions | `src/main/proto/ambonmud/v1/engine_service.proto`, `events.proto` |
 | Web demo client (static) | `src/main/resources/web/` |
-| World YAML format spec | `docs/world-zone-yaml-spec.md` |
+| World YAML format spec | `docs/WORLD_YAML_SPEC.md` |
 | Runtime player saves | `data/players/` (git-ignored, do not commit) |
 
 ### Tests (~78 test files)
@@ -235,12 +235,12 @@ Sessions
 ### New command
 1. Add variant to `Command` sealed interface in `CommandParser.kt`.
 2. Add parse logic in `CommandParser.parse()` (use `matchPrefix()` for prefix matching, `requiredArg()` if arguments needed).
-3. Implement handler in `CommandRouter.kt`.
+3. Implement handler in the appropriate `handlers/` file under `CommandRouter.kt` (e.g. `NavigationHandler`, `CombatHandler`, `ItemHandler`, etc.). For a brand-new category, add a new handler file and wire it from `CommandRouter`.
 4. Preserve prompt behavior for success/failure paths (`outbound.send(SendPrompt(...))`).
 5. Add parser tests in `CommandParserTest` and router tests in `CommandRouterTest` (or a dedicated test file).
 
 ### Staff command
-Same as above, plus gate with `if (!playerState.isStaff)` check in `CommandRouter.kt`. Test in `CommandRouterAdminTest`.
+Same as above, plus gate with `if (!playerState.isStaff)` check in `AdminHandler.kt`. Test in `CommandRouterAdminTest`.
 
 ### Combat/mob/item
 Edit `CombatSystem`, `MobSystem`, `MobRegistry`, `ItemRegistry`; preserve `max*PerTick` caps to avoid tick starvation.
@@ -252,7 +252,7 @@ Add definition in `application.yaml` under `engine.abilities.definitions`. If ne
 Add definition in `application.yaml` under `engine.statusEffects.definitions`. If new effect mechanic, update `EffectType` enum and tick branches in `StatusEffectSystem`. Keep `CombatSystem` call sites in sync (`getPlayerStatMods`, `hasMobEffect(STUN)`, `absorbPlayerDamage`).
 
 ### World content only
-Edit YAML in `src/main/resources/world/`; no code change needed. See `docs/world-zone-yaml-spec.md` for schema.
+Edit YAML in `src/main/resources/world/`; no code change needed. See `docs/WORLD_YAML_SPEC.md` for schema.
 
 ### Config
 Update `AppConfig.kt` and `application.yaml` together; keep `validated()` strict with `require()` checks.
@@ -275,7 +275,7 @@ Update `AppConfig.kt` and `application.yaml` together; keep `validated()` strict
 When adding new `InterEngineMessage` variants, update serialization in `InterEngineMessage.kt` and add tests. Update both `LocalInterEngineBus` and `RedisInterEngineBus`.
 
 ### GMCP
-Update `GmcpEmitter.kt` and the web client's `app.js` handler. Telnet negotiation is in `NetworkSession.kt` (WILL GMCP) and `TelnetLineDecoder.kt`.
+Update `GmcpEmitter.kt` and the v3 web client's GMCP handler at `web-v3/src/gmcp/applyGmcpPackage.ts`. Telnet negotiation is in `NetworkSession.kt` (WILL GMCP) and `TelnetLineDecoder.kt`.
 
 ## Kotlin Style (ktlint)
 
