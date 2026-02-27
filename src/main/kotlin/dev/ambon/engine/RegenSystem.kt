@@ -53,12 +53,14 @@ class RegenSystem(
             val sessionId = player.sessionId
             var didWork = false
 
+            val bonuses = items.equipmentBonuses(sessionId)
+
             // HP regen
             if (player.hp >= player.maxHp) {
                 lastRegenAtMs[sessionId] = now
             } else {
                 val last = lastRegenAtMs.getOrPut(sessionId) { now }
-                val interval = regenIntervalMs(player)
+                val interval = regenIntervalMs(player, bonuses.constitution)
                 if (now - last >= interval) {
                     if (player.healHp(regenAmount)) {
                         markVitalsDirty(sessionId)
@@ -73,7 +75,7 @@ class RegenSystem(
                 lastManaRegenAtMs[sessionId] = now
             } else {
                 val lastMana = lastManaRegenAtMs.getOrPut(sessionId) { now }
-                val interval = manaRegenIntervalMs(player)
+                val interval = manaRegenIntervalMs(player, bonuses.wisdom)
                 if (now - lastMana >= interval) {
                     if (player.healMana(manaRegenAmount)) {
                         markVitalsDirty(sessionId)
@@ -87,23 +89,15 @@ class RegenSystem(
         }
     }
 
-    private fun regenIntervalMs(player: PlayerState): Long {
-        val totalCon = totalConstitution(player)
+    private fun regenIntervalMs(player: PlayerState, equipCon: Int): Long {
+        val totalCon = player.constitution + equipCon
         val conBonus = (totalCon - PlayerState.BASE_STAT).coerceAtLeast(0).toLong()
-        val interval = baseIntervalMs - (conBonus * msPerConstitution)
-        return interval.coerceAtLeast(minIntervalMs)
+        return (baseIntervalMs - conBonus * msPerConstitution).coerceAtLeast(minIntervalMs)
     }
 
-    private fun manaRegenIntervalMs(player: PlayerState): Long {
-        val equipWis = items.equipmentBonuses(player.sessionId).wisdom
+    private fun manaRegenIntervalMs(player: PlayerState, equipWis: Int): Long {
         val totalWis = player.wisdom + equipWis
         val wisBonus = (totalWis - PlayerState.BASE_STAT).coerceAtLeast(0).toLong()
-        val interval = manaBaseIntervalMs - (wisBonus * msPerWisdom)
-        return interval.coerceAtLeast(manaMinIntervalMs)
-    }
-
-    private fun totalConstitution(player: PlayerState): Int {
-        val equipCon = items.equipmentBonuses(player.sessionId).constitution
-        return (player.constitution + equipCon).coerceAtLeast(0)
+        return (manaBaseIntervalMs - wisBonus * msPerWisdom).coerceAtLeast(manaMinIntervalMs)
     }
 }
