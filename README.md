@@ -9,7 +9,7 @@ AmbonMUD
 - ⚔️ **Real-time combat system** with attribute-based damage, dodge mechanics, and tactical status effects (DoT, HoT, STUN, ROOT, SHIELD, buffs/debuffs)
 - 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands
 - 🔌 **Dual transports**: telnet (NAWS/TTYPE/GMCP negotiation) + browser WebSocket with GMCP-aware UI panels
-- 📊 **Structured data** (GMCP) for client-side telemetry and advanced UI features
+- 📊 **Structured data** (GMCP) — 21 packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
 - 💾 **Flexible persistence**: YAML (default) or PostgreSQL with optional Redis L2 caching
 - 🌐 **Three deployment modes**: STANDALONE (single-process), ENGINE (game logic + gRPC), GATEWAY (transports + gRPC) for horizontal scaling
 - 🗺️ **Zone-based sharding** with inter-engine messaging, player handoff, and O(1) cross-engine `tell` routing
@@ -19,7 +19,7 @@ AmbonMUD
 **Current State** (Feb 2026)
 - ✅ All 5 scalability phases complete (bus abstraction, async persistence, Redis, gRPC gateway, zone sharding)
 - ✅ 102 abilities across 4 classes (25+ per class, levels 1–50)
-- ✅ GMCP support with 13 data packages
+- ✅ GMCP support with 21 outbound packages (telnet + WebSocket); see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
 - ✅ Quest system (basic implementation; see [roadmap](docs/ROADMAP.md))
 - ✅ Achievement system, group/party system, dialogue trees, NPC behavior trees
 - ✅ Full production test coverage and CI/CD
@@ -215,6 +215,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#infrastructure) for detailed se
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) — Architectural principles and design decisions
 - [docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) — Zone YAML format specification
 - [docs/WEB_CLIENT_V3.md](docs/WEB_CLIENT_V3.md) — Web client v3 architecture, wiring, and known gaps
+- [docs/GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md) — GMCP protocol reference for client developers
 
 **Developer Resources**
 - [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) — Complete onboarding from zero to productive
