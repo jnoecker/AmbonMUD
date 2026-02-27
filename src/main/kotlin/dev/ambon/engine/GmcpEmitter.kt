@@ -25,8 +25,9 @@ class GmcpEmitter(
         sessionId: SessionId,
         player: PlayerState,
     ) {
-        if (!supportsPackage(sessionId, "Char.Vitals")) return
-        val payload =
+        emit(
+            sessionId,
+            "Char.Vitals",
             CharVitalsPayload(
                 hp = player.hp,
                 maxHp = player.maxHp,
@@ -38,29 +39,29 @@ class GmcpEmitter(
                 xpToNextLevel = progression?.xpToNextLevel(player.xpTotal),
                 gold = player.gold,
                 inCombat = isInCombat(sessionId),
-            )
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Vitals", json.writeValueAsString(payload)))
+            ),
+        )
     }
 
     suspend fun sendRoomInfo(
         sessionId: SessionId,
         room: Room,
     ) {
-        if (!supportsPackage(sessionId, "Room.Info")) return
-        val payload =
+        emit(
+            sessionId,
+            "Room.Info",
             RoomInfoPayload(
                 id = room.id.value,
                 title = room.title,
                 description = room.description,
                 zone = room.id.zone,
                 exits = room.exits.entries.associate { (dir, roomId) -> dir.name.lowercase() to roomId.value },
-            )
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.Info", json.writeValueAsString(payload)))
+            ),
+        )
     }
 
     suspend fun sendCharStatusVars(sessionId: SessionId) {
-        if (!supportsPackage(sessionId, "Char.StatusVars")) return
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.StatusVars", CHAR_STATUS_VARS_JSON))
+        emitRaw(sessionId, "Char.StatusVars", CHAR_STATUS_VARS_JSON)
     }
 
     suspend fun sendCharItemsList(
@@ -68,102 +69,88 @@ class GmcpEmitter(
         inventory: List<ItemInstance>,
         equipment: Map<ItemSlot, ItemInstance>,
     ) {
-        if (!supportsPackage(sessionId, "Char.Items.List")) return
-        val payload =
+        emit(
+            sessionId,
+            "Char.Items.List",
             CharItemsListPayload(
                 inventory = inventory.map { toItemPayload(it) },
                 equipment = ItemSlot.entries.associate { slot -> slot.label() to equipment[slot]?.let { toItemPayload(it) } },
-            )
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Items.List", json.writeValueAsString(payload)))
+            ),
+        )
     }
 
     suspend fun sendCharItemsAdd(
         sessionId: SessionId,
         item: ItemInstance,
     ) {
-        if (!supportsPackage(sessionId, "Char.Items.Add")) return
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Items.Add", json.writeValueAsString(toItemPayload(item))))
+        emit(sessionId, "Char.Items.Add", toItemPayload(item))
     }
 
     suspend fun sendCharItemsRemove(
         sessionId: SessionId,
         item: ItemInstance,
     ) {
-        if (!supportsPackage(sessionId, "Char.Items.Remove")) return
-        val payload = CharItemsRemovePayload(id = item.id.value, name = item.item.displayName)
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Items.Remove", json.writeValueAsString(payload)))
+        emit(sessionId, "Char.Items.Remove", CharItemsRemovePayload(id = item.id.value, name = item.item.displayName))
     }
 
     suspend fun sendRoomPlayers(
         sessionId: SessionId,
         players: List<PlayerState>,
     ) {
-        if (!supportsPackage(sessionId, "Room.Players")) return
-        val payload = players.filter { it.sessionId != sessionId }.map { RoomPlayerPayload(name = it.name, level = it.level) }
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.Players", json.writeValueAsString(payload)))
+        emit(
+            sessionId,
+            "Room.Players",
+            players.filter { it.sessionId != sessionId }.map { RoomPlayerPayload(name = it.name, level = it.level) },
+        )
     }
 
     suspend fun sendRoomAddPlayer(
         sessionId: SessionId,
         player: PlayerState,
     ) {
-        if (!supportsPackage(sessionId, "Room.Players")) return
-        outbound.send(
-            OutboundEvent.GmcpData(
-                sessionId,
-                "Room.AddPlayer",
-                json.writeValueAsString(RoomPlayerPayload(name = player.name, level = player.level)),
-            ),
-        )
+        emit(sessionId, "Room.AddPlayer", RoomPlayerPayload(name = player.name, level = player.level), supportCheck = "Room.Players")
     }
 
     suspend fun sendRoomRemovePlayer(
         sessionId: SessionId,
         name: String,
     ) {
-        if (!supportsPackage(sessionId, "Room.Players")) return
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.RemovePlayer", json.writeValueAsString(RoomRemovePlayerPayload(name = name))))
+        emit(sessionId, "Room.RemovePlayer", RoomRemovePlayerPayload(name = name), supportCheck = "Room.Players")
     }
 
     suspend fun sendRoomMobs(
         sessionId: SessionId,
         mobs: List<MobState>,
     ) {
-        if (!supportsPackage(sessionId, "Room.Mobs")) return
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.Mobs", json.writeValueAsString(mobs.map { toRoomMobPayload(it) })))
+        emit(sessionId, "Room.Mobs", mobs.map { toRoomMobPayload(it) })
     }
 
     suspend fun sendRoomItems(
         sessionId: SessionId,
         items: List<ItemInstance>,
     ) {
-        if (!supportsPackage(sessionId, "Room.Items")) return
-        val payload = items.map { RoomItemPayload(id = it.id.value, name = it.item.displayName) }
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.Items", json.writeValueAsString(payload)))
+        emit(sessionId, "Room.Items", items.map { RoomItemPayload(id = it.id.value, name = it.item.displayName) })
     }
 
     suspend fun sendRoomAddMob(
         sessionId: SessionId,
         mob: MobState,
     ) {
-        if (!supportsPackage(sessionId, "Room.Mobs")) return
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.AddMob", json.writeValueAsString(toRoomMobPayload(mob))))
+        emit(sessionId, "Room.AddMob", toRoomMobPayload(mob), supportCheck = "Room.Mobs")
     }
 
     suspend fun sendRoomUpdateMob(
         sessionId: SessionId,
         mob: MobState,
     ) {
-        if (!supportsPackage(sessionId, "Room.Mobs")) return
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.UpdateMob", json.writeValueAsString(toRoomMobPayload(mob))))
+        emit(sessionId, "Room.UpdateMob", toRoomMobPayload(mob), supportCheck = "Room.Mobs")
     }
 
     suspend fun sendRoomRemoveMob(
         sessionId: SessionId,
         mobId: String,
     ) {
-        if (!supportsPackage(sessionId, "Room.Mobs")) return
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.RemoveMob", json.writeValueAsString(RoomRemoveMobPayload(id = mobId))))
+        emit(sessionId, "Room.RemoveMob", RoomRemoveMobPayload(id = mobId), supportCheck = "Room.Mobs")
     }
 
     suspend fun sendCharSkills(
@@ -171,8 +158,9 @@ class GmcpEmitter(
         abilities: List<AbilityDefinition>,
         cooldownRemainingMs: (AbilityId) -> Long = { 0L },
     ) {
-        if (!supportsPackage(sessionId, "Char.Skills")) return
-        val payload =
+        emit(
+            sessionId,
+            "Char.Skills",
             abilities.map { a ->
                 CharSkillPayload(
                     id = a.id.value,
@@ -185,23 +173,24 @@ class GmcpEmitter(
                     targetType = a.targetType.name,
                     classRestriction = a.requiredClass?.name,
                 )
-            }
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Skills", json.writeValueAsString(payload)))
+            },
+        )
     }
 
     suspend fun sendCharName(
         sessionId: SessionId,
         player: PlayerState,
     ) {
-        if (!supportsPackage(sessionId, "Char.Name")) return
-        val payload =
+        emit(
+            sessionId,
+            "Char.Name",
             CharNamePayload(
                 name = player.name,
                 race = player.race,
                 playerClass = player.playerClass,
                 level = player.level,
-            )
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Name", json.writeValueAsString(payload)))
+            ),
+        )
     }
 
     suspend fun sendCommChannel(
@@ -210,17 +199,16 @@ class GmcpEmitter(
         sender: String,
         message: String,
     ) {
-        if (!supportsPackage(sessionId, "Comm.Channel")) return
-        val payload = CommChannelPayload(channel = channel, sender = sender, message = message)
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Comm.Channel", json.writeValueAsString(payload)))
+        emit(sessionId, "Comm.Channel", CommChannelPayload(channel = channel, sender = sender, message = message))
     }
 
     suspend fun sendCharStatusEffects(
         sessionId: SessionId,
         effects: List<ActiveEffectSnapshot>,
     ) {
-        if (!supportsPackage(sessionId, "Char.StatusEffects")) return
-        val payload =
+        emit(
+            sessionId,
+            "Char.StatusEffects",
             effects.map { e ->
                 CharStatusEffectPayload(
                     id = e.id,
@@ -229,8 +217,8 @@ class GmcpEmitter(
                     remainingMs = e.remainingMs,
                     stacks = e.stacks,
                 )
-            }
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.StatusEffects", json.writeValueAsString(payload)))
+            },
+        )
     }
 
     suspend fun sendGroupInfo(
@@ -238,8 +226,9 @@ class GmcpEmitter(
         leader: String?,
         members: List<PlayerState>,
     ) {
-        if (!supportsPackage(sessionId, "Group.Info")) return
-        val payload =
+        emit(
+            sessionId,
+            "Group.Info",
             GroupInfoPayload(
                 leader = leader,
                 members =
@@ -252,13 +241,12 @@ class GmcpEmitter(
                             playerClass = p.playerClass,
                         )
                     },
-            )
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Group.Info", json.writeValueAsString(payload)))
+            ),
+        )
     }
 
     suspend fun sendCorePing(sessionId: SessionId) {
-        if (!supportsPackage(sessionId, "Core.Ping")) return
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Core.Ping", CORE_PING_JSON))
+        emitRaw(sessionId, "Core.Ping", CORE_PING_JSON)
     }
 
     suspend fun sendCharAchievements(
@@ -266,7 +254,6 @@ class GmcpEmitter(
         player: PlayerState,
         registry: AchievementRegistry,
     ) {
-        if (!supportsPackage(sessionId, "Char.Achievements")) return
         val completed =
             player.unlockedAchievementIds.map { id ->
                 val def = registry.get(id)
@@ -288,8 +275,29 @@ class GmcpEmitter(
                         required = state.progress.sumOf { it.required },
                     )
                 }
-        val payload = CharAchievementsPayload(completed = completed, inProgress = inProgress)
-        outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Achievements", json.writeValueAsString(payload)))
+        emit(sessionId, "Char.Achievements", CharAchievementsPayload(completed = completed, inProgress = inProgress))
+    }
+
+    // ---------- emit helpers ----------
+
+    private suspend fun <T : Any> emit(
+        sessionId: SessionId,
+        packageName: String,
+        payload: T,
+        supportCheck: String = packageName,
+    ) {
+        if (!supportsPackage(sessionId, supportCheck)) return
+        outbound.send(OutboundEvent.GmcpData(sessionId, packageName, json.writeValueAsString(payload)))
+    }
+
+    private suspend fun emitRaw(
+        sessionId: SessionId,
+        packageName: String,
+        rawJson: String,
+        supportCheck: String = packageName,
+    ) {
+        if (!supportsPackage(sessionId, supportCheck)) return
+        outbound.send(OutboundEvent.GmcpData(sessionId, packageName, rawJson))
     }
 
     // ---------- private helpers ----------
