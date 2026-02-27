@@ -2,9 +2,9 @@ package dev.ambon.engine.abilities
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.PlayerClass
-import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
@@ -31,10 +31,8 @@ class AbilitySystem(
     private val rng: Random = Random(),
     private val items: ItemRegistry? = null,
     private val intSpellDivisor: Int = 3,
-    private val markVitalsDirty: (SessionId) -> Unit = {},
-    private val markMobHpDirty: (MobId) -> Unit = {},
+    private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
     private val statusEffects: StatusEffectSystem? = null,
-    private val markStatusDirty: (SessionId) -> Unit = {},
     private val groupSystem: GroupSystem? = null,
     private val mobs: MobRegistry? = null,
 ) {
@@ -138,7 +136,7 @@ class AbilitySystem(
                 val intBonus = PlayerState.statBonus(playerStats.int, intSpellDivisor)
                 val damage = (baseDamage + intBonus).coerceAtLeast(1)
                 mob.takeDamage(damage)
-                markMobHpDirty(mob.id)
+                dirtyNotifier.mobHpDirty(mob.id)
                 combat.addThreat(mob.id, sessionId, damage.toDouble())
                 outbound.send(
                     OutboundEvent.SendText(
@@ -173,7 +171,7 @@ class AbilitySystem(
                     val baseDamage = rollRange(rng, effect.minDamage, effect.maxDamage)
                     val damage = (baseDamage + intBonus).coerceAtLeast(1)
                     m.takeDamage(damage)
-                    markMobHpDirty(m.id)
+                    dirtyNotifier.mobHpDirty(m.id)
                     combat.addThreat(m.id, sessionId, damage.toDouble())
                     outbound.send(
                         OutboundEvent.SendText(
@@ -239,7 +237,7 @@ class AbilitySystem(
                 player.healHp(healAmount)
                 val healed = player.hp - before
                 if (healed > 0) {
-                    markVitalsDirty(sessionId)
+                    dirtyNotifier.playerVitalsDirty(sessionId)
                     combat.addHealingThreat(sessionId, healed)
                 }
                 outbound.send(
@@ -255,7 +253,7 @@ class AbilitySystem(
                         ?: return "Status effects are not available."
                 deductManaAndCooldown(sessionId, player, ability, now)
                 sys.applyToPlayer(sessionId, effect.statusEffectId, sessionId)
-                markStatusDirty(sessionId)
+                dirtyNotifier.playerStatusDirty(sessionId)
                 outbound.send(
                     OutboundEvent.SendText(
                         sessionId,
@@ -315,7 +313,7 @@ class AbilitySystem(
                 target.healHp(healAmount)
                 val healed = target.hp - before
                 if (healed > 0) {
-                    markVitalsDirty(targetSid)
+                    dirtyNotifier.playerVitalsDirty(targetSid)
                     combat.addHealingThreat(sessionId, healed)
                 }
                 if (targetSid == sessionId) {
@@ -346,7 +344,7 @@ class AbilitySystem(
                         ?: return "Status effects are not available."
                 deductManaAndCooldown(sessionId, player, ability, now)
                 sys.applyToPlayer(targetSid, effect.statusEffectId, sessionId)
-                markStatusDirty(targetSid)
+                dirtyNotifier.playerStatusDirty(targetSid)
                 if (targetSid == sessionId) {
                     outbound.send(
                         OutboundEvent.SendText(
@@ -388,7 +386,7 @@ class AbilitySystem(
         now: Long,
     ) {
         player.spendMana(ability.manaCost)
-        markVitalsDirty(sessionId)
+        dirtyNotifier.playerVitalsDirty(sessionId)
         if (ability.cooldownMs > 0) {
             cooldowns.getOrPut(sessionId) { mutableMapOf() }[ability.id] = now + ability.cooldownMs
         }

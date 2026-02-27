@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.abilities.AbilityRegistry
@@ -39,9 +40,7 @@ class AbilityTestFixture(
     fun buildAbilitySystem(
         registry: AbilityRegistry,
         statusEffects: StatusEffectSystem? = null,
-        markVitalsDirty: (SessionId) -> Unit = {},
-        markMobHpDirty: (MobId) -> Unit = {},
-        markStatusDirty: (SessionId) -> Unit = {},
+        dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
         mobsForAbility: MobRegistry? = null,
     ): AbilitySystem =
         AbilitySystem(
@@ -52,9 +51,7 @@ class AbilityTestFixture(
             clock = clock,
             rng = rng,
             statusEffects = statusEffects,
-            markVitalsDirty = markVitalsDirty,
-            markMobHpDirty = markMobHpDirty,
-            markStatusDirty = markStatusDirty,
+            dirtyNotifier = dirtyNotifier,
             mobs = mobsForAbility ?: mobs,
         )
 
