@@ -79,14 +79,6 @@ const MAX_VISIBLE_WORLD_MOBS = 4;
 const MAX_VISIBLE_EFFECTS = 4;
 const EXIT_ORDER = ["north", "south", "east", "west", "up", "down"];
 const COMPASS_DIRECTIONS = ["north", "east", "south", "west", "up", "down"] as const;
-const MAP_PREVIEW_POINTS: Record<(typeof COMPASS_DIRECTIONS)[number], { x: number; y: number; label: string }> = {
-  north: { x: 50, y: 17, label: "N" },
-  east: { x: 83, y: 50, label: "E" },
-  south: { x: 50, y: 83, label: "S" },
-  west: { x: 17, y: 50, label: "W" },
-  up: { x: 73, y: 28, label: "U" },
-  down: { x: 73, y: 72, label: "D" },
-};
 type Direction = (typeof COMPASS_DIRECTIONS)[number];
 const SLOT_ORDER = ["head", "body", "hand"];
 const TABS: Array<{ id: MobileTab; label: string }> = [
@@ -349,6 +341,18 @@ function FleeIcon({ className }: { className?: string }) {
       <path d="M16.9 9.9c.7.7 1.1 1.7 1.1 2.9s-.4 2.2-1.1 2.9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.65" />
       <path d="M18.7 12h2.3" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M19.9 10.8 21 12l-1.1 1.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function MapScrollIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M6 6.8a2.2 2.2 0 1 1 0 4.4m0-4.4h10.8a2.2 2.2 0 0 1 2.2 2.2v8.2a2.8 2.8 0 0 1-2.8 2.8H8.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.2 20a2.4 2.4 0 1 1 0-4.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.2 15.2V6.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.92" />
+      <path d="M11.3 10.2c1 .5 1.6 1.3 1.6 2.3 0 1.1-.7 2-1.8 2.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
+      <path d="M13.7 9.4h2.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
     </svg>
   );
 }
@@ -1100,9 +1104,7 @@ function App() {
 
       <header className="top-banner">
         <div>
-          <p className="top-banner-kicker">AmbonMUD</p>
-          <h1 className="top-banner-title">Web Client v3</h1>
-          <p className="top-banner-subtitle">Fresh React client with parity gameplay features and a new visual language.</p>
+          <h1 className="top-banner-title">AmbonMUD</h1>
         </div>
 
         <div className="connection-cluster">
@@ -1119,7 +1121,7 @@ function App() {
 
       <div className="dashboard" data-active-tab={activeTab}>
         <section className="panel panel-play" aria-label="Gameplay console">
-          <header className="panel-header"><h2>Play</h2><p>Terminal output and direct command flow.</p></header>
+          <header className="panel-header"><h2 title="Terminal output and direct command flow.">Play</h2></header>
           {preLogin && (
             <section className="prelogin-banner" aria-label="Login guidance">
               <p className="prelogin-banner-title">Welcome back. Your session is connected.</p>
@@ -1189,55 +1191,17 @@ function App() {
         </section>
 
         <section className="panel panel-world" aria-label="World state">
-          <header className="panel-header panel-header-with-actions">
-            <div>
-              <h2>World</h2>
-              <p>Room context, exits, and local entities.</p>
-            </div>
+          <header className="panel-header panel-header-world" title="Room context, exits, and local entities.">
             <button
               type="button"
-              className="map-preview-trigger"
+              className="map-icon-trigger"
               onClick={() => setActivePopout("map")}
               disabled={!canOpenMap}
-              aria-label={canOpenMap ? "Open full map" : "Map unavailable before login"}
-              title={canOpenMap ? "Open full map" : "Map unavailable before login"}
+              aria-label={canOpenMap ? "Open mini-map" : "Mini-map unavailable before login"}
+              title={canOpenMap ? "Open mini-map" : "Mini-map unavailable before login"}
             >
-              <svg className="map-preview-svg" viewBox="0 0 100 100" aria-hidden="true">
-                <circle className="map-preview-orbit" cx="50" cy="50" r="42" />
-                {COMPASS_DIRECTIONS.map((direction) => {
-                  const point = MAP_PREVIEW_POINTS[direction];
-                  const active = availableExitSet.has(direction);
-                  return (
-                    <line
-                      key={`${direction}-line`}
-                      className={`map-preview-line ${active ? "map-preview-line-active" : ""}`}
-                      x1="50"
-                      y1="50"
-                      x2={point.x}
-                      y2={point.y}
-                    />
-                  );
-                })}
-                {COMPASS_DIRECTIONS.map((direction) => {
-                  const point = MAP_PREVIEW_POINTS[direction];
-                  const active = availableExitSet.has(direction);
-                  return (
-                    <g key={direction}>
-                      <circle
-                        className={`map-preview-node ${active ? "map-preview-node-active" : ""}`}
-                        cx={point.x}
-                        cy={point.y}
-                        r={active ? 6.5 : 5.2}
-                      />
-                      <text className="map-preview-label" x={point.x} y={point.y + 2} textAnchor="middle">
-                        {point.label}
-                      </text>
-                    </g>
-                  );
-                })}
-                <circle className="map-preview-center-ring" cx="50" cy="50" r="12" />
-                <circle className="map-preview-center-dot" cx="50" cy="50" r="5.5" />
-              </svg>
+              <MapScrollIcon className="map-icon-svg" />
+              <span className="sr-only">Mini-map</span>
             </button>
           </header>
 
@@ -1351,8 +1315,7 @@ function App() {
         <section className="panel panel-character" aria-label="Character status">
           <header className="panel-header panel-header-with-actions">
             <div>
-              <h2>Character</h2>
-              <p>Identity, progression, and active effects.</p>
+              <h2 title="Identity, progression, and active effects.">Character</h2>
             </div>
             <div className="panel-action-row">
               <button type="button" className="panel-action-button" onClick={() => setActivePopout("equipment")} disabled={!canOpenEquipment}>

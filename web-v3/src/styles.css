@@ -174,29 +174,13 @@ body {
   z-index: 1;
 }
 
-.top-banner-kicker {
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  font-weight: 700;
-}
-
 .top-banner-title {
-  margin: var(--space-1) 0 0;
+  margin: 0;
   font-family: "Cormorant Garamond", "Georgia", serif;
   font-size: clamp(1.8rem, 2.45vw, 2.45rem);
   font-weight: 700;
   letter-spacing: 0.02em;
   text-shadow: 0 1px 0 rgb(255 255 255 / 70%), 0 0 10px rgb(216 197 232 / 24%);
-}
-
-.top-banner-subtitle {
-  margin: var(--space-1) 0 0;
-  max-width: 58ch;
-  color: var(--text-secondary);
-  font-size: 0.92rem;
 }
 
 .connection-cluster {
@@ -326,20 +310,13 @@ body {
   z-index: 1;
 }
 
-.panel-header h2,
-.panel-header p {
+.panel-header h2 {
   margin: 0;
 }
 
 .panel-header h2 {
   font-family: "Cormorant Garamond", "Georgia", serif;
   font-size: 1.3rem;
-}
-
-.panel-header p {
-  margin-top: var(--space-1);
-  color: var(--text-secondary);
-  font-size: 0.84rem;
 }
 
 .panel-header-with-actions {
@@ -412,10 +389,18 @@ body {
   flex-shrink: 0;
 }
 
-.map-preview-trigger {
-  width: 76px;
-  height: 76px;
-  border-radius: 14px;
+.panel-header-world {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line-faint);
+}
+
+.map-icon-trigger {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
   border: 1px solid rgb(106 96 136 / 24%);
   background:
     linear-gradient(150deg, rgb(235 224 247 / 90%), rgb(218 235 248 / 84%)),
@@ -423,13 +408,10 @@ body {
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 56%), var(--shadow-sm);
   padding: 7px;
   cursor: pointer;
-  transition:
-    transform 170ms var(--ease-out-soft),
-    box-shadow 170ms var(--ease-out-soft),
-    background-color 170ms var(--ease-out-soft);
+  transition: transform 170ms var(--ease-out-soft), box-shadow 170ms var(--ease-out-soft), background-color 170ms var(--ease-out-soft);
 }
 
-.map-preview-trigger:hover:enabled {
+.map-icon-trigger:hover:enabled {
   transform: translateY(-1px);
   background:
     linear-gradient(150deg, rgb(238 208 228 / 92%), rgb(203 227 245 / 88%)),
@@ -437,72 +419,27 @@ body {
   box-shadow: var(--shadow-md), 0 0 14px rgb(216 197 232 / 30%);
 }
 
-.map-preview-trigger:active:enabled {
+.map-icon-trigger:active:enabled {
   transform: scale(0.98);
 }
 
-.map-preview-trigger:focus-visible {
+.map-icon-trigger:focus-visible {
   outline: none;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
     0 0 0 4px rgb(216 197 232 / 30%);
 }
 
-.map-preview-trigger:disabled {
+.map-icon-trigger:disabled {
   opacity: 0.62;
   cursor: not-allowed;
   box-shadow: none;
 }
 
-.map-preview-svg {
+.map-icon-svg {
   width: 100%;
   height: 100%;
-}
-
-.map-preview-orbit {
-  fill: rgb(240 233 250 / 92%);
-  stroke: rgb(106 96 136 / 24%);
-  stroke-width: 1.2;
-}
-
-.map-preview-line {
-  stroke: rgb(139 131 165 / 30%);
-  stroke-width: 2;
-}
-
-.map-preview-line-active {
-  stroke: rgb(141 186 117 / 78%);
-}
-
-.map-preview-node {
-  fill: rgb(213 214 224 / 82%);
-  stroke: rgb(106 96 136 / 20%);
-  stroke-width: 1;
-}
-
-.map-preview-node-active {
-  fill: rgb(197 216 168 / 88%);
-  stroke: rgb(126 161 109 / 82%);
-}
-
-.map-preview-label {
-  fill: #67697d;
-  font-size: 8.6px;
-  font-weight: 700;
-  font-family: "Nunito Sans", "Segoe UI", sans-serif;
-  pointer-events: none;
-}
-
-.map-preview-center-ring {
-  fill: rgb(241 234 250 / 94%);
-  stroke: rgb(106 96 136 / 22%);
-  stroke-width: 1;
-}
-
-.map-preview-center-dot {
-  fill: rgb(232 197 216 / 84%);
-  stroke: rgb(162 126 152 / 74%);
-  stroke-width: 1;
+  color: #65677d;
 }
 
 .terminal-card {
@@ -1184,9 +1121,9 @@ body {
     display: none;
   }
 
-  .map-preview-trigger {
-    width: 72px;
-    height: 72px;
+  .map-icon-trigger {
+    width: 44px;
+    height: 44px;
   }
 
   .compass-rose {
@@ -1241,11 +1178,6 @@ body {
     margin-bottom: 0;
     align-items: center;
     padding: var(--space-3) var(--space-5);
-  }
-
-  .top-banner-subtitle {
-    max-width: 46ch;
-    font-size: 0.85rem;
   }
 
   .mobile-tab-bar {
