@@ -147,6 +147,29 @@ internal suspend fun broadcastToRoomExcept(
     }
 }
 
+/** Broadcasts [message] to every player in [roomId], including the sender. */
+internal suspend fun broadcastToRoom(
+    roomId: RoomId,
+    message: String,
+    players: PlayerRegistry,
+    outbound: OutboundBus,
+) {
+    for (other in players.playersInRoom(roomId)) {
+        outbound.send(OutboundEvent.SendText(other.sessionId, message))
+    }
+}
+
+/** Broadcasts [message] to all provided [memberSessionIds], useful for group chat. */
+internal suspend fun broadcastToGroup(
+    memberSessionIds: Iterable<SessionId>,
+    message: String,
+    outbound: OutboundBus,
+) {
+    for (sid in memberSessionIds) {
+        outbound.send(OutboundEvent.SendText(sid, message))
+    }
+}
+
 /**
  * Sends a [OutboundEvent.SendError] to [sessionId] if [error] is non-null; no-op otherwise.
  *
