@@ -2,416 +2,49 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
+import { MobileTabBar } from "./components/MobileTabBar";
+import { PopoutLayer } from "./components/PopoutLayer";
+import { CharacterPanel } from "./components/panels/CharacterPanel";
+import { PlayPanel } from "./components/panels/PlayPanel";
+import { WorldPanel } from "./components/panels/WorldPanel";
+import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
+import {
+  EMPTY_CHAR,
+  EMPTY_ROOM,
+  EMPTY_VITALS,
+  MAX_VISIBLE_EFFECTS,
+  MAX_VISIBLE_WORLD_MOBS,
+  MAX_VISIBLE_WORLD_PLAYERS,
+  SLOT_ORDER,
+} from "./constants";
+import { useCommandHistory } from "./hooks/useCommandHistory";
+import { useMiniMap } from "./hooks/useMiniMap";
+import { useMudSocket } from "./hooks/useMudSocket";
+import type {
+  CharacterInfo,
+  ItemSummary,
+  MobileTab,
+  PopoutPanel,
+  RoomMob,
+  RoomPlayer,
+  RoomState,
+  StatusEffect,
+  Vitals,
+} from "./types";
+import { sortExits, titleCaseWords } from "./utils";
 import "@xterm/xterm/css/xterm.css";
 import "./styles.css";
 
-type MobileTab = "play" | "world" | "character";
-type PopoutPanel = "map" | "equipment" | "wearing" | "room" | null;
-
-interface Vitals {
-  hp: number;
-  maxHp: number;
-  mana: number;
-  maxMana: number;
-  level: number | null;
-  xp: number;
-  xpIntoLevel: number;
-  xpToNextLevel: number | null;
-  gold: number;
-}
-
-interface CharacterInfo {
-  name: string;
-  race: string;
-  className: string;
-  level: number | null;
-}
-
-interface RoomState {
-  id: string | null;
-  title: string;
-  description: string;
-  exits: Record<string, string>;
-}
-
-interface ItemSummary {
-  id: string;
-  name: string;
-}
-
-interface RoomPlayer {
-  name: string;
-  level: number;
-}
-
-interface RoomMob {
-  id: string;
-  name: string;
-  hp: number;
-  maxHp: number;
-}
-
-interface StatusEffect {
-  name: string;
-  type: string;
-  stacks: number;
-  remainingMs: number;
-}
-
-interface MapRoom {
-  x: number;
-  y: number;
-  exits: Record<string, string>;
-}
-
-interface TabCycle {
-  matches: string[];
-  index: number;
-  originalPrefix: string;
-  args: string;
-}
-
-const EMPTY_TAB: TabCycle = { matches: [], index: 0, originalPrefix: "", args: "" };
-const HISTORY_KEY = "ambonmud_v3_history";
-const MAX_HISTORY = 100;
-const MAX_VISIBLE_WORLD_PLAYERS = 4;
-const MAX_VISIBLE_WORLD_MOBS = 4;
-const MAX_VISIBLE_EFFECTS = 4;
-const EXIT_ORDER = ["north", "south", "east", "west", "up", "down"];
-const COMPASS_DIRECTIONS = ["north", "east", "south", "west", "up", "down"] as const;
-type Direction = (typeof COMPASS_DIRECTIONS)[number];
-const SLOT_ORDER = ["head", "body", "hand"];
-const TABS: Array<{ id: MobileTab; label: string }> = [
-  { id: "play", label: "Play" },
-  { id: "world", label: "World" },
-  { id: "character", label: "Character" },
-];
-
-const COMMANDS = [
-  "look", "north", "south", "east", "west", "up", "down", "say", "tell", "whisper", "shout",
-  "gossip", "ooc", "emote", "pose", "who", "score", "inventory", "equipment", "exits", "get", "drop",
-  "wear", "remove", "use", "give", "kill", "flee", "cast", "spells", "abilities", "effects", "help",
-  "phase", "gold", "list", "buy", "sell", "quit", "clear", "colors",
-];
-
-const MAP_OFFSETS: Record<string, { dx: number; dy: number }> = {
-  north: { dx: 0, dy: -1 },
-  south: { dx: 0, dy: 1 },
-  east: { dx: 1, dy: 0 },
-  west: { dx: -1, dy: 0 },
-  up: { dx: 0.5, dy: -0.5 },
-  down: { dx: -0.5, dy: 0.5 },
-};
-
-const EMPTY_VITALS: Vitals = {
-  hp: 0,
-  maxHp: 0,
-  mana: 0,
-  maxMana: 0,
-  level: null,
-  xp: 0,
-  xpIntoLevel: 0,
-  xpToNextLevel: 0,
-  gold: 0,
-};
-
-const EMPTY_CHAR: CharacterInfo = { name: "-", race: "", className: "", level: null };
-const EMPTY_ROOM: RoomState = { id: null, title: "-", description: "", exits: {} };
-
-function safeNumber(value: unknown, fallback = 0): number {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
-
-function percent(current: number, max: number): number {
-  if (max <= 0) return 0;
-  return Math.max(0, Math.min(100, Math.round((current / max) * 100)));
-}
-
-function parseGmcp(text: string): { pkg: string; data: unknown } | null {
-  if (!text.trimStart().startsWith("{")) return null;
-  try {
-    const parsed = JSON.parse(text) as { gmcp?: unknown; data?: unknown };
-    if (typeof parsed.gmcp !== "string" || parsed.gmcp.length === 0) return null;
-    return { pkg: parsed.gmcp, data: parsed.data ?? {} };
-  } catch {
-    return null;
-  }
-}
-
-function readHistory(): string[] {
-  try {
-    const raw = window.localStorage.getItem(HISTORY_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed)
-      ? parsed.filter((entry): entry is string => typeof entry === "string")
-      : [];
-  } catch {
-    return [];
-  }
-}
-
-function nextCompletion(value: string, cycle: TabCycle): { value: string; cycle: TabCycle } | null {
-  if (value.trimStart().length === 0) return null;
-  const parts = value.split(" ");
-  const first = parts[0].toLowerCase();
-
-  let next = cycle;
-  let nextIndex = 0;
-
-  const advance =
-    cycle.matches.length > 0 &&
-    cycle.originalPrefix.length > 0 &&
-    first !== cycle.originalPrefix &&
-    cycle.matches.includes(first);
-
-  if (advance) {
-    nextIndex = (cycle.index + 1) % cycle.matches.length;
-  } else {
-    const matches = COMMANDS.filter((cmd) => cmd.startsWith(first) && cmd !== first);
-    if (matches.length === 0) return null;
-    next = { matches, index: 0, originalPrefix: first, args: parts.slice(1).join(" ") };
-  }
-
-  const command = next.matches[nextIndex];
-  const nextValue = next.args.length > 0 ? `${command} ${next.args}` : command;
-  return { value: nextValue, cycle: { ...next, index: nextIndex } };
-}
-
-function sortExits(exits: Record<string, string>): Array<[string, string]> {
-  return Object.entries(exits).sort(([left], [right]) => {
-    const li = EXIT_ORDER.indexOf(left);
-    const ri = EXIT_ORDER.indexOf(right);
-    if (li === -1 && ri === -1) return left.localeCompare(right);
-    if (li === -1) return 1;
-    if (ri === -1) return -1;
-    return li - ri;
-  });
-}
-
-function titleCaseWords(value: string): string {
-  return value
-    .split(/[\s_-]+/)
-    .filter((part) => part.length > 0)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join(" ");
-}
-
-function Bar({
-  label,
-  value,
-  max,
-  text,
-  tone,
-}: {
-  label: string;
-  value: number;
-  max: number;
-  text: string;
-  tone: "hp" | "mana" | "xp";
-}) {
-  const width = percent(value, max);
-  return (
-    <div className="meter-block">
-      <div className="meter-label-row">
-        <span>{label}</span>
-        <span>{text}</span>
-      </div>
-      <div className="meter-track" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={width}>
-        <span className={`meter-fill meter-fill-${tone}`} style={{ width: `${width}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function isDirection(value: string): value is Direction {
-  return (COMPASS_DIRECTIONS as readonly string[]).includes(value);
-}
-
-function DirectionIcon({ direction, className }: { direction: Direction; className?: string }) {
-  switch (direction) {
-    case "north":
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-          <path d="M12 19V7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M8.6 10.4 12 7l3.4 3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M9 6.7c.9-.6 1.9-.9 3-.9s2.1.3 3 .9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-        </svg>
-      );
-    case "east":
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-          <path d="M5 12h12" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M13.6 8.6 17 12l-3.4 3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M17.3 9c.6.9.9 1.9.9 3s-.3 2.1-.9 3" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-        </svg>
-      );
-    case "south":
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-          <path d="M12 5v12" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M15.4 13.6 12 17l-3.4-3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M15 17.3c-.9.6-1.9.9-3 .9s-2.1-.3-3-.9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-        </svg>
-      );
-    case "west":
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-          <path d="M19 12H7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M10.4 15.4 7 12l3.4-3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M6.7 15c-.6-.9-.9-1.9-.9-3s.3-2.1.9-3" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-        </svg>
-      );
-    case "up":
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-          <path d="M12 20V9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M8.6 12.4 12 9l3.4 3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M7.8 7.2h8.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-          <path d="M9.2 6.2 12 4l2.8 2.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-        </svg>
-      );
-    case "down":
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-          <path d="M12 4v11" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M15.4 11.6 12 15l-3.4-3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M7.8 16.8h8.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-          <path d="M9.2 17.8 12 20l2.8-2.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-        </svg>
-      );
-    default:
-      return null;
-  }
-}
-
-function EquipmentIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M8 8.5a4 4 0 0 1 8 0" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7 9h10a3 3 0 0 1 3 3v5.2a3.8 3.8 0 0 1-3.8 3.8H7.8A3.8 3.8 0 0 1 4 17.2V12a3 3 0 0 1 3-3Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M10 13.2h4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M12 13.2v1.9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9.4 6.9c.8-.9 1.7-1.4 2.6-1.4s1.8.5 2.6 1.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
-    </svg>
-  );
-}
-
-function WearingIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M9 5.5c1 .9 2 1.4 3 1.4s2-.5 3-1.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8.2 6.4 6 7.9v4.6l1.2-.8V20h9.6v-8.3l1.2.8V7.9l-2.2-1.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9.2 12.2h5.6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
-      <path d="M9.2 12.2v2.2c0 .9.7 1.6 1.6 1.6h2.4c.9 0 1.6-.7 1.6-1.6v-2.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
-    </svg>
-  );
-}
-
-function CharacterAvatarIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M12 11.2a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M6.6 19.2c.6-3 2.6-4.8 5.4-4.8s4.8 1.8 5.4 4.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4.8 12a7.2 7.2 0 0 1 14.4 0" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
-    </svg>
-  );
-}
-
-function CompassCoreIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M12 7.3v9.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7.3 12h9.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M12 9.4 14.6 12 12 14.6 9.4 12 12 9.4Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
-      <path d="M5.8 12a6.2 6.2 0 0 1 12.4 0" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
-      <path d="M18.2 12a6.2 6.2 0 0 1-12.4 0" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
-    </svg>
-  );
-}
-
-function AttackIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M14.5 4.8 19.2 9.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M18.8 5.2 9.6 14.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8.2 15.8 6 18l2.2 2.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9.6 14.4 7.3 16.7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M12.7 11.3h3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
-      <path d="M6.6 7.8 10.2 6.4 13.8 7.8v4.2c0 3.7-2.2 6.1-3.6 6.9-1.4-.8-3.6-3.2-3.6-6.9V7.8Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M10.2 7.4v10.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
-      <path d="M10.2 10.1h0" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-    </svg>
-  );
-}
-
-function FleeIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M9.2 6.8a2.1 2.1 0 1 0 0 .1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9.3 9.2 7.9 12.1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9.6 9.7 12 11.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7.9 12.1 6.2 15.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M6.2 15.4 4.9 18.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M10.9 12.3 9.1 14.9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9.1 14.9 9.8 18.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8.8 10.4 6.3 10.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
-      <path d="M13.8 8.8c1.2 1 2 2.5 2 4.2s-.8 3.2-2 4.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
-      <path d="M16.9 9.9c.7.7 1.1 1.7 1.1 2.9s-.4 2.2-1.1 2.9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.65" />
-      <path d="M18.7 12h2.3" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M19.9 10.8 21 12l-1.1 1.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function MapScrollIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M6 6.8a2.2 2.2 0 1 1 0 4.4m0-4.4h10.8a2.2 2.2 0 0 1 2.2 2.2v8.2a2.8 2.8 0 0 1-2.8 2.8H8.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8.2 20a2.4 2.4 0 1 1 0-4.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8.2 15.2V6.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.92" />
-      <path d="M11.3 10.2c1 .5 1.6 1.3 1.6 2.3 0 1.1-.7 2-1.8 2.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
-      <path d="M13.7 9.4h2.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
-    </svg>
-  );
-}
-
-function ExpandRoomIcon({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M8 4.8H4.8V8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M16 4.8h3.2V8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8 19.2H4.8V16" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M16 19.2h3.2V16" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9.4 9.4h5.2v5.2H9.4z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.82" />
-    </svg>
-  );
-}
-
 function App() {
   const terminalHostRef = useRef<HTMLDivElement | null>(null);
-  const mapCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  const socketRef = useRef<WebSocket | null>(null);
 
   const connectedRef = useRef(false);
   const inputBufferRef = useRef("");
-  const historyRef = useRef<string[]>([]);
-  const termHistoryIndexRef = useRef(-1);
-  const termSavedInputRef = useRef("");
-  const termTabCycleRef = useRef<TabCycle>(EMPTY_TAB);
-
-  const composerHistoryIndexRef = useRef(-1);
-  const composerSavedInputRef = useRef("");
-  const composerTabCycleRef = useRef<TabCycle>(EMPTY_TAB);
-
-  const visitedRef = useRef<Map<string, MapRoom>>(new Map());
-  const currentRoomIdRef = useRef<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<MobileTab>("play");
   const [activePopout, setActivePopout] = useState<PopoutPanel>(null);
-  const [connected, setConnected] = useState(false);
-  const [liveMessage, setLiveMessage] = useState("Disconnected.");
   const [composerValue, setComposerValue] = useState("");
 
   const [vitals, setVitals] = useState<Vitals>(EMPTY_VITALS);
@@ -423,118 +56,23 @@ function App() {
   const [inventory, setInventory] = useState<ItemSummary[]>([]);
   const [equipment, setEquipment] = useState<Record<string, ItemSummary>>({});
 
-  useEffect(() => {
-    connectedRef.current = connected;
-  }, [connected]);
-
-  useEffect(() => {
-    historyRef.current = readHistory();
-  }, []);
-
-  const wsUrl = useMemo(() => {
-    const scheme = window.location.protocol === "https:" ? "wss" : "ws";
-    return `${scheme}://${window.location.host}/ws`;
-  }, []);
-
-  const persistHistory = useCallback(() => {
-    try {
-      window.localStorage.setItem(HISTORY_KEY, JSON.stringify(historyRef.current));
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  const pushHistory = useCallback(
-    (command: string) => {
-      const normalized = command.trim();
-      if (normalized.length === 0) return;
-      if (historyRef.current.at(-1) === normalized) return;
-      historyRef.current.push(normalized);
-      while (historyRef.current.length > MAX_HISTORY) historyRef.current.shift();
-      persistHistory();
-    },
-    [persistHistory],
-  );
+  const { mapCanvasRef, drawMap, updateMap, resetMap } = useMiniMap();
+  const {
+    pushHistory,
+    applyTerminalHistoryUp,
+    applyTerminalHistoryDown,
+    applyTerminalCompletion,
+    applyComposerHistoryUp,
+    applyComposerHistoryDown,
+    applyComposerCompletion,
+    resetTerminalTraversal,
+    resetComposerTraversal,
+    resetTerminalCompletion,
+    resetComposerCompletion,
+  } = useCommandHistory();
 
   const writeSystem = useCallback((message: string) => {
     terminalRef.current?.write(`\r\n\x1b[2m${message}\x1b[0m\r\n`);
-  }, []);
-
-  const drawMap = useCallback(() => {
-    const canvas = mapCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const width = Math.max(1, Math.floor(rect.width));
-    const height = Math.max(1, Math.floor(rect.height));
-
-    if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-    }
-
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, width, height);
-
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, "#fbf8fd");
-    gradient.addColorStop(1, "#eff4fb");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-
-    const currentId = currentRoomIdRef.current;
-    if (!currentId) return;
-    const current = visitedRef.current.get(currentId);
-    if (!current) return;
-
-    const cell = 28;
-    const radius = 6;
-    const centerX = width / 2;
-    const centerY = height / 2;
-
-    ctx.strokeStyle = "rgba(107, 107, 123, 0.46)";
-    ctx.lineWidth = 1.4;
-    for (const node of visitedRef.current.values()) {
-      const sx = centerX + (node.x - current.x) * cell;
-      const sy = centerY + (node.y - current.y) * cell;
-      for (const targetId of Object.values(node.exits)) {
-        const target = visitedRef.current.get(targetId);
-        if (!target) continue;
-        const tx = centerX + (target.x - current.x) * cell;
-        const ty = centerY + (target.y - current.y) * cell;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(tx, ty);
-        ctx.stroke();
-      }
-    }
-
-    for (const [id, node] of visitedRef.current.entries()) {
-      const x = centerX + (node.x - current.x) * cell;
-      const y = centerY + (node.y - current.y) * cell;
-      if (x < -radius || x > width + radius || y < -radius || y > height + radius) continue;
-
-      const currentNode = id === currentId;
-      ctx.fillStyle = currentNode ? "#e8c5d8" : "#b8d8e8";
-      ctx.beginPath();
-      ctx.arc(x, y, currentNode ? radius + 1.8 : radius, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(107, 107, 123, 0.66)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      if (currentNode) {
-        ctx.strokeStyle = "rgba(232, 216, 168, 0.95)";
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.arc(x, y, radius + 5.8, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
   }, []);
 
   const fitTerminal = useCallback(() => {
@@ -553,48 +91,6 @@ function App() {
     fitAddon.fit();
   }, []);
 
-  const updateMap = useCallback(
-    (roomId: string, exits: Record<string, string>) => {
-      currentRoomIdRef.current = roomId;
-      const rooms = visitedRef.current;
-
-      if (!rooms.has(roomId)) {
-        let placed = false;
-        for (const [dir, neighborId] of Object.entries(exits)) {
-          const neighbor = rooms.get(neighborId);
-          const offset = MAP_OFFSETS[dir];
-          if (!neighbor || !offset) continue;
-          rooms.set(roomId, { x: neighbor.x - offset.dx, y: neighbor.y - offset.dy, exits });
-          placed = true;
-          break;
-        }
-
-        if (!placed) {
-          if (rooms.size === 0) {
-            rooms.set(roomId, { x: 0, y: 0, exits });
-          } else {
-            const previous = Array.from(rooms.values()).at(-1);
-            rooms.set(roomId, { x: (previous?.x ?? 0) + 1, y: previous?.y ?? 0, exits });
-          }
-        }
-      } else {
-        const node = rooms.get(roomId);
-        if (node) node.exits = exits;
-      }
-
-      for (const [dir, targetId] of Object.entries(exits)) {
-        if (rooms.has(targetId)) continue;
-        const source = rooms.get(roomId);
-        const offset = MAP_OFFSETS[dir];
-        if (!source || !offset) continue;
-        rooms.set(targetId, { x: source.x + offset.dx, y: source.y + offset.dy, exits: {} });
-      }
-
-      drawMap();
-    },
-    [drawMap],
-  );
-
   const resetHud = useCallback(() => {
     setVitals(EMPTY_VITALS);
     setCharacter(EMPTY_CHAR);
@@ -604,26 +100,68 @@ function App() {
     setEffects([]);
     setInventory([]);
     setEquipment({});
-    visitedRef.current.clear();
-    currentRoomIdRef.current = null;
-    drawMap();
-  }, [drawMap]);
+    resetMap();
+  }, [resetMap]);
+
+  const handleGmcp = useCallback(
+    (pkg: string, data: unknown) => {
+      applyGmcpPackage(
+        pkg,
+        data,
+        {
+          setVitals,
+          setCharacter,
+          setRoom,
+          setInventory,
+          setEquipment,
+          setPlayers,
+          setMobs,
+          setEffects,
+          updateMap,
+        },
+      );
+    },
+    [updateMap],
+  );
+
+  const { connected, liveMessage, connect, disconnect, reconnect, sendLine } = useMudSocket({
+    onOpen: () => {
+      terminalRef.current?.focus();
+    },
+    onTextMessage: (text) => {
+      terminalRef.current?.write(text);
+    },
+    onGmcpMessage: handleGmcp,
+    onClose: () => {
+      inputBufferRef.current = "";
+      setComposerValue("");
+      resetTerminalTraversal();
+      resetComposerTraversal();
+      resetHud();
+      writeSystem("Connection closed.");
+    },
+    onError: () => {
+      writeSystem("Connection error.");
+    },
+  });
+
+  useEffect(() => {
+    connectedRef.current = connected;
+  }, [connected]);
 
   const sendCommand = useCallback(
     (raw: string, echo: boolean) => {
       const command = raw.trim();
       if (command.length === 0) return;
-      const ws = socketRef.current;
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
+      if (!sendLine(command)) {
         writeSystem("Disconnected. Reconnect to send commands.");
         return;
       }
 
       pushHistory(command);
-      ws.send(command);
       if (echo) terminalRef.current?.write(`${command}\r\n`);
     },
-    [pushHistory, writeSystem],
+    [pushHistory, sendLine, writeSystem],
   );
 
   const clearTerminalInput = useCallback(() => {
@@ -643,30 +181,14 @@ function App() {
   const handleTerminalData = useCallback(
     (data: string) => {
       if (!connectedRef.current) return;
-      const ws = socketRef.current;
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
       if (data === "\x1b[A") {
-        if (historyRef.current.length === 0) return;
-        if (termHistoryIndexRef.current === -1) {
-          termSavedInputRef.current = inputBufferRef.current;
-          termHistoryIndexRef.current = historyRef.current.length - 1;
-        } else if (termHistoryIndexRef.current > 0) {
-          termHistoryIndexRef.current -= 1;
-        }
-        replaceTerminalInput(historyRef.current[termHistoryIndexRef.current] ?? "");
+        applyTerminalHistoryUp(inputBufferRef.current, replaceTerminalInput);
         return;
       }
 
       if (data === "\x1b[B") {
-        if (termHistoryIndexRef.current === -1) return;
-        termHistoryIndexRef.current += 1;
-        if (termHistoryIndexRef.current >= historyRef.current.length) {
-          termHistoryIndexRef.current = -1;
-          replaceTerminalInput(termSavedInputRef.current);
-        } else {
-          replaceTerminalInput(historyRef.current[termHistoryIndexRef.current] ?? "");
-        }
+        applyTerminalHistoryDown(replaceTerminalInput);
         return;
       }
 
@@ -676,9 +198,7 @@ function App() {
           terminalRef.current?.write("\r\n");
           inputBufferRef.current = "";
           setComposerValue("");
-          termHistoryIndexRef.current = -1;
-          termSavedInputRef.current = "";
-          termTabCycleRef.current = EMPTY_TAB;
+          resetTerminalTraversal();
           continue;
         }
 
@@ -687,15 +207,12 @@ function App() {
             inputBufferRef.current = inputBufferRef.current.slice(0, -1);
             terminalRef.current?.write("\b \b");
           }
-          termTabCycleRef.current = EMPTY_TAB;
+          resetTerminalCompletion();
           continue;
         }
 
         if (ch === "\t") {
-          const completion = nextCompletion(inputBufferRef.current, termTabCycleRef.current);
-          if (!completion) continue;
-          replaceTerminalInput(completion.value);
-          termTabCycleRef.current = completion.cycle;
+          applyTerminalCompletion(inputBufferRef.current, replaceTerminalInput);
           continue;
         }
 
@@ -703,272 +220,20 @@ function App() {
         if (code >= 0x20 && code !== 0x7f) {
           inputBufferRef.current += ch;
           terminalRef.current?.write(ch);
-          termTabCycleRef.current = EMPTY_TAB;
+          resetTerminalCompletion();
         }
       }
     },
-    [replaceTerminalInput, sendCommand],
+    [
+      applyTerminalCompletion,
+      applyTerminalHistoryDown,
+      applyTerminalHistoryUp,
+      replaceTerminalInput,
+      resetTerminalCompletion,
+      resetTerminalTraversal,
+      sendCommand,
+    ],
   );
-
-  const handleGmcp = useCallback(
-    (pkg: string, data: unknown) => {
-      switch (pkg) {
-        case "Char.Vitals": {
-          const packet = data as Partial<Record<string, unknown>>;
-          setVitals({
-            hp: safeNumber(packet.hp),
-            maxHp: safeNumber(packet.maxHp, 1),
-            mana: safeNumber(packet.mana),
-            maxMana: safeNumber(packet.maxMana, 1),
-            level: typeof packet.level === "number" ? packet.level : null,
-            xp: safeNumber(packet.xp),
-            xpIntoLevel: safeNumber(packet.xpIntoLevel),
-            xpToNextLevel: packet.xpToNextLevel === null ? null : safeNumber(packet.xpToNextLevel),
-            gold: safeNumber(packet.gold),
-          });
-          break;
-        }
-
-        case "Char.Name": {
-          const packet = data as Partial<Record<string, unknown>>;
-          setCharacter({
-            name: typeof packet.name === "string" && packet.name.length > 0 ? packet.name : "-",
-            race: typeof packet.race === "string" ? packet.race : "",
-            className: typeof packet.class === "string" ? packet.class : "",
-            level: typeof packet.level === "number" ? packet.level : null,
-          });
-          break;
-        }
-
-        case "Room.Info": {
-          const packet = data as Partial<Record<string, unknown>>;
-          const exits = packet.exits && typeof packet.exits === "object" ? (packet.exits as Record<string, string>) : {};
-          const id = typeof packet.id === "string" ? packet.id : null;
-
-          setRoom({
-            id,
-            title: typeof packet.title === "string" && packet.title.length > 0 ? packet.title : "-",
-            description: typeof packet.description === "string" ? packet.description : "",
-            exits,
-          });
-
-          if (id) updateMap(id, exits);
-          break;
-        }
-
-        case "Char.Items.List": {
-          const packet = data as Partial<Record<string, unknown>>;
-          const inventoryList = Array.isArray(packet.inventory)
-            ? packet.inventory
-                .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
-                .map((entry) => ({
-                  id: typeof entry.id === "string" ? entry.id : `${Date.now()}-${Math.random()}`,
-                  name: typeof entry.name === "string" ? entry.name : "Unknown item",
-                }))
-            : [];
-
-          const equipmentMap: Record<string, ItemSummary> = {};
-          if (packet.equipment && typeof packet.equipment === "object") {
-            for (const [slot, entry] of Object.entries(packet.equipment as Record<string, unknown>)) {
-              if (!entry || typeof entry !== "object") continue;
-              const item = entry as Record<string, unknown>;
-              equipmentMap[slot] = {
-                id: typeof item.id === "string" ? item.id : `${slot}-${Date.now()}`,
-                name: typeof item.name === "string" ? item.name : "Unknown item",
-              };
-            }
-          }
-
-          setInventory(inventoryList);
-          setEquipment(equipmentMap);
-          break;
-        }
-
-        case "Char.Items.Add": {
-          const packet = data as Partial<Record<string, unknown>>;
-          setInventory((prev) => [
-            ...prev,
-            {
-              id: typeof packet.id === "string" ? packet.id : `${Date.now()}-${Math.random()}`,
-              name: typeof packet.name === "string" ? packet.name : "Unknown item",
-            },
-          ]);
-          break;
-        }
-
-        case "Char.Items.Remove": {
-          const packet = data as Partial<Record<string, unknown>>;
-          if (typeof packet.id !== "string") break;
-          setInventory((prev) => prev.filter((item) => item.id !== packet.id));
-          break;
-        }
-
-        case "Room.Players": {
-          if (!Array.isArray(data)) {
-            setPlayers([]);
-            break;
-          }
-          setPlayers(
-            data
-              .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
-              .map((entry) => ({
-                name: typeof entry.name === "string" ? entry.name : "Unknown",
-                level: safeNumber(entry.level),
-              })),
-          );
-          break;
-        }
-
-        case "Room.AddPlayer": {
-          const packet = data as Partial<Record<string, unknown>>;
-          const name = packet.name;
-          if (typeof name !== "string") break;
-          setPlayers((prev) => {
-            if (prev.some((player) => player.name === name)) return prev;
-            return [...prev, { name, level: safeNumber(packet.level) }];
-          });
-          break;
-        }
-
-        case "Room.RemovePlayer": {
-          const packet = data as Partial<Record<string, unknown>>;
-          if (typeof packet.name !== "string") break;
-          setPlayers((prev) => prev.filter((player) => player.name !== packet.name));
-          break;
-        }
-
-        case "Room.Mobs": {
-          if (!Array.isArray(data)) {
-            setMobs([]);
-            break;
-          }
-          setMobs(
-            data
-              .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
-              .map((entry) => ({
-                id: typeof entry.id === "string" ? entry.id : `${Date.now()}-${Math.random()}`,
-                name: typeof entry.name === "string" ? entry.name : "Unknown mob",
-                hp: safeNumber(entry.hp),
-                maxHp: Math.max(1, safeNumber(entry.maxHp, 1)),
-              })),
-          );
-          break;
-        }
-
-        case "Room.AddMob": {
-          const packet = data as Partial<Record<string, unknown>>;
-          const id = packet.id;
-          if (typeof id !== "string") break;
-          setMobs((prev) => [
-            ...prev,
-            {
-              id,
-              name: typeof packet.name === "string" ? packet.name : "Unknown mob",
-              hp: safeNumber(packet.hp),
-              maxHp: Math.max(1, safeNumber(packet.maxHp, 1)),
-            },
-          ]);
-          break;
-        }
-
-        case "Room.UpdateMob": {
-          const packet = data as Partial<Record<string, unknown>>;
-          if (typeof packet.id !== "string") break;
-          setMobs((prev) =>
-            prev.map((mob) => {
-              if (mob.id !== packet.id) return mob;
-              return {
-                ...mob,
-                hp: safeNumber(packet.hp, mob.hp),
-                maxHp: Math.max(1, safeNumber(packet.maxHp, mob.maxHp)),
-              };
-            }),
-          );
-          break;
-        }
-
-        case "Room.RemoveMob": {
-          const packet = data as Partial<Record<string, unknown>>;
-          if (typeof packet.id !== "string") break;
-          setMobs((prev) => prev.filter((mob) => mob.id !== packet.id));
-          break;
-        }
-
-        case "Char.StatusEffects": {
-          if (!Array.isArray(data)) {
-            setEffects([]);
-            break;
-          }
-          setEffects(
-            data
-              .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
-              .map((entry) => ({
-                name: typeof entry.name === "string" ? entry.name : "Effect",
-                type: typeof entry.type === "string" ? entry.type : "BUFF",
-                stacks: Math.max(1, safeNumber(entry.stacks, 1)),
-                remainingMs: Math.max(0, safeNumber(entry.remainingMs, 0)),
-              })),
-          );
-          break;
-        }
-
-        default:
-          break;
-      }
-    },
-    [updateMap],
-  );
-
-  const connect = useCallback(() => {
-    const existing = socketRef.current;
-    if (existing && (existing.readyState === WebSocket.OPEN || existing.readyState === WebSocket.CONNECTING)) return;
-
-    const ws = new WebSocket(wsUrl);
-    socketRef.current = ws;
-
-    ws.addEventListener("open", () => {
-      setConnected(true);
-      setLiveMessage("Connected.");
-      terminalRef.current?.focus();
-    });
-
-    ws.addEventListener("message", (event) => {
-      if (typeof event.data !== "string") return;
-      const gmcp = parseGmcp(event.data);
-      if (gmcp) {
-        handleGmcp(gmcp.pkg, gmcp.data);
-      } else {
-        terminalRef.current?.write(event.data);
-      }
-    });
-
-    ws.addEventListener("close", () => {
-      if (socketRef.current === ws) socketRef.current = null;
-      setConnected(false);
-      setLiveMessage("Connection closed.");
-      inputBufferRef.current = "";
-      setComposerValue("");
-      resetHud();
-      writeSystem("Connection closed.");
-    });
-
-    ws.addEventListener("error", () => {
-      setLiveMessage("Connection error.");
-      writeSystem("Connection error.");
-    });
-  }, [handleGmcp, resetHud, wsUrl, writeSystem]);
-
-  const disconnect = useCallback(() => {
-    const ws = socketRef.current;
-    if (!ws) return;
-    socketRef.current = null;
-    if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) ws.close();
-  }, []);
-
-  const reconnect = useCallback(() => {
-    disconnect();
-    window.setTimeout(() => connect(), 120);
-  }, [connect, disconnect]);
 
   useEffect(() => {
     if (!terminalHostRef.current) return;
@@ -1110,48 +375,29 @@ function App() {
     if (!command) return;
     sendCommand(command, true);
     setComposerValue("");
-    composerHistoryIndexRef.current = -1;
-    composerSavedInputRef.current = "";
-    composerTabCycleRef.current = EMPTY_TAB;
+    resetComposerTraversal();
   };
 
   const onComposerKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowUp") {
-      if (historyRef.current.length === 0) return;
       event.preventDefault();
-      if (composerHistoryIndexRef.current === -1) {
-        composerSavedInputRef.current = composerValue;
-        composerHistoryIndexRef.current = historyRef.current.length - 1;
-      } else if (composerHistoryIndexRef.current > 0) {
-        composerHistoryIndexRef.current -= 1;
-      }
-      setComposerValue(historyRef.current[composerHistoryIndexRef.current] ?? "");
+      applyComposerHistoryUp(composerValue, setComposerValue);
       return;
     }
 
     if (event.key === "ArrowDown") {
-      if (composerHistoryIndexRef.current === -1) return;
       event.preventDefault();
-      composerHistoryIndexRef.current += 1;
-      if (composerHistoryIndexRef.current >= historyRef.current.length) {
-        composerHistoryIndexRef.current = -1;
-        setComposerValue(composerSavedInputRef.current);
-      } else {
-        setComposerValue(historyRef.current[composerHistoryIndexRef.current] ?? "");
-      }
+      applyComposerHistoryDown(setComposerValue);
       return;
     }
 
     if (event.key === "Tab") {
       event.preventDefault();
-      const completion = nextCompletion(composerValue, composerTabCycleRef.current);
-      if (!completion) return;
-      setComposerValue(completion.value);
-      composerTabCycleRef.current = completion.cycle;
+      applyComposerCompletion(composerValue, setComposerValue);
       return;
     }
 
-    composerTabCycleRef.current = EMPTY_TAB;
+    resetComposerCompletion();
   };
 
   return (
@@ -1177,407 +423,87 @@ function App() {
       </header>
 
       <div className="dashboard" data-active-tab={activeTab}>
-        <section className="panel panel-play" aria-label="Gameplay console">
-          <header className="panel-header"><h2 title="Terminal output and direct command flow.">Play</h2></header>
-          {preLogin && (
-            <section className="prelogin-banner" aria-label="Login guidance">
-              <p className="prelogin-banner-title">Welcome back. Your session is connected.</p>
-              <p className="prelogin-banner-text">Use the terminal to enter your character name and password. World and character panels will populate right after login.</p>
-            </section>
-          )}
-          <div className="terminal-card"><div ref={terminalHostRef} className="terminal-host" aria-label="AmbonMUD terminal" /></div>
+        <PlayPanel
+          preLogin={preLogin}
+          connected={connected}
+          hasRoomDetails={hasRoomDetails}
+          exits={exits}
+          terminalHostRef={terminalHostRef}
+          composerValue={composerValue}
+          commandPlaceholder={commandPlaceholder}
+          onComposerChange={(value) => {
+            setComposerValue(value);
+            resetComposerCompletion();
+          }}
+          onComposerKeyDown={onComposerKeyDown}
+          onSubmitComposer={submitComposer}
+          onMove={(direction) => {
+            sendCommand(direction, true);
+            terminalRef.current?.focus();
+          }}
+          onFlee={() => {
+            sendCommand("flee", true);
+            terminalRef.current?.focus();
+          }}
+        />
 
-          <div className="movement-grid" role="toolbar" aria-label="Room exits">
-            {exits.length === 0 ? (
-              preLogin ? null : <span className="empty-note">{connected ? "No exits available." : "Reconnect to view exits."}</span>
-            ) : (
-              exits.map(([direction, target]) => {
-                const normalized = direction.toLowerCase();
-                const knownDirection = isDirection(normalized);
-                return (
-                  <button
-                    key={direction}
-                    type="button"
-                    className="chip-button"
-                    title={`Move ${direction} (${target})`}
-                    onClick={() => {
-                      sendCommand(direction, true);
-                      terminalRef.current?.focus();
-                    }}
-                  >
-                    {knownDirection && <DirectionIcon direction={normalized} className="chip-direction-icon" />}
-                    <span className="chip-label">{direction}</span>
-                  </button>
-                );
-              })
-            )}
-            {connected && hasRoomDetails && (
-              <button
-                type="button"
-                className="chip-button chip-button-utility"
-                title="Attempt to flee from combat"
-                onClick={() => {
-                  sendCommand("flee", true);
-                  terminalRef.current?.focus();
-                }}
-              >
-                <FleeIcon className="chip-direction-icon" />
-                <span className="chip-label">flee</span>
-              </button>
-            )}
-          </div>
+        <WorldPanel
+          connected={connected}
+          hasRoomDetails={hasRoomDetails}
+          canOpenMap={canOpenMap}
+          room={room}
+          exits={exits}
+          availableExitSet={availableExitSet}
+          players={players}
+          mobs={mobs}
+          visiblePlayers={visiblePlayers}
+          hiddenPlayersCount={hiddenPlayersCount}
+          visibleMobs={visibleMobs}
+          hiddenMobsCount={hiddenMobsCount}
+          onOpenMap={() => setActivePopout("map")}
+          onOpenRoom={() => setActivePopout("room")}
+          onMove={(direction) => {
+            sendCommand(direction, true);
+            terminalRef.current?.focus();
+          }}
+          onAttackMob={(mobName) => {
+            sendCommand(`kill ${mobName}`, true);
+            terminalRef.current?.focus();
+          }}
+        />
 
-          <form className="command-form" onSubmit={submitComposer}>
-            <label htmlFor="command-input" className="sr-only">Command input</label>
-            <input
-              id="command-input"
-              className="command-input"
-              type="text"
-              value={composerValue}
-              onChange={(event) => {
-                setComposerValue(event.target.value);
-                composerTabCycleRef.current = EMPTY_TAB;
-              }}
-              onKeyDown={onComposerKeyDown}
-              placeholder={commandPlaceholder}
-              autoComplete="off"
-              spellCheck={false}
-            />
-            <button type="submit" className="soft-button" disabled={!connected}>Send</button>
-          </form>
-        </section>
-
-        <section className="panel panel-world" aria-label="World state">
-          <div className="world-stack">
-            <article className="subpanel">
-              {hasRoomDetails ? (
-                <div className="room-main">
-                  <div className="room-title-row">
-                    <p className="room-title">{room.title}</p>
-                    <button
-                      type="button"
-                      className="map-icon-trigger room-map-trigger"
-                      onClick={() => setActivePopout("map")}
-                      disabled={!canOpenMap}
-                      aria-label={canOpenMap ? "Open mini-map" : "Mini-map unavailable before login"}
-                      title={canOpenMap ? "Open mini-map" : "Mini-map unavailable before login"}
-                    >
-                      <MapScrollIcon className="map-icon-svg" />
-                      <span className="sr-only">Mini-map</span>
-                    </button>
-                  </div>
-                  <div className="room-description-wrap" aria-label="Room description">
-                    <p className="room-description">{room.description || "No room description available yet."}</p>
-                    <button
-                      type="button"
-                      className="map-icon-trigger room-expand-trigger"
-                      onClick={() => setActivePopout("room")}
-                      aria-label="Expand room text"
-                      title="Expand room text"
-                    >
-                      <ExpandRoomIcon className="map-icon-svg room-expand-icon" />
-                      <span className="sr-only">Expand room text</span>
-                    </button>
-                  </div>
-                  <div className="compass-block" aria-label="Current exits">
-                    <div className="compass-rose" role="group" aria-label="Directional exits">
-                      {COMPASS_DIRECTIONS.map((direction) => {
-                        const enabled = availableExitSet.has(direction);
-                        return (
-                          <button
-                            key={direction}
-                            type="button"
-                            className={`compass-node compass-node-${direction}`}
-                            disabled={!enabled}
-                            aria-label={enabled ? `Move ${direction}` : `${direction} exit unavailable`}
-                            title={enabled ? `Move ${direction}` : `${direction} unavailable`}
-                            onClick={() => {
-                              sendCommand(direction, true);
-                              terminalRef.current?.focus();
-                            }}
-                          >
-                            <DirectionIcon direction={direction} className="compass-node-icon" />
-                          </button>
-                        );
-                      })}
-                      <span className="compass-core" aria-hidden="true">
-                        <CompassCoreIcon className="compass-core-icon" />
-                      </span>
-                    </div>
-                    <p className="compass-caption">
-                      {exits.length === 0 ? "No exits listed." : `Available: ${exits.map(([direction]) => direction).join(", ")}`}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="prelogin-card">
-                  <h3>{connected ? "World Gate" : "World Offline"}</h3>
-                  <p className="prelogin-card-title">{connected ? "Awaiting your credentials" : "Disconnected from AmbonMUD"}</p>
-                  <p className="room-description">
-                    {connected
-                      ? "Once you finish login in the terminal, this panel will show your current room, exits, players, and nearby mobs."
-                      : "Reconnect to establish a session. The world map and local room context will appear as soon as a session is active."}
-                  </p>
-                  <div className="prelogin-runes" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                </div>
-              )}
-            </article>
-
-            <article className="subpanel split-list">
-              <div>
-                <h3>Players</h3>
-                {players.length === 0 ? <p className="empty-note">{hasRoomDetails ? "Nobody else is here." : "Online players will appear here after login."}</p> : (
-                  <>
-                    <ul className="entity-list">
-                      {visiblePlayers.map((player) => (
-                        <li key={player.name} className="entity-item"><span>{player.name}</span><span className="entity-meta">Lv {player.level}</span></li>
-                      ))}
-                    </ul>
-                    {hiddenPlayersCount > 0 && <p className="empty-note">+{hiddenPlayersCount} more players</p>}
-                  </>
-                )}
-              </div>
-
-              <div>
-                <h3>Mobs</h3>
-                {mobs.length === 0 ? <p className="empty-note">{hasRoomDetails ? "No mobs in this room." : "Nearby creatures will appear here after login."}</p> : (
-                  <>
-                    <ul className="entity-list">
-                      {visibleMobs.map((mob) => (
-                        <li key={mob.id} className="mob-card">
-                          <div className="entity-item">
-                            <span>{mob.name}</span>
-                            <span className="mob-meta-actions">
-                              <span className="entity-meta">{mob.hp}/{mob.maxHp}</span>
-                              <button
-                                type="button"
-                                className="mob-command-button"
-                                title={`Attack ${mob.name}`}
-                                aria-label={`Attack ${mob.name}`}
-                                onClick={() => {
-                                  sendCommand(`kill ${mob.name}`, true);
-                                  terminalRef.current?.focus();
-                                }}
-                              >
-                                <AttackIcon className="mob-command-icon" />
-                              </button>
-                            </span>
-                          </div>
-                          <div className="meter-track"><span className="meter-fill meter-fill-hp" style={{ width: `${percent(mob.hp, mob.maxHp)}%` }} /></div>
-                        </li>
-                      ))}
-                    </ul>
-                    {hiddenMobsCount > 0 && <p className="empty-note">+{hiddenMobsCount} more mobs</p>}
-                  </>
-                )}
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section className="panel panel-character" aria-label="Character status">
-          <header className="panel-header panel-header-with-actions">
-            <div>
-              <h2 className="panel-header-icon-title" title="Identity, progression, and active effects.">
-                <CharacterAvatarIcon className="panel-header-avatar-icon" />
-                <span className="sr-only">Character</span>
-              </h2>
-            </div>
-            <div className="panel-action-row">
-              <button
-                type="button"
-                className="panel-action-button panel-action-button-icon"
-                onClick={() => setActivePopout("equipment")}
-                disabled={!canOpenEquipment}
-                title={canOpenEquipment ? "Equipment" : "Equipment unavailable before login"}
-                aria-label={canOpenEquipment ? "Open equipment" : "Equipment unavailable before login"}
-              >
-                <EquipmentIcon className="panel-action-icon" />
-                <span className="sr-only">Equipment</span>
-              </button>
-              <button
-                type="button"
-                className="panel-action-button panel-action-button-icon"
-                onClick={() => setActivePopout("wearing")}
-                disabled={!canOpenEquipment}
-                title={canOpenEquipment ? "Currently Wearing" : "Currently wearing unavailable before login"}
-                aria-label={canOpenEquipment ? "Open currently wearing" : "Currently wearing unavailable before login"}
-              >
-                <WearingIcon className="panel-action-icon" />
-                <span className="sr-only">Currently Wearing</span>
-              </button>
-            </div>
-          </header>
-
-          <div className="character-stack">
-            <article className="subpanel">
-              {hasCharacterProfile ? (
-                <>
-                  <h3>Identity</h3>
-                  <p className="identity-name">{character.name}</p>
-                  <p className="identity-detail">
-                    {character.level ? `Level ${character.level}` : "Level -"}
-                    {displayRace ? ` ${displayRace}` : ""}
-                    {displayClassName ? ` ${displayClassName}` : ""}
-                  </p>
-                </>
-              ) : (
-                <div className="prelogin-card">
-                  <h3>Identity</h3>
-                  <p className="prelogin-card-title">{connected ? "Character profile pending" : "No active character"}</p>
-                  <p className="room-description">
-                    {connected
-                      ? "After login, your name, class, race, and level will appear here."
-                      : "Reconnect and log in to load your character profile."}
-                  </p>
-                </div>
-              )}
-            </article>
-
-            <article className="subpanel meter-stack">
-              <h3>Vitals</h3>
-              {hasCharacterProfile ? (
-                <>
-                  <Bar label="HP" tone="hp" value={vitals.hp} max={Math.max(1, vitals.maxHp)} text={`${vitals.hp} / ${vitals.maxHp}`} />
-                  <Bar label="Mana" tone="mana" value={vitals.mana} max={Math.max(1, vitals.maxMana)} text={`${vitals.mana} / ${vitals.maxMana}`} />
-                  <Bar label="XP" tone="xp" value={xpValue} max={xpMax} text={xpText} />
-
-                  <dl className="stat-grid">
-                    <div><dt>Level</dt><dd>{vitals.level ?? "-"}</dd></div>
-                    <div><dt>Total XP</dt><dd>{vitals.xp.toLocaleString()}</dd></div>
-                    <div><dt>Gold</dt><dd>{vitals.gold.toLocaleString()}</dd></div>
-                  </dl>
-                </>
-              ) : (
-                <div className="meter-placeholder-stack">
-                  <div className="meter-placeholder-row"><span>HP</span><span>- / -</span></div>
-                  <div className="meter-track meter-track-placeholder"><span className="meter-fill meter-fill-placeholder" /></div>
-                  <div className="meter-placeholder-row"><span>Mana</span><span>- / -</span></div>
-                  <div className="meter-track meter-track-placeholder"><span className="meter-fill meter-fill-placeholder" /></div>
-                  <div className="meter-placeholder-row"><span>XP</span><span>- / -</span></div>
-                  <div className="meter-track meter-track-placeholder"><span className="meter-fill meter-fill-placeholder" /></div>
-                </div>
-              )}
-            </article>
-
-            <article className="subpanel character-effects">
-              <h3>Effects</h3>
-              {effects.length === 0 ? <p className="empty-note">{hasCharacterProfile ? "No active effects." : "Effects will appear here during gameplay."}</p> : (
-                <>
-                  <ul className="effects-list">
-                    {visibleEffects.map((effect, index) => {
-                      const seconds = Math.max(1, Math.ceil(effect.remainingMs / 1000));
-                      const stack = effect.stacks > 1 ? ` x${effect.stacks}` : "";
-                      return (
-                        <li key={`${effect.name}-${index}`} className="effect-item">
-                          <span className="effect-name">{effect.name}{stack}</span>
-                          <span className="effect-type">{effect.type}</span>
-                          <span className="effect-time">{seconds}s</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                  {hiddenEffectsCount > 0 && <p className="empty-note">+{hiddenEffectsCount} more effects</p>}
-                </>
-              )}
-            </article>
-          </div>
-        </section>
+        <CharacterPanel
+          connected={connected}
+          hasCharacterProfile={hasCharacterProfile}
+          canOpenEquipment={canOpenEquipment}
+          character={character}
+          displayRace={displayRace}
+          displayClassName={displayClassName}
+          vitals={vitals}
+          xpValue={xpValue}
+          xpMax={xpMax}
+          xpText={xpText}
+          effects={effects}
+          visibleEffects={visibleEffects}
+          hiddenEffectsCount={hiddenEffectsCount}
+          onOpenEquipment={() => setActivePopout("equipment")}
+          onOpenWearing={() => setActivePopout("wearing")}
+        />
       </div>
 
-      {activePopout && (
-        <div className="popout-backdrop" onClick={() => setActivePopout(null)}>
-          <section
-            className="popout-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-label={popoutTitle}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <header className="popout-header">
-              <h2>{popoutTitle}</h2>
-              <button type="button" className="soft-button popout-close" onClick={() => setActivePopout(null)}>
-                Close
-              </button>
-            </header>
+      <PopoutLayer
+        activePopout={activePopout}
+        popoutTitle={popoutTitle}
+        room={room}
+        exits={exits}
+        inventory={inventory}
+        equipment={equipment}
+        equipmentSlots={equipmentSlots}
+        mapCanvasRef={mapCanvasRef}
+        onClose={() => setActivePopout(null)}
+      />
 
-            {activePopout === "map" && (
-              <div className="popout-content">
-                <canvas
-                  ref={mapCanvasRef}
-                  className="mini-map mini-map-popout"
-                  width={900}
-                  height={560}
-                  aria-label="Visited room map"
-                />
-              </div>
-            )}
-
-            {activePopout === "room" && (
-              <div className="popout-content">
-                <article className="room-popout-copy">
-                  <h3 className="room-popout-title">{room.title}</h3>
-                  <p className="room-popout-text">{room.description || "No room description available yet."}</p>
-                  <p className="room-popout-exits">
-                    {exits.length === 0
-                      ? "No exits listed."
-                      : `Available exits: ${exits.map(([direction]) => direction).join(", ")}`}
-                  </p>
-                </article>
-              </div>
-            )}
-
-            {activePopout === "equipment" && (
-              <div className="popout-content">
-                {inventory.length === 0 ? (
-                  <p className="empty-note">No equipment in bags right now.</p>
-                ) : (
-                  <ul className="item-list">
-                    {inventory.map((item) => (
-                      <li key={item.id}>{item.name}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-
-            {activePopout === "wearing" && (
-              <div className="popout-content">
-                {equipmentSlots.length === 0 ? (
-                  <p className="empty-note">Nothing currently worn.</p>
-                ) : (
-                  <ul className="equipment-list">
-                    {equipmentSlots.map((slot) => (
-                      <li key={slot}>
-                        <span className="equipment-slot">{slot}</span>
-                        <span>{equipment[slot]?.name ?? "Unknown"}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-          </section>
-        </div>
-      )}
-
-      <nav className="mobile-tab-bar" aria-label="Mobile sections">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`mobile-tab ${activeTab === tab.id ? "mobile-tab-active" : ""}`}
-            onClick={() => setActiveTab(tab.id)}
-            aria-pressed={activeTab === tab.id}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+      <MobileTabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
       <p className="sr-only" aria-live="polite">{liveMessage}</p>
     </main>
