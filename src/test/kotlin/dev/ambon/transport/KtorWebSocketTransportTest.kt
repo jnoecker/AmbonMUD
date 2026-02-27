@@ -133,7 +133,11 @@ class KtorWebSocketTransportTest {
                     )
                 }
 
-                val response = client.get("/v3/")
+                val noRedirectClient =
+                    createClient {
+                        followRedirects = false
+                    }
+                val response = noRedirectClient.get("/v3/")
                 assertEquals(HttpStatusCode.Found, response.status)
                 assertEquals("/", response.headers["Location"])
             }
