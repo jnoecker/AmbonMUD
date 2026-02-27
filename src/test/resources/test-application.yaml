@@ -1,0 +1,4 @@
+ambonMUD:
+  world:
+    resources:
+      - world/test_world.yaml

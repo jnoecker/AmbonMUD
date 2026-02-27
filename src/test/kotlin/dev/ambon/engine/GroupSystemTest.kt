@@ -7,6 +7,7 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
+import dev.ambon.test.buildTestPlayerRegistry
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.test.runTest
@@ -23,7 +24,7 @@ class GroupSystemTest {
 
     private fun setup(): TestHarness {
         val items = ItemRegistry()
-        val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+        val players = buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
         val outbound = LocalOutboundBus()
         val clock = MutableClock(0L)
         val group =
@@ -305,7 +306,7 @@ class GroupSystemTest {
     fun `max group size enforced`() =
         runTest {
             val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val players = buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val clock = MutableClock(0L)
             val group =

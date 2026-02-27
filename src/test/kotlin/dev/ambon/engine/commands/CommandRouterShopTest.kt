@@ -306,7 +306,7 @@ class CommandRouterShopTest {
         val world = WorldLoader.loadFromResource("world/ok_shop.yaml")
         val items = ItemRegistry()
         items.loadSpawns(world.itemSpawns)
-        val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+        val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
         val mobs = MobRegistry()
         val outbound = LocalOutboundBus()
         val shopRegistry = ShopRegistry(items)

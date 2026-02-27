@@ -5,12 +5,13 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.grpc.toProto
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -45,15 +46,7 @@ class GrpcOutboundBusTest {
             bus = GrpcOutboundBus(delegate = delegate, grpcReceiveFlow = grpcFlow, scope = scope)
             bus.startReceiving()
 
-            val received =
-                withTimeout(POLL_TIMEOUT_MS) {
-                    var result: OutboundEvent? = null
-                    while (result == null) {
-                        result = bus.tryReceive().getOrNull()
-                        if (result == null) delay(POLL_INTERVAL_MS)
-                    }
-                    result
-                }
+            val received = withTimeout(POLL_TIMEOUT_MS) { bus.asReceiveChannel().receive() }
             assertNotNull(received, "Delegate should have received the event from gRPC flow")
             assertEquals(event, received)
         }
@@ -73,15 +66,7 @@ class GrpcOutboundBusTest {
             bus = GrpcOutboundBus(delegate = delegate, grpcReceiveFlow = grpcFlow, scope = scope)
             bus.startReceiving()
 
-            val received =
-                withTimeout(POLL_TIMEOUT_MS) {
-                    val acc = mutableListOf<OutboundEvent>()
-                    while (acc.size < events.size) {
-                        val r = bus.tryReceive().getOrNull()
-                        if (r != null) acc += r else delay(POLL_INTERVAL_MS)
-                    }
-                    acc
-                }
+            val received = withTimeout(POLL_TIMEOUT_MS) { List(events.size) { bus.asReceiveChannel().receive() } }
             assertEquals(events, received)
         }
 
@@ -95,7 +80,7 @@ class GrpcOutboundBusTest {
 
             bus = GrpcOutboundBus(delegate = delegate, grpcReceiveFlow = grpcFlow, scope = scope)
             bus.startReceiving()
-            delay(200)
+            withTimeout(POLL_TIMEOUT_MS) { bus.awaitReceiverCompletion() }
 
             // Nothing in the delegate
             val result = bus.tryReceive()
@@ -137,7 +122,7 @@ class GrpcOutboundBusTest {
             val grpcFlow =
                 flow {
                     emit(OutboundEvent.Close(sessionId = sid, reason = "disconnect").toProto())
-                    delay(5_000L)
+                    awaitCancellation()
                 }
 
             bus =
@@ -167,7 +152,7 @@ class GrpcOutboundBusTest {
             val grpcFlow =
                 flow {
                     emit(OutboundEvent.SendText(sessionId = sid, text = "drop").toProto())
-                    delay(2_000L)
+                    awaitCancellation()
                 }
 
             bus =
@@ -179,7 +164,7 @@ class GrpcOutboundBusTest {
                 )
             bus.startReceiving()
 
-            delay(100L)
+            withTimeoutOrNull(100L) { bus.asReceiveChannel().receiveCatching() }
             assertTrue(failures.tryReceive().isFailure, "Data-plane drops should not trigger failure callback")
             val result = bus.tryReceive()
             assertTrue(result.isFailure || result.getOrNull() == null)
@@ -187,6 +172,5 @@ class GrpcOutboundBusTest {
 
     companion object {
         private const val POLL_TIMEOUT_MS = 2_000L
-        private const val POLL_INTERVAL_MS = 10L
     }
 }

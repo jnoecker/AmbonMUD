@@ -11,8 +11,10 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
+@Tag("integration")
 class MetricsEndpointTest {
     @Test
     fun `GET metrics returns 200 with prometheus text when registry is provided`(): Unit =

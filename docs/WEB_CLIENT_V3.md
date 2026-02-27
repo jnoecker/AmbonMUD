@@ -132,7 +132,7 @@ bun run build
 
 ## CI Status
 
-Current CI (`.github/workflows/ci.yml`) runs only `./gradlew ktlintCheck test`. No v3 frontend lint/build job is wired into CI yet.
+Current CI (`.github/workflows/ci.yml`) runs backend verification with `./gradlew ktlintCheck test integrationTest` and a separate frontend job for `bun install`, `bun run lint`, and `bun run build`.
 
 ---
 

@@ -550,7 +550,9 @@ Dedicated transport process:
 ### Run Tests
 
 ```bash
-./gradlew test                          # Full suite
+./gradlew test                          # Fast unit suite
+./gradlew integrationTest               # Integration-tagged suite
+./gradlew test integrationTest          # Full suite
 ./gradlew test --tests "ClassName"      # Single class
 ./gradlew test --tests "*CommandRouter*"  # Pattern
 ```
@@ -776,7 +778,7 @@ cd AmbonMUD
 ./gradlew build
 
 # Run tests (before committing)
-./gradlew ktlintCheck test
+./gradlew ktlintCheck test integrationTest
 
 # Make changes, push to feature branch
 git checkout -b feature/my-feature
@@ -795,7 +797,7 @@ git push -u origin feature/my-feature
 - Read [WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md) to understand zone creation
 - Read [CLAUDE.md](../CLAUDE.md) for architectural contracts and change playbooks
 - Explore `src/main/kotlin/dev/ambon/engine/` to understand the engine
-- Run the full test suite to build confidence: `./gradlew ktlintCheck test`
+- Run the full test suite to build confidence: `./gradlew ktlintCheck test integrationTest`
 
 ---
 

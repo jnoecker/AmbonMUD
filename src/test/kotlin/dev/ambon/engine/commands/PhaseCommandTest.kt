@@ -4,10 +4,8 @@ import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.MobRegistry
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
@@ -23,10 +21,10 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PhaseCommandTest {
-    private val world = WorldLoader.loadFromResource("world/test_world.yaml")
+    private val world = dev.ambon.test.TestWorlds.testWorld
     private val items = ItemRegistry()
     private val repo = InMemoryPlayerRepository()
-    private val players = PlayerRegistry(world.startRoom, repo, items)
+    private val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
     private val mobs = MobRegistry()
     private val outbound = LocalOutboundBus()
 
