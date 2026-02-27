@@ -3,7 +3,7 @@
 **Version:** surreal_softmagic_v1
 **Last Updated:** February 26, 2026
 **Scope:** Unified aesthetic for UI components, world rendering, and interactive experiences
-**Implementation:** Hybrid (CSS design tokens + Canvas/SVG decorative elements)
+**Implementation:** Dark-mode theme implemented in `web-v3/src/styles.css` (design tokens + component styles). Canvas/SVG decorative elements and world rendering are planned (Phase 5 of the roadmap).
 
 ---
 
@@ -55,25 +55,26 @@ This style is:
 #### Primary Tones
 | Color | Hex | Use Case | Undertone |
 |-------|-----|----------|-----------|
-| Lavender | `#D8C5E8` | Primary UI, backgrounds, magic aura | Cool |
-| Pale Blue | `#B8D8E8` | Secondary UI, borders, depth | Cool |
-| Dusty Rose | `#E8C5D8` | Accents, warmth, buttons (hover) | Warm |
-| Moss Green | `#C5D8A8` | Navigation, success states, plants | Neutral |
-| Soft Gold | `#E8D8A8` | Highlights, important elements, glow | Warm |
+| Lavender | `#a897d2` | Accents, magic aura, highlights | Cool |
+| Pale Blue | `#8caec9` | Borders, depth, info states | Cool |
+| Dusty Rose | `#b88faa` | Accents, warmth, warning states | Warm |
+| Moss Green | `#8da97b` | Navigation, success states | Neutral |
+| Soft Gold | `#bea873` | Highlights, important elements, glow | Warm |
 
-#### Neutrals (Reduced Saturation)
+#### Neutrals (Dark Theme)
 | Color | Hex | Use Case |
 |-------|-----|----------|
-| Deep Mist | `#6B6B7B` | Text, dark elements |
-| Soft Fog | `#A8A8B8` | Disabled, secondary text |
-| Cloud | `#E8E8F0` | Backgrounds, surfaces |
+| Deep Mist | `#22293c` | Darkest backgrounds, base color |
+| Soft Fog | `#6f7da1` | Secondary text, subtle UI |
+| Cloud | `#d8def1` | Light text, UI highlights |
 
 #### Rules
 - ❌ No neon
 - ❌ No saturated primaries (RGB 255, 0, 0)
-- ❌ No black (#000000) — use Deep Mist instead
-- ✅ Contrast should be moderate (WCAG AA minimum: 4.5:1)
+- ❌ No pure black (#000000) — use Deep Mist (`#22293c`) or a dark gradient instead
+- ✅ Contrast should be moderate (WCAG AA minimum: 4.5:1 for `--text-primary` on panel surfaces)
 - ✅ Cool undertones dominate, warm accents balance
+- ✅ Theme is dark mode — light text on dark surfaces throughout
 
 ### Light Behavior
 
@@ -102,17 +103,17 @@ Light sources should feel:
 ### Design Tokens
 
 ```css
-/* Primary */
---color-primary-lavender: #D8C5E8;
---color-primary-pale-blue: #B8D8E8;
---color-primary-dusty-rose: #E8C5D8;
---color-primary-moss-green: #C5D8A8;
---color-primary-soft-gold: #E8D8A8;
+/* Primary — dark-mode palette */
+--color-primary-lavender: #a897d2;
+--color-primary-pale-blue: #8caec9;
+--color-primary-dusty-rose: #b88faa;
+--color-primary-moss-green: #8da97b;
+--color-primary-soft-gold: #bea873;
 
 /* Neutrals */
---color-neutral-deep-mist: #6B6B7B;
---color-neutral-soft-fog: #A8A8B8;
---color-neutral-cloud: #E8E8F0;
+--color-neutral-deep-mist: #22293c;
+--color-neutral-soft-fog: #6f7da1;
+--color-neutral-cloud: #d8def1;
 
 /* Semantic */
 --color-success: var(--color-primary-moss-green);
@@ -120,16 +121,27 @@ Light sources should feel:
 --color-error: #C5A8A8; /* desaturated red */
 --color-info: var(--color-primary-pale-blue);
 
-/* Backgrounds */
---bg-primary: var(--color-neutral-cloud);
---bg-secondary: #F8F8FC;
---bg-elevated: #FFFFFF;
---bg-overlay: rgba(255, 255, 255, 0.85);
+/* Backgrounds (dark) */
+--bg-primary: #2a3149;
+--bg-secondary: #262f47;
+--bg-elevated: #313a56;
+
+/* Surfaces (glassmorphism panels) */
+--surface-panel-a: rgb(54 63 90 / 95%);
+--surface-panel-b: rgb(43 53 79 / 92%);
+--surface-subpanel: rgb(50 60 88 / 94%);
+--surface-chip: rgb(62 74 108 / 90%);
+--surface-input: rgb(45 56 84 / 96%);
+
+/* Lines & edges */
+--line-soft: rgb(151 166 204 / 36%);
+--line-faint: rgb(140 154 193 / 24%);
+--glass-edge: rgb(236 242 255 / 18%);
 
 /* Text */
---text-primary: var(--color-neutral-deep-mist);
---text-secondary: var(--color-neutral-soft-fog);
---text-disabled: #C8C8D0;
+--text-primary: #dbe3f8;
+--text-secondary: #aebada;
+--text-disabled: #7f89a8;
 ```
 
 ### Opacity Guidelines
@@ -151,15 +163,15 @@ The typeface should evoke:
 - Organic warmth
 - Readability at small sizes (UI) and large sizes (world rendering)
 
-#### Recommendations
+#### Typefaces (loaded via Google Fonts)
 
 | Context | Font | Weight | Size | Line Height | Use |
 |---------|------|--------|------|-------------|-----|
-| UI Headings | `Georgia` or `Crimson Text` | 600 | 20–32px | 1.2 | Titles, panel headers |
-| UI Body | `Segoe UI` or `Inter` | 400 | 14px | 1.5 | Buttons, descriptions, chat |
-| UI Small | `Segoe UI` or `Inter` | 400 | 12px | 1.4 | Labels, metadata |
-| World Text | `Courier New` | 400 | 16–18px | 1.6 | Room descriptions, combat log |
-| Emote/Special | `Georgia` | 400 | 14–16px | 1.5 | Player actions, NPC speech |
+| Display / Titles | `Cormorant Garamond` | 500–700 | clamp(1.8rem, 2.45vw, 2.45rem) | 1.2 | App banner, section headings |
+| UI Body | `Nunito Sans` | 400–800 | 14px | 1.5 | Buttons, descriptions, labels, chat |
+| UI Small | `Nunito Sans` | 400 | 12px | 1.4 | Metadata, captions |
+| Terminal / Code | `JetBrains Mono` | 400–600 | 16–18px | 1.6 | MUD text output, combat log |
+| Fallbacks | `Georgia` (titles), `Segoe UI` / `sans-serif` (UI) | — | — | — | System fallbacks when Google Fonts unavailable |
 
 ### Hierarchy
 
@@ -219,11 +231,11 @@ Motion should feel:
 /* Gentle exit */
 --ease-out-soft: cubic-bezier(0.33, 0.66, 0.66, 1);
 
-/* Bounce (for magic) */
---ease-bounce-soft: cubic-bezier(0.34, 1.56, 0.64, 1);
-
 /* Smooth return */
 --ease-in-out-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+/* Bounce (for magic / spell cast) — planned, not yet defined in styles.css */
+/* --ease-bounce-soft: cubic-bezier(0.34, 1.56, 0.64, 1); */
 ```
 
 ### Duration Guidelines
@@ -271,45 +283,46 @@ Motion should feel:
 
 ### Button States
 
+Primary button class: `.soft-button`.
+
 #### Default
-- Background: `--color-primary-lavender`
-- Text: `--color-neutral-deep-mist`
-- Box shadow: `0 2px 8px rgba(0, 0, 0, 0.08)`
-- Border: 1px solid `--color-primary-pale-blue`
+- Background: dark blue-violet gradient (blue-slate tones)
+- Text: `--text-primary`
+- Box shadow: `--shadow-sm`
+- Border: 1px solid `--line-soft`
 
 #### Hover
-- Background: `--color-primary-dusty-rose`
-- Text: `--color-neutral-deep-mist`
-- Box shadow: `0 4px 12px rgba(216, 197, 232, 0.3)`
-- Transition: 200ms `ease-out-soft`
+- Background: shift toward purple-rose (lavender/dusty-rose blend)
+- Transform: `translateY(-1px)`
+- Box shadow: `--shadow-md, --shadow-glow`
+- Border color: lightened `--line-soft`
+- Transition: 180ms `ease-out-soft`
 
 #### Active (Pressed)
-- Background: `--color-primary-pale-blue`
-- Transform: `scale(0.98)`
-- Transition: 100ms `ease-in-soft`
+- Background: shift toward blue-slate
+- Transform: `translateY(0) scale(0.98)`
 
 #### Disabled
-- Background: `--color-neutral-cloud`
-- Text: `--color-text-disabled`
-- Opacity: 60%
+- Background: muted dark gradient
+- Opacity: 62%
+- Box shadow: none
 - Cursor: not-allowed
 
 #### Focus (Keyboard)
-- Box shadow: `0 0 0 3px rgba(216, 197, 232, 0.5)` (soft glow)
+- Box shadow: `0 0 0 3px rgba(168, 151, 210, 0.4)` (lavender soft glow)
 - No color change
 
 ### Input Fields
 
 #### Default
-- Background: `--bg-elevated`
-- Border: 1px solid `--color-primary-pale-blue`
-- Text: `--color-neutral-deep-mist`
-- Placeholder: `--color-text-disabled`
+- Background: `--surface-input`
+- Border: 1px solid `--line-soft`
+- Text: `--text-primary`
+- Placeholder: `--text-disabled`
 
 #### Focus
 - Border: 1px solid `--color-primary-dusty-rose`
-- Box shadow: `0 0 0 2px rgba(232, 197, 216, 0.2)`
-- Background: Very subtle pale blue tint (1% opacity)
+- Box shadow: `0 0 0 2px rgba(184, 143, 170, 0.2)`
 
 #### Error
 - Border: 1px solid `#C5A8A8`
@@ -357,46 +370,34 @@ Motion should feel:
 
 ### Folder Structure
 
+The v3 client is a React + TypeScript + Vite application built with Bun. All design tokens and component styles live in a single CSS file.
+
 ```
-src/main/resources/web/
-├── styles/
-│   ├── design-tokens.css         # All CSS variables
-│   ├── reset.css                 # Browser normalization
-│   ├── typography.css            # Font hierarchy
-│   ├── layout.css                # Grid, flex, spacing
-│   ├── animations.css            # @keyframes, easing functions
-│   └── theme.css                 # Light mode (dark mode future)
-├── components/
-│   ├── buttons/
-│   │   ├── button.css
-│   │   ├── button.js             # React/Web component
-│   │   └── button-stories.html   # Visual regression test
-│   ├── inputs/
-│   │   ├── text-input.css
-│   │   ├── text-input.js
-│   │   └── text-input-stories.html
-│   ├── layout/
-│   │   ├── panel.css
-│   │   ├── modal.css
-│   │   ├── sidebar.css
-│   │   └── ...
-│   ├── indicators/
-│   │   ├── badge.css
-│   │   ├── progress-bar.css
-│   │   ├── spinner.css
-│   │   └── ...
-│   └── decorative/
-│       ├── particle-effect.js    # Canvas-based magic motes
-│       ├── glow-aura.js          # SVG-based halos
-│       ├── light-thread.js       # Connecting elements
-│       └── ...
-├── canvas/
-│   ├── world-renderer.js         # Main world canvas
-│   ├── particle-system.js        # Ambient effects
-│   ├── lighting.js               # Soft glow calculations
-│   └── ...
-└── app.js                        # Main entry point
+web-v3/
+├── src/
+│   ├── styles.css               # All design tokens + component styles
+│   ├── App.tsx                  # Composition root; owns all app state
+│   ├── main.tsx                 # Vite entry point
+│   ├── components/
+│   │   ├── panels/
+│   │   │   ├── PlayPanel.tsx    # Terminal + input bar
+│   │   │   ├── WorldPanel.tsx   # Room info, mobs, skills combat panel
+│   │   │   ├── ChatPanel.tsx    # Social channels, who list
+│   │   │   └── CharacterPanel.tsx # Stats, inventory, equipment
+│   │   ├── PopoutLayer.tsx      # Floating overlay panels
+│   │   ├── MobileTabBar.tsx     # Mobile tab navigation
+│   │   ├── Icons.tsx            # Shared SVG icons
+│   │   └── isDirection.ts       # Direction type helper
+│   ├── hooks/
+│   │   ├── useMudSocket.ts      # WebSocket lifecycle
+│   │   ├── useCommandHistory.ts # Command history & tab completion
+│   │   └── useMiniMap.ts        # Visited-room graph & canvas rendering
+│   └── gmcp/
+│       └── applyGmcpPackage.ts  # GMCP package handler map
+└── bun.lock                     # Dependency lockfile (Bun)
 ```
+
+Canvas-based decorative elements (particle effects, glow auras, light threads, world renderer) are planned for Phase 5.
 
 ### Component Checklist
 
@@ -442,36 +443,33 @@ src/main/resources/web/
 ### Spacing Scale
 
 ```css
---spacing-xs: 4px;
---spacing-sm: 8px;
---spacing-md: 16px;
---spacing-lg: 24px;
---spacing-xl: 32px;
---spacing-2xl: 48px;
+--space-1: 4px;   /* xs */
+--space-2: 8px;   /* sm */
+--space-3: 12px;
+--space-4: 16px;  /* md */
+--space-5: 24px;  /* lg */
+--space-6: 32px;  /* xl */
 ```
 
 ### Border Radius
 
 ```css
---radius-sm: 2px;      /* Subtle, UI elements */
---radius-md: 4px;      /* Standard buttons, inputs */
---radius-lg: 8px;      /* Cards, panels */
---radius-xl: 12px;     /* Large decorative */
---radius-round: 50%;   /* Circles */
+--radius-md: 10px;    /* Standard buttons, inputs */
+--radius-lg: 16px;    /* Cards, panels */
+--radius-xl: 24px;    /* Large decorative, app banner */
+/* Pills (connection pills, some buttons): border-radius: 999px (inline) */
 ```
 
 ### Shadows
 
 ```css
---shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
---shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
---shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.12);
---shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.16);
+/* Drop shadows (dark theme — stronger than light-mode equivalents) */
+--shadow-sm: 0 2px 7px rgb(8 10 18 / 30%);
+--shadow-md: 0 10px 26px rgb(8 10 18 / 36%);
+--shadow-lg: 0 16px 40px rgb(8 10 18 / 44%);
 
-/* Magic glow (soft, diffused) */
---shadow-glow-sm: 0 0 8px rgba(216, 197, 232, 0.4);
---shadow-glow-md: 0 0 16px rgba(216, 197, 232, 0.3);
---shadow-glow-lg: 0 0 24px rgba(216, 197, 232, 0.2);
+/* Magic glow (soft, diffused — blue-violet ambient) */
+--shadow-glow: 0 0 22px rgb(103 116 170 / 28%);
 ```
 
 ### Z-Index Scale
@@ -492,38 +490,39 @@ src/main/resources/web/
 
 ## 🗺 Implementation Roadmap
 
-### Phase 1: Design System Foundation (Weeks 1–2)
+### Phase 1: Design System Foundation ✅ Complete
 **Goal:** Establish CSS tokens and component library structure
 
-- [ ] Write `design-tokens.css` with all color, spacing, shadow, typography variables
-- [ ] Create `animations.css` with all easing functions and @keyframes
-- [ ] Set up component folder structure
-- [ ] Document in `STYLE_GUIDE.md` (this file)
-- [ ] Create visual regression test templates
+- [x] Design tokens, spacing, shadows, easing — all in `web-v3/src/styles.css`
+- [x] Easing functions and @keyframes (`drift` animation) in `styles.css`
+- [x] Component folder structure set up under `web-v3/src/`
+- [x] Documented in `STYLE_GUIDE.md` (this file)
+- [ ] Visual regression test templates
 
-**Deliverable:** Usable CSS foundation; no UI changes yet
+**Deliverable:** Usable CSS foundation ✅
 
-### Phase 2: Admin Console Redesign (Weeks 3–5)
-**Goal:** Retrofit admin dashboard to new aesthetic
+### Phase 2: Admin Console Redesign
+**Goal:** Retrofit admin dashboard to Surreal Gentle Magic aesthetic
 
-- [ ] Audit current admin UI components
-- [ ] Redesign panels, buttons, inputs using new tokens
+- [ ] Audit current admin UI components (served by `AdminHttpServer.kt`)
+- [ ] Redesign panels, buttons, inputs using design tokens
 - [ ] Add hover/active/focus states to all interactive elements
 - [ ] Integrate ambient animations (background particle drift)
 - [ ] Test on desktop (1920x1080, 1440x900)
 
 **Deliverable:** Functional admin console with full style compliance
 
-### Phase 3: Web Client Redesign (Weeks 6–8)
-**Goal:** Redesign player-facing web client
+### Phase 3: Web Client ✅ Largely Complete
+**Goal:** Player-facing web client with immersive aesthetic
 
-- [ ] Audit current web UI components
-- [ ] Redesign chat, inventory, spell bar, character sheet
-- [ ] Add world-space rendering with Canvas (ambient motes, glows)
-- [ ] Integrate decorative elements (light threads, halos)
-- [ ] Test on desktop + mobile (375px, 768px, 1024px)
+- [x] Chat, inventory, spell bar, character sheet panels built
+- [x] Ambient orbs and background radial gradients implemented
+- [x] Dark-mode Surreal Gentle Magic theme applied throughout
+- [x] Tested on desktop + mobile (responsive layout)
+- [ ] Canvas-based world-space rendering (ambient motes, glows) — see Phase 5
+- [ ] Decorative elements (light threads, halos) — see Phase 5
 
-**Deliverable:** Full player-facing client with immersive aesthetic
+**Deliverable:** Full player-facing client ✅ (canvas decorative elements planned)
 
 ### Phase 4: World Rendering Integration (Weeks 9–10)
 **Goal:** Apply style to in-game room/mob/item visuals
@@ -615,14 +614,14 @@ When creating new variants, document the differences from v1 and update this sec
 
 ### For Designers
 - Test all components at 100% zoom and 120% zoom
-- Use a color picker to verify hex values match tokens
-- Consider dark mode implications early (future consideration)
+- Use a color picker to verify hex values match tokens in `web-v3/src/styles.css`
+- The theme is dark mode — verify contrast ratios for light text on dark surfaces (WCAG AA: 4.5:1)
 - Get feedback from accessibility checkers (WebAIM, WAVE)
 
 ### For Developers
-- Import `design-tokens.css` first in all stylesheets
+- All design tokens live in `web-v3/src/styles.css` — edit that file for token changes; it is the single source of truth
 - Never hardcode colors — always use CSS variables
-- Use `calc()` for spacing combinations (e.g., `calc(var(--spacing-md) + var(--spacing-sm))`)
+- Use `calc()` for spacing combinations (e.g., `calc(var(--space-4) + var(--space-2))`)
 - Animate only `transform` and `opacity` for performance
 - Test on both desktop and mobile breakpoints
 
