@@ -6,7 +6,9 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.healHp
 import dev.ambon.engine.rollRange
+import dev.ambon.engine.takeDamage
 import java.time.Clock
 import java.util.Random
 
@@ -134,7 +136,7 @@ class StatusEffectSystem(
                     val value = rollRange(rng, def.tickMinValue, def.tickMaxValue)
                     when (def.effectType) {
                         EffectType.DOT -> {
-                            player.hp = (player.hp - value).coerceAtLeast(0)
+                            player.takeDamage(value)
                             markVitalsDirty(sessionId)
                             outbound.send(
                                 OutboundEvent.SendText(
@@ -145,7 +147,7 @@ class StatusEffectSystem(
                         }
                         EffectType.HOT -> {
                             val before = player.hp
-                            player.hp = (player.hp + value).coerceAtMost(player.maxHp)
+                            player.healHp(value)
                             val healed = player.hp - before
                             if (healed > 0) {
                                 markVitalsDirty(sessionId)
@@ -189,7 +191,7 @@ class StatusEffectSystem(
                 ) {
                     effect.lastTickAtMs = nowMs
                     val value = rollRange(rng, def.tickMinValue, def.tickMaxValue)
-                    mob.hp = (mob.hp - value).coerceAtLeast(0)
+                    mob.takeDamage(value)
                     markMobHpDirty(mobId)
                     // Notify the player who applied it
                     val source = effect.sourceSessionId

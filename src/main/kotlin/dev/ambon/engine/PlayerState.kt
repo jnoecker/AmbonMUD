@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.quest.QuestState
 import dev.ambon.persistence.PlayerId
 
@@ -59,4 +60,41 @@ data class PlayerState(
             "activeQuests=${activeQuests.keys}, completedQuestIds=$completedQuestIds, " +
             "unlockedAchievementIds=$unlockedAchievementIds, activeTitle=$activeTitle, " +
             "createdAtEpochMs=$createdAtEpochMs, passwordHash=<redacted>)"
+}
+
+/** Increases HP by [amount], clamped to [maxHp]. Returns `true` if HP actually changed. */
+fun PlayerState.healHp(amount: Int): Boolean {
+    val new = (hp + amount).coerceAtMost(maxHp)
+    return if (new != hp) {
+        hp = new
+        true
+    } else {
+        false
+    }
+}
+
+/** Decreases HP by [amount], clamped to 0. */
+fun PlayerState.takeDamage(amount: Int) {
+    hp = (hp - amount).coerceAtLeast(0)
+}
+
+/** Increases mana by [amount], clamped to [maxMana]. Returns `true` if mana actually changed. */
+fun PlayerState.healMana(amount: Int): Boolean {
+    val new = (mana + amount).coerceAtMost(maxMana)
+    return if (new != mana) {
+        mana = new
+        true
+    } else {
+        false
+    }
+}
+
+/** Decreases mana by [amount], clamped to 0. */
+fun PlayerState.spendMana(amount: Int) {
+    mana = (mana - amount).coerceAtLeast(0)
+}
+
+/** Decreases mob HP by [amount], clamped to 0. */
+fun MobState.takeDamage(amount: Int) {
+    hp = (hp - amount).coerceAtLeast(0)
 }
