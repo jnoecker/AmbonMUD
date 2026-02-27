@@ -2,11 +2,9 @@ package dev.ambon.engine.commands
 
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
@@ -24,9 +22,9 @@ class CommandRouterBroadcastTest {
     @Test
     fun `say broadcasts to other players in same room and echoes to sender`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
@@ -55,9 +53,9 @@ class CommandRouterBroadcastTest {
     @Test
     fun `say does not broadcast across rooms`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
@@ -87,9 +85,9 @@ class CommandRouterBroadcastTest {
     @Test
     fun `who lists connected players`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
@@ -116,9 +114,9 @@ class CommandRouterBroadcastTest {
     @Test
     fun `who shows G indicator for grouped players`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val groupSystem = GroupSystem(players, outbound)

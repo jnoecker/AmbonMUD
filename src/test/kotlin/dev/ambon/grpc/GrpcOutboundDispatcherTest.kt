@@ -26,8 +26,10 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
+@Tag("integration")
 class GrpcOutboundDispatcherTest {
     private val serverName = "dispatcher-test-${System.nanoTime()}"
     private lateinit var grpcServer: Server
