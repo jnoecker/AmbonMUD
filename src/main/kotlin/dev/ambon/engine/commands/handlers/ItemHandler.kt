@@ -10,6 +10,7 @@ import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.healHp
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.metrics.GameMetrics
 
@@ -176,7 +177,7 @@ class ItemHandler(
                     outbound.send(OutboundEvent.SendInfo(sessionId, "You use ${result.item.item.displayName}."))
                     if (effect.healHp > 0) {
                         val previousHp = me.hp
-                        me.hp = (me.hp + effect.healHp).coerceAtMost(me.maxHp)
+                        me.healHp(effect.healHp)
                         val healed = (me.hp - previousHp).coerceAtLeast(0)
                         if (healed > 0) {
                             outbound.send(OutboundEvent.SendInfo(sessionId, "You recover $healed HP."))

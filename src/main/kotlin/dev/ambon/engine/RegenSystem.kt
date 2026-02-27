@@ -60,9 +60,7 @@ class RegenSystem(
                 val last = lastRegenAtMs.getOrPut(sessionId) { now }
                 val interval = regenIntervalMs(player)
                 if (now - last >= interval) {
-                    val updated = (player.hp + regenAmount).coerceAtMost(player.maxHp)
-                    if (updated != player.hp) {
-                        player.hp = updated
+                    if (player.healHp(regenAmount)) {
                         markVitalsDirty(sessionId)
                     }
                     lastRegenAtMs[sessionId] = now
@@ -77,9 +75,7 @@ class RegenSystem(
                 val lastMana = lastManaRegenAtMs.getOrPut(sessionId) { now }
                 val interval = manaRegenIntervalMs(player)
                 if (now - lastMana >= interval) {
-                    val updated = (player.mana + manaRegenAmount).coerceAtMost(player.maxMana)
-                    if (updated != player.mana) {
-                        player.mana = updated
+                    if (player.healMana(manaRegenAmount)) {
                         markVitalsDirty(sessionId)
                     }
                     lastManaRegenAtMs[sessionId] = now
