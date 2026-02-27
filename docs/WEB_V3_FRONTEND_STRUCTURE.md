@@ -1,6 +1,7 @@
 # Web Client v3 Frontend Structure
 
 Date: 2026-02-27
+Status: Baseline structure established in PR #253.
 
 ## Goal
 
@@ -68,4 +69,3 @@ Run from `web-v3/`:
 
 - `bun run lint`
 - `bun run build`
-

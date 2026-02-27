@@ -1,7 +1,8 @@
 # Web Client v3: Current State Findings
 
 Date: 2026-02-27
-Scope: discovery pass of server routing, WS/GMCP protocol bridge, v3 frontend architecture, and existing test coverage.
+Status: Updated to reflect PR #253 (`refactor(web-v3): modularize App into hooks, GMCP handlers, and panel components`)
+Scope: server routing, WS/GMCP protocol bridge, current v3 frontend architecture, and verification status.
 
 ## What Was Reviewed
 
@@ -51,20 +52,28 @@ Result: frontend assets are versioned into server resources and served directly 
 
 ## v3 Frontend Architecture Snapshot
 
-- Main UI and state currently live in a single component file:
-  - `web-v3/src/App.tsx` (~1434 lines)
-- Key behaviors implemented:
-  - xterm-based terminal + command entry.
-  - command history in localStorage (`ambonmud_v3_history`).
-  - tab completion against static command dictionary.
-  - world panel (room info, exits, players, mobs).
-  - character panel (identity, vitals, effects, inventory/equipment popouts).
-  - local visited-room mini-map graph (client-side inferred layout).
-  - reconnect flow and pre-login placeholders.
+The v3 client is now modularized.
+
+- `web-v3/src/App.tsx` is a composition root (~456 lines after refactor).
+- Connection lifecycle is extracted to:
+  - `web-v3/src/hooks/useMudSocket.ts`
+- Command history and tab completion are extracted to:
+  - `web-v3/src/hooks/useCommandHistory.ts`
+- Mini-map graph/render logic is extracted to:
+  - `web-v3/src/hooks/useMiniMap.ts`
+- GMCP package handling is extracted to:
+  - `web-v3/src/gmcp/applyGmcpPackage.ts`
+- UI is split into components:
+  - `web-v3/src/components/panels/PlayPanel.tsx`
+  - `web-v3/src/components/panels/WorldPanel.tsx`
+  - `web-v3/src/components/panels/CharacterPanel.tsx`
+  - `web-v3/src/components/PopoutLayer.tsx`
+  - `web-v3/src/components/MobileTabBar.tsx`
+  - shared visual helpers in `web-v3/src/components/Icons.tsx`
 
 ## GMCP Packages Currently Consumed by v3
 
-Handled in `App.tsx` `handleGmcp` switch:
+Handled in `web-v3/src/gmcp/applyGmcpPackage.ts`:
 
 - `Char.Vitals`
 - `Char.Name`
@@ -105,6 +114,11 @@ Note: package matching is prefix-aware in `GameEngine` (`Char.Items` enables `Ch
 - `/v3/` index serving.
 - GMCP envelope parser behavior (`tryParseGmcpEnvelope`) across valid/invalid shapes.
 
+PR #253 additionally validated frontend build integrity with:
+
+- `cd web-v3 && bun run lint`
+- `cd web-v3 && bun run build`
+
 ## CI Status for Frontend
 
 Current CI (`.github/workflows/ci.yml`) runs only:
@@ -117,18 +131,9 @@ No v3 frontend lint/build job is wired into CI yet.
 
 - Transport + protocol boundary: `KtorWebSocketTransport.kt`
 - Engine GMCP publish points: `GmcpEmitter.kt`, `GmcpEventHandler.kt`
-- Frontend data reducer and UI state: `web-v3/src/App.tsx`
+- Frontend composition root: `web-v3/src/App.tsx`
+- Frontend GMCP package mapping: `web-v3/src/gmcp/applyGmcpPackage.ts`
+- Frontend hooks: `web-v3/src/hooks/`
+- Frontend panels/components: `web-v3/src/components/`
 - Frontend styling/theming: `web-v3/src/styles.css`
 - Routing/asset serving verification: `KtorWebSocketTransportTest.kt`
-
-## Suggested First Refactor Target (before larger feature work)
-
-Split `web-v3/src/App.tsx` into smaller modules:
-
-- ws/connection hook
-- GMCP reducer or package handlers
-- terminal input/history utility
-- map state/renderer utility
-- panel components
-
-This reduces risk and makes upcoming feature additions faster and safer.
