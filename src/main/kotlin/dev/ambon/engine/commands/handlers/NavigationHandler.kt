@@ -1,38 +1,32 @@
 package dev.ambon.engine.commands.handlers
 
-import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.DoorState
-import dev.ambon.domain.world.World
-import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.GmcpEmitter
-import dev.ambon.engine.MobRegistry
-import dev.ambon.engine.PlayerRegistry
-import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.EffectType
 import dev.ambon.engine.status.StatusEffectSystem
 
 class NavigationHandler(
-    router: CommandRouter,
-    private val world: World,
-    private val players: PlayerRegistry,
-    private val mobs: MobRegistry,
-    private val items: ItemRegistry,
-    private val combat: CombatSystem,
-    private val outbound: OutboundBus,
-    private val worldState: WorldStateRegistry? = null,
-    private val gmcpEmitter: GmcpEmitter? = null,
+    private val router: CommandRouter,
+    ctx: EngineContext,
     private val statusEffects: StatusEffectSystem? = null,
     private val dialogueSystem: DialogueSystem? = null,
     private val onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
 ) {
+    private val world = ctx.world
+    private val players = ctx.players
+    private val mobs = ctx.mobs
+    private val items = ctx.items
+    private val combat = ctx.combat
+    private val outbound = ctx.outbound
+    private val worldState = ctx.worldState
+    private val gmcpEmitter = ctx.gmcpEmitter
+
     init {
         router.on<Command.Look> { sid, _ -> handleLook(sid) }
         router.on<Command.Move> { sid, cmd -> handleMove(sid, cmd) }
@@ -42,7 +36,6 @@ class NavigationHandler(
 
     private suspend fun handleLook(sessionId: SessionId) {
         sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleMove(
@@ -51,12 +44,10 @@ class NavigationHandler(
     ) {
         if (combat.isInCombat(sessionId)) {
             outbound.send(OutboundEvent.SendText(sessionId, "You are in combat. Try 'flee'."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         if (statusEffects?.hasPlayerEffect(sessionId, EffectType.ROOT) == true) {
             outbound.send(OutboundEvent.SendText(sessionId, "You are rooted and cannot move!"))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val me = players.get(sessionId) ?: return
@@ -66,7 +57,6 @@ class NavigationHandler(
 
         if (to == null) {
             outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
 
@@ -77,7 +67,6 @@ class NavigationHandler(
                 if (doorState != DoorState.OPEN) {
                     val reason = if (doorState == DoorState.LOCKED) "locked" else "closed"
                     outbound.send(OutboundEvent.SendText(sessionId, "The ${door.displayName} is $reason."))
-                    outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
             }
@@ -85,11 +74,11 @@ class NavigationHandler(
 
         if (room.remoteExits.contains(cmd.dir) || !world.rooms.containsKey(to)) {
             if (onCrossZoneMove != null) {
+                router.suppressAutoPrompt()
                 onCrossZoneMove.invoke(sessionId, to)
                 return
             } else {
                 outbound.send(OutboundEvent.SendText(sessionId, "The way shimmers but does not yield."))
-                outbound.send(OutboundEvent.SendPrompt(sessionId))
                 return
             }
         }
@@ -107,14 +96,12 @@ class NavigationHandler(
             gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
         }
         sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleExits(sessionId: SessionId) {
         val me = players.get(sessionId) ?: return
         val r = world.rooms[me.roomId] ?: return
         outbound.send(OutboundEvent.SendInfo(sessionId, exitsLine(r)))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleLookDir(
@@ -134,6 +121,5 @@ class NavigationHandler(
                 outbound.send(OutboundEvent.SendText(sessionId, target.title))
             }
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 }

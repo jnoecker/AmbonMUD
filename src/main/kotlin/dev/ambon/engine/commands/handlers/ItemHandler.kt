@@ -1,13 +1,9 @@
 package dev.ambon.engine.commands.handlers
 
-import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
-import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.PlayerProgression
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
@@ -19,17 +15,19 @@ import dev.ambon.metrics.GameMetrics
 
 class ItemHandler(
     router: CommandRouter,
-    private val players: PlayerRegistry,
-    private val items: ItemRegistry,
-    private val combat: CombatSystem,
-    private val outbound: OutboundBus,
-    private val gmcpEmitter: GmcpEmitter? = null,
+    ctx: EngineContext,
     private val questSystem: QuestSystem? = null,
     private val abilitySystem: AbilitySystem? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val progression: PlayerProgression = PlayerProgression(),
 ) {
+    private val players = ctx.players
+    private val items = ctx.items
+    private val combat = ctx.combat
+    private val outbound = ctx.outbound
+    private val gmcpEmitter = ctx.gmcpEmitter
+
     init {
         router.on<Command.Inventory> { sid, _ -> handleInventory(sid) }
         router.on<Command.Equipment> { sid, _ -> handleEquipment(sid) }
@@ -50,7 +48,6 @@ class ItemHandler(
             val list = inv.map { it.item.displayName }.sorted().joinToString(", ")
             outbound.send(OutboundEvent.SendInfo(sessionId, "You are carrying: $list"))
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleEquipment(sessionId: SessionId) {
@@ -67,7 +64,6 @@ class ItemHandler(
                 }
             outbound.send(OutboundEvent.SendInfo(sessionId, "You are wearing: $line"))
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleWear(
@@ -98,7 +94,6 @@ class ItemHandler(
                     ),
                 )
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleRemove(
@@ -125,7 +120,6 @@ class ItemHandler(
                     ),
                 )
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleGet(
@@ -137,14 +131,12 @@ class ItemHandler(
         val moved = items.takeFromRoom(me.sessionId, roomId, cmd.keyword)
         if (moved == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see '${cmd.keyword}' here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         outbound.send(OutboundEvent.SendInfo(sessionId, "You pick up ${moved.item.displayName}."))
         gmcpEmitter?.sendCharItemsAdd(sessionId, moved)
         syncRoomItemsGmcp(roomId)
         questSystem?.onItemCollected(sessionId, moved)
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleDrop(
@@ -156,13 +148,11 @@ class ItemHandler(
         val moved = items.dropToRoom(me.sessionId, roomId, cmd.keyword)
         if (moved == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${moved.item.displayName}."))
         gmcpEmitter?.sendCharItemsRemove(sessionId, moved)
         syncRoomItemsGmcp(roomId)
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleUse(
@@ -175,7 +165,6 @@ class ItemHandler(
                 val effect = result.item.item.onUse
                 if (effect == null) {
                     outbound.send(OutboundEvent.SendError(sessionId, "${result.item.item.displayName} cannot be used."))
-                    outbound.send(OutboundEvent.SendPrompt(sessionId))
                     return
                 }
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You use ${result.item.item.displayName}."))
@@ -220,7 +209,6 @@ class ItemHandler(
                     ),
                 )
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleGive(
@@ -231,18 +219,15 @@ class ItemHandler(
         val targetSid = players.findSessionByName(cmd.playerName)
         if (targetSid == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.playerName}"))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         if (targetSid == sessionId) {
             outbound.send(OutboundEvent.SendError(sessionId, "You cannot give items to yourself."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val target = players.get(targetSid) ?: return
         if (target.roomId != me.roomId) {
             outbound.send(OutboundEvent.SendError(sessionId, "${target.name} is not here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         when (val result = items.giveToPlayer(me.sessionId, targetSid, cmd.keyword)) {
@@ -258,7 +243,6 @@ class ItemHandler(
             is ItemRegistry.GiveResult.NotFound ->
                 outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying or wearing '${cmd.keyword}'."))
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun grantScaledItemXp(

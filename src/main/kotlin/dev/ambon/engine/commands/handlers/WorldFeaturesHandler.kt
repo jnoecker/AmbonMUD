@@ -1,28 +1,25 @@
 package dev.ambon.engine.commands.handlers
 
-import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.ContainerState
 import dev.ambon.domain.world.DoorState
 import dev.ambon.domain.world.LeverState
 import dev.ambon.domain.world.RoomFeature
-import dev.ambon.domain.world.World
-import dev.ambon.engine.PlayerRegistry
-import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
 
 class WorldFeaturesHandler(
     router: CommandRouter,
-    private val world: World,
-    private val players: PlayerRegistry,
-    private val items: ItemRegistry,
-    private val outbound: OutboundBus,
-    private val worldState: WorldStateRegistry? = null,
+    ctx: EngineContext,
 ) {
+    private val world = ctx.world
+    private val players = ctx.players
+    private val items = ctx.items
+    private val outbound = ctx.outbound
+    private val worldState = ctx.worldState
+
     init {
         router.on<Command.OpenFeature> { sid, cmd -> handleOpenFeature(sid, cmd.keyword) }
         router.on<Command.CloseFeature> { sid, cmd -> handleCloseFeature(sid, cmd.keyword) }
@@ -44,7 +41,6 @@ class WorldFeaturesHandler(
         val feature = findFeatureByKeyword(room, keyword)
         if (feature == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see any '$keyword' to open here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         when (feature) {
@@ -74,7 +70,6 @@ class WorldFeaturesHandler(
             }
             else -> outbound.send(OutboundEvent.SendError(sessionId, "You can't open that."))
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleCloseFeature(
@@ -86,7 +81,6 @@ class WorldFeaturesHandler(
         val feature = findFeatureByKeyword(room, keyword)
         if (feature == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see any '$keyword' to close here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         when (feature) {
@@ -124,7 +118,6 @@ class WorldFeaturesHandler(
             }
             else -> outbound.send(OutboundEvent.SendError(sessionId, "You can't close that."))
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleUnlockFeature(
@@ -136,7 +129,6 @@ class WorldFeaturesHandler(
         val feature = findFeatureByKeyword(room, keyword)
         if (feature == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see any '$keyword' to unlock here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         when (feature) {
@@ -182,7 +174,6 @@ class WorldFeaturesHandler(
             }
             else -> outbound.send(OutboundEvent.SendError(sessionId, "You can't unlock that."))
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleLockFeature(
@@ -194,7 +185,6 @@ class WorldFeaturesHandler(
         val feature = findFeatureByKeyword(room, keyword)
         if (feature == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see any '$keyword' to lock here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         when (feature) {
@@ -244,7 +234,6 @@ class WorldFeaturesHandler(
             }
             else -> outbound.send(OutboundEvent.SendError(sessionId, "You can't lock that."))
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleSearchContainer(
@@ -256,13 +245,11 @@ class WorldFeaturesHandler(
         val feature = findFeatureByKeyword(room, keyword)
         if (feature == null || feature !is RoomFeature.Container) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$keyword' here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val state = worldState?.getContainerState(feature.id) ?: feature.initialState
         if (state != ContainerState.OPEN) {
             outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not open."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val contents = worldState?.getContainerContents(feature.id) ?: emptyList()
@@ -272,7 +259,6 @@ class WorldFeaturesHandler(
             val list = contents.map { it.item.displayName }.sorted().joinToString(", ")
             outbound.send(OutboundEvent.SendInfo(sessionId, "In the ${feature.displayName}: $list"))
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleGetFrom(
@@ -285,13 +271,11 @@ class WorldFeaturesHandler(
         val feature = findFeatureByKeyword(room, containerKeyword)
         if (feature == null || feature !is RoomFeature.Container) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$containerKeyword' here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val state = worldState?.getContainerState(feature.id) ?: feature.initialState
         if (state != ContainerState.OPEN) {
             outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not open."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val item = worldState?.removeFromContainer(feature.id, itemKeyword)
@@ -308,7 +292,6 @@ class WorldFeaturesHandler(
                 outbound,
             )
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handlePutIn(
@@ -321,13 +304,11 @@ class WorldFeaturesHandler(
         val feature = findFeatureByKeyword(room, containerKeyword)
         if (feature == null || feature !is RoomFeature.Container) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$containerKeyword' here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val state = worldState?.getContainerState(feature.id) ?: feature.initialState
         if (state != ContainerState.OPEN) {
             outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not open."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val item = items.removeFromInventory(sessionId, itemKeyword)
@@ -344,7 +325,6 @@ class WorldFeaturesHandler(
                 outbound,
             )
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handlePull(
@@ -356,7 +336,6 @@ class WorldFeaturesHandler(
         val feature = findFeatureByKeyword(room, keyword)
         if (feature == null || feature !is RoomFeature.Lever) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see any lever called '$keyword' here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val state = worldState?.getLeverState(feature.id) ?: feature.initialState
@@ -364,7 +343,6 @@ class WorldFeaturesHandler(
         worldState?.setLeverState(feature.id, newState)
         outbound.send(OutboundEvent.SendInfo(sessionId, "You pull the ${feature.displayName}. It moves ${newState.name.lowercase()}."))
         broadcastToRoomExcept(me.roomId, sessionId, "${me.name} pulls the ${feature.displayName}.", players, outbound)
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleReadSign(
@@ -376,10 +354,8 @@ class WorldFeaturesHandler(
         val feature = findFeatureByKeyword(room, keyword)
         if (feature == null || feature !is RoomFeature.Sign) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see anything called '$keyword' to read here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         outbound.send(OutboundEvent.SendInfo(sessionId, feature.text))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 }

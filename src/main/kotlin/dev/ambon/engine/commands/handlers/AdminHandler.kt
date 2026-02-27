@@ -1,23 +1,15 @@
 package dev.ambon.engine.commands.handlers
 
-import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
-import dev.ambon.domain.world.World
-import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.GmcpEmitter
-import dev.ambon.engine.MobRegistry
-import dev.ambon.engine.PlayerRegistry
-import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.sharding.BroadcastType
@@ -25,24 +17,26 @@ import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.InterEngineMessage
 
 class AdminHandler(
-    router: CommandRouter,
-    private val world: World,
-    private val players: PlayerRegistry,
-    private val mobs: MobRegistry,
-    private val items: ItemRegistry,
-    private val combat: CombatSystem,
-    private val outbound: OutboundBus,
+    private val router: CommandRouter,
+    ctx: EngineContext,
     private val onShutdown: suspend () -> Unit = {},
     private val onMobSmited: (MobId) -> Unit = {},
     private val onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
     private val dialogueSystem: DialogueSystem? = null,
-    private val gmcpEmitter: GmcpEmitter? = null,
     private val statusEffects: StatusEffectSystem? = null,
     private val interEngineBus: InterEngineBus? = null,
     private val engineId: String = "",
     private val metrics: GameMetrics = GameMetrics.noop(),
-    private val worldState: WorldStateRegistry? = null,
 ) {
+    private val world = ctx.world
+    private val players = ctx.players
+    private val mobs = ctx.mobs
+    private val items = ctx.items
+    private val combat = ctx.combat
+    private val outbound = ctx.outbound
+    private val gmcpEmitter = ctx.gmcpEmitter
+    private val worldState = ctx.worldState
+
     private var adminSpawnSeq = 0
 
     init {
@@ -64,21 +58,19 @@ class AdminHandler(
         val targetRoomId = resolveGotoArg(cmd.arg, me.roomId.zone, world)
         if (targetRoomId == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "No such room: ${cmd.arg}"))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         if (!world.rooms.containsKey(targetRoomId)) {
             if (onCrossZoneMove != null) {
+                router.suppressAutoPrompt()
                 onCrossZoneMove.invoke(sessionId, targetRoomId)
                 return
             }
             outbound.send(OutboundEvent.SendError(sessionId, "No such room: ${cmd.arg}"))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         players.moveTo(sessionId, targetRoomId)
         sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleTransfer(
@@ -101,14 +93,12 @@ class AdminHandler(
             } else {
                 outbound.send(OutboundEvent.SendError(sessionId, "Player not found: ${cmd.playerName}"))
             }
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val targetPlayer = players.get(targetSid) ?: return
         val targetRoomId = resolveGotoArg(cmd.arg, targetPlayer.roomId.zone, world)
         if (targetRoomId == null || !world.rooms.containsKey(targetRoomId)) {
             outbound.send(OutboundEvent.SendError(sessionId, "No such room: ${cmd.arg}"))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         players.moveTo(targetSid, targetRoomId)
@@ -116,7 +106,6 @@ class AdminHandler(
         sendLook(targetSid, world, players, mobs, items, worldState, outbound, gmcpEmitter)
         outbound.send(OutboundEvent.SendPrompt(targetSid))
         outbound.send(OutboundEvent.SendInfo(sessionId, "Transferred ${targetPlayer.name} to ${targetRoomId.value}."))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleSpawn(
@@ -128,7 +117,6 @@ class AdminHandler(
         val template = findMobTemplate(cmd.templateArg)
         if (template == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "No mob template found: ${cmd.templateArg}"))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val seq = ++adminSpawnSeq
@@ -150,7 +138,6 @@ class AdminHandler(
             ),
         )
         outbound.send(OutboundEvent.SendInfo(sessionId, "${template.name} appears."))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleShutdown(sessionId: SessionId) {
@@ -191,14 +178,12 @@ class AdminHandler(
             sendLook(targetSid, world, players, mobs, items, worldState, outbound, gmcpEmitter)
             outbound.send(OutboundEvent.SendPrompt(targetSid))
             outbound.send(OutboundEvent.SendInfo(sessionId, "Smote ${targetPlayer.name}."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
 
         val targetMob = combat.findMobInRoom(me.roomId, cmd.target)
         if (targetMob == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "No player or mob named '${cmd.target}'."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         combat.onMobRemovedExternally(targetMob.id)
@@ -210,7 +195,6 @@ class AdminHandler(
         for (p in players.playersInRoom(me.roomId)) {
             gmcpEmitter?.sendRoomRemoveMob(p.sessionId, targetMob.id.value)
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleKick(
@@ -226,17 +210,14 @@ class AdminHandler(
             } else {
                 outbound.send(OutboundEvent.SendError(sessionId, "Player not found: ${cmd.playerName}"))
             }
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         if (targetSid == sessionId) {
             outbound.send(OutboundEvent.SendError(sessionId, "You cannot kick yourself."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         outbound.send(OutboundEvent.Close(targetSid, "Kicked by staff."))
         outbound.send(OutboundEvent.SendInfo(sessionId, "${cmd.playerName} has been kicked."))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleDispel(
@@ -246,7 +227,6 @@ class AdminHandler(
         if (!requireStaff(sessionId, players, outbound)) return
         if (statusEffects == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Status effects are not available."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val targetSid = players.findSessionByName(cmd.target)
@@ -255,7 +235,6 @@ class AdminHandler(
             val targetName = players.get(targetSid)?.name ?: cmd.target
             outbound.send(OutboundEvent.SendInfo(sessionId, "Dispelled all effects from $targetName."))
             outbound.send(OutboundEvent.SendText(targetSid, "All your effects have been dispelled."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val me = players.get(sessionId) ?: return
@@ -263,11 +242,9 @@ class AdminHandler(
         if (mob != null) {
             statusEffects.removeAllFromMob(mob.id)
             outbound.send(OutboundEvent.SendInfo(sessionId, "Dispelled all effects from ${mob.name}."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         outbound.send(OutboundEvent.SendError(sessionId, "No player or mob named '${cmd.target}'."))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private fun findMobTemplate(arg: String): dev.ambon.domain.world.MobSpawn? {

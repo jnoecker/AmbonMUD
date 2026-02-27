@@ -1,10 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
-import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
@@ -16,15 +13,17 @@ import dev.ambon.sharding.PlayerLocationIndex
 
 class CommunicationHandler(
     router: CommandRouter,
-    private val players: PlayerRegistry,
-    private val outbound: OutboundBus,
-    private val gmcpEmitter: GmcpEmitter? = null,
+    ctx: EngineContext,
     private val groupSystem: GroupSystem? = null,
     private val interEngineBus: InterEngineBus? = null,
     private val playerLocationIndex: PlayerLocationIndex? = null,
     private val engineId: String = "",
     private val onRemoteWho: (suspend (SessionId) -> Unit)? = null,
 ) {
+    private val players = ctx.players
+    private val outbound = ctx.outbound
+    private val gmcpEmitter = ctx.gmcpEmitter
+
     init {
         router.on<Command.Say> { sid, cmd -> handleSay(sid, cmd) }
         router.on<Command.Emote> { sid, cmd -> handleEmote(sid, cmd) }
@@ -53,7 +52,6 @@ class CommunicationHandler(
         for (member in members) {
             gmcpEmitter?.sendCommChannel(member.sessionId, "say", me.name, cmd.message)
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleEmote(
@@ -66,7 +64,6 @@ class CommunicationHandler(
         for (other in members) {
             outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} ${cmd.message}"))
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleTell(
@@ -93,12 +90,10 @@ class CommunicationHandler(
             } else {
                 outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.target}"))
             }
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         if (targetSid == sessionId) {
             outbound.send(OutboundEvent.SendInfo(sessionId, "You tell yourself: ${cmd.message}"))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val target = players.get(targetSid) ?: return
@@ -106,7 +101,6 @@ class CommunicationHandler(
         outbound.send(OutboundEvent.SendText(targetSid, "${me.name} tells you: ${cmd.message}"))
         gmcpEmitter?.sendCommChannel(sessionId, "tell", me.name, cmd.message)
         gmcpEmitter?.sendCommChannel(targetSid, "tell", me.name, cmd.message)
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleWhisper(
@@ -117,25 +111,21 @@ class CommunicationHandler(
         val targetSid = players.findSessionByName(cmd.target)
         if (targetSid == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.target}"))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         if (targetSid == sessionId) {
             outbound.send(OutboundEvent.SendInfo(sessionId, "You whisper to yourself: ${cmd.message}"))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val target = players.get(targetSid) ?: return
         if (target.roomId != me.roomId) {
             outbound.send(OutboundEvent.SendError(sessionId, "${target.name} is not here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         outbound.send(OutboundEvent.SendText(sessionId, "You whisper to ${target.name}: ${cmd.message}"))
         outbound.send(OutboundEvent.SendText(targetSid, "${me.name} whispers to you: ${cmd.message}"))
         gmcpEmitter?.sendCommChannel(sessionId, "whisper", me.name, cmd.message)
         gmcpEmitter?.sendCommChannel(targetSid, "whisper", me.name, cmd.message)
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleGossip(
@@ -159,7 +149,6 @@ class CommunicationHandler(
                 sourceEngineId = engineId,
             ),
         )
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleShout(
@@ -175,7 +164,6 @@ class CommunicationHandler(
             }
             gmcpEmitter?.sendCommChannel(p.sessionId, "shout", me.name, cmd.message)
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleOoc(
@@ -191,7 +179,6 @@ class CommunicationHandler(
             }
             gmcpEmitter?.sendCommChannel(p.sessionId, "ooc", me.name, cmd.message)
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handlePose(
@@ -201,7 +188,6 @@ class CommunicationHandler(
         val me = players.get(sessionId) ?: return
         if (!cmd.message.contains(me.name, ignoreCase = true)) {
             outbound.send(OutboundEvent.SendError(sessionId, "Your pose must include your name (${me.name})."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val roomId = me.roomId
@@ -209,7 +195,6 @@ class CommunicationHandler(
         for (other in members) {
             outbound.send(OutboundEvent.SendText(other.sessionId, cmd.message))
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleWho(sessionId: SessionId) {
@@ -237,6 +222,5 @@ class CommunicationHandler(
         if (onRemoteWho != null) {
             onRemoteWho.invoke(sessionId)
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 }

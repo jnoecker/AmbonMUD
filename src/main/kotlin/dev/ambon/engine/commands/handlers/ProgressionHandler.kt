@@ -1,35 +1,32 @@
 package dev.ambon.engine.commands.handlers
 
-import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.Race
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
-import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.PlayerProgression
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.StatusEffectSystem
 
 class ProgressionHandler(
     router: CommandRouter,
-    private val players: PlayerRegistry,
-    private val items: ItemRegistry,
-    private val combat: CombatSystem,
-    private val outbound: OutboundBus,
+    ctx: EngineContext,
     private val progression: PlayerProgression = PlayerProgression(),
     private val abilitySystem: AbilitySystem? = null,
-    private val gmcpEmitter: GmcpEmitter? = null,
     private val statusEffects: StatusEffectSystem? = null,
     private val groupSystem: GroupSystem? = null,
 ) {
+    private val players = ctx.players
+    private val items = ctx.items
+    private val combat = ctx.combat
+    private val outbound = ctx.outbound
+    private val gmcpEmitter = ctx.gmcpEmitter
+
     init {
         router.on<Command.Score> { sid, _ -> handleScore(sid) }
         router.on<Command.Spells> { sid, _ -> handleSpells(sid) }
@@ -97,13 +94,11 @@ class ProgressionHandler(
                 ),
             )
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleSpells(sessionId: SessionId) {
         if (abilitySystem == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Abilities are not available."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val known = abilitySystem.knownAbilities(sessionId)
@@ -134,13 +129,11 @@ class ProgressionHandler(
         gmcpEmitter?.sendCharSkills(sessionId, known) { abilityId ->
             abilitySystem.cooldownRemainingMs(sessionId, abilityId)
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleEffects(sessionId: SessionId) {
         if (statusEffects == null) {
             outbound.send(OutboundEvent.SendInfo(sessionId, "No active effects."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val effects = statusEffects.activePlayerEffects(sessionId)
@@ -159,12 +152,10 @@ class ProgressionHandler(
                 )
             }
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleBalance(sessionId: SessionId) {
         val me = players.get(sessionId) ?: return
         outbound.send(OutboundEvent.SendInfo(sessionId, "You have ${me.gold} gold."))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 }

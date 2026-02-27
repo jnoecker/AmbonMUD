@@ -140,7 +140,6 @@ internal suspend fun requireStaff(
     val me = players.get(sessionId) ?: return false
     if (!me.isStaff) {
         outbound.send(OutboundEvent.SendError(sessionId, "You are not staff."))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
         return false
     }
     return true

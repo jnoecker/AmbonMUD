@@ -1,28 +1,26 @@
 package dev.ambon.engine.commands.handlers
 
-import dev.ambon.bus.OutboundBus
 import dev.ambon.config.EconomyConfig
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.engine.GmcpEmitter
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
 import kotlin.math.roundToInt
 
 class ShopHandler(
     router: CommandRouter,
-    private val players: PlayerRegistry,
-    private val items: ItemRegistry,
-    private val outbound: OutboundBus,
+    ctx: EngineContext,
     private val shopRegistry: ShopRegistry? = null,
-    private val gmcpEmitter: GmcpEmitter? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
     private val economyConfig: EconomyConfig = EconomyConfig(),
 ) {
+    private val players = ctx.players
+    private val items = ctx.items
+    private val outbound = ctx.outbound
+    private val gmcpEmitter = ctx.gmcpEmitter
+
     init {
         router.on<Command.ShopList> { sid, _ -> handleShopList(sid) }
         router.on<Command.Buy> { sid, cmd -> handleBuy(sid, cmd) }
@@ -34,13 +32,11 @@ class ShopHandler(
         val shop = shopRegistry?.shopInRoom(me.roomId)
         if (shop == null) {
             outbound.send(OutboundEvent.SendText(sessionId, "There is no shop here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val shopItems = shopRegistry.shopItems(shop)
         if (shopItems.isEmpty()) {
             outbound.send(OutboundEvent.SendInfo(sessionId, "${shop.name} has nothing for sale."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         outbound.send(OutboundEvent.SendInfo(sessionId, "[ ${shop.name} ]"))
@@ -55,7 +51,6 @@ class ShopHandler(
                 ),
             )
         }
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleBuy(
@@ -66,7 +61,6 @@ class ShopHandler(
         val shop = shopRegistry?.shopInRoom(me.roomId)
         if (shop == null) {
             outbound.send(OutboundEvent.SendText(sessionId, "There is no shop here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val keyword = cmd.keyword.lowercase()
@@ -78,20 +72,17 @@ class ShopHandler(
             }
         if (match == null) {
             outbound.send(OutboundEvent.SendText(sessionId, "The shop doesn't sell '$keyword'."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val (itemId, item) = match
         val buyPrice = (item.basePrice * economyConfig.buyMultiplier).roundToInt().toLong()
         if (me.gold < buyPrice) {
             outbound.send(OutboundEvent.SendText(sessionId, "You can't afford ${item.displayName} ($buyPrice gold)."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val newItem = items.createFromTemplate(itemId)
         if (newItem == null) {
             outbound.send(OutboundEvent.SendText(sessionId, "That item is out of stock."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         me.gold -= buyPrice
@@ -99,7 +90,6 @@ class ShopHandler(
         markVitalsDirty(sessionId)
         outbound.send(OutboundEvent.SendText(sessionId, "You buy ${item.displayName} for $buyPrice gold."))
         gmcpEmitter?.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private suspend fun handleSell(
@@ -110,7 +100,6 @@ class ShopHandler(
         val shop = shopRegistry?.shopInRoom(me.roomId)
         if (shop == null) {
             outbound.send(OutboundEvent.SendText(sessionId, "There is no shop here."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val keyword = cmd.keyword
@@ -123,25 +112,21 @@ class ShopHandler(
             }
         if (invItem == null) {
             outbound.send(OutboundEvent.SendText(sessionId, "You don't have '$keyword'."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val sellPrice = (invItem.item.basePrice * economyConfig.sellMultiplier).roundToInt().toLong()
         if (sellPrice <= 0L) {
             outbound.send(OutboundEvent.SendText(sessionId, "${invItem.item.displayName} is worthless."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         val removed = items.removeFromInventory(sessionId, invItem.item.keyword)
         if (removed == null) {
             outbound.send(OutboundEvent.SendText(sessionId, "You don't have '$keyword'."))
-            outbound.send(OutboundEvent.SendPrompt(sessionId))
             return
         }
         me.gold += sellPrice
         markVitalsDirty(sessionId)
         outbound.send(OutboundEvent.SendText(sessionId, "You sell ${removed.item.displayName} for $sellPrice gold."))
         gmcpEmitter?.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 }
