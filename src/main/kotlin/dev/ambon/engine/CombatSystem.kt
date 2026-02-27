@@ -266,6 +266,12 @@ class CombatSystem(
         playerEntries.shuffle(rng)
         for ((sessionId, mobId) in playerEntries) {
             if (ran >= maxCombatsPerTick) break
+            val mobState = activeMobs[mobId]
+            if (mobState == null) {
+                removePlayerFromCombat(sessionId)
+                continue
+            }
+            if (now < mobState.nextTickAtMs) continue
 
             val player = players.get(sessionId)
             val mob = mobs.get(mobId)

@@ -80,6 +80,46 @@ class CombatSystemTest {
         }
 
     @Test
+    fun `combat does not resolve before combat tick interval`() =
+        runTest {
+            val roomId = RoomId("zone:room")
+            val items = ItemRegistry()
+            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
+            mobs.upsert(mob)
+
+            val outbound = LocalOutboundBus()
+            val clock = MutableClock(0L)
+            val combat =
+                CombatSystem(
+                    players,
+                    mobs,
+                    items,
+                    outbound,
+                    clock = clock,
+                    rng = Random(1),
+                    tickMillis = 1_000L,
+                )
+
+            val sid = SessionId(99L)
+            players.loginOrFail(sid, "Player99")
+
+            val err = combat.startCombat(sid, "rat")
+            assertNull(err)
+
+            combat.tick()
+
+            val player = players.get(sid)
+            assertNotNull(player)
+            assertEquals(player!!.maxHp, player.hp, "Expected no player damage before combat tick interval")
+
+            val updatedMob = mobs.get(mob.id)
+            assertNotNull(updatedMob)
+            assertEquals(updatedMob!!.maxHp, updatedMob.hp, "Expected no mob damage before combat tick interval")
+        }
+
+    @Test
     fun `attack bonus adds flat damage`() =
         runTest {
             val roomId = RoomId("zone:room")

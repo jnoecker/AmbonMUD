@@ -487,7 +487,7 @@ data class MobEngineConfig(
 
 data class CombatEngineConfig(
     val maxCombatsPerTick: Int = 20,
-    val tickMillis: Long = 1_000L,
+    val tickMillis: Long = 2_000L,
     val minDamage: Int = 1,
     val maxDamage: Int = 4,
     val feedback: CombatFeedbackConfig = CombatFeedbackConfig(),

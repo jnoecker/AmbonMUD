@@ -170,7 +170,7 @@ ambonMUD:
           goldPerLevel: 15
     combat:
       maxCombatsPerTick: 20
-      tickMillis: 1000
+      tickMillis: 2000
       minDamage: 1
       maxDamage: 4
       feedback:
