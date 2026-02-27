@@ -23,14 +23,10 @@ import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.DatabaseManager
 import dev.ambon.persistence.PersistenceWorker
-import dev.ambon.persistence.PlayerRepository
-import dev.ambon.persistence.PostgresPlayerRepository
+import dev.ambon.persistence.PlayerRepositoryFactory
 import dev.ambon.persistence.PostgresWorldStateRepository
-import dev.ambon.persistence.RedisCachingPlayerRepository
 import dev.ambon.persistence.WorldStatePersistenceWorker
 import dev.ambon.persistence.WorldStateRepository
-import dev.ambon.persistence.WriteCoalescingPlayerRepository
-import dev.ambon.persistence.YamlPlayerRepository
 import dev.ambon.persistence.YamlWorldStateRepository
 import dev.ambon.redis.RedisConnectionManager
 import dev.ambon.redis.redisObjectMapper
@@ -110,40 +106,20 @@ class MudServer(
             null
         }
 
-    private val baseRepo: PlayerRepository =
-        when (config.persistence.backend) {
-            PersistenceBackend.YAML ->
-                YamlPlayerRepository(
-                    rootDir = Paths.get(config.persistence.rootDir),
-                    metrics = gameMetrics,
-                )
-            PersistenceBackend.POSTGRES ->
-                PostgresPlayerRepository(
-                    database = databaseManager!!.database,
-                    metrics = gameMetrics,
-                )
-        }
-
     private val redisManager: RedisConnectionManager? =
         if (config.redis.enabled) RedisConnectionManager(config.redis) else null
 
-    private val redisRepo: RedisCachingPlayerRepository? =
-        if (redisManager != null) {
-            RedisCachingPlayerRepository(
-                delegate = baseRepo,
-                cache = redisManager,
-                cacheTtlSeconds = config.redis.cacheTtlSeconds,
-            )
-        } else {
-            null
-        }
+    private val playerRepoChain =
+        PlayerRepositoryFactory.buildChain(
+            persistence = config.persistence,
+            redis = config.redis,
+            redisManager = redisManager,
+            database = databaseManager?.database,
+            metrics = gameMetrics,
+        )
 
-    private val l2Repo: PlayerRepository = redisRepo ?: baseRepo
-
-    private val coalescingRepo: WriteCoalescingPlayerRepository? =
-        if (config.persistence.worker.enabled) WriteCoalescingPlayerRepository(l2Repo) else null
-
-    private val playerRepo = coalescingRepo ?: l2Repo
+    private val coalescingRepo = playerRepoChain.coalescingRepository
+    private val playerRepo = playerRepoChain.repository
 
     private val worldStateRepo: WorldStateRepository =
         when (config.persistence.backend) {
