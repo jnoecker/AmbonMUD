@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -472,9 +473,7 @@ class AbilitySystemTest {
                 outbound = fixture.outbound,
                 clock = fixture.clock,
                 rng = rng,
-                markVitalsDirty = {},
-                markMobHpDirty = {},
-                markStatusDirty = {},
+                dirtyNotifier = DirtyNotifier.NO_OP,
             )
         val registry = AbilityRegistry()
         registry.register(

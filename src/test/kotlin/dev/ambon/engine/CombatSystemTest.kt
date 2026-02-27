@@ -13,6 +13,7 @@ import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.MobDrop
+import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.EffectType
@@ -1007,9 +1008,7 @@ class CombatSystemTest {
                     outbound = outbound,
                     clock = clock,
                     rng = Random(1),
-                    markVitalsDirty = {},
-                    markMobHpDirty = {},
-                    markStatusDirty = {},
+                    dirtyNotifier = DirtyNotifier.NO_OP,
                 )
             val combat =
                 fixture.buildCombat(
@@ -1076,9 +1075,7 @@ class CombatSystemTest {
                     outbound = outbound,
                     clock = clock,
                     rng = Random(1),
-                    markVitalsDirty = {},
-                    markMobHpDirty = {},
-                    markStatusDirty = {},
+                    dirtyNotifier = DirtyNotifier.NO_OP,
                 )
             val combat =
                 fixture.buildCombat(
@@ -1143,9 +1140,7 @@ class CombatSystemTest {
                     outbound = outbound,
                     clock = clock,
                     rng = Random(1),
-                    markVitalsDirty = {},
-                    markMobHpDirty = {},
-                    markStatusDirty = {},
+                    dirtyNotifier = DirtyNotifier.NO_OP,
                 )
             val combat =
                 fixture.buildCombat(

@@ -27,6 +27,20 @@ class StatusEffectTestFixture(
     val vitalsDirty = mutableListOf<SessionId>()
     val mobHpDirty = mutableListOf<MobId>()
     val statusDirty = mutableListOf<SessionId>()
+    private val dirtyNotifier =
+        object : dev.ambon.engine.DirtyNotifier {
+            override fun playerVitalsDirty(sessionId: SessionId) {
+                vitalsDirty.add(sessionId)
+            }
+
+            override fun playerStatusDirty(sessionId: SessionId) {
+                statusDirty.add(sessionId)
+            }
+
+            override fun mobHpDirty(mobId: MobId) {
+                mobHpDirty.add(mobId)
+            }
+        }
 
     val system: StatusEffectSystem =
         StatusEffectSystem(
@@ -36,9 +50,7 @@ class StatusEffectTestFixture(
             outbound = outbound,
             clock = clock,
             rng = rng,
-            markVitalsDirty = { vitalsDirty.add(it) },
-            markMobHpDirty = { mobHpDirty.add(it) },
-            markStatusDirty = { statusDirty.add(it) },
+            dirtyNotifier = dirtyNotifier,
         )
 
     suspend fun loginPlayer(

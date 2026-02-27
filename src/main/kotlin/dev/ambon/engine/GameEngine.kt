@@ -329,6 +329,15 @@ class GameEngine(
         gmcpDirtyStatusEffects.add(sessionId)
     }
 
+    private val dirtyNotifier =
+        object : DirtyNotifier {
+            override fun playerVitalsDirty(sessionId: SessionId) = markVitalsDirty(sessionId)
+
+            override fun playerStatusDirty(sessionId: SessionId) = markStatusDirty(sessionId)
+
+            override fun mobHpDirty(mobId: MobId) = markMobHpDirty(mobId)
+        }
+
     fun markGroupDirty(sessionId: SessionId) {
         gmcpDirtyGroup.add(sessionId)
     }
@@ -345,9 +354,7 @@ class GameEngine(
             mobs = mobs,
             outbound = outbound,
             clock = clock,
-            markVitalsDirty = ::markVitalsDirty,
-            markMobHpDirty = ::markMobHpDirty,
-            markStatusDirty = ::markStatusDirty,
+            dirtyNotifier = dirtyNotifier,
         )
     private val groupSystem =
         GroupSystem(
@@ -376,8 +383,7 @@ class GameEngine(
             strDivisor = engineConfig.combat.strDivisor,
             dexDodgePerPoint = engineConfig.combat.dexDodgePerPoint,
             maxDodgePercent = engineConfig.combat.maxDodgePercent,
-            markVitalsDirty = ::markVitalsDirty,
-            markMobHpDirty = ::markMobHpDirty,
+            dirtyNotifier = dirtyNotifier,
             statusEffects = statusEffectSystem,
             groupSystem = groupSystem,
             groupXpBonusPerMember = engineConfig.group.xpBonusPerMember,
@@ -399,7 +405,7 @@ class GameEngine(
             manaRegenAmount = engineConfig.regen.mana.regenAmount,
             msPerWisdom = engineConfig.regen.mana.msPerWisdom,
             metrics = metrics,
-            markVitalsDirty = ::markVitalsDirty,
+            dirtyNotifier = dirtyNotifier,
         )
     private val abilityRegistry =
         AbilityRegistry().also { reg ->
@@ -414,10 +420,8 @@ class GameEngine(
             clock = clock,
             items = items,
             intSpellDivisor = engineConfig.combat.intSpellDivisor,
-            markVitalsDirty = ::markVitalsDirty,
-            markMobHpDirty = ::markMobHpDirty,
+            dirtyNotifier = dirtyNotifier,
             statusEffects = statusEffectSystem,
-            markStatusDirty = ::markStatusDirty,
             groupSystem = groupSystem,
             mobs = mobs,
         )
