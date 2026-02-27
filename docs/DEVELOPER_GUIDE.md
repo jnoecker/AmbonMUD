@@ -800,6 +800,7 @@ git push -u origin feature/my-feature
 
 - Read [ARCHITECTURE.md](../docs/ARCHITECTURE.md) for design rationale
 - Read [WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md) to understand zone creation
+- Read [GMCP_PROTOCOL.md](./GMCP_PROTOCOL.md) to understand the structured data channel
 - Read [CLAUDE.md](../CLAUDE.md) for architectural contracts and change playbooks
 - Explore `src/main/kotlin/dev/ambon/engine/` to understand the engine
 - Run the full test suite to build confidence: `./gradlew ktlintCheck test integrationTest`
