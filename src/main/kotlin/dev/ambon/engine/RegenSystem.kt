@@ -20,7 +20,7 @@ class RegenSystem(
     private val manaRegenAmount: Int = 1,
     private val msPerWisdom: Long = 200L,
     private val metrics: GameMetrics = GameMetrics.noop(),
-    private val markVitalsDirty: (SessionId) -> Unit = {},
+    private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
 ) {
     private val lastRegenAtMs = mutableMapOf<SessionId, Long>()
     private val lastManaRegenAtMs = mutableMapOf<SessionId, Long>()
@@ -63,7 +63,7 @@ class RegenSystem(
                 val interval = regenIntervalMs(player, bonuses.constitution)
                 if (now - last >= interval) {
                     if (player.healHp(regenAmount)) {
-                        markVitalsDirty(sessionId)
+                        dirtyNotifier.playerVitalsDirty(sessionId)
                     }
                     lastRegenAtMs[sessionId] = now
                     didWork = true
@@ -78,7 +78,7 @@ class RegenSystem(
                 val interval = manaRegenIntervalMs(player, bonuses.wisdom)
                 if (now - lastMana >= interval) {
                     if (player.healMana(manaRegenAmount)) {
-                        markVitalsDirty(sessionId)
+                        dirtyNotifier.playerVitalsDirty(sessionId)
                     }
                     lastManaRegenAtMs[sessionId] = now
                     didWork = true
