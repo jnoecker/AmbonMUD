@@ -15,9 +15,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.concurrent.thread
 
+@Tag("integration")
 class EngineGrpcServerTest {
     @Test
     fun `stop returns promptly even with active gateway stream`() =

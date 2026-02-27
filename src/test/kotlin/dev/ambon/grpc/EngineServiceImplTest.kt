@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 /**
@@ -28,6 +29,7 @@ import org.junit.jupiter.api.Test
  * Flows complete naturally (no keep-alive delays) so [toList] can be used.
  * Session-tracking assertions are done after [toList] returns (i.e. after the stream closed).
  */
+@Tag("integration")
 class EngineServiceImplTest {
     private val serverName = "engine-test-${System.nanoTime()}"
     private lateinit var grpcServer: Server

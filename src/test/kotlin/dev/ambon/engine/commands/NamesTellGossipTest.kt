@@ -3,7 +3,6 @@ package dev.ambon.engine.commands
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
@@ -22,9 +21,9 @@ class NamesTellGossipTest {
     @Test
     fun `name sets and who reflects new name`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
@@ -44,9 +43,9 @@ class NamesTellGossipTest {
     @Test
     fun `name must be unique case-insensitively`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
 
             val a = SessionId(1)
             val b = SessionId(2)
@@ -59,9 +58,9 @@ class NamesTellGossipTest {
     @Test
     fun `tell delivers to target only`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val mobs = MobRegistry()
             val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
@@ -101,9 +100,9 @@ class NamesTellGossipTest {
     @Test
     fun `gossip broadcasts to all connected`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
@@ -130,9 +129,9 @@ class NamesTellGossipTest {
     @Test
     fun `tell across rooms still works`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)

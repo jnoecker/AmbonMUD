@@ -3,13 +3,12 @@ package dev.ambon.engine
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
-import dev.ambon.persistence.PlayerCreationRequest
+import dev.ambon.test.createTestPlayer
 import dev.ambon.test.drainAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -23,7 +22,6 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.mindrot.jbcrypt.BCrypt
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -36,9 +34,9 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
-            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
@@ -96,10 +94,10 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
-            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
-            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
+            repo.createTestPlayer("Alice", world.startRoom, password = "secret", ansiEnabled = false)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
@@ -168,10 +166,10 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
-            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
-            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
+            repo.createTestPlayer("Alice", world.startRoom, password = "secret", ansiEnabled = false)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
@@ -260,10 +258,10 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
-            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
-            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
+            repo.createTestPlayer("Alice", world.startRoom, password = "secret", ansiEnabled = false)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
@@ -317,9 +315,9 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
-            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
@@ -459,10 +457,10 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, repo, items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
@@ -517,12 +515,12 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
-            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
-            repo.create(PlayerCreationRequest("Observer", world.startRoom, 0L, BCrypt.hashpw("pw", BCrypt.gensalt()), ansiEnabled = false))
+            repo.createTestPlayer("Alice", world.startRoom, password = "secret", ansiEnabled = false)
+            repo.createTestPlayer("Observer", world.startRoom, password = "pw", ansiEnabled = false)
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, repo, items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
@@ -606,11 +604,11 @@ class GameEngineLoginFlowTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
-            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
+            repo.createTestPlayer("Alice", world.startRoom, password = "secret", ansiEnabled = false)
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, repo, items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
@@ -677,11 +675,11 @@ class GameEngineLoginFlowTest {
             val outbound = LocalOutboundBus()
 
             // ok_small world: start room 'ok_small:a', mob 'rat' in 'ok_small:b', exit north from a to b
-            val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+            val world = dev.ambon.test.TestWorlds.okSmall
             val repo = InMemoryPlayerRepository()
-            repo.create(PlayerCreationRequest("Alice", world.startRoom, 0L, BCrypt.hashpw("secret", BCrypt.gensalt()), ansiEnabled = false))
+            repo.createTestPlayer("Alice", world.startRoom, password = "secret", ansiEnabled = false)
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, repo, items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()

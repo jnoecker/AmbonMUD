@@ -9,7 +9,6 @@ import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.items.ItemUseEffect
 import dev.ambon.engine.PlayerProgression
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -32,7 +31,7 @@ class HandoffManagerTest {
     private val items = ItemRegistry()
     private val startRoom = RoomId("forest:clearing")
     private val players =
-        PlayerRegistry(
+        dev.ambon.test.buildTestPlayerRegistry(
             startRoom = startRoom,
             repo = repo,
             items = items,

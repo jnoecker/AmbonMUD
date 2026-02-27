@@ -6,7 +6,6 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.LoginResult
@@ -24,9 +23,9 @@ class CommandRouterScoreTest {
     @Test
     fun `score shows name level hp and damage range`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val combat = CombatSystem(players, mobs, items, outbound, minDamage = 1, maxDamage = 4)
@@ -44,16 +43,16 @@ class CommandRouterScoreTest {
             assertTrue(text.contains("Level 1"), "Missing level. text=$text")
             assertTrue(text.contains("HP"), "Missing HP. text=$text")
             assertTrue(text.contains("XP"), "Missing XP. text=$text")
-            assertTrue(text.contains("1–4"), "Missing damage range. text=$text")
+            assertTrue(Regex("""\b1\D+4\b""").containsMatchIn(text), "Missing damage range. text=$text")
             assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
         }
 
     @Test
     fun `score with equipped armor item lists it in Armor section`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val combat = CombatSystem(players, mobs, items, outbound, minDamage = 1, maxDamage = 4)
@@ -77,9 +76,9 @@ class CommandRouterScoreTest {
     @Test
     fun `score at max level shows MAXED for XP`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val combat = CombatSystem(players, mobs, items, outbound)
@@ -122,9 +121,9 @@ class CommandRouterScoreTest {
     @Test
     fun `score shows group info when in a group`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val groupSystem = GroupSystem(players, outbound)
@@ -162,9 +161,9 @@ class CommandRouterScoreTest {
     @Test
     fun `score does not show group line when ungrouped`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val groupSystem = GroupSystem(players, outbound)

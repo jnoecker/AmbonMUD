@@ -27,7 +27,7 @@ class AchievementSystemTest {
 
     private fun setup(vararg achievements: AchievementDef): Triple<AchievementSystem, PlayerRegistry, LocalOutboundBus> {
         val items = ItemRegistry()
-        val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+        val players = dev.ambon.test.buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
         val outbound = LocalOutboundBus()
         val registry = AchievementRegistry()
         achievements.forEach { registry.register(it) }
@@ -484,7 +484,7 @@ class AchievementSystemTest {
     fun `setDisplayTitle updates player active title`() =
         runTest {
             val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
             val sid = SessionId(1L)
             players.loginOrFail(sid, "Hero")
 

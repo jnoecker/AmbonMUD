@@ -52,7 +52,7 @@ class QuestSystemTest {
 
     private fun setup(): Triple<QuestSystem, PlayerRegistry, LocalOutboundBus> {
         val items = ItemRegistry()
-        val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+        val players = dev.ambon.test.buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
         val outbound = LocalOutboundBus()
         val clock = MutableClock(1_000L)
         val registry = QuestRegistry()
@@ -235,7 +235,7 @@ class QuestSystemTest {
     fun `onItemCollected increments collect objective`() =
         runTest {
             val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val players = dev.ambon.test.buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
             val outbound = LocalOutboundBus()
             val registry = QuestRegistry()
             val collectItemId = "zone:shiny_rock"
@@ -310,7 +310,7 @@ class QuestSystemTest {
                 )
             registry.register(secondQuest)
             val items = ItemRegistry()
-            val players2 = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val players2 = dev.ambon.test.buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
             val outbound2 = LocalOutboundBus()
             val qs2 =
                 QuestSystem(

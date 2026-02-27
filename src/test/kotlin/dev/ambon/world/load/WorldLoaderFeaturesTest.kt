@@ -16,14 +16,14 @@ import org.junit.jupiter.api.Test
 class WorldLoaderFeaturesTest {
     @Test
     fun `backward-compatible string exits still work`() {
-        val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+        val world = dev.ambon.test.TestWorlds.okSmall
         val a = world.rooms.getValue(RoomId("ok_small:a"))
         assertEquals(RoomId("ok_small:b"), a.exits[Direction.NORTH])
     }
 
     @Test
     fun `door attached to exit is parsed correctly`() {
-        val world = WorldLoader.loadFromResource("world/ok_features.yaml")
+        val world = dev.ambon.test.TestWorlds.okFeatures
         val entrance = world.rooms.getValue(RoomId("ok_features:entrance"))
 
         // Exit should still wire up to vault
@@ -41,7 +41,7 @@ class WorldLoaderFeaturesTest {
 
     @Test
     fun `container feature is parsed correctly`() {
-        val world = WorldLoader.loadFromResource("world/ok_features.yaml")
+        val world = dev.ambon.test.TestWorlds.okFeatures
         val storeroom = world.rooms.getValue(RoomId("ok_features:storeroom"))
 
         val container = storeroom.features.filterIsInstance<RoomFeature.Container>().single()
@@ -57,7 +57,7 @@ class WorldLoaderFeaturesTest {
 
     @Test
     fun `lever feature is parsed correctly`() {
-        val world = WorldLoader.loadFromResource("world/ok_features.yaml")
+        val world = dev.ambon.test.TestWorlds.okFeatures
         val vault = world.rooms.getValue(RoomId("ok_features:vault"))
 
         val lever = vault.features.filterIsInstance<RoomFeature.Lever>().single()
@@ -69,7 +69,7 @@ class WorldLoaderFeaturesTest {
 
     @Test
     fun `sign feature is parsed correctly`() {
-        val world = WorldLoader.loadFromResource("world/ok_features.yaml")
+        val world = dev.ambon.test.TestWorlds.okFeatures
         val entrance = world.rooms.getValue(RoomId("ok_features:entrance"))
 
         val sign = entrance.features.filterIsInstance<RoomFeature.Sign>().single()
@@ -80,7 +80,7 @@ class WorldLoaderFeaturesTest {
 
     @Test
     fun `door feature ID uses zone-room-dir format`() {
-        val world = WorldLoader.loadFromResource("world/ok_features.yaml")
+        val world = dev.ambon.test.TestWorlds.okFeatures
         val entrance = world.rooms.getValue(RoomId("ok_features:entrance"))
         val door = entrance.features.filterIsInstance<RoomFeature.Door>().single()
 
@@ -89,7 +89,7 @@ class WorldLoaderFeaturesTest {
 
     @Test
     fun `container feature ID uses zone-room-localId format`() {
-        val world = WorldLoader.loadFromResource("world/ok_features.yaml")
+        val world = dev.ambon.test.TestWorlds.okFeatures
         val storeroom = world.rooms.getValue(RoomId("ok_features:storeroom"))
         val container = storeroom.features.filterIsInstance<RoomFeature.Container>().single()
 

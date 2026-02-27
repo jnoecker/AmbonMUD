@@ -9,7 +9,6 @@ import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.world.ContainerState
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.LeverState
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
@@ -27,7 +26,7 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CommandRouterFeaturesTest {
-    private val world = WorldLoader.loadFromResource("world/ok_features.yaml")
+    private val world = dev.ambon.test.TestWorlds.okFeatures
     private val startRoomId = world.startRoom // ok_features:entrance
 
     // ---- test fixture ----
@@ -45,7 +44,7 @@ class CommandRouterFeaturesTest {
         val items = ItemRegistry()
         items.loadSpawns(world.itemSpawns)
         val outbound = LocalOutboundBus()
-        val players = PlayerRegistry(startRoomId, InMemoryPlayerRepository(), items)
+        val players = dev.ambon.test.buildTestPlayerRegistry(startRoomId, InMemoryPlayerRepository(), items)
         val mobs = MobRegistry()
         val worldState = WorldStateRegistry(world)
         val router =

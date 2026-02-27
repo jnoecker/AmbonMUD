@@ -2,7 +2,6 @@ package dev.ambon.engine.commands
 
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
@@ -21,10 +20,10 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CrossEngineCommandsTest {
-    private val world = WorldLoader.loadFromResource("world/test_world.yaml")
+    private val world = dev.ambon.test.TestWorlds.testWorld
     private val items = ItemRegistry()
     private val repo = InMemoryPlayerRepository()
-    private val players = PlayerRegistry(world.startRoom, repo, items)
+    private val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
     private val mobs = MobRegistry()
     private val outbound = LocalOutboundBus()
     private val bus = LocalInterEngineBus()

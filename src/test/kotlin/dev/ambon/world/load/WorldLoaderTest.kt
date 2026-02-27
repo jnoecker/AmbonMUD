@@ -9,12 +9,13 @@ import dev.ambon.domain.world.WorldFactory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 class WorldLoaderTest {
     @Test
     fun `loads a valid small world and wires exits`() {
-        val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+        val world = dev.ambon.test.TestWorlds.okSmall
         val zone = "ok_small"
 
         val aId = RoomId("$zone:a")
@@ -36,7 +37,7 @@ class WorldLoaderTest {
 
     @Test
     fun `loads mobs from a zone file`() {
-        val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+        val world = dev.ambon.test.TestWorlds.okSmall
 
         val mob = world.mobSpawns.single()
         assertEquals("ok_small:rat", mob.id.value)
@@ -59,14 +60,14 @@ class WorldLoaderTest {
 
     @Test
     fun `loads zone lifespan minutes`() {
-        val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+        val world = dev.ambon.test.TestWorlds.okSmall
 
         assertEquals(1L, world.zoneLifespansMinutes["ok_small"])
     }
 
     @Test
     fun `loads items from a zone file`() {
-        val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+        val world = dev.ambon.test.TestWorlds.okSmall
 
         val items = world.itemSpawns.associateBy { it.instance.id.value }
         assertEquals(3, items.size)
@@ -229,7 +230,7 @@ class WorldLoaderTest {
 
     @Test
     fun `accepts direction aliases`() {
-        val world = WorldLoader.loadFromResource("world/ok_small.yaml")
+        val world = dev.ambon.test.TestWorlds.okSmall
         val zone = "ok_small"
 
         val aId = RoomId("$zone:a")
@@ -465,6 +466,7 @@ class WorldLoaderTest {
      *
      * Both tests failed before the fix for the missing training zones in application.yaml.
      */
+    @Tag("integration")
     class ProductionWorldTest {
         @Test
         fun `production world loads via WorldFactory defaults`() {

@@ -60,7 +60,7 @@ class BehaviorTreeSystemTest {
     ): TestEnv {
         val mobs = MobRegistry()
         val items = ItemRegistry()
-        val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+        val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
         val outbound = LocalOutboundBus()
         val clock = MutableClock(0L)
         val rng = Random(42)
@@ -523,7 +523,7 @@ class BehaviorTreeSystemTest {
     private fun makeBareContext(): BtContext {
         val mobs = MobRegistry()
         val items = ItemRegistry()
-        val players = PlayerRegistry(roomA.id, InMemoryPlayerRepository(), items)
+        val players = dev.ambon.test.buildTestPlayerRegistry(roomA.id, InMemoryPlayerRepository(), items)
         val outbound = LocalOutboundBus()
         val clock = MutableClock(0L)
         val mob = MobState(MobId("zone:test"), "a test mob", roomA.id)

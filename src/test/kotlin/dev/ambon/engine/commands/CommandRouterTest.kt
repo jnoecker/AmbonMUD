@@ -1,18 +1,10 @@
 package dev.ambon.engine.commands
 
-import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
-import dev.ambon.domain.world.load.WorldLoader
-import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
-import dev.ambon.engine.MobRegistry
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
-import dev.ambon.persistence.InMemoryPlayerRepository
-import dev.ambon.test.drainAll
-import dev.ambon.test.loginOrFail
+import dev.ambon.test.CommandRouterHarness
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions
@@ -26,21 +18,16 @@ class CommandRouterTest {
     @Test
     fun `look emits room title description exits and prompt`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val sid = SessionId(1)
-            players.loginOrFail(sid, "Player1")
+            h.loginPlayer(sid, "Player1")
 
-            val startRoom = world.rooms.getValue(world.startRoom)
+            val startRoom = h.world.rooms.getValue(h.world.startRoom)
 
-            router.handle(sid, Command.Look)
+            h.router.handle(sid, Command.Look)
 
-            val outs = outbound.drainAll()
+            val outs = h.drain()
 
             // Expected: SendText(title), SendText(desc), SendInfo(exits), SendPrompt
             assertTrue(
@@ -64,22 +51,17 @@ class CommandRouterTest {
     @Test
     fun `look includes players currently in room`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val alice = SessionId(1)
             val bob = SessionId(2)
-            players.loginOrFail(alice, "Alice")
-            players.loginOrFail(bob, "Bob")
-            outbound.drainAll()
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.drain()
 
-            router.handle(alice, Command.Look)
+            h.router.handle(alice, Command.Look)
 
-            val outs = outbound.drainAll()
+            val outs = h.drain()
             assertTrue(
                 outs.any {
                     it is OutboundEvent.SendInfo && it.text == "Players here: Alice, Bob"
@@ -91,17 +73,12 @@ class CommandRouterTest {
     @Test
     fun `move north changes room and then look describes new room`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val sid = SessionId(2)
-            players.loginOrFail(sid, "Player2")
+            h.loginPlayer(sid, "Player2")
 
-            val startRoom = world.rooms.getValue(world.startRoom)
+            val startRoom = h.world.rooms.getValue(h.world.startRoom)
             val northTargetId = startRoom.exits[Direction.NORTH]
 
             // If the demo world doesn't have a north exit, that's a test setup issue; fail loudly.
@@ -110,11 +87,11 @@ class CommandRouterTest {
                 "Demo world start room '${startRoom.id}' must have a NORTH exit for this test",
             )
 
-            val northRoom = world.rooms.getValue(northTargetId!!)
+            val northRoom = h.world.rooms.getValue(northTargetId!!)
 
-            router.handle(sid, Command.Move(Direction.NORTH))
+            h.router.handle(sid, Command.Move(Direction.NORTH))
 
-            val outs = outbound.drainAll()
+            val outs = h.drain()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text == northRoom.title },
@@ -129,21 +106,16 @@ class CommandRouterTest {
     @Test
     fun `move broadcasts leave and enter to room members`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val alice = SessionId(1)
             val bob = SessionId(2)
             val charlie = SessionId(3)
-            players.loginOrFail(alice, "Alice")
-            players.loginOrFail(bob, "Bob")
-            players.loginOrFail(charlie, "Charlie")
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.loginPlayer(charlie, "Charlie")
 
-            val startRoom = world.rooms.getValue(world.startRoom)
+            val startRoom = h.world.rooms.getValue(h.world.startRoom)
             val northTargetId = startRoom.exits[Direction.NORTH]
             Assertions.assertNotNull(
                 northTargetId,
@@ -151,11 +123,11 @@ class CommandRouterTest {
             )
 
             // Move Charlie to the north room so Alice will "enter" his room.
-            router.handle(charlie, Command.Move(Direction.NORTH))
-            outbound.drainAll()
+            h.router.handle(charlie, Command.Move(Direction.NORTH))
+            h.drain()
 
-            router.handle(alice, Command.Move(Direction.NORTH))
-            val outs = outbound.drainAll()
+            h.router.handle(alice, Command.Move(Direction.NORTH))
+            val outs = h.drain()
 
             assertTrue(
                 outs.any {
@@ -174,24 +146,19 @@ class CommandRouterTest {
     @Test
     fun `move blocked emits can't go that way and prompt`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val sid = SessionId(3)
-            players.loginOrFail(sid, "Player3")
+            h.loginPlayer(sid, "Player3")
 
-            val startRoom = world.rooms.getValue(world.startRoom)
+            val startRoom = h.world.rooms.getValue(h.world.startRoom)
             val missingDir =
                 Direction.entries.firstOrNull { it !in startRoom.exits.keys }
                     ?: error("Demo world start room must be missing at least one direction for this test")
 
-            router.handle(sid, Command.Move(missingDir))
+            h.router.handle(sid, Command.Move(missingDir))
 
-            val outs = outbound.drainAll()
+            val outs = h.drain()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("can't go that way", ignoreCase = true) },
@@ -203,21 +170,16 @@ class CommandRouterTest {
     @Test
     fun `tell to unknown name emits error to sender only`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val alice = SessionId(1)
             val bob = SessionId(2)
-            players.loginOrFail(alice, "Alice")
-            players.loginOrFail(bob, "Bob")
-            outbound.drainAll()
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.drain()
 
-            router.handle(alice, Command.Tell("Charlie", "hi"))
-            val outs = outbound.drainAll()
+            h.router.handle(alice, Command.Tell("Charlie", "hi"))
+            val outs = h.drain()
 
             assertTrue(
                 outs.any {
@@ -239,23 +201,18 @@ class CommandRouterTest {
     @Test
     fun `tell delivers to target only and not to third party`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val alice = SessionId(1)
             val bob = SessionId(2)
             val eve = SessionId(3)
-            players.loginOrFail(alice, "Alice")
-            players.loginOrFail(bob, "Bob")
-            players.loginOrFail(eve, "Eve")
-            outbound.drainAll()
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.loginPlayer(eve, "Eve")
+            h.drain()
 
-            router.handle(alice, Command.Tell("Bob", "secret"))
-            val outs = outbound.drainAll()
+            h.router.handle(alice, Command.Tell("Bob", "secret"))
+            val outs = h.drain()
 
             assertTrue(
                 outs.any {
@@ -284,21 +241,16 @@ class CommandRouterTest {
     @Test
     fun `say broadcasts only to room members and echoes to sender`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val alice = SessionId(1)
             val bob = SessionId(2)
-            players.loginOrFail(alice, "Alice")
-            players.loginOrFail(bob, "Bob")
-            outbound.drainAll()
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.drain()
 
-            router.handle(alice, Command.Say("hello"))
-            val outs = outbound.drainAll()
+            h.router.handle(alice, Command.Say("hello"))
+            val outs = h.drain()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == alice && it.text == "You say: hello" },
@@ -313,23 +265,18 @@ class CommandRouterTest {
     @Test
     fun `gossip broadcasts to all connected`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val alice = SessionId(1)
             val bob = SessionId(2)
             val eve = SessionId(3)
-            players.loginOrFail(alice, "Alice")
-            players.loginOrFail(bob, "Bob")
-            players.loginOrFail(eve, "Eve")
-            outbound.drainAll()
+            h.loginPlayer(alice, "Alice")
+            h.loginPlayer(bob, "Bob")
+            h.loginPlayer(eve, "Eve")
+            h.drain()
 
-            router.handle(alice, Command.Gossip("hello all"))
-            val outs = outbound.drainAll()
+            h.router.handle(alice, Command.Gossip("hello all"))
+            val outs = h.drain()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == alice && it.text.contains("You gossip: hello all") },
@@ -348,15 +295,13 @@ class CommandRouterTest {
     @Test
     fun `login name uniqueness is case-insensitive`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val h = CommandRouterHarness.create()
 
             val a = SessionId(1)
             val b = SessionId(2)
 
-            val res1 = players.login(a, "Alice", "password")
-            val res2 = players.login(b, "alice", "password")
+            val res1 = h.players.login(a, "Alice", "password")
+            val res2 = h.players.login(b, "alice", "password")
 
             assertEquals(LoginResult.Ok, res1)
             assertTrue(res2 is LoginResult.Takeover, "Expected Takeover for duplicate name with correct password. got=$res2")
@@ -365,19 +310,14 @@ class CommandRouterTest {
     @Test
     fun `exits emits exits line and prompt only`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val sid = SessionId(10)
-            players.loginOrFail(sid, "Player10")
+            h.loginPlayer(sid, "Player10")
 
-            router.handle(sid, Command.Exits)
+            h.router.handle(sid, Command.Exits)
 
-            val outs = outbound.drainAll()
+            val outs = h.drain()
 
             // Only exits + prompt (no title/description)
             assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.startsWith("Exits:") }, "Missing exits line. got=$outs")
@@ -388,26 +328,21 @@ class CommandRouterTest {
     @Test
     fun `look dir shows adjacent room title when exit exists`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val sid = SessionId(11)
-            players.loginOrFail(sid, "Player11")
+            h.loginPlayer(sid, "Player11")
 
-            val startRoom = world.rooms.getValue(world.startRoom)
+            val startRoom = h.world.rooms.getValue(h.world.startRoom)
             val (dir, targetId) =
                 startRoom.exits.entries.firstOrNull()
                     ?: error("Demo world start room must have at least one exit for this test")
 
-            val target = world.rooms.getValue(targetId)
+            val target = h.world.rooms.getValue(targetId)
 
-            router.handle(sid, Command.LookDir(dir))
+            h.router.handle(sid, Command.LookDir(dir))
 
-            val outs = outbound.drainAll()
+            val outs = h.drain()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text == target.title },
                 "Expected target title '${target.title}'. got=$outs",
@@ -418,24 +353,19 @@ class CommandRouterTest {
     @Test
     fun `look dir shows message when no exit exists`() =
         runTest {
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val sid = SessionId(12)
-            players.loginOrFail(sid, "Player12")
+            h.loginPlayer(sid, "Player12")
 
-            val startRoom = world.rooms.getValue(world.startRoom)
+            val startRoom = h.world.rooms.getValue(h.world.startRoom)
             val missingDir =
                 Direction.entries.firstOrNull { it !in startRoom.exits.keys }
                     ?: error("Demo world start room must be missing at least one direction for this test")
 
-            router.handle(sid, Command.LookDir(missingDir))
+            h.router.handle(sid, Command.LookDir(missingDir))
 
-            val outs = outbound.drainAll()
+            val outs = h.drain()
             assertTrue(
                 outs.any {
                     it is OutboundEvent.SendError && it.text.contains("nothing", ignoreCase = true)

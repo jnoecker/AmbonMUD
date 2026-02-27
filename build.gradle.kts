@@ -75,16 +75,36 @@ kotlin {
     jvmToolchain(21)
 }
 
+val integrationTestTag = "integration"
+
 application {
     mainClass.set("dev.ambon.MainKt")
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags(integrationTestTag)
+    }
     // Prevent the entire test suite from hanging indefinitely (e.g. due to coroutine
     // leaks or gRPC streams that never close). Individual test timeouts are configured
     // in junit-platform.properties; this is a backstop for the Gradle process itself.
     timeout = Duration.ofMinutes(5)
+}
+
+val integrationTest by tasks.registering(Test::class) {
+    description = "Runs integration-tagged tests."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags(integrationTestTag)
+    }
+    shouldRunAfter(tasks.test)
+    timeout = Duration.ofMinutes(5)
+}
+
+tasks.check {
+    dependsOn(integrationTest)
 }
 
 // Map -Pconfig.X=Y project properties to config.override.X system properties.

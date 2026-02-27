@@ -3,7 +3,6 @@ package dev.ambon.engine
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -31,10 +30,10 @@ class GameEngineAnsiBehaviorTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
             val players =
-                PlayerRegistry(
+                dev.ambon.test.buildTestPlayerRegistry(
                     world.startRoom,
                     repo,
                     ItemRegistry(),
@@ -119,9 +118,9 @@ class GameEngineAnsiBehaviorTest {
             val inbound = LocalInboundBus()
             val outbound = LocalOutboundBus()
 
-            val world = WorldLoader.loadFromResource("world/test_world.yaml")
+            val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
-            val players = PlayerRegistry(world.startRoom, repo, ItemRegistry())
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
