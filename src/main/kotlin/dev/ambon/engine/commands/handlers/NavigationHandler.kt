@@ -50,75 +50,78 @@ class NavigationHandler(
             outbound.send(OutboundEvent.SendText(sessionId, "You are rooted and cannot move!"))
             return
         }
-        val me = players.get(sessionId) ?: return
-        val from = me.roomId
-        val room = world.rooms[from] ?: return
-        val to = room.exits[cmd.dir]
+        players.withPlayer(sessionId) { me ->
+            val from = me.roomId
+            val room = world.rooms[from] ?: return
+            val to = room.exits[cmd.dir]
 
-        if (to == null) {
-            outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
-            return
-        }
+            if (to == null) {
+                outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
+                return
+            }
 
-        if (worldState != null) {
-            val door = worldState.doorOnExit(from, cmd.dir)
-            if (door != null) {
-                val doorState = worldState.getDoorState(door.id)
-                if (doorState != DoorState.OPEN) {
-                    val reason = if (doorState == DoorState.LOCKED) "locked" else "closed"
-                    outbound.send(OutboundEvent.SendText(sessionId, "The ${door.displayName} is $reason."))
+            if (worldState != null) {
+                val door = worldState.doorOnExit(from, cmd.dir)
+                if (door != null) {
+                    val doorState = worldState.getDoorState(door.id)
+                    if (doorState != DoorState.OPEN) {
+                        val reason = if (doorState == DoorState.LOCKED) "locked" else "closed"
+                        outbound.send(OutboundEvent.SendText(sessionId, "The ${door.displayName} is $reason."))
+                        return
+                    }
+                }
+            }
+
+            if (room.remoteExits.contains(cmd.dir) || !world.rooms.containsKey(to)) {
+                if (onCrossZoneMove != null) {
+                    router.suppressAutoPrompt()
+                    onCrossZoneMove.invoke(sessionId, to)
+                    return
+                } else {
+                    outbound.send(OutboundEvent.SendText(sessionId, "The way shimmers but does not yield."))
                     return
                 }
             }
-        }
 
-        if (room.remoteExits.contains(cmd.dir) || !world.rooms.containsKey(to)) {
-            if (onCrossZoneMove != null) {
-                router.suppressAutoPrompt()
-                onCrossZoneMove.invoke(sessionId, to)
-                return
-            } else {
-                outbound.send(OutboundEvent.SendText(sessionId, "The way shimmers but does not yield."))
-                return
+            val oldMembers = players.playersInRoom(from).filter { it.sessionId != me.sessionId }
+            for (other in oldMembers) {
+                outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} leaves."))
+                gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
             }
+            dialogueSystem?.onPlayerMoved(sessionId)
+            players.moveTo(sessionId, to)
+            val newMembers = players.playersInRoom(to).filter { it.sessionId != me.sessionId }
+            for (other in newMembers) {
+                outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} enters."))
+                gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
+            }
+            sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
         }
-
-        val oldMembers = players.playersInRoom(from).filter { it.sessionId != me.sessionId }
-        for (other in oldMembers) {
-            outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} leaves."))
-            gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
-        }
-        dialogueSystem?.onPlayerMoved(sessionId)
-        players.moveTo(sessionId, to)
-        val newMembers = players.playersInRoom(to).filter { it.sessionId != me.sessionId }
-        for (other in newMembers) {
-            outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} enters."))
-            gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
-        }
-        sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
     }
 
     private suspend fun handleExits(sessionId: SessionId) {
-        val me = players.get(sessionId) ?: return
-        val r = world.rooms[me.roomId] ?: return
-        outbound.send(OutboundEvent.SendInfo(sessionId, exitsLine(r)))
+        players.withPlayer(sessionId) { me ->
+            val r = world.rooms[me.roomId] ?: return
+            outbound.send(OutboundEvent.SendInfo(sessionId, exitsLine(r)))
+        }
     }
 
     private suspend fun handleLookDir(
         sessionId: SessionId,
         cmd: Command.LookDir,
     ) {
-        val me = players.get(sessionId) ?: return
-        val r = world.rooms[me.roomId] ?: return
-        val targetId = r.exits[cmd.dir]
-        if (targetId == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "You see nothing that way."))
-        } else {
-            val target = world.rooms[targetId]
-            if (target == null || r.remoteExits.contains(cmd.dir)) {
-                outbound.send(OutboundEvent.SendText(sessionId, "You see a shimmering passage."))
+        players.withPlayer(sessionId) { me ->
+            val r = world.rooms[me.roomId] ?: return
+            val targetId = r.exits[cmd.dir]
+            if (targetId == null) {
+                outbound.send(OutboundEvent.SendError(sessionId, "You see nothing that way."))
             } else {
-                outbound.send(OutboundEvent.SendText(sessionId, target.title))
+                val target = world.rooms[targetId]
+                if (target == null || r.remoteExits.contains(cmd.dir)) {
+                    outbound.send(OutboundEvent.SendText(sessionId, "You see a shimmering passage."))
+                } else {
+                    outbound.send(OutboundEvent.SendText(sessionId, target.title))
+                }
             }
         }
     }

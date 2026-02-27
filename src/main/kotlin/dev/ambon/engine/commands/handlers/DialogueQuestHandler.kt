@@ -109,26 +109,27 @@ class DialogueQuestHandler(
             outbound.send(OutboundEvent.SendError(sessionId, "Quest system is not available."))
             return
         }
-        val me = players.get(sessionId) ?: return
-        val nameHintLower = cmd.nameHint.trim().lowercase()
-        val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }.toSet()
-        val matchingQuest =
-            questRegistry
-                .all()
-                .filter { quest ->
-                    quest.name.lowercase().contains(nameHintLower) ||
-                        quest.id.substringAfterLast(':').lowercase().contains(nameHintLower)
-                }.firstOrNull { quest -> quest.giverMobId in roomMobIds }
-        if (matchingQuest == null) {
-            outbound.send(
-                OutboundEvent.SendError(
-                    sessionId,
-                    "No quest-giver here offers a quest matching '${cmd.nameHint}'.",
-                ),
-            )
-        } else {
-            val err = questSystem.acceptQuest(sessionId, matchingQuest.id)
-            if (err != null) outbound.send(OutboundEvent.SendError(sessionId, err))
+        players.withPlayer(sessionId) { me ->
+            val nameHintLower = cmd.nameHint.trim().lowercase()
+            val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }.toSet()
+            val matchingQuest =
+                questRegistry
+                    .all()
+                    .filter { quest ->
+                        quest.name.lowercase().contains(nameHintLower) ||
+                            quest.id.substringAfterLast(':').lowercase().contains(nameHintLower)
+                    }.firstOrNull { quest -> quest.giverMobId in roomMobIds }
+            if (matchingQuest == null) {
+                outbound.send(
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "No quest-giver here offers a quest matching '${cmd.nameHint}'.",
+                    ),
+                )
+            } else {
+                val err = questSystem.acceptQuest(sessionId, matchingQuest.id)
+                if (err != null) outbound.send(OutboundEvent.SendError(sessionId, err))
+            }
         }
     }
 
