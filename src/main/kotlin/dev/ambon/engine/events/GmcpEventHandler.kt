@@ -51,7 +51,9 @@ class GmcpEventHandler(
                 gmcpEmitter.sendRoomPlayers(sid, players.playersInRoom(player.roomId).toList())
                 gmcpEmitter.sendRoomMobs(sid, mobs.mobsInRoom(player.roomId))
                 gmcpEmitter.sendRoomItems(sid, items.itemsInRoom(player.roomId))
-                gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid))
+                gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid)) { abilityId ->
+                    abilitySystem.cooldownRemainingMs(sid, abilityId)
+                }
                 gmcpEmitter.sendCharStatusEffects(sid, statusEffectSystem.activePlayerEffects(sid))
                 gmcpEmitter.sendCharAchievements(sid, player, achievementRegistry)
                 val group = groupSystem.getGroup(sid)

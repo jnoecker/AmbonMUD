@@ -158,7 +158,8 @@ src/main/resources/
 │   ├── tutorial_glade.yaml
 │   ├── ambon_hub.yaml
 │   └── ... (8 zones total)
-└── web/                         # Static web client (xterm.js)
+├── web/                         # Legacy static web client
+└── web-v3/                      # Current static web client bundle
 
 src/test/kotlin/
 ├── dev/ambon/engine/            # ~50 engine & command tests

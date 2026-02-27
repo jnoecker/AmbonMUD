@@ -79,7 +79,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 
 | # | Project | Effort | Status | Key Features |
 |---|---------|--------|--------|--------------|
-| **10** | Auto-Map & Enhanced Web Client | Medium | ⏳ Pending | Spatial map rendering, ability buttons, chat panels, mobile layout |
+| **10** | Auto-Map & Enhanced Web Client | Medium | 🟡 In Progress | Spatial map rendering, ability/skills actions, chat panels, mobile layout |
 | **13** | Social Systems (Guilds/Friends/Mail) | Large | ⏳ Pending | Guild hierarchy, friends list, offline mail with attachments |
 | **12** | Player Housing | Medium-large | ⏳ Pending | Personal rooms, furniture, access control, persistent storage |
 
@@ -146,7 +146,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 
 ### Start Here (High Impact, Medium Effort)
 
-1. **Auto-Map & Enhanced Web Client (#10)** — Highest player-visible impact. Requires no engine changes; all data already flows via GMCP. Dramatically improves UX.
+1. **Auto-Map & Enhanced Web Client (#10)** — Highest player-visible impact. Core implementation is live in v3; continue iterating on group/achievement surfaces and polish.
 2. **Crafting & Gathering (#7)** — Economic depth, non-combat progression. Medium effort, self-contained.
 3. **Persistent World State (#9)** — Enables dynamic content (doors, levers, seasonal events). Foundation for later projects.
 
@@ -220,7 +220,7 @@ See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) for setup instructions and [ARCHI
 **Quick wins for contributors:**
 - Add new abilities (config-driven, no code changes needed)
 - Create new zones (YAML world files)
-- Enhance the web client UI (xterm.js + GMCP data)
+- Enhance the v3 web client UI (xterm + GMCP data)
 - Improve admin dashboard (expand existing panels)
 - Write tests for edge cases
 
@@ -228,4 +228,4 @@ See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) for setup instructions and [ARCHI
 
 ---
 
-**Last updated:** February 26, 2026
+**Last updated:** February 27, 2026

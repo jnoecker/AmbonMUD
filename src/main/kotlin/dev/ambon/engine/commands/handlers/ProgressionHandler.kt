@@ -6,6 +6,7 @@ import dev.ambon.domain.Race
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
@@ -25,6 +26,7 @@ class ProgressionHandler(
     private val outbound: OutboundBus,
     private val progression: PlayerProgression = PlayerProgression(),
     private val abilitySystem: AbilitySystem? = null,
+    private val gmcpEmitter: GmcpEmitter? = null,
     private val statusEffects: StatusEffectSystem? = null,
     private val groupSystem: GroupSystem? = null,
 ) {
@@ -128,6 +130,9 @@ class ProgressionHandler(
                     ),
                 )
             }
+        }
+        gmcpEmitter?.sendCharSkills(sessionId, known) { abilityId ->
+            abilitySystem.cooldownRemainingMs(sessionId, abilityId)
         }
         outbound.send(OutboundEvent.SendPrompt(sessionId))
     }

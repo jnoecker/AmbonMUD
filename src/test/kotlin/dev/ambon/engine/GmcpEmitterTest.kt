@@ -138,6 +138,7 @@ class GmcpEmitterTest {
             // xpTotal=1234: level 4 floor=900, level 5 floor=1600 → into=334, span=700
             assertTrue(data.jsonData.contains("\"xpIntoLevel\":334"))
             assertTrue(data.jsonData.contains("\"xpToNextLevel\":700"))
+            assertTrue(data.jsonData.contains("\"inCombat\":false"))
         }
 
     @Test
@@ -319,13 +320,18 @@ class GmcpEmitterTest {
     fun `sendCharSkills emits ability list JSON`() =
         runTest {
             val e = emitter("Char.Skills")
-            e.sendCharSkills(sid, listOf(ability()))
+            e.sendCharSkills(sid, listOf(ability())) { 2300L }
             val data = drainGmcp()[0]
             assertEquals("Char.Skills", data.gmcpPackage)
             assertTrue(data.jsonData.contains("\"id\":\"firebolt\""))
             assertTrue(data.jsonData.contains("\"name\":\"Firebolt\""))
+            assertTrue(data.jsonData.contains("\"description\":\"A bolt of fire.\""))
             assertTrue(data.jsonData.contains("\"manaCost\":8"))
             assertTrue(data.jsonData.contains("\"cooldownMs\":5000"))
+            assertTrue(data.jsonData.contains("\"cooldownRemainingMs\":2300"))
+            assertTrue(data.jsonData.contains("\"levelRequired\":1"))
+            assertTrue(data.jsonData.contains("\"targetType\":\"ENEMY\""))
+            assertTrue(data.jsonData.contains("\"classRestriction\":null"))
         }
 
     @Test
@@ -341,7 +347,7 @@ class GmcpEmitterTest {
     fun `sendCharSkills skipped when not supported`() =
         runTest {
             val e = emitter()
-            e.sendCharSkills(sid, listOf(ability()))
+            e.sendCharSkills(sid, listOf(ability())) { 2300L }
             assertTrue(drainGmcp().isEmpty())
         }
 

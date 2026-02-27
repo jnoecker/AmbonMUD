@@ -1,13 +1,13 @@
 # Web Client v3: Known Gaps and Next Steps
 
 Date: 2026-02-27
-Status: Updated to reflect completed foundation refactor in PR #253.
+Status: Updated to reflect current v3 implementation after social and combat-skills panel work.
 
 ## Known Gaps
 
 1. Unused GMCP surface in UI
 - Server emits packages that v3 currently ignores.
-- Not rendered today: `Char.Skills`, `Comm.Channel`, `Group.Info`, `Char.Achievements`, `Core.Ping`, `Char.StatusVars`.
+- Not rendered today: `Group.Info`, `Char.Achievements`, `Core.Ping`, `Char.StatusVars`.
 - Impact: useful gameplay context exists but is not visible in v3.
 
 2. No frontend checks in CI
@@ -34,10 +34,8 @@ Status: Updated to reflect completed foundation refactor in PR #253.
 
 ## Recommended Next Steps (Prioritized)
 
-1. Add one high-value GMCP feature end-to-end
-- Best first options:
-  - `Comm.Channel` chat panel, or
-  - `Char.Skills` abilities panel.
+1. Add next high-value GMCP feature end-to-end
+- Best first option: `Group.Info` compact party panel/widget.
 - Include minimal UI plus reducer support and manual test checklist.
 
 2. Add frontend tests for GMCP handling
@@ -57,8 +55,8 @@ Status: Updated to reflect completed foundation refactor in PR #253.
 - Document how WS path `/ws` is reached during dev.
 
 5. Expand GMCP package support in UI
-- Phase 1: `Comm.Channel`, `Char.Skills`.
-- Phase 2: `Group.Info`, `Char.Achievements`.
+- Phase 1: `Group.Info`.
+- Phase 2: `Char.Achievements`.
 - Phase 3: `Core.Ping` handling and optional connection telemetry.
 
 6. Reduce bundle size (post-feature baseline)
@@ -67,12 +65,12 @@ Status: Updated to reflect completed foundation refactor in PR #253.
 
 ## Candidate Work Queue
 
-1. Feature: `Comm.Channel` panel with channel filters.
-2. Feature: `Char.Skills` panel with mana/cooldown hints.
+1. Feature: `Group.Info` compact party widget.
+2. Feature: `Char.Achievements` progress panel.
 3. Tests: GMCP package handler/unit test suite.
 4. Infra: CI job for `web-v3` lint/build.
 5. Docs: local dev + WS proxy workflow.
-6. Feature: `Group.Info` compact party widget.
+6. Performance: bundle-size reduction via chunking/lazy loading.
 
 ## Suggested Definition of Done for Any New v3 Feature
 

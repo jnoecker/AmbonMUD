@@ -1,7 +1,7 @@
 # Web Client v3: Current State Findings
 
 Date: 2026-02-27
-Status: Updated to reflect PR #253 (`refactor(web-v3): modularize App into hooks, GMCP handlers, and panel components`)
+Status: Updated to reflect the current v3 client implementation (modular panel architecture, social + skills support, and combat skills panel).
 Scope: server routing, WS/GMCP protocol bridge, current v3 frontend architecture, and verification status.
 
 ## What Was Reviewed
@@ -16,16 +16,16 @@ Scope: server routing, WS/GMCP protocol bridge, current v3 frontend architecture
 
 ## High-Level Wiring
 
-1. The server hosts two web clients in parallel:
-- Legacy client under `/` from classpath package `web`.
-- v3 client under `/v3` from classpath package `web-v3`.
+1. The server serves v3 static assets from classpath package `web-v3` at root (`/`).
 
-2. The WS endpoint for gameplay is `/ws` and is shared by clients.
+2. Compatibility routes `/v3` and `/v3/` redirect to `/`.
 
-3. v3 build pipeline writes static output directly into JVM resources:
+3. The WS endpoint for gameplay is `/ws`.
+
+4. v3 build pipeline writes static output directly into JVM resources:
 - Source project: `web-v3/`
 - Build output target: `src/main/resources/web-v3`
-- Route served by Ktor: `/v3`
+- Route served by Ktor static resources: `/` (with `/v3` redirecting to `/`)
 
 ## Build and Packaging Contract
 
@@ -34,7 +34,7 @@ Scope: server routing, WS/GMCP protocol bridge, current v3 frontend architecture
   - `build`: `tsc -b && vite build`
   - `lint`: `eslint .`
 - `web-v3/vite.config.ts`:
-  - `base: "/v3/"`
+  - `base: "/"`
   - `publicDir: false`
   - `outDir: ../src/main/resources/web-v3`
 
@@ -66,10 +66,20 @@ The v3 client is now modularized.
 - UI is split into components:
   - `web-v3/src/components/panels/PlayPanel.tsx`
   - `web-v3/src/components/panels/WorldPanel.tsx`
+  - `web-v3/src/components/panels/ChatPanel.tsx`
   - `web-v3/src/components/panels/CharacterPanel.tsx`
   - `web-v3/src/components/PopoutLayer.tsx`
   - `web-v3/src/components/MobileTabBar.tsx`
   - shared visual helpers in `web-v3/src/components/Icons.tsx`
+
+Notable current behavior:
+
+- Social panel consumes `Comm.Channel` and supports `Who` refresh.
+- Combat-only skills panel is rendered in `WorldPanel` when `Char.Vitals.inCombat` is `true`.
+- Skills panel reads `Char.Skills` and supports:
+  - refresh via `skills` command
+  - cast action with optimistic local cooldown countdowns
+  - icon-based cast affordances mapped from `classRestriction` or `targetType`
 
 ## GMCP Packages Currently Consumed by v3
 
@@ -89,19 +99,35 @@ Handled in `web-v3/src/gmcp/applyGmcpPackage.ts`:
 - `Room.UpdateMob`
 - `Room.RemoveMob`
 - `Char.StatusEffects`
+- `Char.Skills`
+- `Comm.Channel`
 
 Unknown packages are ignored by default.
 
 ## Server GMCP Capability Snapshot
 
-`GmcpEmitter` can send additional packages not yet rendered by v3 UI:
+`GmcpEmitter` can still send packages not yet rendered by v3 UI:
 
-- `Char.Skills`
-- `Comm.Channel`
 - `Group.Info`
 - `Core.Ping`
 - `Char.Achievements`
-- plus status vars (`Char.StatusVars`) and current room/player/mob/item/vitals streams.
+- plus status vars (`Char.StatusVars`).
+
+Current skills GMCP payload shape (`Char.Skills`) includes:
+
+- `id`
+- `name`
+- `description`
+- `manaCost`
+- `cooldownMs`
+- `cooldownRemainingMs`
+- `levelRequired`
+- `targetType`
+- `classRestriction`
+
+Current vitals GMCP payload (`Char.Vitals`) includes combat flag:
+
+- `inCombat`
 
 Note: package matching is prefix-aware in `GameEngine` (`Char.Items` enables `Char.Items.*`).
 
@@ -111,7 +137,7 @@ Note: package matching is prefix-aware in `GameEngine` (`Char.Items` enables `Ch
 
 - `/ws` inbound/outbound bridging behavior.
 - WS auto `Core.Supports.Set` emission.
-- `/v3/` index serving.
+- `/v3` and `/v3/` redirect behavior.
 - GMCP envelope parser behavior (`tryParseGmcpEnvelope`) across valid/invalid shapes.
 
 PR #253 additionally validated frontend build integrity with:

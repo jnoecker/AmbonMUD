@@ -217,6 +217,95 @@ export function TellIcon({ className }: { className?: string }) {
   );
 }
 
+function ArcaneCastIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="4.1" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M12 4.7v2.2M12 17.1v2.2M4.7 12h2.2M17.1 12h2.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="m7.4 7.4 1.6 1.6m6 6 1.6 1.6m0-9.2L15 9m-6 6-1.6 1.6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.82" />
+    </svg>
+  );
+}
+
+function DivineCastIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M12 4.6v14.8M7.2 9.4h9.6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M12 4.6 9.9 7.2M12 4.6l2.1 2.6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.86" />
+      <path d="M8.4 18.5c.9.7 2.2 1 3.6 1s2.7-.3 3.6-1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.78" />
+    </svg>
+  );
+}
+
+function WarriorCastIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M12 5.2 18.2 8v4.7c0 3.6-2.2 5.8-6.2 7.1-4-1.3-6.2-3.5-6.2-7.1V8L12 5.2Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.4 12h5.2M12 9.4v5.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function RogueCastIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M5.5 16.7 16.7 5.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="m14.6 5.3 4.1 4.1M4.9 19.1l3.2-.7-2.5-2.5-.7 3.2Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.2 13.8h4.6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.78" />
+    </svg>
+  );
+}
+
+function EnemyCastIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M4.8 12h10.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="m12.1 8.6 3.4 3.4-3.4 3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15.7 12h3.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.76" />
+    </svg>
+  );
+}
+
+function AllyCastIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="6.6" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M12 8.6v6.8M8.6 12h6.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SelfCastIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M8.6 6.2a4.8 4.8 0 1 1 6.8 6.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M15.4 17.8a4.8 4.8 0 1 1-6.8-6.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.86" />
+      <path d="M15.2 8.2h3.2v-3.2M8.8 15.8H5.6V19" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function SkillCastIcon({
+  className,
+  classRestriction,
+  targetType,
+}: {
+  className?: string;
+  classRestriction?: string | null;
+  targetType?: string;
+}) {
+  const cls = classRestriction?.toUpperCase();
+  if (cls === "MAGE") return <ArcaneCastIcon className={className} />;
+  if (cls === "CLERIC") return <DivineCastIcon className={className} />;
+  if (cls === "WARRIOR") return <WarriorCastIcon className={className} />;
+  if (cls === "ROGUE") return <RogueCastIcon className={className} />;
+
+  const target = targetType?.toUpperCase();
+  if (target === "ALLY") return <AllyCastIcon className={className} />;
+  if (target === "SELF") return <SelfCastIcon className={className} />;
+  return <EnemyCastIcon className={className} />;
+}
+
 export function MapScrollIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
