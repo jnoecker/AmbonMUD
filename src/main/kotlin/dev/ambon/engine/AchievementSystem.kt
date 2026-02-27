@@ -28,40 +28,18 @@ class AchievementSystem(
         sessionId: SessionId,
         templateKey: String,
     ) {
-        val ps = players.get(sessionId) ?: return
-        var changed = false
-        val updatedProgress = ps.achievementProgress.toMutableMap()
-
-        for (def in registry.all()) {
-            if (ps.unlockedAchievementIds.contains(def.id)) continue
-
+        updateAchievementProgress(sessionId) { def, newProgressList ->
             var achievementChanged = false
-            val currentState = updatedProgress[def.id]
-            val progressList =
-                currentState?.progress
-                    ?: def.criteria.map { c -> CriterionProgress(current = 0, required = c.count) }
-            val newProgressList = progressList.toMutableList()
-
             for ((index, criterion) in def.criteria.withIndex()) {
                 if (criterion.type != CriterionType.KILL) continue
                 val matches = criterion.targetId.isBlank() || criterion.targetId == templateKey
                 if (!matches) continue
                 val prog = newProgressList[index]
                 if (prog.isComplete) continue
-
                 newProgressList[index] = prog.copy(current = prog.current + 1)
                 achievementChanged = true
             }
-
-            if (achievementChanged) {
-                updatedProgress[def.id] = AchievementState(def.id, newProgressList)
-                changed = true
-            }
-        }
-
-        if (changed) {
-            ps.achievementProgress = updatedProgress
-            checkAndUnlock(sessionId, ps.achievementProgress)
+            achievementChanged
         }
     }
 
@@ -72,43 +50,19 @@ class AchievementSystem(
         sessionId: SessionId,
         newLevel: Int,
     ) {
-        val ps = players.get(sessionId) ?: return
-        var changed = false
-        val updatedProgress = ps.achievementProgress.toMutableMap()
-
-        for (def in registry.all()) {
-            if (ps.unlockedAchievementIds.contains(def.id)) continue
-
+        updateAchievementProgress(sessionId) { def, newProgressList ->
             var achievementChanged = false
-            val currentState = updatedProgress[def.id]
-            val progressList =
-                currentState?.progress
-                    ?: def.criteria.map { c -> CriterionProgress(current = 0, required = c.count) }
-            val newProgressList = progressList.toMutableList()
-
             for ((index, criterion) in def.criteria.withIndex()) {
                 if (criterion.type != CriterionType.REACH_LEVEL) continue
                 val prog = newProgressList[index]
                 if (prog.isComplete) continue
-                if (newLevel >= criterion.count) {
-                    newProgressList[index] = prog.copy(current = newLevel)
-                    achievementChanged = true
-                } else if (newLevel > prog.current) {
-                    // Update current level even if not yet met, for progress display
+                if (newLevel >= criterion.count || newLevel > prog.current) {
+                    // Update current level whether or not the target is met (for progress display)
                     newProgressList[index] = prog.copy(current = newLevel)
                     achievementChanged = true
                 }
             }
-
-            if (achievementChanged) {
-                updatedProgress[def.id] = AchievementState(def.id, newProgressList)
-                changed = true
-            }
-        }
-
-        if (changed) {
-            ps.achievementProgress = updatedProgress
-            checkAndUnlock(sessionId, ps.achievementProgress)
+            achievementChanged
         }
     }
 
@@ -119,6 +73,33 @@ class AchievementSystem(
         sessionId: SessionId,
         questId: String,
     ) {
+        updateAchievementProgress(sessionId) { def, newProgressList ->
+            var achievementChanged = false
+            for ((index, criterion) in def.criteria.withIndex()) {
+                if (criterion.type != CriterionType.QUEST_COMPLETE) continue
+                val matches = criterion.targetId.isBlank() || criterion.targetId == questId
+                if (!matches) continue
+                val prog = newProgressList[index]
+                if (prog.isComplete) continue
+                newProgressList[index] = prog.copy(current = 1)
+                achievementChanged = true
+            }
+            achievementChanged
+        }
+    }
+
+    /**
+     * Iterates all achievement definitions for [sessionId], initialises or reuses per-criterion
+     * progress lists, delegates criterion matching to [updateCriteria], and—if anything changed—
+     * flushes the result back to the player and triggers [checkAndUnlock].
+     *
+     * [updateCriteria] receives the definition and a mutable snapshot of its progress list.
+     * It must return `true` if any entry was modified.
+     */
+    private suspend fun updateAchievementProgress(
+        sessionId: SessionId,
+        updateCriteria: (def: AchievementDef, progress: MutableList<CriterionProgress>) -> Boolean,
+    ) {
         val ps = players.get(sessionId) ?: return
         var changed = false
         val updatedProgress = ps.achievementProgress.toMutableMap()
@@ -126,25 +107,13 @@ class AchievementSystem(
         for (def in registry.all()) {
             if (ps.unlockedAchievementIds.contains(def.id)) continue
 
-            var achievementChanged = false
             val currentState = updatedProgress[def.id]
             val progressList =
                 currentState?.progress
                     ?: def.criteria.map { c -> CriterionProgress(current = 0, required = c.count) }
             val newProgressList = progressList.toMutableList()
 
-            for ((index, criterion) in def.criteria.withIndex()) {
-                if (criterion.type != CriterionType.QUEST_COMPLETE) continue
-                val matches = criterion.targetId.isBlank() || criterion.targetId == questId
-                if (!matches) continue
-                val prog = newProgressList[index]
-                if (prog.isComplete) continue
-
-                newProgressList[index] = prog.copy(current = 1)
-                achievementChanged = true
-            }
-
-            if (achievementChanged) {
+            if (updateCriteria(def, newProgressList)) {
                 updatedProgress[def.id] = AchievementState(def.id, newProgressList)
                 changed = true
             }
