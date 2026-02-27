@@ -10,65 +10,43 @@ import kotlinx.coroutines.withContext
 private val log = KotlinLogging.logger {}
 
 class RedisCachingPlayerRepository(
-    private val delegate: PlayerRepository,
+    delegate: PlayerRepository,
     private val cache: StringCache,
     private val cacheTtlSeconds: Long,
     private val mapper: ObjectMapper = redisObjectMapper,
-) : PlayerRepository {
+) : DelegatingPlayerRepository(delegate) {
     private fun nameKey(name: String) = "player:name:${name.lowercase()}"
 
     private fun idKey(id: Long) = "player:id:$id"
 
-    override suspend fun findByName(name: String): PlayerRecord? =
-        cachedLookup(
-            warningContext = "findByName($name)",
-            fromCache = {
-                val idStr = cache.get(nameKey(name)) ?: return@cachedLookup null
-                val id = idStr.toLongOrNull() ?: return@cachedLookup null
-                val json = cache.get(idKey(id)) ?: return@cachedLookup null
-                mapper.readValue<PlayerDto>(json).toDomain()
-            },
-            fromDelegate = { delegate.findByName(name) },
-        )
+    override suspend fun lookupCachedByName(name: String): PlayerRecord? =
+        withCacheReadFallback("findByName($name)") {
+            val idStr = cache.get(nameKey(name)) ?: return@withCacheReadFallback null
+            val id = idStr.toLongOrNull() ?: return@withCacheReadFallback null
+            val json = cache.get(idKey(id)) ?: return@withCacheReadFallback null
+            mapper.readValue<PlayerDto>(json).toDomain()
+        }
 
-    override suspend fun findById(id: PlayerId): PlayerRecord? =
-        cachedLookup(
-            warningContext = "findById($id)",
-            fromCache = {
-                val json = cache.get(idKey(id.value)) ?: return@cachedLookup null
-                mapper.readValue<PlayerDto>(json).toDomain()
-            },
-            fromDelegate = { delegate.findById(id) },
-        )
+    override suspend fun lookupCachedById(id: PlayerId): PlayerRecord? =
+        withCacheReadFallback("findById($id)") {
+            val json = cache.get(idKey(id.value)) ?: return@withCacheReadFallback null
+            mapper.readValue<PlayerDto>(json).toDomain()
+        }
 
-    override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
-        val record = delegate.create(request)
-        cacheRecord(record)
-        return record
-    }
-
-    override suspend fun save(record: PlayerRecord) {
-        delegate.save(record)
+    override suspend fun storeInCache(record: PlayerRecord) {
         cacheRecord(record)
     }
 
-    private suspend fun cachedLookup(
+    private suspend fun withCacheReadFallback(
         warningContext: String,
-        fromCache: suspend () -> PlayerRecord?,
-        fromDelegate: suspend () -> PlayerRecord?,
+        lookup: suspend () -> PlayerRecord?,
     ): PlayerRecord? {
         try {
-            val cached =
-                withContext(Dispatchers.IO) {
-                    fromCache()
-                }
-            if (cached != null) return cached
+            return withContext(Dispatchers.IO) { lookup() }
         } catch (e: Exception) {
             log.warn(e) { "Redis error in $warningContext - falling through to delegate" }
         }
-        val record = fromDelegate()
-        if (record != null) cacheRecord(record)
-        return record
+        return null
     }
 
     private suspend fun cacheRecord(record: PlayerRecord) {
