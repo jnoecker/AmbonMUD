@@ -90,6 +90,26 @@ class RegenSystemTest {
         }
 
     @Test
+    fun `players with depleted mana at login still regen after interval`() =
+        runTest {
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            val regen = makeRegen(players, clock)
+
+            val sid = SessionId(1L)
+            players.loginOrFail(sid, "Eve")
+
+            val player = players.get(sid)!!
+            player.mana = player.maxMana - 5
+
+            regen.tick()
+            clock.advance(3_000L)
+            regen.tick()
+
+            assertEquals(player.maxMana - 4, player.mana, "Expected one mana regen tick (+1 mana)")
+        }
+
+    @Test
     fun `players at full hp do not regen past max`() =
         runTest {
             val players = makeRegistry()
