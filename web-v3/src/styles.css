@@ -488,6 +488,7 @@ body {
     0 0 0 1px rgb(218 226 255 / 14%),
     var(--shadow-sm);
   padding: var(--space-2);
+  overflow: hidden;
 }
 
 .prelogin-banner {
