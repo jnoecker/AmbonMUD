@@ -3,6 +3,7 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.commands.Command
+import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
@@ -12,19 +13,18 @@ import dev.ambon.sharding.InterEngineMessage
 import dev.ambon.sharding.PlayerLocationIndex
 
 class CommunicationHandler(
-    router: CommandRouter,
     ctx: EngineContext,
     private val groupSystem: GroupSystem? = null,
     private val interEngineBus: InterEngineBus? = null,
     private val playerLocationIndex: PlayerLocationIndex? = null,
     private val engineId: String = "",
     private val onRemoteWho: (suspend (SessionId) -> Unit)? = null,
-) {
+) : CommandHandler {
     private val players = ctx.players
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
 
-    init {
+    override fun register(router: CommandRouter) {
         router.on<Command.Say> { sid, cmd -> handleSay(sid, cmd) }
         router.on<Command.Emote> { sid, cmd -> handleEmote(sid, cmd) }
         router.on<Command.Tell> { sid, cmd -> handleTell(sid, cmd) }

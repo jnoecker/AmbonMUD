@@ -3,6 +3,7 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
+import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.dialogue.DialogueSystem
@@ -10,18 +11,17 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectSystem
 
 class CombatHandler(
-    router: CommandRouter,
     ctx: EngineContext,
     private val abilitySystem: AbilitySystem? = null,
     private val statusEffects: StatusEffectSystem? = null,
     private val dialogueSystem: DialogueSystem? = null,
-) {
+) : CommandHandler {
     private val players = ctx.players
     private val mobs = ctx.mobs
     private val combat = ctx.combat
     private val outbound = ctx.outbound
 
-    init {
+    override fun register(router: CommandRouter) {
         router.on<Command.Kill> { sid, cmd -> handleKill(sid, cmd) }
         router.on<Command.Flee> { sid, _ -> handleFlee(sid) }
         router.on<Command.Cast> { sid, cmd -> handleCast(sid, cmd) }

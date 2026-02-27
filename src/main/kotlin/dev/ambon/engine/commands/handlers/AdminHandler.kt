@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.commands.Command
+import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.dialogue.DialogueSystem
@@ -17,7 +18,6 @@ import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.InterEngineMessage
 
 class AdminHandler(
-    private val router: CommandRouter,
     ctx: EngineContext,
     private val onShutdown: suspend () -> Unit = {},
     private val onMobSmited: (MobId) -> Unit = {},
@@ -27,7 +27,7 @@ class AdminHandler(
     private val interEngineBus: InterEngineBus? = null,
     private val engineId: String = "",
     private val metrics: GameMetrics = GameMetrics.noop(),
-) {
+) : CommandHandler {
     private val world = ctx.world
     private val players = ctx.players
     private val mobs = ctx.mobs
@@ -36,10 +36,12 @@ class AdminHandler(
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
     private val worldState = ctx.worldState
+    private lateinit var router: CommandRouter
 
     private var adminSpawnSeq = 0
 
-    init {
+    override fun register(router: CommandRouter) {
+        this.router = router
         router.on<Command.Goto> { sid, cmd -> handleGoto(sid, cmd) }
         router.on<Command.Transfer> { sid, cmd -> handleTransfer(sid, cmd) }
         router.on<Command.Spawn> { sid, cmd -> handleSpawn(sid, cmd) }

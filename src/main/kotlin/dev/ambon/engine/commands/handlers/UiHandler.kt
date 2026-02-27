@@ -2,21 +2,21 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.commands.Command
+import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
 
 class UiHandler(
-    router: CommandRouter,
     ctx: EngineContext,
     private val onPhase: (suspend (SessionId, String?) -> PhaseResult)? = null,
-) {
+) : CommandHandler {
     private val players = ctx.players
     private val outbound = ctx.outbound
     private val combat = ctx.combat
 
-    init {
+    override fun register(router: CommandRouter) {
         router.on<Command.Noop> { _, _ -> }
         router.on<Command.Unknown> { sid, _ ->
             outbound.send(OutboundEvent.SendText(sid, "Huh?"))

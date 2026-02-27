@@ -8,26 +8,26 @@ import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
+import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectSystem
 
 class ProgressionHandler(
-    router: CommandRouter,
     ctx: EngineContext,
     private val progression: PlayerProgression = PlayerProgression(),
     private val abilitySystem: AbilitySystem? = null,
     private val statusEffects: StatusEffectSystem? = null,
     private val groupSystem: GroupSystem? = null,
-) {
+) : CommandHandler {
     private val players = ctx.players
     private val items = ctx.items
     private val combat = ctx.combat
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
 
-    init {
+    override fun register(router: CommandRouter) {
         router.on<Command.Score> { sid, _ -> handleScore(sid) }
         router.on<Command.Spells> { sid, _ -> handleSpells(sid) }
         router.on<Command.Effects> { sid, _ -> handleEffects(sid) }
