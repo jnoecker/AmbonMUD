@@ -6,7 +6,7 @@ import "@xterm/xterm/css/xterm.css";
 import "./styles.css";
 
 type MobileTab = "play" | "world" | "character";
-type PopoutPanel = "map" | "equipment" | "wearing" | null;
+type PopoutPanel = "map" | "equipment" | "wearing" | "room" | null;
 
 interface Vitals {
   hp: number;
@@ -188,6 +188,14 @@ function sortExits(exits: Record<string, string>): Array<[string, string]> {
   });
 }
 
+function titleCaseWords(value: string): string {
+  return value
+    .split(/[\s_-]+/)
+    .filter((part) => part.length > 0)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+}
+
 function Bar({
   label,
   value,
@@ -299,6 +307,16 @@ function WearingIcon({ className }: { className?: string }) {
   );
 }
 
+function CharacterAvatarIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M12 11.2a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6.6 19.2c.6-3 2.6-4.8 5.4-4.8s4.8 1.8 5.4 4.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4.8 12a7.2 7.2 0 0 1 14.4 0" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
+    </svg>
+  );
+}
+
 function CompassCoreIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
@@ -353,6 +371,18 @@ function MapScrollIcon({ className }: { className?: string }) {
       <path d="M8.2 15.2V6.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.92" />
       <path d="M11.3 10.2c1 .5 1.6 1.3 1.6 2.3 0 1.1-.7 2-1.8 2.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
       <path d="M13.7 9.4h2.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
+    </svg>
+  );
+}
+
+function ExpandRoomIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M8 4.8H4.8V8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 4.8h3.2V8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 19.2H4.8V16" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 19.2h3.2V16" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.4 9.4h5.2v5.2H9.4z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.82" />
     </svg>
   );
 }
@@ -505,6 +535,22 @@ function App() {
         ctx.stroke();
       }
     }
+  }, []);
+
+  const fitTerminal = useCallback(() => {
+    const term = terminalRef.current;
+    const fitAddon = fitAddonRef.current;
+    const host = terminalHostRef.current;
+    if (!term || !fitAddon || !host) return;
+    if (host.clientWidth < 220 || host.clientHeight < 120) return;
+
+    const width = host.clientWidth;
+    const nextFontSize = width < 560 ? 12 : width < 760 ? 13 : 14;
+    if (term.options.fontSize !== nextFontSize) {
+      term.options.fontSize = nextFontSize;
+    }
+
+    fitAddon.fit();
   }, []);
 
   const updateMap = useCallback(
@@ -934,25 +980,26 @@ function App() {
       rows: 30,
       convertEol: false,
       theme: {
-        background: "#ede8f4",
-        foreground: "#56586d",
-        cursor: "#8c79a7",
-        selectionBackground: "rgba(216, 197, 232, 0.3)",
+        background: "#2f3446",
+        foreground: "#d8dcef",
+        cursor: "#b9aed8",
+        selectionBackground: "rgba(185, 174, 216, 0.34)",
       },
     });
 
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
     term.open(terminalHostRef.current);
-    fitAddon.fit();
-    term.focus();
 
     terminalRef.current = term;
     fitAddonRef.current = fitAddon;
+    fitTerminal();
+    term.focus();
+
     const dataListener = term.onData(handleTerminalData);
 
     const resizeObserver = new ResizeObserver(() => {
-      fitAddon.fit();
+      fitTerminal();
       drawMap();
     });
     resizeObserver.observe(terminalHostRef.current);
@@ -964,12 +1011,12 @@ function App() {
       fitAddonRef.current = null;
       terminalRef.current = null;
     };
-  }, [drawMap, handleTerminalData]);
+  }, [drawMap, fitTerminal, handleTerminalData]);
 
   useEffect(() => {
     connect();
     const onResize = () => {
-      fitAddonRef.current?.fit();
+      fitTerminal();
       drawMap();
     };
     const onBeforeUnload = () => disconnect();
@@ -982,7 +1029,13 @@ function App() {
       window.removeEventListener("beforeunload", onBeforeUnload);
       disconnect();
     };
-  }, [connect, disconnect, drawMap]);
+  }, [connect, disconnect, drawMap, fitTerminal]);
+
+  useEffect(() => {
+    if (activeTab !== "play") return;
+    const handle = window.requestAnimationFrame(() => fitTerminal());
+    return () => window.cancelAnimationFrame(handle);
+  }, [activeTab, fitTerminal]);
 
   useEffect(() => {
     if (!activePopout) return;
@@ -1029,6 +1082,8 @@ function App() {
   const hiddenMobsCount = Math.max(0, mobs.length - visibleMobs.length);
   const visibleEffects = effects.slice(0, MAX_VISIBLE_EFFECTS);
   const hiddenEffectsCount = Math.max(0, effects.length - visibleEffects.length);
+  const displayRace = character.race ? titleCaseWords(character.race) : "";
+  const displayClassName = character.className ? titleCaseWords(character.className) : "";
   const hasCharacterProfile = character.name !== "-";
   const hasRoomDetails = room.id !== null || room.title !== "-";
   const preLogin = connected && !hasCharacterProfile && !hasRoomDetails;
@@ -1043,6 +1098,8 @@ function App() {
   const popoutTitle =
     activePopout === "map"
       ? "Mini-map"
+      : activePopout === "room"
+        ? "Room Details"
       : activePopout === "equipment"
         ? "Equipment"
         : "Currently Wearing";
@@ -1132,7 +1189,7 @@ function App() {
 
           <div className="movement-grid" role="toolbar" aria-label="Room exits">
             {exits.length === 0 ? (
-              <span className="empty-note">{preLogin ? "Log in to unlock movement." : connected ? "No exits available." : "Reconnect to view exits."}</span>
+              preLogin ? null : <span className="empty-note">{connected ? "No exits available." : "Reconnect to view exits."}</span>
             ) : (
               exits.map(([direction, target]) => {
                 const normalized = direction.toLowerCase();
@@ -1191,27 +1248,37 @@ function App() {
         </section>
 
         <section className="panel panel-world" aria-label="World state">
-          <header className="panel-header panel-header-world" title="Room context, exits, and local entities.">
-            <button
-              type="button"
-              className="map-icon-trigger"
-              onClick={() => setActivePopout("map")}
-              disabled={!canOpenMap}
-              aria-label={canOpenMap ? "Open mini-map" : "Mini-map unavailable before login"}
-              title={canOpenMap ? "Open mini-map" : "Mini-map unavailable before login"}
-            >
-              <MapScrollIcon className="map-icon-svg" />
-              <span className="sr-only">Mini-map</span>
-            </button>
-          </header>
-
           <div className="world-stack">
             <article className="subpanel">
               {hasRoomDetails ? (
-                <>
-                  <h3>Room</h3>
-                  <p className="room-title">{room.title}</p>
-                  <p className="room-description">{room.description || "No room description available yet."}</p>
+                <div className="room-main">
+                  <div className="room-title-row">
+                    <p className="room-title">{room.title}</p>
+                    <button
+                      type="button"
+                      className="map-icon-trigger room-map-trigger"
+                      onClick={() => setActivePopout("map")}
+                      disabled={!canOpenMap}
+                      aria-label={canOpenMap ? "Open mini-map" : "Mini-map unavailable before login"}
+                      title={canOpenMap ? "Open mini-map" : "Mini-map unavailable before login"}
+                    >
+                      <MapScrollIcon className="map-icon-svg" />
+                      <span className="sr-only">Mini-map</span>
+                    </button>
+                  </div>
+                  <div className="room-description-wrap" aria-label="Room description">
+                    <p className="room-description">{room.description || "No room description available yet."}</p>
+                    <button
+                      type="button"
+                      className="map-icon-trigger room-expand-trigger"
+                      onClick={() => setActivePopout("room")}
+                      aria-label="Expand room text"
+                      title="Expand room text"
+                    >
+                      <ExpandRoomIcon className="map-icon-svg room-expand-icon" />
+                      <span className="sr-only">Expand room text</span>
+                    </button>
+                  </div>
                   <div className="compass-block" aria-label="Current exits">
                     <div className="compass-rose" role="group" aria-label="Directional exits">
                       {COMPASS_DIRECTIONS.map((direction) => {
@@ -1241,7 +1308,7 @@ function App() {
                       {exits.length === 0 ? "No exits listed." : `Available: ${exits.map(([direction]) => direction).join(", ")}`}
                     </p>
                   </div>
-                </>
+                </div>
               ) : (
                 <div className="prelogin-card">
                   <h3>{connected ? "World Gate" : "World Offline"}</h3>
@@ -1315,16 +1382,33 @@ function App() {
         <section className="panel panel-character" aria-label="Character status">
           <header className="panel-header panel-header-with-actions">
             <div>
-              <h2 title="Identity, progression, and active effects.">Character</h2>
+              <h2 className="panel-header-icon-title" title="Identity, progression, and active effects.">
+                <CharacterAvatarIcon className="panel-header-avatar-icon" />
+                <span className="sr-only">Character</span>
+              </h2>
             </div>
             <div className="panel-action-row">
-              <button type="button" className="panel-action-button" onClick={() => setActivePopout("equipment")} disabled={!canOpenEquipment}>
+              <button
+                type="button"
+                className="panel-action-button panel-action-button-icon"
+                onClick={() => setActivePopout("equipment")}
+                disabled={!canOpenEquipment}
+                title={canOpenEquipment ? "Equipment" : "Equipment unavailable before login"}
+                aria-label={canOpenEquipment ? "Open equipment" : "Equipment unavailable before login"}
+              >
                 <EquipmentIcon className="panel-action-icon" />
-                <span>Equipment</span>
+                <span className="sr-only">Equipment</span>
               </button>
-              <button type="button" className="panel-action-button" onClick={() => setActivePopout("wearing")} disabled={!canOpenEquipment}>
+              <button
+                type="button"
+                className="panel-action-button panel-action-button-icon"
+                onClick={() => setActivePopout("wearing")}
+                disabled={!canOpenEquipment}
+                title={canOpenEquipment ? "Currently Wearing" : "Currently wearing unavailable before login"}
+                aria-label={canOpenEquipment ? "Open currently wearing" : "Currently wearing unavailable before login"}
+              >
                 <WearingIcon className="panel-action-icon" />
-                <span>Currently Wearing</span>
+                <span className="sr-only">Currently Wearing</span>
               </button>
             </div>
           </header>
@@ -1337,8 +1421,8 @@ function App() {
                   <p className="identity-name">{character.name}</p>
                   <p className="identity-detail">
                     {character.level ? `Level ${character.level}` : "Level -"}
-                    {character.race ? ` ${character.race}` : ""}
-                    {character.className ? ` ${character.className}` : ""}
+                    {displayRace ? ` ${displayRace}` : ""}
+                    {displayClassName ? ` ${displayClassName}` : ""}
                   </p>
                 </>
               ) : (
@@ -1430,6 +1514,20 @@ function App() {
                   height={560}
                   aria-label="Visited room map"
                 />
+              </div>
+            )}
+
+            {activePopout === "room" && (
+              <div className="popout-content">
+                <article className="room-popout-copy">
+                  <h3 className="room-popout-title">{room.title}</h3>
+                  <p className="room-popout-text">{room.description || "No room description available yet."}</p>
+                  <p className="room-popout-exits">
+                    {exits.length === 0
+                      ? "No exits listed."
+                      : `Available exits: ${exits.map(([direction]) => direction).join(", ")}`}
+                  </p>
+                </article>
               </div>
             )}
 
