@@ -358,7 +358,7 @@ Motion should feel:
 ### Folder Structure
 
 ```
-src/main/resources/web/
+web-v3/src/
 ├── styles/
 │   ├── design-tokens.css         # All CSS variables
 │   ├── reset.css                 # Browser normalization
@@ -369,11 +369,11 @@ src/main/resources/web/
 ├── components/
 │   ├── buttons/
 │   │   ├── button.css
-│   │   ├── button.js             # React/Web component
+│   │   ├── Button.tsx             # React/Web component
 │   │   └── button-stories.html   # Visual regression test
 │   ├── inputs/
 │   │   ├── text-input.css
-│   │   ├── text-input.js
+│   │   ├── TextInput.tsx
 │   │   └── text-input-stories.html
 │   ├── layout/
 │   │   ├── panel.css
@@ -391,11 +391,11 @@ src/main/resources/web/
 │       ├── light-thread.js       # Connecting elements
 │       └── ...
 ├── canvas/
-│   ├── world-renderer.js         # Main world canvas
+│   ├── world-renderer.ts         # Main world canvas
 │   ├── particle-system.js        # Ambient effects
 │   ├── lighting.js               # Soft glow calculations
 │   └── ...
-└── app.js                        # Main entry point
+└── main.tsx                        # Main entry point
 ```
 
 ### Component Checklist
@@ -636,3 +636,4 @@ When creating new variants, document the differences from v1 and update this sec
 
 **Last Updated:** February 26, 2026
 **Next Review:** April 30, 2026
+

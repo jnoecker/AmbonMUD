@@ -1,6 +1,6 @@
 # AmbonMUD Web Client v3
 
-Standalone Vite + React + TypeScript frontend for the new client experience.
+Standalone Vite + React + TypeScript frontend for the current browser client.
 
 ## Commands
 
@@ -13,11 +13,15 @@ bun run build
 
 ## Output contract
 
-- `bun run build` writes production assets directly to:
-  - `../src/main/resources/web-v3`
-- Server static root:
-  - `/` serves `web-v3` assets
-- Compatibility redirect routes:
-  - `/v3` and `/v3/` redirect to `/` (configured in `KtorWebSocketTransport.kt`)
+`bun run build` writes production assets directly to:
+- `../src/main/resources/web-v3`
 
-The legacy web client assets remain in `src/main/resources/web`, but current runtime static serving targets `web-v3`.
+Server behavior:
+- `/` serves `web-v3` assets
+- `/v3` and `/v3/` redirect to `/`
+- gameplay socket endpoint is `/ws`
+
+## See also
+
+- Consolidated v3 architecture/status doc: [../docs/WEB_V3.md](../docs/WEB_V3.md)
+- Project overview: [../README.md](../README.md)
