@@ -43,6 +43,9 @@ data class PlayerState(
         const val BASE_MAX_HP = 10
         const val BASE_MANA = 20
         const val BASE_STAT = 10
+
+        /** Returns the bonus conferred by [total] stat points above [BASE_STAT], divided by [divisor]. */
+        fun statBonus(total: Int, divisor: Int): Int = (total - BASE_STAT) / divisor
     }
 
     override fun toString(): String =
