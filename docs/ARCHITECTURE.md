@@ -209,15 +209,19 @@ The engine consumes `InboundEvent`s and produces `OutboundEvent`s. This event mo
 
 ### 2. Transport as Replaceable Adapter
 
-**Decision:** Start with telnet, keep engine unaware of transport specifics, add WebSockets as a second adapter without rewriting game logic.
+**Decision:** Keep engine unaware of transport specifics, supporting both telnet and WebSockets as adapters without rewriting game logic.
 
 **Why:**
 - Telnet: maximum simplicity and compatibility
 - Engine speaks semantic events (SendText, SendPrompt, Close), not raw socket writes
-- WebSockets (Ktor): low-friction browser client via static xterm.js + GMCP sidebar panels
+- WebSockets (Ktor): low-friction browser client via static v3 bundle + GMCP-driven panels
 - Clean path to future transports (SSH, IRC, etc.)
 
 **Tradeoff:** Telnet negotiation (IAC/SB/SE) and WebSocket framing are isolated to transport layer, adding some complexity at the edge.
+
+Current web serving note:
+- Ktor static resources serve the current web bundle from classpath package `web-v3` at `/`.
+- Compatibility routes `/v3` and `/v3/` redirect to `/`.
 
 ---
 
@@ -376,7 +380,7 @@ The engine consumes `InboundEvent`s and produces `OutboundEvent`s. This event mo
 **Why:**
 - Rich clients (web, graphical) need machine-readable data
 - GMCP: well-established MUD protocol (telnet option 201)
-- 13 packages cover character, room, inventory, skills, communication
+- WebSocket sessions auto-opt into the core package set used by v3 (`Char.Vitals`, `Room.Info`, `Char.StatusVars`, `Char.Items`, `Room.Players`, `Room.Mobs`, `Room.Items`, `Char.Skills`, `Char.Name`, `Char.StatusEffects`, `Comm.Channel`, `Core.Ping`)
 - Engine's `GmcpEmitter` emits data alongside `OutboundEvent`s — no engine/transport boundary changes
 - WebSocket clients auto-opt in; telnet clients negotiate via standard `WILL`/`DO`
 

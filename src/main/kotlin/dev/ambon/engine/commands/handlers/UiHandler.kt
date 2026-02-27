@@ -78,7 +78,7 @@ class UiHandler(
                     kill <mob>
                     flee
                     cast/c <spell> [target]
-                    spells/abilities
+                    spells/abilities/skills
                     effects/buffs/debuffs
                     score/sc
                     gold/balance

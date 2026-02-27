@@ -8,6 +8,7 @@ import type {
   RoomItem,
   RoomPlayer,
   RoomState,
+  SkillSummary,
   StatusEffect,
   Vitals,
 } from "../types";
@@ -24,6 +25,7 @@ interface GmcpContext {
   setPlayers: Dispatch<SetStateAction<RoomPlayer[]>>;
   setMobs: Dispatch<SetStateAction<RoomMob[]>>;
   setEffects: Dispatch<SetStateAction<StatusEffect[]>>;
+  setSkills: Dispatch<SetStateAction<SkillSummary[]>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>) => void;
 }
@@ -52,6 +54,7 @@ export function applyGmcpPackage(
         xpIntoLevel: safeNumber(packet.xpIntoLevel),
         xpToNextLevel: packet.xpToNextLevel === null ? null : safeNumber(packet.xpToNextLevel),
         gold: safeNumber(packet.gold),
+        inCombat: packet.inCombat === true,
       });
       break;
     }
@@ -253,6 +256,31 @@ export function applyGmcpPackage(
             type: typeof entry.type === "string" ? entry.type : "BUFF",
             stacks: Math.max(1, safeNumber(entry.stacks, 1)),
             remainingMs: Math.max(0, safeNumber(entry.remainingMs, 0)),
+          })),
+      );
+      break;
+    }
+
+    case "Char.Skills": {
+      const now = Date.now();
+      if (!Array.isArray(data)) {
+        ctx.setSkills([]);
+        break;
+      }
+      ctx.setSkills(
+        data
+          .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
+          .map((entry, index) => ({
+            id: typeof entry.id === "string" ? entry.id : `skill-${index}`,
+            name: typeof entry.name === "string" ? entry.name : "Unknown skill",
+            description: typeof entry.description === "string" ? entry.description : "",
+            manaCost: Math.max(0, safeNumber(entry.manaCost)),
+            cooldownMs: Math.max(0, safeNumber(entry.cooldownMs)),
+            cooldownRemainingMs: Math.max(0, safeNumber(entry.cooldownRemainingMs)),
+            levelRequired: Math.max(1, safeNumber(entry.levelRequired, 1)),
+            targetType: typeof entry.targetType === "string" ? entry.targetType : "ENEMY",
+            classRestriction: typeof entry.classRestriction === "string" ? entry.classRestriction : null,
+            receivedAt: now,
           })),
       );
       break;

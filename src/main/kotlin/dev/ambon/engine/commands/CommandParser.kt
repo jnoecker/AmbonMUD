@@ -553,7 +553,7 @@ object CommandParser {
             "exits", "ex" -> Command.Exits
             "flee" -> Command.Flee
             "score", "sc" -> Command.Score
-            "spells", "abilities" -> Command.Spells
+            "spells", "abilities", "skills" -> Command.Spells
             "effects", "buffs", "debuffs" -> Command.Effects
             "shutdown" -> Command.Shutdown
             "gold", "balance", "wealth" -> Command.Balance

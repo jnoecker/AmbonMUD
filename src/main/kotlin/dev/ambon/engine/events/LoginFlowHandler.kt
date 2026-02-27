@@ -472,7 +472,9 @@ internal class LoginFlowHandler(
         gmcpEmitter.sendCharVitals(sessionId, me)
         gmcpEmitter.sendCharName(sessionId, me)
         gmcpEmitter.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
-        gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId))
+        gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
+            abilitySystem.cooldownRemainingMs(sessionId, abilityId)
+        }
         gmcpEmitter.sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
         gmcpEmitter.sendCharAchievements(sessionId, me, achievementRegistry)
         val group = groupSystem.getGroup(sessionId)
