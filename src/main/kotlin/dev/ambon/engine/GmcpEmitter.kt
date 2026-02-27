@@ -125,6 +125,18 @@ class GmcpEmitter(
         outbound.send(OutboundEvent.GmcpData(sessionId, "Room.Mobs", json))
     }
 
+    suspend fun sendRoomItems(
+        sessionId: SessionId,
+        items: List<ItemInstance>,
+    ) {
+        if (!supportsPackage(sessionId, "Room.Items")) return
+        val json =
+            items.joinToString(",", prefix = "[", postfix = "]") { item ->
+                """{"id":"${item.id.value.jsonEscape()}","name":"${item.item.displayName.jsonEscape()}"}"""
+            }
+        outbound.send(OutboundEvent.GmcpData(sessionId, "Room.Items", json))
+    }
+
     suspend fun sendRoomAddMob(
         sessionId: SessionId,
         mob: MobState,

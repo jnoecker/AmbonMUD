@@ -41,6 +41,7 @@ class CombatSystem(
     private val threatMultiplierWarrior: Double = 1.5,
     private val threatMultiplierDefault: Double = 1.0,
     private val healingThreatMultiplier: Double = 0.5,
+    private val onRoomItemsChanged: suspend (RoomId) -> Unit = {},
 ) {
     // Per-mob combat state (tracks tick timing)
     private data class MobCombatState(
@@ -572,6 +573,7 @@ class CombatSystem(
         statusEffects?.onMobRemoved(mob.id)
         items.dropMobItemsToRoom(mob.id, mob.roomId)
         rollDrops(mob)
+        onRoomItemsChanged(mob.roomId)
         broadcastToRoom(players, outbound, mob.roomId, "${mob.name} dies.")
         grantKillGold(killerSessionId, mob)
         grantGroupKillXp(killerSessionId, mob)

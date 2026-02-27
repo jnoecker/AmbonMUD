@@ -5,6 +5,7 @@ import type {
   CharacterInfo,
   ItemSummary,
   RoomMob,
+  RoomItem,
   RoomPlayer,
   RoomState,
   StatusEffect,
@@ -17,6 +18,7 @@ interface GmcpContext {
   setVitals: Dispatch<SetStateAction<Vitals>>;
   setCharacter: Dispatch<SetStateAction<CharacterInfo>>;
   setRoom: Dispatch<SetStateAction<RoomState>>;
+  setRoomItems: Dispatch<SetStateAction<RoomItem[]>>;
   setInventory: Dispatch<SetStateAction<ItemSummary[]>>;
   setEquipment: Dispatch<SetStateAction<Record<string, ItemSummary>>>;
   setPlayers: Dispatch<SetStateAction<RoomPlayer[]>>;
@@ -89,6 +91,7 @@ export function applyGmcpPackage(
             .map((entry) => ({
               id: typeof entry.id === "string" ? entry.id : `${Date.now()}-${Math.random()}`,
               name: typeof entry.name === "string" ? entry.name : "Unknown item",
+              slot: typeof entry.slot === "string" ? entry.slot : null,
             }))
         : [];
 
@@ -100,6 +103,7 @@ export function applyGmcpPackage(
           equipmentMap[slot] = {
             id: typeof item.id === "string" ? item.id : `${slot}-${Date.now()}`,
             name: typeof item.name === "string" ? item.name : "Unknown item",
+            slot,
           };
         }
       }
@@ -116,6 +120,7 @@ export function applyGmcpPackage(
         {
           id: typeof packet.id === "string" ? packet.id : `${Date.now()}-${Math.random()}`,
           name: typeof packet.name === "string" ? packet.name : "Unknown item",
+          slot: typeof packet.slot === "string" ? packet.slot : null,
         },
       ]);
       break;
@@ -125,6 +130,22 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       if (typeof packet.id !== "string") break;
       ctx.setInventory((prev) => prev.filter((item) => item.id !== packet.id));
+      break;
+    }
+
+    case "Room.Items": {
+      if (!Array.isArray(data)) {
+        ctx.setRoomItems([]);
+        break;
+      }
+      ctx.setRoomItems(
+        data
+          .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
+          .map((entry, index) => ({
+            id: typeof entry.id === "string" ? entry.id : `room-item-${index}-${Date.now()}`,
+            name: typeof entry.name === "string" ? entry.name : "Unknown item",
+          })),
+      );
       break;
     }
 

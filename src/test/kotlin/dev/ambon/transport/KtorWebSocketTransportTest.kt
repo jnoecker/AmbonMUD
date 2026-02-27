@@ -61,6 +61,8 @@ class KtorWebSocketTransportTest {
                             gmcpAutoSend.gmcpPackage == "Core.Supports.Set",
                         "Expected auto Core.Supports.Set, got: $gmcpAutoSend",
                     )
+                    gmcpAutoSend as InboundEvent.GmcpReceived
+                    assertTrue(gmcpAutoSend.jsonData.contains("\"Room.Items 1\""))
 
                     send(Frame.Text("look\r\nwho"))
                     assertEquals(

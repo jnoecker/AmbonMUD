@@ -1,7 +1,7 @@
 import { COMPASS_DIRECTIONS } from "../../constants";
-import type { RoomMob, RoomPlayer, RoomState } from "../../types";
+import type { RoomItem, RoomMob, RoomPlayer, RoomState } from "../../types";
 import { percent } from "../../utils";
-import { AttackIcon, CompassCoreIcon, DirectionIcon, ExpandRoomIcon, MapScrollIcon } from "../Icons";
+import { AttackIcon, CompassCoreIcon, DirectionIcon, ExpandRoomIcon, MapScrollIcon, PickupIcon } from "../Icons";
 
 interface WorldPanelProps {
   connected: boolean;
@@ -16,10 +16,14 @@ interface WorldPanelProps {
   hiddenPlayersCount: number;
   visibleMobs: RoomMob[];
   hiddenMobsCount: number;
+  roomItems: RoomItem[];
+  visibleRoomItems: RoomItem[];
+  hiddenRoomItemsCount: number;
   onOpenMap: () => void;
   onOpenRoom: () => void;
   onMove: (direction: string) => void;
   onAttackMob: (mobName: string) => void;
+  onPickUpItem: (itemName: string) => void;
 }
 
 export function WorldPanel({
@@ -35,10 +39,14 @@ export function WorldPanel({
   hiddenPlayersCount,
   visibleMobs,
   hiddenMobsCount,
+  roomItems,
+  visibleRoomItems,
+  hiddenRoomItemsCount,
   onOpenMap,
   onOpenRoom,
   onMove,
   onAttackMob,
+  onPickUpItem,
 }: WorldPanelProps) {
   return (
     <section className="panel panel-world" aria-label="World state">
@@ -160,6 +168,32 @@ export function WorldPanel({
                   ))}
                 </ul>
                 {hiddenMobsCount > 0 && <p className="empty-note">+{hiddenMobsCount} more mobs</p>}
+              </>
+            )}
+          </div>
+
+          <div>
+            <h3>Items</h3>
+            {roomItems.length === 0 ? <p className="empty-note">{hasRoomDetails ? "No items in this room." : "Room items will appear here after login."}</p> : (
+              <>
+                <ul className="entity-list">
+                  {visibleRoomItems.map((item, index) => (
+                    <li key={`${item.id}-${index}`} className="entity-item">
+                      <span>{item.name}</span>
+                      <button
+                        type="button"
+                        className="mob-command-button"
+                        title={`Pick up ${item.name}`}
+                        aria-label={`Pick up ${item.name}`}
+                        disabled={!connected || !hasRoomDetails}
+                        onClick={() => onPickUpItem(item.name)}
+                      >
+                        <PickupIcon className="mob-command-icon" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                {hiddenRoomItemsCount > 0 && <p className="empty-note">+{hiddenRoomItemsCount} more items</p>}
               </>
             )}
           </div>
