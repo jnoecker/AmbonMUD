@@ -4,6 +4,7 @@ import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { MobileTabBar } from "./components/MobileTabBar";
 import { PopoutLayer } from "./components/PopoutLayer";
+import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { PlayPanel } from "./components/panels/PlayPanel";
 import { WorldPanel } from "./components/panels/WorldPanel";
@@ -21,6 +22,8 @@ import { useCommandHistory } from "./hooks/useCommandHistory";
 import { useMiniMap } from "./hooks/useMiniMap";
 import { useMudSocket } from "./hooks/useMudSocket";
 import type {
+  ChatChannel,
+  ChatMessage,
   CharacterInfo,
   ItemSummary,
   MobileTab,
@@ -35,15 +38,60 @@ import { sortExits, titleCaseWords } from "./utils";
 import "@xterm/xterm/css/xterm.css";
 import "./styles.css";
 
+function createEmptyChatByChannel(): Record<ChatChannel, ChatMessage[]> {
+  return {
+    say: [],
+    tell: [],
+    gossip: [],
+    shout: [],
+    ooc: [],
+  };
+}
+
+function isAsciiLetter(code: number): boolean {
+  return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
+}
+
+function stripAnsiSequences(input: string): string {
+  let output = "";
+  let i = 0;
+  while (i < input.length) {
+    if (input.charCodeAt(i) === 0x1b && input[i + 1] === "[") {
+      i += 2;
+      while (i < input.length && !isAsciiLetter(input.charCodeAt(i))) {
+        i += 1;
+      }
+      if (i < input.length) i += 1;
+      continue;
+    }
+
+    output += input[i];
+    i += 1;
+  }
+  return output;
+}
+
+function parseWhoEntries(messageChunk: string): string[] | null {
+  const clean = stripAnsiSequences(messageChunk);
+  const lines = clean.replace(/\r/g, "\n").split("\n");
+  for (const line of lines) {
+    const markerIndex = line.indexOf("Online:");
+    if (markerIndex === -1) continue;
+    const payload = line.slice(markerIndex + "Online:".length).trim();
+    if (payload.length === 0) return [];
+    return payload.split(",").map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+  }
+  return null;
+}
+
 function App() {
   const terminalHostRef = useRef<HTMLDivElement | null>(null);
+  const composerInputRef = useRef<HTMLInputElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
 
-  const connectedRef = useRef(false);
-  const inputBufferRef = useRef("");
-
   const [activeTab, setActiveTab] = useState<MobileTab>("play");
+  const [activeChatChannel, setActiveChatChannel] = useState<ChatChannel>("say");
   const [activePopout, setActivePopout] = useState<PopoutPanel>(null);
   const [composerValue, setComposerValue] = useState("");
 
@@ -55,24 +103,25 @@ function App() {
   const [effects, setEffects] = useState<StatusEffect[]>([]);
   const [inventory, setInventory] = useState<ItemSummary[]>([]);
   const [equipment, setEquipment] = useState<Record<string, ItemSummary>>({});
+  const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
+  const [whoPlayers, setWhoPlayers] = useState<string[]>([]);
 
   const { mapCanvasRef, drawMap, updateMap, resetMap } = useMiniMap();
   const {
     pushHistory,
-    applyTerminalHistoryUp,
-    applyTerminalHistoryDown,
-    applyTerminalCompletion,
     applyComposerHistoryUp,
     applyComposerHistoryDown,
     applyComposerCompletion,
-    resetTerminalTraversal,
     resetComposerTraversal,
-    resetTerminalCompletion,
     resetComposerCompletion,
   } = useCommandHistory();
 
   const writeSystem = useCallback((message: string) => {
     terminalRef.current?.write(`\r\n\x1b[2m${message}\x1b[0m\r\n`);
+  }, []);
+
+  const focusComposer = useCallback(() => {
+    window.requestAnimationFrame(() => composerInputRef.current?.focus());
   }, []);
 
   const fitTerminal = useCallback(() => {
@@ -100,6 +149,9 @@ function App() {
     setEffects([]);
     setInventory([]);
     setEquipment({});
+    setChatByChannel(createEmptyChatByChannel());
+    setWhoPlayers([]);
+    setActiveChatChannel("say");
     resetMap();
   }, [resetMap]);
 
@@ -117,6 +169,7 @@ function App() {
           setPlayers,
           setMobs,
           setEffects,
+          setChatByChannel,
           updateMap,
         },
       );
@@ -126,16 +179,16 @@ function App() {
 
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine } = useMudSocket({
     onOpen: () => {
-      terminalRef.current?.focus();
+      focusComposer();
     },
     onTextMessage: (text) => {
       terminalRef.current?.write(text);
+      const who = parseWhoEntries(text);
+      if (who) setWhoPlayers(who);
     },
     onGmcpMessage: handleGmcp,
     onClose: () => {
-      inputBufferRef.current = "";
       setComposerValue("");
-      resetTerminalTraversal();
       resetComposerTraversal();
       resetHud();
       writeSystem("Connection closed.");
@@ -144,10 +197,6 @@ function App() {
       writeSystem("Connection error.");
     },
   });
-
-  useEffect(() => {
-    connectedRef.current = connected;
-  }, [connected]);
 
   const sendCommand = useCallback(
     (raw: string, echo: boolean) => {
@@ -164,82 +213,12 @@ function App() {
     [pushHistory, sendLine, writeSystem],
   );
 
-  const clearTerminalInput = useCallback(() => {
-    if (!inputBufferRef.current) return;
-    terminalRef.current?.write("\b \b".repeat(inputBufferRef.current.length));
-  }, []);
-
-  const replaceTerminalInput = useCallback(
-    (next: string) => {
-      clearTerminalInput();
-      inputBufferRef.current = next;
-      terminalRef.current?.write(next);
-    },
-    [clearTerminalInput],
-  );
-
-  const handleTerminalData = useCallback(
-    (data: string) => {
-      if (!connectedRef.current) return;
-
-      if (data === "\x1b[A") {
-        applyTerminalHistoryUp(inputBufferRef.current, replaceTerminalInput);
-        return;
-      }
-
-      if (data === "\x1b[B") {
-        applyTerminalHistoryDown(replaceTerminalInput);
-        return;
-      }
-
-      for (const ch of data) {
-        if (ch === "\r") {
-          sendCommand(inputBufferRef.current, false);
-          terminalRef.current?.write("\r\n");
-          inputBufferRef.current = "";
-          setComposerValue("");
-          resetTerminalTraversal();
-          continue;
-        }
-
-        if (ch === "\u007f") {
-          if (inputBufferRef.current.length > 0) {
-            inputBufferRef.current = inputBufferRef.current.slice(0, -1);
-            terminalRef.current?.write("\b \b");
-          }
-          resetTerminalCompletion();
-          continue;
-        }
-
-        if (ch === "\t") {
-          applyTerminalCompletion(inputBufferRef.current, replaceTerminalInput);
-          continue;
-        }
-
-        const code = ch.charCodeAt(0);
-        if (code >= 0x20 && code !== 0x7f) {
-          inputBufferRef.current += ch;
-          terminalRef.current?.write(ch);
-          resetTerminalCompletion();
-        }
-      }
-    },
-    [
-      applyTerminalCompletion,
-      applyTerminalHistoryDown,
-      applyTerminalHistoryUp,
-      replaceTerminalInput,
-      resetTerminalCompletion,
-      resetTerminalTraversal,
-      sendCommand,
-    ],
-  );
-
   useEffect(() => {
     if (!terminalHostRef.current) return;
 
     const term = new Terminal({
-      cursorBlink: true,
+      cursorBlink: false,
+      disableStdin: true,
       fontFamily: '"JetBrains Mono", "Cascadia Mono", monospace',
       fontSize: 14,
       rows: 30,
@@ -259,9 +238,6 @@ function App() {
     terminalRef.current = term;
     fitAddonRef.current = fitAddon;
     fitTerminal();
-    term.focus();
-
-    const dataListener = term.onData(handleTerminalData);
 
     const resizeObserver = new ResizeObserver(() => {
       fitTerminal();
@@ -270,13 +246,12 @@ function App() {
     resizeObserver.observe(terminalHostRef.current);
 
     return () => {
-      dataListener.dispose();
       resizeObserver.disconnect();
       term.dispose();
       fitAddonRef.current = null;
       terminalRef.current = null;
     };
-  }, [drawMap, fitTerminal, handleTerminalData]);
+  }, [drawMap, fitTerminal]);
 
   useEffect(() => {
     connect();
@@ -400,6 +375,30 @@ function App() {
     resetComposerCompletion();
   };
 
+  const sendChatMessage = useCallback(
+    (channel: ChatChannel, message: string, target: string | null): boolean => {
+      if (!connected || !hasCharacterProfile) return false;
+
+      const body = message.trim();
+      if (body.length === 0) return false;
+
+      const command =
+        channel === "tell"
+          ? (() => {
+              const targetName = target?.trim() ?? "";
+              if (targetName.length === 0) return null;
+              return `${channel} ${targetName} ${body}`;
+            })()
+          : `${channel} ${body}`;
+      if (command === null) return false;
+
+      sendCommand(command, true);
+      focusComposer();
+      return true;
+    },
+    [connected, focusComposer, hasCharacterProfile, sendCommand],
+  );
+
   return (
     <main className="app-shell">
       <div className="ambient-orb ambient-orb-a" aria-hidden="true" />
@@ -429,8 +428,13 @@ function App() {
           hasRoomDetails={hasRoomDetails}
           exits={exits}
           terminalHostRef={terminalHostRef}
+          commandInputRef={composerInputRef}
           composerValue={composerValue}
           commandPlaceholder={commandPlaceholder}
+          onTerminalMouseDown={(event) => {
+            event.preventDefault();
+            focusComposer();
+          }}
           onComposerChange={(value) => {
             setComposerValue(value);
             resetComposerCompletion();
@@ -439,11 +443,11 @@ function App() {
           onSubmitComposer={submitComposer}
           onMove={(direction) => {
             sendCommand(direction, true);
-            terminalRef.current?.focus();
+            focusComposer();
           }}
           onFlee={() => {
             sendCommand("flee", true);
-            terminalRef.current?.focus();
+            focusComposer();
           }}
         />
 
@@ -464,12 +468,27 @@ function App() {
           onOpenRoom={() => setActivePopout("room")}
           onMove={(direction) => {
             sendCommand(direction, true);
-            terminalRef.current?.focus();
+            focusComposer();
           }}
           onAttackMob={(mobName) => {
             sendCommand(`kill ${mobName}`, true);
-            terminalRef.current?.focus();
+            focusComposer();
           }}
+        />
+
+        <ChatPanel
+          connected={connected}
+          canChat={connected && hasCharacterProfile}
+          playerName={character.name}
+          activeChannel={activeChatChannel}
+          messages={chatByChannel[activeChatChannel]}
+          whoPlayers={whoPlayers}
+          onChannelChange={setActiveChatChannel}
+          onRequestWho={() => {
+            sendCommand("who", true);
+            focusComposer();
+          }}
+          onSendMessage={sendChatMessage}
         />
 
         <CharacterPanel

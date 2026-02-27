@@ -1,5 +1,6 @@
-export type MobileTab = "play" | "world" | "character";
+export type MobileTab = "play" | "world" | "chat" | "character";
 export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | null;
+export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc";
 
 export interface Vitals {
   hp: number;
@@ -62,5 +63,13 @@ export interface TabCycle {
   index: number;
   originalPrefix: string;
   args: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  channel: ChatChannel;
+  sender: string;
+  message: string;
+  receivedAt: number;
 }
 
