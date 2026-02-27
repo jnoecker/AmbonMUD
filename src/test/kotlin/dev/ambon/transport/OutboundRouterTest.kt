@@ -93,6 +93,26 @@ class OutboundRouterTest {
         }
 
     @Test
+    fun `multiline text is framed with CRLF between lines`() =
+        runTest {
+            val engineOutbound = LocalOutboundBus()
+            val router = OutboundRouter(engineOutbound, this)
+            val job = router.start()
+
+            val q = Channel<OutboundFrame>(capacity = 10)
+            router.register(SessionId(1), q) { fail("Session should not close") }
+
+            engineOutbound.send(OutboundEvent.SendInfo(SessionId(1), "line1\nline2"))
+            testScheduler.advanceUntilIdle()
+
+            assertEquals("line1\r\nline2\r\n", q.tryReceiveText())
+
+            job.cancel()
+            engineOutbound.close()
+            q.close()
+        }
+
+    @Test
     fun `unregister stops delivery`() =
         runTest {
             val engineOutbound = LocalOutboundBus()
