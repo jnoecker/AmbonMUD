@@ -381,6 +381,7 @@ class GameEngine(
             groupXpBonusPerMember = engineConfig.group.xpBonusPerMember,
             onLevelUp = ::onCombatLevelUp,
             onMobKilledByPlayer = ::onCombatMobKilledByPlayer,
+            onRoomItemsChanged = ::syncRoomItemsForRoom,
         )
     private val regenSystem =
         RegenSystem(
@@ -899,6 +900,13 @@ class GameEngine(
             gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId))
         }
         achievementSystem.onLevelReached(sessionId, level)
+    }
+
+    private suspend fun syncRoomItemsForRoom(roomId: RoomId) {
+        val roomItems = items.itemsInRoom(roomId)
+        for (player in players.playersInRoom(roomId)) {
+            gmcpEmitter.sendRoomItems(player.sessionId, roomItems)
+        }
     }
 
     private suspend fun onCombatMobKilledByPlayer(

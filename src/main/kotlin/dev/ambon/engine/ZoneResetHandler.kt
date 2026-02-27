@@ -133,6 +133,7 @@ internal class ZoneResetHandler(
         // Refresh mob GMCP for all players in the reset zone.
         for (player in playersInZone) {
             gmcpEmitter.sendRoomMobs(player.sessionId, mobs.mobsInRoom(player.roomId))
+            gmcpEmitter.sendRoomItems(player.sessionId, items.itemsInRoom(player.roomId))
         }
     }
 }

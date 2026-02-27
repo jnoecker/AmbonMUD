@@ -113,6 +113,7 @@ internal suspend fun sendLook(
     gmcpEmitter?.sendRoomInfo(sessionId, room)
     gmcpEmitter?.sendRoomPlayers(sessionId, players.playersInRoom(roomId).toList())
     gmcpEmitter?.sendRoomMobs(sessionId, mobs.mobsInRoom(roomId))
+    gmcpEmitter?.sendRoomItems(sessionId, items.itemsInRoom(roomId))
 }
 
 /** Broadcasts [message] to every player in [roomId] except [excludeSessionId]. */

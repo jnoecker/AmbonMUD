@@ -12,6 +12,7 @@ export const HISTORY_KEY = "ambonmud_v3_history";
 export const MAX_HISTORY = 100;
 export const MAX_VISIBLE_WORLD_PLAYERS = 4;
 export const MAX_VISIBLE_WORLD_MOBS = 4;
+export const MAX_VISIBLE_WORLD_ITEMS = 4;
 export const MAX_VISIBLE_EFFECTS = 4;
 export const EXIT_ORDER = ["north", "south", "east", "west", "up", "down"];
 export const COMPASS_DIRECTIONS = ["north", "east", "south", "west", "up", "down"] as const;
