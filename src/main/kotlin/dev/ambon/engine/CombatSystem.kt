@@ -8,6 +8,7 @@ import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.EffectType
+import dev.ambon.engine.status.StatModifiers
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 import java.time.Clock
@@ -297,8 +298,10 @@ class CombatSystem(
             // STUN check
             val stunned = statusEffects?.hasPlayerEffect(sessionId, EffectType.STUN) == true
             if (!stunned) {
+                val playerMods = statusEffects?.getPlayerStatMods(sessionId) ?: StatModifiers.ZERO
+                val playerStats = resolveEffectiveStats(player, playerBonuses, playerMods)
                 val playerAttack = playerBonuses.attack
-                val playerStrBonus = strDamageBonus(player, playerBonuses.strength)
+                val playerStrBonus = PlayerState.statBonus(playerStats.str, strDivisor)
                 val playerRoll = rollDamage()
                 val rawPlayerDamage = playerRoll + playerAttack + playerStrBonus
                 val preClampPlayerDamage = rawPlayerDamage - mob.armor
@@ -372,7 +375,9 @@ class CombatSystem(
             val target = players.get(targetSid) ?: continue
 
             val targetBonuses = items.equipmentBonuses(targetSid)
-            val dodgePct = dodgeChance(target, targetBonuses.dexterity)
+            val targetMods = statusEffects?.getPlayerStatMods(targetSid) ?: StatModifiers.ZERO
+            val targetStats = resolveEffectiveStats(target, targetBonuses, targetMods)
+            val dodgePct = (PlayerState.statBonus(targetStats.dex, 1) * dexDodgePerPoint).coerceIn(0, maxDodgePercent)
             if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
                 outbound.send(OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s attack!"))
             } else {
@@ -513,19 +518,6 @@ class CombatSystem(
             parts += "min 1 applied"
         }
         return " (${parts.joinToString(", ")})"
-    }
-
-    private fun strDamageBonus(player: PlayerState, equipStr: Int): Int {
-        val statusStr = statusEffects?.getPlayerStatMods(player.sessionId)?.str ?: 0
-        val totalStr = player.strength + equipStr + statusStr
-        return PlayerState.statBonus(totalStr, strDivisor)
-    }
-
-    private fun dodgeChance(player: PlayerState, equipDex: Int): Int {
-        val statusDex = statusEffects?.getPlayerStatMods(player.sessionId)?.dex ?: 0
-        val totalDex = player.dexterity + equipDex + statusDex
-        val chance = PlayerState.statBonus(totalDex, 1) * dexDodgePerPoint
-        return chance.coerceIn(0, maxDodgePercent)
     }
 
     private fun syncPlayerDefense(player: PlayerState, currentDefense: Int) {

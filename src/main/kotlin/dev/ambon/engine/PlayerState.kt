@@ -5,6 +5,8 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.quest.QuestState
+import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.status.StatModifiers
 import dev.ambon.persistence.PlayerId
 
 data class PlayerState(
@@ -98,3 +100,28 @@ fun PlayerState.spendMana(amount: Int) {
 fun MobState.takeDamage(amount: Int) {
     hp = (hp - amount).coerceAtLeast(0)
 }
+
+/** Resolved stat totals for a player: base + equipment bonuses + status-effect modifiers. */
+data class EffectiveStats(
+    val str: Int,
+    val dex: Int,
+    val con: Int,
+    val int: Int,
+    val wis: Int,
+    val cha: Int,
+)
+
+/** Combines [player] base stats with [equip] bonuses and optional status-effect [mods]. */
+fun resolveEffectiveStats(
+    player: PlayerState,
+    equip: ItemRegistry.EquipmentBonuses,
+    mods: StatModifiers = StatModifiers.ZERO,
+): EffectiveStats =
+    EffectiveStats(
+        str = player.strength + equip.strength + mods.str,
+        dex = player.dexterity + equip.dexterity + mods.dex,
+        con = player.constitution + equip.constitution + mods.con,
+        int = player.intelligence + equip.intelligence + mods.int,
+        wis = player.wisdom + equip.wisdom + mods.wis,
+        cha = player.charisma + equip.charisma + mods.cha,
+    )

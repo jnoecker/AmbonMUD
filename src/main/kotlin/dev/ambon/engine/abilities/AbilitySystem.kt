@@ -13,8 +13,10 @@ import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.healHp
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.resolveEffectiveStats
 import dev.ambon.engine.rollRange
 import dev.ambon.engine.spendMana
+import dev.ambon.engine.status.StatModifiers
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.engine.takeDamage
 import java.time.Clock
@@ -125,11 +127,15 @@ class AbilitySystem(
                     ?: return "Cast ${ability.displayName} on whom?"
             }
 
+        val playerEquip = items?.equipmentBonuses(player.sessionId) ?: ItemRegistry.EquipmentBonuses()
+        val playerMods = statusEffects?.getPlayerStatMods(sessionId) ?: StatModifiers.ZERO
+        val playerStats = resolveEffectiveStats(player, playerEquip, playerMods)
+
         when (val effect = ability.effect) {
             is AbilityEffect.DirectDamage -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
                 val baseDamage = rollRange(rng, effect.minDamage, effect.maxDamage)
-                val intBonus = intSpellBonus(player)
+                val intBonus = PlayerState.statBonus(playerStats.int, intSpellDivisor)
                 val damage = (baseDamage + intBonus).coerceAtLeast(1)
                 mob.takeDamage(damage)
                 markMobHpDirty(mob.id)
@@ -162,7 +168,7 @@ class AbilitySystem(
                 }
 
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val intBonus = intSpellBonus(player)
+                val intBonus = PlayerState.statBonus(playerStats.int, intSpellDivisor)
                 for (m in targetMobs) {
                     val baseDamage = rollRange(rng, effect.minDamage, effect.maxDamage)
                     val damage = (baseDamage + intBonus).coerceAtLeast(1)
@@ -412,11 +418,5 @@ class AbilitySystem(
     ) {
         learnedAbilities.remove(oldSid)?.let { learnedAbilities[newSid] = it }
         cooldowns.remove(oldSid)?.let { cooldowns[newSid] = it }
-    }
-
-    private fun intSpellBonus(player: PlayerState): Int {
-        val equipInt = items?.equipmentBonuses(player.sessionId)?.intelligence ?: 0
-        val totalInt = player.intelligence + equipInt
-        return PlayerState.statBonus(totalInt, intSpellDivisor)
     }
 }
