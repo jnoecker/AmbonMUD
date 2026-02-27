@@ -105,20 +105,7 @@ class QuestSystem(
 
                 newObjectives[index] = prog.copy(current = prog.current + 1)
                 questChanged = true
-
-                val updated = newObjectives[index]
-                if (updated.isComplete) {
-                    outbound.send(
-                        OutboundEvent.SendText(sessionId, "[Quest] ${objDef.description}: complete!"),
-                    )
-                } else {
-                    outbound.send(
-                        OutboundEvent.SendText(
-                            sessionId,
-                            "[Quest] ${objDef.description}: ${updated.current}/${updated.required}",
-                        ),
-                    )
-                }
+                sendObjectiveProgress(sessionId, objDef.description, newObjectives[index])
             }
 
             if (questChanged) {
@@ -165,20 +152,7 @@ class QuestSystem(
 
                 newObjectives[index] = prog.copy(current = newCurrent)
                 questChanged = true
-
-                val updated = newObjectives[index]
-                if (updated.isComplete) {
-                    outbound.send(
-                        OutboundEvent.SendText(sessionId, "[Quest] ${objDef.description}: complete!"),
-                    )
-                } else {
-                    outbound.send(
-                        OutboundEvent.SendText(
-                            sessionId,
-                            "[Quest] ${objDef.description}: ${updated.current}/${updated.required}",
-                        ),
-                    )
-                }
+                sendObjectiveProgress(sessionId, objDef.description, newObjectives[index])
             }
 
             if (questChanged) {
@@ -280,6 +254,18 @@ class QuestSystem(
             outbound.send(OutboundEvent.SendText(sessionId, "You gain ${rewards.xp} XP."))
         } else {
             persistPlayer(ps)
+        }
+    }
+
+    private suspend fun sendObjectiveProgress(
+        sessionId: SessionId,
+        description: String,
+        updated: ObjectiveProgress,
+    ) {
+        if (updated.isComplete) {
+            outbound.send(OutboundEvent.SendText(sessionId, "[Quest] $description: complete!"))
+        } else {
+            outbound.send(OutboundEvent.SendText(sessionId, "[Quest] $description: ${updated.current}/${updated.required}"))
         }
     }
 
