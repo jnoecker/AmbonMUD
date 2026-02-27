@@ -28,6 +28,14 @@ class AnsiRendererTest {
         assertTrue(line.endsWith("\r\n"))
     }
 
+    @Test
+    fun `renderLine normalizes embedded newlines to CRLF`() {
+        val r = AnsiRenderer()
+        val line = r.renderLine("a\nb\rc\r\nd", TextKind.INFO)
+        assertTrue(line.contains("a\r\nb\r\nc\r\nd"))
+        assertTrue(line.endsWith("\r\n"))
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `prompt rendering uses PromptSpec text not toString`() =
