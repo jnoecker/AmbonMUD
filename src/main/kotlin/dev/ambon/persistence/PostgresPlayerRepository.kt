@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import dev.ambon.domain.achievement.AchievementState
-import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.quest.QuestState
 import dev.ambon.metrics.GameMetrics
 import kotlinx.coroutines.Dispatchers
@@ -86,48 +85,48 @@ class PostgresPlayerRepository(
     override suspend fun save(record: PlayerRecord) {
         metrics.timedSave {
             newSuspendedTransaction(Dispatchers.IO, database) {
+                val dto = PlayerDto.from(record)
                 PlayersTable.upsert(PlayersTable.id) {
-                    it[id] = record.id.value
-                    it[name] = record.name
-                    it[nameLower] = record.name.lowercase()
-                    it[roomId] = record.roomId.value
-                    it[strength] = record.strength
-                    it[dexterity] = record.dexterity
-                    it[constitution] = record.constitution
-                    it[intelligence] = record.intelligence
-                    it[wisdom] = record.wisdom
-                    it[charisma] = record.charisma
-                    it[race] = record.race
-                    it[playerClass] = record.playerClass
-                    it[level] = record.level
-                    it[xpTotal] = record.xpTotal
-                    it[createdAtEpochMs] = record.createdAtEpochMs
-                    it[lastSeenEpochMs] = record.lastSeenEpochMs
-                    it[passwordHash] = record.passwordHash
-                    it[ansiEnabled] = record.ansiEnabled
-                    it[isStaff] = record.isStaff
-                    it[mana] = record.mana
-                    it[maxMana] = record.maxMana
-                    it[gold] = record.gold
-                    it[activeQuests] = questMapper.writeValueAsString(record.activeQuests)
-                    it[completedQuestIds] = questMapper.writeValueAsString(record.completedQuestIds)
-                    it[unlockedAchievementIds] = questMapper.writeValueAsString(record.unlockedAchievementIds)
-                    it[achievementProgress] = questMapper.writeValueAsString(record.achievementProgress)
-                    it[activeTitle] = record.activeTitle
+                    it[id] = dto.id
+                    it[name] = dto.name
+                    it[nameLower] = dto.name.lowercase()
+                    it[roomId] = dto.roomId
+                    it[strength] = dto.strength
+                    it[dexterity] = dto.dexterity
+                    it[constitution] = dto.constitution
+                    it[intelligence] = dto.intelligence
+                    it[wisdom] = dto.wisdom
+                    it[charisma] = dto.charisma
+                    it[race] = dto.race
+                    it[playerClass] = dto.playerClass
+                    it[level] = dto.level
+                    it[xpTotal] = dto.xpTotal
+                    it[createdAtEpochMs] = dto.createdAtEpochMs
+                    it[lastSeenEpochMs] = dto.lastSeenEpochMs
+                    it[passwordHash] = dto.passwordHash
+                    it[ansiEnabled] = dto.ansiEnabled
+                    it[isStaff] = dto.isStaff
+                    it[mana] = dto.mana
+                    it[maxMana] = dto.maxMana
+                    it[gold] = dto.gold
+                    it[activeQuests] = questMapper.writeValueAsString(dto.activeQuests)
+                    it[completedQuestIds] = questMapper.writeValueAsString(dto.completedQuestIds)
+                    it[unlockedAchievementIds] = questMapper.writeValueAsString(dto.unlockedAchievementIds)
+                    it[achievementProgress] = questMapper.writeValueAsString(dto.achievementProgress)
+                    it[activeTitle] = dto.activeTitle
                 }
             }
         }
     }
 
-    private fun ResultRow.toPlayerRecord(): PlayerRecord {
-        val rawCon = this[PlayersTable.constitution]
-        return PlayerRecord(
-            id = PlayerId(this[PlayersTable.id]),
+    private fun ResultRow.toPlayerRecord(): PlayerRecord =
+        PlayerDto(
+            id = this[PlayersTable.id],
             name = this[PlayersTable.name],
-            roomId = RoomId(this[PlayersTable.roomId]),
+            roomId = this[PlayersTable.roomId],
             strength = this[PlayersTable.strength],
             dexterity = this[PlayersTable.dexterity],
-            constitution = if (rawCon == 0) 10 else rawCon,
+            constitution = this[PlayersTable.constitution],
             intelligence = this[PlayersTable.intelligence],
             wisdom = this[PlayersTable.wisdom],
             charisma = this[PlayersTable.charisma],
@@ -160,6 +159,5 @@ class PostgresPlayerRepository(
                     questMapper.readValue(this[PlayersTable.achievementProgress], achievementProgressType)
                 }.getOrDefault(emptyMap()),
             activeTitle = this[PlayersTable.activeTitle],
-        )
-    }
+        ).toDomain()
 }

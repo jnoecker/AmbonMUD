@@ -412,8 +412,8 @@ class AbilitySystem(
     }
 
     private fun intSpellBonus(player: PlayerState): Int {
-        val equipInt = items?.equipment(player.sessionId)?.values?.sumOf { it.item.intelligence } ?: 0
+        val equipInt = items?.equipmentBonuses(player.sessionId)?.intelligence ?: 0
         val totalInt = player.intelligence + equipInt
-        return (totalInt - PlayerState.BASE_STAT) / intSpellDivisor
+        return PlayerState.statBonus(totalInt, intSpellDivisor)
     }
 }

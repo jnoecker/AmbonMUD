@@ -22,6 +22,7 @@ import dev.ambon.engine.commands.handlers.AdminHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
+import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.GroupHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
@@ -476,7 +477,7 @@ class GameEngine(
             metrics = metrics,
         )
 
-    private val router = CommandRouter()
+    private val router = CommandRouter(outbound = outbound, players = players)
 
     init {
         val crossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = if (handoffManager != null) ::handleCrossZoneMove else null
@@ -487,25 +488,27 @@ class GameEngine(
                 null
             }
 
-        NavigationHandler(
-            router = router,
-            world = world,
+        val ctx = EngineContext(
             players = players,
             mobs = mobs,
+            world = world,
             items = items,
-            combat = combatSystem,
             outbound = outbound,
-            worldState = worldState,
+            combat = combatSystem,
             gmcpEmitter = gmcpEmitter,
+            worldState = worldState,
+        )
+
+        NavigationHandler(
+            router = router,
+            ctx = ctx,
             statusEffects = statusEffectSystem,
             dialogueSystem = dialogueSystem,
             onCrossZoneMove = crossZoneMove,
         )
         CommunicationHandler(
             router = router,
-            players = players,
-            outbound = outbound,
-            gmcpEmitter = gmcpEmitter,
+            ctx = ctx,
             groupSystem = groupSystem,
             interEngineBus = interEngineBus,
             playerLocationIndex = playerLocationIndex,
@@ -514,33 +517,22 @@ class GameEngine(
         )
         CombatHandler(
             router = router,
-            players = players,
-            mobs = mobs,
-            combat = combatSystem,
-            outbound = outbound,
+            ctx = ctx,
             abilitySystem = abilitySystem,
             statusEffects = statusEffectSystem,
             dialogueSystem = dialogueSystem,
         )
         ProgressionHandler(
             router = router,
-            players = players,
-            items = items,
-            combat = combatSystem,
-            outbound = outbound,
+            ctx = ctx,
             progression = progression,
             abilitySystem = abilitySystem,
-            gmcpEmitter = gmcpEmitter,
             statusEffects = statusEffectSystem,
             groupSystem = groupSystem,
         )
         ItemHandler(
             router = router,
-            players = players,
-            items = items,
-            combat = combatSystem,
-            outbound = outbound,
-            gmcpEmitter = gmcpEmitter,
+            ctx = ctx,
             questSystem = questSystem,
             abilitySystem = abilitySystem,
             markVitalsDirty = ::markVitalsDirty,
@@ -549,19 +541,14 @@ class GameEngine(
         )
         ShopHandler(
             router = router,
-            players = players,
-            items = items,
-            outbound = outbound,
+            ctx = ctx,
             shopRegistry = shopRegistry,
-            gmcpEmitter = gmcpEmitter,
             markVitalsDirty = ::markVitalsDirty,
             economyConfig = engineConfig.economy,
         )
         DialogueQuestHandler(
             router = router,
-            players = players,
-            mobs = mobs,
-            outbound = outbound,
+            ctx = ctx,
             dialogueSystem = dialogueSystem,
             questSystem = questSystem,
             questRegistry = questRegistry,
@@ -570,41 +557,28 @@ class GameEngine(
         )
         GroupHandler(
             router = router,
-            outbound = outbound,
+            ctx = ctx,
             groupSystem = groupSystem,
         )
         WorldFeaturesHandler(
             router = router,
-            world = world,
-            players = players,
-            items = items,
-            outbound = outbound,
-            worldState = worldState,
+            ctx = ctx,
         )
         AdminHandler(
             router = router,
-            world = world,
-            players = players,
-            mobs = mobs,
-            items = items,
-            combat = combatSystem,
-            outbound = outbound,
+            ctx = ctx,
             onShutdown = onShutdown,
             onMobSmited = mobSystem::onMobRemoved,
             onCrossZoneMove = crossZoneMove,
             dialogueSystem = dialogueSystem,
-            gmcpEmitter = gmcpEmitter,
             statusEffects = statusEffectSystem,
             interEngineBus = interEngineBus,
             engineId = engineId,
             metrics = metrics,
-            worldState = worldState,
         )
         UiHandler(
             router = router,
-            players = players,
-            outbound = outbound,
-            combat = combatSystem,
+            ctx = ctx,
             onPhase = phaseCallback,
         )
     }
