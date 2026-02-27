@@ -1233,6 +1233,82 @@ body {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.skills-combat-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.skills-combat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.skills-combat-header > h3 {
+  margin: 0;
+}
+
+.skills-combat-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow: auto;
+}
+
+.skills-combat-item {
+  border-radius: var(--radius-md);
+  padding: 10px;
+  background: linear-gradient(140deg, rgb(70 83 117 / 92%), rgb(60 76 111 / 88%));
+  border: 1px solid rgb(106 96 136 / 18%);
+  box-shadow: inset 0 1px 0 rgb(232 239 255 / 14%);
+  display: grid;
+  gap: 6px;
+}
+
+.skills-combat-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.skills-combat-name {
+  font-weight: 700;
+}
+
+.skills-combat-meta {
+  color: #9fb0d8;
+  font-size: 0.84rem;
+}
+
+.skills-combat-desc {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+}
+
+.skills-combat-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.skills-combat-cooldown {
+  color: #d9c8a1;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.skills-combat-cooldown-ready {
+  color: #cde6bf;
+}
+
 .character-effects {
   align-content: start;
 }

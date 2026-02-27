@@ -7,6 +7,7 @@ import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.Room
 import dev.ambon.engine.abilities.AbilityDefinition
+import dev.ambon.engine.abilities.AbilityId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.ActiveEffectSnapshot
 
@@ -14,6 +15,7 @@ class GmcpEmitter(
     private val outbound: OutboundBus,
     private val supportsPackage: (SessionId, String) -> Boolean,
     private val progression: PlayerProgression? = null,
+    private val isInCombat: (SessionId) -> Boolean = { false },
 ) {
     suspend fun sendCharVitals(
         sessionId: SessionId,
@@ -23,8 +25,9 @@ class GmcpEmitter(
         val xpInto = progression?.xpIntoLevel(player.xpTotal) ?: 0L
         val xpNeeded = progression?.xpToNextLevel(player.xpTotal)
         val xpNeededJson = if (xpNeeded != null) "$xpNeeded" else "null"
+        val inCombatJson = if (isInCombat(sessionId)) "true" else "false"
         val json =
-            """{"hp":${player.hp},"maxHp":${player.maxHp},"mana":${player.mana},"maxMana":${player.maxMana},"level":${player.level},"xp":${player.xpTotal},"xpIntoLevel":$xpInto,"xpToNextLevel":$xpNeededJson,"gold":${player.gold}}"""
+            """{"hp":${player.hp},"maxHp":${player.maxHp},"mana":${player.mana},"maxMana":${player.maxMana},"level":${player.level},"xp":${player.xpTotal},"xpIntoLevel":$xpInto,"xpToNextLevel":$xpNeededJson,"gold":${player.gold},"inCombat":$inCombatJson}"""
         outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Vitals", json))
     }
 
@@ -169,11 +172,18 @@ class GmcpEmitter(
     suspend fun sendCharSkills(
         sessionId: SessionId,
         abilities: List<AbilityDefinition>,
+        cooldownRemainingMs: (AbilityId) -> Long = { 0L },
     ) {
         if (!supportsPackage(sessionId, "Char.Skills")) return
         val json =
             abilities.joinToString(",", prefix = "[", postfix = "]") { a ->
-                """{"id":"${a.id.value.jsonEscape()}","name":"${a.displayName.jsonEscape()}","manaCost":${a.manaCost},"cooldownMs":${a.cooldownMs}}"""
+                val classRestrictionJson =
+                    a.requiredClass
+                        ?.name
+                        ?.let { "\"${it.jsonEscape()}\"" }
+                        ?: "null"
+                val remainingMs = cooldownRemainingMs(a.id).coerceAtLeast(0L)
+                """{"id":"${a.id.value.jsonEscape()}","name":"${a.displayName.jsonEscape()}","description":"${a.description.jsonEscape()}","manaCost":${a.manaCost},"cooldownMs":${a.cooldownMs},"cooldownRemainingMs":$remainingMs,"levelRequired":${a.levelRequired},"targetType":"${a.targetType.name.jsonEscape()}","classRestriction":$classRestrictionJson}"""
             }
         outbound.send(OutboundEvent.GmcpData(sessionId, "Char.Skills", json))
     }

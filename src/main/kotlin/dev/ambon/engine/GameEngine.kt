@@ -313,6 +313,7 @@ class GameEngine(
                 } == true
             },
             progression = progression,
+            isInCombat = { sid -> combatSystem.isInCombat(sid) },
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -529,6 +530,7 @@ class GameEngine(
             outbound = outbound,
             progression = progression,
             abilitySystem = abilitySystem,
+            gmcpEmitter = gmcpEmitter,
             statusEffects = statusEffectSystem,
             groupSystem = groupSystem,
         )
@@ -897,7 +899,9 @@ class GameEngine(
         val p = players.get(sessionId)
         if (p != null) {
             gmcpEmitter.sendCharName(sessionId, p)
-            gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId))
+            gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
+                abilitySystem.cooldownRemainingMs(sessionId, abilityId)
+            }
         }
         achievementSystem.onLevelReached(sessionId, level)
     }

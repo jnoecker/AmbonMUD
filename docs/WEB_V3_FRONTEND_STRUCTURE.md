@@ -1,7 +1,7 @@
 # Web Client v3 Frontend Structure
 
 Date: 2026-02-27
-Status: Baseline structure established in PR #253.
+Status: Current modular structure with social and combat-skills panel support.
 
 ## Goal
 
@@ -12,7 +12,7 @@ This document captures the post-refactor module layout for `web-v3` so new featu
 ### Composition Root
 
 - `web-v3/src/App.tsx`
-  - Owns top-level app state (vitals, room, players, mobs, effects, inventory/equipment, active tab/popout).
+  - Owns top-level app state (vitals, room, players, mobs, effects, skills, inventory/equipment, active tab/popout).
   - Wires hooks and panel components together.
   - Handles xterm init/fitting and high-level lifecycle effects.
 
@@ -40,6 +40,7 @@ This document captures the post-refactor module layout for `web-v3` so new featu
 
 - `web-v3/src/components/panels/PlayPanel.tsx`
 - `web-v3/src/components/panels/WorldPanel.tsx`
+- `web-v3/src/components/panels/ChatPanel.tsx`
 - `web-v3/src/components/panels/CharacterPanel.tsx`
 - `web-v3/src/components/PopoutLayer.tsx`
 - `web-v3/src/components/MobileTabBar.tsx`
@@ -52,6 +53,12 @@ This document captures the post-refactor module layout for `web-v3` so new featu
   - Add package mapping in `gmcp/applyGmcpPackage.ts`.
   - Add/extend app state in `App.tsx` if needed.
   - Render in an existing panel or a new panel component under `components/panels/`.
+
+- Skills/combat UX conventions:
+  - Skills are sourced from `Char.Skills`.
+  - Combat state comes from `Char.Vitals.inCombat`.
+  - `WorldPanel` swaps entity lists for the skills subpanel only while in combat.
+  - User-triggered cast can apply optimistic cooldown locally while waiting for next server GMCP update.
 
 - New socket-level behavior:
   - Start in `hooks/useMudSocket.ts`.

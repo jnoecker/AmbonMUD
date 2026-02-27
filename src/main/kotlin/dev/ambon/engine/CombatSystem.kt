@@ -105,6 +105,7 @@ class CombatSystem(
 
         // Register player's target
         playerTarget[sessionId] = mob.id
+        markVitalsDirty(sessionId)
 
         // Ensure mob is in active combat
         if (!activeMobs.containsKey(mob.id)) {
@@ -188,6 +189,7 @@ class CombatSystem(
         val now = clock.millis()
 
         playerTarget[sessionId] = mobId
+        markVitalsDirty(sessionId)
         if (!activeMobs.containsKey(mobId)) {
             activeMobs[mobId] =
                 MobCombatState(
@@ -457,6 +459,7 @@ class CombatSystem(
     private fun removePlayerFromCombat(sessionId: SessionId) {
         playerTarget.remove(sessionId)
         threatTable.removePlayer(sessionId)
+        markVitalsDirty(sessionId)
         cleanupEmptyMobs()
     }
 
@@ -466,6 +469,7 @@ class CombatSystem(
         val toRemove = playerTarget.entries.filter { it.value == mobId }.map { it.key }
         for (sid in toRemove) {
             playerTarget.remove(sid)
+            markVitalsDirty(sid)
         }
         threatTable.removeMob(mobId)
     }

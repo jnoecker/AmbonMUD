@@ -243,6 +243,7 @@ class CommandParserTest {
     fun `parses spells and abilities`() {
         assertEquals(Command.Spells, CommandParser.parse("spells"))
         assertEquals(Command.Spells, CommandParser.parse("abilities"))
+        assertEquals(Command.Spells, CommandParser.parse("skills"))
     }
 
     @Test

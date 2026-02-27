@@ -15,7 +15,9 @@ bun run build
 
 - `bun run build` writes production assets directly to:
   - `../src/main/resources/web-v3`
-- Server route:
-  - `/v3` (configured in `KtorWebSocketTransport.kt`)
+- Server static root:
+  - `/` serves `web-v3` assets
+- Compatibility redirect routes:
+  - `/v3` and `/v3/` redirect to `/` (configured in `KtorWebSocketTransport.kt`)
 
-This keeps the old client intact while serving v3 in parallel.
+The legacy web client assets remain in `src/main/resources/web`, but current runtime static serving targets `web-v3`.

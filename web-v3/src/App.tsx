@@ -33,6 +33,7 @@ import type {
   RoomItem,
   RoomPlayer,
   RoomState,
+  SkillSummary,
   StatusEffect,
   Vitals,
 } from "./types";
@@ -104,6 +105,7 @@ function App() {
   const [mobs, setMobs] = useState<RoomMob[]>([]);
   const [roomItems, setRoomItems] = useState<RoomItem[]>([]);
   const [effects, setEffects] = useState<StatusEffect[]>([]);
+  const [skills, setSkills] = useState<SkillSummary[]>([]);
   const [inventory, setInventory] = useState<ItemSummary[]>([]);
   const [equipment, setEquipment] = useState<Record<string, ItemSummary>>({});
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
@@ -151,6 +153,7 @@ function App() {
     setMobs([]);
     setRoomItems([]);
     setEffects([]);
+    setSkills([]);
     setInventory([]);
     setEquipment({});
     setChatByChannel(createEmptyChatByChannel());
@@ -174,6 +177,7 @@ function App() {
           setPlayers,
           setMobs,
           setEffects,
+          setSkills,
           setChatByChannel,
           updateMap,
         },
@@ -501,8 +505,30 @@ function App() {
           roomItems={roomItems}
           visibleRoomItems={visibleRoomItems}
           hiddenRoomItemsCount={hiddenRoomItemsCount}
+          showSkillsPanel={vitals.inCombat}
+          skills={skills}
           onOpenMap={() => setActivePopout("map")}
           onOpenRoom={() => setActivePopout("room")}
+          onRefreshSkills={() => {
+            sendCommand("skills", true);
+            focusComposer();
+          }}
+          onCastSkill={(skillId, cooldownMs) => {
+            const now = Date.now();
+            setSkills((prev) =>
+              prev.map((skill) => (
+                skill.id === skillId
+                  ? {
+                      ...skill,
+                      cooldownRemainingMs: Math.max(skill.cooldownRemainingMs, cooldownMs),
+                      receivedAt: now,
+                    }
+                  : skill
+              )),
+            );
+            sendCommand(`cast ${skillId}`, true);
+            focusComposer();
+          }}
           onMove={(direction) => {
             sendCommand(direction, true);
             focusComposer();
