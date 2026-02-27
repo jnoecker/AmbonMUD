@@ -29,6 +29,13 @@ class PlainRendererTest {
         assertTrue(line.endsWith("\r\n"))
     }
 
+    @Test
+    fun `renderLine normalizes embedded newlines to CRLF`() {
+        val r = PlainRenderer()
+        val line = r.renderLine("a\nb\rc\r\nd", TextKind.INFO)
+        assertEquals("a\r\nb\r\nc\r\nd\r\n", line)
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `prompt rendering uses PromptSpec text not toString`() =
