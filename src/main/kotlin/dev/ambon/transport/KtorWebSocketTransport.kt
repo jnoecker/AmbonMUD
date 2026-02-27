@@ -114,18 +114,16 @@ internal fun Application.ambonMUDWebModule(
         }
 
         get("/v3") {
-            call.respondRedirect("/v3/")
+            call.respondRedirect("/")
+        }
+
+        get("/v3/") {
+            call.respondRedirect("/")
         }
 
         staticResources(
-            remotePath = "/v3",
-            basePackage = "web-v3",
-            index = "index.html",
-        )
-
-        staticResources(
             remotePath = "/",
-            basePackage = "web",
+            basePackage = "web-v3",
             index = "index.html",
         )
     }
