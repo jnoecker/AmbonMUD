@@ -67,45 +67,31 @@ internal fun buildTestRouter(
         gmcpEmitter = null,
         worldState = worldState,
     )
-    UiHandler(router = router, ctx = ctx, onPhase = onPhase)
-    CommunicationHandler(
-        router = router,
-        ctx = ctx,
-        groupSystem = groupSystem,
-        interEngineBus = interEngineBus,
-        playerLocationIndex = playerLocationIndex,
-        engineId = engineId,
-        onRemoteWho = onRemoteWho,
-    )
-    NavigationHandler(
-        router = router,
-        ctx = ctx,
-        onCrossZoneMove = onCrossZoneMove,
-    )
-    CombatHandler(router = router, ctx = ctx)
-    ProgressionHandler(
-        router = router,
-        ctx = ctx,
-        progression = progression,
-        groupSystem = groupSystem,
-    )
-    ItemHandler(router = router, ctx = ctx)
-    ShopHandler(
-        router = router,
-        ctx = ctx,
-        shopRegistry = shopRegistry,
-        economyConfig = economyConfig,
-    )
-    DialogueQuestHandler(router = router, ctx = ctx)
-    GroupHandler(router = router, ctx = ctx, groupSystem = groupSystem)
-    WorldFeaturesHandler(router = router, ctx = ctx)
-    AdminHandler(
-        router = router,
-        ctx = ctx,
-        onShutdown = onShutdown,
-        onMobSmited = onMobSmited,
-        interEngineBus = interEngineBus,
-        engineId = engineId,
-    )
+    listOf(
+        UiHandler(ctx = ctx, onPhase = onPhase),
+        CommunicationHandler(
+            ctx = ctx,
+            groupSystem = groupSystem,
+            interEngineBus = interEngineBus,
+            playerLocationIndex = playerLocationIndex,
+            engineId = engineId,
+            onRemoteWho = onRemoteWho,
+        ),
+        NavigationHandler(ctx = ctx, onCrossZoneMove = onCrossZoneMove),
+        CombatHandler(ctx = ctx),
+        ProgressionHandler(ctx = ctx, progression = progression, groupSystem = groupSystem),
+        ItemHandler(ctx = ctx),
+        ShopHandler(ctx = ctx, shopRegistry = shopRegistry, economyConfig = economyConfig),
+        DialogueQuestHandler(ctx = ctx),
+        GroupHandler(ctx = ctx, groupSystem = groupSystem),
+        WorldFeaturesHandler(ctx = ctx),
+        AdminHandler(
+            ctx = ctx,
+            onShutdown = onShutdown,
+            onMobSmited = onMobSmited,
+            interEngineBus = interEngineBus,
+            engineId = engineId,
+        ),
+    ).forEach { it.register(router) }
     return router
 }

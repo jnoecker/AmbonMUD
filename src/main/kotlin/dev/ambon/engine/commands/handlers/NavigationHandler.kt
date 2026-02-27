@@ -4,6 +4,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.DoorState
 import dev.ambon.engine.commands.Command
+import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.dialogue.DialogueSystem
@@ -12,12 +13,11 @@ import dev.ambon.engine.status.EffectType
 import dev.ambon.engine.status.StatusEffectSystem
 
 class NavigationHandler(
-    private val router: CommandRouter,
     ctx: EngineContext,
     private val statusEffects: StatusEffectSystem? = null,
     private val dialogueSystem: DialogueSystem? = null,
     private val onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
-) {
+) : CommandHandler {
     private val world = ctx.world
     private val players = ctx.players
     private val mobs = ctx.mobs
@@ -26,8 +26,10 @@ class NavigationHandler(
     private val outbound = ctx.outbound
     private val worldState = ctx.worldState
     private val gmcpEmitter = ctx.gmcpEmitter
+    private lateinit var router: CommandRouter
 
-    init {
+    override fun register(router: CommandRouter) {
+        this.router = router
         router.on<Command.Look> { sid, _ -> handleLook(sid) }
         router.on<Command.Move> { sid, cmd -> handleMove(sid, cmd) }
         router.on<Command.Exits> { sid, _ -> handleExits(sid) }
