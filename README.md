@@ -223,16 +223,6 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#infrastructure) for detailed se
 - [CLAUDE.md](CLAUDE.md) — Internal development directives for Claude Code
 - [AGENTS.md](AGENTS.md) — Engineering playbook for code changes
 
-## Load Testing
-
-The `swarm/` module provides Kotlin-based bot-driven load testing:
-
-```bash
-./gradlew :swarm:run --args="--config example.swarm.yaml"
-```
-
-See [swarm/README.md](swarm/README.md) for configuration.
-
 ## Contributing
 
 To contribute, see [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#contributing) for workflow and [CLAUDE.md](CLAUDE.md) for architectural contracts and change playbooks.

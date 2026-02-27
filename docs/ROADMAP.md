@@ -19,7 +19,6 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 ✅ Zone-based sharding + zone instancing
 ✅ Prometheus/Grafana observability
 ✅ Snowflake session IDs
-✅ Swarm load-testing module
 
 ### Gameplay
 ✅ 4 races, 4 classes, 6 primary attributes

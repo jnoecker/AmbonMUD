@@ -221,7 +221,6 @@ Sessions
 | Docker Compose | `docker-compose.yml` (Prometheus, Grafana, Redis, Postgres) |
 | CI workflow | `.github/workflows/ci.yml` (Java 21, `ktlintCheck test`) |
 | CodeQL analysis | `.github/workflows/codeql.yml` (weekly + on main) |
-| Load testing | `swarm/` subproject (`:swarm:run`) |
 
 ## Build Configuration
 
