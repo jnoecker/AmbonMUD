@@ -93,7 +93,7 @@ class KtorWebSocketTransportTest {
         }
 
     @Test
-    fun `serves web client index page`(): Unit =
+    fun `serves v3 web client index page at root`(): Unit =
         runBlocking {
             val inbound = LocalInboundBus()
             val engineOutbound = LocalOutboundBus()
@@ -110,7 +110,7 @@ class KtorWebSocketTransportTest {
 
                 val response = client.get("/")
                 assertEquals(HttpStatusCode.OK, response.status)
-                assertTrue(response.bodyAsText().contains("AmbonMUD Demo"))
+                assertTrue(response.bodyAsText().contains("AmbonMUD Web Client v3"))
             }
 
             inbound.close()
@@ -118,7 +118,7 @@ class KtorWebSocketTransportTest {
         }
 
     @Test
-    fun `serves v3 web client index page`(): Unit =
+    fun `redirects v3 web client path to root`(): Unit =
         runBlocking {
             val inbound = LocalInboundBus()
             val engineOutbound = LocalOutboundBus()
@@ -133,9 +133,13 @@ class KtorWebSocketTransportTest {
                     )
                 }
 
-                val response = client.get("/v3/")
-                assertEquals(HttpStatusCode.OK, response.status)
-                assertTrue(response.bodyAsText().contains("AmbonMUD Web Client v3"))
+                val noRedirectClient =
+                    createClient {
+                        followRedirects = false
+                    }
+                val response = noRedirectClient.get("/v3/")
+                assertEquals(HttpStatusCode.Found, response.status)
+                assertEquals("/", response.headers["Location"])
             }
 
             inbound.close()

@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -100,18 +101,13 @@ class GrpcOutboundDispatcherTest {
                 }
 
             try {
-                // Wait for the Connected event to be processed and the session registered.
-                delay(100)
+                awaitSessionRoute(sid)
 
                 // Engine produces an outbound event.
                 outbound.send(OutboundEvent.SendText(sessionId = sid, text = "Hello gateway!"))
 
-                // Wait for the event to be dispatched to the stream and received.
-                delay(100)
-
-                val proto = receivedProtos.tryReceive().getOrNull()
-                assertNotNull(proto, "Gateway stream should have received the outbound event")
-                val event = proto!!.toDomain()
+                val proto = withTimeout(2_000) { receivedProtos.receive() }
+                val event = proto.toDomain()
                 assertNotNull(event)
                 assertEquals(OutboundEvent.SendText(sessionId = sid, text = "Hello gateway!"), event)
 
@@ -199,5 +195,16 @@ class GrpcOutboundDispatcherTest {
             events += next
         }
         return events
+    }
+
+    private suspend fun awaitSessionRoute(
+        sid: SessionId,
+        timeoutMs: Long = 2_000L,
+    ) {
+        withTimeout(timeoutMs) {
+            while (serviceImpl.sessionToStream[sid] == null) {
+                delay(5)
+            }
+        }
     }
 }
