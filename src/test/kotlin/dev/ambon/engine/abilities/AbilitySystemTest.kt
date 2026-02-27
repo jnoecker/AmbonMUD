@@ -16,7 +16,7 @@ import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectId
 import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.engine.status.StatusEffectSystem
-import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.AbilityTestFixture
 import dev.ambon.test.MutableClock
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
@@ -38,20 +38,7 @@ class AbilitySystemTest {
         clock: MutableClock = MutableClock(0L),
         rng: Random = Random(42),
     ): TestHarness {
-        val items = ItemRegistry()
-        val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-        val mobs = MobRegistry()
-        val outbound = LocalOutboundBus()
-        val combat =
-            CombatSystem(
-                players = players,
-                mobs = mobs,
-                items = items,
-                outbound = outbound,
-                clock = clock,
-                rng = rng,
-                tickMillis = 1_000L,
-            )
+        val fixture = AbilityTestFixture(roomId = roomId, clock = clock, rng = rng)
         val registry = AbilityRegistry()
         registry.register(
             AbilityDefinition(
@@ -89,24 +76,16 @@ class AbilitySystemTest {
                 effect = AbilityEffect.DirectDamage(minDamage = 10, maxDamage = 10),
             ),
         )
-        val abilitySystem =
-            AbilitySystem(
-                players = players,
-                registry = registry,
-                outbound = outbound,
-                combat = combat,
-                clock = clock,
-                rng = rng,
-            )
+        val abilitySystem = fixture.buildAbilitySystem(registry = registry)
         return TestHarness(
-            players = players,
-            mobs = mobs,
-            items = items,
-            outbound = outbound,
-            combat = combat,
+            players = fixture.players,
+            mobs = fixture.mobs,
+            items = fixture.items,
+            outbound = fixture.outbound,
+            combat = fixture.combat,
             registry = registry,
             abilitySystem = abilitySystem,
-            clock = clock,
+            clock = fixture.clock,
         )
     }
 
@@ -419,20 +398,7 @@ class AbilitySystemTest {
         clock: MutableClock = MutableClock(0L),
         rng: Random = Random(42),
     ): TestHarness {
-        val items = ItemRegistry()
-        val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-        val mobs = MobRegistry()
-        val outbound = LocalOutboundBus()
-        val combat =
-            CombatSystem(
-                players = players,
-                mobs = mobs,
-                items = items,
-                outbound = outbound,
-                clock = clock,
-                rng = rng,
-                tickMillis = 1_000L,
-            )
+        val fixture = AbilityTestFixture(roomId = roomId, clock = clock, rng = rng)
         val registry = AbilityRegistry()
         registry.register(
             AbilityDefinition(
@@ -458,25 +424,16 @@ class AbilitySystemTest {
                 effect = AbilityEffect.Taunt(flatThreat = 50.0, margin = 10.0),
             ),
         )
-        val abilitySystem =
-            AbilitySystem(
-                players = players,
-                registry = registry,
-                outbound = outbound,
-                combat = combat,
-                clock = clock,
-                rng = rng,
-                mobs = mobs,
-            )
+        val abilitySystem = fixture.buildAbilitySystem(registry = registry, mobsForAbility = fixture.mobs)
         return TestHarness(
-            players = players,
-            mobs = mobs,
-            items = items,
-            outbound = outbound,
-            combat = combat,
+            players = fixture.players,
+            mobs = fixture.mobs,
+            items = fixture.items,
+            outbound = fixture.outbound,
+            combat = fixture.combat,
             registry = registry,
             abilitySystem = abilitySystem,
-            clock = clock,
+            clock = fixture.clock,
         )
     }
 
@@ -484,20 +441,7 @@ class AbilitySystemTest {
         clock: MutableClock = MutableClock(0L),
         rng: Random = Random(42),
     ): StatusTestHarness {
-        val items = ItemRegistry()
-        val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-        val mobs = MobRegistry()
-        val outbound = LocalOutboundBus()
-        val combat =
-            CombatSystem(
-                players = players,
-                mobs = mobs,
-                items = items,
-                outbound = outbound,
-                clock = clock,
-                rng = rng,
-                tickMillis = 1_000L,
-            )
+        val fixture = AbilityTestFixture(roomId = roomId, clock = clock, rng = rng)
         val statusRegistry = StatusEffectRegistry()
         statusRegistry.register(
             StatusEffectDefinition(
@@ -523,10 +467,10 @@ class AbilitySystemTest {
         val statusEffects =
             StatusEffectSystem(
                 registry = statusRegistry,
-                players = players,
-                mobs = mobs,
-                outbound = outbound,
-                clock = clock,
+                players = fixture.players,
+                mobs = fixture.mobs,
+                outbound = fixture.outbound,
+                clock = fixture.clock,
                 rng = rng,
                 markVitalsDirty = {},
                 markMobHpDirty = {},
@@ -557,23 +501,14 @@ class AbilitySystemTest {
                 effect = AbilityEffect.ApplyStatus(StatusEffectId("shield")),
             ),
         )
-        val abilitySystem =
-            AbilitySystem(
-                players = players,
-                registry = registry,
-                outbound = outbound,
-                combat = combat,
-                clock = clock,
-                rng = rng,
-                statusEffects = statusEffects,
-            )
+        val abilitySystem = fixture.buildAbilitySystem(registry = registry, statusEffects = statusEffects)
         return StatusTestHarness(
-            players = players,
-            mobs = mobs,
-            outbound = outbound,
+            players = fixture.players,
+            mobs = fixture.mobs,
+            outbound = fixture.outbound,
             abilitySystem = abilitySystem,
             statusEffects = statusEffects,
-            clock = clock,
+            clock = fixture.clock,
         )
     }
 

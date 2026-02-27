@@ -1,6 +1,5 @@
 package dev.ambon.engine
 
-import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.XpCurveConfig
@@ -23,8 +22,7 @@ import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectId
 import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.engine.status.StatusEffectSystem
-import dev.ambon.persistence.InMemoryPlayerRepository
-import dev.ambon.test.MutableClock
+import dev.ambon.test.CombatTestFixture
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -41,17 +39,18 @@ class CombatSystemTest {
     @Test
     fun `combat tick damages both sides`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -82,17 +81,18 @@ class CombatSystemTest {
     @Test
     fun `combat does not resolve before combat tick interval`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -122,17 +122,18 @@ class CombatSystemTest {
     @Test
     fun `attack bonus adds flat damage`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -171,17 +172,18 @@ class CombatSystemTest {
     @Test
     fun `defense bonus increases max hp pool`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -221,15 +223,16 @@ class CombatSystemTest {
     @Test
     fun `unequipping armor clamps hp to new max without reducing current hp`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -268,10 +271,11 @@ class CombatSystemTest {
     @Test
     fun `mob death drops items and removes mob`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob = MobState(MobId("demo:owl"), "an owl", roomId, hp = 1, maxHp = 1)
             mobs.upsert(mob)
             items.addMobItem(
@@ -279,10 +283,10 @@ class CombatSystemTest {
                 ItemInstance(ItemId("demo:feather"), Item(keyword = "feather", displayName = "a black feather")),
             )
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -309,8 +313,9 @@ class CombatSystemTest {
     @Test
     fun `mob death rolls guaranteed loot table drop`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
             items.loadSpawns(
                 listOf(
                     ItemSpawn(
@@ -322,8 +327,8 @@ class CombatSystemTest {
                     ),
                 ),
             )
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:wolf"),
@@ -335,10 +340,10 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -362,8 +367,9 @@ class CombatSystemTest {
     @Test
     fun `mob death skips loot table drop when chance is zero`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
             items.loadSpawns(
                 listOf(
                     ItemSpawn(
@@ -375,8 +381,8 @@ class CombatSystemTest {
                     ),
                 ),
             )
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:wolf"),
@@ -388,10 +394,10 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -415,15 +421,16 @@ class CombatSystemTest {
     @Test
     fun `mob kill awards xp and level up`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 1, maxHp = 1, xpReward = 50L)
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val progression =
                 PlayerProgression(
                     ProgressionConfig(
@@ -446,7 +453,7 @@ class CombatSystemTest {
                     ),
                 )
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -501,18 +508,19 @@ class CombatSystemTest {
     @Test
     fun `mob armor reduces player effective damage to minimum 1`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             // armor=100 absorbs all player damage; minimum 1 must apply
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, armor = 100)
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -541,18 +549,19 @@ class CombatSystemTest {
     @Test
     fun `mob armor reduces player damage by flat amount`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             // armor=2, player rolls fixed 5 → effective = 5-2 = 3
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, armor = 2)
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -578,10 +587,11 @@ class CombatSystemTest {
     @Test
     fun `mob uses its own damage range not global config`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             // mob has minDamage=10, maxDamage=10; global config has 1/1
             val mob =
                 MobState(
@@ -595,10 +605,10 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -626,10 +636,11 @@ class CombatSystemTest {
     @Test
     fun `detailed combat feedback includes compact roll and armor summaries for both sides`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:rat"),
@@ -643,10 +654,10 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -685,17 +696,18 @@ class CombatSystemTest {
     @Test
     fun `detailed combat feedback shows min clamp when armor fully absorbs roll`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, armor = 100)
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -730,10 +742,11 @@ class CombatSystemTest {
     @Test
     fun `detailed combat feedback can broadcast to room observers when enabled`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:rat"),
@@ -747,10 +760,10 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -792,10 +805,11 @@ class CombatSystemTest {
     @Test
     fun `player slain by mob shows death summary and safe respawn message`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             // mob hits hard enough to one-shot the player
             val mob =
                 MobState(
@@ -809,10 +823,10 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -853,10 +867,11 @@ class CombatSystemTest {
     @Test
     fun `player death broadcasts to room observers`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:ogre"),
@@ -869,10 +884,10 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -910,17 +925,18 @@ class CombatSystemTest {
     @Test
     fun `player at zero hp shows collapse message and safe respawn`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 100, maxHp = 100)
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -962,15 +978,16 @@ class CombatSystemTest {
     @Test
     fun `stunned player skips attack but mob still attacks`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, minDamage = 1, maxDamage = 1)
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
 
             val statusRegistry = StatusEffectRegistry()
             statusRegistry.register(
@@ -995,7 +1012,7 @@ class CombatSystemTest {
                     markStatusDirty = {},
                 )
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -1029,15 +1046,16 @@ class CombatSystemTest {
     @Test
     fun `shield absorbs mob damage in combat`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 100, maxHp = 100, minDamage = 5, maxDamage = 5)
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
 
             val statusRegistry = StatusEffectRegistry()
             statusRegistry.register(
@@ -1063,7 +1081,7 @@ class CombatSystemTest {
                     markStatusDirty = {},
                 )
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -1095,16 +1113,17 @@ class CombatSystemTest {
     @Test
     fun `stat buff adds to str damage bonus`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             // mob with 0 armor so we can see exact damage
             val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 50, maxHp = 50, minDamage = 1, maxDamage = 1)
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
 
             val statusRegistry = StatusEffectRegistry()
             statusRegistry.register(
@@ -1129,7 +1148,7 @@ class CombatSystemTest {
                     markStatusDirty = {},
                 )
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -1162,10 +1181,11 @@ class CombatSystemTest {
     @Test
     fun `mob kill awards gold from gold range`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:rat"),
@@ -1178,10 +1198,10 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
@@ -1217,10 +1237,11 @@ class CombatSystemTest {
     @Test
     fun `mob with zero gold range awards no gold`() =
         runTest {
-            val roomId = RoomId("zone:room")
-            val items = ItemRegistry()
-            val players = PlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val fixture = CombatTestFixture()
+            val roomId = fixture.roomId
+            val items = fixture.items
+            val players = fixture.players
+            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:rat"),
@@ -1233,10 +1254,10 @@ class CombatSystemTest {
                 )
             mobs.upsert(mob)
 
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val outbound = fixture.outbound
+            val clock = fixture.clock
             val combat =
-                CombatSystem(
+                fixture.buildCombat(
                     players,
                     mobs,
                     items,
