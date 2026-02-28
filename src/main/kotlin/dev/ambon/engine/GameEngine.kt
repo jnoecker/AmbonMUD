@@ -4,6 +4,7 @@ import dev.ambon.bus.InboundBus
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.EngineConfig
 import dev.ambon.config.LoginConfig
+import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -119,6 +120,7 @@ class GameEngine(
             handoffManager = handoffManager,
             getEngineScope = { engineScope },
             metrics = metrics,
+            availableClasses = PlayerClass.selectable(engineConfig.debug.enableSwarmClass),
             maxWrongPasswordRetries = loginConfig.maxWrongPasswordRetries,
             maxFailedLoginAttemptsBeforeDisconnect = loginConfig.maxFailedAttemptsBeforeDisconnect,
         )
