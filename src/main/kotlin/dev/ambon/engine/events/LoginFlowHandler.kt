@@ -121,6 +121,7 @@ internal class LoginFlowHandler(
     private val handoffManager: HandoffManager?,
     private val getEngineScope: () -> CoroutineScope,
     private val metrics: GameMetrics,
+    private val availableClasses: List<PlayerClass>,
     maxWrongPasswordRetries: Int,
     maxFailedLoginAttemptsBeforeDisconnect: Int,
 ) {
@@ -280,11 +281,11 @@ internal class LoginFlowHandler(
         state: LoginState.AwaitingClassSelection,
     ) {
         val input = line.trim()
-        val classes = PlayerClass.entries
+        val classes = availableClasses
         val playerClass =
             input.toIntOrNull()?.let { num ->
                 if (num in 1..classes.size) classes[num - 1] else null
-            } ?: PlayerClass.fromString(input)
+            } ?: classes.firstOrNull { it.name.equals(input, ignoreCase = true) }
 
         if (playerClass == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Invalid choice. Enter a number or class name."))
@@ -574,7 +575,7 @@ internal class LoginFlowHandler(
 
     private suspend fun promptForClassSelection(sessionId: SessionId) {
         outbound.send(OutboundEvent.SendInfo(sessionId, "Choose your class:"))
-        for ((index, pc) in PlayerClass.entries.withIndex()) {
+        for ((index, pc) in availableClasses.withIndex()) {
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,

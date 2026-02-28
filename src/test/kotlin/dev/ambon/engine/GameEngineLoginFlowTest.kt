@@ -2,6 +2,8 @@ package dev.ambon.engine
 
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.config.EngineConfig
+import dev.ambon.config.EngineDebugConfig
 import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -454,6 +456,104 @@ class GameEngineLoginFlowTest {
         }
 
     @Test
+    fun `swarm class is hidden when debug flag is disabled`() =
+        runTest {
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
+
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val repo = InMemoryPlayerRepository()
+            val items = ItemRegistry()
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
+
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 10L
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
+                    engineConfig = EngineConfig(debug = EngineDebugConfig(enableSwarmClass = false)),
+                )
+            val engineJob = launch { engine.run() }
+
+            val sid = SessionId(1L)
+            runCurrent()
+
+            inbound.send(InboundEvent.Connected(sid))
+            inbound.send(InboundEvent.LineReceived(sid, "NoSwarm"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+            outbound.drainAll()
+
+            inbound.send(InboundEvent.LineReceived(sid, "yes"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+            outbound.drainAll()
+
+            inbound.send(InboundEvent.LineReceived(sid, "password"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+            outbound.drainAll()
+
+            inbound.send(InboundEvent.LineReceived(sid, "1"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val classPrompt = outbound.drainAll()
+            assertTrue(
+                classPrompt.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text == "Choose your class:"
+                },
+                "Expected class selection prompt. got=$classPrompt",
+            )
+            assertFalse(
+                classPrompt.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text.contains("Swarm")
+                },
+                "Swarm should not be listed when debug flag is disabled. got=$classPrompt",
+            )
+
+            inbound.send(InboundEvent.LineReceived(sid, "5"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val invalidAttempt = outbound.drainAll()
+            assertTrue(
+                invalidAttempt.any {
+                    it is OutboundEvent.SendError &&
+                        it.sessionId == sid &&
+                        it.text.contains("Invalid choice")
+                },
+                "Expected invalid-choice error for hidden Swarm class. got=$invalidAttempt",
+            )
+            assertFalse(
+                invalidAttempt.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text.contains("Swarm")
+                },
+                "Swarm should remain hidden after invalid selection. got=$invalidAttempt",
+            )
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
+
+    @Test
     fun `elf mage creation applies correct racial modifiers and class`() =
         runTest {
             val inbound = LocalInboundBus()
@@ -505,6 +605,93 @@ class GameEngineLoginFlowTest {
             assertEquals(10, ps.charisma, "Elf CHA should be BASE_STAT + 0")
             assertEquals("ELF", ps.race)
             assertEquals("MAGE", ps.playerClass)
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
+
+    @Test
+    fun `swarm class is selectable behind debug flag and uses swarm start room`() =
+        runTest {
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
+
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val repo = InMemoryPlayerRepository()
+            val items = ItemRegistry()
+            val swarmRoom = RoomId("test_zone:outpost")
+            val players =
+                dev.ambon.test.buildTestPlayerRegistry(
+                    world.startRoom,
+                    repo,
+                    items,
+                    classStartRooms =
+                        mapOf(
+                            PlayerClass.SWARM to swarmRoom,
+                        ),
+                )
+
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 10L
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
+                    engineConfig = EngineConfig(debug = EngineDebugConfig(enableSwarmClass = true)),
+                )
+            val engineJob = launch { engine.run() }
+
+            val sid = SessionId(1L)
+            runCurrent()
+
+            inbound.send(InboundEvent.Connected(sid))
+            inbound.send(InboundEvent.LineReceived(sid, "SwarmBot"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+            outbound.drainAll()
+
+            inbound.send(InboundEvent.LineReceived(sid, "yes"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+            outbound.drainAll()
+
+            inbound.send(InboundEvent.LineReceived(sid, "password"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+            outbound.drainAll()
+
+            inbound.send(InboundEvent.LineReceived(sid, "1"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val classPrompt = outbound.drainAll()
+            assertTrue(
+                classPrompt.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == sid &&
+                        it.text.contains("5. Swarm")
+                },
+                "Expected Swarm in class list when debug flag is enabled. got=$classPrompt",
+            )
+
+            inbound.send(InboundEvent.LineReceived(sid, "5"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val player = players.get(sid)
+            assertNotNull(player)
+            assertEquals("SWARM", player!!.playerClass)
+            assertEquals(swarmRoom, player.roomId)
 
             engineJob.cancel()
             inbound.close()
