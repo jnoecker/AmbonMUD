@@ -78,6 +78,7 @@ internal sealed interface CreateAccountPrep {
 
 class PlayerRegistry(
     private val startRoom: RoomId,
+    private val classStartRooms: Map<PlayerClass, RoomId> = emptyMap(),
     private val repo: PlayerRepository,
     private val items: ItemRegistry,
     private val clock: Clock = Clock.systemUTC(),
@@ -169,7 +170,7 @@ class PlayerRegistry(
             repo.create(
                 PlayerCreationRequest(
                     name = name,
-                    startRoomId = startRoom,
+                    startRoomId = classStartRooms[playerClass] ?: startRoom,
                     nowEpochMs = now,
                     passwordHash = hash,
                     ansiEnabled = defaultAnsiEnabled,
@@ -275,7 +276,7 @@ class PlayerRegistry(
             repo.create(
                 PlayerCreationRequest(
                     name = name,
-                    startRoomId = startRoom,
+                    startRoomId = classStartRooms[playerClass] ?: startRoom,
                     nowEpochMs = now,
                     passwordHash = withContext(hashingContext) { passwordHasher.hash(password) },
                     ansiEnabled = defaultAnsiEnabled,
