@@ -16,6 +16,8 @@ import java.nio.file.StandardOpenOption
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
@@ -43,6 +45,7 @@ class YamlPlayerRepository(
     // then kept up-to-date by save() and create().  Eliminates repeated full-directory scans.
     private val nameIndex = ConcurrentHashMap<String, Long>()
     private val nameIndexReady = AtomicBoolean(false)
+    private val createLock = ReentrantLock()
 
     init {
         playersDir.createDirectories()
@@ -82,24 +85,25 @@ class YamlPlayerRepository(
             require(nm.isNotEmpty()) { "name cannot be blank" }
             require(request.passwordHash.isNotEmpty()) { "passwordHash cannot be blank" }
 
-            // Enforce unique name (case-insensitive) for now
-            val existing = findByName(nm)
-            if (existing != null) throw PlayerPersistenceException("Name already taken: '$nm'")
+            createLock.withLock {
+                ensureNameIndexReady()
+                if (nameIndex.containsKey(nm.lowercase())) {
+                    throw PlayerPersistenceException("Name already taken: '$nm'")
+                }
 
-            val id = nextId.getAndIncrement()
-            persistNextId(nextId.get())
+                val id = nextId.getAndIncrement()
+                persistNextId(nextId.get())
 
-            val record = request.toNewPlayerRecord(PlayerId(id))
-
-            save(record)
-            record
+                val record = request.toNewPlayerRecord(PlayerId(id))
+                writePlayer(record)
+                record
+            }
         }
 
     override suspend fun save(record: PlayerRecord): Unit =
         withContext(Dispatchers.IO) {
             metrics.timedSave {
-                atomicWriteText(pathFor(record.id.value), mapper.writeValueAsString(PlayerDto.from(record)))
-                nameIndex[record.name.lowercase()] = record.id.value
+                writePlayer(record)
             }
         }
 
@@ -149,6 +153,11 @@ class YamlPlayerRepository(
     private fun persistNextId(value: Long) {
         // This file is tiny; atomic rename is fine.
         atomicWriteText(nextIdFile, value.toString())
+    }
+
+    private fun writePlayer(record: PlayerRecord) {
+        atomicWriteText(pathFor(record.id.value), mapper.writeValueAsString(PlayerDto.from(record)))
+        nameIndex[record.name.lowercase()] = record.id.value
     }
 
     private fun atomicWriteText(
