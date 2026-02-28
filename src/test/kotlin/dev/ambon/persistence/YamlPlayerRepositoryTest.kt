@@ -6,7 +6,13 @@ import dev.ambon.engine.LoginResult
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.test.TestPasswordHasher
 import dev.ambon.test.buildTestPlayerRegistry
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -18,6 +24,7 @@ import java.nio.file.Path
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
+import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 class YamlPlayerRepositoryTest {
@@ -205,5 +212,75 @@ class YamlPlayerRepositoryTest {
             val loaded = repo.findById(PlayerId(2))
             assertNotNull(loaded)
             assertEquals(0L, loaded!!.gold)
+        }
+
+    @Test
+    fun `concurrent create assigns unique ids and persists next id`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val now = 1000L
+            val names = (1..32).map { "Player$it" }
+
+            val created =
+                withContext(Dispatchers.Default) {
+                    coroutineScope {
+                        val start = CompletableDeferred<Unit>()
+                        val jobs =
+                            names.map { name ->
+                                async {
+                                    start.await()
+                                    repo.create(PlayerCreationRequest(name, RoomId("test:a"), now, testHash, ansiEnabled = false))
+                                }
+                            }
+                        start.complete(Unit)
+                        jobs.awaitAll()
+                    }
+                }
+
+            assertEquals(names.size, created.size)
+            assertEquals((1L..names.size.toLong()).toSet(), created.map { it.id.value }.toSet())
+            assertEquals((names.size + 1).toString(), tmp.resolve("next_player_id.txt").readText().trim())
+        }
+
+    @Test
+    fun `concurrent create allows only one matching name`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val attempts = 16
+            val now = 1000L
+
+            val results =
+                withContext(Dispatchers.Default) {
+                    coroutineScope {
+                        val start = CompletableDeferred<Unit>()
+                        val jobs =
+                            (1..attempts).map {
+                                async {
+                                    start.await()
+                                    runCatching {
+                                        repo.create(
+                                            PlayerCreationRequest(
+                                                "Carol",
+                                                RoomId("test:a"),
+                                                now,
+                                                testHash,
+                                                ansiEnabled = false,
+                                            ),
+                                        )
+                                    }
+                                }
+                            }
+                        start.complete(Unit)
+                        jobs.awaitAll()
+                    }
+                }
+
+            assertEquals(1, results.count { it.isSuccess })
+            assertEquals(attempts - 1, results.count { it.isFailure })
+            results.filter { it.isFailure }.forEach { result ->
+                val error = result.exceptionOrNull()
+                assertTrue(error is PlayerPersistenceException)
+                assertTrue(error!!.message!!.contains("taken", ignoreCase = true))
+            }
         }
 }
