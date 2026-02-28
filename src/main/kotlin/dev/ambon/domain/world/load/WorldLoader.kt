@@ -894,6 +894,7 @@ object WorldLoader {
                         nextNodeId = nextNodeId,
                         minLevel = choiceFile.minLevel,
                         requiredClass = choiceFile.requiredClass,
+                        action = choiceFile.action,
                     )
                 }
             nodes[key] = DialogueNode(text = nodeFile.text, choices = choices)

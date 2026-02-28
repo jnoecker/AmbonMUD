@@ -10,4 +10,5 @@ data class DialogueChoiceFile(
     val next: String? = null,
     val minLevel: Int? = null,
     val requiredClass: String? = null,
+    val action: String? = null,
 )

@@ -38,6 +38,7 @@ internal data class PlayerDto(
     val achievementProgress: Map<String, AchievementState> = emptyMap(),
     val activeTitle: String? = null,
     val inbox: List<MailMessage> = emptyList(),
+    val recallRoomId: String? = null,
 ) {
     fun toDomain(): PlayerRecord {
         // Legacy migration: old files/cache stored constitution=0; remap to base 10
@@ -70,6 +71,7 @@ internal data class PlayerDto(
             achievementProgress = achievementProgress,
             activeTitle = activeTitle,
             inbox = inbox,
+            recallRoomId = recallRoomId?.let { RoomId(it) },
         )
     }
 
@@ -103,6 +105,7 @@ internal data class PlayerDto(
                 achievementProgress = record.achievementProgress,
                 activeTitle = record.activeTitle,
                 inbox = record.inbox,
+                recallRoomId = record.recallRoomId?.value,
             )
     }
 }

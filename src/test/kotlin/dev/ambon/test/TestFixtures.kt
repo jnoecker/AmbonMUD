@@ -138,6 +138,7 @@ class CommandRouterHarness private constructor(
             onPhase: (suspend (SessionId, String?) -> PhaseResult)? = null,
             onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
             economyConfig: EconomyConfig = EconomyConfig(),
+            clock: Clock = Clock.systemUTC(),
         ): CommandRouterHarness {
             val combat = CombatSystem(players, mobs, items, outbound)
             val router =
@@ -159,6 +160,7 @@ class CommandRouterHarness private constructor(
                     onPhase = onPhase,
                     onCrossZoneMove = onCrossZoneMove,
                     economyConfig = economyConfig,
+                    clock = clock,
                 )
             return CommandRouterHarness(world, repo, items, players, mobs, outbound, progression, groupSystem, combat, router)
         }
