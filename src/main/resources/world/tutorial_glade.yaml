@@ -357,3 +357,29 @@ rooms:
     description: "The deepest recess of the wolf's den. Trinkets and torn cloth lie tangled among old bones. Something useful has been dragged here and half-buried beneath a pile of leaves."
     exits:
       w: wolf_den
+
+  # --- Class Starting Rooms ---
+
+  warrior_barracks:
+    title: "Training Barracks"
+    description: "A spartan chamber that smells of iron and sawdust. Weapon racks line the walls — blunted swords, practice spears, and a battered shield or two. A straw dummy in the corner has been punched into a lopsided slouch. Through the open archway to the south, sunlight spills across a grassy clearing."
+    exits:
+      s: awakening_clearing
+
+  mage_study:
+    title: "The Arcane Alcove"
+    description: "A circular chamber etched floor to ceiling with softly glowing runes. A leather-bound tome floats at chest height, its pages turning on their own. The air carries the sharp tang of ozone and old parchment, and faint sparks drift upward from a brass brazier. A narrow passage opens to the south."
+    exits:
+      s: awakening_clearing
+
+  cleric_chapel:
+    title: "The Wayside Chapel"
+    description: "A modest stone chapel where candlelight throws warm shadows across the walls. A low altar bears offerings of dried wildflowers, smooth river pebbles, and a folded cloth. The silence here is deep and deliberate. A doorway to the south leads into open air."
+    exits:
+      s: awakening_clearing
+
+  rogue_hideout:
+    title: "The Shadow Den"
+    description: "A cramped hideout tucked beneath the roots of a massive oak. The only light filters through gaps in the bark overhead, picking out coils of rope, lockpicks, and a battered satchel hanging from a peg. Someone has scratched a rough map into the dirt floor. A concealed passage slopes south toward daylight."
+    exits:
+      s: awakening_clearing

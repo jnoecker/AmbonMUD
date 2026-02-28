@@ -1580,6 +1580,12 @@ ambonMUD:
             minDamage: 44
             maxDamage: 68
 
+    classStartRooms:
+      WARRIOR: tutorial_glade:warrior_barracks
+      MAGE: tutorial_glade:mage_study
+      CLERIC: tutorial_glade:cleric_chapel
+      ROGUE: tutorial_glade:rogue_hideout
+
   progression:
     maxLevel: 50
     xp:
