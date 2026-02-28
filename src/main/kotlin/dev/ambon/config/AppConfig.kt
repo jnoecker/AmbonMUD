@@ -3,6 +3,9 @@ package dev.ambon.config
 /** Selects the player persistence backend. */
 enum class PersistenceBackend { YAML, POSTGRES }
 
+/** Selects how static world content is loaded at runtime. */
+enum class WorldStorageBackend { YAML, POSTGRES }
+
 /** Deployment mode controlling which components are started. */
 enum class DeploymentMode {
     /** All components in a single process (default, current behaviour). */
@@ -49,8 +52,30 @@ data class AppConfig(
         require(server.inboundBudgetMs > 0L) { "ambonMUD.server.inboundBudgetMs must be > 0" }
         require(server.inboundBudgetMs < server.tickMillis) { "ambonMUD.server.inboundBudgetMs must be < tickMillis" }
 
-        require(world.resources.isNotEmpty()) { "ambonMUD.world.resources must not be empty" }
-        require(world.resources.all { it.isNotBlank() }) { "ambonMUD.world.resources entries must be non-blank" }
+        if (mode != DeploymentMode.GATEWAY) {
+            if (world.storage.backend == WorldStorageBackend.YAML) {
+                require(world.resources.isNotEmpty()) {
+                    "ambonMUD.world.resources must not be empty when world.storage.backend=YAML"
+                }
+                require(world.resources.all { it.isNotBlank() }) {
+                    "ambonMUD.world.resources entries must be non-blank when world.storage.backend=YAML"
+                }
+            } else {
+                require(world.storage.importDirectory.isNotBlank()) {
+                    "ambonMUD.world.storage.importDirectory must be non-blank when world.storage.backend=POSTGRES"
+                }
+                require(world.storage.archiveDirectory.isNotBlank()) {
+                    "ambonMUD.world.storage.archiveDirectory must be non-blank when world.storage.backend=POSTGRES"
+                }
+                require(world.storage.importDirectory != world.storage.archiveDirectory) {
+                    "ambonMUD.world.storage.importDirectory must differ from archiveDirectory"
+                }
+                require(database.jdbcUrl.isNotBlank()) {
+                    "ambonMUD.database.jdbcUrl required when world.storage.backend=POSTGRES"
+                }
+                require(database.maxPoolSize > 0) { "ambonMUD.database.maxPoolSize must be > 0" }
+            }
+        }
 
         require(persistence.rootDir.isNotBlank()) { "ambonMUD.persistence.rootDir must be non-blank" }
         require(persistence.worker.flushIntervalMs > 0L) { "ambonMUD.persistence.worker.flushIntervalMs must be > 0" }
@@ -334,6 +359,13 @@ data class ServerConfig(
 
 data class WorldConfig(
     val resources: List<String> = listOf("world/demo_ruins.yaml"),
+    val storage: WorldStorageConfig = WorldStorageConfig(),
+)
+
+data class WorldStorageConfig(
+    val backend: WorldStorageBackend = WorldStorageBackend.POSTGRES,
+    val importDirectory: String = "data/world-import",
+    val archiveDirectory: String = "data/world-import-archive",
 )
 
 data class PersistenceConfig(

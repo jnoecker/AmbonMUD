@@ -198,6 +198,14 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses world reimport command aliases`() {
+        assertEquals(Command.ReimportWorld, CommandParser.parse("reimportworld"))
+        assertEquals(Command.ReimportWorld, CommandParser.parse("worldreimport"))
+        assertEquals(Command.ReimportWorld, CommandParser.parse("reimport world"))
+        assertEquals(Command.ReimportWorld, CommandParser.parse("world reimport"))
+    }
+
+    @Test
     fun `parses smite with target`() {
         assertEquals(Command.Smite("Alice"), CommandParser.parse("smite Alice"))
         assertEquals(Command.Smite("gate_scout"), CommandParser.parse("smite gate_scout"))

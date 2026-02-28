@@ -87,6 +87,10 @@ ambonMUD:
     inboundBudgetMs: 30
 
   world:
+    storage:
+      backend: POSTGRES
+      importDirectory: data/world-import
+      archiveDirectory: data/world-import-archive
     resources:
       - world/tutorial_glade.yaml
       - world/ambon_hub.yaml

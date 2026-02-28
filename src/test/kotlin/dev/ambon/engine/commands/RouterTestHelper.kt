@@ -45,6 +45,7 @@ internal fun buildTestRouter(
     progression: PlayerProgression = PlayerProgression(),
     groupSystem: GroupSystem? = null,
     onShutdown: suspend () -> Unit = {},
+    onWorldReimport: suspend () -> Int = { 0 },
     onMobSmited: (MobId) -> Unit = {},
     interEngineBus: InterEngineBus? = null,
     playerLocationIndex: PlayerLocationIndex? = null,
@@ -88,6 +89,7 @@ internal fun buildTestRouter(
         AdminHandler(
             ctx = ctx,
             onShutdown = onShutdown,
+            onWorldReimport = onWorldReimport,
             onMobSmited = onMobSmited,
             interEngineBus = interEngineBus,
             engineId = engineId,

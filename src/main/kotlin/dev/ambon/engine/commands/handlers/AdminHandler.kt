@@ -20,6 +20,7 @@ import dev.ambon.sharding.InterEngineMessage
 class AdminHandler(
     ctx: EngineContext,
     private val onShutdown: suspend () -> Unit = {},
+    private val onWorldReimport: suspend () -> Int = { 0 },
     private val onMobSmited: (MobId) -> Unit = {},
     private val onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
     private val dialogueSystem: DialogueSystem? = null,
@@ -46,6 +47,7 @@ class AdminHandler(
         router.on<Command.Transfer> { sid, cmd -> handleTransfer(sid, cmd) }
         router.on<Command.Spawn> { sid, cmd -> handleSpawn(sid, cmd) }
         router.on<Command.Shutdown> { sid, _ -> handleShutdown(sid) }
+        router.on<Command.ReimportWorld> { sid, _ -> handleWorldReimport(sid) }
         router.on<Command.Smite> { sid, cmd -> handleSmite(sid, cmd) }
         router.on<Command.Kick> { sid, cmd -> handleKick(sid, cmd) }
         router.on<Command.Dispel> { sid, cmd -> handleDispel(sid, cmd) }
@@ -164,6 +166,23 @@ class AdminHandler(
             )
             onShutdown()
         }
+    }
+
+    private suspend fun handleWorldReimport(sessionId: SessionId) {
+        if (!requireStaff(sessionId, players, outbound)) return
+        runCatching { onWorldReimport() }
+            .onSuccess { importedCount ->
+                val message =
+                    if (importedCount > 0) {
+                        "Imported $importedCount staged world file(s) into Postgres. Restart required to apply changes."
+                    } else {
+                        "No staged world files found in the import directory."
+                    }
+                outbound.send(OutboundEvent.SendInfo(sessionId, message))
+            }.onFailure { err ->
+                val reason = err.message?.takeIf { it.isNotBlank() } ?: err::class.simpleName ?: "unknown error"
+                outbound.send(OutboundEvent.SendError(sessionId, "World re-import failed: $reason"))
+            }
     }
 
     private suspend fun handleSmite(
