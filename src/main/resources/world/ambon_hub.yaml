@@ -3,6 +3,30 @@ lifespan: 0
 startRoom: hall_of_portals
 
 mobs:
+  innkeeper:
+    name: "the Innkeeper"
+    room: wanderers_inn
+    dialogue:
+      root:
+        text: "Welcome to the Wanderer's Inn! We offer comfortable beds for weary travelers. Would you like to rent a room?"
+        choices:
+          - text: "Yes, I'd like to rent a room."
+            next: confirm
+            action: set_recall
+          - text: "What is a recall point?"
+            next: explain
+          - text: "No thanks, just passing through."
+      confirm:
+        text: "Excellent! Your room is ready whenever you need it. Type 'recall' at any time to return here instantly."
+        choices:
+          - text: "Thank you!"
+      explain:
+        text: "If you rent a room here, this inn becomes your recall point. Type 'recall' anywhere in the world to teleport back. Very handy when you're lost or in trouble!"
+        choices:
+          - text: "I'd like to rent a room, then."
+            next: confirm
+            action: set_recall
+          - text: "I'll think about it."
   portal_keeper:
     name: "the Portal Keeper"
     room: hall_of_portals
@@ -61,7 +85,14 @@ rooms:
 
   wayfinder_gallery:
     title: "Wayfinder Gallery"
-    description: "A narrow gallery lined with relief maps of places that don't exist yet. A brass needle floats over each plaque, twitching toward the hall as if eager to be used."
+    description: "A narrow gallery lined with relief maps of places that don't exist yet. A brass needle floats over each plaque, twitching toward the hall as if eager to be used. A warm glow spills from a doorway to the north."
     exits:
       e: hall_of_portals
       w: blank_arches
+      n: wanderers_inn
+
+  wanderers_inn:
+    title: "The Wanderer's Inn"
+    description: "A cozy common room filled with the scent of woodsmoke and fresh bread. Low beams cross the ceiling, hung with dried herbs. A fire crackles in a broad hearth and mismatched chairs cluster around worn tables. The innkeeper stands behind a short counter, ready to help. A sign on the wall reads: 'RENT A ROOM — type recall anytime to return here.'"
+    exits:
+      s: wayfinder_gallery

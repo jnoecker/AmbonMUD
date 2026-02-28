@@ -55,17 +55,17 @@ class DialogueSystem(
     suspend fun selectChoice(
         sessionId: SessionId,
         choiceNumber: Int,
-    ): String? {
+    ): DialogueOutcome {
         val state =
             conversations[sessionId]
-                ?: return "You are not in a conversation."
+                ?: return DialogueOutcome.Err("You are not in a conversation.")
         val player =
             players.get(sessionId)
-                ?: return "You must be logged in."
+                ?: return DialogueOutcome.Err("You must be logged in.")
 
         val currentNode =
             state.tree.nodes[state.currentNodeId]
-                ?: return endConversationWithMessage(sessionId, state.mobName)
+                ?: return DialogueOutcome.Err(endConversationWithMessage(sessionId, state.mobName))
 
         val visibleChoices =
             filterChoices(
@@ -75,11 +75,11 @@ class DialogueSystem(
             )
 
         if (visibleChoices.isEmpty()) {
-            return endConversationWithMessage(sessionId, state.mobName)
+            return DialogueOutcome.Err(endConversationWithMessage(sessionId, state.mobName))
         }
 
         if (choiceNumber < 1 || choiceNumber > visibleChoices.size) {
-            return "Choose a number between 1 and ${visibleChoices.size}."
+            return DialogueOutcome.Err("Choose a number between 1 and ${visibleChoices.size}.")
         }
 
         val chosen = visibleChoices[choiceNumber - 1]
@@ -93,18 +93,18 @@ class DialogueSystem(
                     "${state.mobName} nods.",
                 ),
             )
-            return null
+            return DialogueOutcome.Ok(action = chosen.action)
         }
 
         val nextNode = state.tree.nodes[nextNodeId]
         if (nextNode == null) {
             conversations.remove(sessionId)
-            return "${state.mobName} has nothing more to say."
+            return DialogueOutcome.Err("${state.mobName} has nothing more to say.")
         }
 
         conversations[sessionId] = state.copy(currentNodeId = nextNodeId)
         renderNode(sessionId, state.mobName, nextNode, player.level, player.playerClass)
-        return null
+        return DialogueOutcome.Ok(action = chosen.action)
     }
 
     fun endConversation(sessionId: SessionId) {

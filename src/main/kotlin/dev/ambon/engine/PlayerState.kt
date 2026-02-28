@@ -45,6 +45,9 @@ data class PlayerState(
     var inbox: MutableList<MailMessage> = mutableListOf(),
     /** Non-null while the player is composing an outgoing mail message. */
     var mailCompose: MailComposeState? = null,
+    var recallRoomId: RoomId? = null,
+    /** Epoch-ms timestamp after which recall is available again. Runtime-only; not persisted. */
+    var recallCooldownUntilMs: Long = 0L,
 ) {
     data class MailComposeState(
         val recipientName: String,
