@@ -2,6 +2,7 @@ package dev.ambon.persistence
 
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.quest.QuestState
 
 /**
@@ -36,6 +37,7 @@ internal data class PlayerDto(
     val unlockedAchievementIds: Set<String> = emptySet(),
     val achievementProgress: Map<String, AchievementState> = emptyMap(),
     val activeTitle: String? = null,
+    val inbox: List<MailMessage> = emptyList(),
 ) {
     fun toDomain(): PlayerRecord {
         // Legacy migration: old files/cache stored constitution=0; remap to base 10
@@ -67,6 +69,7 @@ internal data class PlayerDto(
             unlockedAchievementIds = unlockedAchievementIds,
             achievementProgress = achievementProgress,
             activeTitle = activeTitle,
+            inbox = inbox,
         )
     }
 
@@ -99,6 +102,7 @@ internal data class PlayerDto(
                 unlockedAchievementIds = record.unlockedAchievementIds,
                 achievementProgress = record.achievementProgress,
                 activeTitle = record.activeTitle,
+                inbox = record.inbox,
             )
     }
 }

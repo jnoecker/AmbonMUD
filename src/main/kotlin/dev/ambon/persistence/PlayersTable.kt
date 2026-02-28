@@ -30,6 +30,7 @@ object PlayersTable : Table("players") {
     val unlockedAchievementIds = text("unlocked_achievement_ids").default("[]")
     val achievementProgress = text("achievement_progress").default("{}")
     val activeTitle = varchar("active_title", 64).nullable()
+    val mailInbox = text("mail_inbox").default("[]")
 
     override val primaryKey = PrimaryKey(id)
 }

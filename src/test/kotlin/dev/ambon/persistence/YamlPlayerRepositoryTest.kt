@@ -283,4 +283,27 @@ class YamlPlayerRepositoryTest {
                 assertTrue(error!!.message!!.contains("taken", ignoreCase = true))
             }
         }
+
+    @Test
+    fun `save and reload preserves mail inbox`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val r = repo.create(PlayerCreationRequest("Alice", RoomId("test:a"), 0L, testHash, ansiEnabled = false))
+            val mail =
+                dev.ambon.domain.mail.MailMessage(
+                    id = "abc123",
+                    fromName = "Bob",
+                    body = "Hello Alice!",
+                    sentAtEpochMs = 9000L,
+                    read = false,
+                )
+            repo.save(r.copy(inbox = listOf(mail)))
+
+            val loaded = repo.findById(r.id)!!
+            assertEquals(1, loaded.inbox.size)
+            assertEquals("abc123", loaded.inbox[0].id)
+            assertEquals("Bob", loaded.inbox[0].fromName)
+            assertEquals("Hello Alice!", loaded.inbox[0].body)
+            assertFalse(loaded.inbox[0].read)
+        }
 }
