@@ -374,8 +374,13 @@ data class EngineConfig(
     val statusEffects: StatusEffectEngineConfig = StatusEffectEngineConfig(),
     val economy: EconomyConfig = EconomyConfig(),
     val group: GroupConfig = GroupConfig(),
+    val debug: EngineDebugConfig = EngineDebugConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
+)
+
+data class EngineDebugConfig(
+    val enableSwarmClass: Boolean = false,
 )
 
 data class ProgressionConfig(
