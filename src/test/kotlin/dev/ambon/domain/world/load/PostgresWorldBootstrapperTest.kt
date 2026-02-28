@@ -240,7 +240,7 @@ class PostgresWorldBootstrapperTest {
     }
 
     @Test
-    fun `empty database and no staged files fails fast`() {
+    fun `empty database and no staged files fails fast when no resources configured`() {
         val importDir = Files.createDirectories(tempDir.resolve("import"))
         val archiveDir = tempDir.resolve("archive")
 
@@ -262,5 +262,84 @@ class PostgresWorldBootstrapperTest {
             }
 
         assertTrue(error.message!!.contains("No static world content found"))
+    }
+
+    @Test
+    fun `bootstraps from classpath resources when database is empty`() {
+        val importDir = Files.createDirectories(tempDir.resolve("import"))
+        val archiveDir = tempDir.resolve("archive")
+        val repo = PostgresWorldContentRepository(database)
+
+        val bootstrapper =
+            PostgresWorldBootstrapper(
+                repository = repo,
+                storage =
+                    WorldStorageConfig(
+                        backend = WorldStorageBackend.POSTGRES,
+                        importDirectory = importDir.toString(),
+                        archiveDirectory = archiveDir.toString(),
+                    ),
+                tiers = MobTiersConfig(),
+                resources = listOf("world/test_world.yaml"),
+                clock = Clock.fixed(Instant.ofEpochMilli(999L), ZoneOffset.UTC),
+            )
+
+        val world = bootstrapper.loadWorld()
+
+        // World loaded correctly from the bundled resource.
+        assertEquals("test_zone:hub", world.startRoom.value)
+
+        // Documents were persisted so the next startup reads from DB without re-bootstrapping.
+        val storedDocuments = repo.loadAll()
+        assertEquals(1, storedDocuments.size)
+        assertEquals("test_world.yaml", storedDocuments.single().sourceName)
+        assertEquals(999L, storedDocuments.single().importedAtEpochMs)
+
+        // Import directory untouched (no staged files to archive).
+        assertFalse(Files.exists(archiveDir))
+    }
+
+    @Test
+    fun `skips resource bootstrap when database already has content`() {
+        val importDir = Files.createDirectories(tempDir.resolve("import"))
+        val archiveDir = tempDir.resolve("archive")
+        val repo = PostgresWorldContentRepository(database)
+        val existingText = javaClass.getResource("/world/test_world.yaml")!!.readText()
+
+        repo.replaceAll(
+            listOf(
+                dev.ambon.persistence.WorldContentDocument(
+                    sourceName = "test_world.yaml",
+                    zone = "test_zone",
+                    content = existingText,
+                    loadOrder = 0,
+                    importedAtEpochMs = 1L,
+                ),
+            ),
+        )
+
+        // ok_small.yaml would change the world if bootstrap ran — it must not.
+        val bootstrapper =
+            PostgresWorldBootstrapper(
+                repository = repo,
+                storage =
+                    WorldStorageConfig(
+                        backend = WorldStorageBackend.POSTGRES,
+                        importDirectory = importDir.toString(),
+                        archiveDirectory = archiveDir.toString(),
+                    ),
+                tiers = MobTiersConfig(),
+                resources = listOf("world/ok_small.yaml"),
+            )
+
+        val world = bootstrapper.loadWorld()
+
+        // Still loaded from the existing DB content, not the resource fallback.
+        assertTrue(world.rooms.containsKey(dev.ambon.domain.ids.RoomId("test_zone:hub")))
+        assertFalse(world.rooms.containsKey(dev.ambon.domain.ids.RoomId("ok_small:a")))
+
+        val storedDocuments = repo.loadAll()
+        assertEquals(1, storedDocuments.size)
+        assertEquals("test_world.yaml", storedDocuments.single().sourceName)
     }
 }

@@ -172,6 +172,7 @@ class EngineServer(
                 repository = PostgresWorldContentRepository(databaseManager!!.database),
                 storage = config.world.storage,
                 tiers = config.engine.mob.tiers,
+                resources = config.world.resources,
                 clock = clock,
             )
         } else {

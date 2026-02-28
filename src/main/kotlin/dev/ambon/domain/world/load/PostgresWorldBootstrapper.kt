@@ -4,6 +4,7 @@ import dev.ambon.config.MobTiersConfig
 import dev.ambon.config.WorldStorageConfig
 import dev.ambon.persistence.PostgresWorldContentRepository
 import dev.ambon.persistence.WorldContentDocument
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -14,17 +15,24 @@ import kotlin.io.path.fileSize
 import kotlin.io.path.isDirectory
 import kotlin.io.path.name
 
+private val log = KotlinLogging.logger {}
+
 class PostgresWorldBootstrapper(
     private val repository: PostgresWorldContentRepository,
     private val storage: WorldStorageConfig,
     private val tiers: MobTiersConfig,
+    private val resources: List<String> = emptyList(),
     private val clock: Clock = Clock.systemUTC(),
 ) {
     fun loadWorld(zoneFilter: Set<String> = emptySet()) =
         run {
             importPendingFiles()
 
-            val documents = repository.loadAll()
+            var documents = repository.loadAll()
+            if (documents.isEmpty() && resources.isNotEmpty()) {
+                log.info { "World database is empty — bootstrapping from ${resources.size} bundled resource(s)" }
+                documents = bootstrapFromResources()
+            }
             if (documents.isEmpty()) {
                 throw IllegalStateException(
                     "No static world content found in Postgres and no staged world files were present in '${storage.importDirectory}'",
@@ -37,6 +45,26 @@ class PostgresWorldBootstrapper(
                 }
             WorldLoader.loadFromFiles(parsedFiles, tiers, zoneFilter)
         }
+
+    private fun bootstrapFromResources(): List<WorldContentDocument> {
+        val importedAtEpochMs = clock.millis()
+        val documents =
+            resources.mapIndexed { index, path ->
+                val content =
+                    javaClass.classLoader.getResource(path)?.readText()
+                        ?: throw IllegalStateException("Bundled world resource not found: $path")
+                val parsed = WorldLoader.parseWorldFile(content, path)
+                WorldContentDocument(
+                    sourceName = path.substringAfterLast('/'),
+                    zone = parsed.zone.trim(),
+                    content = content,
+                    loadOrder = index,
+                    importedAtEpochMs = importedAtEpochMs,
+                )
+            }
+        repository.replaceAll(documents)
+        return documents
+    }
 
     fun importPendingFiles(): Int {
         val stagedFiles = stagedFiles()
