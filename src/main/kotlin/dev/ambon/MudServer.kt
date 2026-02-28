@@ -18,8 +18,8 @@ import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.WorldStateRegistry
+import dev.ambon.engine.createPlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
@@ -212,15 +212,10 @@ class MudServer(
             port = config.sharding.advertisePort ?: config.server.telnetPort,
         )
 
-    private val classStartRooms: Map<PlayerClass, RoomId> =
-        config.engine.classStartRooms
-            .mapNotNull { (key, value) -> PlayerClass.fromString(key)?.to(RoomId(value)) }
-            .toMap()
-
     private val players =
-        PlayerRegistry(
+        createPlayerRegistry(
             startRoom = world.startRoom,
-            classStartRooms = classStartRooms,
+            engineConfig = config.engine,
             repo = playerRepo,
             items = items,
             clock = clock,
