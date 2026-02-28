@@ -6,6 +6,7 @@ import dev.ambon.domain.guild.GuildRecord
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.persistence.GuildRepository
+import dev.ambon.persistence.PlayerId
 import dev.ambon.persistence.PlayerRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Clock
@@ -89,6 +90,7 @@ class GuildSystem(
         }
 
         val guildId = trimName.lowercase().replace(Regex("[^a-z0-9]"), "_")
+        if (guildsById.containsKey(guildId)) return "A guild with a conflicting name already exists."
         val record =
             GuildRecord(
                 id = guildId,
@@ -152,6 +154,7 @@ class GuildSystem(
         sessionId: SessionId,
         targetName: String,
     ): String? {
+        pruneExpiredInvites()
         val ps = players.get(sessionId) ?: return "You are not logged in."
         val gid = ps.guildId ?: return "You are not in a guild."
         val rank = ps.guildRank ?: return "You are not in a guild."
@@ -244,9 +247,7 @@ class GuildSystem(
         val guild = guildsById[gid] ?: return "Guild not found."
 
         val targetEntry = guild.members.entries.find { e ->
-            val sid = players.findSessionByPlayerId(e.key)
-            val name = if (sid != null) players.get(sid)?.name else null
-            name?.equals(targetName, ignoreCase = true) == true
+            resolveGuildMemberName(e.key)?.equals(targetName, ignoreCase = true) == true
         } ?: return "Player '$targetName' is not a member of your guild."
 
         val targetPlayerId = targetEntry.key
@@ -294,9 +295,7 @@ class GuildSystem(
         val guild = guildsById[gid] ?: return "Guild not found."
 
         val targetEntry = guild.members.entries.find { e ->
-            val sid = players.findSessionByPlayerId(e.key)
-            val name = if (sid != null) players.get(sid)?.name else null
-            name?.equals(targetName, ignoreCase = true) == true
+            resolveGuildMemberName(e.key)?.equals(targetName, ignoreCase = true) == true
         } ?: return "Player '$targetName' is not a member of your guild."
 
         val targetPlayerId = targetEntry.key
@@ -331,9 +330,7 @@ class GuildSystem(
         val guild = guildsById[gid] ?: return "Guild not found."
 
         val targetEntry = guild.members.entries.find { e ->
-            val sid = players.findSessionByPlayerId(e.key)
-            val name = if (sid != null) players.get(sid)?.name else null
-            name?.equals(targetName, ignoreCase = true) == true
+            resolveGuildMemberName(e.key)?.equals(targetName, ignoreCase = true) == true
         } ?: return "Player '$targetName' is not a member of your guild."
 
         val targetPlayerId = targetEntry.key
@@ -452,6 +449,11 @@ class GuildSystem(
             if (sid == excludeSid) continue
             outbound.send(OutboundEvent.SendInfo(sid, message))
         }
+    }
+
+    private suspend fun resolveGuildMemberName(playerId: PlayerId): String? {
+        val sid = players.findSessionByPlayerId(playerId)
+        return if (sid != null) players.get(sid)?.name else playerRepo.findById(playerId)?.name
     }
 
     private fun pruneExpiredInvites() {

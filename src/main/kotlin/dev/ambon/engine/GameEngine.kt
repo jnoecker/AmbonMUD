@@ -53,6 +53,8 @@ import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.engine.status.StatusEffectRegistryLoader
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
+import dev.ambon.persistence.GuildRepository
+import dev.ambon.persistence.PlayerRepository
 import dev.ambon.persistence.WorldStateRepository
 import dev.ambon.sharding.HandoffManager
 import dev.ambon.sharding.InterEngineBus
@@ -102,8 +104,8 @@ class GameEngine(
     private val worldState: WorldStateRegistry = WorldStateRegistry(world),
     /** Repository for persisting world feature states across restarts. */
     private val worldStateRepository: WorldStateRepository? = null,
-    private val guildRepo: dev.ambon.persistence.GuildRepository? = null,
-    private val playerRepo: dev.ambon.persistence.PlayerRepository? = null,
+    private val guildRepo: GuildRepository? = null,
+    private val playerRepo: PlayerRepository? = null,
 ) {
     private val loginFlowHandler by lazy {
         dev.ambon.engine.events.LoginFlowHandler(

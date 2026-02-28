@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.guild.GuildRecord
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ResultRow
@@ -13,6 +14,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.upsert
 
+private val log = KotlinLogging.logger {}
 private val membersType = object : TypeReference<Map<Long, String>>() {}
 
 class PostgresGuildRepository(
@@ -79,6 +81,8 @@ class PostgresGuildRepository(
         val rawMembers: Map<Long, String> =
             runCatching {
                 mapper.readValue(this[GuildsTable.members], membersType)
+            }.onFailure { ex ->
+                log.warn(ex) { "Failed to deserialize members for guild ${this[GuildsTable.id]}; defaulting to empty" }
             }.getOrDefault(emptyMap())
         return GuildRecord(
             id = this[GuildsTable.id],

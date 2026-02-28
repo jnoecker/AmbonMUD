@@ -118,6 +118,22 @@ class GuildSystemTest {
         }
 
     @Test
+    fun `create guild with name that produces same id returns error`() =
+        runTest {
+            val h = setup()
+            val sid1 = SessionId(1L)
+            val sid2 = SessionId(2L)
+            h.players.loginOrFail(sid1, "Alice")
+            h.players.loginOrFail(sid2, "Bob")
+
+            h.guild.create(sid1, "Shadow Blade", "SB")
+
+            val err = h.guild.create(sid2, "Shadow-Blade", "XX")
+            assertNotNull(err)
+            assertTrue(err!!.contains("conflicting name"))
+        }
+
+    @Test
     fun `invite and accept joins guild`() =
         runTest {
             val h = setup()

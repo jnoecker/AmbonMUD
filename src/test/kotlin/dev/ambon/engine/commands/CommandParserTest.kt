@@ -393,4 +393,48 @@ class CommandParserTest {
         assertTrue(CommandParser.parse("gtell") is Command.Invalid)
         assertTrue(CommandParser.parse("gt") is Command.Invalid)
     }
+
+    @Test
+    fun `parses gchat and g shorthand`() {
+        assertEquals(Command.Gchat("Hello guild!"), CommandParser.parse("gchat Hello guild!"))
+        assertEquals(Command.Gchat("Hello guild!"), CommandParser.parse("g Hello guild!"))
+    }
+
+    @Test
+    fun `gchat without message is Invalid`() {
+        assertTrue(CommandParser.parse("gchat") is Command.Invalid)
+        assertTrue(CommandParser.parse("g") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses guild info and plain guild`() {
+        assertEquals(Command.Guild.Info, CommandParser.parse("guild"))
+        assertEquals(Command.Guild.Info, CommandParser.parse("guild info"))
+    }
+
+    @Test
+    fun `parses guild create with single-word name`() {
+        assertEquals(Command.Guild.Create("Shadowblade", "SB"), CommandParser.parse("guild create Shadowblade SB"))
+    }
+
+    @Test
+    fun `parses guild create with multi-word name`() {
+        assertEquals(Command.Guild.Create("Shadow Blade", "SB"), CommandParser.parse("guild create Shadow Blade SB"))
+    }
+
+    @Test
+    fun `guild create with only one token is Invalid`() {
+        assertTrue(CommandParser.parse("guild create SB") is Command.Invalid)
+        assertTrue(CommandParser.parse("guild create") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses guild invite`() {
+        assertEquals(Command.Guild.Invite("Bob"), CommandParser.parse("guild invite Bob"))
+    }
+
+    @Test
+    fun `guild invite without target is Invalid`() {
+        assertTrue(CommandParser.parse("guild invite") is Command.Invalid)
+    }
 }
