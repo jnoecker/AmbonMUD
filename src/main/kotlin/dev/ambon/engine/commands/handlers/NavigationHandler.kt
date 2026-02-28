@@ -11,13 +11,20 @@ import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.EffectType
 import dev.ambon.engine.status.StatusEffectSystem
+import java.time.Clock
 
 class NavigationHandler(
     ctx: EngineContext,
     private val statusEffects: StatusEffectSystem? = null,
     private val dialogueSystem: DialogueSystem? = null,
     private val onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
+    private val clock: Clock = Clock.systemUTC(),
 ) : CommandHandler {
+    companion object {
+        /** Cooldown between recall uses (5 minutes). */
+        const val RECALL_COOLDOWN_MS = 300_000L
+    }
+
     private val world = ctx.world
     private val players = ctx.players
     private val mobs = ctx.mobs
@@ -34,6 +41,7 @@ class NavigationHandler(
         router.on<Command.Move> { sid, cmd -> handleMove(sid, cmd) }
         router.on<Command.Exits> { sid, _ -> handleExits(sid) }
         router.on<Command.LookDir> { sid, cmd -> handleLookDir(sid, cmd) }
+        router.on<Command.Recall> { sid, _ -> handleRecall(sid) }
     }
 
     private suspend fun handleLook(sessionId: SessionId) {
@@ -99,6 +107,45 @@ class NavigationHandler(
             }
             sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
         }
+    }
+
+    private suspend fun handleRecall(sessionId: SessionId) {
+        if (combat.isInCombat(sessionId)) {
+            outbound.send(OutboundEvent.SendText(sessionId, "You are fighting for your life and cannot recall!"))
+            return
+        }
+        val me = players.get(sessionId) ?: return
+        val now = clock.millis()
+        if (now < me.recallCooldownUntilMs) {
+            val secondsLeft = (me.recallCooldownUntilMs - now + 999L) / 1000L
+            outbound.send(OutboundEvent.SendText(sessionId, "You need to rest before recalling again. ($secondsLeft seconds remaining)"))
+            return
+        }
+        val target = players.recallTarget(sessionId) ?: return
+        me.recallCooldownUntilMs = now + RECALL_COOLDOWN_MS
+        outbound.send(OutboundEvent.SendText(sessionId, "You close your eyes and whisper a prayer..."))
+        if (!world.rooms.containsKey(target)) {
+            if (onCrossZoneMove != null) {
+                router.suppressAutoPrompt()
+                onCrossZoneMove.invoke(sessionId, target)
+                return
+            }
+            outbound.send(OutboundEvent.SendError(sessionId, "Your recall point is unreachable."))
+            return
+        }
+        val from = me.roomId
+        for (other in players.playersInRoom(from).filter { it.sessionId != me.sessionId }) {
+            outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} vanishes in a flash of light."))
+            gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
+        }
+        dialogueSystem?.onPlayerMoved(sessionId)
+        players.moveTo(sessionId, target)
+        outbound.send(OutboundEvent.SendText(sessionId, "You feel a familiar warmth and find yourself back at your recall point."))
+        for (other in players.playersInRoom(target).filter { it.sessionId != me.sessionId }) {
+            outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} appears in a flash of light."))
+            gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
+        }
+        sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
     }
 
     private suspend fun handleExits(sessionId: SessionId) {

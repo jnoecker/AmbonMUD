@@ -9,6 +9,7 @@ import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
+import dev.ambon.engine.dialogue.DialogueOutcome
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
 
@@ -67,7 +68,28 @@ class DialogueQuestHandler(
             outbound.send(OutboundEvent.SendText(sessionId, "Huh?"))
             return
         }
-        outbound.sendIfError(sessionId, dialogueSystem.selectChoice(sessionId, cmd.optionNumber))
+        when (val outcome = dialogueSystem.selectChoice(sessionId, cmd.optionNumber)) {
+            is DialogueOutcome.Err -> outbound.send(OutboundEvent.SendError(sessionId, outcome.message))
+            is DialogueOutcome.Ok -> outcome.action?.let { handleDialogueAction(sessionId, it) }
+        }
+    }
+
+    private suspend fun handleDialogueAction(
+        sessionId: SessionId,
+        action: String,
+    ) {
+        when (action) {
+            "set_recall" -> {
+                val me = players.get(sessionId) ?: return
+                players.setRecallRoom(sessionId, me.roomId)
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "The innkeeper marks your name in the ledger. This inn is now your recall point.",
+                    ),
+                )
+            }
+        }
     }
 
     private suspend fun handleQuestLog(sessionId: SessionId) {
