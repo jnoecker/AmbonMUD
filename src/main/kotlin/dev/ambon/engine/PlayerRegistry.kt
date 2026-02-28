@@ -347,6 +347,7 @@ class PlayerRegistry(
                 achievementProgress = boundRecord.achievementProgress,
                 activeTitle = boundRecord.activeTitle,
                 inbox = boundRecord.inbox.toMutableList(),
+                recallRoomId = boundRecord.recallRoomId,
             )
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
@@ -480,6 +481,29 @@ class PlayerRegistry(
         persistIfClaimed(ps)
     }
 
+    /**
+     * Sets [sessionId]'s recall room to [roomId] and persists.
+     */
+    suspend fun setRecallRoom(
+        sessionId: SessionId,
+        roomId: RoomId,
+    ) {
+        val ps = players[sessionId] ?: return
+        ps.recallRoomId = roomId
+        persistIfClaimed(ps)
+    }
+
+    /**
+     * Returns the room a player should be sent to on `recall`.
+     * Prefers the player's saved recall room, then their class start room, then the world start room.
+     */
+    fun recallTarget(sessionId: SessionId): RoomId? {
+        val ps = players[sessionId] ?: return null
+        return ps.recallRoomId
+            ?: classStartRooms[PlayerClass.fromString(ps.playerClass)]
+            ?: startRoom
+    }
+
     suspend fun grantXp(
         sessionId: SessionId,
         amount: Long,
@@ -586,6 +610,7 @@ class PlayerRegistry(
                 achievementProgress = ps.achievementProgress,
                 activeTitle = ps.activeTitle,
                 inbox = ps.inbox.toList(),
+                recallRoomId = ps.recallRoomId,
             ),
         )
     }

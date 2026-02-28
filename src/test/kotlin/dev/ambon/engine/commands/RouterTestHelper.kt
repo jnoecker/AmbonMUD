@@ -29,6 +29,7 @@ import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.PlayerLocationIndex
+import java.time.Clock
 
 /**
  * Builds a fully-wired [CommandRouter] suitable for use in unit tests.
@@ -54,6 +55,7 @@ internal fun buildTestRouter(
     onPhase: (suspend (SessionId, String?) -> PhaseResult)? = null,
     onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
     worldState: WorldStateRegistry? = null,
+    clock: Clock = Clock.systemUTC(),
     shopRegistry: ShopRegistry? = null,
     economyConfig: EconomyConfig = EconomyConfig(),
 ): CommandRouter {
@@ -78,7 +80,7 @@ internal fun buildTestRouter(
             engineId = engineId,
             onRemoteWho = onRemoteWho,
         ),
-        NavigationHandler(ctx = ctx, onCrossZoneMove = onCrossZoneMove),
+        NavigationHandler(ctx = ctx, onCrossZoneMove = onCrossZoneMove, clock = clock),
         CombatHandler(ctx = ctx),
         ProgressionHandler(ctx = ctx, progression = progression, groupSystem = groupSystem),
         ItemHandler(ctx = ctx),
