@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.domain.achievement.AchievementState
+import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mail.MailMessage
@@ -45,6 +46,9 @@ data class PlayerState(
     var inbox: MutableList<MailMessage> = mutableListOf(),
     /** Non-null while the player is composing an outgoing mail message. */
     var mailCompose: MailComposeState? = null,
+    var guildId: String? = null,
+    var guildRank: GuildRank? = null,
+    var guildTag: String? = null,
 ) {
     data class MailComposeState(
         val recipientName: String,

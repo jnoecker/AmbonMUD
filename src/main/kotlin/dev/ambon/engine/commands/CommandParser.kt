@@ -212,6 +212,47 @@ sealed interface Command {
         val message: String,
     ) : Command
 
+    data class Gchat(
+        val message: String,
+    ) : Command
+
+    sealed interface Guild : Command {
+        data class Create(
+            val name: String,
+            val tag: String,
+        ) : Guild
+
+        data object Disband : Guild
+
+        data class Invite(
+            val target: String,
+        ) : Guild
+
+        data object Accept : Guild
+
+        data object Leave : Guild
+
+        data class Kick(
+            val target: String,
+        ) : Guild
+
+        data class Promote(
+            val target: String,
+        ) : Guild
+
+        data class Demote(
+            val target: String,
+        ) : Guild
+
+        data class Motd(
+            val message: String,
+        ) : Guild
+
+        data object Roster : Guild
+
+        data object Info : Guild
+    }
+
     // ---- World feature commands ----
 
     data class OpenFeature(
@@ -409,6 +450,54 @@ object CommandParser {
 
         // gtell: "gtell <msg>" or "gt <msg>"
         requiredArg(line, listOf("gtell", "gt"), "gtell <message>", { Command.Gtell(it) })?.let { return it }
+
+        // gchat: "gchat <msg>" or "g <msg>"
+        requiredArg(line, listOf("gchat", "g"), "gchat <message>", { Command.Gchat(it) })?.let { return it }
+
+        // guild subcommands
+        matchPrefix(line, listOf("guild")) { rest ->
+            if (rest.isEmpty()) return@matchPrefix Command.Guild.Info
+            val parts = rest.split(Regex("\\s+"), limit = 2)
+            when (parts[0].lowercase()) {
+                "create" -> {
+                    val args = parts.getOrNull(1)?.trim() ?: ""
+                    val tokens = args.split(Regex("\\s+"))
+                    if (tokens.size < 2 || tokens.last().isBlank()) {
+                        Command.Invalid(line, "guild create <name> <tag>")
+                    } else {
+                        val tag = tokens.last()
+                        val name = tokens.dropLast(1).joinToString(" ").trim()
+                        if (name.isEmpty()) Command.Invalid(line, "guild create <name> <tag>") else Command.Guild.Create(name, tag)
+                    }
+                }
+                "disband" -> Command.Guild.Disband
+                "invite" -> {
+                    val target = parts.getOrNull(1)?.trim() ?: ""
+                    if (target.isEmpty()) Command.Invalid(line, "guild invite <player>") else Command.Guild.Invite(target)
+                }
+                "accept" -> Command.Guild.Accept
+                "leave" -> Command.Guild.Leave
+                "kick" -> {
+                    val target = parts.getOrNull(1)?.trim() ?: ""
+                    if (target.isEmpty()) Command.Invalid(line, "guild kick <player>") else Command.Guild.Kick(target)
+                }
+                "promote" -> {
+                    val target = parts.getOrNull(1)?.trim() ?: ""
+                    if (target.isEmpty()) Command.Invalid(line, "guild promote <player>") else Command.Guild.Promote(target)
+                }
+                "demote" -> {
+                    val target = parts.getOrNull(1)?.trim() ?: ""
+                    if (target.isEmpty()) Command.Invalid(line, "guild demote <player>") else Command.Guild.Demote(target)
+                }
+                "motd" -> {
+                    val msg = parts.getOrNull(1)?.trim() ?: ""
+                    if (msg.isEmpty()) Command.Invalid(line, "guild motd <message>") else Command.Guild.Motd(msg)
+                }
+                "roster" -> Command.Guild.Roster
+                "info" -> Command.Guild.Info
+                else -> Command.Guild.Info
+            }
+        }?.let { return it }
 
         // group subcommands: "group invite <player>", "group accept", "group leave", etc.
         matchPrefix(line, listOf("group")) { rest ->

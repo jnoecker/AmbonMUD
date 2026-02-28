@@ -8,6 +8,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GroupSystem
+import dev.ambon.engine.GuildSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
@@ -19,6 +20,7 @@ import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
 import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.GroupHandler
+import dev.ambon.engine.commands.handlers.GuildHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
@@ -45,6 +47,7 @@ internal fun buildTestRouter(
     outbound: OutboundBus,
     progression: PlayerProgression = PlayerProgression(),
     groupSystem: GroupSystem? = null,
+    guildSystem: GuildSystem? = null,
     onShutdown: suspend () -> Unit = {},
     onMobSmited: (MobId) -> Unit = {},
     interEngineBus: InterEngineBus? = null,
@@ -85,6 +88,7 @@ internal fun buildTestRouter(
         ShopHandler(ctx = ctx, shopRegistry = shopRegistry, economyConfig = economyConfig),
         DialogueQuestHandler(ctx = ctx),
         GroupHandler(ctx = ctx, groupSystem = groupSystem),
+        GuildHandler(ctx = ctx, guildSystem = guildSystem),
         WorldFeaturesHandler(ctx = ctx),
         MailHandler(ctx = ctx),
         AdminHandler(

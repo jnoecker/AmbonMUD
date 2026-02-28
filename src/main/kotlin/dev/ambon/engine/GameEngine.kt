@@ -25,6 +25,7 @@ import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
 import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.GroupHandler
+import dev.ambon.engine.commands.handlers.GuildHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
@@ -101,6 +102,8 @@ class GameEngine(
     private val worldState: WorldStateRegistry = WorldStateRegistry(world),
     /** Repository for persisting world feature states across restarts. */
     private val worldStateRepository: WorldStateRepository? = null,
+    private val guildRepo: dev.ambon.persistence.GuildRepository? = null,
+    private val playerRepo: dev.ambon.persistence.PlayerRepository? = null,
 ) {
     private val loginFlowHandler by lazy {
         dev.ambon.engine.events.LoginFlowHandler(
@@ -123,6 +126,7 @@ class GameEngine(
             availableClasses = PlayerClass.selectable(engineConfig.debug.enableSwarmClass),
             maxWrongPasswordRetries = loginConfig.maxWrongPasswordRetries,
             maxFailedLoginAttemptsBeforeDisconnect = loginConfig.maxFailedAttemptsBeforeDisconnect,
+            onAfterLogin = { sid -> guildSystem?.onPlayerLogin(sid) },
         )
     }
 
@@ -145,6 +149,7 @@ class GameEngine(
             statusEffectSystem = statusEffectSystem,
             dialogueSystem = dialogueSystem,
             groupSystem = groupSystem,
+            guildSystem = guildSystem,
             promptForName = loginFlowHandler::promptForName,
             showLoginScreen = { sid -> outbound.send(OutboundEvent.ShowLoginScreen(sid)) },
             onPlayerLoggedOut = { player, sid ->
@@ -374,6 +379,21 @@ class GameEngine(
             inviteTimeoutMs = engineConfig.group.inviteTimeoutMs,
             markGroupDirty = ::markGroupDirty,
         )
+    private val guildSystem: GuildSystem? =
+        if (guildRepo != null && playerRepo != null) {
+            GuildSystem(
+                players = players,
+                guildRepo = guildRepo,
+                playerRepo = playerRepo,
+                outbound = outbound,
+                clock = clock,
+                maxSize = engineConfig.guild.maxSize,
+                inviteTimeoutMs = engineConfig.guild.inviteTimeoutMs,
+                markPlayerDirty = { sid -> players.persistPlayer(sid) }, // suspend lambda
+            )
+        } else {
+            null
+        }
     private val combatSystem =
         CombatSystem(
             players = players,
@@ -567,6 +587,10 @@ class GameEngine(
                 ctx = ctx,
                 groupSystem = groupSystem,
             ),
+            GuildHandler(
+                ctx = ctx,
+                guildSystem = guildSystem,
+            ),
             WorldFeaturesHandler(ctx = ctx),
             AdminHandler(
                 ctx = ctx,
@@ -616,6 +640,9 @@ class GameEngine(
     suspend fun run() =
         coroutineScope {
             engineScope = this
+
+            // Load guild data into memory.
+            guildSystem?.initialize()
 
             // Restore persisted world state, overriding in-memory defaults.
             worldStateRepository?.load()?.let { snapshot ->
