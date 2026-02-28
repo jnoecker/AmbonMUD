@@ -819,4 +819,40 @@ class GameEngineLoginFlowTest {
             assertNotNull(ps)
             assertEquals(world.startRoom, ps!!.roomId, "Rogue with no override should spawn in world default start room")
         }
+
+    @Test
+    fun `swarm character spawns in labyrinth when swarm start room is configured`() =
+        runTest {
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val swarmRoom = RoomId("labyrinth:cell_00_00")
+            val classStartRooms =
+                mapOf(
+                    PlayerClass.SWARM to swarmRoom,
+                )
+            val repo = InMemoryPlayerRepository()
+            val items = ItemRegistry()
+            val players =
+                dev.ambon.test.buildTestPlayerRegistry(
+                    startRoom = world.startRoom,
+                    repo = repo,
+                    items = items,
+                    classStartRooms = classStartRooms,
+                )
+
+            val sid = SessionId(1L)
+            val result =
+                players.create(
+                    sessionId = sid,
+                    nameRaw = "LoadBot",
+                    passwordRaw = "password",
+                    race = dev.ambon.domain.Race.HUMAN,
+                    playerClass = PlayerClass.SWARM,
+                )
+
+            assertEquals(CreateResult.Ok, result)
+            val ps = players.get(sid)
+            assertNotNull(ps)
+            assertEquals(swarmRoom, ps!!.roomId, "Swarm should spawn in the labyrinth start room")
+            assertEquals("SWARM", ps.playerClass)
+        }
 }

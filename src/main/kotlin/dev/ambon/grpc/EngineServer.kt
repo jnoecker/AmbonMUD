@@ -9,6 +9,8 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.config.AppConfig
 import dev.ambon.config.PersistenceBackend
 import dev.ambon.config.ShardingRegistryType
+import dev.ambon.domain.PlayerClass
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
@@ -184,9 +186,15 @@ class EngineServer(
             port = config.sharding.advertisePort ?: config.grpc.server.port,
         )
 
+    private val classStartRooms: Map<PlayerClass, RoomId> =
+        config.engine.classStartRooms
+            .mapNotNull { (key, value) -> PlayerClass.fromString(key)?.to(RoomId(value)) }
+            .toMap()
+
     private val players =
         PlayerRegistry(
             startRoom = world.startRoom,
+            classStartRooms = classStartRooms,
             repo = playerRepo,
             items = items,
             clock = clock,
