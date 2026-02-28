@@ -485,6 +485,16 @@ internal class LoginFlowHandler(
             gmcpEmitter.sendGroupInfo(sessionId, leader, members)
         }
         router.handle(sessionId, Command.Look)
+
+        val unread = me.inbox.count { !it.read }
+        if (unread > 0) {
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "You have $unread unread mail message(s). Type 'mail' to read.",
+                ),
+            )
+        }
     }
 
     private suspend fun ensureLoginRoomAvailable(

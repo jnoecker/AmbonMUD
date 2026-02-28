@@ -20,6 +20,7 @@ import dev.ambon.engine.commands.handlers.DialogueQuestHandler
 import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.GroupHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
+import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
@@ -85,6 +86,7 @@ internal fun buildTestRouter(
         DialogueQuestHandler(ctx = ctx),
         GroupHandler(ctx = ctx, groupSystem = groupSystem),
         WorldFeaturesHandler(ctx = ctx),
+        MailHandler(ctx = ctx),
         AdminHandler(
             ctx = ctx,
             onShutdown = onShutdown,

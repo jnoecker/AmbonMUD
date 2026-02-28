@@ -1,0 +1,1 @@
+ALTER TABLE players ADD COLUMN mail_inbox TEXT NOT NULL DEFAULT '[]';

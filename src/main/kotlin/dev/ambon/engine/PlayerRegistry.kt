@@ -346,6 +346,7 @@ class PlayerRegistry(
                 unlockedAchievementIds = boundRecord.unlockedAchievementIds,
                 achievementProgress = boundRecord.achievementProgress,
                 activeTitle = boundRecord.activeTitle,
+                inbox = boundRecord.inbox.toMutableList(),
             )
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
@@ -407,6 +408,32 @@ class PlayerRegistry(
     }
 
     fun get(sessionId: SessionId): PlayerState? = players[sessionId]
+
+    /** Returns the online [PlayerState] for [name] (case-insensitive), or null if offline. */
+    fun getByName(name: String): PlayerState? {
+        val sid = sessionByLowerName[name.lowercase()] ?: return null
+        return players[sid]
+    }
+
+    /** Persists the current state for [sessionId] if the player is claimed. No-op for unclaimed sessions. */
+    suspend fun persistPlayer(sessionId: SessionId) {
+        val ps = players[sessionId] ?: return
+        persistIfClaimed(ps)
+    }
+
+    /**
+     * Appends [message] to the inbox of an offline player identified by [recipientName].
+     * Returns `true` if the player record was found and updated, `false` if no such player exists.
+     * Must not be called when the recipient is online; use [getByName] to check first.
+     */
+    suspend fun deliverMailOffline(
+        recipientName: String,
+        message: dev.ambon.domain.mail.MailMessage,
+    ): Boolean {
+        val record = repo.findByName(recipientName) ?: return false
+        repo.save(record.copy(inbox = record.inbox + message))
+        return true
+    }
 
     fun allPlayers(): List<PlayerState> = players.values.toList()
 
@@ -558,6 +585,7 @@ class PlayerRegistry(
                 unlockedAchievementIds = ps.unlockedAchievementIds,
                 achievementProgress = ps.achievementProgress,
                 activeTitle = ps.activeTitle,
+                inbox = ps.inbox.toList(),
             ),
         )
     }
