@@ -2,6 +2,8 @@ package dev.ambon.engine
 
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.domain.PlayerClass
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
@@ -747,5 +749,74 @@ class GameEngineLoginFlowTest {
             engineJob.cancel()
             inbound.close()
             outbound.close()
+        }
+
+    @Test
+    fun `new character spawns in class-specific start room when classStartRooms is configured`() =
+        runTest {
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val warriorRoom = RoomId("test_zone:outpost")
+            val classStartRooms =
+                mapOf(
+                    PlayerClass.WARRIOR to warriorRoom,
+                )
+            val repo = InMemoryPlayerRepository()
+            val items = ItemRegistry()
+            val players =
+                dev.ambon.test.buildTestPlayerRegistry(
+                    startRoom = world.startRoom,
+                    repo = repo,
+                    items = items,
+                    classStartRooms = classStartRooms,
+                )
+
+            val sid = SessionId(1L)
+            val result =
+                players.create(
+                    sessionId = sid,
+                    nameRaw = "Grunt",
+                    passwordRaw = "password",
+                    race = dev.ambon.domain.Race.HUMAN,
+                    playerClass = PlayerClass.WARRIOR,
+                )
+
+            assertEquals(CreateResult.Ok, result)
+            val ps = players.get(sid)
+            assertNotNull(ps)
+            assertEquals(warriorRoom, ps!!.roomId, "Warrior should spawn in configured warrior start room")
+        }
+
+    @Test
+    fun `new character uses default start room when class has no configured override`() =
+        runTest {
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val classStartRooms =
+                mapOf(
+                    PlayerClass.WARRIOR to RoomId("test_zone:outpost"),
+                )
+            val repo = InMemoryPlayerRepository()
+            val items = ItemRegistry()
+            val players =
+                dev.ambon.test.buildTestPlayerRegistry(
+                    startRoom = world.startRoom,
+                    repo = repo,
+                    items = items,
+                    classStartRooms = classStartRooms,
+                )
+
+            val sid = SessionId(1L)
+            val result =
+                players.create(
+                    sessionId = sid,
+                    nameRaw = "Rogueling",
+                    passwordRaw = "password",
+                    race = dev.ambon.domain.Race.HUMAN,
+                    playerClass = PlayerClass.ROGUE,
+                )
+
+            assertEquals(CreateResult.Ok, result)
+            val ps = players.get(sid)
+            assertNotNull(ps)
+            assertEquals(world.startRoom, ps!!.roomId, "Rogue with no override should spawn in world default start room")
         }
 }
