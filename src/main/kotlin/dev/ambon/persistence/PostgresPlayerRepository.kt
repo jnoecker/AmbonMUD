@@ -118,6 +118,7 @@ class PostgresPlayerRepository(
                     it[activeTitle] = dto.activeTitle
                     it[mailInbox] = questMapper.writeValueAsString(dto.inbox)
                     it[guildId] = dto.guildId
+                    it[recallRoomId] = dto.recallRoomId
                 }
             }
         }
@@ -168,5 +169,6 @@ class PostgresPlayerRepository(
                     questMapper.readValue(this[PlayersTable.mailInbox], mailInboxType)
                 }.getOrDefault(emptyList()),
             guildId = this[PlayersTable.guildId],
+            recallRoomId = this[PlayersTable.recallRoomId],
         ).toDomain()
 }

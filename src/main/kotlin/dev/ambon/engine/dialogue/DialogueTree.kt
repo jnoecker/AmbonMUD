@@ -15,4 +15,5 @@ data class DialogueChoice(
     val nextNodeId: String?,
     val minLevel: Int?,
     val requiredClass: String?,
+    val action: String? = null,
 )

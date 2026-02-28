@@ -87,6 +87,8 @@ sealed interface Command {
 
     data object Flee : Command
 
+    data object Recall : Command
+
     data object Score : Command
 
     data class Goto(
@@ -690,6 +692,7 @@ object CommandParser {
             "d", "down" -> Command.Move(Direction.DOWN)
             "exits", "ex" -> Command.Exits
             "flee" -> Command.Flee
+            "recall" -> Command.Recall
             "score", "sc" -> Command.Score
             "spells", "abilities", "skills" -> Command.Spells
             "effects", "buffs", "debuffs" -> Command.Effects

@@ -32,6 +32,7 @@ object PlayersTable : Table("players") {
     val activeTitle = varchar("active_title", 64).nullable()
     val mailInbox = text("mail_inbox").default("[]")
     val guildId = varchar("guild_id", 64).nullable()
+    val recallRoomId = varchar("recall_room_id", 128).nullable()
 
     override val primaryKey = PrimaryKey(id)
 }

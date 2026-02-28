@@ -39,6 +39,7 @@ internal data class PlayerDto(
     val activeTitle: String? = null,
     val inbox: List<MailMessage> = emptyList(),
     val guildId: String? = null,
+    val recallRoomId: String? = null,
 ) {
     fun toDomain(): PlayerRecord {
         // Legacy migration: old files/cache stored constitution=0; remap to base 10
@@ -72,6 +73,7 @@ internal data class PlayerDto(
             activeTitle = activeTitle,
             inbox = inbox,
             guildId = guildId,
+            recallRoomId = recallRoomId?.let { RoomId(it) },
         )
     }
 
@@ -106,6 +108,7 @@ internal data class PlayerDto(
                 activeTitle = record.activeTitle,
                 inbox = record.inbox,
                 guildId = record.guildId,
+                recallRoomId = record.recallRoomId?.value,
             )
     }
 }

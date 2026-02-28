@@ -49,6 +49,9 @@ data class PlayerState(
     var guildId: String? = null,
     var guildRank: GuildRank? = null,
     var guildTag: String? = null,
+    var recallRoomId: RoomId? = null,
+    /** Epoch-ms timestamp after which recall is available again. Runtime-only; not persisted. */
+    var recallCooldownUntilMs: Long = 0L,
 ) {
     data class MailComposeState(
         val recipientName: String,
