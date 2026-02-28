@@ -1,4 +1,5 @@
 .gradle
+.gradle-user/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
@@ -46,6 +47,8 @@ Thumbs.db
 *.log
 /data/players/players/
 /data/players/next_player_id.txt
+/data/world-import/
+/data/world-import-archive/
 # Claude Code – track settings/hooks/skills; exclude local overrides and working trees
 /.claude/settings.local.json
 /.claude/worktrees/

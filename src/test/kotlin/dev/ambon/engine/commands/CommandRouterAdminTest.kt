@@ -57,6 +57,7 @@ class CommandRouterAdminTest {
         items: ItemRegistry,
         outbound: OutboundBus,
         onShutdown: suspend () -> Unit = {},
+        onWorldReimport: suspend () -> Int = { 0 },
         onMobSmited: (MobId) -> Unit = {},
     ): CommandRouter {
         val world = dev.ambon.test.TestWorlds.testWorld
@@ -69,6 +70,7 @@ class CommandRouterAdminTest {
             combat = combat,
             outbound = outbound,
             onShutdown = onShutdown,
+            onWorldReimport = onWorldReimport,
             onMobSmited = onMobSmited,
         )
     }
@@ -553,6 +555,150 @@ class CommandRouterAdminTest {
             assertTrue(
                 outs.any { it is OutboundEvent.SendError && it.sessionId == staffSid },
                 "Expected SendError for unknown player. got=$outs",
+            )
+        }
+
+    @Test
+    fun `reimport world calls callback for staff and warns restart required`() =
+        runTest {
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val items = ItemRegistry()
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val outbound = LocalOutboundBus()
+            var callbackCount = 0
+            val router =
+                makeRouter(
+                    players = players,
+                    mobs = mobs,
+                    items = items,
+                    outbound = outbound,
+                    onWorldReimport = {
+                        callbackCount++
+                        3
+                    },
+                )
+
+            val staffSid = SessionId(1)
+            loginStaff(players, staffSid, "Admin")
+            drain(outbound)
+
+            router.handle(staffSid, Command.ReimportWorld)
+            val outs = drain(outbound)
+
+            assertEquals(1, callbackCount, "World re-import callback should be invoked once")
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == staffSid &&
+                        it.text.contains("Imported 3 staged world file(s)") &&
+                        it.text.contains("Restart required")
+                },
+                "Expected re-import confirmation. got=$outs",
+            )
+        }
+
+    @Test
+    fun `reimport world reports empty staging directory`() =
+        runTest {
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val items = ItemRegistry()
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val outbound = LocalOutboundBus()
+            val router =
+                makeRouter(
+                    players = players,
+                    mobs = mobs,
+                    items = items,
+                    outbound = outbound,
+                    onWorldReimport = { 0 },
+                )
+
+            val staffSid = SessionId(1)
+            loginStaff(players, staffSid, "Admin")
+            drain(outbound)
+
+            router.handle(staffSid, Command.ReimportWorld)
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendInfo &&
+                        it.sessionId == staffSid &&
+                        it.text.contains("No staged world files found")
+                },
+                "Expected empty import-dir message. got=$outs",
+            )
+        }
+
+    @Test
+    fun `reimport world emits error when callback fails`() =
+        runTest {
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val items = ItemRegistry()
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val outbound = LocalOutboundBus()
+            val router =
+                makeRouter(
+                    players = players,
+                    mobs = mobs,
+                    items = items,
+                    outbound = outbound,
+                    onWorldReimport = { error("boom") },
+                )
+
+            val staffSid = SessionId(1)
+            loginStaff(players, staffSid, "Admin")
+            drain(outbound)
+
+            router.handle(staffSid, Command.ReimportWorld)
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendError &&
+                        it.sessionId == staffSid &&
+                        it.text.contains("World re-import failed") &&
+                        it.text.contains("boom")
+                },
+                "Expected re-import failure message. got=$outs",
+            )
+        }
+
+    @Test
+    fun `non-staff cannot trigger world reimport`() =
+        runTest {
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val items = ItemRegistry()
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val outbound = LocalOutboundBus()
+            var callbackCalled = false
+            val router =
+                makeRouter(
+                    players = players,
+                    mobs = mobs,
+                    items = items,
+                    outbound = outbound,
+                    onWorldReimport = {
+                        callbackCalled = true
+                        1
+                    },
+                )
+
+            val sid = SessionId(1)
+            login(players, sid, "Alice")
+            drain(outbound)
+
+            router.handle(sid, Command.ReimportWorld)
+            val outs = drain(outbound)
+
+            assertFalse(callbackCalled, "World re-import callback should not run for non-staff")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == sid && it.text.contains("not staff") },
+                "Expected 'not staff' error. got=$outs",
             )
         }
 }

@@ -51,9 +51,13 @@ cd AmbonMUD
 
 **Start the server (default local runtime):**
 ```bash
+mkdir data\world-import
+copy src\main\resources\world\*.yaml data\world-import\
 docker compose up -d
 ./gradlew run
 ```
+
+On first boot, staged YAML files in `data/world-import/` are validated, imported into Postgres, and moved to `data/world-import-archive/`.
 
 **Connect:**
 - Telnet: `telnet localhost 4000`
@@ -292,7 +296,7 @@ Thin dispatch layer (~62 lines) that routes each `Command` variant to the approp
 - `GroupHandler` — party invite/accept/leave/kick
 - `ProgressionHandler` — score, spells, effects, achievements
 - `WorldFeaturesHandler` — zone-specific interactions
-- `AdminHandler` — goto, transfer, spawn, smite, kick, shutdown (staff only)
+- `AdminHandler` — goto, transfer, spawn, reimportworld, smite, kick, shutdown (staff only)
 - `UiHandler` — help, clear, colors, ansi, phase
 
 ### Adding a New Command
@@ -442,6 +446,7 @@ XP curve: `totalXpForLevel(L) = baseXp * (L-1)^exponent + linearXp * (L-1)`
 - Default local runtime uses Docker Compose-managed PostgreSQL on `localhost:5432`
 - Schema managed by Flyway migrations (`src/main/resources/db/migration/`)
 - Connection defaults: `localhost:5432/ambonmud`, user `ambon`, password `ambon` (matches docker compose)
+- Static world content is also loaded from Postgres by default
 
 **YAML**:
 - Player files under `data/players/` (configurable via `ambonMUD.persistence.rootDir`)
@@ -485,6 +490,11 @@ ambonMUD:
   server:
     telnetPort: 4000            # Telnet port
     webPort: 8080               # WebSocket / web client port
+  world:
+    storage:
+      backend: POSTGRES
+      importDirectory: data/world-import
+      archiveDirectory: data/world-import-archive
   persistence:
     backend: POSTGRES           # POSTGRES or YAML
     rootDir: data/players       # YAML backend only
@@ -686,8 +696,9 @@ ambonMUD:
 
 1. Create YAML file in `src/main/resources/world/my_zone.yaml`
 2. Define zone, startRoom, rooms, mobs, items, shops
-3. Reference in `application.yaml` under `world.resources`
-4. Use `WorldLoader` validation to catch errors early
+3. Copy it to `data/world-import/`
+4. Start the server to import it into Postgres and archive the staged file
+5. Use `WorldLoader` validation to catch errors early
 
 See [WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md) for full schema.
 
@@ -697,10 +708,15 @@ See [WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md) for full schema.
 # Ensure Docker Compose is running
 docker compose up -d
 
+# Stage world YAML for import on first boot
+mkdir data\world-import
+copy src\main\resources\world\*.yaml data\world-import\
+
 # Run server with the default config
 ./gradlew run
 
 # Flyway migrations run automatically on startup
+# Static world content is imported from data/world-import/ when present
 # Test via: SELECT * FROM players;
 ```
 

@@ -56,6 +56,554 @@ object WorldLoader {
         tiers: MobTiersConfig = MobTiersConfig(),
     ): World = loadFromResources(listOf(path), tiers)
 
+    fun loadFromFiles(
+        files: List<WorldFile>,
+        tiers: MobTiersConfig = MobTiersConfig(),
+        zoneFilter: Set<String> = emptySet(),
+    ): World {
+        if (files.isEmpty()) throw WorldLoadException("No zone files provided")
+
+        val selectedFiles =
+            if (zoneFilter.isEmpty()) {
+                files
+            } else {
+                files.filter { it.zone.trim() in zoneFilter }
+            }
+        if (selectedFiles.isEmpty()) {
+            throw WorldLoadException("No zone files match the zone filter: $zoneFilter")
+        }
+
+        selectedFiles.forEach { validateFileBasics(it) }
+
+        val mergedRooms = LinkedHashMap<RoomId, Room>()
+        val allExits = LinkedHashMap<RoomId, Map<Direction, RoomId>>()
+        val allRoomFeatures = LinkedHashMap<RoomId, MutableList<RoomFeature>>()
+        val mergedMobs = LinkedHashMap<MobId, MobSpawn>()
+        val mergedItems = LinkedHashMap<ItemId, ItemSpawn>()
+        val mergedShops = mutableListOf<ShopDefinition>()
+        val mergedQuests = mutableListOf<QuestDef>()
+        val zoneLifespansMinutes = LinkedHashMap<String, Long?>()
+
+        val worldStart = normalizeId(selectedFiles.first().zone, selectedFiles.first().startRoom)
+
+        for (file in selectedFiles) {
+            val zone = file.zone.trim()
+            if (zone.isEmpty()) throw WorldLoadException("World zone cannot be blank")
+            val declaredLifespanMinutes = file.lifespan
+            if (!zoneLifespansMinutes.containsKey(zone)) {
+                zoneLifespansMinutes[zone] = declaredLifespanMinutes
+            } else {
+                val existingLifespanMinutes = zoneLifespansMinutes.getValue(zone)
+                when {
+                    declaredLifespanMinutes == null -> Unit
+                    existingLifespanMinutes == null -> zoneLifespansMinutes[zone] = declaredLifespanMinutes
+                    existingLifespanMinutes != declaredLifespanMinutes -> {
+                        throw WorldLoadException(
+                            "Zone '$zone' declares conflicting lifespan values " +
+                                "($existingLifespanMinutes and $declaredLifespanMinutes)",
+                        )
+                    }
+                }
+            }
+
+            for ((rawId, rf) in file.rooms) {
+                val id = normalizeId(zone, rawId)
+                if (mergedRooms.containsKey(id)) {
+                    throw WorldLoadException("Duplicate room id '${id.value}' across zone files")
+                }
+                mergedRooms[id] =
+                    Room(
+                        id = id,
+                        title = rf.title,
+                        description = rf.description,
+                        exits = emptyMap(),
+                    )
+            }
+
+            for ((rawId, rf) in file.rooms) {
+                val fromId = normalizeId(zone, rawId)
+                val featList = allRoomFeatures.getOrPut(fromId) { mutableListOf() }
+                val exits: Map<Direction, RoomId> =
+                    rf.exits
+                        .map { (dirStr, exitValue) ->
+                            val dir =
+                                parseDirectionOrNull(dirStr)
+                                    ?: throw WorldLoadException("Room '${fromId.value}' has invalid direction '$dirStr'")
+                            val doorFile = exitValue.door
+                            if (doorFile != null) {
+                                val doorKeyItemId =
+                                    doorFile.keyItemId?.trim()?.takeUnless { it.isEmpty() }?.let {
+                                        normalizeItemId(zone, it)
+                                    }
+                                val doorState =
+                                    parseDoorState(
+                                        doorFile.initialState,
+                                        "Room '${fromId.value}' door at '$dirStr'",
+                                    )
+                                val dirAbbrev = dirAbbrev(dir)
+                                featList.add(
+                                    RoomFeature.Door(
+                                        id = "${fromId.value}/$dirAbbrev",
+                                        roomId = fromId,
+                                        displayName = "door to the ${dir.name.lowercase()}",
+                                        keyword = dir.name.lowercase(),
+                                        direction = dir,
+                                        initialState = doorState,
+                                        keyItemId = doorKeyItemId,
+                                        keyConsumed = doorFile.keyConsumed,
+                                        resetWithZone = doorFile.resetWithZone,
+                                    ),
+                                )
+                            }
+                            dir to normalizeTarget(zone, exitValue.to)
+                        }.toMap()
+
+                allExits[fromId] = exits
+            }
+
+            for ((rawId, rf) in file.rooms) {
+                val fromId = normalizeId(zone, rawId)
+                val featList = allRoomFeatures.getOrPut(fromId) { mutableListOf() }
+                for ((featLocalId, ff) in rf.features) {
+                    val featId = "${fromId.value}/$featLocalId"
+                    featList.add(parseFeatureFile(featId, fromId, zone, ff))
+                }
+            }
+
+            for ((rawId, mf) in file.mobs) {
+                val mobId = normalizeMobId(zone, rawId)
+                if (mergedMobs.containsKey(mobId)) {
+                    throw WorldLoadException("Duplicate mob id '${mobId.value}' across zone files")
+                }
+                val roomId = normalizeTarget(zone, mf.room)
+
+                val tierName = mf.tier?.trim()?.lowercase()
+                val tier =
+                    if (tierName == null) {
+                        tiers.standard
+                    } else {
+                        tiers.forName(tierName)
+                            ?: throw WorldLoadException(
+                                "Mob '${mobId.value}' has unknown tier '$tierName' " +
+                                    "(expected: weak, standard, elite, boss)",
+                            )
+                    }
+
+                val level = mf.level ?: 1
+                if (level < 1) {
+                    throw WorldLoadException("Mob '${mobId.value}' level must be >= 1 (got $level)")
+                }
+                val steps = level - 1
+
+                val resolvedHp = mf.hp ?: (tier.baseHp + steps * tier.hpPerLevel)
+                val resolvedMinDamage = mf.minDamage ?: (tier.baseMinDamage + steps * tier.damagePerLevel)
+                val resolvedMaxDamage = mf.maxDamage ?: (tier.baseMaxDamage + steps * tier.damagePerLevel)
+                val resolvedArmor = mf.armor ?: tier.baseArmor
+                val resolvedXpReward = mf.xpReward ?: (tier.baseXpReward + steps.toLong() * tier.xpRewardPerLevel)
+                val resolvedGoldMin = mf.goldMin ?: (tier.baseGoldMin + steps.toLong() * tier.goldPerLevel)
+                val resolvedGoldMax = mf.goldMax ?: (tier.baseGoldMax + steps.toLong() * tier.goldPerLevel)
+                val drops =
+                    mf.drops.mapIndexed { index, drop ->
+                        val rawItemId = drop.itemId.trim()
+                        if (rawItemId.isEmpty()) {
+                            throw WorldLoadException("Mob '${mobId.value}' drop #${index + 1} itemId cannot be blank")
+                        }
+
+                        val chance = drop.chance
+                        if (chance.isNaN() || chance < 0.0 || chance > 1.0) {
+                            throw WorldLoadException(
+                                "Mob '${mobId.value}' drop #${index + 1} chance must be in [0.0, 1.0] (got $chance)",
+                            )
+                        }
+
+                        MobDrop(
+                            itemId = normalizeItemId(zone, rawItemId),
+                            chance = chance,
+                        )
+                    }
+
+                if (resolvedHp < 1) throw WorldLoadException("Mob '${mobId.value}' resolved hp must be >= 1")
+                if (resolvedMinDamage < 1) {
+                    throw WorldLoadException("Mob '${mobId.value}' resolved minDamage must be >= 1")
+                }
+                if (resolvedMaxDamage < resolvedMinDamage) {
+                    throw WorldLoadException(
+                        "Mob '${mobId.value}' resolved maxDamage ($resolvedMaxDamage) must be >= " +
+                            "minDamage ($resolvedMinDamage)",
+                    )
+                }
+                if (resolvedArmor < 0) throw WorldLoadException("Mob '${mobId.value}' resolved armor must be >= 0")
+                if (resolvedXpReward < 0L) {
+                    throw WorldLoadException("Mob '${mobId.value}' resolved xpReward must be >= 0")
+                }
+                if (resolvedGoldMin < 0L) {
+                    throw WorldLoadException("Mob '${mobId.value}' resolved goldMin must be >= 0")
+                }
+                if (resolvedGoldMax < resolvedGoldMin) {
+                    throw WorldLoadException(
+                        "Mob '${mobId.value}' resolved goldMax ($resolvedGoldMax) must be >= " +
+                            "goldMin ($resolvedGoldMin)",
+                    )
+                }
+
+                val respawnSeconds = mf.respawnSeconds
+                if (respawnSeconds != null && respawnSeconds <= 0L) {
+                    throw WorldLoadException("Mob '${mobId.value}' respawnSeconds must be > 0 (got $respawnSeconds)")
+                }
+
+                val dialogue = parseDialogue(mobId, mf.dialogue)
+                val behaviorTree = parseBehavior(mobId, zone, mf.behavior)
+                val questIds =
+                    mf.quests.map { rawQuestId ->
+                        val s = rawQuestId.trim()
+                        if (':' in s) s else "$zone:$s"
+                    }
+
+                mergedMobs[mobId] =
+                    MobSpawn(
+                        id = mobId,
+                        name = mf.name,
+                        roomId = roomId,
+                        maxHp = resolvedHp,
+                        minDamage = resolvedMinDamage,
+                        maxDamage = resolvedMaxDamage,
+                        armor = resolvedArmor,
+                        xpReward = resolvedXpReward,
+                        drops = drops,
+                        respawnSeconds = respawnSeconds,
+                        goldMin = resolvedGoldMin,
+                        goldMax = resolvedGoldMax,
+                        dialogue = dialogue,
+                        behaviorTree = behaviorTree,
+                        questIds = questIds,
+                    )
+            }
+
+            for ((rawId, itemFile) in file.items) {
+                val itemId = normalizeItemId(zone, rawId)
+                if (mergedItems.containsKey(itemId)) {
+                    throw WorldLoadException("Duplicate item id '${itemId.value}' across zone files")
+                }
+
+                val displayName = itemFile.displayName.trim()
+                if (displayName.isEmpty()) {
+                    throw WorldLoadException("Item '${itemId.value}' displayName cannot be blank")
+                }
+
+                val keyword = normalizeKeyword(rawId, itemFile.keyword)
+
+                val slotRaw = itemFile.slot?.trim()
+                if (slotRaw != null && slotRaw.isEmpty()) {
+                    throw WorldLoadException("Item '${itemId.value}' slot cannot be blank")
+                }
+                val slot = slotRaw?.let { parseItemSlot(itemId, it) }
+
+                val damage = itemFile.damage
+                if (damage < 0) {
+                    throw WorldLoadException("Item '${itemId.value}' damage cannot be negative")
+                }
+
+                val armor = itemFile.armor
+                if (armor < 0) {
+                    throw WorldLoadException("Item '${itemId.value}' armor cannot be negative")
+                }
+
+                val constitution = itemFile.constitution
+                if (constitution < 0) {
+                    throw WorldLoadException("Item '${itemId.value}' constitution cannot be negative")
+                }
+
+                val charges = itemFile.charges
+                if (charges != null && charges <= 0) {
+                    throw WorldLoadException("Item '${itemId.value}' charges must be > 0")
+                }
+
+                val onUse =
+                    itemFile.onUse?.let { effectFile ->
+                        if (effectFile.healHp < 0) {
+                            throw WorldLoadException("Item '${itemId.value}' onUse.healHp cannot be negative")
+                        }
+                        if (effectFile.grantXp < 0L) {
+                            throw WorldLoadException("Item '${itemId.value}' onUse.grantXp cannot be negative")
+                        }
+                        ItemUseEffect(
+                            healHp = effectFile.healHp,
+                            grantXp = effectFile.grantXp,
+                        ).also { effect ->
+                            if (!effect.hasEffect()) {
+                                throw WorldLoadException(
+                                    "Item '${itemId.value}' onUse must define at least one positive effect",
+                                )
+                            }
+                        }
+                    }
+
+                val basePrice = itemFile.basePrice
+                if (basePrice < 0) {
+                    throw WorldLoadException("Item '${itemId.value}' basePrice cannot be negative")
+                }
+
+                val roomRaw = itemFile.room?.trim()?.takeUnless { it.isEmpty() }
+                val mobRaw = itemFile.mob?.trim()?.takeUnless { it.isEmpty() }
+                if (roomRaw != null && mobRaw != null) {
+                    throw WorldLoadException(
+                        "Item '${itemId.value}' cannot be placed in both room and mob. " +
+                            "Use mobs.<id>.drops for mob loot.",
+                    )
+                }
+                if (mobRaw != null) {
+                    throw WorldLoadException(
+                        "Item '${itemId.value}' uses deprecated 'mob' placement. " +
+                            "Use mobs.<id>.drops instead.",
+                    )
+                }
+
+                val roomId = roomRaw?.let { normalizeTarget(zone, it) }
+
+                mergedItems[itemId] =
+                    ItemSpawn(
+                        instance =
+                            ItemInstance(
+                                id = itemId,
+                                item =
+                                    Item(
+                                        keyword = keyword,
+                                        displayName = displayName,
+                                        description = itemFile.description,
+                                        slot = slot,
+                                        damage = damage,
+                                        armor = armor,
+                                        constitution = constitution,
+                                        strength = itemFile.strength,
+                                        dexterity = itemFile.dexterity,
+                                        intelligence = itemFile.intelligence,
+                                        wisdom = itemFile.wisdom,
+                                        charisma = itemFile.charisma,
+                                        consumable = itemFile.consumable,
+                                        charges = charges,
+                                        onUse = onUse,
+                                        matchByKey = itemFile.matchByKey,
+                                        basePrice = basePrice,
+                                    ),
+                            ),
+                        roomId = roomId,
+                    )
+            }
+
+            for ((rawId, shopFile) in file.shops) {
+                val shopName = shopFile.name.trim()
+                if (shopName.isEmpty()) {
+                    throw WorldLoadException("Shop '$rawId' in zone '$zone' name cannot be blank")
+                }
+                val shopRoomId = normalizeTarget(zone, shopFile.room)
+                val shopItemIds =
+                    shopFile.items.mapIndexed { index, rawItemId ->
+                        val trimmed = rawItemId.trim()
+                        if (trimmed.isEmpty()) {
+                            throw WorldLoadException("Shop '$rawId' in zone '$zone' item #${index + 1} cannot be blank")
+                        }
+                        normalizeItemId(zone, trimmed)
+                    }
+                mergedShops.add(
+                    ShopDefinition(
+                        id = "$zone:$rawId",
+                        name = shopName,
+                        roomId = shopRoomId,
+                        itemIds = shopItemIds,
+                    ),
+                )
+            }
+
+            for ((rawId, questFile) in file.quests) {
+                val questId = "$zone:$rawId"
+                val questName = questFile.name.trim()
+                if (questName.isEmpty()) {
+                    throw WorldLoadException("Quest '$questId' name cannot be blank")
+                }
+                val giver = questFile.giver.trim()
+                if (giver.isEmpty()) {
+                    throw WorldLoadException("Quest '$questId' giver cannot be blank")
+                }
+                val completionType =
+                    when (questFile.completionType.uppercase()) {
+                        "AUTO" -> CompletionType.AUTO
+                        "NPC_TURN_IN" -> CompletionType.NPC_TURN_IN
+                        else -> throw WorldLoadException(
+                            "Quest '$questId' has unknown completionType '${questFile.completionType}'",
+                        )
+                    }
+                if (questFile.objectives.isEmpty()) {
+                    throw WorldLoadException("Quest '$questId' must have at least one objective")
+                }
+                val objectives =
+                    questFile.objectives.mapIndexed { index, obj ->
+                        val objectiveType =
+                            when (obj.type.uppercase()) {
+                                "KILL" -> ObjectiveType.KILL
+                                "COLLECT" -> ObjectiveType.COLLECT
+                                else -> throw WorldLoadException(
+                                    "Quest '$questId' objective #${index + 1} has unknown type '${obj.type}'",
+                                )
+                            }
+                        val targetKeyRaw = obj.targetKey.trim()
+                        if (targetKeyRaw.isEmpty()) {
+                            throw WorldLoadException(
+                                "Quest '$questId' objective #${index + 1} targetKey cannot be blank",
+                            )
+                        }
+                        val targetId = if (':' in targetKeyRaw) targetKeyRaw else "$zone:$targetKeyRaw"
+                        if (obj.count < 1) {
+                            throw WorldLoadException(
+                                "Quest '$questId' objective #${index + 1} count must be >= 1",
+                            )
+                        }
+                        QuestObjectiveDef(
+                            type = objectiveType,
+                            targetId = targetId,
+                            count = obj.count,
+                            description = obj.description.ifBlank {
+                                "${objectiveType.name.lowercase()} $targetKeyRaw x${obj.count}"
+                            },
+                        )
+                    }
+                mergedQuests.add(
+                    QuestDef(
+                        id = questId,
+                        name = questName,
+                        description = questFile.description,
+                        giverMobId = if (':' in giver) giver else "$zone:$giver",
+                        objectives = objectives,
+                        rewards = QuestRewards(xp = questFile.rewards.xp, gold = questFile.rewards.gold),
+                        completionType = completionType,
+                    ),
+                )
+            }
+        }
+
+        val loadedZones = mergedRooms.keys.mapTo(mutableSetOf()) { it.zone }
+        val filteredLoad = zoneFilter.isNotEmpty()
+        for ((fromId, exits) in allExits) {
+            for ((dir, targetId) in exits) {
+                if (filteredLoad && targetId.zone !in loadedZones) continue
+                if (!mergedRooms.containsKey(targetId)) {
+                    throw WorldLoadException(
+                        "Room '${fromId.value}' exit '$dir' points to missing room '${targetId.value}'",
+                    )
+                }
+            }
+        }
+
+        for ((fromId, exits) in allExits) {
+            val room = mergedRooms.getValue(fromId)
+            val remoteExits =
+                if (filteredLoad) {
+                    exits.filterValues { it.zone !in loadedZones }.keys.toSet()
+                } else {
+                    emptySet()
+                }
+            mergedRooms[fromId] =
+                room.copy(
+                    exits = exits,
+                    remoteExits = remoteExits,
+                    features = allRoomFeatures[fromId] ?: emptyList(),
+                )
+        }
+
+        if (!mergedRooms.containsKey(worldStart)) {
+            throw WorldLoadException("World startRoom '${worldStart.value}' does not exist in merged world")
+        }
+
+        for ((mobId, mob) in mergedMobs) {
+            if (!mergedRooms.containsKey(mob.roomId)) {
+                throw WorldLoadException(
+                    "Mob '${mobId.value}' starts in missing room '${mob.roomId.value}'",
+                )
+            }
+        }
+
+        for ((itemId, item) in mergedItems) {
+            val roomId = item.roomId
+            if (roomId != null && !mergedRooms.containsKey(roomId)) {
+                throw WorldLoadException(
+                    "Item '${itemId.value}' starts in missing room '${roomId.value}'",
+                )
+            }
+        }
+
+        for ((mobId, mob) in mergedMobs) {
+            for ((index, drop) in mob.drops.withIndex()) {
+                if (!mergedItems.containsKey(drop.itemId)) {
+                    throw WorldLoadException(
+                        "Mob '${mobId.value}' drop #${index + 1} references missing item '${drop.itemId.value}'",
+                    )
+                }
+            }
+        }
+
+        for (shop in mergedShops) {
+            if (!mergedRooms.containsKey(shop.roomId)) {
+                throw WorldLoadException(
+                    "Shop '${shop.id}' references missing room '${shop.roomId.value}'",
+                )
+            }
+            for ((index, itemId) in shop.itemIds.withIndex()) {
+                if (!mergedItems.containsKey(itemId)) {
+                    throw WorldLoadException(
+                        "Shop '${shop.id}' item #${index + 1} references missing item '${itemId.value}'",
+                    )
+                }
+            }
+        }
+
+        for (features in allRoomFeatures.values) {
+            for (feature in features) {
+                when (feature) {
+                    is RoomFeature.Door -> {
+                        feature.keyItemId?.let { keyId ->
+                            if (!mergedItems.containsKey(keyId)) {
+                                throw WorldLoadException(
+                                    "Door '${feature.id}' keyItemId references unknown item '${keyId.value}'",
+                                )
+                            }
+                        }
+                    }
+
+                    is RoomFeature.Container -> {
+                        feature.keyItemId?.let { keyId ->
+                            if (!mergedItems.containsKey(keyId)) {
+                                throw WorldLoadException(
+                                    "Container '${feature.id}' keyItemId references unknown item '${keyId.value}'",
+                                )
+                            }
+                        }
+                        for ((index, itemId) in feature.initialItems.withIndex()) {
+                            if (!mergedItems.containsKey(itemId)) {
+                                throw WorldLoadException(
+                                    "Container '${feature.id}' item #${index + 1} references unknown item '${itemId.value}'",
+                                )
+                            }
+                        }
+                    }
+
+                    is RoomFeature.Lever, is RoomFeature.Sign -> Unit
+                }
+            }
+        }
+
+        return World(
+            rooms = mergedRooms.toMutableMap(),
+            startRoom = worldStart,
+            mobSpawns = mergedMobs.values.sortedBy { it.id.value },
+            itemSpawns = mergedItems.values.sortedBy { it.instance.id.value },
+            zoneLifespansMinutes =
+                zoneLifespansMinutes.entries
+                    .mapNotNull { (zone, lifespanMinutes) -> lifespanMinutes?.let { zone to it } }
+                    .toMap(),
+            shopDefinitions = mergedShops.toList(),
+            questDefinitions = mergedQuests.toList(),
+        )
+    }
+
     fun loadFromResources(
         paths: List<String>,
         tiers: MobTiersConfig = MobTiersConfig(),
@@ -620,17 +1168,23 @@ object WorldLoader {
         )
     }
 
+    fun parseWorldFile(
+        text: String,
+        sourceName: String = "<inline>",
+    ): WorldFile =
+        try {
+            mapper.readValue(text)
+        } catch (e: Exception) {
+            throw WorldLoadException("Failed to parse '$sourceName': ${e.message}")
+        }
+
     private fun readWorldFile(path: String): WorldFile {
         val text =
             WorldLoader::class.java.classLoader
                 .getResource(path)
                 ?.readText()
                 ?: throw WorldLoadException("World resource not found: $path")
-        try {
-            return mapper.readValue(text)
-        } catch (e: Exception) {
-            throw WorldLoadException("Failed to parse '$path': ${e.message}")
-        }
+        return parseWorldFile(text, path)
     }
 
     private fun validateFileBasics(file: WorldFile) {

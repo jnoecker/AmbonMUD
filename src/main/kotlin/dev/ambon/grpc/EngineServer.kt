@@ -9,7 +9,9 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.config.AppConfig
 import dev.ambon.config.PersistenceBackend
 import dev.ambon.config.ShardingRegistryType
+import dev.ambon.config.WorldStorageBackend
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.domain.world.load.PostgresWorldBootstrapper
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
@@ -22,6 +24,7 @@ import dev.ambon.persistence.DatabaseManager
 import dev.ambon.persistence.PersistenceWorker
 import dev.ambon.persistence.PlayerRepository
 import dev.ambon.persistence.PostgresPlayerRepository
+import dev.ambon.persistence.PostgresWorldContentRepository
 import dev.ambon.persistence.RedisCachingPlayerRepository
 import dev.ambon.persistence.WriteCoalescingPlayerRepository
 import dev.ambon.persistence.YamlPlayerRepository
@@ -94,7 +97,7 @@ class EngineServer(
         if (prometheusRegistry != null) GameMetrics(prometheusRegistry) else GameMetrics.noop()
 
     private val databaseManager: DatabaseManager? =
-        if (config.persistence.backend == PersistenceBackend.POSTGRES) {
+        if (config.persistence.backend == PersistenceBackend.POSTGRES || config.world.storage.backend == WorldStorageBackend.POSTGRES) {
             DatabaseManager(config.database).also { it.migrate() }
         } else {
             null
@@ -163,13 +166,30 @@ class EngineServer(
         } else {
             emptySet()
         }
+    private val postgresWorldBootstrapper: PostgresWorldBootstrapper? =
+        if (config.world.storage.backend == WorldStorageBackend.POSTGRES) {
+            PostgresWorldBootstrapper(
+                repository = PostgresWorldContentRepository(databaseManager!!.database),
+                storage = config.world.storage,
+                tiers = config.engine.mob.tiers,
+                clock = clock,
+            )
+        } else {
+            null
+        }
 
     private val world =
-        WorldFactory.demoWorld(
-            resources = config.world.resources,
-            tiers = config.engine.mob.tiers,
-            zoneFilter = zoneFilter,
-        )
+        when (config.world.storage.backend) {
+            WorldStorageBackend.YAML ->
+                WorldFactory.demoWorld(
+                    resources = config.world.resources,
+                    tiers = config.engine.mob.tiers,
+                    zoneFilter = zoneFilter,
+                )
+
+            WorldStorageBackend.POSTGRES ->
+                postgresWorldBootstrapper!!.loadWorld(zoneFilter)
+        }
     private val scheduler: Scheduler = Scheduler(clock)
     private val localZones: Set<String> =
         if (shardingEnabled && configuredShardedZones.isNotEmpty()) {
@@ -432,6 +452,13 @@ class EngineServer(
                     progression = progression,
                     metrics = gameMetrics,
                     onShutdown = { shutdownSignal.complete(Unit) },
+                    onWorldReimport = {
+                        val bootstrapper =
+                            requireNotNull(postgresWorldBootstrapper) {
+                                "World re-import is only available when world storage backend is POSTGRES."
+                            }
+                        bootstrapper.importPendingFiles()
+                    },
                     handoffManager = handoffManager,
                     interEngineBus = interEngineBus,
                     engineId = engineId,

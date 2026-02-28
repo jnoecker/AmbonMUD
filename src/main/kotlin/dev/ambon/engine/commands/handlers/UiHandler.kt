@@ -101,6 +101,7 @@ class UiHandler(
                     goto <zone:room | room | zone:>
                     transfer <player> <room>
                     spawn <mob-template>
+                    reimportworld
                     smite <player|mob>
                     kick <player>
                     dispel <player|mob>

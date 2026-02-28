@@ -84,6 +84,7 @@ class GameEngine(
     private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val onShutdown: suspend () -> Unit = {},
+    private val onWorldReimport: suspend () -> Int = { 0 },
     private val handoffManager: HandoffManager? = null,
     private val interEngineBus: InterEngineBus? = null,
     private val engineId: String = "",
@@ -561,6 +562,7 @@ class GameEngine(
             AdminHandler(
                 ctx = ctx,
                 onShutdown = onShutdown,
+                onWorldReimport = onWorldReimport,
                 onMobSmited = mobSystem::onMobRemoved,
                 onCrossZoneMove = crossZoneMove,
                 dialogueSystem = dialogueSystem,

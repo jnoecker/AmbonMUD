@@ -104,6 +104,8 @@ sealed interface Command {
 
     data object Shutdown : Command
 
+    data object ReimportWorld : Command
+
     data class Smite(
         val target: String,
     ) : Command
@@ -556,6 +558,7 @@ object CommandParser {
             "spells", "abilities", "skills" -> Command.Spells
             "effects", "buffs", "debuffs" -> Command.Effects
             "shutdown" -> Command.Shutdown
+            "reimportworld", "worldreimport", "reimport world", "world reimport" -> Command.ReimportWorld
             "gold", "balance", "wealth" -> Command.Balance
             "list", "shop" -> Command.ShopList
             else -> Command.Unknown(line)

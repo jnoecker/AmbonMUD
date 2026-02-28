@@ -38,10 +38,14 @@ See [docs/WEB_CLIENT_V3.md](docs/WEB_CLIENT_V3.md#visual-progression) for the fu
 
 **Start the server:**
 ```bash
+mkdir data\world-import
+copy src\main\resources\world\*.yaml data\world-import\
 docker compose up -d
 ./gradlew run          # Unix
 .\gradlew.bat run      # Windows
 ```
+
+On first boot, the server imports staged world YAML files from `data/world-import/` into Postgres and archives them under `data/world-import-archive/`.
 
 **Launch browser demo:**
 ```bash
@@ -93,7 +97,7 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for architectural details and [DEVEL
 - **Character:** `score`, `gold`, `help`, `who`, `quit`
 - **Economy:** `buy`, `sell`, `list` (in shops)
 - **Zones:** `phase` (switch zone instances)
-- **Admin:** `goto`, `transfer`, `spawn`, `smite`, `kick`, `shutdown` (requires staff flag)
+- **Admin:** `goto`, `transfer`, `spawn`, `reimportworld`, `smite`, `kick`, `shutdown` (requires staff flag)
 
 See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full command list and details.
 
@@ -105,7 +109,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 
 ## World Content
 
-**World files** live in `src/main/resources/world/` and are loaded by `WorldLoader`. Each YAML file describes one zone; multiple zones are merged into a single world.
+Static world content is loaded from Postgres at runtime. YAML zone files are treated as import input: place them in `data/world-import/`, start the server, and the importer validates, stores, and archives them. The current source zone files in this repo still live under `src/main/resources/world/`.
 
 **Current Zones (9 regions):**
 | Zone | Description |
@@ -192,6 +196,8 @@ Includes: Prometheus (metrics), Grafana (dashboards), Redis (caching/pub-sub), P
 
 **Default local run:**
 ```bash
+mkdir data\world-import
+copy src\main\resources\world\*.yaml data\world-import\
 docker compose up -d
 ./gradlew run
 ```
