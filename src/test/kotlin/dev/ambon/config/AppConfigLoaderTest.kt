@@ -33,6 +33,8 @@ class AppConfigLoaderTest {
         assertEquals(PersistenceBackend.POSTGRES, config.persistence.backend)
         assertEquals(WorldStorageBackend.POSTGRES, config.world.storage.backend)
         assertTrue(config.redis.enabled)
+        assertTrue(!config.engine.debug.enableSwarmClass)
+        assertEquals("labyrinth:cell_00_00", config.engine.classStartRooms["SWARM"])
     }
 
     @Test

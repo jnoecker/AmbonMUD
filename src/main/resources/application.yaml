@@ -1584,11 +1584,15 @@ ambonMUD:
             minDamage: 44
             maxDamage: 68
 
+    debug:
+      enableSwarmClass: false
+
     classStartRooms:
       WARRIOR: tutorial_glade:warrior_barracks
       MAGE: tutorial_glade:mage_study
       CLERIC: tutorial_glade:cleric_chapel
       ROGUE: tutorial_glade:rogue_hideout
+      SWARM: labyrinth:cell_00_00
 
   progression:
     maxLevel: 50
