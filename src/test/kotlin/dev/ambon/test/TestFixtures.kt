@@ -3,6 +3,7 @@ package dev.ambon.test
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.EconomyConfig
+import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -58,9 +59,11 @@ fun buildTestPlayerRegistry(
     progression: PlayerProgression = PlayerProgression(),
     hashingContext: CoroutineContext = EmptyCoroutineContext,
     passwordHasher: PasswordHasher = TestPasswordHasher,
+    classStartRooms: Map<PlayerClass, RoomId> = emptyMap(),
 ): PlayerRegistry =
     PlayerRegistry(
         startRoom = startRoom,
+        classStartRooms = classStartRooms,
         repo = repo,
         items = items,
         clock = clock,
