@@ -49,6 +49,7 @@ class PostgresWorldBootstrapper(
 
     private fun importStagedFiles(files: List<Path>) {
         val importedAtEpochMs = clock.millis()
+        val existingDocuments = repository.loadAll()
         val stagedDocuments =
             files.mapIndexed { index, path ->
                 val content = Files.readString(path)
@@ -57,15 +58,45 @@ class PostgresWorldBootstrapper(
                     sourceName = path.fileName.toString(),
                     zone = parsed.zone.trim(),
                     content = content,
-                    loadOrder = index,
+                    loadOrder = existingDocuments.size + index,
                     importedAtEpochMs = importedAtEpochMs,
                 ) to parsed
             }
 
+        val mergedDocuments = mergeDocuments(existingDocuments, stagedDocuments.map { it.first })
         // Validate the full merged world before replacing the DB snapshot.
-        WorldLoader.loadFromFiles(stagedDocuments.map { (_, parsed) -> parsed }, tiers)
-        repository.replaceAll(stagedDocuments.map { (document, _) -> document })
+        WorldLoader.loadFromFiles(
+            mergedDocuments.map { document ->
+                WorldLoader.parseWorldFile(document.content, document.sourceName)
+            },
+            tiers,
+        )
+        repository.replaceAll(mergedDocuments)
         archiveImportedFiles(files)
+    }
+
+    private fun mergeDocuments(
+        existingDocuments: List<WorldContentDocument>,
+        stagedDocuments: List<WorldContentDocument>,
+    ): List<WorldContentDocument> {
+        if (stagedDocuments.isEmpty()) {
+            return existingDocuments
+        }
+
+        val existingBySource = existingDocuments.associateBy { it.sourceName }.toMutableMap()
+        stagedDocuments.forEach { staged ->
+            existingBySource[staged.sourceName] =
+                existingBySource[staged.sourceName]?.copy(
+                    zone = staged.zone,
+                    content = staged.content,
+                    importedAtEpochMs = staged.importedAtEpochMs,
+                ) ?: staged
+        }
+
+        return existingDocuments
+            .mapNotNull { existingBySource.remove(it.sourceName) }
+            .plus(stagedDocuments.mapNotNull { staged -> existingBySource.remove(staged.sourceName) })
+            .mapIndexed { index, document -> document.copy(loadOrder = index) }
     }
 
     private fun stagedFiles(): List<Path> {

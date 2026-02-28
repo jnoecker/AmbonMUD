@@ -131,6 +131,94 @@ class PostgresWorldBootstrapperTest {
     }
 
     @Test
+    fun `importPendingFiles merges new staged files into existing world content`() {
+        val importDir = Files.createDirectories(tempDir.resolve("import"))
+        val archiveDir = tempDir.resolve("archive")
+        val repo = PostgresWorldContentRepository(database)
+        val existingText = javaClass.getResource("/world/test_world.yaml")!!.readText()
+        val additionalText = javaClass.getResource("/world/ok_small.yaml")!!.readText()
+
+        repo.replaceAll(
+            listOf(
+                dev.ambon.persistence.WorldContentDocument(
+                    sourceName = "test_world.yaml",
+                    zone = "test_zone",
+                    content = existingText,
+                    loadOrder = 0,
+                    importedAtEpochMs = 1L,
+                ),
+            ),
+        )
+        Files.writeString(importDir.resolve("addon_zone.yaml"), additionalText)
+
+        val bootstrapper =
+            PostgresWorldBootstrapper(
+                repository = repo,
+                storage =
+                    WorldStorageConfig(
+                        backend = WorldStorageBackend.POSTGRES,
+                        importDirectory = importDir.toString(),
+                        archiveDirectory = archiveDir.toString(),
+                    ),
+                tiers = MobTiersConfig(),
+                clock = Clock.fixed(Instant.ofEpochMilli(123456L), ZoneOffset.UTC),
+            )
+
+        val world = bootstrapper.loadWorld()
+
+        assertTrue(world.rooms.containsKey(dev.ambon.domain.ids.RoomId("test_zone:hub")))
+        assertTrue(world.rooms.containsKey(dev.ambon.domain.ids.RoomId("ok_small:a")))
+
+        val storedDocuments = repo.loadAll()
+        assertEquals(listOf("test_world.yaml", "addon_zone.yaml"), storedDocuments.map { it.sourceName })
+    }
+
+    @Test
+    fun `importPendingFiles replaces existing document when staged source name matches`() {
+        val importDir = Files.createDirectories(tempDir.resolve("import"))
+        val archiveDir = tempDir.resolve("archive")
+        val repo = PostgresWorldContentRepository(database)
+        val originalText = javaClass.getResource("/world/ok_small.yaml")!!.readText()
+        val replacementText = javaClass.getResource("/world/test_world.yaml")!!.readText()
+
+        repo.replaceAll(
+            listOf(
+                dev.ambon.persistence.WorldContentDocument(
+                    sourceName = "replace_zone.yaml",
+                    zone = "replace_zone",
+                    content = originalText,
+                    loadOrder = 0,
+                    importedAtEpochMs = 1L,
+                ),
+            ),
+        )
+        Files.writeString(importDir.resolve("replace_zone.yaml"), replacementText)
+
+        val bootstrapper =
+            PostgresWorldBootstrapper(
+                repository = repo,
+                storage =
+                    WorldStorageConfig(
+                        backend = WorldStorageBackend.POSTGRES,
+                        importDirectory = importDir.toString(),
+                        archiveDirectory = archiveDir.toString(),
+                    ),
+                tiers = MobTiersConfig(),
+                clock = Clock.fixed(Instant.ofEpochMilli(123456L), ZoneOffset.UTC),
+            )
+
+        val world = bootstrapper.loadWorld()
+
+        assertTrue(world.rooms.containsKey(dev.ambon.domain.ids.RoomId("test_zone:hub")))
+        assertFalse(world.rooms.containsKey(dev.ambon.domain.ids.RoomId("ok_small:a")))
+
+        val storedDocuments = repo.loadAll()
+        assertEquals(1, storedDocuments.size)
+        assertEquals("replace_zone.yaml", storedDocuments.single().sourceName)
+        assertEquals(replacementText, storedDocuments.single().content)
+    }
+
+    @Test
     fun `importPendingFiles returns zero when no staged files are present`() {
         val importDir = Files.createDirectories(tempDir.resolve("import"))
         val archiveDir = tempDir.resolve("archive")
