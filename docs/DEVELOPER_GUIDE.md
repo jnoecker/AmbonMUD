@@ -31,7 +31,7 @@ Welcome! This guide takes you from zero to productive on the AmbonMUD codebase i
 **Requirements:**
 - JDK 21 (CI runs on Java 21)
 - Git
-- Optional: Docker & Docker Compose (for PostgreSQL, Redis, Prometheus, Grafana)
+- Docker & Docker Compose for the default local runtime (PostgreSQL, Redis, Prometheus, Grafana)
 
 **Clone & build:**
 ```bash
@@ -49,8 +49,9 @@ cd AmbonMUD
 
 ## 2. Quick Start
 
-**Start the server (YAML persistence, in-memory, no Docker needed):**
+**Start the server (default local runtime):**
 ```bash
+docker compose up -d
 ./gradlew run
 ```
 
@@ -73,11 +74,9 @@ cd AmbonMUD
 ./gradlew ktlintCheck
 ```
 
-**Full infrastructure (Docker Compose):**
+**Fallback YAML-only local run:**
 ```bash
-docker compose up -d  # Brings up PostgreSQL, Redis, Prometheus, Grafana
-./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES
-./gradlew run -Pconfig.ambonMUD.redis.enabled=true
+./gradlew run -Pconfig.ambonMUD.persistence.backend=YAML -Pconfig.ambonMUD.redis.enabled=false
 ```
 
 ---
@@ -439,15 +438,15 @@ XP curve: `totalXpForLevel(L) = baseXp * (L-1)^exponent + linearXp * (L-1)`
 
 ### Backends
 
-**YAML** (default):
+**PostgreSQL** (default):
+- Default local runtime uses Docker Compose-managed PostgreSQL on `localhost:5432`
+- Schema managed by Flyway migrations (`src/main/resources/db/migration/`)
+- Connection defaults: `localhost:5432/ambonmud`, user `ambon`, password `ambon` (matches docker compose)
+
+**YAML**:
 - Player files under `data/players/` (configurable via `ambonMUD.persistence.rootDir`)
 - Atomic writes; no external infrastructure needed
 - IDs allocated in `data/players/next_player_id.txt`
-
-**PostgreSQL**:
-- Requires running PostgreSQL instance
-- Schema managed by Flyway migrations (`src/main/resources/db/migration/`)
-- Connection defaults: `localhost:5432/ambonmud`, user `ambon`, password `ambon` (matches docker compose)
 
 ### Persistence Stack
 
@@ -456,7 +455,7 @@ Three layers (regardless of backend):
 ```
 WriteCoalescingPlayerRepository    (dirty-flag write-behind, configurable flush)
     ↓
-RedisCachingPlayerRepository       (optional L2 cache, if redis.enabled=true)
+RedisCachingPlayerRepository       (default L2 cache; disable with redis.enabled=false)
     ↓
 YamlPlayerRepository  OR  PostgresPlayerRepository
 ```
@@ -487,14 +486,14 @@ ambonMUD:
     telnetPort: 4000            # Telnet port
     webPort: 8080               # WebSocket / web client port
   persistence:
-    backend: YAML               # YAML or POSTGRES
+    backend: POSTGRES           # POSTGRES or YAML
     rootDir: data/players       # YAML backend only
   database:
     jdbcUrl: jdbc:postgresql://localhost:5432/ambonmud
     username: ambon
     password: ambon
   redis:
-    enabled: false
+    enabled: true
     uri: redis://localhost:6379
   engine:
     abilities:
@@ -511,8 +510,8 @@ ambonMUD:
 ```bash
 ./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000
 ./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
-./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES
-./gradlew run -Pconfig.ambonMUD.redis.enabled=true
+./gradlew run -Pconfig.ambonMUD.persistence.backend=YAML
+./gradlew run -Pconfig.ambonMUD.redis.enabled=false
 ```
 
 ---
@@ -522,9 +521,9 @@ ambonMUD:
 ### STANDALONE (Default)
 
 Single-process deployment:
-- All components in-memory (engine, transports, persistence)
-- No external infrastructure needed
-- Perfect for local development and small deployments
+- All app components in one JVM process
+- Default local workflow expects PostgreSQL and Redis on `localhost`
+- YAML persistence remains available as a fallback override
 
 ```bash
 ./gradlew run
@@ -692,25 +691,24 @@ ambonMUD:
 
 See [WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md) for full schema.
 
-### Run with PostgreSQL Backend
+### Run with Default PostgreSQL Backend
 
 ```bash
 # Ensure Docker Compose is running
 docker compose up -d
 
-# Run server with Postgres backend
-./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES
+# Run server with the default config
+./gradlew run
 
 # Flyway migrations run automatically on startup
 # Test via: SELECT * FROM players;
 ```
 
-### Enable Redis Caching
+### Run with YAML Fallback
 
 ```bash
-# With Postgres + Redis
-./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES \
-              -Pconfig.ambonMUD.redis.enabled=true
+./gradlew run -Pconfig.ambonMUD.persistence.backend=YAML \
+              -Pconfig.ambonMUD.redis.enabled=false
 ```
 
 ### Run Multi-Instance (Engine + Gateways)

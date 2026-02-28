@@ -337,7 +337,7 @@ data class WorldConfig(
 )
 
 data class PersistenceConfig(
-    val backend: PersistenceBackend = PersistenceBackend.YAML,
+    val backend: PersistenceBackend = PersistenceBackend.POSTGRES,
     val rootDir: String = "data/players",
     val worker: PersistenceWorkerConfig = PersistenceWorkerConfig(),
 )
@@ -685,7 +685,7 @@ data class RedisBusConfig(
 )
 
 data class RedisConfig(
-    val enabled: Boolean = false,
+    val enabled: Boolean = true,
     val uri: String = "redis://localhost:6379",
     val cacheTtlSeconds: Long = 3600L,
     val bus: RedisBusConfig = RedisBusConfig(),

@@ -140,10 +140,10 @@ Pass `InboundBus` / `OutboundBus` to the engine; **never raw `Channel<T>` refere
 ### Deployment Modes
 
 **STANDALONE** (default, single-process):
-- All components in-memory
+- All app components run in one JVM process
 - `LocalInboundBus` / `LocalOutboundBus` (wrapped channels)
-- No external infrastructure
-- Perfect for development and small deployments
+- Default local workflow uses PostgreSQL + Redis on `localhost`
+- YAML persistence remains available as a fallback profile
 
 **ENGINE** (multi-process, game logic only):
 - Runs `GameEngine` + persistence + gRPC server
@@ -278,14 +278,15 @@ Current web serving note:
 
 ### 7. Persistence is Phased
 
-**Decision:** YAML as durable layer, then add write-behind coalescing (Phase 2) and Redis L2 cache (Phase 3) in subsequent layers.
+**Decision:** Keep persistence behind one repository abstraction so the default runtime can use PostgreSQL + Redis while YAML remains available as a fallback.
 
 **Why:**
-- YAML: inspectable, easy to debug, no infrastructure
+- PostgreSQL: durable, indexed, and better suited for the default hot path
+- Redis cache: faster reads, enables cross-process scaling
+- YAML: still available as a low-infrastructure fallback and debugging tool
 - Repository abstraction: clean migration path without touching game logic
 - Atomic writes: prevent corruption at every layer
 - Write-behind: removes persistence from hot path (every room move was hitting disk)
-- Redis cache: faster reads, enables cross-process scaling
 
 **Tradeoff:** Write-behind creates data loss window (~5 s, configurable); acceptable for game server.
 
@@ -344,12 +345,12 @@ Current web serving note:
 
 ---
 
-### 12. Redis as Opt-In Infrastructure
+### 12. Redis as Default Local Cache Layer
 
-**Decision:** Redis enabled via config (`redis.enabled = false` by default). Server runs identically without it.
+**Decision:** Redis is on by default for the local production-style runtime, but can still be disabled via config when using the YAML fallback path.
 
 **Why:**
-- No friction in development (no required services just to start server)
+- Better alignment between local defaults and the production-style persistence path
 - Bus and cache layers degrade gracefully: Redis failure logs warning, falls back to local impl
 - Incremental adoption: cache only, or both, or neither
 - Fast tests: Redis integration uses Testcontainers

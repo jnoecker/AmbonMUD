@@ -10,7 +10,7 @@ AmbonMUD
 - 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands
 - 🔌 **Dual transports**: telnet (NAWS/TTYPE/GMCP negotiation) + browser WebSocket with GMCP-aware UI panels
 - 📊 **Structured data** (GMCP) — 21 packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
-- 💾 **Flexible persistence**: YAML (default) or PostgreSQL with optional Redis L2 caching
+- 💾 **Flexible persistence**: PostgreSQL with Redis L2 caching by default, with YAML fallback available
 - 🌐 **Three deployment modes**: STANDALONE (single-process), ENGINE (game logic + gRPC), GATEWAY (transports + gRPC) for horizontal scaling
 - 🗺️ **Zone-based sharding** with inter-engine messaging, player handoff, and O(1) cross-engine `tell` routing
 - 📈 **Prometheus metrics** for monitoring and load testing integration
@@ -34,10 +34,11 @@ See [docs/WEB_CLIENT_V3.md](docs/WEB_CLIENT_V3.md#visual-progression) for the fu
 
 ## Quick Start
 
-**Requirements:** JDK 21, Gradle wrapper (included in repo)
+**Requirements:** JDK 21, Gradle wrapper (included in repo), Docker Compose for the default local runtime
 
 **Start the server:**
 ```bash
+docker compose up -d
 ./gradlew run          # Unix
 .\gradlew.bat run      # Windows
 ```
@@ -62,14 +63,15 @@ By default: telnet on **:4000**, web on **:8080** (configurable in `src/main/res
 
 ```bash
 ./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000
-./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES
+./gradlew run -Pconfig.ambonMUD.persistence.backend=YAML
+./gradlew run -Pconfig.ambonMUD.redis.enabled=false
 ./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
 ```
 
 See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#configuration) for detailed configuration options and multi-instance setup.
 
 **Deployment Modes:**
-- **STANDALONE** (default): Single-process, all components in-memory
+- **STANDALONE** (default): Single-process app using localhost Postgres/Redis by default
 - **ENGINE**: Game logic + persistence + gRPC server for remote gateways
 - **GATEWAY**: Transports (telnet/WebSocket) + gRPC client to a remote engine
 
@@ -168,10 +170,10 @@ See [WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) for full schema documentation 
 ## Persistence
 
 **Backends** (selectable via `ambonMUD.persistence.backend`):
-- **YAML** (default): Player files in `data/players/`, no external infrastructure
-- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V7)
+- **PostgreSQL** (default): Database-backed (schema via Flyway migrations V1–V7)
+- **YAML**: File-backed fallback in `data/players/`
 
-Both backends support optional **Redis L2 caching** (`ambonMUD.redis.enabled=true`) for distributed deployments.
+Redis L2 caching is enabled by default for the local production-style runtime and can be disabled with `ambonMUD.redis.enabled=false`.
 
 **Grant staff access:**
 - YAML: Add `isStaff: true` to player YAML file
@@ -181,21 +183,22 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#persistence) for detailed persi
 
 ## Infrastructure & Deployment
 
-**Docker Compose** (brings up all optional services):
+**Docker Compose** (brings up the default local dependencies):
 ```bash
 docker compose up -d
 ```
 
 Includes: Prometheus (metrics), Grafana (dashboards), Redis (caching/pub-sub), PostgreSQL (persistence).
 
-**Run with PostgreSQL backend:**
+**Default local run:**
 ```bash
-./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES
+docker compose up -d
+./gradlew run
 ```
 
-**Run with Redis caching:**
+**Fallback YAML run:**
 ```bash
-./gradlew run -Pconfig.ambonMUD.redis.enabled=true
+./gradlew run -Pconfig.ambonMUD.persistence.backend=YAML -Pconfig.ambonMUD.redis.enabled=false
 ```
 
 **Access Grafana:** `http://localhost:3000` (admin/admin)
