@@ -38,6 +38,7 @@ internal data class PlayerDto(
     val achievementProgress: Map<String, AchievementState> = emptyMap(),
     val activeTitle: String? = null,
     val inbox: List<MailMessage> = emptyList(),
+    val guildId: String? = null,
     val recallRoomId: String? = null,
 ) {
     fun toDomain(): PlayerRecord {
@@ -71,6 +72,7 @@ internal data class PlayerDto(
             achievementProgress = achievementProgress,
             activeTitle = activeTitle,
             inbox = inbox,
+            guildId = guildId,
             recallRoomId = recallRoomId?.let { RoomId(it) },
         )
     }
@@ -105,6 +107,7 @@ internal data class PlayerDto(
                 achievementProgress = record.achievementProgress,
                 activeTitle = record.activeTitle,
                 inbox = record.inbox,
+                guildId = record.guildId,
                 recallRoomId = record.recallRoomId?.value,
             )
     }

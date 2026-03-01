@@ -91,6 +91,18 @@ class UiHandler(
                     group kick <player>
                     group list (or just 'group')
                     gtell/gt <message>
+                    guild create <name> <tag>
+                    guild disband
+                    guild invite <player>
+                    guild accept
+                    guild leave
+                    guild kick <player>
+                    guild promote <player>
+                    guild demote <player>
+                    guild motd <message>
+                    guild roster
+                    guild info (or just 'guild')
+                    gchat/g <message>
                     title <titleName>
                     title clear
                     ansi on/off
