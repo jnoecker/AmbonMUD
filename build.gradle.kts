@@ -5,7 +5,7 @@ plugins {
     application
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     id("com.google.protobuf") version "0.9.6"
-    id("com.gradleup.shadow") version "8.3.6"
+    id("com.gradleup.shadow") version "9.3.2"
 }
 
 group = "com.example"
