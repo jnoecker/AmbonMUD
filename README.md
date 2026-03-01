@@ -3,27 +3,31 @@ AmbonMUD
 
 **AmbonMUD** is a production-grade **Kotlin MUD server** with a tick-based event loop, dual transports (telnet + WebSocket), YAML-defined multi-zone worlds, class-based character progression, 102 class-specific spells/abilities, dynamic status effects, real-time combat with NPCs, shops/economy, and three deployment modes (STANDALONE, ENGINE, GATEWAY) for horizontal scaling.
 
+**Live demo:** [https://mud.ambon.dev](https://mud.ambon.dev) — or `telnet mud.ambon.dev 4000`
+
 **Key Features**
 - 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **25+ unique abilities** per class, distributed across 50 levels
-- 🌍 **9 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
+- 🌍 **10 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
 - ⚔️ **Real-time combat system** with attribute-based damage, dodge mechanics, and tactical status effects (DoT, HoT, STUN, ROOT, SHIELD, buffs/debuffs)
 - 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands
 - 🔌 **Dual transports**: telnet (NAWS/TTYPE/GMCP negotiation) + browser WebSocket with GMCP-aware UI panels
 - 📊 **Structured data** (GMCP) — 21 packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
-- 💾 **Flexible persistence**: PostgreSQL with Redis L2 caching by default, with YAML fallback available
+- 💾 **Flexible persistence**: YAML files by default (zero-dependency), PostgreSQL with optional Redis L2 caching available
 - 🌐 **Three deployment modes**: STANDALONE (single-process), ENGINE (game logic + gRPC), GATEWAY (transports + gRPC) for horizontal scaling
 - 🗺️ **Zone-based sharding** with inter-engine messaging, player handoff, and O(1) cross-engine `tell` routing
+- 🧵 **JVM virtual threads** for telnet I/O (JDK 21) — eliminates carrier-thread pinning under load
 - 📈 **Prometheus metrics** for monitoring and load testing integration
 - ✅ **~78 test files** covering all systems; CI validates against Java 21 with ktlint
 
-**Current State** (Feb 2026)
+**Current State** (Mar 2026)
 - ✅ All 6 scalability phases complete (bus abstraction, async persistence, Redis, gRPC gateway, zone sharding, production AWS infrastructure)
 - ✅ 102 abilities across 4 classes (25+ per class, levels 1–50)
 - ✅ GMCP support with 21 outbound packages (telnet + WebSocket); see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
 - ✅ Quest system (basic implementation; see [roadmap](docs/ROADMAP.md))
 - ✅ Achievement system, group/party system, dialogue trees, NPC behavior trees
 - ✅ Full production test coverage and CI/CD
-- ✅ Docker image + AWS CDK infrastructure (ECS Fargate, RDS, ElastiCache, EFS) with topology × tier sizing
+- ✅ Docker image + AWS CDK infrastructure: EC2 demo (~$4-5/mo) and ECS Fargate (topology × tier) options
+- ✅ Live demo at [mud.ambon.dev](https://mud.ambon.dev) — auto-deploys on every push to `main`
 
 Screenshots
 -----------
@@ -35,11 +39,10 @@ See [docs/WEB_CLIENT_V3.md](docs/WEB_CLIENT_V3.md#visual-progression) for the fu
 
 ## Quick Start
 
-**Requirements:** JDK 21, Gradle wrapper (included in repo), Docker Compose for the default local runtime
+**Requirements:** JDK 21, Gradle wrapper (included in repo)
 
-**Start the server:**
+**Start the server** (YAML persistence, no external services needed):
 ```bash
-docker compose up -d
 ./gradlew run          # Unix
 .\gradlew.bat run      # Windows
 ```
@@ -51,10 +54,16 @@ docker compose up -d
 
 **Connect via telnet:**
 ```bash
-telnet localhost 4000  # Telnet client
+telnet localhost 4000
 ```
 
 By default: telnet on **:4000**, web on **:8080** (configurable in `src/main/resources/application.yaml`).
+
+**To use PostgreSQL + Redis locally**, bring up the Docker Compose stack first:
+```bash
+docker compose up -d
+./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES -Pconfig.ambonMUD.redis.enabled=true
+```
 
 > **Note:** Web client loads xterm.js from CDN. For offline use, prefer telnet.
 
@@ -108,7 +117,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 
 **World files** live in `src/main/resources/world/` and are loaded by `WorldLoader`. Each YAML file describes one zone; multiple zones are merged into a single world.
 
-**Current Zones (9 regions):**
+**Current Zones (10 regions):**
 | Zone | Description |
 |------|-------------|
 | `tutorial_glade` | Starting area for new players |
@@ -119,6 +128,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 | `low_training_highlands` | Low-level training zone (highlands) |
 | `low_training_mines` | Low-level training zone (mines) |
 | `low_training_barrens` | Low-level training zone (barrens) |
+| `labyrinth` | High-level maze zone; home of the SWARM load-test class |
 | `achievements` | Achievement trigger zone |
 
 **Zone YAML Format**
@@ -171,10 +181,10 @@ See [WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) for full schema documentation 
 ## Persistence
 
 **Backends** (selectable via `ambonMUD.persistence.backend`):
-- **PostgreSQL** (default): Database-backed (schema via Flyway migrations V1–V7)
-- **YAML**: File-backed fallback in `data/players/`
+- **YAML** (default): File-backed, zero dependencies, player files in `data/players/`
+- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V7); requires `ambonMUD.database.jdbcUrl`
 
-Redis L2 caching is enabled by default for the local production-style runtime and can be disabled with `ambonMUD.redis.enabled=false`.
+Redis L2 caching is disabled by default. Enable it with `ambonMUD.redis.enabled=true` when running alongside the Docker Compose stack.
 
 **Grant staff access:**
 - YAML: Add `isStaff: true` to player YAML file
@@ -184,47 +194,89 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#persistence) for detailed persi
 
 ## Infrastructure & Deployment
 
-**Docker Compose** (brings up the default local dependencies):
+**Docker Compose** (local Prometheus, Grafana, Redis, PostgreSQL):
 ```bash
-docker compose up -d
+docker compose up -d   # then ./gradlew run with postgres/redis flags
 ```
-
-Includes: Prometheus (metrics), Grafana (dashboards), Redis (caching/pub-sub), PostgreSQL (persistence).
-
-**Default local run:**
-```bash
-docker compose up -d
-./gradlew run
-```
-
-**Fallback YAML run:**
-```bash
-./gradlew run -Pconfig.ambonMUD.persistence.backend=YAML -Pconfig.ambonMUD.redis.enabled=false
-```
-
-**Access Grafana:** `http://localhost:3000` (admin/admin)
 
 **Build and run as a Docker container:**
 ```bash
-./gradlew shadowJar
 docker build -t ambonmud .
-docker run --rm -p 4000:4000 -p 8080:8080 \
-  -e AMBONMUD_PERSISTENCE_BACKEND=YAML \
-  -e AMBONMUD_REDIS_ENABLED=false \
-  ambonmud
+docker run --rm -p 4000:4000 -p 8080:8080 -v ./data:/app/data ambonmud
 ```
 
-**Deploy to AWS:**
+---
+
+### EC2 Demo (~$4-5/mo) — replicating mud.ambon.dev
+
+The live demo runs on a single ARM64 t4g.nano with YAML persistence, nginx TLS, and auto-deploy on every push to `main`. To replicate it:
+
+**1. One-time AWS setup**
+
+Create an ECR repository named `ambonmud/app`, then create two IAM roles with OIDC trust for GitHub Actions (repo `your-org/your-repo`):
+
+| Role name | Purpose | Key permissions |
+|-----------|---------|-----------------|
+| `GitHubActions-EcrPush` | CI pushes Docker images | `ecr:GetAuthorizationToken`, `ecr:BatchCheckLayerAvailability`, `ecr:PutImage`, etc. |
+| `GitHubActions-Ec2Demo` | Deploy workflow SSMs the instance | `ssm:SendCommand`, `ssm:GetCommandInvocation` on the instance |
+
+**2. Deploy the CDK stack**
+
+```bash
+cd infra && npm ci
+npx cdk bootstrap   # first time only
+
+# Deploy the EC2 stack — provisions instance, EIP, security groups, helper scripts
+npx cdk deploy --context topology=ec2 \
+  --context imageTag=latest \
+  --context hostname=mud.yourdomain.com
+```
+
+Note the `InstanceId` and `PublicIp` from the CDK outputs.
+
+**3. Point DNS and provision TLS**
+
+Add an A record at your DNS provider: `mud.yourdomain.com` → `<PublicIp>`
+
+Once DNS propagates, open an SSM shell and run the TLS helper:
+```bash
+aws ssm start-session --target <instance-id> --region us-east-1
+$ setup-tls          # runs certbot, configures nginx, sets up auto-renewal
+```
+
+**4. Set GitHub repo variables** (Settings → Secrets and variables → Variables):
+
+| Variable | Value |
+|----------|-------|
+| `AWS_ECR_PUSH_ROLE_ARN` | ARN of `GitHubActions-EcrPush` |
+| `AWS_EC2_DEMO_ROLE_ARN` | ARN of `GitHubActions-Ec2Demo` |
+| `DEMO_INSTANCE_ID` | EC2 instance ID from CDK output |
+| `AWS_REGION` | e.g. `us-east-1` |
+
+After this, every push to `main` automatically:
+1. Runs `ktlintCheck test` + builds the web frontend
+2. Builds and pushes an ARM64 Docker image to ECR (native runner, no QEMU)
+3. SSMs `update-ambonmud <sha>` to pull the new image and restart the service
+
+**Manual redeploy** (if needed):
+```powershell
+aws ssm send-command `
+  --instance-ids <instance-id> `
+  --document-name AWS-RunShellScript `
+  --parameters 'commands=["update-ambonmud latest"]' `
+  --region us-east-1
+```
+
+---
+
+**ECS Fargate** (managed, scalable):
 ```bash
 cd infra && npm ci
 
-# Cheapest path (~$4-5/mo): single EC2 instance, YAML persistence, no RDS/Redis
-npx cdk deploy --context topology=ec2 --context imageTag=<git-sha>
-
-# ECS Fargate standalone (~$60-100/mo): managed Postgres + Redis
+# Standalone (~$60-100/mo): single process, managed Postgres + Redis
 npx cdk deploy --all --context topology=standalone --context tier=hobby
 
-# ECS Fargate production HA: split ENGINE+GATEWAY with auto-scaling
+# Split production HA: separate ENGINE + GATEWAY with auto-scaling
 npx cdk deploy --all --context topology=split --context tier=production \
   --context domain=play.example.com --context alertEmail=ops@example.com
 ```
