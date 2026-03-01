@@ -64,6 +64,8 @@ data class AppConfig(
         require(login.maxFailedAttemptsBeforeDisconnect > 0) {
             "ambonMUD.login.maxFailedAttemptsBeforeDisconnect must be > 0"
         }
+        require(login.maxConcurrentLogins > 0) { "ambonMUD.login.maxConcurrentLogins must be > 0" }
+        require(login.authThreads > 0) { "ambonMUD.login.authThreads must be > 0" }
 
         require(engine.mob.minActionDelayMillis >= 0L) { "ambonMUD.engine.mob.minActionDelayMillis must be >= 0" }
         require(engine.mob.maxActionDelayMillis >= engine.mob.minActionDelayMillis) {
@@ -159,6 +161,7 @@ data class AppConfig(
         require(transport.telnet.maxNonPrintablePerLine >= 0) {
             "ambonMUD.transport.telnet.maxNonPrintablePerLine must be >= 0"
         }
+        require(transport.telnet.socketBacklog > 0) { "ambonMUD.transport.telnet.socketBacklog must be > 0" }
         require(transport.maxInboundBackpressureFailures > 0) {
             "ambonMUD.transport.maxInboundBackpressureFailures must be > 0"
         }
@@ -358,6 +361,10 @@ data class DatabaseConfig(
 data class LoginConfig(
     val maxWrongPasswordRetries: Int = 3,
     val maxFailedAttemptsBeforeDisconnect: Int = 3,
+    /** Maximum number of sessions simultaneously progressing through the login/auth funnel. */
+    val maxConcurrentLogins: Int = 50,
+    /** Thread-pool size for BCrypt hashing, isolated from the shared Dispatchers.IO pool. */
+    val authThreads: Int = Runtime.getRuntime().availableProcessors(),
 )
 
 data class EconomyConfig(
@@ -598,6 +605,8 @@ data class TransportConfig(
 data class TelnetTransportConfig(
     val maxLineLen: Int = 1024,
     val maxNonPrintablePerLine: Int = 32,
+    /** OS-level TCP accept backlog for the telnet ServerSocket (default 256 vs JVM default of 50). */
+    val socketBacklog: Int = 256,
 )
 
 data class WebSocketTransportConfig(
