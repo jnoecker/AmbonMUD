@@ -68,7 +68,7 @@ rooms:
     title: "Hall of Portals"
     description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving—some blank, some half-formed, all waiting for destinations. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.'"
     exits:
-      e: noecker_resume:foyer_of_first_principles
+      e: noecker_resume:lobby
       n: demo_ruins:caravan_gate
       s: tutorial_glade:forest_gate
       w: wayfinder_gallery
