@@ -11,6 +11,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.net.ServerSocket
+import kotlin.coroutines.CoroutineContext
 
 private val log = KotlinLogging.logger {}
 
@@ -26,6 +27,7 @@ class BlockingSocketTransport(
     private val maxInboundBackpressureFailures: Int = 3,
     private val socketBacklog: Int = 256,
     private val metrics: GameMetrics = GameMetrics.noop(),
+    private val sessionDispatcher: CoroutineContext = Dispatchers.IO,
 ) : Transport {
     private var serverSocket: ServerSocket? = null
     private var acceptJob: Job? = null
@@ -54,6 +56,7 @@ class BlockingSocketTransport(
                             maxNonPrintablePerLine = maxNonPrintablePerLine,
                             maxInboundBackpressureFailures = maxInboundBackpressureFailures,
                             metrics = metrics,
+                            dispatcher = sessionDispatcher,
                         )
                     outboundRouter.register(
                         sessionId = sessionId,

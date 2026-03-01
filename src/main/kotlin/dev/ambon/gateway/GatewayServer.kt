@@ -38,6 +38,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -45,6 +46,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
+import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.random.Random
 
@@ -68,6 +70,7 @@ class GatewayServer(
     private val config: AppConfig,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val telnetDispatcher = Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()
     private val multiEngine = config.gateway.engines.isNotEmpty()
 
     private val prometheusRegistry: PrometheusMeterRegistry? =
@@ -180,6 +183,7 @@ class GatewayServer(
                 maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
                 maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
                 metrics = gameMetrics,
+                sessionDispatcher = telnetDispatcher,
             )
         telnetTransport.start()
         log.info { "Gateway telnet transport bound on port ${config.server.telnetPort}" }
@@ -472,6 +476,7 @@ class GatewayServer(
         runCatching { leaseManager?.release() }
         runCatching { redisManager?.close() }
         scope.cancel()
+        telnetDispatcher.close()
         log.info { "Gateway server stopped" }
     }
 
