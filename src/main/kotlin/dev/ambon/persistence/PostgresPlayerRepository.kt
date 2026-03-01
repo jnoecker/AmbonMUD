@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import dev.ambon.domain.achievement.AchievementState
+import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.quest.QuestState
 import dev.ambon.metrics.GameMetrics
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +22,7 @@ private val activeQuestsType = object : TypeReference<Map<String, QuestState>>()
 private val completedQuestIdsType = object : TypeReference<Set<String>>() {}
 private val unlockedAchievementIdsType = object : TypeReference<Set<String>>() {}
 private val achievementProgressType = object : TypeReference<Map<String, AchievementState>>() {}
+private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
 
 class PostgresPlayerRepository(
     private val database: Database,
@@ -114,6 +116,8 @@ class PostgresPlayerRepository(
                     it[unlockedAchievementIds] = questMapper.writeValueAsString(dto.unlockedAchievementIds)
                     it[achievementProgress] = questMapper.writeValueAsString(dto.achievementProgress)
                     it[activeTitle] = dto.activeTitle
+                    it[mailInbox] = questMapper.writeValueAsString(dto.inbox)
+                    it[recallRoomId] = dto.recallRoomId
                 }
             }
         }
@@ -159,5 +163,10 @@ class PostgresPlayerRepository(
                     questMapper.readValue(this[PlayersTable.achievementProgress], achievementProgressType)
                 }.getOrDefault(emptyMap()),
             activeTitle = this[PlayersTable.activeTitle],
+            inbox =
+                runCatching {
+                    questMapper.readValue(this[PlayersTable.mailInbox], mailInboxType)
+                }.getOrDefault(emptyList()),
+            recallRoomId = this[PlayersTable.recallRoomId],
         ).toDomain()
 }

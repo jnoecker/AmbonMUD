@@ -2,6 +2,7 @@ package dev.ambon.persistence
 
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.quest.QuestState
 
 @JvmInline
@@ -36,4 +37,6 @@ data class PlayerRecord(
     val unlockedAchievementIds: Set<String> = emptySet(),
     val achievementProgress: Map<String, AchievementState> = emptyMap(),
     val activeTitle: String? = null,
+    val inbox: List<MailMessage> = emptyList(),
+    val recallRoomId: RoomId? = null,
 )

@@ -87,6 +87,8 @@ sealed interface Command {
 
     data object Flee : Command
 
+    data object Recall : Command
+
     data object Score : Command
 
     data class Goto(
@@ -261,6 +263,29 @@ sealed interface Command {
     ) : Command
 
     data object Noop : Command
+
+    sealed interface Mail : Command {
+        /** `mail` or `mail list` — show inbox. */
+        data object List : Mail
+
+        /** `mail read <n>` — read message at 1-based index. */
+        data class Read(
+            val index: Int,
+        ) : Mail
+
+        /** `mail delete <n>` — delete message at 1-based index. */
+        data class Delete(
+            val index: Int,
+        ) : Mail
+
+        /** `mail send <player>` — begin composing a message to [recipientName]. */
+        data class Send(
+            val recipientName: String,
+        ) : Mail
+
+        /** `mail abort` — cancel an in-progress compose. */
+        data object Abort : Mail
+    }
 }
 
 object CommandParser {
@@ -521,6 +546,32 @@ object CommandParser {
         matchPrefix(line, listOf("achievements", "achievement", "ach")) { Command.AchievementList }
             ?.let { return it }
 
+        // mail subcommands: "mail", "mail list", "mail read <n>", "mail delete <n>",
+        //                   "mail send <player>", "mail abort"
+        matchPrefix(line, listOf("mail")) { rest ->
+            if (rest.isEmpty()) return@matchPrefix Command.Mail.List
+            val parts = rest.split(Regex("\\s+"), limit = 2)
+            when (parts[0].lowercase()) {
+                "list" -> Command.Mail.List
+                "read" -> {
+                    val n = parts.getOrNull(1)?.trim()?.toIntOrNull()
+                        ?: return@matchPrefix Command.Invalid(line, "mail read <number>")
+                    Command.Mail.Read(n)
+                }
+                "delete", "del" -> {
+                    val n = parts.getOrNull(1)?.trim()?.toIntOrNull()
+                        ?: return@matchPrefix Command.Invalid(line, "mail delete <number>")
+                    Command.Mail.Delete(n)
+                }
+                "send" -> {
+                    val name = parts.getOrNull(1)?.trim() ?: ""
+                    if (name.isEmpty()) Command.Invalid(line, "mail send <player>") else Command.Mail.Send(name)
+                }
+                "abort" -> Command.Mail.Abort
+                else -> Command.Invalid(line, "mail list | mail read <n> | mail delete <n> | mail send <player>")
+            }
+        }?.let { return it }
+
         // title clear / title <arg>
         matchPrefix(line, listOf("title")) { rest ->
             when {
@@ -552,6 +603,7 @@ object CommandParser {
             "d", "down" -> Command.Move(Direction.DOWN)
             "exits", "ex" -> Command.Exits
             "flee" -> Command.Flee
+            "recall" -> Command.Recall
             "score", "sc" -> Command.Score
             "spells", "abilities", "skills" -> Command.Spells
             "effects", "buffs", "debuffs" -> Command.Effects

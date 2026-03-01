@@ -15,7 +15,7 @@ import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
-import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.createPlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
@@ -192,9 +192,9 @@ class EngineServer(
             .toMap()
 
     private val players =
-        PlayerRegistry(
+        createPlayerRegistry(
             startRoom = world.startRoom,
-            classStartRooms = classStartRooms,
+            engineConfig = config.engine,
             repo = playerRepo,
             items = items,
             clock = clock,

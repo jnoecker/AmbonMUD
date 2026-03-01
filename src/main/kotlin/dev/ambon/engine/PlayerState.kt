@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.quest.QuestState
 import dev.ambon.engine.items.ItemRegistry
@@ -41,7 +42,18 @@ data class PlayerState(
     var unlockedAchievementIds: Set<String> = emptySet(),
     var achievementProgress: Map<String, AchievementState> = emptyMap(),
     var activeTitle: String? = null,
+    var inbox: MutableList<MailMessage> = mutableListOf(),
+    /** Non-null while the player is composing an outgoing mail message. */
+    var mailCompose: MailComposeState? = null,
+    var recallRoomId: RoomId? = null,
+    /** Epoch-ms timestamp after which recall is available again. Runtime-only; not persisted. */
+    var recallCooldownUntilMs: Long = 0L,
 ) {
+    data class MailComposeState(
+        val recipientName: String,
+        val lines: MutableList<String> = mutableListOf(),
+    )
+
     companion object {
         const val BASE_MAX_HP = 10
         const val BASE_MANA = 20

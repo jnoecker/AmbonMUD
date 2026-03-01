@@ -201,8 +201,8 @@ class DialogueSystemTest {
             env.system.startConversation(sid, "sage")
             env.drain()
 
-            val err = env.system.selectChoice(sid, 1) // "Tell me more."
-            assertNull(err)
+            val outcome = env.system.selectChoice(sid, 1) // "Tell me more."
+            assertTrue(outcome is DialogueOutcome.Ok, "Expected Ok outcome. got=$outcome")
 
             val outs = env.drain()
             assertTrue(
@@ -220,8 +220,8 @@ class DialogueSystemTest {
             env.system.startConversation(sid, "sage")
             env.drain()
 
-            val err = env.system.selectChoice(sid, 2) // "Goodbye." (null next)
-            assertNull(err)
+            val outcome = env.system.selectChoice(sid, 2) // "Goodbye." (null next)
+            assertTrue(outcome is DialogueOutcome.Ok, "Expected Ok outcome. got=$outcome")
             assertFalse(env.system.isInConversation(sid))
         }
 
@@ -234,8 +234,11 @@ class DialogueSystemTest {
             env.system.startConversation(sid, "sage")
             env.drain()
 
-            val err = env.system.selectChoice(sid, 5)
-            assertTrue(err != null && err.contains("between"), "Expected range error. got=$err")
+            val outcome = env.system.selectChoice(sid, 5)
+            assertTrue(
+                outcome is DialogueOutcome.Err && outcome.message.contains("between"),
+                "Expected range error. got=$outcome",
+            )
         }
 
     @Test
@@ -400,10 +403,10 @@ class DialogueSystemTest {
             val env = createEnv()
             val sid = env.loginPlayer()
 
-            val err = env.system.selectChoice(sid, 1)
+            val outcome = env.system.selectChoice(sid, 1)
             assertTrue(
-                err != null && err.contains("not in a conversation"),
-                "Expected error. got=$err",
+                outcome is DialogueOutcome.Err && outcome.message.contains("not in a conversation"),
+                "Expected error. got=$outcome",
             )
         }
 }

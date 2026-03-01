@@ -4,6 +4,7 @@ import dev.ambon.bus.InboundBus
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.EngineConfig
 import dev.ambon.config.LoginConfig
+import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -25,6 +26,7 @@ import dev.ambon.engine.commands.handlers.DialogueQuestHandler
 import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.GroupHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
+import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
@@ -118,6 +120,7 @@ class GameEngine(
             handoffManager = handoffManager,
             getEngineScope = { engineScope },
             metrics = metrics,
+            availableClasses = PlayerClass.selectable(engineConfig.debug.enableSwarmClass),
             maxWrongPasswordRetries = loginConfig.maxWrongPasswordRetries,
             maxFailedLoginAttemptsBeforeDisconnect = loginConfig.maxFailedAttemptsBeforeDisconnect,
         )
@@ -163,7 +166,13 @@ class GameEngine(
                 outbound.send(OutboundEvent.SendInfo(sid, "You are between zones. Please wait..."))
                 outbound.send(OutboundEvent.SendPrompt(sid))
             },
-            routeCommandLine = { sid, line -> router.handle(sid, CommandParser.parse(line)) },
+            routeCommandLine = { sid, line ->
+                if (players.get(sid)?.mailCompose != null) {
+                    mailHandler.handleComposeLine(sid, line)
+                } else {
+                    router.handle(sid, CommandParser.parse(line))
+                }
+            },
             metrics = metrics,
         )
     }
@@ -482,6 +491,7 @@ class GameEngine(
         )
 
     private val router = CommandRouter(outbound = outbound, players = players)
+    private lateinit var mailHandler: MailHandler
 
     init {
         val crossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = if (handoffManager != null) ::handleCrossZoneMove else null
@@ -574,6 +584,9 @@ class GameEngine(
                 onPhase = phaseCallback,
             ),
         ).forEach { it.register(router) }
+
+        mailHandler = MailHandler(ctx = ctx, clock = clock)
+        mailHandler.register(router)
     }
 
     /**

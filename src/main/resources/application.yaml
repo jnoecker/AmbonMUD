@@ -99,7 +99,7 @@ ambonMUD:
       - world/labyrinth.yaml
 
   persistence:
-    backend: YAML
+    backend: POSTGRES
     rootDir: data/players
     worker:
       enabled: true
@@ -1581,6 +1581,9 @@ ambonMUD:
             minDamage: 44
             maxDamage: 68
 
+    debug:
+      enableSwarmClass: false
+
     classStartRooms:
       WARRIOR: tutorial_glade:warrior_barracks
       MAGE: tutorial_glade:mage_study
@@ -1637,7 +1640,7 @@ ambonMUD:
       dev.ambon.engine: INFO
 
   redis:
-    enabled: false
+    enabled: true
     uri: "redis://localhost:6379"
     cacheTtlSeconds: 3600
     bus:

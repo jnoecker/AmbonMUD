@@ -337,7 +337,7 @@ data class WorldConfig(
 )
 
 data class PersistenceConfig(
-    val backend: PersistenceBackend = PersistenceBackend.YAML,
+    val backend: PersistenceBackend = PersistenceBackend.POSTGRES,
     val rootDir: String = "data/players",
     val worker: PersistenceWorkerConfig = PersistenceWorkerConfig(),
 )
@@ -374,8 +374,13 @@ data class EngineConfig(
     val statusEffects: StatusEffectEngineConfig = StatusEffectEngineConfig(),
     val economy: EconomyConfig = EconomyConfig(),
     val group: GroupConfig = GroupConfig(),
+    val debug: EngineDebugConfig = EngineDebugConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
+)
+
+data class EngineDebugConfig(
+    val enableSwarmClass: Boolean = false,
 )
 
 data class ProgressionConfig(
@@ -685,7 +690,7 @@ data class RedisBusConfig(
 )
 
 data class RedisConfig(
-    val enabled: Boolean = false,
+    val enabled: Boolean = true,
     val uri: String = "redis://localhost:6379",
     val cacheTtlSeconds: Long = 3600L,
     val bus: RedisBusConfig = RedisBusConfig(),

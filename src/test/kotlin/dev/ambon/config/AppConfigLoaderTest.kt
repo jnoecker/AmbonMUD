@@ -2,6 +2,7 @@ package dev.ambon.config
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class AppConfigLoaderTest {
@@ -23,6 +24,16 @@ class AppConfigLoaderTest {
                 System.setProperty(key, previous)
             }
         }
+    }
+
+    @Test
+    fun `default application config uses postgres with redis cache`() {
+        val config = AppConfigLoader.load()
+
+        assertEquals(PersistenceBackend.POSTGRES, config.persistence.backend)
+        assertTrue(config.redis.enabled)
+        assertTrue(!config.engine.debug.enableSwarmClass)
+        assertEquals("labyrinth:cell_00_00", config.engine.classStartRooms["SWARM"])
     }
 
     @Test
