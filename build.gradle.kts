@@ -114,7 +114,7 @@ tasks.check {
 fun JavaExec.applyConfigOverrides() {
     project.properties
         .filter { (k, _) -> k.startsWith("config.") }
-        .forEach { (k, v) -> systemProperty("config.override.$k", v.toString()) }
+        .forEach { (k, v) -> systemProperty("config.override.${k.removePrefix("config.")}", v.toString()) }
 }
 
 tasks.named<JavaExec>("run") {
