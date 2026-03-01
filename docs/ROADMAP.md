@@ -19,9 +19,11 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 ✅ Zone-based sharding + zone instancing
 ✅ Prometheus/Grafana observability
 ✅ Snowflake session IDs
+✅ Isolated BCrypt auth thread pool (tunable `authThreads`)
+⏳ Virtual threads for telnet transport (#301)
 
 ### Gameplay
-✅ 4 races, 4 classes, 6 primary attributes
+✅ 4 races, 4 classes + 1 debug class (Swarm), 6 primary attributes
 ✅ **102 class-specific abilities** (25+ per class across 50 levels)
 ✅ Status effects (DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD)
 ✅ Group/party system with N:M threat tables
@@ -185,13 +187,19 @@ Everything else is independent and can start in any order.
 
 ## Performance & Scale Expectations
 
-**Current proven capacity (STANDALONE mode):**
-- ~50 concurrent players without degradation
-- Full test suite passes in <30 seconds
-- Tick latency <10ms (100ms tick window is comfortable)
-- Redis integration handles multi-process workloads
+**Load-tested capacity (STANDALONE mode, February 2026):**
+- **70 sustained concurrent players**, **141 peak sessions** (telnet + WebSocket)
+- Engine tick p99 **< 4 ms** against a 100 ms budget — engine is not the bottleneck
+- Zero tick overruns at peak load
+- JVM heap ~40 MB at 141 sessions; process CPU < 1%
+- Full test suite passes in < 30 seconds
+
+**Current throughput ceilings (tunable):**
+- Login funnel: `authThreads: 8` + cost-10 BCrypt ≈ 30–80 new logins/sec. Configurable via `login.authThreads` and `login.maxConcurrentLogins`.
+- Telnet sessions: `Dispatchers.IO` platform threads become measurable overhead above ~200 concurrent connections. Virtual threads (#301) are the planned remedy.
 
 **Known scaling limiters:**
+- Telnet transport thread model: virtual threads (#301) needed for 500+ concurrent telnet sessions
 - Single-zone performance: Procedural dungeons (#6) with instancing mitigates
 - Builder tooling: OLC (#8) is a prerequisite for content velocity
 - Player retention: Housing (#12), guilds (#13), crafting (#7) essential for long-term engagement
