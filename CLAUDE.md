@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Cloud/Remote Mode
 
-In cloud/remote mode, GitHub API tools (gh CLI, curl to GitHub API) do not work for creating PRs or interacting with GitHub issues. Instead, just push the code to the branch and notify the user — they will create the PR themselves.
+The `gh` CLI is available in cloud/remote mode (verified Feb 2026). Use it normally for creating PRs, viewing issues, and other GitHub operations.
 
 ## Commands
 

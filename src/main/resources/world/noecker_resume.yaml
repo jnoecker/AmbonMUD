@@ -1,308 +1,492 @@
 zone: noecker_resume
-lifespan: 60
-startRoom: foyer_of_first_principles
+lifespan: 45
+startRoom: lobby
 
 mobs:
-  curious_recruiter:
-    name: "a curious recruiter"
-    room: foyer_of_first_principles
-  pair_programmer:
-    name: "a friendly pair programmer"
-    room: kotlin_corridor
-  aws_architect:
-    name: "an AWS solutions architect"
-    room: cloud_observatory
-  legacy_ghost:
-    name: "a legacy ghost of monoliths past"
+  ambon_architect:
+    name: "the Resident Architect"
+    room: ambon_workshop
+    dialogue:
+      root:
+        text: "Welcome to the AmbonMUD workshop! I designed this thing as a portfolio project, but it grew some genuinely interesting distributed systems features along the way. What would you like to know?"
+        choices:
+          - text: "What is AmbonMUD, exactly?"
+            next: about
+          - text: "Tell me about the overall architecture."
+            next: architecture
+          - text: "How does it scale across multiple servers?"
+            next: scaling
+          - text: "What is the tech stack?"
+            next: stack
+          - text: "Nothing, just looking."
+      about:
+        text: "AmbonMUD is a multiplayer text adventure server written in Kotlin — the same style of game from the BBS era, but built on modern infrastructure. Tick-based game loop, telnet and WebSocket transports, GMCP structured data, class-based character progression, quests, abilities, status effects, shop economy, and NPCs with YAML-defined behavior trees. And a backend architecture that could hold its own in a system design interview."
+        choices:
+          - text: "Tell me about the architecture."
+            next: architecture
+          - text: "How does it scale?"
+            next: scaling
+          - text: "What is the tech stack?"
+            next: stack
+          - text: "That's enough, thanks."
+      architecture:
+        text: "AmbonMUD has three deployment modes. STANDALONE runs everything in one process — game engine, transports, persistence. ENGINE mode runs just the game logic and exposes a gRPC server. GATEWAY mode runs the transports and talks to a remote ENGINE over a gRPC bidirectional stream. This split lets you scale engines and gateways independently, and add Redis for cross-process pub/sub."
+        choices:
+          - text: "How does the event bus work?"
+            next: event_bus
+          - text: "Tell me about the gRPC layer."
+            next: grpc
+          - text: "How does it scale?"
+            next: scaling
+          - text: "Got it, thanks."
+      event_bus:
+        text: "The engine communicates exclusively through two interfaces: InboundBus and OutboundBus. In STANDALONE mode these are in-process coroutine channels. In multi-process mode they become Redis pub/sub streams or gRPC bidirectional streams. The engine never knows which implementation it's talking to — you swap the entire transport and bus stack with a config flag."
+        choices:
+          - text: "Tell me about zone sharding."
+            next: sharding
+          - text: "Tell me about the gRPC layer."
+            next: grpc
+          - text: "What about Redis specifically?"
+            next: redis
+          - text: "Interesting, thanks."
+      grpc:
+        text: "Each GATEWAY connects to exactly one ENGINE over a persistent gRPC bidirectional stream. Telnet and WebSocket player sessions get serialized into InboundEvents and streamed to the engine; OutboundEvents come back and get rendered. Session handoffs between engines use a two-phase protocol: player state is flushed to the persistence layer, then a SessionRedirect event tells the gateway to reconnect the player's socket to the target engine."
+        choices:
+          - text: "Tell me about zone sharding."
+            next: sharding
+          - text: "What about Redis?"
+            next: redis
+          - text: "Tell me about persistence."
+            next: persistence
+          - text: "Got it, thanks."
+      scaling:
+        text: "Scaling works in two dimensions. First, multiple ENGINE instances each own a subset of zones — that's zone sharding, coordinated by a ZoneRegistry (static config in dev, Redis-backed in production). Second, a ThresholdInstanceScaler watches player load per zone and publishes scale-up signals when a zone gets crowded. A load-balanced instance selector routes new players to the least-loaded engine for their target zone."
+        choices:
+          - text: "Tell me about zone sharding in more detail."
+            next: sharding
+          - text: "What happens when a player crosses zone boundaries?"
+            next: handoff
+          - text: "How does the event bus work?"
+            next: event_bus
+          - text: "Makes sense, thanks."
+      sharding:
+        text: "Zones are assigned to engine instances via a ZoneRegistry. In local mode this is a static map; in production it is Redis-backed so any process can look up which engine owns a zone. When a player moves to a room in a different engine's zone, the HandoffManager serializes their state, routes the session to the new engine via a SessionRedirect outbound event, and the old engine cleanly releases the session. To the player it just looks like a slightly slow room transition."
+        choices:
+          - text: "How does the session handoff actually work?"
+            next: handoff
+          - text: "Tell me about persistence."
+            next: persistence
+          - text: "What about Redis?"
+            next: redis
+          - text: "Clear, thanks."
+      handoff:
+        text: "The handoff sequence: the source engine flushes the player's state to the persistence layer, emits a SessionRedirect outbound event, and stops routing output for that session. The gateway receives the redirect, tears down local session routing, and reconnects the player's socket to the target engine's gRPC stream. The target engine loads the player from the persistence layer and picks up the session. The whole thing needs to complete fast enough that the player just experiences a slightly sluggish room transition."
+        choices:
+          - text: "Tell me about persistence."
+            next: persistence
+          - text: "How does the event bus work?"
+            next: event_bus
+          - text: "Thanks, that's clear."
+      redis:
+        text: "Redis plays three roles: pub/sub event bus in multi-process mode, player state cache in the persistence chain, and a shared zone registry for shard coordination. The caching layer uses write-coalescing to batch player saves, reducing hot-path latency during busy ticks. Everything touches Redis through interface abstractions, so the engine and game logic never import Lettuce directly."
+        choices:
+          - text: "Tell me about the persistence chain."
+            next: persistence
+          - text: "Tell me about zone sharding."
+            next: sharding
+          - text: "Got it, thanks."
+      persistence:
+        text: "Player state flows through a layered repository chain: WriteCoalescingPlayerRepository batches writes to reduce flush frequency, RedisCachingPlayerRepository serves reads from cache, then either YAML files or PostgreSQL at the bottom depending on config. YAML uses atomic writes via temp-file-and-rename. The Postgres path uses Flyway migrations and Exposed for type-safe queries over HikariCP. You swap backends with a single config flag and the engine never changes."
+        choices:
+          - text: "How does the event bus work?"
+            next: event_bus
+          - text: "Tell me about the overall architecture."
+            next: architecture
+          - text: "That covers it, thanks."
+      stack:
+        text: "Kotlin 2.3 on JVM 21. Ktor for WebSocket transport. kotlinx-coroutines for the async runtime — the game engine runs on a single-threaded coroutine dispatcher, which keeps the tick loop simple to reason about. Jackson for YAML world loading, Hoplite for config. gRPC with Protobuf for inter-process comms. Lettuce for Redis, Exposed plus HikariCP for Postgres. Micrometer and Prometheus for metrics. About 200 Kotlin source files and 85 test files."
+        choices:
+          - text: "Tell me about the architecture."
+            next: architecture
+          - text: "How does it scale?"
+            next: scaling
+          - text: "Impressive. Thanks."
+
+  impostor_syndrome:
+    name: "an Impostor Syndrome Wisp"
+    room: lobby
+    tier: weak
+    level: 2
+    xpReward: 25
+    behavior:
+      template: coward
+      params:
+        fleeHpPercent: 70
+        fleeMessage: "The wisp shrieks, 'You probably don't belong here either!' and vanishes through the wall."
+    respawnSeconds: 120
+
+  memory_leak:
+    name: "a Memory Leak"
+    room: proteus_bay
+    tier: weak
+    level: 3
+    behavior:
+      template: wander_aggro
+      params:
+        aggroMessage: "The leak oozes toward your heap space and latches on!"
+    respawnSeconds: 90
+
+  null_pointer_exception:
+    name: "a NullPointerException"
+    room: juola_lab
+    tier: standard
+    level: 4
+    hp: 22
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "Exception in thread \"main\": java.lang.NullPointerException at line 42!"
+    respawnSeconds: 120
+
+  scope_creep:
+    name: "a Scope Creep"
+    room: freelance_hq
+    tier: standard
+    level: 6
+    behavior:
+      template: wander_aggro
+      params:
+        aggroMessage: "'Could we add just one more feature? It will only take a minute. Two minutes tops.'"
+    respawnSeconds: 60
+
+  legacy_monolith:
+    name: "the Legacy Monolith"
     room: migration_bridge
-  skeptical_reviewer:
-    name: "a skeptical code reviewer"
-    room: review_gauntlet
-  oncall_pager:
-    name: "an angry on-call pager"
-    room: incident_war_room
-  interview_candidate:
-    name: "a nervous interview candidate"
-    room: karat_interview_studio
-  calm_mentor:
-    name: "a calm mentor"
-    room: mentorship_mezzanine
-  patent_lawyer:
-    name: "a patent lawyer with ink-stained fingers"
-    room: patent_annex
-  imposter_wisp:
-    name: "an imposter-syndrome wisp"
-    room: mirror_of_doubt
+    tier: elite
+    level: 7
+    hp: 65
+    armor: 3
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "THE MONOLITH AWAKENS. ESTIMATED DEPLOY TIME: FOUR HOURS. DO NOT INTERRUPT THE PROCESS."
+    respawnSeconds: 300
+
+  fda_auditor:
+    name: "an FDA Compliance Auditor"
+    room: fda_archive
+    tier: standard
+    level: 5
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "'I need to see your audit trail. ALL of it. Where is the audit trail?!'"
+    respawnSeconds: 150
+
+  runaway_lambda:
+    name: "a Runaway Lambda"
+    room: lambda_shrine
+    tier: weak
+    level: 5
+    goldMin: 0
+    goldMax: 5
+    behavior:
+      template: wander
+    respawnSeconds: 30
+
+  budget_committee:
+    name: "a Budget Committee"
+    room: savings_vault
+    tier: standard
+    level: 5
+    hp: 28
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "'That hundred-thousand-a-month savings? We have some follow-up questions.'"
+    respawnSeconds: 120
+
+  phone_screen:
+    name: "a Technical Phone Screen"
+    room: karat_studio
+    tier: standard
+    level: 6
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "'Quick: implement a thread-safe LRU cache. Fifteen minutes. No hints. I'm timing you.'"
+    respawnSeconds: 90
+
+  stack_overflow_error:
+    name: "a Stack Overflow Error"
+    room: gatech_annex
+    tier: elite
+    level: 8
+    hp: 42
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "Segmentation fault (core dumped). Stack trace: [infinite recursion in progress]"
+    respawnSeconds: 180
 
 items:
-  diogenes_lantern:
-    displayName: "Diogenes' lantern"
-    description: "A battered lantern labeled: 'Searching for an honest bug report.' It somehow makes requirements clearer."
+  lambda_arrow:
+    displayName: "a Lambda Arrow"
+    description: "Small, stateless, and devastatingly focused. Engraved: 'Do one thing well and exit cleanly.'"
     slot: hand
-    damage: 1
-    room: foyer_of_first_principles
-
-  math_laurel:
-    displayName: "a laurel of mathematics"
-    description: "A woven laurel that smells faintly of chalk dust and proofs."
-    slot: head
-    constitution: 1
-    room: duquesne_hall
-
-  cs_diploma_scroll:
-    displayName: "a computer science diploma scroll"
-    description: "It unfurls into clean interfaces, invariants, and a gentle warning about undefined behavior."
-    room: duquesne_hall
-
-  valedictorian_medal:
-    displayName: "a valedictorian medal"
-    description: "Bright enough to blind your inner critic for a moment."
-    slot: head
-    armor: 1
-    room: graduation_stage
-
-  aws_cert_badge:
-    displayName: "an AWS certification badge"
-    description: "Stamped: 'Solutions Architect – Associate'. It hums when you draw boxes and arrows."
-    slot: hand
-    armor: 1
-    room: cloud_observatory
-
-  well_architected_shield:
-    displayName: "a Well-Architected shield"
-    description: "Reliability on the front. Cost control on the back. It blocks questionable defaults."
-    slot: hand
-    armor: 2
-    room: migration_bridge
+    damage: 2
+    basePrice: 18
+    room: lambda_shrine
 
   ci_cd_wrench:
-    displayName: "a CI/CD wrench"
-    description: "Turn it once and deployment time drops. Turn it twice and someone asks for 'just one more pipeline'."
+    displayName: "a CI/CD Wrench"
+    description: "Reduced deployment time by 60%. Turn it left: pipeline improves. Turn it right: someone requests another stage."
     slot: hand
-    damage: 1
-    room: pipeline_foundry
+    damage: 2
+    basePrice: 15
+    room: pipeline_bay
 
-  observability_compass:
-    displayName: "an observability compass"
-    description: "Points toward structured logs, metrics, traces, and the root cause you missed the first time."
-    room: incident_war_room
-
-  serverless_talisman:
-    displayName: "a serverless talisman"
-    description: "Etched with Lambda, API Gateway, SQS, and DynamoDB. It prefers small, sharp responsibilities."
+  type_safe_compiler:
+    displayName: "a Type-Safe Compiler"
+    description: "Refuses to let you swing it incorrectly. Kotlin-forged; catches your runtime errors before they hurt anyone."
     slot: hand
+    damage: 3
+    basePrice: 30
+    room: gatech_annex
+
+  well_architected_shield:
+    displayName: "a Well-Architected Shield"
+    description: "Five pillars embossed on the face: Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization. Stops questionable cloud defaults cold."
+    slot: hand
+    armor: 3
+    basePrice: 35
+    room: migration_bridge
+
+  aws_cert_badge:
+    displayName: "an AWS Certification Badge"
+    description: "Stamped: 'Solutions Architect – Associate, Aug 2023'. It hums softly when you start drawing box-and-arrow diagrams."
+    slot: head
+    armor: 2
     constitution: 1
-    room: serverless_shrine
+    basePrice: 25
+    room: cloud_platform
 
-  interview_clipboard:
-    displayName: "an interview clipboard"
-    description: "Covered in rubric checkboxes and notes like: 'clarity', 'tradeoffs', 'production readiness'."
-    room: karat_interview_studio
+  valedictorian_medal:
+    displayName: "a Valedictorian Medal"
+    description: "Summa cum laude. Valedictorian in Computer Science, Mathematics, and Liberal Arts at Duquesne University. Bright enough to briefly silence your inner critic."
+    slot: head
+    armor: 1
+    constitution: 1
+    basePrice: 20
+    room: education_wing
 
-  mentorship_notebook:
-    displayName: "a mentorship notebook"
-    description: "Packed with mock interview drills, actionable feedback, and tiny celebrations of progress."
-    room: mentorship_mezzanine
+  code_review_coffee:
+    displayName: "a Code Review Coffee"
+    keyword: coffee
+    description: "Black, strong, and it leaves comments. Recommended before any production deploy or Daubert challenge."
+    consumable: true
+    onUse:
+      healHp: 15
+    basePrice: 12
+    room: war_room
 
-  apprenticeship_syllabus:
-    displayName: "an apprenticeship syllabus"
-    description: "State-approved and surprisingly battle-tested. The margins contain hard-earned advice."
-    room: apprenticeship_classroom
+  unit_test_suite:
+    displayName: "a Unit Test Suite"
+    keyword: potion
+    description: "Confidence in a flask. Drink and briefly feel like every edge case is covered. JUnit and Jest flavors available."
+    consumable: true
+    onUse:
+      healHp: 10
+    basePrice: 8
+    room: freelance_hq
 
   patent_scroll:
-    displayName: "a patent scroll"
-    description: "Authorship Technologies—names and numbers in neat rows. It crackles with reproducible results."
+    displayName: "a Patent Scroll"
+    description: "Authorship Technologies — US-11605055-B2 and US-10657494-B2. It crackles faintly and smells of peer review and legal fees."
+    basePrice: 5
     room: patent_annex
 
   cost_savings_coin:
-    displayName: "a heavy cost-savings coin"
-    description: "Stamped: '$100K/month'. It clinks whenever you replace an expensive data source with a smarter one."
-    room: optimization_vault
+    displayName: "a Cost-Savings Coin"
+    description: "Heavy gold, stamped '$100K/month'. Earned by replacing expensive data sources with smarter, cheaper ones at Signifyd."
+    basePrice: 50
+    room: savings_vault
+
+  jgaap_sourcebook:
+    displayName: "a JGAAP Sourcebook"
+    description: "Open-source forensic authorship analysis. Margin note: 'Every methodology must be reproducible or it doesn't count.'"
+    basePrice: 8
+    room: juola_lab
+
+  audit_trail:
+    displayName: "an Immutable Audit Trail"
+    description: "A tamper-evident ledger. Timestamped, cross-referenced, and defensible under Daubert admissibility standards."
+    basePrice: 10
+    room: fda_archive
+
+  observability_compass:
+    displayName: "an Observability Compass"
+    description: "Points toward structured logs, distributed traces, and the root cause you missed the first three times."
+    basePrice: 15
+    room: war_room
+
+  interview_rubric:
+    displayName: "an Interview Rubric"
+    description: "Three thousand interviews condensed into calibrated checkboxes: tradeoffs, communication clarity, production readiness."
+    basePrice: 8
+    room: karat_studio
+
+shops:
+  career_services:
+    name: "Career Services Desk"
+    room: lobby
+    items:
+      - code_review_coffee
+      - unit_test_suite
 
 rooms:
-  foyer_of_first_principles:
-    title: "Foyer of First Principles"
-    description: "A bright entryway lined with whiteboards. Every question here becomes: 'What do we know, exactly?' Doorways lead into a career built on backend systems, careful tradeoffs, and a suspiciously logical mindset."
+  lobby:
+    title: "The Lobby (Resume: John Noecker Jr.)"
+    description: "A bright, airy foyer. A framed summary on the wall reads: JOHN NOECKER JR. | Backend & Distributed Systems Engineer | 15+ years designing scalable, fault-tolerant cloud systems | AWS-first, JVM-heavy (Java/Kotlin) | Spring Boot, DynamoDB, Lambda, API Gateway, CI/CD, Docker | 3,000+ technical interviews conducted | 500+ engineers mentored | ambon.dev. A Career Services Desk stands nearby. An Impostor Syndrome Wisp lurks in the corner but will probably flee if you confront it."
     exits:
-      n: timeline_corridor
-      e: mirror_of_doubt
+      n: timeline_entry
+      e: ambon_workshop
       w: ambon_hub:hall_of_portals
 
-  mirror_of_doubt:
-    title: "Mirror of Doubt"
-    description: "A mirror that reflects you with a tooltip reading 'Are you sure you deserve this?' Strangely, the reflection fades when you list concrete accomplishments out loud."
+  ambon_workshop:
+    title: "AmbonMUD Workshop"
+    description: "A server room that smells faintly of coroutines and carefully considered abstractions. Diagrams cover every surface: event bus interfaces, gRPC streaming topologies, zone shard registries, a layered persistence chain with Redis in the middle. A sticky note on the whiteboard reads: 'It started as a demo. It grew a distributed systems story.' The Resident Architect stands nearby, apparently happy to explain any of it."
     exits:
-      w: foyer_of_first_principles
-      n: mentorship_mezzanine
+      w: lobby
 
-  timeline_corridor:
-    title: "Timeline Corridor"
-    description: "A long hallway with plaques arranged in chronological order. The air smells like fresh commits and old lessons."
+  timeline_entry:
+    title: "Career Timeline Entrance"
+    description: "A long corridor lined with professional plaques in chronological order. The air carries the faint smell of fresh commits and hard-earned lessons. The earliest chapters are to the north."
     exits:
-      s: foyer_of_first_principles
-      n: proteus_workbench
+      s: lobby
+      n: proteus_bay
 
-  proteus_workbench:
-    title: "PROTEUS Workbench"
-    description: "A practical workshop full of half-disassembled systems and the joy of getting real software shipped. You can almost hear the early-career momentum building."
+  proteus_bay:
+    title: "PROTEUS Workbench (2009-2010)"
+    description: "An early-career workshop smelling of large datasets and the quiet satisfaction of real software shipped. A placard reads: 'Built tools to parse extremely large datasets — achieved 1000x reduction in processing time over ad-hoc workflows. Performance, scalability, reliability from day one.' A Memory Leak drifts through looking for something to consume."
     exits:
-      s: timeline_corridor
-      n: juola_labs
+      s: timeline_entry
+      n: juola_lab
 
-  juola_labs:
-    title: "Juola Labs"
-    description: "A research-minded lab where the most dangerous monster is an unrepeatable experiment. Notes on linguistic attribution are stacked everywhere, each annotated for correctness and reproducibility."
+  juola_lab:
+    title: "Juola & Associates Lab (2010-2016)"
+    description: "A research lab where the most dangerous bug is an unrepeatable result. Bookshelves hold forensic analysis tools, legal filings, and authorship attribution papers. A chalkboard reads: 'Applied to The Cuckoo's Calling, Satoshi Nakamoto, and Chevron v. Donziger. Methodologies defensible under Daubert admissibility standards.' A NullPointerException guards the door with misplaced confidence."
     exits:
-      s: proteus_workbench
+      s: proteus_bay
       e: patent_annex
-      n: authorship_foundry
-
-  authorship_foundry:
-    title: "Authorship Foundry"
-    description: "A forge where text becomes signals, and signals become systems. Everything is explainable or it doesn't count."
-    exits:
-      s: juola_labs
-      n: signify_market
+      n: signifyd_floor
 
   patent_annex:
     title: "Patent Annex"
-    description: "A quiet side room with framed filings. On the wall: 'Authorship Technologies' and two U.S. patent numbers—proof that the ideas made it out of the lab and into the world."
+    description: "A quiet room with framed certificates on the wall: 'Authorship Technologies — Patrick Juola, John Noecker Jr., et al. U.S. Patents: US-11605055-B2, US-10657494-B2.' A second plaque notes a $1.6M government grant and peer-reviewed publications. The patent scroll rests on the table."
     exits:
-      w: juola_labs
+      w: juola_lab
 
-  signify_market:
-    title: "Signifyd Market Street"
-    description: "A bustling street where risk decisions move fast and correctness matters. Service boundaries and data flow diagrams are etched into the cobblestones."
+  signifyd_floor:
+    title: "Signifyd Market Floor (2016-2018)"
+    description: "A bustling trading floor where fraud decisions move fast and correctness is non-negotiable. Service boundaries and data flow diagrams are etched into the cobblestones. A bronze plaque reads: 'Reduced recurring data costs ~$100K/month. Improved throughput and latency via smarter caching strategies. Production systems at scale.'"
     exits:
-      s: authorship_foundry
-      n: review_gauntlet
-      e: optimization_vault
-
-  optimization_vault:
-    title: "Optimization Vault"
-    description: "A vault of graphs and invoices. A ledger reads: 'Reduced recurring data costs by approximately $100K/month' beside notes on vendor evaluation and smarter sourcing."
-    exits:
-      w: signify_market
-
-  review_gauntlet:
-    title: "Review Gauntlet"
-    description: "A corridor of pull requests guarded by sharp questions: 'What’s the failure mode?' 'What’s the blast radius?' 'Where’s the metric?' The right answers open doors."
-    exits:
-      s: signify_market
+      s: juola_lab
+      e: savings_vault
       n: enzyme_workshop
 
-  enzyme_workshop:
-    title: "Enzyme Workshop"
-    description: "A clean room for building systems that must be auditable and correct. Regulatory constraints hover like runes—demanding validation, traceability, and careful data handling."
+  savings_vault:
+    title: "Optimization Vault"
+    description: "A vault lined with cost graphs and vendor invoices. The ledger shows a clean line trending sharply downward after smarter data sourcing decisions. The Budget Committee is stationed here, still asking follow-up questions about last quarter's numbers."
     exits:
-      s: review_gauntlet
+      w: signifyd_floor
+
+  enzyme_workshop:
+    title: "Enzyme Workshop (2019-2020)"
+    description: "A clean room for systems that must be auditable and correct. TypeScript and Node.js blueprints are pinned everywhere. A sign reads: 'Greenfield platform for FDA 510(k) data extraction — backend validation, audit trails, and regulatory correctness required at every layer.' Runes of traceability hover in the air."
+    exits:
+      s: signifyd_floor
       e: fda_archive
-      n: freelance_crossroads
+      n: freelance_hq
 
   fda_archive:
     title: "FDA 510(k) Archive"
-    description: "Shelves of documents and extraction pipelines. A sign says: 'Automate the boring parts, never compromise the audit trail.'"
+    description: "Shelves packed with regulatory documents and extraction pipeline specs. Every action logged. Every transformation traceable. A sign over the door: 'Automate the boring parts. Never compromise the audit trail.' The Compliance Auditor paces the stacks, clipboard raised."
     exits:
       w: enzyme_workshop
 
-  freelance_crossroads:
-    title: "Freelance Crossroads"
-    description: "A crossroads labeled 'Noecker & Associates'. The paths are ambiguous, requirements incomplete, and expectations high—exactly the sort of place staff-level scope is forged."
+  freelance_hq:
+    title: "Noecker & Associates HQ (2020-Present)"
+    description: "A crossroads of ambiguous requirements and high-stakes deliveries. Whiteboards read: 'Staff-level scope — architecture, delivery, production support. Reduced deployment time 60%. AWS Well-Architected migrations. Observability-first: structured logging, metrics, alerting. Reduced mean time-to-diagnosis in production.' A Scope Creep wanders in from an adjacent room, as usual."
     exits:
       s: enzyme_workshop
-      n: migration_bridge
-      e: pipeline_foundry
-      w: kotlin_corridor
+      e: migration_bridge
+      w: pipeline_bay
+      n: cloud_platform
 
   migration_bridge:
-    title: "Migration Bridge"
-    description: "A bridge spanning a chasm labeled 'Legacy → Cloud'. Each plank is a careful step: incremental delivery, backward compatibility, operational safety. The Well-Architected shield hangs here like a blessing and a warning."
+    title: "Legacy Migration Bridge"
+    description: "A bridge over a chasm labeled 'Monolith to Cloud'. Each plank is a deliberate step: incremental delivery, backward compatibility, zero-downtime cutover. The Well-Architected Shield leans against the railing. The Legacy Monolith blocks the far end, absolutely certain its four-hour deploy pipeline is fine."
     exits:
-      s: freelance_crossroads
-      n: serverless_shrine
+      w: freelance_hq
 
-  serverless_shrine:
-    title: "Serverless Shrine"
-    description: "A shrine etched with Lambda, API Gateway, SQS, and DynamoDB. Offerings include small functions, clean contracts, and a refusal to let queues become mystery meat."
-    exits:
-      s: migration_bridge
-      n: cloud_observatory
-
-  pipeline_foundry:
+  pipeline_bay:
     title: "Pipeline Foundry"
-    description: "A foundry of Jenkins gears and Docker valves. A banner reads: 'Reduced deployment time by 60%'. The machines thrum with repeatability."
+    description: "Jenkins gears mesh with Docker valves in a satisfying clank. A banner overhead: 'Deployment time reduced 60% — CI/CD pipelines rebuilt with repeatability and speed.' The CI/CD Wrench sits on the workbench, still warm from the last optimization run."
     exits:
-      w: freelance_crossroads
-      n: incident_war_room
+      e: freelance_hq
+      n: war_room
 
-  incident_war_room:
+  war_room:
     title: "Incident War Room"
-    description: "Screens glow with dashboards. Structured logs march in disciplined rows. Traces thread through services like bright string, shortening the distance between symptom and cause."
+    description: "Screens glow with live dashboards. Structured logs scroll in disciplined rows. Distributed traces thread through services like bright string, shortening the gap between symptom and root cause. An Observability Compass rests on the table. A Code Review Coffee sits beside it, still warm."
     exits:
-      s: pipeline_foundry
-      e: cloud_observatory
-      n: karat_interview_studio
+      s: pipeline_bay
 
-  cloud_observatory:
+  cloud_platform:
     title: "Cloud Observatory"
-    description: "An observatory of AWS diagrams and cost curves. From here you can see the whole system—reliability, observability, and cost control aligned like constellations."
+    description: "An observatory of AWS architecture diagrams and cost curves. Lambda, EC2, S3, DynamoDB, API Gateway, CloudFormation — the full toolkit laid out like star charts. A note reads: 'AWS Certified Solutions Architect, Associate — reliability, cost control, and operational safety in every design.' The AWS Certification Badge is displayed in a case by the telescope."
     exits:
-      w: incident_war_room
-      s: serverless_shrine
-      n: mentorship_mezzanine
+      s: freelance_hq
+      e: lambda_shrine
+      n: karat_studio
 
-  kotlin_corridor:
-    title: "Kotlin Corridor"
-    description: "A bright corridor with JVM runes and Spring-shaped arches. Type safety and expressiveness make the air feel crisp."
+  lambda_shrine:
+    title: "Serverless Shrine"
+    description: "A shrine etched with Lambda, API Gateway, SQS, and DynamoDB insignia. Offerings include small, focused functions and clean event contracts. A Runaway Lambda darts between exits, stateless and entirely too eager to invoke itself again."
     exits:
-      e: freelance_crossroads
-      n: duquesne_hall
+      w: cloud_platform
 
-  karat_interview_studio:
-    title: "Karat Interview Studio"
-    description: "A studio with a timer on the wall and a thousand tiny stories in the chairs. A chalkboard reads: '3,000+ technical interviews' and 'calibrated feedback on tradeoffs, clarity, and production readiness.'"
+  karat_studio:
+    title: "Karat Interview Studio (2019-Present)"
+    description: "A studio with a timer on the wall and three thousand stories in the chairs. A chalkboard reads: 'Senior Interview Engineer — partners include Citi, Indeed, and Roblox. Calibrated feedback on tradeoffs, communication clarity, and production readiness.' The Interview Rubric is on the table. A Technical Phone Screen prowls the room looking for someone to quiz."
     exits:
-      s: incident_war_room
-      n: mentorship_mezzanine
+      s: cloud_platform
+      e: mentorship_lounge
+      n: education_wing
 
-  mentorship_mezzanine:
+  mentorship_lounge:
     title: "Mentorship Mezzanine"
-    description: "A warm mezzanine overlooking a maze of interview rooms. Notes say: 'Mentored 500+ engineers' and 'Actionable feedback beats vague praise.'"
+    description: "A warm lounge overlooking the interview rooms below. Wall notes: '500+ engineers mentored through Karat and Brilliant Black Minds. Actionable feedback over vague encouragement. State-approved apprenticeship curriculum authored and delivered. A decade of hiring, training, and operations at an independent small business.'"
     exits:
-      s: karat_interview_studio
-      w: mirror_of_doubt
-      n: apprenticeship_classroom
+      w: karat_studio
 
-  apprenticeship_classroom:
-    title: "Apprenticeship Classroom"
-    description: "A classroom with a state-approved curriculum on the lectern. The lessons are practical: fundamentals, real projects, and the gentle discipline of finishing what you start."
+  education_wing:
+    title: "Duquesne Hall (Education)"
+    description: "A grand hall where Computer Science and Mathematics share the same chalkboard. A plaque reads: 'B.S. Computer Science | B.A. Mathematics | Duquesne University — Graduated summa cum laude. Valedictorian in Liberal Arts, Computer Science, and Mathematics.' The Valedictorian Medal gleams under the lights. A doorway east leads to graduate studies."
     exits:
-      s: mentorship_mezzanine
-      n: duquesne_hall
-
-  duquesne_hall:
-    title: "Duquesne Hall"
-    description: "A grand hall where Computer Science and Mathematics share the same chalkboard. A plaque reads: 'B.S. Computer Science | B.A. Mathematics' and 'Graduated summa cum laude.'"
-    exits:
-      s: apprenticeship_classroom
+      s: karat_studio
+      e: gatech_annex
       n: graduation_stage
-      e: gatech_studio
 
-  gatech_studio:
-    title: "Georgia Tech Studio"
-    description: "A studio full of diagrams: machine learning, AI, robotics. Even the whiteboards feel competitive—but the notes are meticulous."
+  gatech_annex:
+    title: "Georgia Tech Annex"
+    description: "A studio of graduate-level diagrams: machine learning, artificial intelligence, robotics. The notes are meticulous and competitive. A Stack Overflow Error has taken up residence at the recursion terminal, growing with every stack frame. A Type-Safe Compiler sits ominously on the desk nearby."
     exits:
-      w: duquesne_hall
+      w: education_wing
 
   graduation_stage:
     title: "Graduation Stage"
-    description: "A stage with spotlights and a podium. The crowd is a blur, but the medal is sharp: 'Valedictorian'—and the moment is yours, even if the paperwork tried to simplify it."
+    description: "A bright stage with spotlights and a waiting podium. The view from here takes in the full arc: PROTEUS datasets to cloud migrations, forensic linguistics to fraud systems, FDA pipelines to three thousand interview rooms. A terminal in the corner blinks: ambon.dev — more systems to build, more worlds to ship."
     exits:
-      s: duquesne_hall
-      n: epilogue_terminal
-
-  epilogue_terminal:
-    title: "Epilogue Terminal"
-    description: "A terminal prompt waits: 'dev.ambon>' The cursor blinks like an invitation—more systems to design, more worlds to build, more silly zones to ship."
-    exits:
-      s: graduation_stage
+      s: education_wing
