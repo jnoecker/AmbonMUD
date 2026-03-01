@@ -171,10 +171,11 @@ src/test/kotlin/
 └── dev/ambon/test/              # Test utilities (MutableClock, helpers)
 
 infra/
-├── bin/infra.ts                 # CDK app entry point
+├── bin/infra.ts                 # CDK app entry point (branches on topology=ec2 vs ECS)
 ├── lib/
-│   ├── config.ts                # topology × tier sizing table
-│   ├── vpc-stack.ts             # VPC, subnets, security groups
+│   ├── config.ts                # topology × tier sizing table (standalone/split)
+│   ├── ec2-stack.ts             # EC2 single-instance topology (~$4-5/mo, YAML persistence)
+│   ├── vpc-stack.ts             # VPC, subnets, security groups (ECS topologies)
 │   ├── data-stack.ts            # RDS, ElastiCache Redis, EFS, Secrets Manager
 │   ├── lb-stack.ts              # NLB, ALB, Cloud Map DNS
 │   ├── ecs-stack.ts             # ECS cluster, Engine+Gateway Fargate services
@@ -791,9 +792,27 @@ docker run --rm -p 4000:4000 -p 8080:8080 \
   ambonmud
 ```
 
-### Deploy to AWS (Production)
+### Deploy to AWS
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full CDK-based AWS deployment guide covering topology selection, one-time bootstrap, and the CI/CD pipeline.
+Three topology options, from cheapest to most capable:
+
+| Topology | Cost | Use case |
+|----------|------|----------|
+| `ec2` | ~$4-5/mo | Low-traffic server (resume, demo); YAML persistence, no RDS/Redis |
+| `standalone` + hobby tier | ~$60-100/mo | Single Fargate task with managed Postgres + Redis |
+| `split` + moderate/production | ~$200+/mo | Auto-scaling ENGINE + GATEWAY with full HA |
+
+```bash
+cd infra && npm ci
+
+# Cheapest: single EC2 instance, YAML persistence
+npx cdk deploy --context topology=ec2 --context imageTag=<sha>
+
+# ECS Fargate (requires one-time cdk bootstrap first)
+npx cdk deploy --all --context topology=standalone --context tier=hobby
+```
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full guide: one-time bootstrap, topology/tier reference, env var table, CI/CD pipeline, and operational notes.
 
 ---
 

@@ -214,12 +214,17 @@ docker run --rm -p 4000:4000 -p 8080:8080 \
   ambonmud
 ```
 
-**Deploy to AWS (ECS Fargate):**
+**Deploy to AWS:**
 ```bash
 cd infra && npm ci
-# Cheapest path (~$30-60/mo): standalone topology, hobby tier
+
+# Cheapest path (~$4-5/mo): single EC2 instance, YAML persistence, no RDS/Redis
+npx cdk deploy --context topology=ec2 --context imageTag=<git-sha>
+
+# ECS Fargate standalone (~$60-100/mo): managed Postgres + Redis
 npx cdk deploy --all --context topology=standalone --context tier=hobby
-# Production HA: split ENGINE+GATEWAY with auto-scaling
+
+# ECS Fargate production HA: split ENGINE+GATEWAY with auto-scaling
 npx cdk deploy --all --context topology=split --context tier=production \
   --context domain=play.example.com --context alertEmail=ops@example.com
 ```
