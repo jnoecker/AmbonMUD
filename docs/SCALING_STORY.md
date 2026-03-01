@@ -97,15 +97,51 @@ We partitioned the game world across multiple engine processes by zone:
 - **`STANDALONE`**: simplest path, no distributed dependencies required.
 - **`ENGINE` + `GATEWAY`**: split mode for horizontal session ingress.
 
+### Load-tested capacity (STANDALONE, February 2026)
+
+Load testing confirmed the following benchmarks on a single `STANDALONE` instance:
+
+| Metric | Result |
+|--------|--------|
+| Sustained concurrent players | **70** |
+| Peak sessions (telnet + WebSocket combined) | **141** |
+| Engine tick duration p50 | < 1 ms |
+| Engine tick duration p99 | **< 4 ms** (vs. 100 ms budget) |
+| Engine tick overruns | **0** throughout test |
+| JVM heap at peak | ~40 MB |
+| Process CPU at peak | < 1% |
+
+The engine tick is not the bottleneck. At 141 sessions the game loop is using less than 4% of its time budget, leaving enormous headroom before tick starvation becomes a concern.
+
+### Auth funnel: the real login-throughput ceiling
+
+The login path has two independently tunable limits:
+
+- **`login.maxConcurrentLogins`** (default: `150`) — maximum sessions simultaneously in the name-lookup → BCrypt → world-entry funnel. Sessions beyond this receive an immediate "server busy" message rather than silently timing out.
+- **`login.authThreads`** (default: `8`) — dedicated thread pool for BCrypt hashing, isolated from `Dispatchers.IO` to avoid starving socket I/O.
+
+BCrypt at cost-10 takes roughly 100–300 ms per operation. With `authThreads: 8`, the sustained login throughput cap is approximately **30–80 logins/sec**. At that rate, 150 simultaneous new connections clear the funnel in 2–5 seconds — well within any reasonable bot or player timeout.
+
+**Symptom to watch for:** if bots time out in their initial state (before submitting a name) during a high-concurrency ramp, the cause is almost always the login semaphore being saturated, not the engine. Increase `maxConcurrentLogins` and/or `authThreads` in lock-step with your CPU count.
+
+### Observed subsystem pressure at 70 players
+
+From the February 2026 load test, in order of observed pressure:
+
+1. **Regen tick max latency** — average stays near 0 but max spikes to ~4 ms at 70 active players as the per-player regen loop grows. First subsystem to feel pressure at higher player counts.
+2. **Outbound backpressure** — small cluster of disconnects (~0.4/sec) during peak combat activity. Expected and correct behavior (slow WebSocket clients being shed).
+3. **Persistence batch latency** — Player repo save/load max hits ~150 ms when the coalescing worker flushes a large batch. Not on the critical path; acceptable and configurable via `flushIntervalMs`.
+
 ### Throughput and safety mechanisms already present
 
 - **Single-threaded authoritative tick** for gameplay consistency.
-- **Backpressure-aware outbound routing** (slow sessions can be disconnected instead of unbounded queue growth).
+- **Backpressure-aware outbound routing** (slow sessions can be disconnected instead of allowing unbounded memory growth).
 - **Prompt coalescing** to reduce unnecessary output churn.
 - **Write-coalescing persistence** to compress many state changes into fewer durable writes.
 - **Backend selection** (`YAML` or `POSTGRES`) behind one `PlayerRepository` abstraction.
 - **Optional Redis cache/pub-sub** with graceful degradation.
 - **Metrics pipeline** via Micrometer/Prometheus, including standalone metrics endpoint support in split deployments.
+- **Isolated BCrypt thread pool** to prevent auth load from starving socket I/O on `Dispatchers.IO`.
 
 ### Sharding status
 
@@ -147,10 +183,12 @@ We partitioned the game world across multiple engine processes by zone:
 
 If asked “what limits scale right now?”, a strong answer is:
 
-1. **Per-shard tick budget** (authoritative loop): command routing, combat, mob updates, and world events share the budget per engine shard. With sharding, this scales horizontally.
-2. **Cross-zone coordination latency**: handoffs and cross-engine messaging add one Redis pub/sub hop (~1-5ms). Zone instancing adds instance-selection overhead.
-3. **Operational observability depth**: core metrics exist per-engine, but saturation-oriented dashboards/alerts and cross-engine correlation can still be expanded.
-4. **Persistence durability vs. latency tuning**: flush interval and backend choices are workload-dependent.
+1. **Login funnel throughput**: the BCrypt thread pool (`authThreads`) is the primary ceiling for concurrent logins. At default settings (8 threads, cost-10 BCrypt), sustained throughput is ~30–80 new logins/sec. Tunable independently of the engine. High-concurrency test ramps will see bots timeout with “stuck in WAIT_NAME” errors if `maxConcurrentLogins` is too low relative to the ramp rate — this is the semaphore being exhausted, not an engine issue.
+2. **Per-shard tick budget** (authoritative loop): command routing, combat, mob updates, and world events share the budget per engine shard. Load testing shows the single-threaded engine comfortably handles 70 active players with p99 tick < 4 ms. With sharding, this scales horizontally.
+3. **Telnet transport thread pressure**: `BlockingSocketTransport` uses `Dispatchers.IO` with one blocking `read()` per connection. At very high telnet session counts (hundreds), `Dispatchers.IO` thread overhead becomes meaningful. Virtual threads (JDK 21 feature, tracked as #301) are the planned remedy — each session's blocking read uses a virtual thread instead of a platform thread, enabling thousands of concurrent telnet sessions with minimal overhead. WebSocket transport is unaffected (already non-blocking via Ktor/Netty).
+4. **Cross-zone coordination latency**: handoffs and cross-engine messaging add one Redis pub/sub hop (~1–5 ms). Zone instancing adds instance-selection overhead.
+5. **Operational observability depth**: core metrics exist per-engine, but saturation-oriented dashboards/alerts and cross-engine correlation can still be expanded.
+6. **Persistence durability vs. latency tuning**: flush interval and backend choices are workload-dependent.
 
 ---
 
@@ -158,11 +196,12 @@ If asked “what limits scale right now?”, a strong answer is:
 
 The highest-value next steps are:
 
-1. Add queue depth/capacity gauges across inbound/outbound buses and per-session buffers.
-2. Improve error taxonomy metrics for auth, handoff, and Redis fallback reasons.
-3. Codify alert rules and dashboards as versioned infra artifacts.
-4. Add structured logging + correlation IDs across gateway/engine/session flows.
-5. Strengthen telemetry contract tests so instrumentation regressions are caught in CI.
+1. **Virtual threads for telnet transport (#301)**: migrate `BlockingSocketTransport` from `Dispatchers.IO` platform threads to JDK 21 virtual threads. Unlocks thousands of concurrent telnet sessions without thread pool pressure. WebSocket transport already uses Ktor's non-blocking I/O and does not require this change.
+2. Add queue depth/capacity gauges across inbound/outbound buses and per-session buffers.
+3. Improve error taxonomy metrics for auth, handoff, and Redis fallback reasons — particularly a counter for `maxConcurrentLogins` saturation events to make the auth ceiling visible in Grafana.
+4. Codify alert rules and dashboards as versioned infra artifacts.
+5. Add structured logging + correlation IDs across gateway/engine/session flows.
+6. Strengthen telemetry contract tests so instrumentation regressions are caught in CI.
 
 This positions the project for confident load testing and safer multi-engine operation.
 
@@ -170,7 +209,7 @@ This positions the project for confident load testing and safer multi-engine ope
 
 ## 9) 90-second interview version
 
-> “We scaled AmbonMUD by separating concerns: gameplay remains deterministic in a single authoritative tick loop, while transports and I/O are abstracted and distributed. First, we introduced bus interfaces so engine code stopped depending on local channels. Next, we moved persistence writes off the tick using a coalescing worker. Then we added Redis as optional cache and pub/sub with HMAC-signed envelopes and graceful degradation. We split runtime into engine and gateway roles over gRPC for horizontal session ingress, with Snowflake IDs and gateway leasing for distributed session safety. Then we implemented zone-based engine sharding — partitioning the game world across multiple engine processes, with a player handoff protocol for cross-zone movement, an inter-engine bus for global commands, and a Redis player location index for O(1) tell routing. We also added zone instancing with auto-scaling for hot-zone load distribution. Today, the system scales from single-process to multi-engine sharded deployments, with observability hardening as the next major scaling multiplier.”
+> “We scaled AmbonMUD by separating concerns: gameplay remains deterministic in a single authoritative tick loop, while transports and I/O are abstracted and distributed. First, we introduced bus interfaces so engine code stopped depending on local channels. Next, we moved persistence writes off the tick using a coalescing worker. Then we added Redis as optional cache and pub/sub with HMAC-signed envelopes and graceful degradation. We split runtime into engine and gateway roles over gRPC for horizontal session ingress, with Snowflake IDs and gateway leasing for distributed session safety. Then we implemented zone-based engine sharding — partitioning the game world across multiple engine processes, with a player handoff protocol for cross-zone movement, an inter-engine bus for global commands, and a Redis player location index for O(1) tell routing. We also added zone instancing with auto-scaling for hot-zone load distribution. Load testing validated 70 sustained concurrent players with p99 engine tick under 4 ms against a 100 ms budget — the engine is not the bottleneck. The actual ceiling at high concurrency is the BCrypt auth funnel, which we tuned with an isolated thread pool. Next up is virtual threads for the telnet transport to push beyond hundreds of concurrent sessions.”
 
 ---
 

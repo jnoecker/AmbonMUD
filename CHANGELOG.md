@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [2026-02] - 2026-02-28
+
+### Added
+- Added `labyrinth` as the 10th world zone (`world/labyrinth.yaml`).
+- Added debug-only `SWARM` player class (`PlayerClass.debugOnly = true`) for load-testing. Enabled via `-Pconfig.ambonMUD.engine.debug.enableSwarmClass=true`; never appears in production character creation.
+
+### Fixed
+- Fixed `-Pconfig.*` Gradle property overrides being silently ignored. The `applyConfigOverrides` helper was producing `config.override.config.ambonMUD.*` system properties (double `config.` prefix) instead of `config.override.ambonMUD.*`, so all runtime config overrides (logging level, port, etc.) were no-ops. Now strips the leading `config.` before prepending `config.override.`.
+
+### Changed
+- Raised `login.maxConcurrentLogins` from `50` to `150` and `login.authThreads` from `4` to `8`. Previous defaults caused bots to time out in `WAIT_NAME` under high-concurrency ramps: the login semaphore saturated at 50, rejected bots retried in a loop, and the 60-second FSM timer expired mid-cycle. With 8 BCrypt threads the sustained login throughput is ~30–80 logins/sec, clearing 150 simultaneous connections in under 5 seconds.
+
+### Documentation
+- Updated `docs/SCALING_STORY.md` with load-test validated numbers (70 sustained players, 141 peak sessions, engine tick p99 < 4 ms), auth funnel bottleneck analysis, virtual threads roadmap item, and a revised 90-second interview summary.
+- Updated `docs/ROADMAP.md` with measured capacity numbers and virtual threads (#301) as a tracked infrastructure item.
+- Updated `docs/ARCHITECTURE.md` Design Decision #15 to document debug-only classes and the `-Pconfig.*` override mechanism.
+- Updated `AGENTS.md` world zone count (9 → 10).
+
 ## [2026-02] - 2026-02-25
 
 ### Added
