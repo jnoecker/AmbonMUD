@@ -27,11 +27,11 @@ class AppConfigLoaderTest {
     }
 
     @Test
-    fun `default application config uses postgres with redis cache`() {
+    fun `default application config uses yaml persistence with redis disabled`() {
         val config = AppConfigLoader.load()
 
-        assertEquals(PersistenceBackend.POSTGRES, config.persistence.backend)
-        assertTrue(config.redis.enabled)
+        assertEquals(PersistenceBackend.YAML, config.persistence.backend)
+        assertTrue(!config.redis.enabled)
         assertTrue(!config.engine.debug.enableSwarmClass)
         assertEquals("labyrinth:cell_00_00", config.engine.classStartRooms["SWARM"])
     }

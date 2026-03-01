@@ -99,7 +99,7 @@ ambonMUD:
       - world/labyrinth.yaml
 
   persistence:
-    backend: POSTGRES
+    backend: YAML
     rootDir: data/players
     worker:
       enabled: true
@@ -1648,7 +1648,7 @@ ambonMUD:
       dev.ambon.engine: INFO
 
   redis:
-    enabled: true
+    enabled: false
     uri: "redis://localhost:6379"
     cacheTtlSeconds: 3600
     bus:
