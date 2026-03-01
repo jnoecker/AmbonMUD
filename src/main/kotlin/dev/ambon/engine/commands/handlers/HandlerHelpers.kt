@@ -98,17 +98,17 @@ internal suspend fun sendLook(
         outbound.send(OutboundEvent.SendInfo(sessionId, "Items here: $list"))
     }
 
+    val rawRoomPlayers = players.playersInRoom(roomId)
     val roomPlayers =
-        players
-            .playersInRoom(roomId)
+        rawRoomPlayers
             .map { p ->
                 val t = p.activeTitle
                 if (t != null) "[$t] ${p.name}" else p.name
             }.sorted()
 
+    val rawRoomMobs = mobs.mobsInRoom(roomId)
     val roomMobs =
-        mobs
-            .mobsInRoom(roomId)
+        rawRoomMobs
             .map { it.name }
             .sorted()
 
@@ -127,9 +127,9 @@ internal suspend fun sendLook(
     )
 
     gmcpEmitter?.sendRoomInfo(sessionId, room)
-    gmcpEmitter?.sendRoomPlayers(sessionId, players.playersInRoom(roomId).toList())
-    gmcpEmitter?.sendRoomMobs(sessionId, mobs.mobsInRoom(roomId))
-    gmcpEmitter?.sendRoomItems(sessionId, items.itemsInRoom(roomId))
+    gmcpEmitter?.sendRoomPlayers(sessionId, rawRoomPlayers)
+    gmcpEmitter?.sendRoomMobs(sessionId, rawRoomMobs)
+    gmcpEmitter?.sendRoomItems(sessionId, here)
 }
 
 /** Broadcasts [message] to every player in [roomId] except [excludeSessionId]. */
