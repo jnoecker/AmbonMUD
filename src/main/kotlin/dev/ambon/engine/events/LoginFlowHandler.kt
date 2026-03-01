@@ -25,6 +25,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
 
 private val log = KotlinLogging.logger {}
 
@@ -124,12 +125,19 @@ internal class LoginFlowHandler(
     private val availableClasses: List<PlayerClass>,
     maxWrongPasswordRetries: Int,
     maxFailedLoginAttemptsBeforeDisconnect: Int,
+    maxConcurrentLogins: Int,
     private val onAfterLogin: suspend (SessionId) -> Unit = {},
 ) {
     // State exposed by reference so SessionEventHandler can clear it on disconnect.
     internal val pendingLogins = mutableMapOf<SessionId, LoginState>()
     internal val failedLoginAttempts = mutableMapOf<SessionId, Int>()
     internal val sessionAnsiDefaults = mutableMapOf<SessionId, Boolean>()
+
+    // Bounds concurrent sessions in the auth funnel (name lookup → BCrypt → world entry).
+    // A session acquires a slot on first name submission and holds it until auth completes
+    // or the session disconnects, so retries don't consume extra slots.
+    private val loginSemaphore = Semaphore(maxConcurrentLogins)
+    private val sessionsHoldingLoginPermit = mutableSetOf<SessionId>()
 
     private val pendingAuthResults = Channel<PendingAuthResult>(Channel.UNLIMITED)
     private val nameCommandRegex = Regex("^name\\s+(.+)$", RegexOption.IGNORE_CASE)
@@ -171,10 +179,33 @@ internal class LoginFlowHandler(
             return
         }
 
+        // Acquire a login slot on the session's first name submission.
+        // Retries (returning to AwaitingName after a failed attempt) reuse the slot already held.
+        if (!sessionsHoldingLoginPermit.contains(sessionId)) {
+            if (!loginSemaphore.tryAcquire()) {
+                outbound.send(
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "The server is currently at maximum login capacity. Please try again shortly.",
+                    ),
+                )
+                outbound.send(OutboundEvent.Close(sessionId, "Server at maximum login capacity"))
+                return
+            }
+            sessionsHoldingLoginPermit.add(sessionId)
+        }
+
         pendingLogins[sessionId] = LoginState.AwaitingNameLookup(name)
         getEngineScope().launch {
             val exists = players.hasRegisteredName(name)
             pendingAuthResults.send(PendingAuthResult.NameLookup(sessionId, name, exists))
+        }
+    }
+
+    /** Releases the login semaphore slot held by [sessionId], if any. Called on disconnect. */
+    internal fun releasePermitIfHeld(sessionId: SessionId) {
+        if (sessionsHoldingLoginPermit.remove(sessionId)) {
+            loginSemaphore.release()
         }
     }
 
@@ -444,6 +475,7 @@ internal class LoginFlowHandler(
         if (nextAttempts < maxFailedLoginAttemptsBeforeDisconnect) return false
 
         pendingLogins.remove(sessionId)
+        releasePermitIfHeld(sessionId)
         outbound.send(OutboundEvent.Close(sessionId, "Too many failed login attempts."))
         return true
     }
@@ -452,6 +484,7 @@ internal class LoginFlowHandler(
         sessionId: SessionId,
         suppressEnterBroadcast: Boolean = false,
     ) {
+        releasePermitIfHeld(sessionId)
         pendingLogins.remove(sessionId)
         failedLoginAttempts.remove(sessionId)
 
