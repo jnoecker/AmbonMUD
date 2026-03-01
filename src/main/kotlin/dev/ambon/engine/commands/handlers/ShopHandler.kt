@@ -2,6 +2,8 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.config.EconomyConfig
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.world.ShopDefinition
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
@@ -27,14 +29,19 @@ class ShopHandler(
         router.on<Command.Sell> { sid, cmd -> handleSell(sid, cmd) }
     }
 
+    /** Returns the shop at [me]'s current room, or null (sending an error) if there is none. */
+    private suspend fun findShop(sessionId: SessionId, me: PlayerState): ShopDefinition? {
+        val shop = shopRegistry?.shopInRoom(me.roomId)
+        if (shop == null) {
+            outbound.send(OutboundEvent.SendText(sessionId, "There is no shop here."))
+        }
+        return shop
+    }
+
     private suspend fun handleShopList(sessionId: SessionId) {
         players.withPlayer(sessionId) { me ->
-            val shop = shopRegistry?.shopInRoom(me.roomId)
-            if (shop == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "There is no shop here."))
-                return
-            }
-            val shopItems = shopRegistry.shopItems(shop)
+            val shop = findShop(sessionId, me) ?: return
+            val shopItems = shopRegistry!!.shopItems(shop)
             if (shopItems.isEmpty()) {
                 outbound.send(OutboundEvent.SendInfo(sessionId, "${shop.name} has nothing for sale."))
                 return
@@ -59,13 +66,9 @@ class ShopHandler(
         cmd: Command.Buy,
     ) {
         players.withPlayer(sessionId) { me ->
-            val shop = shopRegistry?.shopInRoom(me.roomId)
-            if (shop == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "There is no shop here."))
-                return
-            }
+            val shop = findShop(sessionId, me) ?: return
             val keyword = cmd.keyword.lowercase()
-            val shopItems = shopRegistry.shopItems(shop)
+            val shopItems = shopRegistry!!.shopItems(shop)
             val match =
                 shopItems.firstOrNull { (_, item) ->
                     item.keyword.lowercase() == keyword ||
@@ -99,11 +102,7 @@ class ShopHandler(
         cmd: Command.Sell,
     ) {
         players.withPlayer(sessionId) { me ->
-            val shop = shopRegistry?.shopInRoom(me.roomId)
-            if (shop == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "There is no shop here."))
-                return
-            }
+            val shop = findShop(sessionId, me) ?: return
             val keyword = cmd.keyword
             val inv = items.inventory(sessionId)
             val lowerKeyword = keyword.lowercase()
