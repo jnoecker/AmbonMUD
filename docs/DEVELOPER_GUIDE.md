@@ -32,6 +32,7 @@ Welcome! This guide takes you from zero to productive on the AmbonMUD codebase i
 - JDK 21 (CI runs on Java 21)
 - Git
 - Docker & Docker Compose for the default local runtime (PostgreSQL, Redis, Prometheus, Grafana)
+- Node.js 22+ (only needed to work on the CDK infrastructure in `infra/`)
 
 **Clone & build:**
 ```bash
@@ -169,8 +170,25 @@ src/test/kotlin/
 ├── dev/ambon/world/load/        # World loader tests
 └── dev/ambon/test/              # Test utilities (MutableClock, helpers)
 
+infra/
+├── bin/infra.ts                 # CDK app entry point
+├── lib/
+│   ├── config.ts                # topology × tier sizing table
+│   ├── vpc-stack.ts             # VPC, subnets, security groups
+│   ├── data-stack.ts            # RDS, ElastiCache Redis, EFS, Secrets Manager
+│   ├── lb-stack.ts              # NLB, ALB, Cloud Map DNS
+│   ├── ecs-stack.ts             # ECS cluster, Engine+Gateway Fargate services
+│   ├── dns-stack.ts             # Route 53, ACM certificate
+│   └── monitoring-stack.ts      # CloudWatch alarms, SNS
+├── grafana/                     # Grafana dashboard provisioning
+├── prometheus.yml               # Local Prometheus config
+├── prometheus-alerts.yml        # Alert rules
+├── package.json
+└── cdk.json
+
 docs/
 ├── ARCHITECTURE.md              # Design decisions & architectural principles
+├── DEPLOYMENT.md                # Docker + AWS CDK deployment guide
 ├── WORLD_YAML_SPEC.md           # Zone YAML format specification
 ├── ROADMAP.md                   # Planned features & roadmap
 ├── WEB_CLIENT_V3.md             # Web client v3 architecture & gaps
@@ -506,13 +524,35 @@ ambonMUD:
       dev.ambon.transport: DEBUG
 ```
 
-**Override at runtime:**
+**Override at runtime (Gradle):**
 ```bash
 ./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000
 ./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
 ./gradlew run -Pconfig.ambonMUD.persistence.backend=YAML
 ./gradlew run -Pconfig.ambonMUD.redis.enabled=false
 ```
+
+**Override via environment variables (containers):**
+
+Hoplite maps `SCREAMING_SNAKE_CASE` env vars to camelCase config keys (lowercased, `_` → `.`). Env vars are highest priority (override YAML and `-Pconfig.*` system properties).
+
+| Environment Variable | Config Key | Example Value |
+|---|---|---|
+| `AMBONMUD_MODE` | `ambonMUD.mode` | `STANDALONE`, `ENGINE`, `GATEWAY` |
+| `AMBONMUD_PERSISTENCE_BACKEND` | `ambonMUD.persistence.backend` | `POSTGRES` |
+| `AMBONMUD_DATABASE_JDBCURL` | `ambonMUD.database.jdbcUrl` | `jdbc:postgresql://host:5432/ambonmud` |
+| `AMBONMUD_DATABASE_USERNAME` | `ambonMUD.database.username` | `ambonmud` |
+| `AMBONMUD_DATABASE_PASSWORD` | `ambonMUD.database.password` | `…` |
+| `AMBONMUD_REDIS_ENABLED` | `ambonMUD.redis.enabled` | `true` |
+| `AMBONMUD_REDIS_URI` | `ambonMUD.redis.uri` | `redis://host:6379` |
+| `AMBONMUD_REDIS_BUS_ENABLED` | `ambonMUD.redis.bus.enabled` | `true` |
+| `AMBONMUD_SHARDING_ENABLED` | `ambonMUD.sharding.enabled` | `true` |
+| `AMBONMUD_SHARDING_REGISTRY_TYPE` | `ambonMUD.sharding.registry.type` | `REDIS` |
+| `AMBONMUD_SHARDING_ENGINEID` | `ambonMUD.sharding.engineId` | (auto-set by entrypoint to hostname) |
+| `AMBONMUD_SHARDING_ADVERTISEHOST` | `ambonMUD.sharding.advertiseHost` | (auto-set by entrypoint to container IP) |
+| `AMBONMUD_GRPC_CLIENT_ENGINEHOST` | `ambonMUD.grpc.client.engineHost` | `engine.internal.ambonmud` |
+| `AMBONMUD_SERVER_TELNETPORT` | `ambonMUD.server.telnetPort` | `4000` |
+| `AMBONMUD_SERVER_WEBPORT` | `ambonMUD.server.webPort` | `8080` |
 
 ---
 
@@ -728,6 +768,33 @@ Terminal 3 (Gateway 2):
 ./gradlew runGateway2   # telnet :4001, web :8081
 ```
 
+### Build and Run as a Docker Container
+
+```bash
+# Build the fat JAR, then the image
+./gradlew shadowJar
+docker build -t ambonmud .
+
+# Run in STANDALONE mode (mirrors ./gradlew run)
+docker run --rm -p 4000:4000 -p 8080:8080 \
+  -e AMBONMUD_DATABASE_JDBCURL=jdbc:postgresql://host.docker.internal:5432/ambonmud \
+  -e AMBONMUD_DATABASE_USERNAME=ambon \
+  -e AMBONMUD_DATABASE_PASSWORD=ambon \
+  -e AMBONMUD_REDIS_URI=redis://host.docker.internal:6379 \
+  ambonmud
+
+# Or with YAML persistence (no external dependencies)
+docker run --rm -p 4000:4000 -p 8080:8080 \
+  -e AMBONMUD_MODE=STANDALONE \
+  -e AMBONMUD_PERSISTENCE_BACKEND=YAML \
+  -e AMBONMUD_REDIS_ENABLED=false \
+  ambonmud
+```
+
+### Deploy to AWS (Production)
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full CDK-based AWS deployment guide covering topology selection, one-time bootstrap, and the CI/CD pipeline.
+
 ---
 
 ## 14. Troubleshooting
@@ -766,7 +833,7 @@ Terminal 3 (Gateway 2):
 
 ### Constraints in Claude Code Cloud Sessions
 
-- **GitHub CLI (`gh`) is not available** — use `git` commands directly for push/branch/fetch
+- **GitHub CLI (`gh`) is available** (verified Feb 2026, gh 2.87.0) — use normally for `gh pr create`, `gh issue view`, etc.
 - **No hardcoded timing in tests** — never use short `delay()` (e.g. `delay(50)`) for async sync. Use `withTimeout` + polling or proper synchronization primitives
 - **Egress proxy** — all HTTP/HTTPS traffic goes through a proxy; Gradle dependency resolution works through it
 - **JVM Toolchain** — must match installed JDK (currently 21). If it drifts, update `build.gradle.kts`
@@ -789,7 +856,8 @@ git add src/...
 git commit -m "feat: description"
 git push -u origin feature/my-feature
 
-# Create PR in GitHub web UI (gh CLI not available in cloud)
+# Create PR
+gh pr create --title "..." --body "..."
 ```
 
 ---

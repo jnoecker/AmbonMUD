@@ -17,12 +17,13 @@ AmbonMUD
 - ✅ **~78 test files** covering all systems; CI validates against Java 21 with ktlint
 
 **Current State** (Feb 2026)
-- ✅ All 5 scalability phases complete (bus abstraction, async persistence, Redis, gRPC gateway, zone sharding)
+- ✅ All 6 scalability phases complete (bus abstraction, async persistence, Redis, gRPC gateway, zone sharding, production AWS infrastructure)
 - ✅ 102 abilities across 4 classes (25+ per class, levels 1–50)
 - ✅ GMCP support with 21 outbound packages (telnet + WebSocket); see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
 - ✅ Quest system (basic implementation; see [roadmap](docs/ROADMAP.md))
 - ✅ Achievement system, group/party system, dialogue trees, NPC behavior trees
 - ✅ Full production test coverage and CI/CD
+- ✅ Docker image + AWS CDK infrastructure (ECS Fargate, RDS, ElastiCache, EFS) with topology × tier sizing
 
 Screenshots
 -----------
@@ -203,19 +204,41 @@ docker compose up -d
 
 **Access Grafana:** `http://localhost:3000` (admin/admin)
 
-See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#infrastructure) for detailed setup.
+**Build and run as a Docker container:**
+```bash
+./gradlew shadowJar
+docker build -t ambonmud .
+docker run --rm -p 4000:4000 -p 8080:8080 \
+  -e AMBONMUD_PERSISTENCE_BACKEND=YAML \
+  -e AMBONMUD_REDIS_ENABLED=false \
+  ambonmud
+```
+
+**Deploy to AWS (ECS Fargate):**
+```bash
+cd infra && npm ci
+# Cheapest path (~$30-60/mo): standalone topology, hobby tier
+npx cdk deploy --all --context topology=standalone --context tier=hobby
+# Production HA: split ENGINE+GATEWAY with auto-scaling
+npx cdk deploy --all --context topology=split --context tier=production \
+  --context domain=play.example.com --context alertEmail=ops@example.com
+```
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full deployment guide (Docker, CDK, CI/CD, operational notes).
 
 ## Architecture & Development
 
-**Scalability** has 5 complete phases:
+**Scalability** has 6 complete phases:
 1. Event bus abstraction (InboundBus/OutboundBus, SessionIdFactory)
 2. Async persistence worker (write-behind coalescing)
 3. Redis integration (L2 cache + pub/sub)
 4. gRPC gateway split (multi-gateway horizontal scaling)
 5. Zone-based engine sharding (multi-engine with zone instancing)
+6. Production AWS infrastructure (Docker, CDK, ECS Fargate, NLB/ALB, CI/CD)
 
 **Architecture & Design**
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) — Architectural principles and design decisions
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Docker build, CDK deploy, topology/tier reference, CI/CD
 - [docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) — Zone YAML format specification
 - [docs/WEB_CLIENT_V3.md](docs/WEB_CLIENT_V3.md) — Web client v3 architecture, wiring, and known gaps
 - [docs/GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md) — GMCP protocol reference for client developers
