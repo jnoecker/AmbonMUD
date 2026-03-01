@@ -36,7 +36,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Web client v3 (static, current): `src/main/resources/web-v3` (built from `web-v3/` with `bun run build`); legacy assets remain in `src/main/resources/web` but are no longer served
 - Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
-- World content: `src/main/resources/world` (9 zones: ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements)
+- World content: `src/main/resources/world` (10 zones: ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth)
 - World format contract: `docs/WORLD_YAML_SPEC.md`
 - Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence` (`PlayerRepository`, `YamlPlayerRepository`, `PostgresPlayerRepository`, `DatabaseManager`, `PlayersTable`)
 - Flyway schema migrations: `src/main/resources/db/migration` (V1–V7: players table through achievements)

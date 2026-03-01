@@ -389,16 +389,22 @@ Current web serving note:
 
 ---
 
-### 15. Config-Driven Abilities
+### 15. Config-Driven Abilities and Debug-Only Classes
 
-**Decision:** Define spell/ability definitions in `application.yaml`, not hardcoded in Kotlin.
+**Decision:** Define spell/ability definitions in `application.yaml`, not hardcoded in Kotlin. Debug-only gameplay variants (e.g. the `SWARM` class) carry a `debugOnly = true` flag and are filtered from production class lists unless explicitly enabled via config.
 
 **Why:**
 - Adding/tuning/rebalancing abilities should not require recompilation (same as world content being data)
 - Config validation at startup catches misconfigured abilities early
 - Class restrictions, mana costs, cooldowns, effect values all tunable per-deployment
+- `debugOnly` classes expose experimental mechanics in test environments without polluting player-facing selection lists
 
-**Tradeoff:** No compile-time type safety for ability definitions; runtime validation at startup only.
+**How:**
+- `PlayerClass.selectable(debugClassesEnabled: Boolean)` returns only non-debug entries by default
+- Enable in development with `-Pconfig.ambonMUD.engine.debug.enableSwarmClass=true`
+- The `-Pconfig.<key>=<value>` Gradle property mechanism maps to `config.override.<key>` system properties, which Hoplite picks up as highest-priority overrides at startup
+
+**Tradeoff:** No compile-time type safety for ability definitions; runtime validation at startup only. Debug classes require deliberate opt-in to keep them out of production character creation.
 
 ---
 
