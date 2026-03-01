@@ -38,5 +38,6 @@ data class PlayerRecord(
     val achievementProgress: Map<String, AchievementState> = emptyMap(),
     val activeTitle: String? = null,
     val inbox: List<MailMessage> = emptyList(),
+    val guildId: String? = null,
     val recallRoomId: RoomId? = null,
 )

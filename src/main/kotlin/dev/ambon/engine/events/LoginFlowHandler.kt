@@ -124,6 +124,7 @@ internal class LoginFlowHandler(
     private val availableClasses: List<PlayerClass>,
     maxWrongPasswordRetries: Int,
     maxFailedLoginAttemptsBeforeDisconnect: Int,
+    private val onAfterLogin: suspend (SessionId) -> Unit = {},
 ) {
     // State exposed by reference so SessionEventHandler can clear it on disconnect.
     internal val pendingLogins = mutableMapOf<SessionId, LoginState>()
@@ -462,6 +463,7 @@ internal class LoginFlowHandler(
         }
 
         log.info { "Player logged in: name=${me.name} sessionId=$sessionId" }
+        onAfterLogin(sessionId)
         playerLocationIndex?.register(me.name)
         abilitySystem.syncAbilities(sessionId, me.level, me.playerClass)
         outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
