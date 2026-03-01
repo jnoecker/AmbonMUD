@@ -78,6 +78,11 @@ class MudServer(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val engineDispatcher = Executors.newSingleThreadExecutor { r -> Thread(r, "ambonMUD-engine") }.asCoroutineDispatcher()
+    private val authDispatcher =
+        Executors
+            .newFixedThreadPool(config.login.authThreads) { r ->
+                Thread(r, "ambon-auth").also { it.isDaemon = true }
+            }.asCoroutineDispatcher()
     private val sessionIdFactory = AtomicSessionIdFactory()
 
     private lateinit var outboundRouter: OutboundRouter
@@ -234,7 +239,7 @@ class MudServer(
             items = items,
             clock = clock,
             progression = progression,
-            hashingContext = Dispatchers.IO,
+            hashingContext = authDispatcher,
         )
 
     // --- Sharding infrastructure (null when sharding is disabled) ---
@@ -550,6 +555,7 @@ class MudServer(
                 maxLineLen = config.transport.telnet.maxLineLen,
                 maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
                 maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
+                socketBacklog = config.transport.telnet.socketBacklog,
                 metrics = gameMetrics,
             )
         telnetTransport.start()
@@ -631,6 +637,7 @@ class MudServer(
         runCatching { databaseManager?.close() }
         scope.cancel()
         engineDispatcher.close()
+        authDispatcher.close()
         inbound.close()
         outbound.close()
         log.info { "Server stopped" }
