@@ -117,10 +117,10 @@ ambonMUD:
     maxFailedAttemptsBeforeDisconnect: 3
     # Maximum sessions simultaneously in the auth funnel (name lookup → BCrypt → world entry).
     # Sessions beyond this limit receive an immediate "server busy" message rather than timing out.
-    maxConcurrentLogins: 50
+    maxConcurrentLogins: 150
     # Thread-pool size for BCrypt hashing, isolated from Dispatchers.IO to avoid starving socket I/O.
     # Defaults to availableProcessors at runtime if not set; tune based on measured BCrypt throughput.
-    authThreads: 4
+    authThreads: 8
 
   engine:
     mob:
