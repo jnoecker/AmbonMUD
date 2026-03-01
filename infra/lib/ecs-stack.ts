@@ -23,6 +23,8 @@ export interface EcsStackProps extends StackProps {
 }
 
 export class EcsStack extends Stack {
+  private static readonly EFS_VOLUME_NAME = 'efs-data';
+
   readonly cluster: ecs.Cluster;
   readonly ecrRepo: ecr.IRepository;
 
@@ -82,12 +84,12 @@ export class EcsStack extends Stack {
     // -------------------------------------------------------------------------
     if (config.topology === 'standalone') {
       this.createStandaloneService(
-        vpc, containerImage, efsAp, executionRole,
+        containerImage, efsAp, executionRole,
         redisUri, jdbcUrl, config, dataStack, lbStack, vpcStack,
       );
     } else {
       this.createSplitServices(
-        vpc, containerImage, efsAp, executionRole,
+        containerImage, efsAp, executionRole,
         redisUri, jdbcUrl, config, dataStack, lbStack, vpcStack,
       );
     }
@@ -97,7 +99,6 @@ export class EcsStack extends Stack {
   // Standalone topology
   // ---------------------------------------------------------------------------
   private createStandaloneService(
-    _vpc: ec2.Vpc,
     image: ecs.ContainerImage,
     efsAp: efs.AccessPoint,
     executionRole: iam.Role,
@@ -146,11 +147,7 @@ export class EcsStack extends Stack {
       stopTimeout: Duration.seconds(60),
     });
 
-    container.addMountPoints({
-      containerPath: '/app/data',
-      sourceVolume: 'efs-data',
-      readOnly: false,
-    });
+    this.attachDataMount(container);
 
     const service = new ecs.FargateService(this, 'StandaloneService', {
       cluster: this.cluster,
@@ -169,7 +166,6 @@ export class EcsStack extends Stack {
   // Split topology
   // ---------------------------------------------------------------------------
   private createSplitServices(
-    vpc: ec2.Vpc,
     image: ecs.ContainerImage,
     efsAp: efs.AccessPoint,
     executionRole: iam.Role,
@@ -181,7 +177,7 @@ export class EcsStack extends Stack {
     vpcStack: VpcStack,
   ): void {
     this.createEngineService(
-      vpc, image, efsAp, executionRole,
+      image, efsAp, executionRole,
       redisUri, jdbcUrl, config, dataStack, lbStack, vpcStack,
     );
     this.createGatewayService(
@@ -190,7 +186,6 @@ export class EcsStack extends Stack {
   }
 
   private createEngineService(
-    _vpc: ec2.Vpc,
     image: ecs.ContainerImage,
     efsAp: efs.AccessPoint,
     executionRole: iam.Role,
@@ -239,11 +234,7 @@ export class EcsStack extends Stack {
       stopTimeout: Duration.seconds(60),
     });
 
-    container.addMountPoints({
-      containerPath: '/app/data',
-      sourceVolume: 'efs-data',
-      readOnly: false,
-    });
+    this.attachDataMount(container);
 
     const service = new ecs.FargateService(this, 'EngineService', {
       cluster: this.cluster,
@@ -360,7 +351,7 @@ export class EcsStack extends Stack {
 
   private attachEfsVolume(taskDef: ecs.FargateTaskDefinition, ap: efs.AccessPoint): void {
     taskDef.addVolume({
-      name: 'efs-data',
+      name: EcsStack.EFS_VOLUME_NAME,
       efsVolumeConfiguration: {
         fileSystemId: ap.fileSystem.fileSystemId,
         transitEncryption: 'ENABLED',
@@ -369,6 +360,14 @@ export class EcsStack extends Stack {
           iam: 'ENABLED',
         },
       },
+    });
+  }
+
+  private attachDataMount(container: ecs.ContainerDefinition): void {
+    container.addMountPoints({
+      containerPath: '/app/data',
+      sourceVolume: EcsStack.EFS_VOLUME_NAME,
+      readOnly: false,
     });
   }
 

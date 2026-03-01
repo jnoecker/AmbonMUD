@@ -96,7 +96,6 @@ export class Ec2Stack extends Stack {
     const userData = ec2.UserData.forLinux();
     userData.addCommands(
       'set -euo pipefail',
-      'dnf update -y',
       'dnf install -y docker',
       'systemctl enable --now docker',
       'mkdir -p /app/data',

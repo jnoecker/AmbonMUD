@@ -13,7 +13,11 @@ fi
 # inter-engine routing layer. Default to the container's primary private IP.
 if [ -z "$AMBONMUD_SHARDING_ADVERTISEHOST" ]; then
   PRIVATE_IP="$(hostname -I 2>/dev/null | cut -d' ' -f1)"
-  export AMBONMUD_SHARDING_ADVERTISEHOST="${PRIVATE_IP:-localhost}"
+  if [ -z "$PRIVATE_IP" ]; then
+    echo "WARNING: Could not detect private IP; AMBONMUD_SHARDING_ADVERTISEHOST defaulting to localhost. Inter-engine routing will fail in split topology." >&2
+    PRIVATE_IP="localhost"
+  fi
+  export AMBONMUD_SHARDING_ADVERTISEHOST="$PRIVATE_IP"
 fi
 
 exec java -Djava.net.preferIPv4Stack=true -jar /app/app.jar "$@"

@@ -9,7 +9,7 @@ COPY build.gradle.kts settings.gradle.kts ./
 COPY src/main/proto/ src/main/proto/
 
 # Resolve dependencies (cached layer if build files unchanged)
-RUN chmod +x ./gradlew && ./gradlew dependencies --no-daemon -q 2>/dev/null || true
+RUN chmod +x ./gradlew && ./gradlew dependencies --no-daemon -q
 
 # Copy source and build
 COPY src/ src/

@@ -1,7 +1,8 @@
 import { App } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 
-export type Topology = 'standalone' | 'split';
+/** All valid topologies. 'ec2' is handled by Ec2Stack; 'standalone'/'split' use the ECS multi-stack path. */
+export type Topology = 'standalone' | 'split' | 'ec2';
 export type ScaleTier = 'hobby' | 'moderate' | 'production';
 
 export interface InfraConfig {
@@ -116,7 +117,7 @@ export function resolveConfig(app: App): InfraConfig {
   const alertEmail = app.node.tryGetContext('alertEmail') as string | undefined;
 
   if (topology !== 'standalone' && topology !== 'split') {
-    throw new Error(`Invalid topology "${topology}". Must be "standalone" or "split".`);
+    throw new Error(`Invalid ECS topology "${topology}". Must be "standalone" or "split" (use topology=ec2 for the single-instance EC2 path).`);
   }
   if (!(tier in TIER_CONFIG)) {
     throw new Error(`Invalid tier "${tier}". Must be "hobby", "moderate", or "production".`);
