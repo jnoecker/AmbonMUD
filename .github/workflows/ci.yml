@@ -38,9 +38,11 @@ jobs:
 
   docker:
     # Build and push to ECR on every push to main after tests pass.
+    # Runs on a native ARM64 runner to match the t4g.nano demo instance —
+    # avoids slow QEMU emulation while producing a correct linux/arm64 image.
     needs: [test, frontend]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     outputs:
       image-tag: ${{ steps.meta.outputs.tag }}
     steps:
@@ -63,18 +65,12 @@ jobs:
           echo "registry=${{ steps.login-ecr.outputs.registry }}" >> "$GITHUB_OUTPUT"
           echo "repo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }}" >> "$GITHUB_OUTPUT"
 
-      - name: Set up QEMU (enables ARM64 cross-compilation on amd64 runner)
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push Docker image (multi-platform)
+      - name: Build and push Docker image
         run: |
           IMAGE="${{ steps.meta.outputs.registry }}/${{ steps.meta.outputs.repo }}"
-          docker buildx build \
-            --platform linux/amd64,linux/arm64 \
+          docker build \
             --tag "$IMAGE:${{ steps.meta.outputs.tag }}" \
             --tag "$IMAGE:latest" \
-            --push \
             .
+          docker push "$IMAGE:${{ steps.meta.outputs.tag }}"
+          docker push "$IMAGE:latest"
