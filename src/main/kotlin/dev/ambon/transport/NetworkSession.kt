@@ -11,6 +11,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+import kotlin.coroutines.CoroutineContext
 
 private val log = KotlinLogging.logger {}
 
@@ -31,6 +34,7 @@ class NetworkSession(
     private val maxNonPrintablePerLine: Int = 32,
     private val maxInboundBackpressureFailures: Int = 3,
     private val metrics: GameMetrics = GameMetrics.noop(),
+    private val dispatcher: CoroutineContext = Dispatchers.IO,
 ) {
     private val disconnected = AtomicBoolean(false)
     private var inboundBackpressureFailures = 0
@@ -40,11 +44,11 @@ class NetworkSession(
         private set
 
     private val terminalCaps = TerminalCapabilities()
-    private val outputLock = Any()
+    private val outputLock = ReentrantLock()
 
     fun start() {
-        scope.launch(Dispatchers.IO) { readLoop() }
-        scope.launch(Dispatchers.IO) { writeLoop() }
+        scope.launch(dispatcher) { readLoop() }
+        scope.launch(dispatcher) { writeLoop() }
     }
 
     fun closeNow(reason: String) {
@@ -235,7 +239,7 @@ class NetworkSession(
 
     private fun sendRaw(bytes: ByteArray) {
         try {
-            synchronized(outputLock) {
+            outputLock.withLock {
                 socket.getOutputStream().write(bytes)
                 socket.getOutputStream().flush()
             }
@@ -258,7 +262,7 @@ class NetworkSession(
                     drained++
                 }
                 if (needFlush) {
-                    synchronized(outputLock) { output.flush() }
+                    outputLock.withLock { output.flush() }
                 }
             }
         } catch (_: Throwable) {
@@ -280,14 +284,14 @@ class NetworkSession(
         return when (frame) {
             is OutboundFrame.Text -> {
                 val bytes = frame.content.toByteArray(Charsets.UTF_8)
-                synchronized(outputLock) { output.write(bytes) }
+                outputLock.withLock { output.write(bytes) }
                 true
             }
             is OutboundFrame.Gmcp -> {
                 if (gmcpEnabled) {
                     val payload = "${frame.gmcpPackage} ${frame.jsonData}".toByteArray(Charsets.UTF_8)
                     val bytes = buildTelnetSubnegotiationBytes(TelnetProtocol.GMCP, payload)
-                    synchronized(outputLock) { output.write(bytes) }
+                    outputLock.withLock { output.write(bytes) }
                     true
                 } else {
                     false

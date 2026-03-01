@@ -83,6 +83,7 @@ class MudServer(
             .newFixedThreadPool(config.login.authThreads) { r ->
                 Thread(r, "ambon-auth").also { it.isDaemon = true }
             }.asCoroutineDispatcher()
+    private val telnetDispatcher = Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()
     private val sessionIdFactory = AtomicSessionIdFactory()
 
     private lateinit var outboundRouter: OutboundRouter
@@ -557,6 +558,7 @@ class MudServer(
                 maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
                 socketBacklog = config.transport.telnet.socketBacklog,
                 metrics = gameMetrics,
+                sessionDispatcher = telnetDispatcher,
             )
         telnetTransport.start()
         log.info { "Telnet transport bound on port ${config.server.telnetPort}" }
@@ -638,6 +640,7 @@ class MudServer(
         scope.cancel()
         engineDispatcher.close()
         authDispatcher.close()
+        telnetDispatcher.close()
         inbound.close()
         outbound.close()
         log.info { "Server stopped" }
