@@ -106,7 +106,8 @@ export class MonitoringStack extends Stack {
       logGroup: engineLogGroup,
       metricNamespace: 'AmbonMUD',
       metricName: 'PlayerSaveFailures',
-      filterPattern: logs.FilterPattern.stringValue('$.level', '=', 'ERROR').and(
+      filterPattern: logs.FilterPattern.all(
+        logs.FilterPattern.stringValue('$.level', '=', 'ERROR'),
         logs.FilterPattern.stringValue('$.message', '=', '*save*'),
       ),
       metricValue: '1',

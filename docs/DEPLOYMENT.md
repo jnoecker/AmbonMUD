@@ -14,6 +14,7 @@ This document covers building the Docker image, testing it locally, and deployin
 6. [Environment Variable Reference](#6-environment-variable-reference)
 7. [CI/CD Pipeline](#7-cicd-pipeline)
 8. [Operational Notes](#8-operational-notes)
+9. [EC2 Single-Instance Option](#9-ec2-single-instance-option)
 
 ---
 
@@ -258,3 +259,90 @@ ECS sends `SIGTERM` before killing tasks. The JVM shutdown hook (in `Main.kt`) c
 ### Upgrading
 
 CDK `cdk diff` shows exactly what will change before deploying. In-place tier upgrades (e.g. `hobby` → `moderate`) resize RDS, Redis, and ECS tasks without data loss. Topology upgrades (`standalone` → `split`) add new ECS services while draining the old one.
+
+---
+
+## 9. EC2 Single-Instance Option
+
+**Use case:** always-on low-traffic server (resume showcase, demo, personal play) where the ECS/RDS/Redis overhead of other topologies isn't justified.
+
+**Cost breakdown:**
+
+| Component | ~Monthly |
+|-----------|---------|
+| EC2 t4g.nano (2 vCPU burst / 512 MB) | ~$3.07 |
+| EBS gp3 8 GB (encrypted) | ~$0.64 |
+| Elastic IP (free while attached) | $0 |
+| Route 53 hosted zone (optional) | ~$0.50 |
+| **Total** | **~$4–5/mo** |
+
+No RDS, no Redis, no NAT gateway, no load balancer. YAML persistence stores player data at `/app/data` on the root EBS volume.
+
+### Deploy
+
+```bash
+cd infra && npm ci
+
+# Minimal: IP-only, no DNS
+npx cdk deploy --context topology=ec2 --context imageTag=<git-sha>
+
+# With Route 53 DNS (creates play.<domain> A record)
+npx cdk deploy --context topology=ec2 --context imageTag=<git-sha> \
+  --context domain=example.com
+```
+
+Stack outputs after deploy:
+
+```
+AmbonMUD-ec2.PublicIp      = 1.2.3.4
+AmbonMUD-ec2.TelnetConnect = telnet 1.2.3.4 4000
+AmbonMUD-ec2.WebConnect    = http://1.2.3.4:8080
+AmbonMUD-ec2.SsmShell      = aws ssm start-session --target i-0abc... --region us-east-1
+AmbonMUD-ec2.UpdateImage   = aws ssm send-command ... "update-ambonmud <new-tag>"
+```
+
+### Updating the running image
+
+The instance is **not replaced** when CDK context changes — player YAML data on disk is preserved. To roll out a new image tag:
+
+```bash
+# Option A: SSM shell (interactive)
+aws ssm start-session --target <instanceId> --region us-east-1
+$ update-ambonmud <new-tag>
+
+# Option B: SSM send-command (non-interactive / scriptable)
+aws ssm send-command \
+  --instance-ids <instanceId> \
+  --document-name AWS-RunShellScript \
+  --parameters 'commands=["update-ambonmud <new-tag>"]' \
+  --region us-east-1
+```
+
+`update-ambonmud` does: ECR login → `docker pull` → patch service file → `systemctl restart ambonmud`.
+
+### Shell access
+
+No SSH key is required. Use SSM Session Manager:
+
+```bash
+aws ssm start-session --target <instanceId> --region us-east-1
+```
+
+Or open the AWS console → EC2 → Connect → Session Manager.
+
+### Data persistence
+
+Player YAML files live at `/app/data/players/` on the root EBS volume. They survive instance stop/start and CDK redeploys as long as the instance is not replaced (i.e., `cdk destroy` is not run and user data changes don't force replacement).
+
+For extra safety, take periodic EBS snapshots:
+```bash
+aws ec2 create-snapshot --volume-id <vol-id> --description "AmbonMUD backup" --region us-east-1
+```
+
+### Upgrading to ECS Fargate later
+
+The EC2 stack is independent of the Fargate stacks. To migrate:
+1. Export player YAML files from `/app/data/` via SSM.
+2. Deploy the `standalone/hobby` (or higher) Fargate topology.
+3. Import player files into the new persistence backend (YAML or Postgres).
+4. Run `cdk destroy --context topology=ec2` to tear down the EC2 stack.
