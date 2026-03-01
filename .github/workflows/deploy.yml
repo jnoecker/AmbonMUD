@@ -1,0 +1,124 @@
+name: Deploy
+
+on:
+  # Trigger manually with an image tag to deploy
+  workflow_dispatch:
+    inputs:
+      image-tag:
+        description: "Docker image tag (git SHA) to deploy"
+        required: true
+      environment:
+        description: "Target environment"
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+      topology:
+        description: "Deployment topology"
+        required: true
+        default: split
+        type: choice
+        options:
+          - standalone
+          - split
+      tier:
+        description: "Scale tier"
+        required: true
+        default: hobby
+        type: choice
+        options:
+          - hobby
+          - moderate
+          - production
+
+  # Also trigger automatically after a successful CI docker build on main
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy-staging:
+    name: Deploy to staging
+    runs-on: ubuntu-latest
+    environment: staging
+    # For workflow_run trigger, only proceed if CI succeeded
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve image tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.image-tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_CDK_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install CDK dependencies
+        working-directory: infra
+        run: npm ci
+
+      - name: CDK deploy (staging)
+        working-directory: infra
+        run: |
+          npx cdk deploy --all --require-approval never \
+            --context topology=${{ inputs.topology || 'split' }} \
+            --context tier=${{ inputs.tier || 'hobby' }} \
+            --context imageTag=${{ steps.tag.outputs.tag }} \
+            --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }}
+
+  deploy-production:
+    name: Deploy to production
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production   # requires manual approval in GitHub Environments
+    if: >
+      github.event_name == 'workflow_dispatch' &&
+      inputs.environment == 'production'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_CDK_DEPLOY_ROLE_ARN_PROD }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install CDK dependencies
+        working-directory: infra
+        run: npm ci
+
+      - name: CDK deploy (production)
+        working-directory: infra
+        run: |
+          npx cdk deploy --all --require-approval never \
+            --context topology=split \
+            --context tier=${{ inputs.tier || 'production' }} \
+            --context imageTag=${{ inputs.image-tag }} \
+            --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }} \
+            --context domain=${{ vars.DOMAIN }} \
+            --context alertEmail=${{ vars.ALERT_EMAIL }}
