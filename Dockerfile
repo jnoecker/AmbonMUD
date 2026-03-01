@@ -1,4 +1,18 @@
-# Stage 1: build the fat JAR
+# Stage 1: build the web client
+FROM oven/bun:latest AS frontend
+WORKDIR /build
+
+# Install dependencies first for layer caching
+COPY web-v3/package.json web-v3/bun.lock web-v3/
+RUN cd web-v3 && bun install --frozen-lockfile
+
+# Copy source and build.
+# Vite config writes output to ../src/main/resources/web-v3 (relative to web-v3/),
+# which resolves to /build/src/main/resources/web-v3 in this stage.
+COPY web-v3/ web-v3/
+RUN cd web-v3 && bun run build
+
+# Stage 2: build the fat JAR
 FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /build
 
@@ -11,11 +25,12 @@ COPY src/main/proto/ src/main/proto/
 # Resolve dependencies (cached layer if build files unchanged)
 RUN chmod +x ./gradlew && ./gradlew dependencies --no-daemon -q
 
-# Copy source and build
+# Copy source, inject the built frontend, then build the fat JAR
 COPY src/ src/
+COPY --from=frontend /build/src/main/resources/web-v3/ src/main/resources/web-v3/
 RUN ./gradlew shadowJar --no-daemon -x test
 
-# Stage 2: minimal JRE runtime
+# Stage 3: minimal JRE runtime
 FROM eclipse-temurin:21-jre AS runtime
 WORKDIR /app
 
