@@ -96,6 +96,7 @@ ambonMUD:
       - world/low_training_highlands.yaml
       - world/low_training_mines.yaml
       - world/low_training_barrens.yaml
+      - world/labyrinth.yaml
 
   persistence:
     backend: POSTGRES
