@@ -99,19 +99,35 @@ We partitioned the game world across multiple engine processes by zone:
 
 ### Load-tested capacity (STANDALONE, February 2026)
 
-Load testing confirmed the following benchmarks on a single `STANDALONE` instance:
+Two load test runs were conducted against a single `STANDALONE` instance.
+
+**Run 1 — 70 players (pre-auth-fix baseline)**
 
 | Metric | Result |
 |--------|--------|
 | Sustained concurrent players | **70** |
 | Peak sessions (telnet + WebSocket combined) | **141** |
-| Engine tick duration p50 | < 1 ms |
 | Engine tick duration p99 | **< 4 ms** (vs. 100 ms budget) |
 | Engine tick overruns | **0** throughout test |
+| Outbound frames/sec at peak | ~300 |
 | JVM heap at peak | ~40 MB |
 | Process CPU at peak | < 1% |
 
-The engine tick is not the bottleneck. At 141 sessions the game loop is using less than 4% of its time budget, leaving enormous headroom before tick starvation becomes a concern.
+**Run 2 — 150 players (post-auth-fix)**
+
+| Metric | Result |
+|--------|--------|
+| Sustained concurrent players | **150** |
+| Peak sessions (telnet + WebSocket combined) | **153** |
+| Engine tick duration p99 at ramp | **~15 ms** (spike during initial 150-player login burst) |
+| Engine tick duration p99 steady-state | ~3 ms |
+| Engine tick overruns | **~0.02/sec briefly** during ramp; zero thereafter |
+| Outbound frames/sec at peak | ~800 |
+| JVM heap at peak | ~40 MB |
+| Process CPU at peak | ~2% |
+| Login capacity disconnects | **0** (auth fix confirmed) |
+
+The auth fix worked: all 150 players logged in cleanly with no "server at max login capacity" rejections. At 150 active players the engine is no longer invisible — tick p99 spiked to ~15 ms during the connection burst and brief overruns appeared, but both resolved once the load stabilised.
 
 ### Auth funnel: the real login-throughput ceiling
 
@@ -124,13 +140,15 @@ BCrypt at cost-10 takes roughly 100–300 ms per operation. With `authThreads: 8
 
 **Symptom to watch for:** if bots time out in their initial state (before submitting a name) during a high-concurrency ramp, the cause is almost always the login semaphore being saturated, not the engine. Increase `maxConcurrentLogins` and/or `authThreads` in lock-step with your CPU count.
 
-### Observed subsystem pressure at 70 players
+### Observed subsystem pressure
 
-From the February 2026 load test, in order of observed pressure:
+From the two February 2026 load test runs, in order of observed pressure:
 
-1. **Regen tick max latency** — average stays near 0 but max spikes to ~4 ms at 70 active players as the per-player regen loop grows. First subsystem to feel pressure at higher player counts.
-2. **Outbound backpressure** — small cluster of disconnects (~0.4/sec) during peak combat activity. Expected and correct behavior (slow WebSocket clients being shed).
-3. **Persistence batch latency** — Player repo save/load max hits ~150 ms when the coalescing worker flushes a large batch. Not on the critical path; acceptable and configurable via `flushIntervalMs`.
+1. **Regen subsystem** — the clearest scaling signal across both runs. At 70 players the regen tick average was effectively 0; at 150 players it was ~3 ms sustained, with max ~4 ms. Unlike combat (which has `maxCombatsPerTick`) there is no per-tick cap on regen iterations — it processes every active player unconditionally. This is the primary driver of the tick p99 regression at 150 players and the most actionable item for the next scaling push.
+2. **Engine tick p99 / overruns during login burst** — at 150 players the initial connection ramp caused a p99 spike to ~15 ms and brief tick overruns (~0.02/sec). Both resolved once load stabilised. Not a sustained problem, but indicates the engine feels the cost of processing 150 simultaneous `Connected` events and their associated outbound fanout in a short window.
+3. **Outbound backpressure** — small cluster of disconnects (~0.4/sec) during peak combat activity in both runs. Expected and correct behavior (slow WebSocket clients being shed).
+4. **Persistence save max latency** — rose from ~150 ms at 70 players to ~300 ms at 150 players as the coalescing worker flushes larger batches at higher write frequency. Not on the critical path; configurable via `flushIntervalMs`.
+5. **GC pressure** — more active GC pauses at 150 players (~0.15 pause_seconds/sec during ramp vs. near-zero before). Still sub-millisecond per event, but trending with load.
 
 ### Throughput and safety mechanisms already present
 
@@ -184,7 +202,8 @@ From the February 2026 load test, in order of observed pressure:
 If asked “what limits scale right now?”, a strong answer is:
 
 1. **Login funnel throughput**: the BCrypt thread pool (`authThreads`) is the primary ceiling for concurrent logins. At default settings (8 threads, cost-10 BCrypt), sustained throughput is ~30–80 new logins/sec. Tunable independently of the engine. High-concurrency test ramps will see bots timeout with “stuck in WAIT_NAME” errors if `maxConcurrentLogins` is too low relative to the ramp rate — this is the semaphore being exhausted, not an engine issue.
-2. **Per-shard tick budget** (authoritative loop): command routing, combat, mob updates, and world events share the budget per engine shard. Load testing shows the single-threaded engine comfortably handles 70 active players with p99 tick < 4 ms. With sharding, this scales horizontally.
+2. **Regen subsystem tick cost**: unlike combat (which has a `maxCombatsPerTick` cap), `RegenSystem` processes every active player every tick with no budget limit. At 150 players the regen avg was ~3 ms sustained — fine today, but this will dominate the tick budget as player counts grow. Adding a `maxPlayersPerRegenTick` cap (matching the combat pattern) is the next engine scaling task.
+3. **Per-shard tick budget** (authoritative loop): command routing, combat, mob updates, and world events share the budget per engine shard. Load testing shows the engine handles 150 active players with p99 tick under 15 ms at ramp and ~3 ms steady-state against a 100 ms budget. With sharding, this scales horizontally.
 3. **Telnet transport thread pressure**: `BlockingSocketTransport` uses `Dispatchers.IO` with one blocking `read()` per connection. At very high telnet session counts (hundreds), `Dispatchers.IO` thread overhead becomes meaningful. Virtual threads (JDK 21 feature, tracked as #301) are the planned remedy — each session's blocking read uses a virtual thread instead of a platform thread, enabling thousands of concurrent telnet sessions with minimal overhead. WebSocket transport is unaffected (already non-blocking via Ktor/Netty).
 4. **Cross-zone coordination latency**: handoffs and cross-engine messaging add one Redis pub/sub hop (~1–5 ms). Zone instancing adds instance-selection overhead.
 5. **Operational observability depth**: core metrics exist per-engine, but saturation-oriented dashboards/alerts and cross-engine correlation can still be expanded.
@@ -196,9 +215,10 @@ If asked “what limits scale right now?”, a strong answer is:
 
 The highest-value next steps are:
 
-1. **Virtual threads for telnet transport (#301)**: migrate `BlockingSocketTransport` from `Dispatchers.IO` platform threads to JDK 21 virtual threads. Unlocks thousands of concurrent telnet sessions without thread pool pressure. WebSocket transport already uses Ktor's non-blocking I/O and does not require this change.
-2. Add queue depth/capacity gauges across inbound/outbound buses and per-session buffers.
-3. Improve error taxonomy metrics for auth, handoff, and Redis fallback reasons — particularly a counter for `maxConcurrentLogins` saturation events to make the auth ceiling visible in Grafana.
+1. **Regen tick cap**: add `maxPlayersPerRegenTick` (mirroring `maxCombatsPerTick`) so regen work is spread across ticks rather than processed in a single unbounded pass. Confirmed as the primary engine scaling bottleneck at 150 players.
+2. **Virtual threads for telnet transport (#301)**: migrate `BlockingSocketTransport` from `Dispatchers.IO` platform threads to JDK 21 virtual threads. Unlocks thousands of concurrent telnet sessions without thread pool pressure. WebSocket transport already uses Ktor's non-blocking I/O and does not require this change.
+3. Add queue depth/capacity gauges across inbound/outbound buses and per-session buffers.
+4. Improve error taxonomy metrics for auth, handoff, and Redis fallback reasons — particularly a counter for `maxConcurrentLogins` saturation events to make the auth ceiling visible in Grafana.
 4. Codify alert rules and dashboards as versioned infra artifacts.
 5. Add structured logging + correlation IDs across gateway/engine/session flows.
 6. Strengthen telemetry contract tests so instrumentation regressions are caught in CI.
