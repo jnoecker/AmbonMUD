@@ -161,6 +161,48 @@ class RegenSystemTest {
         }
 
     @Test
+    fun `maxPlayersPerTick counts every inspected player not just healed players`() =
+        runTest {
+            // With the old (buggy) implementation ran only incremented when a player actually
+            // received regen.  Full-HP players were free to inspect without consuming the budget,
+            // so all N players were visited every tick regardless of the cap.
+            //
+            // With the fix, ran++ happens for every player visited.  We verify this by placing
+            // 10 players all at full HP with a cap of 10 (exactly equal), then confirming a
+            // damaged 11th player — sitting just outside the cap — is NOT healed when the 10
+            // full-HP players fill the budget first.
+            //
+            // Random(42).nextInt(11) == 1, so iteration visits players at indices
+            // 1,2,3,4,5,6,7,8,9,10 — the damaged player is at index 0 (sid1) and is not
+            // reached, confirming the budget was consumed by the full-HP players.
+            val players = makeRegistry()
+            val clock = MutableClock(0L)
+            val regen = makeRegen(players, clock, baseIntervalMs = 100L, manaBaseIntervalMs = 100L)
+
+            val sids = (1..11).map { SessionId(it.toLong()) }
+            sids.forEachIndexed { idx, sid -> players.loginOrFail(sid, "Player$idx") }
+
+            // Seed all timers at t=0
+            regen.tick()
+
+            // Damage only sid1 (index 0 in the list)
+            val damagedHp = players.get(sids[0])!!.maxHp - 1
+            players.get(sids[0])!!.hp = damagedHp
+
+            clock.advance(200L)
+
+            // Cap = 10, 11 players total.  The 10 full-HP players consume the cap; sid1 (index 0)
+            // is not reached when iteration starts at index 1 (Random(42).nextInt(11) == 1).
+            regen.tick(maxPlayersPerTick = 10)
+
+            assertEquals(
+                damagedHp,
+                players.get(sids[0])!!.hp,
+                "Damaged player must not be healed when cap is consumed by full-HP players",
+            )
+        }
+
+    @Test
     fun `regen does not fire before interval elapses`() =
         runTest {
             val players = makeRegistry()
