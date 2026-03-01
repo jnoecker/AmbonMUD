@@ -114,6 +114,12 @@ ambonMUD:
   login:
     maxWrongPasswordRetries: 3
     maxFailedAttemptsBeforeDisconnect: 3
+    # Maximum sessions simultaneously in the auth funnel (name lookup → BCrypt → world entry).
+    # Sessions beyond this limit receive an immediate "server busy" message rather than timing out.
+    maxConcurrentLogins: 50
+    # Thread-pool size for BCrypt hashing, isolated from Dispatchers.IO to avoid starving socket I/O.
+    # Defaults to availableProcessors at runtime if not set; tune based on measured BCrypt throughput.
+    authThreads: 4
 
   engine:
     mob:
@@ -1608,6 +1614,8 @@ ambonMUD:
     telnet:
       maxLineLen: 1024
       maxNonPrintablePerLine: 32
+      # OS-level TCP accept backlog (JVM default is 50; raise to absorb burst connection storms).
+      socketBacklog: 256
     websocket:
       host: 0.0.0.0
       stopGraceMillis: 1000

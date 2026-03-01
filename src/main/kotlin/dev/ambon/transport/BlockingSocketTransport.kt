@@ -24,13 +24,14 @@ class BlockingSocketTransport(
     private val maxLineLen: Int = 1024,
     private val maxNonPrintablePerLine: Int = 32,
     private val maxInboundBackpressureFailures: Int = 3,
+    private val socketBacklog: Int = 256,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) : Transport {
     private var serverSocket: ServerSocket? = null
     private var acceptJob: Job? = null
 
     override suspend fun start() {
-        serverSocket = ServerSocket(port)
+        serverSocket = ServerSocket(port, socketBacklog)
         log.info { "Telnet listening on port $port" }
         acceptJob =
             scope.launch(Dispatchers.IO) {

@@ -128,6 +128,7 @@ class GameEngine(
             availableClasses = PlayerClass.selectable(engineConfig.debug.enableSwarmClass),
             maxWrongPasswordRetries = loginConfig.maxWrongPasswordRetries,
             maxFailedLoginAttemptsBeforeDisconnect = loginConfig.maxFailedAttemptsBeforeDisconnect,
+            maxConcurrentLogins = loginConfig.maxConcurrentLogins,
             onAfterLogin = { sid -> guildSystem?.onPlayerLogin(sid) },
         )
     }
@@ -136,7 +137,10 @@ class GameEngine(
         SessionEventHandler(
             players = players,
             markAwaitingName = { sid -> loginFlowHandler.pendingLogins[sid] = LoginState.AwaitingName },
-            clearLoginState = { sid -> loginFlowHandler.pendingLogins.remove(sid) },
+            clearLoginState = { sid ->
+                loginFlowHandler.pendingLogins.remove(sid)
+                loginFlowHandler.releasePermitIfHeld(sid)
+            },
             failedLoginAttempts = loginFlowHandler.failedLoginAttempts,
             sessionAnsiDefaults = loginFlowHandler.sessionAnsiDefaults,
             gmcpSessions = gmcpSessions,

@@ -76,6 +76,11 @@ class EngineServer(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val engineDispatcher =
         Executors.newSingleThreadExecutor { r -> Thread(r, "ambonMUD-engine") }.asCoroutineDispatcher()
+    private val authDispatcher =
+        Executors
+            .newFixedThreadPool(config.login.authThreads) { r ->
+                Thread(r, "ambon-auth").also { it.isDaemon = true }
+            }.asCoroutineDispatcher()
 
     private val clock = Clock.systemUTC()
     private val shutdownSignal = CompletableDeferred<Unit>()
@@ -192,7 +197,7 @@ class EngineServer(
             items = items,
             clock = clock,
             progression = progression,
-            hashingContext = Dispatchers.IO,
+            hashingContext = authDispatcher,
         )
 
     // --- Sharding infrastructure (null when sharding is disabled) ---
@@ -481,6 +486,7 @@ class EngineServer(
         runCatching { databaseManager?.close() }
         scope.cancel()
         engineDispatcher.close()
+        authDispatcher.close()
         inbound.close()
         outbound.close()
         log.info { "Engine server stopped" }
