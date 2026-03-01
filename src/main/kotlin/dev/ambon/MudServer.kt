@@ -22,11 +22,14 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.DatabaseManager
+import dev.ambon.persistence.GuildRepository
 import dev.ambon.persistence.PersistenceWorker
 import dev.ambon.persistence.PlayerRepositoryFactory
+import dev.ambon.persistence.PostgresGuildRepository
 import dev.ambon.persistence.PostgresWorldStateRepository
 import dev.ambon.persistence.WorldStatePersistenceWorker
 import dev.ambon.persistence.WorldStateRepository
+import dev.ambon.persistence.YamlGuildRepository
 import dev.ambon.persistence.YamlWorldStateRepository
 import dev.ambon.redis.RedisConnectionManager
 import dev.ambon.redis.redisObjectMapper
@@ -134,6 +137,19 @@ class MudServer(
         }
 
     private var worldStatePersistenceWorker: WorldStatePersistenceWorker? = null
+
+    private val guildRepo: GuildRepository =
+        when (config.persistence.backend) {
+            PersistenceBackend.YAML ->
+                YamlGuildRepository(
+                    rootDir = Paths.get(config.persistence.rootDir),
+                )
+            PersistenceBackend.POSTGRES ->
+                PostgresGuildRepository(
+                    database = databaseManager!!.database,
+                    mapper = redisObjectMapper,
+                )
+        }
 
     private val instanceId: String =
         config.redis.bus.instanceId
@@ -518,6 +534,8 @@ class MudServer(
                     },
                     worldState = worldState,
                     worldStateRepository = worldStateRepo,
+                    guildRepo = guildRepo,
+                    playerRepo = playerRepo,
                 ).run()
             }
 

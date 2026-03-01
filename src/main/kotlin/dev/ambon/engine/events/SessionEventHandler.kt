@@ -3,6 +3,7 @@ package dev.ambon.engine.events
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GroupSystem
+import dev.ambon.engine.GuildSystem
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.RegenSystem
@@ -30,6 +31,7 @@ class SessionEventHandler(
     private val statusEffectSystem: StatusEffectSystem,
     private val dialogueSystem: DialogueSystem,
     private val groupSystem: GroupSystem,
+    private val guildSystem: GuildSystem? = null,
     private val promptForName: suspend (SessionId) -> Unit,
     private val showLoginScreen: suspend (SessionId) -> Unit,
     private val onPlayerLoggedOut: suspend (PlayerState, SessionId) -> Unit,
@@ -65,6 +67,7 @@ class SessionEventHandler(
         statusEffectSystem.onPlayerDisconnected(sessionId)
         dialogueSystem.onPlayerDisconnected(sessionId)
         groupSystem.onPlayerDisconnected(sessionId)
+        guildSystem?.onPlayerDisconnected(sessionId)
         gmcpDirtyStatusEffects.remove(sessionId)
         gmcpDirtyGroup.remove(sessionId)
 

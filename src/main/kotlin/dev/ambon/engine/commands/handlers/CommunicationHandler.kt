@@ -206,16 +206,12 @@ class CommunicationHandler(
                 .joinToString(separator = ", ") { p ->
                     val t = p.activeTitle
                     val grouped = groupSystem?.isGrouped(p.sessionId) == true
-                    val prefix =
-                        if (t != null && grouped) {
-                            "[$t] [G] "
-                        } else if (t != null) {
-                            "[$t] "
-                        } else if (grouped) {
-                            "[G] "
-                        } else {
-                            ""
-                        }
+                    val guildTag = p.guildTag
+                    val prefix = buildString {
+                        if (guildTag != null) append("[$guildTag] ")
+                        if (t != null) append("[$t] ")
+                        if (grouped) append("[G] ")
+                    }
                     "$prefix${p.name}"
                 }
 

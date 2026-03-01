@@ -117,6 +117,7 @@ class PostgresPlayerRepository(
                     it[achievementProgress] = questMapper.writeValueAsString(dto.achievementProgress)
                     it[activeTitle] = dto.activeTitle
                     it[mailInbox] = questMapper.writeValueAsString(dto.inbox)
+                    it[guildId] = dto.guildId
                     it[recallRoomId] = dto.recallRoomId
                 }
             }
@@ -167,6 +168,7 @@ class PostgresPlayerRepository(
                 runCatching {
                     questMapper.readValue(this[PlayersTable.mailInbox], mailInboxType)
                 }.getOrDefault(emptyList()),
+            guildId = this[PlayersTable.guildId],
             recallRoomId = this[PlayersTable.recallRoomId],
         ).toDomain()
 }

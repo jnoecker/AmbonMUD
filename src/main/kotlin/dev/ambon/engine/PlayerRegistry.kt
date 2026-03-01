@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PlayerCreationRequest
+import dev.ambon.persistence.PlayerId
 import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
 import kotlinx.coroutines.withContext
@@ -347,6 +348,7 @@ class PlayerRegistry(
                 achievementProgress = boundRecord.achievementProgress,
                 activeTitle = boundRecord.activeTitle,
                 inbox = boundRecord.inbox.toMutableList(),
+                guildId = boundRecord.guildId,
                 recallRoomId = boundRecord.recallRoomId,
             )
         players[sessionId] = ps
@@ -409,6 +411,10 @@ class PlayerRegistry(
     }
 
     fun get(sessionId: SessionId): PlayerState? = players[sessionId]
+
+    /** Returns the session id for [playerId] if that player is currently online, or null if offline. */
+    fun findSessionByPlayerId(playerId: PlayerId): SessionId? =
+        players.entries.firstOrNull { it.value.playerId == playerId }?.key
 
     /** Returns the online [PlayerState] for [name] (case-insensitive), or null if offline. */
     fun getByName(name: String): PlayerState? {
@@ -610,6 +616,7 @@ class PlayerRegistry(
                 achievementProgress = ps.achievementProgress,
                 activeTitle = ps.activeTitle,
                 inbox = ps.inbox.toList(),
+                guildId = ps.guildId,
                 recallRoomId = ps.recallRoomId,
             ),
         )
