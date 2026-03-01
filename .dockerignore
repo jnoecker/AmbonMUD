@@ -1,0 +1,13 @@
+.git
+.github
+.gradle
+.gradle-user
+build/
+data/
+infra/
+web-v3/
+docs/
+*.md
+.editorconfig
+.gitignore
+docker-compose.yml

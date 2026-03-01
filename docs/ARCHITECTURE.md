@@ -157,6 +157,14 @@ Pass `InboundBus` / `OutboundBus` to the engine; **never raw `Channel<T>` refere
 - Multiple gateways can share one engine
 - Session IDs are globally unique (Snowflake-based)
 
+**Container / Production (AWS ECS Fargate):**
+- Single Docker image; mode set via `AMBONMUD_MODE` env var
+- `standalone` topology: one Fargate service, `STANDALONE` mode
+- `split` topology: separate Engine + Gateway Fargate services connected over Cloud Map DNS
+- Config injected via `AMBONMUD_*` env vars (Hoplite env var source)
+- `docker-entrypoint.sh` auto-derives unique `engineId` and `advertiseHost` per task
+- See `infra/` (CDK project) and [DEPLOYMENT.md](./DEPLOYMENT.md) for full details
+
 ---
 
 ## Event-Driven Design

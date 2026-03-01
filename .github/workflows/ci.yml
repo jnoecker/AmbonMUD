@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write   # required for OIDC AWS credential federation
 
 jobs:
   test:
@@ -34,3 +35,38 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run lint
       - run: bun run build
+
+  docker:
+    # Build and push to ECR on every push to main after tests pass.
+    needs: [test, frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image metadata
+        id: meta
+        run: |
+          echo "tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "registry=${{ steps.login-ecr.outputs.registry }}" >> "$GITHUB_OUTPUT"
+          echo "repo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE="${{ steps.meta.outputs.registry }}/${{ steps.meta.outputs.repo }}"
+          docker build -t "$IMAGE:${{ steps.meta.outputs.tag }}" .
+          docker tag "$IMAGE:${{ steps.meta.outputs.tag }}" "$IMAGE:latest"
+          docker push "$IMAGE:${{ steps.meta.outputs.tag }}"
+          docker push "$IMAGE:latest"

@@ -5,6 +5,7 @@ plugins {
     application
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     id("com.google.protobuf") version "0.9.6"
+    id("com.gradleup.shadow") version "8.3.6"
 }
 
 group = "com.example"
@@ -79,6 +80,14 @@ val integrationTestTag = "integration"
 
 application {
     mainClass.set("dev.ambon.MainKt")
+}
+
+tasks.shadowJar {
+    archiveClassifier.set("all")
+    manifest {
+        attributes["Main-Class"] = "dev.ambon.MainKt"
+    }
+    mergeServiceFiles()
 }
 
 tasks.test {

@@ -90,6 +90,19 @@ We partitioned the game world across multiple engine processes by zone:
 
 ---
 
+### Phase 6: Production cloud infrastructure
+
+We added a full production deployment story on AWS ECS Fargate:
+
+- **Dockerfile** (multi-stage): fat JAR build → minimal JRE runtime, non-root user. `docker-entrypoint.sh` auto-populates `AMBONMUD_SHARDING_ENGINEID` from the ECS task hostname and `AMBONMUD_SHARDING_ADVERTISEHOST` from the container IP — each Engine task gets a unique identity without code changes.
+- **Environment variable config**: Hoplite `EnvironmentVariablesPropertySource` maps `AMBONMUD_*` vars to config keys, so containers need no config file mount.
+- **CDK infrastructure** (`infra/`): parameterized by **topology** (standalone vs. ENGINE+GATEWAY split) and **tier** (hobby/moderate/production). Provisions VPC, RDS Postgres, ElastiCache Redis, EFS (world mutations), NLB (telnet), ALB (WebSocket), Cloud Map DNS, ECS Fargate services with CPU/request auto-scaling, CloudWatch alarms, and optional Route 53 + ACM.
+- **CI/CD**: ECR push on every `main` merge; CDK deploy workflow with staging auto-deploy and production manual-approval gate, both using OIDC (no long-lived secrets).
+
+**Why it mattered:** the full scaling story is now deployable end-to-end. A single `cdk deploy` command provisions the entire stack; a single redeploy switches topology or tier without data migration.
+
+---
+
 ## 5) Current scalability state (what exists today)
 
 ### Deployment modes
@@ -219,9 +232,10 @@ The highest-value next steps are:
 2. **Virtual threads for telnet transport (#301)**: migrate `BlockingSocketTransport` from `Dispatchers.IO` platform threads to JDK 21 virtual threads. Unlocks thousands of concurrent telnet sessions without thread pool pressure. WebSocket transport already uses Ktor's non-blocking I/O and does not require this change.
 3. Add queue depth/capacity gauges across inbound/outbound buses and per-session buffers.
 4. Improve error taxonomy metrics for auth, handoff, and Redis fallback reasons — particularly a counter for `maxConcurrentLogins` saturation events to make the auth ceiling visible in Grafana.
-4. Codify alert rules and dashboards as versioned infra artifacts.
 5. Add structured logging + correlation IDs across gateway/engine/session flows.
 6. Strengthen telemetry contract tests so instrumentation regressions are caught in CI.
+7. *(done)* ~~Codify alert rules and dashboards as versioned infra artifacts~~ — CloudWatch alarms and the CDK monitoring stack are now checked into `infra/`.
+8. **Scale-in graceful drain**: add an ECS lifecycle hook or Lambda that triggers zone migration (via `HandoffManager`) before an Engine task is terminated by ECS scale-in or deployment. Currently, ECS `stopTimeout: 60s` gives the JVM shutdown hook time to flush persistence, but cross-zone handoff requires the engine to signal its peer before the gRPC stream closes.
 
 This positions the project for confident load testing and safer multi-engine operation.
 
@@ -229,7 +243,7 @@ This positions the project for confident load testing and safer multi-engine ope
 
 ## 9) 90-second interview version
 
-> “We scaled AmbonMUD by separating concerns: gameplay remains deterministic in a single authoritative tick loop, while transports and I/O are abstracted and distributed. First, we introduced bus interfaces so engine code stopped depending on local channels. Next, we moved persistence writes off the tick using a coalescing worker. Then we added Redis as optional cache and pub/sub with HMAC-signed envelopes and graceful degradation. We split runtime into engine and gateway roles over gRPC for horizontal session ingress, with Snowflake IDs and gateway leasing for distributed session safety. Then we implemented zone-based engine sharding — partitioning the game world across multiple engine processes, with a player handoff protocol for cross-zone movement, an inter-engine bus for global commands, and a Redis player location index for O(1) tell routing. We also added zone instancing with auto-scaling for hot-zone load distribution. Load testing validated 70 sustained concurrent players with p99 engine tick under 4 ms against a 100 ms budget — the engine is not the bottleneck. The actual ceiling at high concurrency is the BCrypt auth funnel, which we tuned with an isolated thread pool. Next up is virtual threads for the telnet transport to push beyond hundreds of concurrent sessions.”
+> “We scaled AmbonMUD by separating concerns: gameplay remains deterministic in a single authoritative tick loop, while transports and I/O are abstracted and distributed. First, we introduced bus interfaces so engine code stopped depending on local channels. Next, we moved persistence writes off the tick using a coalescing worker. Then we added Redis as optional cache and pub/sub with HMAC-signed envelopes and graceful degradation. We split runtime into engine and gateway roles over gRPC for horizontal session ingress, with Snowflake IDs and gateway leasing for distributed session safety. Then we implemented zone-based engine sharding — partitioning the game world across multiple engine processes, with a player handoff protocol for cross-zone movement, an inter-engine bus for global commands, and a Redis player location index for O(1) tell routing. We also added zone instancing with auto-scaling for hot-zone load distribution. Load testing validated 150 sustained concurrent players with p99 engine tick under 15 ms at ramp and ~3 ms steady-state against a 100 ms budget. The actual ceiling at high concurrency is the BCrypt auth funnel, which we tuned with an isolated thread pool. Finally, we containerized the server with a multi-stage Dockerfile and built a full CDK infrastructure on AWS ECS Fargate — parameterized by topology and tier, with NLB+ALB, Cloud Map service discovery, EFS-backed world mutations, and CloudWatch alarms — so the whole stack deploys with a single `cdk deploy` command and scales from ~$30/month all the way to full HA multi-engine production.”
 
 ---
 
