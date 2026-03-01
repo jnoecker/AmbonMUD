@@ -1,0 +1,25 @@
+{
+  "name": "ambonmud-infra",
+  "version": "0.1.0",
+  "description": "AWS CDK infrastructure for AmbonMUD",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "synth": "cdk synth",
+    "diff": "cdk diff",
+    "deploy:hobby": "cdk deploy --all --context topology=standalone --context tier=hobby",
+    "deploy:split:hobby": "cdk deploy --all --context topology=split --context tier=hobby",
+    "deploy:split:moderate": "cdk deploy --all --context topology=split --context tier=moderate",
+    "deploy:split:production": "cdk deploy --all --context topology=split --context tier=production"
+  },
+  "devDependencies": {
+    "aws-cdk": "2.177.0",
+    "typescript": "5.7.3",
+    "@types/node": "22.13.9"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.177.0",
+    "constructs": "10.4.2"
+  }
+}
