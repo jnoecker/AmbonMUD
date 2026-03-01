@@ -98,7 +98,8 @@ export class Ec2Stack extends Stack {
       'set -euo pipefail',
       'dnf install -y docker',
       'systemctl enable --now docker',
-      'mkdir -p /app/data',
+      // UID 1001 matches the pinned ambonmud user inside the container (Dockerfile).
+      'mkdir -p /app/data && chown 1001:1001 /app/data',
       '',
       // ---- update-ambonmud helper script ------------------------------------
       // Pulls a new image tag, patches the service file, and restarts.
