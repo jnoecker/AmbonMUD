@@ -186,8 +186,9 @@ class RegenSystemTest {
             regen.tick()
 
             // Damage only sid1 (index 0 in the list)
-            val damagedHp = players.get(sids[0])!!.maxHp - 1
-            players.get(sids[0])!!.hp = damagedHp
+            val damagedPlayer = players.get(sids[0])!!
+            val damagedHp = damagedPlayer.maxHp - 1
+            damagedPlayer.hp = damagedHp
 
             clock.advance(200L)
 
@@ -197,7 +198,7 @@ class RegenSystemTest {
 
             assertEquals(
                 damagedHp,
-                players.get(sids[0])!!.hp,
+                damagedPlayer.hp,
                 "Damaged player must not be healed when cap is consumed by full-HP players",
             )
         }
