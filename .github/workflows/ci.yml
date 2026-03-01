@@ -63,10 +63,18 @@ jobs:
           echo "registry=${{ steps.login-ecr.outputs.registry }}" >> "$GITHUB_OUTPUT"
           echo "repo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }}" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push Docker image
+      - name: Set up QEMU (enables ARM64 cross-compilation on amd64 runner)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image (multi-platform)
         run: |
           IMAGE="${{ steps.meta.outputs.registry }}/${{ steps.meta.outputs.repo }}"
-          docker build -t "$IMAGE:${{ steps.meta.outputs.tag }}" .
-          docker tag "$IMAGE:${{ steps.meta.outputs.tag }}" "$IMAGE:latest"
-          docker push "$IMAGE:${{ steps.meta.outputs.tag }}"
-          docker push "$IMAGE:latest"
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --tag "$IMAGE:${{ steps.meta.outputs.tag }}" \
+            --tag "$IMAGE:latest" \
+            --push \
+            .
