@@ -34,8 +34,9 @@ RUN ./gradlew shadowJar --no-daemon -x test
 FROM eclipse-temurin:21-jre AS runtime
 WORKDIR /app
 
-# Non-root user for security
-RUN groupadd -r ambonmud && useradd -r -g ambonmud ambonmud
+# Non-root user for security — pin UID/GID 1001 so host volume mounts can be
+# chowned to a known ID without needing to inspect the running container.
+RUN groupadd -r -g 1001 ambonmud && useradd -r -u 1001 -g ambonmud ambonmud
 
 COPY --from=builder /build/build/libs/*-all.jar app.jar
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
