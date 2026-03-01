@@ -49,9 +49,9 @@ class RegenSystem(
         for (i in list.indices) {
             if (ran >= maxPlayersPerTick) break
             val player = list[(start + i) % list.size]
+            ran++
 
             val sessionId = player.sessionId
-            var didWork = false
 
             val bonuses = items.equipmentBonuses(sessionId)
 
@@ -66,7 +66,6 @@ class RegenSystem(
                         dirtyNotifier.playerVitalsDirty(sessionId)
                     }
                     lastRegenAtMs[sessionId] = now
-                    didWork = true
                 }
             }
 
@@ -81,11 +80,8 @@ class RegenSystem(
                         dirtyNotifier.playerVitalsDirty(sessionId)
                     }
                     lastManaRegenAtMs[sessionId] = now
-                    didWork = true
                 }
             }
-
-            if (didWork) ran++
         }
     }
 
