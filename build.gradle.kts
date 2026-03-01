@@ -50,8 +50,8 @@ dependencies {
     // JDBC driver
     implementation("org.postgresql:postgresql:42.7.5")
     // Schema migration
-    implementation("org.flywaydb:flyway-core:11.3.0")
-    implementation("org.flywaydb:flyway-database-postgresql:11.3.0")
+    implementation("org.flywaydb:flyway-core:12.0.3")
+    implementation("org.flywaydb:flyway-database-postgresql:12.0.3")
 
     // gRPC / Protobuf
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
