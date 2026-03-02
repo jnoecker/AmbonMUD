@@ -7,7 +7,6 @@ import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.dialogue.DialogueSystem
-import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectSystem
 
 class CombatHandler(
@@ -43,10 +42,7 @@ class CombatHandler(
         sessionId: SessionId,
         cmd: Command.Cast,
     ) {
-        if (abilitySystem == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Abilities are not available."))
-            return
-        }
-        outbound.sendIfError(sessionId, abilitySystem.cast(sessionId, cmd.spellName, cmd.target))
+        if (!requireSystem(sessionId, abilitySystem != null, "Abilities", outbound)) return
+        outbound.sendIfError(sessionId, abilitySystem!!.cast(sessionId, cmd.spellName, cmd.target))
     }
 }

@@ -180,6 +180,22 @@ internal suspend fun OutboundBus.sendIfError(sessionId: SessionId, error: String
     if (error != null) send(OutboundEvent.SendError(sessionId, error))
 }
 
+/**
+ * Guards an optional system: sends a [OutboundEvent.SendError] and returns `false` when
+ * [available] is false, so callers can write `if (!requireSystem(...)) return`.
+ */
+internal suspend fun requireSystem(
+    sessionId: SessionId,
+    available: Boolean,
+    name: String,
+    outbound: OutboundBus,
+): Boolean {
+    if (!available) {
+        outbound.send(OutboundEvent.SendError(sessionId, "$name are not available on this server."))
+    }
+    return available
+}
+
 /** Checks if [sessionId] has staff privileges; sends an error and returns false if not. */
 internal suspend fun requireStaff(
     sessionId: SessionId,
