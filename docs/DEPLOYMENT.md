@@ -84,26 +84,122 @@ Internet
 
 **Prerequisites:** AWS CLI configured, CDK CLI installed (`npm install -g aws-cdk`).
 
+### 3a. Bootstrap CDK
+
 ```bash
-# Bootstrap CDK in your account/region (once per account/region)
 cdk bootstrap aws://ACCOUNT_ID/us-east-1
-
-# Create two OIDC-based GitHub Actions IAM roles:
-#   - github-actions-ecr-push  (ECR push only)
-#   - github-actions-cdk-deploy  (CloudFormation + ECS describe/update)
-# See: https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
-
-# Set GitHub repository variables:
-#   AWS_ECR_PUSH_ROLE_ARN   = arn:aws:iam::ACCOUNT:role/github-actions-ecr-push
-#   AWS_CDK_DEPLOY_ROLE_ARN = arn:aws:iam::ACCOUNT:role/github-actions-cdk-deploy
-#   ECR_REPO_NAME           = ambonmud/app   (create this ECR repo first)
-#   AWS_REGION              = us-east-1
 ```
 
-**Create the ECR repository:**
+### 3b. Register the GitHub OIDC provider (once per AWS account)
+
+```bash
+aws iam create-open-id-connect-provider \
+  --url https://token.actions.githubusercontent.com \
+  --client-id-list sts.amazonaws.com \
+  --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1
+```
+
+Skip this step if the provider already exists (`aws iam list-open-id-connect-providers`).
+
+### 3c. Create IAM roles
+
+Three roles are needed. Each uses the same trust policy template — replace `ACCOUNT_ID` throughout:
+
+**Trust policy (save as `/tmp/gh-trust.json`):**
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+        },
+        "StringLike": {
+          "token.actions.githubusercontent.com:sub": "repo:jnoecker/AmbonMUD:*"
+        }
+      }
+    }
+  ]
+}
+```
+
+> **Why `StringLike` with `:*`?** GitHub's OIDC `sub` claim changes format depending on context:
+> - CI docker job (no environment): `repo:jnoecker/AmbonMUD:ref:refs/heads/main`
+> - Deploy job (`environment: staging`): `repo:jnoecker/AmbonMUD:environment:staging`
+> - Deploy job (`environment: production`): `repo:jnoecker/AmbonMUD:environment:production`
+>
+> Using `StringEquals` with a single branch-based sub is a common mistake that causes
+> "Not authorized to perform sts:AssumeRoleWithWebIdentity" once environment-scoped jobs are added.
+
+**Role 1 — ECR push** (used by `ci.yml` docker job):
+```bash
+aws iam create-role \
+  --role-name GitHubActions-EcrPush \
+  --assume-role-policy-document file:///tmp/gh-trust.json
+
+aws iam attach-role-policy \
+  --role-name GitHubActions-EcrPush \
+  --policy-arn arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
+```
+
+**Role 2 — CDK deploy** (used by `deploy.yml` staging + production jobs):
+```bash
+aws iam create-role \
+  --role-name github-actions-cdk-deploy \
+  --assume-role-policy-document file:///tmp/gh-trust.json
+
+# CDK needs CloudFormation, ECS, broad read/write for stack resources.
+# PowerUserAccess is broad but practical for CDK; scope down to specific
+# CloudFormation/ECS/IAM PassRole actions for stricter environments.
+aws iam attach-role-policy \
+  --role-name github-actions-cdk-deploy \
+  --policy-arn arn:aws:iam::aws:policy/PowerUserAccess
+
+aws iam attach-role-policy \
+  --role-name github-actions-cdk-deploy \
+  --policy-arn arn:aws:iam::aws:policy/IAMFullAccess
+```
+
+**Role 3 — EC2 demo** (used by the `topology=ec2` CDK stack):
+```bash
+aws iam create-role \
+  --role-name GitHubActions-Ec2Demo \
+  --assume-role-policy-document file:///tmp/gh-trust.json
+
+aws iam attach-role-policy \
+  --role-name GitHubActions-Ec2Demo \
+  --policy-arn arn:aws:iam::aws:policy/PowerUserAccess
+
+aws iam attach-role-policy \
+  --role-name GitHubActions-Ec2Demo \
+  --policy-arn arn:aws:iam::aws:policy/IAMFullAccess
+```
+
+### 3d. Create the ECR repository
+
 ```bash
 aws ecr create-repository --repository-name ambonmud/app --region us-east-1
 ```
+
+### 3e. Set GitHub repository variables
+
+Go to **Settings → Secrets and variables → Actions → Variables** and add:
+
+| Variable | Value |
+|---|---|
+| `AWS_REGION` | `us-east-1` (or your region) |
+| `AWS_ECR_PUSH_ROLE_ARN` | `arn:aws:iam::ACCOUNT_ID:role/GitHubActions-EcrPush` |
+| `AWS_CDK_DEPLOY_ROLE_ARN` | `arn:aws:iam::ACCOUNT_ID:role/github-actions-cdk-deploy` |
+| `AWS_CDK_DEPLOY_ROLE_ARN_PROD` | `arn:aws:iam::ACCOUNT_ID:role/github-actions-cdk-deploy` (or a separate prod role) |
+| `ECR_REPO_NAME` | `ambonmud/app` |
+| `DOMAIN` | your apex domain, e.g. `example.com` (production only — omit if no DNS) |
+| `ALERT_EMAIL` | ops email for CloudWatch SNS alarms (production only) |
 
 ---
 
