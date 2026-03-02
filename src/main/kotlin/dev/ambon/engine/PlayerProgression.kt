@@ -86,28 +86,38 @@ class PlayerProgression(
         level: Int,
         constitution: Int = PlayerState.BASE_STAT,
         hpPerLevel: Int = config.rewards.hpPerLevel,
-    ): Int {
-        val normalizedLevel = level.coerceIn(1, config.maxLevel)
-        val levels = (normalizedLevel - 1).toLong()
-        val baseBonus = levels * hpPerLevel.toLong()
-        val conBonus = ((constitution - PlayerState.BASE_STAT) / 5).toLong() * levels
-        return (PlayerState.BASE_MAX_HP.toLong() + baseBonus + conBonus)
-            .coerceAtLeast(PlayerState.BASE_MAX_HP.toLong())
-            .coerceAtMost(Int.MAX_VALUE.toLong())
-            .toInt()
-    }
+    ): Int = maxResourceForLevel(level, constitution, hpPerLevel, PlayerState.BASE_MAX_HP)
 
     fun maxManaForLevel(
         level: Int,
         intelligence: Int = PlayerState.BASE_STAT,
         manaPerLevel: Int = config.rewards.manaPerLevel,
-    ): Int {
+    ): Int = maxResourceForLevel(level, intelligence, manaPerLevel, PlayerState.BASE_MANA)
+
+    /**
+     * Applies the level-derived base HP/mana stats to [ps], clamping current
+     * hp and mana to the new maximums. Callers are responsible for setting
+     * [PlayerState.level] and [PlayerState.xpTotal] before or after this call.
+     */
+    fun applyLevelStats(ps: PlayerState, level: Int) {
+        val (classHpPerLevel, classManaPerLevel) = resolveClassScaling(ps.playerClass)
+        val newMaxHp = maxHpForLevel(level, ps.constitution, classHpPerLevel)
+        val newMaxMana = maxManaForLevel(level, ps.intelligence, classManaPerLevel)
+        ps.baseMaxHp = newMaxHp
+        ps.maxHp = newMaxHp
+        ps.hp = ps.hp.coerceIn(1, newMaxHp)
+        ps.baseMana = newMaxMana
+        ps.maxMana = newMaxMana
+        ps.mana = ps.mana.coerceIn(0, newMaxMana)
+    }
+
+    private fun maxResourceForLevel(level: Int, stat: Int, perLevel: Int, baseValue: Int): Int {
         val normalizedLevel = level.coerceIn(1, config.maxLevel)
         val levels = (normalizedLevel - 1).toLong()
-        val baseBonus = levels * manaPerLevel.toLong()
-        val intBonus = ((intelligence - PlayerState.BASE_STAT) / 5).toLong() * levels
-        return (PlayerState.BASE_MANA.toLong() + baseBonus + intBonus)
-            .coerceAtLeast(PlayerState.BASE_MANA.toLong())
+        val baseBonus = levels * perLevel.toLong()
+        val statBonus = ((stat - PlayerState.BASE_STAT) / 5).toLong() * levels
+        return (baseValue.toLong() + baseBonus + statBonus)
+            .coerceAtLeast(baseValue.toLong())
             .coerceAtMost(Int.MAX_VALUE.toLong())
             .toInt()
     }
