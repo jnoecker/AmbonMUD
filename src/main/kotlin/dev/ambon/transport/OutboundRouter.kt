@@ -39,7 +39,9 @@ class OutboundRouter(
         val queueDepth: AtomicInteger = AtomicInteger(0),
         @Volatile var lastEnqueuedWasPrompt: Boolean = false,
         @Volatile var renderer: TextRenderer = PlainRenderer(),
-    )
+    ) {
+        val isAnsi: Boolean get() = renderer is AnsiRenderer
+    }
 
     private val sinks = ConcurrentHashMap<SessionId, SessionSink>()
 
@@ -201,8 +203,7 @@ class OutboundRouter(
         sessionId: SessionId,
         sink: SessionSink,
     ) {
-        val ansiEnabled = sink.renderer is AnsiRenderer
-        val frames = loginScreenRenderer.render(loginScreen, ansiEnabled)
+        val frames = loginScreenRenderer.render(loginScreen, sink.isAnsi)
 
         for (frame in frames) {
             if (!enqueueFramed(sessionId, sink, frame)) {
@@ -217,8 +218,7 @@ class OutboundRouter(
         sessionId: SessionId,
         sink: SessionSink,
     ) {
-        val isAnsi = sink.renderer is AnsiRenderer
-        if (!isAnsi) {
+        if (!sink.isAnsi) {
             sendLine(sessionId, sink, "----------------", TextKind.NORMAL)
             return
         }
@@ -232,8 +232,7 @@ class OutboundRouter(
         sessionId: SessionId,
         sink: SessionSink,
     ) {
-        val isAnsi = sink.renderer is AnsiRenderer
-        if (!isAnsi) {
+        if (!sink.isAnsi) {
             sendLine(sessionId, sink, "ANSI is off. Type: ansi on", TextKind.INFO)
             return
         }
