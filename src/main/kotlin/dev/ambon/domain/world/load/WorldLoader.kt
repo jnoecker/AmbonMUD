@@ -12,7 +12,6 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
-import dev.ambon.domain.items.ItemUseEffect
 import dev.ambon.domain.quest.CompletionType
 import dev.ambon.domain.quest.ObjectiveType
 import dev.ambon.domain.quest.QuestDef
@@ -329,22 +328,17 @@ object WorldLoader {
                 }
 
                 val onUse =
-                    itemFile.onUse?.let { effectFile ->
-                        if (effectFile.healHp < 0) {
+                    itemFile.onUse?.also { effect ->
+                        if (effect.healHp < 0) {
                             throw WorldLoadException("Item '${itemId.value}' onUse.healHp cannot be negative")
                         }
-                        if (effectFile.grantXp < 0L) {
+                        if (effect.grantXp < 0L) {
                             throw WorldLoadException("Item '${itemId.value}' onUse.grantXp cannot be negative")
                         }
-                        ItemUseEffect(
-                            healHp = effectFile.healHp,
-                            grantXp = effectFile.grantXp,
-                        ).also { effect ->
-                            if (!effect.hasEffect()) {
-                                throw WorldLoadException(
-                                    "Item '${itemId.value}' onUse must define at least one positive effect",
-                                )
-                            }
+                        if (!effect.hasEffect()) {
+                            throw WorldLoadException(
+                                "Item '${itemId.value}' onUse must define at least one positive effect",
+                            )
                         }
                     }
 
