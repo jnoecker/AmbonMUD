@@ -458,21 +458,33 @@ class WorldLoaderTest {
     /**
      * Regression tests for production world integrity.
      *
-     * These guard against two failure modes:
-     * 1. A cross-zone exit in a production YAML file pointing to a room that does not
-     *    exist (caught by loading via WorldFactory defaults).
-     * 2. application.yaml's world.resources list getting out of sync with the zone files
-     *    referenced by other zones (caught by loading directly from the config file).
-     *
-     * Both tests failed before the fix for the missing training zones in application.yaml.
+     * Guards against cross-zone exits in production YAML files pointing to rooms that
+     * do not exist. Loads the full production zone set explicitly to avoid test-classpath
+     * interference (Gradle puts src/test/resources before src/main/resources, so
+     * auto-discovery would find bad_*.yaml test fixtures instead of production zones).
      */
     @Tag("integration")
     class ProductionWorldTest {
+        // All zone files shipped in src/main/resources/world/. Update this list when
+        // adding or removing a production zone — the test will fail at load time if a
+        // cross-zone exit references a zone missing from this list.
+        private val productionZones =
+            listOf(
+                "world/aineroia_cottage.yaml",
+                "world/ambon_hub.yaml",
+                "world/demo_ruins.yaml",
+                "world/labyrinth.yaml",
+                "world/low_training_barrens.yaml",
+                "world/low_training_highlands.yaml",
+                "world/low_training_marsh.yaml",
+                "world/low_training_mines.yaml",
+                "world/noecker_resume.yaml",
+                "world/tutorial_glade.yaml",
+            )
+
         @Test
         fun `production world loads via WorldFactory defaults`() {
-            // Calls WorldFactory.demoWorld() with its built-in resource list.
-            // Exercises all cross-zone exit validation across every production zone.
-            val world = WorldFactory.demoWorld()
+            val world = WorldFactory.demoWorld(resources = productionZones)
             assertTrue(world.rooms.isNotEmpty())
             // Spot-check the cross-zone wiring that was broken in #142:
             // ambon_hub:blank_arches -> NORTH -> low_training_marsh:reedwalk_landing
@@ -488,23 +500,28 @@ class WorldLoaderTest {
 
         @Test
         fun `application yaml world resources load without cross-zone errors`() {
-            // Mimics exactly what MudServer does at startup: reads the resource list
-            // from application.yaml and passes it to WorldLoader. If application.yaml
-            // is missing a zone that another zone references, this test fails with the
-            // same WorldLoadException the server throws.
+            // world.resources is now empty in application.yaml (auto-discovery is used
+            // at runtime). This test validates the full production zone set loads cleanly
+            // and that world.startRoom resolves correctly.
             val text =
                 WorldLoader::class.java.classLoader
                     .getResource("application.yaml")!!
                     .readText()
             val root = ObjectMapper(YAMLFactory()).readTree(text)
-            val resources =
+            val startRoom =
                 root
                     .path("ambonMUD")
                     .path("world")
-                    .path("resources")
-                    .map { it.textValue() }
-            val world = WorldLoader.loadFromResources(resources)
+                    .path("startRoom")
+                    .textValue()
+                    ?.let { RoomId(it) }
+            val world =
+                WorldFactory.demoWorld(
+                    resources = productionZones,
+                    startRoom = startRoom,
+                )
             assertTrue(world.rooms.isNotEmpty())
+            assertEquals(RoomId("ambon_hub:hall_of_portals"), world.startRoom)
         }
     }
 
@@ -667,5 +684,35 @@ class WorldLoaderTest {
             ex.message!!.contains("nonexistent_node", ignoreCase = true),
             "Got: ${ex.message}",
         )
+    }
+
+    @Test
+    fun `startRoomOverride takes precedence over first-file start room`() {
+        // mz_forest loads first; its startRoom (enchanted_forest:trailhead) would normally win.
+        // The override points into mz_swamp (second file) instead.
+        val world =
+            WorldLoader.loadFromResources(
+                paths = listOf("world/mz_forest.yaml", "world/mz_swamp.yaml"),
+                startRoomOverride = RoomId("swamp:edge"),
+            )
+        assertEquals(RoomId("swamp:edge"), world.startRoom)
+    }
+
+    @Test
+    fun `startRoomOverride fails when the room does not exist in the merged world`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResources(
+                    paths = listOf("world/ok_small.yaml"),
+                    startRoomOverride = RoomId("ok_small:nonexistent"),
+                )
+            }
+        assertTrue(ex.message!!.contains("nonexistent", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `WorldFactory loads from explicit resource list`() {
+        val world = WorldFactory.demoWorld(resources = listOf("world/mz_forest.yaml", "world/mz_swamp.yaml"))
+        assertTrue(world.rooms.isNotEmpty())
     }
 }

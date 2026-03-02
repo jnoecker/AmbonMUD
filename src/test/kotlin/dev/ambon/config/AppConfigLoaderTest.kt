@@ -140,4 +140,20 @@ class AppConfigLoaderTest {
             )
         config.validated()
     }
+
+    @Test
+    fun `validation accepts empty resources list for auto-discovery`() {
+        AppConfig(world = WorldConfig(resources = emptyList())).validated()
+    }
+
+    @Test
+    fun `validation accepts explicit startRoom in zone-room format`() {
+        AppConfig(world = WorldConfig(startRoom = "ambon_hub:hall_of_portals")).validated()
+    }
+
+    @Test
+    fun `validation rejects startRoom without colon`() {
+        val invalid = AppConfig(world = WorldConfig(startRoom = "hall_of_portals"))
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
 }
