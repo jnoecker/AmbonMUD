@@ -374,6 +374,44 @@ class BehaviorTreeSystemTest {
             assertEquals(roomB.id, e.mobs.get(e.mobId)!!.roomId)
         }
 
+    @Test
+    fun `wander action does not cross zone boundary`() =
+        runTest {
+            // Build a world where the mob's only exit leads to a different zone
+            val borderRoom =
+                Room(RoomId("zone1:border"), "Border", "desc", mapOf(Direction.NORTH to RoomId("zone2:far")))
+            val farRoom = Room(RoomId("zone2:far"), "Far", "desc", emptyMap())
+            val crossZoneWorld = World(mapOf(borderRoom.id to borderRoom, farRoom.id to farRoom), borderRoom.id)
+
+            val mobs = MobRegistry()
+            val items = ItemRegistry()
+            val players =
+                dev.ambon.test.buildTestPlayerRegistry(borderRoom.id, InMemoryPlayerRepository(), items)
+            val mob = MobState(MobId("zone1:mob"), "border mob", borderRoom.id)
+            mobs.upsert(mob)
+
+            val ctx =
+                BtContext(
+                    mob = mob,
+                    world = crossZoneWorld,
+                    mobs = mobs,
+                    players = players,
+                    outbound = LocalOutboundBus(),
+                    clock = MutableClock(0L),
+                    rng = Random(42),
+                    isMobInCombat = { false },
+                    startMobCombat = { _, _ -> false },
+                    fleeMob = { false },
+                    gmcpEmitter = null,
+                    mobMemory = MobBehaviorMemory(),
+                )
+
+            val result = WanderAction.tick(ctx)
+
+            assertEquals(BtResult.FAILURE, result, "Expected FAILURE — no same-zone exits")
+            assertEquals(borderRoom.id, mobs.get(mob.id)!!.roomId, "Mob must not have crossed zone boundary")
+        }
+
     // --- Say action tests ---
 
     @Test
