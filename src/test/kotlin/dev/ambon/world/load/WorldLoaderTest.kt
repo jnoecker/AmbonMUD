@@ -668,4 +668,34 @@ class WorldLoaderTest {
             "Got: ${ex.message}",
         )
     }
+
+    @Test
+    fun `startRoomOverride takes precedence over first-file start room`() {
+        // mz_forest loads first; its startRoom (enchanted_forest:trailhead) would normally win.
+        // The override points into mz_swamp (second file) instead.
+        val world =
+            WorldLoader.loadFromResources(
+                paths = listOf("world/mz_forest.yaml", "world/mz_swamp.yaml"),
+                startRoomOverride = RoomId("swamp:edge"),
+            )
+        assertEquals(RoomId("swamp:edge"), world.startRoom)
+    }
+
+    @Test
+    fun `startRoomOverride fails when the room does not exist in the merged world`() {
+        val ex =
+            assertThrows(WorldLoadException::class.java) {
+                WorldLoader.loadFromResources(
+                    paths = listOf("world/ok_small.yaml"),
+                    startRoomOverride = RoomId("ok_small:nonexistent"),
+                )
+            }
+        assertTrue(ex.message!!.contains("nonexistent", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `WorldFactory loads from explicit resource list`() {
+        val world = WorldFactory.demoWorld(resources = listOf("world/mz_forest.yaml", "world/mz_swamp.yaml"))
+        assertTrue(world.rooms.isNotEmpty())
+    }
 }
