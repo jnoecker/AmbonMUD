@@ -322,7 +322,7 @@ class PlayerRegistry(
                 roomId = boundRecord.roomId,
                 playerId = boundRecord.id,
                 baseMaxHp = maxHp,
-                hp = maxHp,
+                hp = if (boundRecord.hp <= 0) maxHp else boundRecord.hp.coerceIn(1, maxHp),
                 maxHp = maxHp,
                 strength = boundRecord.strength,
                 dexterity = boundRecord.dexterity,
@@ -427,6 +427,21 @@ class PlayerRegistry(
         val ps = players[sessionId] ?: return
         persistIfClaimed(ps)
     }
+
+    /**
+     * Applies [updater] to the persisted record of an offline player and saves the result.
+     * No-op if no record exists for [playerId].
+     * Must only be called for players that are confirmed offline.
+     */
+    suspend fun updateOfflinePlayer(playerId: PlayerId, updater: (PlayerRecord) -> PlayerRecord) {
+        val record = repo.findById(playerId) ?: return
+        repo.save(updater(record))
+    }
+
+    /**
+     * Returns the name of an offline player by their [playerId], or null if not found.
+     */
+    suspend fun findOfflinePlayerName(playerId: PlayerId): String? = repo.findById(playerId)?.name
 
     /**
      * Appends [message] to the inbox of an offline player identified by [recipientName].
@@ -607,6 +622,7 @@ class PlayerRegistry(
                 passwordHash = ps.passwordHash,
                 ansiEnabled = ps.ansiEnabled,
                 isStaff = ps.isStaff,
+                hp = ps.hp,
                 mana = ps.mana,
                 maxMana = ps.maxMana,
                 gold = ps.gold,
