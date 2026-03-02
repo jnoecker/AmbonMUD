@@ -1,7 +1,6 @@
 package dev.ambon.grpc
 
 import dev.ambon.bus.OutboundBus
-import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.metrics.GameMetrics
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -61,7 +60,7 @@ class GrpcOutboundDispatcher(
     }
 
     private suspend fun dispatch(event: OutboundEvent) {
-        val sid = event.sessionId()
+        val sid = event.sessionId
         val streamChannel = serviceImpl.sessionToStream[sid]
         if (streamChannel == null) {
             log.debug { "No gateway stream for session $sid; dropping $event" }
@@ -132,24 +131,6 @@ class GrpcOutboundDispatcher(
         )
     }
 }
-
-// ── OutboundEvent.sessionId() extension ────────────────────────────────────────
-
-/** Extracts the [SessionId] from any [OutboundEvent] variant. */
-fun OutboundEvent.sessionId(): SessionId =
-    when (this) {
-        is OutboundEvent.SendText -> sessionId
-        is OutboundEvent.SendInfo -> sessionId
-        is OutboundEvent.SendError -> sessionId
-        is OutboundEvent.SendPrompt -> sessionId
-        is OutboundEvent.ShowLoginScreen -> sessionId
-        is OutboundEvent.SetAnsi -> sessionId
-        is OutboundEvent.Close -> sessionId
-        is OutboundEvent.ClearScreen -> sessionId
-        is OutboundEvent.GmcpData -> sessionId
-        is OutboundEvent.ShowAnsiDemo -> sessionId
-        is OutboundEvent.SessionRedirect -> sessionId
-    }
 
 private const val DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS = 250L
 private const val STOP_TIMEOUT_MS = 5_000L

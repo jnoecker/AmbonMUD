@@ -26,8 +26,7 @@ class GroupHandler(
         sessionId: SessionId,
         cmd: Command.GroupCmd,
     ) {
-        if (!requireSystem(sessionId, groupSystem != null, "Groups", outbound)) return
-        val gs = groupSystem!!
+        val gs = requireSystemOrNull(sessionId, groupSystem, "Groups", outbound) ?: return
         val err =
             when (cmd) {
                 is Command.GroupCmd.Invite -> gs.invite(sessionId, cmd.target)
@@ -43,7 +42,7 @@ class GroupHandler(
         sessionId: SessionId,
         cmd: Command.Gtell,
     ) {
-        if (!requireSystem(sessionId, groupSystem != null, "Groups", outbound)) return
-        outbound.sendIfError(sessionId, groupSystem!!.gtell(sessionId, cmd.message))
+        val gs = requireSystemOrNull(sessionId, groupSystem, "Groups", outbound) ?: return
+        outbound.sendIfError(sessionId, gs.gtell(sessionId, cmd.message))
     }
 }

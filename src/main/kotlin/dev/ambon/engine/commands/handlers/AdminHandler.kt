@@ -4,12 +4,12 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
+import dev.ambon.engine.MobRemovalCoordinator
 import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
-import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
@@ -20,9 +20,8 @@ import dev.ambon.sharding.InterEngineMessage
 class AdminHandler(
     ctx: EngineContext,
     private val onShutdown: suspend () -> Unit = {},
-    private val onMobSmited: (MobId) -> Unit = {},
+    private val mobRemovalCoordinator: MobRemovalCoordinator? = null,
     private val onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
-    private val dialogueSystem: DialogueSystem? = null,
     private val statusEffects: StatusEffectSystem? = null,
     private val interEngineBus: InterEngineBus? = null,
     private val engineId: String = "",
@@ -194,11 +193,8 @@ class AdminHandler(
                 outbound.send(OutboundEvent.SendError(sessionId, "No player or mob named '${cmd.target}'."))
                 return
             }
-            combat.onMobRemovedExternally(targetMob.id)
-            dialogueSystem?.onMobRemoved(targetMob.id)
             items.removeMobItems(targetMob.id)
-            mobs.remove(targetMob.id)
-            onMobSmited(targetMob.id)
+            mobRemovalCoordinator?.removeMobExternally(targetMob.id)
             broadcastToRoom(players, outbound, me.roomId, "${targetMob.name} is struck down by divine wrath.")
             for (p in players.playersInRoom(me.roomId)) {
                 gmcpEmitter?.sendRoomRemoveMob(p.sessionId, targetMob.id.value)

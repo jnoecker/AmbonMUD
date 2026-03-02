@@ -70,6 +70,18 @@ class PlayerProgression(
         return (nextFloor - currentFloor).coerceAtLeast(0L)
     }
 
+    /**
+     * Resolves the class-specific HP-per-level and mana-per-level scaling factors.
+     * Falls back to the configured defaults if [playerClass] is null or unrecognised.
+     */
+    fun resolveClassScaling(playerClass: String?): Pair<Int, Int> {
+        val pc = PlayerClass.fromString(playerClass ?: "")
+        return Pair(
+            pc?.hpPerLevel ?: config.rewards.hpPerLevel,
+            pc?.manaPerLevel ?: config.rewards.manaPerLevel,
+        )
+    }
+
     fun maxHpForLevel(
         level: Int,
         constitution: Int = PlayerState.BASE_STAT,
@@ -135,9 +147,7 @@ class PlayerProgression(
         intelligence: Int,
         playerClass: String?,
     ): String {
-        val pc = PlayerClass.fromString(playerClass ?: "")
-        val classHpPerLevel = pc?.hpPerLevel ?: hpPerLevel
-        val classManaPerLevel = pc?.manaPerLevel ?: manaPerLevel
+        val (classHpPerLevel, classManaPerLevel) = resolveClassScaling(playerClass)
         val newMaxHp = maxHpForLevel(result.newLevel, constitution, classHpPerLevel)
         val oldMaxHp = maxHpForLevel(result.previousLevel, constitution, classHpPerLevel)
         val hpGain = (newMaxHp - oldMaxHp).coerceAtLeast(0)
@@ -160,9 +170,7 @@ class PlayerProgression(
     ): LevelUpResult {
         val con = player.constitution
         val int = player.intelligence
-        val pc = PlayerClass.fromString(player.playerClass)
-        val classHpPerLevel = pc?.hpPerLevel ?: config.rewards.hpPerLevel
-        val classManaPerLevel = pc?.manaPerLevel ?: config.rewards.manaPerLevel
+        val (classHpPerLevel, classManaPerLevel) = resolveClassScaling(player.playerClass)
         val currentXpTotal = player.xpTotal.coerceAtLeast(0L)
         val currentLevel = computeLevel(currentXpTotal)
         val currentBaseMaxHp = maxHpForLevel(currentLevel, con, classHpPerLevel)
