@@ -18,14 +18,15 @@ on:
       topology:
         description: "Deployment topology"
         required: true
-        default: split
+        default: ec2
         type: choice
         options:
+          - ec2
           - standalone
           - split
       tier:
-        description: "Scale tier"
-        required: true
+        description: "Scale tier (ignored for ec2 topology)"
+        required: false
         default: hobby
         type: choice
         options:
@@ -95,7 +96,7 @@ jobs:
         working-directory: infra
         run: |
           npx cdk deploy --all --require-approval never \
-            --context topology=${{ inputs.topology || 'split' }} \
+            --context topology=${{ inputs.topology || 'ec2' }} \
             --context tier=${{ inputs.tier || 'hobby' }} \
             --context imageTag=${{ steps.tag.outputs.tag }} \
             --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }}
