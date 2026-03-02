@@ -509,7 +509,7 @@ class WorldLoaderTest {
             val root = ObjectMapper(YAMLFactory()).readTree(text)
             val startRoom =
                 root
-                    .path("ambonMUD")
+                    .path("ambonmud")
                     .path("world")
                     .path("startRoom")
                     .textValue()
