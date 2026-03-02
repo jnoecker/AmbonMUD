@@ -130,10 +130,10 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 | `low_training_barrens` | Low-level training zone (barrens) |
 | `labyrinth` | High-level maze zone; home of the SWARM load-test class |
 | `achievements` | Achievement trigger zone |
-| `wesleyalis` | Kingdom of Wesleyalis |
-| `trailey` | Kingdom of Trailey |
-| `pbrae` | Region of Pbrae |
-| `aineroia_cottage` | Aineroia cottage area |
+| `wesleyalis` | Tropical jungle kingdom with exotic wildlife |
+| `trailey` | Surreal HOA-governed suburban neighborhood |
+| `pbrae` | Forested mountain region with trails and highlands |
+| `aineroia_cottage` | Enchanted fae wood estate; home of Aineroia, Lady of the Fae Wood |
 
 **Zone YAML Format**
 ```yaml
