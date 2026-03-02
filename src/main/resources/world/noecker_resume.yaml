@@ -116,7 +116,7 @@ mobs:
     name: "an Impostor Syndrome Wisp"
     room: lobby
     tier: weak
-    level: 2
+    level: 1
     xpReward: 25
     behavior:
       template: coward
@@ -129,7 +129,7 @@ mobs:
     name: "a Memory Leak"
     room: proteus_bay
     tier: weak
-    level: 3
+    level: 1
     behavior:
       template: wander_aggro
       params:
@@ -139,9 +139,9 @@ mobs:
   null_pointer_exception:
     name: "a NullPointerException"
     room: juola_lab
-    tier: standard
-    level: 4
-    hp: 22
+    tier: weak
+    level: 1
+    hp: 10
     behavior:
       template: aggro_guard
       params:
@@ -151,8 +151,8 @@ mobs:
   scope_creep:
     name: "a Scope Creep"
     room: freelance_hq
-    tier: standard
-    level: 6
+    tier: weak
+    level: 1
     behavior:
       template: wander_aggro
       params:
@@ -162,10 +162,10 @@ mobs:
   legacy_monolith:
     name: "the Legacy Monolith"
     room: migration_bridge
-    tier: elite
-    level: 7
-    hp: 65
-    armor: 3
+    tier: weak
+    level: 1
+    hp: 12
+    armor: 0
     behavior:
       template: aggro_guard
       params:
@@ -175,8 +175,8 @@ mobs:
   fda_auditor:
     name: "an FDA Compliance Auditor"
     room: fda_archive
-    tier: standard
-    level: 5
+    tier: weak
+    level: 1
     behavior:
       template: aggro_guard
       params:
@@ -187,7 +187,7 @@ mobs:
     name: "a Runaway Lambda"
     room: lambda_shrine
     tier: weak
-    level: 5
+    level: 1
     goldMin: 0
     goldMax: 5
     behavior:
@@ -197,9 +197,9 @@ mobs:
   budget_committee:
     name: "a Budget Committee"
     room: savings_vault
-    tier: standard
-    level: 5
-    hp: 28
+    tier: weak
+    level: 1
+    hp: 10
     behavior:
       template: aggro_guard
       params:
@@ -209,8 +209,8 @@ mobs:
   phone_screen:
     name: "a Technical Phone Screen"
     room: karat_studio
-    tier: standard
-    level: 6
+    tier: weak
+    level: 1
     behavior:
       template: aggro_guard
       params:
@@ -220,9 +220,9 @@ mobs:
   stack_overflow_error:
     name: "a Stack Overflow Error"
     room: gatech_annex
-    tier: elite
-    level: 8
-    hp: 42
+    tier: weak
+    level: 1
+    hp: 12
     behavior:
       template: aggro_guard
       params:
