@@ -1,0 +1,214 @@
+zone: celestial_sanctum
+lifespan: 0
+startRoom: cloudgate
+
+# This zone is intentionally unreachable by normal navigation — it has no exits
+# to any player-accessible zone. Staff access it via the `goto` command.
+
+mobs:
+  divine_keeper:
+    name: "the Divine Keeper"
+    room: hall_of_glory
+    tier: boss
+    level: 50
+    hp: 999999
+    minDamage: 0
+    maxDamage: 0
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+
+  immortal_guardian:
+    name: "an Immortal Guardian"
+    room: divine_courtyard
+    tier: boss
+    level: 50
+    hp: 999999
+    minDamage: 50
+    maxDamage: 100
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    behavior:
+      template: stationary_aggro
+      params:
+        aggroMessage: "The Immortal Guardian's voice thunders: ONLY THE DIVINE MAY PASS!"
+
+items:
+  # ── Weapons ─────────────────────────────────────────────────────────────────
+  sunforged_blade:
+    displayName: "the Sunforged Blade"
+    keyword: "blade"
+    description: "A longsword forged in the heart of a dying star. Its edge never dulls, and it casts its own faint golden light. The hilt is warm to the touch, as if something within it still burns."
+    slot: hand
+    damage: 40
+    basePrice: 1
+
+  divine_warhammer:
+    displayName: "the Divine Warhammer"
+    keyword: "warhammer"
+    description: "A massive warhammer of skyforged iron etched with divine runes that glow faintly blue. Each strike resonates with a note too low for mortal ears, felt in the chest rather than heard."
+    slot: hand
+    damage: 35
+    constitution: 5
+    basePrice: 1
+
+  void_dagger:
+    displayName: "the Void Dagger"
+    keyword: "vdagger"
+    description: "A thin blade shaped from solidified shadow. It leaves no reflection and casts no shadow of its own. It cuts through anything with unnerving silence."
+    slot: hand
+    damage: 30
+    basePrice: 1
+
+  staff_of_the_firmament:
+    displayName: "the Staff of the Firmament"
+    keyword: "firmament"
+    description: "A tall staff of polished azure crystal capped with a perpetually orbiting sphere of white light. Lightning answers to it — or something that looks like lightning."
+    slot: hand
+    damage: 32
+    constitution: 8
+    basePrice: 1
+
+  celestial_spear:
+    displayName: "the Celestial Spear"
+    keyword: "spear"
+    description: "A spear whose shaft is a single shaft of starlight made solid. The tip gleams with a light that exists between colors. It hums faintly with divine resonance."
+    slot: hand
+    damage: 38
+    basePrice: 1
+
+  # ── Head Armor ───────────────────────────────────────────────────────────────
+  crown_of_divinity:
+    displayName: "the Crown of Divinity"
+    keyword: "crown"
+    description: "A circlet of braided celestial gold set with seven stones, each the compressed soul of a constellation. It sits upon the head with unsettling weightlessness."
+    slot: head
+    armor: 30
+    constitution: 10
+    basePrice: 1
+
+  celestial_helm:
+    displayName: "the Celestial Helm"
+    keyword: "chelm"
+    description: "A full helm of divine alloy, its visor etched with the faces of winds. It shows no seam or hinge and fits any head perfectly."
+    slot: head
+    armor: 25
+    basePrice: 1
+
+  # ── Body Armor ───────────────────────────────────────────────────────────────
+  divine_platemail:
+    displayName: "the Divine Platemail"
+    keyword: "platemail"
+    description: "Full plate armor assembled from metal drawn from the core of a collapsed god. The surface reflects clouds even underground, and blows that would shatter lesser armor leave no mark."
+    slot: body
+    armor: 40
+    basePrice: 1
+
+  ethereal_robes:
+    displayName: "the Ethereal Robes"
+    keyword: "robes"
+    description: "Robes woven from compressed starlight and the memory of distant moons. They shift between white and deep violet depending on the light, and are softer than anything has a right to be."
+    slot: body
+    armor: 25
+    constitution: 15
+    basePrice: 1
+
+  # ── Hand Armor / Shields ─────────────────────────────────────────────────────
+  aegis_of_heaven:
+    displayName: "the Aegis of Heaven"
+    keyword: "aegis"
+    description: "A round shield faced with a single perfect mirror of divine glass. Attacks aimed at the bearer seem uncertain, as though the shield makes them doubt their aim."
+    slot: hand
+    armor: 30
+    basePrice: 1
+
+  divine_gauntlets:
+    displayName: "the Divine Gauntlets"
+    keyword: "gauntlets"
+    description: "Articulated gauntlets of skyforged alloy, etched inside the cuffs with the names of every being they have protected. The list is very long and in very small script."
+    slot: hand
+    armor: 22
+    constitution: 8
+    basePrice: 1
+
+  ring_of_eternity:
+    displayName: "the Ring of Eternity"
+    keyword: "ring"
+    description: "A plain band of unknown metal that has resisted every attempt at classification. It neither heats nor cools, scratches nor tarnishes. Wearing it, you feel less temporary."
+    slot: hand
+    constitution: 25
+    basePrice: 1
+
+shops:
+  divine_armory:
+    name: "Armory of the Divine"
+    room: hall_of_glory
+    items:
+      - sunforged_blade
+      - divine_warhammer
+      - void_dagger
+      - staff_of_the_firmament
+      - celestial_spear
+      - crown_of_divinity
+      - celestial_helm
+      - divine_platemail
+      - ethereal_robes
+      - aegis_of_heaven
+      - divine_gauntlets
+      - ring_of_eternity
+
+rooms:
+  cloudgate:
+    title: "The Cloudgate"
+    description: "You stand on a platform of compacted cloud, impossibly solid underfoot. A soft luminous light fills the air from no particular direction, warm and sourceless. The world below is visible through gaps in the cloud floor — cities and forests and oceans, all distant and calm. You have arrived in a place not meant for mortals."
+    exits:
+      n: divine_courtyard
+
+  divine_courtyard:
+    title: "Divine Courtyard"
+    description: "A vast open courtyard of white stone that has never known rain or wind, ringed by columns too tall to see the tops of. The air tastes faintly of ozone and something older. A motionless guardian watches from the far side. Paths lead to the grand hall to the north, the forge to the east, and a garden to the west."
+    exits:
+      s: cloudgate
+      n: hall_of_glory
+      e: celestial_forge
+      w: cloud_garden
+
+  hall_of_glory:
+    title: "Hall of Glory"
+    description: "A colonnaded hall of breathtaking proportion, its vaulted ceiling painted with murals depicting the history of the divine in strokes of gold and deep blue. Display stands line the walls, each bearing an example of a god-tier weapon or piece of armor under a cone of warm light. The Divine Keeper presides here, ready to equip those of sufficient station."
+    exits:
+      s: divine_courtyard
+      n: sky_throne
+      e: vault_of_relics
+
+  celestial_forge:
+    title: "The Celestial Forge"
+    description: "The forge burns with a white-blue fire that produces no smoke and leaves no ash. Hammers of impossible size hang on the walls, sized for hands that do not belong to humans. The anvil is a single block of ore from a dead star, and the stone around it is scorched in a pattern that looks deliberately artistic."
+    exits:
+      w: divine_courtyard
+
+  vault_of_relics:
+    title: "Vault of Relics"
+    description: "A circular chamber with locked vitrines along every wall, each holding items from ages predating the current world. Most of the vitrines are empty. A few hold things that should not be examined too closely. The air is very still here, as if time is moving more carefully."
+    exits:
+      w: hall_of_glory
+
+  sky_throne:
+    title: "The Sky Throne"
+    description: "A chamber dominated by an enormous throne of pale stone and polished bone, its back tall enough to scrape the arched ceiling. From the open balcony behind the throne, the whole world is spread below like an illuminated map. The view is humbling. The throne itself radiates a quiet authority even now, unoccupied."
+    exits:
+      s: hall_of_glory
+      n: sky_observatory
+
+  cloud_garden:
+    title: "Cloud Garden"
+    description: "A garden grown on a wide shelf of cloud, its beds filled with flowers that do not exist below the cloud layer: luminous white starbloom, slow-burning ember roses, and great swaths of something that looks like sky made into petals. The air here is quiet even by celestial standards."
+    exits:
+      e: divine_courtyard
+
+  sky_observatory:
+    title: "Sky Observatory"
+    description: "The highest point in the sanctum, open on all sides to the boundless sky. A great armillary sphere of golden rings turns slowly in the center, tracking movements of bodies too distant for most to care about. The horizon curves visibly from here. Below, far below, you can see the whole of the world — kingdoms, oceans, and the faint glow of cities. It is easy to feel very powerful from up here. It is easy to feel very small too."
+    exits:
+      s: sky_throne
