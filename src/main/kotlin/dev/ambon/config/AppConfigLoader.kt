@@ -10,15 +10,17 @@ object AppConfigLoader {
     private const val DEFAULT_RESOURCE_PATH = "/application.yaml"
 
     // Environment variable naming convention for container deployments:
-    //   AMBONMUD_MODE              → ambonMUD.mode
-    //   AMBONMUD_PERSISTENCE_BACKEND → ambonMUD.persistence.backend
-    //   AMBONMUD_DATABASE_JDBCURL  → ambonMUD.database.jdbcUrl
-    //   AMBONMUD_REDIS_URI         → ambonMUD.redis.uri
-    //   AMBONMUD_REDIS_BUS_ENABLED → ambonMUD.redis.bus.enabled
-    //   AMBONMUD_SHARDING_ENABLED  → ambonMUD.sharding.enabled
-    //   AMBONMUD_SHARDING_REGISTRY_TYPE → ambonMUD.sharding.registry.type
-    //   AMBONMUD_GRPC_CLIENT_ENGINEHOST → ambonMUD.grpc.client.engineHost
+    //   AMBONMUD_MODE              → ambonmud.mode
+    //   AMBONMUD_PERSISTENCE_BACKEND → ambonmud.persistence.backend
+    //   AMBONMUD_DATABASE_JDBCURL  → ambonmud.database.jdbcUrl
+    //   AMBONMUD_REDIS_URI         → ambonmud.redis.uri
+    //   AMBONMUD_REDIS_BUS_ENABLED → ambonmud.redis.bus.enabled
+    //   AMBONMUD_SHARDING_ENABLED  → ambonmud.sharding.enabled
+    //   AMBONMUD_SHARDING_REGISTRY_TYPE → ambonmud.sharding.registry.type
+    //   AMBONMUD_GRPC_CLIENT_ENGINEHOST → ambonmud.grpc.client.engineHost
     // Hoplite lowercases all keys and replaces _ with . for path segments.
+    // NOTE: The root YAML key and AmbonMUDRootConfig field are both `ambonmud`
+    // (all-lowercase) so that Hoplite's env-var normalisation resolves correctly.
     @OptIn(ExperimentalHoplite::class)
     fun load(
         resourcePath: String = DEFAULT_RESOURCE_PATH,
@@ -45,7 +47,7 @@ object AppConfigLoader {
         return builder
             .build()
             .loadConfigOrThrow<AmbonMUDRootConfig>()
-            .ambonMUD
+            .ambonmud
             .validated()
     }
 }

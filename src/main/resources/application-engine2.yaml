@@ -2,7 +2,7 @@
 # Run with: ./gradlew runEngine2
 # Owns: noecker_resume, low_training_mines, low_training_barrens
 # gRPC server: 9092  |  metrics: 9192
-ambonMUD:
+ambonmud:
   mode: ENGINE
   sharding:
     enabled: true

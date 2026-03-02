@@ -1,5 +1,6 @@
 package dev.ambon.config
 
+import com.sksamuel.hoplite.PropertySource
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -10,7 +11,7 @@ class AppConfigLoaderTest {
 
     @Test
     fun `system property overrides default config`() {
-        val key = "config.override.ambonMUD.server.telnetPort"
+        val key = "config.override.ambonmud.server.telnetPort"
         val previous = System.getProperty(key)
         System.setProperty(key, "4444")
 
@@ -155,5 +156,19 @@ class AppConfigLoaderTest {
     fun `validation rejects startRoom without colon`() {
         val invalid = AppConfig(world = WorldConfig(startRoom = "hall_of_portals"))
         assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `env-var normalised path overrides persistence backend`() {
+        // Regression for #320: AMBONMUD_PERSISTENCE_BACKEND was silently ignored because
+        // Hoplite normalises env vars to ambonmud.persistence.backend but the root field
+        // was named ambonMUD, causing a key-normalisation mismatch. Renaming the field to
+        // ambonmud (all-lowercase) fixes the lookup.
+        val source = PropertySource.map(mapOf("ambonmud.persistence.backend" to "POSTGRES"))
+        val config = AppConfigLoader.load(
+            resourcePath = testResourcePath,
+            extraSources = listOf(source),
+        )
+        assertEquals(PersistenceBackend.POSTGRES, config.persistence.backend)
     }
 }
