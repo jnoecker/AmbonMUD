@@ -298,10 +298,13 @@ class CombatSystem(
             if (player.hp <= 0) {
                 metrics.onPlayerDeath()
                 removePlayerFromCombat(sessionId)
-                outbound.send(OutboundEvent.SendText(sessionId, "You collapse, too wounded to keep fighting."))
-                outbound.send(OutboundEvent.SendText(sessionId, "You are safe now — rest and your wounds will mend."))
-                broadcastToRoom(players, outbound, player.roomId, "${player.name} has fallen in battle.", exclude = sessionId)
-                outbound.send(OutboundEvent.SendPrompt(sessionId))
+                handlePlayerDeath(
+                    sessionId = sessionId,
+                    playerName = player.name,
+                    roomId = player.roomId,
+                    deathMessage = "You collapse, too wounded to keep fighting.",
+                    roomMessage = "${player.name} has fallen in battle.",
+                )
                 ran++
                 continue
             }
@@ -429,16 +432,13 @@ class CombatSystem(
             if (target.hp <= 0) {
                 metrics.onPlayerDeath()
                 removePlayerFromCombat(targetSid)
-                outbound.send(OutboundEvent.SendText(targetSid, "You have been slain by ${mob.name}."))
-                outbound.send(OutboundEvent.SendText(targetSid, "You are safe now — rest and your wounds will mend."))
-                broadcastToRoom(
-                    players,
-                    outbound,
-                    target.roomId,
-                    "${target.name} has been slain by ${mob.name}.",
-                    exclude = targetSid,
+                handlePlayerDeath(
+                    sessionId = targetSid,
+                    playerName = target.name,
+                    roomId = target.roomId,
+                    deathMessage = "You have been slain by ${mob.name}.",
+                    roomMessage = "${target.name} has been slain by ${mob.name}.",
                 )
-                outbound.send(OutboundEvent.SendPrompt(targetSid))
             }
 
             mobState.nextTickAtMs = now + config.tickMillis
@@ -461,6 +461,19 @@ class CombatSystem(
     }
 
     // --- Private helpers ---
+
+    private suspend fun handlePlayerDeath(
+        sessionId: SessionId,
+        playerName: String,
+        roomId: RoomId,
+        deathMessage: String,
+        roomMessage: String,
+    ) {
+        outbound.send(OutboundEvent.SendText(sessionId, deathMessage))
+        outbound.send(OutboundEvent.SendText(sessionId, "You are safe now — rest and your wounds will mend."))
+        broadcastToRoom(players, outbound, roomId, roomMessage, exclude = sessionId)
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
 
     private fun removePlayerFromCombat(sessionId: SessionId) {
         playerTarget.remove(sessionId)
