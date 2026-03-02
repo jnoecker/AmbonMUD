@@ -33,7 +33,6 @@ class GuildSystemTest {
             GuildSystem(
                 players = players,
                 guildRepo = guildRepo,
-                playerRepo = playerRepo,
                 outbound = outbound,
                 clock = clock,
                 maxSize = 5,

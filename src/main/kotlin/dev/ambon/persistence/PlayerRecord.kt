@@ -29,6 +29,7 @@ data class PlayerRecord(
     val passwordHash: String = "",
     val ansiEnabled: Boolean = false,
     val isStaff: Boolean = false,
+    val hp: Int = 0,
     val mana: Int = 20,
     val maxMana: Int = 20,
     val gold: Long = 0L,
