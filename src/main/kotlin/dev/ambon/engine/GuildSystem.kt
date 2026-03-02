@@ -182,7 +182,7 @@ class GuildSystem(
         val invite = pendingInvites[sessionId] ?: return "You have no pending guild invite."
         pendingInvites.remove(sessionId)
 
-        if (clock.millis() > invite.expiresAtMs) return "Your guild invite has expired."
+        if (clock.millis() >= invite.expiresAtMs) return "Your guild invite has expired."
 
         val guild = guildsById[invite.guildId] ?: return "That guild no longer exists."
         if (guild.members.size >= maxSize) return "That guild is now full."

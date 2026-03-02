@@ -440,7 +440,7 @@ class CommandRouterAdminTest {
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
             val combat = CombatSystem(players, mobs, items, outbound)
-            val clock = java.time.Clock.systemUTC()
+            val clock = dev.ambon.test.MutableClock(nowMs = 0L)
             val coordinator = MobRemovalCoordinator(
                 combatSystem = combat,
                 dialogueSystem = DialogueSystem(mobs, players, outbound),

@@ -143,6 +143,8 @@ class GrpcOutboundDispatcherTest {
             OutboundEvent.Close(sid, ""),
             OutboundEvent.ClearScreen(sid),
             OutboundEvent.ShowAnsiDemo(sid),
+            OutboundEvent.SessionRedirect(sid, "", "", 0),
+            OutboundEvent.GmcpData(sid, "", ""),
         )
         events.forEach { assertEquals(sid, it.sessionId) }
     }
