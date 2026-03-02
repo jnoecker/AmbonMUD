@@ -40,24 +40,32 @@ mobs:
             next: advice
           - text: "Goodbye."
       about_portals:
-        text: "Each archway leads to a different realm. The northern passage opens into the fae wood — home of Aineroia, Lady of the Fae Wood, who shaped many of the magical creatures of this world. To the south lies a peaceful forest glade — ideal for those just starting their journey. East leads to a scholar's retreat."
+        text: "Each archway leads to a different realm. The northern passage opens into the fae wood — home of Aineroia, Lady of the Fae Wood. The southern arch leads to the Kingdom of PBrae — a castle in the mountains. East leads to a scholar's retreat. West, through the gallery, is the Kingdom of Wesleyalis — a treehouse in a prehistoric rainforest. And below — through the trapdoor in the floor — lies the Kingdom of Trailey: a spy compound disguised as a very boring suburb."
         choices:
-          - text: "What about the western passages?"
+          - text: "Tell me about the western passage."
             next: western
+          - text: "What's down there?"
+            next: trailey_info
           - text: "Thank you."
       western:
-        text: "The western gallery has more archways, some still unkeyed. The ones that work lead to training grounds of various difficulty. Speak to the instructors there if you wish to hone your skills."
+        text: "Head west through the Wayfinder Gallery and the Blank Arches. The western arch there opens into the Kingdom of Wesleyalis — a massive treehouse in a prehistoric rainforest, ruled by King Wesley the Artist and Princess Aurora. Ancient bees the size of horses. Dinosaurs in the deep jungle. Paintings that come to life. Proceed with respect for art."
         choices:
-          - text: "I'll explore them. Thanks!"
+          - text: "I'll explore it. Thanks!"
           - text: "Tell me more about the training grounds."
             next: training
             minLevel: 3
+      trailey_info:
+        text: "The Kingdom of Trailey lies below — a HOA cul-de-sac where every house looks exactly the same and all of them conceal a high-tech spy compound inside. Ruled by King Trevor and Queen Hailey. Trevor maintains a mechanical shooting range and a roughhousing pit with a very large, very enthusiastic opponent. Hailey's zone is a competition gymnasium inside a human-scale dollhouse, with the finest perfume vault in any known dimension. Upstairs, Humpty Dumpty refuses to stay fallen. Approach all three with appropriate readiness."
+        choices:
+          - text: "Sounds like my kind of neighborhood."
+          - text: "Tell me about the other portals."
+            next: about_portals
       training:
         text: "The training grounds are divided by difficulty. The marshlands and highlands are suitable for novice adventurers, while the mines and barrens offer stiffer challenges. Each has its own creatures and rewards."
         choices:
           - text: "Sounds dangerous. I'll be careful."
       advice:
-        text: "Head south to the Tutorial Glade first. Pick up equipment as you find it, and don't be afraid to flee from fights you can't win. Leveling up makes you stronger — check your 'score' often."
+        text: "The south arch leads to the Kingdom of PBrae — the mountain pass and gravel road are gentle enough for new adventurers. Pick up equipment as you find it, and don't be afraid to flee from fights you can't win. Leveling up makes you stronger — check your 'score' often."
         choices:
           - text: "Thanks for the advice!"
           - text: "Tell me about the portals."
@@ -66,22 +74,24 @@ mobs:
 rooms:
   hall_of_portals:
     title: "Hall of Portals"
-    description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving—some blank, some half-formed, all waiting for destinations. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.'"
+    description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.' Northern light filters green through fae leaves. Eastern light smells of old books. Southern light carries mountain air and the faint crunch of gravel. Western light is warm, tropical, and faintly buzzes. In the center of the floor, a trapdoor — sealed with a welcome mat that reads 'HOME' — descends to an entirely different kind of neighborhood."
     exits:
       e: noecker_resume:lobby
       n: aineroia_cottage:before_gate
-      s: tutorial_glade:forest_gate
+      s: pbrae:gravel_road
       w: wayfinder_gallery
+      d: trailey:cul_de_sac
 
   blank_arches:
     title: "Blank Arches"
-    description: "Unkeyed archways stand here like paused sentences. New chalkwork now marks several passages for low-rank adventurers, each arch pulsing with a different color of mist."
+    description: "Unkeyed archways stand here like paused sentences. New chalkwork marks several passages for low-rank adventurers, each arch pulsing with a different color of mist. To the west, an archway framed with painted vines and tropical flowers hums with warm, buzzing energy — beyond it, distant birdcall and the smell of rainforest and something ancient and sweet."
     exits:
       e: wayfinder_gallery
       n: low_training_marsh:reedwalk_landing
       s: low_training_highlands:switchback_foot
       u: low_training_mines:orelift_station
       d: low_training_barrens:windcut_gate
+      w: wesleyalis:gravel_road_2
 
   wayfinder_gallery:
     title: "Wayfinder Gallery"

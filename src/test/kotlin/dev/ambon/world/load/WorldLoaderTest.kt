@@ -459,28 +459,27 @@ class WorldLoaderTest {
      * Regression tests for production world integrity.
      *
      * Guards against cross-zone exits in production YAML files pointing to rooms that
-     * do not exist. Loads the full production zone set explicitly to avoid test-classpath
-     * interference (Gradle puts src/test/resources before src/main/resources, so
-     * auto-discovery would find bad_*.yaml test fixtures instead of production zones).
+     * do not exist. Scans src/main/resources/world/ directly from the filesystem so
+     * that new zones are picked up automatically and test-classpath interference
+     * (bad_*.yaml fixtures) is avoided entirely.
      */
     @Tag("integration")
     class ProductionWorldTest {
-        // All zone files shipped in src/main/resources/world/. Update this list when
-        // adding or removing a production zone — the test will fail at load time if a
-        // cross-zone exit references a zone missing from this list.
-        private val productionZones =
-            listOf(
-                "world/aineroia_cottage.yaml",
-                "world/ambon_hub.yaml",
-                "world/demo_ruins.yaml",
-                "world/labyrinth.yaml",
-                "world/low_training_barrens.yaml",
-                "world/low_training_highlands.yaml",
-                "world/low_training_marsh.yaml",
-                "world/low_training_mines.yaml",
-                "world/noecker_resume.yaml",
-                "world/tutorial_glade.yaml",
-            )
+        // Scan the source tree directly so new zones are included automatically without
+        // any change to this test. Gradle runs tests from the project root, so the
+        // relative path is stable. Non-zone YAMLs (e.g. achievements.yaml) are filtered
+        // out by the zone: key check, matching the same logic used by WorldFactory at runtime.
+        private val productionZones: List<String> by lazy {
+            val worldDir = java.io.File("src/main/resources/world")
+            check(worldDir.isDirectory) {
+                "Could not find src/main/resources/world — is the working directory the project root?"
+            }
+            worldDir
+                .listFiles { f -> f.extension == "yaml" }!!
+                .filter { f -> f.useLines { lines -> lines.take(20).any { it.trimStart().startsWith("zone:") } } }
+                .map { "world/${it.name}" }
+                .sorted()
+        }
 
         @Test
         fun `production world loads via WorldFactory defaults`() {
