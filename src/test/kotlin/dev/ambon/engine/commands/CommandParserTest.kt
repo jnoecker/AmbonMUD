@@ -221,6 +221,19 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses setlevel with player and level`() {
+        assertEquals(Command.SetLevel("Alice", 50), CommandParser.parse("setlevel Alice 50"))
+        assertEquals(Command.SetLevel("Bob", 1), CommandParser.parse("setlevel Bob 1"))
+    }
+
+    @Test
+    fun `setlevel with missing args returns Invalid`() {
+        assertTrue(CommandParser.parse("setlevel") is Command.Invalid)
+        assertTrue(CommandParser.parse("setlevel Alice") is Command.Invalid)
+        assertTrue(CommandParser.parse("setlevel Alice notanumber") is Command.Invalid)
+    }
+
+    @Test
     fun `parses cast with spell and target`() {
         assertEquals(Command.Cast("fireball", "rat"), CommandParser.parse("cast fireball rat"))
         assertEquals(Command.Cast("fireball", "rat"), CommandParser.parse("c fireball rat"))
