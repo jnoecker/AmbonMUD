@@ -115,7 +115,6 @@ Available behavior templates:
 | Template | Description |
 |----------|------------|
 | `aggro_guard` | Stays in place, attacks any player in the room on sight |
-| `stationary_aggro` | Same as `aggro_guard` |
 | `patrol` | Cycles through `patrolRoute` rooms; pauses during combat |
 | `patrol_aggro` | Patrols and attacks players on sight |
 | `wander` | Moves randomly between adjacent rooms; pauses during combat |
