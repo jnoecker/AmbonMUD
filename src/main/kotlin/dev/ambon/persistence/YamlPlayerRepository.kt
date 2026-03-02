@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.metrics.GameMetrics
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -23,6 +24,8 @@ import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
+
+private val log = KotlinLogging.logger {}
 
 class PlayerPersistenceException(
     message: String,
@@ -112,15 +115,45 @@ class YamlPlayerRepository(
     /**
      * Builds the name index from disk exactly once.  After this call [nameIndex] reflects all
      * persisted players.  Subsequent calls are no-ops.
+     *
+     * Files are scanned in ascending filename order (zero-padded numeric IDs → alphabetical = numeric).
+     * When two files share a name the lower ID (earlier created) wins and a warning is logged.
+     *
+     * After the scan, [nextId] is bumped to at least `maxSeenId + 1` so that a stale or missing
+     * `next_player_id.txt` can never cause a new player to be written over an existing file.
      */
     private fun ensureNameIndexReady() {
         if (nameIndexReady.get()) return
         // Double-checked: if another thread beat us here, the index is already populated.
         synchronized(nameIndexReady) {
             if (nameIndexReady.get()) return
-            playersDir.listDirectoryEntries("*.yaml").forEach { p ->
+            val files = playersDir.listDirectoryEntries("*.yaml").sortedBy { it.fileName.toString() }
+            var maxSeenId = 0L
+            files.forEach { p ->
                 val dto = runCatching { readPlayerDto(p) }.getOrNull() ?: return@forEach
-                nameIndex[dto.name.lowercase()] = dto.id
+                maxSeenId = maxOf(maxSeenId, dto.id)
+                val key = dto.name.lowercase()
+                val existingId = nameIndex[key]
+                if (existingId != null) {
+                    // Keep the lower ID (earlier created); log a warning so operators notice.
+                    log.warn {
+                        "Duplicate player name '${dto.name}' found in files " +
+                            "${pathFor(existingId).fileName} and ${p.fileName}. " +
+                            "Keeping ID $existingId; ID ${dto.id} is orphaned."
+                    }
+                } else {
+                    nameIndex[key] = dto.id
+                }
+            }
+            // Guard against a stale or missing next_player_id.txt falling behind actual file IDs.
+            if (maxSeenId >= nextId.get()) {
+                val corrected = maxSeenId + 1
+                log.warn {
+                    "next_player_id.txt value ${nextId.get()} is behind max existing player ID " +
+                        "$maxSeenId; correcting to $corrected to prevent file overwrites."
+                }
+                nextId.set(corrected)
+                persistNextId(corrected)
             }
             nameIndexReady.set(true)
         }
