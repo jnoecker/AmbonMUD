@@ -24,6 +24,10 @@ private val unlockedAchievementIdsType = object : TypeReference<Set<String>>() {
 private val achievementProgressType = object : TypeReference<Map<String, AchievementState>>() {}
 private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
 
+/** Deserialises JSON with a fallback to [default] on any parse failure. */
+private inline fun <T> safeReadJson(json: String, type: TypeReference<T>, default: T): T =
+    runCatching { questMapper.readValue(json, type) }.getOrDefault(default)
+
 class PostgresPlayerRepository(
     private val database: Database,
     private val metrics: GameMetrics = GameMetrics.noop(),
@@ -149,27 +153,12 @@ class PostgresPlayerRepository(
             mana = this[PlayersTable.mana],
             maxMana = this[PlayersTable.maxMana],
             gold = this[PlayersTable.gold],
-            activeQuests =
-                runCatching {
-                    questMapper.readValue(this[PlayersTable.activeQuests], activeQuestsType)
-                }.getOrDefault(emptyMap()),
-            completedQuestIds =
-                runCatching {
-                    questMapper.readValue(this[PlayersTable.completedQuestIds], completedQuestIdsType)
-                }.getOrDefault(emptySet()),
-            unlockedAchievementIds =
-                runCatching {
-                    questMapper.readValue(this[PlayersTable.unlockedAchievementIds], unlockedAchievementIdsType)
-                }.getOrDefault(emptySet()),
-            achievementProgress =
-                runCatching {
-                    questMapper.readValue(this[PlayersTable.achievementProgress], achievementProgressType)
-                }.getOrDefault(emptyMap()),
+            activeQuests = safeReadJson(this[PlayersTable.activeQuests], activeQuestsType, emptyMap()),
+            completedQuestIds = safeReadJson(this[PlayersTable.completedQuestIds], completedQuestIdsType, emptySet()),
+            unlockedAchievementIds = safeReadJson(this[PlayersTable.unlockedAchievementIds], unlockedAchievementIdsType, emptySet()),
+            achievementProgress = safeReadJson(this[PlayersTable.achievementProgress], achievementProgressType, emptyMap()),
             activeTitle = this[PlayersTable.activeTitle],
-            inbox =
-                runCatching {
-                    questMapper.readValue(this[PlayersTable.mailInbox], mailInboxType)
-                }.getOrDefault(emptyList()),
+            inbox = safeReadJson(this[PlayersTable.mailInbox], mailInboxType, emptyList()),
             guildId = this[PlayersTable.guildId],
             recallRoomId = this[PlayersTable.recallRoomId],
         ).toDomain()

@@ -131,17 +131,20 @@ class GrpcOutboundDispatcherTest {
         }
 
     @Test
-    fun `sessionId extension covers all OutboundEvent variants`() {
+    fun `sessionId property is accessible via OutboundEvent interface`() {
         val sid = SessionId(1L)
-        assertEquals(sid, OutboundEvent.SendText(sid, "").sessionId())
-        assertEquals(sid, OutboundEvent.SendInfo(sid, "").sessionId())
-        assertEquals(sid, OutboundEvent.SendError(sid, "").sessionId())
-        assertEquals(sid, OutboundEvent.SendPrompt(sid).sessionId())
-        assertEquals(sid, OutboundEvent.ShowLoginScreen(sid).sessionId())
-        assertEquals(sid, OutboundEvent.SetAnsi(sid, true).sessionId())
-        assertEquals(sid, OutboundEvent.Close(sid, "").sessionId())
-        assertEquals(sid, OutboundEvent.ClearScreen(sid).sessionId())
-        assertEquals(sid, OutboundEvent.ShowAnsiDemo(sid).sessionId())
+        val events: List<OutboundEvent> = listOf(
+            OutboundEvent.SendText(sid, ""),
+            OutboundEvent.SendInfo(sid, ""),
+            OutboundEvent.SendError(sid, ""),
+            OutboundEvent.SendPrompt(sid),
+            OutboundEvent.ShowLoginScreen(sid),
+            OutboundEvent.SetAnsi(sid, true),
+            OutboundEvent.Close(sid, ""),
+            OutboundEvent.ClearScreen(sid),
+            OutboundEvent.ShowAnsiDemo(sid),
+        )
+        events.forEach { assertEquals(sid, it.sessionId) }
     }
 
     @Test

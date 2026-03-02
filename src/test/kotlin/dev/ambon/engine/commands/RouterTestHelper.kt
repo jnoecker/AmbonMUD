@@ -2,7 +2,6 @@ package dev.ambon.engine.commands
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.EconomyConfig
-import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
@@ -10,6 +9,7 @@ import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.GuildSystem
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.MobRemovalCoordinator
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.ShopRegistry
@@ -50,7 +50,7 @@ internal fun buildTestRouter(
     groupSystem: GroupSystem? = null,
     guildSystem: GuildSystem? = null,
     onShutdown: suspend () -> Unit = {},
-    onMobSmited: (MobId) -> Unit = {},
+    mobRemovalCoordinator: MobRemovalCoordinator? = null,
     interEngineBus: InterEngineBus? = null,
     playerLocationIndex: PlayerLocationIndex? = null,
     engineId: String = "",
@@ -96,7 +96,7 @@ internal fun buildTestRouter(
         AdminHandler(
             ctx = ctx,
             onShutdown = onShutdown,
-            onMobSmited = onMobSmited,
+            mobRemovalCoordinator = mobRemovalCoordinator,
             interEngineBus = interEngineBus,
             engineId = engineId,
         ),

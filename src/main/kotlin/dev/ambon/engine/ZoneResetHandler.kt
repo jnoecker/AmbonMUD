@@ -6,7 +6,6 @@ import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
 import dev.ambon.engine.behavior.BehaviorTreeSystem
-import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import java.time.Clock
@@ -43,10 +42,9 @@ internal class ZoneResetHandler(
     private val players: PlayerRegistry,
     private val outbound: OutboundBus,
     private val worldState: WorldStateRegistry,
-    private val combatSystem: CombatSystem,
-    private val dialogueSystem: DialogueSystem,
-    private val behaviorTreeSystem: BehaviorTreeSystem,
+    private val mobRemovalCoordinator: MobRemovalCoordinator,
     private val mobSystem: MobSystem,
+    private val behaviorTreeSystem: BehaviorTreeSystem,
     private val gmcpEmitter: GmcpEmitter,
     private val clock: Clock,
 ) {
@@ -96,11 +94,7 @@ internal class ZoneResetHandler(
                 .toSet()
 
         for (mobId in zoneMobIds) {
-            combatSystem.onMobRemovedExternally(mobId)
-            dialogueSystem.onMobRemoved(mobId)
-            behaviorTreeSystem.onMobRemoved(mobId)
-            mobs.remove(mobId)
-            mobSystem.onMobRemoved(mobId)
+            mobRemovalCoordinator.removeMobExternally(mobId)
         }
 
         for (spawn in zoneMobSpawns) {

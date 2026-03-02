@@ -8,9 +8,15 @@ import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.MobRemovalCoordinator
+import dev.ambon.engine.MobSystem
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.behavior.BehaviorTreeSystem
+import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.status.StatusEffectRegistry
+import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.persistence.InMemoryPlayerRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -57,7 +63,7 @@ class CommandRouterAdminTest {
         items: ItemRegistry,
         outbound: OutboundBus,
         onShutdown: suspend () -> Unit = {},
-        onMobSmited: (MobId) -> Unit = {},
+        mobRemovalCoordinator: MobRemovalCoordinator? = null,
     ): CommandRouter {
         val world = dev.ambon.test.TestWorlds.testWorld
         val combat = CombatSystem(players, mobs, items, outbound)
@@ -69,7 +75,7 @@ class CommandRouterAdminTest {
             combat = combat,
             outbound = outbound,
             onShutdown = onShutdown,
-            onMobSmited = onMobSmited,
+            mobRemovalCoordinator = mobRemovalCoordinator,
         )
     }
 
@@ -433,8 +439,23 @@ class CommandRouterAdminTest {
             val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
-            var smitedMobId: MobId? = null
-            val router = makeRouter(players, mobs, items, outbound, onMobSmited = { smitedMobId = it })
+            val combat = CombatSystem(players, mobs, items, outbound)
+            val clock = java.time.Clock.systemUTC()
+            val coordinator = MobRemovalCoordinator(
+                combatSystem = combat,
+                dialogueSystem = DialogueSystem(mobs, players, outbound),
+                behaviorTreeSystem = BehaviorTreeSystem(world, mobs, players, outbound, clock),
+                mobs = mobs,
+                mobSystem = MobSystem(),
+                statusEffectSystem = StatusEffectSystem(
+                    StatusEffectRegistry(),
+                    players,
+                    mobs,
+                    outbound,
+                    clock,
+                ),
+            )
+            val router = makeRouter(players, mobs, items, outbound, mobRemovalCoordinator = coordinator)
 
             val staffSid = SessionId(1)
             loginStaff(players, staffSid, "Admin")
@@ -449,7 +470,6 @@ class CommandRouterAdminTest {
             drain(outbound)
 
             assertNull(mobs.get(mobId), "Mob should be removed from registry after smite")
-            assertEquals(mobId, smitedMobId, "onMobSmited callback should have been called with mob ID")
         }
 
     @Test
