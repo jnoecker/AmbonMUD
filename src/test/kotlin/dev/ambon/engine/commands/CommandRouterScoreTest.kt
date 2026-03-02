@@ -7,6 +7,7 @@ import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.CombatSystemConfig
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
@@ -28,7 +29,7 @@ class CommandRouterScoreTest {
             val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
-            val combat = CombatSystem(players, mobs, items, outbound, minDamage = 1, maxDamage = 4)
+            val combat = CombatSystem(players, mobs, items, outbound, config = CombatSystemConfig(minDamage = 1, maxDamage = 4))
             val router = buildTestRouter(world, players, mobs, items, combat, outbound)
 
             val sid = SessionId(1)
@@ -55,7 +56,7 @@ class CommandRouterScoreTest {
             val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
             val mobs = MobRegistry()
             val outbound = LocalOutboundBus()
-            val combat = CombatSystem(players, mobs, items, outbound, minDamage = 1, maxDamage = 4)
+            val combat = CombatSystem(players, mobs, items, outbound, config = CombatSystemConfig(minDamage = 1, maxDamage = 4))
             val router = buildTestRouter(world, players, mobs, items, combat, outbound)
 
             val sid = SessionId(2)

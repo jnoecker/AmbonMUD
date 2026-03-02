@@ -14,6 +14,28 @@ import dev.ambon.metrics.GameMetrics
 import java.time.Clock
 import java.util.Random
 
+data class CombatSystemConfig(
+    val tickMillis: Long = 1_000L,
+    val minDamage: Int = 1,
+    val maxDamage: Int = 4,
+    val strDivisor: Int = 3,
+    val dexDodgePerPoint: Int = 2,
+    val maxDodgePercent: Int = 30,
+    val threatMultiplierWarrior: Double = 1.5,
+    val threatMultiplierDefault: Double = 1.0,
+    val healingThreatMultiplier: Double = 0.5,
+    val groupXpBonusPerMember: Double = 0.10,
+    val detailedFeedbackEnabled: Boolean = false,
+    val detailedFeedbackRoomBroadcastEnabled: Boolean = false,
+)
+
+data class CombatSystemCallbacks(
+    val onMobRemoved: suspend (MobId, RoomId) -> Unit = { _, _ -> },
+    val onLevelUp: suspend (SessionId, Int) -> Unit = { _, _ -> },
+    val onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
+    val onRoomItemsChanged: suspend (RoomId) -> Unit = {},
+)
+
 class CombatSystem(
     private val players: PlayerRegistry,
     private val mobs: MobRegistry,
@@ -21,33 +43,23 @@ class CombatSystem(
     private val outbound: OutboundBus,
     private val clock: Clock = Clock.systemUTC(),
     private val rng: Random = Random(),
-    private val tickMillis: Long = 1_000L,
-    internal val minDamage: Int = 1,
-    internal val maxDamage: Int = 4,
-    private val detailedFeedbackEnabled: Boolean = false,
-    private val detailedFeedbackRoomBroadcastEnabled: Boolean = false,
-    private val onMobRemoved: suspend (MobId, RoomId) -> Unit = { _, _ -> },
     private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
-    private val onLevelUp: suspend (SessionId, Int) -> Unit = { _, _ -> },
-    private val strDivisor: Int = 3,
-    private val dexDodgePerPoint: Int = 2,
-    private val maxDodgePercent: Int = 30,
     private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
     private val statusEffects: StatusEffectSystem? = null,
-    private val onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
     private val groupSystem: GroupSystem? = null,
-    private val groupXpBonusPerMember: Double = 0.10,
-    private val threatMultiplierWarrior: Double = 1.5,
-    private val threatMultiplierDefault: Double = 1.0,
-    private val healingThreatMultiplier: Double = 0.5,
-    private val onRoomItemsChanged: suspend (RoomId) -> Unit = {},
+    private val config: CombatSystemConfig = CombatSystemConfig(),
+    private val callbacks: CombatSystemCallbacks = CombatSystemCallbacks(),
 ) {
     // Per-mob combat state (tracks tick timing)
     private data class MobCombatState(
         val mobId: MobId,
         var nextTickAtMs: Long,
     )
+
+    // Expose base damage range for display (e.g. score screen) without leaking full config.
+    internal val minDamage: Int get() = config.minDamage
+    internal val maxDamage: Int get() = config.maxDamage
 
     // Which mob each player is attacking
     private val playerTarget = mutableMapOf<SessionId, MobId>()
@@ -191,7 +203,7 @@ class CombatSystem(
         playerTarget[sessionId] = mobId
         dirtyNotifier.playerVitalsDirty(sessionId)
         if (!activeMobs.containsKey(mobId)) {
-            activeMobs[mobId] = MobCombatState(mobId = mobId, nextTickAtMs = now + tickMillis)
+            activeMobs[mobId] = MobCombatState(mobId = mobId, nextTickAtMs = now + config.tickMillis)
         }
         val multiplier = threatMultiplier(player)
         threatTable.addThreat(mobId, sessionId, multiplier)
@@ -228,7 +240,7 @@ class CombatSystem(
         sessionId: SessionId,
         healAmount: Int,
     ) {
-        val threat = healAmount.toDouble() * healingThreatMultiplier
+        val threat = healAmount.toDouble() * config.healingThreatMultiplier
         if (threat <= 0.0) return
 
         // Add healing threat to all mobs that are engaged with the healer's group members in the room
@@ -300,7 +312,7 @@ class CombatSystem(
                 val playerMods = statusEffects?.getPlayerStatMods(sessionId) ?: StatModifiers.ZERO
                 val playerStats = resolveEffectiveStats(player, playerBonuses, playerMods)
                 val playerAttack = playerBonuses.attack
-                val playerStrBonus = PlayerState.statBonus(playerStats.str, strDivisor)
+                val playerStrBonus = PlayerState.statBonus(playerStats.str, config.strDivisor)
                 val playerRoll = rollDamage()
                 val rawPlayerDamage = playerRoll + playerAttack + playerStrBonus
                 val preClampPlayerDamage = rawPlayerDamage - mob.armor
@@ -323,7 +335,7 @@ class CombatSystem(
 
                 val playerHitText = "You hit ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix."
                 outbound.send(OutboundEvent.SendText(sessionId, playerHitText))
-                if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
+                if (config.detailedFeedbackEnabled && config.detailedFeedbackRoomBroadcastEnabled) {
                     broadcastToRoom(
                         players,
                         outbound,
@@ -376,7 +388,7 @@ class CombatSystem(
             val targetBonuses = items.equipmentBonuses(targetSid)
             val targetMods = statusEffects?.getPlayerStatMods(targetSid) ?: StatModifiers.ZERO
             val targetStats = resolveEffectiveStats(target, targetBonuses, targetMods)
-            val dodgePct = (PlayerState.statBonus(targetStats.dex, 1) * dexDodgePerPoint).coerceIn(0, maxDodgePercent)
+            val dodgePct = (PlayerState.statBonus(targetStats.dex, 1) * config.dexDodgePerPoint).coerceIn(0, config.maxDodgePercent)
             if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
                 outbound.send(OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s attack!"))
             } else {
@@ -403,7 +415,7 @@ class CombatSystem(
                         "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
                     }
                 outbound.send(OutboundEvent.SendText(targetSid, mobHitText))
-                if (detailedFeedbackEnabled && detailedFeedbackRoomBroadcastEnabled) {
+                if (config.detailedFeedbackEnabled && config.detailedFeedbackRoomBroadcastEnabled) {
                     broadcastToRoom(
                         players,
                         outbound,
@@ -429,7 +441,7 @@ class CombatSystem(
                 outbound.send(OutboundEvent.SendPrompt(targetSid))
             }
 
-            mobState.nextTickAtMs = now + tickMillis
+            mobState.nextTickAtMs = now + config.tickMillis
             // Send prompt to all players targeting this mob
             for ((sid, mid) in playerTarget) {
                 if (mid == mobState.mobId) {
@@ -480,14 +492,14 @@ class CombatSystem(
 
     private fun threatMultiplier(player: PlayerState): Double =
         if (player.playerClass.equals("WARRIOR", ignoreCase = true)) {
-            threatMultiplierWarrior
+            config.threatMultiplierWarrior
         } else {
-            threatMultiplierDefault
+            config.threatMultiplierDefault
         }
 
     private fun rollDamage(
-        min: Int = minDamage,
-        max: Int = maxDamage,
+        min: Int = config.minDamage,
+        max: Int = config.maxDamage,
     ): Int {
         require(min > 0) { "min damage must be > 0" }
         require(max >= min) { "max damage must be >= min damage" }
@@ -502,7 +514,7 @@ class CombatSystem(
         clampedToMinimum: Boolean = false,
         shieldAbsorbed: Int = 0,
     ): String {
-        if (!detailedFeedbackEnabled) return ""
+        if (!config.detailedFeedbackEnabled) return ""
         val parts = mutableListOf<String>()
         var rollSummary = "roll $roll"
         if (attackBonus > 0) {
@@ -560,11 +572,11 @@ class CombatSystem(
         removeMobFromCombat(mob.id)
 
         mobs.remove(mob.id)
-        onMobRemoved(mob.id, mob.roomId)
+        callbacks.onMobRemoved(mob.id, mob.roomId)
         statusEffects?.onMobRemoved(mob.id)
         items.dropMobItemsToRoom(mob.id, mob.roomId)
         rollDrops(mob)
-        onRoomItemsChanged(mob.roomId)
+        callbacks.onRoomItemsChanged(mob.roomId)
         broadcastToRoom(players, outbound, mob.roomId, "${mob.name} dies.")
         grantKillGold(killerSessionId, mob)
         grantGroupKillXp(killerSessionId, mob)
@@ -572,7 +584,7 @@ class CombatSystem(
         // Fire quest/achievement callbacks for all contributors
         if (mob.templateKey.isNotEmpty()) {
             for (sid in contributors) {
-                onMobKilledByPlayer(sid, mob.templateKey)
+                callbacks.onMobKilledByPlayer(sid, mob.templateKey)
             }
         }
     }
@@ -616,7 +628,7 @@ class CombatSystem(
         val memberCount = recipients.size
         val groupBonus =
             if (memberCount > 1) {
-                1.0 + (memberCount - 1) * groupXpBonusPerMember
+                1.0 + (memberCount - 1) * config.groupXpBonusPerMember
             } else {
                 1.0
             }
@@ -636,7 +648,7 @@ class CombatSystem(
                 val levelUpMessage =
                     progression.buildLevelUpMessage(result, player.constitution, player.intelligence, player.playerClass)
                 outbound.send(OutboundEvent.SendText(sid, levelUpMessage))
-                onLevelUp(sid, result.newLevel)
+                callbacks.onLevelUp(sid, result.newLevel)
             }
         }
     }
