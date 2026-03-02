@@ -3,7 +3,6 @@ package dev.ambon.bus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.grpc.isControlPlane
-import dev.ambon.grpc.sessionId
 import dev.ambon.grpc.toDomain
 import dev.ambon.metrics.GameMetrics
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -85,7 +84,7 @@ class GrpcOutboundBus(
                                     log.debug { "Dropped SendPrompt for session ${event.sessionId} (gateway local queue full)" }
                                 else ->
                                     log.warn {
-                                        "Dropped ${event::class.simpleName} for session ${event.sessionId()} " +
+                                        "Dropped ${event::class.simpleName} for session ${event.sessionId} " +
                                             "(gateway local queue full)"
                                     }
                             }
@@ -102,7 +101,7 @@ class GrpcOutboundBus(
                             metrics.onGrpcForcedDisconnectDueToControlDeliveryFailure("gateway_local_queue_full_timeout")
                             notifyFailure(
                                 GrpcOutboundFailure.ControlPlaneDeliveryFailure(
-                                    sessionId = event.sessionId(),
+                                    sessionId = event.sessionId,
                                     eventType = event::class.simpleName ?: "UnknownOutboundEvent",
                                     reason = "gateway_local_queue_full_timeout",
                                 ),

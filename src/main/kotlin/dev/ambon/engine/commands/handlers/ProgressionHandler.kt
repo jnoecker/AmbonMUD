@@ -98,8 +98,7 @@ class ProgressionHandler(
     }
 
     private suspend fun handleSpells(sessionId: SessionId) {
-        if (!requireSystem(sessionId, abilitySystem != null, "Abilities", outbound)) return
-        val abilities = abilitySystem!!
+        val abilities = requireSystemOrNull(sessionId, abilitySystem, "Abilities", outbound) ?: return
         val known = abilities.knownAbilities(sessionId)
         if (known.isEmpty()) {
             outbound.send(OutboundEvent.SendInfo(sessionId, "You don't know any spells yet."))
