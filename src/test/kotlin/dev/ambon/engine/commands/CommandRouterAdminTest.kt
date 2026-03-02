@@ -555,4 +555,111 @@ class CommandRouterAdminTest {
                 "Expected SendError for unknown player. got=$outs",
             )
         }
+
+    // ── setlevel ───────────────────────────────────────────────────────────────
+
+    @Test
+    fun `setlevel updates target player level and xpTotal`() =
+        runTest {
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val items = ItemRegistry()
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val outbound = LocalOutboundBus()
+            val router = makeRouter(players, mobs, items, outbound)
+
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            loginStaff(players, staffSid, "Admin")
+            login(players, bobSid, "Bob")
+            drain(outbound)
+
+            router.handle(staffSid, Command.SetLevel("Bob", 10))
+            val outs = drain(outbound)
+
+            val bob = players.get(bobSid)!!
+            assertEquals(10, bob.level, "Bob's level should be 10 after setlevel")
+            assertTrue(bob.xpTotal > 0, "Bob's xpTotal should be > 0 after setlevel to 10")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.sessionId == bobSid },
+                "Target should receive notification. got=$outs",
+            )
+            assertTrue(
+                outs.any { it is OutboundEvent.SendInfo && it.sessionId == staffSid && it.text.contains("Bob") },
+                "Staff should see confirmation. got=$outs",
+            )
+        }
+
+    @Test
+    fun `setlevel rejects out-of-range level`() =
+        runTest {
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val items = ItemRegistry()
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val outbound = LocalOutboundBus()
+            val router = makeRouter(players, mobs, items, outbound)
+
+            val staffSid = SessionId(1)
+            val bobSid = SessionId(2)
+            loginStaff(players, staffSid, "Admin")
+            login(players, bobSid, "Bob")
+            drain(outbound)
+
+            router.handle(staffSid, Command.SetLevel("Bob", 99))
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == staffSid },
+                "Expected error for out-of-range level. got=$outs",
+            )
+            assertEquals(1, players.get(bobSid)!!.level, "Bob's level should be unchanged")
+        }
+
+    @Test
+    fun `setlevel for offline player emits error`() =
+        runTest {
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val items = ItemRegistry()
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val outbound = LocalOutboundBus()
+            val router = makeRouter(players, mobs, items, outbound)
+
+            val staffSid = SessionId(1)
+            loginStaff(players, staffSid, "Admin")
+            drain(outbound)
+
+            router.handle(staffSid, Command.SetLevel("Ghost", 10))
+            val outs = drain(outbound)
+
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == staffSid },
+                "Expected error for offline player. got=$outs",
+            )
+        }
+
+    @Test
+    fun `setlevel requires staff`() =
+        runTest {
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val items = ItemRegistry()
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
+            val mobs = MobRegistry()
+            val outbound = LocalOutboundBus()
+            val router = makeRouter(players, mobs, items, outbound)
+
+            val bobSid = SessionId(1)
+            login(players, bobSid, "Bob")
+            drain(outbound)
+
+            router.handle(bobSid, Command.SetLevel("Bob", 10))
+            val outs = drain(outbound)
+
+            assertEquals(1, players.get(bobSid)!!.level, "Non-staff should not be able to setlevel")
+            assertTrue(
+                outs.any { it is OutboundEvent.SendError && it.sessionId == bobSid },
+                "Non-staff should receive error. got=$outs",
+            )
+        }
 }

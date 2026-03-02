@@ -91,6 +91,8 @@ class PlayerRegistry(
     private val hashingContext: CoroutineContext = EmptyCoroutineContext,
     private val passwordHasher: PasswordHasher = BCryptPasswordHasher,
 ) {
+    val maxLevel: Int get() = progression.maxLevel
+
     private val players = mutableMapOf<SessionId, PlayerState>()
     private val roomMembers = mutableMapOf<RoomId, MutableSet<SessionId>>()
 
@@ -544,6 +546,29 @@ class PlayerRegistry(
         val result = activeProgression.grantXp(ps, amount)
         persistIfClaimed(ps)
         return result
+    }
+
+    suspend fun setLevel(
+        sessionId: SessionId,
+        level: Int,
+    ) {
+        val ps = players[sessionId] ?: return
+        val pc = PlayerClass.fromString(ps.playerClass)
+        val classHpPerLevel = pc?.hpPerLevel ?: progression.hpPerLevel
+        val classManaPerLevel = pc?.manaPerLevel ?: progression.manaPerLevel
+        val clampedLevel = level.coerceIn(1, progression.maxLevel)
+        val newXpTotal = progression.totalXpForLevel(clampedLevel)
+        val newMaxHp = progression.maxHpForLevel(clampedLevel, ps.constitution, classHpPerLevel)
+        val newMaxMana = progression.maxManaForLevel(clampedLevel, ps.intelligence, classManaPerLevel)
+        ps.xpTotal = newXpTotal
+        ps.level = clampedLevel
+        ps.baseMaxHp = newMaxHp
+        ps.maxHp = newMaxHp
+        ps.hp = ps.hp.coerceIn(1, newMaxHp)
+        ps.baseMana = newMaxMana
+        ps.maxMana = newMaxMana
+        ps.mana = ps.mana.coerceIn(0, newMaxMana)
+        persistIfClaimed(ps)
     }
 
     suspend fun setAnsiEnabled(

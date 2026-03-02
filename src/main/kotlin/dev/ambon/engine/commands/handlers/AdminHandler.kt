@@ -48,6 +48,7 @@ class AdminHandler(
         router.on<Command.Shutdown> { sid, _ -> handleShutdown(sid) }
         router.on<Command.Smite> { sid, cmd -> handleSmite(sid, cmd) }
         router.on<Command.Kick> { sid, cmd -> handleKick(sid, cmd) }
+        router.on<Command.SetLevel> { sid, cmd -> handleSetLevel(sid, cmd) }
         router.on<Command.Dispel> { sid, cmd -> handleDispel(sid, cmd) }
     }
 
@@ -226,6 +227,30 @@ class AdminHandler(
         }
         outbound.send(OutboundEvent.Close(targetSid, "Kicked by staff."))
         outbound.send(OutboundEvent.SendInfo(sessionId, "${cmd.playerName} has been kicked."))
+    }
+
+    private suspend fun handleSetLevel(
+        sessionId: SessionId,
+        cmd: Command.SetLevel,
+    ) {
+        if (!requireStaff(sessionId, players, outbound)) return
+        val targetSid = players.findSessionByName(cmd.playerName)
+        if (targetSid == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Player '${cmd.playerName}' is not online."))
+            return
+        }
+        val maxLevel = players.maxLevel
+        if (cmd.level !in 1..maxLevel) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Level must be between 1 and $maxLevel."))
+            return
+        }
+        players.withPlayer(targetSid) { targetPlayer ->
+            players.setLevel(targetSid, cmd.level)
+            outbound.send(OutboundEvent.SendInfo(targetSid, "A divine hand reshapes your fate. You are now level ${cmd.level}."))
+            outbound.send(OutboundEvent.SendPrompt(targetSid))
+            gmcpEmitter?.sendCharVitals(targetSid, targetPlayer)
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Set ${targetPlayer.name} to level ${cmd.level}."))
+        }
     }
 
     private suspend fun handleDispel(
