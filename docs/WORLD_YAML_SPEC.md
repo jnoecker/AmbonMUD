@@ -142,7 +142,7 @@ goldMax    = T.baseGoldMax + (L-1) * T.goldPerLevel
 
 Any explicit per-mob field overrides the computed value from the tier formula.
 
-Tier default values are operator-configurable via `application.yaml` under `ambonMUD.engine.mob.tiers`.
+Tier default values are operator-configurable via `application.yaml` under `ambonmud.engine.mob.tiers`.
 The built-in defaults are:
 
 | Tier     | baseHp | hpPerLevel | baseMinDmg | baseMaxDmg | dmgPerLevel | baseArmor | baseXp | xpPerLevel | baseGoldMin | baseGoldMax | goldPerLevel |
