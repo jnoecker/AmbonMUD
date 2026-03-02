@@ -313,18 +313,12 @@ class PlayerRegistry(
     ) {
         val xpTotal = boundRecord.xpTotal.coerceAtLeast(0L)
         val level = progression.computeLevel(xpTotal)
-        val (classHpPerLevel, classManaPerLevel) = progression.resolveClassScaling(boundRecord.playerClass)
-        val maxHp = progression.maxHpForLevel(level, boundRecord.constitution, classHpPerLevel)
-        val maxMana = progression.maxManaForLevel(level, boundRecord.intelligence, classManaPerLevel)
         val ps =
             PlayerState(
                 sessionId = sessionId,
                 name = boundRecord.name,
                 roomId = boundRecord.roomId,
                 playerId = boundRecord.id,
-                baseMaxHp = maxHp,
-                hp = if (boundRecord.hp <= 0) maxHp else boundRecord.hp.coerceIn(1, maxHp),
-                maxHp = maxHp,
                 strength = boundRecord.strength,
                 dexterity = boundRecord.dexterity,
                 constitution = boundRecord.constitution,
@@ -337,9 +331,6 @@ class PlayerRegistry(
                 xpTotal = xpTotal,
                 ansiEnabled = boundRecord.ansiEnabled,
                 isStaff = boundRecord.isStaff,
-                mana = boundRecord.mana.coerceIn(0, maxMana),
-                maxMana = maxMana,
-                baseMana = maxMana,
                 gold = boundRecord.gold,
                 createdAtEpochMs = boundRecord.createdAtEpochMs,
                 passwordHash = boundRecord.passwordHash,
@@ -352,6 +343,9 @@ class PlayerRegistry(
                 guildId = boundRecord.guildId,
                 recallRoomId = boundRecord.recallRoomId,
             )
+        progression.applyLevelStats(ps, level)
+        ps.hp = if (boundRecord.hp <= 0) ps.maxHp else boundRecord.hp.coerceIn(1, ps.maxHp)
+        ps.mana = boundRecord.mana.coerceIn(0, ps.maxMana)
         players[sessionId] = ps
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
         sessionByLowerName[ps.name.lowercase()] = sessionId
@@ -533,19 +527,10 @@ class PlayerRegistry(
         level: Int,
     ) {
         val ps = players[sessionId] ?: return
-        val (classHpPerLevel, classManaPerLevel) = progression.resolveClassScaling(ps.playerClass)
         val clampedLevel = level.coerceIn(1, progression.maxLevel)
-        val newXpTotal = progression.totalXpForLevel(clampedLevel)
-        val newMaxHp = progression.maxHpForLevel(clampedLevel, ps.constitution, classHpPerLevel)
-        val newMaxMana = progression.maxManaForLevel(clampedLevel, ps.intelligence, classManaPerLevel)
-        ps.xpTotal = newXpTotal
         ps.level = clampedLevel
-        ps.baseMaxHp = newMaxHp
-        ps.maxHp = newMaxHp
-        ps.hp = ps.hp.coerceIn(1, newMaxHp)
-        ps.baseMana = newMaxMana
-        ps.maxMana = newMaxMana
-        ps.mana = ps.mana.coerceIn(0, newMaxMana)
+        ps.xpTotal = progression.totalXpForLevel(clampedLevel)
+        progression.applyLevelStats(ps, clampedLevel)
         persistIfClaimed(ps)
     }
 
