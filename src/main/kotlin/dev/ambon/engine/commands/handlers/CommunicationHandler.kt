@@ -132,24 +132,14 @@ class CommunicationHandler(
         sessionId: SessionId,
         cmd: Command.Gossip,
     ) {
-        players.withPlayer(sessionId) { me ->
-            for (p in players.allPlayers()) {
-                if (p.sessionId == sessionId) {
-                    outbound.send(OutboundEvent.SendText(sessionId, "You gossip: ${cmd.message}"))
-                } else {
-                    outbound.send(OutboundEvent.SendText(p.sessionId, "[GOSSIP] ${me.name}: ${cmd.message}"))
-                }
-                gmcpEmitter?.sendCommChannel(p.sessionId, "gossip", me.name, cmd.message)
-            }
-            interEngineBus?.broadcast(
-                InterEngineMessage.GlobalBroadcast(
-                    broadcastType = BroadcastType.GOSSIP,
-                    senderName = me.name,
-                    text = cmd.message,
-                    sourceEngineId = engineId,
-                ),
-            )
-        }
+        broadcastGlobalChannel(
+            sessionId = sessionId,
+            channelName = "gossip",
+            selfVerb = "You gossip:",
+            otherPrefix = "[GOSSIP]",
+            message = cmd.message,
+            broadcastType = BroadcastType.GOSSIP,
+        )
     }
 
     private suspend fun handleShout(
@@ -172,14 +162,41 @@ class CommunicationHandler(
         sessionId: SessionId,
         cmd: Command.Ooc,
     ) {
+        broadcastGlobalChannel(
+            sessionId = sessionId,
+            channelName = "ooc",
+            selfVerb = "You say OOC:",
+            otherPrefix = "[OOC]",
+            message = cmd.message,
+        )
+    }
+
+    private suspend fun broadcastGlobalChannel(
+        sessionId: SessionId,
+        channelName: String,
+        selfVerb: String,
+        otherPrefix: String,
+        message: String,
+        broadcastType: BroadcastType? = null,
+    ) {
         players.withPlayer(sessionId) { me ->
             for (p in players.allPlayers()) {
                 if (p.sessionId == sessionId) {
-                    outbound.send(OutboundEvent.SendText(sessionId, "You say OOC: ${cmd.message}"))
+                    outbound.send(OutboundEvent.SendText(sessionId, "$selfVerb $message"))
                 } else {
-                    outbound.send(OutboundEvent.SendText(p.sessionId, "[OOC] ${me.name}: ${cmd.message}"))
+                    outbound.send(OutboundEvent.SendText(p.sessionId, "$otherPrefix ${me.name}: $message"))
                 }
-                gmcpEmitter?.sendCommChannel(p.sessionId, "ooc", me.name, cmd.message)
+                gmcpEmitter?.sendCommChannel(p.sessionId, channelName, me.name, message)
+            }
+            if (broadcastType != null) {
+                interEngineBus?.broadcast(
+                    InterEngineMessage.GlobalBroadcast(
+                        broadcastType = broadcastType,
+                        senderName = me.name,
+                        text = message,
+                        sourceEngineId = engineId,
+                    ),
+                )
             }
         }
     }
