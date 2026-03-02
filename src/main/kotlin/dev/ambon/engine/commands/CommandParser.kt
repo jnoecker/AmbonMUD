@@ -114,6 +114,11 @@ sealed interface Command {
         val playerName: String,
     ) : Command
 
+    data class SetLevel(
+        val playerName: String,
+        val level: Int,
+    ) : Command
+
     data class Cast(
         val spellName: String,
         val target: String?,
@@ -603,6 +608,18 @@ object CommandParser {
 
         // kick
         requiredArg(line, listOf("kick"), "kick <player>", { Command.Kick(it) })?.let { return it }
+
+        // setlevel
+        matchPrefix(line, listOf("setlevel")) { rest ->
+            val parts = rest.trim().split(Regex("\\s+"), limit = 2)
+            val levelStr = parts.getOrNull(1)?.trim()
+            val level = levelStr?.toIntOrNull()
+            when {
+                parts[0].isBlank() || levelStr == null -> Command.Invalid(line, "setlevel <player> <level>")
+                level == null -> Command.Invalid(line, "setlevel <player> <level>")
+                else -> Command.SetLevel(parts[0], level)
+            }
+        }?.let { return it }
 
         // phase/layer — switch zone instance
         matchPrefix(line, listOf("phase", "layer")) { rest ->
