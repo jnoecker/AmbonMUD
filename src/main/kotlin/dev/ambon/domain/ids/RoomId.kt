@@ -1,5 +1,9 @@
 package dev.ambon.domain.ids
 
+/** Qualifies [localId] with [zone] if it doesn't already contain a zone prefix. */
+fun qualifyId(zone: String, localId: String): String =
+    if (':' in localId) localId else "$zone:$localId"
+
 @JvmInline
 value class RoomId(
     val value: String,
