@@ -6,10 +6,10 @@ enum class PlayerClass(
     val manaPerLevel: Int,
     val debugOnly: Boolean = false,
 ) {
-    WARRIOR("Warrior", hpPerLevel = 3, manaPerLevel = 2),
-    MAGE("Mage", hpPerLevel = 1, manaPerLevel = 8),
-    CLERIC("Cleric", hpPerLevel = 2, manaPerLevel = 6),
-    ROGUE("Rogue", hpPerLevel = 2, manaPerLevel = 4),
+    WARRIOR("Warrior", hpPerLevel = 8, manaPerLevel = 4),
+    MAGE("Mage", hpPerLevel = 4, manaPerLevel = 16),
+    CLERIC("Cleric", hpPerLevel = 6, manaPerLevel = 12),
+    ROGUE("Rogue", hpPerLevel = 5, manaPerLevel = 8),
     SWARM("Swarm", hpPerLevel = 2, manaPerLevel = 3, debugOnly = true),
     ;
 
