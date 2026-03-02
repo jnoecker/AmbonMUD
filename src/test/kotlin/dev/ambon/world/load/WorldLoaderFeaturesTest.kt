@@ -2,10 +2,9 @@ package dev.ambon.domain.world.load
 
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
-import dev.ambon.domain.world.ContainerState
 import dev.ambon.domain.world.Direction
-import dev.ambon.domain.world.DoorState
 import dev.ambon.domain.world.LeverState
+import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.RoomFeature
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -32,7 +31,7 @@ class WorldLoaderFeaturesTest {
         // Door feature should be attached to entrance room
         val door = entrance.features.filterIsInstance<RoomFeature.Door>().single()
         assertEquals(Direction.NORTH, door.direction)
-        assertEquals(DoorState.LOCKED, door.initialState)
+        assertEquals(LockableState.LOCKED, door.initialState)
         assertEquals(ItemId("ok_features:brass_key"), door.keyItemId)
         assertFalse(door.keyConsumed)
         assertTrue(door.resetWithZone)
@@ -47,7 +46,7 @@ class WorldLoaderFeaturesTest {
         val container = storeroom.features.filterIsInstance<RoomFeature.Container>().single()
         assertEquals("a supply chest", container.displayName)
         assertEquals("chest", container.keyword)
-        assertEquals(ContainerState.CLOSED, container.initialState)
+        assertEquals(LockableState.CLOSED, container.initialState)
         assertNull(container.keyItemId)
         assertFalse(container.keyConsumed)
         assertTrue(container.resetWithZone)
