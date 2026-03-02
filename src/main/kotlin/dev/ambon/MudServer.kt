@@ -12,6 +12,7 @@ import dev.ambon.bus.RedisOutboundBus
 import dev.ambon.config.AppConfig
 import dev.ambon.config.PersistenceBackend
 import dev.ambon.config.ShardingRegistryType
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
@@ -215,6 +216,7 @@ class MudServer(
             resources = config.world.resources,
             tiers = config.engine.mob.tiers,
             zoneFilter = zoneFilter,
+            startRoom = config.world.startRoom?.let { RoomId(it) },
         )
     private val worldState = WorldStateRegistry(world)
     private val tickMillis: Long = config.server.tickMillis

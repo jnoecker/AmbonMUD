@@ -40,7 +40,7 @@ mobs:
             next: advice
           - text: "Goodbye."
       about_portals:
-        text: "Each archway leads to a different realm. The northern passage leads to ancient ruins, perfect for seasoned warriors. To the south lies a peaceful forest glade — ideal for those just starting their journey. East leads to a scholar's retreat."
+        text: "Each archway leads to a different realm. The northern passage opens into the fae wood — home of Aineroia, Lady of the Fae Wood, who shaped many of the magical creatures of this world. To the south lies a peaceful forest glade — ideal for those just starting their journey. East leads to a scholar's retreat."
         choices:
           - text: "What about the western passages?"
             next: western
@@ -69,7 +69,7 @@ rooms:
     description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving—some blank, some half-formed, all waiting for destinations. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.'"
     exits:
       e: noecker_resume:lobby
-      n: demo_ruins:caravan_gate
+      n: aineroia_cottage:before_gate
       s: tutorial_glade:forest_gate
       w: wayfinder_gallery
 

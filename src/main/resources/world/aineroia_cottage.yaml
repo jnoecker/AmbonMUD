@@ -1,0 +1,314 @@
+zone: aineroia_cottage
+lifespan: 0
+startRoom: before_gate
+
+mobs:
+  aineroia:
+    name: "Aineroia, Lady of the Fae Wood"
+    room: study
+    tier: boss
+    level: 50
+    hp: 999999
+    minDamage: 100
+    maxDamage: 200
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+
+  fae_sprite_east:
+    name: "a wandering fae sprite"
+    room: north_magical_plants
+    tier: weak
+    level: 3
+    respawnSeconds: 120
+    behavior:
+      template: wander
+
+  fae_sprite_west:
+    name: "a wandering fae sprite"
+    room: west_garden
+    tier: weak
+    level: 3
+    respawnSeconds: 120
+    behavior:
+      template: wander
+
+  phantom_cat:
+    name: "a phantom cat"
+    room: west_sitting_room
+    tier: weak
+    level: 4
+    respawnSeconds: 180
+    behavior:
+      template: wander
+
+  vinemaw:
+    name: "a vinemaw"
+    room: poison_garden
+    tier: standard
+    level: 5
+    respawnSeconds: 300
+    behavior:
+      template: wander_aggro
+      params:
+        aggroMessage: "The vinemaw snaps toward you with barbed tendrils!"
+
+items:
+  moonpetal:
+    displayName: "a moonpetal herb"
+    keyword: "moonpetal"
+    description: "A luminescent herb with wide, cool-to-the-touch petals. It smells faintly of night air and restores a measure of vitality when consumed."
+    consumable: true
+    onUse:
+      healHp: 12
+    room: west_herb_garden
+    basePrice: 15
+
+  phoenix_feather:
+    displayName: "a phoenix feather"
+    keyword: "feather"
+    description: "A long tail feather in deepest crimson and molten gold, still faintly warm. It doesn't burn — but something inside it does."
+    room: east_flower_garden
+    basePrice: 30
+
+  corpsecap_spore:
+    displayName: "a corpsecap spore"
+    keyword: "spore"
+    description: "A small glass capsule containing a single dried spore from a corpsecap mushroom. Labeled: 'DO NOT INHALE'. Probably useful for something terrible."
+    room: poison_garden
+    basePrice: 5
+
+rooms:
+  before_gate:
+    title: "Before the Gate"
+    description: "Twisted ironwood posts rise from tangled roots to support a gate of woven briars, its arch laced with tiny white blossoms that never fall. Beyond the gate, a mossy path winds toward a cottage barely glimpsed through ancient oaks. The air smells of rain and old magic."
+    exits:
+      n: south_pathway
+      s: ambon_hub:hall_of_portals
+
+  south_pathway:
+    title: "Southern Path"
+    description: "A mossy path of flat stones meanders through the fae wood. Luminescent mushrooms line the edges in hues of blue and violet. The trees here have no names — they predate naming. The gate is to the south; the path winds further north."
+    exits:
+      n: north_pathway
+      w: east_garden
+      e: south_magical_plants
+      s: before_gate
+
+  north_pathway:
+    title: "Northern Path"
+    description: "The path widens as the cottage comes fully into view ahead. Warm light fills the windows, and cascading ivy covers the stone walls. To the west, a pond catches the strange fae-wood light; to the east, a garden of impossible plants blooms in colors with no names."
+    exits:
+      n: porch
+      w: beside_pond
+      e: north_magical_plants
+      s: south_pathway
+
+  west_garden:
+    title: "Western Garden"
+    description: "A wild garden grows with studied abandon — flowering vines weave through low stone borders that might once have been walls. Nothing here is tamed, but nothing is uncared for either. The air hums faintly, as if the soil itself is thinking."
+    exits:
+      n: small_pond
+      e: east_garden
+
+  east_garden:
+    title: "Eastern Garden"
+    description: "A garden of herbs and wild grasses, crossed by a narrow drainage channel of shimmering water. The soil is dark and rich, smelling faintly of copper and loam. Bees that are not quite bees drift between blossoms."
+    exits:
+      n: beside_pond
+      w: west_garden
+      e: south_pathway
+
+  small_pond:
+    title: "A Small Pond"
+    description: "A glass-still pond fills a natural hollow in the cottage grounds. The bottom is invisible — not from depth, but from an inky darkness that coils like dropped ink. Fireflies circle the edge without ever settling."
+    exits:
+      n: west_flower_garden
+      e: beside_pond
+      s: west_garden
+
+  beside_pond:
+    title: "Beside the Pond"
+    description: "The air beside the pond is cool and heavy with the scent of waterlilies. A low stone bench sits here, worn smooth by centuries of use. The cottage looms to the north, its ivy-draped walls broken by warm lit windows."
+    exits:
+      n: east_flower_garden
+      w: small_pond
+      e: north_pathway
+      s: east_garden
+
+  north_magical_plants:
+    title: "Northern Magical Garden"
+    description: "A raised garden bed holds plants found nowhere else in the mortal world: luminous fern fronds that retract when approached, blossoms with shifting geometric petals, and something that breathes. The air carries a faint electric charge."
+    exits:
+      n: front_porch
+      w: north_pathway
+      s: south_magical_plants
+
+  south_magical_plants:
+    title: "Southern Magical Garden"
+    description: "This portion of the magical garden spills toward the wild wood, less ordered and more alive. A vine with silver leaves coils and uncoils slowly, and tiny orbs of light drift just above the soil as if pollinating invisible blooms."
+    exits:
+      n: north_magical_plants
+      w: south_pathway
+
+  west_flower_garden:
+    title: "Western Flower Garden"
+    description: "An explosion of color — beds of deep violet moonflowers alternate with silver starbloom and crimson foxbell. The blossoms are enormous, healthy beyond reason, and several track your movement with unhurried curiosity."
+    exits:
+      n: west_sitting_room
+      e: east_flower_garden
+      s: small_pond
+
+  east_flower_garden:
+    title: "Eastern Flower Garden"
+    description: "More flowers bloom here in impossible profusion, tended by unseen hands. A stone birdbath filled with shimmering water sits at the center; a phoenix feather floats on the surface, still warm to the touch."
+    exits:
+      n: east_sitting_room
+      w: west_flower_garden
+      e: porch
+      s: beside_pond
+
+  porch:
+    title: "The Cottage Porch"
+    description: "A covered porch of white birchwood spans the cottage front, its roof hung with wind chimes of crystal and bone. Ferns grow in clay pots along the rail. The heavy cottage door stands slightly ajar, letting out the smell of woodsmoke and herbs."
+    exits:
+      n: foyer
+      w: east_flower_garden
+      e: front_porch
+      s: north_pathway
+
+  front_porch:
+    title: "Front Porch"
+    description: "The eastern end of the porch is sheltered by a trellis dripping with night-blooming jasmine. A rocking chair sits here, a half-read book balanced on its arm, as though someone stepped away moments ago and expected to return."
+    exits:
+      n: study
+      w: porch
+      s: north_magical_plants
+
+  west_sitting_room:
+    title: "Western Sitting Room"
+    description: "Woven rugs cover the stone floor, and shelves hold curious objects — a glass globe containing a perpetual miniature storm, a jar of preserved fae wings, a stuffed creature with too many eyes. Everything is arranged with obvious care and no obvious logic."
+    exits:
+      n: west_bedroom
+      e: east_sitting_room
+      s: west_flower_garden
+
+  east_sitting_room:
+    title: "Eastern Sitting Room"
+    description: "A deep hearthrug anchors two high-backed chairs near a cold fireplace. Above the mantle hangs a painting showing a sunrise over a city that doesn't exist — the sky is the wrong color, violet at the top fading to gold, and the light shifts when you look directly at it."
+    exits:
+      n: east_bedroom
+      w: west_sitting_room
+      e: foyer
+      s: east_flower_garden
+
+  foyer:
+    title: "Foyer"
+    description: "The foyer is modest and warm. Hooks on the wall hold a velvet cloak and a traveling staff twisted from something that was not quite wood. A hall leads north into the cottage, sitting rooms extend to the west, and the study is to the east. The front door is to the south."
+    exits:
+      n: hall
+      w: east_sitting_room
+      e: study
+      s: porch
+
+  study:
+    title: "Study"
+    description: "The study is cramped with consequence — floor-to-ceiling shelves of grimoires, star charts pinned over older star charts, a broad desk scattered with correspondence in languages not yet invented. Candles burn without melting. A smell of ozone and old books fills the air."
+    exits:
+      w: foyer
+      s: front_porch
+
+  west_bedroom:
+    title: "Western Bedroom"
+    description: "A guest bedroom kept with quiet precision. The bed is made tight as a drum, the pillow undented. A porcelain basin sits on the dresser, filled with water that doesn't ripple. A pressed flower from an unknown species hangs framed above the headboard."
+    exits:
+      n: west_kitchen
+      e: east_bedroom
+      s: west_sitting_room
+
+  east_bedroom:
+    title: "Eastern Bedroom"
+    description: "The second bedroom is less formal, with a soft quilt in shades of deep blue and silver. A window gives out onto the herb garden. A small writing desk holds an unfinished letter; the ink on the quill never dries."
+    exits:
+      n: center_kitchen
+      w: west_bedroom
+      e: hall
+      s: east_sitting_room
+
+  hall:
+    title: "The Hall"
+    description: "A central hall of polished dark wood connects the rooms of the cottage's middle floor. The floorboards don't creak, even underfoot. Doors lead west to the bedrooms and east to the closet. The kitchen is to the north; the foyer waits to the south."
+    exits:
+      n: east_kitchen
+      w: east_bedroom
+      e: closet
+      s: foyer
+
+  closet:
+    title: "Closet"
+    description: "A narrow closet lined with cedar shelves. Stacks of cloth, rolled scrolls, labeled jars, and miscellany crowd every surface. There is more here than the closet seems to be able to hold."
+    exits:
+      n: pantry
+      w: hall
+
+  west_kitchen:
+    title: "Western Kitchen"
+    description: "The western end of the long kitchen is given to prep work — a broad wooden block, a rack of unusual knives, and bundles of hanging herbs. The herbs sway in no detectable draft, their scent shifting from moment to moment."
+    exits:
+      n: west_herb_garden
+      e: center_kitchen
+      s: west_bedroom
+
+  center_kitchen:
+    title: "Center Kitchen"
+    description: "The heart of the kitchen holds the main cookfire, a clay oven built into the chimney wall. A cauldron of something simmers on an unseen heat, filling the room with steam that smells of forest rain and copper."
+    exits:
+      n: east_herb_garden
+      w: west_kitchen
+      e: east_kitchen
+      s: east_bedroom
+
+  east_kitchen:
+    title: "Eastern Kitchen"
+    description: "The kitchen's eastern section serves as both workspace and passage. The back door leads north to the porch and herb gardens. Shelves hold covered crocks of preserved things in colors that don't occur in nature."
+    exits:
+      n: back_porch
+      w: center_kitchen
+      e: pantry
+      s: hall
+
+  pantry:
+    title: "Pantry"
+    description: "The pantry is cool and dim, lined with shelves from floor to ceiling. Jars of preserved herbs, dried ingredients, and labeled tinctures fill every space. A few glow softly. The organization makes sense only to its owner."
+    exits:
+      w: east_kitchen
+      s: closet
+
+  west_herb_garden:
+    title: "Western Herb Garden"
+    description: "Neatly tended rows of herbs grow in raised beds of dark, rich earth. Many are recognizable — thyme, rosemary, lavender — but some are not. Small labels stake the ground before each unfamiliar plant, written in a language you can almost read."
+    exits:
+      e: east_herb_garden
+      s: west_kitchen
+
+  east_herb_garden:
+    title: "Eastern Herb Garden"
+    description: "The eastern beds are given over to stranger varieties — silvermoss, nightshade hybrids, a flowering root that only blooms after midnight. The air is pungent and faintly dizzying, as though breathing it is a mild enchantment in itself."
+    exits:
+      w: west_herb_garden
+      e: back_porch
+      s: center_kitchen
+
+  back_porch:
+    title: "Back Porch"
+    description: "The back porch doubles as a workspace — bundles of drying herbs hang from the rafters, clay pots of specimens line the rail, and a worn workbench holds mortar, pestle, and things half-processed. The herb gardens spread to either side."
+    exits:
+      w: east_herb_garden
+      e: poison_garden
+      s: east_kitchen
+
+  poison_garden:
+    title: "Poisonous Plant Garden"
+    description: "Clearly marked by a low iron fence and a sign reading 'HEED', this bed is beautiful and dangerous in equal measure. Nightbloom, corpsecap, vinemaw vine, and others whose names haven't been written grow here in deliberate isolation. Even the air is a little wrong."
+    exits:
+      w: back_porch

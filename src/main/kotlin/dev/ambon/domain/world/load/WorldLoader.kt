@@ -60,6 +60,7 @@ object WorldLoader {
         paths: List<String>,
         tiers: MobTiersConfig = MobTiersConfig(),
         zoneFilter: Set<String> = emptySet(),
+        startRoomOverride: RoomId? = null,
     ): World {
         if (paths.isEmpty()) throw WorldLoadException("No zone files provided")
 
@@ -87,8 +88,8 @@ object WorldLoader {
         val mergedQuests = mutableListOf<QuestDef>()
         val zoneLifespansMinutes = LinkedHashMap<String, Long?>()
 
-        // If multiple files provide startRoom, pick first file’s startRoom as world start.
-        val worldStart = normalizeId(files.first().zone, files.first().startRoom)
+        // startRoomOverride wins; otherwise fall back to first file’s declared startRoom.
+        val worldStart = startRoomOverride ?: normalizeId(files.first().zone, files.first().startRoom)
 
         for (file in files) {
             val zone = file.zone.trim()

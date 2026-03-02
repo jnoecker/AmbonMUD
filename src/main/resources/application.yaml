@@ -87,16 +87,10 @@ ambonMUD:
     inboundBudgetMs: 30
 
   world:
-    resources:
-      - world/tutorial_glade.yaml
-      - world/ambon_hub.yaml
-      - world/noecker_resume.yaml
-      - world/demo_ruins.yaml
-      - world/low_training_marsh.yaml
-      - world/low_training_highlands.yaml
-      - world/low_training_mines.yaml
-      - world/low_training_barrens.yaml
-      - world/labyrinth.yaml
+    startRoom: "ambon_hub:hall_of_portals"
+    # resources: omitted — all zone files under classpath world/ are auto-discovered.
+    # Provide an explicit list here to restrict which zones are loaded (useful for
+    # lightweight deploys or ENGINE-mode zone partitioning).
 
   persistence:
     backend: YAML
