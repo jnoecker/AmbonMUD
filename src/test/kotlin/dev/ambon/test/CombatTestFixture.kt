@@ -7,6 +7,8 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.CombatSystemCallbacks
+import dev.ambon.engine.CombatSystemConfig
 import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
@@ -64,27 +66,31 @@ class CombatTestFixture(
             outbound = outbound,
             clock = clock,
             rng = rng,
-            tickMillis = tickMillis,
-            minDamage = minDamage,
-            maxDamage = maxDamage,
-            detailedFeedbackEnabled = detailedFeedbackEnabled,
-            detailedFeedbackRoomBroadcastEnabled = detailedFeedbackRoomBroadcastEnabled,
-            onMobRemoved = onMobRemoved,
             progression = progression,
             metrics = metrics,
-            onLevelUp = onLevelUp,
-            strDivisor = strDivisor,
-            dexDodgePerPoint = dexDodgePerPoint,
-            maxDodgePercent = maxDodgePercent,
             dirtyNotifier = dirtyNotifier,
             statusEffects = statusEffects,
-            onMobKilledByPlayer = onMobKilledByPlayer,
             groupSystem = groupSystem,
-            groupXpBonusPerMember = groupXpBonusPerMember,
-            threatMultiplierWarrior = threatMultiplierWarrior,
-            threatMultiplierDefault = threatMultiplierDefault,
-            healingThreatMultiplier = healingThreatMultiplier,
-            onRoomItemsChanged = onRoomItemsChanged,
+            config = CombatSystemConfig(
+                tickMillis = tickMillis,
+                minDamage = minDamage,
+                maxDamage = maxDamage,
+                strDivisor = strDivisor,
+                dexDodgePerPoint = dexDodgePerPoint,
+                maxDodgePercent = maxDodgePercent,
+                threatMultiplierWarrior = threatMultiplierWarrior,
+                threatMultiplierDefault = threatMultiplierDefault,
+                healingThreatMultiplier = healingThreatMultiplier,
+                groupXpBonusPerMember = groupXpBonusPerMember,
+                detailedFeedbackEnabled = detailedFeedbackEnabled,
+                detailedFeedbackRoomBroadcastEnabled = detailedFeedbackRoomBroadcastEnabled,
+            ),
+            callbacks = CombatSystemCallbacks(
+                onMobRemoved = onMobRemoved,
+                onLevelUp = onLevelUp,
+                onMobKilledByPlayer = onMobKilledByPlayer,
+                onRoomItemsChanged = onRoomItemsChanged,
+            ),
         )
 
     suspend fun loginPlayer(

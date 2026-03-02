@@ -6,6 +6,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.CombatSystemConfig
 import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
@@ -34,7 +35,7 @@ class AbilityTestFixture(
             outbound = outbound,
             clock = clock,
             rng = rng,
-            tickMillis = 1_000L,
+            config = CombatSystemConfig(tickMillis = 1_000L),
         )
 
     fun buildAbilitySystem(
