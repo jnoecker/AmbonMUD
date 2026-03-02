@@ -1,0 +1,696 @@
+zone: pbrae
+lifespan: 0
+startRoom: gravel_road
+
+mobs:
+  forest_deer:
+    name: "a white-tailed deer"
+    room: forest_trail
+    tier: weak
+    level: 2
+    xpReward: 10
+    goldMin: 0
+    goldMax: 2
+    respawnSeconds: 180
+    behavior:
+      template: wander
+
+  mountain_hawk:
+    name: "a mountain hawk"
+    room: mountain_path
+    tier: weak
+    level: 3
+    respawnSeconds: 240
+    behavior:
+      template: wander
+
+  red_hen:
+    name: "a plump red hen"
+    room: coop_henhouse
+    tier: weak
+    level: 1
+    xpReward: 5
+    goldMin: 0
+    goldMax: 1
+    respawnSeconds: 60
+    behavior:
+      template: wander
+
+  white_hen:
+    name: "a fluffy white hen"
+    room: coop_outer_run
+    tier: weak
+    level: 1
+    xpReward: 5
+    goldMin: 0
+    goldMax: 1
+    respawnSeconds: 60
+    behavior:
+      template: wander
+
+  mallard_duck:
+    name: "a waddling mallard duck"
+    room: coop_duck_pond
+    tier: weak
+    level: 1
+    xpReward: 5
+    goldMin: 0
+    goldMax: 1
+    respawnSeconds: 60
+    behavior:
+      template: wander
+
+  pekin_duck:
+    name: "a white Pekin duck"
+    room: coop_duck_nook
+    tier: weak
+    level: 1
+    xpReward: 5
+    goldMin: 0
+    goldMax: 1
+    respawnSeconds: 60
+    behavior:
+      template: wander
+
+  gobbler:
+    name: "a gobbling bronze turkey"
+    room: coop_turkey_hall
+    tier: weak
+    level: 2
+    respawnSeconds: 90
+    behavior:
+      template: wander
+
+  hen_turkey:
+    name: "a speckled turkey hen"
+    room: coop_turkey_roost
+    tier: weak
+    level: 1
+    respawnSeconds: 90
+    behavior:
+      template: wander
+
+  royal_rooster:
+    name: "the Royal Rooster, Lord of the Coop"
+    room: coop_rooster_den
+    tier: standard
+    level: 3
+    respawnSeconds: 180
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The Royal Rooster puffs up, spreads his magnificent wings, and CROWS with ear-splitting authority!"
+
+  royal_cook:
+    name: "the Royal Cook"
+    room: kitchen_main
+    tier: weak
+    level: 1
+    goldMin: 0
+    goldMax: 5
+    respawnSeconds: 300
+    behavior:
+      template: wander
+
+  castle_servant:
+    name: "a loyal castle servant"
+    room: servant_quarters
+    tier: weak
+    level: 1
+    goldMin: 1
+    goldMax: 3
+    respawnSeconds: 300
+    behavior:
+      template: wander
+
+  creeper:
+    name: "a hissing Creeper"
+    room: peanut_nether
+    tier: standard
+    level: 5
+    respawnSeconds: 120
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "Ssssssss..."
+
+  rocket_car:
+    name: "a rocket-powered arena car"
+    room: peanut_rocket_arena
+    tier: weak
+    level: 3
+    respawnSeconds: 120
+    behavior:
+      template: wander
+
+  divine_guardian:
+    name: "a divine guardian of Olympus"
+    room: peanut_olympus
+    tier: elite
+    level: 8
+    respawnSeconds: 300
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The guardian raises its golden spear! 'None may pass without the King's seal!'"
+
+  penguin_guard:
+    name: "a waddling penguin guard"
+    room: braelynn_penguin_palace
+    tier: weak
+    level: 1
+    respawnSeconds: 120
+    behavior:
+      template: wander
+
+  baby_penguin:
+    name: "an adorable baby penguin"
+    room: braelynn_penguin_nursery
+    tier: weak
+    level: 1
+    xpReward: 1
+    goldMin: 0
+    goldMax: 0
+    respawnSeconds: 60
+    behavior:
+      template: wander
+
+  stuffie_guardian:
+    name: "a magical giant stuffed bear"
+    room: braelynn_stuffie_grove
+    tier: standard
+    level: 2
+    respawnSeconds: 180
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The stuffed bear's button eyes glow fierce gold! 'These stuffies are MINE to protect!'"
+
+  roblox_noob:
+    name: "a friendly Roblox noob"
+    room: braelynn_roblox_plaza
+    tier: weak
+    level: 1
+    xpReward: 5
+    goldMin: 1
+    goldMax: 5
+    respawnSeconds: 60
+    behavior:
+      template: wander
+
+items:
+  royal_egg:
+    displayName: "a golden royal egg"
+    keyword: "egg"
+    description: "A warm, perfectly smooth egg with a faint golden sheen. It pulses gently, as if something wonderful is about to hatch. Eating it restores vigor."
+    consumable: true
+    onUse:
+      healHp: 20
+    room: coop_egg_vault
+    basePrice: 25
+
+  rooster_feather:
+    displayName: "a magnificent tail feather"
+    keyword: "feather"
+    description: "An iridescent tail feather from the Royal Rooster himself — deep crimson at the base fading to burnished gold at the tip. A symbol of the Kingdom of PBrae."
+    room: coop_rooster_den
+    basePrice: 10
+
+  mountain_herb:
+    displayName: "a sprig of mountain herb"
+    keyword: "herb"
+    description: "A small bundle of hardy herbs found growing in the rocky soil of the mountain path. Their crisp, bright scent is immediately refreshing."
+    consumable: true
+    onUse:
+      healHp: 8
+    room: mountain_path
+    basePrice: 12
+
+  minecraft_diamond:
+    displayName: "a glittering Minecraft diamond"
+    keyword: "diamond"
+    description: "A perfectly cubic, brilliant blue diamond mined from deep beneath King Peanut's dream realm. It catches light and throws tiny rainbow prisms on the walls."
+    room: peanut_diamond_mine
+    basePrice: 50
+
+  rocket_boost:
+    displayName: "a rocket boost canister"
+    keyword: "canister"
+    description: "A pressurized orange canister stamped with a rocket car logo. Press the button and hold on tight — the rush of boost energy is practically a sugar rush."
+    consumable: true
+    onUse:
+      healHp: 15
+    room: peanut_rocket_arena
+    basePrice: 20
+
+  smite_coin:
+    displayName: "a divine Smite gold coin"
+    keyword: "coin"
+    description: "A heavy gold coin stamped with the faces of gods on both sides — they seem to change depending on the angle. Clearly minted on Mount Olympus."
+    room: peanut_olympus
+    basePrice: 100
+
+  penguin_plushie:
+    displayName: "a soft penguin plushie"
+    keyword: "plushie"
+    description: "A pudgy, impossibly soft stuffed penguin wearing a tiny golden crown. It squeaks when squeezed. Braelynn has dozens, but this one is clearly special."
+    slot: hand
+    armor: 1
+    room: braelynn_penguin_nursery
+    basePrice: 30
+
+  royal_goblet:
+    displayName: "the Royal Goblet of PBrae"
+    keyword: "goblet"
+    description: "A golden goblet encrusted with tiny jewels spelling out 'P' on one side and 'B' on the other, intertwined with a crown motif. The vessel of the kingdom."
+    room: braelynn_throne
+    basePrice: 150
+
+shops:
+  castle_market:
+    name: "The Castle PBrae Market Stall"
+    room: front_yard
+    items:
+      - mountain_herb
+      - royal_egg
+      - rocket_boost
+
+rooms:
+  # ─── OUTDOOR: MOUNTAIN & APPROACH ───────────────────────────────────────────
+
+  mountain_summit:
+    title: "The Summit of Castle Mountain"
+    description: "You stand atop the peak that Castle PBrae calls home, the wind tugging at your cloak with royal insistence. Far below, the castle gleams like a crown set among the trees, its moat-stream glittering silver in the light. A thundering sound draws you east; the path descends southward."
+    exits:
+      e: waterfall_cliff
+      d: mountain_path
+
+  waterfall_cliff:
+    title: "Thundering Waterfall"
+    description: "A great waterfall roars off the eastern face of the mountain, plunging into the forest canopy far below in a billowing curtain of mist and spray. A permanent rainbow hangs in the mist. Carved into the cliff face are the initials 'P' and 'B' inside a heart, worn smooth by years of waterfall weather. The summit lies to the west."
+    exits:
+      w: mountain_summit
+
+  mountain_path:
+    title: "Winding Mountain Path"
+    description: "A rocky path winds down the flank of the mountain between hardy pines and tumbled boulders. The air here is clear and cold and carries the distant sound of the waterfall. A mountain hawk traces lazy circles overhead. The summit looms above; the forest begins below to the south."
+    exits:
+      u: mountain_summit
+      s: forest_trail
+
+  forest_trail:
+    title: "Forest Trail"
+    description: "The forest here is old and tall, its canopy filtering light into green-gold columns. The path is soft with pine needles and the occasional hoof-print of a deer. The trees grow wilder to the west; a morning mist clings to the eastern undergrowth. South, through the trees, the glint of the royal moat-stream is visible."
+    exits:
+      n: mountain_path
+      e: eastern_woods
+      w: western_woods
+      s: moat_banks
+
+  eastern_woods:
+    title: "Eastern Woods"
+    description: "The eastern edge of the forest rises into bramble and old oak, the trees so thick the sky is barely a rumor. Mushrooms cluster at the roots in rings that feel deliberate. It is very quiet here, and very alive. The trail is back to the west."
+    exits:
+      w: forest_trail
+
+  western_woods:
+    title: "Western Woods"
+    description: "Ancient firs crowd together to the west of the trail, their roots arching over the ground like the ribs of a great ship. Sunlight barely reaches the soft carpet of needles. Something small and quick moves through the underbrush — a chipmunk, or perhaps just the wind. The trail is back to the east."
+    exits:
+      e: forest_trail
+
+  moat_banks:
+    title: "Banks of the Royal Moat"
+    description: "A cheerful stream, clear and quick, curves around the base of the castle hill like a moat set by nature rather than stonemasons. Wildflowers crowd the banks and small silver fish dart through the shallows. A wooden footbridge spans the stream to the south. The forest lies to the north."
+    exits:
+      n: forest_trail
+      s: footbridge
+
+  footbridge:
+    title: "The Royal Footbridge"
+    description: "A narrow footbridge of weathered planks arches over the royal moat-stream, its rope railings worn smooth by a thousand small hands. The planks flex and creak underfoot with a satisfying bounce. A small painted sign on the north post reads: 'KINGDOM OF PBRAE — Authorized Subjects Only.' Unauthorized subjects are not specified."
+    exits:
+      n: moat_banks
+      s: gravel_road
+
+  gravel_road:
+    title: "The Royal Gravel Road"
+    description: "A broad road of pale gravel crunches satisfyingly underfoot, stretching from the footbridge in the north down to the castle gates. It is tidy and well-maintained — someone with a rake has been here recently. Castle PBrae rises ahead to the south, its flags snapping in the mountain breeze. A shimmer of portal light is visible far to the north, beyond the stream."
+    exits:
+      n: ambon_hub:hall_of_portals
+      s: front_yard
+
+  # ─── CASTLE GROUNDS ──────────────────────────────────────────────────────────
+
+  front_yard:
+    title: "Castle PBrae Front Yard"
+    description: "The wide front yard of Castle PBrae is a cheerful chaos of mowed grass, flower beds, and the occasional escaped feather. The castle's stone walls — which look suspiciously like a real house — rise to the south, draped in morning glory. To the west, the sounds and smells of the Royal Poultry District drift over a low wooden fence. A market stall near the gate sells provisions."
+    exits:
+      n: gravel_road
+      w: coop_entrance
+      s: front_porch
+
+  front_porch:
+    title: "Front Porch of Castle PBrae"
+    description: "The front porch is broad and welcoming, its floorboards painted a cheerful red. A pair of small boots — one with a lightning bolt drawn in marker, one covered in sticker penguins — sits beside the door. A painted sign reads: 'CASTLE PBRAE — Home of King Peanut and Queen Braelynn. Enter with Joy.' The door stands open."
+    exits:
+      n: front_yard
+      s: front_stoop
+
+  front_stoop:
+    title: "The Royal Entry Hall"
+    description: "Just inside the castle doors, the entry hall buzzes with the energy of a house that is constantly in motion. Backpacks hang on hooks. A drawing of a rocket car and a drawing of a penguin are taped side by side on the wall with obvious pride. The kitchen smells of something good from the east. To the west, a patio door stands open to the afternoon air."
+    exits:
+      n: front_porch
+      w: north_patio
+      e: kitchen_west
+
+  # ─── PATIOS ───────────────────────────────────────────────────────────────────
+
+  north_patio:
+    title: "The North Patio"
+    description: "A brick patio stretches along the western side of the castle, shaded by a large oak whose roots have gently lifted one corner of the brickwork. A scatter of sidewalk chalk drawings covers the ground — rockets, crowns, penguins, and something that may be a Minecraft Creeper. The entry hall is to the east; more patio continues south."
+    exits:
+      e: front_stoop
+      s: central_patio
+
+  central_patio:
+    title: "The Central Patio"
+    description: "The middle section of the western patio, where most of the outdoor adventures happen. A worn picnic table sits here, its surface carved with initials and game scores that span what appears to be several years. A large plastic bin nearby overflows with outdoor toys. The north patio is behind you; the south patio lies ahead."
+    exits:
+      n: north_patio
+      s: sw_patio_a
+
+  sw_patio_a:
+    title: "The Southwest Patio"
+    description: "The patio widens at the south end, open to the sky. A fire pit ring of stones occupies the center, its edges blackened with happy use. String lights have been strung between the fence posts and the castle wall, ready for evenings. The central patio is to the north; a smaller nook extends to the east."
+    exits:
+      n: central_patio
+      e: sw_patio_b
+
+  sw_patio_b:
+    title: "The Lower South Patio"
+    description: "A narrow lower patio tucked against the southern wall, half-shaded by a pergola draped in climbing roses. A hammock is strung between two posts; someone has left a book on it, face-down. This is clearly a prime location for doing nothing in particular, which is itself a royal prerogative. The southwest patio is to the west."
+    exits:
+      w: sw_patio_a
+
+  # ─── KITCHEN ──────────────────────────────────────────────────────────────────
+
+  kitchen_west:
+    title: "The Royal Pantry"
+    description: "The western end of the royal kitchen serves as pantry and prep area. Shelves line every wall, packed with labeled jars, cereal boxes, snacks of strategic importance, and a suspicious number of juice boxes. The countertops are at two heights — one for the servants (the parents), one approximately right for a child standing on tiptoe. The entry hall is to the west."
+    exits:
+      w: front_stoop
+      e: kitchen_main
+
+  kitchen_main:
+    title: "The Royal Kitchen"
+    description: "The heart of Castle PBrae, where the Royal Cook labors to keep the kingdom fed. The stove gleams, the refrigerator hums, and the kitchen table is the true throne of household power. Cheerful crayon drawings are held to the refrigerator by a collection of magnets from everywhere the kingdom has ever traveled. A cozy nook lies to the south."
+    exits:
+      w: kitchen_west
+      e: living_nw
+      s: kitchen_nook
+
+  kitchen_nook:
+    title: "The Kitchen Nook"
+    description: "A cozy breakfast nook tucked into the corner behind the kitchen, its built-in bench seats cushioned in a cheerful stripe. This is where royal breakfasts happen — cereal with too much milk, toast with the crusts cut off by diplomatic agreement. The walls are plastered in school drawings and old birthday cards: a museum of small victories. The kitchen is to the north."
+    exits:
+      n: kitchen_main
+
+  # ─── LIVING ROOMS & BATHROOM ──────────────────────────────────────────────────
+
+  living_nw:
+    title: "The Northwest Drawing Room"
+    description: "The first of the castle's great halls, given over to the serious business of leisure. A large couch dominates the north wall, facing a TV that has witnessed more gaming sessions than it can count. Controllers in various states of charge are draped across the cushions. Bookshelves hold a cheerful mix of actual books and Funko Pops. The kitchen is to the west."
+    exits:
+      w: kitchen_main
+      e: living_ne
+      s: living_sw
+
+  living_ne:
+    title: "The Northeast Sitting Room"
+    description: "The sitting room continues the great tradition of comfortable chaos. A floor lamp casts warm light over the reading corner, where an impractical number of pillows has been arranged into a fort built by small and determined architects. Board games are stacked in a precarious tower by the far wall. The bathroom is to the south."
+    exits:
+      w: living_nw
+      s: bathroom
+
+  living_sw:
+    title: "The South Throne Hall"
+    description: "The grandest of the castle's living spaces, so designated by the throne-like recliner positioned at its center. This is the room from which the kingdom is governed during movie nights and video game sessions of state. A carved wooden staircase winds upward to the royal chambers — the Grand Landing awaits above. A window looks out onto the patio."
+    exits:
+      n: living_nw
+      e: bathroom
+      u: upper_landing
+
+  bathroom:
+    title: "The Royal Bathroom"
+    description: "An impeccably tiled royal bathroom. The counter is crowded with the full paraphernalia of two children: toothbrushes (color-coded), an alarming array of hair accessories, a rubber duck that has seen things, and a height-measurement chart on the doorframe recording years of upward progress. Everything smells faintly of bubblegum shampoo."
+    exits:
+      n: living_ne
+      w: living_sw
+
+  # ─── UPPER FLOOR ─────────────────────────────────────────────────────────────
+
+  upper_landing:
+    title: "The Grand Landing"
+    description: "The top of the royal staircase opens onto a carpeted landing that is the crossroads of the kingdom's upper world. A framed photo gallery lines the walls — birthdays, holidays, ordinary Tuesday afternoons made immortal. To the east, the sound of rocket engines and pixel music drifts from behind King Peanut's door. To the south, penguin chatter and Roblox music emanate from Queen Braelynn's chambers. The servants' quarters are to the west."
+    exits:
+      d: living_sw
+      e: peanut_chamber
+      s: braelynn_chamber
+      w: servant_quarters
+
+  servant_quarters:
+    title: "The Servant's Quarters"
+    description: "The quarters of the royal servants — the parents — are comfortable and surprisingly well-organized given the chaos they manage daily. A coffee mug on the nightstand is perpetually half-full. A whiteboard covered in color-coded schedules and reminders hangs on the wall; at the bottom, in very large letters, someone has written 'IT IS FINE.' The landing is to the east."
+    exits:
+      e: upper_landing
+
+  # ─── KING PEANUT'S DREAM WORLD ───────────────────────────────────────────────
+
+  peanut_chamber:
+    title: "King Peanut's Royal Chamber"
+    description: "The threshold of King Peanut's domain crackles with low-level electricity. The walls are covered in posters: Rocket League cars in mid-boost, Smite gods in heroic poses, Creepers rendered in pixel art. LEGO structures of dubious structural integrity crowd the shelves. The floor is a sacred minefield of small bricks. At the center of the room reality is thinner than usual — east leads to the arena, up to the Overworld, down to the Nether, north to Olympus."
+    exits:
+      w: upper_landing
+      e: peanut_rocket_arena
+      u: peanut_overworld
+      d: peanut_nether
+      n: peanut_olympus
+
+  peanut_rocket_arena:
+    title: "The Royal Rocket League Arena"
+    description: "You have entered the Arena. The roar of imaginary crowds fills your ears. The field glows with electrified blue and orange lines, and cars ricochet off the curved walls in physics-defying arcs. Boost pads pulse gold across the turf. A rocket boost canister has been left at the sideline by someone going too fast to stop. The goal zone is to the east; Peanut's chamber lies west."
+    exits:
+      w: peanut_chamber
+      e: peanut_arena_goals
+
+  peanut_arena_goals:
+    title: "The Goal Zone"
+    description: "The curved walls of the goal zone loom overhead, buzzing with the thrill of every shot ever made here. The net at the end of the pitch is battered but glorious. A scoreboard on the wall reads 'PEANUT: LOTS — EVERYONE ELSE: NOT AS MANY.' On the floor in tape: 'THIS IS WHERE GOALS HAPPEN.' Back to the arena is west."
+    exits:
+      w: peanut_rocket_arena
+
+  peanut_overworld:
+    title: "The Minecraft Overworld"
+    description: "You emerge onto an infinite blocky plain under a sky of perfect square clouds. Grass is green and pixelated. A blocky cow wanders in the middle distance with absolute confidence. A crafting table sits near what appears to be the beginnings of an extremely ambitious construction project — half-finished towers, scattered torches, a mine entrance to the north. Peanut's chamber is below."
+    exits:
+      d: peanut_chamber
+      n: peanut_diamond_mine
+
+  peanut_diamond_mine:
+    title: "The Diamond Mine Depths"
+    description: "You descend into the blocky earth. Glowing redstone ore traces veins through the stone walls, and somewhere deeper, lava casts everything in orange. And there — set into the wall in a small alcove — a vein of unmistakable blue. A glittering Minecraft diamond catches the torchlight. This is the good stuff. The Overworld is back to the south."
+    exits:
+      s: peanut_overworld
+
+  peanut_nether:
+    title: "The Nether Fortress"
+    description: "Netherrack stretches in every direction, lit by fire and lava falls. A fortress of cracked nether bricks rises from the hellish landscape, its soul sand pathways muffled underfoot. A hissing Creeper lurks by the gate — it does not seem pleased to see you. The way back to Peanut's chamber is up; the Battleground of the Gods is to the east."
+    exits:
+      u: peanut_chamber
+      e: peanut_battleground
+
+  peanut_battleground:
+    title: "The Battleground of the Gods"
+    description: "Ancient stone tiles form a great arena where gods clash by divine decree. Spectral banners bearing the sigils of every pantheon hang from marble columns. The air smells of ozone and ambition. A conquest lane stretches north toward Olympus itself. Back through the Nether portal is west."
+    exits:
+      w: peanut_nether
+      n: peanut_olympus
+
+  peanut_olympus:
+    title: "Mount Olympus"
+    description: "You stand at the peak of Mount Olympus, where clouds part for golden towers and the divine guardian paces a slow and implacable watch. Lightning flickers at the edges of everything. A great throne of platinum and pixel sits at the summit to the east — Peanut's Pixel Throne. The Battleground lies to the south. Trespassers are warned."
+    exits:
+      s: peanut_battleground
+      e: peanut_throne
+
+  peanut_throne:
+    title: "Peanut's Pixel Throne Room"
+    description: "At the very peak of the dream world, King Peanut's Pixel Throne Room shimmers between three realities at once. One wall is a Rocket League scoreboard; one wall is a Smite ability wheel; one wall is a Minecraft biome map. At the center, a throne assembled from pixel art, rocket car parts, and carved stone blocks. It is magnificent. A divine Smite gold coin gleams on the armrest. The peak of Olympus is to the west."
+    exits:
+      w: peanut_olympus
+
+  # ─── QUEEN BRAELYNN'S DREAM WORLD ────────────────────────────────────────────
+
+  braelynn_chamber:
+    title: "Queen Braelynn's Royal Chamber"
+    description: "Queen Braelynn's chamber is a landscape of organized wonder. Shelves of stuffed animals line every wall, arranged by species and emotional significance. Fairy lights give the room a permanent golden-hour glow. Roblox music plays from a small speaker on the desk. The Grand Landing is north; the Penguin Palace is south; the Stuffie Grove is west; Roblox Plaza is east. The dream begins here."
+    exits:
+      n: upper_landing
+      s: braelynn_penguin_palace
+      w: braelynn_stuffie_grove
+      e: braelynn_roblox_plaza
+
+  braelynn_penguin_palace:
+    title: "The Penguin Palace"
+    description: "You have arrived in the Penguin Palace, a grand hall of blue ice and carved snowdrifts where penguins in tiny formal wear shuffle about with tremendous dignity. The floor is perfectly smooth marble — excellent for sliding. Penguin portraits line the walls. The grandest portrait, at the far end, depicts Queen Braelynn herself in full regalia, surrounded by adoring penguins. The Ice Rink is to the east; the Chamber is north."
+    exits:
+      n: braelynn_chamber
+      e: braelynn_ice_rink
+
+  braelynn_ice_rink:
+    title: "The Royal Ice Rink"
+    description: "The royal ice rink shimmers beneath enchanted lights that cycle through every color of the rainbow at a steady, joyful rhythm. Penguins here have clearly been practicing — they spin and glide with professional flair. The ice is perfect, the music is perfect, and everything smells faintly of hot chocolate. The Penguin Nursery is to the north; the Palace is west."
+    exits:
+      w: braelynn_penguin_palace
+      n: braelynn_penguin_nursery
+
+  braelynn_penguin_nursery:
+    title: "The Penguin Nursery"
+    description: "A cozy room of soft snow and warm nesting materials, where baby penguins in a state of ultimate fluffiness peep and totter and fall over. An adorable baby penguin approaches you immediately with total confidence and absolutely no fear. On a shelf near the entrance, a soft penguin plushie wearing a tiny golden crown sits in a place of honor. The Ice Rink is to the south."
+    exits:
+      s: braelynn_ice_rink
+
+  braelynn_stuffie_grove:
+    title: "The Great Stuffie Grove"
+    description: "The Stuffie Grove is a sacred space. Trees here are made of plush fabric; their leaves are tiny felt hearts. Every stuffed animal that ever mattered in the history of Braelynn's kingdom has found its way here — bears, bunnies, unicorns, one extremely specific llama. They sit in peaceful congress, debating stuffie matters of great importance. A magical giant stuffed bear guards the central clearing with fierce love. Queen Braelynn's Chamber is to the east."
+    exits:
+      e: braelynn_chamber
+
+  braelynn_roblox_plaza:
+    title: "Roblox Town Square"
+    description: "Welcome to Roblox Town Square, where blocky characters in an improbable range of outfits go about their business with cheerful determination. A friendly noob in full gear wanders past, waving. The buildings around the plaza are charmingly oversized, their pixel-brick facades painted in candy colors. The Adopt Me! Ranch is to the west, and the Obby Tower rises to the north. The Chamber is back east."
+    exits:
+      e: braelynn_chamber
+      n: braelynn_obby
+      w: braelynn_adopt_me
+
+  braelynn_adopt_me:
+    title: "The Adopt Me! Ranch"
+    description: "The ranch sprawls across a cheerfully impossible landscape — gleaming pastures, improbably cute animals, and little trading booths. Legendary pets drift through the air on shimmering wings. Someone nearby is trading a Neon Dragon for a Shadow Dragon; the negotiation appears to be ongoing. The neon lights are warm and the grass is very, very green. The Plaza is to the east."
+    exits:
+      e: braelynn_roblox_plaza
+
+  braelynn_obby:
+    title: "The Rainbow Obby Tower"
+    description: "A towering obstacle course of multicolored platforms spirals into a sky of perpetual sunset. The lower platforms are manageable. The middle platforms require commitment. The upper platforms are, frankly, a test of character. At the very top, something wonderful awaits. Jump the gaps, dodge the spinners, do not fall. The Plaza is below to the south; the throne awaits above."
+    exits:
+      s: braelynn_roblox_plaza
+      u: braelynn_throne
+
+  braelynn_throne:
+    title: "Queen Braelynn's Penguin Throne"
+    description: "At the very pinnacle of the Obby Tower, wreathed in victory confetti that never quite settles, sits Queen Braelynn's Penguin Throne. It is constructed entirely of interlocking penguin plushies, with a single golden goblet on the armrest and a view that encompasses all of the dream world below. The Royal Goblet of PBrae gleams here, waiting. You made it. The Obby is below."
+    exits:
+      d: braelynn_obby
+
+  # ─── THE ROYAL CHICKEN COOP (3 × 4 grid, north–south) ───────────────────────
+  # West column:  coop_watchtower → coop_duck_pond → coop_duck_nook → coop_feed_room
+  # Center column: coop_entrance → coop_henhouse → coop_turkey_hall → coop_egg_vault
+  # East column:  coop_outer_run → coop_rooster_den → coop_turkey_roost → coop_dream_portal
+
+  coop_entrance:
+    title: "The Royal Coop Gate"
+    description: "A gate of painted wood and chicken wire, decorated with a hand-lettered sign reading 'ROYAL POULTRY DISTRICT OF PBRAE — All birds are citizens.' Pixel-art chickens have been painted on the gateposts in Minecraft style, alongside colorful Roblox-inspired crown designs. The smell of hay and feathers is warm and familiar. The front yard is north; the watchtower is west; the outer run is east; the hen house is south."
+    exits:
+      n: front_yard
+      w: coop_watchtower
+      e: coop_outer_run
+      s: coop_henhouse
+
+  coop_watchtower:
+    title: "The Roblox Watchtower"
+    description: "A tall narrow watchtower built in brightly colored blocky Roblox style — coral pink, sky blue, and sunshine yellow stacked in exuberant tiers. From the top, you can survey the whole coop spread out below. A pixel-art banner flutters at the peak reading 'COOP SQUAD' in the official font. The coop gate is to the east; the duck pond is south."
+    exits:
+      e: coop_entrance
+      s: coop_duck_pond
+
+  coop_outer_run:
+    title: "The Outer Run"
+    description: "A wide, fenced outdoor run where the castle's birds roam freely in the fresh mountain air. The grass has been thoroughly investigated and found mostly acceptable. A Minecraft-style dirt path winds between feeding stations. Hens move with the purposeful energy of birds who have somewhere important to be, even when they don't. The gate is west; the Rooster's Domain is south."
+    exits:
+      w: coop_entrance
+      s: coop_rooster_den
+
+  coop_henhouse:
+    title: "The Hen House"
+    description: "The main henhouse is warm and golden-straw-smelling, with rows of nesting boxes along both walls. Each box has been given a hand-painted name: 'Princess Cluck,' 'Duchess Fluffington,' 'Lady Bawk.' The hens have opinions and are not afraid to express them. This is a democracy, but the hens are in charge. The gate is north; the duck pond is west; the Rooster is east; Turkey Hall is south."
+    exits:
+      n: coop_entrance
+      w: coop_duck_pond
+      e: coop_rooster_den
+      s: coop_turkey_hall
+
+  coop_rooster_den:
+    title: "The Royal Rooster's Domain"
+    description: "The Royal Rooster holds court in this elevated section of the outer run, a raised timber platform that serves as his personal stage. His tail feathers cascade in magnificent iridescent plumes. A Minecraft item frame on the fence post holds one such feather on display as treasure. He watches you. He is deciding things. Approach with caution. Hen House is west; Turkey Roost is south; Outer Run is north."
+    exits:
+      n: coop_outer_run
+      w: coop_henhouse
+      s: coop_turkey_roost
+
+  coop_duck_pond:
+    title: "The Royal Duck Pond"
+    description: "A small round pond fed by a diverted stream, fringed with reeds and decorative rocks painted to look like Minecraft blocks. Mallards, Pekins, and one very confident Muscovy duck hold sovereignty over the water. A Roblox-colored bridge of rainbow planks arches over the narrowest part. The Watchtower is north; Hen House is east; Duck Nook is south."
+    exits:
+      n: coop_watchtower
+      e: coop_henhouse
+      s: coop_duck_nook
+
+  coop_duck_nook:
+    title: "Duck Nook and Creek"
+    description: "The stream that feeds the duck pond continues through a culvert here into a shaded nook of mud, pebbles, and pure duck happiness. A white Pekin duck explores the creek bank with total conviction. Pixel-art ducks have been painted on a low stone wall. Duck Pond is north; Turkey Hall is east; Feed Room is south."
+    exits:
+      n: coop_duck_pond
+      e: coop_turkey_hall
+      s: coop_feed_room
+
+  coop_turkey_hall:
+    title: "The Great Turkey Hall"
+    description: "The turkeys have the grandest accommodations in the Royal Poultry District — a wide, high-ceilinged hall with roosting beams and a deep bed of straw. A painted wooden coat of arms on the wall depicts a bronze turkey crowned and holding a Minecraft diamond in one wing and a Roblox crown in the other. A gobbling bronze turkey surveys his domain with obvious self-regard. Hen House north; Duck Nook west; Turkey Roost east; Egg Vault south."
+    exits:
+      n: coop_henhouse
+      w: coop_duck_nook
+      e: coop_turkey_roost
+      s: coop_egg_vault
+
+  coop_turkey_roost:
+    title: "Turkey Night Roost"
+    description: "A quieter, dimmer section of the turkey hall dedicated to evening roosting and napping. The beams overhead are thick and wide, and the turkeys have established their preferred spots — several beams sport small hand-painted name tags ('Henry,' 'Gobbles,' 'Sir Wattles'). A speckled turkey hen regards you with sleepy, judgmental dignity. Rooster's Domain north; Turkey Hall west; Dream Portal south."
+    exits:
+      n: coop_rooster_den
+      w: coop_turkey_hall
+      s: coop_dream_portal
+
+  coop_egg_vault:
+    title: "The Sacred Egg Vault"
+    description: "A cool, carefully tended room lined with straw-filled wooden crates where the kingdom's eggs are collected and kept. Most eggs are ordinary and beautiful. One — sitting in a dedicated velvet-lined box at the center — glows with a faint golden light. This is the Royal Egg. It is not to be taken lightly. Turkey Hall is north; Feed Room is west; Dream Portal is east."
+    exits:
+      n: coop_turkey_hall
+      w: coop_feed_room
+      e: coop_dream_portal
+
+  coop_feed_room:
+    title: "The Royal Feed Room"
+    description: "Bags and barrels of grain, cracked corn, layer pellets, and specialty feeds crowd the shelves of this functional room. Scoops and buckets hang on hooks. A handwritten feeding schedule on the wall is color-coded by bird type — one column is labeled 'CHICKENS (the nice ones)' and another 'ROOSTER (be careful).' Duck Nook is north; Egg Vault is east."
+    exits:
+      n: coop_duck_nook
+      e: coop_egg_vault
+
+  coop_dream_portal:
+    title: "The Dream Portal"
+    description: "In the far south corner of the Royal Poultry District, where the fence meets the old apple tree, there is a gap in the wood that shimmers in a way that wood really shouldn't. Beyond it — visible in flickers — are images: a penguin wearing a crown, a glowing diamond, a rocket car scoring an impossible goal, a stuffed bear waving cheerfully. The birds will not go near it. The turkeys say it smells like dreams. It does. Turkey Roost is north; Egg Vault is west."
+    exits:
+      n: coop_turkey_roost
+      w: coop_egg_vault
