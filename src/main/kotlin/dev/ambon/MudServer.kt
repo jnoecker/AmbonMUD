@@ -16,7 +16,9 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PersistenceContext
 import dev.ambon.engine.PlayerProgression
+import dev.ambon.engine.ShardingContext
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.createPlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
@@ -525,25 +527,29 @@ class MudServer(
                     progression = progression,
                     metrics = gameMetrics,
                     onShutdown = { shutdownSignal.complete(Unit) },
-                    handoffManager = handoffManager,
-                    interEngineBus = interEngineBus,
-                    engineId = engineId,
-                    playerLocationIndex = playerLocationIndex,
-                    zoneRegistry = zoneRegistry,
-                    peerEngineCount = {
-                        zoneRegistry
-                            ?.allAssignments()
-                            ?.values
-                            ?.map { it.engineId }
-                            ?.filter { it != engineId }
-                            ?.toSet()
-                            ?.size
-                            ?: 0
-                    },
                     worldState = worldState,
-                    worldStateRepository = worldStateRepo,
-                    guildRepo = guildRepo,
-                    playerRepo = playerRepo,
+                    sharding = ShardingContext(
+                        engineId = engineId,
+                        handoffManager = handoffManager,
+                        interEngineBus = interEngineBus,
+                        peerEngineCount = {
+                            zoneRegistry
+                                ?.allAssignments()
+                                ?.values
+                                ?.map { it.engineId }
+                                ?.filter { it != engineId }
+                                ?.toSet()
+                                ?.size
+                                ?: 0
+                        },
+                        playerLocationIndex = playerLocationIndex,
+                        zoneRegistry = zoneRegistry,
+                    ),
+                    persistence = PersistenceContext(
+                        worldStateRepository = worldStateRepo,
+                        guildRepo = guildRepo,
+                        playerRepo = playerRepo,
+                    ),
                 ).run()
             }
 
