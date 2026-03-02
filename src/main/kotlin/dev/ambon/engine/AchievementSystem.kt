@@ -208,14 +208,7 @@ class AchievementSystem(
         )
 
         // Grant rewards
-        if (def.rewards.gold > 0) {
-            ps.gold += def.rewards.gold
-            outbound.send(OutboundEvent.SendText(sessionId, "You receive ${def.rewards.gold} gold."))
-        }
-        if (def.rewards.xp > 0) {
-            players.grantXp(sessionId, def.rewards.xp)
-            outbound.send(OutboundEvent.SendText(sessionId, "You gain ${def.rewards.xp} XP."))
-        }
+        grantRewards(sessionId, def.rewards, ps, players, outbound)
         if (def.rewards.title != null) {
             outbound.send(
                 OutboundEvent.SendText(

@@ -244,17 +244,8 @@ class QuestSystem(
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest complete: ${quest.name}!"))
         onQuestCompleted?.invoke(sessionId, questId)
 
-        if (rewards.gold > 0) {
-            ps.gold += rewards.gold
-            outbound.send(OutboundEvent.SendText(sessionId, "You receive ${rewards.gold} gold."))
-        }
-
-        if (rewards.xp > 0) {
-            players.grantXp(sessionId, rewards.xp)
-            outbound.send(OutboundEvent.SendText(sessionId, "You gain ${rewards.xp} XP."))
-        } else {
-            persistPlayer(ps)
-        }
+        grantRewards(sessionId, rewards, ps, players, outbound)
+        if (rewards.xp == 0L) persistPlayer(ps)
     }
 
     private suspend fun sendObjectiveProgress(

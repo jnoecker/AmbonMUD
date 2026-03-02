@@ -1,5 +1,7 @@
 package dev.ambon.domain.achievement
 
+import dev.ambon.domain.Rewards
+
 data class AchievementDef(
     val id: String,
     val displayName: String,
@@ -20,11 +22,11 @@ data class AchievementCriterion(
 )
 
 data class AchievementRewards(
-    val xp: Long = 0L,
-    val gold: Long = 0L,
+    override val xp: Long = 0L,
+    override val gold: Long = 0L,
     /** Title string made available to the player on unlock. Null means no title reward. */
     val title: String? = null,
-)
+) : Rewards
 
 enum class AchievementCategory { COMBAT, EXPLORATION, SOCIAL, CRAFTING, CLASS }
 
