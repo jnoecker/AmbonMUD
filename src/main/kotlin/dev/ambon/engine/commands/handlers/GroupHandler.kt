@@ -6,7 +6,6 @@ import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
-import dev.ambon.engine.events.OutboundEvent
 
 class GroupHandler(
     ctx: EngineContext,
@@ -27,17 +26,15 @@ class GroupHandler(
         sessionId: SessionId,
         cmd: Command.GroupCmd,
     ) {
-        if (groupSystem == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Groups are not available."))
-            return
-        }
+        if (!requireSystem(sessionId, groupSystem != null, "Groups", outbound)) return
+        val gs = groupSystem!!
         val err =
             when (cmd) {
-                is Command.GroupCmd.Invite -> groupSystem.invite(sessionId, cmd.target)
-                Command.GroupCmd.Accept -> groupSystem.accept(sessionId)
-                Command.GroupCmd.Leave -> groupSystem.leave(sessionId)
-                is Command.GroupCmd.Kick -> groupSystem.kick(sessionId, cmd.target)
-                Command.GroupCmd.List -> groupSystem.list(sessionId)
+                is Command.GroupCmd.Invite -> gs.invite(sessionId, cmd.target)
+                Command.GroupCmd.Accept -> gs.accept(sessionId)
+                Command.GroupCmd.Leave -> gs.leave(sessionId)
+                is Command.GroupCmd.Kick -> gs.kick(sessionId, cmd.target)
+                Command.GroupCmd.List -> gs.list(sessionId)
             }
         outbound.sendIfError(sessionId, err)
     }
@@ -46,10 +43,7 @@ class GroupHandler(
         sessionId: SessionId,
         cmd: Command.Gtell,
     ) {
-        if (groupSystem == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Groups are not available."))
-            return
-        }
-        outbound.sendIfError(sessionId, groupSystem.gtell(sessionId, cmd.message))
+        if (!requireSystem(sessionId, groupSystem != null, "Groups", outbound)) return
+        outbound.sendIfError(sessionId, groupSystem!!.gtell(sessionId, cmd.message))
     }
 }

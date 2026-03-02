@@ -93,37 +93,32 @@ class DialogueQuestHandler(
     }
 
     private suspend fun handleQuestLog(sessionId: SessionId) {
-        val log = questSystem?.formatQuestLog(sessionId) ?: "Quest system is not available."
-        outbound.send(OutboundEvent.SendInfo(sessionId, log))
+        if (!requireSystem(sessionId, questSystem != null, "Quests", outbound)) return
+        outbound.send(OutboundEvent.SendInfo(sessionId, questSystem!!.formatQuestLog(sessionId)))
     }
 
     private suspend fun handleQuestInfo(
         sessionId: SessionId,
         cmd: Command.QuestInfo,
     ) {
-        val info = questSystem?.formatQuestInfo(sessionId, cmd.nameHint) ?: "Quest system is not available."
-        outbound.send(OutboundEvent.SendInfo(sessionId, info))
+        if (!requireSystem(sessionId, questSystem != null, "Quests", outbound)) return
+        outbound.send(OutboundEvent.SendInfo(sessionId, questSystem!!.formatQuestInfo(sessionId, cmd.nameHint)))
     }
 
     private suspend fun handleQuestAbandon(
         sessionId: SessionId,
         cmd: Command.QuestAbandon,
     ) {
-        if (questSystem == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Quest system is not available."))
-        } else {
-            outbound.sendIfError(sessionId, questSystem.abandonQuest(sessionId, cmd.nameHint))
-        }
+        if (!requireSystem(sessionId, questSystem != null, "Quests", outbound)) return
+        outbound.sendIfError(sessionId, questSystem!!.abandonQuest(sessionId, cmd.nameHint))
     }
 
     private suspend fun handleQuestAccept(
         sessionId: SessionId,
         cmd: Command.QuestAccept,
     ) {
-        if (questSystem == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Quest system is not available."))
-            return
-        }
+        if (!requireSystem(sessionId, questSystem != null, "Quests", outbound)) return
+        val qs = questSystem!!
         players.withPlayer(sessionId) { me ->
             val nameHintLower = cmd.nameHint.trim().lowercase()
             val roomMobIds = mobs.mobsInRoom(me.roomId).map { it.id.value }.toSet()
@@ -142,25 +137,22 @@ class DialogueQuestHandler(
                     ),
                 )
             } else {
-                outbound.sendIfError(sessionId, questSystem.acceptQuest(sessionId, matchingQuest.id))
+                outbound.sendIfError(sessionId, qs.acceptQuest(sessionId, matchingQuest.id))
             }
         }
     }
 
     private suspend fun handleAchievementList(sessionId: SessionId) {
-        val list = achievementSystem?.formatAchievements(sessionId) ?: "Achievement system is not available."
-        outbound.send(OutboundEvent.SendInfo(sessionId, list))
+        if (!requireSystem(sessionId, achievementSystem != null, "Achievements", outbound)) return
+        outbound.send(OutboundEvent.SendInfo(sessionId, achievementSystem!!.formatAchievements(sessionId)))
     }
 
     private suspend fun handleTitleSet(
         sessionId: SessionId,
         cmd: Command.TitleSet,
     ) {
-        if (achievementSystem == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Achievement system is not available."))
-            return
-        }
-        val available = achievementSystem.availableTitles(sessionId)
+        if (!requireSystem(sessionId, achievementSystem != null, "Achievements", outbound)) return
+        val available = achievementSystem!!.availableTitles(sessionId)
         val match = available.firstOrNull { (_, title) -> title.equals(cmd.titleArg, ignoreCase = true) }
         if (match == null) {
             outbound.send(
