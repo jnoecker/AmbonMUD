@@ -1,7 +1,6 @@
 package dev.ambon.bus
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -10,192 +9,108 @@ import kotlinx.coroutines.channels.ReceiveChannel
 
 private val log = KotlinLogging.logger {}
 
-class RedisOutboundBus(
+internal class RedisOutboundBus(
     private val delegate: LocalOutboundBus,
-    private val publisher: BusPublisher,
-    private val subscriberSetup: BusSubscriberSetup,
-    private val channelName: String,
-    private val instanceId: String,
-    private val mapper: ObjectMapper,
-    private val sharedSecret: String,
-) : OutboundBus {
-    private data class Envelope(
-        val instanceId: String = "",
-        val type: String = "",
+    publisher: BusPublisher,
+    subscriberSetup: BusSubscriberSetup,
+    channelName: String,
+    instanceId: String,
+    mapper: ObjectMapper,
+    sharedSecret: String,
+) : RedisEventBus<OutboundEvent, RedisOutboundBus.Envelope>(
+        publisher = publisher,
+        subscriberSetup = subscriberSetup,
+        channelName = channelName,
+        instanceId = instanceId,
+        mapper = mapper,
+        sharedSecret = sharedSecret,
+        direction = "outbound",
+    ),
+    OutboundBus {
+    internal data class Envelope(
+        override val instanceId: String = "",
+        override val type: String = "",
         val sessionId: Long = 0L,
         val text: String = "",
         val enabled: Boolean = false,
         val reason: String = "",
         val gmcpPackage: String = "",
         val jsonData: String = "",
-        val signature: String = "",
-    )
+        override val signature: String = "",
+    ) : RedisEnvelope
 
     fun startSubscribing() {
-        subscriberSetup.startListening(channelName) { message ->
-            try {
-                val env = mapper.readValue<Envelope>(message)
-                if (env.instanceId == instanceId) return@startListening
-                if (!env.hasValidSignature(sharedSecret)) {
-                    log.warn { "Dropping outbound Redis event with invalid signature (type=${env.type})" }
-                    return@startListening
-                }
-                val event = env.toEvent() ?: return@startListening
-                delegate.trySend(event)
-            } catch (e: Exception) {
-                log.warn(e) { "Failed to deserialize outbound event from Redis" }
-            }
-        }
-        log.info { "Redis outbound bus subscribed to '$channelName' (instanceId=$instanceId)" }
+        startListening { delegate.trySend(it) }
     }
 
-    override suspend fun send(event: OutboundEvent) {
-        delegate.send(event)
-        publish(event)
-    }
+    override fun deserializeEnvelope(json: String): Envelope = mapper.readValue(json, Envelope::class.java)
 
-    override fun tryReceive(): ChannelResult<OutboundEvent> = delegate.tryReceive()
-
-    override fun asReceiveChannel(): ReceiveChannel<OutboundEvent> = delegate.asReceiveChannel()
-
-    override fun close() {
-        delegate.close()
-    }
-
-    fun delegateForMetrics(): LocalOutboundBus = delegate
-
-    private fun publish(event: OutboundEvent) {
-        try {
-            val env =
-                when (event) {
-                    is OutboundEvent.SendText ->
-                        Envelope(
-                            instanceId = instanceId,
-                            type = "SendText",
-                            sessionId = event.sessionId.value,
-                            text = event.text,
-                        )
-                    is OutboundEvent.SendInfo ->
-                        Envelope(
-                            instanceId = instanceId,
-                            type = "SendInfo",
-                            sessionId = event.sessionId.value,
-                            text = event.text,
-                        )
-                    is OutboundEvent.SendError ->
-                        Envelope(
-                            instanceId = instanceId,
-                            type = "SendError",
-                            sessionId = event.sessionId.value,
-                            text = event.text,
-                        )
-                    is OutboundEvent.SendPrompt ->
-                        Envelope(
-                            instanceId = instanceId,
-                            type = "SendPrompt",
-                            sessionId = event.sessionId.value,
-                        )
-                    is OutboundEvent.ShowLoginScreen ->
-                        Envelope(
-                            instanceId = instanceId,
-                            type = "ShowLoginScreen",
-                            sessionId = event.sessionId.value,
-                        )
-                    is OutboundEvent.SetAnsi ->
-                        Envelope(
-                            instanceId = instanceId,
-                            type = "SetAnsi",
-                            sessionId = event.sessionId.value,
-                            enabled = event.enabled,
-                        )
-                    is OutboundEvent.Close ->
-                        Envelope(
-                            instanceId = instanceId,
-                            type = "Close",
-                            sessionId = event.sessionId.value,
-                            reason = event.reason,
-                        )
-                    is OutboundEvent.ClearScreen ->
-                        Envelope(
-                            instanceId = instanceId,
-                            type = "ClearScreen",
-                            sessionId = event.sessionId.value,
-                        )
-                    is OutboundEvent.ShowAnsiDemo ->
-                        Envelope(
-                            instanceId = instanceId,
-                            type = "ShowAnsiDemo",
-                            sessionId = event.sessionId.value,
-                        )
-                    is OutboundEvent.SessionRedirect ->
-                        return // control-plane event, not published to Redis
-                    is OutboundEvent.GmcpData ->
-                        Envelope(
-                            instanceId = instanceId,
-                            type = "GmcpData",
-                            sessionId = event.sessionId.value,
-                            gmcpPackage = event.gmcpPackage,
-                            jsonData = event.jsonData,
-                        )
-                }.withSignature(sharedSecret)
-            publisher.publish(channelName, mapper.writeValueAsString(env))
-        } catch (e: Exception) {
-            log.warn(e) { "Failed to publish outbound event to Redis" }
-        }
-    }
-
-    private fun Envelope.payloadToSign(): String = "$instanceId|$type|$sessionId|$text|$enabled|$reason|$gmcpPackage|$jsonData"
-
-    private fun Envelope.withSignature(secret: String): Envelope = copy(signature = hmacSha256(secret, payloadToSign()))
-
-    private fun Envelope.hasValidSignature(secret: String): Boolean = isValidHmac(secret, payloadToSign(), signature)
-
-    private fun Envelope.toEvent(): OutboundEvent? {
+    override fun Envelope.toEvent(): OutboundEvent? {
         val sid = SessionId(sessionId)
         return when (type) {
-            "SendText" ->
-                OutboundEvent.SendText(
-                    sessionId = sid,
-                    text = text,
-                )
-            "SendInfo" ->
-                OutboundEvent.SendInfo(
-                    sessionId = sid,
-                    text = text,
-                )
-            "SendError" ->
-                OutboundEvent.SendError(
-                    sessionId = sid,
-                    text = text,
-                )
-            "SendPrompt" ->
-                OutboundEvent.SendPrompt(sessionId = sid)
-            "ShowLoginScreen" ->
-                OutboundEvent.ShowLoginScreen(sessionId = sid)
-            "SetAnsi" ->
-                OutboundEvent.SetAnsi(
-                    sessionId = sid,
-                    enabled = enabled,
-                )
-            "Close" ->
-                OutboundEvent.Close(
-                    sessionId = sid,
-                    reason = reason,
-                )
-            "ClearScreen" ->
-                OutboundEvent.ClearScreen(sessionId = sid)
-            "ShowAnsiDemo" ->
-                OutboundEvent.ShowAnsiDemo(sessionId = sid)
-            "GmcpData" ->
-                OutboundEvent.GmcpData(
-                    sessionId = sid,
-                    gmcpPackage = gmcpPackage,
-                    jsonData = jsonData,
-                )
+            "SendText" -> OutboundEvent.SendText(sid, text)
+            "SendInfo" -> OutboundEvent.SendInfo(sid, text)
+            "SendError" -> OutboundEvent.SendError(sid, text)
+            "SendPrompt" -> OutboundEvent.SendPrompt(sid)
+            "ShowLoginScreen" -> OutboundEvent.ShowLoginScreen(sid)
+            "SetAnsi" -> OutboundEvent.SetAnsi(sid, enabled)
+            "Close" -> OutboundEvent.Close(sid, reason)
+            "ClearScreen" -> OutboundEvent.ClearScreen(sid)
+            "ShowAnsiDemo" -> OutboundEvent.ShowAnsiDemo(sid)
+            "GmcpData" -> OutboundEvent.GmcpData(sid, gmcpPackage, jsonData)
             else -> {
                 log.warn { "Unknown outbound event type from Redis: $type" }
                 null
             }
         }
     }
+
+    override fun OutboundEvent.toEnvelope(): Envelope? =
+        when (this) {
+            is OutboundEvent.SendText ->
+                Envelope(instanceId = instanceId, type = "SendText", sessionId = sessionId.value, text = text)
+            is OutboundEvent.SendInfo ->
+                Envelope(instanceId = instanceId, type = "SendInfo", sessionId = sessionId.value, text = text)
+            is OutboundEvent.SendError ->
+                Envelope(instanceId = instanceId, type = "SendError", sessionId = sessionId.value, text = text)
+            is OutboundEvent.SendPrompt ->
+                Envelope(instanceId = instanceId, type = "SendPrompt", sessionId = sessionId.value)
+            is OutboundEvent.ShowLoginScreen ->
+                Envelope(instanceId = instanceId, type = "ShowLoginScreen", sessionId = sessionId.value)
+            is OutboundEvent.SetAnsi ->
+                Envelope(instanceId = instanceId, type = "SetAnsi", sessionId = sessionId.value, enabled = enabled)
+            is OutboundEvent.Close ->
+                Envelope(instanceId = instanceId, type = "Close", sessionId = sessionId.value, reason = reason)
+            is OutboundEvent.ClearScreen ->
+                Envelope(instanceId = instanceId, type = "ClearScreen", sessionId = sessionId.value)
+            is OutboundEvent.ShowAnsiDemo ->
+                Envelope(instanceId = instanceId, type = "ShowAnsiDemo", sessionId = sessionId.value)
+            is OutboundEvent.SessionRedirect -> null // control-plane event, not published to Redis
+            is OutboundEvent.GmcpData ->
+                Envelope(
+                    instanceId = instanceId,
+                    type = "GmcpData",
+                    sessionId = sessionId.value,
+                    gmcpPackage = gmcpPackage,
+                    jsonData = jsonData,
+                )
+        }
+
+    override fun Envelope.payloadToSign(): String =
+        "$instanceId|$type|$sessionId|$text|$enabled|$reason|$gmcpPackage|$jsonData"
+
+    override fun Envelope.withSignature(sig: String): Envelope = copy(signature = sig)
+
+    override suspend fun send(event: OutboundEvent) {
+        delegate.send(event)
+        publishEvent(event)
+    }
+
+    override fun tryReceive(): ChannelResult<OutboundEvent> = delegate.tryReceive()
+
+    override fun asReceiveChannel(): ReceiveChannel<OutboundEvent> = delegate.asReceiveChannel()
+
+    override fun close() = delegate.close()
+
+    fun delegateForMetrics(): LocalOutboundBus = delegate
 }
