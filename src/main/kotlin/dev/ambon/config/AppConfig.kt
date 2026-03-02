@@ -39,8 +39,8 @@ data class AppConfig(
     val sharding: ShardingConfig = ShardingConfig(),
 ) {
     fun validated(): AppConfig {
-        require(server.telnetPort in 1..65535) { "ambonMUD.server.telnetPort must be between 1 and 65535" }
-        require(server.webPort in 1..65535) { "ambonMUD.server.webPort must be between 1 and 65535" }
+        server.telnetPort.requireValidPort("ambonMUD.server.telnetPort")
+        server.webPort.requireValidPort("ambonMUD.server.webPort")
         require(server.inboundChannelCapacity > 0) { "ambonMUD.server.inboundChannelCapacity must be > 0" }
         require(server.outboundChannelCapacity > 0) { "ambonMUD.server.outboundChannelCapacity must be > 0" }
         require(server.sessionOutboundQueueCapacity > 0) { "ambonMUD.server.sessionOutboundQueueCapacity must be > 0" }
@@ -177,12 +177,10 @@ data class AppConfig(
         require(observability.metricsEndpoint.startsWith("/")) {
             "ambonMUD.observability.metricsEndpoint must start with '/'"
         }
-        require(observability.metricsHttpPort in 1..65535) {
-            "ambonMUD.observability.metricsHttpPort must be between 1 and 65535"
-        }
+        observability.metricsHttpPort.requireValidPort("ambonMUD.observability.metricsHttpPort")
 
         if (admin.enabled) {
-            require(admin.port in 1..65535) { "ambonMUD.admin.port must be between 1 and 65535" }
+            admin.port.requireValidPort("ambonMUD.admin.port")
             require(admin.token.isNotBlank()) { "ambonMUD.admin.token must be non-blank when admin.enabled=true" }
         }
 
@@ -203,12 +201,12 @@ data class AppConfig(
         }
 
         if (mode == DeploymentMode.ENGINE || mode == DeploymentMode.GATEWAY) {
-            require(grpc.server.port in 1..65535) { "ambonMUD.grpc.server.port must be between 1 and 65535" }
+            grpc.server.port.requireValidPort("ambonMUD.grpc.server.port")
         }
 
         if (mode == DeploymentMode.GATEWAY) {
             require(grpc.client.engineHost.isNotBlank()) { "ambonMUD.grpc.client.engineHost must be non-blank in gateway mode" }
-            require(grpc.client.enginePort in 1..65535) { "ambonMUD.grpc.client.enginePort must be between 1 and 65535" }
+            grpc.client.enginePort.requireValidPort("ambonMUD.grpc.client.enginePort")
             require(gateway.id in 0..0xFFFF) { "ambonMUD.gateway.id must be between 0 and 65535" }
             require(gateway.snowflake.idLeaseTtlSeconds > 0L) {
                 "ambonMUD.gateway.snowflake.idLeaseTtlSeconds must be > 0"
@@ -233,7 +231,7 @@ data class AppConfig(
             gateway.engines.forEachIndexed { idx, entry ->
                 require(entry.id.isNotBlank()) { "ambonMUD.gateway.engines[$idx].id must be non-blank" }
                 require(entry.host.isNotBlank()) { "ambonMUD.gateway.engines[$idx].host must be non-blank" }
-                require(entry.port in 1..65535) { "ambonMUD.gateway.engines[$idx].port must be between 1 and 65535" }
+                entry.port.requireValidPort("ambonMUD.gateway.engines[$idx].port")
                 require(seenGatewayEngineIds.add(entry.id)) {
                     "ambonMUD.gateway.engines contains duplicate id '${entry.id}'"
                 }
@@ -250,7 +248,7 @@ data class AppConfig(
                 "ambonMUD.sharding.advertiseHost must be non-blank when sharding.enabled=true"
             }
             sharding.advertisePort?.let { port ->
-                require(port in 1..65535) { "ambonMUD.sharding.advertisePort must be between 1 and 65535" }
+                port.requireValidPort("ambonMUD.sharding.advertisePort")
             }
 
             val seenAssignmentEngineIds = mutableSetOf<String>()
@@ -262,9 +260,7 @@ data class AppConfig(
                 require(assignment.host.isNotBlank()) {
                     "ambonMUD.sharding.registry.assignments[$idx].host must be non-blank"
                 }
-                require(assignment.port in 1..65535) {
-                    "ambonMUD.sharding.registry.assignments[$idx].port must be between 1 and 65535"
-                }
+                assignment.port.requireValidPort("ambonMUD.sharding.registry.assignments[$idx].port")
                 require(seenAssignmentEngineIds.add(assignment.engineId)) {
                     "ambonMUD.sharding.registry.assignments contains duplicate engineId '${assignment.engineId}'"
                 }
@@ -792,6 +788,10 @@ data class ShardingConfig(
     /** Zone instancing (layering) settings. */
     val instancing: InstanceConfig = InstanceConfig(),
 )
+
+private fun Int.requireValidPort(fieldName: String) {
+    require(this in 1..65535) { "$fieldName must be between 1 and 65535" }
+}
 
 private fun validateMobTier(
     name: String,
