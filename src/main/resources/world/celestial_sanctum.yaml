@@ -12,8 +12,8 @@ mobs:
     tier: boss
     level: 50
     hp: 999999
-    minDamage: 0
-    maxDamage: 0
+    minDamage: 1
+    maxDamage: 1
     xpReward: 0
     goldMin: 0
     goldMax: 0
@@ -30,7 +30,7 @@ mobs:
     goldMin: 0
     goldMax: 0
     behavior:
-      template: stationary_aggro
+      template: aggro_guard
       params:
         aggroMessage: "The Immortal Guardian's voice thunders: ONLY THE DIVINE MAY PASS!"
 
