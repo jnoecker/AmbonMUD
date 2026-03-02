@@ -91,9 +91,11 @@ class InterEngineMessageHandlingTest {
                 clock = clock,
                 tickMillis = 100L,
                 scheduler = scheduler,
-                interEngineBus = bus,
-                engineId = engineId,
                 onShutdown = onShutdown,
+                sharding = ShardingContext(
+                    engineId = engineId,
+                    interEngineBus = bus,
+                ),
             )
 
         return EngineTestHarness(engine, inbound, outbound, bus, players, clock)

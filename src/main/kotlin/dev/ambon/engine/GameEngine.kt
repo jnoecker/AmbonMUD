@@ -72,6 +72,33 @@ import java.time.Clock
 
 private val log = KotlinLogging.logger {}
 
+/**
+ * Groups all sharding / multi-engine parameters. Pass a non-default instance only when running
+ * in ENGINE or STANDALONE mode with an active shard topology; STANDALONE single-node setups
+ * can omit this entirely and rely on the all-null defaults.
+ */
+data class ShardingContext(
+    val engineId: String = "",
+    val handoffManager: HandoffManager? = null,
+    val interEngineBus: InterEngineBus? = null,
+    /** Returns the number of peer engines (excluding self). Used for `who` shard-coverage warnings. */
+    val peerEngineCount: () -> Int = { 0 },
+    /** O(1) cross-engine tell / who routing. */
+    val playerLocationIndex: PlayerLocationIndex? = null,
+    /** Zone registry for instancing-aware phase command. */
+    val zoneRegistry: ZoneRegistry? = null,
+)
+
+/**
+ * Groups optional persistence repositories that the engine writes to at runtime.
+ * All fields default to null; the engine degrades gracefully when a repo is absent.
+ */
+data class PersistenceContext(
+    val worldStateRepository: WorldStateRepository? = null,
+    val guildRepo: GuildRepository? = null,
+    val playerRepo: PlayerRepository? = null,
+)
+
 class GameEngine(
     private val inbound: InboundBus,
     private val outbound: OutboundBus,
@@ -89,24 +116,25 @@ class GameEngine(
     private val progression: PlayerProgression = PlayerProgression(),
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val onShutdown: suspend () -> Unit = {},
-    private val handoffManager: HandoffManager? = null,
-    private val interEngineBus: InterEngineBus? = null,
-    private val engineId: String = "",
-    /** Returns the number of peer engines (excluding self). Used for `who` shard coverage warnings. */
-    private val peerEngineCount: () -> Int = { 0 },
-    /** Player-location index for O(1) cross-engine tell routing. */
-    private val playerLocationIndex: PlayerLocationIndex? = null,
-    /** Zone registry for instancing-aware phase command. */
-    private val zoneRegistry: ZoneRegistry? = null,
-    private val questRegistry: QuestRegistry = QuestRegistry(),
-    private val achievementRegistry: AchievementRegistry = AchievementRegistry(),
     /** Mutable world feature state (doors, containers, levers). Caller owns and must pass the same instance to the persistence worker. */
     private val worldState: WorldStateRegistry = WorldStateRegistry(world),
-    /** Repository for persisting world feature states across restarts. */
-    private val worldStateRepository: WorldStateRepository? = null,
-    private val guildRepo: GuildRepository? = null,
-    private val playerRepo: PlayerRepository? = null,
+    private val questRegistry: QuestRegistry = QuestRegistry(),
+    private val achievementRegistry: AchievementRegistry = AchievementRegistry(),
+    private val sharding: ShardingContext = ShardingContext(),
+    private val persistence: PersistenceContext = PersistenceContext(),
 ) {
+    // Convenience delegates — expose grouped context fields as flat names so the
+    // existing class body compiles without modification.
+    private val engineId get() = sharding.engineId
+    private val handoffManager get() = sharding.handoffManager
+    private val interEngineBus get() = sharding.interEngineBus
+    private val peerEngineCount get() = sharding.peerEngineCount
+    private val playerLocationIndex get() = sharding.playerLocationIndex
+    private val zoneRegistry get() = sharding.zoneRegistry
+    private val worldStateRepository get() = persistence.worldStateRepository
+    private val guildRepo get() = persistence.guildRepo
+    private val playerRepo get() = persistence.playerRepo
+
     private val loginFlowHandler by lazy {
         dev.ambon.engine.events.LoginFlowHandler(
             outbound = outbound,
@@ -389,7 +417,7 @@ class GameEngine(
         if (guildRepo != null) {
             GuildSystem(
                 players = players,
-                guildRepo = guildRepo,
+                guildRepo = guildRepo!!,
                 outbound = outbound,
                 clock = clock,
                 maxSize = engineConfig.guild.maxSize,
@@ -525,7 +553,7 @@ class GameEngine(
     init {
         val crossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = if (handoffManager != null) ::handleCrossZoneMove else null
         val phaseCallback: (suspend (SessionId, String?) -> PhaseResult)? =
-            if (zoneRegistry != null && zoneRegistry.instancingEnabled() && handoffManager != null) {
+            if (zoneRegistry != null && zoneRegistry!!.instancingEnabled() && handoffManager != null) {
                 ::handlePhase
             } else {
                 null
@@ -695,14 +723,14 @@ class GameEngine(
                         var interEngineProcessed = 0
                         while (interEngineProcessed < maxInboundEventsPerTick) {
                             if (clock.millis() >= inboundDeadline) break
-                            val msg = interEngineBus.incoming().tryReceive().getOrNull() ?: break
+                            val msg = interEngineBus!!.incoming().tryReceive().getOrNull() ?: break
                             handleInterEngineMessage(msg)
                             interEngineProcessed++
                         }
                     }
 
                     if (handoffManager != null) {
-                        for (timedOut in handoffManager.expireTimedOut()) {
+                        for (timedOut in handoffManager!!.expireTimedOut()) {
                             handleHandoffTimeout(timedOut.sessionId)
                         }
                     }
