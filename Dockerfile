@@ -48,6 +48,13 @@ RUN mkdir -p /app/data \
 
 USER ambonmud
 
+# Persist player data (YAML backend) across container restarts.
+# Without this, container recreation loses all player files and players
+# must re-create their characters.  For production use, prefer mounting
+# a named volume (e.g. -v ambondata:/app/data) or switching to the
+# Postgres backend via AMBONMUD_PERSISTENCE_BACKEND=POSTGRES.
+VOLUME /app/data
+
 # Telnet, WebSocket/HTTP, Metrics/Admin, gRPC
 EXPOSE 4000 8080 9090 9091
 

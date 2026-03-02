@@ -1006,4 +1006,108 @@ class GameEngineLoginFlowTest {
             assertNotNull(ps)
             assertEquals(world.startRoom, ps!!.roomId, "Rogue with no override should spawn in world default start room")
         }
+
+    @Test
+    fun `two sessions creating same name concurrently does not crash`() =
+        runTest {
+            val inbound = LocalInboundBus()
+            val outbound = LocalOutboundBus()
+
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val repo = InMemoryPlayerRepository()
+            val items = ItemRegistry()
+            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
+
+            val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+            val mobs = MobRegistry()
+            val scheduler = Scheduler(clock)
+            val tickMillis = 10L
+            val engine =
+                GameEngine(
+                    inbound = inbound,
+                    outbound = outbound,
+                    players = players,
+                    world = world,
+                    clock = clock,
+                    tickMillis = tickMillis,
+                    scheduler = scheduler,
+                    mobs = mobs,
+                    items = items,
+                )
+            val engineJob = launch { engine.run() }
+
+            val sid1 = SessionId(1L)
+            val sid2 = SessionId(2L)
+            runCurrent()
+
+            // Both sessions connect and enter the same name
+            inbound.send(InboundEvent.Connected(sid1))
+            inbound.send(InboundEvent.Connected(sid2))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+            outbound.drainAll()
+
+            inbound.send(InboundEvent.LineReceived(sid1, "DupeName"))
+            inbound.send(InboundEvent.LineReceived(sid2, "DupeName"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+            outbound.drainAll()
+
+            // Both confirm "yes" to create
+            inbound.send(InboundEvent.LineReceived(sid1, "yes"))
+            inbound.send(InboundEvent.LineReceived(sid2, "yes"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+            outbound.drainAll()
+
+            // Both enter passwords
+            inbound.send(InboundEvent.LineReceived(sid1, "password"))
+            inbound.send(InboundEvent.LineReceived(sid2, "password"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+            outbound.drainAll()
+
+            // Both pick race (1 = Human)
+            inbound.send(InboundEvent.LineReceived(sid1, "1"))
+            inbound.send(InboundEvent.LineReceived(sid2, "1"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+            outbound.drainAll()
+
+            // Both pick class (1 = Warrior) — triggers prepareCreateAccount
+            inbound.send(InboundEvent.LineReceived(sid1, "1"))
+            inbound.send(InboundEvent.LineReceived(sid2, "1"))
+            advanceTimeBy(tickMillis)
+            runCurrent()
+
+            val outs = outbound.drainAll()
+
+            // Exactly one session should be logged in, the other should see "name taken"
+            val loggedIn1 = players.get(sid1) != null
+            val loggedIn2 = players.get(sid2) != null
+
+            assertTrue(
+                loggedIn1 || loggedIn2,
+                "At least one session should have been created successfully",
+            )
+            assertFalse(
+                loggedIn1 && loggedIn2,
+                "Both sessions should not have been created with the same name",
+            )
+
+            // The session that failed should have received a "name taken" error
+            val failedSid = if (loggedIn1) sid2 else sid1
+            assertTrue(
+                outs.any {
+                    it is OutboundEvent.SendError &&
+                        it.sessionId == failedSid &&
+                        it.text.contains("taken", ignoreCase = true)
+                },
+                "The duplicate session should receive a 'name taken' error. got=$outs",
+            )
+
+            engineJob.cancel()
+            inbound.close()
+            outbound.close()
+        }
 }
