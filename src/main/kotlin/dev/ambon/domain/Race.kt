@@ -16,6 +16,6 @@ enum class Race(
     ;
 
     companion object {
-        fun fromString(s: String): Race? = entries.firstOrNull { it.name.equals(s, ignoreCase = true) }
+        fun fromString(s: String): Race? = enumFromString(s)
     }
 }

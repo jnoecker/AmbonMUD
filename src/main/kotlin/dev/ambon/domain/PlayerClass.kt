@@ -14,7 +14,7 @@ enum class PlayerClass(
     ;
 
     companion object {
-        fun fromString(s: String): PlayerClass? = entries.firstOrNull { it.name.equals(s, ignoreCase = true) }
+        fun fromString(s: String): PlayerClass? = enumFromString(s)
 
         fun selectable(debugClassesEnabled: Boolean = false): List<PlayerClass> =
             entries.filter { !it.debugOnly || debugClassesEnabled }
