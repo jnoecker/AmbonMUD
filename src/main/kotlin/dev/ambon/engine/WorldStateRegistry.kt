@@ -3,10 +3,9 @@ package dev.ambon.engine
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.items.ItemInstance
-import dev.ambon.domain.world.ContainerState
 import dev.ambon.domain.world.Direction
-import dev.ambon.domain.world.DoorState
 import dev.ambon.domain.world.LeverState
+import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
 import dev.ambon.persistence.WorldStateSnapshot
@@ -55,8 +54,7 @@ class WorldStateRegistry(
 
     // ---- Mutable runtime state ----
 
-    private val doorStates = mutableMapOf<String, DoorState>()
-    private val containerStates = mutableMapOf<String, ContainerState>()
+    private val lockableStates = mutableMapOf<String, LockableState>()
     private val leverStates = mutableMapOf<String, LeverState>()
 
     /** Items currently inside each container. Key = feature ID. */
@@ -66,35 +64,34 @@ class WorldStateRegistry(
     var isDirty: Boolean = false
         private set
 
-    // ---- Door operations ----
+    // ---- Lockable (door / container) operations ----
 
-    fun getDoorState(featureId: String): DoorState {
-        val def = featuresById[featureId] as? RoomFeature.Door ?: return DoorState.CLOSED
-        return doorStates[featureId] ?: def.initialState
+    fun getLockableState(featureId: String): LockableState {
+        val def = featuresById[featureId]
+        val initial = when (def) {
+            is RoomFeature.Door -> def.initialState
+            is RoomFeature.Container -> def.initialState
+            else -> LockableState.CLOSED
+        }
+        return lockableStates[featureId] ?: initial
     }
 
-    fun setDoorState(
+    fun setLockableState(
         featureId: String,
-        state: DoorState,
+        state: LockableState,
     ) {
-        doorStates[featureId] = state
+        lockableStates[featureId] = state
         isDirty = true
     }
 
-    // ---- Container operations ----
+    // Convenience aliases for callers that still distinguish doors from containers
+    fun getDoorState(featureId: String): LockableState = getLockableState(featureId)
 
-    fun getContainerState(featureId: String): ContainerState {
-        val def = featuresById[featureId] as? RoomFeature.Container ?: return ContainerState.CLOSED
-        return containerStates[featureId] ?: def.initialState
-    }
+    fun setDoorState(featureId: String, state: LockableState) = setLockableState(featureId, state)
 
-    fun setContainerState(
-        featureId: String,
-        state: ContainerState,
-    ) {
-        containerStates[featureId] = state
-        isDirty = true
-    }
+    fun getContainerState(featureId: String): LockableState = getLockableState(featureId)
+
+    fun setContainerState(featureId: String, state: LockableState) = setLockableState(featureId, state)
 
     fun getContainerContents(featureId: String): List<ItemInstance> =
         containerContents[featureId] ?: emptyList()
@@ -167,13 +164,13 @@ class WorldStateRegistry(
             when (feature) {
                 is RoomFeature.Door -> {
                     if (feature.resetWithZone) {
-                        doorStates[id] = feature.initialState
+                        lockableStates[id] = feature.initialState
                         isDirty = true
                     }
                 }
                 is RoomFeature.Container -> {
                     if (feature.resetWithZone) {
-                        containerStates[id] = feature.initialState
+                        lockableStates[id] = feature.initialState
                         // Container contents are reset by GameEngine (needs ItemRegistry access)
                         isDirty = true
                     }
@@ -197,9 +194,18 @@ class WorldStateRegistry(
             containerContents.mapValues { (_, items) ->
                 items.map { it.id.value }
             }
+        val doors = mutableMapOf<String, String>()
+        val containers = mutableMapOf<String, String>()
+        for ((id, state) in lockableStates) {
+            when (featuresById[id]) {
+                is RoomFeature.Door -> doors[id] = state.name
+                is RoomFeature.Container -> containers[id] = state.name
+                else -> Unit
+            }
+        }
         return WorldStateSnapshot(
-            doorStates = doorStates.mapValues { (_, s) -> s.name },
-            containerStates = containerStates.mapValues { (_, s) -> s.name },
+            doorStates = doors,
+            containerStates = containers,
             leverStates = leverStates.mapValues { (_, s) -> s.name },
             containerItems = containerItemsMap,
         )
@@ -219,12 +225,12 @@ class WorldStateRegistry(
         resolveItem: (ItemId) -> ItemInstance?,
     ) {
         for ((id, stateName) in snapshot.doorStates) {
-            val state = DoorState.entries.firstOrNull { it.name == stateName } ?: continue
-            doorStates[id] = state
+            val state = LockableState.entries.firstOrNull { it.name == stateName } ?: continue
+            lockableStates[id] = state
         }
         for ((id, stateName) in snapshot.containerStates) {
-            val state = ContainerState.entries.firstOrNull { it.name == stateName } ?: continue
-            containerStates[id] = state
+            val state = LockableState.entries.firstOrNull { it.name == stateName } ?: continue
+            lockableStates[id] = state
         }
         for ((id, stateName) in snapshot.leverStates) {
             val state = LeverState.entries.firstOrNull { it.name == stateName } ?: continue

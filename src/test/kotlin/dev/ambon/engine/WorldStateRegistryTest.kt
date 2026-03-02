@@ -4,10 +4,9 @@ import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
-import dev.ambon.domain.world.ContainerState
 import dev.ambon.domain.world.Direction
-import dev.ambon.domain.world.DoorState
 import dev.ambon.domain.world.LeverState
+import dev.ambon.domain.world.LockableState
 import dev.ambon.persistence.WorldStateSnapshot
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -23,7 +22,7 @@ class WorldStateRegistryTest {
     @Test
     fun `initial door state comes from feature definition`() {
         val doorId = "ok_features:entrance/n"
-        assertEquals(DoorState.LOCKED, registry.getDoorState(doorId))
+        assertEquals(LockableState.LOCKED, registry.getDoorState(doorId))
     }
 
     @Test
@@ -31,25 +30,25 @@ class WorldStateRegistryTest {
         val doorId = "ok_features:entrance/n"
         assertFalse(registry.isDirty)
 
-        registry.setDoorState(doorId, DoorState.OPEN)
+        registry.setDoorState(doorId, LockableState.OPEN)
 
-        assertEquals(DoorState.OPEN, registry.getDoorState(doorId))
+        assertEquals(LockableState.OPEN, registry.getDoorState(doorId))
         assertTrue(registry.isDirty)
     }
 
     @Test
     fun `initial container state comes from feature definition`() {
         val containerId = "ok_features:storeroom/supply_chest"
-        assertEquals(ContainerState.CLOSED, registry.getContainerState(containerId))
+        assertEquals(LockableState.CLOSED, registry.getContainerState(containerId))
     }
 
     @Test
     fun `setContainerState updates state and marks dirty`() {
         val containerId = "ok_features:storeroom/supply_chest"
 
-        registry.setContainerState(containerId, ContainerState.OPEN)
+        registry.setContainerState(containerId, LockableState.OPEN)
 
-        assertEquals(ContainerState.OPEN, registry.getContainerState(containerId))
+        assertEquals(LockableState.OPEN, registry.getContainerState(containerId))
         assertTrue(registry.isDirty)
     }
 
@@ -84,7 +83,7 @@ class WorldStateRegistryTest {
 
     @Test
     fun `clearDirty resets isDirty flag`() {
-        registry.setDoorState("ok_features:entrance/n", DoorState.OPEN)
+        registry.setDoorState("ok_features:entrance/n", LockableState.OPEN)
         assertTrue(registry.isDirty)
 
         registry.clearDirty()
@@ -122,14 +121,14 @@ class WorldStateRegistryTest {
     @Test
     fun `resetZone resets features with resetWithZone=true`() {
         val doorId = "ok_features:entrance/n"
-        registry.setDoorState(doorId, DoorState.OPEN)
+        registry.setDoorState(doorId, LockableState.OPEN)
         val leverId = "ok_features:vault/iron_lever"
         registry.setLeverState(leverId, LeverState.DOWN)
         registry.clearDirty()
 
         registry.resetZone("ok_features")
 
-        assertEquals(DoorState.LOCKED, registry.getDoorState(doorId))
+        assertEquals(LockableState.LOCKED, registry.getDoorState(doorId))
         assertEquals(LeverState.UP, registry.getLeverState(leverId))
         assertTrue(registry.isDirty)
     }
@@ -137,7 +136,7 @@ class WorldStateRegistryTest {
     @Test
     fun `buildSnapshot captures current state`() {
         val doorId = "ok_features:entrance/n"
-        registry.setDoorState(doorId, DoorState.OPEN)
+        registry.setDoorState(doorId, LockableState.OPEN)
 
         val snap = registry.buildSnapshot()
 
@@ -159,8 +158,8 @@ class WorldStateRegistryTest {
             if (itemId.value == "ok_features:silver_coin") makeItem(itemId.value, "coin") else null
         }
 
-        assertEquals(DoorState.OPEN, registry.getDoorState(doorId))
-        assertEquals(ContainerState.OPEN, registry.getContainerState(containerId))
+        assertEquals(LockableState.OPEN, registry.getDoorState(doorId))
+        assertEquals(LockableState.OPEN, registry.getContainerState(containerId))
         assertEquals(1, registry.getContainerContents(containerId).size)
         assertFalse(registry.isDirty)
     }
