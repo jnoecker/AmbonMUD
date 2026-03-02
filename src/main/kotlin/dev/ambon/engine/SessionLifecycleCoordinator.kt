@@ -21,7 +21,7 @@ class SessionLifecycleCoordinator(
     private val guildSystem: GuildSystem?,
 ) {
     /** Cleans up all per-session state across every subsystem. */
-    fun onPlayerDisconnected(sessionId: SessionId) {
+    suspend fun onPlayerDisconnected(sessionId: SessionId) {
         combatSystem.onPlayerDisconnected(sessionId)
         regenSystem.onPlayerDisconnected(sessionId)
         abilitySystem.onPlayerDisconnected(sessionId)
