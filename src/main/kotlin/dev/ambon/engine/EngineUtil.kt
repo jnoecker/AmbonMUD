@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.Rewards
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
@@ -34,4 +35,27 @@ internal fun rollRange(
 ): Int {
     if (max <= min) return min
     return min + rng.nextInt((max - min) + 1)
+}
+
+/**
+ * Grants XP and gold from [rewards] to the player, sending feedback messages.
+ * Gold is added to [ps] immediately. XP is granted via [players.grantXp], which
+ * also handles persistence. The caller is responsible for persisting when no XP
+ * is granted (i.e. when [rewards.xp] == 0 and gold was awarded).
+ */
+internal suspend fun grantRewards(
+    sessionId: SessionId,
+    rewards: Rewards,
+    ps: PlayerState,
+    players: PlayerRegistry,
+    outbound: OutboundBus,
+) {
+    if (rewards.gold > 0) {
+        ps.gold += rewards.gold
+        outbound.send(OutboundEvent.SendText(sessionId, "You receive ${rewards.gold} gold."))
+    }
+    if (rewards.xp > 0) {
+        players.grantXp(sessionId, rewards.xp)
+        outbound.send(OutboundEvent.SendText(sessionId, "You gain ${rewards.xp} XP."))
+    }
 }

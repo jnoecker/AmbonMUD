@@ -1,5 +1,7 @@
 package dev.ambon.domain.quest
 
+import dev.ambon.domain.Rewards
+
 data class QuestDef(
     val id: String,
     val name: String,
@@ -18,9 +20,9 @@ data class QuestObjectiveDef(
 )
 
 data class QuestRewards(
-    val xp: Long = 0L,
-    val gold: Long = 0L,
-)
+    override val xp: Long = 0L,
+    override val gold: Long = 0L,
+) : Rewards
 
 enum class ObjectiveType { KILL, COLLECT }
 
