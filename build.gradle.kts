@@ -20,7 +20,7 @@ val hopliteVersion = "2.9.0"
 val micrometerVersion = "1.16.3"
 val grpcVersion = "1.79.0"
 val grpcKotlinVersion = "1.5.0"
-val protobufVersion = "3.25.5"
+val protobufVersion = "4.34.0"
 val exposedVersion = "0.58.0"
 
 dependencies {
@@ -54,6 +54,7 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql:12.0.3")
 
     // gRPC / Protobuf
+    implementation("com.google.protobuf:protobuf-java:$protobufVersion")
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
