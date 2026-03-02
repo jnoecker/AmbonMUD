@@ -285,6 +285,86 @@ class YamlPlayerRepositoryTest {
         }
 
     @Test
+    fun `findByName returns lowest-id record when duplicate names exist on disk`() =
+        runTest {
+            // Simulate the on-disk state left by a previous data-loss incident: two files both
+            // named "Ambuoroko" with IDs 1 and 5.  The repository must always return ID 1
+            // (lowest / earliest created) regardless of filesystem scan order.
+            val playersDir = tmp.resolve("players")
+            playersDir.toFile().mkdirs()
+
+            val hash1 = TestPasswordHasher.hash("password1")
+            val hash5 = TestPasswordHasher.hash("password5")
+
+            fun yaml(id: Long, hash: String) =
+                """
+                id: $id
+                name: "Ambuoroko"
+                roomId: "test:start"
+                createdAtEpochMs: 1000
+                lastSeenEpochMs: 2000
+                passwordHash: "$hash"
+                ansiEnabled: false
+                """.trimIndent()
+
+            playersDir.resolve("00000000000000000001.yaml").writeText(yaml(1, hash1))
+            playersDir.resolve("00000000000000000005.yaml").writeText(yaml(5, hash5))
+            tmp.resolve("next_player_id.txt").writeText("6")
+
+            val repo = YamlPlayerRepository(tmp)
+            val found = repo.findByName("Ambuoroko")
+
+            assertNotNull(found)
+            assertEquals(1L, found!!.id.value)
+        }
+
+    @Test
+    fun `nextId is corrected upward when next_player_id_txt is stale`() =
+        runTest {
+            // Simulate a stale next_player_id.txt (e.g. file lost and recreated from scratch)
+            // that falls behind the actual max file ID.  Creating a new player must not
+            // overwrite the existing file with the highest ID.
+            val playersDir = tmp.resolve("players")
+            playersDir.toFile().mkdirs()
+
+            val existingHash = TestPasswordHasher.hash("secret")
+            playersDir.resolve("00000000000000000010.yaml").writeText(
+                """
+                id: 10
+                name: "HighId"
+                roomId: "test:start"
+                createdAtEpochMs: 1000
+                lastSeenEpochMs: 2000
+                passwordHash: "$existingHash"
+                ansiEnabled: false
+                """.trimIndent(),
+            )
+            // Stale counter — would collide with IDs 1..10 if not corrected
+            tmp.resolve("next_player_id.txt").writeText("1")
+
+            val repo = YamlPlayerRepository(tmp)
+            // Force the index scan (and nextId correction) by doing a lookup
+            repo.findByName("HighId")
+
+            // Now create a new player; it must receive ID 11, not 1..10
+            val newRecord = repo.create(
+                PlayerCreationRequest(
+                    "NewPlayer",
+                    RoomId("test:start"),
+                    3000L,
+                    TestPasswordHasher.hash("pw"),
+                    ansiEnabled = false,
+                ),
+            )
+            assertEquals(11L, newRecord.id.value)
+
+            // The existing file must be untouched
+            val existing = repo.findByName("HighId")
+            assertNotNull(existing)
+            assertEquals(10L, existing!!.id.value)
+        }
+
+    @Test
     fun `save and reload preserves mail inbox`() =
         runTest {
             val repo = YamlPlayerRepository(tmp)
