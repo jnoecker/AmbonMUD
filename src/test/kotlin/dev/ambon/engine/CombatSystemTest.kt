@@ -218,7 +218,7 @@ class CombatSystemTest {
             val player = players.get(sid)
             assertNotNull(player)
             assertEquals(12, player!!.maxHp)
-            assertEquals(11, player.hp)
+            assertEquals(9, player.hp)
         }
 
     @Test
