@@ -7,7 +7,6 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.persistence.GuildRepository
 import dev.ambon.persistence.PlayerId
-import dev.ambon.persistence.PlayerRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Clock
 
@@ -23,7 +22,6 @@ data class PendingGuildInvite(
 class GuildSystem(
     private val players: PlayerRegistry,
     private val guildRepo: GuildRepository,
-    private val playerRepo: PlayerRepository,
     private val outbound: OutboundBus,
     private val clock: Clock = Clock.systemUTC(),
     private val maxSize: Int = 50,
@@ -135,11 +133,7 @@ class GuildSystem(
                     )
                 }
             } else {
-                // Update offline player record
-                val record = playerRepo.findById(memberId)
-                if (record != null) {
-                    playerRepo.save(record.copy(guildId = null))
-                }
+                players.updateOfflinePlayer(memberId) { it.copy(guildId = null) }
             }
         }
 
@@ -273,10 +267,7 @@ class GuildSystem(
                 outbound.send(OutboundEvent.SendInfo(targetSid, "You have been kicked from guild '${guild.name}'."))
             }
         } else {
-            val record = playerRepo.findById(targetPlayerId)
-            if (record != null) {
-                playerRepo.save(record.copy(guildId = null))
-            }
+            players.updateOfflinePlayer(targetPlayerId) { it.copy(guildId = null) }
         }
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "$targetName has been kicked from the guild."))
@@ -453,7 +444,7 @@ class GuildSystem(
 
     private suspend fun resolveGuildMemberName(playerId: PlayerId): String? {
         val sid = players.findSessionByPlayerId(playerId)
-        return if (sid != null) players.get(sid)?.name else playerRepo.findById(playerId)?.name
+        return if (sid != null) players.get(sid)?.name else players.findOfflinePlayerName(playerId)
     }
 
     private fun pruneExpiredInvites() {

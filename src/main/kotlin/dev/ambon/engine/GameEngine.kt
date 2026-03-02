@@ -386,11 +386,10 @@ class GameEngine(
             markGroupDirty = ::markGroupDirty,
         )
     private val guildSystem: GuildSystem? =
-        if (guildRepo != null && playerRepo != null) {
+        if (guildRepo != null) {
             GuildSystem(
                 players = players,
                 guildRepo = guildRepo,
-                playerRepo = playerRepo,
                 outbound = outbound,
                 clock = clock,
                 maxSize = engineConfig.guild.maxSize,

@@ -46,7 +46,6 @@ class CommandRouterGuildTest {
                 GuildSystem(
                     players = players,
                     guildRepo = InMemoryGuildRepository(),
-                    playerRepo = playerRepo,
                     outbound = outbound,
                     clock = clock,
                 )
