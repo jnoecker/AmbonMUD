@@ -7,6 +7,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PlayerCreationRequest
 import dev.ambon.persistence.PlayerId
+import dev.ambon.persistence.PlayerPersistenceException
 import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
 import kotlinx.coroutines.withContext
@@ -168,23 +169,27 @@ class PlayerRegistry(
         val hash = withContext(hashingContext) { passwordHasher.hash(password) }
         val baseStat = PlayerState.BASE_STAT
         val record =
-            repo.create(
-                PlayerCreationRequest(
-                    name = name,
-                    startRoomId = classStartRooms[playerClass] ?: startRoom,
-                    nowEpochMs = now,
-                    passwordHash = hash,
-                    ansiEnabled = defaultAnsiEnabled,
-                    race = race.name,
-                    playerClass = playerClass.name,
-                    strength = baseStat + race.strMod,
-                    dexterity = baseStat + race.dexMod,
-                    constitution = baseStat + race.conMod,
-                    intelligence = baseStat + race.intMod,
-                    wisdom = baseStat + race.wisMod,
-                    charisma = baseStat + race.chaMod,
-                ),
-            )
+            try {
+                repo.create(
+                    PlayerCreationRequest(
+                        name = name,
+                        startRoomId = classStartRooms[playerClass] ?: startRoom,
+                        nowEpochMs = now,
+                        passwordHash = hash,
+                        ansiEnabled = defaultAnsiEnabled,
+                        race = race.name,
+                        playerClass = playerClass.name,
+                        strength = baseStat + race.strMod,
+                        dexterity = baseStat + race.dexMod,
+                        constitution = baseStat + race.conMod,
+                        intelligence = baseStat + race.intMod,
+                        wisdom = baseStat + race.wisMod,
+                        charisma = baseStat + race.chaMod,
+                    ),
+                )
+            } catch (_: PlayerPersistenceException) {
+                return CreateAccountPrep.Taken
+            }
         return CreateAccountPrep.Ready(record)
     }
 
@@ -274,23 +279,27 @@ class PlayerRegistry(
         val baseStat = PlayerState.BASE_STAT
         val now = clock.millis()
         val created =
-            repo.create(
-                PlayerCreationRequest(
-                    name = name,
-                    startRoomId = classStartRooms[playerClass] ?: startRoom,
-                    nowEpochMs = now,
-                    passwordHash = withContext(hashingContext) { passwordHasher.hash(password) },
-                    ansiEnabled = defaultAnsiEnabled,
-                    race = race.name,
-                    playerClass = playerClass.name,
-                    strength = baseStat + race.strMod,
-                    dexterity = baseStat + race.dexMod,
-                    constitution = baseStat + race.conMod,
-                    intelligence = baseStat + race.intMod,
-                    wisdom = baseStat + race.wisMod,
-                    charisma = baseStat + race.chaMod,
-                ),
-            )
+            try {
+                repo.create(
+                    PlayerCreationRequest(
+                        name = name,
+                        startRoomId = classStartRooms[playerClass] ?: startRoom,
+                        nowEpochMs = now,
+                        passwordHash = withContext(hashingContext) { passwordHasher.hash(password) },
+                        ansiEnabled = defaultAnsiEnabled,
+                        race = race.name,
+                        playerClass = playerClass.name,
+                        strength = baseStat + race.strMod,
+                        dexterity = baseStat + race.dexMod,
+                        constitution = baseStat + race.conMod,
+                        intelligence = baseStat + race.intMod,
+                        wisdom = baseStat + race.wisMod,
+                        charisma = baseStat + race.chaMod,
+                    ),
+                )
+            } catch (_: PlayerPersistenceException) {
+                return CreateResult.Taken
+            }
         bindSession(sessionId, created, now)
         return CreateResult.Ok
     }
