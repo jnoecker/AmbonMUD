@@ -16,7 +16,7 @@ enum class DeploymentMode {
 }
 
 data class AmbonMUDRootConfig(
-    val ambonMUD: AppConfig = AppConfig(),
+    val ambonmud: AppConfig = AppConfig(),
 )
 
 data class AppConfig(
