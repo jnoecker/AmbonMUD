@@ -8,7 +8,8 @@ import dev.ambon.engine.events.OutboundEvent
 data object WanderAction : BtNode {
     override suspend fun tick(ctx: BtContext): BtResult {
         val room = ctx.world.rooms[ctx.mob.roomId] ?: return BtResult.FAILURE
-        val exits = room.exits.values.toList()
+        val homeZone = ctx.mob.roomId.zone
+        val exits = room.exits.values.filter { it.zone == homeZone }
         if (exits.isEmpty()) return BtResult.FAILURE
 
         val destination = exits[ctx.rng.nextInt(exits.size)]
