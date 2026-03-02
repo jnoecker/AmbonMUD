@@ -313,7 +313,7 @@ class CombatSystem(
                 val playerStats = resolveEffectiveStats(player, playerBonuses, playerMods)
                 val playerAttack = playerBonuses.attack
                 val playerStrBonus = PlayerState.statBonus(playerStats.str, config.strDivisor)
-                val playerRoll = rollDamage()
+                val playerRoll = rollRange(rng, config.minDamage, config.maxDamage)
                 val rawPlayerDamage = playerRoll + playerAttack + playerStrBonus
                 val preClampPlayerDamage = rawPlayerDamage - mob.armor
                 val effectivePlayerDamage = preClampPlayerDamage.coerceAtLeast(1)
@@ -392,7 +392,7 @@ class CombatSystem(
             if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
                 outbound.send(OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s attack!"))
             } else {
-                val mobRoll = rollDamage(mob.minDamage, mob.maxDamage)
+                val mobRoll = rollRange(rng, mob.minDamage, mob.maxDamage)
                 var mobDamage = mobRoll
                 if (statusEffects != null) {
                     mobDamage = statusEffects.absorbPlayerDamage(targetSid, mobDamage)
@@ -496,16 +496,6 @@ class CombatSystem(
         } else {
             config.threatMultiplierDefault
         }
-
-    private fun rollDamage(
-        min: Int = config.minDamage,
-        max: Int = config.maxDamage,
-    ): Int {
-        require(min > 0) { "min damage must be > 0" }
-        require(max >= min) { "max damage must be >= min damage" }
-        val range = (max - min) + 1
-        return min + rng.nextInt(range)
-    }
 
     private fun combatFeedbackSuffix(
         roll: Int,
