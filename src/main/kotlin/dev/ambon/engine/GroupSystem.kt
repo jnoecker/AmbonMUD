@@ -178,14 +178,7 @@ class GroupSystem(
 
         outbound.send(OutboundEvent.SendText(sessionId, "You leave the group."))
 
-        if (group.members.size <= 1) {
-            // Group dissolves
-            val remaining = group.members.firstOrNull()
-            if (remaining != null) {
-                groupBySession.remove(remaining)
-                markGroupDirty(remaining)
-                outbound.send(OutboundEvent.SendText(remaining, "$playerName leaves the group. The group has been disbanded."))
-            }
+        if (dissolveGroupIfNeeded(group, "$playerName leaves the group. The group has been disbanded.")) {
             return null
         }
 
@@ -234,19 +227,7 @@ class GroupSystem(
 
         outbound.send(OutboundEvent.SendText(targetSid, "You have been kicked from the group."))
 
-        if (group.members.size <= 1) {
-            // Group dissolves
-            val remaining = group.members.firstOrNull()
-            if (remaining != null) {
-                groupBySession.remove(remaining)
-                markGroupDirty(remaining)
-                outbound.send(
-                    OutboundEvent.SendText(
-                        remaining,
-                        "$kickedName has been kicked. The group has been disbanded.",
-                    ),
-                )
-            }
+        if (dissolveGroupIfNeeded(group, "$kickedName has been kicked. The group has been disbanded.")) {
             return null
         }
 
@@ -300,7 +281,7 @@ class GroupSystem(
         return null
     }
 
-    fun onPlayerDisconnected(sessionId: SessionId) {
+    suspend fun onPlayerDisconnected(sessionId: SessionId) {
         // Remove pending invites where this player is invitee
         pendingInvites.remove(sessionId)
         // Remove pending invites where this player is inviter
@@ -309,15 +290,7 @@ class GroupSystem(
         val group = groupBySession.remove(sessionId) ?: return
         group.members.remove(sessionId)
 
-        if (group.members.size <= 1) {
-            // Group dissolves
-            val remaining = group.members.firstOrNull()
-            if (remaining != null) {
-                groupBySession.remove(remaining)
-                markGroupDirty(remaining)
-            }
-            return
-        }
+        if (dissolveGroupIfNeeded(group)) return
 
         // Transfer leadership if needed
         if (group.leader == sessionId) {
@@ -351,6 +324,27 @@ class GroupSystem(
         if (group.leader == oldSid) {
             group.leader = newSid
         }
+    }
+
+    /**
+     * Dissolves [group] if it has one or fewer members remaining.
+     *
+     * When dissolved, the sole remaining member (if any) is removed from [groupBySession]
+     * and marked dirty. If [disbandMessage] is non-null it is sent to that member.
+     *
+     * @return `true` if the group was dissolved, `false` if it still has enough members.
+     */
+    private suspend fun dissolveGroupIfNeeded(group: Group, disbandMessage: String? = null): Boolean {
+        if (group.members.size > 1) return false
+        val remaining = group.members.firstOrNull()
+        if (remaining != null) {
+            groupBySession.remove(remaining)
+            markGroupDirty(remaining)
+            if (disbandMessage != null) {
+                outbound.send(OutboundEvent.SendText(remaining, disbandMessage))
+            }
+        }
+        return true
     }
 
     private fun cleanExpiredInvites() {
