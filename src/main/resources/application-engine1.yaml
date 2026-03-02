@@ -2,7 +2,7 @@
 # Run with: ./gradlew runEngine1
 # Owns: tutorial_glade, ambon_hub, demo_ruins, low_training_marsh, low_training_highlands
 # gRPC server: 9091  |  metrics: 9191
-ambonMUD:
+ambonmud:
   mode: ENGINE
   sharding:
     enabled: true

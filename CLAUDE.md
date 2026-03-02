@@ -36,10 +36,10 @@ Run tests matching a pattern:
 
 Override any config value at runtime with `-Pconfig.<key>=<value>`:
 ```bash
-./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
-./gradlew run -Pconfig.ambonMUD.logging.packageLevels.dev.ambon.transport=DEBUG
-./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000
-./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES  # connection defaults match docker compose
+./gradlew run -Pconfig.ambonmud.logging.level=DEBUG
+./gradlew run -Pconfig.ambonmud.logging.packageLevels.dev.ambon.transport=DEBUG
+./gradlew run -Pconfig.ambonmud.server.telnetPort=5000
+./gradlew run -Pconfig.ambonmud.persistence.backend=POSTGRES  # connection defaults match docker compose
 ```
 
 Multi-instance local testing (start engines first, then gateways):

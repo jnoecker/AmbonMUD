@@ -2,7 +2,7 @@
 # Run with: ./gradlew runGateway1
 # Telnet: 4000  |  Web: 8080  |  metrics: 9180
 # Connects to engine-1 (:9091) and engine-2 (:9092)
-ambonMUD:
+ambonmud:
   mode: GATEWAY
   gateway:
     id: 0
