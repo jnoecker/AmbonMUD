@@ -1,0 +1,529 @@
+zone: trailey
+lifespan: 0
+startRoom: cul_de_sac
+
+mobs:
+  # ─── OUTDOOR / HOA ──────────────────────────────────────────────────────────
+  hoa_inspector:
+    name: "the HOA Inspector"
+    room: cul_de_sac
+    tier: standard
+    level: 2
+    xpReward: 15
+    goldMin: 5
+    goldMax: 10
+    respawnSeconds: 180
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The HOA Inspector materializes from behind an approved shrub, clipboard already raised. 'NOTICE OF VIOLATION — your PRESENCE is non-compliant with section 4.7.2 of the community guidelines!'"
+
+  beige_neighbor:
+    name: "a beige neighbor"
+    room: cul_de_sac
+    tier: weak
+    level: 1
+    xpReward: 5
+    goldMin: 0
+    goldMax: 1
+    respawnSeconds: 90
+    behavior:
+      template: wander
+
+  lawn_mower_bot:
+    name: "an aggressive robotic lawn mower"
+    room: yard_upper
+    tier: standard
+    level: 3
+    xpReward: 20
+    goldMin: 0
+    goldMax: 3
+    respawnSeconds: 120
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The robotic lawn mower pivots sharply, blades spinning at full speed, and targets your ankles. The HOA programmed it for zero tolerance."
+
+  bounced_squirrel:
+    name: "a repeatedly bounced squirrel"
+    room: trampoline
+    tier: weak
+    level: 1
+    xpReward: 3
+    goldMin: 0
+    goldMax: 0
+    respawnSeconds: 60
+    behavior:
+      template: wander
+
+  # ─── SPY HOUSE INTERIOR ──────────────────────────────────────────────────────
+  spy_drone:
+    name: "a surveillance drone"
+    room: foyer
+    tier: standard
+    level: 4
+    xpReward: 25
+    goldMin: 2
+    goldMax: 8
+    respawnSeconds: 180
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The drone's camera snaps to your face. A cheerful recognition chime plays. Then it fires."
+
+  laser_sentinel:
+    name: "a laser sentinel mk. II"
+    room: hall
+    tier: standard
+    level: 5
+    xpReward: 35
+    goldMin: 3
+    goldMax: 10
+    respawnSeconds: 240
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The sentinel's targeting laser sweeps the floor and settles on your center mass. A lock-on beep confirms. It does not fire a warning shot."
+
+  # ─── HAILEY'S ZONE ───────────────────────────────────────────────────────────
+  makeup_mannequin:
+    name: "an animated cosmetics mannequin"
+    room: haileys_parlor
+    tier: standard
+    level: 4
+    xpReward: 30
+    goldMin: 5
+    goldMax: 15
+    respawnSeconds: 120
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The mannequin turns its perfectly made-up face toward you and opens its glossy lips in a silent scream. Then it attacks with surprising precision."
+
+  perfume_cloud:
+    name: "a sentient perfume cloud"
+    room: haileys_dressing
+    tier: standard
+    level: 5
+    xpReward: 25
+    goldMin: 2
+    goldMax: 8
+    respawnSeconds: 90
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The perfume cloud drifts toward you with alarming intentionality. The scent is overwhelming — 'Midnight Blossoms' — and the damage is significant."
+
+  balance_beam_automaton:
+    name: "the Balance Beam Automaton"
+    room: haileys_gym
+    tier: elite
+    level: 7
+    hp: 400
+    xpReward: 120
+    goldMin: 8
+    goldMax: 15
+    respawnSeconds: 300
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The Balance Beam Automaton sticks a perfect landing and pivots to face you. It executes a round-off back-handspring as a warning. You should take the warning seriously."
+
+  # ─── TREVOR'S ZONE ───────────────────────────────────────────────────────────
+  robot_deer:
+    name: "a mechanical deer target"
+    room: trevors_range
+    tier: weak
+    level: 3
+    xpReward: 15
+    goldMin: 1
+    goldMax: 5
+    respawnSeconds: 60
+    behavior:
+      template: wander
+
+  robot_duck:
+    name: "a mechanical duck target"
+    room: trevors_range
+    tier: weak
+    level: 2
+    xpReward: 10
+    goldMin: 0
+    goldMax: 3
+    respawnSeconds: 60
+    behavior:
+      template: wander
+
+  robot_wolf:
+    name: "the Alpha Wolf-Bot Mark VII"
+    room: trevors_armory
+    tier: elite
+    level: 8
+    hp: 500
+    minDamage: 15
+    maxDamage: 25
+    xpReward: 150
+    goldMin: 10
+    goldMax: 20
+    respawnSeconds: 600
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The Alpha Wolf-Bot's eyes blaze red. It bares a mouthful of articulated steel teeth and LUNGES with the hydraulic force of eight hundred pounds per square inch!"
+
+  inflate_goon:
+    name: "Big Biff, the Roughhousing Inflate-O-Goon"
+    room: trevors_roughhousing
+    tier: standard
+    level: 6
+    xpReward: 80
+    goldMin: 5
+    goldMax: 15
+    respawnSeconds: 240
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "Big Biff BOUNCES off the foam wall with his entire body! He takes the hit like it's nothing — in fact, he seems to be GETTING BIGGER. Each blow inflates him further. His eyes go wide. He is enormous now. He is VAST. He is sweating. He is—"
+
+  # ─── HUMPTY DUMPTY (UPSTAIRS) ────────────────────────────────────────────────
+  humpty_dumpty:
+    name: "Humpty Dumpty, the Uncracked Sovereign"
+    room: humpty_cracked
+    tier: elite
+    level: 12
+    hp: 1500
+    minDamage: 25
+    maxDamage: 45
+    xpReward: 500
+    goldMin: 20
+    goldMax: 40
+    respawnSeconds: 900
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "HUMPTY DUMPTY HAD A GREAT FALL — and then reassembled himself while all the king's horses watched helplessly! He looms above you from the Wall, cracks spreading and sealing, grinning with absolutely unearned confidence. He LEAPS!"
+
+  humpty_shell_piece:
+    name: "a reassembling shell fragment"
+    room: humpty_arena
+    tier: standard
+    level: 8
+    xpReward: 40
+    goldMin: 3
+    goldMax: 8
+    respawnSeconds: 30
+    behavior:
+      template: aggro_guard
+      params:
+        aggroMessage: "The shell fragment skitters across the floor toward you, cracking and reforming as it moves. It is very focused on the task."
+
+items:
+  hoa_violation_notice:
+    displayName: "an HOA violation notice"
+    keyword: "notice"
+    description: "A crisp official document noting violations including: improper mailbox angle (0.3 degrees off regulation), non-compliant lawn length (0.2mm above the approved maximum), unauthorized personality, and 'general atmospheric non-beige-ness.' It is terrifyingly thorough."
+    room: cul_de_sac
+    basePrice: 0
+
+  spy_watch:
+    displayName: "a classified spy smartwatch"
+    keyword: "watch"
+    description: "A titanium-cased smartwatch with seventeen listed functions and fourteen unlisted ones, the latter labeled in a cipher. It tracks biometrics, decrypts nearby signals, and deploys a thumbnail-sized blast shield if you press the crown twice. Also tells the time."
+    slot: hand
+    armor: 4
+    room: foyer
+    basePrice: 85
+
+  spy_gadget_pen:
+    displayName: "a spy gadget pen"
+    keyword: "pen"
+    description: "It looks like an ordinary pen. It is not. The cap fires a micro-grappling hook; the body contains a compressed-air sedative dart; the clip is a USB drive containing enough embarrassing information to neutralize a mid-sized international incident. Also it writes."
+    consumable: true
+    onUse:
+      healHp: 25
+    room: hall
+    basePrice: 50
+
+  makeup_compact:
+    displayName: "a professional makeup compact"
+    keyword: "compact"
+    description: "A heavy professional-grade compact from Hailey's collection. The mirror is perfect; the powder inside has a slight luminescent quality that is not standard in commercial cosmetics. Opening it and taking a moment with it is, for reasons you can't explain, actually quite restoring."
+    consumable: true
+    onUse:
+      healHp: 15
+    room: haileys_parlor
+    basePrice: 35
+
+  luxury_perfume:
+    displayName: "a bottle of Midnight Blossoms perfume"
+    keyword: "perfume"
+    description: "A heavy crystal bottle of Hailey's prize perfume — 'Midnight Blossoms,' according to the engraved stopper. One spritz and you are undeniably more capable. It is unclear whether this is psychological or chemical. The sentient cloud that guards it suggests the latter."
+    consumable: true
+    onUse:
+      healHp: 30
+    room: haileys_dressing
+    basePrice: 60
+
+  competition_leotard:
+    displayName: "Hailey's competition leotard"
+    keyword: "leotard"
+    description: "A full-competition leotard in midnight blue and silver, decorated with precisely applied crystals along the neckline and sleeves. Designed for a Level 10 gymnast who expects to win. The stitching is structural enough to be classified as armor by people who know about these things."
+    slot: hand
+    armor: 5
+    room: haileys_gym
+    basePrice: 90
+
+  paintball_marker:
+    displayName: "Trevor's tactical paintball marker"
+    keyword: "marker"
+    description: "A heavily modified paintball marker with a custom grip, extended barrel, and a two-hundred-round hopper. The paint is Trevor's proprietary formula: glows in the dark, stains for six weeks, and leaves a satisfying impact sound on robot surfaces."
+    slot: hand
+    damage: 11
+    room: trevors_range
+    basePrice: 75
+
+  robot_spring_coil:
+    displayName: "a precision robot spring coil"
+    keyword: "coil"
+    description: "A tight helical spring machined to tolerances of one ten-thousandth of an inch, salvaged from one of Trevor's mechanical targets. Trevor made it. It is better than it needs to be. That is on purpose."
+    room: trevors_armory
+    basePrice: 25
+
+  deflated_remnant:
+    displayName: "a deflated Biff remnant"
+    keyword: "remnant"
+    description: "A flattened, rubbery fragment of something that used to be enormous — clearly the aftermath of Big Biff's critical inflation failure. It still faintly bounces when you put it down. On one side, in stretched letters: 'BIFF WAS HERE.'"
+    room: trevors_roughhousing
+    basePrice: 10
+
+  humpty_shell_fragment:
+    displayName: "a fragment of Humpty's shell"
+    keyword: "fragment"
+    description: "A curved piece of shell from Humpty Dumpty, inscribed on the inner surface in tiny lettering: 'ALL THE KING'S MEN FAILED AGAIN (round 47).' It's warm to the touch and faintly vibrates, as if it wants to rejoin something."
+    room: humpty_arena
+    basePrice: 150
+
+shops:
+  spy_supply_depot:
+    name: "The Foyer Supply Depot"
+    room: foyer
+    items:
+      - spy_gadget_pen
+      - spy_watch
+
+  hailey_boutique:
+    name: "Hailey's Beauty Boutique"
+    room: haileys_parlor
+    items:
+      - makeup_compact
+      - luxury_perfume
+      - competition_leotard
+
+rooms:
+  # ─── THE HOA CUL-DE-SAC ──────────────────────────────────────────────────────
+
+  cul_de_sac:
+    title: "The Cul-de-Sac of Mirrors"
+    description: "The HOA-approved cul-de-sac stretches in every direction with uncanny uniformity. Every house is Approved Beige (Pantone 7527 C). Every lawn is precisely 3.25 inches tall. Every mailbox is the same colonial brass at the same height facing the same direction. Strangely, no matter which direction you walk — north, south, west — you find yourself standing in front of the same house, which is, in fact, every house. The neighborhood watches from behind identical blinds. A concealed staircase behind a regulation-height hedge rises upward to somewhere considerably more interesting. The driveway of the house to the east is where things begin."
+    exits:
+      n: cul_de_sac
+      s: cul_de_sac
+      w: cul_de_sac
+      e: driveway
+      u: ambon_hub:hall_of_portals
+
+  driveway:
+    title: "The Approved Driveway"
+    description: "A regulation-width concrete driveway, sealed and re-sealed to the HOA's exacting standards. Two faint tire tracks mark the path of a very sensible sedan. The surface is immaculate — no oil stains, no chalk drawings, no evidence that children have ever existed here, which is suspicious given what's inside. A subtle seam in the concrete near the garage suggests considerably more going on underground than the exterior implies. The cul-de-sac is west; the parking pad and garage are ahead; the sidewalk runs south."
+    exits:
+      w: cul_de_sac
+      e: parking_pad
+      s: sidewalk
+
+  sidewalk:
+    title: "The Regulation Sidewalk"
+    description: "A perfectly level concrete sidewalk, expansion joints measured to the inch, not a crack to be seen. Identical topiary balls in identical planters flank the front door to the north. The whole street smells of fresh paint applied over previous fresh paint. A faint electronic hum drifts from within the house. The driveway is north; the front door of the spy house is east."
+    exits:
+      n: driveway
+      e: foyer
+
+  parking_pad:
+    title: "The Parking Pad"
+    description: "An extended concrete pad beside the garage, spotlessly clean. A basketball hoop stands at regulation height with a regulation-white net and absolutely no scuffs on the backboard, raising serious questions about whether it has ever been used for basketball. The garage door hums on the south wall. The driveway is west; the side yard stretches to the east."
+    exits:
+      w: driveway
+      s: garage
+      e: yard_upper
+
+  yard_upper:
+    title: "The Front Yard - Upper Section"
+    description: "The front yard is a masterpiece of regulation landscaping: turf that is more algorithm than grass, beds of HOA-approved perennials in approved colors (beige, off-white, and natural), and a water feature making an approved sound. An aggressive robotic lawn mower patrols a perfect spiral path, its sensors already registering your non-compliant presence. The parking pad is west; the back section of the yard lies south."
+    exits:
+      w: parking_pad
+      s: yard_lower
+
+  yard_lower:
+    title: "The Back Yard - Lower Section"
+    description: "The back yard is where regulation loosens its grip, slightly. A tall privacy fence (approved height, approved color) blocks the neighbors' view, and behind it: actual human life. A worn patch of grass from repeated running starts. Chalk gymnastics floor exercise outlines in one corner. The deck of the house is accessible west. The trampoline is visible to the south, its safety net slightly worn at one corner in the way only a well-loved trampoline ever gets."
+    exits:
+      n: yard_upper
+      s: trampoline
+      w: deck
+
+  trampoline:
+    title: "The Trampoline"
+    description: "A large rectangular trampoline fills the back corner of the yard, its blue mat weathered to the ideal consistency by years of enthusiastic use. The safety net has two repaired sections and one small hole that everyone agreed was fine. Spring pockets around the frame hold assorted stuffed animals and action figures trapped there for years, their tiny faces pressed against the net with resigned acceptance. A squirrel that bounced onto the mat at some point appears to have been here for a while and has developed an opinion about the experience. Small rubber feet marks indicate exactly where to jump for maximum height. The back yard is north."
+    exits:
+      n: yard_lower
+
+  garage:
+    title: "The Spy Garage"
+    description: "The garage door closes behind you and the ordinary world ends. The suburban concrete shell retracts into the floor and the true garage reveals itself: brushed steel, LED task lighting, and three wall-mounted equipment bays holding gear in padded silhouette mounts — shapes suggesting tools with no civilian designation. A full-length workbench holds mechanical components, disassembled electronics, and a schematic board covered in revisions. The vehicle bay holds something low-slung and fast under a fitted cover. The parking pad access is north; the kitchen service entrance is south."
+    exits:
+      n: parking_pad
+      s: kitchen_nook
+
+  # ─── GROUND FLOOR INTERIOR ───────────────────────────────────────────────────
+
+  foyer:
+    title: "The Foyer - Spy House Entry"
+    description: "What appears from the street to be an ordinary front hallway is nothing of the kind. The moment the door closes, the beige paint retracts into the walls and burnished titanium panels emerge. Motion sensors in the ceiling track your entry with polite efficiency. A supply depot — disguised as an ordinary coat closet — opens automatically after three seconds of standing in front of it. A surveillance drone hovers near the ceiling, assessing. The sidewalk is back through the west door; the central corridor is east."
+    exits:
+      w: sidewalk
+      e: hall
+
+  hall:
+    title: "The Central Corridor"
+    description: "The central corridor is a marvel of concealed engineering. The floor is obsidian tile with a faint luminescent grid. The walls display scrolling status readouts in a font that implies serious operational activity. Holographic floor markers direct traffic to every major system. The foyer is west; the kitchen service entry is north; the main kitchen ops area is east. A concealed staircase rises silently upward when you step on the correct floor tile — a panel in the ceiling marks the upper floor. The basement stairs descend from a panel labeled 'AUTHORIZED PERSONNEL ONLY — this means the kids.'"
+    exits:
+      w: foyer
+      n: kitchen_nook
+      e: kitchen_main
+      u: upper_landing
+      d: basement_landing
+
+  kitchen_nook:
+    title: "The Kitchen Service Entry"
+    description: "The service end of the kitchen connects to the garage by a concealed lift for bringing in groceries, equipment, and the occasional mission-critical item without going through the main entry. Counter space is devoted to practical matters: device charging stations, a magnetic board blending 'pick up from gymnastics' with 'debrief at 0800,' and a rack of coffee mugs suggesting a heroic caffeine dependency. The garage lift is north; the main kitchen is east; the corridor is south."
+    exits:
+      n: garage
+      e: kitchen_main
+      s: hall
+
+  kitchen_main:
+    title: "The Main Kitchen - Operations Center"
+    description: "The kitchen is the operational heart of the spy house. The island conceals a touchscreen command interface beneath a cutting-board surface. The refrigerator has biometric access for the 'good stuff.' A breakfast bar runs along the east side with a perfect view of the deck and yard. The real intelligence of this household is exchanged here, over coffee, at seven in the morning. The kitchen service nook is west; the outdoor deck is east; the sitting room is south."
+    exits:
+      w: kitchen_nook
+      e: deck
+      s: sitting_room
+
+  sitting_room:
+    title: "The Sitting Room"
+    description: "The sitting room approaches something like genuine relaxation. Deep couches face a screen capable of displaying either an extremely large television picture or a tactical mission briefing with equal fidelity. The bookshelves contain novels, technical manuals, and what appear to be dossiers filed under the Dewey Decimal System. Two large reinforced windows — the specifications of which the manufacturer does not publicize — look onto the yard. The kitchen is north."
+    exits:
+      n: kitchen_main
+
+  deck:
+    title: "The Outdoor Deck"
+    description: "The deck emerges from the back of the house, its composite boards warm underfoot. A table and chairs face the yard, though the table has fold-out equipment compartments in the legs that are somewhat unusual. String lights run at regulation brightness along the railing. The back yard is directly north; the swimming pool extends to the south, its water lit from below in crisp, perfect blue. The kitchen is back west."
+    exits:
+      w: kitchen_main
+      n: yard_lower
+      s: swimming_pool
+
+  swimming_pool:
+    title: "The Swimming Pool"
+    description: "A full-length lap pool extends south of the deck, its water the specific shade of blue that only comes from excellent filtration and genuine caring. Underwater lighting gives the surface a cold, precise glow. Lane ropes define lap lanes, but the diving end has a board and a deep section clearly intended for less efficient purposes. At the very bottom of the deep end, almost invisible through the water, is a seam in the pool floor that looks very much like a hatch. Whether it leads anywhere is left as an exercise for the curious. The deck is north."
+    exits:
+      n: deck
+
+  # ─── UPPER FLOOR ─────────────────────────────────────────────────────────────
+
+  upper_landing:
+    title: "The Upper Landing"
+    description: "The concealed staircase deposits you onto a carpeted landing that is slightly different in character from the floors below — the technology a bit older, the walls paneled in wood rather than steel, as if this floor predates the renovation. Framed family photos line the hallway, except that in several of them, one parent appears to be somewhere classified. A long corridor extends east toward a peculiar sound: a low, repeated crack, like masonry under stress. Or like something putting itself back together."
+    exits:
+      d: hall
+      e: humpty_cracked
+
+  humpty_cracked:
+    title: "The Wall of Humpty Dumpty"
+    description: "At the end of the upper hallway, an improbable eight-foot ornamental wall of brick and mortar occupies the space where a bedroom wall should be. Perched at the very top, dangerously near the edge, sits Humpty Dumpty: vast, egg-shaped, waistcoated, and visibly cracked along the left side. The fracture keeps spreading and sealing itself in a loop that has clearly been running for quite some time. He regards you with the smug confidence of someone who has heard the ending of his own story and believes he will be the exception. 'Nobody puts Humpty back together quite like Humpty,' he says. He is incorrect, but he doesn't know that yet. The landing is back west; east leads to where he falls."
+    exits:
+      w: upper_landing
+      e: humpty_arena
+
+  humpty_arena:
+    title: "The Arena of Fragments"
+    description: "The far side of the Wall is where things go when Humpty falls. The floor shows the evidence of many repeated catastrophic reassemblies: hairline cracks in every tile, impact marks on the walls at egg-sized heights, plaster dust drifted into corners. And yet nothing stays apart for long. Shell fragments skitter across the floor toward each other with alarming purpose. Each one that reassembles immediately evaluates the situation and turns toward you. The yolk, evidently, has a very long memory. A piece of shell sits in the far corner, inscribed on the inner surface with tiny, increasingly despairing text. The Wall is back west."
+    exits:
+      w: humpty_cracked
+
+  # ─── BASEMENT ────────────────────────────────────────────────────────────────
+
+  basement_landing:
+    title: "The Basement Landing"
+    description: "The staircase from the central corridor deposits you on a landing of polished concrete lit by recessed floor LEDs. A large painted sign reads: 'AUTHORIZED PERSONNEL ONLY — this means the kids.' Below that, in a different hand: 'No seriously.' Below that, a third: 'Fine, whatever, just be careful.' Two corridors branch from here: east leads toward a doorway framed in pink light and the distant sound of competition floor music — Hailey's zone. South brings the sound of mechanical targets resetting and foam-padded impacts — Trevor's domain. The main floor is above."
+    exits:
+      u: hall
+      e: haileys_entry
+      s: trevors_entry
+
+  # ─── HAILEY'S ZONE ───────────────────────────────────────────────────────────
+
+  haileys_entry:
+    title: "Hailey's Gymnastics Dollhouse - Entry Hall"
+    description: "The entry begins at a miniature door that is, somehow, full human scale inside — a recurring geometric trick throughout Hailey's zone. The walls are silver damask; the floor is white marble; the lighting comes from chandeliers that are unreasonably elegant for a basement. A glass-fronted trophy cabinet lines the entry wall: a forest of gold and silver hardware, each piece from a different gymnastics meet, each plaque bearing a consistent first-place finish. The basement landing is west; the glamour parlour is north; the competition gym is east."
+    exits:
+      w: basement_landing
+      n: haileys_parlor
+      e: haileys_gym
+
+  haileys_parlor:
+    title: "The Glamour Parlour"
+    description: "The parlour is where preparation happens at a serious level. Every surface holds a different category of cosmetic: foundations organized by undertone, eye palettes sorted by color family, lip products on a carousel that rotates on demand. The air is a precisely calibrated blend of the finest perfumes in the collection, which is extensive. An animated cosmetics mannequin stands near the center vanity — it tends the good stuff and doesn't appreciate unauthorized access. The dressing room continues east; the entry hall is south."
+    exits:
+      s: haileys_entry
+      e: haileys_dressing
+
+  haileys_dressing:
+    title: "The Dressing Room and Perfume Vault"
+    description: "A room of mirrors, warm amber lighting, and the kind of perfume concentration that makes your eyes water in the best possible way. One full wall is the Perfume Vault: hundreds of bottles from dozens of houses, organized by fragrance family, each one backlit. A sentient perfume cloud drifts among the bottles with proprietary intensity. Competition leotards hang in a dedicated wardrobe, size-sorted in clear garment bags labeled with the meet and the score. The crown jewel of the Vault — 'Midnight Blossoms' in a crystal bottle — sits at the center of the display under a modest spotlight. The glamour parlour is west."
+    exits:
+      w: haileys_parlor
+
+  haileys_gym:
+    title: "Hailey's Competition Gymnasium"
+    description: "A full-scale competition gymnasium occupies the impossible back half of Hailey's zone, its geometry cheerfully defying the basement's apparent dimensions. Spring floor in regulation 12-by-12, chalk-line border crisp. A balance beam at regulation height runs the full east wall length. Uneven bars hang at regulation spacing beneath a ceiling that is somehow much higher than it should be. A vault with approach runway fills the south section. The Balance Beam Automaton — a robotic gymnast maintaining the equipment and guarding the training floor with the form and dignity of a Level 10 athlete — patrols the beam at all times. Hailey's competition leotard hangs on the entrance rack. The entry hall is west."
+    exits:
+      w: haileys_entry
+
+  # ─── TREVOR'S ZONE ───────────────────────────────────────────────────────────
+
+  trevors_entry:
+    title: "Trevor's Zone - Entry Range"
+    description: "The transition from Hailey's zone to Trevor's is immediate and unambiguous. Marble ends. Industrial rubber flooring begins. The walls are bare concrete block hung with target posters, range safety rules in large print, and a hand-drawn mechanical diagram that has been revised so many times it is mostly revision marks. Mechanical deer and duck targets move through the range on programmable tracks, resetting with a satisfying clank when hit. The smell is machine oil, rubber, and the warm ozone tang of electronics at operating temperature. The basement landing is north; the main range is south; the roughhousing pit is east."
+    exits:
+      n: basement_landing
+      s: trevors_range
+      e: trevors_roughhousing
+
+  trevors_range:
+    title: "The Mechanical Shooting Range"
+    description: "A professional-grade indoor range configured entirely for mechanical targets. Target tracks run at five distances from 10 to 50 yards, each loaded with a different robot creature: mechanical deer glide between timber cutouts, duck targets pop from foam blinds, and in the far lane, something larger and faster runs a wolf-shaped silhouette program. A supply station holds Trevor's tactical paintball marker and a rack of protective gear. The armory and wolf-bot workshop are in the back room to the west. The entry range is north."
+    exits:
+      n: trevors_entry
+      w: trevors_armory
+
+  trevors_armory:
+    title: "The Robot Armory and Workshop"
+    description: "The workshop behind the range is where the machines are built and maintained. Work tables hold disassembled components: a half-finished rabbit target, the torso section of something that will eventually be larger than a person, wiring looms in labeled bundles. Precision spring coils and mechanism parts fill small labeled bins. The Alpha Wolf-Bot Mark VII stands in the charging alcove at the back wall, eyes dark but servos humming faintly at idle. It is larger up close than it looked on the range. The range is back east."
+    exits:
+      e: trevors_range
+
+  trevors_roughhousing:
+    title: "The Roughhousing Pit"
+    description: "The Roughhousing Pit is exactly what the name suggests, engineered to contain it. The walls are padded foam three feet thick. The floor is crash mat over crash mat, eight layers deep. Obstacles — foam cubes, a tilting platform, monkey bars bolted to the ceiling — make it navigable only by the confident and the committed. At the center, Big Biff the Roughhousing Inflate-O-Goon sits on a beanbag the size of a small car, eating a sandwich with enormous contentment. He appears to be made of something that yields on impact and then springs back considerably harder. He has the cheerful energy of someone who genuinely loves roughhousing and is honestly excited to see you. A deflated remnant near the door suggests how previous visits ended. The entry range is west."
+    exits:
+      w: trevors_entry
