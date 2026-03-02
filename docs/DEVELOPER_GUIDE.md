@@ -50,9 +50,8 @@ cd AmbonMUD
 
 ## 2. Quick Start
 
-**Start the server (default local runtime):**
+**Start the server (zero-dependency — YAML persistence, no Docker required):**
 ```bash
-docker compose up -d
 ./gradlew run
 ```
 
@@ -75,9 +74,10 @@ docker compose up -d
 ./gradlew ktlintCheck
 ```
 
-**Fallback YAML-only local run:**
+**Run with PostgreSQL + Redis (requires Docker Compose):**
 ```bash
-./gradlew run -Pconfig.ambonMUD.persistence.backend=YAML -Pconfig.ambonMUD.redis.enabled=false
+docker compose up -d
+./gradlew run -Pconfig.ambonmud.persistence.backend=POSTGRES -Pconfig.ambonmud.redis.enabled=true
 ```
 
 ---
@@ -158,7 +158,7 @@ src/main/resources/
 ├── world/                       # Zone YAML files
 │   ├── tutorial_glade.yaml
 │   ├── ambon_hub.yaml
-│   └── ... (8 zones total)
+│   └── ... (14 zones total)
 ├── web/                         # Legacy static web client
 └── web-v3/                      # Current static web client bundle
 
@@ -409,7 +409,7 @@ Serializable DTO; same fields as `PlayerState` plus timestamps.
 **File:** `src/main/kotlin/dev/ambon/engine/status/StatusEffectSystem.kt`
 
 - Timed status effects: DoT, HoT, STAT_BUFF, STAT_DEBUFF, STUN, ROOT, SHIELD
-- Defined in `application.yaml` under `ambonMUD.engine.statusEffects.definitions`
+- Defined in `application.yaml` under `ambonmud.engine.statusEffects.definitions`
 - Configurable stacking rules (REFRESH, STACK, NONE)
 - `effects`, `buffs`, `debuffs` commands expose active effects to players
 
@@ -457,15 +457,14 @@ XP curve: `totalXpForLevel(L) = baseXp * (L-1)^exponent + linearXp * (L-1)`
 
 ### Backends
 
-**PostgreSQL** (default):
-- Default local runtime uses Docker Compose-managed PostgreSQL on `localhost:5432`
-- Schema managed by Flyway migrations (`src/main/resources/db/migration/`)
-- Connection defaults: `localhost:5432/ambonmud`, user `ambon`, password `ambon` (matches docker compose)
-
-**YAML**:
-- Player files under `data/players/` (configurable via `ambonMUD.persistence.rootDir`)
+**YAML** (default):
+- Player files under `data/players/` (configurable via `ambonmud.persistence.rootDir`)
 - Atomic writes; no external infrastructure needed
 - IDs allocated in `data/players/next_player_id.txt`
+
+**PostgreSQL** (optional, bring up Docker Compose first):
+- Schema managed by Flyway migrations (`src/main/resources/db/migration/`, V1–V12)
+- Connection defaults: `localhost:5432/ambonmud`, user `ambon`, password `ambon` (matches docker compose)
 
 ### Persistence Stack
 
@@ -499,20 +498,20 @@ YamlPlayerRepository  OR  PostgresPlayerRepository
 
 **Top-level key:**
 ```yaml
-ambonMUD:
+ambonmud:
   mode: STANDALONE              # STANDALONE, ENGINE, or GATEWAY
   server:
     telnetPort: 4000            # Telnet port
     webPort: 8080               # WebSocket / web client port
   persistence:
-    backend: POSTGRES           # POSTGRES or YAML
+    backend: YAML               # YAML (default) or POSTGRES
     rootDir: data/players       # YAML backend only
   database:
     jdbcUrl: jdbc:postgresql://localhost:5432/ambonmud
     username: ambon
     password: ambon
   redis:
-    enabled: true
+    enabled: false              # false by default; enable with Docker Compose
     uri: redis://localhost:6379
   engine:
     abilities:
@@ -527,33 +526,33 @@ ambonMUD:
 
 **Override at runtime (Gradle):**
 ```bash
-./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000
-./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
-./gradlew run -Pconfig.ambonMUD.persistence.backend=YAML
-./gradlew run -Pconfig.ambonMUD.redis.enabled=false
+./gradlew run -Pconfig.ambonmud.server.telnetPort=5000
+./gradlew run -Pconfig.ambonmud.logging.level=DEBUG
+./gradlew run -Pconfig.ambonmud.persistence.backend=POSTGRES
+./gradlew run -Pconfig.ambonmud.redis.enabled=true
 ```
 
 **Override via environment variables (containers):**
 
-Hoplite maps `SCREAMING_SNAKE_CASE` env vars to camelCase config keys (lowercased, `_` → `.`). Env vars are highest priority (override YAML and `-Pconfig.*` system properties).
+Hoplite lowercases env var names and replaces `_` with `.`, so `AMBONMUD_PERSISTENCE_BACKEND` resolves to `ambonmud.persistence.backend`. Env vars are highest priority (override YAML and `-Pconfig.*` system properties).
 
 | Environment Variable | Config Key | Example Value |
 |---|---|---|
-| `AMBONMUD_MODE` | `ambonMUD.mode` | `STANDALONE`, `ENGINE`, `GATEWAY` |
-| `AMBONMUD_PERSISTENCE_BACKEND` | `ambonMUD.persistence.backend` | `POSTGRES` |
-| `AMBONMUD_DATABASE_JDBCURL` | `ambonMUD.database.jdbcUrl` | `jdbc:postgresql://host:5432/ambonmud` |
-| `AMBONMUD_DATABASE_USERNAME` | `ambonMUD.database.username` | `ambonmud` |
-| `AMBONMUD_DATABASE_PASSWORD` | `ambonMUD.database.password` | `…` |
-| `AMBONMUD_REDIS_ENABLED` | `ambonMUD.redis.enabled` | `true` |
-| `AMBONMUD_REDIS_URI` | `ambonMUD.redis.uri` | `redis://host:6379` |
-| `AMBONMUD_REDIS_BUS_ENABLED` | `ambonMUD.redis.bus.enabled` | `true` |
-| `AMBONMUD_SHARDING_ENABLED` | `ambonMUD.sharding.enabled` | `true` |
-| `AMBONMUD_SHARDING_REGISTRY_TYPE` | `ambonMUD.sharding.registry.type` | `REDIS` |
-| `AMBONMUD_SHARDING_ENGINEID` | `ambonMUD.sharding.engineId` | (auto-set by entrypoint to hostname) |
-| `AMBONMUD_SHARDING_ADVERTISEHOST` | `ambonMUD.sharding.advertiseHost` | (auto-set by entrypoint to container IP) |
-| `AMBONMUD_GRPC_CLIENT_ENGINEHOST` | `ambonMUD.grpc.client.engineHost` | `engine.internal.ambonmud` |
-| `AMBONMUD_SERVER_TELNETPORT` | `ambonMUD.server.telnetPort` | `4000` |
-| `AMBONMUD_SERVER_WEBPORT` | `ambonMUD.server.webPort` | `8080` |
+| `AMBONMUD_MODE` | `ambonmud.mode` | `STANDALONE`, `ENGINE`, `GATEWAY` |
+| `AMBONMUD_PERSISTENCE_BACKEND` | `ambonmud.persistence.backend` | `POSTGRES` |
+| `AMBONMUD_DATABASE_JDBCURL` | `ambonmud.database.jdbcUrl` | `jdbc:postgresql://host:5432/ambonmud` |
+| `AMBONMUD_DATABASE_USERNAME` | `ambonmud.database.username` | `ambonmud` |
+| `AMBONMUD_DATABASE_PASSWORD` | `ambonmud.database.password` | `…` |
+| `AMBONMUD_REDIS_ENABLED` | `ambonmud.redis.enabled` | `true` |
+| `AMBONMUD_REDIS_URI` | `ambonmud.redis.uri` | `redis://host:6379` |
+| `AMBONMUD_REDIS_BUS_ENABLED` | `ambonmud.redis.bus.enabled` | `true` |
+| `AMBONMUD_SHARDING_ENABLED` | `ambonmud.sharding.enabled` | `true` |
+| `AMBONMUD_SHARDING_REGISTRY_TYPE` | `ambonmud.sharding.registry.type` | `REDIS` |
+| `AMBONMUD_SHARDING_ENGINEID` | `ambonmud.sharding.engineId` | (auto-set by entrypoint to hostname) |
+| `AMBONMUD_SHARDING_ADVERTISEHOST` | `ambonmud.sharding.advertiseHost` | (auto-set by entrypoint to container IP) |
+| `AMBONMUD_GRPC_CLIENT_ENGINEHOST` | `ambonmud.grpc.client.engineHost` | `engine.internal.ambonmud` |
+| `AMBONMUD_SERVER_TELNETPORT` | `ambonmud.server.telnetPort` | `4000` |
+| `AMBONMUD_SERVER_WEBPORT` | `ambonmud.server.webPort` | `8080` |
 
 ---
 
@@ -679,13 +678,13 @@ router.on<Command.LookItem> { sid, cmd ->
 
 ### Add a New Ability
 
-1. Define in `application.yaml` under `ambonMUD.engine.abilities.definitions`
+1. Define in `application.yaml` under `ambonmud.engine.abilities.definitions`
 2. Set `requiredClass`, `levelRequired`, `manaCost`, `cooldownMs`
 3. Set `effect` (type + parameters)
 4. Add tests in `AbilitySystemTest`
 
 ```yaml
-ambonMUD:
+ambonmud:
   engine:
     abilities:
       definitions:
@@ -705,13 +704,13 @@ ambonMUD:
 
 ### Add a New Status Effect
 
-1. Define in `application.yaml` under `ambonMUD.engine.statusEffects.definitions`
+1. Define in `application.yaml` under `ambonmud.engine.statusEffects.definitions`
 2. Set `effectType` (DOT, HOT, STAT_BUFF, STAT_DEBUFF, STUN, ROOT, SHIELD)
 3. Set duration, tick interval, damage/heal, stat mods
 4. Reference in ability via `APPLY_STATUS` effect
 
 ```yaml
-ambonMUD:
+ambonmud:
   engine:
     statusEffects:
       definitions:
@@ -732,24 +731,28 @@ ambonMUD:
 
 See [WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md) for full schema.
 
-### Run with Default PostgreSQL Backend
+### Run with PostgreSQL Backend
 
 ```bash
-# Ensure Docker Compose is running
+# Start Postgres + Redis via Docker Compose
 docker compose up -d
 
-# Run server with the default config
-./gradlew run
+# Run server pointing at Postgres
+./gradlew run -Pconfig.ambonmud.persistence.backend=POSTGRES \
+              -Pconfig.ambonmud.redis.enabled=true
 
 # Flyway migrations run automatically on startup
 # Test via: SELECT * FROM players;
 ```
 
-### Run with YAML Fallback
+### Run with YAML Backend (Default)
 
 ```bash
-./gradlew run -Pconfig.ambonMUD.persistence.backend=YAML \
-              -Pconfig.ambonMUD.redis.enabled=false
+# No Docker required — just run
+./gradlew run
+# Equivalent explicit form:
+./gradlew run -Pconfig.ambonmud.persistence.backend=YAML \
+              -Pconfig.ambonmud.redis.enabled=false
 ```
 
 ### Run Multi-Instance (Engine + Gateways)
@@ -828,7 +831,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full guide: one-time bootstrap, top
 
 ### Server won't start: "Address already in use"
 - Port 4000 or 8080 is in use
-- Override: `./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000`
+- Override: `./gradlew run -Pconfig.ambonmud.server.telnetPort=5000`
 - Or kill the old process: `lsof -i :4000 | grep -v PID | awk '{print $2}' | xargs kill -9`
 
 ### Redis/PostgreSQL connection errors
