@@ -31,10 +31,13 @@ class StaticZoneRegistry(
         for ((_, pair) in assignments) {
             val (address, zones) = pair
             for (zone in zones) {
-                if (!instancing) {
-                    require(zone !in seenZones) { "Zone '$zone' assigned to multiple engines" }
-                    seenZones.add(zone)
+                if (zone in seenZones && !instancing) {
+                    log.warn {
+                        "Zone '$zone' is claimed by multiple engines; auto-enabling instancing for this zone. " +
+                            "Set instancing=true in sharding config to suppress this warning."
+                    }
                 }
+                seenZones.add(zone)
                 map.getOrPut(zone) { mutableListOf() }.add(
                     ZoneInstance(
                         engineId = address.engineId,

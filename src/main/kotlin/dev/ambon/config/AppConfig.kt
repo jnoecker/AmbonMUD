@@ -49,8 +49,10 @@ data class AppConfig(
         require(server.inboundBudgetMs > 0L) { "ambonMUD.server.inboundBudgetMs must be > 0" }
         require(server.inboundBudgetMs < server.tickMillis) { "ambonMUD.server.inboundBudgetMs must be < tickMillis" }
 
-        require(world.resources.isNotEmpty()) { "ambonMUD.world.resources must not be empty" }
         require(world.resources.all { it.isNotBlank() }) { "ambonMUD.world.resources entries must be non-blank" }
+        world.startRoom?.let { sr ->
+            require(sr.contains(':')) { "ambonMUD.world.startRoom must be in 'zone:room' format, got '$sr'" }
+        }
 
         require(persistence.rootDir.isNotBlank()) { "ambonMUD.persistence.rootDir must be non-blank" }
         require(persistence.worker.flushIntervalMs > 0L) { "ambonMUD.persistence.worker.flushIntervalMs must be > 0" }
@@ -336,7 +338,8 @@ data class ServerConfig(
 )
 
 data class WorldConfig(
-    val resources: List<String> = listOf("world/demo_ruins.yaml"),
+    val resources: List<String> = emptyList(),
+    val startRoom: String? = null,
 )
 
 data class PersistenceConfig(
