@@ -5,9 +5,9 @@ package dev.ambon.persistence
  * Keys are feature IDs in the format "<zone>:<room>/<localId>".
  */
 data class WorldStateSnapshot(
-    /** Door states: featureId → DoorState name (OPEN/CLOSED/LOCKED). */
+    /** Door states: featureId → LockableState name (OPEN/CLOSED/LOCKED). */
     val doorStates: Map<String, String> = emptyMap(),
-    /** Container states: featureId → ContainerState name (OPEN/CLOSED/LOCKED). */
+    /** Container states: featureId → LockableState name (OPEN/CLOSED/LOCKED). */
     val containerStates: Map<String, String> = emptyMap(),
     /** Lever states: featureId → LeverState name (UP/DOWN). */
     val leverStates: Map<String, String> = emptyMap(),

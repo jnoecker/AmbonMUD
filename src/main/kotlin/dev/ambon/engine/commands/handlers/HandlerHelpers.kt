@@ -4,9 +4,8 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.ContainerState
 import dev.ambon.domain.world.Direction
-import dev.ambon.domain.world.DoorState
+import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
@@ -61,7 +60,7 @@ internal suspend fun sendLook(
                 val door = ws?.doorOnExit(roomId, dir)
                 if (door != null && ws != null) {
                     val state = ws.getDoorState(door.id)
-                    if (state == DoorState.OPEN) label else "$label [${state.name.lowercase()}]"
+                    if (state == LockableState.OPEN) label else "$label [${state.name.lowercase()}]"
                 } else {
                     label
                 }
@@ -261,9 +260,6 @@ internal fun exitsLine(r: Room): String =
 /** Returns the zone portion of a namespaced id (before the first ':'). */
 internal fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
 
-/** Unified state for lockable features (doors and containers). */
-internal enum class LockableState { OPEN, CLOSED, LOCKED }
-
 /** Adapter providing uniform access to a Door or Container's lockable state. */
 internal class Lockable(
     val displayName: String,
@@ -279,48 +275,20 @@ internal fun resolveLockable(
     worldState: WorldStateRegistry?,
 ): Lockable? =
     when (feature) {
-        is RoomFeature.Door -> {
-            val state = worldState?.getDoorState(feature.id) ?: feature.initialState
-            Lockable(
-                displayName = feature.displayName,
-                state = when (state) {
-                    DoorState.OPEN -> LockableState.OPEN
-                    DoorState.CLOSED -> LockableState.CLOSED
-                    DoorState.LOCKED -> LockableState.LOCKED
-                },
-                keyItemId = feature.keyItemId,
-                keyConsumed = feature.keyConsumed,
-                applyState = { ls ->
-                    val ds = when (ls) {
-                        LockableState.OPEN -> DoorState.OPEN
-                        LockableState.CLOSED -> DoorState.CLOSED
-                        LockableState.LOCKED -> DoorState.LOCKED
-                    }
-                    worldState?.setDoorState(feature.id, ds)
-                },
-            )
-        }
-        is RoomFeature.Container -> {
-            val state = worldState?.getContainerState(feature.id) ?: feature.initialState
-            Lockable(
-                displayName = feature.displayName,
-                state = when (state) {
-                    ContainerState.OPEN -> LockableState.OPEN
-                    ContainerState.CLOSED -> LockableState.CLOSED
-                    ContainerState.LOCKED -> LockableState.LOCKED
-                },
-                keyItemId = feature.keyItemId,
-                keyConsumed = feature.keyConsumed,
-                applyState = { ls ->
-                    val cs = when (ls) {
-                        LockableState.OPEN -> ContainerState.OPEN
-                        LockableState.CLOSED -> ContainerState.CLOSED
-                        LockableState.LOCKED -> ContainerState.LOCKED
-                    }
-                    worldState?.setContainerState(feature.id, cs)
-                },
-            )
-        }
+        is RoomFeature.Door -> Lockable(
+            displayName = feature.displayName,
+            state = worldState?.getDoorState(feature.id) ?: feature.initialState,
+            keyItemId = feature.keyItemId,
+            keyConsumed = feature.keyConsumed,
+            applyState = { worldState?.setDoorState(feature.id, it) },
+        )
+        is RoomFeature.Container -> Lockable(
+            displayName = feature.displayName,
+            state = worldState?.getContainerState(feature.id) ?: feature.initialState,
+            keyItemId = feature.keyItemId,
+            keyConsumed = feature.keyConsumed,
+            applyState = { worldState?.setContainerState(feature.id, it) },
+        )
         else -> null
     }
 

@@ -2,7 +2,7 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.DoorState
+import dev.ambon.domain.world.LockableState
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
@@ -74,8 +74,8 @@ class NavigationHandler(
                 val door = worldState.doorOnExit(from, cmd.dir)
                 if (door != null) {
                     val doorState = worldState.getDoorState(door.id)
-                    if (doorState != DoorState.OPEN) {
-                        val reason = if (doorState == DoorState.LOCKED) "locked" else "closed"
+                    if (doorState != LockableState.OPEN) {
+                        val reason = if (doorState == LockableState.LOCKED) "locked" else "closed"
                         outbound.send(OutboundEvent.SendText(sessionId, "The ${door.displayName} is $reason."))
                         return
                     }

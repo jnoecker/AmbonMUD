@@ -17,11 +17,10 @@ import dev.ambon.domain.quest.ObjectiveType
 import dev.ambon.domain.quest.QuestDef
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
-import dev.ambon.domain.world.ContainerState
 import dev.ambon.domain.world.Direction
-import dev.ambon.domain.world.DoorState
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.LeverState
+import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.MobDrop
 import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
@@ -142,7 +141,7 @@ object WorldLoader {
                                         normalizeItemId(zone, it)
                                     }
                                 val doorState =
-                                    parseDoorState(
+                                    parseLockableState(
                                         doorFile.initialState,
                                         "Room ‘${fromId.value}’ door at ‘$dirStr’",
                                     )
@@ -759,26 +758,15 @@ object WorldLoader {
             Direction.DOWN -> "d"
         }
 
-    private fun parseDoorState(
-        raw: String,
-        context: String,
-    ): DoorState =
-        when (raw.trim().lowercase()) {
-            "open" -> DoorState.OPEN
-            "closed" -> DoorState.CLOSED
-            "locked" -> DoorState.LOCKED
-            else -> throw WorldLoadException("$context has invalid door initialState '$raw' (expected: open, closed, locked)")
-        }
-
-    private fun parseContainerState(
+    private fun parseLockableState(
         raw: String?,
         context: String,
-    ): ContainerState =
+    ): LockableState =
         when (raw?.trim()?.lowercase() ?: "closed") {
-            "open" -> ContainerState.OPEN
-            "closed" -> ContainerState.CLOSED
-            "locked" -> ContainerState.LOCKED
-            else -> throw WorldLoadException("$context has invalid container initialState '$raw' (expected: open, closed, locked)")
+            "open" -> LockableState.OPEN
+            "closed" -> LockableState.CLOSED
+            "locked" -> LockableState.LOCKED
+            else -> throw WorldLoadException("$context has invalid initialState '$raw' (expected: open, closed, locked)")
         }
 
     private fun parseLeverState(
@@ -812,7 +800,7 @@ object WorldLoader {
                     ff.keyItemId?.trim()?.takeUnless { it.isEmpty() }?.let {
                         normalizeItemId(zone, it)
                     }
-                val initialState = parseContainerState(ff.initialState, "Container '$featId'")
+                val initialState = parseLockableState(ff.initialState, "Container '$featId'")
                 val initialItems =
                     ff.items.mapIndexed { index, rawItemId ->
                         val s = rawItemId.trim()

@@ -1,8 +1,8 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.world.ContainerState
 import dev.ambon.domain.world.LeverState
+import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
@@ -189,7 +189,7 @@ class WorldFeaturesHandler(
                 return
             }
             val state = worldState?.getContainerState(feature.id) ?: feature.initialState
-            if (state != ContainerState.OPEN) {
+            if (state != LockableState.OPEN) {
                 outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not open."))
                 return
             }
@@ -216,7 +216,7 @@ class WorldFeaturesHandler(
                 return
             }
             val state = worldState?.getContainerState(feature.id) ?: feature.initialState
-            if (state != ContainerState.OPEN) {
+            if (state != LockableState.OPEN) {
                 outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not open."))
                 return
             }
@@ -250,7 +250,7 @@ class WorldFeaturesHandler(
                 return
             }
             val state = worldState?.getContainerState(feature.id) ?: feature.initialState
-            if (state != ContainerState.OPEN) {
+            if (state != LockableState.OPEN) {
                 outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not open."))
                 return
             }

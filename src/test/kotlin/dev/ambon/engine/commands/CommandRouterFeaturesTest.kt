@@ -6,9 +6,9 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
-import dev.ambon.domain.world.ContainerState
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.LeverState
+import dev.ambon.domain.world.LockableState
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
@@ -189,7 +189,7 @@ class CommandRouterFeaturesTest {
             val h = harness()
             val containerId = "ok_features:storeroom/supply_chest"
             h.worldState.addToContainer(containerId, makeCoin())
-            h.worldState.setContainerState(containerId, ContainerState.OPEN)
+            h.worldState.setContainerState(containerId, LockableState.OPEN)
             h.worldState.clearDirty()
 
             h.players.moveTo(h.sid, RoomId("ok_features:storeroom"))
@@ -209,7 +209,7 @@ class CommandRouterFeaturesTest {
             val h = harness()
             val containerId = "ok_features:storeroom/supply_chest"
             h.worldState.addToContainer(containerId, makeCoin())
-            h.worldState.setContainerState(containerId, ContainerState.OPEN)
+            h.worldState.setContainerState(containerId, LockableState.OPEN)
             h.worldState.clearDirty()
 
             h.players.moveTo(h.sid, RoomId("ok_features:storeroom"))
@@ -227,7 +227,7 @@ class CommandRouterFeaturesTest {
         runTest {
             val h = harness()
             val containerId = "ok_features:storeroom/supply_chest"
-            h.worldState.setContainerState(containerId, ContainerState.OPEN)
+            h.worldState.setContainerState(containerId, LockableState.OPEN)
             h.worldState.clearDirty()
             h.items.addToInventory(h.sid, makeCoin())
 
