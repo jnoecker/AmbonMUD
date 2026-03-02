@@ -9,6 +9,7 @@ import dev.ambon.config.MobTiersConfig
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.ids.qualifyId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
@@ -263,7 +264,7 @@ object WorldLoader {
                 val questIds =
                     mf.quests.map { rawQuestId ->
                         val s = rawQuestId.trim()
-                        if (':' in s) s else "$zone:$s"
+                        qualifyId(zone, s)
                     }
 
                 mergedMobs[mobId] =
@@ -410,7 +411,7 @@ object WorldLoader {
                     }
                 mergedShops.add(
                     ShopDefinition(
-                        id = "$zone:$rawId",
+                        id = qualifyId(zone, rawId),
                         name = shopName,
                         roomId = shopRoomId,
                         itemIds = shopItemIds,
@@ -420,7 +421,7 @@ object WorldLoader {
 
             // Stage quests (normalized)
             for ((rawId, questFile) in file.quests) {
-                val questId = "$zone:$rawId"
+                val questId = qualifyId(zone, rawId)
                 val questName = questFile.name.trim()
                 if (questName.isEmpty()) {
                     throw WorldLoadException("Quest '$questId' name cannot be blank")
@@ -456,7 +457,7 @@ object WorldLoader {
                                 "Quest '$questId' objective #${index + 1} targetKey cannot be blank",
                             )
                         }
-                        val targetId = if (':' in targetKeyRaw) targetKeyRaw else "$zone:$targetKeyRaw"
+                        val targetId = qualifyId(zone, targetKeyRaw)
                         if (obj.count < 1) {
                             throw WorldLoadException(
                                 "Quest '$questId' objective #${index + 1} count must be >= 1",
@@ -474,7 +475,7 @@ object WorldLoader {
                         id = questId,
                         name = questName,
                         description = questFile.description,
-                        giverMobId = if (':' in giver) giver else "$zone:$giver",
+                        giverMobId = qualifyId(zone, giver),
                         objectives = objectives,
                         rewards = QuestRewards(xp = questFile.rewards.xp, gold = questFile.rewards.gold),
                         completionType = completionType,
@@ -657,7 +658,7 @@ object WorldLoader {
     ): RoomId {
         val s = raw.trim()
         if (s.isEmpty()) throw WorldLoadException("Room id cannot be blank")
-        return if (':' in s) RoomId(s) else RoomId("$zone:$s")
+        return RoomId(qualifyId(zone, s))
     }
 
     /**
@@ -676,7 +677,7 @@ object WorldLoader {
     ): MobId {
         val s = raw.trim()
         if (s.isEmpty()) throw WorldLoadException("Mob id cannot be blank")
-        return if (':' in s) MobId(s) else MobId("$zone:$s")
+        return MobId(qualifyId(zone, s))
     }
 
     private fun normalizeItemId(
@@ -685,7 +686,7 @@ object WorldLoader {
     ): ItemId {
         val s = raw.trim()
         if (s.isEmpty()) throw WorldLoadException("Item id cannot be blank")
-        return if (':' in s) ItemId(s) else ItemId("$zone:$s")
+        return ItemId(qualifyId(zone, s))
     }
 
     private fun normalizeKeyword(

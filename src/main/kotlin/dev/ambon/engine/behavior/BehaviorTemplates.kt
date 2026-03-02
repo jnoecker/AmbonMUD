@@ -1,6 +1,7 @@
 package dev.ambon.engine.behavior
 
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.ids.qualifyId
 import dev.ambon.domain.world.data.BehaviorParamsFile
 import dev.ambon.engine.behavior.actions.AggroAction
 import dev.ambon.engine.behavior.actions.FleeAction
@@ -121,7 +122,6 @@ object BehaviorTemplates {
         zone: String,
     ): List<RoomId> =
         route.map { raw ->
-            val id = if (':' in raw) raw else "$zone:$raw"
-            RoomId(id)
+            RoomId(qualifyId(zone, raw))
         }
 }

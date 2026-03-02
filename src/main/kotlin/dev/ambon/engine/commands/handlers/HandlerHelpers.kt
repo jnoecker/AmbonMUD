@@ -4,6 +4,7 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.ids.qualifyId
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.Room
@@ -309,8 +310,8 @@ internal fun resolveGotoArg(
                 world.rooms.keys.firstOrNull { it.zone == effectiveZone }
             }
         } else {
-            runCatching { RoomId("$effectiveZone:$local") }.getOrNull()
+            runCatching { RoomId(qualifyId(effectiveZone, local)) }.getOrNull()
         }
     } else {
-        runCatching { RoomId("$currentZone:$arg") }.getOrNull()
+        runCatching { RoomId(qualifyId(currentZone, arg)) }.getOrNull()
     }
