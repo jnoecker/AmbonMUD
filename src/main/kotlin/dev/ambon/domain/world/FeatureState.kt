@@ -1,7 +1,6 @@
 package dev.ambon.domain.world
 
-enum class DoorState { OPEN, CLOSED, LOCKED }
-
-enum class ContainerState { OPEN, CLOSED, LOCKED }
+/** Shared state for doors and containers — both can be open, closed, or locked. */
+enum class LockableState { OPEN, CLOSED, LOCKED }
 
 enum class LeverState { UP, DOWN }
