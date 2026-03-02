@@ -146,8 +146,7 @@ class GameEngine(
             statusEffectSystem = statusEffectSystem,
             achievementRegistry = achievementRegistry,
             groupSystem = groupSystem,
-            combatSystem = combatSystem,
-            regenSystem = regenSystem,
+            sessionLifecycle = sessionLifecycleCoordinator,
             router = router,
             playerLocationIndex = playerLocationIndex,
             handoffManager = handoffManager,
@@ -177,13 +176,7 @@ class GameEngine(
             gmcpDirtyGroup = gmcpDirtyGroup,
             handoffManager = handoffManager,
             removePendingWhoRequestsFor = interEngineEventHandler::removePendingWhoRequestsFor,
-            combatSystem = combatSystem,
-            regenSystem = regenSystem,
-            abilitySystem = abilitySystem,
-            statusEffectSystem = statusEffectSystem,
-            dialogueSystem = dialogueSystem,
-            groupSystem = groupSystem,
-            guildSystem = guildSystem,
+            sessionLifecycle = sessionLifecycleCoordinator,
             promptForName = loginFlowHandler::promptForName,
             showLoginScreen = { sid -> outbound.send(OutboundEvent.ShowLoginScreen(sid)) },
             onPlayerLoggedOut = { player, sid ->
@@ -329,10 +322,9 @@ class GameEngine(
             players = players,
             outbound = outbound,
             worldState = worldState,
-            combatSystem = combatSystem,
-            dialogueSystem = dialogueSystem,
-            behaviorTreeSystem = behaviorTreeSystem,
+            mobRemovalCoordinator = mobRemovalCoordinator,
             mobSystem = mobSystem,
+            behaviorTreeSystem = behaviorTreeSystem,
             gmcpEmitter = gmcpEmitter,
             clock = clock,
         )
@@ -547,6 +539,25 @@ class GameEngine(
             metrics = metrics,
         )
 
+    private val sessionLifecycleCoordinator = SessionLifecycleCoordinator(
+        combatSystem = combatSystem,
+        regenSystem = regenSystem,
+        abilitySystem = abilitySystem,
+        statusEffectSystem = statusEffectSystem,
+        dialogueSystem = dialogueSystem,
+        groupSystem = groupSystem,
+        guildSystem = guildSystem,
+    )
+
+    private val mobRemovalCoordinator = MobRemovalCoordinator(
+        combatSystem = combatSystem,
+        dialogueSystem = dialogueSystem,
+        behaviorTreeSystem = behaviorTreeSystem,
+        mobs = mobs,
+        mobSystem = mobSystem,
+        statusEffectSystem = statusEffectSystem,
+    )
+
     private val router = CommandRouter(outbound = outbound, players = players)
     private lateinit var mailHandler: MailHandler
 
@@ -632,9 +643,8 @@ class GameEngine(
             AdminHandler(
                 ctx = ctx,
                 onShutdown = onShutdown,
-                onMobSmited = mobSystem::onMobRemoved,
+                mobRemovalCoordinator = mobRemovalCoordinator,
                 onCrossZoneMove = crossZoneMove,
-                dialogueSystem = dialogueSystem,
                 statusEffects = statusEffectSystem,
                 interEngineBus = interEngineBus,
                 engineId = engineId,
@@ -763,12 +773,7 @@ class GameEngine(
                             combatSystem.handleSpellKill(sourceSessionId, mob)
                         } else {
                             // No source — end combat if applicable, broadcast death, clean up
-                            combatSystem.onMobRemovedExternally(mobId)
-                            dialogueSystem.onMobRemoved(mobId)
-                            behaviorTreeSystem.onMobRemoved(mobId)
-                            mobs.remove(mobId)
-                            mobSystem.onMobRemoved(mobId)
-                            statusEffectSystem.onMobRemoved(mobId)
+                            mobRemovalCoordinator.removeMobExternally(mobId)
                             broadcastToRoom(players, outbound, mob.roomId, "${mob.name} dies.")
                         }
                     }
@@ -906,9 +911,7 @@ class GameEngine(
         mobId: MobId,
         roomId: RoomId,
     ) {
-        mobSystem.onMobRemoved(mobId)
-        dialogueSystem.onMobRemoved(mobId)
-        behaviorTreeSystem.onMobRemoved(mobId)
+        mobRemovalCoordinator.onCombatKillCleanup(mobId)
         for (p in players.playersInRoom(roomId)) {
             gmcpEmitter.sendRoomRemoveMob(p.sessionId, mobId.value)
         }

@@ -4,6 +4,7 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.world.ContainerState
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.DoorState
 import dev.ambon.domain.world.Room
@@ -132,32 +133,22 @@ internal suspend fun sendLook(
     gmcpEmitter?.sendRoomItems(sessionId, here)
 }
 
-/** Broadcasts [message] to every player in [roomId] except [excludeSessionId]. */
+/** Broadcasts [message] to every player in [roomId] except [excludeSessionId]. Delegates to [dev.ambon.engine.broadcastToRoom]. */
 internal suspend fun broadcastToRoomExcept(
     roomId: RoomId,
     excludeSessionId: SessionId,
     message: String,
     players: PlayerRegistry,
     outbound: OutboundBus,
-) {
-    for (other in players.playersInRoom(roomId)) {
-        if (other.sessionId != excludeSessionId) {
-            outbound.send(OutboundEvent.SendText(other.sessionId, message))
-        }
-    }
-}
+) = dev.ambon.engine.broadcastToRoom(players, outbound, roomId, message, excludeSessionId)
 
-/** Broadcasts [message] to every player in [roomId], including the sender. */
+/** Broadcasts [message] to every player in [roomId], including the sender. Delegates to [dev.ambon.engine.broadcastToRoom]. */
 internal suspend fun broadcastToRoom(
     roomId: RoomId,
     message: String,
     players: PlayerRegistry,
     outbound: OutboundBus,
-) {
-    for (other in players.playersInRoom(roomId)) {
-        outbound.send(OutboundEvent.SendText(other.sessionId, message))
-    }
-}
+) = dev.ambon.engine.broadcastToRoom(players, outbound, roomId, message)
 
 /** Broadcasts [message] to all provided [memberSessionIds], useful for group chat. */
 internal suspend fun broadcastToGroup(
@@ -181,19 +172,21 @@ internal suspend fun OutboundBus.sendIfError(sessionId: SessionId, error: String
 }
 
 /**
- * Guards an optional system: sends a [OutboundEvent.SendError] and returns `false` when
- * [available] is false, so callers can write `if (!requireSystem(...)) return`.
+ * Type-safe guard for an optional system. Returns the system instance if non-null,
+ * or sends an error and returns null.
+ *
+ * Usage: `val gs = requireSystemOrNull(sessionId, groupSystem, "Groups", outbound) ?: return`
  */
-internal suspend fun requireSystem(
+internal suspend fun <T> requireSystemOrNull(
     sessionId: SessionId,
-    available: Boolean,
+    system: T?,
     name: String,
     outbound: OutboundBus,
-): Boolean {
-    if (!available) {
+): T? {
+    if (system == null) {
         outbound.send(OutboundEvent.SendError(sessionId, "$name are not available on this server."))
     }
-    return available
+    return system
 }
 
 /** Checks if [sessionId] has staff privileges; sends an error and returns false if not. */
@@ -267,6 +260,69 @@ internal fun exitsLine(r: Room): String =
 
 /** Returns the zone portion of a namespaced id (before the first ':'). */
 internal fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
+
+/** Unified state for lockable features (doors and containers). */
+internal enum class LockableState { OPEN, CLOSED, LOCKED }
+
+/** Adapter providing uniform access to a Door or Container's lockable state. */
+internal class Lockable(
+    val displayName: String,
+    val state: LockableState,
+    val keyItemId: ItemId?,
+    val keyConsumed: Boolean,
+    val applyState: (LockableState) -> Unit,
+)
+
+/** Creates a [Lockable] adapter from a Door or Container; returns null for other feature types. */
+internal fun resolveLockable(
+    feature: RoomFeature,
+    worldState: WorldStateRegistry?,
+): Lockable? =
+    when (feature) {
+        is RoomFeature.Door -> {
+            val state = worldState?.getDoorState(feature.id) ?: feature.initialState
+            Lockable(
+                displayName = feature.displayName,
+                state = when (state) {
+                    DoorState.OPEN -> LockableState.OPEN
+                    DoorState.CLOSED -> LockableState.CLOSED
+                    DoorState.LOCKED -> LockableState.LOCKED
+                },
+                keyItemId = feature.keyItemId,
+                keyConsumed = feature.keyConsumed,
+                applyState = { ls ->
+                    val ds = when (ls) {
+                        LockableState.OPEN -> DoorState.OPEN
+                        LockableState.CLOSED -> DoorState.CLOSED
+                        LockableState.LOCKED -> DoorState.LOCKED
+                    }
+                    worldState?.setDoorState(feature.id, ds)
+                },
+            )
+        }
+        is RoomFeature.Container -> {
+            val state = worldState?.getContainerState(feature.id) ?: feature.initialState
+            Lockable(
+                displayName = feature.displayName,
+                state = when (state) {
+                    ContainerState.OPEN -> LockableState.OPEN
+                    ContainerState.CLOSED -> LockableState.CLOSED
+                    ContainerState.LOCKED -> LockableState.LOCKED
+                },
+                keyItemId = feature.keyItemId,
+                keyConsumed = feature.keyConsumed,
+                applyState = { ls ->
+                    val cs = when (ls) {
+                        LockableState.OPEN -> ContainerState.OPEN
+                        LockableState.CLOSED -> ContainerState.CLOSED
+                        LockableState.LOCKED -> ContainerState.LOCKED
+                    }
+                    worldState?.setContainerState(feature.id, cs)
+                },
+            )
+        }
+        else -> null
+    }
 
 /** Resolves a goto/transfer argument to a [RoomId], handling "zone:room", "room", "zone:". */
 internal fun resolveGotoArg(

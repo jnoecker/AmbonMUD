@@ -6,11 +6,10 @@ import dev.ambon.domain.Race
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
 import dev.ambon.engine.AchievementRegistry
-import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.PlayerRegistry
-import dev.ambon.engine.RegenSystem
+import dev.ambon.engine.SessionLifecycleCoordinator
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.commands.Command
@@ -115,8 +114,7 @@ internal class LoginFlowHandler(
     private val statusEffectSystem: StatusEffectSystem,
     private val achievementRegistry: AchievementRegistry,
     private val groupSystem: GroupSystem,
-    private val combatSystem: CombatSystem,
-    private val regenSystem: RegenSystem,
+    private val sessionLifecycle: SessionLifecycleCoordinator,
     private val router: CommandRouter,
     private val playerLocationIndex: PlayerLocationIndex?,
     private val handoffManager: HandoffManager?,
@@ -360,11 +358,7 @@ internal class LoginFlowHandler(
                             dev.ambon.engine.LoginResult.Ok -> finalizeSuccessfulLogin(sid)
                             is dev.ambon.engine.LoginResult.Takeover -> {
                                 val oldSid = loginResult.oldSessionId
-                                combatSystem.remapSession(oldSid, sid)
-                                regenSystem.remapSession(oldSid, sid)
-                                abilitySystem.remapSession(oldSid, sid)
-                                statusEffectSystem.remapSession(oldSid, sid)
-                                groupSystem.remapSession(oldSid, sid)
+                                sessionLifecycle.remapSession(oldSid, sid)
                                 outbound.send(OutboundEvent.Close(oldSid, "Your account has logged in from another location."))
                                 val me = players.get(sid)
                                 if (me != null) broadcastToRoom(players, outbound, me.roomId, "${me.name} briefly flickers.", sid)

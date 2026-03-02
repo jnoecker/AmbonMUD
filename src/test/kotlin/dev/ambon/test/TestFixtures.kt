@@ -4,7 +4,6 @@ import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.config.EconomyConfig
 import dev.ambon.domain.PlayerClass
-import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
@@ -13,6 +12,7 @@ import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.MobRemovalCoordinator
 import dev.ambon.engine.PasswordHasher
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
@@ -130,7 +130,7 @@ class CommandRouterHarness private constructor(
             progression: PlayerProgression = PlayerProgression(),
             groupSystem: GroupSystem? = null,
             onShutdown: suspend () -> Unit = {},
-            onMobSmited: (MobId) -> Unit = {},
+            mobRemovalCoordinator: MobRemovalCoordinator? = null,
             interEngineBus: InterEngineBus? = null,
             playerLocationIndex: PlayerLocationIndex? = null,
             engineId: String = "",
@@ -152,7 +152,7 @@ class CommandRouterHarness private constructor(
                     progression = progression,
                     groupSystem = groupSystem,
                     onShutdown = onShutdown,
-                    onMobSmited = onMobSmited,
+                    mobRemovalCoordinator = mobRemovalCoordinator,
                     interEngineBus = interEngineBus,
                     playerLocationIndex = playerLocationIndex,
                     engineId = engineId,

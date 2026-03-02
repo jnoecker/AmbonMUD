@@ -48,9 +48,7 @@ class GuildSystem(
         val gid = ps.guildId ?: return
         val guild = guildsById[gid] ?: run {
             // Guild no longer exists — clear stale reference
-            ps.guildId = null
-            ps.guildRank = null
-            ps.guildTag = null
+            ps.clearGuild()
             markPlayerDirty(sessionId)
             return
         }
@@ -123,9 +121,7 @@ class GuildSystem(
             val memberSid = players.findSessionByPlayerId(memberId)
             if (memberSid != null) {
                 val memberPs = players.get(memberSid) ?: continue
-                memberPs.guildId = null
-                memberPs.guildRank = null
-                memberPs.guildTag = null
+                memberPs.clearGuild()
                 markPlayerDirty(memberSid)
                 if (memberSid != sessionId) {
                     outbound.send(
@@ -186,7 +182,7 @@ class GuildSystem(
         val invite = pendingInvites[sessionId] ?: return "You have no pending guild invite."
         pendingInvites.remove(sessionId)
 
-        if (clock.millis() > invite.expiresAtMs) return "Your guild invite has expired."
+        if (clock.millis() >= invite.expiresAtMs) return "Your guild invite has expired."
 
         val guild = guildsById[invite.guildId] ?: return "That guild no longer exists."
         if (guild.members.size >= maxSize) return "That guild is now full."
@@ -219,9 +215,7 @@ class GuildSystem(
         guildsById[guild.id] = updated
 
         val guildName = guild.name
-        ps.guildId = null
-        ps.guildRank = null
-        ps.guildTag = null
+        ps.clearGuild()
         markPlayerDirty(sessionId)
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "You have left guild '$guildName'."))
@@ -260,9 +254,7 @@ class GuildSystem(
         if (targetSid != null) {
             val targetPs = players.get(targetSid)
             if (targetPs != null) {
-                targetPs.guildId = null
-                targetPs.guildRank = null
-                targetPs.guildTag = null
+                targetPs.clearGuild()
                 markPlayerDirty(targetSid)
                 outbound.send(OutboundEvent.SendInfo(targetSid, "You have been kicked from guild '${guild.name}'."))
             }
@@ -449,6 +441,6 @@ class GuildSystem(
 
     private fun pruneExpiredInvites() {
         val now = clock.millis()
-        pendingInvites.entries.removeIf { it.value.expiresAtMs < now }
+        pendingInvites.entries.removeIf { it.value.expiresAtMs <= now }
     }
 }

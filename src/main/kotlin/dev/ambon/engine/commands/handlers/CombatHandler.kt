@@ -42,7 +42,7 @@ class CombatHandler(
         sessionId: SessionId,
         cmd: Command.Cast,
     ) {
-        if (!requireSystem(sessionId, abilitySystem != null, "Abilities", outbound)) return
-        outbound.sendIfError(sessionId, abilitySystem!!.cast(sessionId, cmd.spellName, cmd.target))
+        val abilities = requireSystemOrNull(sessionId, abilitySystem, "Abilities", outbound) ?: return
+        outbound.sendIfError(sessionId, abilities.cast(sessionId, cmd.spellName, cmd.target))
     }
 }

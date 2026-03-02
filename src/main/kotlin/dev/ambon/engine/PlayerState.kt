@@ -112,6 +112,13 @@ fun PlayerState.spendMana(amount: Int) {
     mana = (mana - amount).coerceAtLeast(0)
 }
 
+/** Clears all guild-related fields on this player. */
+fun PlayerState.clearGuild() {
+    guildId = null
+    guildRank = null
+    guildTag = null
+}
+
 /** Decreases mob HP by [amount], clamped to 0. */
 fun MobState.takeDamage(amount: Int) {
     hp = (hp - amount).coerceAtLeast(0)

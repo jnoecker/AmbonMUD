@@ -32,8 +32,7 @@ class GuildHandler(
         sessionId: SessionId,
         cmd: Command.Guild,
     ) {
-        if (!requireSystem(sessionId, guildSystem != null, "Guilds", outbound)) return
-        val gs = guildSystem!!
+        val gs = requireSystemOrNull(sessionId, guildSystem, "Guilds", outbound) ?: return
         val err =
             when (cmd) {
                 is Command.Guild.Create -> gs.create(sessionId, cmd.name, cmd.tag)
@@ -55,7 +54,7 @@ class GuildHandler(
         sessionId: SessionId,
         cmd: Command.Gchat,
     ) {
-        if (!requireSystem(sessionId, guildSystem != null, "Guilds", outbound)) return
-        outbound.sendIfError(sessionId, guildSystem!!.gchat(sessionId, cmd.message))
+        val gs = requireSystemOrNull(sessionId, guildSystem, "Guilds", outbound) ?: return
+        outbound.sendIfError(sessionId, gs.gchat(sessionId, cmd.message))
     }
 }

@@ -1,15 +1,9 @@
 package dev.ambon.engine.events
 
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.GroupSystem
-import dev.ambon.engine.GuildSystem
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
-import dev.ambon.engine.RegenSystem
-import dev.ambon.engine.abilities.AbilitySystem
-import dev.ambon.engine.dialogue.DialogueSystem
-import dev.ambon.engine.status.StatusEffectSystem
+import dev.ambon.engine.SessionLifecycleCoordinator
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.sharding.HandoffManager
 
@@ -25,13 +19,7 @@ class SessionEventHandler(
     private val gmcpDirtyGroup: MutableSet<SessionId>,
     private val handoffManager: HandoffManager?,
     private val removePendingWhoRequestsFor: (SessionId) -> Unit,
-    private val combatSystem: CombatSystem,
-    private val regenSystem: RegenSystem,
-    private val abilitySystem: AbilitySystem,
-    private val statusEffectSystem: StatusEffectSystem,
-    private val dialogueSystem: DialogueSystem,
-    private val groupSystem: GroupSystem,
-    private val guildSystem: GuildSystem? = null,
+    private val sessionLifecycle: SessionLifecycleCoordinator,
     private val promptForName: suspend (SessionId) -> Unit,
     private val showLoginScreen: suspend (SessionId) -> Unit,
     private val onPlayerLoggedOut: suspend (PlayerState, SessionId) -> Unit,
@@ -61,13 +49,7 @@ class SessionEventHandler(
         handoffManager?.cancelIfPending(sessionId)
         removePendingWhoRequestsFor(sessionId)
 
-        combatSystem.onPlayerDisconnected(sessionId)
-        regenSystem.onPlayerDisconnected(sessionId)
-        abilitySystem.onPlayerDisconnected(sessionId)
-        statusEffectSystem.onPlayerDisconnected(sessionId)
-        dialogueSystem.onPlayerDisconnected(sessionId)
-        groupSystem.onPlayerDisconnected(sessionId)
-        guildSystem?.onPlayerDisconnected(sessionId)
+        sessionLifecycle.onPlayerDisconnected(sessionId)
         gmcpDirtyStatusEffects.remove(sessionId)
         gmcpDirtyGroup.remove(sessionId)
 

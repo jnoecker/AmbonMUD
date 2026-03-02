@@ -1,5 +1,7 @@
 package dev.ambon.bus
 
+import dev.ambon.redis.RedisConnectionManager
+import io.lettuce.core.pubsub.RedisPubSubAdapter
 import java.nio.charset.StandardCharsets
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -35,3 +37,26 @@ internal fun isValidHmac(
     payload: String,
     signature: String,
 ): Boolean = signature.isNotBlank() && signature == hmacSha256(secret, payload)
+
+/** Creates a [BusPublisher] that publishes to Redis via the given [manager]. */
+fun redisBusPublisher(manager: RedisConnectionManager): BusPublisher =
+    BusPublisher { ch, msg ->
+        manager.asyncCommands?.publish(ch, msg)
+    }
+
+/** Creates a [BusSubscriberSetup] that subscribes to Redis pub/sub via the given [manager]. */
+fun redisBusSubscriberSetup(manager: RedisConnectionManager): BusSubscriberSetup =
+    BusSubscriberSetup { ch, onMessage ->
+        val conn = manager.connectPubSub()
+        if (conn != null) {
+            conn.addListener(
+                object : RedisPubSubAdapter<String, String>() {
+                    override fun message(
+                        channel: String,
+                        message: String,
+                    ) = onMessage(message)
+                },
+            )
+            conn.sync().subscribe(ch)
+        }
+    }
