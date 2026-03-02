@@ -6,7 +6,6 @@ import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
-import dev.ambon.engine.events.OutboundEvent
 
 class GuildHandler(
     ctx: EngineContext,
@@ -33,23 +32,21 @@ class GuildHandler(
         sessionId: SessionId,
         cmd: Command.Guild,
     ) {
-        if (guildSystem == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Guilds are not available."))
-            return
-        }
+        if (!requireSystem(sessionId, guildSystem != null, "Guilds", outbound)) return
+        val gs = guildSystem!!
         val err =
             when (cmd) {
-                is Command.Guild.Create -> guildSystem.create(sessionId, cmd.name, cmd.tag)
-                Command.Guild.Disband -> guildSystem.disband(sessionId)
-                is Command.Guild.Invite -> guildSystem.invite(sessionId, cmd.target)
-                Command.Guild.Accept -> guildSystem.accept(sessionId)
-                Command.Guild.Leave -> guildSystem.leave(sessionId)
-                is Command.Guild.Kick -> guildSystem.kick(sessionId, cmd.target)
-                is Command.Guild.Promote -> guildSystem.promote(sessionId, cmd.target)
-                is Command.Guild.Demote -> guildSystem.demote(sessionId, cmd.target)
-                is Command.Guild.Motd -> guildSystem.setMotd(sessionId, cmd.message)
-                Command.Guild.Roster -> guildSystem.roster(sessionId)
-                Command.Guild.Info -> guildSystem.info(sessionId)
+                is Command.Guild.Create -> gs.create(sessionId, cmd.name, cmd.tag)
+                Command.Guild.Disband -> gs.disband(sessionId)
+                is Command.Guild.Invite -> gs.invite(sessionId, cmd.target)
+                Command.Guild.Accept -> gs.accept(sessionId)
+                Command.Guild.Leave -> gs.leave(sessionId)
+                is Command.Guild.Kick -> gs.kick(sessionId, cmd.target)
+                is Command.Guild.Promote -> gs.promote(sessionId, cmd.target)
+                is Command.Guild.Demote -> gs.demote(sessionId, cmd.target)
+                is Command.Guild.Motd -> gs.setMotd(sessionId, cmd.message)
+                Command.Guild.Roster -> gs.roster(sessionId)
+                Command.Guild.Info -> gs.info(sessionId)
             }
         outbound.sendIfError(sessionId, err)
     }
@@ -58,10 +55,7 @@ class GuildHandler(
         sessionId: SessionId,
         cmd: Command.Gchat,
     ) {
-        if (guildSystem == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Guilds are not available."))
-            return
-        }
-        outbound.sendIfError(sessionId, guildSystem.gchat(sessionId, cmd.message))
+        if (!requireSystem(sessionId, guildSystem != null, "Guilds", outbound)) return
+        outbound.sendIfError(sessionId, guildSystem!!.gchat(sessionId, cmd.message))
     }
 }

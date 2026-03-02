@@ -98,18 +98,16 @@ class ProgressionHandler(
     }
 
     private suspend fun handleSpells(sessionId: SessionId) {
-        if (abilitySystem == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Abilities are not available."))
-            return
-        }
-        val known = abilitySystem.knownAbilities(sessionId)
+        if (!requireSystem(sessionId, abilitySystem != null, "Abilities", outbound)) return
+        val abilities = abilitySystem!!
+        val known = abilities.knownAbilities(sessionId)
         if (known.isEmpty()) {
             outbound.send(OutboundEvent.SendInfo(sessionId, "You don't know any spells yet."))
         } else {
             players.withPlayer(sessionId) { me ->
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Known spells (Mana: ${me.mana}/${me.maxMana}):"))
                 for (a in known) {
-                    val remainingMs = abilitySystem.cooldownRemainingMs(sessionId, a.id)
+                    val remainingMs = abilities.cooldownRemainingMs(sessionId, a.id)
                     val cdText =
                         if (remainingMs > 0) {
                             val remainingSec = ((remainingMs + 999) / 1000).coerceAtLeast(1)
@@ -129,7 +127,7 @@ class ProgressionHandler(
             }
         }
         gmcpEmitter?.sendCharSkills(sessionId, known) { abilityId ->
-            abilitySystem.cooldownRemainingMs(sessionId, abilityId)
+            abilities.cooldownRemainingMs(sessionId, abilityId)
         }
     }
 
