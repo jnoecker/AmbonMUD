@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file.
 
+## [2026-03] - 2026-03-01
+
+### Added
+- **Live demo instance** at [mud.ambon.dev](https://mud.ambon.dev) — t4g.nano EC2 with YAML persistence, nginx TLS termination via Let's Encrypt, and auto-deploy on every push to `main`.
+- **EC2 CDK stack** (`infra/lib/ec2-stack.ts`): optional `hostname` context var installs nginx + certbot, opens ports 80/443, writes a `setup-tls` helper script on the instance.
+- **Auto-deploy workflow** (`.github/workflows/deploy-demo.yml`): triggers on CI success for `main`, SSMs `update-ambonmud <sha>` to pull the new image and restart the service in-place (player data untouched).
+- **`setup-tls` helper**: installed at `/usr/local/bin/setup-tls` on EC2 instances when `hostname` is set; runs certbot HTTP-01 challenge and configures nginx auto-renewal.
+
+### Changed
+- **Default persistence backend changed from `POSTGRES` to `YAML`**. The server now starts with zero external dependencies. Users who want PostgreSQL must set `ambonMUD.persistence.backend=POSTGRES` explicitly (e.g. `-Pconfig.ambonMUD.persistence.backend=POSTGRES`).
+- **Redis disabled by default** (`redis.enabled: false`). Enable with `ambonMUD.redis.enabled=true` when running alongside the Docker Compose stack.
+- **Telnet I/O uses JVM virtual threads** (PR #313). `BlockingSocketTransport` and `NetworkSession` now accept an injectable `CoroutineContext`; `MudServer` and `GatewayServer` supply a virtual-thread executor. Replaced all `synchronized` blocks in `NetworkSession` with `ReentrantLock` to avoid carrier-thread pinning.
+- **Docker image builds on native ARM64 runner** (`ubuntu-24.04-arm`) instead of QEMU emulation — reduces CI build time from ~20 min to ~3 min. Image targets `linux/arm64` to match the t4g.nano demo instance.
+- **Container user pinned to UID/GID 1001** in the Dockerfile (`groupadd -r -g 1001 / useradd -r -u 1001`). EC2 user data `chown 1001:1001 /app/data` ensures the host volume mount is writable from the first start.
+- Removed `web-v3/` from `.dockerignore` so the Bun frontend build stage in the Dockerfile can include the web client in the image.
+
 ## [2026-02] - 2026-02-28
 
 ### Added

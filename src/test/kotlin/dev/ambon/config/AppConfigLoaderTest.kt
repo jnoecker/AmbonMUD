@@ -27,11 +27,11 @@ class AppConfigLoaderTest {
     }
 
     @Test
-    fun `default application config uses postgres with redis cache`() {
+    fun `default application config uses yaml persistence with redis disabled`() {
         val config = AppConfigLoader.load()
 
-        assertEquals(PersistenceBackend.POSTGRES, config.persistence.backend)
-        assertTrue(config.redis.enabled)
+        assertEquals(PersistenceBackend.YAML, config.persistence.backend)
+        assertTrue(!config.redis.enabled)
         assertTrue(!config.engine.debug.enableSwarmClass)
         assertEquals("labyrinth:cell_00_00", config.engine.classStartRooms["SWARM"])
     }
@@ -139,5 +139,21 @@ class AppConfigLoaderTest {
                     ),
             )
         config.validated()
+    }
+
+    @Test
+    fun `validation accepts empty resources list for auto-discovery`() {
+        AppConfig(world = WorldConfig(resources = emptyList())).validated()
+    }
+
+    @Test
+    fun `validation accepts explicit startRoom in zone-room format`() {
+        AppConfig(world = WorldConfig(startRoom = "ambon_hub:hall_of_portals")).validated()
+    }
+
+    @Test
+    fun `validation rejects startRoom without colon`() {
+        val invalid = AppConfig(world = WorldConfig(startRoom = "hall_of_portals"))
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
     }
 }

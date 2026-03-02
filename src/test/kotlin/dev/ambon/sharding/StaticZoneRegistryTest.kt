@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class StaticZoneRegistryTest {
     private val engine1 = EngineAddress("engine-1", "host1", 9090)
@@ -67,15 +66,19 @@ class StaticZoneRegistryTest {
         }
 
         @Test
-        fun `rejects duplicate zone assignments`() {
-            assertThrows<IllegalArgumentException> {
+        fun `auto-instances duplicate zone assignments without explicit instancing flag`() {
+            // Should not throw — duplicates are silently treated as instance zones
+            val registry =
                 StaticZoneRegistry(
                     mapOf(
                         "engine-1" to Pair(engine1, setOf("zone_a")),
                         "engine-2" to Pair(engine2, setOf("zone_a")),
                     ),
                 )
-            }
+
+            val instances = registry.instancesOf("zone_a")
+            assertEquals(2, instances.size)
+            assertEquals(setOf("engine-1", "engine-2"), instances.map { it.engineId }.toSet())
         }
 
         @Test

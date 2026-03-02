@@ -5,7 +5,7 @@ plugins {
     application
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     id("com.google.protobuf") version "0.9.6"
-    id("com.gradleup.shadow") version "8.3.6"
+    id("com.gradleup.shadow") version "9.3.2"
 }
 
 group = "com.example"
@@ -20,7 +20,7 @@ val hopliteVersion = "2.9.0"
 val micrometerVersion = "1.16.3"
 val grpcVersion = "1.79.0"
 val grpcKotlinVersion = "1.5.0"
-val protobufVersion = "3.25.5"
+val protobufVersion = "4.34.0"
 val exposedVersion = "0.58.0"
 
 dependencies {
@@ -30,8 +30,8 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
 
-    implementation("ch.qos.logback:logback-classic:1.5.18")
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
+    implementation("ch.qos.logback:logback-classic:1.5.32")
+    implementation("io.github.oshai:kotlin-logging-jvm:8.0.01")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.0")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.0")
     implementation("com.sksamuel.hoplite:hoplite-core:$hopliteVersion")
@@ -50,10 +50,11 @@ dependencies {
     // JDBC driver
     implementation("org.postgresql:postgresql:42.7.5")
     // Schema migration
-    implementation("org.flywaydb:flyway-core:11.3.0")
-    implementation("org.flywaydb:flyway-database-postgresql:11.3.0")
+    implementation("org.flywaydb:flyway-core:12.0.3")
+    implementation("org.flywaydb:flyway-database-postgresql:12.0.3")
 
     // gRPC / Protobuf
+    implementation("com.google.protobuf:protobuf-java:$protobufVersion")
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")

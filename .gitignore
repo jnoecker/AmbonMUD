@@ -55,10 +55,14 @@ Thumbs.db
 /progress.md
 /task_plan.md
 
-# Gradle local user cache
+# Gradle user home cache (local tooling artifact)
 .gradle-user/
 
-# CDK build artifacts and cached context (contains account IDs)
+# CDK build output and resolved context (account-specific, regenerated on deploy)
 infra/cdk.out/
 infra/cdk.context.json
 infra/node_modules/
+
+# IAM policy files and trust docs contain account IDs — generate locally, never commit
+infra/iam/
+ecr-trust.json

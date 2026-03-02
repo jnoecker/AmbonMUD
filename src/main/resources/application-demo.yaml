@@ -1,0 +1,11 @@
+# Demo profile — loaded when JAVA_TOOL_OPTIONS=-Dambon.profile=demo is set.
+# Overrides that make the live EC2 instance start new players in the
+# noecker_resume zone instead of the tutorial glade.
+ambonMUD:
+  engine:
+    classStartRooms:
+      WARRIOR: noecker_resume:lobby
+      MAGE: noecker_resume:lobby
+      CLERIC: noecker_resume:lobby
+      ROGUE: noecker_resume:lobby
+      SWARM: labyrinth:cell_00_00

@@ -18,14 +18,15 @@ on:
       topology:
         description: "Deployment topology"
         required: true
-        default: split
+        default: ec2
         type: choice
         options:
+          - ec2
           - standalone
           - split
       tier:
-        description: "Scale tier"
-        required: true
+        description: "Scale tier (ignored for ec2 topology)"
+        required: false
         default: hobby
         type: choice
         options:
@@ -53,6 +54,17 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     steps:
+      - name: Check required variables
+        run: |
+          missing=""
+          [ -z "${{ vars.AWS_CDK_DEPLOY_ROLE_ARN }}" ] && missing="$missing AWS_CDK_DEPLOY_ROLE_ARN"
+          [ -z "${{ vars.AWS_REGION }}" ]              && missing="$missing AWS_REGION"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing required GitHub Actions repository variables:$missing"
+            echo "::error::See docs/DEPLOYMENT.md §3 (One-Time AWS Bootstrap) for setup instructions."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
 
       - name: Resolve image tag
@@ -84,7 +96,7 @@ jobs:
         working-directory: infra
         run: |
           npx cdk deploy --all --require-approval never \
-            --context topology=${{ inputs.topology || 'split' }} \
+            --context topology=${{ inputs.topology || 'ec2' }} \
             --context tier=${{ inputs.tier || 'hobby' }} \
             --context imageTag=${{ steps.tag.outputs.tag }} \
             --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }}
@@ -98,6 +110,18 @@ jobs:
       github.event_name == 'workflow_dispatch' &&
       inputs.environment == 'production'
     steps:
+      - name: Check required variables
+        run: |
+          missing=""
+          [ -z "${{ vars.AWS_CDK_DEPLOY_ROLE_ARN_PROD }}" ] && missing="$missing AWS_CDK_DEPLOY_ROLE_ARN_PROD"
+          [ -z "${{ vars.AWS_REGION }}" ]                   && missing="$missing AWS_REGION"
+          [ -z "${{ vars.DOMAIN }}" ]                       && missing="$missing DOMAIN"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing required GitHub Actions repository variables:$missing"
+            echo "::error::See docs/DEPLOYMENT.md §3 (One-Time AWS Bootstrap) for setup instructions."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
 
       - name: Configure AWS credentials (OIDC)

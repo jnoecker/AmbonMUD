@@ -15,6 +15,14 @@ export interface Ec2StackProps extends StackProps {
    * Requires a Route 53 hosted zone for <domain> in the same account.
    */
   readonly domain?: string;
+  /**
+   * Optional fully-qualified hostname for nginx TLS termination, e.g. "mud.ambon.dev".
+   * If provided, nginx + certbot are installed and a `setup-tls` helper script is
+   * written to /usr/local/bin/setup-tls. Run it once (via SSM) after DNS is live:
+   *   setup-tls
+   * Ports 80 and 443 are always opened in the security group for HTTP → HTTPS redirects.
+   */
+  readonly hostname?: string;
 }
 
 /**
@@ -22,12 +30,14 @@ export interface Ec2StackProps extends StackProps {
  *
  * Provisions:
  *   - VPC with a single public subnet (no NAT gateway)
- *   - Security group: TCP 4000 (telnet) + 8080 (web) open to 0.0.0.0/0
+ *   - Security group: TCP 4000 (telnet) + 80/443 (HTTP/HTTPS) + 8080 (direct web) open to 0.0.0.0/0
  *   - IAM role: ECR pull + SSM Session Manager (no SSH key needed)
  *   - t4g.nano (ARM64) running Amazon Linux 2023
  *   - Docker + systemd service that pulls and runs the AmbonMUD container
  *   - Elastic IP (persists across stop/start; no charge while attached)
  *   - Optional Route 53 A record (play.<domain> → EIP)
+ *   - Optional nginx TLS termination (hostname prop): installs nginx + certbot,
+ *     writes nginx config, installs `setup-tls` helper
  *
  * YAML persistence is used (no RDS or Redis).
  * Player data lives at /app/data on the root EBS volume.
@@ -36,12 +46,16 @@ export interface Ec2StackProps extends StackProps {
  * player YAML data), run the update helper via SSM:
  *   aws ssm start-session --target <instanceId>
  *   $ update-ambonmud <new-tag>
+ *
+ * To set up TLS after DNS is live:
+ *   aws ssm start-session --target <instanceId>
+ *   $ setup-tls
  */
 export class Ec2Stack extends Stack {
   constructor(scope: Construct, id: string, props: Ec2StackProps) {
     super(scope, id, props);
 
-    const { imageTag, ecrRepoName, domain } = props;
+    const { imageTag, ecrRepoName, domain, hostname } = props;
     const ecrUri = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${ecrRepoName}`;
 
     // -------------------------------------------------------------------------
@@ -71,8 +85,12 @@ export class Ec2Stack extends Stack {
     });
     sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(4000), 'Telnet');
     sg.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(4000), 'Telnet IPv6');
-    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(8080), 'Web / WebSocket');
-    sg.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(8080), 'Web / WebSocket IPv6');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'HTTP');
+    sg.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(80), 'HTTP IPv6');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443), 'HTTPS');
+    sg.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(443), 'HTTPS IPv6');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(8080), 'Web direct (bypass nginx)');
+    sg.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(8080), 'Web direct IPv6');
 
     // -------------------------------------------------------------------------
     // IAM role: ECR pull + SSM for browser-based shell access.
@@ -98,7 +116,8 @@ export class Ec2Stack extends Stack {
       'set -euo pipefail',
       'dnf install -y docker',
       'systemctl enable --now docker',
-      'mkdir -p /app/data',
+      // UID 1001 matches the pinned ambonmud user inside the container (Dockerfile).
+      'mkdir -p /app/data && chown 1001:1001 /app/data',
       '',
       // ---- update-ambonmud helper script ------------------------------------
       // Pulls a new image tag, patches the service file, and restarts.
@@ -130,7 +149,11 @@ export class Ec2Stack extends Stack {
       `ExecStartPre=/bin/bash -c 'aws ecr get-login-password --region ${this.region} | docker login --username AWS --password-stdin ${ecrUri}'`,
       `ExecStartPre=/usr/bin/docker pull ${ecrUri}:${imageTag}`,
       'ExecStartPre=-/usr/bin/docker rm -f ambonmud',
-      `ExecStart=/usr/bin/docker run --name ambonmud -p 4000:4000 -p 8080:8080 -v /app/data:/app/data -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false ${ecrUri}:${imageTag}`,
+      // JAVA_TOOL_OPTIONS is read directly by the JVM (not Hoplite), making it
+      // a reliable way to set JVM system properties in the container.
+      // -Dambon.profile=demo loads application-demo.yaml from the classpath,
+      // which overrides classStartRooms to start players in noecker_resume.
+      `ExecStart=/usr/bin/docker run --name ambonmud -p 4000:4000 -p 8080:8080 -v /app/data:/app/data -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false -e JAVA_TOOL_OPTIONS=-Dambon.profile=demo ${ecrUri}:${imageTag}`,
       'ExecStop=/usr/bin/docker stop ambonmud',
       '',
       '[Install]',
@@ -141,6 +164,65 @@ export class Ec2Stack extends Stack {
       'systemctl enable ambonmud',
       'systemctl start ambonmud',
     );
+
+    // -------------------------------------------------------------------------
+    // Optional nginx + TLS setup (when hostname is provided).
+    //
+    // Installs nginx and certbot, writes an nginx reverse-proxy config that
+    // handles both HTTP and WebSocket connections, and installs a `setup-tls`
+    // helper that the operator runs once (via SSM) after DNS is live:
+    //   setup-tls
+    //
+    // certbot uses HTTP-01 challenge so nginx must be running and reachable on
+    // port 80 before running setup-tls.
+    // -------------------------------------------------------------------------
+    if (hostname) {
+      userData.addCommands(
+        '',
+        'dnf install -y nginx certbot python3-certbot-nginx',
+        'systemctl enable nginx',
+        '',
+        // nginx reverse-proxy config: HTTP + WebSocket → localhost:8080
+        `cat > /etc/nginx/conf.d/ambonmud.conf << 'NGINX_END'`,
+        '# WebSocket upgrade helper',
+        'map $http_upgrade $connection_upgrade {',
+        '    default upgrade;',
+        "    ''      close;",
+        '}',
+        '',
+        'server {',
+        '    listen 80;',
+        `    server_name ${hostname};`,
+        '',
+        '    location / {',
+        '        proxy_pass http://localhost:8080;',
+        '        proxy_http_version 1.1;',
+        '        proxy_set_header Upgrade $http_upgrade;',
+        '        proxy_set_header Connection $connection_upgrade;',
+        '        proxy_set_header Host $host;',
+        '        proxy_set_header X-Real-IP $remote_addr;',
+        '        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;',
+        '        proxy_set_header X-Forwarded-Proto $scheme;',
+        '        # Keep WebSocket connections alive',
+        '        proxy_read_timeout 3600;',
+        '    }',
+        '}',
+        'NGINX_END',
+        '',
+        // setup-tls: run once after DNS A record is pointing here
+        `cat > /usr/local/bin/setup-tls << 'SETUP_END'`,
+        '#!/bin/bash',
+        'set -euo pipefail',
+        `DOMAIN="\${1:-${hostname}}"`,
+        'systemctl start nginx',
+        'certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email --redirect',
+        'systemctl reload nginx',
+        'echo "TLS setup complete for $DOMAIN — cert auto-renews via certbot systemd timer"',
+        'SETUP_END',
+        'chmod +x /usr/local/bin/setup-tls',
+        'systemctl start nginx',
+      );
+    }
 
     // -------------------------------------------------------------------------
     // EC2 instance: t4g.nano — ARM64, 2 vCPU (burstable) / 512 MB RAM.
@@ -203,7 +285,7 @@ export class Ec2Stack extends Stack {
       description: 'Connect via telnet',
     });
     new CfnOutput(this, 'WebConnect', {
-      value: `http://${eip.attrPublicIp}:8080`,
+      value: hostname ? `https://${hostname}` : `http://${eip.attrPublicIp}:8080`,
       description: 'Connect via web browser',
     });
     new CfnOutput(this, 'SsmShell', {
@@ -214,5 +296,11 @@ export class Ec2Stack extends Stack {
       value: `aws ssm send-command --instance-ids ${instance.instanceId} --document-name AWS-RunShellScript --parameters 'commands=["update-ambonmud <new-tag>"]' --region ${this.region}`,
       description: 'Deploy a new image tag without replacing the instance',
     });
+    if (hostname) {
+      new CfnOutput(this, 'SetupTls', {
+        value: `aws ssm send-command --instance-ids ${instance.instanceId} --document-name AWS-RunShellScript --parameters 'commands=["setup-tls"]' --region ${this.region}`,
+        description: 'Provision Let\'s Encrypt cert (run once after DNS is live)',
+      });
+    }
   }
 }

@@ -38,9 +38,11 @@ jobs:
 
   docker:
     # Build and push to ECR on every push to main after tests pass.
+    # Runs on a native ARM64 runner to match the t4g.nano demo instance —
+    # avoids slow QEMU emulation while producing a correct linux/arm64 image.
     needs: [test, frontend]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     outputs:
       image-tag: ${{ steps.meta.outputs.tag }}
     steps:
@@ -66,7 +68,9 @@ jobs:
       - name: Build and push Docker image
         run: |
           IMAGE="${{ steps.meta.outputs.registry }}/${{ steps.meta.outputs.repo }}"
-          docker build -t "$IMAGE:${{ steps.meta.outputs.tag }}" .
-          docker tag "$IMAGE:${{ steps.meta.outputs.tag }}" "$IMAGE:latest"
+          docker build \
+            --tag "$IMAGE:${{ steps.meta.outputs.tag }}" \
+            --tag "$IMAGE:latest" \
+            .
           docker push "$IMAGE:${{ steps.meta.outputs.tag }}"
           docker push "$IMAGE:latest"
