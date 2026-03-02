@@ -108,6 +108,7 @@ class PostgresPlayerRepository(
                     it[passwordHash] = dto.passwordHash
                     it[ansiEnabled] = dto.ansiEnabled
                     it[isStaff] = dto.isStaff
+                    it[hp] = dto.hp
                     it[mana] = dto.mana
                     it[maxMana] = dto.maxMana
                     it[gold] = dto.gold
@@ -144,6 +145,7 @@ class PostgresPlayerRepository(
             passwordHash = this[PlayersTable.passwordHash],
             ansiEnabled = this[PlayersTable.ansiEnabled],
             isStaff = this[PlayersTable.isStaff],
+            hp = this[PlayersTable.hp],
             mana = this[PlayersTable.mana],
             maxMana = this[PlayersTable.maxMana],
             gold = this[PlayersTable.gold],
