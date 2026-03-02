@@ -62,7 +62,7 @@ By default: telnet on **:4000**, web on **:8080** (configurable in `src/main/res
 **To use PostgreSQL + Redis locally**, bring up the Docker Compose stack first:
 ```bash
 docker compose up -d
-./gradlew run -Pconfig.ambonMUD.persistence.backend=POSTGRES -Pconfig.ambonMUD.redis.enabled=true
+./gradlew run -Pconfig.ambonmud.persistence.backend=POSTGRES -Pconfig.ambonmud.redis.enabled=true
 ```
 
 > **Note:** Web client loads xterm.js from CDN. For offline use, prefer telnet.
@@ -72,10 +72,10 @@ docker compose up -d
 **Runtime config** is loaded from `src/main/resources/application.yaml`. Override any value at startup:
 
 ```bash
-./gradlew run -Pconfig.ambonMUD.server.telnetPort=5000
-./gradlew run -Pconfig.ambonMUD.persistence.backend=YAML
-./gradlew run -Pconfig.ambonMUD.redis.enabled=false
-./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG
+./gradlew run -Pconfig.ambonmud.server.telnetPort=5000
+./gradlew run -Pconfig.ambonmud.persistence.backend=YAML
+./gradlew run -Pconfig.ambonmud.redis.enabled=false
+./gradlew run -Pconfig.ambonmud.logging.level=DEBUG
 ```
 
 See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#configuration) for detailed configuration options and multi-instance setup.
@@ -117,7 +117,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 
 **World files** live in `src/main/resources/world/` and are loaded by `WorldLoader`. Each YAML file describes one zone; multiple zones are merged into a single world.
 
-**Current Zones (10 regions):**
+**Current Zones (14 regions):**
 | Zone | Description |
 |------|-------------|
 | `tutorial_glade` | Starting area for new players |
@@ -130,6 +130,10 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 | `low_training_barrens` | Low-level training zone (barrens) |
 | `labyrinth` | High-level maze zone; home of the SWARM load-test class |
 | `achievements` | Achievement trigger zone |
+| `wesleyalis` | Kingdom of Wesleyalis |
+| `trailey` | Kingdom of Trailey |
+| `pbrae` | Region of Pbrae |
+| `aineroia_cottage` | Aineroia cottage area |
 
 **Zone YAML Format**
 ```yaml
@@ -180,11 +184,11 @@ See [WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) for full schema documentation 
 
 ## Persistence
 
-**Backends** (selectable via `ambonMUD.persistence.backend`):
+**Backends** (selectable via `ambonmud.persistence.backend`):
 - **YAML** (default): File-backed, zero dependencies, player files in `data/players/`
-- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V7); requires `ambonMUD.database.jdbcUrl`
+- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V12); requires `ambonmud.database.jdbcUrl`
 
-Redis L2 caching is disabled by default. Enable it with `ambonMUD.redis.enabled=true` when running alongside the Docker Compose stack.
+Redis L2 caching is disabled by default. Enable it with `ambonmud.redis.enabled=true` when running alongside the Docker Compose stack.
 
 **Grant staff access:**
 - YAML: Add `isStaff: true` to player YAML file

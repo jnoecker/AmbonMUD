@@ -409,7 +409,7 @@ Current web serving note:
 
 **How:**
 - `PlayerClass.selectable(debugClassesEnabled: Boolean)` returns only non-debug entries by default
-- Enable in development with `-Pconfig.ambonMUD.engine.debug.enableSwarmClass=true`
+- Enable in development with `-Pconfig.ambonmud.engine.debug.enableSwarmClass=true`
 - The `-Pconfig.<key>=<value>` Gradle property mechanism maps to `config.override.<key>` system properties, which Hoplite picks up as highest-priority overrides at startup
 
 **Tradeoff:** No compile-time type safety for ability definitions; runtime validation at startup only. Debug classes require deliberate opt-in to keep them out of production character creation.
