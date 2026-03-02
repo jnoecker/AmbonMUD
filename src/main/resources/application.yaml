@@ -186,11 +186,11 @@ ambonmud:
       baseIntervalMillis: 5000
       minIntervalMillis: 1000
       msPerConstitution: 200
-      regenAmount: 1
+      regenAmount: 4
       mana:
         baseIntervalMillis: 3000
         minIntervalMillis: 1000
-        regenAmount: 1
+        regenAmount: 4
         msPerWisdom: 200
     scheduler:
       maxActionsPerTick: 100

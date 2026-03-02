@@ -480,8 +480,8 @@ class CombatSystemTest {
             assertNotNull(player)
             assertEquals(2, player!!.level)
             assertEquals(50L, player.xpTotal)
-            assertEquals(13, player.maxHp)
-            assertEquals(13, player.hp)
+            assertEquals(18, player.maxHp)
+            assertEquals(18, player.hp)
 
             val messages =
                 outbound
@@ -490,7 +490,7 @@ class CombatSystemTest {
                     .filter { it.sessionId == sid }
                     .map { it.text }
             assertTrue(messages.contains("You gain 50 XP."))
-            assertTrue(messages.contains("You reached level 2! (+3 max HP, +2 max Mana)"))
+            assertTrue(messages.contains("You reached level 2! (+8 max HP, +4 max Mana)"))
         }
 
     private fun equipItem(
