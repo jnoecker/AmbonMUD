@@ -228,8 +228,7 @@ items:
     keyword: "stinger"
     description: "A massive stinger shed by the Prehistoric Queen Bee, honed to a razor edge and fitted with a grip of tough vine. It hums faintly with ancient apiary power."
     slot: hand
-    minDamage: 12
-    maxDamage: 20
+    damage: 16
     armor: 1
     room: prehistoric_apiary
     basePrice: 120

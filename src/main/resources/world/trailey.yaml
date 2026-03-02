@@ -278,8 +278,7 @@ items:
     keyword: "marker"
     description: "A heavily modified paintball marker with a custom grip, extended barrel, and a two-hundred-round hopper. The paint is Trevor's proprietary formula: glows in the dark, stains for six weeks, and leaves a satisfying impact sound on robot surfaces."
     slot: hand
-    minDamage: 8
-    maxDamage: 14
+    damage: 11
     room: trevors_range
     basePrice: 75
 

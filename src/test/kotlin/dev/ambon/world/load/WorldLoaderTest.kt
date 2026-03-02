@@ -479,7 +479,10 @@ class WorldLoaderTest {
                 "world/low_training_marsh.yaml",
                 "world/low_training_mines.yaml",
                 "world/noecker_resume.yaml",
+                "world/pbrae.yaml",
+                "world/trailey.yaml",
                 "world/tutorial_glade.yaml",
+                "world/wesleyalis.yaml",
             )
 
         @Test
