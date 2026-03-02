@@ -484,16 +484,6 @@ class PlayerRegistry(
         persistIfClaimed(ps)
     }
 
-    suspend fun saveQuestState(sessionId: SessionId) {
-        val ps = players[sessionId] ?: return
-        persistIfClaimed(ps)
-    }
-
-    suspend fun saveAchievementState(sessionId: SessionId) {
-        val ps = players[sessionId] ?: return
-        persistIfClaimed(ps)
-    }
-
     suspend fun setDisplayTitle(
         sessionId: SessionId,
         title: String?,
