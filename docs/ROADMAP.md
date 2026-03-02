@@ -4,7 +4,7 @@ This document outlines planned features, completed work, and strategic next step
 
 ---
 
-## Current State (February 2026)
+## Current State (March 2026)
 
 AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 
@@ -235,4 +235,4 @@ See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) for setup instructions and [ARCHI
 
 ---
 
-**Last updated:** February 27, 2026
+**Last updated:** March 2, 2026

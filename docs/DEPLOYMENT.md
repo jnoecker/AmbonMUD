@@ -280,26 +280,26 @@ npx cdk diff --context topology=split --context tier=moderate
 
 ## 6. Environment Variable Reference
 
-The app reads configuration from `AMBONMUD_*` environment variables at startup (Hoplite maps `SCREAMING_SNAKE_CASE` to `camelCase` config keys via lowercase + `_` → `.`).
+The app reads configuration from `AMBONMUD_*` environment variables at startup (Hoplite lowercases env var names and replaces `_` with `.`, so `AMBONMUD_PERSISTENCE_BACKEND` resolves to `ambonmud.persistence.backend`).
 
 | Variable | Config Key | Notes |
 |---|---|---|
-| `AMBONMUD_MODE` | `ambonMUD.mode` | `STANDALONE`, `ENGINE`, `GATEWAY` |
-| `AMBONMUD_PERSISTENCE_BACKEND` | `ambonMUD.persistence.backend` | `POSTGRES` or `YAML` |
-| `AMBONMUD_DATABASE_JDBCURL` | `ambonMUD.database.jdbcUrl` | Full JDBC URL |
-| `AMBONMUD_DATABASE_USERNAME` | `ambonMUD.database.username` | Injected from Secrets Manager |
-| `AMBONMUD_DATABASE_PASSWORD` | `ambonMUD.database.password` | Injected from Secrets Manager |
-| `AMBONMUD_REDIS_ENABLED` | `ambonMUD.redis.enabled` | `true` / `false` |
-| `AMBONMUD_REDIS_URI` | `ambonMUD.redis.uri` | Constructed from ElastiCache endpoint |
-| `AMBONMUD_REDIS_BUS_ENABLED` | `ambonMUD.redis.bus.enabled` | Required for split topology |
-| `AMBONMUD_SHARDING_ENABLED` | `ambonMUD.sharding.enabled` | Set to `true` on Engine tasks |
-| `AMBONMUD_SHARDING_REGISTRY_TYPE` | `ambonMUD.sharding.registry.type` | `REDIS` for dynamic discovery |
-| `AMBONMUD_SHARDING_ENGINEID` | `ambonMUD.sharding.engineId` | Auto-set by `docker-entrypoint.sh` to `$(hostname)` |
-| `AMBONMUD_SHARDING_ADVERTISEHOST` | `ambonMUD.sharding.advertiseHost` | Auto-set to container private IP |
-| `AMBONMUD_GRPC_CLIENT_ENGINEHOST` | `ambonMUD.grpc.client.engineHost` | `engine.internal.ambonmud` (Cloud Map) |
-| `AMBONMUD_GRPC_CLIENT_ENGINEPORT` | `ambonMUD.grpc.client.enginePort` | `9090` |
-| `AMBONMUD_SERVER_TELNETPORT` | `ambonMUD.server.telnetPort` | `4000` |
-| `AMBONMUD_SERVER_WEBPORT` | `ambonMUD.server.webPort` | `8080` |
+| `AMBONMUD_MODE` | `ambonmud.mode` | `STANDALONE`, `ENGINE`, `GATEWAY` |
+| `AMBONMUD_PERSISTENCE_BACKEND` | `ambonmud.persistence.backend` | `POSTGRES` or `YAML` |
+| `AMBONMUD_DATABASE_JDBCURL` | `ambonmud.database.jdbcUrl` | Full JDBC URL |
+| `AMBONMUD_DATABASE_USERNAME` | `ambonmud.database.username` | Injected from Secrets Manager |
+| `AMBONMUD_DATABASE_PASSWORD` | `ambonmud.database.password` | Injected from Secrets Manager |
+| `AMBONMUD_REDIS_ENABLED` | `ambonmud.redis.enabled` | `true` / `false` |
+| `AMBONMUD_REDIS_URI` | `ambonmud.redis.uri` | Constructed from ElastiCache endpoint |
+| `AMBONMUD_REDIS_BUS_ENABLED` | `ambonmud.redis.bus.enabled` | Required for split topology |
+| `AMBONMUD_SHARDING_ENABLED` | `ambonmud.sharding.enabled` | Set to `true` on Engine tasks |
+| `AMBONMUD_SHARDING_REGISTRY_TYPE` | `ambonmud.sharding.registry.type` | `REDIS` for dynamic discovery |
+| `AMBONMUD_SHARDING_ENGINEID` | `ambonmud.sharding.engineId` | Auto-set by `docker-entrypoint.sh` to `$(hostname)` |
+| `AMBONMUD_SHARDING_ADVERTISEHOST` | `ambonmud.sharding.advertiseHost` | Auto-set to container private IP |
+| `AMBONMUD_GRPC_CLIENT_ENGINEHOST` | `ambonmud.grpc.client.engineHost` | `engine.internal.ambonmud` (Cloud Map) |
+| `AMBONMUD_GRPC_CLIENT_ENGINEPORT` | `ambonmud.grpc.client.enginePort` | `9090` |
+| `AMBONMUD_SERVER_TELNETPORT` | `ambonmud.server.telnetPort` | `4000` |
+| `AMBONMUD_SERVER_WEBPORT` | `ambonmud.server.webPort` | `8080` |
 
 ---
 
