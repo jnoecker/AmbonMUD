@@ -10,6 +10,7 @@ import dev.ambon.domain.quest.QuestState
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.StatModifiers
 import dev.ambon.persistence.PlayerId
+import dev.ambon.persistence.PlayerRecord
 
 data class PlayerState(
     val sessionId: SessionId,
@@ -110,6 +111,43 @@ fun PlayerState.healMana(amount: Int): Boolean {
 /** Decreases mana by [amount], clamped to 0. */
 fun PlayerState.spendMana(amount: Int) {
     mana = (mana - amount).coerceAtLeast(0)
+}
+
+/** Converts this runtime state to a [PlayerRecord] for persistence. */
+fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
+    val pid = playerId ?: error("Cannot persist a PlayerState without a playerId")
+    return PlayerRecord(
+        id = pid,
+        name = name,
+        roomId = roomId,
+        strength = strength,
+        dexterity = dexterity,
+        constitution = constitution,
+        intelligence = intelligence,
+        wisdom = wisdom,
+        charisma = charisma,
+        race = race,
+        playerClass = playerClass,
+        level = level,
+        xpTotal = xpTotal,
+        createdAtEpochMs = createdAtEpochMs,
+        lastSeenEpochMs = lastSeenEpochMs,
+        passwordHash = passwordHash,
+        ansiEnabled = ansiEnabled,
+        isStaff = isStaff,
+        hp = hp,
+        mana = mana,
+        maxMana = maxMana,
+        gold = gold,
+        activeQuests = activeQuests,
+        completedQuestIds = completedQuestIds,
+        unlockedAchievementIds = unlockedAchievementIds,
+        achievementProgress = achievementProgress,
+        activeTitle = activeTitle,
+        inbox = inbox.toList(),
+        guildId = guildId,
+        recallRoomId = recallRoomId,
+    )
 }
 
 /** Clears all guild-related fields on this player. */
