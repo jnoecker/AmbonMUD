@@ -36,10 +36,10 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Web client v3 (static, current): `src/main/resources/web-v3` (built from `web-v3/` with `bun run build`); legacy assets remain in `src/main/resources/web` but are no longer served
 - Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
-- World content: `src/main/resources/world` (10 zones: ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth)
+- World content: `src/main/resources/world` (14 zones: ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth, wesleyalis, trailey, pbrae, aineroia_cottage)
 - World format contract: `docs/WORLD_YAML_SPEC.md`
 - Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence` (`PlayerRepository`, `YamlPlayerRepository`, `PostgresPlayerRepository`, `DatabaseManager`, `PlayersTable`)
-- Flyway schema migrations: `src/main/resources/db/migration` (V1–V7: players table through achievements)
+- Flyway schema migrations: `src/main/resources/db/migration` (V1–V12: players table through player HP field)
 - Tests: `src/test/kotlin` (~78 test files), fixtures in `src/test/resources/world`
 - Runtime player data (git-ignored): `data/players`
 
@@ -72,7 +72,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Player room/last-seen persistence must stay intact.
 - Player progression persistence must stay intact (level/xp/attributes/mana/race/class/gold).
 - Keep atomic-write behavior for YAML persistence files.
-- The persistence backend is selectable via `ambonMUD.persistence.backend` (`YAML` or `POSTGRES`). Database connection defaults match the docker compose stack, so switching to Postgres only requires flipping the backend flag.
+- The persistence backend is selectable via `ambonmud.persistence.backend` (`YAML` or `POSTGRES`). Database connection defaults match the docker compose stack, so switching to Postgres only requires flipping the backend flag.
 - The persistence chain is: `WriteCoalescingPlayerRepository` → `RedisCachingPlayerRepository` (optional) → `YamlPlayerRepository` or `PostgresPlayerRepository`. Changes to `PlayerRecord` must survive all three layers including JSON round-trip through Redis.
 - `PostgresPlayerRepository` uses Exposed DSL, Flyway migrations, and HikariCP. Schema lives in `src/main/resources/db/migration/`. Tests use H2 in PostgreSQL-compatibility mode (no Docker required).
 - `isStaff` is a `PlayerRecord` field; it is faithfully serialized through all persistence layers. Grant by editing the player YAML directly or updating the `players` table row.
@@ -105,7 +105,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 ### Configuration / demo client
 - Config schema changes: update `src/main/kotlin/dev/ambon/config/AppConfig.kt` and `src/main/resources/application.yaml` together; keep `validated()` strict.
 - Web client v3 changes: edit source in `web-v3/`, run `bun run build` to write assets to `src/main/resources/web-v3/`, sanity-check via `KtorWebSocketTransportTest`.
-- Runtime config overrides use `-Pconfig.<key>=<value>` (e.g. `./gradlew run -Pconfig.ambonMUD.logging.level=DEBUG`). This works in all shells including Windows PowerShell.
+- Runtime config overrides use `-Pconfig.<key>=<value>` (e.g. `./gradlew run -Pconfig.ambonmud.logging.level=DEBUG`). This works in all shells including Windows PowerShell.
 
 ### Persistence
 - Keep `PlayerRepository` as the abstraction boundary.
