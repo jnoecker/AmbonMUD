@@ -187,7 +187,7 @@ class AchievementSystem(
         }
 
         if (persistNeeded) {
-            players.saveAchievementState(sessionId)
+            players.persistPlayer(sessionId)
         }
     }
 

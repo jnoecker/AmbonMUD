@@ -270,7 +270,7 @@ class QuestSystem(
     }
 
     private suspend fun persistPlayer(ps: dev.ambon.engine.PlayerState) {
-        players.saveQuestState(ps.sessionId)
+        players.persistPlayer(ps.sessionId)
     }
 
     private fun findActiveQuestId(
