@@ -111,7 +111,7 @@ internal suspend fun sendLook(
             room.exits.keys.joinToString(", ") { dir ->
                 val label = dir.name.lowercase()
                 val door = ws?.doorOnExit(roomId, dir)
-                if (door != null && ws != null) {
+                if (door != null) {
                     val state = ws.getDoorState(door.id)
                     if (state == LockableState.OPEN) label else "$label [${state.name.lowercase()}]"
                 } else {
@@ -184,6 +184,10 @@ internal suspend fun sendLook(
     gmcpEmitter?.sendRoomMobs(sessionId, rawRoomMobs)
     gmcpEmitter?.sendRoomItems(sessionId, here)
 }
+
+/** EngineContext convenience wrapper for [sendLook]. */
+internal suspend fun EngineContext.sendLook(sessionId: SessionId): Unit =
+    sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
 
 /** Broadcasts [message] to every player in [roomId] except [excludeSessionId]. Delegates to [dev.ambon.engine.broadcastToRoom]. */
 internal suspend fun broadcastToRoomExcept(
