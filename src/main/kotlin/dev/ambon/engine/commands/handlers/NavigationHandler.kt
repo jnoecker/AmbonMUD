@@ -3,6 +3,7 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.LockableState
+import dev.ambon.engine.ceilSeconds
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
@@ -115,7 +116,7 @@ class NavigationHandler(
         val me = players.get(sessionId) ?: return
         val now = clock.millis()
         if (now < me.recallCooldownUntilMs) {
-            val secondsLeft = (me.recallCooldownUntilMs - now + 999L) / 1000L
+            val secondsLeft = (me.recallCooldownUntilMs - now).ceilSeconds()
             outbound.send(OutboundEvent.SendText(sessionId, "You need to rest before recalling again. ($secondsLeft seconds remaining)"))
             return
         }

@@ -1,7 +1,6 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
-import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -312,8 +311,7 @@ class CombatSystem(
             // STUN check
             val stunned = statusEffects?.hasPlayerEffect(sessionId, EffectType.STUN) == true
             if (!stunned) {
-                val playerMods = statusEffects?.getPlayerStatMods(sessionId) ?: StatBlock.ZERO
-                val playerStats = resolveEffectiveStats(player, playerBonuses, playerMods)
+                val playerStats = resolvePlayerStats(player, items, statusEffects)
                 val playerAttack = playerBonuses.attack
                 val playerStrBonus = PlayerState.statBonus(playerStats.str, config.strDivisor)
                 val playerRoll = rollRange(rng, config.minDamage, config.maxDamage)
@@ -388,9 +386,7 @@ class CombatSystem(
 
             val target = players.get(targetSid) ?: continue
 
-            val targetBonuses = items.equipmentBonuses(targetSid)
-            val targetMods = statusEffects?.getPlayerStatMods(targetSid) ?: StatBlock.ZERO
-            val targetStats = resolveEffectiveStats(target, targetBonuses, targetMods)
+            val targetStats = resolvePlayerStats(target, items, statusEffects)
             val dodgePct = (PlayerState.statBonus(targetStats.dex, 1) * config.dexDodgePerPoint).coerceIn(0, config.maxDodgePercent)
             if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
                 outbound.send(OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s attack!"))

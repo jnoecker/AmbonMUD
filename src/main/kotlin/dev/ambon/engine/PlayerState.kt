@@ -227,3 +227,18 @@ fun resolveEffectiveStats(
         wis = player.wisdom + equip.stats.wis + mods.wis,
         cha = player.charisma + equip.stats.cha + mods.cha,
     )
+
+/**
+ * Convenience overload that gathers equipment bonuses and status-effect mods
+ * from the (possibly null) [items] and [statusEffects] systems, then resolves
+ * the player's effective stats in one call.
+ */
+fun resolvePlayerStats(
+    player: PlayerState,
+    items: ItemRegistry?,
+    statusEffects: dev.ambon.engine.status.StatusEffectSystem?,
+): StatBlock {
+    val equip = items?.equipmentBonuses(player.sessionId) ?: ItemRegistry.EquipmentBonuses()
+    val mods = statusEffects?.getPlayerStatMods(player.sessionId) ?: StatBlock.ZERO
+    return resolveEffectiveStats(player, equip, mods)
+}
