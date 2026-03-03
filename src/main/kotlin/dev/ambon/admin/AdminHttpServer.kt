@@ -116,42 +116,61 @@ private data class PlayerDetailDto(
 )
 
 private fun PlayerState.toListItemDto() =
-    PlayerListItemDto(
+    toListItemDto(
         name = name,
         level = level,
         playerClass = playerClass,
         race = race,
         room = roomId.value,
-        isOnline = true,
         isStaff = isStaff,
+        isOnline = true,
         hp = hp,
         maxHp = maxHp,
     )
 
 private fun PlayerRecord.toListItemDto() =
-    PlayerListItemDto(
+    toListItemDto(
         name = name,
         level = level,
         playerClass = playerClass,
         race = race,
         room = roomId.value,
-        isOnline = false,
         isStaff = isStaff,
+        isOnline = false,
         hp = 0,
         maxHp = 0,
     )
 
+private fun toListItemDto(
+    name: String,
+    level: Int,
+    playerClass: String,
+    race: String,
+    room: String,
+    isStaff: Boolean,
+    isOnline: Boolean,
+    hp: Int,
+    maxHp: Int,
+) = PlayerListItemDto(
+    name = name,
+    level = level,
+    playerClass = playerClass,
+    race = race,
+    room = room,
+    isOnline = isOnline,
+    isStaff = isStaff,
+    hp = hp,
+    maxHp = maxHp,
+)
+
 private fun PlayerState.toDetailDto() =
-    PlayerDetailDto(
+    toDetailDto(
         name = name,
         level = level,
         playerClass = playerClass,
         race = race,
         room = roomId.value,
-        isOnline = true,
         isStaff = isStaff,
-        hp = hp,
-        maxHp = maxHp,
         mana = mana,
         maxMana = maxMana,
         xpTotal = xpTotal,
@@ -166,19 +185,19 @@ private fun PlayerState.toDetailDto() =
         activeQuestIds = activeQuests.keys.sorted(),
         completedQuestIds = completedQuestIds.sorted(),
         achievementIds = unlockedAchievementIds.sorted(),
+        isOnline = true,
+        hp = hp,
+        maxHp = maxHp,
     )
 
 private fun PlayerRecord.toDetailDto() =
-    PlayerDetailDto(
+    toDetailDto(
         name = name,
         level = level,
         playerClass = playerClass,
         race = race,
         room = roomId.value,
-        isOnline = false,
         isStaff = isStaff,
-        hp = 0,
-        maxHp = 0,
         mana = mana,
         maxMana = maxMana,
         xpTotal = xpTotal,
@@ -193,7 +212,60 @@ private fun PlayerRecord.toDetailDto() =
         activeQuestIds = activeQuests.keys.sorted(),
         completedQuestIds = completedQuestIds.sorted(),
         achievementIds = unlockedAchievementIds.sorted(),
+        isOnline = false,
+        hp = 0,
+        maxHp = 0,
     )
+
+private fun toDetailDto(
+    name: String,
+    level: Int,
+    playerClass: String,
+    race: String,
+    room: String,
+    isStaff: Boolean,
+    mana: Int,
+    maxMana: Int,
+    xpTotal: Long,
+    gold: Long,
+    strength: Int,
+    dexterity: Int,
+    constitution: Int,
+    intelligence: Int,
+    wisdom: Int,
+    charisma: Int,
+    activeTitle: String?,
+    activeQuestIds: List<String>,
+    completedQuestIds: List<String>,
+    achievementIds: List<String>,
+    isOnline: Boolean,
+    hp: Int,
+    maxHp: Int,
+) = PlayerDetailDto(
+    name = name,
+    level = level,
+    playerClass = playerClass,
+    race = race,
+    room = room,
+    isOnline = isOnline,
+    isStaff = isStaff,
+    hp = hp,
+    maxHp = maxHp,
+    mana = mana,
+    maxMana = maxMana,
+    xpTotal = xpTotal,
+    gold = gold,
+    strength = strength,
+    dexterity = dexterity,
+    constitution = constitution,
+    intelligence = intelligence,
+    wisdom = wisdom,
+    charisma = charisma,
+    activeTitle = activeTitle,
+    activeQuestIds = activeQuestIds,
+    completedQuestIds = completedQuestIds,
+    achievementIds = achievementIds,
+)
 
 private data class ZoneInfoDto(
     val name: String,
@@ -214,6 +286,24 @@ private data class ZoneDetailDto(
     val name: String,
     val rooms: List<RoomInfoDto>,
 )
+
+private fun buildZoneInfoDtos(
+    world: World,
+    players: PlayerRegistry,
+    mobs: MobRegistry,
+): List<ZoneInfoDto> =
+    world.rooms.keys
+        .groupBy { it.zone }
+        .entries
+        .map { (zone, rooms) ->
+            ZoneInfoDto(
+                name = zone,
+                roomCount = rooms.size,
+                playersOnline = players.playersInZone(zone).size,
+                mobsAlive = rooms.sumOf { roomId -> mobs.mobsInRoom(roomId).size },
+            )
+        }
+        .sortedBy { it.name }
 
 // --- Ktor module ---
 
@@ -240,17 +330,7 @@ internal fun Application.adminModule(
             val zones = world.rooms.keys.mapTo(mutableSetOf()) { it.zone }
             val mobCount = mobs.all().size
             val zoneSummaries =
-                world.rooms.keys
-                    .groupBy { it.zone }
-                    .entries
-                    .map { (zone, rooms) ->
-                        ZoneInfoDto(
-                            name = zone,
-                            roomCount = rooms.size,
-                            playersOnline = players.playersInZone(zone).size,
-                            mobsAlive = rooms.sumOf { roomId -> mobs.mobsInRoom(roomId).size },
-                        )
-                    }
+                buildZoneInfoDtos(world, players, mobs)
                     .sortedWith(compareByDescending<ZoneInfoDto> { it.playersOnline }.thenBy { it.name })
             val body =
                 buildString {
@@ -460,7 +540,8 @@ internal fun Application.adminModule(
         // ── World inspector ───────────────────────────────────────────────────
         get("/world") {
             val query = call.request.queryParameters["q"]?.trim()?.lowercase() ?: ""
-            val roomsByZone = world.rooms.keys.groupBy { it.zone }
+            val allZones = buildZoneInfoDtos(world, players, mobs)
+            val filtered = allZones.filter { query.isBlank() || it.name.lowercase().contains(query) }
             val body =
                 buildString {
                     append("<h1>World</h1>")
@@ -470,18 +551,12 @@ internal fun Application.adminModule(
                     append("</form>")
                     append("<table>")
                     append("<tr><th>Zone</th><th>Rooms</th><th>Players Online</th><th>Mobs Alive</th></tr>")
-                    val filtered =
-                        roomsByZone.entries
-                            .sortedBy { it.key }
-                            .filter { query.isBlank() || it.key.lowercase().contains(query) }
-                    for ((zone, rooms) in filtered) {
-                        val zonePlayers = players.playersInZone(zone).size
-                        val zoneMobs = rooms.sumOf { roomId -> mobs.mobsInRoom(roomId).size }
+                    for (zone in filtered) {
                         append("<tr>")
-                        append("<td><a href=\"/world/${zone.esc()}\">${zone.esc()}</a></td>")
-                        append("<td>${rooms.size}</td>")
-                        append("<td>$zonePlayers</td>")
-                        append("<td>$zoneMobs</td>")
+                        append("<td><a href=\"/world/${zone.name.esc()}\">${zone.name.esc()}</a></td>")
+                        append("<td>${zone.roomCount}</td>")
+                        append("<td>${zone.playersOnline}</td>")
+                        append("<td>${zone.mobsAlive}</td>")
                         append("</tr>")
                     }
                     if (filtered.isEmpty()) {
@@ -562,16 +637,7 @@ internal fun Application.adminModule(
         }
 
         get("/api/world/zones") {
-            val roomsByZone = world.rooms.keys.groupBy { it.zone }
-            val zones =
-                roomsByZone.entries.sortedBy { it.key }.map { (zone, rooms) ->
-                    ZoneInfoDto(
-                        name = zone,
-                        roomCount = rooms.size,
-                        playersOnline = players.playersInZone(zone).size,
-                        mobsAlive = rooms.sumOf { roomId -> mobs.mobsInRoom(roomId).size },
-                    )
-                }
+            val zones = buildZoneInfoDtos(world, players, mobs)
             call.respondText(json.writeValueAsString(zones), ContentType.Application.Json)
         }
 
