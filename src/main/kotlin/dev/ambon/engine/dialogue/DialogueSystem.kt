@@ -182,9 +182,5 @@ class DialogueSystem(
     private fun findMobInRoom(
         roomId: RoomId,
         keyword: String,
-    ) = mobs
-        .mobsInRoom(roomId)
-        .filter { it.name.lowercase().contains(keyword.lowercase()) }
-        .sortedBy { it.name }
-        .firstOrNull()
+    ) = mobs.findInRoomByKeyword(roomId, keyword).firstOrNull()
 }

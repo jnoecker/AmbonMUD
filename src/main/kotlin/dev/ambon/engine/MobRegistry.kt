@@ -32,6 +32,20 @@ class MobRegistry {
 
     fun mobsInRoom(roomId: RoomId): List<MobState> = roomMembers[roomId]?.mapNotNull { mobs[it] } ?: emptyList()
 
+    /**
+     * Returns mobs in [roomId] whose name contains [keyword] (case-insensitive),
+     * sorted alphabetically by name.
+     */
+    fun findInRoomByKeyword(
+        roomId: RoomId,
+        keyword: String,
+    ): List<MobState> {
+        val lower = keyword.lowercase()
+        return mobsInRoom(roomId)
+            .filter { it.name.lowercase().contains(lower) }
+            .sortedBy { it.name }
+    }
+
     fun moveTo(
         mobId: MobId,
         newRoom: RoomId,
