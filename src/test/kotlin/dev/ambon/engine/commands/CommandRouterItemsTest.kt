@@ -1,19 +1,13 @@
 package dev.ambon.engine.commands
 
-import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.items.ItemUseEffect
-import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.LoginResult
-import dev.ambon.engine.MobRegistry
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
-import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.CommandRouterHarness
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -23,24 +17,18 @@ class CommandRouterItemsTest {
     @Test
     fun `look includes items here line`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-            items.setRoomItems(
-                world.startRoom,
+            val h = CommandRouterHarness.create()
+            h.items.setRoomItems(
+                h.world.startRoom,
                 listOf(ItemInstance(ItemId("test:lantern"), Item(keyword = "lantern", displayName = "a brass lantern"))),
             )
 
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val mobs = MobRegistry()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
-
             val sid = SessionId(1L)
-            login(players, sid, "Player1")
+            h.loginPlayer(sid, "Player1")
 
-            router.handle(sid, Command.Look)
+            h.router.handle(sid, Command.Look)
 
-            val outs = drain(outbound)
+            val outs = h.drain()
             assertTrue(
                 outs.any {
                     it is OutboundEvent.SendInfo &&
@@ -54,28 +42,22 @@ class CommandRouterItemsTest {
     @Test
     fun `get moves item from room to inventory`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-            items.setRoomItems(
-                world.startRoom,
+            val h = CommandRouterHarness.create()
+            h.items.setRoomItems(
+                h.world.startRoom,
                 listOf(ItemInstance(ItemId("test:note"), Item(keyword = "note", displayName = "a crumpled note"))),
             )
 
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val mobs = MobRegistry()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
-
             val sid = SessionId(2L)
-            login(players, sid, "Player2")
+            h.loginPlayer(sid, "Player2")
 
-            router.handle(sid, Command.Get("note"))
+            h.router.handle(sid, Command.Get("note"))
 
-            assertEquals(0, items.itemsInRoom(world.startRoom).size)
-            assertEquals(1, items.inventory(sid).size)
-            assertEquals("note", items.inventory(sid)[0].item.keyword)
+            assertEquals(0, h.items.itemsInRoom(h.world.startRoom).size)
+            assertEquals(1, h.items.inventory(sid).size)
+            assertEquals("note", h.items.inventory(sid)[0].item.keyword)
 
-            val outs = drain(outbound)
+            val outs = h.drain()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("pick up") },
                 "Missing pickup message. got=$outs",
@@ -85,30 +67,24 @@ class CommandRouterItemsTest {
     @Test
     fun `inventory shows carried items`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val mobs = MobRegistry()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val sid = SessionId(3L)
-            login(players, sid, "Player3")
+            h.loginPlayer(sid, "Player3")
 
             // give an item via registry
-            items.dropToRoom(sid, world.startRoom, "lantern") // no-op, not in inv
-            items.takeFromRoom(sid, world.startRoom, "lantern") // no-op
+            h.items.dropToRoom(sid, h.world.startRoom, "lantern") // no-op, not in inv
+            h.items.takeFromRoom(sid, h.world.startRoom, "lantern") // no-op
             // simplest: just set inventory by taking from a room
-            items.setRoomItems(
-                world.startRoom,
+            h.items.setRoomItems(
+                h.world.startRoom,
                 listOf(ItemInstance(ItemId("test:lantern"), Item(keyword = "lantern", displayName = "a brass lantern"))),
             )
-            items.takeFromRoom(sid, world.startRoom, "lantern")
+            h.items.takeFromRoom(sid, h.world.startRoom, "lantern")
 
-            router.handle(sid, Command.Inventory)
+            h.router.handle(sid, Command.Inventory)
 
-            val outs = drain(outbound)
+            val outs = h.drain()
             assertTrue(
                 outs.any {
                     it is OutboundEvent.SendInfo &&
@@ -122,33 +98,27 @@ class CommandRouterItemsTest {
     @Test
     fun `drop moves item from inventory to room`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val mobs = MobRegistry()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val sid = SessionId(4L)
-            login(players, sid, "Player4")
+            h.loginPlayer(sid, "Player4")
 
             // Put item into inventory by taking it from the room
-            items.setRoomItems(
-                world.startRoom,
+            h.items.setRoomItems(
+                h.world.startRoom,
                 listOf(ItemInstance(ItemId("test:note"), Item(keyword = "note", displayName = "a crumpled note"))),
             )
-            items.takeFromRoom(sid, world.startRoom, "note")
-            assertEquals(1, items.inventory(sid).size)
-            assertEquals(0, items.itemsInRoom(world.startRoom).size)
+            h.items.takeFromRoom(sid, h.world.startRoom, "note")
+            assertEquals(1, h.items.inventory(sid).size)
+            assertEquals(0, h.items.itemsInRoom(h.world.startRoom).size)
 
-            router.handle(sid, Command.Drop("note"))
+            h.router.handle(sid, Command.Drop("note"))
 
-            assertEquals(0, items.inventory(sid).size)
-            assertEquals(1, items.itemsInRoom(world.startRoom).size)
-            assertEquals("note", items.itemsInRoom(world.startRoom)[0].item.keyword)
+            assertEquals(0, h.items.inventory(sid).size)
+            assertEquals(1, h.items.itemsInRoom(h.world.startRoom).size)
+            assertEquals("note", h.items.itemsInRoom(h.world.startRoom)[0].item.keyword)
 
-            val outs = drain(outbound)
+            val outs = h.drain()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("You drop") },
                 "Missing drop message. got=$outs",
@@ -158,19 +128,13 @@ class CommandRouterItemsTest {
     @Test
     fun `wear moves item from inventory to equipment slot`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val mobs = MobRegistry()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val sid = SessionId(5L)
-            login(players, sid, "Player5")
+            h.loginPlayer(sid, "Player5")
 
-            items.setRoomItems(
-                world.startRoom,
+            h.items.setRoomItems(
+                h.world.startRoom,
                 listOf(
                     ItemInstance(
                         ItemId("test:cap"),
@@ -178,18 +142,18 @@ class CommandRouterItemsTest {
                     ),
                 ),
             )
-            items.takeFromRoom(sid, world.startRoom, "cap")
+            h.items.takeFromRoom(sid, h.world.startRoom, "cap")
 
-            router.handle(sid, Command.Wear("cap"))
+            h.router.handle(sid, Command.Wear("cap"))
 
-            assertEquals(0, items.inventory(sid).size)
-            val equipped = items.equipment(sid)
+            assertEquals(0, h.items.inventory(sid).size)
+            val equipped = h.items.equipment(sid)
             assertEquals("cap", equipped.getValue(ItemSlot.HEAD).item.keyword)
-            val player = players.get(sid)
+            val player = h.players.get(sid)
             assertEquals(11, player!!.maxHp)
             assertEquals(11, player.hp)
 
-            val outs = drain(outbound)
+            val outs = h.drain()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("You wear") },
                 "Missing wear message. got=$outs",
@@ -199,19 +163,13 @@ class CommandRouterItemsTest {
     @Test
     fun `remove moves item from equipment slot back to inventory`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val mobs = MobRegistry()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val sid = SessionId(6L)
-            login(players, sid, "Player6")
+            h.loginPlayer(sid, "Player6")
 
-            items.setRoomItems(
-                world.startRoom,
+            h.items.setRoomItems(
+                h.world.startRoom,
                 listOf(
                     ItemInstance(
                         ItemId("test:cap"),
@@ -219,19 +177,19 @@ class CommandRouterItemsTest {
                     ),
                 ),
             )
-            items.takeFromRoom(sid, world.startRoom, "cap")
-            router.handle(sid, Command.Wear("cap"))
-            drain(outbound)
+            h.items.takeFromRoom(sid, h.world.startRoom, "cap")
+            h.router.handle(sid, Command.Wear("cap"))
+            h.drain()
 
-            router.handle(sid, Command.Remove(ItemSlot.HEAD))
+            h.router.handle(sid, Command.Remove(ItemSlot.HEAD))
 
-            assertEquals(1, items.inventory(sid).size)
-            assertTrue(items.equipment(sid).isEmpty())
-            val player = players.get(sid)
+            assertEquals(1, h.items.inventory(sid).size)
+            assertTrue(h.items.equipment(sid).isEmpty())
+            val player = h.players.get(sid)
             assertEquals(10, player!!.maxHp)
             assertEquals(10, player.hp)
 
-            val outs = drain(outbound)
+            val outs = h.drain()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("You remove") },
                 "Missing remove message. got=$outs",
@@ -241,19 +199,13 @@ class CommandRouterItemsTest {
     @Test
     fun `wear prefers wearable item when multiple inventory items share keyword`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val mobs = MobRegistry()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
+            val h = CommandRouterHarness.create()
 
             val sid = SessionId(7L)
-            login(players, sid, "Player7")
+            h.loginPlayer(sid, "Player7")
 
-            items.setRoomItems(
-                world.startRoom,
+            h.items.setRoomItems(
+                h.world.startRoom,
                 listOf(
                     ItemInstance(
                         ItemId("test:ring_plain"),
@@ -265,17 +217,17 @@ class CommandRouterItemsTest {
                     ),
                 ),
             )
-            items.takeFromRoom(sid, world.startRoom, "ring")
-            items.takeFromRoom(sid, world.startRoom, "ring")
+            h.items.takeFromRoom(sid, h.world.startRoom, "ring")
+            h.items.takeFromRoom(sid, h.world.startRoom, "ring")
 
-            router.handle(sid, Command.Wear("ring"))
+            h.router.handle(sid, Command.Wear("ring"))
 
-            val equipped = items.equipment(sid)
+            val equipped = h.items.equipment(sid)
             assertEquals("ring", equipped.getValue(ItemSlot.HAND).item.keyword)
-            assertEquals(1, items.inventory(sid).size)
-            assertEquals("ring", items.inventory(sid)[0].item.keyword)
+            assertEquals(1, h.items.inventory(sid).size)
+            assertEquals("ring", h.items.inventory(sid)[0].item.keyword)
 
-            val outs = drain(outbound)
+            val outs = h.drain()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("You wear") },
                 "Missing wear message. got=$outs",
@@ -285,19 +237,13 @@ class CommandRouterItemsTest {
     @Test
     fun `use applies effects and consumes when charges reach zero`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val mobs = MobRegistry()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
-
+            val h = CommandRouterHarness.create()
             val sid = SessionId(8L)
-            login(players, sid, "Player8")
-            players.get(sid)!!.hp = 5
+            h.loginPlayer(sid, "Player8")
+            h.players.get(sid)!!.hp = 5
 
-            items.setRoomItems(
-                world.startRoom,
+            h.items.setRoomItems(
+                h.world.startRoom,
                 listOf(
                     ItemInstance(
                         ItemId("test:potion"),
@@ -311,44 +257,38 @@ class CommandRouterItemsTest {
                     ),
                 ),
             )
-            items.takeFromRoom(sid, world.startRoom, "potion")
+            h.items.takeFromRoom(sid, h.world.startRoom, "potion")
 
-            router.handle(sid, Command.Use("potion"))
+            h.router.handle(sid, Command.Use("potion"))
 
-            assertEquals(8, players.get(sid)!!.hp)
-            assertEquals(1, items.inventory(sid).size)
-            val remainingPotion = items.inventory(sid).single()
+            assertEquals(8, h.players.get(sid)!!.hp)
+            assertEquals(1, h.items.inventory(sid).size)
+            val remainingPotion = h.items.inventory(sid).single()
             assertEquals(1, remainingPotion.item.charges)
 
-            var outs = drain(outbound)
+            var outs = h.drain()
             assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.contains("You use a red potion") })
             assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.contains("recover 3 HP") })
             assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.contains("1 charge") })
 
-            router.handle(sid, Command.Use("potion"))
+            h.router.handle(sid, Command.Use("potion"))
 
-            assertEquals(10, players.get(sid)!!.hp)
-            assertTrue(items.inventory(sid).isEmpty())
+            assertEquals(10, h.players.get(sid)!!.hp)
+            assertTrue(h.items.inventory(sid).isEmpty())
 
-            outs = drain(outbound)
+            outs = h.drain()
             assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.contains("is consumed") })
         }
 
     @Test
     fun `use can consume equipped item and updates defense`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val mobs = MobRegistry()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
-
+            val h = CommandRouterHarness.create()
             val sid = SessionId(9L)
-            login(players, sid, "Player9")
+            h.loginPlayer(sid, "Player9")
 
-            items.setRoomItems(
-                world.startRoom,
+            h.items.setRoomItems(
+                h.world.startRoom,
                 listOf(
                     ItemInstance(
                         ItemId("test:blessed_cap"),
@@ -364,17 +304,17 @@ class CommandRouterItemsTest {
                     ),
                 ),
             )
-            items.takeFromRoom(sid, world.startRoom, "cap")
-            router.handle(sid, Command.Wear("cap"))
-            drain(outbound)
+            h.items.takeFromRoom(sid, h.world.startRoom, "cap")
+            h.router.handle(sid, Command.Wear("cap"))
+            h.drain()
 
-            assertEquals(11, players.get(sid)!!.maxHp)
-            router.handle(sid, Command.Use("cap"))
+            assertEquals(11, h.players.get(sid)!!.maxHp)
+            h.router.handle(sid, Command.Use("cap"))
 
-            assertTrue(items.equipment(sid).isEmpty())
-            assertEquals(10, players.get(sid)!!.maxHp)
+            assertTrue(h.items.equipment(sid).isEmpty())
+            assertEquals(10, h.players.get(sid)!!.maxHp)
 
-            val outs = drain(outbound)
+            val outs = h.drain()
             assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.contains("You use a blessed cap") })
             assertTrue(outs.any { it is OutboundEvent.SendInfo && it.text.contains("is consumed") })
         }
@@ -382,32 +322,26 @@ class CommandRouterItemsTest {
     @Test
     fun `give moves item to nearby player inventory`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val mobs = MobRegistry()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
-
+            val h = CommandRouterHarness.create()
             val aliceSid = SessionId(10L)
             val bobSid = SessionId(11L)
-            login(players, aliceSid, "Alice")
-            login(players, bobSid, "Bob")
+            h.loginPlayer(aliceSid, "Alice")
+            h.loginPlayer(bobSid, "Bob")
 
-            items.setRoomItems(
-                world.startRoom,
+            h.items.setRoomItems(
+                h.world.startRoom,
                 listOf(ItemInstance(ItemId("test:coin"), Item(keyword = "coin", displayName = "a silver coin"))),
             )
-            items.takeFromRoom(aliceSid, world.startRoom, "coin")
+            h.items.takeFromRoom(aliceSid, h.world.startRoom, "coin")
 
-            router.handle(aliceSid, Command.Give("coin", "Bob"))
+            h.router.handle(aliceSid, Command.Give("coin", "Bob"))
 
-            assertTrue(items.inventory(aliceSid).isEmpty())
-            assertEquals(1, items.inventory(bobSid).size)
-            val bobsItem = items.inventory(bobSid).single()
+            assertTrue(h.items.inventory(aliceSid).isEmpty())
+            assertEquals(1, h.items.inventory(bobSid).size)
+            val bobsItem = h.items.inventory(bobSid).single()
             assertEquals("coin", bobsItem.item.keyword)
 
-            val outs = drain(outbound)
+            val outs = h.drain()
             assertTrue(outs.any { it is OutboundEvent.SendInfo && it.sessionId == aliceSid && it.text.contains("You give") })
             assertTrue(outs.any { it is OutboundEvent.SendInfo && it.sessionId == bobSid && it.text.contains("gives you") })
         }
@@ -415,20 +349,14 @@ class CommandRouterItemsTest {
     @Test
     fun `give removes equipped item and updates defense`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val mobs = MobRegistry()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
-
+            val h = CommandRouterHarness.create()
             val aliceSid = SessionId(12L)
             val bobSid = SessionId(13L)
-            login(players, aliceSid, "Alice2")
-            login(players, bobSid, "Bob2")
+            h.loginPlayer(aliceSid, "Alice2")
+            h.loginPlayer(bobSid, "Bob2")
 
-            items.setRoomItems(
-                world.startRoom,
+            h.items.setRoomItems(
+                h.world.startRoom,
                 listOf(
                     ItemInstance(
                         ItemId("test:cap"),
@@ -436,19 +364,19 @@ class CommandRouterItemsTest {
                     ),
                 ),
             )
-            items.takeFromRoom(aliceSid, world.startRoom, "cap")
-            router.handle(aliceSid, Command.Wear("cap"))
-            drain(outbound)
+            h.items.takeFromRoom(aliceSid, h.world.startRoom, "cap")
+            h.router.handle(aliceSid, Command.Wear("cap"))
+            h.drain()
 
-            assertEquals(11, players.get(aliceSid)!!.maxHp)
-            router.handle(aliceSid, Command.Give("cap", "Bob2"))
+            assertEquals(11, h.players.get(aliceSid)!!.maxHp)
+            h.router.handle(aliceSid, Command.Give("cap", "Bob2"))
 
-            assertTrue(items.equipment(aliceSid).isEmpty())
-            assertEquals(10, players.get(aliceSid)!!.maxHp)
-            val bobsItem = items.inventory(bobSid).single()
+            assertTrue(h.items.equipment(aliceSid).isEmpty())
+            assertEquals(10, h.players.get(aliceSid)!!.maxHp)
+            val bobsItem = h.items.inventory(bobSid).single()
             assertEquals("cap", bobsItem.item.keyword)
 
-            val outs = drain(outbound)
+            val outs = h.drain()
             assertTrue(outs.any { it is OutboundEvent.SendInfo && it.sessionId == aliceSid && it.text.contains("You give") })
             assertTrue(outs.any { it is OutboundEvent.SendInfo && it.sessionId == bobSid && it.text.contains("gives you") })
         }
@@ -456,52 +384,28 @@ class CommandRouterItemsTest {
     @Test
     fun `give requires target in same room`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val mobs = MobRegistry()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
-
+            val h = CommandRouterHarness.create()
             val aliceSid = SessionId(14L)
             val bobSid = SessionId(15L)
-            login(players, aliceSid, "Alice3")
-            login(players, bobSid, "Bob3")
+            h.loginPlayer(aliceSid, "Alice3")
+            h.loginPlayer(bobSid, "Bob3")
 
-            val startRoom = world.rooms.getValue(world.startRoom)
+            val startRoom = h.world.rooms.getValue(h.world.startRoom)
             val targetRoom = startRoom.exits.values.first()
-            players.moveTo(bobSid, targetRoom)
+            h.players.moveTo(bobSid, targetRoom)
 
-            items.setRoomItems(
-                world.startRoom,
+            h.items.setRoomItems(
+                h.world.startRoom,
                 listOf(ItemInstance(ItemId("test:coin"), Item(keyword = "coin", displayName = "a silver coin"))),
             )
-            items.takeFromRoom(aliceSid, world.startRoom, "coin")
+            h.items.takeFromRoom(aliceSid, h.world.startRoom, "coin")
 
-            router.handle(aliceSid, Command.Give("coin", "Bob3"))
+            h.router.handle(aliceSid, Command.Give("coin", "Bob3"))
 
-            assertEquals(1, items.inventory(aliceSid).size)
-            assertTrue(items.inventory(bobSid).isEmpty())
+            assertEquals(1, h.items.inventory(aliceSid).size)
+            assertTrue(h.items.inventory(bobSid).isEmpty())
 
-            val outs = drain(outbound)
+            val outs = h.drain()
             assertTrue(outs.any { it is OutboundEvent.SendError && it.text.contains("not here") })
         }
-
-    private fun drain(ch: LocalOutboundBus): List<OutboundEvent> {
-        val out = mutableListOf<OutboundEvent>()
-        while (true) {
-            val v = ch.tryReceive().getOrNull() ?: break
-            out.add(v)
-        }
-        return out
-    }
-
-    private suspend fun login(
-        players: PlayerRegistry,
-        sessionId: SessionId,
-        name: String,
-    ) {
-        val res = players.login(sessionId, name, "password")
-        require(res == LoginResult.Ok) { "Login failed: $res" }
-    }
 }

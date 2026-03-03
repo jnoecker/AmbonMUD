@@ -12,6 +12,9 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.GameEngineHarness
+import dev.ambon.test.TestWorlds
+import dev.ambon.test.buildTestPlayerRegistry
 import dev.ambon.test.createTestPlayer
 import dev.ambon.test.drainAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,40 +38,17 @@ class GameEngineLoginFlowTest {
     @Test
     fun `connect shows login screen before name prompt`() =
         runTest {
-            val inbound = LocalInboundBus()
-            val outbound = LocalOutboundBus()
-
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val repo = InMemoryPlayerRepository()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
-
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
-            val mobs = MobRegistry()
-            val items = ItemRegistry()
-            val scheduler = Scheduler(clock)
-            val tickMillis = 10L
-            val engine =
-                GameEngine(
-                    inbound = inbound,
-                    outbound = outbound,
-                    players = players,
-                    world = world,
-                    clock = clock,
-                    tickMillis = tickMillis,
-                    scheduler = scheduler,
-                    mobs = mobs,
-                    items = items,
-                )
-            val engineJob = launch { engine.run() }
+            val h = GameEngineHarness.start(scope = this, clock = clock)
 
             val sid = SessionId(99L)
             runCurrent()
 
-            inbound.send(InboundEvent.Connected(sid))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.Connected(sid))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val outs = outbound.drainAll()
+            val outs = h.outbound.drainAll()
             val loginIndex = outs.indexOfFirst { it is OutboundEvent.ShowLoginScreen && it.sessionId == sid }
             val namePromptIndex =
                 outs.indexOfFirst {
@@ -87,52 +67,28 @@ class GameEngineLoginFlowTest {
                 "Expected a prompt after connect. got=$outs",
             )
 
-            engineJob.cancel()
-            inbound.close()
-            outbound.close()
+            h.close()
         }
 
     @Test
     fun `blank password returns to name prompt`() =
         runTest {
-            val inbound = LocalInboundBus()
-            val outbound = LocalOutboundBus()
-
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val repo = InMemoryPlayerRepository()
-            repo.createTestPlayer("Alice", world.startRoom, password = "secret", ansiEnabled = false)
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
-
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
-            val mobs = MobRegistry()
-            val items = ItemRegistry()
-            val scheduler = Scheduler(clock)
-            val tickMillis = 10L
-            val engine =
-                GameEngine(
-                    inbound = inbound,
-                    outbound = outbound,
-                    players = players,
-                    world = world,
-                    clock = clock,
-                    tickMillis = tickMillis,
-                    scheduler = scheduler,
-                    mobs = mobs,
-                    items = items,
-                )
-            val engineJob = launch { engine.run() }
+            val repo = InMemoryPlayerRepository()
+            repo.createTestPlayer("Alice", TestWorlds.testWorld.startRoom, password = "secret", ansiEnabled = false)
+            val h = GameEngineHarness.start(scope = this, clock = clock, repo = repo)
 
             val sid = SessionId(1L)
             runCurrent()
 
-            inbound.send(InboundEvent.Connected(sid))
-            inbound.send(InboundEvent.LineReceived(sid, "Alice"))
-            inbound.send(InboundEvent.LineReceived(sid, ""))
+            h.inbound.send(InboundEvent.Connected(sid))
+            h.inbound.send(InboundEvent.LineReceived(sid, "Alice"))
+            h.inbound.send(InboundEvent.LineReceived(sid, ""))
 
-            advanceTimeBy(tickMillis)
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val outs = outbound.drainAll()
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.sessionId == sid && it.text == "Password:" },
@@ -159,52 +115,28 @@ class GameEngineLoginFlowTest {
                 "Did not expect disconnect after one blank password. got=$outs",
             )
 
-            engineJob.cancel()
-            inbound.close()
-            outbound.close()
+            h.close()
         }
 
     @Test
     fun `fourth wrong password returns to login`() =
         runTest {
-            val inbound = LocalInboundBus()
-            val outbound = LocalOutboundBus()
-
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val repo = InMemoryPlayerRepository()
-            repo.createTestPlayer("Alice", world.startRoom, password = "secret", ansiEnabled = false)
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
-
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
-            val mobs = MobRegistry()
-            val items = ItemRegistry()
-            val scheduler = Scheduler(clock)
-            val tickMillis = 10L
-            val engine =
-                GameEngine(
-                    inbound = inbound,
-                    outbound = outbound,
-                    players = players,
-                    world = world,
-                    clock = clock,
-                    tickMillis = tickMillis,
-                    scheduler = scheduler,
-                    mobs = mobs,
-                    items = items,
-                )
-            val engineJob = launch { engine.run() }
+            val repo = InMemoryPlayerRepository()
+            repo.createTestPlayer("Alice", TestWorlds.testWorld.startRoom, password = "secret", ansiEnabled = false)
+            val h = GameEngineHarness.start(scope = this, clock = clock, repo = repo)
 
             val sid = SessionId(1L)
             runCurrent()
 
-            inbound.send(InboundEvent.Connected(sid))
-            inbound.send(InboundEvent.LineReceived(sid, "Alice"))
-            repeat(4) { inbound.send(InboundEvent.LineReceived(sid, "wrong")) }
+            h.inbound.send(InboundEvent.Connected(sid))
+            h.inbound.send(InboundEvent.LineReceived(sid, "Alice"))
+            repeat(4) { h.inbound.send(InboundEvent.LineReceived(sid, "wrong")) }
 
-            advanceTimeBy(tickMillis)
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val outs = outbound.drainAll()
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any {
@@ -251,106 +183,57 @@ class GameEngineLoginFlowTest {
                 "Did not expect disconnect after first failed login cycle. got=$outs",
             )
 
-            engineJob.cancel()
-            inbound.close()
-            outbound.close()
+            h.close()
         }
 
     @Test
     fun `disconnects after three failed login cycles`() =
         runTest {
-            val inbound = LocalInboundBus()
-            val outbound = LocalOutboundBus()
-
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val repo = InMemoryPlayerRepository()
-            repo.createTestPlayer("Alice", world.startRoom, password = "secret", ansiEnabled = false)
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
-
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
-            val mobs = MobRegistry()
-            val items = ItemRegistry()
-            val scheduler = Scheduler(clock)
-            val tickMillis = 10L
-            val engine =
-                GameEngine(
-                    inbound = inbound,
-                    outbound = outbound,
-                    players = players,
-                    world = world,
-                    clock = clock,
-                    tickMillis = tickMillis,
-                    scheduler = scheduler,
-                    mobs = mobs,
-                    items = items,
-                )
-            val engineJob = launch { engine.run() }
+            val repo = InMemoryPlayerRepository()
+            repo.createTestPlayer("Alice", TestWorlds.testWorld.startRoom, password = "secret", ansiEnabled = false)
+            val h = GameEngineHarness.start(scope = this, clock = clock, repo = repo)
 
             val sid = SessionId(1L)
             runCurrent()
 
-            inbound.send(InboundEvent.Connected(sid))
+            h.inbound.send(InboundEvent.Connected(sid))
             repeat(3) {
-                inbound.send(InboundEvent.LineReceived(sid, "Alice"))
-                repeat(4) { inbound.send(InboundEvent.LineReceived(sid, "wrong")) }
+                h.inbound.send(InboundEvent.LineReceived(sid, "Alice"))
+                repeat(4) { h.inbound.send(InboundEvent.LineReceived(sid, "wrong")) }
             }
 
-            advanceTimeBy(tickMillis)
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
             val got = mutableListOf<OutboundEvent>()
             withTimeout(500) {
                 while (got.none { it is OutboundEvent.Close && it.sessionId == sid }) {
-                    got += outbound.asReceiveChannel().receive()
+                    got += h.outbound.asReceiveChannel().receive()
                 }
             }
 
             val close = got.filterIsInstance<OutboundEvent.Close>().first { it.sessionId == sid }
             assertEquals("Too many failed login attempts.", close.reason)
 
-            engineJob.cancel()
-            inbound.close()
-            outbound.close()
+            h.close()
         }
 
     @Test
     fun `new user requires confirmation before password prompt`() =
         runTest {
-            val inbound = LocalInboundBus()
-            val outbound = LocalOutboundBus()
-
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val repo = InMemoryPlayerRepository()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
-
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
-            val mobs = MobRegistry()
-            val items = ItemRegistry()
-            val scheduler = Scheduler(clock)
-            val tickMillis = 10L
-            val engine =
-                GameEngine(
-                    inbound = inbound,
-                    outbound = outbound,
-                    players = players,
-                    world = world,
-                    clock = clock,
-                    tickMillis = tickMillis,
-                    scheduler = scheduler,
-                    mobs = mobs,
-                    items = items,
-                )
-            val engineJob = launch { engine.run() }
+            val h = GameEngineHarness.start(scope = this, clock = clock)
 
             val sid = SessionId(1L)
             runCurrent()
 
-            inbound.send(InboundEvent.Connected(sid))
-            inbound.send(InboundEvent.LineReceived(sid, "NewUser"))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.Connected(sid))
+            h.inbound.send(InboundEvent.LineReceived(sid, "NewUser"))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val beforeConfirm = outbound.drainAll()
+            val beforeConfirm = h.outbound.drainAll()
             assertTrue(
                 beforeConfirm.any {
                     it is OutboundEvent.SendInfo &&
@@ -368,11 +251,11 @@ class GameEngineLoginFlowTest {
                 "Did not expect password prompt before create confirmation. got=$beforeConfirm",
             )
 
-            inbound.send(InboundEvent.LineReceived(sid, "no"))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.LineReceived(sid, "no"))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val afterNo = outbound.drainAll()
+            val afterNo = h.outbound.drainAll()
             assertTrue(
                 afterNo.any {
                     it is OutboundEvent.SendInfo &&
@@ -382,12 +265,12 @@ class GameEngineLoginFlowTest {
                 "Expected return to name prompt after declining account creation. got=$afterNo",
             )
 
-            inbound.send(InboundEvent.LineReceived(sid, "NewUser"))
-            inbound.send(InboundEvent.LineReceived(sid, "yes"))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.LineReceived(sid, "NewUser"))
+            h.inbound.send(InboundEvent.LineReceived(sid, "yes"))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val afterYes = outbound.drainAll()
+            val afterYes = h.outbound.drainAll()
             assertTrue(
                 afterYes.any {
                     it is OutboundEvent.SendInfo &&
@@ -405,11 +288,11 @@ class GameEngineLoginFlowTest {
                 "Did not expect existing-user password prompt for new-account flow. got=$afterYes",
             )
 
-            inbound.send(InboundEvent.LineReceived(sid, "password"))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.LineReceived(sid, "password"))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val afterPassword = outbound.drainAll()
+            val afterPassword = h.outbound.drainAll()
             assertTrue(
                 afterPassword.any {
                     it is OutboundEvent.SendInfo &&
@@ -419,11 +302,11 @@ class GameEngineLoginFlowTest {
                 "Expected race selection prompt after password. got=$afterPassword",
             )
 
-            inbound.send(InboundEvent.LineReceived(sid, "1"))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.LineReceived(sid, "1"))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val afterRace = outbound.drainAll()
+            val afterRace = h.outbound.drainAll()
             assertTrue(
                 afterRace.any {
                     it is OutboundEvent.SendInfo &&
@@ -433,11 +316,11 @@ class GameEngineLoginFlowTest {
                 "Expected class selection prompt after race. got=$afterRace",
             )
 
-            inbound.send(InboundEvent.LineReceived(sid, "1"))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.LineReceived(sid, "1"))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val ps = players.get(sid)
+            val ps = h.players.get(sid)
             assertNotNull(ps)
             assertEquals("NewUser", ps!!.name)
             // Human race (choice 1): STR +1, CHA +1, all others +0
@@ -450,9 +333,7 @@ class GameEngineLoginFlowTest {
             assertEquals("HUMAN", ps.race)
             assertEquals("WARRIOR", ps.playerClass)
 
-            engineJob.cancel()
-            inbound.close()
-            outbound.close()
+            h.close()
         }
 
     @Test
@@ -556,45 +437,22 @@ class GameEngineLoginFlowTest {
     @Test
     fun `elf mage creation applies correct racial modifiers and class`() =
         runTest {
-            val inbound = LocalInboundBus()
-            val outbound = LocalOutboundBus()
-
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val repo = InMemoryPlayerRepository()
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
-
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
-            val mobs = MobRegistry()
-            val scheduler = Scheduler(clock)
-            val tickMillis = 10L
-            val engine =
-                GameEngine(
-                    inbound = inbound,
-                    outbound = outbound,
-                    players = players,
-                    world = world,
-                    clock = clock,
-                    tickMillis = tickMillis,
-                    scheduler = scheduler,
-                    mobs = mobs,
-                    items = items,
-                )
-            val engineJob = launch { engine.run() }
+            val h = GameEngineHarness.start(scope = this, clock = clock)
 
             val sid = SessionId(1L)
             runCurrent()
 
-            inbound.send(InboundEvent.Connected(sid))
-            inbound.send(InboundEvent.LineReceived(sid, "ElfMage"))
-            inbound.send(InboundEvent.LineReceived(sid, "yes"))
-            inbound.send(InboundEvent.LineReceived(sid, "password"))
-            inbound.send(InboundEvent.LineReceived(sid, "2")) // race: Elf
-            inbound.send(InboundEvent.LineReceived(sid, "2")) // class: Mage
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.Connected(sid))
+            h.inbound.send(InboundEvent.LineReceived(sid, "ElfMage"))
+            h.inbound.send(InboundEvent.LineReceived(sid, "yes"))
+            h.inbound.send(InboundEvent.LineReceived(sid, "password"))
+            h.inbound.send(InboundEvent.LineReceived(sid, "2")) // race: Elf
+            h.inbound.send(InboundEvent.LineReceived(sid, "2")) // class: Mage
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val ps = players.get(sid)
+            val ps = h.players.get(sid)
             assertNotNull(ps)
             // Elf: STR -1, DEX +2, CON -2, INT +1, WIS +0, CHA +0
             assertEquals(9, ps!!.strength, "Elf STR should be BASE_STAT - 1")
@@ -606,9 +464,7 @@ class GameEngineLoginFlowTest {
             assertEquals("ELF", ps.race)
             assertEquals("MAGE", ps.playerClass)
 
-            engineJob.cancel()
-            inbound.close()
-            outbound.close()
+            h.close()
         }
 
     @Test
@@ -701,33 +557,11 @@ class GameEngineLoginFlowTest {
     @Test
     fun `second login with correct password kicks first session and observer sees flicker`() =
         runTest {
-            val inbound = LocalInboundBus()
-            val outbound = LocalOutboundBus()
-
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val repo = InMemoryPlayerRepository()
-            repo.createTestPlayer("Alice", world.startRoom, password = "secret", ansiEnabled = false)
-            repo.createTestPlayer("Observer", world.startRoom, password = "pw", ansiEnabled = false)
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
-
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
-            val mobs = MobRegistry()
-            val scheduler = Scheduler(clock)
-            val tickMillis = 10L
-            val engine =
-                GameEngine(
-                    inbound = inbound,
-                    outbound = outbound,
-                    players = players,
-                    world = world,
-                    clock = clock,
-                    tickMillis = tickMillis,
-                    scheduler = scheduler,
-                    mobs = mobs,
-                    items = items,
-                )
-            val engineJob = launch { engine.run() }
+            val repo = InMemoryPlayerRepository()
+            repo.createTestPlayer("Alice", TestWorlds.testWorld.startRoom, password = "secret", ansiEnabled = false)
+            repo.createTestPlayer("Observer", TestWorlds.testWorld.startRoom, password = "pw", ansiEnabled = false)
+            val h = GameEngineHarness.start(scope = this, clock = clock, repo = repo)
 
             val sid1 = SessionId(1L)
             val sid2 = SessionId(2L)
@@ -735,28 +569,28 @@ class GameEngineLoginFlowTest {
             runCurrent()
 
             // Login Observer (sid3) and Alice (sid1) — both land in start room
-            inbound.send(InboundEvent.Connected(sid3))
-            inbound.send(InboundEvent.LineReceived(sid3, "Observer"))
-            inbound.send(InboundEvent.LineReceived(sid3, "pw"))
-            inbound.send(InboundEvent.Connected(sid1))
-            inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
-            inbound.send(InboundEvent.LineReceived(sid1, "secret"))
+            h.inbound.send(InboundEvent.Connected(sid3))
+            h.inbound.send(InboundEvent.LineReceived(sid3, "Observer"))
+            h.inbound.send(InboundEvent.LineReceived(sid3, "pw"))
+            h.inbound.send(InboundEvent.Connected(sid1))
+            h.inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
+            h.inbound.send(InboundEvent.LineReceived(sid1, "secret"))
 
-            advanceTimeBy(tickMillis)
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            assertEquals("Alice", players.get(sid1)?.name, "Expected Alice logged in on sid1")
-            outbound.drainAll()
+            assertEquals("Alice", h.players.get(sid1)?.name, "Expected Alice logged in on sid1")
+            h.outbound.drainAll()
 
             // Second session takes over Alice with correct password
-            inbound.send(InboundEvent.Connected(sid2))
-            inbound.send(InboundEvent.LineReceived(sid2, "Alice"))
-            inbound.send(InboundEvent.LineReceived(sid2, "secret"))
+            h.inbound.send(InboundEvent.Connected(sid2))
+            h.inbound.send(InboundEvent.LineReceived(sid2, "Alice"))
+            h.inbound.send(InboundEvent.LineReceived(sid2, "secret"))
 
-            advanceTimeBy(tickMillis)
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val outs = outbound.drainAll()
+            val outs = h.outbound.drainAll()
 
             // Old session is closed with kick message
             val kick = outs.filterIsInstance<OutboundEvent.Close>().firstOrNull { it.sessionId == sid1 }
@@ -778,69 +612,45 @@ class GameEngineLoginFlowTest {
             )
 
             // New session now owns Alice; old session is gone
-            assertNull(players.get(sid1), "Expected old session removed from registry")
-            assertEquals("Alice", players.get(sid2)?.name)
-            assertEquals(sid2, players.findSessionByName("Alice"))
+            assertNull(h.players.get(sid1), "Expected old session removed from registry")
+            assertEquals("Alice", h.players.get(sid2)?.name)
+            assertEquals(sid2, h.players.findSessionByName("Alice"))
 
-            engineJob.cancel()
-            inbound.close()
-            outbound.close()
+            h.close()
         }
 
     @Test
     fun `wrong password on live name does not kick original session`() =
         runTest {
-            val inbound = LocalInboundBus()
-            val outbound = LocalOutboundBus()
-
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val repo = InMemoryPlayerRepository()
-            repo.createTestPlayer("Alice", world.startRoom, password = "secret", ansiEnabled = false)
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
-
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
-            val mobs = MobRegistry()
-            val scheduler = Scheduler(clock)
-            val tickMillis = 10L
-            val engine =
-                GameEngine(
-                    inbound = inbound,
-                    outbound = outbound,
-                    players = players,
-                    world = world,
-                    clock = clock,
-                    tickMillis = tickMillis,
-                    scheduler = scheduler,
-                    mobs = mobs,
-                    items = items,
-                )
-            val engineJob = launch { engine.run() }
+            val repo = InMemoryPlayerRepository()
+            repo.createTestPlayer("Alice", TestWorlds.testWorld.startRoom, password = "secret", ansiEnabled = false)
+            val h = GameEngineHarness.start(scope = this, clock = clock, repo = repo)
 
             val sid1 = SessionId(1L)
             val sid2 = SessionId(2L)
             runCurrent()
 
             // Login Alice on sid1
-            inbound.send(InboundEvent.Connected(sid1))
-            inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
-            inbound.send(InboundEvent.LineReceived(sid1, "secret"))
+            h.inbound.send(InboundEvent.Connected(sid1))
+            h.inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
+            h.inbound.send(InboundEvent.LineReceived(sid1, "secret"))
 
-            advanceTimeBy(tickMillis)
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            assertEquals("Alice", players.get(sid1)?.name)
-            outbound.drainAll()
+            assertEquals("Alice", h.players.get(sid1)?.name)
+            h.outbound.drainAll()
 
             // Second session attempts takeover with wrong password
-            inbound.send(InboundEvent.Connected(sid2))
-            inbound.send(InboundEvent.LineReceived(sid2, "Alice"))
-            inbound.send(InboundEvent.LineReceived(sid2, "wrongpassword"))
+            h.inbound.send(InboundEvent.Connected(sid2))
+            h.inbound.send(InboundEvent.LineReceived(sid2, "Alice"))
+            h.inbound.send(InboundEvent.LineReceived(sid2, "wrongpassword"))
 
-            advanceTimeBy(tickMillis)
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val outs = outbound.drainAll()
+            val outs = h.outbound.drainAll()
 
             // Original session is NOT closed
             assertFalse(
@@ -849,78 +659,54 @@ class GameEngineLoginFlowTest {
             )
 
             // Original session still owns Alice
-            assertEquals("Alice", players.get(sid1)?.name)
-            assertNull(players.get(sid2), "Expected sid2 not logged in after wrong password")
+            assertEquals("Alice", h.players.get(sid1)?.name)
+            assertNull(h.players.get(sid2), "Expected sid2 not logged in after wrong password")
 
-            engineJob.cancel()
-            inbound.close()
-            outbound.close()
+            h.close()
         }
 
     @Test
     fun `combat is inherited after session takeover`() =
         runTest {
-            val inbound = LocalInboundBus()
-            val outbound = LocalOutboundBus()
-
             // ok_small world: start room 'ok_small:a', mob 'rat' in 'ok_small:b', exit north from a to b
-            val world = dev.ambon.test.TestWorlds.okSmall
-            val repo = InMemoryPlayerRepository()
-            repo.createTestPlayer("Alice", world.startRoom, password = "secret", ansiEnabled = false)
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
-
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
-            val mobs = MobRegistry()
-            val scheduler = Scheduler(clock)
-            val tickMillis = 10L
-            val engine =
-                GameEngine(
-                    inbound = inbound,
-                    outbound = outbound,
-                    players = players,
-                    world = world,
-                    clock = clock,
-                    tickMillis = tickMillis,
-                    scheduler = scheduler,
-                    mobs = mobs,
-                    items = items,
-                )
-            val engineJob = launch { engine.run() }
+            val repo = InMemoryPlayerRepository()
+            repo.createTestPlayer("Alice", TestWorlds.okSmall.startRoom, password = "secret", ansiEnabled = false)
+            val h = GameEngineHarness.start(scope = this, world = TestWorlds.okSmall, clock = clock, repo = repo)
 
             val sid1 = SessionId(1L)
             val sid2 = SessionId(2L)
             runCurrent()
 
             // Login Alice, move to rat's room, start combat
-            inbound.send(InboundEvent.Connected(sid1))
-            inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
-            inbound.send(InboundEvent.LineReceived(sid1, "secret"))
-            inbound.send(InboundEvent.LineReceived(sid1, "n"))
-            inbound.send(InboundEvent.LineReceived(sid1, "kill rat"))
+            h.inbound.send(InboundEvent.Connected(sid1))
+            h.inbound.send(InboundEvent.LineReceived(sid1, "Alice"))
+            h.inbound.send(InboundEvent.LineReceived(sid1, "secret"))
+            h.inbound.send(InboundEvent.LineReceived(sid1, "n"))
+            h.inbound.send(InboundEvent.LineReceived(sid1, "kill rat"))
 
-            advanceTimeBy(tickMillis)
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            outbound.drainAll()
+            h.outbound.drainAll()
 
             // Take over Alice on sid2
-            inbound.send(InboundEvent.Connected(sid2))
-            inbound.send(InboundEvent.LineReceived(sid2, "Alice"))
-            inbound.send(InboundEvent.LineReceived(sid2, "secret"))
+            h.inbound.send(InboundEvent.Connected(sid2))
+            h.inbound.send(InboundEvent.LineReceived(sid2, "Alice"))
+            h.inbound.send(InboundEvent.LineReceived(sid2, "secret"))
 
-            advanceTimeBy(tickMillis)
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            outbound.drainAll()
+            h.outbound.drainAll()
 
             // Flee on sid2 — succeeds only if combat was inherited
-            inbound.send(InboundEvent.LineReceived(sid2, "flee"))
+            h.inbound.send(InboundEvent.LineReceived(sid2, "flee"))
 
-            advanceTimeBy(tickMillis)
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val outs = outbound.drainAll()
+            val outs = h.outbound.drainAll()
 
             assertFalse(
                 outs.any { it is OutboundEvent.SendError && it.sessionId == sid2 && it.text == "You are not in combat." },
@@ -933,9 +719,7 @@ class GameEngineLoginFlowTest {
                 "Expected 'You flee from...' message on new session. got=$outs",
             )
 
-            engineJob.cancel()
-            inbound.close()
-            outbound.close()
+            h.close()
         }
 
     @Test
@@ -950,7 +734,7 @@ class GameEngineLoginFlowTest {
             val repo = InMemoryPlayerRepository()
             val items = ItemRegistry()
             val players =
-                dev.ambon.test.buildTestPlayerRegistry(
+                buildTestPlayerRegistry(
                     startRoom = world.startRoom,
                     repo = repo,
                     items = items,
@@ -984,7 +768,7 @@ class GameEngineLoginFlowTest {
             val repo = InMemoryPlayerRepository()
             val items = ItemRegistry()
             val players =
-                dev.ambon.test.buildTestPlayerRegistry(
+                buildTestPlayerRegistry(
                     startRoom = world.startRoom,
                     repo = repo,
                     items = items,
@@ -1010,81 +794,58 @@ class GameEngineLoginFlowTest {
     @Test
     fun `two sessions creating same name concurrently does not crash`() =
         runTest {
-            val inbound = LocalInboundBus()
-            val outbound = LocalOutboundBus()
-
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val repo = InMemoryPlayerRepository()
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
-
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
-            val mobs = MobRegistry()
-            val scheduler = Scheduler(clock)
-            val tickMillis = 10L
-            val engine =
-                GameEngine(
-                    inbound = inbound,
-                    outbound = outbound,
-                    players = players,
-                    world = world,
-                    clock = clock,
-                    tickMillis = tickMillis,
-                    scheduler = scheduler,
-                    mobs = mobs,
-                    items = items,
-                )
-            val engineJob = launch { engine.run() }
+            val h = GameEngineHarness.start(scope = this, clock = clock)
 
             val sid1 = SessionId(1L)
             val sid2 = SessionId(2L)
             runCurrent()
 
             // Both sessions connect and enter the same name
-            inbound.send(InboundEvent.Connected(sid1))
-            inbound.send(InboundEvent.Connected(sid2))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.Connected(sid1))
+            h.inbound.send(InboundEvent.Connected(sid2))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
-            outbound.drainAll()
+            h.outbound.drainAll()
 
-            inbound.send(InboundEvent.LineReceived(sid1, "DupeName"))
-            inbound.send(InboundEvent.LineReceived(sid2, "DupeName"))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.LineReceived(sid1, "DupeName"))
+            h.inbound.send(InboundEvent.LineReceived(sid2, "DupeName"))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
-            outbound.drainAll()
+            h.outbound.drainAll()
 
             // Both confirm "yes" to create
-            inbound.send(InboundEvent.LineReceived(sid1, "yes"))
-            inbound.send(InboundEvent.LineReceived(sid2, "yes"))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.LineReceived(sid1, "yes"))
+            h.inbound.send(InboundEvent.LineReceived(sid2, "yes"))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
-            outbound.drainAll()
+            h.outbound.drainAll()
 
             // Both enter passwords
-            inbound.send(InboundEvent.LineReceived(sid1, "password"))
-            inbound.send(InboundEvent.LineReceived(sid2, "password"))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.LineReceived(sid1, "password"))
+            h.inbound.send(InboundEvent.LineReceived(sid2, "password"))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
-            outbound.drainAll()
+            h.outbound.drainAll()
 
             // Both pick race (1 = Human)
-            inbound.send(InboundEvent.LineReceived(sid1, "1"))
-            inbound.send(InboundEvent.LineReceived(sid2, "1"))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.LineReceived(sid1, "1"))
+            h.inbound.send(InboundEvent.LineReceived(sid2, "1"))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
-            outbound.drainAll()
+            h.outbound.drainAll()
 
             // Both pick class (1 = Warrior) — triggers prepareCreateAccount
-            inbound.send(InboundEvent.LineReceived(sid1, "1"))
-            inbound.send(InboundEvent.LineReceived(sid2, "1"))
-            advanceTimeBy(tickMillis)
+            h.inbound.send(InboundEvent.LineReceived(sid1, "1"))
+            h.inbound.send(InboundEvent.LineReceived(sid2, "1"))
+            advanceTimeBy(h.tickMillis)
             runCurrent()
 
-            val outs = outbound.drainAll()
+            val outs = h.outbound.drainAll()
 
             // Exactly one session should be logged in, the other should see "name taken"
-            val loggedIn1 = players.get(sid1) != null
-            val loggedIn2 = players.get(sid2) != null
+            val loggedIn1 = h.players.get(sid1) != null
+            val loggedIn2 = h.players.get(sid2) != null
 
             assertTrue(
                 loggedIn1 || loggedIn2,
@@ -1106,8 +867,6 @@ class GameEngineLoginFlowTest {
                 "The duplicate session should receive a 'name taken' error. got=$outs",
             )
 
-            engineJob.cancel()
-            inbound.close()
-            outbound.close()
+            h.close()
         }
 }

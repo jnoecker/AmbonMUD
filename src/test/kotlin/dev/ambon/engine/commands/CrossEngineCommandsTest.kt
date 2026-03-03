@@ -3,15 +3,15 @@ package dev.ambon.engine.commands
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.sharding.BroadcastType
 import dev.ambon.sharding.InterEngineMessage
 import dev.ambon.sharding.LocalInterEngineBus
+import dev.ambon.test.drainAll
+import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -45,13 +45,13 @@ class CrossEngineCommandsTest {
     fun `gossip broadcasts GlobalBroadcast via inter-engine bus`() =
         runTest {
             val sid = SessionId(1)
-            login(players, sid, "Alice")
-            drain(outbound)
+            players.loginOrFail(sid, "Alice")
+            outbound.drainAll()
 
             router.handle(sid, Command.Gossip("hello world"))
 
             // Local delivery still works
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == sid && "You gossip" in (it as OutboundEvent.SendText).text },
             )
@@ -70,13 +70,13 @@ class CrossEngineCommandsTest {
     fun `tell to unknown player sends TellMessage via bus`() =
         runTest {
             val sid = SessionId(1)
-            login(players, sid, "Alice")
-            drain(outbound)
+            players.loginOrFail(sid, "Alice")
+            outbound.drainAll()
 
             router.handle(sid, Command.Tell("Bob", "hey bob"))
 
             // Sender should see confirmation (not error)
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && "You tell Bob" in (it as OutboundEvent.SendText).text },
             )
@@ -109,11 +109,11 @@ class CrossEngineCommandsTest {
                 )
 
             val sid = SessionId(1)
-            login(players, sid, "Alice")
-            drain(outbound)
+            players.loginOrFail(sid, "Alice")
+            outbound.drainAll()
 
             noBusRouter.handle(sid, Command.Tell("Bob", "hey bob"))
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendError && "No such player" in (it as OutboundEvent.SendError).text },
@@ -124,13 +124,13 @@ class CrossEngineCommandsTest {
     fun `kick unknown player sends KickRequest via bus`() =
         runTest {
             val sid = SessionId(1)
-            login(players, sid, "Alice")
+            players.loginOrFail(sid, "Alice")
             players.get(sid)!!.isStaff = true
-            drain(outbound)
+            outbound.drainAll()
 
             router.handle(sid, Command.Kick("Bob"))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && "Kick request sent" in (it as OutboundEvent.SendInfo).text },
             )
@@ -144,9 +144,9 @@ class CrossEngineCommandsTest {
     fun `shutdown broadcasts GlobalBroadcast SHUTDOWN via bus`() =
         runTest {
             val sid = SessionId(1)
-            login(players, sid, "Admin")
+            players.loginOrFail(sid, "Admin")
             players.get(sid)!!.isStaff = true
-            drain(outbound)
+            outbound.drainAll()
 
             var shutdownCalled = false
             val shutdownRouter =
@@ -177,13 +177,13 @@ class CrossEngineCommandsTest {
     fun `transfer unknown player sends TransferRequest via bus`() =
         runTest {
             val sid = SessionId(1)
-            login(players, sid, "Admin")
+            players.loginOrFail(sid, "Admin")
             players.get(sid)!!.isStaff = true
-            drain(outbound)
+            outbound.drainAll()
 
             router.handle(sid, Command.Transfer("Bob", "forest:clearing"))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && "Transfer request sent" in (it as OutboundEvent.SendInfo).text },
             )
@@ -196,30 +196,12 @@ class CrossEngineCommandsTest {
             assertEquals("forest:clearing", transfer.targetRoomId)
         }
 
-    private fun drain(ch: LocalOutboundBus): List<OutboundEvent> {
-        val out = mutableListOf<OutboundEvent>()
-        while (true) {
-            val ev = ch.tryReceive().getOrNull() ?: break
-            out += ev
-        }
-        return out
-    }
-
-    private suspend fun login(
-        players: PlayerRegistry,
-        sessionId: SessionId,
-        name: String,
-    ) {
-        val res = players.login(sessionId, name, "password")
-        require(res == LoginResult.Ok) { "Login failed: $res" }
-    }
-
     @Test
     fun `tell to unknown player uses sendTo when player index returns target engine`() =
         runTest {
             val sid = SessionId(1)
-            login(players, sid, "Alice")
-            drain(outbound)
+            players.loginOrFail(sid, "Alice")
+            outbound.drainAll()
 
             val capturingBus = CapturingInterEngineBus()
             val index = MapPlayerLocationIndex(mapOf("bob" to "engine-2"))
@@ -238,7 +220,7 @@ class CrossEngineCommandsTest {
 
             indexRouter.handle(sid, Command.Tell("Bob", "hello from alice"))
 
-            val outs = drain(outbound)
+            val outs = outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && "You tell Bob" in (it as OutboundEvent.SendText).text },
             )
@@ -256,8 +238,8 @@ class CrossEngineCommandsTest {
     fun `tell falls back to broadcast when player index returns null`() =
         runTest {
             val sid = SessionId(1)
-            login(players, sid, "Alice")
-            drain(outbound)
+            players.loginOrFail(sid, "Alice")
+            outbound.drainAll()
 
             val capturingBus = CapturingInterEngineBus()
             val emptyIndex = MapPlayerLocationIndex(emptyMap())
@@ -285,8 +267,8 @@ class CrossEngineCommandsTest {
     fun `tell falls back to broadcast when player index returns own engine`() =
         runTest {
             val sid = SessionId(1)
-            login(players, sid, "Alice")
-            drain(outbound)
+            players.loginOrFail(sid, "Alice")
+            outbound.drainAll()
 
             val capturingBus = CapturingInterEngineBus()
             // index says "Bob" is on engine-1 (same engine), should still broadcast
