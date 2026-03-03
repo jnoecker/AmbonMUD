@@ -3,6 +3,7 @@ package dev.ambon.gateway
 import dev.ambon.bus.InboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
+import dev.ambon.grpc.GrpcTimeouts
 import dev.ambon.grpc.proto.InboundEventProto
 import dev.ambon.grpc.toProto
 import dev.ambon.sharding.InstanceSelector
@@ -146,13 +147,13 @@ class SessionRouter(
 
         val proto = event.toProto()
         try {
-            withTimeout(FORWARD_SEND_TIMEOUT_MS) {
+            withTimeout(GrpcTimeouts.FORWARD_SEND_TIMEOUT_MS) {
                 channel.send(proto)
             }
         } catch (e: TimeoutCancellationException) {
-            log.warn { "Engine $engineId gRPC channel unresponsive for ${FORWARD_SEND_TIMEOUT_MS}ms" }
+            log.warn { "Engine $engineId gRPC channel unresponsive for ${GrpcTimeouts.FORWARD_SEND_TIMEOUT_MS}ms" }
             throw IllegalStateException(
-                "Engine $engineId gRPC channel did not accept event within ${FORWARD_SEND_TIMEOUT_MS}ms",
+                "Engine $engineId gRPC channel did not accept event within ${GrpcTimeouts.FORWARD_SEND_TIMEOUT_MS}ms",
                 e,
             )
         }
@@ -211,5 +212,3 @@ private fun InboundEvent.sessionId(): SessionId =
         is InboundEvent.GmcpReceived -> sessionId
         is InboundEvent.LineReceived -> sessionId
     }
-
-private const val FORWARD_SEND_TIMEOUT_MS = 5_000L

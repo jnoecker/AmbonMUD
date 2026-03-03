@@ -22,7 +22,7 @@ class GrpcOutboundDispatcher(
     private val serviceImpl: EngineServiceImpl,
     private val scope: CoroutineScope,
     private val metrics: GameMetrics = GameMetrics.noop(),
-    private val controlPlaneSendTimeoutMs: Long = DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS,
+    private val controlPlaneSendTimeoutMs: Long = GrpcTimeouts.DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS,
 ) {
     init {
         require(controlPlaneSendTimeoutMs > 0L) {
@@ -43,7 +43,7 @@ class GrpcOutboundDispatcher(
     }
 
     fun stop() {
-        cancelJobWithTimeout(job, STOP_TIMEOUT_MS, "GrpcOutboundDispatcher job")
+        cancelJobWithTimeout(job, GrpcTimeouts.STOP_TIMEOUT_MS, "GrpcOutboundDispatcher job")
         log.info { "GrpcOutboundDispatcher stopped" }
     }
 
@@ -101,6 +101,3 @@ class GrpcOutboundDispatcher(
         }
     }
 }
-
-private const val DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS = 250L
-private const val STOP_TIMEOUT_MS = 5_000L
