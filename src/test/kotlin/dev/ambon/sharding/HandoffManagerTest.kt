@@ -151,18 +151,33 @@ class HandoffManagerTest {
         assertTrue(serialized.ansiEnabled)
 
         assertEquals(1, serialized.inventoryItems.size)
-        assertEquals("forest:coin", serialized.inventoryItems[0].id)
-        assertEquals("coin", serialized.inventoryItems[0].keyword)
+        assertEquals(ItemId("forest:coin"), serialized.inventoryItems[0].id)
+        assertEquals("coin", serialized.inventoryItems[0].item.keyword)
 
         assertEquals(2, serialized.equippedItems.size)
-        assertEquals("forest:sword", serialized.equippedItems["HAND"]?.id)
-        assertEquals(5, serialized.equippedItems["HAND"]?.damage)
-        assertEquals("forest:shield", serialized.equippedItems["BODY"]?.id)
-        assertEquals(2, serialized.equippedItems["BODY"]?.armor)
+        assertEquals(ItemId("forest:sword"), serialized.equippedItems["HAND"]?.id)
+        assertEquals(5, serialized.equippedItems["HAND"]?.item?.damage)
+        assertEquals(ItemId("forest:shield"), serialized.equippedItems["BODY"]?.id)
+        assertEquals(2, serialized.equippedItems["BODY"]?.item?.armor)
     }
 
     @Test
-    fun `serializeItem and deserializeItem round-trip`() {
+    fun `serializePlayer preserves ItemInstance directly`() {
+        val player =
+            PlayerState(
+                sessionId = sid,
+                name = "Alice",
+                roomId = RoomId("forest:clearing"),
+                playerId = PlayerId(42L),
+                hp = 20,
+                maxHp = 20,
+                baseMaxHp = 20,
+                level = 1,
+                xpTotal = 0L,
+                ansiEnabled = false,
+                isStaff = false,
+            )
+
         val original =
             ItemInstance(
                 id = ItemId("zone:magic_staff"),
@@ -182,21 +197,16 @@ class HandoffManagerTest {
                     ),
             )
 
-        val serialized = HandoffManager.serializeItem(original)
-        val restored = HandoffManager.deserializeItem(serialized)
+        val serialized =
+            HandoffManager.serializePlayer(
+                player = player,
+                targetRoomId = targetRoom,
+                inventory = listOf(original),
+                equipment = mapOf(ItemSlot.HAND to original),
+            )
 
-        assertEquals(original.id, restored.id)
-        assertEquals(original.item.keyword, restored.item.keyword)
-        assertEquals(original.item.displayName, restored.item.displayName)
-        assertEquals(original.item.description, restored.item.description)
-        assertEquals(original.item.slot, restored.item.slot)
-        assertEquals(original.item.damage, restored.item.damage)
-        assertEquals(original.item.armor, restored.item.armor)
-        assertEquals(original.item.constitution, restored.item.constitution)
-        assertEquals(original.item.consumable, restored.item.consumable)
-        assertEquals(original.item.charges, restored.item.charges)
-        assertEquals(original.item.onUse, restored.item.onUse)
-        assertEquals(original.item.matchByKey, restored.item.matchByKey)
+        assertEquals(original, serialized.inventoryItems[0])
+        assertEquals(original, serialized.equippedItems["HAND"])
     }
 
     @Test
@@ -349,21 +359,17 @@ class HandoffManagerTest {
                             lastSeenEpochMs = 2_000L,
                             inventoryItems =
                                 listOf(
-                                    SerializedItem(
-                                        id = "forest:coin",
-                                        keyword = "coin",
-                                        displayName = "a gold coin",
+                                    ItemInstance(
+                                        id = ItemId("forest:coin"),
+                                        item = Item(keyword = "coin", displayName = "a gold coin"),
                                     ),
                                 ),
                             equippedItems =
                                 mapOf(
                                     "HAND" to
-                                        SerializedItem(
-                                            id = "forest:sword",
-                                            keyword = "sword",
-                                            displayName = "a sharp sword",
-                                            slot = "HAND",
-                                            damage = 5,
+                                        ItemInstance(
+                                            id = ItemId("forest:sword"),
+                                            item = Item(keyword = "sword", displayName = "a sharp sword", slot = ItemSlot.HAND, damage = 5),
                                         ),
                                 ),
                         ),
