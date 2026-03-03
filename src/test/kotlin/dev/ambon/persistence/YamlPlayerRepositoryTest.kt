@@ -1,7 +1,11 @@
 package dev.ambon.persistence
 
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.test.TestPasswordHasher
@@ -385,5 +389,32 @@ class YamlPlayerRepositoryTest {
             assertEquals("Bob", loaded.inbox[0].fromName)
             assertEquals("Hello Alice!", loaded.inbox[0].body)
             assertFalse(loaded.inbox[0].read)
+        }
+
+    @Test
+    fun `save and reload preserves inventory and equipped items`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val r = repo.create(PlayerCreationRequest("ItemTest", RoomId("test:a"), 1000L, testHash, ansiEnabled = false))
+
+            val potion = ItemInstance(ItemId("test:potion"), Item(keyword = "potion", displayName = "a healing potion"))
+            val sword = ItemInstance(
+                ItemId("test:sword"),
+                Item(keyword = "sword", displayName = "a short sword", slot = ItemSlot.HAND),
+            )
+
+            val updated = r.copy(
+                inventoryItems = listOf(potion),
+                equippedItems = mapOf("HAND" to sword),
+            )
+            repo.save(updated)
+
+            val loaded = repo.findById(r.id)!!
+            assertEquals(1, loaded.inventoryItems.size)
+            assertEquals("potion", loaded.inventoryItems[0].item.keyword)
+            assertEquals(ItemId("test:potion"), loaded.inventoryItems[0].id)
+            assertEquals(1, loaded.equippedItems.size)
+            assertEquals("sword", loaded.equippedItems["HAND"]?.item?.keyword)
+            assertEquals(ItemId("test:sword"), loaded.equippedItems["HAND"]?.id)
         }
 }

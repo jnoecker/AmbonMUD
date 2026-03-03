@@ -4,6 +4,7 @@ import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.Race
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PersistenceException
 import dev.ambon.persistence.PlayerCreationRequest
@@ -273,6 +274,13 @@ class PlayerRegistry(
         roomMembers.getOrPut(ps.roomId) { mutableSetOf() }.add(sessionId)
         sessionByLowerName[ps.name.lowercase()] = sessionId
         items.ensurePlayer(sessionId)
+        for (item in boundRecord.inventoryItems) {
+            items.addToInventory(sessionId, item)
+        }
+        for ((slotName, item) in boundRecord.equippedItems) {
+            val slot = ItemSlot.parse(slotName) ?: continue
+            items.setEquippedItem(sessionId, slot, item)
+        }
 
         repo.save(
             boundRecord.copy(
@@ -517,7 +525,11 @@ class PlayerRegistry(
 
     private suspend fun persistIfClaimed(ps: PlayerState) {
         if (ps.playerId == null) return
-        repo.save(ps.toPlayerRecord(lastSeenEpochMs = clock.millis()))
+        val record = ps.toPlayerRecord(lastSeenEpochMs = clock.millis()).copy(
+            inventoryItems = items.inventory(ps.sessionId),
+            equippedItems = items.equipment(ps.sessionId).mapKeys { (slot, _) -> slot.name },
+        )
+        repo.save(record)
     }
 
     private fun isValidPassword(password: String): Boolean {
