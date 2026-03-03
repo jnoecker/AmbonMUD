@@ -109,12 +109,8 @@ class GuildSystem(
         return null
     }
 
-    suspend fun disband(sessionId: SessionId): String? {
-        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
-        val gid = ps.guildId ?: return "You are not in a guild."
-        if (ps.guildRank != GuildRank.LEADER) return "Only the guild leader can disband the guild."
-
-        val guild = guildsById[gid] ?: return "Guild not found."
+    suspend fun disband(sessionId: SessionId): String? = withMembership(sessionId) { ps, guild ->
+        if (ps.guildRank != GuildRank.LEADER) return@withMembership "Only the guild leader can disband the guild."
 
         // Notify and clear all online members
         for ((memberId, _) in guild.members) {
@@ -133,11 +129,11 @@ class GuildSystem(
             }
         }
 
-        guildRepo.delete(gid)
-        guildsById.remove(gid)
+        guildRepo.delete(guild.id)
+        guildsById.remove(guild.id)
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Guild '${guild.name}' has been disbanded."))
-        return null
+        null
     }
 
     suspend fun invite(
@@ -145,32 +141,33 @@ class GuildSystem(
         targetName: String,
     ): String? {
         pruneExpiredInvites()
-        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
-        val gid = ps.guildId ?: return "You are not in a guild."
-        val rank = ps.guildRank ?: return "You are not in a guild."
-        if (rank == GuildRank.MEMBER) return "Only officers and the leader can send guild invites."
+        return withMembership(sessionId) { ps, guild ->
+            val rank = ps.guildRank ?: return@withMembership "You are not in a guild."
+            if (rank == GuildRank.MEMBER) return@withMembership "Only officers and the leader can send guild invites."
+            if (guild.members.size >= maxSize) return@withMembership "Your guild is full (max $maxSize members)."
 
-        val guild = guildsById[gid] ?: return "Guild not found."
-        if (guild.members.size >= maxSize) return "Your guild is full (max $maxSize members)."
+            val targetSid = players.findSessionByName(targetName)
+                ?: return@withMembership "Player '$targetName' is not online."
+            if (targetSid == sessionId) return@withMembership "You cannot invite yourself."
+            val targetPs = players.get(targetSid) ?: return@withMembership "Player '$targetName' is not online."
 
-        val targetSid = players.findSessionByName(targetName) ?: return "Player '$targetName' is not online."
-        if (targetSid == sessionId) return "You cannot invite yourself."
-        val targetPs = players.get(targetSid) ?: return "Player '$targetName' is not online."
+            if (targetPs.guildId != null) return@withMembership "${targetPs.name} is already in a guild."
+            if (pendingInvites[targetSid]?.guildId == guild.id) {
+                return@withMembership "${targetPs.name} already has a pending invite to your guild."
+            }
 
-        if (targetPs.guildId != null) return "${targetPs.name} is already in a guild."
-        if (pendingInvites[targetSid]?.guildId == gid) return "${targetPs.name} already has a pending invite to your guild."
+            val expiry = clock.millis() + inviteTimeoutMs
+            pendingInvites[targetSid] = PendingGuildInvite(guild.id, guild.name, ps.name, expiry)
 
-        val expiry = clock.millis() + inviteTimeoutMs
-        pendingInvites[targetSid] = PendingGuildInvite(gid, guild.name, ps.name, expiry)
-
-        outbound.send(
-            OutboundEvent.SendInfo(
-                targetSid,
-                "${ps.name} has invited you to join guild '${guild.name}' [${guild.tag}]. Type 'guild accept' to join.",
-            ),
-        )
-        outbound.send(OutboundEvent.SendInfo(sessionId, "Invite sent to ${targetPs.name}."))
-        return null
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    targetSid,
+                    "${ps.name} has invited you to join guild '${guild.name}' [${guild.tag}]. Type 'guild accept' to join.",
+                ),
+            )
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Invite sent to ${targetPs.name}."))
+            null
+        }
     }
 
     suspend fun accept(sessionId: SessionId): String? {
@@ -188,8 +185,7 @@ class GuildSystem(
         if (guild.members.size >= maxSize) return "That guild is now full."
 
         val updated = guild.copy(members = guild.members + (pid to GuildRank.MEMBER))
-        guildRepo.save(updated)
-        guildsById[guild.id] = updated
+        persistGuild(updated)
 
         ps.guildId = guild.id
         ps.guildRank = GuildRank.MEMBER
@@ -201,18 +197,15 @@ class GuildSystem(
         return null
     }
 
-    suspend fun leave(sessionId: SessionId): String? {
-        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
-        val pid = ps.playerId ?: return ERR_NOT_CONNECTED
-        val gid = ps.guildId ?: return "You are not in a guild."
+    suspend fun leave(sessionId: SessionId): String? = withMembership(sessionId) { ps, guild ->
+        val pid = ps.playerId ?: return@withMembership ERR_NOT_CONNECTED
         if (ps.guildRank == GuildRank.LEADER) {
-            return "You are the guild leader. Disband the guild with 'guild disband', or promote another member to leader first."
+            return@withMembership "You are the guild leader. Disband the guild with 'guild disband', " +
+                "or promote another member to leader first."
         }
 
-        val guild = guildsById[gid] ?: return "Guild not found."
         val updated = guild.copy(members = guild.members - pid)
-        guildRepo.save(updated)
-        guildsById[guild.id] = updated
+        persistGuild(updated)
 
         val guildName = guild.name
         ps.clearGuild()
@@ -220,35 +213,26 @@ class GuildSystem(
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "You have left guild '$guildName'."))
         broadcastToGuild(updated, "${ps.name} has left the guild.", excludeSid = sessionId)
-        return null
+        null
     }
 
     suspend fun kick(
         sessionId: SessionId,
         targetName: String,
-    ): String? {
-        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
-        val gid = ps.guildId ?: return "You are not in a guild."
-        val rank = ps.guildRank ?: return "You are not in a guild."
-        if (rank == GuildRank.MEMBER) return "Only officers and the leader can kick guild members."
+    ): String? = withMembership(sessionId) { ps, guild ->
+        val rank = ps.guildRank ?: return@withMembership "You are not in a guild."
+        if (rank == GuildRank.MEMBER) return@withMembership "Only officers and the leader can kick guild members."
 
-        val guild = guildsById[gid] ?: return "Guild not found."
+        val (targetPlayerId, targetRank) = findMemberByName(guild, targetName)
+            ?: return@withMembership "Player '$targetName' is not a member of your guild."
 
-        val targetEntry = guild.members.entries.find { e ->
-            resolveGuildMemberName(e.key)?.equals(targetName, ignoreCase = true) == true
-        } ?: return "Player '$targetName' is not a member of your guild."
-
-        val targetPlayerId = targetEntry.key
-        val targetRank = targetEntry.value
-
-        if (targetRank == GuildRank.LEADER) return "You cannot kick the guild leader."
+        if (targetRank == GuildRank.LEADER) return@withMembership "You cannot kick the guild leader."
         if (rank == GuildRank.OFFICER && targetRank == GuildRank.OFFICER) {
-            return "Officers cannot kick other officers."
+            return@withMembership "Officers cannot kick other officers."
         }
 
         val updated = guild.copy(members = guild.members - targetPlayerId)
-        guildRepo.save(updated)
-        guildsById[guild.id] = updated
+        persistGuild(updated)
 
         val targetSid = players.findSessionByPlayerId(targetPlayerId)
         if (targetSid != null) {
@@ -264,32 +248,23 @@ class GuildSystem(
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "$targetName has been kicked from the guild."))
         broadcastToGuild(updated, "$targetName has been kicked from the guild.", excludeSid = sessionId)
-        return null
+        null
     }
 
     suspend fun promote(
         sessionId: SessionId,
         targetName: String,
-    ): String? {
-        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
-        val gid = ps.guildId ?: return "You are not in a guild."
-        if (ps.guildRank != GuildRank.LEADER) return "Only the guild leader can promote members."
+    ): String? = withMembership(sessionId) { ps, guild ->
+        if (ps.guildRank != GuildRank.LEADER) return@withMembership "Only the guild leader can promote members."
 
-        val guild = guildsById[gid] ?: return "Guild not found."
+        val (targetPlayerId, targetRank) = findMemberByName(guild, targetName)
+            ?: return@withMembership "Player '$targetName' is not a member of your guild."
 
-        val targetEntry = guild.members.entries.find { e ->
-            resolveGuildMemberName(e.key)?.equals(targetName, ignoreCase = true) == true
-        } ?: return "Player '$targetName' is not a member of your guild."
-
-        val targetPlayerId = targetEntry.key
-        val targetRank = targetEntry.value
-
-        if (targetRank == GuildRank.LEADER) return "$targetName is already the leader."
-        if (targetRank == GuildRank.OFFICER) return "$targetName is already an officer."
+        if (targetRank == GuildRank.LEADER) return@withMembership "$targetName is already the leader."
+        if (targetRank == GuildRank.OFFICER) return@withMembership "$targetName is already an officer."
 
         val updated = guild.copy(members = guild.members + (targetPlayerId to GuildRank.OFFICER))
-        guildRepo.save(updated)
-        guildsById[guild.id] = updated
+        persistGuild(updated)
 
         val targetSid = players.findSessionByPlayerId(targetPlayerId)
         if (targetSid != null) {
@@ -299,32 +274,23 @@ class GuildSystem(
         }
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "$targetName has been promoted to Officer."))
-        return null
+        null
     }
 
     suspend fun demote(
         sessionId: SessionId,
         targetName: String,
-    ): String? {
-        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
-        val gid = ps.guildId ?: return "You are not in a guild."
-        if (ps.guildRank != GuildRank.LEADER) return "Only the guild leader can demote members."
+    ): String? = withMembership(sessionId) { ps, guild ->
+        if (ps.guildRank != GuildRank.LEADER) return@withMembership "Only the guild leader can demote members."
 
-        val guild = guildsById[gid] ?: return "Guild not found."
+        val (targetPlayerId, targetRank) = findMemberByName(guild, targetName)
+            ?: return@withMembership "Player '$targetName' is not a member of your guild."
 
-        val targetEntry = guild.members.entries.find { e ->
-            resolveGuildMemberName(e.key)?.equals(targetName, ignoreCase = true) == true
-        } ?: return "Player '$targetName' is not a member of your guild."
-
-        val targetPlayerId = targetEntry.key
-        val targetRank = targetEntry.value
-
-        if (targetRank == GuildRank.LEADER) return "You cannot demote the guild leader."
-        if (targetRank == GuildRank.MEMBER) return "$targetName is already a Member."
+        if (targetRank == GuildRank.LEADER) return@withMembership "You cannot demote the guild leader."
+        if (targetRank == GuildRank.MEMBER) return@withMembership "$targetName is already a Member."
 
         val updated = guild.copy(members = guild.members + (targetPlayerId to GuildRank.MEMBER))
-        guildRepo.save(updated)
-        guildsById[guild.id] = updated
+        persistGuild(updated)
 
         val targetSid = players.findSessionByPlayerId(targetPlayerId)
         if (targetSid != null) {
@@ -334,32 +300,24 @@ class GuildSystem(
         }
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "$targetName has been demoted to Member."))
-        return null
+        null
     }
 
     suspend fun setMotd(
         sessionId: SessionId,
         motd: String,
-    ): String? {
-        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
-        val gid = ps.guildId ?: return "You are not in a guild."
-        val rank = ps.guildRank ?: return "You are not in a guild."
-        if (rank == GuildRank.MEMBER) return "Only officers and the leader can set the guild MOTD."
+    ): String? = withMembership(sessionId) { ps, guild ->
+        val rank = ps.guildRank ?: return@withMembership "You are not in a guild."
+        if (rank == GuildRank.MEMBER) return@withMembership "Only officers and the leader can set the guild MOTD."
 
-        val guild = guildsById[gid] ?: return "Guild not found."
         val updated = guild.copy(motd = motd.trim().ifEmpty { null })
-        guildRepo.save(updated)
-        guildsById[guild.id] = updated
+        persistGuild(updated)
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Guild MOTD updated."))
-        return null
+        null
     }
 
-    suspend fun roster(sessionId: SessionId): String? {
-        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
-        val gid = ps.guildId ?: return "You are not in a guild."
-        val guild = guildsById[gid] ?: return "Guild not found."
-
+    suspend fun roster(sessionId: SessionId): String? = withMembership(sessionId) { _, guild ->
         val lines = buildString {
             appendLine("=== ${guild.name} [${guild.tag}] ===")
             appendLine("Members (${guild.members.size}/$maxSize):")
@@ -378,14 +336,10 @@ class GuildSystem(
         }.trimEnd()
 
         outbound.send(OutboundEvent.SendInfo(sessionId, lines))
-        return null
+        null
     }
 
-    suspend fun info(sessionId: SessionId): String? {
-        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
-        val gid = ps.guildId ?: return "You are not in a guild."
-        val guild = guildsById[gid] ?: return "Guild not found."
-
+    suspend fun info(sessionId: SessionId): String? = withMembership(sessionId) { _, guild ->
         val leaderSid = players.findSessionByPlayerId(guild.leaderId)
         val leaderName = if (leaderSid != null) players.get(leaderSid)?.name else null
 
@@ -399,17 +353,13 @@ class GuildSystem(
         }.trimEnd()
 
         outbound.send(OutboundEvent.SendInfo(sessionId, lines))
-        return null
+        null
     }
 
     suspend fun gchat(
         sessionId: SessionId,
         message: String,
-    ): String? {
-        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
-        val gid = ps.guildId ?: return "You are not in a guild."
-        val guild = guildsById[gid] ?: return "Guild not found."
-
+    ): String? = withMembership(sessionId) { ps, guild ->
         pruneExpiredInvites()
 
         val formatted = "[${guild.tag}] ${ps.name}: $message"
@@ -417,10 +367,33 @@ class GuildSystem(
             val sid = players.findSessionByPlayerId(memberId) ?: continue
             outbound.send(OutboundEvent.SendInfo(sid, formatted))
         }
-        return null
+        null
     }
 
     // -------- helpers --------
+
+    private suspend fun withMembership(
+        sessionId: SessionId,
+        block: suspend (PlayerState, GuildRecord) -> String?,
+    ): String? {
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
+        val gid = ps.guildId ?: return "You are not in a guild."
+        val guild = guildsById[gid] ?: return "Guild not found."
+        return block(ps, guild)
+    }
+
+    private suspend fun findMemberByName(
+        guild: GuildRecord,
+        targetName: String,
+    ): Pair<PlayerId, GuildRank>? =
+        guild.members.entries.find { (playerId, _) ->
+            resolveGuildMemberName(playerId)?.equals(targetName, ignoreCase = true) == true
+        }?.let { it.key to it.value }
+
+    private suspend fun persistGuild(updated: GuildRecord) {
+        guildRepo.save(updated)
+        guildsById[updated.id] = updated
+    }
 
     private suspend fun broadcastToGuild(
         guild: GuildRecord,
