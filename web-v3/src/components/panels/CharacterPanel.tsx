@@ -1,6 +1,8 @@
 import { useState } from "react";
-import type { CharacterInfo, StatusEffect, StatusVarLabels, Vitals } from "../../types";
+import type { AchievementData, CharacterInfo, StatusEffect, StatusVarLabels, Vitals } from "../../types";
 import { Bar, CharacterAvatarIcon, EquipmentIcon, WearingIcon } from "../Icons";
+
+type DetailTab = "vitals" | "effects" | "achievements";
 
 interface CharacterPanelProps {
   connected: boolean;
@@ -17,6 +19,7 @@ interface CharacterPanelProps {
   effects: StatusEffect[];
   visibleEffects: StatusEffect[];
   hiddenEffectsCount: number;
+  achievements: AchievementData;
   onOpenEquipment: () => void;
   onOpenWearing: () => void;
 }
@@ -36,10 +39,13 @@ export function CharacterPanel({
   effects,
   visibleEffects,
   hiddenEffectsCount,
+  achievements,
   onOpenEquipment,
   onOpenWearing,
 }: CharacterPanelProps) {
-  const [activeDetailTab, setActiveDetailTab] = useState<"vitals" | "effects">("vitals");
+  const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("vitals");
+
+  const totalAchievements = achievements.completed.length + achievements.inProgress.length;
 
   return (
     <section className="panel panel-character" aria-label="Character status">
@@ -122,10 +128,19 @@ export function CharacterPanel({
             >
               Effects
             </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeDetailTab === "achievements"}
+              className={`character-detail-tab ${activeDetailTab === "achievements" ? "character-detail-tab-active" : ""}`}
+              onClick={() => setActiveDetailTab("achievements")}
+            >
+              Achievements
+            </button>
           </div>
 
           <div className="character-detail-body">
-            {activeDetailTab === "vitals" ? (
+            {activeDetailTab === "vitals" && (
               <section
                 key="vitals"
                 className="character-detail-panel character-detail-panel-flip meter-stack"
@@ -149,7 +164,9 @@ export function CharacterPanel({
                   </div>
                 )}
               </section>
-            ) : (
+            )}
+
+            {activeDetailTab === "effects" && (
               <section
                 key="effects"
                 className="character-detail-panel character-detail-panel-flip character-effects"
@@ -176,10 +193,45 @@ export function CharacterPanel({
                 )}
               </section>
             )}
+
+            {activeDetailTab === "achievements" && (
+              <section
+                key="achievements"
+                className="character-detail-panel character-detail-panel-flip character-achievements"
+                role="tabpanel"
+                aria-label="Achievements"
+              >
+                {totalAchievements === 0 ? (
+                  <p className="empty-note">{hasCharacterProfile ? "No achievements yet." : "Achievements will appear here during gameplay."}</p>
+                ) : (
+                  <ul className="achievements-list">
+                    {achievements.completed.map((a) => (
+                      <li key={a.id} className="achievement-item achievement-item-completed">
+                        <span className="achievement-name">{a.name}</span>
+                        {a.title && <span className="achievement-title">{a.title}</span>}
+                      </li>
+                    ))}
+                    {achievements.inProgress.map((a) => (
+                      <li key={a.id} className="achievement-item achievement-item-progress">
+                        <div className="achievement-progress-header">
+                          <span className="achievement-name">{a.name}</span>
+                          <span className="achievement-progress-text">{a.current} / {a.required}</span>
+                        </div>
+                        <div className="meter-track achievement-progress-track">
+                          <span
+                            className="meter-fill meter-fill-xp"
+                            style={{ width: `${Math.min(100, (a.current / Math.max(1, a.required)) * 100)}%` }}
+                          />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            )}
           </div>
         </article>
       </div>
     </section>
   );
 }
-
