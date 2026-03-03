@@ -1,8 +1,5 @@
 package dev.ambon.persistence
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
@@ -17,9 +14,7 @@ private val log = KotlinLogging.logger {}
 class YamlWorldStateRepository(
     private val rootDir: Path,
 ) : WorldStateRepository {
-    private val mapper: ObjectMapper =
-        ObjectMapper(YAMLFactory())
-            .registerModule(KotlinModule.Builder().build())
+    private val mapper = yamlMapper
 
     private val stateFile: Path = rootDir.resolve("world_state.yml")
 

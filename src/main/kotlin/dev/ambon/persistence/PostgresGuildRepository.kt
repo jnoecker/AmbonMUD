@@ -1,7 +1,6 @@
 package dev.ambon.persistence
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
 import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.guild.GuildRecord
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -19,8 +18,9 @@ private val membersType = object : TypeReference<Map<Long, String>>() {}
 
 class PostgresGuildRepository(
     private val database: Database,
-    private val mapper: ObjectMapper,
 ) : GuildRepository {
+    private val mapper = jsonMapper
+
     override suspend fun findById(id: String): GuildRecord? =
         newSuspendedTransaction(Dispatchers.IO, database) {
             GuildsTable

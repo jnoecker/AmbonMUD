@@ -1,16 +1,13 @@
 package dev.ambon.persistence
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.upsert
 
-private val wsMapper: ObjectMapper =
-    ObjectMapper().registerModule(KotlinModule.Builder().build())
+private val wsMapper = jsonMapper
 
 private val strStrMapType = object : TypeReference<Map<String, String>>() {}
 private val strListStrMapType = object : TypeReference<Map<String, List<String>>>() {}
