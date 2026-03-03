@@ -19,6 +19,8 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.buildTestRouter
+import dev.ambon.engine.events.InboundEvent
+import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
@@ -181,6 +183,23 @@ class GameEngineHarness private constructor(
     val engine: GameEngine,
     val engineJob: Job,
 ) {
+    fun drain(): List<OutboundEvent> = outbound.drainAll()
+
+    /**
+     * Drives a fresh player through the engine's full login sequence
+     * (Connected → name → "yes" → password) and drains the resulting output.
+     */
+    suspend fun loginNewPlayer(
+        sid: SessionId,
+        name: String,
+        password: String = "password",
+    ) {
+        inbound.send(InboundEvent.Connected(sid))
+        inbound.send(InboundEvent.LineReceived(sid, name))
+        inbound.send(InboundEvent.LineReceived(sid, "yes"))
+        inbound.send(InboundEvent.LineReceived(sid, password))
+    }
+
     fun close() {
         engineJob.cancel()
         inbound.close()
