@@ -16,8 +16,7 @@ class MobRegistry {
         } else {
             // update fields but preserve membership maps properly if room changes
             if (existing.roomId != mob.roomId) {
-                roomMembers[existing.roomId]?.remove(mob.id)
-                if (roomMembers[existing.roomId]?.isEmpty() == true) roomMembers.remove(existing.roomId)
+                roomMembers.removeFromSet(existing.roomId, mob.id)
                 roomMembers.getOrPut(mob.roomId) { mutableSetOf() }.add(mob.id)
             }
             existing.name = mob.name
@@ -39,16 +38,14 @@ class MobRegistry {
     ) {
         val m = mobs[mobId] ?: return
         if (m.roomId == newRoom) return
-        roomMembers[m.roomId]?.remove(mobId)
-        if (roomMembers[m.roomId]?.isEmpty() == true) roomMembers.remove(m.roomId)
+        roomMembers.removeFromSet(m.roomId, mobId)
         m.roomId = newRoom
         roomMembers.getOrPut(newRoom) { mutableSetOf() }.add(mobId)
     }
 
     fun remove(mobId: MobId): MobState? {
         val m = mobs.remove(mobId) ?: return null
-        roomMembers[m.roomId]?.remove(mobId)
-        if (roomMembers[m.roomId]?.isEmpty() == true) roomMembers.remove(m.roomId)
+        roomMembers.removeFromSet(m.roomId, mobId)
         return m
     }
 }

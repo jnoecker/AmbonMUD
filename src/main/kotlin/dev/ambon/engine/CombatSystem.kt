@@ -50,7 +50,7 @@ class CombatSystem(
     private val groupSystem: GroupSystem? = null,
     private val config: CombatSystemConfig = CombatSystemConfig(),
     private val callbacks: CombatSystemCallbacks = CombatSystemCallbacks(),
-) {
+) : GameSystem {
     // Per-mob combat state (tracks tick timing)
     private data class MobCombatState(
         val mobId: MobId,
@@ -142,7 +142,7 @@ class CombatSystem(
         return null
     }
 
-    fun remapSession(
+    override fun remapSession(
         oldSid: SessionId,
         newSid: SessionId,
     ) {
@@ -151,10 +151,10 @@ class CombatSystem(
             playerTarget[newSid] = mobId
         }
         threatTable.remapSession(oldSid, newSid)
-        defenseByPlayer.remove(oldSid)?.let { defenseByPlayer[newSid] = it }
+        defenseByPlayer.remapKey(oldSid, newSid)
     }
 
-    fun onPlayerDisconnected(sessionId: SessionId) {
+    override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         removePlayerFromCombat(sessionId)
         defenseByPlayer.remove(sessionId)
     }
