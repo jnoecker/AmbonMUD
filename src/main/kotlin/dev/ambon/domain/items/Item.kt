@@ -1,5 +1,7 @@
 package dev.ambon.domain.items
 
+import dev.ambon.domain.StatBlock
+
 data class ItemUseEffect(
     val healHp: Int = 0,
     val grantXp: Long = 0L,
@@ -14,12 +16,7 @@ data class Item(
     val slot: ItemSlot? = null,
     val damage: Int = 0,
     val armor: Int = 0,
-    val strength: Int = 0,
-    val dexterity: Int = 0,
-    val constitution: Int = 0,
-    val intelligence: Int = 0,
-    val wisdom: Int = 0,
-    val charisma: Int = 0,
+    val stats: StatBlock = StatBlock.ZERO,
     val consumable: Boolean = false,
     val charges: Int? = null,
     val onUse: ItemUseEffect? = null,

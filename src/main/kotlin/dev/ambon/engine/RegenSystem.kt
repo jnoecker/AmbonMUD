@@ -60,7 +60,7 @@ class RegenSystem(
                 lastRegenAtMs[sessionId] = now
             } else {
                 val last = lastRegenAtMs.getOrPut(sessionId) { now }
-                val interval = regenIntervalMs(player, bonuses.constitution)
+                val interval = regenIntervalMs(player, bonuses.stats.con)
                 if (now - last >= interval) {
                     if (player.healHp(regenAmount)) {
                         dirtyNotifier.playerVitalsDirty(sessionId)
@@ -74,7 +74,7 @@ class RegenSystem(
                 lastManaRegenAtMs[sessionId] = now
             } else {
                 val lastMana = lastManaRegenAtMs.getOrPut(sessionId) { now }
-                val interval = manaRegenIntervalMs(player, bonuses.wisdom)
+                val interval = manaRegenIntervalMs(player, bonuses.stats.wis)
                 if (now - lastMana >= interval) {
                     if (player.healMana(manaRegenAmount)) {
                         dirtyNotifier.playerVitalsDirty(sessionId)

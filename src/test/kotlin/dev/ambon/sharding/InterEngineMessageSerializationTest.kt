@@ -1,6 +1,7 @@
 package dev.ambon.sharding
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
@@ -113,7 +114,7 @@ class InterEngineMessageSerializationTest {
                         slot = ItemSlot.HAND,
                         damage = 7,
                         armor = 1,
-                        constitution = 2,
+                        stats = StatBlock(con = 2),
                         consumable = true,
                         charges = 3,
                         onUse = ItemUseEffect(healHp = 4, grantXp = 12),
