@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.quest.QuestState
 import org.jetbrains.exposed.sql.ResultRow
@@ -17,6 +18,8 @@ private val achievementProgressType = object : TypeReference<Map<String, Achieve
 private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
 private val craftingSkillsType = object : TypeReference<Map<String, CraftingSkillState>>() {}
 private val friendsListType = object : TypeReference<Set<String>>() {}
+private val inventoryItemsType = object : TypeReference<List<ItemInstance>>() {}
+private val equippedItemsType = object : TypeReference<Map<String, ItemInstance>>() {}
 
 /** Deserialises JSON with a fallback to [default] on any parse failure. */
 private fun <T> safeReadJson(json: String, type: TypeReference<T>, default: T): T =
@@ -56,6 +59,8 @@ object PlayersTable : Table("players") {
     val recallRoomId = varchar("recall_room_id", 128).nullable()
     val craftingSkills = text("crafting_skills").default("{}")
     val friendsList = text("friends_list").default("[]")
+    val inventoryItems = text("inventory_items").default("[]")
+    val equippedItems = text("equipped_items").default("{}")
 
     override val primaryKey = PrimaryKey(id)
 
@@ -94,6 +99,8 @@ object PlayersTable : Table("players") {
             recallRoomId = row[recallRoomId]?.let { RoomId(it) },
             craftingSkills = safeReadJson(row[craftingSkills], craftingSkillsType, emptyMap()),
             friendsList = safeReadJson(row[friendsList], friendsListType, emptySet()),
+            inventoryItems = safeReadJson(row[inventoryItems], inventoryItemsType, emptyList()),
+            equippedItems = safeReadJson(row[equippedItems], equippedItemsType, emptyMap()),
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -131,5 +138,7 @@ object PlayersTable : Table("players") {
         statement[recallRoomId] = record.recallRoomId?.value
         statement[craftingSkills] = jsonMapper.writeValueAsString(record.craftingSkills)
         statement[friendsList] = jsonMapper.writeValueAsString(record.friendsList)
+        statement[inventoryItems] = jsonMapper.writeValueAsString(record.inventoryItems)
+        statement[equippedItems] = jsonMapper.writeValueAsString(record.equippedItems)
     }
 }
