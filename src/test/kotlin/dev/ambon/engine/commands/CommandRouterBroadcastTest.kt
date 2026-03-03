@@ -2,12 +2,13 @@ package dev.ambon.engine.commands
 
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GroupSystem
-import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.CommandRouterHarness
+import dev.ambon.test.TestWorlds
+import dev.ambon.test.buildTestPlayerRegistry
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,21 +23,15 @@ class CommandRouterBroadcastTest {
     @Test
     fun `say broadcasts to other players in same room and echoes to sender`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
-
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
             val b = SessionId(2)
-            players.loginOrFail(a, "Player1")
-            players.loginOrFail(b, "Player2")
+            h.players.loginOrFail(a, "Player1")
+            h.players.loginOrFail(b, "Player2")
 
-            router.handle(a, Command.Say("hello"))
+            h.router.handle(a, Command.Say("hello"))
 
-            val outs = outbound.drainAll()
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "You say: hello" },
@@ -53,24 +48,18 @@ class CommandRouterBroadcastTest {
     @Test
     fun `say does not broadcast across rooms`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
-
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
             val b = SessionId(2)
-            players.loginOrFail(a, "Player1")
-            players.loginOrFail(b, "Player2")
+            h.players.loginOrFail(a, "Player1")
+            h.players.loginOrFail(b, "Player2")
 
             // Move b north into a different room
-            router.handle(b, Command.Move(dev.ambon.domain.world.Direction.NORTH))
-            outbound.drainAll() // ignore look output
+            h.router.handle(b, Command.Move(dev.ambon.domain.world.Direction.NORTH))
+            h.outbound.drainAll() // ignore look output
 
-            router.handle(a, Command.Say("psst"))
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Say("psst"))
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "You say: psst" },
@@ -85,20 +74,14 @@ class CommandRouterBroadcastTest {
     @Test
     fun `who lists connected players`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
-            val outbound = LocalOutboundBus()
-            val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
-
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
             val b = SessionId(2)
-            players.loginOrFail(a, "Player1")
-            players.loginOrFail(b, "Player2")
+            h.players.loginOrFail(a, "Player1")
+            h.players.loginOrFail(b, "Player2")
 
-            router.handle(a, Command.Who)
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Who)
+            val outs = h.outbound.drainAll()
 
             val msg =
                 outs
@@ -114,37 +97,35 @@ class CommandRouterBroadcastTest {
     @Test
     fun `who shows G indicator for grouped players`() =
         runTest {
-            val world = dev.ambon.test.TestWorlds.testWorld
+            val world = TestWorlds.testWorld
+            val repo = InMemoryPlayerRepository()
             val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-            val mobs = MobRegistry()
+            val players = buildTestPlayerRegistry(world.startRoom, repo, items)
             val outbound = LocalOutboundBus()
             val groupSystem = GroupSystem(players, outbound)
-            val router =
-                buildTestRouter(
-                    world,
-                    players,
-                    mobs,
-                    items,
-                    CombatSystem(players, mobs, items, outbound),
-                    outbound,
-                    groupSystem = groupSystem,
-                )
+            val h = CommandRouterHarness.create(
+                world = world,
+                repo = repo,
+                items = items,
+                players = players,
+                outbound = outbound,
+                groupSystem = groupSystem,
+            )
 
             val a = SessionId(1)
             val b = SessionId(2)
             val c = SessionId(3)
-            players.loginOrFail(a, "Alice")
-            players.loginOrFail(b, "Bob")
-            players.loginOrFail(c, "Charlie")
-            outbound.drainAll()
+            h.players.loginOrFail(a, "Alice")
+            h.players.loginOrFail(b, "Bob")
+            h.players.loginOrFail(c, "Charlie")
+            h.outbound.drainAll()
 
             groupSystem.invite(a, "Bob")
             groupSystem.accept(b)
-            outbound.drainAll()
+            h.outbound.drainAll()
 
-            router.handle(c, Command.Who)
-            val outs = outbound.drainAll()
+            h.router.handle(c, Command.Who)
+            val outs = h.outbound.drainAll()
 
             val msg =
                 outs
