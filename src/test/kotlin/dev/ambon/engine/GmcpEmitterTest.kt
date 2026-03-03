@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.domain.DamageRange
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -116,7 +117,7 @@ class GmcpEmitterTest {
         cooldownMs = cooldownMs,
         levelRequired = 1,
         targetType = TargetType.ENEMY,
-        effect = AbilityEffect.DirectDamage(minDamage = 5, maxDamage = 10),
+        effect = AbilityEffect.DirectDamage(damage = DamageRange(5, 10)),
     )
 
     // ── Char.Vitals ──

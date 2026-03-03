@@ -1,5 +1,6 @@
 package dev.ambon.test
 
+import dev.ambon.domain.DamageRange
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -25,8 +26,7 @@ interface TestFixtureBase {
         name: String,
         hp: Int = 10,
         maxHp: Int = hp,
-        minDamage: Int = 1,
-        maxDamage: Int = 4,
+        damage: DamageRange = DamageRange(1, 4),
         armor: Int = 0,
         xpReward: Long = 30L,
         goldMin: Long = 0L,
@@ -40,8 +40,7 @@ interface TestFixtureBase {
                 roomId = roomId,
                 hp = hp,
                 maxHp = maxHp,
-                minDamage = minDamage,
-                maxDamage = maxDamage,
+                damage = damage,
                 armor = armor,
                 xpReward = xpReward,
                 goldMin = goldMin,

@@ -1,6 +1,7 @@
 package dev.ambon.engine.abilities
 
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.domain.DamageRange
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -50,7 +51,7 @@ class AbilitySystemTest {
                 cooldownMs = 0,
                 levelRequired = 1,
                 targetType = TargetType.ENEMY,
-                effect = AbilityEffect.DirectDamage(minDamage = 5, maxDamage = 5),
+                effect = AbilityEffect.DirectDamage(damage = DamageRange(5, 5)),
             ),
         )
         registry.register(
@@ -74,7 +75,7 @@ class AbilitySystemTest {
                 cooldownMs = 3000,
                 levelRequired = 5,
                 targetType = TargetType.ENEMY,
-                effect = AbilityEffect.DirectDamage(minDamage = 10, maxDamage = 10),
+                effect = AbilityEffect.DirectDamage(damage = DamageRange(10, 10)),
             ),
         )
         val abilitySystem = fixture.buildAbilitySystem(registry = registry)
@@ -410,7 +411,7 @@ class AbilitySystemTest {
                 cooldownMs = 0,
                 levelRequired = 5,
                 targetType = TargetType.ENEMY,
-                effect = AbilityEffect.AreaDamage(minDamage = 3, maxDamage = 7),
+                effect = AbilityEffect.AreaDamage(damage = DamageRange(3, 7)),
             ),
         )
         registry.register(

@@ -1,5 +1,6 @@
 package dev.ambon.engine.abilities
 
+import dev.ambon.domain.DamageRange
 import dev.ambon.domain.PlayerClass
 import dev.ambon.engine.status.StatusEffectId
 
@@ -16,8 +17,7 @@ enum class TargetType {
 
 sealed interface AbilityEffect {
     data class DirectDamage(
-        val minDamage: Int,
-        val maxDamage: Int,
+        val damage: DamageRange,
     ) : AbilityEffect
 
     data class DirectHeal(
@@ -30,8 +30,7 @@ sealed interface AbilityEffect {
     ) : AbilityEffect
 
     data class AreaDamage(
-        val minDamage: Int,
-        val maxDamage: Int,
+        val damage: DamageRange,
     ) : AbilityEffect
 
     data class Taunt(
