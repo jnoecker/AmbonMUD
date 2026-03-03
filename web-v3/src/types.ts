@@ -80,6 +80,15 @@ export interface ChatMessage {
   receivedAt: number;
 }
 
+export interface StatusVarLabels {
+  hp: string;
+  maxHp: string;
+  mana: string;
+  maxMana: string;
+  level: string;
+  xp: string;
+}
+
 export interface SkillSummary {
   id: string;
   name: string;
