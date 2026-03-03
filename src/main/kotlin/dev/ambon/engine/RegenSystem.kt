@@ -21,19 +21,19 @@ class RegenSystem(
     private val msPerWisdom: Long = 200L,
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
-) {
+) : GameSystem {
     private val lastRegenAtMs = mutableMapOf<SessionId, Long>()
     private val lastManaRegenAtMs = mutableMapOf<SessionId, Long>()
 
-    fun remapSession(
+    override fun remapSession(
         oldSid: SessionId,
         newSid: SessionId,
     ) {
-        lastRegenAtMs.remove(oldSid)?.let { lastRegenAtMs[newSid] = it }
-        lastManaRegenAtMs.remove(oldSid)?.let { lastManaRegenAtMs[newSid] = it }
+        lastRegenAtMs.remapKey(oldSid, newSid)
+        lastManaRegenAtMs.remapKey(oldSid, newSid)
     }
 
-    fun onPlayerDisconnected(sessionId: SessionId) {
+    override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         lastRegenAtMs.remove(sessionId)
         lastManaRegenAtMs.remove(sessionId)
     }
