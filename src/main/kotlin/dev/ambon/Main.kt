@@ -31,11 +31,7 @@ fun main() =
                 val webClientUrl =
                     config.demo.webClientUrl ?: "http://${config.demo.webClientHost}:${config.server.webPort}"
                 server.start()
-                Runtime.getRuntime().addShutdownHook(
-                    Thread {
-                        runBlocking { server.stop() }
-                    },
-                )
+                installShutdownHook { server.stop() }
                 log.info {
                     "AmbonMUD listening on telnet port ${config.server.telnetPort} " +
                         "(telnet localhost ${config.server.telnetPort})"
@@ -50,11 +46,7 @@ fun main() =
             DeploymentMode.ENGINE -> {
                 val server = EngineServer(config)
                 server.start()
-                Runtime.getRuntime().addShutdownHook(
-                    Thread {
-                        runBlocking { server.stop() }
-                    },
-                )
+                installShutdownHook { server.stop() }
                 server.awaitShutdown()
                 log.info { "Shutdown signal received. Stopping engine server..." }
                 server.stop()
@@ -63,11 +55,7 @@ fun main() =
             DeploymentMode.GATEWAY -> {
                 val server = GatewayServer(config)
                 server.start()
-                Runtime.getRuntime().addShutdownHook(
-                    Thread {
-                        runBlocking { server.stop() }
-                    },
-                )
+                installShutdownHook { server.stop() }
                 log.info { "Gateway running. Press Ctrl+C to stop." }
                 // Gateway has no shutdown signal — block until JVM shutdown hook fires.
                 // This simple approach is acceptable for v1; reconnect logic is tracked separately.
@@ -75,6 +63,10 @@ fun main() =
             }
         }
     }
+
+private fun installShutdownHook(stop: suspend () -> Unit) {
+    Runtime.getRuntime().addShutdownHook(Thread { runBlocking { stop() } })
+}
 
 private fun maybeAutoLaunchBrowser(
     url: String,
