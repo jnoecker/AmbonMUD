@@ -114,8 +114,8 @@ class PostgresPlayerRepositoryTest {
             val ex =
                 try {
                     repo.create(PlayerCreationRequest("carol", RoomId("test:a"), 1L, "hash789", ansiEnabled = false))
-                    fail("Expected PlayerPersistenceException")
-                } catch (e: PlayerPersistenceException) {
+                    fail("Expected PersistenceException")
+                } catch (e: PersistenceException) {
                     e
                 }
 

@@ -93,8 +93,8 @@ class YamlPlayerRepositoryTest {
             val ex =
                 try {
                     repo.create(PlayerCreationRequest("carol", RoomId("test:a"), now, hash, ansiEnabled = false))
-                    fail("Expected PlayerPersistenceException")
-                } catch (e: PlayerPersistenceException) {
+                    fail("Expected PersistenceException")
+                } catch (e: PersistenceException) {
                     e
                 }
 
@@ -279,7 +279,7 @@ class YamlPlayerRepositoryTest {
             assertEquals(attempts - 1, results.count { it.isFailure })
             results.filter { it.isFailure }.forEach { result ->
                 val error = result.exceptionOrNull()
-                assertTrue(error is PlayerPersistenceException)
+                assertTrue(error is PersistenceException)
                 assertTrue(error!!.message!!.contains("taken", ignoreCase = true))
             }
         }
