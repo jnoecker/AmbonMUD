@@ -5,9 +5,9 @@ import dev.ambon.domain.Race
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.persistence.PersistenceException
 import dev.ambon.persistence.PlayerCreationRequest
 import dev.ambon.persistence.PlayerId
-import dev.ambon.persistence.PlayerPersistenceException
 import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
 import kotlinx.coroutines.withContext
@@ -189,7 +189,7 @@ class PlayerRegistry(
                         charisma = baseStat + race.statMods.cha,
                     ),
                 )
-            } catch (_: PlayerPersistenceException) {
+            } catch (_: PersistenceException) {
                 return CreateAccountPrep.Taken
             }
         return CreateAccountPrep.Ready(record)

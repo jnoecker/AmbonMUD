@@ -13,7 +13,7 @@ import kotlin.io.path.createDirectories
  * then renames it into place. Falls back to a non-atomic move if the
  * file system does not support atomic rename.
  *
- * @throws PlayerPersistenceException if the write fails for any I/O reason.
+ * @throws PersistenceException if the write fails for any I/O reason.
  */
 internal fun atomicWriteText(
     path: Path,
@@ -29,6 +29,6 @@ internal fun atomicWriteText(
             Files.move(tmp, path, StandardCopyOption.REPLACE_EXISTING)
         }
     } catch (e: IOException) {
-        throw PlayerPersistenceException("Failed to write file atomically: $path", e)
+        throw PersistenceException("Failed to write file atomically: $path", e)
     }
 }
