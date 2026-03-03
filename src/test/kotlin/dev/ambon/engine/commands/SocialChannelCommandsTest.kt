@@ -1,14 +1,9 @@
 package dev.ambon.engine.commands
 
-import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
-import dev.ambon.engine.CombatSystem
-import dev.ambon.engine.MobRegistry
-import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
-import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.CommandRouterHarness
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,29 +14,19 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SocialChannelCommandsTest {
-    private fun buildFixture(): Triple<CommandRouter, PlayerRegistry, LocalOutboundBus> {
-        val world = dev.ambon.test.TestWorlds.testWorld
-        val items = ItemRegistry()
-        val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, InMemoryPlayerRepository(), items)
-        val mobs = MobRegistry()
-        val outbound = LocalOutboundBus()
-        val router = buildTestRouter(world, players, mobs, items, CombatSystem(players, mobs, items, outbound), outbound)
-        return Triple(router, players, outbound)
-    }
-
     // ─── Whisper ────────────────────────────────────────────────────────────────
 
     @Test
     fun `whisper delivers private message to target in same room`() =
         runTest {
-            val (router, players, outbound) = buildFixture()
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
             val b = SessionId(2)
-            players.loginOrFail(a, "Alice")
-            players.loginOrFail(b, "Bob")
+            h.players.loginOrFail(a, "Alice")
+            h.players.loginOrFail(b, "Bob")
 
-            router.handle(a, Command.Whisper("Bob", "hey secret"))
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Whisper("Bob", "hey secret"))
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "You whisper to Bob: hey secret" },
@@ -56,18 +41,18 @@ class SocialChannelCommandsTest {
     @Test
     fun `whisper fails when target is not in the same room`() =
         runTest {
-            val (router, players, outbound) = buildFixture()
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
             val b = SessionId(2)
-            players.loginOrFail(a, "Alice")
-            players.loginOrFail(b, "Bob")
+            h.players.loginOrFail(a, "Alice")
+            h.players.loginOrFail(b, "Bob")
 
             // Move Bob north into a different room
-            router.handle(b, Command.Move(Direction.NORTH))
-            outbound.drainAll()
+            h.router.handle(b, Command.Move(Direction.NORTH))
+            h.outbound.drainAll()
 
-            router.handle(a, Command.Whisper("Bob", "hey"))
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Whisper("Bob", "hey"))
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendError && it.sessionId == a && it.text.contains("not here") },
@@ -82,12 +67,12 @@ class SocialChannelCommandsTest {
     @Test
     fun `whisper fails when target player does not exist`() =
         runTest {
-            val (router, players, outbound) = buildFixture()
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
-            players.loginOrFail(a, "Alice")
+            h.players.loginOrFail(a, "Alice")
 
-            router.handle(a, Command.Whisper("Nobody", "hello"))
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Whisper("Nobody", "hello"))
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendError && it.sessionId == a },
@@ -98,12 +83,12 @@ class SocialChannelCommandsTest {
     @Test
     fun `whisper to self shows self message`() =
         runTest {
-            val (router, players, outbound) = buildFixture()
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
-            players.loginOrFail(a, "Alice")
+            h.players.loginOrFail(a, "Alice")
 
-            router.handle(a, Command.Whisper("Alice", "talking to myself"))
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Whisper("Alice", "talking to myself"))
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.sessionId == a && it.text.contains("yourself") },
@@ -116,18 +101,18 @@ class SocialChannelCommandsTest {
     @Test
     fun `shout broadcasts to all players in same zone`() =
         runTest {
-            val (router, players, outbound) = buildFixture()
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
             val b = SessionId(2)
-            players.loginOrFail(a, "Alice")
-            players.loginOrFail(b, "Bob")
+            h.players.loginOrFail(a, "Alice")
+            h.players.loginOrFail(b, "Bob")
 
             // Move Bob to a different room but same zone
-            router.handle(b, Command.Move(Direction.NORTH))
-            outbound.drainAll()
+            h.router.handle(b, Command.Move(Direction.NORTH))
+            h.outbound.drainAll()
 
-            router.handle(a, Command.Shout("zone shout"))
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Shout("zone shout"))
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "You shout: zone shout" },
@@ -142,15 +127,15 @@ class SocialChannelCommandsTest {
     @Test
     fun `shout is prefixed with SHOUT for recipients`() =
         runTest {
-            val (router, players, outbound) = buildFixture()
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
             val b = SessionId(2)
-            players.loginOrFail(a, "Alice")
-            players.loginOrFail(b, "Bob")
-            outbound.drainAll()
+            h.players.loginOrFail(a, "Alice")
+            h.players.loginOrFail(b, "Bob")
+            h.outbound.drainAll()
 
-            router.handle(a, Command.Shout("hello zone"))
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Shout("hello zone"))
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == b && it.text.startsWith("[SHOUT]") },
@@ -163,18 +148,18 @@ class SocialChannelCommandsTest {
     @Test
     fun `ooc broadcasts to all players globally`() =
         runTest {
-            val (router, players, outbound) = buildFixture()
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
             val b = SessionId(2)
-            players.loginOrFail(a, "Alice")
-            players.loginOrFail(b, "Bob")
+            h.players.loginOrFail(a, "Alice")
+            h.players.loginOrFail(b, "Bob")
 
             // Move Bob to a different room
-            router.handle(b, Command.Move(Direction.NORTH))
-            outbound.drainAll()
+            h.router.handle(b, Command.Move(Direction.NORTH))
+            h.outbound.drainAll()
 
-            router.handle(a, Command.Ooc("hello everyone"))
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Ooc("hello everyone"))
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text.contains("You say OOC") },
@@ -189,15 +174,15 @@ class SocialChannelCommandsTest {
     @Test
     fun `ooc message to recipients is prefixed with OOC`() =
         runTest {
-            val (router, players, outbound) = buildFixture()
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
             val b = SessionId(2)
-            players.loginOrFail(a, "Alice")
-            players.loginOrFail(b, "Bob")
-            outbound.drainAll()
+            h.players.loginOrFail(a, "Alice")
+            h.players.loginOrFail(b, "Bob")
+            h.outbound.drainAll()
 
-            router.handle(a, Command.Ooc("out of character"))
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Ooc("out of character"))
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == b && it.text.startsWith("[OOC]") },
@@ -210,15 +195,15 @@ class SocialChannelCommandsTest {
     @Test
     fun `pose sends raw message to all in room without name prefix`() =
         runTest {
-            val (router, players, outbound) = buildFixture()
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
             val b = SessionId(2)
-            players.loginOrFail(a, "Alice")
-            players.loginOrFail(b, "Bob")
-            outbound.drainAll()
+            h.players.loginOrFail(a, "Alice")
+            h.players.loginOrFail(b, "Bob")
+            h.outbound.drainAll()
 
-            router.handle(a, Command.Pose("Alice coughs loudly."))
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Pose("Alice coughs loudly."))
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "Alice coughs loudly." },
@@ -233,13 +218,13 @@ class SocialChannelCommandsTest {
     @Test
     fun `pose rejected when player name absent from message`() =
         runTest {
-            val (router, players, outbound) = buildFixture()
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
-            players.loginOrFail(a, "Alice")
-            outbound.drainAll()
+            h.players.loginOrFail(a, "Alice")
+            h.outbound.drainAll()
 
-            router.handle(a, Command.Pose("The old man coughs loudly."))
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Pose("The old man coughs loudly."))
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendError && it.sessionId == a },
@@ -254,18 +239,18 @@ class SocialChannelCommandsTest {
     @Test
     fun `pose does not send to players in other rooms`() =
         runTest {
-            val (router, players, outbound) = buildFixture()
+            val h = CommandRouterHarness.create()
             val a = SessionId(1)
             val b = SessionId(2)
-            players.loginOrFail(a, "Alice")
-            players.loginOrFail(b, "Bob")
+            h.players.loginOrFail(a, "Alice")
+            h.players.loginOrFail(b, "Bob")
 
             // Move Bob away
-            router.handle(b, Command.Move(Direction.NORTH))
-            outbound.drainAll()
+            h.router.handle(b, Command.Move(Direction.NORTH))
+            h.outbound.drainAll()
 
-            router.handle(a, Command.Pose("Alice dances alone."))
-            val outs = outbound.drainAll()
+            h.router.handle(a, Command.Pose("Alice dances alone."))
+            val outs = h.outbound.drainAll()
 
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.sessionId == a && it.text == "Alice dances alone." },
