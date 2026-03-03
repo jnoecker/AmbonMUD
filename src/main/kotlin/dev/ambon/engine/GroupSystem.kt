@@ -348,7 +348,6 @@ class GroupSystem(
     }
 
     private fun cleanExpiredInvites() {
-        val now = clock.millis()
-        pendingInvites.entries.removeAll { it.value.expiresAtMs <= now }
+        pendingInvites.removeExpired(clock.millis()) { it.expiresAtMs }
     }
 }
