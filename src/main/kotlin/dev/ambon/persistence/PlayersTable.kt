@@ -16,6 +16,7 @@ private val unlockedAchievementIdsType = object : TypeReference<Set<String>>() {
 private val achievementProgressType = object : TypeReference<Map<String, AchievementState>>() {}
 private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
 private val craftingSkillsType = object : TypeReference<Map<String, CraftingSkillState>>() {}
+private val friendsListType = object : TypeReference<Set<String>>() {}
 
 /** Deserialises JSON with a fallback to [default] on any parse failure. */
 private fun <T> safeReadJson(json: String, type: TypeReference<T>, default: T): T =
@@ -54,6 +55,7 @@ object PlayersTable : Table("players") {
     val guildId = varchar("guild_id", 64).nullable()
     val recallRoomId = varchar("recall_room_id", 128).nullable()
     val craftingSkills = text("crafting_skills").default("{}")
+    val friendsList = text("friends_list").default("[]")
 
     override val primaryKey = PrimaryKey(id)
 
@@ -91,6 +93,7 @@ object PlayersTable : Table("players") {
             guildId = row[guildId],
             recallRoomId = row[recallRoomId]?.let { RoomId(it) },
             craftingSkills = safeReadJson(row[craftingSkills], craftingSkillsType, emptyMap()),
+            friendsList = safeReadJson(row[friendsList], friendsListType, emptySet()),
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -127,5 +130,6 @@ object PlayersTable : Table("players") {
         statement[guildId] = record.guildId
         statement[recallRoomId] = record.recallRoomId?.value
         statement[craftingSkills] = jsonMapper.writeValueAsString(record.craftingSkills)
+        statement[friendsList] = jsonMapper.writeValueAsString(record.friendsList)
     }
 }

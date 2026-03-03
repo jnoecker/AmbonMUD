@@ -25,6 +25,7 @@ import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.CraftingHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
 import dev.ambon.engine.commands.handlers.EngineContext
+import dev.ambon.engine.commands.handlers.FriendsHandler
 import dev.ambon.engine.commands.handlers.GroupHandler
 import dev.ambon.engine.commands.handlers.GuildHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
@@ -160,7 +161,10 @@ class GameEngine(
             maxWrongPasswordRetries = loginConfig.maxWrongPasswordRetries,
             maxFailedLoginAttemptsBeforeDisconnect = loginConfig.maxFailedAttemptsBeforeDisconnect,
             maxConcurrentLogins = loginConfig.maxConcurrentLogins,
-            onAfterLogin = { sid -> guildSystem?.onPlayerLogin(sid) },
+            onAfterLogin = { sid ->
+                guildSystem?.onPlayerLogin(sid)
+                friendsSystem.onPlayerLogin(sid)
+            },
         )
     }
 
@@ -187,6 +191,7 @@ class GameEngine(
                 log.info { "Player logged out: name=${player.name} sessionId=$sid" }
                 playerLocationIndex?.unregister(player.name)
                 broadcastToRoom(players, outbound, player.roomId, "${player.name} leaves.", sid)
+                friendsSystem.onPlayerLogout(player.name)
             },
             metrics = metrics,
         )
@@ -423,6 +428,14 @@ class GameEngine(
         } else {
             null
         }
+    private val friendsSystem =
+        FriendsSystem(
+            players = players,
+            outbound = outbound,
+            gmcpEmitter = gmcpEmitter,
+            maxFriends = engineConfig.friends.maxFriends,
+            markPlayerDirty = { sid -> players.persistPlayer(sid) },
+        )
     private val combatSystem =
         CombatSystem(
             players = players,
@@ -658,6 +671,10 @@ class GameEngine(
             GuildHandler(
                 ctx = ctx,
                 guildSystem = guildSystem,
+            ),
+            FriendsHandler(
+                ctx = ctx,
+                friendsSystem = friendsSystem,
             ),
             WorldFeaturesHandler(ctx = ctx),
             AdminHandler(

@@ -43,6 +43,7 @@ data class PlayerRecord(
     val guildId: String? = null,
     val recallRoomId: RoomId? = null,
     val craftingSkills: Map<String, CraftingSkillState> = emptyMap(),
+    val friendsList: Set<String> = emptySet(),
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

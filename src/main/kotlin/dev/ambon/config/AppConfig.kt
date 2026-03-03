@@ -415,6 +415,7 @@ data class EngineConfig(
     val group: GroupConfig = GroupConfig(),
     val guild: GuildConfig = GuildConfig(),
     val crafting: CraftingConfig = CraftingConfig(),
+    val friends: FriendsConfig = FriendsConfig(),
     val debug: EngineDebugConfig = EngineDebugConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
@@ -579,6 +580,10 @@ data class GroupConfig(
 data class GuildConfig(
     val maxSize: Int = 50,
     val inviteTimeoutMs: Long = 60_000L,
+)
+
+data class FriendsConfig(
+    val maxFriends: Int = 50,
 )
 
 data class AbilityEngineConfig(

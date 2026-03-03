@@ -53,6 +53,7 @@ data class PlayerState(
     var guildRank: GuildRank? = null,
     var guildTag: String? = null,
     var recallRoomId: RoomId? = null,
+    var friendsList: MutableSet<String> = mutableSetOf(),
     /** Epoch-ms timestamp after which recall is available again. Runtime-only; not persisted. */
     var recallCooldownUntilMs: Long = 0L,
     var craftingSkills: MutableMap<CraftingSkill, CraftingSkillState> = mutableMapOf(),
@@ -158,6 +159,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
                 null
             }
         }.toMap().toMutableMap(),
+        friendsList = friendsList.toMutableSet(),
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -195,6 +197,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         guildId = guildId,
         recallRoomId = recallRoomId,
         craftingSkills = craftingSkills.map { (k, v) -> k.name to v }.toMap(),
+        friendsList = friendsList.toSet(),
     )
 }
 
