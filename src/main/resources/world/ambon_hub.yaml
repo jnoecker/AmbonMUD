@@ -81,6 +81,7 @@ rooms:
       s: pbrae:gravel_road
       w: wayfinder_gallery
       d: trailey:cul_de_sac
+      u: crafting_workshop:entrance
 
   blank_arches:
     title: "Blank Arches"

@@ -22,6 +22,7 @@ import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.handlers.AdminHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
+import dev.ambon.engine.commands.handlers.CraftingHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
 import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.FriendsHandler
@@ -34,6 +35,9 @@ import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
 import dev.ambon.engine.commands.handlers.UiHandler
 import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
+import dev.ambon.engine.crafting.CraftingRegistry
+import dev.ambon.engine.crafting.CraftingSystem
+import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.DefaultEngineEventDispatcher
 import dev.ambon.engine.events.EngineEventDispatcher
@@ -499,6 +503,15 @@ class GameEngine(
 
     private val shopRegistry = ShopRegistry(items)
 
+    private val gatheringRegistry = GatheringRegistry()
+    private val craftingRegistry = CraftingRegistry()
+    private val craftingSystem = CraftingSystem(
+        gatheringRegistry = gatheringRegistry,
+        craftingRegistry = craftingRegistry,
+        config = engineConfig.crafting,
+        clock = clock,
+    )
+
     private val dialogueSystem =
         DialogueSystem(
             mobs = mobs,
@@ -638,6 +651,11 @@ class GameEngine(
                 markVitalsDirty = ::markVitalsDirty,
                 economyConfig = engineConfig.economy,
             ),
+            CraftingHandler(
+                ctx = ctx,
+                craftingSystem = craftingSystem,
+                markVitalsDirty = ::markVitalsDirty,
+            ),
             DialogueQuestHandler(
                 ctx = ctx,
                 dialogueSystem = dialogueSystem,
@@ -691,6 +709,8 @@ class GameEngine(
         }
         items.loadSpawns(world.itemSpawns)
         shopRegistry.register(world.shopDefinitions)
+        gatheringRegistry.register(world.gatheringNodes)
+        craftingRegistry.register(world.recipes)
         // Seed container initial items from feature definitions (snapshot may override below in run()).
         for (room in world.rooms.values) {
             for (feature in room.features.filterIsInstance<RoomFeature.Container>()) {
@@ -801,6 +821,10 @@ class GameEngine(
                     val regenSample = Timer.start()
                     regenSystem.tick(maxPlayersPerTick = engineConfig.regen.maxPlayersPerTick)
                     regenSample.stop(metrics.regenTickTimer)
+
+                    // Tick gathering node respawns
+                    craftingSystem.tickNodeRespawns()
+
                     metrics.recordTickPhase("simulation", simulationPhaseSample)
 
                     // Phase 3: Flush GMCP vitals for sessions that had changes this tick.
