@@ -62,7 +62,7 @@ class PostgresPlayerRepository(
         } catch (e: Exception) {
             // Unique-index violation on name_lower → treat as duplicate name
             if (e.message?.contains("idx_players_name_lower", ignoreCase = true) == true) {
-                throw PlayerPersistenceException("Name already taken: '$trimmed'", e)
+                throw PersistenceException("Name already taken: '$trimmed'", e)
             }
             throw e
         }

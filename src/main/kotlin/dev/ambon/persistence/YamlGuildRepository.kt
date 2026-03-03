@@ -75,7 +75,7 @@ class YamlGuildRepository(
         return try {
             mapper.readValue<GuildDto>(path.readText())
         } catch (e: Exception) {
-            throw PlayerPersistenceException("Failed to read guild file: $path", e)
+            throw PersistenceException("Failed to read guild file: $path", e)
         }
     }
 

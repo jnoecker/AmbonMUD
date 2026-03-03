@@ -101,7 +101,7 @@ class PlayerRegistryFactoryTest {
             assertEquals(
                 CreateAccountPrep.Taken,
                 result,
-                "prepareCreateAccount should return Taken when repo.create throws PlayerPersistenceException",
+                "prepareCreateAccount should return Taken when repo.create throws PersistenceException",
             )
         }
 
@@ -149,7 +149,7 @@ class PlayerRegistryFactoryTest {
             assertEquals(
                 CreateResult.Taken,
                 result,
-                "create should return Taken when repo.create throws PlayerPersistenceException",
+                "create should return Taken when repo.create throws PersistenceException",
             )
         }
 }
