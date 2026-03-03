@@ -5,7 +5,6 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.CombatSystemCallbacks
 import dev.ambon.engine.CombatSystemConfig
@@ -22,14 +21,14 @@ import java.time.Clock
 import java.util.Random
 
 class CombatTestFixture(
-    val roomId: RoomId = RoomId("zone:room"),
+    override val roomId: RoomId = RoomId("zone:room"),
     val clock: MutableClock = MutableClock(0L),
     val items: ItemRegistry = ItemRegistry(),
     val repo: InMemoryPlayerRepository = InMemoryPlayerRepository(),
-    val players: PlayerRegistry = buildTestPlayerRegistry(roomId, repo, items, clock = clock),
-    val mobs: MobRegistry = MobRegistry(),
+    override val players: PlayerRegistry = buildTestPlayerRegistry(roomId, repo, items, clock = clock),
+    override val mobs: MobRegistry = MobRegistry(),
     val outbound: LocalOutboundBus = LocalOutboundBus(),
-) {
+) : TestFixtureBase {
     fun buildCombat(
         players: PlayerRegistry = this.players,
         mobs: MobRegistry = this.mobs,
@@ -92,43 +91,4 @@ class CombatTestFixture(
                 onRoomItemsChanged = onRoomItemsChanged,
             ),
         )
-
-    suspend fun loginPlayer(
-        sessionId: SessionId,
-        name: String,
-        password: String = "password",
-    ) {
-        players.loginOrFail(sessionId, name, password)
-    }
-
-    fun spawnMob(
-        id: MobId,
-        name: String,
-        hp: Int = 10,
-        maxHp: Int = hp,
-        minDamage: Int = 1,
-        maxDamage: Int = 4,
-        armor: Int = 0,
-        xpReward: Long = 30L,
-        goldMin: Long = 0L,
-        goldMax: Long = 0L,
-        roomId: RoomId = this.roomId,
-    ): MobState {
-        val mob =
-            MobState(
-                id = id,
-                name = name,
-                roomId = roomId,
-                hp = hp,
-                maxHp = maxHp,
-                minDamage = minDamage,
-                maxDamage = maxDamage,
-                armor = armor,
-                xpReward = xpReward,
-                goldMin = goldMin,
-                goldMax = goldMax,
-            )
-        mobs.upsert(mob)
-        return mob
-    }
 }
