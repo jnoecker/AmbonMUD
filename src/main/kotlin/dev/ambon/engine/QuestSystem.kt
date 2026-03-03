@@ -7,6 +7,7 @@ import dev.ambon.domain.quest.CompletionType
 import dev.ambon.domain.quest.ObjectiveProgress
 import dev.ambon.domain.quest.ObjectiveType
 import dev.ambon.domain.quest.QuestDef
+import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.domain.quest.QuestState
 import dev.ambon.engine.events.OutboundEvent
@@ -88,36 +89,10 @@ class QuestSystem(
         sessionId: SessionId,
         templateKey: String,
     ) {
-        val ps = players.get(sessionId) ?: return
-        val updatedQuests = ps.activeQuests.toMutableMap()
-        var changed = false
-
-        for ((questId, state) in ps.activeQuests) {
-            val quest = registry.get(questId) ?: continue
-            val newObjectives = state.objectives.toMutableList()
-            var questChanged = false
-
-            for ((index, objDef) in quest.objectives.withIndex()) {
-                if (objDef.type != ObjectiveType.KILL) continue
-                if (objDef.targetId != templateKey) continue
-                val prog = newObjectives[index]
-                if (prog.isComplete) continue
-
-                newObjectives[index] = prog.copy(current = prog.current + 1)
-                questChanged = true
-                sendObjectiveProgress(sessionId, objDef.description, newObjectives[index])
-            }
-
-            if (questChanged) {
-                updatedQuests[questId] = state.copy(objectives = newObjectives)
-                changed = true
-            }
-        }
-
-        if (changed) {
-            ps.activeQuests = updatedQuests
-            persistPlayer(ps)
-            checkAutoComplete(sessionId, ps.activeQuests)
+        advanceObjectives(sessionId) { objDef, prog ->
+            if (objDef.type != ObjectiveType.KILL) return@advanceObjectives null
+            if (objDef.targetId != templateKey) return@advanceObjectives null
+            prog.copy(current = prog.current + 1)
         }
     }
 
@@ -127,6 +102,27 @@ class QuestSystem(
     suspend fun onItemCollected(
         sessionId: SessionId,
         item: ItemInstance,
+    ) {
+        advanceObjectives(sessionId) { objDef, prog ->
+            if (objDef.type != ObjectiveType.COLLECT) return@advanceObjectives null
+            val targetIdRaw = objDef.targetId
+            val itemId = item.id.value
+            if (itemId != targetIdRaw && !itemId.endsWith(":${targetIdRaw.substringAfterLast(':')}")) return@advanceObjectives null
+            val currentCount = items.inventory(sessionId).count { inv -> inv.id.value == itemId }
+            val newCurrent = currentCount.coerceAtMost(prog.required)
+            if (newCurrent <= prog.current) return@advanceObjectives null
+            prog.copy(current = newCurrent)
+        }
+    }
+
+    /**
+     * Iterates all active quest objectives for [sessionId], calling [advance] for each
+     * non-complete objective. When [advance] returns a non-null [ObjectiveProgress], the
+     * objective is updated and the player is persisted with an auto-complete check.
+     */
+    private suspend fun advanceObjectives(
+        sessionId: SessionId,
+        advance: (QuestObjectiveDef, ObjectiveProgress) -> ObjectiveProgress?,
     ) {
         val ps = players.get(sessionId) ?: return
         val updatedQuests = ps.activeQuests.toMutableMap()
@@ -138,21 +134,12 @@ class QuestSystem(
             var questChanged = false
 
             for ((index, objDef) in quest.objectives.withIndex()) {
-                if (objDef.type != ObjectiveType.COLLECT) continue
-                val targetIdRaw = objDef.targetId
-                val itemId = item.id.value
-                if (itemId != targetIdRaw && !itemId.endsWith(":${targetIdRaw.substringAfterLast(':')}")) continue
-
                 val prog = newObjectives[index]
                 if (prog.isComplete) continue
-
-                val currentCount = items.inventory(sessionId).count { inv -> inv.id.value == itemId }
-                val newCurrent = currentCount.coerceAtMost(prog.required)
-                if (newCurrent <= prog.current) continue
-
-                newObjectives[index] = prog.copy(current = newCurrent)
+                val updated = advance(objDef, prog) ?: continue
+                newObjectives[index] = updated
                 questChanged = true
-                sendObjectiveProgress(sessionId, objDef.description, newObjectives[index])
+                sendObjectiveProgress(sessionId, objDef.description, updated)
             }
 
             if (questChanged) {
