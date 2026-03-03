@@ -10,21 +10,17 @@ import dev.ambon.bus.RedisOutboundBus
 import dev.ambon.bus.redisBusPublisher
 import dev.ambon.bus.redisBusSubscriberSetup
 import dev.ambon.config.AppConfig
-import dev.ambon.config.PersistenceBackend
-import dev.ambon.config.ShardingRegistryType
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PersistenceContext
 import dev.ambon.engine.PlayerProgression
-import dev.ambon.engine.ShardingContext
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.createPlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
-import dev.ambon.persistence.DatabaseManager
 import dev.ambon.persistence.GuildRepositoryFactory
 import dev.ambon.persistence.PersistenceWorker
 import dev.ambon.persistence.PlayerRepositoryFactory
@@ -33,23 +29,7 @@ import dev.ambon.persistence.WorldStateRepositoryFactory
 import dev.ambon.redis.RedisConnectionManager
 import dev.ambon.redis.redisObjectMapper
 import dev.ambon.session.AtomicSessionIdFactory
-import dev.ambon.sharding.ClassicRedisZoneRegistry
 import dev.ambon.sharding.EngineAddress
-import dev.ambon.sharding.HandoffManager
-import dev.ambon.sharding.InstanceSelector
-import dev.ambon.sharding.InstancedRedisZoneRegistry
-import dev.ambon.sharding.InterEngineBus
-import dev.ambon.sharding.LoadBalancedInstanceSelector
-import dev.ambon.sharding.LocalInterEngineBus
-import dev.ambon.sharding.LoggingScaleDecisionPublisher
-import dev.ambon.sharding.PlayerLocationIndex
-import dev.ambon.sharding.RedisInterEngineBus
-import dev.ambon.sharding.RedisPlayerLocationIndex
-import dev.ambon.sharding.RedisScaleDecisionPublisher
-import dev.ambon.sharding.ScaleDecisionPublisher
-import dev.ambon.sharding.StaticZoneRegistry
-import dev.ambon.sharding.ThresholdInstanceScaler
-import dev.ambon.sharding.ZoneRegistry
 import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.KtorWebSocketTransport
 import dev.ambon.transport.OutboundRouter
@@ -97,12 +77,8 @@ class MudServer(
     private val gameMetrics: GameMetrics =
         ServerInfrastructure.createGameMetrics(prometheusRegistry)
 
-    private val databaseManager: DatabaseManager? =
-        if (config.persistence.backend == PersistenceBackend.POSTGRES) {
-            DatabaseManager(config.database).also { it.migrate() }
-        } else {
-            null
-        }
+    private val databaseManager =
+        ServerInfrastructure.createDatabaseManager(config)
 
     private val redisManager: RedisConnectionManager? =
         ServerInfrastructure.createRedisManager(config)
@@ -173,17 +149,8 @@ class MudServer(
     private val progression = PlayerProgression(config.progression)
     private val shardingEnabled = config.sharding.enabled
     private val engineId = config.sharding.engineId
-    private val configuredShardedZones =
-        config.sharding.zones
-            .map(String::trim)
-            .filter { it.isNotEmpty() }
-            .toSet()
-    private val zoneFilter =
-        if (shardingEnabled && configuredShardedZones.isNotEmpty()) {
-            configuredShardedZones
-        } else {
-            emptySet()
-        }
+    private val configuredShardedZones = ServerInfrastructure.resolveConfiguredZones(config)
+    private val zoneFilter = ServerInfrastructure.resolveZoneFilter(config, configuredShardedZones)
 
     private val world =
         WorldFactory.demoWorld(
@@ -195,18 +162,9 @@ class MudServer(
     private val worldState = WorldStateRegistry(world)
     private val tickMillis: Long = config.server.tickMillis
     private val scheduler: Scheduler = Scheduler(clock)
-    private val localZones: Set<String> =
-        if (shardingEnabled && configuredShardedZones.isNotEmpty()) {
-            configuredShardedZones
-        } else {
-            world.rooms.keys.mapTo(linkedSetOf()) { it.zone }
-        }
+    private val localZones = ServerInfrastructure.resolveLocalZones(config, configuredShardedZones, world)
     private val advertisedEngineAddress: EngineAddress =
-        EngineAddress(
-            engineId = engineId,
-            host = config.sharding.advertiseHost,
-            port = config.sharding.advertisePort ?: config.server.telnetPort,
-        )
+        ServerInfrastructure.resolveEngineAddress(config, config.server.telnetPort)
 
     private val players =
         createPlayerRegistry(
@@ -220,107 +178,30 @@ class MudServer(
         )
 
     // --- Sharding infrastructure (null when sharding is disabled) ---
-    private val zoneRegistry: ZoneRegistry? =
-        if (shardingEnabled) {
-            when (config.sharding.registry.type) {
-                ShardingRegistryType.REDIS -> {
-                    val manager =
-                        requireNotNull(redisManager) {
-                            "Sharding registry type REDIS requires ambonMUD.redis.enabled=true"
-                        }
-                    if (config.sharding.instancing.enabled) {
-                        InstancedRedisZoneRegistry(
-                            redis = manager,
-                            mapper = redisObjectMapper,
-                            leaseTtlSeconds = config.sharding.registry.leaseTtlSeconds,
-                            defaultCapacity = config.sharding.instancing.defaultCapacity,
-                        )
-                    } else {
-                        ClassicRedisZoneRegistry(
-                            redis = manager,
-                            mapper = redisObjectMapper,
-                            leaseTtlSeconds = config.sharding.registry.leaseTtlSeconds,
-                        )
-                    }
-                }
+    private val zoneRegistry =
+        ServerInfrastructure.createZoneRegistry(config, redisManager, engineId, advertisedEngineAddress, localZones)
 
-                ShardingRegistryType.STATIC -> {
-                    val configuredAssignments = config.sharding.registry.assignments
-                    val assignmentMap =
-                        if (configuredAssignments.isEmpty()) {
-                            mapOf(engineId to Pair(advertisedEngineAddress, localZones))
-                        } else {
-                            configuredAssignments.associate { assignment ->
-                                assignment.engineId to
-                                    Pair(
-                                        EngineAddress(assignment.engineId, assignment.host, assignment.port),
-                                        assignment.zones
-                                            .map(String::trim)
-                                            .filter { it.isNotEmpty() }
-                                            .toSet(),
-                                    )
-                            }
-                        }
-                    StaticZoneRegistry(
-                        assignments = assignmentMap,
-                        instancing = config.sharding.instancing.enabled,
-                    )
-                }
-            }
-        } else {
-            null
-        }
+    private val interEngineBus =
+        ServerInfrastructure.createInterEngineBus(config, redisManager)
 
-    private val interEngineBus: InterEngineBus? =
-        if (shardingEnabled && redisManager != null) {
-            RedisInterEngineBus(
-                engineId = engineId,
-                publisher = redisBusPublisher(redisManager),
-                subscriberSetup = redisBusSubscriberSetup(redisManager),
-                mapper = redisObjectMapper,
-            )
-        } else if (shardingEnabled) {
-            LocalInterEngineBus()
-        } else {
-            null
-        }
+    private val instanceSelector =
+        ServerInfrastructure.createInstanceSelector(config, zoneRegistry)
 
-    private val instanceSelector: InstanceSelector? =
-        if (shardingEnabled && config.sharding.instancing.enabled && zoneRegistry != null) {
-            LoadBalancedInstanceSelector(zoneRegistry)
-        } else {
-            null
-        }
+    private val playerLocationIndex =
+        ServerInfrastructure.createPlayerLocationIndex(config, redisManager)
 
-    private val handoffManager: HandoffManager? =
-        if (shardingEnabled && interEngineBus != null && zoneRegistry != null) {
-            HandoffManager(
-                engineId = engineId,
-                players = players,
-                items = items,
-                outbound = outbound,
-                bus = interEngineBus,
-                zoneRegistry = zoneRegistry,
-                isTargetRoomLocal = world.rooms::containsKey,
-                clock = clock,
-                ackTimeoutMs = config.sharding.handoff.ackTimeoutMs,
-                instanceSelector = instanceSelector,
-            )
-        } else {
-            null
-        }
-
-    private val playerLocationIndex: PlayerLocationIndex? =
-        if (shardingEnabled && config.sharding.playerIndex.enabled && redisManager != null) {
-            val keyTtlSeconds = (config.sharding.playerIndex.heartbeatMs * 3L / 1_000L).coerceAtLeast(1L)
-            RedisPlayerLocationIndex(
-                engineId = engineId,
-                redis = redisManager,
-                keyTtlSeconds = keyTtlSeconds,
-            )
-        } else {
-            null
-        }
+    private val handoffManager =
+        ServerInfrastructure.createHandoffManager(
+            config = config,
+            players = players,
+            items = items,
+            outbound = outbound,
+            interEngineBus = interEngineBus,
+            zoneRegistry = zoneRegistry,
+            world = world,
+            clock = clock,
+            instanceSelector = instanceSelector,
+        )
 
     private val adminServer: AdminHttpServer? =
         if (config.admin.enabled) {
@@ -341,10 +222,7 @@ class MudServer(
             null
         }
 
-    private var zoneHeartbeatJob: Job? = null
-    private var playerIndexHeartbeatJob: Job? = null
-    private var zoneLoadReportJob: Job? = null
-    private var autoScaleJob: Job? = null
+    private var shardingJobs = ServerInfrastructure.ShardingJobs()
 
     init {
         bindQueueMetrics()
@@ -396,74 +274,19 @@ class MudServer(
         outboundRouter = OutboundRouter(outbound, scope, metrics = gameMetrics)
         routerJob = outboundRouter.start()
 
-        // Start inter-engine bus and register zones
-        if (interEngineBus != null) {
-            interEngineBus.start()
-        }
-
-        // Start player-location index heartbeat
-        if (playerLocationIndex != null) {
-            val heartbeatMs = config.sharding.playerIndex.heartbeatMs
-            // refreshTtls uses the index's own internal name tracking —
-            // no access to PlayerRegistry needed, avoiding a cross-thread read.
-            playerIndexHeartbeatJob =
-                scope.launchPeriodic(heartbeatMs, "Player location index heartbeat") {
-                    playerLocationIndex.refreshTtls()
-                }
-        }
-        if (zoneRegistry != null) {
-            zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
-            val heartbeatIntervalMs =
-                ((config.sharding.registry.leaseTtlSeconds * 1_000L) / 3L)
-                    .coerceAtLeast(1_000L)
-            zoneHeartbeatJob =
-                scope.launchPeriodic(heartbeatIntervalMs, "Zone lease heartbeat (engine=$engineId)") {
-                    zoneRegistry.renewLease(engineId)
-                    zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
-                }
-            // Zone load reporting for instance-aware routing
-            if (config.sharding.instancing.enabled) {
-                val loadReportIntervalMs = config.sharding.instancing.loadReportIntervalMs
-                zoneLoadReportJob =
-                    scope.launchPeriodic(loadReportIntervalMs, "Zone load report (engine=$engineId)") {
-                        val zoneCounts =
-                            players
-                                .allPlayers()
-                                .groupBy { it.roomId.zone }
-                                .mapValues { (_, ps) -> ps.size }
-                        zoneRegistry.reportLoad(engineId, zoneCounts)
-                    }
-            }
-            // Auto-scaling signal evaluation
-            if (config.sharding.instancing.autoScale.enabled) {
-                val scaler =
-                    ThresholdInstanceScaler(
-                        registry = zoneRegistry,
-                        scaleUpThreshold = config.sharding.instancing.autoScale.scaleUpThreshold,
-                        scaleDownThreshold = config.sharding.instancing.autoScale.scaleDownThreshold,
-                        cooldownMs = config.sharding.instancing.autoScale.cooldownMs,
-                        minInstances =
-                            if (world.startRoom.value.contains(":")) {
-                                val startZone = world.startRoom.value.substringBefore(":")
-                                mapOf(startZone to config.sharding.instancing.startZoneMinInstances)
-                            } else {
-                                emptyMap()
-                            },
-                        clock = clock,
-                    )
-                val publisher: ScaleDecisionPublisher =
-                    redisManager?.withCommands { RedisScaleDecisionPublisher(it) }
-                        ?: LoggingScaleDecisionPublisher()
-                val evalIntervalMs = config.sharding.instancing.autoScale.evaluationIntervalMs
-                autoScaleJob =
-                    scope.launchPeriodic(evalIntervalMs, "Auto-scale evaluation") {
-                        val decisions = scaler.evaluate()
-                        if (decisions.isNotEmpty()) {
-                            publisher.publish(decisions)
-                        }
-                    }
-            }
-        }
+        shardingJobs = ServerInfrastructure.startShardingJobs(
+            config = config,
+            scope = scope,
+            zoneRegistry = zoneRegistry,
+            playerLocationIndex = playerLocationIndex,
+            interEngineBus = interEngineBus,
+            redisManager = redisManager,
+            players = players,
+            engineAddress = advertisedEngineAddress,
+            localZones = localZones,
+            world = world,
+            clock = clock,
+        )
 
         engineJob =
             scope.launch(engineDispatcher) {
@@ -485,22 +308,12 @@ class MudServer(
                     metrics = gameMetrics,
                     onShutdown = { shutdownSignal.complete(Unit) },
                     worldState = worldState,
-                    sharding = ShardingContext(
-                        engineId = engineId,
+                    sharding = ServerInfrastructure.buildShardingContext(
+                        config = config,
                         handoffManager = handoffManager,
                         interEngineBus = interEngineBus,
-                        peerEngineCount = {
-                            zoneRegistry
-                                ?.allAssignments()
-                                ?.values
-                                ?.map { it.engineId }
-                                ?.filter { it != engineId }
-                                ?.toSet()
-                                ?.size
-                                ?: 0
-                        },
-                        playerLocationIndex = playerLocationIndex,
                         zoneRegistry = zoneRegistry,
+                        playerLocationIndex = playerLocationIndex,
                     ),
                     persistence = PersistenceContext(
                         worldStateRepository = worldStateRepo,
@@ -556,10 +369,7 @@ class MudServer(
         runCatching { adminServer?.stop() }
         runCatching { telnetTransport.stop() }
         runCatching { webTransport.stop() }
-        runCatching { zoneHeartbeatJob?.cancelAndJoin() }
-        runCatching { zoneLoadReportJob?.cancelAndJoin() }
-        runCatching { autoScaleJob?.cancelAndJoin() }
-        runCatching { playerIndexHeartbeatJob?.cancelAndJoin() }
+        shardingJobs.stopAll()
         runCatching { engineJob?.cancelAndJoin() }
         runCatching { interEngineBus?.close() }
         runCatching { persistenceWorker?.shutdown() }

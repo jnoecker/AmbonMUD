@@ -14,7 +14,7 @@ private val log = KotlinLogging.logger {}
  * The first execution happens after the first delay.
  * Failures are logged as warnings under [name] and the loop continues.
  */
-internal fun CoroutineScope.launchPeriodic(
+fun CoroutineScope.launchPeriodic(
     intervalMs: Long,
     name: String,
     block: suspend () -> Unit,
