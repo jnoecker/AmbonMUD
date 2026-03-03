@@ -27,7 +27,7 @@ class GuildSystem(
     private val maxSize: Int = 50,
     private val inviteTimeoutMs: Long = 60_000L,
     private val markPlayerDirty: suspend (SessionId) -> Unit = {},
-) {
+) : GameSystem {
     private val guildsById = mutableMapOf<String, GuildRecord>()
     private val pendingInvites = mutableMapOf<SessionId, PendingGuildInvite>()
 
@@ -39,7 +39,7 @@ class GuildSystem(
         log.info { "GuildSystem initialized with ${guildsById.size} guild(s)" }
     }
 
-    fun onPlayerDisconnected(sessionId: SessionId) {
+    override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         pendingInvites.remove(sessionId)
     }
 

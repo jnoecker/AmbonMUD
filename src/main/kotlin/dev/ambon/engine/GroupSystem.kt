@@ -28,7 +28,7 @@ class GroupSystem(
     private val maxGroupSize: Int = 5,
     private val inviteTimeoutMs: Long = 60_000L,
     private val markGroupDirty: (SessionId) -> Unit = {},
-) {
+) : GameSystem {
     private val groupBySession = mutableMapOf<SessionId, Group>()
     private val pendingInvites = mutableMapOf<SessionId, PendingInvite>()
 
@@ -281,7 +281,7 @@ class GroupSystem(
         return null
     }
 
-    suspend fun onPlayerDisconnected(sessionId: SessionId) {
+    override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         // Remove pending invites where this player is invitee
         pendingInvites.remove(sessionId)
         // Remove pending invites where this player is inviter
@@ -301,7 +301,7 @@ class GroupSystem(
         }
     }
 
-    fun remapSession(
+    override fun remapSession(
         oldSid: SessionId,
         newSid: SessionId,
     ) {

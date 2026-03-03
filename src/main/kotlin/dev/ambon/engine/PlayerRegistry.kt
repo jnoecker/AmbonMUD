@@ -319,8 +319,7 @@ class PlayerRegistry(
         // Persist last seen + room for claimed players
         persistIfClaimed(ps)
 
-        roomMembers[ps.roomId]?.remove(sessionId)
-        if (roomMembers[ps.roomId]?.isEmpty() == true) roomMembers.remove(ps.roomId)
+        roomMembers.removeFromSet(ps.roomId, sessionId)
         sessionByLowerName.remove(ps.name.lowercase())
         items.removePlayer(sessionId)
     }
@@ -350,8 +349,7 @@ class PlayerRegistry(
         // Persist with target room before removing
         persistIfClaimed(ps)
 
-        roomMembers[ps.roomId]?.remove(sessionId)
-        if (roomMembers[ps.roomId]?.isEmpty() == true) roomMembers.remove(ps.roomId)
+        roomMembers.removeFromSet(ps.roomId, sessionId)
         sessionByLowerName.remove(ps.name.lowercase())
         items.removePlayer(sessionId)
         return ps
@@ -420,8 +418,7 @@ class PlayerRegistry(
         val ps = players[sessionId] ?: return
         if (ps.roomId == newRoom) return
 
-        roomMembers[ps.roomId]?.remove(sessionId)
-        if (roomMembers[ps.roomId]?.isEmpty() == true) roomMembers.remove(ps.roomId)
+        roomMembers.removeFromSet(ps.roomId, sessionId)
 
         ps.roomId = newRoom
         roomMembers.getOrPut(newRoom) { mutableSetOf() }.add(sessionId)
