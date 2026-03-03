@@ -440,7 +440,6 @@ class GuildSystem(
     }
 
     private fun pruneExpiredInvites() {
-        val now = clock.millis()
-        pendingInvites.entries.removeIf { it.value.expiresAtMs <= now }
+        pendingInvites.removeExpired(clock.millis()) { it.expiresAtMs }
     }
 }
