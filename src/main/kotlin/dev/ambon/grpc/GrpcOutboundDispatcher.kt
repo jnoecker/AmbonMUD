@@ -4,14 +4,9 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.metrics.GameMetrics
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 
 private val log = KotlinLogging.logger {}
 
@@ -48,14 +43,7 @@ class GrpcOutboundDispatcher(
     }
 
     fun stop() {
-        runBlocking {
-            try {
-                withTimeout(STOP_TIMEOUT_MS) { job?.cancelAndJoin() }
-            } catch (_: TimeoutCancellationException) {
-                log.warn { "GrpcOutboundDispatcher job did not stop within ${STOP_TIMEOUT_MS}ms; forcing cancel" }
-                job?.cancel()
-            }
-        }
+        cancelJobWithTimeout(job, STOP_TIMEOUT_MS, "GrpcOutboundDispatcher job")
         log.info { "GrpcOutboundDispatcher stopped" }
     }
 
@@ -72,63 +60,45 @@ class GrpcOutboundDispatcher(
             return
         }
         val proto = event.toProto()
-        val result = streamChannel.trySend(proto)
-        if (result.isSuccess) {
-            return
-        }
-
-        if (!event.isControlPlane()) {
-            if (result.isClosed) {
-                serviceImpl.sessionToStream.remove(sid)
-                metrics.onGrpcDataPlaneDrop("stream_closed")
-                log.info { "Gateway stream for session $sid is closed; removed from routing table" }
-            } else {
-                metrics.onGrpcDataPlaneDrop("stream_full")
-                when (event) {
-                    is OutboundEvent.SendPrompt ->
-                        log.debug { "Dropped SendPrompt for session $sid (gateway stream full)" }
-                    else ->
-                        log.warn { "Gateway stream for session $sid is full; dropped ${event::class.simpleName}" }
-                }
-            }
-            return
-        }
-
-        val controlFailureReason =
-            if (result.isClosed) {
-                "stream_closed"
-            } else {
-                val delivered =
-                    try {
-                        withTimeout(controlPlaneSendTimeoutMs) {
-                            streamChannel.send(proto)
-                        }
-                        true
-                    } catch (_: TimeoutCancellationException) {
-                        false
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (_: Exception) {
-                        false
+        when (
+            val outcome =
+                deliverWithBackpressure(
+                    trySend = { streamChannel.trySend(proto) },
+                    suspendSend = { streamChannel.send(proto) },
+                    isControlPlane = event.isControlPlane(),
+                    controlPlaneSendTimeoutMs = controlPlaneSendTimeoutMs,
+                )
+        ) {
+            DeliveryOutcome.Delivered -> {}
+            DeliveryOutcome.DeliveredWithFallback -> metrics.onGrpcControlPlaneFallbackSend()
+            is DeliveryOutcome.DroppedDataPlane -> {
+                if (outcome.channelClosed) {
+                    serviceImpl.sessionToStream.remove(sid)
+                    metrics.onGrpcDataPlaneDrop("stream_closed")
+                    log.info { "Gateway stream for session $sid is closed; removed from routing table" }
+                } else {
+                    metrics.onGrpcDataPlaneDrop("stream_full")
+                    when (event) {
+                        is OutboundEvent.SendPrompt ->
+                            log.debug { "Dropped SendPrompt for session $sid (gateway stream full)" }
+                        else ->
+                            log.warn { "Gateway stream for session $sid is full; dropped ${event::class.simpleName}" }
                     }
-
-                if (delivered) {
-                    metrics.onGrpcControlPlaneFallbackSend()
-                    return
                 }
-                "stream_full_timeout"
             }
-
-        metrics.onGrpcControlPlaneDrop(controlFailureReason)
-        metrics.onGrpcForcedDisconnectDueToControlDeliveryFailure(controlFailureReason)
-        log.warn {
-            "Control-plane delivery failed for session $sid (${event::class.simpleName}, " +
-                "reason=$controlFailureReason); forcing disconnect"
+            is DeliveryOutcome.ControlPlaneFailure -> {
+                metrics.onGrpcControlPlaneDrop(outcome.reason)
+                metrics.onGrpcForcedDisconnectDueToControlDeliveryFailure(outcome.reason)
+                log.warn {
+                    "Control-plane delivery failed for session $sid (${event::class.simpleName}, " +
+                        "reason=${outcome.reason}); forcing disconnect"
+                }
+                serviceImpl.forceDisconnectSession(
+                    sessionId = sid,
+                    reason = "control-plane-delivery-failed:${outcome.reason}",
+                )
+            }
         }
-        serviceImpl.forceDisconnectSession(
-            sessionId = sid,
-            reason = "control-plane-delivery-failed:$controlFailureReason",
-        )
     }
 }
 
