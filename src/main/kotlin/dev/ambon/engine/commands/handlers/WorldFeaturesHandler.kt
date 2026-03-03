@@ -4,6 +4,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.LeverState
 import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.RoomFeature
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
@@ -80,23 +81,7 @@ class WorldFeaturesHandler(
                 outbound.send(OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is not locked."))
             lockable.keyItemId == null ->
                 outbound.send(OutboundEvent.SendError(sessionId, "That doesn't need a key."))
-            else -> {
-                val key = findKeyInInventory(sessionId, lockable.keyItemId, items)
-                if (key == null) {
-                    outbound.send(OutboundEvent.SendError(sessionId, "You don't have the key for the ${lockable.displayName}."))
-                } else {
-                    lockable.applyState(LockableState.CLOSED)
-                    if (lockable.keyConsumed) items.removeFromInventory(sessionId, key.item.keyword)
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "You unlock the ${lockable.displayName}."))
-                    broadcastToRoomExcept(
-                        me.roomId,
-                        sessionId,
-                        "${me.name} unlocks the ${lockable.displayName}.",
-                        players,
-                        outbound,
-                    )
-                }
-            }
+            else -> applyKeyAction(sessionId, me, lockable, LockableState.CLOSED, "unlock", "unlocks")
         }
     }
 
@@ -113,23 +98,7 @@ class WorldFeaturesHandler(
                 outbound.send(OutboundEvent.SendError(sessionId, "The ${lockable.displayName} must be closed before locking."))
             lockable.keyItemId == null ->
                 outbound.send(OutboundEvent.SendError(sessionId, "That doesn't need a key."))
-            else -> {
-                val key = findKeyInInventory(sessionId, lockable.keyItemId, items)
-                if (key == null) {
-                    outbound.send(OutboundEvent.SendError(sessionId, "You don't have the key for the ${lockable.displayName}."))
-                } else {
-                    lockable.applyState(LockableState.LOCKED)
-                    if (lockable.keyConsumed) items.removeFromInventory(sessionId, key.item.keyword)
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "You lock the ${lockable.displayName}."))
-                    broadcastToRoomExcept(
-                        me.roomId,
-                        sessionId,
-                        "${me.name} locks the ${lockable.displayName}.",
-                        players,
-                        outbound,
-                    )
-                }
-            }
+            else -> applyKeyAction(sessionId, me, lockable, LockableState.LOCKED, "lock", "locks")
         }
     }
 
@@ -232,5 +201,30 @@ class WorldFeaturesHandler(
             return
         }
         outbound.send(OutboundEvent.SendInfo(sessionId, feature.text))
+    }
+
+    private suspend fun applyKeyAction(
+        sessionId: SessionId,
+        me: PlayerState,
+        lockable: Lockable,
+        newState: LockableState,
+        verb: String,
+        verbThirdPerson: String,
+    ) {
+        val key = findKeyInInventory(sessionId, lockable.keyItemId!!, items)
+        if (key == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't have the key for the ${lockable.displayName}."))
+        } else {
+            lockable.applyState(newState)
+            if (lockable.keyConsumed) items.removeFromInventory(sessionId, key.item.keyword)
+            outbound.send(OutboundEvent.SendInfo(sessionId, "You $verb the ${lockable.displayName}."))
+            broadcastToRoomExcept(
+                me.roomId,
+                sessionId,
+                "${me.name} $verbThirdPerson the ${lockable.displayName}.",
+                players,
+                outbound,
+            )
+        }
     }
 }
