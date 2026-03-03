@@ -45,7 +45,7 @@ class QuestSystem(
         sessionId: SessionId,
         questId: String,
     ): String? {
-        val ps = players.get(sessionId) ?: return "Unknown player."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         val quest = registry.get(questId) ?: return "Unknown quest '$questId'."
         if (ps.activeQuests.containsKey(questId)) return "You are already on that quest."
         if (ps.completedQuestIds.contains(questId)) return "You have already completed that quest."
@@ -73,7 +73,7 @@ class QuestSystem(
         sessionId: SessionId,
         nameHint: String,
     ): String? {
-        val ps = players.get(sessionId) ?: return "Unknown player."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         val questId = findActiveQuestId(ps.activeQuests, nameHint) ?: return "No active quest matching '$nameHint'."
         val quest = registry.get(questId)
         ps.activeQuests = ps.activeQuests - questId

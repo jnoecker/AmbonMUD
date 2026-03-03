@@ -62,8 +62,8 @@ class GuildSystem(
         name: String,
         tag: String,
     ): String? {
-        val ps = players.get(sessionId) ?: return "You are not logged in."
-        val pid = ps.playerId ?: return "You are not logged in."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
+        val pid = ps.playerId ?: return ERR_NOT_CONNECTED
 
         if (ps.guildId != null) return "You are already in a guild."
 
@@ -110,7 +110,7 @@ class GuildSystem(
     }
 
     suspend fun disband(sessionId: SessionId): String? {
-        val ps = players.get(sessionId) ?: return "You are not logged in."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         val gid = ps.guildId ?: return "You are not in a guild."
         if (ps.guildRank != GuildRank.LEADER) return "Only the guild leader can disband the guild."
 
@@ -145,7 +145,7 @@ class GuildSystem(
         targetName: String,
     ): String? {
         pruneExpiredInvites()
-        val ps = players.get(sessionId) ?: return "You are not logged in."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         val gid = ps.guildId ?: return "You are not in a guild."
         val rank = ps.guildRank ?: return "You are not in a guild."
         if (rank == GuildRank.MEMBER) return "Only officers and the leader can send guild invites."
@@ -174,8 +174,8 @@ class GuildSystem(
     }
 
     suspend fun accept(sessionId: SessionId): String? {
-        val ps = players.get(sessionId) ?: return "You are not logged in."
-        val pid = ps.playerId ?: return "You are not logged in."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
+        val pid = ps.playerId ?: return ERR_NOT_CONNECTED
 
         if (ps.guildId != null) return "You are already in a guild."
 
@@ -202,8 +202,8 @@ class GuildSystem(
     }
 
     suspend fun leave(sessionId: SessionId): String? {
-        val ps = players.get(sessionId) ?: return "You are not logged in."
-        val pid = ps.playerId ?: return "You are not logged in."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
+        val pid = ps.playerId ?: return ERR_NOT_CONNECTED
         val gid = ps.guildId ?: return "You are not in a guild."
         if (ps.guildRank == GuildRank.LEADER) {
             return "You are the guild leader. Disband the guild with 'guild disband', or promote another member to leader first."
@@ -227,7 +227,7 @@ class GuildSystem(
         sessionId: SessionId,
         targetName: String,
     ): String? {
-        val ps = players.get(sessionId) ?: return "You are not logged in."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         val gid = ps.guildId ?: return "You are not in a guild."
         val rank = ps.guildRank ?: return "You are not in a guild."
         if (rank == GuildRank.MEMBER) return "Only officers and the leader can kick guild members."
@@ -271,7 +271,7 @@ class GuildSystem(
         sessionId: SessionId,
         targetName: String,
     ): String? {
-        val ps = players.get(sessionId) ?: return "You are not logged in."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         val gid = ps.guildId ?: return "You are not in a guild."
         if (ps.guildRank != GuildRank.LEADER) return "Only the guild leader can promote members."
 
@@ -306,7 +306,7 @@ class GuildSystem(
         sessionId: SessionId,
         targetName: String,
     ): String? {
-        val ps = players.get(sessionId) ?: return "You are not logged in."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         val gid = ps.guildId ?: return "You are not in a guild."
         if (ps.guildRank != GuildRank.LEADER) return "Only the guild leader can demote members."
 
@@ -341,7 +341,7 @@ class GuildSystem(
         sessionId: SessionId,
         motd: String,
     ): String? {
-        val ps = players.get(sessionId) ?: return "You are not logged in."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         val gid = ps.guildId ?: return "You are not in a guild."
         val rank = ps.guildRank ?: return "You are not in a guild."
         if (rank == GuildRank.MEMBER) return "Only officers and the leader can set the guild MOTD."
@@ -356,7 +356,7 @@ class GuildSystem(
     }
 
     suspend fun roster(sessionId: SessionId): String? {
-        val ps = players.get(sessionId) ?: return "You are not logged in."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         val gid = ps.guildId ?: return "You are not in a guild."
         val guild = guildsById[gid] ?: return "Guild not found."
 
@@ -382,7 +382,7 @@ class GuildSystem(
     }
 
     suspend fun info(sessionId: SessionId): String? {
-        val ps = players.get(sessionId) ?: return "You are not logged in."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         val gid = ps.guildId ?: return "You are not in a guild."
         val guild = guildsById[gid] ?: return "Guild not found."
 
@@ -406,7 +406,7 @@ class GuildSystem(
         sessionId: SessionId,
         message: String,
     ): String? {
-        val ps = players.get(sessionId) ?: return "You are not logged in."
+        val ps = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         val gid = ps.guildId ?: return "You are not in a guild."
         val guild = guildsById[gid] ?: return "Guild not found."
 

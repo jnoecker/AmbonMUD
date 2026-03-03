@@ -6,6 +6,7 @@ import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DirtyNotifier
+import dev.ambon.engine.ERR_NOT_CONNECTED
 import dev.ambon.engine.GameSystem
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
@@ -64,7 +65,7 @@ class AbilitySystem(
         spellName: String,
         targetKeyword: String?,
     ): String? {
-        val player = players.get(sessionId) ?: return "You are not connected."
+        val player = players.get(sessionId) ?: return ERR_NOT_CONNECTED
 
         // 1. Resolve ability
         val ability = registry.findByKeyword(spellName)
