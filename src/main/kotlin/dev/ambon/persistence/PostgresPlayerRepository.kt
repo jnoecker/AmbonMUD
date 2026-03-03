@@ -1,36 +1,12 @@
 package dev.ambon.persistence
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import dev.ambon.domain.achievement.AchievementState
-import dev.ambon.domain.ids.RoomId
-import dev.ambon.domain.mail.MailMessage
-import dev.ambon.domain.quest.QuestState
 import dev.ambon.metrics.GameMetrics
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.upsert
-
-private val questMapper: ObjectMapper =
-    ObjectMapper()
-        .registerModule(KotlinModule.Builder().build())
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-
-private val activeQuestsType = object : TypeReference<Map<String, QuestState>>() {}
-private val completedQuestIdsType = object : TypeReference<Set<String>>() {}
-private val unlockedAchievementIdsType = object : TypeReference<Set<String>>() {}
-private val achievementProgressType = object : TypeReference<Map<String, AchievementState>>() {}
-private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
-
-/** Deserialises JSON with a fallback to [default] on any parse failure. */
-private inline fun <T> safeReadJson(json: String, type: TypeReference<T>, default: T): T =
-    runCatching { questMapper.readValue(json, type) }.getOrDefault(default)
 
 class PostgresPlayerRepository(
     private val database: Database,
@@ -43,7 +19,7 @@ class PostgresPlayerRepository(
                     .selectAll()
                     .where { PlayersTable.nameLower eq name.trim().lowercase() }
                     .firstOrNull()
-                    ?.toPlayerRecord()
+                    ?.let { PlayersTable.readRecord(it) }
             }
         }
 
@@ -54,7 +30,7 @@ class PostgresPlayerRepository(
                     .selectAll()
                     .where { PlayersTable.id eq id.value }
                     .firstOrNull()
-                    ?.toPlayerRecord()
+                    ?.let { PlayersTable.readRecord(it) }
             }
         }
 
@@ -96,76 +72,9 @@ class PostgresPlayerRepository(
         metrics.timedSave {
             newSuspendedTransaction(Dispatchers.IO, database) {
                 PlayersTable.upsert(PlayersTable.id) {
-                    it[id] = record.id.value
-                    it[name] = record.name
-                    it[nameLower] = record.name.lowercase()
-                    it[roomId] = record.roomId.value
-                    it[strength] = record.strength
-                    it[dexterity] = record.dexterity
-                    it[constitution] = record.constitution
-                    it[intelligence] = record.intelligence
-                    it[wisdom] = record.wisdom
-                    it[charisma] = record.charisma
-                    it[race] = record.race
-                    it[playerClass] = record.playerClass
-                    it[level] = record.level
-                    it[xpTotal] = record.xpTotal
-                    it[createdAtEpochMs] = record.createdAtEpochMs
-                    it[lastSeenEpochMs] = record.lastSeenEpochMs
-                    it[passwordHash] = record.passwordHash
-                    it[ansiEnabled] = record.ansiEnabled
-                    it[isStaff] = record.isStaff
-                    it[hp] = record.hp
-                    it[mana] = record.mana
-                    it[maxMana] = record.maxMana
-                    it[gold] = record.gold
-                    it[activeQuests] = questMapper.writeValueAsString(record.activeQuests)
-                    it[completedQuestIds] = questMapper.writeValueAsString(record.completedQuestIds)
-                    it[unlockedAchievementIds] = questMapper.writeValueAsString(record.unlockedAchievementIds)
-                    it[achievementProgress] = questMapper.writeValueAsString(record.achievementProgress)
-                    it[activeTitle] = record.activeTitle
-                    it[mailInbox] = questMapper.writeValueAsString(record.inbox)
-                    it[guildId] = record.guildId
-                    it[recallRoomId] = record.recallRoomId?.value
+                    PlayersTable.writeRecord(it, record)
                 }
             }
         }
-    }
-
-    private fun ResultRow.toPlayerRecord(): PlayerRecord {
-        // Legacy migration: old rows stored constitution=0; remap to base 10
-        val rawCon = this[PlayersTable.constitution]
-        return PlayerRecord(
-            id = PlayerId(this[PlayersTable.id]),
-            name = this[PlayersTable.name],
-            roomId = RoomId(this[PlayersTable.roomId]),
-            strength = this[PlayersTable.strength],
-            dexterity = this[PlayersTable.dexterity],
-            constitution = if (rawCon == 0) 10 else rawCon,
-            intelligence = this[PlayersTable.intelligence],
-            wisdom = this[PlayersTable.wisdom],
-            charisma = this[PlayersTable.charisma],
-            race = this[PlayersTable.race],
-            playerClass = this[PlayersTable.playerClass],
-            level = this[PlayersTable.level],
-            xpTotal = this[PlayersTable.xpTotal],
-            createdAtEpochMs = this[PlayersTable.createdAtEpochMs],
-            lastSeenEpochMs = this[PlayersTable.lastSeenEpochMs],
-            passwordHash = this[PlayersTable.passwordHash],
-            ansiEnabled = this[PlayersTable.ansiEnabled],
-            isStaff = this[PlayersTable.isStaff],
-            hp = this[PlayersTable.hp],
-            mana = this[PlayersTable.mana],
-            maxMana = this[PlayersTable.maxMana],
-            gold = this[PlayersTable.gold],
-            activeQuests = safeReadJson(this[PlayersTable.activeQuests], activeQuestsType, emptyMap()),
-            completedQuestIds = safeReadJson(this[PlayersTable.completedQuestIds], completedQuestIdsType, emptySet()),
-            unlockedAchievementIds = safeReadJson(this[PlayersTable.unlockedAchievementIds], unlockedAchievementIdsType, emptySet()),
-            achievementProgress = safeReadJson(this[PlayersTable.achievementProgress], achievementProgressType, emptyMap()),
-            activeTitle = this[PlayersTable.activeTitle],
-            inbox = safeReadJson(this[PlayersTable.mailInbox], mailInboxType, emptyList()),
-            guildId = this[PlayersTable.guildId],
-            recallRoomId = this[PlayersTable.recallRoomId]?.let { RoomId(it) },
-        )
     }
 }

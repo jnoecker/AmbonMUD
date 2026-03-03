@@ -24,13 +24,13 @@ class RedisCachingPlayerRepository(
             val idStr = cache.get(nameKey(name)) ?: return@withCacheReadFallback null
             val id = idStr.toLongOrNull() ?: return@withCacheReadFallback null
             val json = cache.get(idKey(id)) ?: return@withCacheReadFallback null
-            mapper.readValue<PlayerDto>(json).toDomain()
+            mapper.readValue<PlayerRecord>(json).migrateDefaults()
         }
 
     override suspend fun lookupCachedById(id: PlayerId): PlayerRecord? =
         withCacheReadFallback("findById($id)") {
             val json = cache.get(idKey(id.value)) ?: return@withCacheReadFallback null
-            mapper.readValue<PlayerDto>(json).toDomain()
+            mapper.readValue<PlayerRecord>(json).migrateDefaults()
         }
 
     override suspend fun storeInCache(record: PlayerRecord) {
@@ -52,7 +52,7 @@ class RedisCachingPlayerRepository(
     private suspend fun cacheRecord(record: PlayerRecord) {
         try {
             withContext(Dispatchers.IO) {
-                val json = mapper.writeValueAsString(PlayerDto.from(record))
+                val json = mapper.writeValueAsString(record)
                 cache.setEx(idKey(record.id.value), cacheTtlSeconds, json)
                 cache.setEx(nameKey(record.name), cacheTtlSeconds, record.id.value.toString())
             }

@@ -41,4 +41,11 @@ data class PlayerRecord(
     val inbox: List<MailMessage> = emptyList(),
     val guildId: String? = null,
     val recallRoomId: RoomId? = null,
-)
+) {
+    /**
+     * Applies legacy migration fixes after deserialization.
+     * Old saves stored constitution=0; remap to the base stat value (10).
+     */
+    fun migrateDefaults(): PlayerRecord =
+        if (constitution == 0) copy(constitution = 10) else this
+}
