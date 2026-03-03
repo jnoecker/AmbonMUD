@@ -10,6 +10,7 @@ import { PlayPanel } from "./components/panels/PlayPanel";
 import { WorldPanel } from "./components/panels/WorldPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import {
+  DEFAULT_STATUS_VAR_LABELS,
   EMPTY_CHAR,
   EMPTY_ROOM,
   EMPTY_VITALS,
@@ -35,6 +36,7 @@ import type {
   RoomState,
   SkillSummary,
   StatusEffect,
+  StatusVarLabels,
   Vitals,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
@@ -99,6 +101,7 @@ function App() {
   const [composerValue, setComposerValue] = useState("");
 
   const [vitals, setVitals] = useState<Vitals>(EMPTY_VITALS);
+  const [statusVarLabels, setStatusVarLabels] = useState<StatusVarLabels>(DEFAULT_STATUS_VAR_LABELS);
   const [character, setCharacter] = useState<CharacterInfo>(EMPTY_CHAR);
   const [room, setRoom] = useState<RoomState>(EMPTY_ROOM);
   const [players, setPlayers] = useState<RoomPlayer[]>([]);
@@ -147,6 +150,7 @@ function App() {
 
   const resetHud = useCallback(() => {
     setVitals(EMPTY_VITALS);
+    setStatusVarLabels(DEFAULT_STATUS_VAR_LABELS);
     setCharacter(EMPTY_CHAR);
     setRoom(EMPTY_ROOM);
     setPlayers([]);
@@ -169,6 +173,7 @@ function App() {
         data,
         {
           setVitals,
+          setStatusVarLabels,
           setCharacter,
           setRoom,
           setRoomItems,
@@ -566,6 +571,7 @@ function App() {
           displayRace={displayRace}
           displayClassName={displayClassName}
           vitals={vitals}
+          statusVarLabels={statusVarLabels}
           xpValue={xpValue}
           xpMax={xpMax}
           xpText={xpText}
