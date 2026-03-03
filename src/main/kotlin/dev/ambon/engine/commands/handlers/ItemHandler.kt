@@ -82,8 +82,7 @@ class ItemHandler(
                             "You wear ${result.item.item.displayName} on your ${result.slot.label()}.",
                         ),
                     )
-                    combat.syncPlayerDefense(sessionId)
-                    gmcpEmitter?.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
+                    afterEquipChange(sessionId, combat, items, gmcpEmitter)
                 }
                 is ItemRegistry.EquipResult.NotFound ->
                     outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
@@ -113,8 +112,7 @@ class ItemHandler(
                             "You remove ${result.item.item.displayName} from your ${result.slot.label()}.",
                         ),
                     )
-                    combat.syncPlayerDefense(sessionId)
-                    gmcpEmitter?.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
+                    afterEquipChange(sessionId, combat, items, gmcpEmitter)
                 }
                 is ItemRegistry.UnequipResult.SlotEmpty ->
                     outbound.send(
@@ -194,7 +192,7 @@ class ItemHandler(
                         if (result.location == ItemRegistry.HeldItemLocation.EQUIPPED) {
                             combat.syncPlayerDefense(sessionId)
                         }
-                        gmcpEmitter?.sendCharItemsList(sessionId, items.inventory(me.sessionId), items.equipment(me.sessionId))
+                        syncItemsGmcp(sessionId, items, gmcpEmitter)
                     } else if (result.remainingCharges != null) {
                         outbound.send(
                             OutboundEvent.SendInfo(
@@ -224,20 +222,13 @@ class ItemHandler(
         cmd: Command.Give,
     ) {
         players.withPlayer(sessionId) { me ->
-            val targetSid = players.findSessionByName(cmd.playerName)
-            if (targetSid == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.playerName}"))
-                return
-            }
+            val targetSid = requirePlayerOnline(sessionId, cmd.playerName, players, outbound) ?: return
             if (targetSid == sessionId) {
                 outbound.send(OutboundEvent.SendError(sessionId, "You cannot give items to yourself."))
                 return
             }
             players.withPlayer(targetSid) { target ->
-                if (target.roomId != me.roomId) {
-                    outbound.send(OutboundEvent.SendError(sessionId, "${target.name} is not here."))
-                    return
-                }
+                if (!requireSameRoom(sessionId, me, target, outbound)) return
                 when (val result = items.giveToPlayer(me.sessionId, targetSid, cmd.keyword)) {
                     is ItemRegistry.GiveResult.Given -> {
                         if (result.location == ItemRegistry.HeldItemLocation.EQUIPPED) {
