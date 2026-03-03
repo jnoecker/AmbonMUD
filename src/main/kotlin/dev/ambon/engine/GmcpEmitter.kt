@@ -3,6 +3,7 @@ package dev.ambon.engine
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
@@ -154,6 +155,24 @@ class GmcpEmitter(
         mobId: String,
     ) {
         emit(sessionId, "Room.RemoveMob", RoomRemoveMobPayload(id = mobId), supportCheck = "Room.Mobs")
+    }
+
+    // ── Room-level broadcast helpers ─────────────────────────────────────
+
+    suspend fun broadcastRoomAddMob(roomId: RoomId, mob: MobState, players: PlayerRegistry) {
+        for (p in players.playersInRoom(roomId)) sendRoomAddMob(p.sessionId, mob)
+    }
+
+    suspend fun broadcastRoomUpdateMob(roomId: RoomId, mob: MobState, players: PlayerRegistry) {
+        for (p in players.playersInRoom(roomId)) sendRoomUpdateMob(p.sessionId, mob)
+    }
+
+    suspend fun broadcastRoomRemoveMob(roomId: RoomId, mobId: String, players: PlayerRegistry) {
+        for (p in players.playersInRoom(roomId)) sendRoomRemoveMob(p.sessionId, mobId)
+    }
+
+    suspend fun broadcastRoomItems(roomId: RoomId, items: List<ItemInstance>, players: PlayerRegistry) {
+        for (p in players.playersInRoom(roomId)) sendRoomItems(p.sessionId, items)
     }
 
     suspend fun sendCharSkills(

@@ -195,9 +195,7 @@ class AdminHandler(
             items.removeMobItems(targetMob.id)
             mobRemovalCoordinator?.removeMobExternally(targetMob.id)
             broadcastToRoom(players, outbound, me.roomId, "${targetMob.name} is struck down by divine wrath.")
-            for (p in players.playersInRoom(me.roomId)) {
-                gmcpEmitter?.sendRoomRemoveMob(p.sessionId, targetMob.id.value)
-            }
+            gmcpEmitter?.broadcastRoomRemoveMob(me.roomId, targetMob.id.value, players)
         }
     }
 

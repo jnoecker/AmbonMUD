@@ -277,10 +277,6 @@ class ItemHandler(
     }
 
     private suspend fun syncRoomItemsGmcp(roomId: RoomId) {
-        val emitter = gmcpEmitter ?: return
-        val roomItems = items.itemsInRoom(roomId)
-        for (player in players.playersInRoom(roomId)) {
-            emitter.sendRoomItems(player.sessionId, roomItems)
-        }
+        gmcpEmitter?.broadcastRoomItems(roomId, items.itemsInRoom(roomId), players)
     }
 }
