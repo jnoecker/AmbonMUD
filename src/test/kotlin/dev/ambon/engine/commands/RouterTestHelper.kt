@@ -28,6 +28,7 @@ import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
 import dev.ambon.engine.commands.handlers.UiHandler
 import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
+import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.PlayerLocationIndex
@@ -61,6 +62,7 @@ internal fun buildTestRouter(
     clock: Clock = Clock.systemUTC(),
     shopRegistry: ShopRegistry? = null,
     economyConfig: EconomyConfig = EconomyConfig(),
+    gatheringRegistry: GatheringRegistry? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
     val ctx = EngineContext(
@@ -72,6 +74,7 @@ internal fun buildTestRouter(
         combat = combat,
         gmcpEmitter = null,
         worldState = worldState,
+        gatheringRegistry = gatheringRegistry,
     )
     listOf(
         UiHandler(ctx = ctx, onPhase = onPhase),

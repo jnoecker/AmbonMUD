@@ -8,12 +8,14 @@ It is written for code generators that need to emit valid zone files.
 - One YAML document describes one zone file.
 - Multiple zone files can be merged into one world.
 - YAML files are deserialized into:
-  - `WorldFile` (`zone`, `lifespan`, `startRoom`, `rooms`, `mobs`, `items`, `shops`)
+  - `WorldFile` (`zone`, `lifespan`, `startRoom`, `rooms`, `mobs`, `items`, `shops`, `gatheringNodes`, `recipes`)
   - `RoomFile`
   - `MobFile`
   - `MobDropFile`
   - `ItemFile`
   - `ShopFile`
+  - `GatheringNodeFile`
+  - `RecipeFile`
 
 ## Top-Level Schema
 
@@ -25,6 +27,8 @@ rooms: <map<string, Room>, required, must be non-empty>
 mobs: <map<string, Mob>, optional, default {}>
 items: <map<string, Item>, optional, default {}>
 shops: <map<string, Shop>, optional, default {}>
+gatheringNodes: <map<string, GatheringNode>, optional, default {}>
+recipes: <map<string, Recipe>, optional, default {}>
 ```
 
 `lifespan` notes:
@@ -34,7 +38,7 @@ shops: <map<string, Shop>, optional, default {}>
 ### Required vs optional
 
 - Required top-level fields: `zone`, `startRoom`, `rooms`
-- Optional top-level fields: `lifespan`, `mobs`, `items`, `shops`
+- Optional top-level fields: `lifespan`, `mobs`, `items`, `shops`, `gatheringNodes`, `recipes`
 
 ## Nested Schemas
 
@@ -47,7 +51,13 @@ Each value:
 title: <string, required>
 description: <string, required>
 exits: <map<string direction, string target-room-id>, optional, default {}>
+station: <string, optional - one of FORGE|ALCHEMY_TABLE|WORKBENCH (case-insensitive)>
 ```
+
+`station` notes:
+- Designates the room as a crafting station of the given type.
+- Recipes that specify a matching `station` type receive a bonus when crafted in this room.
+- Visible in room descriptions as "Crafting station: Forge" (etc.).
 
 Valid direction keys (case-insensitive):
 
@@ -223,6 +233,78 @@ Shop ID normalization:
 - `room` follows the same normalization rules as other room references (prefixed with `<zone>:` when unqualified).
 - `items` entries follow the same normalization rules as item references.
 
+### `gatheringNodes` map
+
+Each key is a gathering node ID (local or fully qualified).
+Each value:
+
+```yaml
+displayName:    <string, required, non-blank after trim>
+keyword:        <string, required, non-blank after trim>
+skill:          <string, required - one of MINING|HERBALISM (case-insensitive); must be a gathering skill>
+skillRequired:  <integer >= 1, optional, default 1>
+yields:         <list<Yield>, required, must be non-empty>
+respawnSeconds: <integer > 0, optional, default 60>
+xpReward:       <integer >= 0, optional, default 10>
+room:           <room-id string, required>
+```
+
+`Yield` entry:
+
+```yaml
+itemId:      <item-id string, required - must resolve to an existing item>
+minQuantity: <integer >= 1, optional, default 1>
+maxQuantity: <integer >= minQuantity, optional, default 1>
+```
+
+Gathering node notes:
+- `skill` must be a **gathering** skill (`MINING` or `HERBALISM`). Crafting skills (`SMITHING`, `ALCHEMY`) are rejected.
+- Nodes are visible in the room when players use the `look` command ("Resources: a copper ore vein, ...").
+- After a player gathers from a node, it becomes depleted for `respawnSeconds` before becoming available again.
+- Players must have a skill level >= `skillRequired` to gather from the node.
+- There is a configurable cooldown between gather attempts (`crafting.gatherCooldownMs`, default 3000ms).
+
+Commands:
+- `gather <keyword>` / `harvest <keyword>` / `mine <keyword>` — gather from a node in the current room.
+- `craftskills` / `professions` / `prof` — view your gathering and crafting skill levels.
+
+### `recipes` map
+
+Each key is a recipe ID (local or fully qualified).
+Each value:
+
+```yaml
+displayName:   <string, required, non-blank after trim>
+skill:         <string, required - one of SMITHING|ALCHEMY (case-insensitive); must be a crafting skill>
+skillRequired: <integer >= 1, optional, default 1>
+levelRequired: <integer >= 1, optional, default 1>
+materials:     <list<Material>, required, must be non-empty>
+outputItemId:  <item-id string, required - must resolve to an existing item>
+outputQuantity: <integer >= 1, optional, default 1>
+station:       <string, optional - one of FORGE|ALCHEMY_TABLE|WORKBENCH (case-insensitive)>
+stationBonus:  <integer >= 0, optional, default 0 - extra output quantity when crafted at a matching station>
+xpReward:      <integer >= 0, optional, default 10>
+```
+
+`Material` entry:
+
+```yaml
+itemId:   <item-id string, required - must resolve to an existing item>
+quantity: <integer >= 1, required>
+```
+
+Recipe notes:
+- `skill` must be a **crafting** skill (`SMITHING` or `ALCHEMY`). Gathering skills are rejected.
+- `materials` are consumed from the player's inventory when crafting.
+- If `station` is set and the player is in a room with a matching `station` type, the `stationBonus` extra output is produced. If `stationBonus` is 0, the global `crafting.stationBonusQuantity` (default 1) is used instead.
+- `levelRequired` is the player's character level (not skill level).
+- Crafting stations are visible in the room description ("Crafting station: Forge").
+
+Commands:
+- `craft <keyword>` / `make <keyword>` / `create <keyword>` — craft a recipe.
+- `recipes [filter]` — list all recipes, optionally filtered by skill name or recipe name.
+- `craftskills` / `professions` / `prof` — view your gathering and crafting skill levels.
+
 ## ID Normalization Rules
 
 The loader normalizes IDs with this logic:
@@ -242,6 +324,11 @@ This applies to:
 - `items` keys and `items.*.room`
 - `shops.*.room`
 - `shops.*.items` entries
+- `gatheringNodes` keys and `gatheringNodes.*.room`
+- `gatheringNodes.*.yields.*.itemId`
+- `recipes` keys
+- `recipes.*.materials.*.itemId`
+- `recipes.*.outputItemId`
 
 Examples with `zone: swamp`:
 
@@ -276,7 +363,11 @@ When loading multiple files:
 7. Every mob drop `itemId` must resolve to an existing merged item.
 8. Every shop `room` must resolve to an existing merged room.
 9. Every shop `items` entry must resolve to an existing merged item.
-10. For repeated `zone` names across files, `lifespan` merge rule is:
+10. Every gathering node `room` must resolve to an existing merged room.
+11. Every gathering node `yields.*.itemId` must resolve to an existing merged item.
+12. Every recipe `materials.*.itemId` must resolve to an existing merged item.
+13. Every recipe `outputItemId` must resolve to an existing merged item.
+14. For repeated `zone` names across files, `lifespan` merge rule is:
    - if only one file sets `lifespan`, that value is used
    - if multiple files set it, all non-null values must match
    - conflicting non-null values are rejected
@@ -314,6 +405,14 @@ For each file your tool emits:
 17. If `behavior` is present, `template` must be one of the known templates.
 18. Do not combine `behavior` with `stationary: true` — they are mutually exclusive.
 19. If using `patrol` or `patrol_aggro` templates, `patrolRoute` must be non-empty and all room IDs must resolve.
+20. If `gatheringNodes` is present, each node's `skill` must be a gathering skill (`MINING` or `HERBALISM`).
+21. Each gathering node must have a non-empty `yields` list; all `itemId` references must resolve to existing items.
+22. Each gathering node's `room` must resolve to an existing room.
+23. If `recipes` is present, each recipe's `skill` must be a crafting skill (`SMITHING` or `ALCHEMY`).
+24. Each recipe must have a non-empty `materials` list; all `itemId` references must resolve to existing items.
+25. Each recipe's `outputItemId` must resolve to an existing item.
+26. If a recipe specifies `station`, it must be one of `FORGE`, `ALCHEMY_TABLE`, or `WORKBENCH`.
+27. If a room specifies `station`, it must be one of `FORGE`, `ALCHEMY_TABLE`, or `WORKBENCH`.
 
 ## Minimal Valid Example
 
@@ -365,6 +464,9 @@ items:
   fang:
     displayName: "a rat fang"
     basePrice: 2
+  iron_ore:
+    displayName: "a chunk of iron ore"
+    basePrice: 12
   sigil:
     displayName: "a chalk sigil"
     # basePrice 0 (default) — cannot be bought or sold
@@ -390,12 +492,46 @@ rooms:
     description: "A cracked stair descends."
     exits:
       n: hall
+      w: forge
   hall:
     title: "Hall"
     description: "Pillars vanish into shadow."
     exits:
       south: entry
       east: overworld:graveyard
+  forge:
+    title: "The Forge"
+    description: "A sweltering room with a roaring forge."
+    station: FORGE
+    exits:
+      e: entry
+
+gatheringNodes:
+  iron_vein:
+    displayName: "an iron ore vein"
+    keyword: iron
+    skill: MINING
+    skillRequired: 1
+    yields:
+      - itemId: iron_ore
+        minQuantity: 1
+        maxQuantity: 2
+    respawnSeconds: 30
+    xpReward: 15
+    room: hall
+
+recipes:
+  iron_blade:
+    displayName: "Iron Blade"
+    skill: SMITHING
+    skillRequired: 5
+    materials:
+      - itemId: iron_ore
+        quantity: 3
+    outputItemId: helm
+    station: FORGE
+    stationBonus: 0
+    xpReward: 25
 ```
 
 ## Notes For Robust Generators
