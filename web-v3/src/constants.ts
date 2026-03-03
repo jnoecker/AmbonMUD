@@ -3,6 +3,7 @@ import type {
   CharacterInfo,
   MobileTab,
   RoomState,
+  StatusVarLabels,
   SocialTab,
   TabCycle,
   Vitals,
@@ -104,6 +105,15 @@ export const EMPTY_VITALS: Vitals = {
   xpToNextLevel: 0,
   gold: 0,
   inCombat: false,
+};
+
+export const DEFAULT_STATUS_VAR_LABELS: StatusVarLabels = {
+  hp: "HP",
+  maxHp: "Max HP",
+  mana: "Mana",
+  maxMana: "Max Mana",
+  level: "Level",
+  xp: "XP",
 };
 
 export const EMPTY_CHAR: CharacterInfo = { name: "-", race: "", className: "", level: null };

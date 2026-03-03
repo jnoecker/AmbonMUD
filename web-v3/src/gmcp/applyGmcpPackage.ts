@@ -10,6 +10,7 @@ import type {
   RoomState,
   SkillSummary,
   StatusEffect,
+  StatusVarLabels,
   Vitals,
 } from "../types";
 import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
@@ -17,6 +18,7 @@ import { safeNumber } from "../utils";
 
 interface GmcpContext {
   setVitals: Dispatch<SetStateAction<Vitals>>;
+  setStatusVarLabels: Dispatch<SetStateAction<StatusVarLabels>>;
   setCharacter: Dispatch<SetStateAction<CharacterInfo>>;
   setRoom: Dispatch<SetStateAction<RoomState>>;
   setRoomItems: Dispatch<SetStateAction<RoomItem[]>>;
@@ -42,6 +44,19 @@ export function applyGmcpPackage(
   ctx: GmcpContext,
 ) {
   switch (pkg) {
+    case "Char.StatusVars": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setStatusVarLabels((prev) => ({
+        hp: typeof packet.hp === "string" ? packet.hp : prev.hp,
+        maxHp: typeof packet.maxHp === "string" ? packet.maxHp : prev.maxHp,
+        mana: typeof packet.mana === "string" ? packet.mana : prev.mana,
+        maxMana: typeof packet.maxMana === "string" ? packet.maxMana : prev.maxMana,
+        level: typeof packet.level === "string" ? packet.level : prev.level,
+        xp: typeof packet.xp === "string" ? packet.xp : prev.xp,
+      }));
+      break;
+    }
+
     case "Char.Vitals": {
       const packet = data as Partial<Record<string, unknown>>;
       ctx.setVitals({
