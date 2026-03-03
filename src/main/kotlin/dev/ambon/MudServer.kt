@@ -25,15 +25,11 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.DatabaseManager
-import dev.ambon.persistence.GuildRepository
+import dev.ambon.persistence.GuildRepositoryFactory
 import dev.ambon.persistence.PersistenceWorker
 import dev.ambon.persistence.PlayerRepositoryFactory
-import dev.ambon.persistence.PostgresGuildRepository
-import dev.ambon.persistence.PostgresWorldStateRepository
 import dev.ambon.persistence.WorldStatePersistenceWorker
-import dev.ambon.persistence.WorldStateRepository
-import dev.ambon.persistence.YamlGuildRepository
-import dev.ambon.persistence.YamlWorldStateRepository
+import dev.ambon.persistence.WorldStateRepositoryFactory
 import dev.ambon.redis.RedisConnectionManager
 import dev.ambon.redis.redisObjectMapper
 import dev.ambon.session.AtomicSessionIdFactory
@@ -68,7 +64,6 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
-import java.nio.file.Paths
 import java.time.Clock
 import java.util.concurrent.Executors
 
@@ -124,31 +119,19 @@ class MudServer(
     private val coalescingRepo = playerRepoChain.coalescingRepository
     private val playerRepo = playerRepoChain.repository
 
-    private val worldStateRepo: WorldStateRepository =
-        when (config.persistence.backend) {
-            PersistenceBackend.YAML ->
-                YamlWorldStateRepository(
-                    rootDir = Paths.get(config.persistence.rootDir),
-                )
-            PersistenceBackend.POSTGRES ->
-                PostgresWorldStateRepository(
-                    database = databaseManager!!.database,
-                )
-        }
+    private val worldStateRepo =
+        WorldStateRepositoryFactory.create(
+            persistence = config.persistence,
+            database = databaseManager?.database,
+        )
 
     private var worldStatePersistenceWorker: WorldStatePersistenceWorker? = null
 
-    private val guildRepo: GuildRepository =
-        when (config.persistence.backend) {
-            PersistenceBackend.YAML ->
-                YamlGuildRepository(
-                    rootDir = Paths.get(config.persistence.rootDir),
-                )
-            PersistenceBackend.POSTGRES ->
-                PostgresGuildRepository(
-                    database = databaseManager!!.database,
-                )
-        }
+    private val guildRepo =
+        GuildRepositoryFactory.create(
+            persistence = config.persistence,
+            database = databaseManager?.database,
+        )
 
     private val instanceId: String =
         ServerInfrastructure.generateInstanceId(config)
