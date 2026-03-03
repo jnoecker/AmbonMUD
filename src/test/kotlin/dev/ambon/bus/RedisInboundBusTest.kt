@@ -82,6 +82,78 @@ class RedisInboundBusTest {
         assertFalse(delegate.tryReceive().isSuccess)
     }
 
+    // ── Round-trip tests for every variant ─────────────────────────────────
+    // These catch missing deserialize branches (string-matching with else → null).
+
+    @Test
+    fun `Connected round-trips through Redis`() {
+        roundTrip(
+            expected = InboundEvent.Connected(SessionId(5), defaultAnsiEnabled = true),
+            sessionId = 5,
+            type = "Connected",
+            defaultAnsiEnabled = true,
+        )
+    }
+
+    @Test
+    fun `Disconnected round-trips through Redis`() {
+        roundTrip(
+            expected = InboundEvent.Disconnected(SessionId(6), reason = "timeout"),
+            sessionId = 6,
+            type = "Disconnected",
+            reason = "timeout",
+        )
+    }
+
+    @Test
+    fun `LineReceived round-trips through Redis`() {
+        roundTrip(
+            expected = InboundEvent.LineReceived(SessionId(7), line = "look"),
+            sessionId = 7,
+            type = "LineReceived",
+            line = "look",
+        )
+    }
+
+    @Test
+    fun `GmcpReceived round-trips through Redis`() {
+        roundTrip(
+            expected = InboundEvent.GmcpReceived(SessionId(8), gmcpPackage = "Char.Vitals", jsonData = "{\"hp\":10}"),
+            sessionId = 8,
+            type = "GmcpReceived",
+            gmcpPackage = "Char.Vitals",
+            jsonData = "{\"hp\":10}",
+        )
+    }
+
+    private fun roundTrip(
+        expected: InboundEvent,
+        sessionId: Long,
+        type: String,
+        defaultAnsiEnabled: Boolean = false,
+        reason: String = "",
+        line: String = "",
+        gmcpPackage: String = "",
+        jsonData: String = "",
+    ) {
+        fakeSubscriber.inject(
+            signedInboundJson(
+                instanceId = "server-2",
+                type = type,
+                sessionId = sessionId,
+                defaultAnsiEnabled = defaultAnsiEnabled,
+                reason = reason,
+                line = line,
+                gmcpPackage = gmcpPackage,
+                jsonData = jsonData,
+            ),
+        )
+
+        val received = delegate.tryReceive()
+        assertTrue(received.isSuccess, "Expected $type to deserialize successfully")
+        assertEquals(expected, received.getOrNull())
+    }
+
     @Test
     fun `trySend does not publish when delegate channel is full`() {
         val fullDelegate = LocalInboundBus(capacity = 1)
