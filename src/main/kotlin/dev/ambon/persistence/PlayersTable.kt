@@ -1,6 +1,31 @@
 package dev.ambon.persistence
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import dev.ambon.domain.achievement.AchievementState
+import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.mail.MailMessage
+import dev.ambon.domain.quest.QuestState
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.statements.UpdateBuilder
+
+private val jsonMapper: ObjectMapper =
+    ObjectMapper()
+        .registerModule(KotlinModule.Builder().build())
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+private val activeQuestsType = object : TypeReference<Map<String, QuestState>>() {}
+private val completedQuestIdsType = object : TypeReference<Set<String>>() {}
+private val unlockedAchievementIdsType = object : TypeReference<Set<String>>() {}
+private val achievementProgressType = object : TypeReference<Map<String, AchievementState>>() {}
+private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
+
+/** Deserialises JSON with a fallback to [default] on any parse failure. */
+private fun <T> safeReadJson(json: String, type: TypeReference<T>, default: T): T =
+    runCatching { jsonMapper.readValue(json, type) }.getOrDefault(default)
 
 object PlayersTable : Table("players") {
     val id = long("id").autoIncrement("player_id_seq")
@@ -36,4 +61,74 @@ object PlayersTable : Table("players") {
     val recallRoomId = varchar("recall_room_id", 128).nullable()
 
     override val primaryKey = PrimaryKey(id)
+
+    /** Reads all columns from a [ResultRow] into a [PlayerRecord]. */
+    fun readRecord(row: ResultRow): PlayerRecord =
+        PlayerRecord(
+            id = PlayerId(row[id]),
+            name = row[name],
+            roomId = RoomId(row[roomId]),
+            strength = row[strength],
+            dexterity = row[dexterity],
+            constitution = row[constitution],
+            intelligence = row[intelligence],
+            wisdom = row[wisdom],
+            charisma = row[charisma],
+            race = row[race],
+            playerClass = row[playerClass],
+            level = row[level],
+            xpTotal = row[xpTotal],
+            createdAtEpochMs = row[createdAtEpochMs],
+            lastSeenEpochMs = row[lastSeenEpochMs],
+            passwordHash = row[passwordHash],
+            ansiEnabled = row[ansiEnabled],
+            isStaff = row[isStaff],
+            hp = row[hp],
+            mana = row[mana],
+            maxMana = row[maxMana],
+            gold = row[gold],
+            activeQuests = safeReadJson(row[activeQuests], activeQuestsType, emptyMap()),
+            completedQuestIds = safeReadJson(row[completedQuestIds], completedQuestIdsType, emptySet()),
+            unlockedAchievementIds = safeReadJson(row[unlockedAchievementIds], unlockedAchievementIdsType, emptySet()),
+            achievementProgress = safeReadJson(row[achievementProgress], achievementProgressType, emptyMap()),
+            activeTitle = row[activeTitle],
+            inbox = safeReadJson(row[mailInbox], mailInboxType, emptyList()),
+            guildId = row[guildId],
+            recallRoomId = row[recallRoomId]?.let { RoomId(it) },
+        ).migrateDefaults()
+
+    /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
+    fun writeRecord(statement: UpdateBuilder<*>, record: PlayerRecord) {
+        statement[id] = record.id.value
+        statement[name] = record.name
+        statement[nameLower] = record.name.lowercase()
+        statement[roomId] = record.roomId.value
+        statement[strength] = record.strength
+        statement[dexterity] = record.dexterity
+        statement[constitution] = record.constitution
+        statement[intelligence] = record.intelligence
+        statement[wisdom] = record.wisdom
+        statement[charisma] = record.charisma
+        statement[race] = record.race
+        statement[playerClass] = record.playerClass
+        statement[level] = record.level
+        statement[xpTotal] = record.xpTotal
+        statement[createdAtEpochMs] = record.createdAtEpochMs
+        statement[lastSeenEpochMs] = record.lastSeenEpochMs
+        statement[passwordHash] = record.passwordHash
+        statement[ansiEnabled] = record.ansiEnabled
+        statement[isStaff] = record.isStaff
+        statement[hp] = record.hp
+        statement[mana] = record.mana
+        statement[maxMana] = record.maxMana
+        statement[gold] = record.gold
+        statement[activeQuests] = jsonMapper.writeValueAsString(record.activeQuests)
+        statement[completedQuestIds] = jsonMapper.writeValueAsString(record.completedQuestIds)
+        statement[unlockedAchievementIds] = jsonMapper.writeValueAsString(record.unlockedAchievementIds)
+        statement[achievementProgress] = jsonMapper.writeValueAsString(record.achievementProgress)
+        statement[activeTitle] = record.activeTitle
+        statement[mailInbox] = jsonMapper.writeValueAsString(record.inbox)
+        statement[guildId] = record.guildId
+        statement[recallRoomId] = record.recallRoomId?.value
+    }
 }
