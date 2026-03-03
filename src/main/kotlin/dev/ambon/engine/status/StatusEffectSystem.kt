@@ -34,21 +34,23 @@ class StatusEffectSystem(
         sessionId: SessionId,
         effectId: StatusEffectId,
         sourceSessionId: SessionId? = null,
-    ): Boolean {
-        val def = registry.get(effectId) ?: return false
-        val now = clock.millis()
-        val list = playerEffects.getOrPut(sessionId) { mutableListOf() }
-        return applyEffect(list, def, now, sourceSessionId)
-    }
+    ): Boolean = applyTo(playerEffects, sessionId, effectId, sourceSessionId)
 
     fun applyToMob(
         mobId: MobId,
         effectId: StatusEffectId,
         sourceSessionId: SessionId? = null,
+    ): Boolean = applyTo(mobEffects, mobId, effectId, sourceSessionId)
+
+    private fun <K> applyTo(
+        map: MutableMap<K, MutableList<ActiveEffect>>,
+        key: K,
+        effectId: StatusEffectId,
+        sourceSessionId: SessionId?,
     ): Boolean {
         val def = registry.get(effectId) ?: return false
         val now = clock.millis()
-        val list = mobEffects.getOrPut(mobId) { mutableListOf() }
+        val list = map.getOrPut(key) { mutableListOf() }
         return applyEffect(list, def, now, sourceSessionId)
     }
 
@@ -100,12 +102,25 @@ class StatusEffectSystem(
         tickMobEffects(nowMs)
     }
 
-    private suspend fun tickPlayerEffects(nowMs: Long) {
-        val itr = playerEffects.iterator()
+    /**
+     * Generic tick loop: iterates a map of entity-id → effects,
+     * resolves each entity, prunes expired/orphaned effects, and
+     * delegates active-effect handling to [onExpired] and [onActive].
+     *
+     * [onActive] returns `true` if the effect should be removed (e.g. depleted shield).
+     */
+    private inline fun <K, E> tickEffects(
+        map: MutableMap<K, MutableList<ActiveEffect>>,
+        nowMs: Long,
+        resolve: (K) -> E?,
+        onExpired: (K, StatusEffectDefinition) -> Unit,
+        onActive: (K, E, ActiveEffect, StatusEffectDefinition) -> Boolean,
+    ) {
+        val itr = map.iterator()
         while (itr.hasNext()) {
-            val (sessionId, effects) = itr.next()
-            val player = players.get(sessionId)
-            if (player == null) {
+            val (key, effects) = itr.next()
+            val entity = resolve(key)
+            if (entity == null) {
                 itr.remove()
                 continue
             }
@@ -115,24 +130,34 @@ class StatusEffectSystem(
                 val def = registry.get(effect.definitionId)
                 if (def == null || nowMs > effect.expiresAtMs) {
                     effectItr.remove()
-                    if (def != null) {
-                        outbound.send(
-                            OutboundEvent.SendText(sessionId, "${def.displayName} fades."),
-                        )
-                    }
-                    dirtyNotifier.playerStatusDirty(sessionId)
+                    if (def != null) onExpired(key, def)
                     continue
                 }
-                // Depleted shields
-                if (def.effectType == EffectType.SHIELD && effect.shieldRemaining <= 0) {
+                if (onActive(key, entity, effect, def)) {
                     effectItr.remove()
-                    outbound.send(
-                        OutboundEvent.SendText(sessionId, "${def.displayName} shatters!"),
-                    )
-                    dirtyNotifier.playerStatusDirty(sessionId)
-                    continue
                 }
-                // Tick DOT/HOT (fire the last tick when nowMs == expiresAtMs)
+            }
+            if (effects.isEmpty()) itr.remove()
+        }
+    }
+
+    private suspend fun tickPlayerEffects(nowMs: Long) {
+        tickEffects(
+            map = playerEffects,
+            nowMs = nowMs,
+            resolve = { players.get(it) },
+            onExpired = { sessionId, def ->
+                outbound.send(OutboundEvent.SendText(sessionId, "${def.displayName} fades."))
+                dirtyNotifier.playerStatusDirty(sessionId)
+            },
+            onActive = { sessionId, player, effect, def ->
+                // Depleted shields — remove immediately
+                if (def.effectType == EffectType.SHIELD && effect.shieldRemaining <= 0) {
+                    outbound.send(OutboundEvent.SendText(sessionId, "${def.displayName} shatters!"))
+                    dirtyNotifier.playerStatusDirty(sessionId)
+                    return@tickEffects true
+                }
+                // Tick DOT/HOT
                 if (def.tickIntervalMs > 0 && nowMs - effect.lastTickAtMs >= def.tickIntervalMs) {
                     effect.lastTickAtMs = nowMs
                     val value = rollRange(rng, def.tickMinValue, def.tickMaxValue)
@@ -161,32 +186,21 @@ class StatusEffectSystem(
                                 )
                             }
                         }
-                        else -> {} // non-ticking types
+                        else -> {}
                     }
                 }
-            }
-            if (effects.isEmpty()) itr.remove()
-        }
+                false // keep the effect
+            },
+        )
     }
 
     private suspend fun tickMobEffects(nowMs: Long) {
-        val itr = mobEffects.iterator()
-        while (itr.hasNext()) {
-            val (mobId, effects) = itr.next()
-            val mob = mobs.get(mobId)
-            if (mob == null) {
-                itr.remove()
-                continue
-            }
-            val effectItr = effects.iterator()
-            while (effectItr.hasNext()) {
-                val effect = effectItr.next()
-                val def = registry.get(effect.definitionId)
-                if (def == null || nowMs > effect.expiresAtMs) {
-                    effectItr.remove()
-                    continue
-                }
-                // Tick DOT on mobs
+        tickEffects(
+            map = mobEffects,
+            nowMs = nowMs,
+            resolve = { mobs.get(it) },
+            onExpired = { _, _ -> },
+            onActive = { mobId, mob, effect, def ->
                 if (def.effectType == EffectType.DOT &&
                     def.tickIntervalMs > 0 &&
                     nowMs - effect.lastTickAtMs >= def.tickIntervalMs
@@ -195,7 +209,6 @@ class StatusEffectSystem(
                     val value = rollRange(rng, def.tickMinValue, def.tickMaxValue)
                     mob.takeDamage(value)
                     dirtyNotifier.mobHpDirty(mobId)
-                    // Notify the player who applied it
                     val source = effect.sourceSessionId
                     if (source != null) {
                         outbound.send(
@@ -206,9 +219,9 @@ class StatusEffectSystem(
                         )
                     }
                 }
-            }
-            if (effects.isEmpty()) itr.remove()
-        }
+                false // keep the effect
+            },
+        )
     }
 
     // ── Queries ────────────────────────────────────────────────────────
