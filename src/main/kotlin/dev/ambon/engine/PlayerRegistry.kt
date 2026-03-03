@@ -596,43 +596,8 @@ class PlayerRegistry(
     }
 
     private suspend fun persistIfClaimed(ps: PlayerState) {
-        val pid = ps.playerId ?: return
-        val now = clock.millis()
-
-        repo.save(
-            PlayerRecord(
-                id = pid,
-                name = ps.name,
-                roomId = ps.roomId,
-                strength = ps.strength,
-                dexterity = ps.dexterity,
-                constitution = ps.constitution,
-                intelligence = ps.intelligence,
-                wisdom = ps.wisdom,
-                charisma = ps.charisma,
-                race = ps.race,
-                playerClass = ps.playerClass,
-                level = ps.level,
-                xpTotal = ps.xpTotal,
-                createdAtEpochMs = ps.createdAtEpochMs,
-                lastSeenEpochMs = now,
-                passwordHash = ps.passwordHash,
-                ansiEnabled = ps.ansiEnabled,
-                isStaff = ps.isStaff,
-                hp = ps.hp,
-                mana = ps.mana,
-                maxMana = ps.maxMana,
-                gold = ps.gold,
-                activeQuests = ps.activeQuests,
-                completedQuestIds = ps.completedQuestIds,
-                unlockedAchievementIds = ps.unlockedAchievementIds,
-                achievementProgress = ps.achievementProgress,
-                activeTitle = ps.activeTitle,
-                inbox = ps.inbox.toList(),
-                guildId = ps.guildId,
-                recallRoomId = ps.recallRoomId,
-            ),
-        )
+        if (ps.playerId == null) return
+        repo.save(ps.toPlayerRecord(lastSeenEpochMs = clock.millis()))
     }
 
     private fun isValidPassword(password: String): Boolean {
