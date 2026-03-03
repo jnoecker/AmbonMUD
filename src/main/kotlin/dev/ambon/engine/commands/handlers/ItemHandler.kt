@@ -189,10 +189,7 @@ class ItemHandler(
                     }
                     if (result.consumed) {
                         outbound.send(OutboundEvent.SendInfo(sessionId, "${result.item.item.displayName} is consumed."))
-                        if (result.location == ItemRegistry.HeldItemLocation.EQUIPPED) {
-                            combat.syncPlayerDefense(sessionId)
-                        }
-                        syncItemsGmcp(sessionId, items, gmcpEmitter)
+                        afterEquipChange(sessionId, combat, items, gmcpEmitter)
                     } else if (result.remainingCharges != null) {
                         outbound.send(
                             OutboundEvent.SendInfo(
@@ -232,7 +229,7 @@ class ItemHandler(
                 when (val result = items.giveToPlayer(me.sessionId, targetSid, cmd.keyword)) {
                     is ItemRegistry.GiveResult.Given -> {
                         if (result.location == ItemRegistry.HeldItemLocation.EQUIPPED) {
-                            combat.syncPlayerDefense(sessionId)
+                            afterEquipChange(sessionId, combat, items, gmcpEmitter)
                         }
                         outbound.send(OutboundEvent.SendInfo(sessionId, "You give ${result.item.item.displayName} to ${target.name}."))
                         outbound.send(OutboundEvent.SendInfo(targetSid, "${me.name} gives you ${result.item.item.displayName}."))
