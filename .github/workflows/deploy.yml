@@ -40,6 +40,10 @@ on:
     types: [completed]
     branches: [main]
 
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false   # let the running deploy finish; queue the next one
+
 permissions:
   contents: read
   id-token: write
