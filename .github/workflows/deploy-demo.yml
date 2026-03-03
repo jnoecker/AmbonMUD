@@ -17,6 +17,10 @@ on:
     types: [completed]
     branches: [main]
 
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: true    # only the latest image matters for demo
+
 permissions:
   contents: read
   id-token: write   # required for OIDC AWS credential federation
@@ -45,7 +49,7 @@ jobs:
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=[\"update-ambonmud $IMAGE_TAG\"]" \
+            --parameters "commands=[\"docker image prune -af --filter 'until=1h' && update-ambonmud $IMAGE_TAG\"]" \
             --comment "Auto-deploy $IMAGE_TAG from GitHub Actions" \
             --query "Command.CommandId" \
             --output text)
