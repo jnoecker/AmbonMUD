@@ -16,6 +16,7 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.persistence.PlayerId
 import dev.ambon.test.MutableClock
+import dev.ambon.test.TEST_SESSION_ID
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -90,7 +91,7 @@ class HandoffManagerTest {
             ackTimeoutMs = 1_000L,
         )
 
-    private val sid = SessionId(1L)
+    private val sid = TEST_SESSION_ID
 
     @BeforeEach
     fun setup() =

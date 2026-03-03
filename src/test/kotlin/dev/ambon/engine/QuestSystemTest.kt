@@ -2,7 +2,6 @@ package dev.ambon.engine
 
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.ItemId
-import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
@@ -15,6 +14,7 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
+import dev.ambon.test.TEST_ROOM_ID
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class QuestSystemTest {
-    private val roomId = RoomId("zone:room")
+    private val roomId = TEST_ROOM_ID
     private val questId = "zone:kill_quest"
     private val mobTemplateKey = "zone:target_mob"
     private val killQuest =

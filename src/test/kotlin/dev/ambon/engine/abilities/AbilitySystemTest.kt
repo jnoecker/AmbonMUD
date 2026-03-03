@@ -3,8 +3,6 @@ package dev.ambon.engine.abilities
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.ids.MobId
-import dev.ambon.domain.ids.RoomId
-import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DirtyNotifier
@@ -20,6 +18,8 @@ import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.test.AbilityTestFixture
 import dev.ambon.test.MutableClock
+import dev.ambon.test.TEST_ROOM_ID
+import dev.ambon.test.TEST_SESSION_ID
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,8 +33,8 @@ import java.util.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AbilitySystemTest {
-    private val roomId = RoomId("zone:room")
-    private val sid = SessionId(1L)
+    private val roomId = TEST_ROOM_ID
+    private val sid = TEST_SESSION_ID
 
     private fun buildSystem(
         clock: MutableClock = MutableClock(0L),

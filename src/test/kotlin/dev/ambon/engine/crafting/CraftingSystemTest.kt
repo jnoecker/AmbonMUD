@@ -10,13 +10,13 @@ import dev.ambon.domain.crafting.MaterialRequirement
 import dev.ambon.domain.crafting.RecipeDef
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
-import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.test.MutableClock
+import dev.ambon.test.TEST_SESSION_ID
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -44,7 +44,7 @@ class CraftingSystemTest {
         random = Random(42),
     )
     private val items = ItemRegistry()
-    private val sid = SessionId(1L)
+    private val sid = TEST_SESSION_ID
     private val roomId = RoomId("test:mine")
 
     private val copperOreId = ItemId("test:copper_ore")
