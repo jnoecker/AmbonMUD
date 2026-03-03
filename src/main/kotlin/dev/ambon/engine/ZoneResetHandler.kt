@@ -1,12 +1,12 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.ids.idZone
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
 import dev.ambon.engine.behavior.BehaviorTreeSystem
-import dev.ambon.engine.commands.handlers.idZone
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import java.time.Clock

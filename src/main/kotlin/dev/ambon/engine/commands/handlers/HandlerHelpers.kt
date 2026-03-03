@@ -342,9 +342,6 @@ internal fun exitsLine(r: Room): String =
         "Exits: $names"
     }
 
-/** Returns the zone portion of a namespaced id (before the first ':'). */
-internal fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
-
 /**
  * Resolves [sessionId] to a [PlayerState] and its current [Room], then executes [block].
  * Returns early from the enclosing function if the player is not found or the room is missing.

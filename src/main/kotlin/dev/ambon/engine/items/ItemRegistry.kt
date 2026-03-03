@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.ids.idZone
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.ItemSpawn
@@ -547,6 +548,4 @@ class ItemRegistry {
             }
         }
     }
-
-    private fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
 }
