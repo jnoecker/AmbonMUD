@@ -1,13 +1,8 @@
 package dev.ambon
 
-import dev.ambon.bus.GrpcInboundBus
-import dev.ambon.bus.GrpcOutboundBus
+import dev.ambon.bus.DepthAware
 import dev.ambon.bus.InboundBus
-import dev.ambon.bus.LocalInboundBus
-import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.bus.OutboundBus
-import dev.ambon.bus.RedisInboundBus
-import dev.ambon.bus.RedisOutboundBus
 import dev.ambon.config.AppConfig
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.redis.RedisConnectionManager
@@ -102,22 +97,7 @@ object ServerInfrastructure {
         outbound: OutboundBus,
         metrics: GameMetrics,
     ) {
-        val inboundLocal =
-            when (inbound) {
-                is LocalInboundBus -> inbound
-                is RedisInboundBus -> inbound.delegateForMetrics()
-                is GrpcInboundBus -> inbound.delegateForMetrics()
-                else -> null
-            }
-        inboundLocal?.let { metrics.bindInboundBusQueue(it::depth) { it.capacity } }
-
-        val outboundLocal =
-            when (outbound) {
-                is LocalOutboundBus -> outbound
-                is RedisOutboundBus -> outbound.delegateForMetrics()
-                is GrpcOutboundBus -> outbound.delegateForMetrics()
-                else -> null
-            }
-        outboundLocal?.let { metrics.bindOutboundBusQueue(it::depth) { it.capacity } }
+        (inbound as? DepthAware)?.let { metrics.bindInboundBusQueue(it::depth) { it.capacity } }
+        (outbound as? DepthAware)?.let { metrics.bindOutboundBusQueue(it::depth) { it.capacity } }
     }
 }
