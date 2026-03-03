@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.XpCurveConfig
+import dev.ambon.domain.DamageRange
 import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
@@ -601,8 +602,7 @@ class CombatSystemTest {
                     roomId,
                     hp = 10,
                     maxHp = 10,
-                    minDamage = 10,
-                    maxDamage = 10,
+                    damage = DamageRange(10, 10),
                 )
             mobs.upsert(mob)
 
@@ -649,8 +649,7 @@ class CombatSystemTest {
                     roomId,
                     hp = 20,
                     maxHp = 20,
-                    minDamage = 7,
-                    maxDamage = 7,
+                    damage = DamageRange(7, 7),
                     armor = 2,
                 )
             mobs.upsert(mob)
@@ -755,8 +754,7 @@ class CombatSystemTest {
                     roomId,
                     hp = 20,
                     maxHp = 20,
-                    minDamage = 7,
-                    maxDamage = 7,
+                    damage = DamageRange(7, 7),
                     armor = 2,
                 )
             mobs.upsert(mob)
@@ -819,8 +817,7 @@ class CombatSystemTest {
                     roomId,
                     hp = 100,
                     maxHp = 100,
-                    minDamage = 50,
-                    maxDamage = 50,
+                    damage = DamageRange(50, 50),
                 )
             mobs.upsert(mob)
 
@@ -880,8 +877,7 @@ class CombatSystemTest {
                     roomId,
                     hp = 100,
                     maxHp = 100,
-                    minDamage = 50,
-                    maxDamage = 50,
+                    damage = DamageRange(50, 50),
                 )
             mobs.upsert(mob)
 
@@ -984,7 +980,7 @@ class CombatSystemTest {
             val items = fixture.items
             val players = fixture.players
             val mobs = fixture.mobs
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, minDamage = 1, maxDamage = 1)
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, damage = DamageRange(1, 1))
             mobs.upsert(mob)
 
             val outbound = fixture.outbound
@@ -1050,7 +1046,7 @@ class CombatSystemTest {
             val items = fixture.items
             val players = fixture.players
             val mobs = fixture.mobs
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 100, maxHp = 100, minDamage = 5, maxDamage = 5)
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 100, maxHp = 100, damage = DamageRange(5, 5))
             mobs.upsert(mob)
 
             val outbound = fixture.outbound
@@ -1116,7 +1112,7 @@ class CombatSystemTest {
             val players = fixture.players
             val mobs = fixture.mobs
             // mob with 0 armor so we can see exact damage
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 50, maxHp = 50, minDamage = 1, maxDamage = 1)
+            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 50, maxHp = 50, damage = DamageRange(1, 1))
             mobs.upsert(mob)
 
             val outbound = fixture.outbound

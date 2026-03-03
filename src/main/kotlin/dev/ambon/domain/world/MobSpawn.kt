@@ -1,24 +1,25 @@
 package dev.ambon.domain.world
 
+import dev.ambon.domain.DamageRange
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.mob.MobTemplate
 import dev.ambon.engine.behavior.BtNode
 import dev.ambon.engine.dialogue.DialogueTree
 
 data class MobSpawn(
-    val id: MobId,
-    val name: String,
-    val roomId: RoomId,
-    val maxHp: Int = 10,
-    val minDamage: Int = 1,
-    val maxDamage: Int = 4,
-    val armor: Int = 0,
-    val xpReward: Long = 30L,
-    val drops: List<MobDrop> = emptyList(),
+    override val id: MobId,
+    override val name: String,
+    override val roomId: RoomId,
+    override val maxHp: Int = 10,
+    override val damage: DamageRange = DamageRange(1, 4),
+    override val armor: Int = 0,
+    override val xpReward: Long = 30L,
+    override val drops: List<MobDrop> = emptyList(),
     val respawnSeconds: Long? = null,
-    val goldMin: Long = 0L,
-    val goldMax: Long = 0L,
-    val dialogue: DialogueTree? = null,
-    val behaviorTree: BtNode? = null,
-    val questIds: List<String> = emptyList(),
-)
+    override val goldMin: Long = 0L,
+    override val goldMax: Long = 0L,
+    override val dialogue: DialogueTree? = null,
+    override val behaviorTree: BtNode? = null,
+    override val questIds: List<String> = emptyList(),
+) : MobTemplate
