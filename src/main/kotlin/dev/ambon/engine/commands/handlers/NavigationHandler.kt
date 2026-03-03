@@ -25,10 +25,9 @@ class NavigationHandler(
         const val RECALL_COOLDOWN_MS = 300_000L
     }
 
+    private val ctx = ctx
     private val world = ctx.world
     private val players = ctx.players
-    private val mobs = ctx.mobs
-    private val items = ctx.items
     private val combat = ctx.combat
     private val outbound = ctx.outbound
     private val worldState = ctx.worldState
@@ -45,7 +44,7 @@ class NavigationHandler(
     }
 
     private suspend fun handleLook(sessionId: SessionId) {
-        sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
+        ctx.sendLook(sessionId)
     }
 
     private suspend fun handleMove(
@@ -104,7 +103,7 @@ class NavigationHandler(
                 gmcpEmitter,
                 dialogueSystem,
             )
-            sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
+            ctx.sendLook(sessionId)
         }
     }
 
@@ -145,7 +144,7 @@ class NavigationHandler(
             dialogueSystem,
         )
         outbound.send(OutboundEvent.SendText(sessionId, "You feel a familiar warmth and find yourself back at your recall point."))
-        sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
+        ctx.sendLook(sessionId)
     }
 
     private suspend fun handleExits(sessionId: SessionId) {
