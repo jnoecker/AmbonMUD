@@ -12,6 +12,12 @@ name: Deploy Demo
 #     AWS_REGION              AWS region (default: us-east-1)
 
 on:
+  workflow_dispatch:
+    inputs:
+      image-tag:
+        description: "Docker image tag (git SHA) to deploy. Defaults to HEAD of main."
+        required: false
+
   workflow_run:
     workflows: [CI]
     types: [completed]
@@ -29,10 +35,12 @@ jobs:
   deploy-demo:
     name: Update demo instance
     runs-on: ubuntu-latest
-    # Only run if CI passed and the demo instance variable is configured.
+    # Only run if CI passed (or manually triggered) and the demo instance is configured.
     if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      vars.DEMO_INSTANCE_ID != ''
+      vars.DEMO_INSTANCE_ID != '' && (
+        github.event_name == 'workflow_dispatch' ||
+        github.event.workflow_run.conclusion == 'success'
+      )
     steps:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -40,10 +48,21 @@ jobs:
           role-to-assume: ${{ vars.AWS_EC2_DEMO_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
+      - name: Resolve image tag
+        id: tag
+        run: |
+          if [ -n "${{ inputs.image-tag }}" ]; then
+            echo "tag=${{ inputs.image-tag }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "tag=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Send update command via SSM
         id: ssm
         env:
-          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+          IMAGE_TAG: ${{ steps.tag.outputs.tag }}
           INSTANCE_ID: ${{ vars.DEMO_INSTANCE_ID }}
         run: |
           COMMAND_ID=$(aws ssm send-command \
