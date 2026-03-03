@@ -556,13 +556,7 @@ class CombatSystem(
     private fun findMobsInRoom(
         roomId: RoomId,
         keyword: String,
-    ): List<MobState> {
-        val lower = keyword.lowercase()
-        return mobs
-            .mobsInRoom(roomId)
-            .filter { it.name.lowercase().contains(lower) }
-            .sortedBy { it.name }
-    }
+    ): List<MobState> = mobs.findInRoomByKeyword(roomId, keyword)
 
     private suspend fun handleMobDeath(
         killerSessionId: SessionId,

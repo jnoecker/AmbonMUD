@@ -48,8 +48,7 @@ class DialogueQuestHandler(
         }
         outbound.sendIfError(sessionId, dialogueSystem.startConversation(sessionId, cmd.target))
         if (questSystem != null && me != null) {
-            val targetLower = cmd.target.trim().lowercase()
-            val mob = mobs.mobsInRoom(me.roomId).firstOrNull { m -> m.name.lowercase().contains(targetLower) }
+            val mob = mobs.findInRoomByKeyword(me.roomId, cmd.target.trim()).firstOrNull()
             if (mob != null) {
                 val available = questSystem.availableQuests(sessionId, mob.id.value)
                 for (quest in available) {

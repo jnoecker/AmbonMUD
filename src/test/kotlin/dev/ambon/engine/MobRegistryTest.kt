@@ -38,6 +38,32 @@ class MobRegistryTest {
     }
 
     @Test
+    fun `findInRoomByKeyword filters and sorts by name`() {
+        val registry = MobRegistry()
+        val room = RoomId("zone:room1")
+        val rat = MobState(MobId("demo:rat"), "a rat", room)
+        val bat = MobState(MobId("demo:bat"), "a bat", room)
+        val wolf = MobState(MobId("demo:wolf"), "a wolf", room)
+
+        registry.upsert(rat)
+        registry.upsert(bat)
+        registry.upsert(wolf)
+
+        // keyword "at" matches "a rat" and "a bat", sorted alphabetically
+        val matches = registry.findInRoomByKeyword(room, "at")
+        assertEquals(listOf(bat, rat), matches)
+
+        // case-insensitive
+        assertEquals(listOf(wolf), registry.findInRoomByKeyword(room, "WOLF"))
+
+        // no match
+        assertTrue(registry.findInRoomByKeyword(room, "goblin").isEmpty())
+
+        // empty room
+        assertTrue(registry.findInRoomByKeyword(RoomId("zone:empty"), "rat").isEmpty())
+    }
+
+    @Test
     fun `moveTo updates room membership`() {
         val registry = MobRegistry()
         val roomA = RoomId("zone:roomA")
