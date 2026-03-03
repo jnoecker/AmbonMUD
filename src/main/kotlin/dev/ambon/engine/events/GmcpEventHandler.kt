@@ -43,25 +43,20 @@ class GmcpEventHandler(
 
                 val player = players.get(sid) ?: return
                 val room = world.rooms[player.roomId] ?: return
-                gmcpEmitter.sendCharStatusVars(sid)
-                gmcpEmitter.sendCharVitals(sid, player)
+                gmcpEmitter.sendFullCharacterSync(
+                    sid,
+                    player,
+                    items,
+                    abilitySystem,
+                    statusEffectSystem,
+                    achievementRegistry,
+                    groupSystem,
+                    players,
+                )
                 gmcpEmitter.sendRoomInfo(sid, room)
-                gmcpEmitter.sendCharName(sid, player)
-                gmcpEmitter.sendCharItemsList(sid, items.inventory(sid), items.equipment(sid))
                 gmcpEmitter.sendRoomPlayers(sid, players.playersInRoom(player.roomId).toList())
                 gmcpEmitter.sendRoomMobs(sid, mobs.mobsInRoom(player.roomId))
                 gmcpEmitter.sendRoomItems(sid, items.itemsInRoom(player.roomId))
-                gmcpEmitter.sendCharSkills(sid, abilitySystem.knownAbilities(sid)) { abilityId ->
-                    abilitySystem.cooldownRemainingMs(sid, abilityId)
-                }
-                gmcpEmitter.sendCharStatusEffects(sid, statusEffectSystem.activePlayerEffects(sid))
-                gmcpEmitter.sendCharAchievements(sid, player, achievementRegistry)
-                val group = groupSystem.getGroup(sid)
-                if (group != null) {
-                    val leader = players.get(group.leader)?.name
-                    val members = group.members.mapNotNull { players.get(it) }
-                    gmcpEmitter.sendGroupInfo(sid, leader, members)
-                }
             }
 
             "Core.Supports.Remove" -> {
