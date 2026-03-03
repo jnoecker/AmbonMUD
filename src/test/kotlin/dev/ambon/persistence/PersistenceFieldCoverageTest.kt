@@ -9,8 +9,12 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import dev.ambon.domain.Progress
 import dev.ambon.domain.achievement.AchievementState
+import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.quest.QuestState
 import dev.ambon.engine.toPlayerRecord
@@ -99,6 +103,15 @@ class PersistenceFieldCoverageTest {
                 ),
                 guildId = "knights",
                 recallRoomId = RoomId("town:square"),
+                inventoryItems = listOf(
+                    ItemInstance(ItemId("test:potion"), Item(keyword = "potion", displayName = "a healing potion")),
+                ),
+                equippedItems = mapOf(
+                    "HAND" to ItemInstance(
+                        ItemId("test:sword"),
+                        Item(keyword = "sword", displayName = "a short sword", slot = ItemSlot.HAND),
+                    ),
+                ),
             )
 
         @BeforeAll
@@ -239,7 +252,10 @@ class PersistenceFieldCoverageTest {
         val ps = FULLY_POPULATED.toPlayerState(sid)
         val roundTripped = ps.toPlayerRecord(lastSeenEpochMs = FULLY_POPULATED.lastSeenEpochMs)
 
-        assertEquals(FULLY_POPULATED, roundTripped)
+        // Items are managed by ItemRegistry, not PlayerState, so they don't survive
+        // the PlayerState round-trip. All other fields must match.
+        val expected = FULLY_POPULATED.copy(inventoryItems = emptyList(), equippedItems = emptyMap())
+        assertEquals(expected, roundTripped)
     }
 
     // -----------------------------------------------------------------------
