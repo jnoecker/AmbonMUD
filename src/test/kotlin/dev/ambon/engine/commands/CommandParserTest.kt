@@ -450,4 +450,41 @@ class CommandParserTest {
     fun `guild invite without target is Invalid`() {
         assertTrue(CommandParser.parse("guild invite") is Command.Invalid)
     }
+
+    // -------- friend commands --------
+
+    @Test
+    fun `parses friend list`() {
+        assertEquals(Command.Friend.List, CommandParser.parse("friend"))
+        assertEquals(Command.Friend.List, CommandParser.parse("friend list"))
+        assertEquals(Command.Friend.List, CommandParser.parse("friends"))
+    }
+
+    @Test
+    fun `parses friend add`() {
+        assertEquals(Command.Friend.Add("Bob"), CommandParser.parse("friend add Bob"))
+    }
+
+    @Test
+    fun `friend add without target is Invalid`() {
+        assertTrue(CommandParser.parse("friend add") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses friend remove`() {
+        assertEquals(Command.Friend.Remove("Bob"), CommandParser.parse("friend remove Bob"))
+        assertEquals(Command.Friend.Remove("Bob"), CommandParser.parse("friend rem Bob"))
+        assertEquals(Command.Friend.Remove("Bob"), CommandParser.parse("friend del Bob"))
+        assertEquals(Command.Friend.Remove("Bob"), CommandParser.parse("friend delete Bob"))
+    }
+
+    @Test
+    fun `friend remove without target is Invalid`() {
+        assertTrue(CommandParser.parse("friend remove") is Command.Invalid)
+    }
+
+    @Test
+    fun `friend unknown subcommand is Invalid`() {
+        assertTrue(CommandParser.parse("friend xyz") is Command.Invalid)
+    }
 }

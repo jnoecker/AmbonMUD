@@ -346,6 +346,26 @@ class GmcpEmitter(
         emit(sessionId, "Char.Achievements", CharAchievementsPayload(completed = completed, inProgress = inProgress))
     }
 
+    // ---------- friends ----------
+
+    suspend fun sendFriendsList(sessionId: SessionId, friends: List<FriendInfo>) {
+        emit(
+            sessionId,
+            "Friends.List",
+            friends.map { f ->
+                FriendPayload(name = f.name, online = f.online, level = f.level, zone = f.zone)
+            },
+        )
+    }
+
+    suspend fun sendFriendOnline(sessionId: SessionId, friendName: String, level: Int) {
+        emit(sessionId, "Friends.Online", FriendEventPayload(name = friendName, level = level))
+    }
+
+    suspend fun sendFriendOffline(sessionId: SessionId, friendName: String) {
+        emit(sessionId, "Friends.Offline", FriendOfflinePayload(name = friendName))
+    }
+
     // ---------- emit helpers ----------
 
     private suspend fun <T : Any> emit(
@@ -515,6 +535,22 @@ class GmcpEmitter(
     private data class CharAchievementsPayload(
         val completed: List<CompletedAchievementPayload>,
         val inProgress: List<InProgressAchievementPayload>,
+    )
+
+    private data class FriendPayload(
+        val name: String,
+        val online: Boolean,
+        val level: Int?,
+        val zone: String?,
+    )
+
+    private data class FriendEventPayload(
+        val name: String,
+        val level: Int,
+    )
+
+    private data class FriendOfflinePayload(
+        val name: String,
     )
 
     private companion object {

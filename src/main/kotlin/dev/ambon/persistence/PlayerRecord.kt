@@ -41,6 +41,7 @@ data class PlayerRecord(
     val inbox: List<MailMessage> = emptyList(),
     val guildId: String? = null,
     val recallRoomId: RoomId? = null,
+    val friendsList: Set<String> = emptySet(),
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

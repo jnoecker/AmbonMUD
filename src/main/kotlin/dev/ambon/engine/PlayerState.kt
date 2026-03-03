@@ -51,6 +51,7 @@ data class PlayerState(
     var guildRank: GuildRank? = null,
     var guildTag: String? = null,
     var recallRoomId: RoomId? = null,
+    var friendsList: MutableSet<String> = mutableSetOf(),
     /** Epoch-ms timestamp after which recall is available again. Runtime-only; not persisted. */
     var recallCooldownUntilMs: Long = 0L,
 ) {
@@ -146,6 +147,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         inbox = inbox.toMutableList(),
         guildId = guildId,
         recallRoomId = recallRoomId,
+        friendsList = friendsList.toMutableSet(),
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -182,6 +184,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         inbox = inbox.toList(),
         guildId = guildId,
         recallRoomId = recallRoomId,
+        friendsList = friendsList.toSet(),
     )
 }
 
