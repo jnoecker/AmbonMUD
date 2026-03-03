@@ -15,6 +15,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.call
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
@@ -227,9 +228,14 @@ internal fun Application.adminModule(
     json: ObjectMapper,
 ) {
     routing {
+        intercept(ApplicationCallPipeline.Plugins) {
+            if (!call.requireBasicAuth(token)) {
+                finish()
+            }
+        }
+
         // ── Overview ─────────────────────────────────────────────────────────
         get("/") {
-            if (!call.requireBasicAuth(token)) return@get
             val online = players.allPlayers()
             val zones = world.rooms.keys.mapTo(mutableSetOf()) { it.zone }
             val mobCount = mobs.all().size
@@ -299,7 +305,6 @@ internal fun Application.adminModule(
 
         // ── Players list ──────────────────────────────────────────────────────
         get("/players") {
-            if (!call.requireBasicAuth(token)) return@get
             val query = call.request.queryParameters["q"]?.trim() ?: ""
             val onlineOnly = call.request.queryParameters["online"] == "1"
             val staffOnly = call.request.queryParameters["staff"] == "1"
@@ -361,7 +366,6 @@ internal fun Application.adminModule(
 
         // ── Player detail ─────────────────────────────────────────────────────
         get("/players/{name}") {
-            if (!call.requireBasicAuth(token)) return@get
             val name = call.parameters["name"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val ps = players.allPlayers().firstOrNull { it.name.equals(name, ignoreCase = true) }
             val dto: PlayerDetailDto? =
@@ -436,7 +440,6 @@ internal fun Application.adminModule(
 
         // ── Toggle staff ───────────────────────────────────────────────────────
         post("/players/{name}/staff") {
-            if (!call.requireBasicAuth(token)) return@post
             val name = call.parameters["name"] ?: return@post call.respond(HttpStatusCode.BadRequest)
             // consume form body (required by Ktor to avoid connection reset)
             runCatching { call.receiveParameters() }
@@ -456,7 +459,6 @@ internal fun Application.adminModule(
 
         // ── World inspector ───────────────────────────────────────────────────
         get("/world") {
-            if (!call.requireBasicAuth(token)) return@get
             val query = call.request.queryParameters["q"]?.trim()?.lowercase() ?: ""
             val roomsByZone = world.rooms.keys.groupBy { it.zone }
             val body =
@@ -492,7 +494,6 @@ internal fun Application.adminModule(
 
         // ── Zone detail ───────────────────────────────────────────────────────
         get("/world/{zone}") {
-            if (!call.requireBasicAuth(token)) return@get
             val zone = call.parameters["zone"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val zoneRooms = world.rooms.filter { it.key.zone == zone }
             if (zoneRooms.isEmpty()) {
@@ -524,7 +525,6 @@ internal fun Application.adminModule(
         // ── JSON API ──────────────────────────────────────────────────────────
 
         get("/api/overview") {
-            if (!call.requireBasicAuth(token)) return@get
             val dto =
                 OverviewDto(
                     playersOnline = players.allPlayers().size,
@@ -541,7 +541,6 @@ internal fun Application.adminModule(
         }
 
         get("/api/players") {
-            if (!call.requireBasicAuth(token)) return@get
             val items =
                 players
                     .allPlayers()
@@ -551,7 +550,6 @@ internal fun Application.adminModule(
         }
 
         get("/api/players/{name}") {
-            if (!call.requireBasicAuth(token)) return@get
             val name = call.parameters["name"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val ps = players.allPlayers().firstOrNull { it.name.equals(name, ignoreCase = true) }
             val dto: PlayerDetailDto? =
@@ -564,7 +562,6 @@ internal fun Application.adminModule(
         }
 
         get("/api/world/zones") {
-            if (!call.requireBasicAuth(token)) return@get
             val roomsByZone = world.rooms.keys.groupBy { it.zone }
             val zones =
                 roomsByZone.entries.sortedBy { it.key }.map { (zone, rooms) ->
@@ -579,7 +576,6 @@ internal fun Application.adminModule(
         }
 
         get("/api/world/zones/{zone}") {
-            if (!call.requireBasicAuth(token)) return@get
             val zone = call.parameters["zone"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val zoneRooms = world.rooms.filter { it.key.zone == zone }
             if (zoneRooms.isEmpty()) {
