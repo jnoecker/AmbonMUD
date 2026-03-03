@@ -2,10 +2,11 @@ package dev.ambon.engine.status
 
 import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.MobId
-import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.test.MutableClock
 import dev.ambon.test.StatusEffectTestFixture
+import dev.ambon.test.TEST_ROOM_ID
+import dev.ambon.test.TEST_SESSION_ID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -16,8 +17,8 @@ import java.util.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StatusEffectSystemTest {
-    private val roomId = RoomId("zone:room")
-    private val sid = SessionId(1L)
+    private val roomId = TEST_ROOM_ID
+    private val sid = TEST_SESSION_ID
     private val mobId = MobId("zone:goblin")
 
     private fun buildSystem(

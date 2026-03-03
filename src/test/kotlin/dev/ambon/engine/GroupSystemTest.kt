@@ -7,6 +7,7 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
+import dev.ambon.test.TEST_ROOM_ID
 import dev.ambon.test.buildTestPlayerRegistry
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
@@ -19,7 +20,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class GroupSystemTest {
-    private val roomId = RoomId("zone:room")
+    private val roomId = TEST_ROOM_ID
     private val room2 = RoomId("zone:room2")
 
     private fun setup(): TestHarness {

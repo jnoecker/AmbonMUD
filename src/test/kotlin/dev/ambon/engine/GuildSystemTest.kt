@@ -2,13 +2,13 @@ package dev.ambon.engine
 
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.guild.GuildRank
-import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryGuildRepository
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
+import dev.ambon.test.TEST_ROOM_ID
 import dev.ambon.test.buildTestPlayerRegistry
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class GuildSystemTest {
-    private val roomId = RoomId("zone:room")
+    private val roomId = TEST_ROOM_ID
 
     private fun setup(): TestHarness {
         val items = ItemRegistry()

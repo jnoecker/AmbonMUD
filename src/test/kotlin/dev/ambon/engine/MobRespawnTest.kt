@@ -13,6 +13,7 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
+import dev.ambon.test.TEST_ROOM_ID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -22,7 +23,7 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MobRespawnTest {
-    private val roomId = RoomId("zone:room")
+    private val roomId = TEST_ROOM_ID
     private val mobId = MobId("zone:rat")
 
     /**

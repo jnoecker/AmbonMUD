@@ -17,6 +17,7 @@ import dev.ambon.engine.abilities.AbilityEffect
 import dev.ambon.engine.abilities.AbilityId
 import dev.ambon.engine.abilities.TargetType
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.test.TEST_SESSION_ID
 import dev.ambon.test.drainAll
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -24,7 +25,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class GmcpEmitterTest {
-    private val sid = SessionId(1L)
+    private val sid = TEST_SESSION_ID
     private val outbound = LocalOutboundBus()
 
     private val progression = PlayerProgression()

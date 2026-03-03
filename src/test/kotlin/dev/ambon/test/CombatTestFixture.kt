@@ -21,7 +21,7 @@ import java.time.Clock
 import java.util.Random
 
 class CombatTestFixture(
-    override val roomId: RoomId = RoomId("zone:room"),
+    override val roomId: RoomId = TEST_ROOM_ID,
     val clock: MutableClock = MutableClock(0L),
     val items: ItemRegistry = ItemRegistry(),
     val repo: InMemoryPlayerRepository = InMemoryPlayerRepository(),

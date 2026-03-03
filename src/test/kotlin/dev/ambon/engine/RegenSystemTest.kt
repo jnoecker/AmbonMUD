@@ -1,10 +1,10 @@
 package dev.ambon.engine
 
-import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
+import dev.ambon.test.TEST_ROOM_ID
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -15,7 +15,7 @@ import java.util.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class RegenSystemTest {
-    private val roomId = RoomId("zone:room")
+    private val roomId = TEST_ROOM_ID
 
     private fun makeRegen(
         players: PlayerRegistry,
