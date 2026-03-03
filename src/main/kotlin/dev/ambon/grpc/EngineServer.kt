@@ -287,6 +287,23 @@ class EngineServer(
     private var zoneLoadReportJob: Job? = null
     private var autoScaleJob: Job? = null
 
+    /**
+     * Launches a coroutine that calls [action] every [intervalMs] milliseconds,
+     * logging a warning if the action throws.
+     */
+    private fun launchPeriodicJob(
+        intervalMs: Long,
+        label: String,
+        action: suspend () -> Unit,
+    ): Job = scope.launch {
+        while (isActive) {
+            delay(intervalMs)
+            runCatching { action() }.onFailure { err ->
+                log.warn(err) { "$label failed" }
+            }
+        }
+    }
+
     suspend fun start() {
         redisManager?.connect()
 
@@ -312,54 +329,37 @@ class EngineServer(
 
         // Start player-location index heartbeat
         if (playerLocationIndex != null) {
-            val heartbeatMs = config.sharding.playerIndex.heartbeatMs
-            playerIndexHeartbeatJob =
-                scope.launch {
-                    while (isActive) {
-                        delay(heartbeatMs)
-                        runCatching {
-                            playerLocationIndex.refreshTtls()
-                        }.onFailure { err ->
-                            log.warn(err) { "Player location index heartbeat failed" }
-                        }
-                    }
-                }
+            playerIndexHeartbeatJob = launchPeriodicJob(
+                intervalMs = config.sharding.playerIndex.heartbeatMs,
+                label = "Player location index heartbeat",
+            ) {
+                playerLocationIndex.refreshTtls()
+            }
         }
         if (zoneRegistry != null) {
             zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
             val heartbeatIntervalMs =
                 ((config.sharding.registry.leaseTtlSeconds * 1_000L) / 3L)
                     .coerceAtLeast(1_000L)
-            zoneHeartbeatJob =
-                scope.launch {
-                    while (isActive) {
-                        delay(heartbeatIntervalMs)
-                        runCatching {
-                            zoneRegistry.renewLease(engineId)
-                            zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
-                        }.onFailure { err ->
-                            log.warn(err) { "Zone lease heartbeat failed for engine=$engineId" }
-                        }
-                    }
-                }
+            zoneHeartbeatJob = launchPeriodicJob(
+                intervalMs = heartbeatIntervalMs,
+                label = "Zone lease heartbeat for engine=$engineId",
+            ) {
+                zoneRegistry.renewLease(engineId)
+                zoneRegistry.claimZones(engineId, advertisedEngineAddress, localZones)
+            }
             if (config.sharding.instancing.enabled) {
-                val loadReportIntervalMs = config.sharding.instancing.loadReportIntervalMs
-                zoneLoadReportJob =
-                    scope.launch {
-                        while (isActive) {
-                            delay(loadReportIntervalMs)
-                            runCatching {
-                                val zoneCounts =
-                                    players
-                                        .allPlayers()
-                                        .groupBy { it.roomId.zone }
-                                        .mapValues { (_, ps) -> ps.size }
-                                zoneRegistry.reportLoad(engineId, zoneCounts)
-                            }.onFailure { err ->
-                                log.warn(err) { "Zone load report failed for engine=$engineId" }
-                            }
-                        }
-                    }
+                zoneLoadReportJob = launchPeriodicJob(
+                    intervalMs = config.sharding.instancing.loadReportIntervalMs,
+                    label = "Zone load report for engine=$engineId",
+                ) {
+                    val zoneCounts =
+                        players
+                            .allPlayers()
+                            .groupBy { it.roomId.zone }
+                            .mapValues { (_, ps) -> ps.size }
+                    zoneRegistry.reportLoad(engineId, zoneCounts)
+                }
             }
             // Auto-scaling signal evaluation
             if (config.sharding.instancing.autoScale.enabled) {
@@ -384,21 +384,15 @@ class EngineServer(
                     } else {
                         LoggingScaleDecisionPublisher()
                     }
-                val evalIntervalMs = config.sharding.instancing.autoScale.evaluationIntervalMs
-                autoScaleJob =
-                    scope.launch {
-                        while (isActive) {
-                            delay(evalIntervalMs)
-                            runCatching {
-                                val decisions = scaler.evaluate()
-                                if (decisions.isNotEmpty()) {
-                                    publisher.publish(decisions)
-                                }
-                            }.onFailure { err ->
-                                log.warn(err) { "Auto-scale evaluation failed" }
-                            }
-                        }
+                autoScaleJob = launchPeriodicJob(
+                    intervalMs = config.sharding.instancing.autoScale.evaluationIntervalMs,
+                    label = "Auto-scale evaluation",
+                ) {
+                    val decisions = scaler.evaluate()
+                    if (decisions.isNotEmpty()) {
+                        publisher.publish(decisions)
                     }
+                }
             }
         }
 
