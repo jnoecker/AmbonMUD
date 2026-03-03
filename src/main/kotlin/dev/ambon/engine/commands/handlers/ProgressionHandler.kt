@@ -7,6 +7,7 @@ import dev.ambon.domain.items.ItemSlot
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.abilities.AbilitySystem
+import dev.ambon.engine.ceilSeconds
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
@@ -109,8 +110,7 @@ class ProgressionHandler(
                     val remainingMs = abilities.cooldownRemainingMs(sessionId, a.id)
                     val cdText =
                         if (remainingMs > 0) {
-                            val remainingSec = ((remainingMs + 999) / 1000).coerceAtLeast(1)
-                            "${remainingSec}s remaining"
+                            "${remainingMs.ceilSeconds()}s remaining"
                         } else if (a.cooldownMs > 0) {
                             "${a.cooldownMs / 1000}s cooldown"
                         } else {
@@ -141,7 +141,7 @@ class ProgressionHandler(
         } else {
             outbound.send(OutboundEvent.SendInfo(sessionId, "Active effects:"))
             for (e in effects) {
-                val remainingSec = ((e.remainingMs + 999) / 1000).coerceAtLeast(1)
+                val remainingSec = e.remainingMs.ceilSeconds()
                 val stacksText = if (e.stacks > 1) " (x${e.stacks})" else ""
                 outbound.send(
                     OutboundEvent.SendInfo(

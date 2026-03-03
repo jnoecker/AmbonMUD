@@ -2,7 +2,6 @@ package dev.ambon.engine.abilities
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.PlayerClass
-import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DirtyNotifier
@@ -13,11 +12,12 @@ import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.broadcastToRoom
+import dev.ambon.engine.ceilSeconds
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.healHp
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.remapKey
-import dev.ambon.engine.resolveEffectiveStats
+import dev.ambon.engine.resolvePlayerStats
 import dev.ambon.engine.rollRange
 import dev.ambon.engine.spendMana
 import dev.ambon.engine.status.StatusEffectSystem
@@ -82,8 +82,7 @@ class AbilitySystem(
         val now = clock.millis()
         val expiresAt = cooldowns[sessionId]?.get(ability.id) ?: 0L
         if (now < expiresAt) {
-            val remainingMs = expiresAt - now
-            val remainingSec = ((remainingMs + 999) / 1000).coerceAtLeast(1)
+            val remainingSec = (expiresAt - now).ceilSeconds()
             return "${ability.displayName} is on cooldown (${remainingSec}s remaining)."
         }
 
@@ -128,9 +127,7 @@ class AbilitySystem(
                     ?: return "Cast ${ability.displayName} on whom?"
             }
 
-        val playerEquip = items?.equipmentBonuses(player.sessionId) ?: ItemRegistry.EquipmentBonuses()
-        val playerMods = statusEffects?.getPlayerStatMods(sessionId) ?: StatBlock.ZERO
-        val playerStats = resolveEffectiveStats(player, playerEquip, playerMods)
+        val playerStats = resolvePlayerStats(player, items, statusEffects)
 
         val intBonus = PlayerState.statBonus(playerStats.int, intSpellDivisor)
 
