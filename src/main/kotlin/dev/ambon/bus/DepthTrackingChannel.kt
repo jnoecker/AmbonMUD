@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * A [Channel] wrapper that maintains an approximate depth count.
- * Used by [LocalInboundBus] and [LocalOutboundBus] to expose queue depth metrics.
+ * Used by [LocalBusChannel] to expose queue depth metrics.
  */
 internal class DepthTrackingChannel<T>(
     val capacity: Int = Channel.UNLIMITED,

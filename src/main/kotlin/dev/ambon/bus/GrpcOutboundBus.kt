@@ -50,7 +50,8 @@ class GrpcOutboundBus(
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val controlPlaneSendTimeoutMs: Long = DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS,
     private val onFailure: (GrpcOutboundFailure) -> Unit = {},
-) : OutboundBus {
+) : OutboundBus,
+    DepthAware {
     init {
         require(controlPlaneSendTimeoutMs > 0L) {
             "controlPlaneSendTimeoutMs must be > 0"
@@ -168,7 +169,9 @@ class GrpcOutboundBus(
         delegate.close()
     }
 
-    fun delegateForMetrics(): LocalOutboundBus = delegate
+    override fun depth(): Int = delegate.depth()
+
+    override val capacity: Int get() = delegate.capacity
 }
 
 private const val DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS = 250L
