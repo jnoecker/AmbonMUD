@@ -1,6 +1,7 @@
 package dev.ambon.persistence
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import dev.ambon.domain.achievement.AchievementState
@@ -17,7 +18,9 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.upsert
 
 private val questMapper: ObjectMapper =
-    ObjectMapper().registerModule(KotlinModule.Builder().build())
+    ObjectMapper()
+        .registerModule(KotlinModule.Builder().build())
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
 private val activeQuestsType = object : TypeReference<Map<String, QuestState>>() {}
 private val completedQuestIdsType = object : TypeReference<Set<String>>() {}
