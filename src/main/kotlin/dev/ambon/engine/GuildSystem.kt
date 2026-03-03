@@ -27,6 +27,7 @@ class GuildSystem(
     private val maxSize: Int = 50,
     private val inviteTimeoutMs: Long = 60_000L,
     private val markPlayerDirty: suspend (SessionId) -> Unit = {},
+    private val gmcpEmitter: GmcpEmitter? = null,
 ) : GameSystem {
     private val guildsById = mutableMapOf<String, GuildRecord>()
     private val pendingInvites = mutableMapOf<SessionId, PendingGuildInvite>()
@@ -55,6 +56,7 @@ class GuildSystem(
         val playerId = ps.playerId ?: return
         ps.guildRank = guild.members[playerId]
         ps.guildTag = guild.tag
+        sendGuildSync(sessionId)
     }
 
     suspend fun create(
@@ -106,11 +108,15 @@ class GuildSystem(
         markPlayerDirty(sessionId)
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Guild '$trimName' [$trimTag] founded!"))
+        broadcastGuildGmcp(record)
         return null
     }
 
     suspend fun disband(sessionId: SessionId): String? = withMembership(sessionId) { ps, guild ->
         if (ps.guildRank != GuildRank.LEADER) return@withMembership "Only the guild leader can disband the guild."
+
+        // Collect online session IDs before clearing guild state
+        val onlineMemberSids = guild.members.keys.mapNotNull { players.findSessionByPlayerId(it) }
 
         // Notify and clear all online members
         for ((memberId, _) in guild.members) {
@@ -133,6 +139,11 @@ class GuildSystem(
         guildsById.remove(guild.id)
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Guild '${guild.name}' has been disbanded."))
+
+        // Send empty guild GMCP to all former online members
+        for (sid in onlineMemberSids) {
+            gmcpEmitter?.sendGuildInfo(sid, null, null, null, null, 0, maxSize)
+        }
         null
     }
 
@@ -194,6 +205,7 @@ class GuildSystem(
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "You have joined guild '${guild.name}' [${guild.tag}]!"))
         broadcastToGuild(updated, "${ps.name} has joined the guild.", excludeSid = sessionId)
+        broadcastGuildGmcp(updated)
         return null
     }
 
@@ -213,6 +225,8 @@ class GuildSystem(
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "You have left guild '$guildName'."))
         broadcastToGuild(updated, "${ps.name} has left the guild.", excludeSid = sessionId)
+        gmcpEmitter?.sendGuildInfo(sessionId, null, null, null, null, 0, maxSize)
+        broadcastGuildGmcp(updated)
         null
     }
 
@@ -248,6 +262,10 @@ class GuildSystem(
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "$targetName has been kicked from the guild."))
         broadcastToGuild(updated, "$targetName has been kicked from the guild.", excludeSid = sessionId)
+        if (targetSid != null) {
+            gmcpEmitter?.sendGuildInfo(targetSid, null, null, null, null, 0, maxSize)
+        }
+        broadcastGuildGmcp(updated)
         null
     }
 
@@ -274,6 +292,7 @@ class GuildSystem(
         }
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "$targetName has been promoted to Officer."))
+        broadcastGuildGmcp(updated)
         null
     }
 
@@ -300,6 +319,7 @@ class GuildSystem(
         }
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "$targetName has been demoted to Member."))
+        broadcastGuildGmcp(updated)
         null
     }
 
@@ -314,6 +334,7 @@ class GuildSystem(
         persistGuild(updated)
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Guild MOTD updated."))
+        broadcastGuildGmcp(updated)
         null
     }
 
@@ -366,9 +387,60 @@ class GuildSystem(
         for ((memberId, _) in guild.members) {
             val sid = players.findSessionByPlayerId(memberId) ?: continue
             outbound.send(OutboundEvent.SendInfo(sid, formatted))
+            gmcpEmitter?.sendGuildChat(sid, ps.name, message)
         }
         null
     }
+
+    /** Sends Guild.Info and Guild.Members GMCP for the given session. */
+    suspend fun sendGuildSync(sessionId: SessionId) {
+        val emitter = gmcpEmitter ?: return
+        val ps = players.get(sessionId) ?: return
+        val gid = ps.guildId
+        if (gid == null) {
+            emitter.sendGuildInfo(sessionId, null, null, null, null, 0, maxSize)
+            return
+        }
+        val guild = guildsById[gid] ?: return
+        emitter.sendGuildInfo(
+            sessionId,
+            name = guild.name,
+            tag = guild.tag,
+            rank = ps.guildRank?.name,
+            motd = guild.motd,
+            memberCount = guild.members.size,
+            maxSize = maxSize,
+        )
+        emitter.sendGuildMembers(sessionId, buildMemberInfoList(guild))
+    }
+
+    /** Sends Guild.Info + Guild.Members to all online members of the guild. */
+    private suspend fun broadcastGuildGmcp(guild: GuildRecord) {
+        val emitter = gmcpEmitter ?: return
+        val memberInfos = buildMemberInfoList(guild)
+        for ((memberId, rank) in guild.members) {
+            val sid = players.findSessionByPlayerId(memberId) ?: continue
+            emitter.sendGuildInfo(
+                sid,
+                name = guild.name,
+                tag = guild.tag,
+                rank = rank.name,
+                motd = guild.motd,
+                memberCount = guild.members.size,
+                maxSize = maxSize,
+            )
+            emitter.sendGuildMembers(sid, memberInfos)
+        }
+    }
+
+    private suspend fun buildMemberInfoList(guild: GuildRecord): List<GuildMemberInfo> =
+        guild.members.entries.map { (memberId, rank) ->
+            val sid = players.findSessionByPlayerId(memberId)
+            val online = sid != null
+            val ps = if (sid != null) players.get(sid) else null
+            val name = ps?.name ?: players.findOfflinePlayerName(memberId) ?: "(unknown)"
+            GuildMemberInfo(name = name, rank = rank.name, online = online, level = ps?.level)
+        }
 
     // -------- helpers --------
 
@@ -416,3 +488,10 @@ class GuildSystem(
         pendingInvites.removeExpired(clock.millis()) { it.expiresAtMs }
     }
 }
+
+data class GuildMemberInfo(
+    val name: String,
+    val rank: String,
+    val online: Boolean,
+    val level: Int?,
+)

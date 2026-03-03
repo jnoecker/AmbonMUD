@@ -151,6 +151,7 @@ class GameEngine(
             statusEffectSystem = statusEffectSystem,
             achievementRegistry = achievementRegistry,
             groupSystem = groupSystem,
+            guildSystem = guildSystem,
             sessionLifecycle = sessionLifecycleCoordinator,
             router = router,
             playerLocationIndex = playerLocationIndex,
@@ -272,6 +273,7 @@ class GameEngine(
             statusEffectSystem = statusEffectSystem,
             achievementRegistry = achievementRegistry,
             groupSystem = groupSystem,
+            guildSystem = guildSystem,
             gmcpEmitter = gmcpEmitter,
             logger = log,
             metrics = metrics,
@@ -423,7 +425,8 @@ class GameEngine(
                 clock = clock,
                 maxSize = engineConfig.guild.maxSize,
                 inviteTimeoutMs = engineConfig.guild.inviteTimeoutMs,
-                markPlayerDirty = { sid -> players.persistPlayer(sid) }, // suspend lambda
+                markPlayerDirty = { sid -> players.persistPlayer(sid) },
+                gmcpEmitter = gmcpEmitter,
             )
         } else {
             null

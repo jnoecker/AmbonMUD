@@ -616,4 +616,91 @@ class GmcpEmitterTest {
             e.sendGroupInfo(sid, "Alice", listOf(player()))
             assertTrue(drainGmcp().isEmpty())
         }
+
+    // ── Guild.Info ──
+
+    @Test
+    fun `sendGuildInfo emits guild name tag rank motd and counts`() =
+        runTest {
+            val e = emitter("Guild.Info")
+            e.sendGuildInfo(sid, "Knights", "KNT", "LEADER", "Welcome!", 5, 50)
+            val data = drainGmcp()[0]
+            assertEquals("Guild.Info", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"name\":\"Knights\""))
+            assertTrue(data.jsonData.contains("\"tag\":\"KNT\""))
+            assertTrue(data.jsonData.contains("\"rank\":\"LEADER\""))
+            assertTrue(data.jsonData.contains("\"motd\":\"Welcome!\""))
+            assertTrue(data.jsonData.contains("\"memberCount\":5"))
+            assertTrue(data.jsonData.contains("\"maxSize\":50"))
+        }
+
+    @Test
+    fun `sendGuildInfo with null fields emits null values`() =
+        runTest {
+            val e = emitter("Guild.Info")
+            e.sendGuildInfo(sid, null, null, null, null, 0, 50)
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"name\":null"))
+            assertTrue(data.jsonData.contains("\"tag\":null"))
+            assertTrue(data.jsonData.contains("\"rank\":null"))
+            assertTrue(data.jsonData.contains("\"memberCount\":0"))
+        }
+
+    @Test
+    fun `sendGuildInfo skipped when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendGuildInfo(sid, "Knights", "KNT", "LEADER", null, 5, 50)
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    // ── Guild.Members ──
+
+    @Test
+    fun `sendGuildMembers emits member list with ranks and online status`() =
+        runTest {
+            val e = emitter("Guild.Info")
+            val members = listOf(
+                GuildMemberInfo(name = "Alice", rank = "LEADER", online = true, level = 10),
+                GuildMemberInfo(name = "Bob", rank = "MEMBER", online = false, level = 5),
+            )
+            e.sendGuildMembers(sid, members)
+            val data = drainGmcp()[0]
+            assertEquals("Guild.Members", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"name\":\"Alice\""))
+            assertTrue(data.jsonData.contains("\"rank\":\"LEADER\""))
+            assertTrue(data.jsonData.contains("\"online\":true"))
+            assertTrue(data.jsonData.contains("\"name\":\"Bob\""))
+            assertTrue(data.jsonData.contains("\"online\":false"))
+            assertTrue(data.jsonData.contains("\"level\":5"))
+        }
+
+    @Test
+    fun `sendGuildMembers uses Guild Info as support check`() =
+        runTest {
+            val e = emitter()
+            e.sendGuildMembers(sid, listOf(GuildMemberInfo("Alice", "LEADER", true, 10)))
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    // ── Guild.Chat ──
+
+    @Test
+    fun `sendGuildChat emits sender and message`() =
+        runTest {
+            val e = emitter("Guild.Info")
+            e.sendGuildChat(sid, "Alice", "hello guild!")
+            val data = drainGmcp()[0]
+            assertEquals("Guild.Chat", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"sender\":\"Alice\""))
+            assertTrue(data.jsonData.contains("\"message\":\"hello guild!\""))
+        }
+
+    @Test
+    fun `sendGuildChat skipped when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendGuildChat(sid, "Alice", "hello")
+            assertTrue(drainGmcp().isEmpty())
+        }
 }

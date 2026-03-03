@@ -8,6 +8,7 @@ import dev.ambon.domain.world.World
 import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
+import dev.ambon.engine.GuildSystem
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.SessionLifecycleCoordinator
 import dev.ambon.engine.abilities.AbilitySystem
@@ -114,6 +115,7 @@ internal class LoginFlowHandler(
     private val statusEffectSystem: StatusEffectSystem,
     private val achievementRegistry: AchievementRegistry,
     private val groupSystem: GroupSystem,
+    private val guildSystem: GuildSystem? = null,
     private val sessionLifecycle: SessionLifecycleCoordinator,
     private val router: CommandRouter,
     private val playerLocationIndex: PlayerLocationIndex?,
@@ -507,6 +509,7 @@ internal class LoginFlowHandler(
             achievementRegistry,
             groupSystem,
             players,
+            guildSystem,
         )
         router.handle(sessionId, Command.Look)
 
