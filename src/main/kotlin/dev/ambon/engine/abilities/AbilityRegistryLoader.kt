@@ -1,6 +1,7 @@
 package dev.ambon.engine.abilities
 
 import dev.ambon.config.AbilityEngineConfig
+import dev.ambon.domain.DamageRange
 import dev.ambon.domain.PlayerClass
 import dev.ambon.engine.status.StatusEffectId
 
@@ -21,8 +22,7 @@ object AbilityRegistryLoader {
                 when (defConfig.effect.type.uppercase()) {
                     "DIRECT_DAMAGE" ->
                         AbilityEffect.DirectDamage(
-                            minDamage = defConfig.effect.minDamage,
-                            maxDamage = defConfig.effect.maxDamage,
+                            damage = DamageRange(defConfig.effect.minDamage, defConfig.effect.maxDamage),
                         )
                     "DIRECT_HEAL" ->
                         AbilityEffect.DirectHeal(
@@ -35,8 +35,7 @@ object AbilityRegistryLoader {
                         )
                     "AREA_DAMAGE" ->
                         AbilityEffect.AreaDamage(
-                            minDamage = defConfig.effect.minDamage,
-                            maxDamage = defConfig.effect.maxDamage,
+                            damage = DamageRange(defConfig.effect.minDamage, defConfig.effect.maxDamage),
                         )
                     "TAUNT" ->
                         AbilityEffect.Taunt(

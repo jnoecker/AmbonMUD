@@ -395,7 +395,7 @@ class CombatSystem(
             if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
                 outbound.send(OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s attack!"))
             } else {
-                val mobRoll = rollRange(rng, mob.minDamage, mob.maxDamage)
+                val mobRoll = rollRange(rng, mob.damage.min, mob.damage.max)
                 var mobDamage = mobRoll
                 if (statusEffects != null) {
                     mobDamage = statusEffects.absorbPlayerDamage(targetSid, mobDamage)

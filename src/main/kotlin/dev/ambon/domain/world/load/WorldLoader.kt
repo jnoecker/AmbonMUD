@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.config.MobTiersConfig
+import dev.ambon.domain.DamageRange
 import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
@@ -274,8 +275,7 @@ object WorldLoader {
                         name = mf.name,
                         roomId = roomId,
                         maxHp = resolvedHp,
-                        minDamage = resolvedMinDamage,
-                        maxDamage = resolvedMaxDamage,
+                        damage = DamageRange(resolvedMinDamage, resolvedMaxDamage),
                         armor = resolvedArmor,
                         xpReward = resolvedXpReward,
                         drops = drops,

@@ -44,8 +44,8 @@ class WorldLoaderTest {
         assertEquals("a small rat", mob.name)
         assertEquals(RoomId("ok_small:b"), mob.roomId)
         assertEquals(10, mob.maxHp)
-        assertEquals(1, mob.minDamage)
-        assertEquals(4, mob.maxDamage)
+        assertEquals(1, mob.damage.min)
+        assertEquals(4, mob.damage.max)
         assertEquals(0, mob.armor)
         assertEquals(30L, mob.xpReward)
         assertEquals(1, mob.drops.size)
@@ -250,8 +250,8 @@ class WorldLoaderTest {
 
         val rat = mobs.getValue("ok_mob_stats:rat")
         assertEquals(10, rat.maxHp)
-        assertEquals(1, rat.minDamage)
-        assertEquals(4, rat.maxDamage)
+        assertEquals(1, rat.damage.min)
+        assertEquals(4, rat.damage.max)
         assertEquals(0, rat.armor)
         assertEquals(30L, rat.xpReward)
     }
@@ -269,8 +269,8 @@ class WorldLoaderTest {
         // xpReward = 30 + 2*10 = 50
         val bandit = mobs.getValue("ok_mob_stats:bandit")
         assertEquals(16, bandit.maxHp)
-        assertEquals(3, bandit.minDamage)
-        assertEquals(6, bandit.maxDamage)
+        assertEquals(3, bandit.damage.min)
+        assertEquals(6, bandit.damage.max)
         assertEquals(0, bandit.armor)
         assertEquals(50L, bandit.xpReward)
     }
@@ -282,8 +282,8 @@ class WorldLoaderTest {
 
         val mob = mobs.getValue("ok_mob_stats:override_mob")
         assertEquals(99, mob.maxHp)
-        assertEquals(5, mob.minDamage)
-        assertEquals(10, mob.maxDamage)
+        assertEquals(5, mob.damage.min)
+        assertEquals(10, mob.damage.max)
         assertEquals(2, mob.armor)
         assertEquals(999L, mob.xpReward)
     }
@@ -295,8 +295,8 @@ class WorldLoaderTest {
 
         val boss = mobs.getValue("ok_mob_stats:boss_mob")
         assertEquals(50, boss.maxHp)
-        assertEquals(3, boss.minDamage)
-        assertEquals(8, boss.maxDamage)
+        assertEquals(3, boss.damage.min)
+        assertEquals(8, boss.damage.max)
         assertEquals(3, boss.armor)
         assertEquals(200L, boss.xpReward)
     }
