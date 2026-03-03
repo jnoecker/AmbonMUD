@@ -93,7 +93,7 @@ class ShopHandler(
             items.addToInventory(sessionId, newItem)
             markVitalsDirty(sessionId)
             outbound.send(OutboundEvent.SendText(sessionId, "You buy ${item.displayName} for $buyPrice gold."))
-            gmcpEmitter?.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
+            syncItemsGmcp(sessionId, items, gmcpEmitter)
         }
     }
 
@@ -128,7 +128,7 @@ class ShopHandler(
             me.gold += sellPrice
             markVitalsDirty(sessionId)
             outbound.send(OutboundEvent.SendText(sessionId, "You sell ${removed.item.displayName} for $sellPrice gold."))
-            gmcpEmitter?.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
+            syncItemsGmcp(sessionId, items, gmcpEmitter)
         }
     }
 }

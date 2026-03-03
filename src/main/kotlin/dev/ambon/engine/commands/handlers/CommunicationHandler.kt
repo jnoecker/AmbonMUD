@@ -106,20 +106,13 @@ class CommunicationHandler(
         cmd: Command.Whisper,
     ) {
         players.withPlayer(sessionId) { me ->
-            val targetSid = players.findSessionByName(cmd.target)
-            if (targetSid == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.target}"))
-                return
-            }
+            val targetSid = requirePlayerOnline(sessionId, cmd.target, players, outbound) ?: return
             if (targetSid == sessionId) {
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You whisper to yourself: ${cmd.message}"))
                 return
             }
             players.withPlayer(targetSid) { target ->
-                if (target.roomId != me.roomId) {
-                    outbound.send(OutboundEvent.SendError(sessionId, "${target.name} is not here."))
-                    return
-                }
+                if (!requireSameRoom(sessionId, me, target, outbound)) return
                 outbound.send(OutboundEvent.SendText(sessionId, "You whisper to ${target.name}: ${cmd.message}"))
                 outbound.send(OutboundEvent.SendText(targetSid, "${me.name} whispers to you: ${cmd.message}"))
                 gmcpEmitter?.sendCommChannel(sessionId, "whisper", me.name, cmd.message)
