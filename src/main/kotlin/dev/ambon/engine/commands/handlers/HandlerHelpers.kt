@@ -408,6 +408,26 @@ internal suspend fun requireContainerOpen(
     return true
 }
 
+/**
+ * Finds an open [RoomFeature.Container] by [keyword] in [room], or sends an error and returns null.
+ * Combines feature lookup, type check, and open-state check into a single guard.
+ */
+internal suspend fun requireOpenContainer(
+    sessionId: SessionId,
+    room: Room,
+    keyword: String,
+    worldState: WorldStateRegistry?,
+    outbound: OutboundBus,
+): RoomFeature.Container? {
+    val feature = findFeatureByKeyword(room, keyword)
+    if (feature == null || feature !is RoomFeature.Container) {
+        outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$keyword' here."))
+        return null
+    }
+    if (!requireContainerOpen(sessionId, feature, worldState, outbound)) return null
+    return feature
+}
+
 /** Adapter providing uniform access to a Door or Container's lockable state. */
 internal class Lockable(
     val displayName: String,
