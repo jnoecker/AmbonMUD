@@ -213,7 +213,7 @@ class BehaviorTreeSystemTest {
             assertTrue(e.combat.isInCombat(sid))
 
             val messages = e.outbound.drainAll()
-            assertTrue(messages.any { it is OutboundEvent.SendText && (it as OutboundEvent.SendText).text.contains("attacks you") })
+            assertTrue(messages.any { it is OutboundEvent.SendText && it.text.contains("attacks you") })
         }
 
     @Test
@@ -328,7 +328,7 @@ class BehaviorTreeSystemTest {
             assertTrue(newRoom != roomA.id, "Mob should have fled to a different room")
 
             val messages = e.outbound.drainAll()
-            assertTrue(messages.any { it is OutboundEvent.SendText && (it as OutboundEvent.SendText).text.contains("flees") })
+            assertTrue(messages.any { it is OutboundEvent.SendText && it.text.contains("flees") })
         }
 
     @Test

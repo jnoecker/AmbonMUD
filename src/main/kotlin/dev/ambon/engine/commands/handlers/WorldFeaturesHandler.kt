@@ -34,7 +34,7 @@ class WorldFeaturesHandler(
     private suspend fun handleOpenFeature(
         sessionId: SessionId,
         keyword: String,
-    ) = withPlayerAndRoom(sessionId, players, world) { me, room ->
+    ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
         val feature = requireFeature(sessionId, room, keyword, "open", outbound) ?: return
         val lockable = requireLockable(sessionId, feature, worldState, "open", outbound) ?: return
         when (lockable.state) {
@@ -51,7 +51,7 @@ class WorldFeaturesHandler(
     private suspend fun handleCloseFeature(
         sessionId: SessionId,
         keyword: String,
-    ) = withPlayerAndRoom(sessionId, players, world) { me, room ->
+    ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
         val feature = requireFeature(sessionId, room, keyword, "close", outbound) ?: return
         val lockable = requireLockable(sessionId, feature, worldState, "close", outbound) ?: return
         when (lockable.state) {
@@ -72,7 +72,7 @@ class WorldFeaturesHandler(
     private suspend fun handleUnlockFeature(
         sessionId: SessionId,
         keyword: String,
-    ) = withPlayerAndRoom(sessionId, players, world) { me, room ->
+    ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
         val feature = requireFeature(sessionId, room, keyword, "unlock", outbound) ?: return
         val lockable = requireLockable(sessionId, feature, worldState, "unlock", outbound) ?: return
         when {
@@ -103,7 +103,7 @@ class WorldFeaturesHandler(
     private suspend fun handleLockFeature(
         sessionId: SessionId,
         keyword: String,
-    ) = withPlayerAndRoom(sessionId, players, world) { me, room ->
+    ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
         val feature = requireFeature(sessionId, room, keyword, "lock", outbound) ?: return
         val lockable = requireLockable(sessionId, feature, worldState, "lock", outbound) ?: return
         when {
@@ -136,7 +136,7 @@ class WorldFeaturesHandler(
     private suspend fun handleSearchContainer(
         sessionId: SessionId,
         keyword: String,
-    ) = withPlayerAndRoom(sessionId, players, world) { _, room ->
+    ): Unit = withPlayerAndRoom(sessionId, players, world) { _, room ->
         val feature = findFeatureByKeyword(room, keyword)
         if (feature == null || feature !is RoomFeature.Container) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$keyword' here."))
@@ -156,7 +156,7 @@ class WorldFeaturesHandler(
         sessionId: SessionId,
         itemKeyword: String,
         containerKeyword: String,
-    ) = withPlayerAndRoom(sessionId, players, world) { me, room ->
+    ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
         val feature = findFeatureByKeyword(room, containerKeyword)
         if (feature == null || feature !is RoomFeature.Container) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$containerKeyword' here."))
@@ -183,7 +183,7 @@ class WorldFeaturesHandler(
         sessionId: SessionId,
         itemKeyword: String,
         containerKeyword: String,
-    ) = withPlayerAndRoom(sessionId, players, world) { me, room ->
+    ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
         val feature = findFeatureByKeyword(room, containerKeyword)
         if (feature == null || feature !is RoomFeature.Container) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$containerKeyword' here."))
@@ -209,7 +209,7 @@ class WorldFeaturesHandler(
     private suspend fun handlePull(
         sessionId: SessionId,
         keyword: String,
-    ) = withPlayerAndRoom(sessionId, players, world) { me, room ->
+    ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
         val feature = findFeatureByKeyword(room, keyword)
         if (feature == null || feature !is RoomFeature.Lever) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see any lever called '$keyword' here."))
@@ -225,7 +225,7 @@ class WorldFeaturesHandler(
     private suspend fun handleReadSign(
         sessionId: SessionId,
         keyword: String,
-    ) = withPlayerAndRoom(sessionId, players, world) { _, room ->
+    ): Unit = withPlayerAndRoom(sessionId, players, world) { _, room ->
         val feature = findFeatureByKeyword(room, keyword)
         if (feature == null || feature !is RoomFeature.Sign) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't see anything called '$keyword' to read here."))

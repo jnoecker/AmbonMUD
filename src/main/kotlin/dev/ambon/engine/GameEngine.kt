@@ -561,7 +561,7 @@ class GameEngine(
     )
 
     private val router = CommandRouter(outbound = outbound, players = players)
-    private lateinit var mailHandler: MailHandler
+    private val mailHandler: MailHandler
 
     init {
         val crossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = if (handoffManager != null) ::handleCrossZoneMove else null
