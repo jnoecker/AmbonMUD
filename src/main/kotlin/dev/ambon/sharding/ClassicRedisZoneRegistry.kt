@@ -52,12 +52,7 @@ class ClassicRedisZoneRegistry(
             )
         for (key in cursor.keys) {
             val json = commands.get(key) ?: continue
-            val addr =
-                try {
-                    mapper.readValue<EngineAddress>(json)
-                } catch (_: Exception) {
-                    continue
-                }
+            val addr = mapper.readValueOrNull<EngineAddress>(json) ?: continue
             if (addr.engineId == engineId) {
                 commands.expire(key, leaseTtlSeconds)
             }
@@ -76,12 +71,7 @@ class ClassicRedisZoneRegistry(
         for (key in cursor.keys) {
             val zone = key.removePrefix(keyPrefix)
             val json = commands.get(key) ?: continue
-            val addr =
-                try {
-                    mapper.readValue<EngineAddress>(json)
-                } catch (_: Exception) {
-                    continue
-                }
+            val addr = mapper.readValueOrNull<EngineAddress>(json) ?: continue
             result[zone] = addr
         }
         return result
