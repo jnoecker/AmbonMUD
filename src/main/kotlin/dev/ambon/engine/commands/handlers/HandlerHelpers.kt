@@ -189,6 +189,34 @@ internal suspend fun <T> requireSystemOrNull(
     return system
 }
 
+/**
+ * Notifies old-room players of departure, moves the player, then notifies new-room players of arrival.
+ * Also fires [dialogueSystem] movement callbacks and emits GMCP room-player add/remove.
+ */
+internal suspend fun movePlayerWithNotify(
+    sessionId: SessionId,
+    from: RoomId,
+    to: RoomId,
+    departMsg: String,
+    arriveMsg: String,
+    players: PlayerRegistry,
+    outbound: OutboundBus,
+    gmcpEmitter: GmcpEmitter?,
+    dialogueSystem: dev.ambon.engine.dialogue.DialogueSystem? = null,
+) {
+    val me = players.get(sessionId) ?: return
+    for (other in players.playersInRoom(from).filter { it.sessionId != me.sessionId }) {
+        outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} $departMsg"))
+        gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
+    }
+    dialogueSystem?.onPlayerMoved(sessionId)
+    players.moveTo(sessionId, to)
+    for (other in players.playersInRoom(to).filter { it.sessionId != me.sessionId }) {
+        outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} $arriveMsg"))
+        gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
+    }
+}
+
 /** Checks if [sessionId] has staff privileges; sends an error and returns false if not. */
 internal suspend fun requireStaff(
     sessionId: SessionId,
