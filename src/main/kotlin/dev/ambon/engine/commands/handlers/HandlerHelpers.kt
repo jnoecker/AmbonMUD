@@ -261,6 +261,73 @@ internal fun exitsLine(r: Room): String =
 /** Returns the zone portion of a namespaced id (before the first ':'). */
 internal fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
 
+/**
+ * Resolves [sessionId] to a [PlayerState] and its current [Room], then executes [block].
+ * Returns early from the enclosing function if the player is not found or the room is missing.
+ */
+internal inline fun withPlayerAndRoom(
+    sessionId: SessionId,
+    players: PlayerRegistry,
+    world: World,
+    block: (PlayerState, Room) -> Unit,
+) {
+    val me = players.get(sessionId) ?: return
+    val room = world.rooms[me.roomId] ?: return
+    block(me, room)
+}
+
+/**
+ * Finds a [RoomFeature] by [keyword] in [room], or sends an error with the given [verb] and returns null.
+ * Example error: "You don't see any 'chest' to open here."
+ */
+internal suspend fun requireFeature(
+    sessionId: SessionId,
+    room: Room,
+    keyword: String,
+    verb: String,
+    outbound: OutboundBus,
+): RoomFeature? {
+    val feature = findFeatureByKeyword(room, keyword)
+    if (feature == null) {
+        outbound.send(OutboundEvent.SendError(sessionId, "You don't see any '$keyword' to $verb here."))
+    }
+    return feature
+}
+
+/**
+ * Resolves a [Lockable] from [feature], or sends "You can't [verb] that." and returns null.
+ */
+internal suspend fun requireLockable(
+    sessionId: SessionId,
+    feature: RoomFeature,
+    worldState: WorldStateRegistry?,
+    verb: String,
+    outbound: OutboundBus,
+): Lockable? {
+    val lockable = resolveLockable(feature, worldState)
+    if (lockable == null) {
+        outbound.send(OutboundEvent.SendError(sessionId, "You can't $verb that."))
+    }
+    return lockable
+}
+
+/**
+ * Checks that a [RoomFeature.Container] is open; sends "The <name> is not open." and returns false otherwise.
+ */
+internal suspend fun requireContainerOpen(
+    sessionId: SessionId,
+    feature: RoomFeature.Container,
+    worldState: WorldStateRegistry?,
+    outbound: OutboundBus,
+): Boolean {
+    val state = worldState?.getContainerState(feature.id) ?: feature.initialState
+    if (state != LockableState.OPEN) {
+        outbound.send(OutboundEvent.SendError(sessionId, "The ${feature.displayName} is not open."))
+        return false
+    }
+    return true
+}
+
 /** Adapter providing uniform access to a Door or Container's lockable state. */
 internal class Lockable(
     val displayName: String,
