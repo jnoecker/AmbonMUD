@@ -3,7 +3,7 @@ package dev.ambon.engine.behavior.actions
 import dev.ambon.engine.behavior.BtContext
 import dev.ambon.engine.behavior.BtNode
 import dev.ambon.engine.behavior.BtResult
-import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.behavior.moveMobWithNotify
 
 data object FleeAction : BtNode {
     override suspend fun tick(ctx: BtContext): BtResult {
@@ -16,21 +16,12 @@ data object FleeAction : BtNode {
 
         // Pick a random exit and move
         val destination = exits[ctx.rng.nextInt(exits.size)]
-        val from = ctx.mob.roomId
 
-        // Notify players in old room
-        for (p in ctx.players.playersInRoom(from)) {
-            ctx.outbound.send(OutboundEvent.SendText(p.sessionId, "${ctx.mob.name} flees!"))
-            ctx.gmcpEmitter?.sendRoomRemoveMob(p.sessionId, ctx.mob.id.value)
-        }
-
-        ctx.mobs.moveTo(ctx.mob.id, destination)
-
-        // Notify players in new room
-        for (p in ctx.players.playersInRoom(destination)) {
-            ctx.outbound.send(OutboundEvent.SendText(p.sessionId, "${ctx.mob.name} arrives in a panic."))
-            ctx.gmcpEmitter?.sendRoomAddMob(p.sessionId, ctx.mob)
-        }
+        ctx.moveMobWithNotify(
+            destination,
+            departMsg = "${ctx.mob.name} flees!",
+            arriveMsg = "${ctx.mob.name} arrives in a panic.",
+        )
 
         return BtResult.SUCCESS
     }

@@ -93,18 +93,17 @@ class NavigationHandler(
                 }
             }
 
-            val oldMembers = players.playersInRoom(from).filter { it.sessionId != me.sessionId }
-            for (other in oldMembers) {
-                outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} leaves."))
-                gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
-            }
-            dialogueSystem?.onPlayerMoved(sessionId)
-            players.moveTo(sessionId, to)
-            val newMembers = players.playersInRoom(to).filter { it.sessionId != me.sessionId }
-            for (other in newMembers) {
-                outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} enters."))
-                gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
-            }
+            movePlayerWithNotify(
+                sessionId,
+                from,
+                to,
+                "leaves.",
+                "enters.",
+                players,
+                outbound,
+                gmcpEmitter,
+                dialogueSystem,
+            )
             sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
         }
     }
@@ -134,17 +133,18 @@ class NavigationHandler(
             return
         }
         val from = me.roomId
-        for (other in players.playersInRoom(from).filter { it.sessionId != me.sessionId }) {
-            outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} vanishes in a flash of light."))
-            gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
-        }
-        dialogueSystem?.onPlayerMoved(sessionId)
-        players.moveTo(sessionId, target)
+        movePlayerWithNotify(
+            sessionId,
+            from,
+            target,
+            "vanishes in a flash of light.",
+            "appears in a flash of light.",
+            players,
+            outbound,
+            gmcpEmitter,
+            dialogueSystem,
+        )
         outbound.send(OutboundEvent.SendText(sessionId, "You feel a familiar warmth and find yourself back at your recall point."))
-        for (other in players.playersInRoom(target).filter { it.sessionId != me.sessionId }) {
-            outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} appears in a flash of light."))
-            gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
-        }
         sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
     }
 
