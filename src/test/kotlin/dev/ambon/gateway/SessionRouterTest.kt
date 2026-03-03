@@ -6,6 +6,7 @@ import dev.ambon.grpc.proto.InboundEventProto
 import dev.ambon.sharding.EngineAddress
 import dev.ambon.sharding.LoadBalancedInstanceSelector
 import dev.ambon.sharding.StaticZoneRegistry
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -144,6 +145,7 @@ class SessionRouterTest {
         assertTrue(result.isFailure)
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     @Test
     fun `close closes all engine channels`() {
         val (router, channels) = makeRouter("e1", "e2")
