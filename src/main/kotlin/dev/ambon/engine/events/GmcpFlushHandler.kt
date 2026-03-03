@@ -46,10 +46,8 @@ class GmcpFlushHandler(
             mobsByRoom.getOrPut(mob.roomId) { mutableListOf() }.add(mob)
         }
         for ((roomId, roomMobs) in mobsByRoom) {
-            for (p in players.playersInRoom(roomId)) {
-                for (mob in roomMobs) {
-                    gmcpEmitter.sendRoomUpdateMob(p.sessionId, mob)
-                }
+            for (mob in roomMobs) {
+                gmcpEmitter.broadcastRoomUpdateMob(roomId, mob, players)
             }
         }
     }
