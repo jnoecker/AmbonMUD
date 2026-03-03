@@ -2,6 +2,7 @@ package dev.ambon.sharding
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import dev.ambon.domain.items.ItemInstance
 import dev.ambon.engine.PlayerState
 
 /**
@@ -104,35 +105,6 @@ data class PlayerSummary(
 )
 
 /**
- * Serialized item data for cross-zone handoff. Carries the full item definition
- * so that the target engine can reconstruct items without needing the source zone's templates.
- */
-data class SerializedItem(
-    val id: String = "",
-    val keyword: String = "",
-    val displayName: String = "",
-    val description: String = "",
-    val slot: String? = null,
-    val damage: Int = 0,
-    val armor: Int = 0,
-    val constitution: Int = 0,
-    val strength: Int = 0,
-    val dexterity: Int = 0,
-    val intelligence: Int = 0,
-    val wisdom: Int = 0,
-    val charisma: Int = 0,
-    val consumable: Boolean = false,
-    val charges: Int? = null,
-    val onUse: SerializedItemUseEffect? = null,
-    val matchByKey: Boolean = false,
-)
-
-data class SerializedItemUseEffect(
-    val healHp: Int = 0,
-    val grantXp: Long = 0L,
-)
-
-/**
  * Full player state for cross-zone handoff. Serialized as JSON for transport.
  */
 data class SerializedPlayerState(
@@ -160,7 +132,7 @@ data class SerializedPlayerState(
     val mana: Int = PlayerState.BASE_MANA,
     val maxMana: Int = PlayerState.BASE_MANA,
     val baseMana: Int = PlayerState.BASE_MANA,
-    val inventoryItems: List<SerializedItem> = emptyList(),
+    val inventoryItems: List<ItemInstance> = emptyList(),
     // slot name → item
-    val equippedItems: Map<String, SerializedItem> = emptyMap(),
+    val equippedItems: Map<String, ItemInstance> = emptyMap(),
 )
