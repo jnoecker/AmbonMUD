@@ -6,6 +6,8 @@ import dev.ambon.config.AdminConfig
 import dev.ambon.domain.world.World
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.PlayerState
+import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.ContentType
@@ -111,6 +113,86 @@ private data class PlayerDetailDto(
     val completedQuestIds: List<String>,
     val achievementIds: List<String>,
 )
+
+private fun PlayerState.toListItemDto() =
+    PlayerListItemDto(
+        name = name,
+        level = level,
+        playerClass = playerClass,
+        race = race,
+        room = roomId.value,
+        isOnline = true,
+        isStaff = isStaff,
+        hp = hp,
+        maxHp = maxHp,
+    )
+
+private fun PlayerRecord.toListItemDto() =
+    PlayerListItemDto(
+        name = name,
+        level = level,
+        playerClass = playerClass,
+        race = race,
+        room = roomId.value,
+        isOnline = false,
+        isStaff = isStaff,
+        hp = 0,
+        maxHp = 0,
+    )
+
+private fun PlayerState.toDetailDto() =
+    PlayerDetailDto(
+        name = name,
+        level = level,
+        playerClass = playerClass,
+        race = race,
+        room = roomId.value,
+        isOnline = true,
+        isStaff = isStaff,
+        hp = hp,
+        maxHp = maxHp,
+        mana = mana,
+        maxMana = maxMana,
+        xpTotal = xpTotal,
+        gold = gold,
+        strength = strength,
+        dexterity = dexterity,
+        constitution = constitution,
+        intelligence = intelligence,
+        wisdom = wisdom,
+        charisma = charisma,
+        activeTitle = activeTitle,
+        activeQuestIds = activeQuests.keys.sorted(),
+        completedQuestIds = completedQuestIds.sorted(),
+        achievementIds = unlockedAchievementIds.sorted(),
+    )
+
+private fun PlayerRecord.toDetailDto() =
+    PlayerDetailDto(
+        name = name,
+        level = level,
+        playerClass = playerClass,
+        race = race,
+        room = roomId.value,
+        isOnline = false,
+        isStaff = isStaff,
+        hp = 0,
+        maxHp = 0,
+        mana = mana,
+        maxMana = maxMana,
+        xpTotal = xpTotal,
+        gold = gold,
+        strength = strength,
+        dexterity = dexterity,
+        constitution = constitution,
+        intelligence = intelligence,
+        wisdom = wisdom,
+        charisma = charisma,
+        activeTitle = activeTitle,
+        activeQuestIds = activeQuests.keys.sorted(),
+        completedQuestIds = completedQuestIds.sorted(),
+        achievementIds = unlockedAchievementIds.sorted(),
+    )
 
 private data class ZoneInfoDto(
     val name: String,
@@ -228,32 +310,9 @@ internal fun Application.adminModule(
                 if (query.isNotBlank()) {
                     val ps = onlineNames[query.lowercase()]
                     if (ps != null) {
-                        PlayerListItemDto(
-                            name = ps.name,
-                            level = ps.level,
-                            playerClass = ps.playerClass,
-                            race = ps.race,
-                            room = ps.roomId.value,
-                            isOnline = true,
-                            isStaff = ps.isStaff,
-                            hp = ps.hp,
-                            maxHp = ps.maxHp,
-                        )
+                        ps.toListItemDto()
                     } else {
-                        val record = playerRepo.findByName(query)
-                        record?.let {
-                            PlayerListItemDto(
-                                name = it.name,
-                                level = it.level,
-                                playerClass = it.playerClass,
-                                race = it.race,
-                                room = it.roomId.value,
-                                isOnline = false,
-                                isStaff = it.isStaff,
-                                hp = 0,
-                                maxHp = 0,
-                            )
-                        }
+                        playerRepo.findByName(query)?.toListItemDto()
                     }
                 } else {
                     null
@@ -292,19 +351,7 @@ internal fun Application.adminModule(
                             online.filter { !staffOnly || it.isStaff }
                         val items =
                             filteredOnline
-                                .map { p ->
-                                    PlayerListItemDto(
-                                        name = p.name,
-                                        level = p.level,
-                                        playerClass = p.playerClass,
-                                        race = p.race,
-                                        room = p.roomId.value,
-                                        isOnline = true,
-                                        isStaff = p.isStaff,
-                                        hp = p.hp,
-                                        maxHp = p.maxHp,
-                                    )
-                                }
+                                .map { it.toListItemDto() }
                                 .sortedWith(playerComparator(sort))
                         append(playerRowsHtml(items))
                     }
@@ -318,62 +365,7 @@ internal fun Application.adminModule(
             val name = call.parameters["name"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val ps = players.allPlayers().firstOrNull { it.name.equals(name, ignoreCase = true) }
             val dto: PlayerDetailDto? =
-                if (ps != null) {
-                    PlayerDetailDto(
-                        name = ps.name,
-                        level = ps.level,
-                        playerClass = ps.playerClass,
-                        race = ps.race,
-                        room = ps.roomId.value,
-                        isOnline = true,
-                        isStaff = ps.isStaff,
-                        hp = ps.hp,
-                        maxHp = ps.maxHp,
-                        mana = ps.mana,
-                        maxMana = ps.maxMana,
-                        xpTotal = ps.xpTotal,
-                        gold = ps.gold,
-                        strength = ps.strength,
-                        dexterity = ps.dexterity,
-                        constitution = ps.constitution,
-                        intelligence = ps.intelligence,
-                        wisdom = ps.wisdom,
-                        charisma = ps.charisma,
-                        activeTitle = ps.activeTitle,
-                        activeQuestIds = ps.activeQuests.keys.sorted(),
-                        completedQuestIds = ps.completedQuestIds.sorted(),
-                        achievementIds = ps.unlockedAchievementIds.sorted(),
-                    )
-                } else {
-                    val record = playerRepo.findByName(name)
-                    record?.let {
-                        PlayerDetailDto(
-                            name = it.name,
-                            level = it.level,
-                            playerClass = it.playerClass,
-                            race = it.race,
-                            room = it.roomId.value,
-                            isOnline = false,
-                            isStaff = it.isStaff,
-                            hp = 0,
-                            maxHp = 0,
-                            mana = it.mana,
-                            maxMana = it.maxMana,
-                            xpTotal = it.xpTotal,
-                            gold = it.gold,
-                            strength = it.strength,
-                            dexterity = it.dexterity,
-                            constitution = it.constitution,
-                            intelligence = it.intelligence,
-                            wisdom = it.wisdom,
-                            charisma = it.charisma,
-                            activeTitle = it.activeTitle,
-                            activeQuestIds = it.activeQuests.keys.sorted(),
-                            completedQuestIds = it.completedQuestIds.sorted(),
-                            achievementIds = it.unlockedAchievementIds.sorted(),
-                        )
-                    }
-                }
+                ps?.toDetailDto() ?: playerRepo.findByName(name)?.toDetailDto()
             if (dto == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
@@ -554,19 +546,7 @@ internal fun Application.adminModule(
                 players
                     .allPlayers()
                     .sortedBy { it.name }
-                    .map { p ->
-                        PlayerListItemDto(
-                            name = p.name,
-                            level = p.level,
-                            playerClass = p.playerClass,
-                            race = p.race,
-                            room = p.roomId.value,
-                            isOnline = true,
-                            isStaff = p.isStaff,
-                            hp = p.hp,
-                            maxHp = p.maxHp,
-                        )
-                    }
+                    .map { it.toListItemDto() }
             call.respondText(json.writeValueAsString(items), ContentType.Application.Json)
         }
 
@@ -575,62 +555,7 @@ internal fun Application.adminModule(
             val name = call.parameters["name"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val ps = players.allPlayers().firstOrNull { it.name.equals(name, ignoreCase = true) }
             val dto: PlayerDetailDto? =
-                if (ps != null) {
-                    PlayerDetailDto(
-                        name = ps.name,
-                        level = ps.level,
-                        playerClass = ps.playerClass,
-                        race = ps.race,
-                        room = ps.roomId.value,
-                        isOnline = true,
-                        isStaff = ps.isStaff,
-                        hp = ps.hp,
-                        maxHp = ps.maxHp,
-                        mana = ps.mana,
-                        maxMana = ps.maxMana,
-                        xpTotal = ps.xpTotal,
-                        gold = ps.gold,
-                        strength = ps.strength,
-                        dexterity = ps.dexterity,
-                        constitution = ps.constitution,
-                        intelligence = ps.intelligence,
-                        wisdom = ps.wisdom,
-                        charisma = ps.charisma,
-                        activeTitle = ps.activeTitle,
-                        activeQuestIds = ps.activeQuests.keys.sorted(),
-                        completedQuestIds = ps.completedQuestIds.sorted(),
-                        achievementIds = ps.unlockedAchievementIds.sorted(),
-                    )
-                } else {
-                    val record = playerRepo.findByName(name)
-                    record?.let {
-                        PlayerDetailDto(
-                            name = it.name,
-                            level = it.level,
-                            playerClass = it.playerClass,
-                            race = it.race,
-                            room = it.roomId.value,
-                            isOnline = false,
-                            isStaff = it.isStaff,
-                            hp = 0,
-                            maxHp = 0,
-                            mana = it.mana,
-                            maxMana = it.maxMana,
-                            xpTotal = it.xpTotal,
-                            gold = it.gold,
-                            strength = it.strength,
-                            dexterity = it.dexterity,
-                            constitution = it.constitution,
-                            intelligence = it.intelligence,
-                            wisdom = it.wisdom,
-                            charisma = it.charisma,
-                            activeTitle = it.activeTitle,
-                            activeQuestIds = it.activeQuests.keys.sorted(),
-                            completedQuestIds = it.completedQuestIds.sorted(),
-                            achievementIds = it.unlockedAchievementIds.sorted(),
-                        )
-                    }
-                }
+                ps?.toDetailDto() ?: playerRepo.findByName(name)?.toDetailDto()
             if (dto == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
