@@ -27,6 +27,7 @@ class AdminHandler(
     private val engineId: String = "",
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) : CommandHandler {
+    private val ctx = ctx
     private val world = ctx.world
     private val players = ctx.players
     private val mobs = ctx.mobs
@@ -34,7 +35,6 @@ class AdminHandler(
     private val combat = ctx.combat
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
-    private val worldState = ctx.worldState
     private lateinit var router: CommandRouter
 
     private var adminSpawnSeq = 0
@@ -72,7 +72,7 @@ class AdminHandler(
                 return
             }
             players.moveTo(sessionId, targetRoomId)
-            sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
+            ctx.sendLook(sessionId)
         }
     }
 
@@ -106,7 +106,7 @@ class AdminHandler(
                 }
                 players.moveTo(targetSid, targetRoomId)
                 outbound.send(OutboundEvent.SendText(targetSid, "You are transported by a divine hand."))
-                sendLook(targetSid, world, players, mobs, items, worldState, outbound, gmcpEmitter)
+                ctx.sendLook(targetSid)
                 outbound.send(OutboundEvent.SendPrompt(targetSid))
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Transferred ${targetPlayer.name} to ${targetRoomId.value}."))
             }
@@ -180,7 +180,7 @@ class AdminHandler(
                     outbound.send(
                         OutboundEvent.SendText(targetSid, "A divine hand strikes you down. You awaken at the start, bruised and humbled."),
                     )
-                    sendLook(targetSid, world, players, mobs, items, worldState, outbound, gmcpEmitter)
+                    ctx.sendLook(targetSid)
                     outbound.send(OutboundEvent.SendPrompt(targetSid))
                     outbound.send(OutboundEvent.SendInfo(sessionId, "Smote ${targetPlayer.name}."))
                 }

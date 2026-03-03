@@ -85,6 +85,10 @@ internal suspend fun requireSameRoom(
     return true
 }
 
+/** Convenience extension that delegates to the 8-argument [sendLook], pulling all dependencies from this context. */
+internal suspend fun EngineContext.sendLook(sessionId: SessionId) =
+    sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
+
 /** Sends a full room description (title, description, exits, items, players, mobs) to [sessionId]. */
 internal suspend fun sendLook(
     sessionId: SessionId,
