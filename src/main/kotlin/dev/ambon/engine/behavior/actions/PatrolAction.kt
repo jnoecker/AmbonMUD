@@ -4,7 +4,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.engine.behavior.BtContext
 import dev.ambon.engine.behavior.BtNode
 import dev.ambon.engine.behavior.BtResult
-import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.behavior.moveMobWithNotify
 
 data class PatrolAction(
     val route: List<RoomId>,
@@ -23,17 +23,7 @@ data class PatrolAction(
         }
 
         // Move toward the next waypoint (direct move — assumes route is connected)
-        for (p in ctx.players.playersInRoom(from)) {
-            ctx.outbound.send(OutboundEvent.SendText(p.sessionId, "${ctx.mob.name} leaves."))
-            ctx.gmcpEmitter?.sendRoomRemoveMob(p.sessionId, ctx.mob.id.value)
-        }
-
-        ctx.mobs.moveTo(ctx.mob.id, nextWaypoint)
-
-        for (p in ctx.players.playersInRoom(nextWaypoint)) {
-            ctx.outbound.send(OutboundEvent.SendText(p.sessionId, "${ctx.mob.name} enters."))
-            ctx.gmcpEmitter?.sendRoomAddMob(p.sessionId, ctx.mob)
-        }
+        ctx.moveMobWithNotify(nextWaypoint)
 
         // Advance to the next waypoint for the following tick
         memory.patrolIndex = (memory.patrolIndex + 1) % route.size
