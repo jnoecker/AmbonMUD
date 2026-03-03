@@ -10,6 +10,7 @@ import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
+import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
@@ -31,6 +32,57 @@ internal inline fun PlayerRegistry.withPlayer(
 ) {
     val player = get(sessionId) ?: return
     block(player)
+}
+
+/** Sends the full GMCP Char.Items list (inventory + equipment) for [sessionId]. */
+internal suspend fun syncItemsGmcp(
+    sessionId: SessionId,
+    items: ItemRegistry,
+    gmcpEmitter: GmcpEmitter?,
+) {
+    gmcpEmitter?.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
+}
+
+/** Syncs player defense stats and sends the GMCP items list after an equip/unequip change. */
+internal suspend fun afterEquipChange(
+    sessionId: SessionId,
+    combat: CombatSystem,
+    items: ItemRegistry,
+    gmcpEmitter: GmcpEmitter?,
+) {
+    combat.syncPlayerDefense(sessionId)
+    syncItemsGmcp(sessionId, items, gmcpEmitter)
+}
+
+/**
+ * Finds an online player by [name], or sends "No such player" and returns null.
+ * Callers can use non-local return from the enclosing inline [PlayerRegistry.withPlayer].
+ */
+internal suspend fun requirePlayerOnline(
+    sessionId: SessionId,
+    name: String,
+    players: PlayerRegistry,
+    outbound: OutboundBus,
+): SessionId? {
+    val targetSid = players.findSessionByName(name)
+    if (targetSid == null) {
+        outbound.send(OutboundEvent.SendError(sessionId, "No such player: $name"))
+    }
+    return targetSid
+}
+
+/** Checks that [target] is in the same room as [me]; sends an error and returns false otherwise. */
+internal suspend fun requireSameRoom(
+    sessionId: SessionId,
+    me: PlayerState,
+    target: PlayerState,
+    outbound: OutboundBus,
+): Boolean {
+    if (target.roomId != me.roomId) {
+        outbound.send(OutboundEvent.SendError(sessionId, "${target.name} is not here."))
+        return false
+    }
+    return true
 }
 
 /** Sends a full room description (title, description, exits, items, players, mobs) to [sessionId]. */
