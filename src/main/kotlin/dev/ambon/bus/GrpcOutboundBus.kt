@@ -2,6 +2,9 @@ package dev.ambon.bus
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.grpc.DeliveryOutcome
+import dev.ambon.grpc.cancelJobWithTimeout
+import dev.ambon.grpc.deliverWithBackpressure
 import dev.ambon.grpc.isControlPlane
 import dev.ambon.grpc.toDomain
 import dev.ambon.metrics.GameMetrics
@@ -9,14 +12,11 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.ChannelResult
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 
 private val log = KotlinLogging.logger {}
 
@@ -72,42 +72,7 @@ class GrpcOutboundBus(
                             log.warn { "Received unrecognised OutboundEventProto from engine: $proto" }
                             return@collect
                         }
-                        val fastPath = delegate.trySend(event)
-                        if (fastPath.isSuccess) {
-                            return@collect
-                        }
-
-                        if (!event.isControlPlane()) {
-                            metrics.onGrpcDataPlaneDrop("gateway_local_queue_full")
-                            when (event) {
-                                is OutboundEvent.SendPrompt ->
-                                    log.debug { "Dropped SendPrompt for session ${event.sessionId} (gateway local queue full)" }
-                                else ->
-                                    log.warn {
-                                        "Dropped ${event::class.simpleName} for session ${event.sessionId} " +
-                                            "(gateway local queue full)"
-                                    }
-                            }
-                            return@collect
-                        }
-
-                        try {
-                            withTimeout(controlPlaneSendTimeoutMs) {
-                                delegate.send(event)
-                            }
-                            metrics.onGrpcControlPlaneFallbackSend()
-                        } catch (_: TimeoutCancellationException) {
-                            metrics.onGrpcControlPlaneDrop("gateway_local_queue_full_timeout")
-                            metrics.onGrpcForcedDisconnectDueToControlDeliveryFailure("gateway_local_queue_full_timeout")
-                            notifyFailure(
-                                GrpcOutboundFailure.ControlPlaneDeliveryFailure(
-                                    sessionId = event.sessionId,
-                                    eventType = event::class.simpleName ?: "UnknownOutboundEvent",
-                                    reason = "gateway_local_queue_full_timeout",
-                                ),
-                            )
-                            return@collect
-                        }
+                        deliverToDelegate(event)
                     }
                     throw IllegalStateException("Engine gRPC outbound stream completed unexpectedly")
                 } catch (e: CancellationException) {
@@ -118,6 +83,44 @@ class GrpcOutboundBus(
                 }
             }
         log.info { "GrpcOutboundBus receiver started" }
+    }
+
+    private suspend fun deliverToDelegate(event: OutboundEvent) {
+        when (
+            val outcome =
+                deliverWithBackpressure(
+                    trySend = { delegate.trySend(event) },
+                    suspendSend = { delegate.send(event) },
+                    isControlPlane = event.isControlPlane(),
+                    controlPlaneSendTimeoutMs = controlPlaneSendTimeoutMs,
+                )
+        ) {
+            DeliveryOutcome.Delivered -> {}
+            DeliveryOutcome.DeliveredWithFallback -> metrics.onGrpcControlPlaneFallbackSend()
+            is DeliveryOutcome.DroppedDataPlane -> {
+                metrics.onGrpcDataPlaneDrop("gateway_local_queue_full")
+                when (event) {
+                    is OutboundEvent.SendPrompt ->
+                        log.debug { "Dropped SendPrompt for session ${event.sessionId} (gateway local queue full)" }
+                    else ->
+                        log.warn {
+                            "Dropped ${event::class.simpleName} for session ${event.sessionId} " +
+                                "(gateway local queue full)"
+                        }
+                }
+            }
+            is DeliveryOutcome.ControlPlaneFailure -> {
+                metrics.onGrpcControlPlaneDrop("gateway_local_queue_full_timeout")
+                metrics.onGrpcForcedDisconnectDueToControlDeliveryFailure("gateway_local_queue_full_timeout")
+                notifyFailure(
+                    GrpcOutboundFailure.ControlPlaneDeliveryFailure(
+                        sessionId = event.sessionId,
+                        eventType = event::class.simpleName ?: "UnknownOutboundEvent",
+                        reason = "gateway_local_queue_full_timeout",
+                    ),
+                )
+            }
+        }
     }
 
     private fun notifyFailure(failure: GrpcOutboundFailure) {
@@ -148,14 +151,7 @@ class GrpcOutboundBus(
     fun isReceiverActive(): Boolean = receiverJob?.isActive == true
 
     fun stopReceiving() {
-        runBlocking {
-            try {
-                withTimeout(STOP_TIMEOUT_MS) { receiverJob?.cancelAndJoin() }
-            } catch (_: TimeoutCancellationException) {
-                log.warn { "GrpcOutboundBus receiver did not stop within ${STOP_TIMEOUT_MS}ms; forcing cancel" }
-                receiverJob?.cancel()
-            }
-        }
+        cancelJobWithTimeout(receiverJob, STOP_TIMEOUT_MS, "GrpcOutboundBus receiver")
     }
 
     override suspend fun send(event: OutboundEvent) = delegate.send(event)
