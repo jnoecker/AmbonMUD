@@ -17,6 +17,7 @@ import dev.ambon.engine.abilities.AbilityEffect
 import dev.ambon.engine.abilities.AbilityId
 import dev.ambon.engine.abilities.TargetType
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.test.drainAll
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -39,16 +40,7 @@ class GmcpEmitterTest {
         )
     }
 
-    private fun drain(): List<OutboundEvent> {
-        val events = mutableListOf<OutboundEvent>()
-        while (true) {
-            val result = outbound.tryReceive()
-            if (result.isSuccess) events.add(result.getOrNull()!!) else break
-        }
-        return events
-    }
-
-    private fun drainGmcp(): List<OutboundEvent.GmcpData> = drain().filterIsInstance<OutboundEvent.GmcpData>()
+    private fun drainGmcp(): List<OutboundEvent.GmcpData> = outbound.drainAll().filterIsInstance<OutboundEvent.GmcpData>()
 
     private fun player(
         name: String = "Alice",

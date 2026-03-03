@@ -17,6 +17,7 @@ import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.drainAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -60,14 +61,8 @@ class CommandRouterFeaturesTest {
         val sid = SessionId(1)
         val res = players.login(sid, "Tester", "password")
         require(res == LoginResult.Ok)
-        outbound.drain()
+        outbound.drainAll()
         return Harness(sid, players, items, router, outbound, worldState)
-    }
-
-    private fun LocalOutboundBus.drain(): List<OutboundEvent> {
-        val out = mutableListOf<OutboundEvent>()
-        while (true) out += tryReceive().getOrNull() ?: break
-        return out
     }
 
     private fun makeKey() =
@@ -89,7 +84,7 @@ class CommandRouterFeaturesTest {
         runTest {
             val h = harness()
             h.router.handle(h.sid, Command.Move(Direction.NORTH))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("locked", ignoreCase = true) },
                 "Expected blocked message, got: $outs",
@@ -104,7 +99,7 @@ class CommandRouterFeaturesTest {
             h.items.addToInventory(h.sid, makeKey())
 
             h.router.handle(h.sid, Command.UnlockFeature("n"))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("unlock", ignoreCase = true) },
                 "Expected unlock message, got: $outs",
@@ -116,7 +111,7 @@ class CommandRouterFeaturesTest {
         runTest {
             val h = harness()
             h.router.handle(h.sid, Command.UnlockFeature("n"))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendError },
                 "Expected error, got: $outs",
@@ -130,10 +125,10 @@ class CommandRouterFeaturesTest {
             // Unlock first
             h.items.addToInventory(h.sid, makeKey())
             h.router.handle(h.sid, Command.UnlockFeature("n"))
-            h.outbound.drain()
+            h.outbound.drainAll()
 
             h.router.handle(h.sid, Command.OpenFeature("n"))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("open", ignoreCase = true) },
                 "Expected open message, got: $outs",
@@ -145,7 +140,7 @@ class CommandRouterFeaturesTest {
         runTest {
             val h = harness()
             h.router.handle(h.sid, Command.OpenFeature("n"))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(outs.any { it is OutboundEvent.SendError }, "Expected error, got: $outs")
         }
 
@@ -156,10 +151,10 @@ class CommandRouterFeaturesTest {
             h.items.addToInventory(h.sid, makeKey())
             h.router.handle(h.sid, Command.UnlockFeature("n"))
             h.router.handle(h.sid, Command.OpenFeature("n"))
-            h.outbound.drain()
+            h.outbound.drainAll()
 
             h.router.handle(h.sid, Command.CloseFeature("n"))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("close", ignoreCase = true) },
                 "Expected close message, got: $outs",
@@ -173,10 +168,10 @@ class CommandRouterFeaturesTest {
         runTest {
             val h = harness()
             h.players.moveTo(h.sid, RoomId("ok_features:storeroom"))
-            h.outbound.drain()
+            h.outbound.drainAll()
 
             h.router.handle(h.sid, Command.SearchContainer("chest"))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendError },
                 "Expected error for closed container, got: $outs",
@@ -193,10 +188,10 @@ class CommandRouterFeaturesTest {
             h.worldState.clearDirty()
 
             h.players.moveTo(h.sid, RoomId("ok_features:storeroom"))
-            h.outbound.drain()
+            h.outbound.drainAll()
 
             h.router.handle(h.sid, Command.SearchContainer("chest"))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("coin", ignoreCase = true) },
                 "Expected coin in search results, got: $outs",
@@ -213,10 +208,10 @@ class CommandRouterFeaturesTest {
             h.worldState.clearDirty()
 
             h.players.moveTo(h.sid, RoomId("ok_features:storeroom"))
-            h.outbound.drain()
+            h.outbound.drainAll()
 
             h.router.handle(h.sid, Command.GetFrom("coin", "chest"))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(outs.any { it is OutboundEvent.SendInfo }, "Expected success, got: $outs")
             assertTrue(h.items.inventory(h.sid).any { it.item.keyword == "coin" })
             assertTrue(h.worldState.getContainerContents(containerId).isEmpty())
@@ -232,10 +227,10 @@ class CommandRouterFeaturesTest {
             h.items.addToInventory(h.sid, makeCoin())
 
             h.players.moveTo(h.sid, RoomId("ok_features:storeroom"))
-            h.outbound.drain()
+            h.outbound.drainAll()
 
             h.router.handle(h.sid, Command.PutIn("coin", "chest"))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(outs.any { it is OutboundEvent.SendInfo }, "Expected success, got: $outs")
             assertTrue(h.items.inventory(h.sid).isEmpty())
             assertFalse(h.worldState.getContainerContents(containerId).isEmpty())
@@ -248,10 +243,10 @@ class CommandRouterFeaturesTest {
         runTest {
             val h = harness()
             h.players.moveTo(h.sid, RoomId("ok_features:vault"))
-            h.outbound.drain()
+            h.outbound.drainAll()
 
             h.router.handle(h.sid, Command.Pull("lever"))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(outs.any { it is OutboundEvent.SendInfo }, "Expected success, got: $outs")
             assertEquals(LeverState.DOWN, h.worldState.getLeverState("ok_features:vault/iron_lever"))
         }
@@ -263,7 +258,7 @@ class CommandRouterFeaturesTest {
         runTest {
             val h = harness()
             h.router.handle(h.sid, Command.ReadSign("board"))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("Welcome", ignoreCase = true) },
                 "Expected sign text, got: $outs",
@@ -275,7 +270,7 @@ class CommandRouterFeaturesTest {
         runTest {
             val h = harness()
             h.router.handle(h.sid, Command.ReadSign("xyzzy"))
-            val outs = h.outbound.drain()
+            val outs = h.outbound.drainAll()
             assertTrue(outs.any { it is OutboundEvent.SendError }, "Expected error, got: $outs")
         }
 }

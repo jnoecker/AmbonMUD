@@ -16,6 +16,7 @@ import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.drainAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -32,7 +33,7 @@ class CommandRouterShopTest {
 
             env.router.handle(env.sid, Command.Balance)
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("42 gold") },
                 "Expected balance message containing '42 gold'. got=$outs",
@@ -46,7 +47,7 @@ class CommandRouterShopTest {
 
             env.router.handle(env.sid, Command.ShopList)
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendInfo && it.text.contains("Market Vendor") },
                 "Expected shop name in listing. got=$outs",
@@ -70,7 +71,7 @@ class CommandRouterShopTest {
 
             env.router.handle(env.sid, Command.ShopList)
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("no shop") },
                 "Expected 'no shop' message. got=$outs",
@@ -90,7 +91,7 @@ class CommandRouterShopTest {
             assertEquals(1, inv.size)
             assertEquals("sword", inv[0].item.keyword)
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("You buy") && it.text.contains("50 gold") },
                 "Expected buy confirmation. got=$outs",
@@ -108,7 +109,7 @@ class CommandRouterShopTest {
             assertEquals(10L, env.player.gold)
             assertTrue(env.items.inventory(env.sid).isEmpty())
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("afford") },
                 "Expected 'cannot afford' message. got=$outs",
@@ -127,7 +128,7 @@ class CommandRouterShopTest {
             assertEquals(100L, env.player.gold)
             assertTrue(env.items.inventory(env.sid).isEmpty())
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("no shop") },
                 "Expected 'no shop' message. got=$outs",
@@ -144,7 +145,7 @@ class CommandRouterShopTest {
 
             assertEquals(100L, env.player.gold)
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("doesn't sell") },
                 "Expected 'doesn't sell' message. got=$outs",
@@ -166,7 +167,7 @@ class CommandRouterShopTest {
             assertEquals(25L, env.player.gold) // 50 * 0.5 = 25
             assertTrue(env.items.inventory(env.sid).isEmpty())
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("You sell") && it.text.contains("25 gold") },
                 "Expected sell confirmation. got=$outs",
@@ -188,7 +189,7 @@ class CommandRouterShopTest {
             assertEquals(0L, env.player.gold)
             assertEquals(1, env.items.inventory(env.sid).size)
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("worthless") },
                 "Expected 'worthless' message. got=$outs",
@@ -211,7 +212,7 @@ class CommandRouterShopTest {
             assertEquals(0L, env.player.gold)
             assertEquals(1, env.items.inventory(env.sid).size)
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("no shop") },
                 "Expected 'no shop' message. got=$outs",
@@ -228,7 +229,7 @@ class CommandRouterShopTest {
 
             assertEquals(0L, env.player.gold)
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("don't have") },
                 "Expected 'don't have' message. got=$outs",
@@ -255,7 +256,7 @@ class CommandRouterShopTest {
             assertEquals(0L, env.player.gold)
             assertEquals(1, env.items.inventory(env.sid).size)
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("worthless") },
                 "Expected 'worthless' message for 0-value sell. got=$outs",
@@ -285,16 +286,7 @@ class CommandRouterShopTest {
         val router: CommandRouter,
         val sid: SessionId,
         val player: dev.ambon.engine.PlayerState,
-    ) {
-        fun drain(): List<OutboundEvent> {
-            val out = mutableListOf<OutboundEvent>()
-            while (true) {
-                val v = outbound.tryReceive().getOrNull() ?: break
-                out.add(v)
-            }
-            return out
-        }
-    }
+    )
 
     private suspend fun setup(
         economyConfig: EconomyConfig =
@@ -327,7 +319,7 @@ class CommandRouterShopTest {
         val res = players.login(sid, "Shopper", "password")
         require(res == LoginResult.Ok) { "Login failed: $res" }
         // Drain login-related output
-        while (outbound.tryReceive().getOrNull() != null) { /* drain */ }
+        outbound.drainAll()
 
         val player = players.get(sid)!!
         return TestEnv(world, items, players, mobs, outbound, router, sid, player)
