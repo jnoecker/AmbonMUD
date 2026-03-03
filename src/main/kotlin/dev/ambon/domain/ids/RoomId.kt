@@ -4,6 +4,9 @@ package dev.ambon.domain.ids
 fun qualifyId(zone: String, localId: String): String =
     if (':' in localId) localId else "$zone:$localId"
 
+/** Extracts the zone prefix from a namespaced id (before the first `:`), or the full string if unqualified. */
+fun idZone(rawId: String): String = rawId.substringBefore(':', rawId)
+
 @JvmInline
 value class RoomId(
     val value: String,
