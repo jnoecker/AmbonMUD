@@ -32,7 +32,8 @@ private const val FORWARD_SEND_TIMEOUT_MS = 5_000L
 class GrpcInboundBus(
     private val delegate: LocalInboundBus,
     grpcSendChannel: SendChannel<InboundEventProto>,
-) : InboundBus {
+) : InboundBus,
+    DepthAware {
     @Volatile
     private var grpcSendChannel: SendChannel<InboundEventProto> = grpcSendChannel
 
@@ -74,5 +75,5 @@ class GrpcInboundBus(
 
     override fun depth(): Int = delegate.depth()
 
-    fun delegateForMetrics(): LocalInboundBus = delegate
+    override val capacity: Int get() = delegate.capacity
 }

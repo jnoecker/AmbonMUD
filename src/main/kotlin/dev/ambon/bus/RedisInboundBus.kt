@@ -25,7 +25,8 @@ internal class RedisInboundBus(
         sharedSecret = sharedSecret,
         direction = "inbound",
     ),
-    InboundBus {
+    InboundBus,
+    DepthAware {
     internal data class Envelope(
         override val instanceId: String = "",
         override val type: String = "",
@@ -95,5 +96,5 @@ internal class RedisInboundBus(
 
     override fun depth(): Int = delegate.depth()
 
-    fun delegateForMetrics(): LocalInboundBus = delegate
+    override val capacity: Int get() = delegate.capacity
 }
