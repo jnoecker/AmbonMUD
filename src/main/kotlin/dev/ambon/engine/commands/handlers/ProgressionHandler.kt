@@ -70,17 +70,17 @@ class ProgressionHandler(
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,
-                    "  STR: ${formatStat(me.strength, equipped.values.sumOf { it.item.strength })}  " +
-                        "DEX: ${formatStat(me.dexterity, equipped.values.sumOf { it.item.dexterity })}  " +
-                        "CON: ${formatStat(me.constitution, equipped.values.sumOf { it.item.constitution })}",
+                    "  STR: ${formatStat(me.strength, equipped.values.sumOf { it.item.stats.str })}  " +
+                        "DEX: ${formatStat(me.dexterity, equipped.values.sumOf { it.item.stats.dex })}  " +
+                        "CON: ${formatStat(me.constitution, equipped.values.sumOf { it.item.stats.con })}",
                 ),
             )
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,
-                    "  INT: ${formatStat(me.intelligence, equipped.values.sumOf { it.item.intelligence })}  " +
-                        "WIS: ${formatStat(me.wisdom, equipped.values.sumOf { it.item.wisdom })}  " +
-                        "CHA: ${formatStat(me.charisma, equipped.values.sumOf { it.item.charisma })}",
+                    "  INT: ${formatStat(me.intelligence, equipped.values.sumOf { it.item.stats.int })}  " +
+                        "WIS: ${formatStat(me.wisdom, equipped.values.sumOf { it.item.stats.wis })}  " +
+                        "CHA: ${formatStat(me.charisma, equipped.values.sumOf { it.item.stats.cha })}",
                 ),
             )
             outbound.send(OutboundEvent.SendInfo(sessionId, "  Dmg : $dmgMin–$dmgMax          Armor: $armorDetail"))

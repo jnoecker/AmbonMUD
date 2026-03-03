@@ -597,14 +597,15 @@ internal class LoginFlowHandler(
     private suspend fun promptForRaceSelection(sessionId: SessionId) {
         outbound.send(OutboundEvent.SendInfo(sessionId, "Choose your race:"))
         for ((index, race) in Race.entries.withIndex()) {
+            val s = race.statMods
             val mods =
                 buildList {
-                    if (race.strMod != 0) add("STR %+d".format(race.strMod))
-                    if (race.dexMod != 0) add("DEX %+d".format(race.dexMod))
-                    if (race.conMod != 0) add("CON %+d".format(race.conMod))
-                    if (race.intMod != 0) add("INT %+d".format(race.intMod))
-                    if (race.wisMod != 0) add("WIS %+d".format(race.wisMod))
-                    if (race.chaMod != 0) add("CHA %+d".format(race.chaMod))
+                    if (s.str != 0) add("STR %+d".format(s.str))
+                    if (s.dex != 0) add("DEX %+d".format(s.dex))
+                    if (s.con != 0) add("CON %+d".format(s.con))
+                    if (s.int != 0) add("INT %+d".format(s.int))
+                    if (s.wis != 0) add("WIS %+d".format(s.wis))
+                    if (s.cha != 0) add("CHA %+d".format(s.cha))
                 }.joinToString(", ")
             val desc = if (mods.isNotEmpty()) " ($mods)" else ""
             outbound.send(OutboundEvent.SendInfo(sessionId, "  ${index + 1}. ${race.displayName}$desc"))

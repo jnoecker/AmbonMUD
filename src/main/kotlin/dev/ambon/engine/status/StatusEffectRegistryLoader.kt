@@ -1,6 +1,7 @@
 package dev.ambon.engine.status
 
 import dev.ambon.config.StatusEffectEngineConfig
+import dev.ambon.domain.StatBlock
 
 object StatusEffectRegistryLoader {
     fun load(
@@ -37,7 +38,7 @@ object StatusEffectRegistryLoader {
                     tickMaxValue = defConfig.tickMaxValue,
                     shieldAmount = defConfig.shieldAmount,
                     statMods =
-                        StatModifiers(
+                        StatBlock(
                             str = defConfig.strMod,
                             dex = defConfig.dexMod,
                             con = defConfig.conMod,

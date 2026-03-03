@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -8,7 +9,6 @@ import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.EffectType
-import dev.ambon.engine.status.StatModifiers
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 import java.time.Clock
@@ -312,7 +312,7 @@ class CombatSystem(
             // STUN check
             val stunned = statusEffects?.hasPlayerEffect(sessionId, EffectType.STUN) == true
             if (!stunned) {
-                val playerMods = statusEffects?.getPlayerStatMods(sessionId) ?: StatModifiers.ZERO
+                val playerMods = statusEffects?.getPlayerStatMods(sessionId) ?: StatBlock.ZERO
                 val playerStats = resolveEffectiveStats(player, playerBonuses, playerMods)
                 val playerAttack = playerBonuses.attack
                 val playerStrBonus = PlayerState.statBonus(playerStats.str, config.strDivisor)
@@ -389,7 +389,7 @@ class CombatSystem(
             val target = players.get(targetSid) ?: continue
 
             val targetBonuses = items.equipmentBonuses(targetSid)
-            val targetMods = statusEffects?.getPlayerStatMods(targetSid) ?: StatModifiers.ZERO
+            val targetMods = statusEffects?.getPlayerStatMods(targetSid) ?: StatBlock.ZERO
             val targetStats = resolveEffectiveStats(target, targetBonuses, targetMods)
             val dodgePct = (PlayerState.statBonus(targetStats.dex, 1) * config.dexDodgePerPoint).coerceIn(0, config.maxDodgePercent)
             if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
@@ -639,7 +639,7 @@ class CombatSystem(
 
         for (sid in recipients) {
             val player = players.get(sid) ?: continue
-            val equipCha = items.equipmentBonuses(sid).charisma
+            val equipCha = items.equipmentBonuses(sid).stats.cha
             val reward = progression.applyCharismaXpBonus(player.charisma + equipCha, perPlayerXp)
 
             val result = players.grantXp(sid, reward, progression) ?: continue
