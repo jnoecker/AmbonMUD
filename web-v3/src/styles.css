@@ -636,6 +636,59 @@ body {
   min-height: 0;
 }
 
+.social-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0;
+  border-bottom: 1px solid rgb(131 147 186 / 30%);
+}
+
+.social-tab {
+  flex: 1 1 0;
+  padding: 8px 6px 7px;
+  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgb(180 190 218 / 72%);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    color 170ms var(--ease-out-soft),
+    border-color 170ms var(--ease-out-soft);
+}
+
+.social-tab:hover {
+  color: #c7d2ef;
+}
+
+.social-tab-active {
+  color: #dde6ff;
+  border-bottom-color: rgb(140 156 206 / 72%);
+}
+
+.social-placeholder-feed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-placeholder {
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+}
+
+.social-placeholder-text {
+  margin: 0;
+  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-size: 1.05rem;
+  font-style: italic;
+  color: rgb(180 190 218 / 50%);
+}
+
 .chat-shell {
   min-height: 0;
   height: 100%;
