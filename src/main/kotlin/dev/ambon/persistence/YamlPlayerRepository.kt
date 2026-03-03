@@ -8,12 +8,7 @@ import dev.ambon.metrics.GameMetrics
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.IOException
-import java.nio.file.AtomicMoveNotSupportedException
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
-import java.nio.file.StandardOpenOption
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
@@ -191,26 +186,5 @@ class YamlPlayerRepository(
     private fun writePlayer(record: PlayerRecord) {
         atomicWriteText(pathFor(record.id.value), mapper.writeValueAsString(PlayerDto.from(record)))
         nameIndex[record.name.lowercase()] = record.id.value
-    }
-
-    private fun atomicWriteText(
-        path: Path,
-        contents: String,
-    ) {
-        try {
-            path.parent?.createDirectories()
-
-            val tmp = Files.createTempFile(path.parent, path.fileName.toString(), ".tmp")
-            Files.writeString(tmp, contents, StandardOpenOption.TRUNCATE_EXISTING)
-
-            // Best-effort atomic move; on Windows this can fail if antivirus hooks, etc.
-            try {
-                Files.move(tmp, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
-            } catch (_: AtomicMoveNotSupportedException) {
-                Files.move(tmp, path, StandardCopyOption.REPLACE_EXISTING)
-            }
-        } catch (e: IOException) {
-            throw PlayerPersistenceException("Failed to write file atomically: $path", e)
-        }
     }
 }
