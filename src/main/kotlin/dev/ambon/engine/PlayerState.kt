@@ -113,6 +113,41 @@ fun PlayerState.spendMana(amount: Int) {
     mana = (mana - amount).coerceAtLeast(0)
 }
 
+/** Creates a [PlayerState] from a persisted [PlayerRecord], binding it to [sessionId]. */
+fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
+    PlayerState(
+        sessionId = sessionId,
+        name = name,
+        roomId = roomId,
+        playerId = id,
+        hp = hp,
+        strength = strength,
+        dexterity = dexterity,
+        constitution = constitution,
+        intelligence = intelligence,
+        wisdom = wisdom,
+        charisma = charisma,
+        race = race,
+        playerClass = playerClass,
+        level = level,
+        xpTotal = xpTotal,
+        ansiEnabled = ansiEnabled,
+        isStaff = isStaff,
+        mana = mana,
+        maxMana = maxMana,
+        gold = gold,
+        createdAtEpochMs = createdAtEpochMs,
+        passwordHash = passwordHash,
+        activeQuests = activeQuests,
+        completedQuestIds = completedQuestIds,
+        unlockedAchievementIds = unlockedAchievementIds,
+        achievementProgress = achievementProgress,
+        activeTitle = activeTitle,
+        inbox = inbox.toMutableList(),
+        guildId = guildId,
+        recallRoomId = recallRoomId,
+    )
+
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
 fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
     val pid = playerId ?: error("Cannot persist a PlayerState without a playerId")

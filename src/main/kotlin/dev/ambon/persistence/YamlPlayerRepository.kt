@@ -1,5 +1,6 @@
 package dev.ambon.persistence
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -39,6 +40,7 @@ class YamlPlayerRepository(
     private val mapper: ObjectMapper =
         ObjectMapper(YAMLFactory())
             .registerModule(KotlinModule.Builder().build())
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
     private val playersDir: Path = rootDir.resolve("players")
     private val nextIdFile: Path = rootDir.resolve("next_player_id.txt")
@@ -68,7 +70,7 @@ class YamlPlayerRepository(
 
                 val id = nameIndex[target.lowercase()]
                 if (id != null) {
-                    return@timedLoad readPlayerDto(pathFor(id))?.toDomain()
+                    return@timedLoad readRecord(pathFor(id))
                 }
                 null
             }
@@ -78,7 +80,7 @@ class YamlPlayerRepository(
         withContext(Dispatchers.IO) {
             metrics.timedLoad {
                 val path = pathFor(id.value)
-                readPlayerDto(path)?.toDomain()
+                readRecord(path)
             }
         }
 
@@ -130,19 +132,20 @@ class YamlPlayerRepository(
             val files = playersDir.listDirectoryEntries("*.yaml").sortedBy { it.fileName.toString() }
             var maxSeenId = 0L
             files.forEach { p ->
-                val dto = runCatching { readPlayerDto(p) }.getOrNull() ?: return@forEach
-                maxSeenId = maxOf(maxSeenId, dto.id)
-                val key = dto.name.lowercase()
+                val record = runCatching { readRecord(p) }.getOrNull() ?: return@forEach
+                val id = record.id.value
+                maxSeenId = maxOf(maxSeenId, id)
+                val key = record.name.lowercase()
                 val existingId = nameIndex[key]
                 if (existingId != null) {
                     // Keep the lower ID (earlier created); log a warning so operators notice.
                     log.warn {
-                        "Duplicate player name '${dto.name}' found in files " +
+                        "Duplicate player name '${record.name}' found in files " +
                             "${pathFor(existingId).fileName} and ${p.fileName}. " +
-                            "Keeping ID $existingId; ID ${dto.id} is orphaned."
+                            "Keeping ID $existingId; ID $id is orphaned."
                     }
                 } else {
-                    nameIndex[key] = dto.id
+                    nameIndex[key] = id
                 }
             }
             // Guard against a stale or missing next_player_id.txt falling behind actual file IDs.
@@ -161,10 +164,10 @@ class YamlPlayerRepository(
 
     private fun pathFor(id: Long): Path = playersDir.resolve(id.toString().padStart(20, '0') + ".yaml")
 
-    private fun readPlayerDto(path: Path): PlayerDto? {
+    private fun readRecord(path: Path): PlayerRecord? {
         if (!path.exists()) return null
         return try {
-            mapper.readValue<PlayerDto>(path.readText())
+            mapper.readValue<PlayerRecord>(path.readText()).migrateDefaults()
         } catch (e: Exception) {
             throw PlayerPersistenceException("Failed to read player file: $path", e)
         }
@@ -189,7 +192,7 @@ class YamlPlayerRepository(
     }
 
     private fun writePlayer(record: PlayerRecord) {
-        atomicWriteText(pathFor(record.id.value), mapper.writeValueAsString(PlayerDto.from(record)))
+        atomicWriteText(pathFor(record.id.value), mapper.writeValueAsString(record))
         nameIndex[record.name.lowercase()] = record.id.value
     }
 

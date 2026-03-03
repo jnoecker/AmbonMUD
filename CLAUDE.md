@@ -161,7 +161,7 @@ Sessions
 | `dev.ambon.domain.world` | World model | `Room.kt`, `Direction.kt`, `World.kt`, `WorldFactory.kt`, `ShopDefinition.kt`, `MobSpawn.kt`, `ItemSpawn.kt`, `MobDrop.kt` |
 | `dev.ambon.domain.world.data` | YAML DTOs | `WorldFile.kt`, `RoomFile.kt`, `MobFile.kt`, `ItemFile.kt`, `ShopFile.kt`, `MobDropFile.kt`, `BehaviorFile.kt`, `DialogueNodeFile.kt`, `QuestFile.kt` |
 | `dev.ambon.domain.world.load` | World loading | `WorldLoader.kt` (30K, YAML parsing + validation) |
-| `dev.ambon.persistence` | Player persistence | `PlayerRepository.kt` (interface), `PlayerRecord.kt`, `PlayerDto.kt`, `PlayerCreationRequest.kt`; `WriteCoalescingPlayerRepository.kt`, `RedisCachingPlayerRepository.kt`, `YamlPlayerRepository.kt`, `PostgresPlayerRepository.kt`, `PlayersTable.kt`, `DatabaseManager.kt`, `PersistenceWorker.kt`, `StringCache.kt` |
+| `dev.ambon.persistence` | Player persistence | `PlayerRepository.kt` (interface), `PlayerRecord.kt`, `PlayerCreationRequest.kt`; `WriteCoalescingPlayerRepository.kt`, `RedisCachingPlayerRepository.kt`, `YamlPlayerRepository.kt`, `PostgresPlayerRepository.kt`, `PlayersTable.kt`, `DatabaseManager.kt`, `PersistenceWorker.kt`, `StringCache.kt` |
 | `dev.ambon.transport` | Network I/O | `Transport.kt`, `BlockingSocketTransport.kt` (telnet), `KtorWebSocketTransport.kt` (13K, WebSocket), `NetworkSession.kt` (12K), `OutboundRouter.kt` (9K), `AnsiRenderer.kt`, `PlainRenderer.kt`, `TelnetLineDecoder.kt` (6K) |
 | `dev.ambon.grpc` | gRPC engine/gateway | `EngineGrpcServer.kt`, `EngineServer.kt` (21K), `EngineServiceImpl.kt`, `GrpcOutboundDispatcher.kt`, `ProtoMapper.kt` (8.6K), `OutboundEventPlane.kt` |
 | `dev.ambon.gateway` | Gateway-mode root | `GatewayServer.kt` (23K), `SessionRouter.kt` |
@@ -258,10 +258,10 @@ Update `AppConfig.kt` and `application.yaml` together; keep `validated()` strict
 
 ### Persistence (adding a field to PlayerRecord)
 1. Add field with default to `PlayerRecord` data class.
-2. Verify YAML round-trip (Jackson handles new defaults for existing files).
-3. Verify Redis JSON round-trip (`RedisCachingPlayerRepositoryTest`).
-4. For Postgres: add a new Flyway migration (`V<N>__description.sql` in `src/main/resources/db/migration/`), update `PlayersTable.kt` column and `PostgresPlayerRepository.kt` mapping (`toPlayerRecord()`, `insert`, `upsert`).
-5. If the field is runtime state, update `PlayerState` and the `PlayerRegistry` sync logic.
+2. Add column to `PlayersTable.kt` and update `readRecord()` / `writeRecord()`.
+3. For Postgres: add a new Flyway migration (`V<N>__description.sql` in `src/main/resources/db/migration/`).
+4. If the field is runtime state, update `PlayerState` and the `toPlayerState()` / `toPlayerRecord()` extensions in `PlayerState.kt`.
+5. Run `PersistenceFieldCoverageTest` — it will catch any mapping omission across YAML, Redis JSON, Postgres, and PlayerState round-trips.
 
 ### Bus/Redis/gRPC (adding a new event variant)
 1. Add variant to `InboundEvent` or `OutboundEvent`.

@@ -2,6 +2,7 @@ package dev.ambon.persistence
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.zaxxer.hikari.HikariConfig
@@ -9,8 +10,11 @@ import com.zaxxer.hikari.HikariDataSource
 import dev.ambon.domain.Progress
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.ids.RoomId
+import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.quest.QuestState
+import dev.ambon.engine.toPlayerRecord
+import dev.ambon.engine.toPlayerState
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -27,7 +31,7 @@ import kotlin.reflect.full.memberProperties
 /**
  * Safety-net tests that verify every [PlayerRecord] field is correctly wired through
  * all persistence layers. When a new field is added to [PlayerRecord] but not propagated
- * to the DTO, DB table, or Redis serialization, one of these tests will fail at CI time.
+ * to the DB table or serialization, one of these tests will fail at CI time.
  *
  * All fields in the test record are set to **non-default** values so that a mapping
  * omission (which would silently fall back to the default) is caught as a mismatch.
@@ -127,16 +131,8 @@ class PersistenceFieldCoverageTest {
     }
 
     // -----------------------------------------------------------------------
-    // 1. Reflective property-count guards
+    // 1. Reflective property-count guard
     // -----------------------------------------------------------------------
-
-    @Test
-    fun `PlayerRecord and PlayerDto have the same properties`() {
-        val recordProps = PlayerRecord::class.memberProperties.map { it.name }.toSortedSet()
-        val dtoProps = PlayerDto::class.memberProperties.map { it.name }.toSortedSet()
-
-        assertEquals(recordProps, dtoProps, "PlayerRecord and PlayerDto properties must match")
-    }
 
     @Test
     fun `PlayersTable has one column per PlayerRecord field plus nameLower`() {
@@ -163,13 +159,20 @@ class PersistenceFieldCoverageTest {
     }
 
     // -----------------------------------------------------------------------
-    // 2. PlayerDto ↔ PlayerRecord round-trip
+    // 2. YAML round-trip
     // -----------------------------------------------------------------------
 
     @Test
-    fun `PlayerDto from-toDomain round-trip preserves all fields`() {
-        val roundTripped = PlayerDto.from(FULLY_POPULATED).toDomain()
-        assertEquals(FULLY_POPULATED, roundTripped)
+    fun `YAML round-trip preserves all fields`() {
+        val mapper =
+            ObjectMapper(YAMLFactory())
+                .registerModule(KotlinModule.Builder().build())
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+        val yaml = mapper.writeValueAsString(FULLY_POPULATED)
+        val restored = mapper.readValue<PlayerRecord>(yaml)
+
+        assertEquals(FULLY_POPULATED, restored)
     }
 
     // -----------------------------------------------------------------------
@@ -208,7 +211,7 @@ class PersistenceFieldCoverageTest {
         }
 
     // -----------------------------------------------------------------------
-    // 4. Redis JSON round-trip (via InMemoryStringCache)
+    // 4. Redis JSON round-trip
     // -----------------------------------------------------------------------
 
     @Test
@@ -220,10 +223,23 @@ class PersistenceFieldCoverageTest {
                 .registerModule(KotlinModule.Builder().build())
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
-        val json = mapper.writeValueAsString(PlayerDto.from(FULLY_POPULATED))
-        val restored = mapper.readValue<PlayerDto>(json).toDomain()
+        val json = mapper.writeValueAsString(FULLY_POPULATED)
+        val restored = mapper.readValue<PlayerRecord>(json)
 
         assertEquals(FULLY_POPULATED, restored)
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. PlayerRecord ↔ PlayerState round-trip
+    // -----------------------------------------------------------------------
+
+    @Test
+    fun `PlayerState toPlayerRecord round-trip preserves all persisted fields`() {
+        val sid = SessionId(99)
+        val ps = FULLY_POPULATED.toPlayerState(sid)
+        val roundTripped = ps.toPlayerRecord(lastSeenEpochMs = FULLY_POPULATED.lastSeenEpochMs)
+
+        assertEquals(FULLY_POPULATED, roundTripped)
     }
 
     // -----------------------------------------------------------------------

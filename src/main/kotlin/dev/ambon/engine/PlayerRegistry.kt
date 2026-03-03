@@ -265,36 +265,7 @@ class PlayerRegistry(
     ) {
         val xpTotal = boundRecord.xpTotal.coerceAtLeast(0L)
         val level = progression.computeLevel(xpTotal)
-        val ps =
-            PlayerState(
-                sessionId = sessionId,
-                name = boundRecord.name,
-                roomId = boundRecord.roomId,
-                playerId = boundRecord.id,
-                strength = boundRecord.strength,
-                dexterity = boundRecord.dexterity,
-                constitution = boundRecord.constitution,
-                intelligence = boundRecord.intelligence,
-                wisdom = boundRecord.wisdom,
-                charisma = boundRecord.charisma,
-                race = boundRecord.race,
-                playerClass = boundRecord.playerClass,
-                level = level,
-                xpTotal = xpTotal,
-                ansiEnabled = boundRecord.ansiEnabled,
-                isStaff = boundRecord.isStaff,
-                gold = boundRecord.gold,
-                createdAtEpochMs = boundRecord.createdAtEpochMs,
-                passwordHash = boundRecord.passwordHash,
-                activeQuests = boundRecord.activeQuests,
-                completedQuestIds = boundRecord.completedQuestIds,
-                unlockedAchievementIds = boundRecord.unlockedAchievementIds,
-                achievementProgress = boundRecord.achievementProgress,
-                activeTitle = boundRecord.activeTitle,
-                inbox = boundRecord.inbox.toMutableList(),
-                guildId = boundRecord.guildId,
-                recallRoomId = boundRecord.recallRoomId,
-            )
+        val ps = boundRecord.copy(xpTotal = xpTotal, level = level).toPlayerState(sessionId)
         progression.applyLevelStats(ps, level)
         ps.hp = if (boundRecord.hp <= 0) ps.maxHp else boundRecord.hp.coerceIn(1, ps.maxHp)
         ps.mana = boundRecord.mana.coerceIn(0, ps.maxMana)
