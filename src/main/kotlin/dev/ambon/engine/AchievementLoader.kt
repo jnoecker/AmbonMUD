@@ -1,14 +1,12 @@
 package dev.ambon.engine
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.domain.achievement.AchievementCategory
 import dev.ambon.domain.achievement.AchievementCriterion
 import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.achievement.AchievementRewards
 import dev.ambon.domain.achievement.CriterionType
+import dev.ambon.persistence.yamlMapper
 
 /** Flat DTO for YAML deserialization of achievements.yaml. */
 internal data class AchievementsFile(
@@ -38,10 +36,6 @@ internal data class AchievementRewardsFile(
 )
 
 object AchievementLoader {
-    private val mapper: ObjectMapper =
-        ObjectMapper(YAMLFactory())
-            .registerModule(KotlinModule.Builder().build())
-
     /**
      * Loads achievements from a classpath resource and registers them in [registry].
      * Safe to call with a non-existent resource — will log a warning and skip.
@@ -54,7 +48,7 @@ object AchievementLoader {
             AchievementLoader::class.java.classLoader.getResourceAsStream(resourcePath)
                 ?: return
 
-        val file = mapper.readValue<AchievementsFile>(stream)
+        val file = yamlMapper.readValue<AchievementsFile>(stream)
         for ((rawId, entry) in file.achievements) {
             val id = rawId.trim()
             require(id.isNotEmpty()) { "Achievement id cannot be blank" }

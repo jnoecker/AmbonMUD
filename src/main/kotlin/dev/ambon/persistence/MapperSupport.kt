@@ -16,3 +16,13 @@ val jsonMapper: ObjectMapper =
     ObjectMapper()
         .registerModule(KotlinModule.Builder().build())
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+/**
+ * General persistence exception for I/O failures, uniqueness violations, and
+ * other repository-level errors. Originally named `PlayerPersistenceException`;
+ * renamed so guild and world-state repositories can use it too.
+ */
+class PersistenceException(
+    message: String,
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)

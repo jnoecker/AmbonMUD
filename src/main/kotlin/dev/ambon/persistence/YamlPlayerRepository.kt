@@ -19,11 +19,6 @@ import kotlin.io.path.writeText
 
 private val log = KotlinLogging.logger {}
 
-class PlayerPersistenceException(
-    message: String,
-    cause: Throwable? = null,
-) : RuntimeException(message, cause)
-
 class YamlPlayerRepository(
     private val rootDir: Path,
     private val metrics: GameMetrics = GameMetrics.noop(),
@@ -81,7 +76,7 @@ class YamlPlayerRepository(
             createLock.withLock {
                 ensureNameIndexReady()
                 if (nameIndex.containsKey(nm.lowercase())) {
-                    throw PlayerPersistenceException("Name already taken: '$nm'")
+                    throw PersistenceException("Name already taken: '$nm'")
                 }
 
                 val id = nextId.getAndIncrement()
@@ -157,7 +152,7 @@ class YamlPlayerRepository(
         return try {
             mapper.readValue<PlayerRecord>(path.readText()).migrateDefaults()
         } catch (e: Exception) {
-            throw PlayerPersistenceException("Failed to read player file: $path", e)
+            throw PersistenceException("Failed to read player file: $path", e)
         }
     }
 
@@ -170,7 +165,7 @@ class YamlPlayerRepository(
                 .toLong()
                 .coerceAtLeast(1L)
         } catch (e: Exception) {
-            throw PlayerPersistenceException("Failed to read next_player_id.txt", e)
+            throw PersistenceException("Failed to read next_player_id.txt", e)
         }
     }
 

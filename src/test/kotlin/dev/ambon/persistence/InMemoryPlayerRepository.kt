@@ -13,7 +13,7 @@ class InMemoryPlayerRepository : PlayerRepository {
     override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
         val trimmed = request.name.trim()
         if (players.values.any { it.name.equals(trimmed, ignoreCase = true) }) {
-            throw PlayerPersistenceException("Name already taken: '$trimmed'")
+            throw PersistenceException("Name already taken: '$trimmed'")
         }
         val id = PlayerId(nextId.getAndIncrement())
         val record = request.toNewPlayerRecord(id)
