@@ -1,9 +1,6 @@
 package dev.ambon.persistence
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.mail.MailMessage
@@ -11,11 +8,6 @@ import dev.ambon.domain.quest.QuestState
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
-
-private val jsonMapper: ObjectMapper =
-    ObjectMapper()
-        .registerModule(KotlinModule.Builder().build())
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
 private val activeQuestsType = object : TypeReference<Map<String, QuestState>>() {}
 private val completedQuestIdsType = object : TypeReference<Set<String>>() {}

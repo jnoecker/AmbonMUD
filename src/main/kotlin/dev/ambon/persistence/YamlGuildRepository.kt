@@ -1,8 +1,5 @@
 package dev.ambon.persistence
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.guild.GuildRecord
@@ -18,9 +15,7 @@ import kotlin.io.path.readText
 class YamlGuildRepository(
     private val rootDir: Path,
 ) : GuildRepository {
-    private val mapper: ObjectMapper =
-        ObjectMapper(YAMLFactory())
-            .registerModule(KotlinModule.Builder().build())
+    private val mapper = yamlMapper
     private val guildsDir: Path = rootDir.resolve("guilds")
 
     init {

@@ -147,7 +147,6 @@ class MudServer(
             PersistenceBackend.POSTGRES ->
                 PostgresGuildRepository(
                     database = databaseManager!!.database,
-                    mapper = redisObjectMapper,
                 )
         }
 

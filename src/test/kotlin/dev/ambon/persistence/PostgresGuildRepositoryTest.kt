@@ -1,6 +1,5 @@
 package dev.ambon.persistence
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import dev.ambon.domain.guild.GuildRank
@@ -25,7 +24,6 @@ class PostgresGuildRepositoryTest {
     companion object {
         private lateinit var hikari: HikariDataSource
         private lateinit var database: Database
-        private val mapper = ObjectMapper()
 
         @BeforeAll
         @JvmStatic
@@ -76,7 +74,7 @@ class PostgresGuildRepositoryTest {
     @Test
     fun `create then findById round-trips guild`() =
         runTest {
-            val repo = PostgresGuildRepository(database, mapper)
+            val repo = PostgresGuildRepository(database)
             val returned = repo.create(makeRecord())
 
             assertEquals("shadowblade", returned.id)
@@ -93,7 +91,7 @@ class PostgresGuildRepositoryTest {
     @Test
     fun `save persists member and motd changes`() =
         runTest {
-            val repo = PostgresGuildRepository(database, mapper)
+            val repo = PostgresGuildRepository(database)
             val member = PlayerId(2L)
             val record = repo.create(makeRecord())
             val updated =
@@ -114,7 +112,7 @@ class PostgresGuildRepositoryTest {
     @Test
     fun `delete removes guild`() =
         runTest {
-            val repo = PostgresGuildRepository(database, mapper)
+            val repo = PostgresGuildRepository(database)
             repo.create(makeRecord())
             assertNotNull(repo.findById("shadowblade"))
 
@@ -125,7 +123,7 @@ class PostgresGuildRepositoryTest {
     @Test
     fun `findByName is case-insensitive`() =
         runTest {
-            val repo = PostgresGuildRepository(database, mapper)
+            val repo = PostgresGuildRepository(database)
             repo.create(makeRecord())
 
             assertNotNull(repo.findByName("Shadowblade"))
@@ -137,7 +135,7 @@ class PostgresGuildRepositoryTest {
     @Test
     fun `findAll returns all guilds`() =
         runTest {
-            val repo = PostgresGuildRepository(database, mapper)
+            val repo = PostgresGuildRepository(database)
             repo.create(makeRecord("guild1", "GuildOne", "G1"))
             repo.create(makeRecord("guild2", "GuildTwo", "G2"))
 
@@ -150,14 +148,14 @@ class PostgresGuildRepositoryTest {
     @Test
     fun `findById returns null for unknown`() =
         runTest {
-            val repo = PostgresGuildRepository(database, mapper)
+            val repo = PostgresGuildRepository(database)
             assertNull(repo.findById("unknown"))
         }
 
     @Test
     fun `findByName returns null for unknown`() =
         runTest {
-            val repo = PostgresGuildRepository(database, mapper)
+            val repo = PostgresGuildRepository(database)
             assertNull(repo.findByName("nobody"))
         }
 }
