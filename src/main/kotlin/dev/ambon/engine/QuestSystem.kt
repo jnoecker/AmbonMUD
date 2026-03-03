@@ -57,7 +57,7 @@ class QuestSystem(
                 objectives = quest.objectives.map { ObjectiveProgress(current = 0, required = it.count) },
             )
         ps.activeQuests = ps.activeQuests + (questId to state)
-        persistPlayer(ps)
+        players.persistPlayer(ps.sessionId)
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest accepted: ${quest.name}"))
         for (obj in quest.objectives) {
@@ -77,7 +77,7 @@ class QuestSystem(
         val questId = findActiveQuestId(ps.activeQuests, nameHint) ?: return "No active quest matching '$nameHint'."
         val quest = registry.get(questId)
         ps.activeQuests = ps.activeQuests - questId
-        persistPlayer(ps)
+        players.persistPlayer(ps.sessionId)
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest abandoned: ${quest?.name ?: questId}"))
         return null
     }
@@ -150,7 +150,7 @@ class QuestSystem(
 
         if (changed) {
             ps.activeQuests = updatedQuests
-            persistPlayer(ps)
+            players.persistPlayer(ps.sessionId)
             checkAutoComplete(sessionId, ps.activeQuests)
         }
     }
@@ -232,7 +232,7 @@ class QuestSystem(
         onQuestCompleted?.invoke(sessionId, questId)
 
         grantRewards(sessionId, rewards, ps, players, outbound)
-        if (rewards.xp == 0L) persistPlayer(ps)
+        if (rewards.xp == 0L) players.persistPlayer(ps.sessionId)
     }
 
     private suspend fun sendObjectiveProgress(
@@ -245,10 +245,6 @@ class QuestSystem(
         } else {
             outbound.send(OutboundEvent.SendText(sessionId, "[Quest] $description: ${updated.current}/${updated.required}"))
         }
-    }
-
-    private suspend fun persistPlayer(ps: dev.ambon.engine.PlayerState) {
-        players.persistPlayer(ps.sessionId)
     }
 
     private fun findActiveQuestId(
