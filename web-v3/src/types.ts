@@ -1,6 +1,7 @@
 export type MobileTab = "play" | "world" | "chat" | "character";
 export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc";
+export type SocialTab = "chat" | "guild" | "friends" | "who";
 
 export interface Vitals {
   hp: number;
