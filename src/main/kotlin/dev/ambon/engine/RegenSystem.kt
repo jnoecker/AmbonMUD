@@ -52,35 +52,48 @@ class RegenSystem(
             ran++
 
             val sessionId = player.sessionId
-
             val bonuses = items.equipmentBonuses(sessionId)
 
-            // HP regen
-            if (player.hp >= player.maxHp) {
-                lastRegenAtMs[sessionId] = now
-            } else {
-                val last = lastRegenAtMs.getOrPut(sessionId) { now }
-                val interval = regenIntervalMs(player, bonuses.stats.con)
-                if (now - last >= interval) {
-                    if (player.healHp(regenAmount)) {
-                        dirtyNotifier.playerVitalsDirty(sessionId)
-                    }
-                    lastRegenAtMs[sessionId] = now
-                }
-            }
+            applyRegen(
+                now = now,
+                sessionId = sessionId,
+                tracker = lastRegenAtMs,
+                current = player.hp,
+                max = player.maxHp,
+                intervalMs = regenIntervalMs(player, bonuses.stats.con),
+                heal = { player.healHp(regenAmount) },
+            )
 
-            // Mana regen
-            if (player.mana >= player.maxMana) {
-                lastManaRegenAtMs[sessionId] = now
-            } else {
-                val lastMana = lastManaRegenAtMs.getOrPut(sessionId) { now }
-                val interval = manaRegenIntervalMs(player, bonuses.stats.wis)
-                if (now - lastMana >= interval) {
-                    if (player.healMana(manaRegenAmount)) {
-                        dirtyNotifier.playerVitalsDirty(sessionId)
-                    }
-                    lastManaRegenAtMs[sessionId] = now
+            applyRegen(
+                now = now,
+                sessionId = sessionId,
+                tracker = lastManaRegenAtMs,
+                current = player.mana,
+                max = player.maxMana,
+                intervalMs = manaRegenIntervalMs(player, bonuses.stats.wis),
+                heal = { player.healMana(manaRegenAmount) },
+            )
+        }
+    }
+
+    private inline fun applyRegen(
+        now: Long,
+        sessionId: SessionId,
+        tracker: MutableMap<SessionId, Long>,
+        current: Int,
+        max: Int,
+        intervalMs: Long,
+        heal: () -> Boolean,
+    ) {
+        if (current >= max) {
+            tracker[sessionId] = now
+        } else {
+            val last = tracker.getOrPut(sessionId) { now }
+            if (now - last >= intervalMs) {
+                if (heal()) {
+                    dirtyNotifier.playerVitalsDirty(sessionId)
                 }
+                tracker[sessionId] = now
             }
         }
     }
