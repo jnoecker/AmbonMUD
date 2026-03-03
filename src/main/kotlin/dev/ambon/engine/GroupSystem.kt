@@ -62,7 +62,7 @@ class GroupSystem(
         inviterSid: SessionId,
         targetName: String,
     ): String? {
-        val inviter = players.get(inviterSid) ?: return "You are not connected."
+        val inviter = players.get(inviterSid) ?: return ERR_NOT_CONNECTED
 
         val targetSid =
             players.findSessionByName(targetName)
@@ -128,7 +128,7 @@ class GroupSystem(
             return "You are already in a group."
         }
 
-        val invitee = players.get(inviteeSid) ?: return "You are not connected."
+        val invitee = players.get(inviteeSid) ?: return ERR_NOT_CONNECTED
 
         // Get or create inviter's group
         val group =
@@ -270,7 +270,7 @@ class GroupSystem(
             groupBySession[sessionId]
                 ?: return "You are not in a group."
 
-        val player = players.get(sessionId) ?: return "You are not connected."
+        val player = players.get(sessionId) ?: return ERR_NOT_CONNECTED
 
         for (sid in group.members) {
             outbound.send(

@@ -94,7 +94,7 @@ class AdminHandler(
                     )
                     outbound.send(OutboundEvent.SendInfo(sessionId, "Transfer request sent to other engines."))
                 } else {
-                    outbound.send(OutboundEvent.SendError(sessionId, "Player not found: ${cmd.playerName}"))
+                    outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.playerName}"))
                 }
                 return
             }
@@ -210,7 +210,7 @@ class AdminHandler(
                 interEngineBus.broadcast(InterEngineMessage.KickRequest(targetPlayerName = cmd.playerName))
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Kick request sent to other engines."))
             } else {
-                outbound.send(OutboundEvent.SendError(sessionId, "Player not found: ${cmd.playerName}"))
+                outbound.send(OutboundEvent.SendError(sessionId, "No such player: ${cmd.playerName}"))
             }
             return
         }
@@ -227,11 +227,7 @@ class AdminHandler(
         cmd: Command.SetLevel,
     ) {
         if (!requireStaff(sessionId, players, outbound)) return
-        val targetSid = players.findSessionByName(cmd.playerName)
-        if (targetSid == null) {
-            outbound.send(OutboundEvent.SendError(sessionId, "Player '${cmd.playerName}' is not online."))
-            return
-        }
+        val targetSid = requirePlayerOnline(sessionId, cmd.playerName, players, outbound) ?: return
         val maxLevel = players.maxLevel
         if (cmd.level !in 1..maxLevel) {
             outbound.send(OutboundEvent.SendError(sessionId, "Level must be between 1 and $maxLevel."))

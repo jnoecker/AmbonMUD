@@ -7,6 +7,9 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import java.util.Random
 
+/** Standard error when `players.get(sessionId)` returns null in a system method returning `String?`. */
+internal const val ERR_NOT_CONNECTED = "You are not connected."
+
 /**
  * Sends [text] as a [OutboundEvent.SendText] to every player in [roomId],
  * optionally excluding [exclude].
