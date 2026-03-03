@@ -36,6 +36,12 @@ import java.time.Clock
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
+/** Common session ID for single-player tests. */
+val TEST_SESSION_ID = SessionId(1L)
+
+/** Common room ID for tests that need a generic `zone:room`. */
+val TEST_ROOM_ID = RoomId("zone:room")
+
 object TestWorlds {
     val testWorld: World by lazy { WorldLoader.loadFromResource("world/test_world.yaml") }
     val okSmall: World by lazy { WorldLoader.loadFromResource("world/ok_small.yaml") }
