@@ -115,7 +115,7 @@ internal suspend fun sendLook(
             room.exits.keys.joinToString(", ") { dir ->
                 val label = dir.name.lowercase()
                 val door = ws?.doorOnExit(roomId, dir)
-                if (door != null && ws != null) {
+                if (door != null) {
                     val state = ws.getDoorState(door.id)
                     if (state == LockableState.OPEN) label else "$label [${state.name.lowercase()}]"
                 } else {
