@@ -10,6 +10,11 @@ import java.util.Random
 /** Standard error when `players.get(sessionId)` returns null in a system method returning `String?`. */
 internal const val ERR_NOT_CONNECTED = "You are not connected."
 
+/** Removes all entries whose expiry (extracted via [expiresAt]) is at or before [nowMs]. */
+internal fun <K, V> MutableMap<K, V>.removeExpired(nowMs: Long, expiresAt: (V) -> Long) {
+    entries.removeIf { expiresAt(it.value) <= nowMs }
+}
+
 /**
  * Sends [text] as a [OutboundEvent.SendText] to every player in [roomId],
  * optionally excluding [exclude].
