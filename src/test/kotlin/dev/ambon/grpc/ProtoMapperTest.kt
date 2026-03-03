@@ -148,6 +148,61 @@ class ProtoMapperTest {
         assertNull(proto.toDomain())
     }
 
+    // ── Sealed subclass coverage ────────────────────────────────────────────
+
+    @Test
+    fun `all InboundEvent variants have a proto round-trip`() {
+        val variantNames =
+            InboundEvent::class.sealedSubclasses.map { it.simpleName!! }.toSet()
+        val sampleEvents: List<InboundEvent> =
+            listOf(
+                InboundEvent.Connected(sid),
+                InboundEvent.Disconnected(sid, "quit"),
+                InboundEvent.LineReceived(sid, "test"),
+                InboundEvent.GmcpReceived(sid, "Core.Hello", "{}"),
+            )
+        val coveredNames = sampleEvents.map { it::class.simpleName!! }.toSet()
+        assertEquals(
+            variantNames,
+            coveredNames,
+            "Missing InboundEvent proto round-trip coverage for: ${variantNames - coveredNames}",
+        )
+        for (event in sampleEvents) {
+            val roundTripped = event.toProto().toDomain()
+            assertEquals(event, roundTripped, "${event::class.simpleName} should round-trip through proto")
+        }
+    }
+
+    @Test
+    fun `all OutboundEvent variants have a proto round-trip`() {
+        val variantNames =
+            OutboundEvent::class.sealedSubclasses.map { it.simpleName!! }.toSet()
+        val sampleEvents: List<OutboundEvent> =
+            listOf(
+                OutboundEvent.SendText(sid, "t"),
+                OutboundEvent.SendInfo(sid, "i"),
+                OutboundEvent.SendError(sid, "e"),
+                OutboundEvent.SendPrompt(sid),
+                OutboundEvent.ShowLoginScreen(sid),
+                OutboundEvent.SetAnsi(sid, true),
+                OutboundEvent.Close(sid, "r"),
+                OutboundEvent.ClearScreen(sid),
+                OutboundEvent.ShowAnsiDemo(sid),
+                OutboundEvent.SessionRedirect(sid, "e2", "h", 9092),
+                OutboundEvent.GmcpData(sid, "p", "{}"),
+            )
+        val coveredNames = sampleEvents.map { it::class.simpleName!! }.toSet()
+        assertEquals(
+            variantNames,
+            coveredNames,
+            "Missing OutboundEvent proto round-trip coverage for: ${variantNames - coveredNames}",
+        )
+        for (event in sampleEvents) {
+            val roundTripped = event.toProto().toDomain()
+            assertEquals(event, roundTripped, "${event::class.simpleName} should round-trip through proto")
+        }
+    }
+
     // ── sessionId preservation ─────────────────────────────────────────────
 
     @Test

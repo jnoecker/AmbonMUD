@@ -155,6 +155,33 @@ class RedisInboundBusTest {
     }
 
     @Test
+    fun `all InboundEvent variants have a toEnvelope mapping`() =
+        runTest {
+            val sid = SessionId(100)
+            val variantNames =
+                InboundEvent::class.sealedSubclasses.map { it.simpleName!! }.toSet()
+            val sampleEvents: List<InboundEvent> =
+                listOf(
+                    InboundEvent.Connected(sid),
+                    InboundEvent.Disconnected(sid, "quit"),
+                    InboundEvent.LineReceived(sid, "test"),
+                    InboundEvent.GmcpReceived(sid, "Core.Hello", "{}"),
+                )
+            val coveredNames = sampleEvents.map { it::class.simpleName!! }.toSet()
+            assertEquals(
+                variantNames,
+                coveredNames,
+                "Missing InboundEvent round-trip coverage for: ${variantNames - coveredNames}",
+            )
+            // Verify every sample actually produces an envelope (toEnvelope returns non-null)
+            for (event in sampleEvents) {
+                bus.send(event)
+                assertTrue(fakePublisher.messages.isNotEmpty(), "${event::class.simpleName} should produce a Redis envelope")
+                fakePublisher.messages.clear()
+            }
+        }
+
+    @Test
     fun `trySend does not publish when delegate channel is full`() {
         val fullDelegate = LocalInboundBus(capacity = 1)
         fullDelegate.trySend(InboundEvent.Connected(SessionId(99)))
