@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { CHAT_CHANNELS, SOCIAL_TABS } from "../../constants";
-import { TellIcon } from "../Icons";
+import { RefreshIcon, TellIcon } from "../Icons";
 import type { ChatChannel, ChatMessage, SocialTab } from "../../types";
 
 interface ChatPanelProps {
@@ -194,6 +194,7 @@ export function ChatPanel({
 
         {activeSocialTab === "who" && (
           <>
+            <div aria-hidden="true" />
             <div ref={feedRef} className="chat-feed" role="log" aria-label="Who player list">
               <section className="chat-feed-panel chat-feed-panel-flip" aria-label="Who subwindow">
                 {!canChat ? (
@@ -227,7 +228,10 @@ export function ChatPanel({
             </div>
 
             <div className="chat-form chat-form-who">
-              <button type="button" className="soft-button" onClick={onRequestWho} disabled={!canChat}>Refresh Who</button>
+              <button type="button" className="soft-button who-refresh-button" onClick={onRequestWho} disabled={!canChat}>
+                <RefreshIcon className="who-refresh-icon" />
+                Refresh
+              </button>
             </div>
           </>
         )}
