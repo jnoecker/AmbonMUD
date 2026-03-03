@@ -40,11 +40,11 @@ suspend fun BtContext.moveMobWithNotify(
     val from = mob.roomId
     for (p in players.playersInRoom(from)) {
         outbound.send(OutboundEvent.SendText(p.sessionId, departMsg))
-        gmcpEmitter?.sendRoomRemoveMob(p.sessionId, mob.id.value)
     }
+    gmcpEmitter?.broadcastRoomRemoveMob(from, mob.id.value, players)
     mobs.moveTo(mob.id, destination)
     for (p in players.playersInRoom(destination)) {
         outbound.send(OutboundEvent.SendText(p.sessionId, arriveMsg))
-        gmcpEmitter?.sendRoomAddMob(p.sessionId, mob)
     }
+    gmcpEmitter?.broadcastRoomAddMob(destination, mob, players)
 }
