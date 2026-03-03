@@ -57,7 +57,6 @@ import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.KtorWebSocketTransport
 import dev.ambon.transport.OutboundRouter
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -70,7 +69,6 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import java.nio.file.Paths
 import java.time.Clock
-import java.util.UUID
 import java.util.concurrent.Executors
 
 private val log = KotlinLogging.logger {}
@@ -98,17 +96,10 @@ class MudServer(
     private val clock = Clock.systemUTC()
 
     private val prometheusRegistry: PrometheusMeterRegistry? =
-        if (config.observability.metricsEnabled) {
-            PrometheusMeterRegistry(PrometheusConfig.DEFAULT).also { reg ->
-                reg.config().commonTags("service", "ambonmud")
-                config.observability.staticTags.forEach { (k, v) -> reg.config().commonTags(k, v) }
-            }
-        } else {
-            null
-        }
+        ServerInfrastructure.createPrometheusRegistry(config, "ambonmud")
 
     private val gameMetrics: GameMetrics =
-        if (prometheusRegistry != null) GameMetrics(prometheusRegistry) else GameMetrics.noop()
+        ServerInfrastructure.createGameMetrics(prometheusRegistry)
 
     private val databaseManager: DatabaseManager? =
         if (config.persistence.backend == PersistenceBackend.POSTGRES) {
@@ -118,7 +109,7 @@ class MudServer(
         }
 
     private val redisManager: RedisConnectionManager? =
-        if (config.redis.enabled) RedisConnectionManager(config.redis) else null
+        ServerInfrastructure.createRedisManager(config)
 
     private val playerRepoChain =
         PlayerRepositoryFactory.buildChain(
@@ -160,8 +151,7 @@ class MudServer(
         }
 
     private val instanceId: String =
-        config.redis.bus.instanceId
-            .takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+        ServerInfrastructure.generateInstanceId(config)
 
     private val inbound: InboundBus =
         if (config.redis.enabled && config.redis.bus.enabled && redisManager != null) {
@@ -373,27 +363,8 @@ class MudServer(
         coalescingRepo?.let { gameMetrics.bindWriteCoalescerDirtyCount(it::dirtyCount) }
     }
 
-    private fun bindQueueMetrics() {
-        when (val bus = inbound) {
-            is LocalInboundBus -> {
-                gameMetrics.bindInboundBusQueue(bus::depth) { bus.capacity }
-            }
-            is RedisInboundBus -> {
-                val delegate = bus.delegateForMetrics()
-                gameMetrics.bindInboundBusQueue(delegate::depth) { delegate.capacity }
-            }
-        }
-
-        when (val bus = outbound) {
-            is LocalOutboundBus -> {
-                gameMetrics.bindOutboundBusQueue(bus::depth) { bus.capacity }
-            }
-            is RedisOutboundBus -> {
-                val delegate = bus.delegateForMetrics()
-                gameMetrics.bindOutboundBusQueue(delegate::depth) { delegate.capacity }
-            }
-        }
-    }
+    private fun bindQueueMetrics() =
+        ServerInfrastructure.bindQueueMetrics(inbound, outbound, gameMetrics)
 
     suspend fun start() {
         if (config.redis.enabled && config.redis.bus.enabled) {
@@ -552,41 +523,26 @@ class MudServer(
                 ).run()
             }
 
-        telnetTransport =
-            BlockingSocketTransport(
-                port = config.server.telnetPort,
-                inbound = inbound,
-                outboundRouter = outboundRouter,
-                sessionIdFactory = sessionIdFactory::allocate,
-                scope = scope,
-                sessionOutboundQueueCapacity = config.server.sessionOutboundQueueCapacity,
-                maxLineLen = config.transport.telnet.maxLineLen,
-                maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
-                maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
-                socketBacklog = config.transport.telnet.socketBacklog,
-                metrics = gameMetrics,
-                sessionDispatcher = telnetDispatcher,
-            )
+        telnetTransport = ServerInfrastructure.createTelnetTransport(
+            config = config,
+            inbound = inbound,
+            outboundRouter = outboundRouter,
+            sessionIdFactory = sessionIdFactory::allocate,
+            scope = scope,
+            metrics = gameMetrics,
+            sessionDispatcher = telnetDispatcher,
+        )
         telnetTransport.start()
         log.info { "Telnet transport bound on port ${config.server.telnetPort}" }
 
-        webTransport =
-            KtorWebSocketTransport(
-                port = config.server.webPort,
-                inbound = inbound,
-                outboundRouter = outboundRouter,
-                sessionIdFactory = sessionIdFactory::allocate,
-                host = config.transport.websocket.host,
-                sessionOutboundQueueCapacity = config.server.sessionOutboundQueueCapacity,
-                stopGraceMillis = config.transport.websocket.stopGraceMillis,
-                stopTimeoutMillis = config.transport.websocket.stopTimeoutMillis,
-                maxLineLen = config.transport.telnet.maxLineLen,
-                maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
-                maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
-                prometheusRegistry = prometheusRegistry,
-                metricsEndpoint = config.observability.metricsEndpoint,
-                metrics = gameMetrics,
-            )
+        webTransport = ServerInfrastructure.createWebTransport(
+            config = config,
+            inbound = inbound,
+            outboundRouter = outboundRouter,
+            sessionIdFactory = sessionIdFactory::allocate,
+            prometheusRegistry = prometheusRegistry,
+            metrics = gameMetrics,
+        )
         webTransport.start()
         log.info { "WebSocket transport bound on ${config.transport.websocket.host}:${config.server.webPort}" }
         if (config.observability.metricsEnabled) {
