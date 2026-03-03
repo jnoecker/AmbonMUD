@@ -1,7 +1,6 @@
 package dev.ambon.sharding
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.redis.RedisConnectionManager
 import io.github.oshai.kotlinlogging.KotlinLogging
 
@@ -77,12 +76,7 @@ class InstancedRedisZoneRegistry(
             for ((engineId, json) in entries.toSortedMap()) {
                 val leaseKey = "$leasePrefix$zone:$engineId"
                 if (commands.exists(leaseKey) > 0) {
-                    val instance =
-                        try {
-                            mapper.readValue<ZoneInstance>(json)
-                        } catch (_: Exception) {
-                            continue
-                        }
+                    val instance = mapper.readValueOrNull<ZoneInstance>(json) ?: continue
                     result.putIfAbsent(zone, instance.address)
                 }
             }
@@ -97,11 +91,7 @@ class InstancedRedisZoneRegistry(
             .mapNotNull { (engineId, json) ->
                 val leaseKey = "$leasePrefix$zone:$engineId"
                 if (commands.exists(leaseKey) <= 0) return@mapNotNull null
-                try {
-                    mapper.readValue<ZoneInstance>(json)
-                } catch (_: Exception) {
-                    null
-                }
+                mapper.readValueOrNull<ZoneInstance>(json)
             }.sortedBy { it.engineId }
     }
 
@@ -113,12 +103,7 @@ class InstancedRedisZoneRegistry(
         for ((zone, count) in zoneCounts) {
             val hashKey = "$instanceHashPrefix$zone"
             val existingJson = commands.hget(hashKey, engineId) ?: continue
-            val instance =
-                try {
-                    mapper.readValue<ZoneInstance>(existingJson)
-                } catch (_: Exception) {
-                    continue
-                }
+            val instance = mapper.readValueOrNull<ZoneInstance>(existingJson) ?: continue
             val updated = instance.copy(playerCount = count)
             commands.hset(hashKey, engineId, mapper.writeValueAsString(updated))
         }
