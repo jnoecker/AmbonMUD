@@ -285,6 +285,7 @@ class GmcpEmitter(
         achievementRegistry: AchievementRegistry,
         groupSystem: GroupSystem,
         players: PlayerRegistry,
+        guildSystem: GuildSystem? = null,
     ) {
         sendCharStatusVars(sessionId)
         sendCharVitals(sessionId, player)
@@ -296,6 +297,7 @@ class GmcpEmitter(
         sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
         sendCharAchievements(sessionId, player, achievementRegistry)
         sendGroupSync(sessionId, groupSystem, players)
+        guildSystem?.sendGuildSync(sessionId)
     }
 
     /**
@@ -364,6 +366,53 @@ class GmcpEmitter(
 
     suspend fun sendFriendOffline(sessionId: SessionId, friendName: String) {
         emit(sessionId, "Friends.Offline", FriendOfflinePayload(name = friendName))
+    }
+
+    // ---------- guild ----------
+
+    suspend fun sendGuildInfo(
+        sessionId: SessionId,
+        name: String?,
+        tag: String?,
+        rank: String?,
+        motd: String?,
+        memberCount: Int,
+        maxSize: Int,
+    ) {
+        emit(
+            sessionId,
+            "Guild.Info",
+            GuildInfoGmcpPayload(
+                name = name,
+                tag = tag,
+                rank = rank,
+                motd = motd,
+                memberCount = memberCount,
+                maxSize = maxSize,
+            ),
+        )
+    }
+
+    suspend fun sendGuildMembers(
+        sessionId: SessionId,
+        members: List<GuildMemberInfo>,
+    ) {
+        emit(
+            sessionId,
+            "Guild.Members",
+            members.map { m ->
+                GuildMemberGmcpPayload(name = m.name, rank = m.rank, online = m.online, level = m.level)
+            },
+            supportCheck = "Guild.Info",
+        )
+    }
+
+    suspend fun sendGuildChat(
+        sessionId: SessionId,
+        sender: String,
+        message: String,
+    ) {
+        emit(sessionId, "Guild.Chat", GuildChatGmcpPayload(sender = sender, message = message), supportCheck = "Guild.Info")
     }
 
     // ---------- emit helpers ----------
@@ -551,6 +600,27 @@ class GmcpEmitter(
 
     private data class FriendOfflinePayload(
         val name: String,
+    )
+
+    private data class GuildInfoGmcpPayload(
+        val name: String?,
+        val tag: String?,
+        val rank: String?,
+        val motd: String?,
+        val memberCount: Int,
+        val maxSize: Int,
+    )
+
+    private data class GuildMemberGmcpPayload(
+        val name: String,
+        val rank: String,
+        val online: Boolean,
+        val level: Int?,
+    )
+
+    private data class GuildChatGmcpPayload(
+        val sender: String,
+        val message: String,
     )
 
     private companion object {

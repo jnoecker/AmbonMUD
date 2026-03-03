@@ -5,6 +5,7 @@ import dev.ambon.domain.world.World
 import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
+import dev.ambon.engine.GuildSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.abilities.AbilitySystem
@@ -23,6 +24,7 @@ class GmcpEventHandler(
     private val statusEffectSystem: StatusEffectSystem,
     private val achievementRegistry: AchievementRegistry,
     private val groupSystem: GroupSystem,
+    private val guildSystem: GuildSystem? = null,
     private val gmcpEmitter: GmcpEmitter,
     private val logger: KLogger,
     private val metrics: GameMetrics = GameMetrics.noop(),
@@ -52,6 +54,7 @@ class GmcpEventHandler(
                     achievementRegistry,
                     groupSystem,
                     players,
+                    guildSystem,
                 )
                 gmcpEmitter.sendRoomInfo(sid, room)
                 gmcpEmitter.sendRoomPlayers(sid, players.playersInRoom(player.roomId).toList())
