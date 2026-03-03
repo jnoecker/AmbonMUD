@@ -34,16 +34,6 @@ on:
           - moderate
           - production
 
-  # Also trigger automatically after a successful CI docker build on main
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
-
-concurrency:
-  group: deploy-staging
-  cancel-in-progress: false   # let the running deploy finish; queue the next one
-
 permissions:
   contents: read
   id-token: write
@@ -53,10 +43,6 @@ jobs:
     name: Deploy to staging
     runs-on: ubuntu-latest
     environment: staging
-    # For workflow_run trigger, only proceed if CI succeeded
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     steps:
       - name: Check required variables
         run: |
@@ -70,15 +56,6 @@ jobs:
           fi
 
       - uses: actions/checkout@v4
-
-      - name: Resolve image tag
-        id: tag
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "tag=${{ inputs.image-tag }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "tag=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
-          fi
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -102,7 +79,7 @@ jobs:
           npx cdk deploy --all --require-approval never \
             --context topology=${{ inputs.topology || 'ec2' }} \
             --context tier=${{ inputs.tier || 'hobby' }} \
-            --context imageTag=${{ steps.tag.outputs.tag }} \
+            --context imageTag=${{ inputs.image-tag }} \
             --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }}
 
   deploy-production:
