@@ -5,6 +5,8 @@ import type {
   ChatMessage,
   CharacterInfo,
   CompletedAchievement,
+  GroupInfo,
+  GroupMember,
   InProgressAchievement,
   ItemSummary,
   RoomMob,
@@ -32,11 +34,12 @@ interface GmcpContext {
   setEffects: Dispatch<SetStateAction<StatusEffect[]>>;
   setSkills: Dispatch<SetStateAction<SkillSummary[]>>;
   setAchievements: Dispatch<SetStateAction<AchievementData>>;
+  setGroupInfo: Dispatch<SetStateAction<GroupInfo>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>) => void;
 }
 
-const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc"]);
+const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell"]);
 
 function isChatChannel(value: string): value is ChatChannel {
   return CHAT_CHANNEL_SET.has(value as ChatChannel);
@@ -327,6 +330,24 @@ export function applyGmcpPackage(
             }))
         : [];
       ctx.setAchievements({ completed, inProgress });
+      break;
+    }
+
+    case "Group.Info": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const leader = typeof packet.leader === "string" ? packet.leader : null;
+      const members: GroupMember[] = Array.isArray(packet.members)
+        ? packet.members
+            .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+            .map((e) => ({
+              name: typeof e.name === "string" ? e.name : "Unknown",
+              level: safeNumber(e.level, 1),
+              hp: safeNumber(e.hp),
+              maxHp: safeNumber(e.maxHp, 1),
+              playerClass: typeof e.class === "string" ? e.class : "",
+            }))
+        : [];
+      ctx.setGroupInfo({ leader, members });
       break;
     }
 
