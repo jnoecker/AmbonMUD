@@ -32,12 +32,9 @@ class CraftingHandler(
     }
 
     private suspend fun handleGather(sessionId: SessionId, cmd: Command.Gather) {
-        if (craftingSystem == null) {
-            outbound.send(OutboundEvent.SendText(sessionId, "Crafting is not available."))
-            return
-        }
+        val cs = requireSystemOrNull(sessionId, craftingSystem, "Crafting", outbound) ?: return
         players.withPlayer(sessionId) { me ->
-            val result = craftingSystem.gather(me, cmd.keyword, me.roomId, items)
+            val result = cs.gather(me, cmd.keyword, me.roomId, items)
             when (result) {
                 is Either.Left -> when (val err = result.value) {
                     is GatherError.NoNodeFound -> outbound.send(
@@ -46,12 +43,7 @@ class CraftingHandler(
                             "There is nothing to gather here matching '${cmd.keyword}'.",
                         ),
                     )
-                    is GatherError.SkillTooLow -> outbound.send(
-                        OutboundEvent.SendText(
-                            sessionId,
-                            "Your skill is too low (need ${err.required}, have ${err.current}).",
-                        ),
-                    )
+                    is GatherError.SkillTooLow -> sendSkillTooLow(sessionId, err.required, err.current)
                     is GatherError.NodeDepleted -> outbound.send(
                         OutboundEvent.SendText(
                             sessionId,
@@ -74,32 +66,17 @@ class CraftingHandler(
                             "You gather from ${r.node.displayName}: $itemNames",
                         ),
                     )
-                    outbound.send(
-                        OutboundEvent.SendInfo(sessionId, "[${r.node.skill.name} +${r.xpAwarded} XP]"),
-                    )
-                    if (r.leveledUp) {
-                        outbound.send(
-                            OutboundEvent.SendInfo(
-                                sessionId,
-                                "** Your ${r.node.skill.name} skill has increased to ${r.newLevel}! **",
-                            ),
-                        )
-                    }
-                    markVitalsDirty(sessionId)
-                    syncItemsGmcp(sessionId, items, gmcpEmitter)
+                    sendCraftingXp(sessionId, r.node.skill, r.xpAwarded, r.leveledUp, r.newLevel)
                 }
             }
         }
     }
 
     private suspend fun handleCraft(sessionId: SessionId, cmd: Command.Craft) {
-        if (craftingSystem == null) {
-            outbound.send(OutboundEvent.SendText(sessionId, "Crafting is not available."))
-            return
-        }
+        val cs = requireSystemOrNull(sessionId, craftingSystem, "Crafting", outbound) ?: return
         players.withPlayer(sessionId) { me ->
             val room = world.rooms[me.roomId]
-            val result = craftingSystem.craft(me, cmd.recipeKeyword, me.roomId, items, room?.station)
+            val result = cs.craft(me, cmd.recipeKeyword, me.roomId, items, room?.station)
             when (result) {
                 is Either.Left -> when (val err = result.value) {
                     is CraftError.RecipeNotFound -> outbound.send(
@@ -108,12 +85,7 @@ class CraftingHandler(
                             "Unknown recipe '${cmd.recipeKeyword}'. Type 'recipes' to see available recipes.",
                         ),
                     )
-                    is CraftError.SkillTooLow -> outbound.send(
-                        OutboundEvent.SendText(
-                            sessionId,
-                            "Your skill is too low (need ${err.required}, have ${err.current}).",
-                        ),
-                    )
+                    is CraftError.SkillTooLow -> sendSkillTooLow(sessionId, err.required, err.current)
                     is CraftError.LevelTooLow -> outbound.send(
                         OutboundEvent.SendText(
                             sessionId,
@@ -142,43 +114,28 @@ class CraftingHandler(
                             ),
                         )
                     }
-                    outbound.send(
-                        OutboundEvent.SendInfo(sessionId, "[${r.recipe.skill.name} +${r.xpAwarded} XP]"),
-                    )
-                    if (r.leveledUp) {
-                        outbound.send(
-                            OutboundEvent.SendInfo(
-                                sessionId,
-                                "** Your ${r.recipe.skill.name} skill has increased to ${r.newLevel}! **",
-                            ),
-                        )
-                    }
-                    markVitalsDirty(sessionId)
-                    syncItemsGmcp(sessionId, items, gmcpEmitter)
+                    sendCraftingXp(sessionId, r.recipe.skill, r.xpAwarded, r.leveledUp, r.newLevel)
                 }
             }
         }
     }
 
     private suspend fun handleRecipes(sessionId: SessionId, cmd: Command.Recipes) {
-        if (craftingSystem == null) {
-            outbound.send(OutboundEvent.SendText(sessionId, "Crafting is not available."))
-            return
-        }
+        val cs = requireSystemOrNull(sessionId, craftingSystem, "Crafting", outbound) ?: return
         players.withPlayer(sessionId) { me ->
             val allRecipes = if (cmd.filter != null) {
                 val filterLower = cmd.filter.lowercase()
                 val bySkill = CraftingSkill.entries.firstOrNull { it.name.lowercase() == filterLower }
                 if (bySkill != null) {
-                    craftingSystem.recipesForSkill(bySkill)
+                    cs.recipesForSkill(bySkill)
                 } else {
-                    craftingSystem.allRecipes().filter {
+                    cs.allRecipes().filter {
                         it.displayName.lowercase().contains(filterLower) ||
                             it.id.substringAfter(':').lowercase().contains(filterLower)
                     }
                 }
             } else {
-                craftingSystem.allRecipes()
+                cs.allRecipes()
             }
 
             if (allRecipes.isEmpty()) {
@@ -189,7 +146,7 @@ class CraftingHandler(
             outbound.send(OutboundEvent.SendInfo(sessionId, "[ Crafting Recipes ]"))
             outbound.send(OutboundEvent.SendInfo(sessionId, "  %-25s %-12s %5s %5s".format("Recipe", "Skill", "Req", "Lvl")))
             for (recipe in allRecipes.sortedWith(compareBy({ it.skill }, { it.skillRequired }))) {
-                val skillState = craftingSystem.getSkillState(me, recipe.skill)
+                val skillState = cs.getSkillState(me, recipe.skill)
                 val meetsSkill = skillState.level >= recipe.skillRequired
                 val meetsLevel = me.level >= recipe.levelRequired
                 val marker = if (meetsSkill && meetsLevel) " " else "*"
@@ -230,5 +187,26 @@ class CraftingHandler(
                 )
             }
         }
+    }
+
+    private suspend fun sendSkillTooLow(sessionId: SessionId, required: Int, current: Int) {
+        outbound.send(OutboundEvent.SendText(sessionId, "Your skill is too low (need $required, have $current)."))
+    }
+
+    private suspend fun sendCraftingXp(
+        sessionId: SessionId,
+        skill: CraftingSkill,
+        xpAwarded: Int,
+        leveledUp: Boolean,
+        newLevel: Int,
+    ) {
+        outbound.send(OutboundEvent.SendInfo(sessionId, "[${skill.name} +$xpAwarded XP]"))
+        if (leveledUp) {
+            outbound.send(
+                OutboundEvent.SendInfo(sessionId, "** Your ${skill.name} skill has increased to $newLevel! **"),
+            )
+        }
+        markVitalsDirty(sessionId)
+        syncItemsGmcp(sessionId, items, gmcpEmitter)
     }
 }
