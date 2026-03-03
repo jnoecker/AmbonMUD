@@ -13,7 +13,7 @@ import dev.ambon.persistence.InMemoryPlayerRepository
 import java.util.Random
 
 class StatusEffectTestFixture(
-    override val roomId: RoomId = RoomId("zone:room"),
+    override val roomId: RoomId = TEST_ROOM_ID,
     val clock: MutableClock = MutableClock(0L),
     val rng: Random = Random(42),
     val items: ItemRegistry = ItemRegistry(),
