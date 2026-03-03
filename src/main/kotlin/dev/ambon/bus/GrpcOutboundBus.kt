@@ -3,6 +3,7 @@ package dev.ambon.bus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.grpc.DeliveryOutcome
+import dev.ambon.grpc.GrpcTimeouts
 import dev.ambon.grpc.cancelJobWithTimeout
 import dev.ambon.grpc.deliverWithBackpressure
 import dev.ambon.grpc.isControlPlane
@@ -48,7 +49,7 @@ class GrpcOutboundBus(
     grpcReceiveFlow: Flow<dev.ambon.grpc.proto.OutboundEventProto>,
     private val scope: CoroutineScope,
     private val metrics: GameMetrics = GameMetrics.noop(),
-    private val controlPlaneSendTimeoutMs: Long = DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS,
+    private val controlPlaneSendTimeoutMs: Long = GrpcTimeouts.DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS,
     private val onFailure: (GrpcOutboundFailure) -> Unit = {},
 ) : OutboundBus,
     DepthAware {
@@ -152,7 +153,7 @@ class GrpcOutboundBus(
     fun isReceiverActive(): Boolean = receiverJob?.isActive == true
 
     fun stopReceiving() {
-        cancelJobWithTimeout(receiverJob, STOP_TIMEOUT_MS, "GrpcOutboundBus receiver")
+        cancelJobWithTimeout(receiverJob, GrpcTimeouts.STOP_TIMEOUT_MS, "GrpcOutboundBus receiver")
     }
 
     override suspend fun send(event: OutboundEvent) = delegate.send(event)
@@ -169,6 +170,3 @@ class GrpcOutboundBus(
 
     override val capacity: Int get() = delegate.capacity
 }
-
-private const val DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS = 250L
-private const val STOP_TIMEOUT_MS = 5_000L
