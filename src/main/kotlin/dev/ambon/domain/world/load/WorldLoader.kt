@@ -8,6 +8,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.config.MobTiersConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.StatBlock
+import dev.ambon.domain.crafting.CraftingSkill
+import dev.ambon.domain.crafting.CraftingStationType
+import dev.ambon.domain.crafting.GatheringNodeDef
+import dev.ambon.domain.crafting.GatheringYield
+import dev.ambon.domain.crafting.MaterialRequirement
+import dev.ambon.domain.crafting.RecipeDef
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -87,6 +93,8 @@ object WorldLoader {
         val mergedItems = LinkedHashMap<ItemId, ItemSpawn>()
         val mergedShops = mutableListOf<ShopDefinition>()
         val mergedQuests = mutableListOf<QuestDef>()
+        val mergedGatheringNodes = mutableListOf<GatheringNodeDef>()
+        val mergedRecipes = mutableListOf<RecipeDef>()
         val zoneLifespansMinutes = LinkedHashMap<String, Long?>()
 
         // startRoomOverride wins; otherwise fall back to first file’s declared startRoom.
@@ -118,12 +126,16 @@ object WorldLoader {
                 if (mergedRooms.containsKey(id)) {
                     throw WorldLoadException("Duplicate room id '${id.value}' across zone files")
                 }
+                val station = rf.station?.let { raw ->
+                    parseCraftingStationType(raw, "Room '${id.value}'")
+                }
                 mergedRooms[id] =
                     Room(
                         id = id,
                         title = rf.title,
                         description = rf.description,
                         exits = emptyMap(),
+                        station = station,
                     )
             }
 
@@ -486,6 +498,112 @@ object WorldLoader {
                     ),
                 )
             }
+
+            // Stage gathering nodes (normalized)
+            for ((rawId, nodeFile) in file.gatheringNodes) {
+                val nodeId = qualifyId(zone, rawId)
+                val displayName = nodeFile.displayName.trim()
+                if (displayName.isEmpty()) {
+                    throw WorldLoadException("Gathering node '$nodeId' displayName cannot be blank")
+                }
+                val skill = parseCraftingSkill(nodeFile.skill, "Gathering node '$nodeId'")
+                if (!skill.isGathering) {
+                    throw WorldLoadException(
+                        "Gathering node '$nodeId' must use a gathering skill (MINING or HERBALISM), got '$skill'",
+                    )
+                }
+                if (nodeFile.skillRequired < 1) {
+                    throw WorldLoadException("Gathering node '$nodeId' skillRequired must be >= 1")
+                }
+                if (nodeFile.yields.isEmpty()) {
+                    throw WorldLoadException("Gathering node '$nodeId' must have at least one yield")
+                }
+                val yields = nodeFile.yields.mapIndexed { index, yieldFile ->
+                    val itemId = normalizeItemId(zone, yieldFile.itemId)
+                    if (yieldFile.minQuantity < 1) {
+                        throw WorldLoadException(
+                            "Gathering node '$nodeId' yield #${index + 1} minQuantity must be >= 1",
+                        )
+                    }
+                    if (yieldFile.maxQuantity < yieldFile.minQuantity) {
+                        throw WorldLoadException(
+                            "Gathering node '$nodeId' yield #${index + 1} maxQuantity must be >= minQuantity",
+                        )
+                    }
+                    GatheringYield(
+                        itemId = itemId,
+                        minQuantity = yieldFile.minQuantity,
+                        maxQuantity = yieldFile.maxQuantity,
+                    )
+                }
+                val nodeRoomId = normalizeTarget(zone, nodeFile.room)
+                val keyword = normalizeKeyword(rawId, nodeFile.keyword)
+                mergedGatheringNodes.add(
+                    GatheringNodeDef(
+                        id = nodeId,
+                        displayName = displayName,
+                        keyword = keyword,
+                        skill = skill,
+                        skillRequired = nodeFile.skillRequired,
+                        yields = yields,
+                        respawnSeconds = nodeFile.respawnSeconds,
+                        xpReward = nodeFile.xpReward,
+                        roomId = nodeRoomId,
+                    ),
+                )
+            }
+
+            // Stage recipes (normalized)
+            for ((rawId, recipeFile) in file.recipes) {
+                val recipeId = qualifyId(zone, rawId)
+                val displayName = recipeFile.displayName.trim()
+                if (displayName.isEmpty()) {
+                    throw WorldLoadException("Recipe '$recipeId' displayName cannot be blank")
+                }
+                val skill = parseCraftingSkill(recipeFile.skill, "Recipe '$recipeId'")
+                if (!skill.isCrafting) {
+                    throw WorldLoadException(
+                        "Recipe '$recipeId' must use a crafting skill (SMITHING or ALCHEMY), got '$skill'",
+                    )
+                }
+                if (recipeFile.skillRequired < 1) {
+                    throw WorldLoadException("Recipe '$recipeId' skillRequired must be >= 1")
+                }
+                if (recipeFile.materials.isEmpty()) {
+                    throw WorldLoadException("Recipe '$recipeId' must have at least one material")
+                }
+                val materials = recipeFile.materials.mapIndexed { index, matFile ->
+                    val itemId = normalizeItemId(zone, matFile.itemId)
+                    if (matFile.quantity < 1) {
+                        throw WorldLoadException(
+                            "Recipe '$recipeId' material #${index + 1} quantity must be >= 1",
+                        )
+                    }
+                    MaterialRequirement(itemId = itemId, quantity = matFile.quantity)
+                }
+                val outputItemId = normalizeItemId(zone, recipeFile.outputItemId)
+                if (recipeFile.outputQuantity < 1) {
+                    throw WorldLoadException("Recipe '$recipeId' outputQuantity must be >= 1")
+                }
+                val stationType = recipeFile.station?.let { raw ->
+                    parseCraftingStationType(raw, "Recipe '$recipeId'")
+                }
+                mergedRecipes.add(
+                    RecipeDef(
+                        id = recipeId,
+                        displayName = displayName,
+                        skill = skill,
+                        skillRequired = recipeFile.skillRequired,
+                        levelRequired = recipeFile.levelRequired,
+                        materials = materials,
+                        outputItemId = outputItemId,
+                        outputQuantity = recipeFile.outputQuantity,
+                        stationType = stationType,
+                        stationBonus = recipeFile.stationBonus,
+                        xpReward = recipeFile.xpReward,
+                    ),
+                )
+            }
         }
 
         // Now validate that all exit targets exist in the merged room set.
@@ -517,6 +635,7 @@ object WorldLoader {
                 exits = exits,
                 remoteExits = remoteExits,
                 features = allRoomFeatures[fromId] ?: emptyList(),
+                station = room.station,
             )
         }
 
@@ -571,6 +690,38 @@ object WorldLoader {
             }
         }
 
+        // Validate gathering node references after merge
+        for (node in mergedGatheringNodes) {
+            if (!mergedRooms.containsKey(node.roomId)) {
+                throw WorldLoadException(
+                    "Gathering node '${node.id}' references missing room '${node.roomId.value}'",
+                )
+            }
+            for ((index, yield) in node.yields.withIndex()) {
+                if (!mergedItems.containsKey(yield.itemId)) {
+                    throw WorldLoadException(
+                        "Gathering node '${node.id}' yield #${index + 1} references missing item '${yield.itemId.value}'",
+                    )
+                }
+            }
+        }
+
+        // Validate recipe references after merge
+        for (recipe in mergedRecipes) {
+            for ((index, mat) in recipe.materials.withIndex()) {
+                if (!mergedItems.containsKey(mat.itemId)) {
+                    throw WorldLoadException(
+                        "Recipe '${recipe.id}' material #${index + 1} references missing item '${mat.itemId.value}'",
+                    )
+                }
+            }
+            if (!mergedItems.containsKey(recipe.outputItemId)) {
+                throw WorldLoadException(
+                    "Recipe '${recipe.id}' output references missing item '${recipe.outputItemId.value}'",
+                )
+            }
+        }
+
         // Validate feature item cross-references after merge
         for (features in allRoomFeatures.values) {
             for (feature in features) {
@@ -616,6 +767,8 @@ object WorldLoader {
                     .toMap(),
             shopDefinitions = mergedShops.toList(),
             questDefinitions = mergedQuests.toList(),
+            gatheringNodes = mergedGatheringNodes.toList(),
+            recipes = mergedRecipes.toList(),
         )
     }
 
@@ -890,4 +1043,28 @@ object WorldLoader {
 
         return DialogueTree(rootNodeId = rootKey, nodes = nodes)
     }
+
+    private fun parseCraftingSkill(
+        raw: String,
+        context: String,
+    ): CraftingSkill =
+        try {
+            CraftingSkill.valueOf(raw.trim().uppercase())
+        } catch (_: IllegalArgumentException) {
+            throw WorldLoadException(
+                "$context has unknown crafting skill '$raw' (expected: ${CraftingSkill.entries.joinToString()})",
+            )
+        }
+
+    private fun parseCraftingStationType(
+        raw: String,
+        context: String,
+    ): CraftingStationType =
+        try {
+            CraftingStationType.valueOf(raw.trim().uppercase())
+        } catch (_: IllegalArgumentException) {
+            throw WorldLoadException(
+                "$context has unknown station type '$raw' (expected: ${CraftingStationType.entries.joinToString()})",
+            )
+        }
 }

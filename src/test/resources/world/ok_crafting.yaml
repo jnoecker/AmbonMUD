@@ -1,0 +1,77 @@
+zone: craft_test
+startRoom: workshop
+items:
+  copper_ore:
+    displayName: "copper ore"
+    keyword: copper
+  iron_ore:
+    displayName: "iron ore"
+    keyword: iron
+  copper_sword:
+    displayName: "a copper sword"
+    keyword: "copper sword"
+    slot: hand
+    damage: 4
+  healing_potion:
+    displayName: "a healing potion"
+    keyword: potion
+    consumable: true
+    onUse:
+      healHp: 10
+rooms:
+  workshop:
+    title: "Workshop"
+    description: "A crafting workshop."
+    station: FORGE
+    exits:
+      n: garden
+  garden:
+    title: "Herb Garden"
+    description: "A garden."
+    station: ALCHEMY_TABLE
+    exits:
+      s: workshop
+gatheringNodes:
+  copper_vein:
+    displayName: "a copper ore vein"
+    keyword: copper
+    skill: MINING
+    skillRequired: 1
+    yields:
+      - itemId: copper_ore
+        minQuantity: 1
+        maxQuantity: 2
+    respawnSeconds: 30
+    xpReward: 10
+    room: workshop
+  iron_vein:
+    displayName: "an iron ore vein"
+    skill: MINING
+    skillRequired: 15
+    yields:
+      - itemId: iron_ore
+    respawnSeconds: 60
+    xpReward: 25
+    room: workshop
+recipes:
+  copper_sword:
+    displayName: "Copper Sword"
+    skill: SMITHING
+    skillRequired: 1
+    materials:
+      - itemId: copper_ore
+        quantity: 3
+    outputItemId: copper_sword
+    station: FORGE
+    xpReward: 20
+  healing_potion:
+    displayName: "Healing Potion"
+    skill: ALCHEMY
+    skillRequired: 1
+    materials:
+      - itemId: copper_ore
+        quantity: 1
+    outputItemId: healing_potion
+    station: ALCHEMY_TABLE
+    stationBonus: 1
+    xpReward: 15

@@ -260,6 +260,22 @@ sealed interface Command {
         data object Info : Guild
     }
 
+    // ---- Crafting & Gathering commands ----
+
+    data class Gather(
+        val keyword: String,
+    ) : Command
+
+    data class Craft(
+        val recipeKeyword: String,
+    ) : Command
+
+    data class Recipes(
+        val filter: String?,
+    ) : Command
+
+    data object CraftSkills : Command
+
     // ---- World feature commands ----
 
     data class OpenFeature(
@@ -721,6 +737,15 @@ object CommandParser {
             }
         }?.let { return it }
 
+        // Crafting & Gathering
+        requiredArg(line, listOf("gather", "harvest", "mine"), "gather <node>") { Command.Gather(it) }
+            ?.let { return it }
+        requiredArg(line, listOf("craft", "make", "create"), "craft <recipe>") { Command.Craft(it) }
+            ?.let { return it }
+        matchPrefix(line, listOf("recipes", "recipe")) { rest ->
+            Command.Recipes(rest.takeIf { it.isNotBlank() })
+        }?.let { return it }
+
         // Bare number → dialogue choice (CommandRouter decides if applicable)
         lower.toIntOrNull()?.let { n ->
             if (n in 1..9) return Command.DialogueChoice(n)
@@ -750,6 +775,7 @@ object CommandParser {
             "shutdown" -> Command.Shutdown
             "gold", "balance", "wealth" -> Command.Balance
             "list", "shop" -> Command.ShopList
+            "craftskills", "professions", "prof" -> Command.CraftSkills
             else -> Command.Unknown(line)
         }
     }

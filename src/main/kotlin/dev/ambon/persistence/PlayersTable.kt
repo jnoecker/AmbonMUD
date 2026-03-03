@@ -2,6 +2,7 @@ package dev.ambon.persistence
 
 import com.fasterxml.jackson.core.type.TypeReference
 import dev.ambon.domain.achievement.AchievementState
+import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.quest.QuestState
@@ -14,6 +15,7 @@ private val completedQuestIdsType = object : TypeReference<Set<String>>() {}
 private val unlockedAchievementIdsType = object : TypeReference<Set<String>>() {}
 private val achievementProgressType = object : TypeReference<Map<String, AchievementState>>() {}
 private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
+private val craftingSkillsType = object : TypeReference<Map<String, CraftingSkillState>>() {}
 private val friendsListType = object : TypeReference<Set<String>>() {}
 
 /** Deserialises JSON with a fallback to [default] on any parse failure. */
@@ -52,6 +54,7 @@ object PlayersTable : Table("players") {
     val mailInbox = text("mail_inbox").default("[]")
     val guildId = varchar("guild_id", 64).nullable()
     val recallRoomId = varchar("recall_room_id", 128).nullable()
+    val craftingSkills = text("crafting_skills").default("{}")
     val friendsList = text("friends_list").default("[]")
 
     override val primaryKey = PrimaryKey(id)
@@ -89,6 +92,7 @@ object PlayersTable : Table("players") {
             inbox = safeReadJson(row[mailInbox], mailInboxType, emptyList()),
             guildId = row[guildId],
             recallRoomId = row[recallRoomId]?.let { RoomId(it) },
+            craftingSkills = safeReadJson(row[craftingSkills], craftingSkillsType, emptyMap()),
             friendsList = safeReadJson(row[friendsList], friendsListType, emptySet()),
         ).migrateDefaults()
 
@@ -125,6 +129,7 @@ object PlayersTable : Table("players") {
         statement[mailInbox] = jsonMapper.writeValueAsString(record.inbox)
         statement[guildId] = record.guildId
         statement[recallRoomId] = record.recallRoomId?.value
+        statement[craftingSkills] = jsonMapper.writeValueAsString(record.craftingSkills)
         statement[friendsList] = jsonMapper.writeValueAsString(record.friendsList)
     }
 }

@@ -110,6 +110,12 @@ data class AppConfig(
         require(engine.economy.buyMultiplier > 0.0) { "ambonMUD.engine.economy.buyMultiplier must be > 0" }
         require(engine.economy.sellMultiplier > 0.0) { "ambonMUD.engine.economy.sellMultiplier must be > 0" }
 
+        require(engine.crafting.maxSkillLevel >= 1) { "ambonMUD.engine.crafting.maxSkillLevel must be >= 1" }
+        require(engine.crafting.baseXpPerLevel > 0L) { "ambonMUD.engine.crafting.baseXpPerLevel must be > 0" }
+        require(engine.crafting.xpExponent > 0.0) { "ambonMUD.engine.crafting.xpExponent must be > 0" }
+        require(engine.crafting.gatherCooldownMs >= 0L) { "ambonMUD.engine.crafting.gatherCooldownMs must be >= 0" }
+        require(engine.crafting.stationBonusQuantity >= 0) { "ambonMUD.engine.crafting.stationBonusQuantity must be >= 0" }
+
         require(engine.regen.mana.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.baseIntervalMillis must be > 0" }
         require(engine.regen.mana.minIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.minIntervalMillis must be > 0" }
         require(engine.regen.mana.regenAmount > 0) { "ambonMUD.engine.regen.mana.regenAmount must be > 0" }
@@ -371,6 +377,33 @@ data class EconomyConfig(
     val sellMultiplier: Double = 0.5,
 )
 
+data class CraftingConfig(
+    val maxSkillLevel: Int = 100,
+    val baseXpPerLevel: Long = 50L,
+    val xpExponent: Double = 1.5,
+    val gatherCooldownMs: Long = 3000L,
+    val stationBonusQuantity: Int = 1,
+    val recipes: Map<String, RecipeConfigEntry> = emptyMap(),
+)
+
+data class RecipeConfigEntry(
+    val displayName: String = "",
+    val skill: String = "SMITHING",
+    val skillRequired: Int = 1,
+    val levelRequired: Int = 1,
+    val materials: List<MaterialConfigEntry> = emptyList(),
+    val outputItemId: String = "",
+    val outputQuantity: Int = 1,
+    val station: String? = null,
+    val stationBonus: Int = 0,
+    val xpReward: Int = 25,
+)
+
+data class MaterialConfigEntry(
+    val itemId: String = "",
+    val quantity: Int = 1,
+)
+
 data class EngineConfig(
     val mob: MobEngineConfig = MobEngineConfig(),
     val combat: CombatEngineConfig = CombatEngineConfig(),
@@ -381,6 +414,7 @@ data class EngineConfig(
     val economy: EconomyConfig = EconomyConfig(),
     val group: GroupConfig = GroupConfig(),
     val guild: GuildConfig = GuildConfig(),
+    val crafting: CraftingConfig = CraftingConfig(),
     val friends: FriendsConfig = FriendsConfig(),
     val debug: EngineDebugConfig = EngineDebugConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */

@@ -242,6 +242,19 @@ class ItemRegistry {
         return removed
     }
 
+    /** Removes one item matching [itemId] from inventory. Returns the removed instance, or null. */
+    fun removeFromInventoryById(
+        sessionId: SessionId,
+        itemId: ItemId,
+    ): ItemInstance? {
+        val inv = inventoryItems[sessionId] ?: return null
+        val idx = inv.indexOfFirst { it.id == itemId }
+        if (idx < 0) return null
+        val removed = inv.removeAt(idx)
+        if (inv.isEmpty()) inventoryItems.remove(sessionId)
+        return removed
+    }
+
     fun unplacedItems(): Map<ItemId, ItemInstance> = unplacedItems.toMap()
 
     fun ensurePlayer(sessionId: SessionId) {

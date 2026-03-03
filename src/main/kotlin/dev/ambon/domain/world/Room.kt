@@ -1,5 +1,6 @@
 package dev.ambon.domain.world
 
+import dev.ambon.domain.crafting.CraftingStationType
 import dev.ambon.domain.ids.RoomId
 
 data class Room(
@@ -11,4 +12,6 @@ data class Room(
     val remoteExits: Set<Direction> = emptySet(),
     /** Stateful features in this room: doors, containers, levers, signs. */
     val features: List<RoomFeature> = emptyList(),
+    /** Crafting station available in this room, if any. */
+    val station: CraftingStationType? = null,
 )

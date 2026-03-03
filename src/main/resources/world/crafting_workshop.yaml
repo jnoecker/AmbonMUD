@@ -1,0 +1,244 @@
+zone: crafting_workshop
+lifespan: 0
+startRoom: entrance
+
+items:
+  copper_ore:
+    displayName: "a chunk of copper ore"
+    keyword: copper
+    description: "A rough chunk of copper ore, glinting faintly with green and orange."
+    basePrice: 5
+  iron_ore:
+    displayName: "a chunk of iron ore"
+    keyword: iron
+    description: "A dense chunk of iron ore, heavy and dark gray."
+    basePrice: 12
+  wildflower:
+    displayName: "a wildflower"
+    keyword: wildflower
+    description: "A bright wildflower with delicate petals."
+    basePrice: 3
+  healing_herb:
+    displayName: "a healing herb"
+    keyword: herb
+    description: "A fragrant herb known for its restorative properties."
+    basePrice: 8
+  copper_sword:
+    displayName: "a copper sword"
+    keyword: "copper sword"
+    description: "A simple sword forged from copper. Better than bare fists."
+    slot: hand
+    damage: 4
+    basePrice: 25
+  iron_sword:
+    displayName: "an iron sword"
+    keyword: "iron sword"
+    description: "A sturdy iron sword, well-balanced and sharp."
+    slot: hand
+    damage: 8
+    strength: 1
+    basePrice: 80
+  copper_helm:
+    displayName: "a copper helm"
+    keyword: "copper helm"
+    description: "A simple helm fashioned from hammered copper."
+    slot: head
+    armor: 2
+    basePrice: 20
+  minor_healing_potion:
+    displayName: "a minor healing potion"
+    keyword: "healing potion"
+    description: "A small vial of glowing green liquid that restores health."
+    consumable: true
+    onUse:
+      healHp: 15
+    basePrice: 15
+  strength_elixir:
+    displayName: "a strength elixir"
+    keyword: "strength elixir"
+    description: "A thick red elixir that temporarily bolsters physical power."
+    consumable: true
+    onUse:
+      healHp: 5
+    basePrice: 40
+
+mobs:
+  supply_merchant:
+    name: "the Supply Merchant"
+    room: supply_shop
+    dialogue:
+      root:
+        text: "Welcome to my shop! I sell raw materials for aspiring crafters. Use 'list' to see what I have, or 'buy <item>' to purchase."
+        choices:
+          - text: "What do you recommend for a beginner?"
+            next: beginner
+          - text: "Just browsing."
+      beginner:
+        text: "Start with copper ore and wildflowers — they're cheap and easy to work with. Head to the mine or herb garden to gather your own for free, or buy from me if you're in a hurry."
+        choices:
+          - text: "Thanks for the tip!"
+
+shops:
+  supply_shop:
+    name: "Crafter's Supply Shop"
+    room: supply_shop
+    items:
+      - copper_ore
+      - iron_ore
+      - wildflower
+      - healing_herb
+
+rooms:
+  entrance:
+    title: "Crafting Workshop Entrance"
+    description: "A spacious workshop entrance with tool racks lining the walls and the smell of coal smoke and dried herbs in the air. A staircase descends back to the Hub. Signs point in every direction: MINE to the north, HERB GARDEN to the east, FORGE to the west, and SUPPLY SHOP to the south."
+    exits:
+      n: mine_tunnel
+      e: herb_garden
+      w: forge_room
+      s: supply_shop
+      d: ambon_hub:hall_of_portals
+
+  mine_tunnel:
+    title: "Mine Tunnel"
+    description: "A rough-hewn tunnel cut into bedrock. Torches flicker along the walls, illuminating veins of copper and iron running through the stone. The air is cool and smells of damp earth."
+    exits:
+      s: entrance
+
+  herb_garden:
+    title: "Herb Garden"
+    description: "A tranquil garden bathed in sunlight filtering through a glass ceiling. Rows of wildflowers and medicinal herbs grow in raised beds. Butterflies flit between the blooms."
+    exits:
+      w: entrance
+
+  forge_room:
+    title: "The Forge"
+    description: "A sweltering room dominated by a roaring forge. An anvil stands beside it, scarred with a thousand hammer marks. Racks of tongs and hammers hang within easy reach."
+    station: FORGE
+    exits:
+      e: entrance
+      n: alchemy_lab
+
+  alchemy_lab:
+    title: "Alchemy Laboratory"
+    description: "Glass vials and copper tubing cover every surface. A large alchemy table sits in the center, stained with colorful residues. Shelves hold jars of dried ingredients."
+    station: ALCHEMY_TABLE
+    exits:
+      s: forge_room
+
+  supply_shop:
+    title: "Crafter's Supply Shop"
+    description: "A tidy shop with bins of raw materials and a friendly merchant behind the counter. Prices are posted on a chalkboard."
+    exits:
+      n: entrance
+
+gatheringNodes:
+  copper_vein:
+    displayName: "a copper ore vein"
+    keyword: copper
+    skill: MINING
+    skillRequired: 1
+    yields:
+      - itemId: copper_ore
+        minQuantity: 1
+        maxQuantity: 3
+    respawnSeconds: 30
+    xpReward: 10
+    room: mine_tunnel
+  iron_vein:
+    displayName: "an iron ore vein"
+    keyword: iron
+    skill: MINING
+    skillRequired: 15
+    yields:
+      - itemId: iron_ore
+        minQuantity: 1
+        maxQuantity: 2
+    respawnSeconds: 60
+    xpReward: 25
+    room: mine_tunnel
+  wildflower_patch:
+    displayName: "a wildflower patch"
+    keyword: wildflower
+    skill: HERBALISM
+    skillRequired: 1
+    yields:
+      - itemId: wildflower
+        minQuantity: 1
+        maxQuantity: 3
+    respawnSeconds: 30
+    xpReward: 10
+    room: herb_garden
+  healing_herbs:
+    displayName: "a cluster of healing herbs"
+    keyword: herb
+    skill: HERBALISM
+    skillRequired: 15
+    yields:
+      - itemId: healing_herb
+        minQuantity: 1
+        maxQuantity: 2
+    respawnSeconds: 60
+    xpReward: 25
+    room: herb_garden
+
+recipes:
+  copper_sword:
+    displayName: "Copper Sword"
+    skill: SMITHING
+    skillRequired: 1
+    materials:
+      - itemId: copper_ore
+        quantity: 3
+    outputItemId: copper_sword
+    station: FORGE
+    stationBonus: 0
+    xpReward: 20
+  copper_helm:
+    displayName: "Copper Helm"
+    skill: SMITHING
+    skillRequired: 5
+    materials:
+      - itemId: copper_ore
+        quantity: 4
+    outputItemId: copper_helm
+    station: FORGE
+    stationBonus: 0
+    xpReward: 25
+  iron_sword:
+    displayName: "Iron Sword"
+    skill: SMITHING
+    skillRequired: 20
+    materials:
+      - itemId: iron_ore
+        quantity: 3
+      - itemId: copper_ore
+        quantity: 1
+    outputItemId: iron_sword
+    station: FORGE
+    stationBonus: 0
+    xpReward: 50
+  minor_healing_potion:
+    displayName: "Minor Healing Potion"
+    skill: ALCHEMY
+    skillRequired: 1
+    materials:
+      - itemId: wildflower
+        quantity: 2
+    outputItemId: minor_healing_potion
+    station: ALCHEMY_TABLE
+    stationBonus: 1
+    xpReward: 15
+  strength_elixir:
+    displayName: "Strength Elixir"
+    skill: ALCHEMY
+    skillRequired: 20
+    materials:
+      - itemId: healing_herb
+        quantity: 2
+      - itemId: wildflower
+        quantity: 1
+    outputItemId: strength_elixir
+    station: ALCHEMY_TABLE
+    stationBonus: 1
+    xpReward: 45
