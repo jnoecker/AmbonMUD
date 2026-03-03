@@ -85,15 +85,14 @@ class RegenSystem(
         }
     }
 
-    private fun regenIntervalMs(player: PlayerState, equipCon: Int): Long {
-        val totalCon = player.constitution + equipCon
-        val conBonus = (totalCon - PlayerState.BASE_STAT).coerceAtLeast(0).toLong()
-        return (baseIntervalMs - conBonus * msPerConstitution).coerceAtLeast(minIntervalMs)
-    }
+    private fun regenIntervalMs(player: PlayerState, equipCon: Int): Long =
+        regenInterval(player.constitution + equipCon, baseIntervalMs, msPerConstitution, minIntervalMs)
 
-    private fun manaRegenIntervalMs(player: PlayerState, equipWis: Int): Long {
-        val totalWis = player.wisdom + equipWis
-        val wisBonus = (totalWis - PlayerState.BASE_STAT).coerceAtLeast(0).toLong()
-        return (manaBaseIntervalMs - wisBonus * msPerWisdom).coerceAtLeast(manaMinIntervalMs)
+    private fun manaRegenIntervalMs(player: PlayerState, equipWis: Int): Long =
+        regenInterval(player.wisdom + equipWis, manaBaseIntervalMs, msPerWisdom, manaMinIntervalMs)
+
+    private fun regenInterval(totalStat: Int, baseMs: Long, msPerPoint: Long, minMs: Long): Long {
+        val bonus = (totalStat - PlayerState.BASE_STAT).coerceAtLeast(0).toLong()
+        return (baseMs - bonus * msPerPoint).coerceAtLeast(minMs)
     }
 }
