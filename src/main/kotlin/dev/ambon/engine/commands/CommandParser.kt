@@ -310,6 +310,21 @@ sealed interface Command {
 
     data object Noop : Command
 
+    sealed interface Friend : Command {
+        /** `friend list` or `friend` or `friends` — show friends list. */
+        data object List : Friend
+
+        /** `friend add <name>` — add a player to friends list. */
+        data class Add(
+            val target: String,
+        ) : Friend
+
+        /** `friend remove <name>` — remove a player from friends list. */
+        data class Remove(
+            val target: String,
+        ) : Friend
+    }
+
     sealed interface Mail : Command {
         /** `mail` or `mail list` — show inbox. */
         data object List : Mail
@@ -675,6 +690,25 @@ object CommandParser {
                 }
                 "abort" -> Command.Mail.Abort
                 else -> Command.Invalid(line, "mail list | mail read <n> | mail delete <n> | mail send <player>")
+            }
+        }?.let { return it }
+
+        // friend subcommands: "friend", "friend list", "friend add <name>", "friend remove <name>"
+        // also "friends" as alias for "friend list"
+        matchPrefix(line, listOf("friend", "friends")) { rest ->
+            if (rest.isEmpty()) return@matchPrefix Command.Friend.List
+            val parts = rest.split(Regex("\\s+"), limit = 2)
+            when (parts[0].lowercase()) {
+                "list" -> Command.Friend.List
+                "add" -> {
+                    val name = parts.getOrNull(1)?.trim() ?: ""
+                    if (name.isEmpty()) Command.Invalid(line, "friend add <player>") else Command.Friend.Add(name)
+                }
+                "remove", "rem", "del", "delete" -> {
+                    val name = parts.getOrNull(1)?.trim() ?: ""
+                    if (name.isEmpty()) Command.Invalid(line, "friend remove <player>") else Command.Friend.Remove(name)
+                }
+                else -> Command.Invalid(line, "friend list | friend add <player> | friend remove <player>")
             }
         }?.let { return it }
 
