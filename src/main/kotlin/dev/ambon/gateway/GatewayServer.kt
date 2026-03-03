@@ -31,7 +31,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.lettuce.core.SetArgs
-import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -45,7 +44,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.random.Random
@@ -74,24 +72,16 @@ class GatewayServer(
     private val multiEngine = config.gateway.engines.isNotEmpty()
 
     private val prometheusRegistry: PrometheusMeterRegistry? =
-        if (config.observability.metricsEnabled) {
-            PrometheusMeterRegistry(PrometheusConfig.DEFAULT).also { reg ->
-                reg.config().commonTags("service", "ambonmud-gateway")
-                config.observability.staticTags.forEach { (k, v) -> reg.config().commonTags(k, v) }
-            }
-        } else {
-            null
-        }
+        dev.ambon.ServerInfrastructure.createPrometheusRegistry(config, "ambonmud-gateway")
 
     private val gameMetrics: GameMetrics =
-        if (prometheusRegistry != null) GameMetrics(prometheusRegistry) else GameMetrics.noop()
+        dev.ambon.ServerInfrastructure.createGameMetrics(prometheusRegistry)
 
     private val instanceId: String =
-        config.redis.bus.instanceId
-            .takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+        dev.ambon.ServerInfrastructure.generateInstanceId(config)
 
     private val redisManager: RedisConnectionManager? =
-        if (config.redis.enabled) RedisConnectionManager(config.redis) else null
+        dev.ambon.ServerInfrastructure.createRedisManager(config)
 
     private val sessionIdFactory: SessionIdFactory =
         SnowflakeSessionIdFactory(
@@ -171,40 +161,26 @@ class GatewayServer(
         outboundRouter = OutboundRouter(engineOutbound = activeOutbound, scope = scope, metrics = gameMetrics)
         scope.launch { outboundRouter.start() }
 
-        telnetTransport =
-            BlockingSocketTransport(
-                port = config.server.telnetPort,
-                inbound = activeInbound,
-                outboundRouter = outboundRouter,
-                sessionIdFactory = sessionIdFactory::allocate,
-                scope = scope,
-                sessionOutboundQueueCapacity = config.server.sessionOutboundQueueCapacity,
-                maxLineLen = config.transport.telnet.maxLineLen,
-                maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
-                maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
-                metrics = gameMetrics,
-                sessionDispatcher = telnetDispatcher,
-            )
+        telnetTransport = dev.ambon.ServerInfrastructure.createTelnetTransport(
+            config = config,
+            inbound = activeInbound,
+            outboundRouter = outboundRouter,
+            sessionIdFactory = sessionIdFactory::allocate,
+            scope = scope,
+            metrics = gameMetrics,
+            sessionDispatcher = telnetDispatcher,
+        )
         telnetTransport.start()
         log.info { "Gateway telnet transport bound on port ${config.server.telnetPort}" }
 
-        webTransport =
-            KtorWebSocketTransport(
-                port = config.server.webPort,
-                inbound = activeInbound,
-                outboundRouter = outboundRouter,
-                sessionIdFactory = sessionIdFactory::allocate,
-                host = config.transport.websocket.host,
-                sessionOutboundQueueCapacity = config.server.sessionOutboundQueueCapacity,
-                stopGraceMillis = config.transport.websocket.stopGraceMillis,
-                stopTimeoutMillis = config.transport.websocket.stopTimeoutMillis,
-                maxLineLen = config.transport.telnet.maxLineLen,
-                maxNonPrintablePerLine = config.transport.telnet.maxNonPrintablePerLine,
-                maxInboundBackpressureFailures = config.transport.maxInboundBackpressureFailures,
-                prometheusRegistry = prometheusRegistry,
-                metricsEndpoint = config.observability.metricsEndpoint,
-                metrics = gameMetrics,
-            )
+        webTransport = dev.ambon.ServerInfrastructure.createWebTransport(
+            config = config,
+            inbound = activeInbound,
+            outboundRouter = outboundRouter,
+            sessionIdFactory = sessionIdFactory::allocate,
+            prometheusRegistry = prometheusRegistry,
+            metrics = gameMetrics,
+        )
         webTransport.start()
 
         bindQueueMetrics()
@@ -222,23 +198,8 @@ class GatewayServer(
         }
     }
 
-    private fun bindQueueMetrics() {
-        when (val bus = activeInbound) {
-            is LocalInboundBus -> gameMetrics.bindInboundBusQueue(bus::depth) { bus.capacity }
-            is GrpcInboundBus -> {
-                val delegate = bus.delegateForMetrics()
-                gameMetrics.bindInboundBusQueue(delegate::depth) { delegate.capacity }
-            }
-        }
-
-        when (val bus = activeOutbound) {
-            is LocalOutboundBus -> gameMetrics.bindOutboundBusQueue(bus::depth) { bus.capacity }
-            is GrpcOutboundBus -> {
-                val delegate = bus.delegateForMetrics()
-                gameMetrics.bindOutboundBusQueue(delegate::depth) { delegate.capacity }
-            }
-        }
-    }
+    private fun bindQueueMetrics() =
+        dev.ambon.ServerInfrastructure.bindQueueMetrics(activeInbound, activeOutbound, gameMetrics)
 
     private suspend fun startSingleEngine() {
         val managedChannel =
