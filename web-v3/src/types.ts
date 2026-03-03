@@ -97,6 +97,8 @@ export interface InProgressAchievement {
 export interface AchievementData {
   completed: CompletedAchievement[];
   inProgress: InProgressAchievement[];
+}
+
 export interface StatusVarLabels {
   hp: string;
   maxHp: string;
