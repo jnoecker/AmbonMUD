@@ -1,0 +1,16 @@
+zone: bad_craft2
+startRoom: room1
+items:
+  copper_ore:
+    displayName: "copper ore"
+rooms:
+  room1:
+    title: "Room"
+    description: "A room."
+gatheringNodes:
+  bad_node:
+    displayName: "a bad node"
+    skill: SMITHING
+    yields:
+      - itemId: copper_ore
+    room: room1

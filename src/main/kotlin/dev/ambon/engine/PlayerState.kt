@@ -2,6 +2,8 @@ package dev.ambon.engine
 
 import dev.ambon.domain.StatBlock
 import dev.ambon.domain.achievement.AchievementState
+import dev.ambon.domain.crafting.CraftingSkill
+import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -53,6 +55,9 @@ data class PlayerState(
     var recallRoomId: RoomId? = null,
     /** Epoch-ms timestamp after which recall is available again. Runtime-only; not persisted. */
     var recallCooldownUntilMs: Long = 0L,
+    var craftingSkills: MutableMap<CraftingSkill, CraftingSkillState> = mutableMapOf(),
+    /** Epoch-ms timestamp after which gathering is available again. Runtime-only; not persisted. */
+    var gatherCooldownUntilMs: Long = 0L,
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -146,6 +151,13 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         inbox = inbox.toMutableList(),
         guildId = guildId,
         recallRoomId = recallRoomId,
+        craftingSkills = craftingSkills.mapNotNull { (key, state) ->
+            try {
+                CraftingSkill.valueOf(key) to state
+            } catch (_: IllegalArgumentException) {
+                null
+            }
+        }.toMap().toMutableMap(),
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -182,6 +194,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         inbox = inbox.toList(),
         guildId = guildId,
         recallRoomId = recallRoomId,
+        craftingSkills = craftingSkills.map { (k, v) -> k.name to v }.toMap(),
     )
 }
 

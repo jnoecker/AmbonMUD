@@ -1581,6 +1581,13 @@ ambonmud:
             minDamage: 44
             maxDamage: 68
 
+    crafting:
+      maxSkillLevel: 100
+      baseXpPerLevel: 50
+      xpExponent: 1.5
+      gatherCooldownMs: 3000
+      stationBonusQuantity: 1
+
     debug:
       enableSwarmClass: false
 

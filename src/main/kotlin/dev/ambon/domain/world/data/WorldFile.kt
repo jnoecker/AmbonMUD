@@ -9,4 +9,6 @@ data class WorldFile(
     val items: Map<String, ItemFile> = emptyMap(),
     val shops: Map<String, ShopFile> = emptyMap(),
     val quests: Map<String, QuestFile> = emptyMap(),
+    val gatheringNodes: Map<String, GatheringNodeFile> = emptyMap(),
+    val recipes: Map<String, RecipeFile> = emptyMap(),
 )

@@ -450,4 +450,45 @@ class CommandParserTest {
     fun `guild invite without target is Invalid`() {
         assertTrue(CommandParser.parse("guild invite") is Command.Invalid)
     }
+
+    // ---- Crafting & Gathering ----
+
+    @Test
+    fun `parses gather command and aliases`() {
+        assertEquals(Command.Gather("copper"), CommandParser.parse("gather copper"))
+        assertEquals(Command.Gather("copper"), CommandParser.parse("harvest copper"))
+        assertEquals(Command.Gather("iron"), CommandParser.parse("mine iron"))
+    }
+
+    @Test
+    fun `gather without argument is Invalid`() {
+        assertTrue(CommandParser.parse("gather") is Command.Invalid)
+        assertTrue(CommandParser.parse("harvest") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses craft command and aliases`() {
+        assertEquals(Command.Craft("copper sword"), CommandParser.parse("craft copper sword"))
+        assertEquals(Command.Craft("potion"), CommandParser.parse("make potion"))
+        assertEquals(Command.Craft("helm"), CommandParser.parse("create helm"))
+    }
+
+    @Test
+    fun `craft without argument is Invalid`() {
+        assertTrue(CommandParser.parse("craft") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses recipes command with and without filter`() {
+        assertEquals(Command.Recipes(null), CommandParser.parse("recipes"))
+        assertEquals(Command.Recipes("smithing"), CommandParser.parse("recipes smithing"))
+        assertEquals(Command.Recipes("copper"), CommandParser.parse("recipe copper"))
+    }
+
+    @Test
+    fun `parses craftskills command aliases`() {
+        assertEquals(Command.CraftSkills, CommandParser.parse("craftskills"))
+        assertEquals(Command.CraftSkills, CommandParser.parse("professions"))
+        assertEquals(Command.CraftSkills, CommandParser.parse("prof"))
+    }
 }

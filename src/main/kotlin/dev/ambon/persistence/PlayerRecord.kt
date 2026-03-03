@@ -1,6 +1,7 @@
 package dev.ambon.persistence
 
 import dev.ambon.domain.achievement.AchievementState
+import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.quest.QuestState
@@ -41,6 +42,7 @@ data class PlayerRecord(
     val inbox: List<MailMessage> = emptyList(),
     val guildId: String? = null,
     val recallRoomId: RoomId? = null,
+    val craftingSkills: Map<String, CraftingSkillState> = emptyMap(),
 ) {
     /**
      * Applies legacy migration fixes after deserialization.
