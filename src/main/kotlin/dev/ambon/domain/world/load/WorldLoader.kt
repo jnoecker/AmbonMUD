@@ -101,8 +101,7 @@ object WorldLoader {
         val worldStart = startRoomOverride ?: normalizeId(files.first().zone, files.first().startRoom)
 
         for (file in files) {
-            val zone = file.zone.trim()
-            if (zone.isEmpty()) throw WorldLoadException("World zone cannot be blank")
+            val zone = requireNonBlank(file.zone) { "World zone cannot be blank" }
             val declaredLifespanMinutes = file.lifespan
             if (!zoneLifespansMinutes.containsKey(zone)) {
                 zoneLifespansMinutes[zone] = declaredLifespanMinutes
@@ -226,9 +225,8 @@ object WorldLoader {
                 val resolvedGoldMax = mf.goldMax ?: (tier.baseGoldMax + steps.toLong() * tier.goldPerLevel)
                 val drops =
                     mf.drops.mapIndexed { index, drop ->
-                        val rawItemId = drop.itemId.trim()
-                        if (rawItemId.isEmpty()) {
-                            throw WorldLoadException("Mob '${mobId.value}' drop #${index + 1} itemId cannot be blank")
+                        val rawItemId = requireNonBlank(drop.itemId) {
+                            "Mob '${mobId.value}' drop #${index + 1} itemId cannot be blank"
                         }
 
                         val chance = drop.chance
@@ -307,9 +305,8 @@ object WorldLoader {
                     throw WorldLoadException("Duplicate item id '${itemId.value}' across zone files")
                 }
 
-                val displayName = itemFile.displayName.trim()
-                if (displayName.isEmpty()) {
-                    throw WorldLoadException("Item '${itemId.value}' displayName cannot be blank")
+                val displayName = requireNonBlank(itemFile.displayName) {
+                    "Item '${itemId.value}' displayName cannot be blank"
                 }
 
                 val keyword = normalizeKeyword(rawId, itemFile.keyword)
@@ -412,16 +409,14 @@ object WorldLoader {
 
             // Stage shops (normalized)
             for ((rawId, shopFile) in file.shops) {
-                val shopName = shopFile.name.trim()
-                if (shopName.isEmpty()) {
-                    throw WorldLoadException("Shop '$rawId' in zone '$zone' name cannot be blank")
+                val shopName = requireNonBlank(shopFile.name) {
+                    "Shop '$rawId' in zone '$zone' name cannot be blank"
                 }
                 val shopRoomId = normalizeTarget(zone, shopFile.room)
                 val shopItemIds =
                     shopFile.items.mapIndexed { index, rawItemId ->
-                        val trimmed = rawItemId.trim()
-                        if (trimmed.isEmpty()) {
-                            throw WorldLoadException("Shop '$rawId' item #${index + 1} cannot be blank")
+                        val trimmed = requireNonBlank(rawItemId) {
+                            "Shop '$rawId' item #${index + 1} cannot be blank"
                         }
                         normalizeItemId(zone, trimmed)
                     }
@@ -438,13 +433,11 @@ object WorldLoader {
             // Stage quests (normalized)
             for ((rawId, questFile) in file.quests) {
                 val questId = qualifyId(zone, rawId)
-                val questName = questFile.name.trim()
-                if (questName.isEmpty()) {
-                    throw WorldLoadException("Quest '$questId' name cannot be blank")
+                val questName = requireNonBlank(questFile.name) {
+                    "Quest '$questId' name cannot be blank"
                 }
-                val giver = questFile.giver.trim()
-                if (giver.isEmpty()) {
-                    throw WorldLoadException("Quest '$questId' giver cannot be blank")
+                val giver = requireNonBlank(questFile.giver) {
+                    "Quest '$questId' giver cannot be blank"
                 }
                 val completionType =
                     when (questFile.completionType.uppercase()) {
@@ -467,11 +460,8 @@ object WorldLoader {
                                     "Quest '$questId' objective #${index + 1} has unknown type '${obj.type}'",
                                 )
                             }
-                        val targetKeyRaw = obj.targetKey.trim()
-                        if (targetKeyRaw.isEmpty()) {
-                            throw WorldLoadException(
-                                "Quest '$questId' objective #${index + 1} targetKey cannot be blank",
-                            )
+                        val targetKeyRaw = requireNonBlank(obj.targetKey) {
+                            "Quest '$questId' objective #${index + 1} targetKey cannot be blank"
                         }
                         val targetId = qualifyId(zone, targetKeyRaw)
                         if (obj.count < 1) {
@@ -502,9 +492,8 @@ object WorldLoader {
             // Stage gathering nodes (normalized)
             for ((rawId, nodeFile) in file.gatheringNodes) {
                 val nodeId = qualifyId(zone, rawId)
-                val displayName = nodeFile.displayName.trim()
-                if (displayName.isEmpty()) {
-                    throw WorldLoadException("Gathering node '$nodeId' displayName cannot be blank")
+                val displayName = requireNonBlank(nodeFile.displayName) {
+                    "Gathering node '$nodeId' displayName cannot be blank"
                 }
                 val skill = parseCraftingSkill(nodeFile.skill, "Gathering node '$nodeId'")
                 if (!skill.isGathering) {
@@ -556,9 +545,8 @@ object WorldLoader {
             // Stage recipes (normalized)
             for ((rawId, recipeFile) in file.recipes) {
                 val recipeId = qualifyId(zone, rawId)
-                val displayName = recipeFile.displayName.trim()
-                if (displayName.isEmpty()) {
-                    throw WorldLoadException("Recipe '$recipeId' displayName cannot be blank")
+                val displayName = requireNonBlank(recipeFile.displayName) {
+                    "Recipe '$recipeId' displayName cannot be blank"
                 }
                 val skill = parseCraftingSkill(recipeFile.skill, "Recipe '$recipeId'")
                 if (!skill.isCrafting) {
@@ -786,8 +774,7 @@ object WorldLoader {
     }
 
     private fun validateFileBasics(file: WorldFile) {
-        val zone = file.zone.trim()
-        if (zone.isEmpty()) throw WorldLoadException("World zone cannot be blank")
+        val zone = requireNonBlank(file.zone) { "World zone cannot be blank" }
         if (file.lifespan != null && file.lifespan < 0L) {
             throw WorldLoadException("Zone '$zone' lifespan must be >= 0")
         }
@@ -813,8 +800,7 @@ object WorldLoader {
         zone: String,
         raw: String,
     ): RoomId {
-        val s = raw.trim()
-        if (s.isEmpty()) throw WorldLoadException("Room id cannot be blank")
+        val s = requireNonBlank(raw) { "Room id cannot be blank" }
         return RoomId(qualifyId(zone, s))
     }
 
@@ -832,8 +818,7 @@ object WorldLoader {
         zone: String,
         raw: String,
     ): MobId {
-        val s = raw.trim()
-        if (s.isEmpty()) throw WorldLoadException("Mob id cannot be blank")
+        val s = requireNonBlank(raw) { "Mob id cannot be blank" }
         return MobId(qualifyId(zone, s))
     }
 
@@ -841,8 +826,7 @@ object WorldLoader {
         zone: String,
         raw: String,
     ): ItemId {
-        val s = raw.trim()
-        if (s.isEmpty()) throw WorldLoadException("Item id cannot be blank")
+        val s = requireNonBlank(raw) { "Item id cannot be blank" }
         return ItemId(qualifyId(zone, s))
     }
 
@@ -851,16 +835,13 @@ object WorldLoader {
         rawKeyword: String?,
     ): String {
         if (rawKeyword != null) {
-            val trimmed = rawKeyword.trim()
-            if (trimmed.isEmpty()) throw WorldLoadException("Item keyword cannot be blank")
-            return trimmed
+            return requireNonBlank(rawKeyword) { "Item keyword cannot be blank" }
         }
         return keywordFromId(rawId)
     }
 
     private fun keywordFromId(rawId: String): String {
-        val trimmed = rawId.trim()
-        if (trimmed.isEmpty()) throw WorldLoadException("Item keyword cannot be blank")
+        val trimmed = requireNonBlank(rawId) { "Item keyword cannot be blank" }
         val base = trimmed.substringAfterLast(':')
         if (base.isEmpty()) throw WorldLoadException("Item keyword cannot be blank")
         return base
@@ -944,13 +925,11 @@ object WorldLoader {
         ff: FeatureFile,
     ): RoomFeature {
         val type = ff.type.trim().uppercase()
-        val displayName = ff.displayName.trim()
-        if (displayName.isEmpty()) {
-            throw WorldLoadException("Feature '$featId' displayName cannot be blank")
+        val displayName = requireNonBlank(ff.displayName) {
+            "Feature '$featId' displayName cannot be blank"
         }
-        val keyword = ff.keyword.trim()
-        if (keyword.isEmpty()) {
-            throw WorldLoadException("Feature '$featId' keyword cannot be blank")
+        val keyword = requireNonBlank(ff.keyword) {
+            "Feature '$featId' keyword cannot be blank"
         }
         return when (type) {
             "CONTAINER" -> {
@@ -961,9 +940,8 @@ object WorldLoader {
                 val initialState = parseLockableState(ff.initialState, "Container '$featId'")
                 val initialItems =
                     ff.items.mapIndexed { index, rawItemId ->
-                        val s = rawItemId.trim()
-                        if (s.isEmpty()) {
-                            throw WorldLoadException("Container '$featId' item #${index + 1} cannot be blank")
+                        val s = requireNonBlank(rawItemId) {
+                            "Container '$featId' item #${index + 1} cannot be blank"
                         }
                         normalizeItemId(zone, s)
                     }
@@ -1067,4 +1045,10 @@ object WorldLoader {
                 "$context has unknown station type '$raw' (expected: ${CraftingStationType.entries.joinToString()})",
             )
         }
+
+    private inline fun requireNonBlank(value: String, lazyMessage: () -> String): String {
+        val trimmed = value.trim()
+        if (trimmed.isEmpty()) throw WorldLoadException(lazyMessage())
+        return trimmed
+    }
 }
