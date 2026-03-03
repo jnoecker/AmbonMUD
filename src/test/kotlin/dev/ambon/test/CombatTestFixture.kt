@@ -5,6 +5,7 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.items.ItemInstance
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.CombatSystemCallbacks
 import dev.ambon.engine.CombatSystemConfig
@@ -14,6 +15,8 @@ import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.status.StatusEffectDefinition
+import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.InMemoryPlayerRepository
@@ -91,4 +94,68 @@ class CombatTestFixture(
                 onRoomItemsChanged = onRoomItemsChanged,
             ),
         )
+
+    /**
+     * Advance the clock by one combat tick interval and run combat.tick().
+     */
+    suspend fun tickCombat(
+        combat: CombatSystem,
+        tickMillis: Long = 1_000L,
+    ) {
+        clock.advance(tickMillis)
+        combat.tick()
+    }
+
+    /**
+     * Place an item in the room, pick it up, and equip it for the given session.
+     */
+    fun equipItem(
+        sessionId: SessionId,
+        instance: ItemInstance,
+        roomId: RoomId = this.roomId,
+    ) {
+        items.addRoomItem(roomId, instance)
+        val moved = items.takeFromRoom(sessionId, roomId, instance.item.keyword)
+        requireNotNull(moved) { "Expected to move item '${instance.item.keyword}' into inventory" }
+        val result = items.equipFromInventory(sessionId, instance.item.keyword)
+        require(result is ItemRegistry.EquipResult.Equipped) { "Expected to equip '${instance.item.keyword}', got $result" }
+    }
+
+    /**
+     * Build a [StatusEffectSystem] wired to this fixture's registries,
+     * with the given effect definitions pre-registered.
+     */
+    fun buildStatusEffects(
+        vararg definitions: StatusEffectDefinition,
+        rng: Random = Random(1),
+    ): StatusEffectSystem {
+        val registry = StatusEffectRegistry()
+        definitions.forEach { registry.register(it) }
+        return StatusEffectSystem(
+            registry = registry,
+            players = players,
+            mobs = mobs,
+            outbound = outbound,
+            clock = clock,
+            rng = rng,
+            dirtyNotifier = DirtyNotifier.NO_OP,
+        )
+    }
+}
+
+/**
+ * Place an item in the room, pick it up, and equip it.
+ * Standalone variant for use outside [CombatTestFixture].
+ */
+fun equipItemForTest(
+    items: ItemRegistry,
+    sessionId: SessionId,
+    roomId: RoomId,
+    instance: ItemInstance,
+) {
+    items.addRoomItem(roomId, instance)
+    val moved = items.takeFromRoom(sessionId, roomId, instance.item.keyword)
+    requireNotNull(moved) { "Expected to move item '${instance.item.keyword}' into inventory" }
+    val result = items.equipFromInventory(sessionId, instance.item.keyword)
+    require(result is ItemRegistry.EquipResult.Equipped) { "Expected to equip '${instance.item.keyword}', got $result" }
 }

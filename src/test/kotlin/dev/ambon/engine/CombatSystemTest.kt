@@ -7,7 +7,6 @@ import dev.ambon.domain.DamageRange
 import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
-import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
@@ -15,15 +14,11 @@ import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.MobDrop
-import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.EffectType
 import dev.ambon.engine.status.StackBehavior
 import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectId
-import dev.ambon.engine.status.StatusEffectRegistry
-import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.test.CombatTestFixture
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
@@ -42,40 +37,24 @@ class CombatSystemTest {
     fun `combat tick damages both sides`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
-            mobs.upsert(mob)
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 10, maxHp = 10)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                )
+            val combat = fixture.buildCombat(rng = Random(1))
 
             val sid = SessionId(1L)
-            players.loginOrFail(sid, "Player1")
+            fixture.players.loginOrFail(sid, "Player1")
 
             val err = combat.startCombat(sid, "rat")
             assertNull(err)
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
-            val player = players.get(sid)
+            val player = fixture.players.get(sid)
             assertNotNull(player)
             assertTrue(player!!.hp < player.maxHp, "Expected player to take damage")
 
-            val updatedMob = mobs.get(mob.id)
+            val updatedMob = fixture.mobs.get(mob.id)
             assertNotNull(updatedMob)
             assertTrue(updatedMob!!.hp < updatedMob.maxHp, "Expected mob to take damage")
         }
@@ -84,39 +63,25 @@ class CombatSystemTest {
     fun `combat does not resolve before combat tick interval`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
-            mobs.upsert(mob)
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 10, maxHp = 10)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                )
+            val combat = fixture.buildCombat(rng = Random(1))
 
             val sid = SessionId(99L)
-            players.loginOrFail(sid, "Player99")
+            fixture.players.loginOrFail(sid, "Player99")
 
             val err = combat.startCombat(sid, "rat")
             assertNull(err)
 
+            // tick without advancing clock — should not resolve
             combat.tick()
 
-            val player = players.get(sid)
+            val player = fixture.players.get(sid)
             assertNotNull(player)
             assertEquals(player!!.maxHp, player.hp, "Expected no player damage before combat tick interval")
 
-            val updatedMob = mobs.get(mob.id)
+            val updatedMob = fixture.mobs.get(mob.id)
             assertNotNull(updatedMob)
             assertEquals(updatedMob!!.maxHp, updatedMob.hp, "Expected no mob damage before combat tick interval")
         }
@@ -125,35 +90,16 @@ class CombatSystemTest {
     fun `attack bonus adds flat damage`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
-            mobs.upsert(mob)
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 10, maxHp = 10)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                    minDamage = 1,
-                    maxDamage = 1,
-                )
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
 
             val sid = SessionId(3L)
-            players.loginOrFail(sid, "Player3")
+            fixture.players.loginOrFail(sid, "Player3")
 
-            equipItem(
-                items,
+            fixture.equipItem(
                 sid,
-                roomId,
                 ItemInstance(
                     ItemId("demo:dagger"),
                     Item(keyword = "dagger", displayName = "a dagger", slot = ItemSlot.HAND, damage = 2),
@@ -163,10 +109,9 @@ class CombatSystemTest {
             val err = combat.startCombat(sid, "rat")
             assertNull(err)
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
-            val updatedMob = mobs.get(mob.id)
+            val updatedMob = fixture.mobs.get(mob.id)
             assertNotNull(updatedMob)
             assertEquals(7, updatedMob!!.hp)
         }
@@ -175,35 +120,16 @@ class CombatSystemTest {
     fun `defense bonus increases max hp pool`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10)
-            mobs.upsert(mob)
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 10, maxHp = 10)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                    minDamage = 1,
-                    maxDamage = 1,
-                )
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
 
             val sid = SessionId(4L)
-            players.loginOrFail(sid, "Player4")
+            fixture.players.loginOrFail(sid, "Player4")
 
-            equipItem(
-                items,
+            fixture.equipItem(
                 sid,
-                roomId,
                 ItemInstance(
                     ItemId("demo:cap"),
                     Item(keyword = "cap", displayName = "a cap", slot = ItemSlot.HEAD, armor = 2),
@@ -213,10 +139,9 @@ class CombatSystemTest {
             val err = combat.startCombat(sid, "rat")
             assertNull(err)
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
-            val player = players.get(sid)
+            val player = fixture.players.get(sid)
             assertNotNull(player)
             assertEquals(12, player!!.maxHp)
             assertEquals(9, player.hp)
@@ -226,33 +151,14 @@ class CombatSystemTest {
     fun `unequipping armor clamps hp to new max without reducing current hp`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                    minDamage = 1,
-                    maxDamage = 1,
-                )
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
 
             val sid = SessionId(6L)
-            players.loginOrFail(sid, "Player6")
+            fixture.players.loginOrFail(sid, "Player6")
 
-            equipItem(
-                items,
+            fixture.equipItem(
                 sid,
-                roomId,
                 ItemInstance(
                     ItemId("demo:helm"),
                     Item(keyword = "helm", displayName = "a helm", slot = ItemSlot.HEAD, armor = 2),
@@ -260,10 +166,10 @@ class CombatSystemTest {
             )
             combat.syncPlayerDefense(sid)
 
-            val player = players.get(sid)!!
+            val player = fixture.players.get(sid)!!
             player.hp = 8
 
-            items.unequip(sid, ItemSlot.HEAD)
+            fixture.items.unequip(sid, ItemSlot.HEAD)
             combat.syncPlayerDefense(sid)
 
             assertEquals(10, player.maxHp)
@@ -274,51 +180,33 @@ class CombatSystemTest {
     fun `mob death drops items and removes mob`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
-            val mob = MobState(MobId("demo:owl"), "an owl", roomId, hp = 1, maxHp = 1)
-            mobs.upsert(mob)
-            items.addMobItem(
+            val mob = MobState(MobId("demo:owl"), "an owl", fixture.roomId, hp = 1, maxHp = 1)
+            fixture.mobs.upsert(mob)
+            fixture.items.addMobItem(
                 mob.id,
                 ItemInstance(ItemId("demo:feather"), Item(keyword = "feather", displayName = "a black feather")),
             )
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(2),
-                    tickMillis = 1_000L,
-                )
+            val combat = fixture.buildCombat(rng = Random(2))
 
             val sid = SessionId(2L)
-            players.loginOrFail(sid, "Player2")
+            fixture.players.loginOrFail(sid, "Player2")
 
             val err = combat.startCombat(sid, "owl")
             assertNull(err)
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
-            assertNull(mobs.get(mob.id), "Expected mob to be removed after death")
-            assertTrue(items.itemsInMob(mob.id).isEmpty(), "Expected mob inventory to be cleared")
-            assertEquals(1, items.itemsInRoom(roomId).size, "Expected dropped item in room")
+            assertNull(fixture.mobs.get(mob.id), "Expected mob to be removed after death")
+            assertTrue(fixture.items.itemsInMob(mob.id).isEmpty(), "Expected mob inventory to be cleared")
+            assertEquals(1, fixture.items.itemsInRoom(fixture.roomId).size, "Expected dropped item in room")
         }
 
     @Test
     fun `mob death rolls guaranteed loot table drop`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            items.loadSpawns(
+            fixture.items.loadSpawns(
                 listOf(
                     ItemSpawn(
                         instance =
@@ -329,50 +217,34 @@ class CombatSystemTest {
                     ),
                 ),
             )
-            val players = fixture.players
-            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:wolf"),
                     "a wolf",
-                    roomId,
+                    fixture.roomId,
                     hp = 1,
                     maxHp = 1,
                     drops = listOf(MobDrop(ItemId("demo:fang"), 1.0)),
                 )
-            mobs.upsert(mob)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(2),
-                    tickMillis = 1_000L,
-                )
+            val combat = fixture.buildCombat(rng = Random(2))
 
             val sid = SessionId(7L)
-            players.loginOrFail(sid, "Player7")
+            fixture.players.loginOrFail(sid, "Player7")
             val err = combat.startCombat(sid, "wolf")
             assertNull(err)
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
-            assertTrue(items.itemsInRoom(roomId).any { it.id.value == "demo:fang" })
+            assertTrue(fixture.items.itemsInRoom(fixture.roomId).any { it.id.value == "demo:fang" })
         }
 
     @Test
     fun `mob death skips loot table drop when chance is zero`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            items.loadSpawns(
+            fixture.items.loadSpawns(
                 listOf(
                     ItemSpawn(
                         instance =
@@ -383,56 +255,36 @@ class CombatSystemTest {
                     ),
                 ),
             )
-            val players = fixture.players
-            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:wolf"),
                     "a wolf",
-                    roomId,
+                    fixture.roomId,
                     hp = 1,
                     maxHp = 1,
                     drops = listOf(MobDrop(ItemId("demo:fang"), 0.0)),
                 )
-            mobs.upsert(mob)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(2),
-                    tickMillis = 1_000L,
-                )
+            val combat = fixture.buildCombat(rng = Random(2))
 
             val sid = SessionId(8L)
-            players.loginOrFail(sid, "Player8")
+            fixture.players.loginOrFail(sid, "Player8")
             val err = combat.startCombat(sid, "wolf")
             assertNull(err)
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
-            assertTrue(items.itemsInRoom(roomId).none { it.id.value == "demo:fang" })
+            assertTrue(fixture.items.itemsInRoom(fixture.roomId).none { it.id.value == "demo:fang" })
         }
 
     @Test
     fun `mob kill awards xp and level up`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 1, maxHp = 1, xpReward = 50L)
-            mobs.upsert(mob)
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 1, maxHp = 1, xpReward = 50L)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
             val progression =
                 PlayerProgression(
                     ProgressionConfig(
@@ -456,28 +308,21 @@ class CombatSystemTest {
                 )
             val combat =
                 fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
                     rng = Random(5),
-                    tickMillis = 1_000L,
                     minDamage = 1,
                     maxDamage = 1,
                     progression = progression,
                 )
 
             val sid = SessionId(5L)
-            players.loginOrFail(sid, "Player5")
+            fixture.players.loginOrFail(sid, "Player5")
 
             val err = combat.startCombat(sid, "rat")
             assertNull(err)
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
-            val player = players.get(sid)
+            val player = fixture.players.get(sid)
             assertNotNull(player)
             assertEquals(2, player!!.level)
             assertEquals(50L, player.xpTotal)
@@ -485,7 +330,7 @@ class CombatSystemTest {
             assertEquals(18, player.hp)
 
             val messages =
-                outbound
+                fixture.outbound
                     .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
@@ -494,57 +339,26 @@ class CombatSystemTest {
             assertTrue(messages.contains("You reached level 2! (+8 max HP, +4 max Mana)"))
         }
 
-    private fun equipItem(
-        items: ItemRegistry,
-        sessionId: SessionId,
-        roomId: RoomId,
-        instance: ItemInstance,
-    ) {
-        items.addRoomItem(roomId, instance)
-        val moved = items.takeFromRoom(sessionId, roomId, instance.item.keyword)
-        requireNotNull(moved) { "Expected to move item '${instance.item.keyword}' into inventory" }
-        val result = items.equipFromInventory(sessionId, instance.item.keyword)
-        require(result is ItemRegistry.EquipResult.Equipped) { "Expected to equip '${instance.item.keyword}', got $result" }
-    }
-
     @Test
     fun `mob armor reduces player effective damage to minimum 1`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
             // armor=100 absorbs all player damage; minimum 1 must apply
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, armor = 100)
-            mobs.upsert(mob)
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 10, maxHp = 10, armor = 100)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                    minDamage = 1,
-                    maxDamage = 1,
-                )
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
 
             val sid = SessionId(1L)
-            players.loginOrFail(sid, "Tester1")
+            fixture.players.loginOrFail(sid, "Tester1")
             combat.startCombat(sid, "rat")
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
             // mob should lose at least 1 hp (minimum effective damage)
             assertTrue(mob.hp <= 9, "Expected mob hp <= 9, got ${mob.hp}")
             assertEquals(9, mob.hp)
 
-            val messages = outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            val messages = fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
             assertTrue(messages.any { it.contains("for 1 damage") }, "Expected 'for 1 damage' in: $messages")
         }
 
@@ -552,37 +366,19 @@ class CombatSystemTest {
     fun `mob armor reduces player damage by flat amount`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
-            // armor=2, player rolls fixed 5 → effective = 5-2 = 3
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, armor = 2)
-            mobs.upsert(mob)
+            // armor=2, player rolls fixed 5 -> effective = 5-2 = 3
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 10, maxHp = 10, armor = 2)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                    minDamage = 5,
-                    maxDamage = 5,
-                )
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 5, maxDamage = 5)
 
             val sid = SessionId(2L)
-            players.loginOrFail(sid, "Tester2")
+            fixture.players.loginOrFail(sid, "Tester2")
             combat.startCombat(sid, "rat")
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
             assertEquals(7, mob.hp, "Expected mob hp=7 (10 - (5-2)=3)")
-            val messages = outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            val messages = fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
             assertTrue(messages.any { it.contains("for 3 damage") }, "Expected 'for 3 damage' in: $messages")
         }
 
@@ -590,47 +386,29 @@ class CombatSystemTest {
     fun `mob uses its own damage range not global config`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
             // mob has minDamage=10, maxDamage=10; global config has 1/1
             val mob =
                 MobState(
                     MobId("demo:rat"),
                     "a rat",
-                    roomId,
+                    fixture.roomId,
                     hp = 10,
                     maxHp = 10,
                     damage = DamageRange(10, 10),
                 )
-            mobs.upsert(mob)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                    minDamage = 1,
-                    maxDamage = 1,
-                )
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
 
             val sid = SessionId(3L)
-            players.loginOrFail(sid, "Tester3")
+            fixture.players.loginOrFail(sid, "Tester3")
             combat.startCombat(sid, "rat")
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
-            val player = players.get(sid)
+            val player = fixture.players.get(sid)
             assertNotNull(player)
             // mob should have hit player for 10 (its own damage), not 1 (global config)
-            val messages = outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
+            val messages = fixture.outbound.drainAll().filterIsInstance<OutboundEvent.SendText>().map { it.text }
             assertTrue(messages.any { it.contains("hits you for 10 damage") }, "Expected mob hit for 10, messages: $messages")
         }
 
@@ -638,46 +416,33 @@ class CombatSystemTest {
     fun `detailed combat feedback includes compact roll and armor summaries for both sides`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:rat"),
                     "a rat",
-                    roomId,
+                    fixture.roomId,
                     hp = 20,
                     maxHp = 20,
                     damage = DamageRange(7, 7),
                     armor = 2,
                 )
-            mobs.upsert(mob)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
             val combat =
                 fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
                     rng = Random(1),
-                    tickMillis = 1_000L,
                     minDamage = 5,
                     maxDamage = 5,
                     detailedFeedbackEnabled = true,
                 )
 
             val sid = SessionId(9L)
-            players.loginOrFail(sid, "Tester9")
+            fixture.players.loginOrFail(sid, "Tester9")
             combat.startCombat(sid, "rat")
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
             val messages =
-                outbound
+                fixture.outbound
                     .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
@@ -697,37 +462,24 @@ class CombatSystemTest {
     fun `detailed combat feedback shows min clamp when armor fully absorbs roll`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, armor = 100)
-            mobs.upsert(mob)
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 10, maxHp = 10, armor = 100)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
             val combat =
                 fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
                     rng = Random(1),
-                    tickMillis = 1_000L,
                     minDamage = 1,
                     maxDamage = 1,
                     detailedFeedbackEnabled = true,
                 )
 
             val sid = SessionId(10L)
-            players.loginOrFail(sid, "Tester10")
+            fixture.players.loginOrFail(sid, "Tester10")
             combat.startCombat(sid, "rat")
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
             val messages =
-                outbound
+                fixture.outbound
                     .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
@@ -743,33 +495,21 @@ class CombatSystemTest {
     fun `detailed combat feedback can broadcast to room observers when enabled`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:rat"),
                     "a rat",
-                    roomId,
+                    fixture.roomId,
                     hp = 20,
                     maxHp = 20,
                     damage = DamageRange(7, 7),
                     armor = 2,
                 )
-            mobs.upsert(mob)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
             val combat =
                 fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
                     rng = Random(1),
-                    tickMillis = 1_000L,
                     minDamage = 5,
                     maxDamage = 5,
                     detailedFeedbackEnabled = true,
@@ -778,14 +518,13 @@ class CombatSystemTest {
 
             val fighterSid = SessionId(11L)
             val observerSid = SessionId(12L)
-            players.loginOrFail(fighterSid, "Fighter")
-            players.loginOrFail(observerSid, "Observer")
+            fixture.players.loginOrFail(fighterSid, "Fighter")
+            fixture.players.loginOrFail(observerSid, "Observer")
             combat.startCombat(fighterSid, "rat")
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
             val observerMessages =
-                outbound
+                fixture.outbound
                     .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == observerSid }
@@ -805,48 +544,30 @@ class CombatSystemTest {
     fun `player slain by mob shows death summary and safe respawn message`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
             // mob hits hard enough to one-shot the player
             val mob =
                 MobState(
                     MobId("demo:ogre"),
                     "an ogre",
-                    roomId,
+                    fixture.roomId,
                     hp = 100,
                     maxHp = 100,
                     damage = DamageRange(50, 50),
                 )
-            mobs.upsert(mob)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                    minDamage = 1,
-                    maxDamage = 1,
-                )
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
 
             val sid = SessionId(20L)
-            players.loginOrFail(sid, "Victim")
+            fixture.players.loginOrFail(sid, "Victim")
             combat.startCombat(sid, "ogre")
             // drain the "You attack an ogre." message
-            outbound.drainAll()
+            fixture.outbound.drainAll()
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
             val messages =
-                outbound
+                fixture.outbound
                     .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
@@ -866,48 +587,30 @@ class CombatSystemTest {
     fun `player death broadcasts to room observers`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:ogre"),
                     "an ogre",
-                    roomId,
+                    fixture.roomId,
                     hp = 100,
                     maxHp = 100,
                     damage = DamageRange(50, 50),
                 )
-            mobs.upsert(mob)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                    minDamage = 1,
-                    maxDamage = 1,
-                )
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
 
             val fighterSid = SessionId(21L)
             val observerSid = SessionId(22L)
-            players.loginOrFail(fighterSid, "Fighter")
-            players.loginOrFail(observerSid, "Observer")
+            fixture.players.loginOrFail(fighterSid, "Fighter")
+            fixture.players.loginOrFail(observerSid, "Observer")
             combat.startCombat(fighterSid, "ogre")
-            outbound.drainAll()
+            fixture.outbound.drainAll()
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
             val observerMessages =
-                outbound
+                fixture.outbound
                     .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == observerSid }
@@ -923,40 +626,22 @@ class CombatSystemTest {
     fun `player at zero hp shows collapse message and safe respawn`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 100, maxHp = 100)
-            mobs.upsert(mob)
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 100, maxHp = 100)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                    minDamage = 1,
-                    maxDamage = 1,
-                )
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
 
             val sid = SessionId(23L)
-            players.loginOrFail(sid, "Wounded")
+            fixture.players.loginOrFail(sid, "Wounded")
             // manually set HP to 0 before the combat tick
-            players.get(sid)!!.hp = 0
+            fixture.players.get(sid)!!.hp = 0
             combat.startCombat(sid, "rat")
-            outbound.drainAll()
+            fixture.outbound.drainAll()
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
             val messages =
-                outbound
+                fixture.outbound
                     .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
@@ -976,65 +661,41 @@ class CombatSystemTest {
     fun `stunned player skips attack but mob still attacks`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 10, maxHp = 10, damage = DamageRange(1, 1))
-            mobs.upsert(mob)
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 10, maxHp = 10, damage = DamageRange(1, 1))
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-
-            val statusRegistry = StatusEffectRegistry()
-            statusRegistry.register(
-                StatusEffectDefinition(
-                    id = StatusEffectId("stun"),
-                    displayName = "Stun",
-                    effectType = EffectType.STUN,
-                    durationMs = 5000,
-                    stackBehavior = StackBehavior.NONE,
-                ),
-            )
             val statusEffects =
-                StatusEffectSystem(
-                    registry = statusRegistry,
-                    players = players,
-                    mobs = mobs,
-                    outbound = outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    dirtyNotifier = DirtyNotifier.NO_OP,
+                fixture.buildStatusEffects(
+                    StatusEffectDefinition(
+                        id = StatusEffectId("stun"),
+                        displayName = "Stun",
+                        effectType = EffectType.STUN,
+                        durationMs = 5000,
+                        stackBehavior = StackBehavior.NONE,
+                    ),
                 )
             val combat =
                 fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
                     rng = Random(1),
-                    tickMillis = 1_000L,
                     minDamage = 5,
                     maxDamage = 5,
                     statusEffects = statusEffects,
                 )
 
             val sid = SessionId(30L)
-            players.loginOrFail(sid, "StunTest")
+            fixture.players.loginOrFail(sid, "StunTest")
             combat.startCombat(sid, "rat")
-            outbound.drainAll()
+            fixture.outbound.drainAll()
 
             // Apply stun to the player
             statusEffects.applyToPlayer(sid, StatusEffectId("stun"))
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
             // Mob should still be at full HP (stunned player can't attack)
             assertEquals(10, mob.hp, "Stunned player should not damage mob")
             // Player should take damage from mob
-            val player = players.get(sid)!!
+            val player = fixture.players.get(sid)!!
             assertTrue(player.hp < player.maxHp, "Mob should still damage stunned player")
         }
 
@@ -1042,64 +703,40 @@ class CombatSystemTest {
     fun `shield absorbs mob damage in combat`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 100, maxHp = 100, damage = DamageRange(5, 5))
-            mobs.upsert(mob)
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 100, maxHp = 100, damage = DamageRange(5, 5))
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-
-            val statusRegistry = StatusEffectRegistry()
-            statusRegistry.register(
-                StatusEffectDefinition(
-                    id = StatusEffectId("shield"),
-                    displayName = "Shield",
-                    effectType = EffectType.SHIELD,
-                    durationMs = 30000,
-                    shieldAmount = 20,
-                    stackBehavior = StackBehavior.NONE,
-                ),
-            )
             val statusEffects =
-                StatusEffectSystem(
-                    registry = statusRegistry,
-                    players = players,
-                    mobs = mobs,
-                    outbound = outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    dirtyNotifier = DirtyNotifier.NO_OP,
+                fixture.buildStatusEffects(
+                    StatusEffectDefinition(
+                        id = StatusEffectId("shield"),
+                        displayName = "Shield",
+                        effectType = EffectType.SHIELD,
+                        durationMs = 30000,
+                        shieldAmount = 20,
+                        stackBehavior = StackBehavior.NONE,
+                    ),
                 )
             val combat =
                 fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
                     rng = Random(1),
-                    tickMillis = 1_000L,
                     minDamage = 1,
                     maxDamage = 1,
                     statusEffects = statusEffects,
                 )
 
             val sid = SessionId(31L)
-            players.loginOrFail(sid, "ShieldTest")
+            fixture.players.loginOrFail(sid, "ShieldTest")
             combat.startCombat(sid, "rat")
-            outbound.drainAll()
+            fixture.outbound.drainAll()
 
             // Apply shield to the player
             statusEffects.applyToPlayer(sid, StatusEffectId("shield"))
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
             // Player should take no damage (shield absorbs the 5 damage)
-            val player = players.get(sid)!!
+            val player = fixture.players.get(sid)!!
             assertEquals(player.maxHp, player.hp, "Shield should absorb all mob damage")
         }
 
@@ -1107,46 +744,23 @@ class CombatSystemTest {
     fun `stat buff adds to str damage bonus`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
             // mob with 0 armor so we can see exact damage
-            val mob = MobState(MobId("demo:rat"), "a rat", roomId, hp = 50, maxHp = 50, damage = DamageRange(1, 1))
-            mobs.upsert(mob)
+            val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 50, maxHp = 50, damage = DamageRange(1, 1))
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-
-            val statusRegistry = StatusEffectRegistry()
-            statusRegistry.register(
-                StatusEffectDefinition(
-                    id = StatusEffectId("buff"),
-                    displayName = "Buff",
-                    effectType = EffectType.STAT_BUFF,
-                    durationMs = 60000,
-                    statMods = StatBlock(str = 6),
-                ),
-            )
             val statusEffects =
-                StatusEffectSystem(
-                    registry = statusRegistry,
-                    players = players,
-                    mobs = mobs,
-                    outbound = outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    dirtyNotifier = DirtyNotifier.NO_OP,
+                fixture.buildStatusEffects(
+                    StatusEffectDefinition(
+                        id = StatusEffectId("buff"),
+                        displayName = "Buff",
+                        effectType = EffectType.STAT_BUFF,
+                        durationMs = 60000,
+                        statMods = StatBlock(str = 6),
+                    ),
                 )
             val combat =
                 fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
                     rng = Random(1),
-                    tickMillis = 1_000L,
                     minDamage = 3,
                     maxDamage = 3,
                     statusEffects = statusEffects,
@@ -1154,16 +768,15 @@ class CombatSystemTest {
                 )
 
             val sid = SessionId(32L)
-            players.loginOrFail(sid, "BuffTest")
+            fixture.players.loginOrFail(sid, "BuffTest")
 
-            // Apply +6 STR buff → +2 bonus damage (6/3)
+            // Apply +6 STR buff -> +2 bonus damage (6/3)
             statusEffects.applyToPlayer(sid, StatusEffectId("buff"))
 
             combat.startCombat(sid, "rat")
-            outbound.drainAll()
+            fixture.outbound.drainAll()
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
             // Damage should be 3 (base) + 2 (str bonus) = 5
             assertEquals(45, mob.hp, "STR buff should add bonus damage")
@@ -1173,51 +786,33 @@ class CombatSystemTest {
     fun `mob kill awards gold from gold range`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:rat"),
                     "a rat",
-                    roomId,
+                    fixture.roomId,
                     hp = 1,
                     maxHp = 1,
                     goldMin = 5L,
                     goldMax = 5L,
                 )
-            mobs.upsert(mob)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                    minDamage = 1,
-                    maxDamage = 1,
-                )
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
 
             val sid = SessionId(30L)
-            players.loginOrFail(sid, "GoldHunter")
+            fixture.players.loginOrFail(sid, "GoldHunter")
             val err = combat.startCombat(sid, "rat")
             assertNull(err)
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
-            val player = players.get(sid)
+            val player = fixture.players.get(sid)
             assertNotNull(player)
             assertEquals(5L, player!!.gold)
 
             val messages =
-                outbound
+                fixture.outbound
                     .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }
@@ -1229,51 +824,33 @@ class CombatSystemTest {
     fun `mob with zero gold range awards no gold`() =
         runTest {
             val fixture = CombatTestFixture()
-            val roomId = fixture.roomId
-            val items = fixture.items
-            val players = fixture.players
-            val mobs = fixture.mobs
             val mob =
                 MobState(
                     MobId("demo:rat"),
                     "a rat",
-                    roomId,
+                    fixture.roomId,
                     hp = 1,
                     maxHp = 1,
                     goldMin = 0L,
                     goldMax = 0L,
                 )
-            mobs.upsert(mob)
+            fixture.mobs.upsert(mob)
 
-            val outbound = fixture.outbound
-            val clock = fixture.clock
-            val combat =
-                fixture.buildCombat(
-                    players,
-                    mobs,
-                    items,
-                    outbound,
-                    clock = clock,
-                    rng = Random(1),
-                    tickMillis = 1_000L,
-                    minDamage = 1,
-                    maxDamage = 1,
-                )
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
 
             val sid = SessionId(31L)
-            players.loginOrFail(sid, "NoGold")
+            fixture.players.loginOrFail(sid, "NoGold")
             val err = combat.startCombat(sid, "rat")
             assertNull(err)
 
-            clock.advance(1_000L)
-            combat.tick()
+            fixture.tickCombat(combat)
 
-            val player = players.get(sid)
+            val player = fixture.players.get(sid)
             assertNotNull(player)
             assertEquals(0L, player!!.gold)
 
             val messages =
-                outbound
+                fixture.outbound
                     .drainAll()
                     .filterIsInstance<OutboundEvent.SendText>()
                     .filter { it.sessionId == sid }

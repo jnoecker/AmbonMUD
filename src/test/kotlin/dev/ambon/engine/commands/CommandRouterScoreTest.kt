@@ -18,6 +18,7 @@ import dev.ambon.test.CommandRouterHarness
 import dev.ambon.test.TestWorlds
 import dev.ambon.test.buildTestPlayerRegistry
 import dev.ambon.test.drainAll
+import dev.ambon.test.equipItemForTest
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -60,7 +61,12 @@ class CommandRouterScoreTest {
             h.loginPlayer(sid, "Brenna")
             h.drain()
 
-            equipItem(h.items, sid, ItemId("test:helm"), Item(keyword = "helm", displayName = "iron helm", slot = ItemSlot.HEAD, armor = 3))
+            equipItemForTest(
+                h.items,
+                sid,
+                RoomId("test:room"),
+                ItemInstance(ItemId("test:helm"), Item(keyword = "helm", displayName = "iron helm", slot = ItemSlot.HEAD, armor = 3)),
+            )
             h.combat.syncPlayerDefense(sid)
 
             h.router.handle(sid, Command.Score)
@@ -155,24 +161,4 @@ class CommandRouterScoreTest {
             val text = outs.filterIsInstance<OutboundEvent.SendInfo>().joinToString("\n") { it.text }
             assertTrue(!text.contains("Group:"), "Should not contain Group line. text=$text")
         }
-
-    private fun equipItem(
-        items: ItemRegistry,
-        sessionId: SessionId,
-        itemId: ItemId,
-        item: Item,
-    ) {
-        val instance = ItemInstance(itemId, item)
-        items.ensurePlayer(sessionId)
-        items.addRoomItem(
-            RoomId("test:room"),
-            instance,
-        )
-        items.takeFromRoom(
-            sessionId,
-            RoomId("test:room"),
-            item.keyword,
-        )
-        items.equipFromInventory(sessionId, item.keyword)
-    }
 }
