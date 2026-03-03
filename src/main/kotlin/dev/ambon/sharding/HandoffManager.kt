@@ -1,14 +1,10 @@
 package dev.ambon.sharding
 
 import dev.ambon.bus.OutboundBus
-import dev.ambon.domain.StatBlock
-import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
-import dev.ambon.domain.items.ItemUseEffect
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.events.OutboundEvent
@@ -262,11 +258,11 @@ class HandoffManager(
             players.bindFromHandoff(sessionId, ps)
 
             for (item in state.inventoryItems) {
-                items.addToInventory(sessionId, deserializeItem(item))
+                items.addToInventory(sessionId, item)
             }
             for ((slotName, item) in state.equippedItems) {
                 val slot = ItemSlot.parse(slotName) ?: continue
-                items.setEquippedItem(sessionId, slot, deserializeItem(item))
+                items.setEquippedItem(sessionId, slot, item)
             }
 
             for (other in players.playersInRoom(targetRoom)) {
@@ -348,71 +344,8 @@ class HandoffManager(
                 mana = player.mana,
                 maxMana = player.maxMana,
                 baseMana = player.baseMana,
-                inventoryItems = inventory.map { serializeItem(it) },
-                equippedItems =
-                    equipment
-                        .mapKeys { (slot, _) -> slot.name }
-                        .mapValues { (_, instance) -> serializeItem(instance) },
-            )
-
-        fun serializeItem(instance: ItemInstance): SerializedItem =
-            SerializedItem(
-                id = instance.id.value,
-                keyword = instance.item.keyword,
-                displayName = instance.item.displayName,
-                description = instance.item.description,
-                slot = instance.item.slot?.name,
-                damage = instance.item.damage,
-                armor = instance.item.armor,
-                constitution = instance.item.stats.con,
-                strength = instance.item.stats.str,
-                dexterity = instance.item.stats.dex,
-                intelligence = instance.item.stats.int,
-                wisdom = instance.item.stats.wis,
-                charisma = instance.item.stats.cha,
-                consumable = instance.item.consumable,
-                charges = instance.item.charges,
-                onUse =
-                    instance.item.onUse?.let { effect ->
-                        SerializedItemUseEffect(
-                            healHp = effect.healHp,
-                            grantXp = effect.grantXp,
-                        )
-                    },
-                matchByKey = instance.item.matchByKey,
-            )
-
-        fun deserializeItem(serialized: SerializedItem): ItemInstance =
-            ItemInstance(
-                id = ItemId(serialized.id),
-                item =
-                    Item(
-                        keyword = serialized.keyword,
-                        displayName = serialized.displayName,
-                        description = serialized.description,
-                        slot = serialized.slot?.let { ItemSlot.parse(it) },
-                        damage = serialized.damage,
-                        armor = serialized.armor,
-                        stats =
-                            StatBlock(
-                                str = serialized.strength,
-                                dex = serialized.dexterity,
-                                con = serialized.constitution,
-                                int = serialized.intelligence,
-                                wis = serialized.wisdom,
-                                cha = serialized.charisma,
-                            ),
-                        consumable = serialized.consumable,
-                        charges = serialized.charges,
-                        onUse =
-                            serialized.onUse?.let { effect ->
-                                ItemUseEffect(
-                                    healHp = effect.healHp,
-                                    grantXp = effect.grantXp,
-                                )
-                            },
-                        matchByKey = serialized.matchByKey,
-                    ),
+                inventoryItems = inventory,
+                equippedItems = equipment.mapKeys { (slot, _) -> slot.name },
             )
     }
 }

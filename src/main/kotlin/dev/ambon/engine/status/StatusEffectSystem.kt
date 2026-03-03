@@ -5,10 +5,12 @@ import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.DirtyNotifier
+import dev.ambon.engine.GameSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.healHp
+import dev.ambon.engine.remapKey
 import dev.ambon.engine.rollRange
 import dev.ambon.engine.takeDamage
 import java.time.Clock
@@ -22,7 +24,7 @@ class StatusEffectSystem(
     private val clock: Clock,
     private val rng: Random = Random(),
     private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
-) {
+) : GameSystem {
     private val playerEffects = mutableMapOf<SessionId, MutableList<ActiveEffect>>()
     private val mobEffects = mutableMapOf<MobId, MutableList<ActiveEffect>>()
 
@@ -288,7 +290,7 @@ class StatusEffectSystem(
 
     // ── Cleanup ────────────────────────────────────────────────────────
 
-    fun onPlayerDisconnected(sessionId: SessionId) {
+    override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         playerEffects.remove(sessionId)
     }
 
@@ -305,11 +307,11 @@ class StatusEffectSystem(
         mobEffects.remove(mobId)
     }
 
-    fun remapSession(
+    override fun remapSession(
         oldSid: SessionId,
         newSid: SessionId,
     ) {
-        playerEffects.remove(oldSid)?.let { playerEffects[newSid] = it }
+        playerEffects.remapKey(oldSid, newSid)
     }
 
     /**

@@ -4,6 +4,7 @@ import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.GameSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -12,7 +13,7 @@ class DialogueSystem(
     private val mobs: MobRegistry,
     private val players: PlayerRegistry,
     private val outbound: OutboundBus,
-) {
+) : GameSystem {
     data class ConversationState(
         val mobId: MobId,
         val currentNodeId: String,
@@ -111,7 +112,7 @@ class DialogueSystem(
         conversations.remove(sessionId)
     }
 
-    fun onPlayerDisconnected(sessionId: SessionId) {
+    override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         conversations.remove(sessionId)
     }
 

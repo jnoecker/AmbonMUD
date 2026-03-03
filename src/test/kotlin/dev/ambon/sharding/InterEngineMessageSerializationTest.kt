@@ -1,6 +1,12 @@
 package dev.ambon.sharding
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import dev.ambon.domain.StatBlock
+import dev.ambon.domain.ids.ItemId
+import dev.ambon.domain.items.Item
+import dev.ambon.domain.items.ItemInstance
+import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.items.ItemUseEffect
 import dev.ambon.redis.redisObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -64,30 +70,21 @@ class InterEngineMessageSerializationTest {
                 lastSeenEpochMs = 2000L,
                 inventoryItems =
                     listOf(
-                        SerializedItem(
-                            id = "zone:sword",
-                            keyword = "sword",
-                            displayName = "a sharp sword",
-                            slot = "HAND",
-                            damage = 5,
+                        ItemInstance(
+                            id = ItemId("zone:sword"),
+                            item = Item(keyword = "sword", displayName = "a sharp sword", slot = ItemSlot.HAND, damage = 5),
                         ),
-                        SerializedItem(
-                            id = "zone:shield",
-                            keyword = "shield",
-                            displayName = "a wooden shield",
-                            slot = "BODY",
-                            armor = 2,
+                        ItemInstance(
+                            id = ItemId("zone:shield"),
+                            item = Item(keyword = "shield", displayName = "a wooden shield", slot = ItemSlot.BODY, armor = 2),
                         ),
                     ),
                 equippedItems =
                     mapOf(
                         "HAND" to
-                            SerializedItem(
-                                id = "zone:sword",
-                                keyword = "sword",
-                                displayName = "a sharp sword",
-                                slot = "HAND",
-                                damage = 5,
+                            ItemInstance(
+                                id = ItemId("zone:sword"),
+                                item = Item(keyword = "sword", displayName = "a sharp sword", slot = ItemSlot.HAND, damage = 5),
                             ),
                     ),
             )
@@ -105,24 +102,27 @@ class InterEngineMessageSerializationTest {
     }
 
     @Test
-    fun `SerializedItem round-trips through JSON`() {
+    fun `ItemInstance round-trips through JSON`() {
         val item =
-            SerializedItem(
-                id = "zone:magic_staff",
-                keyword = "staff",
-                displayName = "a glowing staff",
-                description = "It hums with power.",
-                slot = "HAND",
-                damage = 7,
-                armor = 1,
-                constitution = 2,
-                consumable = true,
-                charges = 3,
-                onUse = SerializedItemUseEffect(healHp = 4, grantXp = 12),
-                matchByKey = true,
+            ItemInstance(
+                id = ItemId("zone:magic_staff"),
+                item =
+                    Item(
+                        keyword = "staff",
+                        displayName = "a glowing staff",
+                        description = "It hums with power.",
+                        slot = ItemSlot.HAND,
+                        damage = 7,
+                        armor = 1,
+                        stats = StatBlock(con = 2),
+                        consumable = true,
+                        charges = 3,
+                        onUse = ItemUseEffect(healHp = 4, grantXp = 12),
+                        matchByKey = true,
+                    ),
             )
         val json = mapper.writeValueAsString(item)
-        val deserialized = mapper.readValue<SerializedItem>(json)
+        val deserialized = mapper.readValue<ItemInstance>(json)
         assertEquals(item, deserialized)
     }
 

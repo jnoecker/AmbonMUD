@@ -6,6 +6,7 @@ import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DirtyNotifier
+import dev.ambon.engine.GameSystem
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
@@ -14,6 +15,7 @@ import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.healHp
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.remapKey
 import dev.ambon.engine.resolveEffectiveStats
 import dev.ambon.engine.rollRange
 import dev.ambon.engine.spendMana
@@ -35,7 +37,7 @@ class AbilitySystem(
     private val statusEffects: StatusEffectSystem? = null,
     private val groupSystem: GroupSystem? = null,
     private val mobs: MobRegistry? = null,
-) {
+) : GameSystem {
     private val learnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
     private val cooldowns = mutableMapOf<SessionId, MutableMap<AbilityId, Long>>()
 
@@ -405,16 +407,16 @@ class AbilitySystem(
         return (expiresAt - clock.millis()).coerceAtLeast(0L)
     }
 
-    fun onPlayerDisconnected(sessionId: SessionId) {
+    override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         learnedAbilities.remove(sessionId)
         cooldowns.remove(sessionId)
     }
 
-    fun remapSession(
+    override fun remapSession(
         oldSid: SessionId,
         newSid: SessionId,
     ) {
-        learnedAbilities.remove(oldSid)?.let { learnedAbilities[newSid] = it }
-        cooldowns.remove(oldSid)?.let { cooldowns[newSid] = it }
+        learnedAbilities.remapKey(oldSid, newSid)
+        cooldowns.remapKey(oldSid, newSid)
     }
 }

@@ -4,7 +4,6 @@ import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.mob.MobState
 import dev.ambon.test.MutableClock
 import dev.ambon.test.StatusEffectTestFixture
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,24 +31,6 @@ class StatusEffectSystemTest {
                 players.login(sid, "TestPlayer", "pass", defaultAnsiEnabled = false)
             }
         assertEquals(dev.ambon.engine.LoginResult.Ok, result)
-    }
-
-    private fun StatusEffectTestFixture.spawnMob(
-        hp: Int = 50,
-        id: MobId = mobId,
-    ): MobState {
-        val mob =
-            MobState(
-                id = id,
-                name = "Goblin",
-                roomId = roomId,
-                hp = hp,
-                maxHp = hp,
-                minDamage = 1,
-                maxDamage = 2,
-            )
-        mobs.upsert(mob)
-        return mob
     }
 
     private fun StatusEffectTestFixture.registerDot(
@@ -183,7 +164,7 @@ class StatusEffectSystemTest {
         runTest {
             val h = buildSystem()
             h.loginPlayer()
-            val mob = h.spawnMob(hp = 50)
+            val mob = h.spawnMob(id = mobId, name = "Goblin", hp = 50)
             h.registerDot(durationMs = 6000, tickIntervalMs = 2000, minVal = 5, maxVal = 5)
 
             h.system.applyToMob(mobId, StatusEffectId("ignite"), sid)
@@ -345,7 +326,7 @@ class StatusEffectSystemTest {
     @Test
     fun `ROOT hasMobEffect returns true`() {
         val h = buildSystem()
-        h.spawnMob()
+        h.spawnMob(id = mobId, name = "Goblin")
         h.registerRoot(durationMs = 4000)
 
         h.system.applyToMob(mobId, StatusEffectId("frost_grip"))
@@ -455,7 +436,7 @@ class StatusEffectSystemTest {
     // ── Cleanup Tests ──
 
     @Test
-    fun `onPlayerDisconnected clears effects`() {
+    fun `onPlayerDisconnected clears effects`() = runTest {
         val h = buildSystem()
         h.loginPlayer()
         h.registerStun(durationMs = 5000)
@@ -469,7 +450,7 @@ class StatusEffectSystemTest {
     @Test
     fun `onMobRemoved clears effects`() {
         val h = buildSystem()
-        h.spawnMob()
+        h.spawnMob(id = mobId, name = "Goblin")
         h.registerRoot(durationMs = 5000)
         h.system.applyToMob(mobId, StatusEffectId("frost_grip"))
 
@@ -516,7 +497,7 @@ class StatusEffectSystemTest {
         runTest {
             val h = buildSystem()
             h.loginPlayer()
-            val mob = h.spawnMob(hp = 3)
+            val mob = h.spawnMob(id = mobId, name = "Goblin", hp = 3)
             h.registerDot(durationMs = 6000, tickIntervalMs = 2000, minVal = 5, maxVal = 5)
 
             h.system.applyToMob(mobId, StatusEffectId("ignite"), sid)
@@ -548,7 +529,7 @@ class StatusEffectSystemTest {
     @Test
     fun `activeMobEffects returns correct snapshot`() {
         val h = buildSystem()
-        h.spawnMob()
+        h.spawnMob(id = mobId, name = "Goblin")
         h.registerRoot(durationMs = 4000)
         h.system.applyToMob(mobId, StatusEffectId("frost_grip"))
 
