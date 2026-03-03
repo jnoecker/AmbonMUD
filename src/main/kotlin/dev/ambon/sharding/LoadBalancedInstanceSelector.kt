@@ -9,7 +9,7 @@ package dev.ambon.sharding
  * 4. **Fallback** — if all instances are at or over capacity, pick the least loaded one.
  */
 class LoadBalancedInstanceSelector(
-    private val registry: ZoneRegistry,
+    private val registry: ZoneInstanceReader,
 ) : InstanceSelector {
     override fun select(
         zone: String,

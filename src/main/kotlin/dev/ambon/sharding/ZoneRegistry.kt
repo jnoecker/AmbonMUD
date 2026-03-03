@@ -10,6 +10,14 @@ data class EngineAddress(
 )
 
 /**
+ * Read-only subset of [ZoneRegistry] for consumers that only need to query zone instances.
+ */
+interface ZoneInstanceReader {
+    /** All instances of a given zone. Empty list if nobody claims it. */
+    fun instancesOf(zone: String): List<ZoneInstance>
+}
+
+/**
  * Shared registry mapping zone names to the engine instance(s) that own them.
  *
  * In classic (non-instanced) mode each zone maps to exactly one engine.
@@ -19,7 +27,7 @@ data class EngineAddress(
  * Implementations can be backed by static config ([StaticZoneRegistry]) for
  * development or by Redis ([RedisZoneRegistry]) for dynamic deployments.
  */
-interface ZoneRegistry {
+interface ZoneRegistry : ZoneInstanceReader {
     /** Which engine owns this zone right now? Null if unclaimed. */
     fun ownerOf(zone: String): EngineAddress?
 
@@ -44,8 +52,7 @@ interface ZoneRegistry {
 
     // ---- Instancing-aware methods (default impls for backward compat) ----
 
-    /** All instances of a given zone. Empty list if nobody claims it. */
-    fun instancesOf(zone: String): List<ZoneInstance> =
+    override fun instancesOf(zone: String): List<ZoneInstance> =
         listOfNotNull(
             ownerOf(zone)?.let {
                 ZoneInstance(engineId = it.engineId, address = it, zone = zone)
