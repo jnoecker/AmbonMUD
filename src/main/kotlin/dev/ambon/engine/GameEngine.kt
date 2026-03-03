@@ -914,9 +914,7 @@ class GameEngine(
         roomId: RoomId,
     ) {
         mobRemovalCoordinator.onCombatKillCleanup(mobId)
-        for (p in players.playersInRoom(roomId)) {
-            gmcpEmitter.sendRoomRemoveMob(p.sessionId, mobId.value)
-        }
+        gmcpEmitter.broadcastRoomRemoveMob(roomId, mobId.value, players)
         val spawn = world.mobSpawns.find { it.id == mobId }
         val respawnMs = spawn?.respawnSeconds?.let { it * 1_000L }
         if (spawn != null && respawnMs != null) {
@@ -956,10 +954,7 @@ class GameEngine(
     }
 
     private suspend fun syncRoomItemsForRoom(roomId: RoomId) {
-        val roomItems = items.itemsInRoom(roomId)
-        for (player in players.playersInRoom(roomId)) {
-            gmcpEmitter.sendRoomItems(player.sessionId, roomItems)
-        }
+        gmcpEmitter.broadcastRoomItems(roomId, items.itemsInRoom(roomId), players)
     }
 
     private suspend fun onCombatMobKilledByPlayer(
