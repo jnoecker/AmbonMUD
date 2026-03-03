@@ -91,14 +91,7 @@ class ItemRegistry {
         mobItems.clear()
         unplacedItems.clear()
         itemTemplates.clear()
-        for (spawn in spawns) {
-            val instance = spawn.instance
-            itemTemplates[instance.id] = instance
-            when {
-                spawn.roomId != null -> addRoomItem(spawn.roomId, instance)
-                else -> addUnplacedItem(instance.id, instance)
-            }
-        }
+        placeSpawns(spawns)
     }
 
     fun resetZone(
@@ -133,14 +126,7 @@ class ItemRegistry {
             itemTemplates.remove(itemId)
         }
 
-        for (spawn in spawns) {
-            val instance = spawn.instance
-            itemTemplates[instance.id] = instance
-            when {
-                spawn.roomId != null -> addRoomItem(spawn.roomId, instance)
-                else -> addUnplacedItem(instance.id, instance)
-            }
-        }
+        placeSpawns(spawns)
     }
 
     fun clearRoom(roomId: RoomId) {
@@ -547,6 +533,17 @@ class ItemRegistry {
                 val slot = match.slot ?: return
                 if (!equipped.containsKey(slot)) return
                 equipped[slot] = item
+            }
+        }
+    }
+
+    private fun placeSpawns(spawns: List<ItemSpawn>) {
+        for (spawn in spawns) {
+            val instance = spawn.instance
+            itemTemplates[instance.id] = instance
+            when {
+                spawn.roomId != null -> addRoomItem(spawn.roomId, instance)
+                else -> addUnplacedItem(instance.id, instance)
             }
         }
     }
