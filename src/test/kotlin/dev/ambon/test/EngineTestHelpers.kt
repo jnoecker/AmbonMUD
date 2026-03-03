@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
+import kotlinx.coroutines.withTimeout
 
 fun LocalOutboundBus.drainAll(): List<OutboundEvent> {
     val out = mutableListOf<OutboundEvent>()
@@ -13,6 +14,19 @@ fun LocalOutboundBus.drainAll(): List<OutboundEvent> {
         out += ev
     }
     return out
+}
+
+suspend fun LocalOutboundBus.collectUntil(
+    timeoutMs: Long = 500,
+    predicate: (List<OutboundEvent>) -> Boolean,
+): List<OutboundEvent> {
+    val events = mutableListOf<OutboundEvent>()
+    withTimeout(timeoutMs) {
+        while (!predicate(events)) {
+            events += asReceiveChannel().receive()
+        }
+    }
+    return events
 }
 
 suspend fun PlayerRegistry.loginOrFail(
