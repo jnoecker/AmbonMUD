@@ -148,8 +148,7 @@ class NavigationHandler(
     }
 
     private suspend fun handleExits(sessionId: SessionId) {
-        players.withPlayer(sessionId) { me ->
-            val r = world.rooms[me.roomId] ?: return
+        withPlayerAndRoom(sessionId, players, world) { _, r ->
             outbound.send(OutboundEvent.SendInfo(sessionId, exitsLine(r)))
         }
     }
@@ -158,8 +157,7 @@ class NavigationHandler(
         sessionId: SessionId,
         cmd: Command.LookDir,
     ) {
-        players.withPlayer(sessionId) { me ->
-            val r = world.rooms[me.roomId] ?: return
+        withPlayerAndRoom(sessionId, players, world) { _, r ->
             val targetId = r.exits[cmd.dir]
             if (targetId == null) {
                 outbound.send(OutboundEvent.SendError(sessionId, "You see nothing that way."))
