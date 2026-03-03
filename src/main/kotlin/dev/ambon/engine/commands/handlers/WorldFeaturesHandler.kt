@@ -106,12 +106,7 @@ class WorldFeaturesHandler(
         sessionId: SessionId,
         keyword: String,
     ): Unit = withPlayerAndRoom(sessionId, players, world) { _, room ->
-        val feature = findFeatureByKeyword(room, keyword)
-        if (feature == null || feature !is RoomFeature.Container) {
-            outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$keyword' here."))
-            return
-        }
-        if (!requireContainerOpen(sessionId, feature, worldState, outbound)) return
+        val feature = requireOpenContainer(sessionId, room, keyword, worldState, outbound) ?: return
         val contents = worldState?.getContainerContents(feature.id) ?: emptyList()
         if (contents.isEmpty()) {
             outbound.send(OutboundEvent.SendInfo(sessionId, "The ${feature.displayName} is empty."))
@@ -126,12 +121,7 @@ class WorldFeaturesHandler(
         itemKeyword: String,
         containerKeyword: String,
     ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
-        val feature = findFeatureByKeyword(room, containerKeyword)
-        if (feature == null || feature !is RoomFeature.Container) {
-            outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$containerKeyword' here."))
-            return
-        }
-        if (!requireContainerOpen(sessionId, feature, worldState, outbound)) return
+        val feature = requireOpenContainer(sessionId, room, containerKeyword, worldState, outbound) ?: return
         val item = worldState?.removeFromContainer(feature.id, itemKeyword)
         if (item == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "There is no '$itemKeyword' in the ${feature.displayName}."))
@@ -153,12 +143,7 @@ class WorldFeaturesHandler(
         itemKeyword: String,
         containerKeyword: String,
     ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
-        val feature = findFeatureByKeyword(room, containerKeyword)
-        if (feature == null || feature !is RoomFeature.Container) {
-            outbound.send(OutboundEvent.SendError(sessionId, "You don't see any container called '$containerKeyword' here."))
-            return
-        }
-        if (!requireContainerOpen(sessionId, feature, worldState, outbound)) return
+        val feature = requireOpenContainer(sessionId, room, containerKeyword, worldState, outbound) ?: return
         val item = items.removeFromInventory(sessionId, itemKeyword)
         if (item == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "You don't have any '$itemKeyword'."))
