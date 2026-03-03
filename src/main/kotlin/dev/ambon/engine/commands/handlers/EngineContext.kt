@@ -7,6 +7,7 @@ import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.WorldStateRegistry
+import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.items.ItemRegistry
 
 /**
@@ -27,4 +28,5 @@ data class EngineContext(
     val combat: CombatSystem,
     val gmcpEmitter: GmcpEmitter?,
     val worldState: WorldStateRegistry?,
+    val gatheringRegistry: GatheringRegistry? = null,
 )

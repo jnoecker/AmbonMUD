@@ -1,8 +1,17 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.domain.crafting.CraftingSkill
+import dev.ambon.domain.crafting.CraftingStationType
+import dev.ambon.domain.crafting.GatheringNodeDef
+import dev.ambon.domain.crafting.GatheringYield
+import dev.ambon.domain.ids.ItemId
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
+import dev.ambon.domain.world.Room
+import dev.ambon.domain.world.World
 import dev.ambon.engine.LoginResult
+import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.CommandRouterHarness
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -373,5 +382,139 @@ class CommandRouterTest {
                 "Expected 'nothing that way' message. got=$outs",
             )
             assertTrue(outs.any { it is OutboundEvent.SendPrompt }, "Missing prompt. got=$outs")
+        }
+
+    @Test
+    fun `look shows gathering nodes in room`() =
+        runTest {
+            val startRoom = RoomId("zone:hub")
+            val world = World(
+                rooms = mapOf(
+                    startRoom to Room(
+                        id = startRoom,
+                        title = "Mine Tunnel",
+                        description = "A rough tunnel.",
+                        exits = emptyMap(),
+                    ),
+                ),
+                startRoom = startRoom,
+            )
+            val registry = GatheringRegistry()
+            registry.register(
+                listOf(
+                    GatheringNodeDef(
+                        id = "zone:copper_vein",
+                        displayName = "a copper ore vein",
+                        keyword = "copper",
+                        skill = CraftingSkill.MINING,
+                        yields = listOf(GatheringYield(ItemId("zone:copper_ore"))),
+                        roomId = startRoom,
+                    ),
+                    GatheringNodeDef(
+                        id = "zone:iron_vein",
+                        displayName = "an iron ore vein",
+                        keyword = "iron",
+                        skill = CraftingSkill.MINING,
+                        skillRequired = 15,
+                        yields = listOf(GatheringYield(ItemId("zone:iron_ore"))),
+                        roomId = startRoom,
+                    ),
+                ),
+            )
+            val h = CommandRouterHarness.create(world = world, gatheringRegistry = registry)
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Player1")
+            h.drain()
+
+            h.router.handle(sid, Command.Look)
+            val outs = h.drain()
+
+            val resourceLine = outs.filterIsInstance<OutboundEvent.SendInfo>()
+                .firstOrNull { it.text.startsWith("Resources:") }
+            assertTrue(resourceLine != null, "Expected Resources line in look output. got=$outs")
+            assertTrue(
+                resourceLine!!.text.contains("a copper ore vein"),
+                "Expected copper vein in resources. got=${resourceLine.text}",
+            )
+            assertTrue(
+                resourceLine.text.contains("an iron ore vein"),
+                "Expected iron vein in resources. got=${resourceLine.text}",
+            )
+        }
+
+    @Test
+    fun `look shows crafting station when room has one`() =
+        runTest {
+            val startRoom = RoomId("zone:forge")
+            val world = World(
+                rooms = mapOf(
+                    startRoom to Room(
+                        id = startRoom,
+                        title = "The Forge",
+                        description = "A sweltering room.",
+                        exits = emptyMap(),
+                        station = CraftingStationType.FORGE,
+                    ),
+                ),
+                startRoom = startRoom,
+            )
+            val h = CommandRouterHarness.create(world = world)
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Player1")
+            h.drain()
+
+            h.router.handle(sid, Command.Look)
+            val outs = h.drain()
+
+            val stationLine = outs.filterIsInstance<OutboundEvent.SendInfo>()
+                .firstOrNull { it.text.startsWith("Crafting station:") }
+            assertTrue(stationLine != null, "Expected Crafting station line. got=$outs")
+            assertEquals("Crafting station: Forge", stationLine!!.text)
+        }
+
+    @Test
+    fun `look omits resources line when no nodes in room`() =
+        runTest {
+            val h = CommandRouterHarness.create()
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Player1")
+            h.drain()
+
+            h.router.handle(sid, Command.Look)
+            val outs = h.drain()
+
+            val hasResources = outs.filterIsInstance<OutboundEvent.SendInfo>()
+                .any { it.text.startsWith("Resources:") }
+            assertFalse(hasResources, "Should not have Resources line when no nodes exist. got=$outs")
+        }
+
+    @Test
+    fun `look shows alchemy table station display name`() =
+        runTest {
+            val startRoom = RoomId("zone:lab")
+            val world = World(
+                rooms = mapOf(
+                    startRoom to Room(
+                        id = startRoom,
+                        title = "Alchemy Lab",
+                        description = "Glass vials everywhere.",
+                        exits = emptyMap(),
+                        station = CraftingStationType.ALCHEMY_TABLE,
+                    ),
+                ),
+                startRoom = startRoom,
+            )
+            val h = CommandRouterHarness.create(world = world)
+            val sid = SessionId(1)
+            h.loginPlayer(sid, "Player1")
+            h.drain()
+
+            h.router.handle(sid, Command.Look)
+            val outs = h.drain()
+
+            val stationLine = outs.filterIsInstance<OutboundEvent.SendInfo>()
+                .firstOrNull { it.text.startsWith("Crafting station:") }
+            assertTrue(stationLine != null, "Expected Crafting station line. got=$outs")
+            assertEquals("Crafting station: Alchemy Table", stationLine!!.text)
         }
 }

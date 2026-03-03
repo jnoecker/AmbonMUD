@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.crafting.CraftingStationType
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -16,6 +17,7 @@ import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.WorldStateRegistry
+import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 
@@ -85,11 +87,11 @@ internal suspend fun requireSameRoom(
     return true
 }
 
-/** Convenience extension that delegates to the 8-argument [sendLook], pulling all dependencies from this context. */
+/** Convenience extension that delegates to the full [sendLook], pulling all dependencies from this context. */
 internal suspend fun EngineContext.sendLook(sessionId: SessionId) =
-    sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter)
+    sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter, gatheringRegistry)
 
-/** Sends a full room description (title, description, exits, items, players, mobs) to [sessionId]. */
+/** Sends a full room description (title, description, exits, items, resources, players, mobs) to [sessionId]. */
 internal suspend fun sendLook(
     sessionId: SessionId,
     world: World,
@@ -99,6 +101,7 @@ internal suspend fun sendLook(
     worldState: WorldStateRegistry?,
     outbound: OutboundBus,
     gmcpEmitter: GmcpEmitter?,
+    gatheringRegistry: GatheringRegistry? = null,
 ) {
     val me = players.get(sessionId) ?: return
     val roomId = me.roomId
@@ -146,6 +149,18 @@ internal suspend fun sendLook(
         outbound.send(OutboundEvent.SendInfo(sessionId, "You notice: $featureDesc"))
     }
 
+    // Crafting station
+    if (room.station != null) {
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Crafting station: ${stationDisplayName(room.station)}"))
+    }
+
+    // Gathering resources
+    val nodes = gatheringRegistry?.nodesInRoom(roomId) ?: emptyList()
+    if (nodes.isNotEmpty()) {
+        val nodeList = nodes.map { it.displayName }.sorted().joinToString(", ")
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Resources: $nodeList"))
+    }
+
     // Items
     val here = items.itemsInRoom(roomId)
     if (here.isEmpty()) {
@@ -188,6 +203,14 @@ internal suspend fun sendLook(
     gmcpEmitter?.sendRoomMobs(sessionId, rawRoomMobs)
     gmcpEmitter?.sendRoomItems(sessionId, here)
 }
+
+/** Returns a human-readable display name for a [CraftingStationType]. */
+private fun stationDisplayName(station: CraftingStationType): String =
+    when (station) {
+        CraftingStationType.FORGE -> "Forge"
+        CraftingStationType.ALCHEMY_TABLE -> "Alchemy Table"
+        CraftingStationType.WORKBENCH -> "Workbench"
+    }
 
 /** Broadcasts [message] to every player in [roomId] except [excludeSessionId]. Delegates to [dev.ambon.engine.broadcastToRoom]. */
 internal suspend fun broadcastToRoomExcept(

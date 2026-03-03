@@ -607,6 +607,7 @@ class GameEngine(
             combat = combatSystem,
             gmcpEmitter = gmcpEmitter,
             worldState = worldState,
+            gatheringRegistry = gatheringRegistry,
         )
 
         listOf(
