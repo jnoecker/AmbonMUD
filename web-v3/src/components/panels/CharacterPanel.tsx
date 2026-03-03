@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { AchievementData, CharacterInfo, StatusEffect, Vitals } from "../../types";
+import type { AchievementData, CharacterInfo, StatusEffect, StatusVarLabels, Vitals } from "../../types";
 import { Bar, CharacterAvatarIcon, EquipmentIcon, WearingIcon } from "../Icons";
 
 type DetailTab = "vitals" | "effects" | "achievements";
@@ -12,6 +12,7 @@ interface CharacterPanelProps {
   displayRace: string;
   displayClassName: string;
   vitals: Vitals;
+  statusVarLabels: StatusVarLabels;
   xpValue: number;
   xpMax: number;
   xpText: string;
@@ -31,6 +32,7 @@ export function CharacterPanel({
   displayRace,
   displayClassName,
   vitals,
+  statusVarLabels,
   xpValue,
   xpMax,
   xpText,
@@ -147,17 +149,17 @@ export function CharacterPanel({
               >
                 {hasCharacterProfile ? (
                   <>
-                    <Bar label="HP" tone="hp" value={vitals.hp} max={Math.max(1, vitals.maxHp)} text={`${vitals.hp} / ${vitals.maxHp}`} />
-                    <Bar label="Mana" tone="mana" value={vitals.mana} max={Math.max(1, vitals.maxMana)} text={`${vitals.mana} / ${vitals.maxMana}`} />
-                    <Bar label="XP" tone="xp" value={xpValue} max={xpMax} text={xpText} />
+                    <Bar label={statusVarLabels.hp} tone="hp" value={vitals.hp} max={Math.max(1, vitals.maxHp)} text={`${vitals.hp} / ${vitals.maxHp}`} />
+                    <Bar label={statusVarLabels.mana} tone="mana" value={vitals.mana} max={Math.max(1, vitals.maxMana)} text={`${vitals.mana} / ${vitals.maxMana}`} />
+                    <Bar label={statusVarLabels.xp} tone="xp" value={xpValue} max={xpMax} text={xpText} />
                   </>
                 ) : (
                   <div className="meter-placeholder-stack">
-                    <div className="meter-placeholder-row"><span>HP</span><span>- / -</span></div>
+                    <div className="meter-placeholder-row"><span>{statusVarLabels.hp}</span><span>- / -</span></div>
                     <div className="meter-track meter-track-placeholder"><span className="meter-fill meter-fill-placeholder" /></div>
-                    <div className="meter-placeholder-row"><span>Mana</span><span>- / -</span></div>
+                    <div className="meter-placeholder-row"><span>{statusVarLabels.mana}</span><span>- / -</span></div>
                     <div className="meter-track meter-track-placeholder"><span className="meter-fill meter-fill-placeholder" /></div>
-                    <div className="meter-placeholder-row"><span>XP</span><span>- / -</span></div>
+                    <div className="meter-placeholder-row"><span>{statusVarLabels.xp}</span><span>- / -</span></div>
                     <div className="meter-track meter-track-placeholder"><span className="meter-fill meter-fill-placeholder" /></div>
                   </div>
                 )}

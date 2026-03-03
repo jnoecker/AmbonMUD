@@ -3,6 +3,8 @@ import type {
   CharacterInfo,
   MobileTab,
   RoomState,
+  StatusVarLabels,
+  SocialTab,
   TabCycle,
   Vitals,
 } from "./types";
@@ -24,6 +26,13 @@ export const TABS: Array<{ id: MobileTab; label: string }> = [
   { id: "chat", label: "Social" },
   { id: "character", label: "Character" },
 ];
+export const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [
+  { id: "chat", label: "Chat" },
+  { id: "guild", label: "Guild" },
+  { id: "friends", label: "Friends" },
+  { id: "who", label: "Who" },
+];
+
 export const CHAT_CHANNELS: Array<{
   id: ChatChannel;
   label: string;
@@ -96,6 +105,15 @@ export const EMPTY_VITALS: Vitals = {
   xpToNextLevel: 0,
   gold: 0,
   inCombat: false,
+};
+
+export const DEFAULT_STATUS_VAR_LABELS: StatusVarLabels = {
+  hp: "HP",
+  maxHp: "Max HP",
+  mana: "Mana",
+  maxMana: "Max Mana",
+  level: "Level",
+  xp: "XP",
 };
 
 export const EMPTY_CHAR: CharacterInfo = { name: "-", race: "", className: "", level: null };

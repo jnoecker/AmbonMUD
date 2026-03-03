@@ -1,6 +1,7 @@
 export type MobileTab = "play" | "world" | "chat" | "character";
 export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc";
+export type SocialTab = "chat" | "guild" | "friends" | "who";
 
 export interface Vitals {
   hp: number;
@@ -96,6 +97,13 @@ export interface InProgressAchievement {
 export interface AchievementData {
   completed: CompletedAchievement[];
   inProgress: InProgressAchievement[];
+export interface StatusVarLabels {
+  hp: string;
+  maxHp: string;
+  mana: string;
+  maxMana: string;
+  level: string;
+  xp: string;
 }
 
 export interface SkillSummary {
