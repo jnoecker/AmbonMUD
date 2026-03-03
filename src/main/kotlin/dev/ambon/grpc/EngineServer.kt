@@ -379,11 +379,8 @@ class EngineServer(
                         clock = clock,
                     )
                 val publisher: ScaleDecisionPublisher =
-                    if (redisManager?.commands != null) {
-                        RedisScaleDecisionPublisher(redisManager.commands!!)
-                    } else {
-                        LoggingScaleDecisionPublisher()
-                    }
+                    redisManager?.withCommands { RedisScaleDecisionPublisher(it) }
+                        ?: LoggingScaleDecisionPublisher()
                 autoScaleJob = launchPeriodicJob(
                     intervalMs = config.sharding.instancing.autoScale.evaluationIntervalMs,
                     label = "Auto-scale evaluation",

@@ -43,37 +43,38 @@ class ClassicRedisZoneRegistry(
     }
 
     override fun renewLease(engineId: String) {
-        val commands = redis.commands ?: return
-        val cursor =
-            commands.scan(
-                io.lettuce.core.ScanArgs.Builder
-                    .matches("$keyPrefix*")
-                    .limit(100),
-            )
-        for (key in cursor.keys) {
-            val json = commands.get(key) ?: continue
-            val addr = mapper.readValueOrNull<EngineAddress>(json) ?: continue
-            if (addr.engineId == engineId) {
-                commands.expire(key, leaseTtlSeconds)
+        redis.withCommands { commands ->
+            val cursor =
+                commands.scan(
+                    io.lettuce.core.ScanArgs.Builder
+                        .matches("$keyPrefix*")
+                        .limit(100),
+                )
+            for (key in cursor.keys) {
+                val json = commands.get(key) ?: continue
+                val addr = mapper.readValueOrNull<EngineAddress>(json) ?: continue
+                if (addr.engineId == engineId) {
+                    commands.expire(key, leaseTtlSeconds)
+                }
             }
         }
     }
 
-    override fun allAssignments(): Map<String, EngineAddress> {
-        val commands = redis.commands ?: return emptyMap()
-        val result = mutableMapOf<String, EngineAddress>()
-        val cursor =
-            commands.scan(
-                io.lettuce.core.ScanArgs.Builder
-                    .matches("$keyPrefix*")
-                    .limit(1000),
-            )
-        for (key in cursor.keys) {
-            val zone = key.removePrefix(keyPrefix)
-            val json = commands.get(key) ?: continue
-            val addr = mapper.readValueOrNull<EngineAddress>(json) ?: continue
-            result[zone] = addr
-        }
-        return result
-    }
+    override fun allAssignments(): Map<String, EngineAddress> =
+        redis.withCommands { commands ->
+            val result = mutableMapOf<String, EngineAddress>()
+            val cursor =
+                commands.scan(
+                    io.lettuce.core.ScanArgs.Builder
+                        .matches("$keyPrefix*")
+                        .limit(1000),
+                )
+            for (key in cursor.keys) {
+                val zone = key.removePrefix(keyPrefix)
+                val json = commands.get(key) ?: continue
+                val addr = mapper.readValueOrNull<EngineAddress>(json) ?: continue
+                result[zone] = addr
+            }
+            result
+        } ?: emptyMap()
 }

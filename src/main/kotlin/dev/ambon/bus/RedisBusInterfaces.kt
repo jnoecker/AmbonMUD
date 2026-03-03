@@ -41,7 +41,7 @@ internal fun isValidHmac(
 /** Creates a [BusPublisher] that publishes to Redis via the given [manager]. */
 fun redisBusPublisher(manager: RedisConnectionManager): BusPublisher =
     BusPublisher { ch, msg ->
-        manager.asyncCommands?.publish(ch, msg)
+        manager.withAsyncCommands { it.publish(ch, msg) }
     }
 
 /** Creates a [BusSubscriberSetup] that subscribes to Redis pub/sub via the given [manager]. */
