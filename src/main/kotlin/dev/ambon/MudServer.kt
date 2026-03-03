@@ -37,9 +37,11 @@ import dev.ambon.persistence.YamlWorldStateRepository
 import dev.ambon.redis.RedisConnectionManager
 import dev.ambon.redis.redisObjectMapper
 import dev.ambon.session.AtomicSessionIdFactory
+import dev.ambon.sharding.ClassicRedisZoneRegistry
 import dev.ambon.sharding.EngineAddress
 import dev.ambon.sharding.HandoffManager
 import dev.ambon.sharding.InstanceSelector
+import dev.ambon.sharding.InstancedRedisZoneRegistry
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.LoadBalancedInstanceSelector
 import dev.ambon.sharding.LocalInterEngineBus
@@ -48,7 +50,6 @@ import dev.ambon.sharding.PlayerLocationIndex
 import dev.ambon.sharding.RedisInterEngineBus
 import dev.ambon.sharding.RedisPlayerLocationIndex
 import dev.ambon.sharding.RedisScaleDecisionPublisher
-import dev.ambon.sharding.RedisZoneRegistry
 import dev.ambon.sharding.ScaleDecisionPublisher
 import dev.ambon.sharding.StaticZoneRegistry
 import dev.ambon.sharding.ThresholdInstanceScaler
@@ -245,13 +246,20 @@ class MudServer(
                         requireNotNull(redisManager) {
                             "Sharding registry type REDIS requires ambonMUD.redis.enabled=true"
                         }
-                    RedisZoneRegistry(
-                        redis = manager,
-                        mapper = redisObjectMapper,
-                        leaseTtlSeconds = config.sharding.registry.leaseTtlSeconds,
-                        instancing = config.sharding.instancing.enabled,
-                        defaultCapacity = config.sharding.instancing.defaultCapacity,
-                    )
+                    if (config.sharding.instancing.enabled) {
+                        InstancedRedisZoneRegistry(
+                            redis = manager,
+                            mapper = redisObjectMapper,
+                            leaseTtlSeconds = config.sharding.registry.leaseTtlSeconds,
+                            defaultCapacity = config.sharding.instancing.defaultCapacity,
+                        )
+                    } else {
+                        ClassicRedisZoneRegistry(
+                            redis = manager,
+                            mapper = redisObjectMapper,
+                            leaseTtlSeconds = config.sharding.registry.leaseTtlSeconds,
+                        )
+                    }
                 }
 
                 ShardingRegistryType.STATIC -> {
