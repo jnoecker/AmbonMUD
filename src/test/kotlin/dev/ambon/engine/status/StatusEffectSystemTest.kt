@@ -454,7 +454,7 @@ class StatusEffectSystemTest {
     // ── Cleanup Tests ──
 
     @Test
-    fun `onPlayerDisconnected clears effects`() {
+    fun `onPlayerDisconnected clears effects`() = runTest {
         val h = buildSystem()
         h.loginPlayer()
         h.registerStun(durationMs = 5000)

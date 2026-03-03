@@ -540,13 +540,15 @@ class GameEngine(
         )
 
     private val sessionLifecycleCoordinator = SessionLifecycleCoordinator(
-        combatSystem = combatSystem,
-        regenSystem = regenSystem,
-        abilitySystem = abilitySystem,
-        statusEffectSystem = statusEffectSystem,
-        dialogueSystem = dialogueSystem,
-        groupSystem = groupSystem,
-        guildSystem = guildSystem,
+        listOfNotNull(
+            combatSystem,
+            regenSystem,
+            abilitySystem,
+            statusEffectSystem,
+            dialogueSystem,
+            groupSystem,
+            guildSystem,
+        ),
     )
 
     private val mobRemovalCoordinator = MobRemovalCoordinator(
