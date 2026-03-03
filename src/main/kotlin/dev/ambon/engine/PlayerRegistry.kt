@@ -181,12 +181,12 @@ class PlayerRegistry(
                         ansiEnabled = defaultAnsiEnabled,
                         race = race.name,
                         playerClass = playerClass.name,
-                        strength = baseStat + race.strMod,
-                        dexterity = baseStat + race.dexMod,
-                        constitution = baseStat + race.conMod,
-                        intelligence = baseStat + race.intMod,
-                        wisdom = baseStat + race.wisMod,
-                        charisma = baseStat + race.chaMod,
+                        strength = baseStat + race.statMods.str,
+                        dexterity = baseStat + race.statMods.dex,
+                        constitution = baseStat + race.statMods.con,
+                        intelligence = baseStat + race.statMods.int,
+                        wisdom = baseStat + race.statMods.wis,
+                        charisma = baseStat + race.statMods.cha,
                     ),
                 )
             } catch (_: PlayerPersistenceException) {

@@ -1,6 +1,7 @@
 package dev.ambon.sharding
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -363,12 +364,12 @@ class HandoffManager(
                 slot = instance.item.slot?.name,
                 damage = instance.item.damage,
                 armor = instance.item.armor,
-                constitution = instance.item.constitution,
-                strength = instance.item.strength,
-                dexterity = instance.item.dexterity,
-                intelligence = instance.item.intelligence,
-                wisdom = instance.item.wisdom,
-                charisma = instance.item.charisma,
+                constitution = instance.item.stats.con,
+                strength = instance.item.stats.str,
+                dexterity = instance.item.stats.dex,
+                intelligence = instance.item.stats.int,
+                wisdom = instance.item.stats.wis,
+                charisma = instance.item.stats.cha,
                 consumable = instance.item.consumable,
                 charges = instance.item.charges,
                 onUse =
@@ -392,12 +393,15 @@ class HandoffManager(
                         slot = serialized.slot?.let { ItemSlot.parse(it) },
                         damage = serialized.damage,
                         armor = serialized.armor,
-                        constitution = serialized.constitution,
-                        strength = serialized.strength,
-                        dexterity = serialized.dexterity,
-                        intelligence = serialized.intelligence,
-                        wisdom = serialized.wisdom,
-                        charisma = serialized.charisma,
+                        stats =
+                            StatBlock(
+                                str = serialized.strength,
+                                dex = serialized.dexterity,
+                                con = serialized.constitution,
+                                int = serialized.intelligence,
+                                wis = serialized.wisdom,
+                                cha = serialized.charisma,
+                            ),
                         consumable = serialized.consumable,
                         charges = serialized.charges,
                         onUse =

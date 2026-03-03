@@ -2,6 +2,7 @@ package dev.ambon.engine.abilities
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.PlayerClass
+import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DirtyNotifier
@@ -16,7 +17,6 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.resolveEffectiveStats
 import dev.ambon.engine.rollRange
 import dev.ambon.engine.spendMana
-import dev.ambon.engine.status.StatModifiers
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.engine.takeDamage
 import java.time.Clock
@@ -126,7 +126,7 @@ class AbilitySystem(
             }
 
         val playerEquip = items?.equipmentBonuses(player.sessionId) ?: ItemRegistry.EquipmentBonuses()
-        val playerMods = statusEffects?.getPlayerStatMods(sessionId) ?: StatModifiers.ZERO
+        val playerMods = statusEffects?.getPlayerStatMods(sessionId) ?: StatBlock.ZERO
         val playerStats = resolveEffectiveStats(player, playerEquip, playerMods)
 
         when (val effect = ability.effect) {

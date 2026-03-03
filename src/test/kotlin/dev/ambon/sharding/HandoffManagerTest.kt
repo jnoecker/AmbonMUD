@@ -1,6 +1,7 @@
 package dev.ambon.sharding
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -174,7 +175,7 @@ class HandoffManagerTest {
                         slot = ItemSlot.HAND,
                         damage = 7,
                         armor = 1,
-                        constitution = 2,
+                        stats = StatBlock(con = 2),
                         consumable = true,
                         charges = 3,
                         onUse = ItemUseEffect(healHp = 4, grantXp = 12),
@@ -192,7 +193,7 @@ class HandoffManagerTest {
         assertEquals(original.item.slot, restored.item.slot)
         assertEquals(original.item.damage, restored.item.damage)
         assertEquals(original.item.armor, restored.item.armor)
-        assertEquals(original.item.constitution, restored.item.constitution)
+        assertEquals(original.item.stats, restored.item.stats)
         assertEquals(original.item.consumable, restored.item.consumable)
         assertEquals(original.item.charges, restored.item.charges)
         assertEquals(original.item.onUse, restored.item.onUse)

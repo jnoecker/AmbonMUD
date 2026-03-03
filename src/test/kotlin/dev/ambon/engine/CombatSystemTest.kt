@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.XpCurveConfig
+import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -18,7 +19,6 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.EffectType
 import dev.ambon.engine.status.StackBehavior
-import dev.ambon.engine.status.StatModifiers
 import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectId
 import dev.ambon.engine.status.StatusEffectRegistry
@@ -1129,7 +1129,7 @@ class CombatSystemTest {
                     displayName = "Buff",
                     effectType = EffectType.STAT_BUFF,
                     durationMs = 60000,
-                    statMods = StatModifiers(str = 6),
+                    statMods = StatBlock(str = 6),
                 ),
             )
             val statusEffects =

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.config.MobTiersConfig
+import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -377,12 +378,15 @@ object WorldLoader {
                                         slot = slot,
                                         damage = damage,
                                         armor = armor,
-                                        constitution = constitution,
-                                        strength = itemFile.strength,
-                                        dexterity = itemFile.dexterity,
-                                        intelligence = itemFile.intelligence,
-                                        wisdom = itemFile.wisdom,
-                                        charisma = itemFile.charisma,
+                                        stats =
+                                            StatBlock(
+                                                str = itemFile.strength,
+                                                dex = itemFile.dexterity,
+                                                con = constitution,
+                                                int = itemFile.intelligence,
+                                                wis = itemFile.wisdom,
+                                                cha = itemFile.charisma,
+                                            ),
                                         consumable = itemFile.consumable,
                                         charges = charges,
                                         onUse = onUse,
