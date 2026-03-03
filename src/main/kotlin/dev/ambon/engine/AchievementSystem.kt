@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.achievement.AchievementCategory
+import dev.ambon.domain.achievement.AchievementCriterion
 import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.achievement.CriterionProgress
@@ -28,19 +29,14 @@ class AchievementSystem(
         sessionId: SessionId,
         templateKey: String,
     ) {
-        updateAchievementProgress(sessionId) { def, newProgressList ->
-            var achievementChanged = false
-            for ((index, criterion) in def.criteria.withIndex()) {
-                if (criterion.type != CriterionType.KILL) continue
-                val matches = criterion.targetId.isBlank() || criterion.targetId == templateKey
-                if (!matches) continue
-                val prog = newProgressList[index]
-                if (prog.isComplete) continue
-                newProgressList[index] = prog.copy(current = prog.current + 1)
-                achievementChanged = true
-            }
-            achievementChanged
-        }
+        updateAchievementProgress(
+            sessionId,
+            criterionAdvancer(
+                type = CriterionType.KILL,
+                matches = { it.targetId.isBlank() || it.targetId == templateKey },
+                newValue = { _, prog -> prog.current + 1 },
+            ),
+        )
     }
 
     /**
@@ -50,20 +46,16 @@ class AchievementSystem(
         sessionId: SessionId,
         newLevel: Int,
     ) {
-        updateAchievementProgress(sessionId) { def, newProgressList ->
-            var achievementChanged = false
-            for ((index, criterion) in def.criteria.withIndex()) {
-                if (criterion.type != CriterionType.REACH_LEVEL) continue
-                val prog = newProgressList[index]
-                if (prog.isComplete) continue
-                if (newLevel >= criterion.count || newLevel > prog.current) {
-                    // Update current level whether or not the target is met (for progress display)
-                    newProgressList[index] = prog.copy(current = newLevel)
-                    achievementChanged = true
-                }
-            }
-            achievementChanged
-        }
+        updateAchievementProgress(
+            sessionId,
+            criterionAdvancer(
+                type = CriterionType.REACH_LEVEL,
+                // Update current level whether or not the target is met (for progress display)
+                newValue = { criterion, prog ->
+                    if (newLevel >= criterion.count || newLevel > prog.current) newLevel else null
+                },
+            ),
+        )
     }
 
     /**
@@ -73,19 +65,39 @@ class AchievementSystem(
         sessionId: SessionId,
         questId: String,
     ) {
-        updateAchievementProgress(sessionId) { def, newProgressList ->
-            var achievementChanged = false
-            for ((index, criterion) in def.criteria.withIndex()) {
-                if (criterion.type != CriterionType.QUEST_COMPLETE) continue
-                val matches = criterion.targetId.isBlank() || criterion.targetId == questId
-                if (!matches) continue
-                val prog = newProgressList[index]
-                if (prog.isComplete) continue
-                newProgressList[index] = prog.copy(current = 1)
-                achievementChanged = true
+        updateAchievementProgress(
+            sessionId,
+            criterionAdvancer(
+                type = CriterionType.QUEST_COMPLETE,
+                matches = { it.targetId.isBlank() || it.targetId == questId },
+                newValue = { _, _ -> 1 },
+            ),
+        )
+    }
+
+    /**
+     * Builds a lambda that iterates an achievement's criteria, filters by [type] and [matches],
+     * then computes a new progress value via [newValue]. Returns `true` if any criterion was
+     * updated. [newValue] may return `null` to skip a criterion without modifying it.
+     */
+    private fun criterionAdvancer(
+        type: CriterionType,
+        matches: (AchievementCriterion) -> Boolean = { true },
+        newValue: (AchievementCriterion, CriterionProgress) -> Int?,
+    ): (AchievementDef, MutableList<CriterionProgress>) -> Boolean = { def, newProgressList ->
+        var changed = false
+        for ((index, criterion) in def.criteria.withIndex()) {
+            if (criterion.type != type) continue
+            if (!matches(criterion)) continue
+            val prog = newProgressList[index]
+            if (prog.isComplete) continue
+            val value = newValue(criterion, prog)
+            if (value != null) {
+                newProgressList[index] = prog.copy(current = value)
+                changed = true
             }
-            achievementChanged
         }
+        changed
     }
 
     /**
