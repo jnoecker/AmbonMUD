@@ -97,7 +97,7 @@ class CombatSystem(
         sessionId: SessionId,
         keywordRaw: String,
     ): String? {
-        val player = players.get(sessionId) ?: return "You are not connected."
+        val player = players.get(sessionId) ?: return ERR_NOT_CONNECTED
         val keyword = keywordRaw.trim()
         if (keyword.isEmpty()) return "Kill what?"
 
