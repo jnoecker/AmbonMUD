@@ -452,11 +452,8 @@ class MudServer(
                         clock = clock,
                     )
                 val publisher: ScaleDecisionPublisher =
-                    if (redisManager?.commands != null) {
-                        RedisScaleDecisionPublisher(redisManager.commands!!)
-                    } else {
-                        LoggingScaleDecisionPublisher()
-                    }
+                    redisManager?.withCommands { RedisScaleDecisionPublisher(it) }
+                        ?: LoggingScaleDecisionPublisher()
                 val evalIntervalMs = config.sharding.instancing.autoScale.evaluationIntervalMs
                 autoScaleJob =
                     scope.launchPeriodic(evalIntervalMs, "Auto-scale evaluation") {
