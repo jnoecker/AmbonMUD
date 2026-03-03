@@ -132,11 +132,12 @@ class AbilitySystem(
         val playerMods = statusEffects?.getPlayerStatMods(sessionId) ?: StatBlock.ZERO
         val playerStats = resolveEffectiveStats(player, playerEquip, playerMods)
 
+        val intBonus = PlayerState.statBonus(playerStats.int, intSpellDivisor)
+
         when (val effect = ability.effect) {
             is AbilityEffect.DirectDamage -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
                 val baseDamage = rollRange(rng, effect.damage.min, effect.damage.max)
-                val intBonus = PlayerState.statBonus(playerStats.int, intSpellDivisor)
                 val damage = (baseDamage + intBonus).coerceAtLeast(1)
                 mob.takeDamage(damage)
                 dirtyNotifier.mobHpDirty(mob.id)
@@ -169,7 +170,6 @@ class AbilitySystem(
                 }
 
                 deductManaAndCooldown(sessionId, player, ability, now)
-                val intBonus = PlayerState.statBonus(playerStats.int, intSpellDivisor)
                 for (m in targetMobs) {
                     val baseDamage = rollRange(rng, effect.damage.min, effect.damage.max)
                     val damage = (baseDamage + intBonus).coerceAtLeast(1)
