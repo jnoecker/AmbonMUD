@@ -1,9 +1,5 @@
 package dev.ambon.persistence
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.metrics.GameMetrics
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -32,10 +28,7 @@ class YamlPlayerRepository(
     private val rootDir: Path,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) : PlayerRepository {
-    private val mapper: ObjectMapper =
-        ObjectMapper(YAMLFactory())
-            .registerModule(KotlinModule.Builder().build())
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    private val mapper = yamlMapper
 
     private val playersDir: Path = rootDir.resolve("players")
     private val nextIdFile: Path = rootDir.resolve("next_player_id.txt")
