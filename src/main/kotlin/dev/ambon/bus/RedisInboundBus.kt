@@ -58,37 +58,19 @@ internal class RedisInboundBus(
         }
     }
 
+    private fun baseEnvelope(type: String, sessionId: SessionId) =
+        Envelope(instanceId = instanceId, type = type, sessionId = sessionId.value)
+
     override fun InboundEvent.toEnvelope(): Envelope? =
         when (this) {
             is InboundEvent.Connected ->
-                Envelope(
-                    instanceId = instanceId,
-                    type = "Connected",
-                    sessionId = sessionId.value,
-                    defaultAnsiEnabled = defaultAnsiEnabled,
-                )
+                baseEnvelope("Connected", sessionId).copy(defaultAnsiEnabled = defaultAnsiEnabled)
             is InboundEvent.Disconnected ->
-                Envelope(
-                    instanceId = instanceId,
-                    type = "Disconnected",
-                    sessionId = sessionId.value,
-                    reason = reason,
-                )
+                baseEnvelope("Disconnected", sessionId).copy(reason = reason)
             is InboundEvent.LineReceived ->
-                Envelope(
-                    instanceId = instanceId,
-                    type = "LineReceived",
-                    sessionId = sessionId.value,
-                    line = line,
-                )
+                baseEnvelope("LineReceived", sessionId).copy(line = line)
             is InboundEvent.GmcpReceived ->
-                Envelope(
-                    instanceId = instanceId,
-                    type = "GmcpReceived",
-                    sessionId = sessionId.value,
-                    gmcpPackage = gmcpPackage,
-                    jsonData = jsonData,
-                )
+                baseEnvelope("GmcpReceived", sessionId).copy(gmcpPackage = gmcpPackage, jsonData = jsonData)
         }
 
     override fun Envelope.payloadToSign(): String =
