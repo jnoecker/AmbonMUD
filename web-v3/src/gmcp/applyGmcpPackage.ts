@@ -1,8 +1,11 @@
 import type { Dispatch, SetStateAction } from "react";
 import type {
+  AchievementData,
   ChatChannel,
   ChatMessage,
   CharacterInfo,
+  CompletedAchievement,
+  InProgressAchievement,
   ItemSummary,
   RoomMob,
   RoomItem,
@@ -28,6 +31,7 @@ interface GmcpContext {
   setMobs: Dispatch<SetStateAction<RoomMob[]>>;
   setEffects: Dispatch<SetStateAction<StatusEffect[]>>;
   setSkills: Dispatch<SetStateAction<SkillSummary[]>>;
+  setAchievements: Dispatch<SetStateAction<AchievementData>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>) => void;
 }
@@ -298,6 +302,31 @@ export function applyGmcpPackage(
             receivedAt: now,
           })),
       );
+      break;
+    }
+
+    case "Char.Achievements": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const completed: CompletedAchievement[] = Array.isArray(packet.completed)
+        ? packet.completed
+            .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+            .map((e) => ({
+              id: typeof e.id === "string" ? e.id : "",
+              name: typeof e.name === "string" ? e.name : "Unknown",
+              title: typeof e.title === "string" ? e.title : null,
+            }))
+        : [];
+      const inProgress: InProgressAchievement[] = Array.isArray(packet.inProgress)
+        ? packet.inProgress
+            .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+            .map((e) => ({
+              id: typeof e.id === "string" ? e.id : "",
+              name: typeof e.name === "string" ? e.name : "Unknown",
+              current: safeNumber(e.current),
+              required: safeNumber(e.required, 1),
+            }))
+        : [];
+      ctx.setAchievements({ completed, inProgress });
       break;
     }
 
