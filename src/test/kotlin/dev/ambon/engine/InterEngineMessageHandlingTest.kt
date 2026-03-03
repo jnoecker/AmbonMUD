@@ -158,7 +158,7 @@ class InterEngineMessageHandlingTest {
 
             val outs = h.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && "[GOSSIP] Bob: hello from engine-2" in (it as OutboundEvent.SendText).text },
+                outs.any { it is OutboundEvent.SendText && "[GOSSIP] Bob: hello from engine-2" in it.text },
                 "Local player should receive remote gossip. got=$outs",
             )
 
@@ -189,7 +189,7 @@ class InterEngineMessageHandlingTest {
 
             val outs = h.outbound.drainAll()
             assertTrue(
-                outs.none { it is OutboundEvent.SendText && "my own gossip" in (it as OutboundEvent.SendText).text },
+                outs.none { it is OutboundEvent.SendText && "my own gossip" in it.text },
                 "Self-broadcast should be ignored. got=$outs",
             )
 
@@ -219,7 +219,7 @@ class InterEngineMessageHandlingTest {
 
             val outs = h.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && "Bob tells you: hi alice" in (it as OutboundEvent.SendText).text },
+                outs.any { it is OutboundEvent.SendText && "Bob tells you: hi alice" in it.text },
                 "Local player should receive remote tell. got=$outs",
             )
 
@@ -316,7 +316,7 @@ class InterEngineMessageHandlingTest {
 
             val outs = h.outbound.drainAll()
             assertTrue(
-                outs.none { it is OutboundEvent.SendInfo && "Bob" in (it as OutboundEvent.SendInfo).text },
+                outs.none { it is OutboundEvent.SendInfo && "Bob" in it.text },
                 "Unknown requestId WhoResponse should be dropped",
             )
 
@@ -369,7 +369,7 @@ class InterEngineMessageHandlingTest {
 
             val outs = h.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && "shutdown" in (it as OutboundEvent.SendText).text.lowercase() },
+                outs.any { it is OutboundEvent.SendText && "shutdown" in it.text.lowercase() },
                 "Local player should see shutdown message. got=$outs",
             )
             assertTrue(shutdownCalled, "onShutdown callback should be called")

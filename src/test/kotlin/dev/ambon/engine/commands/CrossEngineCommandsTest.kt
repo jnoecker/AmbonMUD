@@ -53,7 +53,7 @@ class CrossEngineCommandsTest {
             // Local delivery still works
             val outs = outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.sessionId == sid && "You gossip" in (it as OutboundEvent.SendText).text },
+                outs.any { it is OutboundEvent.SendText && it.sessionId == sid && "You gossip" in it.text },
             )
 
             // Bus should have a GlobalBroadcast
@@ -78,7 +78,7 @@ class CrossEngineCommandsTest {
             // Sender should see confirmation (not error)
             val outs = outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && "You tell Bob" in (it as OutboundEvent.SendText).text },
+                outs.any { it is OutboundEvent.SendText && "You tell Bob" in it.text },
             )
             assertTrue(
                 outs.none { it is OutboundEvent.SendError },
@@ -116,7 +116,7 @@ class CrossEngineCommandsTest {
             val outs = outbound.drainAll()
 
             assertTrue(
-                outs.any { it is OutboundEvent.SendError && "No such player" in (it as OutboundEvent.SendError).text },
+                outs.any { it is OutboundEvent.SendError && "No such player" in it.text },
             )
         }
 
@@ -132,7 +132,7 @@ class CrossEngineCommandsTest {
 
             val outs = outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendInfo && "Kick request sent" in (it as OutboundEvent.SendInfo).text },
+                outs.any { it is OutboundEvent.SendInfo && "Kick request sent" in it.text },
             )
 
             val msg = bus.incoming().tryReceive().getOrNull()
@@ -185,7 +185,7 @@ class CrossEngineCommandsTest {
 
             val outs = outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendInfo && "Transfer request sent" in (it as OutboundEvent.SendInfo).text },
+                outs.any { it is OutboundEvent.SendInfo && "Transfer request sent" in it.text },
             )
 
             val msg = bus.incoming().tryReceive().getOrNull()
@@ -222,7 +222,7 @@ class CrossEngineCommandsTest {
 
             val outs = outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && "You tell Bob" in (it as OutboundEvent.SendText).text },
+                outs.any { it is OutboundEvent.SendText && "You tell Bob" in it.text },
             )
             assertTrue(outs.none { it is OutboundEvent.SendError })
 
