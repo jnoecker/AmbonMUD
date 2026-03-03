@@ -1,10 +1,7 @@
 package dev.ambon.redis
 
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import dev.ambon.persistence.jsonMapper
 
-val redisObjectMapper: ObjectMapper =
-    ObjectMapper()
-        .registerModule(KotlinModule.Builder().build())
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+/** Shared JSON ObjectMapper for Redis serialization. Delegates to [jsonMapper] to avoid duplicate configuration. */
+val redisObjectMapper: ObjectMapper = jsonMapper
