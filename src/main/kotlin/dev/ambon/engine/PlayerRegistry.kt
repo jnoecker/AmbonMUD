@@ -222,40 +222,19 @@ class PlayerRegistry(
         val password = normalizePassword(passwordRaw)
         if (!isValidPassword(password)) return LoginResult.InvalidPassword
 
-        val now = clock.millis()
-
-        val existingRecord: PlayerRecord? = repo.findByName(name)
-
-        val boundRecord =
-            if (existingRecord != null) {
-                if (existingRecord.passwordHash.isNotBlank()) {
-                    val ok =
-                        withContext(hashingContext) {
-                            passwordHasher.verify(password, existingRecord.passwordHash)
-                        }
-                    if (!ok) return LoginResult.WrongPassword
-                    existingRecord.copy(lastSeenEpochMs = now)
-                } else {
-                    val hash = withContext(hashingContext) { passwordHasher.hash(password) }
-                    existingRecord.copy(lastSeenEpochMs = now, passwordHash = hash)
-                }
-            } else {
-                return when (create(sessionId, name, password, defaultAnsiEnabled)) {
+        return when (val prep = prepareLoginCredentials(nameRaw, passwordRaw)) {
+            is LoginCredentialPrep.Verified -> applyLoginCredentials(sessionId, prep.record, defaultAnsiEnabled)
+            LoginCredentialPrep.WrongPassword -> LoginResult.WrongPassword
+            LoginCredentialPrep.NotFound -> {
+                when (create(sessionId, nameRaw, passwordRaw, defaultAnsiEnabled)) {
                     CreateResult.Ok -> LoginResult.Ok
                     CreateResult.InvalidName -> LoginResult.InvalidName
                     CreateResult.InvalidPassword -> LoginResult.InvalidPassword
                     CreateResult.Taken -> LoginResult.Taken
                 }
             }
-
-        if (isNameOnline(name, sessionId)) {
-            val oldSid = findSessionByName(name)!!
-            takeoverSession(oldSid, sessionId, boundRecord, now)
-            return LoginResult.Takeover(oldSid)
+            LoginCredentialPrep.InvalidInput -> LoginResult.InvalidName
         }
-
-        bindSession(sessionId, boundRecord, now)
-        return LoginResult.Ok
     }
 
     suspend fun create(
@@ -266,44 +245,17 @@ class PlayerRegistry(
         race: Race = Race.HUMAN,
         playerClass: PlayerClass = PlayerClass.WARRIOR,
     ): CreateResult {
-        if (players.containsKey(sessionId)) return CreateResult.InvalidName
-
         val name = normalizeName(nameRaw)
         if (!isValidName(name)) return CreateResult.InvalidName
-
-        if (isNameOnline(name, sessionId)) return CreateResult.Taken
 
         val password = normalizePassword(passwordRaw)
         if (!isValidPassword(password)) return CreateResult.InvalidPassword
 
-        if (repo.findByName(name) != null) return CreateResult.Taken
-
-        val baseStat = PlayerState.BASE_STAT
-        val now = clock.millis()
-        val created =
-            try {
-                repo.create(
-                    PlayerCreationRequest(
-                        name = name,
-                        startRoomId = classStartRooms[playerClass] ?: startRoom,
-                        nowEpochMs = now,
-                        passwordHash = withContext(hashingContext) { passwordHasher.hash(password) },
-                        ansiEnabled = defaultAnsiEnabled,
-                        race = race.name,
-                        playerClass = playerClass.name,
-                        strength = baseStat + race.strMod,
-                        dexterity = baseStat + race.dexMod,
-                        constitution = baseStat + race.conMod,
-                        intelligence = baseStat + race.intMod,
-                        wisdom = baseStat + race.wisMod,
-                        charisma = baseStat + race.chaMod,
-                    ),
-                )
-            } catch (_: PlayerPersistenceException) {
-                return CreateResult.Taken
-            }
-        bindSession(sessionId, created, now)
-        return CreateResult.Ok
+        return when (val prep = prepareCreateAccount(nameRaw, passwordRaw, defaultAnsiEnabled, race, playerClass)) {
+            is CreateAccountPrep.Ready -> applyCreateAccount(sessionId, prep.record)
+            CreateAccountPrep.InvalidInput -> CreateResult.InvalidName
+            CreateAccountPrep.Taken -> CreateResult.Taken
+        }
     }
 
     private suspend fun bindSession(
