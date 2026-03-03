@@ -192,6 +192,54 @@ class RedisOutboundBusTest {
             assertTrue(fakePublisher.messages.isEmpty())
         }
 
+    @Test
+    fun `all OutboundEvent variants have a toEnvelope mapping or are explicitly excluded`() =
+        runTest {
+            val sid = SessionId(100)
+            val variantNames =
+                OutboundEvent::class.sealedSubclasses.map { it.simpleName!! }.toSet()
+
+            // Every variant must appear here — either as a published event or as an excluded control-plane event.
+            val publishedEvents: List<OutboundEvent> =
+                listOf(
+                    OutboundEvent.SendText(sid, "t"),
+                    OutboundEvent.SendInfo(sid, "i"),
+                    OutboundEvent.SendError(sid, "e"),
+                    OutboundEvent.SendPrompt(sid),
+                    OutboundEvent.ShowLoginScreen(sid),
+                    OutboundEvent.SetAnsi(sid, true),
+                    OutboundEvent.Close(sid, "r"),
+                    OutboundEvent.ClearScreen(sid),
+                    OutboundEvent.ShowAnsiDemo(sid),
+                    OutboundEvent.GmcpData(sid, "p", "{}"),
+                )
+            val excludedEvents: List<OutboundEvent> =
+                listOf(
+                    OutboundEvent.SessionRedirect(sid, "e2", "h", 9092),
+                )
+
+            val coveredNames =
+                (publishedEvents + excludedEvents).map { it::class.simpleName!! }.toSet()
+            assertEquals(
+                variantNames,
+                coveredNames,
+                "Missing OutboundEvent round-trip coverage for: ${variantNames - coveredNames}",
+            )
+
+            // Verify published events produce envelopes
+            for (event in publishedEvents) {
+                bus.send(event)
+                assertTrue(fakePublisher.messages.isNotEmpty(), "${event::class.simpleName} should produce a Redis envelope")
+                fakePublisher.messages.clear()
+            }
+
+            // Verify excluded events do NOT produce envelopes
+            for (event in excludedEvents) {
+                bus.send(event)
+                assertTrue(fakePublisher.messages.isEmpty(), "${event::class.simpleName} should NOT produce a Redis envelope")
+            }
+        }
+
     private fun roundTrip(
         expected: OutboundEvent,
         sessionId: Long,
