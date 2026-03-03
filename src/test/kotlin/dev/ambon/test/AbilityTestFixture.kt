@@ -1,10 +1,7 @@
 package dev.ambon.test
 
 import dev.ambon.bus.LocalOutboundBus
-import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
-import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.CombatSystemConfig
 import dev.ambon.engine.DirtyNotifier
@@ -18,15 +15,15 @@ import dev.ambon.persistence.InMemoryPlayerRepository
 import java.util.Random
 
 class AbilityTestFixture(
-    val roomId: RoomId = RoomId("zone:room"),
+    override val roomId: RoomId = RoomId("zone:room"),
     val clock: MutableClock = MutableClock(0L),
     val rng: Random = Random(42),
     val items: ItemRegistry = ItemRegistry(),
     val repo: InMemoryPlayerRepository = InMemoryPlayerRepository(),
-    val players: PlayerRegistry = buildTestPlayerRegistry(roomId, repo, items, clock = clock),
-    val mobs: MobRegistry = MobRegistry(),
+    override val players: PlayerRegistry = buildTestPlayerRegistry(roomId, repo, items, clock = clock),
+    override val mobs: MobRegistry = MobRegistry(),
     val outbound: LocalOutboundBus = LocalOutboundBus(),
-) {
+) : TestFixtureBase {
     val combat: CombatSystem =
         CombatSystem(
             players = players,
@@ -55,35 +52,4 @@ class AbilityTestFixture(
             dirtyNotifier = dirtyNotifier,
             mobs = mobsForAbility ?: mobs,
         )
-
-    suspend fun loginPlayer(
-        sessionId: SessionId,
-        name: String,
-        password: String = "password",
-    ) {
-        players.loginOrFail(sessionId, name, password)
-    }
-
-    fun spawnMob(
-        id: MobId,
-        name: String,
-        hp: Int = 20,
-        maxHp: Int = hp,
-        minDamage: Int = 1,
-        maxDamage: Int = 4,
-        roomId: RoomId = this.roomId,
-    ): MobState {
-        val mob =
-            MobState(
-                id = id,
-                name = name,
-                roomId = roomId,
-                hp = hp,
-                maxHp = maxHp,
-                minDamage = minDamage,
-                maxDamage = maxDamage,
-            )
-        mobs.upsert(mob)
-        return mob
-    }
 }
