@@ -23,6 +23,7 @@ import { useCommandHistory } from "./hooks/useCommandHistory";
 import { useMiniMap } from "./hooks/useMiniMap";
 import { useMudSocket } from "./hooks/useMudSocket";
 import type {
+  AchievementData,
   ChatChannel,
   ChatMessage,
   CharacterInfo,
@@ -108,6 +109,7 @@ function App() {
   const [skills, setSkills] = useState<SkillSummary[]>([]);
   const [inventory, setInventory] = useState<ItemSummary[]>([]);
   const [equipment, setEquipment] = useState<Record<string, ItemSummary>>({});
+  const [achievements, setAchievements] = useState<AchievementData>({ completed: [], inProgress: [] });
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
   const [whoPlayers, setWhoPlayers] = useState<string[]>([]);
 
@@ -156,6 +158,7 @@ function App() {
     setSkills([]);
     setInventory([]);
     setEquipment({});
+    setAchievements({ completed: [], inProgress: [] });
     setChatByChannel(createEmptyChatByChannel());
     setWhoPlayers([]);
     setActiveChatChannel("say");
@@ -178,6 +181,7 @@ function App() {
           setMobs,
           setEffects,
           setSkills,
+          setAchievements,
           setChatByChannel,
           updateMap,
         },
@@ -572,6 +576,7 @@ function App() {
           effects={effects}
           visibleEffects={visibleEffects}
           hiddenEffectsCount={hiddenEffectsCount}
+          achievements={achievements}
           onOpenEquipment={() => setActivePopout("equipment")}
           onOpenWearing={() => setActivePopout("wearing")}
         />

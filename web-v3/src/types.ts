@@ -80,6 +80,24 @@ export interface ChatMessage {
   receivedAt: number;
 }
 
+export interface CompletedAchievement {
+  id: string;
+  name: string;
+  title: string | null;
+}
+
+export interface InProgressAchievement {
+  id: string;
+  name: string;
+  current: number;
+  required: number;
+}
+
+export interface AchievementData {
+  completed: CompletedAchievement[];
+  inProgress: InProgressAchievement[];
+}
+
 export interface SkillSummary {
   id: string;
   name: string;
