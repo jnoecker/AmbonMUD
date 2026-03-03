@@ -56,14 +56,7 @@ class GmcpFlushHandler(
 
     suspend fun flushDirtyGroup() {
         drainDirty(gmcpDirtyGroup) { sid ->
-            val group = groupSystem.getGroup(sid)
-            if (group != null) {
-                val leader = players.get(group.leader)?.name
-                val members = group.members.mapNotNull { players.get(it) }
-                gmcpEmitter.sendGroupInfo(sid, leader, members)
-            } else {
-                gmcpEmitter.sendGroupInfo(sid, null, emptyList())
-            }
+            gmcpEmitter.sendGroupSync(sid, groupSystem, players)
         }
     }
 

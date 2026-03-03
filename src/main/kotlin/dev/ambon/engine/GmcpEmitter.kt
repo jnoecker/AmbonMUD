@@ -10,8 +10,11 @@ import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.Room
 import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.abilities.AbilityId
+import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.ActiveEffectSnapshot
+import dev.ambon.engine.status.StatusEffectSystem
 
 class GmcpEmitter(
     private val outbound: OutboundBus,
@@ -247,6 +250,52 @@ class GmcpEmitter(
 
     suspend fun sendCorePing(sessionId: SessionId) {
         emitRaw(sessionId, "Core.Ping", CORE_PING_JSON)
+    }
+
+    /**
+     * Sends the full character GMCP state: status vars, vitals, name, items,
+     * skills, status effects, achievements, and group info. Called on login
+     * and when a client negotiates GMCP support.
+     */
+    suspend fun sendFullCharacterSync(
+        sessionId: SessionId,
+        player: PlayerState,
+        items: ItemRegistry,
+        abilitySystem: AbilitySystem,
+        statusEffectSystem: StatusEffectSystem,
+        achievementRegistry: AchievementRegistry,
+        groupSystem: GroupSystem,
+        players: PlayerRegistry,
+    ) {
+        sendCharStatusVars(sessionId)
+        sendCharVitals(sessionId, player)
+        sendCharName(sessionId, player)
+        sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
+        sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
+            abilitySystem.cooldownRemainingMs(sessionId, abilityId)
+        }
+        sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
+        sendCharAchievements(sessionId, player, achievementRegistry)
+        sendGroupSync(sessionId, groupSystem, players)
+    }
+
+    /**
+     * Resolves and sends the current group state for [sessionId].
+     * If the player is not in a group, sends an empty group payload.
+     */
+    suspend fun sendGroupSync(
+        sessionId: SessionId,
+        groupSystem: GroupSystem,
+        players: PlayerRegistry,
+    ) {
+        val group = groupSystem.getGroup(sessionId)
+        if (group != null) {
+            val leader = players.get(group.leader)?.name
+            val members = group.members.mapNotNull { players.get(it) }
+            sendGroupInfo(sessionId, leader, members)
+        } else {
+            sendGroupInfo(sessionId, null, emptyList())
+        }
     }
 
     suspend fun sendCharAchievements(

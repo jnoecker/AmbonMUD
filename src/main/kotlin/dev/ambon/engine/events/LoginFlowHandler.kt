@@ -498,21 +498,16 @@ internal class LoginFlowHandler(
         if (!suppressEnterBroadcast) {
             broadcastToRoom(players, outbound, me.roomId, "${me.name} enters.", sessionId)
         }
-        gmcpEmitter.sendCharStatusVars(sessionId)
-        gmcpEmitter.sendCharVitals(sessionId, me)
-        gmcpEmitter.sendCharName(sessionId, me)
-        gmcpEmitter.sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
-        gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
-            abilitySystem.cooldownRemainingMs(sessionId, abilityId)
-        }
-        gmcpEmitter.sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
-        gmcpEmitter.sendCharAchievements(sessionId, me, achievementRegistry)
-        val group = groupSystem.getGroup(sessionId)
-        if (group != null) {
-            val leader = players.get(group.leader)?.name
-            val members = group.members.mapNotNull { players.get(it) }
-            gmcpEmitter.sendGroupInfo(sessionId, leader, members)
-        }
+        gmcpEmitter.sendFullCharacterSync(
+            sessionId,
+            me,
+            items,
+            abilitySystem,
+            statusEffectSystem,
+            achievementRegistry,
+            groupSystem,
+            players,
+        )
         router.handle(sessionId, Command.Look)
 
         val unread = me.inbox.count { !it.read }
