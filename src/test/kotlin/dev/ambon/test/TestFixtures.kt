@@ -19,6 +19,7 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.buildTestRouter
+import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -147,6 +148,7 @@ class CommandRouterHarness private constructor(
             onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)? = null,
             economyConfig: EconomyConfig = EconomyConfig(),
             clock: Clock = Clock.systemUTC(),
+            gatheringRegistry: GatheringRegistry? = null,
         ): CommandRouterHarness {
             val combat = CombatSystem(players, mobs, items, outbound)
             val router =
@@ -169,6 +171,7 @@ class CommandRouterHarness private constructor(
                     onCrossZoneMove = onCrossZoneMove,
                     economyConfig = economyConfig,
                     clock = clock,
+                    gatheringRegistry = gatheringRegistry,
                 )
             return CommandRouterHarness(world, repo, items, players, mobs, outbound, progression, groupSystem, combat, router)
         }
