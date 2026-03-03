@@ -14,6 +14,7 @@ import dev.ambon.sharding.InterEngineMessage
 import dev.ambon.sharding.LocalInterEngineBus
 import dev.ambon.sharding.PlayerSummary
 import dev.ambon.test.MutableClock
+import dev.ambon.test.drainAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -110,15 +111,6 @@ class InterEngineMessageHandlingTest {
         val clock: MutableClock,
     )
 
-    private fun drain(ch: LocalOutboundBus): List<OutboundEvent> {
-        val out = mutableListOf<OutboundEvent>()
-        while (true) {
-            val ev = ch.tryReceive().getOrNull() ?: break
-            out += ev
-        }
-        return out
-    }
-
     private suspend fun loginViaEngine(
         harness: EngineTestHarness,
         sid: SessionId,
@@ -151,7 +143,7 @@ class InterEngineMessageHandlingTest {
 
             loginViaEngine(h, sid, "Alice")
             pumpEngine(h)
-            drain(h.outbound)
+            h.outbound.drainAll()
 
             // Inject a gossip broadcast from another engine
             (h.bus as LocalInterEngineBus).broadcast(
@@ -164,7 +156,7 @@ class InterEngineMessageHandlingTest {
             )
             pumpEngine(h)
 
-            val outs = drain(h.outbound)
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && "[GOSSIP] Bob: hello from engine-2" in (it as OutboundEvent.SendText).text },
                 "Local player should receive remote gossip. got=$outs",
@@ -183,7 +175,7 @@ class InterEngineMessageHandlingTest {
 
             loginViaEngine(h, sid, "Alice")
             pumpEngine(h)
-            drain(h.outbound)
+            h.outbound.drainAll()
 
             (h.bus as LocalInterEngineBus).broadcast(
                 InterEngineMessage.GlobalBroadcast(
@@ -195,7 +187,7 @@ class InterEngineMessageHandlingTest {
             )
             pumpEngine(h)
 
-            val outs = drain(h.outbound)
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.none { it is OutboundEvent.SendText && "my own gossip" in (it as OutboundEvent.SendText).text },
                 "Self-broadcast should be ignored. got=$outs",
@@ -214,7 +206,7 @@ class InterEngineMessageHandlingTest {
 
             loginViaEngine(h, sid, "Alice")
             pumpEngine(h)
-            drain(h.outbound)
+            h.outbound.drainAll()
 
             (h.bus as LocalInterEngineBus).broadcast(
                 InterEngineMessage.TellMessage(
@@ -225,7 +217,7 @@ class InterEngineMessageHandlingTest {
             )
             pumpEngine(h)
 
-            val outs = drain(h.outbound)
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && "Bob tells you: hi alice" in (it as OutboundEvent.SendText).text },
                 "Local player should receive remote tell. got=$outs",
@@ -245,7 +237,7 @@ class InterEngineMessageHandlingTest {
 
             loginViaEngine(h, sid, "Alice")
             pumpEngine(h)
-            drain(h.outbound)
+            h.outbound.drainAll()
             capturingBus.sent.clear()
 
             // Inject a WhoRequest from another engine
@@ -283,7 +275,7 @@ class InterEngineMessageHandlingTest {
 
             loginViaEngine(h, sid, "Alice")
             pumpEngine(h)
-            drain(h.outbound)
+            h.outbound.drainAll()
             capturingBus.sent.clear()
 
             // Inject a WhoRequest from self (should be ignored)
@@ -311,7 +303,7 @@ class InterEngineMessageHandlingTest {
 
             loginViaEngine(h, sid, "Alice")
             pumpEngine(h)
-            drain(h.outbound)
+            h.outbound.drainAll()
 
             // Inject a WhoResponse with an unknown requestId
             (h.bus as LocalInterEngineBus).broadcast(
@@ -322,7 +314,7 @@ class InterEngineMessageHandlingTest {
             )
             pumpEngine(h)
 
-            val outs = drain(h.outbound)
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.none { it is OutboundEvent.SendInfo && "Bob" in (it as OutboundEvent.SendInfo).text },
                 "Unknown requestId WhoResponse should be dropped",
@@ -341,14 +333,14 @@ class InterEngineMessageHandlingTest {
 
             loginViaEngine(h, sid, "Alice")
             pumpEngine(h)
-            drain(h.outbound)
+            h.outbound.drainAll()
 
             (h.bus as LocalInterEngineBus).broadcast(
                 InterEngineMessage.KickRequest(targetPlayerName = "Alice"),
             )
             pumpEngine(h)
 
-            val outs = drain(h.outbound)
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.Close && it.sessionId == sid },
                 "KickRequest should close the local session. got=$outs",
@@ -368,14 +360,14 @@ class InterEngineMessageHandlingTest {
 
             loginViaEngine(h, sid, "Alice")
             pumpEngine(h)
-            drain(h.outbound)
+            h.outbound.drainAll()
 
             (h.bus as LocalInterEngineBus).broadcast(
                 InterEngineMessage.ShutdownRequest(initiatorName = "Admin"),
             )
             pumpEngine(h)
 
-            val outs = drain(h.outbound)
+            val outs = h.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && "shutdown" in (it as OutboundEvent.SendText).text.lowercase() },
                 "Local player should see shutdown message. got=$outs",

@@ -11,6 +11,7 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.drainAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -96,16 +97,7 @@ class DialogueSystemTest {
         val outbound: LocalOutboundBus,
         val system: DialogueSystem,
         val items: ItemRegistry,
-    ) {
-        fun drain(): List<OutboundEvent> {
-            val out = mutableListOf<OutboundEvent>()
-            while (true) {
-                val v = outbound.tryReceive().getOrNull() ?: break
-                out.add(v)
-            }
-            return out
-        }
-    }
+    )
 
     private suspend fun TestEnv.loginPlayer(
         name: String = "Tester",
@@ -118,7 +110,7 @@ class DialogueSystemTest {
         val player = players.get(sid)!!
         player.playerClass = playerClass
         player.level = level
-        drain()
+        outbound.drainAll()
         return sid
     }
 
@@ -160,7 +152,7 @@ class DialogueSystemTest {
             val err = env.system.startConversation(sid, "sage")
             assertNull(err)
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("Hello there!") },
                 "Expected root text. got=$outs",
@@ -199,12 +191,12 @@ class DialogueSystemTest {
             val sid = env.loginPlayer()
             env.addDialogueMob()
             env.system.startConversation(sid, "sage")
-            env.drain()
+            env.outbound.drainAll()
 
             val outcome = env.system.selectChoice(sid, 1) // "Tell me more."
             assertTrue(outcome is DialogueOutcome.Ok, "Expected Ok outcome. got=$outcome")
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("more info") },
                 "Expected next node text. got=$outs",
@@ -218,7 +210,7 @@ class DialogueSystemTest {
             val sid = env.loginPlayer()
             env.addDialogueMob()
             env.system.startConversation(sid, "sage")
-            env.drain()
+            env.outbound.drainAll()
 
             val outcome = env.system.selectChoice(sid, 2) // "Goodbye." (null next)
             assertTrue(outcome is DialogueOutcome.Ok, "Expected Ok outcome. got=$outcome")
@@ -232,7 +224,7 @@ class DialogueSystemTest {
             val sid = env.loginPlayer()
             env.addDialogueMob()
             env.system.startConversation(sid, "sage")
-            env.drain()
+            env.outbound.drainAll()
 
             val outcome = env.system.selectChoice(sid, 5)
             assertTrue(
@@ -249,7 +241,7 @@ class DialogueSystemTest {
             env.addDialogueMob(dialogue = conditionalDialogue)
             env.system.startConversation(sid, "sage")
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             val infoTexts =
                 outs
                     .filterIsInstance<OutboundEvent.SendInfo>()
@@ -272,7 +264,7 @@ class DialogueSystemTest {
             env.addDialogueMob(dialogue = conditionalDialogue)
             env.system.startConversation(sid, "sage")
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             val infoTexts =
                 outs
                     .filterIsInstance<OutboundEvent.SendInfo>()
@@ -291,7 +283,7 @@ class DialogueSystemTest {
             env.addDialogueMob(dialogue = conditionalDialogue)
             env.system.startConversation(sid, "sage")
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             val infoTexts =
                 outs
                     .filterIsInstance<OutboundEvent.SendInfo>()
@@ -310,7 +302,7 @@ class DialogueSystemTest {
             env.addDialogueMob(dialogue = conditionalDialogue)
             env.system.startConversation(sid, "sage")
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             val infoTexts =
                 outs
                     .filterIsInstance<OutboundEvent.SendInfo>()
@@ -328,13 +320,13 @@ class DialogueSystemTest {
             val sid = env.loginPlayer()
             env.addDialogueMob()
             env.system.startConversation(sid, "sage")
-            env.drain()
+            env.outbound.drainAll()
 
             assertTrue(env.system.isInConversation(sid))
             env.system.onPlayerMoved(sid)
             assertFalse(env.system.isInConversation(sid))
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("walk away") },
                 "Expected walk-away notification. got=$outs",
@@ -348,7 +340,7 @@ class DialogueSystemTest {
             val sid = env.loginPlayer()
             env.addDialogueMob()
             env.system.startConversation(sid, "sage")
-            env.drain()
+            env.outbound.drainAll()
 
             assertTrue(env.system.isInConversation(sid))
             env.system.onPlayerDisconnected(sid)
@@ -364,13 +356,13 @@ class DialogueSystemTest {
 
             env.system.startConversation(sid, "sage")
             assertTrue(env.system.isInConversation(sid))
-            env.drain()
+            env.outbound.drainAll()
 
             // Start again — should reset to root
             env.system.startConversation(sid, "sage")
             assertTrue(env.system.isInConversation(sid))
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("Hello there!") },
                 "Expected root text on re-start. got=$outs",
@@ -384,13 +376,13 @@ class DialogueSystemTest {
             val sid = env.loginPlayer()
             val mobId = env.addDialogueMob()
             env.system.startConversation(sid, "sage")
-            env.drain()
+            env.outbound.drainAll()
 
             assertTrue(env.system.isInConversation(sid))
             env.system.onMobRemoved(mobId)
             assertFalse(env.system.isInConversation(sid))
 
-            val outs = env.drain()
+            val outs = env.outbound.drainAll()
             assertTrue(
                 outs.any { it is OutboundEvent.SendText && it.text.contains("no longer available") },
                 "Expected mob-removed notification. got=$outs",
