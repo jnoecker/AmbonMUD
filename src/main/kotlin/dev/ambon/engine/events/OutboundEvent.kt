@@ -2,6 +2,14 @@ package dev.ambon.engine.events
 
 import dev.ambon.domain.ids.SessionId
 
+/**
+ * Adding a new [OutboundEvent] variant? Update these files:
+ *  1. [dev.ambon.bus.RedisOutboundBus]  — toEnvelope() + toEvent() + Envelope fields + payloadToSign()
+ *  2. [dev.ambon.grpc.ProtoMapper]      — toProto() + toDomain() + per-variant proto helper
+ *  3. `src/main/proto/ambonmud/v1/events.proto` — add proto message + oneof field
+ *  4. [dev.ambon.transport.OutboundRouter] — handle the new variant
+ *  5. Tests: RedisOutboundBusTest (round-trip), ProtoMapperTest (round-trip)
+ */
 sealed interface OutboundEvent {
     val sessionId: SessionId
 

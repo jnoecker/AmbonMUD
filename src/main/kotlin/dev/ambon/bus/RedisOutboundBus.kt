@@ -65,35 +65,23 @@ internal class RedisOutboundBus(
         }
     }
 
+    private fun baseEnvelope(type: String, sessionId: SessionId) =
+        Envelope(instanceId = instanceId, type = type, sessionId = sessionId.value)
+
     override fun OutboundEvent.toEnvelope(): Envelope? =
         when (this) {
-            is OutboundEvent.SendText ->
-                Envelope(instanceId = instanceId, type = "SendText", sessionId = sessionId.value, text = text)
-            is OutboundEvent.SendInfo ->
-                Envelope(instanceId = instanceId, type = "SendInfo", sessionId = sessionId.value, text = text)
-            is OutboundEvent.SendError ->
-                Envelope(instanceId = instanceId, type = "SendError", sessionId = sessionId.value, text = text)
-            is OutboundEvent.SendPrompt ->
-                Envelope(instanceId = instanceId, type = "SendPrompt", sessionId = sessionId.value)
-            is OutboundEvent.ShowLoginScreen ->
-                Envelope(instanceId = instanceId, type = "ShowLoginScreen", sessionId = sessionId.value)
-            is OutboundEvent.SetAnsi ->
-                Envelope(instanceId = instanceId, type = "SetAnsi", sessionId = sessionId.value, enabled = enabled)
-            is OutboundEvent.Close ->
-                Envelope(instanceId = instanceId, type = "Close", sessionId = sessionId.value, reason = reason)
-            is OutboundEvent.ClearScreen ->
-                Envelope(instanceId = instanceId, type = "ClearScreen", sessionId = sessionId.value)
-            is OutboundEvent.ShowAnsiDemo ->
-                Envelope(instanceId = instanceId, type = "ShowAnsiDemo", sessionId = sessionId.value)
+            is OutboundEvent.SendText -> baseEnvelope("SendText", sessionId).copy(text = text)
+            is OutboundEvent.SendInfo -> baseEnvelope("SendInfo", sessionId).copy(text = text)
+            is OutboundEvent.SendError -> baseEnvelope("SendError", sessionId).copy(text = text)
+            is OutboundEvent.SendPrompt -> baseEnvelope("SendPrompt", sessionId)
+            is OutboundEvent.ShowLoginScreen -> baseEnvelope("ShowLoginScreen", sessionId)
+            is OutboundEvent.SetAnsi -> baseEnvelope("SetAnsi", sessionId).copy(enabled = enabled)
+            is OutboundEvent.Close -> baseEnvelope("Close", sessionId).copy(reason = reason)
+            is OutboundEvent.ClearScreen -> baseEnvelope("ClearScreen", sessionId)
+            is OutboundEvent.ShowAnsiDemo -> baseEnvelope("ShowAnsiDemo", sessionId)
             is OutboundEvent.SessionRedirect -> null // control-plane event, not published to Redis
             is OutboundEvent.GmcpData ->
-                Envelope(
-                    instanceId = instanceId,
-                    type = "GmcpData",
-                    sessionId = sessionId.value,
-                    gmcpPackage = gmcpPackage,
-                    jsonData = jsonData,
-                )
+                baseEnvelope("GmcpData", sessionId).copy(gmcpPackage = gmcpPackage, jsonData = jsonData)
         }
 
     override fun Envelope.payloadToSign(): String =
