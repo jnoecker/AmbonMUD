@@ -22,8 +22,8 @@ import dev.ambon.session.GatewayIdLeaseManager
 import dev.ambon.session.SessionIdFactory
 import dev.ambon.session.SnowflakeSessionIdFactory
 import dev.ambon.sharding.InstanceSelector
+import dev.ambon.sharding.InstancedRedisZoneRegistry
 import dev.ambon.sharding.LoadBalancedInstanceSelector
-import dev.ambon.sharding.RedisZoneRegistry
 import dev.ambon.transport.BlockingSocketTransport
 import dev.ambon.transport.KtorWebSocketTransport
 import dev.ambon.transport.OutboundRouter
@@ -269,11 +269,10 @@ class GatewayServer(
         if (!config.sharding.instancing.enabled) return null
         val rm = redisManager ?: return null
         val registry =
-            RedisZoneRegistry(
+            InstancedRedisZoneRegistry(
                 redis = rm,
                 mapper = redisObjectMapper,
                 leaseTtlSeconds = config.sharding.registry.leaseTtlSeconds,
-                instancing = true,
                 defaultCapacity = config.sharding.instancing.defaultCapacity,
             )
         return LoadBalancedInstanceSelector(registry)
