@@ -9,13 +9,13 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
+import dev.ambon.test.collectUntil
 import dev.ambon.test.drainAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Tag
@@ -74,12 +74,8 @@ class GameEngineIntegrationTest {
             runCurrent()
 
             // Collect events deterministically
-            val got = mutableListOf<OutboundEvent>()
-
-            withTimeout(500) {
-                while (got.none { it is OutboundEvent.Close && it.sessionId == sid }) {
-                    got += outbound.asReceiveChannel().receive()
-                }
+            val got = outbound.collectUntil { events ->
+                events.any { it is OutboundEvent.Close && it.sessionId == sid }
             }
 
             assertTrue(got.any { it is OutboundEvent.SendText && it.sessionId == sid }, "Expected SendText; got=$got")
@@ -143,11 +139,8 @@ class GameEngineIntegrationTest {
             advanceTimeBy(5)
             runCurrent()
 
-            val got = mutableListOf<OutboundEvent>()
-            withTimeout(500) {
-                while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Bob enters." }) {
-                    got += outbound.asReceiveChannel().receive()
-                }
+            outbound.collectUntil { events ->
+                events.any { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Bob enters." }
             }
 
             inbound.send(InboundEvent.Disconnected(sid2, "test"))
@@ -155,10 +148,8 @@ class GameEngineIntegrationTest {
             advanceTimeBy(5)
             runCurrent()
 
-            withTimeout(500) {
-                while (got.none { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Bob leaves." }) {
-                    got += outbound.asReceiveChannel().receive()
-                }
+            outbound.collectUntil { events ->
+                events.any { it is OutboundEvent.SendText && it.sessionId == sid1 && it.text == "Bob leaves." }
             }
 
             engineJob.cancel()
