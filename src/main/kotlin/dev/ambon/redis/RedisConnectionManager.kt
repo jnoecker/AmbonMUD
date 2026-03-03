@@ -62,6 +62,25 @@ class RedisConnectionManager(
         commands?.setex(key, ttlSeconds, value)
     }
 
+    /**
+     * Executes [block] with the sync [RedisCommands] handle if Redis is connected,
+     * returning the block's result.  Returns `null` when the connection is absent.
+     *
+     * Callers that need a non-null default can chain the Elvis operator:
+     * ```
+     * redis.withCommands { it.hgetall(key) } ?: emptyMap()
+     * ```
+     */
+    inline fun <T> withCommands(block: (RedisCommands<String, String>) -> T): T? =
+        commands?.let(block)
+
+    /**
+     * Executes [block] with the async [RedisAsyncCommands] handle if Redis is
+     * connected, returning the block's result.  Returns `null` when absent.
+     */
+    inline fun <T> withAsyncCommands(block: (RedisAsyncCommands<String, String>) -> T): T? =
+        asyncCommands?.let(block)
+
     override fun close() {
         pubSubConnections.forEach { runCatching { it.close() } }
         pubSubConnections.clear()
