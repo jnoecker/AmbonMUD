@@ -139,10 +139,18 @@ export function ChatPanel({
     });
   }, [friends]);
 
+  const [friendsNow, setFriendsNow] = useState(() => Date.now());
+  const hasFriendNotifications = friendNotifications.length > 0;
+
+  useEffect(() => {
+    if (!hasFriendNotifications || activeSocialTab !== "friends") return;
+    const interval = window.setInterval(() => setFriendsNow(Date.now()), 5_000);
+    return () => window.clearInterval(interval);
+  }, [hasFriendNotifications, activeSocialTab]);
+
   const recentNotifications = useMemo(() => {
-    const now = Date.now();
-    return friendNotifications.filter((n) => now - n.receivedAt < 30_000);
-  }, [friendNotifications]);
+    return friendNotifications.filter((n) => friendsNow - n.receivedAt < 30_000);
+  }, [friendNotifications, friendsNow]);
 
   return (
     <section className="panel panel-chat" aria-label="Social channels">
