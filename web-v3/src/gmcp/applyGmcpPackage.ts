@@ -1,21 +1,26 @@
 import type { Dispatch, SetStateAction } from "react";
 import type {
   AchievementData,
+  CharStats,
   ChatChannel,
   ChatMessage,
   CharacterInfo,
+  CombatEventData,
   CombatTarget,
   CompletedAchievement,
   DialogueChoice,
   DialogueState,
   FriendEntry,
   FriendNotification,
+  GainEvent,
   GroupInfo,
   GroupMember,
   GuildInfo,
   GuildMemberEntry,
   InProgressAchievement,
   ItemSummary,
+  MobInfo,
+  QuestEntry,
   RoomMob,
   RoomItem,
   RoomPlayer,
@@ -50,6 +55,11 @@ interface GmcpContext {
   setCombatTarget: Dispatch<SetStateAction<CombatTarget | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>) => void;
+  pushCombatEvent: (event: CombatEventData) => void;
+  setCharStats: Dispatch<SetStateAction<CharStats | null>>;
+  setQuests: Dispatch<SetStateAction<QuestEntry[]>>;
+  pushGainEvent: (event: GainEvent) => void;
+  setMobInfo: Dispatch<SetStateAction<MobInfo[]>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -392,6 +402,8 @@ export function applyGmcpPackage(
               level: safeNumber(e.level, 1),
               hp: safeNumber(e.hp),
               maxHp: safeNumber(e.maxHp, 1),
+              mana: safeNumber(e.mana),
+              maxMana: safeNumber(e.maxMana, 1),
               playerClass: typeof e.class === "string" ? e.class : "",
             }))
         : [];
@@ -555,6 +567,147 @@ export function applyGmcpPackage(
 
     case "Dialogue.End": {
       ctx.setDialogue(null);
+      break;
+    }
+
+    case "Char.Combat.Event": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.pushCombatEvent({
+        type: typeof packet.type === "string" ? packet.type : "UNKNOWN",
+        targetName: typeof packet.targetName === "string" ? packet.targetName : null,
+        targetId: typeof packet.targetId === "string" ? packet.targetId : null,
+        abilityId: typeof packet.abilityId === "string" ? packet.abilityId : null,
+        abilityName: typeof packet.abilityName === "string" ? packet.abilityName : null,
+        damage: safeNumber(packet.damage),
+        healing: safeNumber(packet.healing),
+        absorbed: safeNumber(packet.absorbed),
+        shieldRemaining: safeNumber(packet.shieldRemaining),
+        sourceIsPlayer: packet.sourceIsPlayer === true,
+        xpGained: safeNumber(packet.xpGained),
+        goldGained: safeNumber(packet.goldGained),
+      });
+      break;
+    }
+
+    case "Char.Stats": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setCharStats({
+        strength: safeNumber(packet.strength),
+        dexterity: safeNumber(packet.dexterity),
+        constitution: safeNumber(packet.constitution),
+        intelligence: safeNumber(packet.intelligence),
+        wisdom: safeNumber(packet.wisdom),
+        charisma: safeNumber(packet.charisma),
+        effectiveStrength: safeNumber(packet.effectiveStrength),
+        effectiveDexterity: safeNumber(packet.effectiveDexterity),
+        effectiveConstitution: safeNumber(packet.effectiveConstitution),
+        effectiveIntelligence: safeNumber(packet.effectiveIntelligence),
+        effectiveWisdom: safeNumber(packet.effectiveWisdom),
+        effectiveCharisma: safeNumber(packet.effectiveCharisma),
+        baseDamageMin: safeNumber(packet.baseDamageMin),
+        baseDamageMax: safeNumber(packet.baseDamageMax),
+        armor: safeNumber(packet.armor),
+        dodgePercent: safeNumber(packet.dodgePercent),
+      });
+      break;
+    }
+
+    case "Quest.List": {
+      if (!Array.isArray(data)) {
+        ctx.setQuests([]);
+        break;
+      }
+      ctx.setQuests(
+        data
+          .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
+          .map((entry) => ({
+            id: typeof entry.id === "string" ? entry.id : "",
+            name: typeof entry.name === "string" ? entry.name : "Unknown Quest",
+            description: typeof entry.description === "string" ? entry.description : "",
+            objectives: Array.isArray(entry.objectives)
+              ? entry.objectives
+                  .filter((o): o is Record<string, unknown> => typeof o === "object" && o !== null)
+                  .map((o) => ({
+                    description: typeof o.description === "string" ? o.description : "",
+                    current: safeNumber(o.current),
+                    required: safeNumber(o.required, 1),
+                  }))
+              : [],
+          })),
+      );
+      break;
+    }
+
+    case "Quest.Update": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const questId = typeof packet.questId === "string" ? packet.questId : null;
+      const objIndex = typeof packet.objectiveIndex === "number" ? packet.objectiveIndex : -1;
+      if (!questId || objIndex < 0) break;
+      ctx.setQuests((prev) =>
+        prev.map((q) => {
+          if (q.id !== questId) return q;
+          const objectives = q.objectives.map((o, i) =>
+            i === objIndex
+              ? { ...o, current: safeNumber(packet.current, o.current), required: safeNumber(packet.required, o.required) }
+              : o,
+          );
+          return { ...q, objectives };
+        }),
+      );
+      break;
+    }
+
+    case "Quest.Complete": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const questId = typeof packet.questId === "string" ? packet.questId : null;
+      if (!questId) break;
+      ctx.setQuests((prev) => prev.filter((q) => q.id !== questId));
+      break;
+    }
+
+    case "Char.Cooldown": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const abilityId = typeof packet.abilityId === "string" ? packet.abilityId : null;
+      const cooldownMs = safeNumber(packet.cooldownMs);
+      if (!abilityId || cooldownMs <= 0) break;
+      const now = Date.now();
+      ctx.setSkills((prev) =>
+        prev.map((s) =>
+          s.id === abilityId
+            ? { ...s, cooldownRemainingMs: cooldownMs, receivedAt: now }
+            : s,
+        ),
+      );
+      break;
+    }
+
+    case "Char.Gain": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.pushGainEvent({
+        type: typeof packet.type === "string" ? packet.type : "unknown",
+        amount: safeNumber(packet.amount),
+        source: typeof packet.source === "string" ? packet.source : null,
+      });
+      break;
+    }
+
+    case "Room.MobInfo": {
+      if (!Array.isArray(data)) {
+        ctx.setMobInfo([]);
+        break;
+      }
+      ctx.setMobInfo(
+        data
+          .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
+          .map((entry) => ({
+            id: typeof entry.id === "string" ? entry.id : "",
+            level: safeNumber(entry.level, 1),
+            tier: typeof entry.tier === "string" ? entry.tier : "standard",
+            questGiver: entry.questGiver === true,
+            shopKeeper: entry.shopKeeper === true,
+            dialogue: entry.dialogue === true,
+          })),
+      );
       break;
     }
 

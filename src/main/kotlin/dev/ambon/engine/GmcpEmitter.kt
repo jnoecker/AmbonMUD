@@ -3,6 +3,7 @@ package dev.ambon.engine
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
@@ -12,6 +13,7 @@ import dev.ambon.domain.world.Room
 import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.abilities.AbilityId
 import dev.ambon.engine.abilities.AbilitySystem
+import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.ActiveEffectSnapshot
@@ -286,6 +288,8 @@ class GmcpEmitter(
                             level = p.level,
                             hp = p.hp,
                             maxHp = p.maxHp,
+                            mana = p.mana,
+                            maxMana = p.maxMana,
                             playerClass = p.playerClass,
                         )
                     },
@@ -392,6 +396,241 @@ class GmcpEmitter(
 
     suspend fun sendFriendOffline(sessionId: SessionId, friendName: String) {
         emit(sessionId, "Friends.Offline", FriendOfflinePayload(name = friendName))
+    }
+
+    // ---------- combat events ----------
+
+    suspend fun sendCombatEvent(
+        sessionId: SessionId,
+        event: CombatEvent,
+    ) {
+        val payload = when (event) {
+            is CombatEvent.MeleeHit -> CombatEventPayload(
+                type = "meleeHit",
+                targetName = event.targetName,
+                targetId = event.targetId,
+                damage = event.damage,
+                sourceIsPlayer = event.sourceIsPlayer,
+            )
+            is CombatEvent.AbilityHit -> CombatEventPayload(
+                type = "abilityHit",
+                abilityId = event.abilityId,
+                abilityName = event.abilityName,
+                targetName = event.targetName,
+                targetId = event.targetId,
+                damage = event.damage,
+                sourceIsPlayer = event.sourceIsPlayer,
+            )
+            is CombatEvent.Heal -> CombatEventPayload(
+                type = "heal",
+                abilityName = event.abilityName,
+                targetName = event.targetName,
+                amount = event.amount,
+                sourceIsPlayer = event.sourceIsPlayer,
+            )
+            is CombatEvent.Dodge -> CombatEventPayload(
+                type = "dodge",
+                targetName = event.targetName,
+                targetId = event.targetId,
+                sourceIsPlayer = event.sourceIsPlayer,
+            )
+            is CombatEvent.DotTick -> CombatEventPayload(
+                type = "dotTick",
+                effectName = event.effectName,
+                targetName = event.targetName,
+                targetId = event.targetId,
+                damage = event.damage,
+            )
+            is CombatEvent.HotTick -> CombatEventPayload(
+                type = "hotTick",
+                effectName = event.effectName,
+                targetName = event.targetName,
+                amount = event.amount,
+            )
+            is CombatEvent.Kill -> CombatEventPayload(
+                type = "kill",
+                targetName = event.targetName,
+                targetId = event.targetId,
+                xpGained = event.xpGained,
+                goldGained = event.goldGained,
+            )
+            is CombatEvent.Death -> CombatEventPayload(
+                type = "death",
+                killerName = event.killerName,
+                killerIsPlayer = event.killerIsPlayer,
+            )
+            is CombatEvent.ShieldAbsorb -> CombatEventPayload(
+                type = "shieldAbsorb",
+                attackerName = event.attackerName,
+                absorbed = event.absorbed,
+                remaining = event.remaining,
+            )
+        }
+        emit(sessionId, "Char.Combat.Event", payload, supportCheck = "Char.Combat.Event")
+    }
+
+    // ---------- character stats ----------
+
+    suspend fun sendCharStats(
+        sessionId: SessionId,
+        player: PlayerState,
+        effectiveStats: StatBlock,
+        baseDamageMin: Int,
+        baseDamageMax: Int,
+        armor: Int,
+        dodgePercent: Int,
+    ) {
+        emit(
+            sessionId,
+            "Char.Stats",
+            CharStatsPayload(
+                strength = player.strength,
+                dexterity = player.dexterity,
+                constitution = player.constitution,
+                intelligence = player.intelligence,
+                wisdom = player.wisdom,
+                charisma = player.charisma,
+                effectiveStrength = effectiveStats.str,
+                effectiveDexterity = effectiveStats.dex,
+                effectiveConstitution = effectiveStats.con,
+                effectiveIntelligence = effectiveStats.int,
+                effectiveWisdom = effectiveStats.wis,
+                effectiveCharisma = effectiveStats.cha,
+                baseDamageMin = baseDamageMin,
+                baseDamageMax = baseDamageMax,
+                armor = armor,
+                dodgePercent = dodgePercent,
+            ),
+        )
+    }
+
+    // ---------- quests ----------
+
+    suspend fun sendQuestList(
+        sessionId: SessionId,
+        quests: List<QuestListEntry>,
+    ) {
+        val payload = quests.map { q ->
+            QuestListPayload(
+                id = q.id,
+                name = q.name,
+                description = q.description,
+                objectives = q.objectives.map { o ->
+                    QuestObjectivePayload(description = o.description, current = o.current, required = o.required)
+                },
+            )
+        }
+        emit(sessionId, "Quest.List", payload)
+    }
+
+    suspend fun sendQuestUpdate(
+        sessionId: SessionId,
+        questId: String,
+        objectiveIndex: Int,
+        current: Int,
+        required: Int,
+    ) {
+        emit(
+            sessionId,
+            "Quest.Update",
+            QuestUpdatePayload(questId = questId, objectiveIndex = objectiveIndex, current = current, required = required),
+            supportCheck = "Quest",
+        )
+    }
+
+    suspend fun sendQuestComplete(
+        sessionId: SessionId,
+        questId: String,
+        questName: String,
+    ) {
+        emit(
+            sessionId,
+            "Quest.Complete",
+            QuestCompletePayload(questId = questId, questName = questName),
+            supportCheck = "Quest",
+        )
+    }
+
+    // ---------- cooldowns ----------
+
+    suspend fun sendCharCooldown(
+        sessionId: SessionId,
+        abilityId: String,
+        cooldownMs: Long,
+    ) {
+        emit(
+            sessionId,
+            "Char.Cooldown",
+            CharCooldownPayload(abilityId = abilityId, cooldownMs = cooldownMs),
+        )
+    }
+
+    // ---------- gain events ----------
+
+    suspend fun sendCharGain(
+        sessionId: SessionId,
+        type: String,
+        amount: Long,
+        source: String? = null,
+        newLevel: Int? = null,
+        hpGained: Int? = null,
+        manaGained: Int? = null,
+    ) {
+        emit(
+            sessionId,
+            "Char.Gain",
+            CharGainPayload(
+                type = type,
+                amount = amount,
+                source = source,
+                newLevel = newLevel,
+                hpGained = hpGained,
+                manaGained = manaGained,
+            ),
+        )
+    }
+
+    // ---------- room mob info ----------
+
+    suspend fun sendRoomMobInfo(
+        sessionId: SessionId,
+        mobs: List<MobInfoEntry>,
+    ) {
+        emit(
+            sessionId,
+            "Room.MobInfo",
+            mobs.map { m ->
+                RoomMobInfoPayload(
+                    id = m.id,
+                    level = m.level,
+                    tier = m.tier,
+                    questGiver = m.questGiver,
+                    shopKeeper = m.shopKeeper,
+                    dialogue = m.dialogue,
+                )
+            },
+        )
+    }
+
+    suspend fun broadcastRoomMobInfo(roomId: RoomId, mobInfos: List<MobInfoEntry>, players: PlayerRegistry) {
+        for (p in players.playersInRoom(roomId)) sendRoomMobInfo(p.sessionId, mobInfos)
+    }
+
+    /**
+     * Builds [MobInfoEntry] list from raw [MobState] data and an optional set of shop mob IDs.
+     */
+    fun buildMobInfoEntries(
+        mobs: List<MobState>,
+        shopMobIds: Set<String> = emptySet(),
+    ): List<MobInfoEntry> = mobs.map { mob ->
+        MobInfoEntry(
+            id = mob.id.value,
+            level = estimateMobLevel(mob.xpReward),
+            tier = "standard",
+            questGiver = mob.questIds.isNotEmpty(),
+            shopKeeper = mob.id.value in shopMobIds,
+            dialogue = mob.dialogue != null,
+        )
     }
 
     // ---------- dialogue ----------
@@ -627,6 +866,8 @@ class GmcpEmitter(
         val level: Int,
         val hp: Int,
         val maxHp: Int,
+        val mana: Int,
+        val maxMana: Int,
         @get:JsonProperty("class") val playerClass: String,
     )
 
@@ -706,9 +947,142 @@ class GmcpEmitter(
         val reason: String,
     )
 
+    // ---------- combat event payload ----------
+
+    private data class CombatEventPayload(
+        val type: String,
+        val targetName: String? = null,
+        val targetId: String? = null,
+        val damage: Int? = null,
+        val amount: Int? = null,
+        val sourceIsPlayer: Boolean? = null,
+        val abilityId: String? = null,
+        val abilityName: String? = null,
+        val effectName: String? = null,
+        val xpGained: Long? = null,
+        val goldGained: Long? = null,
+        val killerName: String? = null,
+        val killerIsPlayer: Boolean? = null,
+        val attackerName: String? = null,
+        val absorbed: Int? = null,
+        val remaining: Int? = null,
+    )
+
+    // ---------- stats payload ----------
+
+    private data class CharStatsPayload(
+        val strength: Int,
+        val dexterity: Int,
+        val constitution: Int,
+        val intelligence: Int,
+        val wisdom: Int,
+        val charisma: Int,
+        val effectiveStrength: Int,
+        val effectiveDexterity: Int,
+        val effectiveConstitution: Int,
+        val effectiveIntelligence: Int,
+        val effectiveWisdom: Int,
+        val effectiveCharisma: Int,
+        val baseDamageMin: Int,
+        val baseDamageMax: Int,
+        val armor: Int,
+        val dodgePercent: Int,
+    )
+
+    // ---------- quest payloads ----------
+
+    private data class QuestListPayload(
+        val id: String,
+        val name: String,
+        val description: String,
+        val objectives: List<QuestObjectivePayload>,
+    )
+
+    private data class QuestObjectivePayload(
+        val description: String,
+        val current: Int,
+        val required: Int,
+    )
+
+    private data class QuestUpdatePayload(
+        val questId: String,
+        val objectiveIndex: Int,
+        val current: Int,
+        val required: Int,
+    )
+
+    private data class QuestCompletePayload(
+        val questId: String,
+        val questName: String,
+    )
+
+    // ---------- cooldown payload ----------
+
+    private data class CharCooldownPayload(
+        val abilityId: String,
+        val cooldownMs: Long,
+    )
+
+    // ---------- gain payload ----------
+
+    private data class CharGainPayload(
+        val type: String,
+        val amount: Long,
+        val source: String? = null,
+        val newLevel: Int? = null,
+        val hpGained: Int? = null,
+        val manaGained: Int? = null,
+    )
+
+    // ---------- room mob info payload ----------
+
+    private data class RoomMobInfoPayload(
+        val id: String,
+        val level: Int,
+        val tier: String,
+        val questGiver: Boolean,
+        val shopKeeper: Boolean,
+        val dialogue: Boolean,
+    )
+
     private companion object {
         const val CHAR_STATUS_VARS_JSON =
             """{"hp":"HP","maxHp":"Max HP","mana":"Mana","maxMana":"Max Mana","level":"Level","xp":"XP"}"""
         const val CORE_PING_JSON = "{}"
+
+        /** Rough mob level estimate based on XP reward. */
+        fun estimateMobLevel(xpReward: Long): Int = when {
+            xpReward <= 0L -> 1
+            xpReward < 50L -> 1
+            xpReward < 100L -> 2
+            xpReward < 200L -> 3
+            xpReward < 400L -> 5
+            xpReward < 800L -> 7
+            else -> ((xpReward / 100) + 5).toInt().coerceIn(1, 50)
+        }
     }
 }
+
+// ---------- public data entry types for new GMCP methods ----------
+
+data class QuestListEntry(
+    val id: String,
+    val name: String,
+    val description: String,
+    val objectives: List<QuestObjectiveEntry>,
+)
+
+data class QuestObjectiveEntry(
+    val description: String,
+    val current: Int,
+    val required: Int,
+)
+
+data class MobInfoEntry(
+    val id: String,
+    val level: Int,
+    val tier: String,
+    val questGiver: Boolean,
+    val shopKeeper: Boolean,
+    val dialogue: Boolean,
+)

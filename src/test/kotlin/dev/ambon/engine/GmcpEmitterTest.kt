@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.DamageRange
+import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -16,6 +17,7 @@ import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.abilities.AbilityEffect
 import dev.ambon.engine.abilities.AbilityId
 import dev.ambon.engine.abilities.TargetType
+import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.TEST_SESSION_ID
 import dev.ambon.test.drainAll
@@ -904,5 +906,248 @@ class GmcpEmitterTest {
             val e = combatEmitter(target)
             e.sendCharCombat(sid)
             assertTrue(drainGmcp().isEmpty())
+        }
+
+    // ── Char.Combat.Event ──
+
+    @Test
+    fun `sendCombatEvent emits meleeHit JSON`() =
+        runTest {
+            val e = emitter("Char.Combat.Event")
+            e.sendCombatEvent(sid, CombatEvent.MeleeHit("Goblin", "mob-1", 12, sourceIsPlayer = true))
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertEquals("Char.Combat.Event", events[0].gmcpPackage)
+            assertTrue(events[0].jsonData.contains("\"type\":\"meleeHit\""))
+            assertTrue(events[0].jsonData.contains("\"targetName\":\"Goblin\""))
+            assertTrue(events[0].jsonData.contains("\"damage\":12"))
+            assertTrue(events[0].jsonData.contains("\"sourceIsPlayer\":true"))
+        }
+
+    @Test
+    fun `sendCombatEvent emits kill JSON`() =
+        runTest {
+            val e = emitter("Char.Combat.Event")
+            e.sendCombatEvent(sid, CombatEvent.Kill("Goblin", "mob-1", xpGained = 100L, goldGained = 25L))
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"type\":\"kill\""))
+            assertTrue(events[0].jsonData.contains("\"xpGained\":100"))
+            assertTrue(events[0].jsonData.contains("\"goldGained\":25"))
+        }
+
+    @Test
+    fun `sendCombatEvent does nothing when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendCombatEvent(sid, CombatEvent.MeleeHit("Goblin", "mob-1", 10, sourceIsPlayer = true))
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    @Test
+    fun `sendCombatEvent matches prefix Char-Combat-Event`() =
+        runTest {
+            val e = emitter("Char.Combat")
+            e.sendCombatEvent(sid, CombatEvent.Dodge("Goblin", "mob-1", sourceIsPlayer = true))
+            val events = drainGmcp()
+            // "Char.Combat.Event" starts with "Char.Combat." so it should match
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"type\":\"dodge\""))
+        }
+
+    // ── Char.Stats ──
+
+    @Test
+    fun `sendCharStats emits correct JSON`() =
+        runTest {
+            val e = emitter("Char.Stats")
+            val p = player()
+            e.sendCharStats(sid, p, StatBlock(str = 16, dex = 14), baseDamageMin = 3, baseDamageMax = 8, armor = 5, dodgePercent = 12)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertEquals("Char.Stats", events[0].gmcpPackage)
+            assertTrue(events[0].jsonData.contains("\"effectiveStrength\":16"))
+            assertTrue(events[0].jsonData.contains("\"effectiveDexterity\":14"))
+            assertTrue(events[0].jsonData.contains("\"baseDamageMin\":3"))
+            assertTrue(events[0].jsonData.contains("\"armor\":5"))
+            assertTrue(events[0].jsonData.contains("\"dodgePercent\":12"))
+        }
+
+    @Test
+    fun `sendCharStats does nothing when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendCharStats(sid, player(), StatBlock.ZERO, 0, 0, 0, 0)
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    // ── Quest ──
+
+    @Test
+    fun `sendQuestList emits correct JSON`() =
+        runTest {
+            val e = emitter("Quest")
+            e.sendQuestList(
+                sid,
+                listOf(
+                    QuestListEntry(
+                        id = "slay_goblins",
+                        name = "Goblin Menace",
+                        description = "Kill goblins.",
+                        objectives = listOf(QuestObjectiveEntry("Kill 5 goblins", 3, 5)),
+                    ),
+                ),
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertEquals("Quest.List", events[0].gmcpPackage)
+            assertTrue(events[0].jsonData.contains("\"id\":\"slay_goblins\""))
+            assertTrue(events[0].jsonData.contains("\"name\":\"Goblin Menace\""))
+            assertTrue(events[0].jsonData.contains("\"current\":3"))
+            assertTrue(events[0].jsonData.contains("\"required\":5"))
+        }
+
+    @Test
+    fun `sendQuestUpdate emits correct JSON`() =
+        runTest {
+            val e = emitter("Quest")
+            e.sendQuestUpdate(sid, "slay_goblins", 0, 4, 5)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertEquals("Quest.Update", events[0].gmcpPackage)
+            assertTrue(events[0].jsonData.contains("\"questId\":\"slay_goblins\""))
+            assertTrue(events[0].jsonData.contains("\"objectiveIndex\":0"))
+            assertTrue(events[0].jsonData.contains("\"current\":4"))
+        }
+
+    @Test
+    fun `sendQuestComplete emits correct JSON`() =
+        runTest {
+            val e = emitter("Quest")
+            e.sendQuestComplete(sid, "slay_goblins", "Goblin Menace")
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertEquals("Quest.Complete", events[0].gmcpPackage)
+            assertTrue(events[0].jsonData.contains("\"questId\":\"slay_goblins\""))
+            assertTrue(events[0].jsonData.contains("\"questName\":\"Goblin Menace\""))
+        }
+
+    @Test
+    fun `quest GMCP does nothing when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendQuestList(sid, emptyList())
+            e.sendQuestUpdate(sid, "q", 0, 1, 5)
+            e.sendQuestComplete(sid, "q", "Q")
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    // ── Char.Cooldown ──
+
+    @Test
+    fun `sendCharCooldown emits correct JSON`() =
+        runTest {
+            val e = emitter("Char.Cooldown")
+            e.sendCharCooldown(sid, "fireball", 3000L)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertEquals("Char.Cooldown", events[0].gmcpPackage)
+            assertTrue(events[0].jsonData.contains("\"abilityId\":\"fireball\""))
+            assertTrue(events[0].jsonData.contains("\"cooldownMs\":3000"))
+        }
+
+    @Test
+    fun `sendCharCooldown does nothing when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendCharCooldown(sid, "fireball", 3000L)
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    // ── Char.Gain ──
+
+    @Test
+    fun `sendCharGain emits xp gain JSON`() =
+        runTest {
+            val e = emitter("Char.Gain")
+            e.sendCharGain(sid, "xp", 250L, "Goblin")
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertEquals("Char.Gain", events[0].gmcpPackage)
+            assertTrue(events[0].jsonData.contains("\"type\":\"xp\""))
+            assertTrue(events[0].jsonData.contains("\"amount\":250"))
+            assertTrue(events[0].jsonData.contains("\"source\":\"Goblin\""))
+        }
+
+    @Test
+    fun `sendCharGain emits levelUp JSON`() =
+        runTest {
+            val e = emitter("Char.Gain")
+            e.sendCharGain(sid, "levelUp", 0L, newLevel = 6, hpGained = 8, manaGained = 4)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"type\":\"levelUp\""))
+            assertTrue(events[0].jsonData.contains("\"newLevel\":6"))
+            assertTrue(events[0].jsonData.contains("\"hpGained\":8"))
+            assertTrue(events[0].jsonData.contains("\"manaGained\":4"))
+        }
+
+    @Test
+    fun `sendCharGain does nothing when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendCharGain(sid, "xp", 100L, "Goblin")
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    // ── Room.MobInfo ──
+
+    @Test
+    fun `sendRoomMobInfo emits correct JSON`() =
+        runTest {
+            val e = emitter("Room.MobInfo")
+            e.sendRoomMobInfo(
+                sid,
+                listOf(
+                    MobInfoEntry(
+                        id = "forest:goblin_1",
+                        level = 3,
+                        tier = "standard",
+                        questGiver = true,
+                        shopKeeper = false,
+                        dialogue = true,
+                    ),
+                ),
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertEquals("Room.MobInfo", events[0].gmcpPackage)
+            assertTrue(events[0].jsonData.contains("\"id\":\"forest:goblin_1\""))
+            assertTrue(events[0].jsonData.contains("\"level\":3"))
+            assertTrue(events[0].jsonData.contains("\"questGiver\":true"))
+            assertTrue(events[0].jsonData.contains("\"shopKeeper\":false"))
+            assertTrue(events[0].jsonData.contains("\"dialogue\":true"))
+        }
+
+    @Test
+    fun `sendRoomMobInfo does nothing when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendRoomMobInfo(sid, emptyList())
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    // ── Group.Info mana ──
+
+    @Test
+    fun `sendGroupInfo includes mana fields`() =
+        runTest {
+            val e = emitter("Group.Info")
+            val members = listOf(player(name = "Alice", mana = 30, maxMana = 60))
+            e.sendGroupInfo(sid, "Alice", members)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"mana\":30"))
+            assertTrue(events[0].jsonData.contains("\"maxMana\":60"))
         }
 }
