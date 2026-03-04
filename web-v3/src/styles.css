@@ -1099,6 +1099,50 @@ body {
   color: var(--text-disabled);
 }
 
+.guild-tab-layout,
+.group-tab-layout {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  height: 100%;
+  gap: 0;
+}
+
+.guild-tab-info,
+.group-tab-members {
+  overflow-y: auto;
+  max-height: 160px;
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--line-faint);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.guild-compact-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.guild-compact-rank {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+
+.guild-roster-scroll {
+  overflow-y: auto;
+  max-height: 90px;
+}
+
+.embedded-chat-feed {
+  overflow-y: auto;
+  padding: var(--space-3);
+  min-height: 0;
+}
+
 .friends-panel-content {
   display: flex;
   flex-direction: column;

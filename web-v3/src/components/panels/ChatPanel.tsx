@@ -9,7 +9,7 @@ interface ChatPanelProps {
   canChat: boolean;
   playerName: string;
   activeChannel: ChatChannel;
-  messages: ChatMessage[];
+  chatByChannel: Record<ChatChannel, ChatMessage[]>;
   whoPlayers: string[];
   groupInfo: GroupInfo;
   guildInfo: GuildInfo;
@@ -58,7 +58,7 @@ export function ChatPanel({
   canChat,
   playerName,
   activeChannel,
-  messages,
+  chatByChannel,
   whoPlayers,
   groupInfo,
   guildInfo,
@@ -70,16 +70,36 @@ export function ChatPanel({
   onSendMessage,
 }: ChatPanelProps) {
   const feedRef = useRef<HTMLDivElement | null>(null);
+  const guildFeedRef = useRef<HTMLDivElement | null>(null);
+  const groupFeedRef = useRef<HTMLDivElement | null>(null);
   const messageInputRef = useRef<HTMLInputElement | null>(null);
   const [draftByChannel, setDraftByChannel] = useState<Record<ChatChannel, string>>(createEmptyDrafts);
   const [targets, setTargets] = useState<Record<"tell", string>>(createEmptyTargets);
+  const [guildDraft, setGuildDraft] = useState("");
+  const [groupDraft, setGroupDraft] = useState("");
   const [activeSocialTab, setActiveSocialTab] = useState<SocialTab>("chat");
+
+  const messages = chatByChannel[activeChannel];
+  const gchatMessages = chatByChannel.gchat;
+  const gtellMessages = chatByChannel.gtell;
 
   useEffect(() => {
     const feed = feedRef.current;
     if (!feed) return;
     feed.scrollTop = feed.scrollHeight;
   }, [activeSocialTab, activeChannel, messages.length, whoPlayers.length]);
+
+  useEffect(() => {
+    const feed = guildFeedRef.current;
+    if (!feed) return;
+    feed.scrollTop = feed.scrollHeight;
+  }, [activeSocialTab, gchatMessages.length]);
+
+  useEffect(() => {
+    const feed = groupFeedRef.current;
+    if (!feed) return;
+    feed.scrollTop = feed.scrollHeight;
+  }, [activeSocialTab, gtellMessages.length]);
 
   const activeMeta = useMemo(
     () => CHAT_CHANNELS.find((channel) => channel.id === activeChannel) ?? CHAT_CHANNELS[0],
@@ -316,99 +336,209 @@ export function ChatPanel({
         )}
 
         {activeSocialTab === "guild" && (
-          <>
-            <div aria-hidden="true" />
-            <div ref={feedRef} className="chat-feed" role="region" aria-label="Guild info">
-              <section className="chat-feed-panel chat-feed-panel-flip" aria-label="Guild subwindow">
-                {!canChat ? (
+          !canChat ? (
+            <>
+              <div aria-hidden="true" />
+              <div className="chat-feed" role="region" aria-label="Guild info">
+                <section className="chat-feed-panel" aria-label="Guild subwindow">
                   <p className="empty-note">
                     {connected ? "Log in through the terminal to unlock social features." : "Reconnect to load social data."}
                   </p>
-                ) : !inGuild ? (
+                </section>
+              </div>
+              <div aria-hidden="true" />
+            </>
+          ) : !inGuild ? (
+            <>
+              <div aria-hidden="true" />
+              <div className="chat-feed" role="region" aria-label="Guild info">
+                <section className="chat-feed-panel" aria-label="Guild subwindow">
                   <p className="empty-note">You are not in a guild. Use `guild create &lt;name&gt; &lt;tag&gt;` to found one.</p>
-                ) : (
-                  <div className="guild-panel-content">
-                    <div className="guild-info-header">
-                      <span className="guild-name">{guildInfo.name}</span>
-                      {guildInfo.tag && <span className="guild-tag">[{guildInfo.tag}]</span>}
-                    </div>
-                    {guildInfo.rank && (
-                      <div className="guild-rank">Your rank: {rankLabel(guildInfo.rank)}</div>
-                    )}
-                    {guildInfo.motd && (
-                      <div className="guild-motd">
-                        <span className="guild-motd-label">MOTD</span>
-                        <p className="guild-motd-text">{guildInfo.motd}</p>
-                      </div>
-                    )}
-                    <div className="guild-roster-header">
-                      Roster ({guildInfo.memberCount} / {guildInfo.maxSize})
-                    </div>
-                    {sortedGuildMembers.length === 0 ? (
-                      <p className="empty-note">No roster data yet.</p>
-                    ) : (
-                      <ul className="guild-member-list">
-                        {sortedGuildMembers.map((member) => (
-                          <li key={member.name} className={`guild-member-item ${member.online ? "" : "guild-member-offline"}`}>
-                            <span className="guild-member-name">{member.name}</span>
-                            <span className="guild-member-details">
-                              <span className={`guild-member-status ${member.online ? "guild-member-status-online" : "guild-member-status-offline"}`} />
-                              <span className="guild-member-rank">{rankLabel(member.rank)}</span>
-                              {member.level !== null && <span className="guild-member-level">Lv {member.level}</span>}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                </section>
+              </div>
+              <div aria-hidden="true" />
+            </>
+          ) : (
+            <div className="guild-tab-layout">
+              <div className="guild-tab-info">
+                <div className="guild-compact-header">
+                  <span className="guild-name">{guildInfo.name}</span>
+                  {guildInfo.tag && <span className="guild-tag">[{guildInfo.tag}]</span>}
+                  {guildInfo.rank && <span className="guild-compact-rank">{rankLabel(guildInfo.rank)}</span>}
+                </div>
+                {guildInfo.motd && (
+                  <div className="guild-motd">
+                    <span className="guild-motd-label">MOTD</span>
+                    <p className="guild-motd-text">{guildInfo.motd}</p>
                   </div>
                 )}
-              </section>
-            </div>
-            <div aria-hidden="true" />
-          </>
-        )}
+                <div className="guild-roster-header">
+                  Roster ({guildInfo.memberCount} / {guildInfo.maxSize})
+                </div>
+                <div className="guild-roster-scroll">
+                  {sortedGuildMembers.length === 0 ? (
+                    <p className="empty-note">No roster data yet.</p>
+                  ) : (
+                    <ul className="guild-member-list">
+                      {sortedGuildMembers.map((member) => (
+                        <li key={member.name} className={`guild-member-item ${member.online ? "" : "guild-member-offline"}`}>
+                          <span className="guild-member-name">{member.name}</span>
+                          <span className="guild-member-details">
+                            <span className={`guild-member-status ${member.online ? "guild-member-status-online" : "guild-member-status-offline"}`} />
+                            <span className="guild-member-rank">{rankLabel(member.rank)}</span>
+                            {member.level !== null && <span className="guild-member-level">Lv {member.level}</span>}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
 
-        {activeSocialTab === "group" && (
-          <>
-            <div aria-hidden="true" />
-            <div ref={feedRef} className="chat-feed" role="region" aria-label="Group members">
-              <section className="chat-feed-panel chat-feed-panel-flip" aria-label="Group subwindow">
-                {!canChat ? (
-                  <p className="empty-note">
-                    {connected ? "Log in through the terminal to unlock social features." : "Reconnect to load social data."}
-                  </p>
-                ) : !inGroup ? (
-                  <p className="empty-note">You are not in a group. Use `group invite &lt;name&gt;` to start one.</p>
+              <div ref={guildFeedRef} className="embedded-chat-feed" role="log" aria-live="polite" aria-label="Guild chat messages">
+                {gchatMessages.length === 0 ? (
+                  <p className="empty-note">No guild messages yet.</p>
                 ) : (
-                  <ul className="group-member-list">
-                    {groupInfo.members.map((member) => {
-                      const isLeader = member.name === groupInfo.leader;
-                      const hpPct = Math.min(100, (member.hp / Math.max(1, member.maxHp)) * 100);
+                  <ul className="chat-message-list">
+                    {gchatMessages.map((entry) => {
+                      const isSelf = entry.sender.localeCompare(playerName, undefined, { sensitivity: "accent" }) === 0;
+                      const time = new Date(entry.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
                       return (
-                        <li key={member.name} className="group-member-item">
-                          <div className="group-member-header">
-                            <span className="group-member-name">
-                              {isLeader && <span className="group-leader-badge" title="Leader">&#9733;</span>}
-                              {member.name}
-                            </span>
-                            <span className="group-member-class">{member.playerClass} {member.level}</span>
+                        <li key={entry.id} className={`chat-message-item ${isSelf ? "chat-message-item-self" : ""}`}>
+                          <div className="chat-message-meta">
+                            <span className="chat-message-sender">{isSelf ? "You" : entry.sender}</span>
+                            <span className="chat-message-time">{time}</span>
                           </div>
-                          <div className="meter-track group-member-hp-track">
-                            <span
-                              className="meter-fill meter-fill-hp"
-                              style={{ width: `${hpPct}%` }}
-                            />
-                          </div>
-                          <div className="group-member-hp-text">{member.hp} / {member.maxHp}</div>
+                          <p className="chat-message-body">{entry.message}</p>
                         </li>
                       );
                     })}
                   </ul>
                 )}
-              </section>
+              </div>
+
+              <form
+                className="chat-form"
+                onSubmit={(event: FormEvent<HTMLFormElement>) => {
+                  event.preventDefault();
+                  const sent = onSendMessage("gchat", guildDraft, null);
+                  if (sent) setGuildDraft("");
+                }}
+              >
+                <input
+                  className="chat-input"
+                  type="text"
+                  value={guildDraft}
+                  onChange={(event) => setGuildDraft(event.target.value)}
+                  placeholder="Message your guild"
+                  aria-label="Guild chat message"
+                  autoComplete="off"
+                  spellCheck={false}
+                  disabled={!canChat}
+                />
+                <button type="submit" className="soft-button" disabled={!canChat}>Send</button>
+              </form>
             </div>
-            <div aria-hidden="true" />
-          </>
+          )
+        )}
+
+        {activeSocialTab === "group" && (
+          !canChat ? (
+            <>
+              <div aria-hidden="true" />
+              <div className="chat-feed" role="region" aria-label="Group members">
+                <section className="chat-feed-panel" aria-label="Group subwindow">
+                  <p className="empty-note">
+                    {connected ? "Log in through the terminal to unlock social features." : "Reconnect to load social data."}
+                  </p>
+                </section>
+              </div>
+              <div aria-hidden="true" />
+            </>
+          ) : !inGroup ? (
+            <>
+              <div aria-hidden="true" />
+              <div className="chat-feed" role="region" aria-label="Group members">
+                <section className="chat-feed-panel" aria-label="Group subwindow">
+                  <p className="empty-note">You are not in a group. Use `group invite &lt;name&gt;` to start one.</p>
+                </section>
+              </div>
+              <div aria-hidden="true" />
+            </>
+          ) : (
+            <div className="group-tab-layout">
+              <div className="group-tab-members">
+                <ul className="group-member-list">
+                  {groupInfo.members.map((member) => {
+                    const isLeader = member.name === groupInfo.leader;
+                    const hpPct = Math.min(100, (member.hp / Math.max(1, member.maxHp)) * 100);
+                    return (
+                      <li key={member.name} className="group-member-item">
+                        <div className="group-member-header">
+                          <span className="group-member-name">
+                            {isLeader && <span className="group-leader-badge" title="Leader">&#9733;</span>}
+                            {member.name}
+                          </span>
+                          <span className="group-member-class">{member.playerClass} {member.level}</span>
+                        </div>
+                        <div className="meter-track group-member-hp-track">
+                          <span
+                            className="meter-fill meter-fill-hp"
+                            style={{ width: `${hpPct}%` }}
+                          />
+                        </div>
+                        <div className="group-member-hp-text">{member.hp} / {member.maxHp}</div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <div ref={groupFeedRef} className="embedded-chat-feed" role="log" aria-live="polite" aria-label="Group chat messages">
+                {gtellMessages.length === 0 ? (
+                  <p className="empty-note">No group messages yet.</p>
+                ) : (
+                  <ul className="chat-message-list">
+                    {gtellMessages.map((entry) => {
+                      const isSelf = entry.sender.localeCompare(playerName, undefined, { sensitivity: "accent" }) === 0;
+                      const time = new Date(entry.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                      return (
+                        <li key={entry.id} className={`chat-message-item ${isSelf ? "chat-message-item-self" : ""}`}>
+                          <div className="chat-message-meta">
+                            <span className="chat-message-sender">{isSelf ? "You" : entry.sender}</span>
+                            <span className="chat-message-time">{time}</span>
+                          </div>
+                          <p className="chat-message-body">{entry.message}</p>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
+              <form
+                className="chat-form"
+                onSubmit={(event: FormEvent<HTMLFormElement>) => {
+                  event.preventDefault();
+                  const sent = onSendMessage("gtell", groupDraft, null);
+                  if (sent) setGroupDraft("");
+                }}
+              >
+                <input
+                  className="chat-input"
+                  type="text"
+                  value={groupDraft}
+                  onChange={(event) => setGroupDraft(event.target.value)}
+                  placeholder="Message your group"
+                  aria-label="Group chat message"
+                  autoComplete="off"
+                  spellCheck={false}
+                  disabled={!canChat}
+                />
+                <button type="submit" className="soft-button" disabled={!canChat}>Send</button>
+              </form>
+            </div>
+          )
         )}
 
 

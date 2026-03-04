@@ -587,7 +587,7 @@ function App() {
           canChat={connected && hasCharacterProfile}
           playerName={character.name}
           activeChannel={activeChatChannel}
-          messages={chatByChannel[activeChatChannel]}
+          chatByChannel={chatByChannel}
           whoPlayers={whoPlayers}
           groupInfo={groupInfo}
           guildInfo={guildInfo}
