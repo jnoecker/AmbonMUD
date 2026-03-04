@@ -113,6 +113,7 @@ export function applyGmcpPackage(
         title: typeof packet.title === "string" && packet.title.length > 0 ? packet.title : "-",
         description: typeof packet.description === "string" ? packet.description : "",
         exits,
+        image: typeof packet.image === "string" ? packet.image : null,
       });
 
       if (id) ctx.updateMap(id, exits);
@@ -128,6 +129,7 @@ export function applyGmcpPackage(
               id: typeof entry.id === "string" ? entry.id : `${Date.now()}-${Math.random()}`,
               name: typeof entry.name === "string" ? entry.name : "Unknown item",
               slot: typeof entry.slot === "string" ? entry.slot : null,
+              image: typeof entry.image === "string" ? entry.image : null,
             }))
         : [];
 
@@ -140,6 +142,7 @@ export function applyGmcpPackage(
             id: typeof item.id === "string" ? item.id : `${slot}-${Date.now()}`,
             name: typeof item.name === "string" ? item.name : "Unknown item",
             slot,
+            image: typeof item.image === "string" ? item.image : null,
           };
         }
       }
@@ -157,6 +160,7 @@ export function applyGmcpPackage(
           id: typeof packet.id === "string" ? packet.id : `${Date.now()}-${Math.random()}`,
           name: typeof packet.name === "string" ? packet.name : "Unknown item",
           slot: typeof packet.slot === "string" ? packet.slot : null,
+          image: typeof packet.image === "string" ? packet.image : null,
         },
       ]);
       break;
@@ -180,6 +184,7 @@ export function applyGmcpPackage(
           .map((entry, index) => ({
             id: typeof entry.id === "string" ? entry.id : `room-item-${index}-${Date.now()}`,
             name: typeof entry.name === "string" ? entry.name : "Unknown item",
+            image: typeof entry.image === "string" ? entry.image : null,
           })),
       );
       break;
@@ -232,6 +237,7 @@ export function applyGmcpPackage(
             name: typeof entry.name === "string" ? entry.name : "Unknown mob",
             hp: safeNumber(entry.hp),
             maxHp: Math.max(1, safeNumber(entry.maxHp, 1)),
+            image: typeof entry.image === "string" ? entry.image : null,
           })),
       );
       break;
@@ -248,6 +254,7 @@ export function applyGmcpPackage(
           name: typeof packet.name === "string" ? packet.name : "Unknown mob",
           hp: safeNumber(packet.hp),
           maxHp: Math.max(1, safeNumber(packet.maxHp, 1)),
+          image: typeof packet.image === "string" ? packet.image : null,
         },
       ]);
       break;
@@ -263,6 +270,7 @@ export function applyGmcpPackage(
             ...mob,
             hp: safeNumber(packet.hp, mob.hp),
             maxHp: Math.max(1, safeNumber(packet.maxHp, mob.maxHp)),
+            image: typeof packet.image === "string" ? packet.image : mob.image,
           };
         }),
       );

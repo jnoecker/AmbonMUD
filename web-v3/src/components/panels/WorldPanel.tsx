@@ -91,6 +91,9 @@ export function WorldPanel({
                   <span className="sr-only">Mini-map</span>
                 </button>
               </div>
+              {room.image && (
+                <img src={room.image} alt={room.title} className="room-hero-image" />
+              )}
               <div className="room-description-wrap" aria-label="Room description">
                 <p className="room-description">{room.description || "No room description available yet."}</p>
                 <button
@@ -250,7 +253,10 @@ export function WorldPanel({
                     {visibleMobs.map((mob) => (
                       <li key={mob.id} className="mob-card">
                         <div className="entity-item">
-                          <span>{mob.name}</span>
+                          <span className="entity-name-with-thumb">
+                            {mob.image && <img src={mob.image} alt="" className="entity-thumb" />}
+                            {mob.name}
+                          </span>
                           <span className="mob-meta-actions">
                             <span className="entity-meta">{mob.hp}/{mob.maxHp}</span>
                             <button
@@ -289,7 +295,10 @@ export function WorldPanel({
                   <ul className="entity-list">
                     {visibleRoomItems.map((item, index) => (
                       <li key={`${item.id}-${index}`} className="entity-item">
-                        <span>{item.name}</span>
+                        <span className="entity-name-with-thumb">
+                          {item.image && <img src={item.image} alt="" className="entity-thumb" />}
+                          {item.name}
+                        </span>
                         <button
                           type="button"
                           className="mob-command-button"
