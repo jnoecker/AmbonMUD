@@ -98,8 +98,9 @@ fun PlayerState.healHp(amount: Int): Boolean {
     }
 }
 
-/** Decreases HP by [amount], clamped to 0. */
+/** Decreases HP by [amount], clamped to 0. Staff members are immune to damage. */
 fun PlayerState.takeDamage(amount: Int) {
+    if (isStaff) return
     hp = (hp - amount).coerceAtLeast(0)
 }
 
@@ -114,8 +115,9 @@ fun PlayerState.healMana(amount: Int): Boolean {
     }
 }
 
-/** Decreases mana by [amount], clamped to 0. */
+/** Decreases mana by [amount], clamped to 0. Staff members have infinite mana. */
 fun PlayerState.spendMana(amount: Int) {
+    if (isStaff) return
     mana = (mana - amount).coerceAtLeast(0)
 }
 

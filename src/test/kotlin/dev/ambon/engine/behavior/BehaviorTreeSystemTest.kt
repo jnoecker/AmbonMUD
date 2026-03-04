@@ -265,6 +265,33 @@ class BehaviorTreeSystemTest {
             assertTrue(e.combat.isMobInCombat(e.mobId))
         }
 
+    @Test
+    fun `aggro guard ignores staff player in same room`() =
+        runTest {
+            val tree =
+                SelectorNode(
+                    listOf(
+                        IsInCombat,
+                        SequenceNode(listOf(IsPlayerInRoom, AggroAction)),
+                        StationaryAction,
+                    ),
+                )
+            val e = env(behaviorTree = tree)
+            val sid = SessionId(1L)
+            e.players.loginOrFail(sid, "StaffGuy")
+            e.players.get(sid)!!.isStaff = true
+
+            e.outbound.drainAll()
+
+            e.system.tick() // schedule
+            e.clock.advance(200)
+            e.system.tick() // execute
+
+            // Staff player should NOT be in combat — mob skips them
+            assertFalse(e.combat.isMobInCombat(e.mobId))
+            assertFalse(e.combat.isInCombat(sid))
+        }
+
     // --- Patrol tests ---
 
     @Test

@@ -73,8 +73,8 @@ class AbilitySystem(
             return "You don't know a spell called '$spellName'."
         }
 
-        // 2. Check mana
-        if (player.mana < ability.manaCost) {
+        // 2. Check mana (staff have infinite mana)
+        if (!player.isStaff && player.mana < ability.manaCost) {
             return "Not enough mana. (${player.mana}/${ability.manaCost})"
         }
 
