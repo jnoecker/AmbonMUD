@@ -507,6 +507,8 @@ function App() {
           preLogin={preLogin}
           connected={connected}
           hasRoomDetails={hasRoomDetails}
+          roomImage={room.image}
+          roomTitle={room.title}
           exits={exits}
           terminalHostRef={terminalHostRef}
           commandInputRef={composerInputRef}
