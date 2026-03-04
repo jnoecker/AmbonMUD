@@ -150,6 +150,7 @@ export function applyGmcpPackage(
             .map((entry) => ({
               id: typeof entry.id === "string" ? entry.id : `${Date.now()}-${Math.random()}`,
               name: typeof entry.name === "string" ? entry.name : "Unknown item",
+              keyword: typeof entry.keyword === "string" ? entry.keyword : (typeof entry.name === "string" ? entry.name : "item"),
               slot: typeof entry.slot === "string" ? entry.slot : null,
               basePrice: typeof entry.basePrice === "number" ? entry.basePrice : undefined,
               image: typeof entry.image === "string" ? entry.image : null,
@@ -164,6 +165,7 @@ export function applyGmcpPackage(
           equipmentMap[slot] = {
             id: typeof item.id === "string" ? item.id : `${slot}-${Date.now()}`,
             name: typeof item.name === "string" ? item.name : "Unknown item",
+            keyword: typeof item.keyword === "string" ? item.keyword : (typeof item.name === "string" ? item.name : "item"),
             slot,
             image: typeof item.image === "string" ? item.image : null,
           };
@@ -182,6 +184,7 @@ export function applyGmcpPackage(
         {
           id: typeof packet.id === "string" ? packet.id : `${Date.now()}-${Math.random()}`,
           name: typeof packet.name === "string" ? packet.name : "Unknown item",
+          keyword: typeof packet.keyword === "string" ? packet.keyword : (typeof packet.name === "string" ? packet.name : "item"),
           slot: typeof packet.slot === "string" ? packet.slot : null,
           basePrice: typeof packet.basePrice === "number" ? packet.basePrice : undefined,
           image: typeof packet.image === "string" ? packet.image : null,

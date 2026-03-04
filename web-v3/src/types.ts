@@ -88,6 +88,7 @@ export interface RoomState {
 export interface ItemSummary {
   id: string;
   name: string;
+  keyword: string;
   slot: string | null;
   basePrice?: number;
   image?: string | null;

@@ -536,6 +536,7 @@ class GmcpEmitter(
         ItemPayload(
             id = item.id.value,
             name = item.item.displayName,
+            keyword = item.item.keyword,
             slot = item.item.slot?.label(),
             damage = item.item.damage,
             armor = item.item.armor,
@@ -587,6 +588,7 @@ class GmcpEmitter(
     private data class ItemPayload(
         val id: String,
         val name: String,
+        val keyword: String,
         val slot: String?,
         val damage: Int,
         val armor: Int,
