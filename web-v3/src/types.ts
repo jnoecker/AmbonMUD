@@ -1,5 +1,5 @@
 export type MobileTab = "play" | "world" | "chat" | "character";
-export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | null;
+export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | "mobDetail" | "itemDetail" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 

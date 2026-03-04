@@ -26,6 +26,8 @@ interface PlayPanelProps {
   onTalkToMob: (mobName: string) => void;
   onAttackMob: (mobName: string) => void;
   onPickUpItem: (itemName: string) => void;
+  onOpenMobDetail: (mob: RoomMob) => void;
+  onOpenItemDetail: (item: RoomItem) => void;
 }
 
 export function PlayPanel({
@@ -50,6 +52,8 @@ export function PlayPanel({
   onTalkToMob,
   onAttackMob,
   onPickUpItem,
+  onOpenMobDetail,
+  onOpenItemDetail,
 }: PlayPanelProps) {
   const showEntities = hasRoomDetails && (mobs.length > 0 || roomItems.length > 0);
 
@@ -75,10 +79,15 @@ export function PlayPanel({
                 {mobs.map((mob) => (
                   <li key={mob.id} className="mob-card">
                     <div className="entity-item">
-                      <span className="entity-name-with-thumb">
+                      <button
+                        type="button"
+                        className="entity-name-with-thumb entity-thumb-clickable"
+                        title={`View ${mob.name} details`}
+                        onClick={() => onOpenMobDetail(mob)}
+                      >
                         {mob.image && <img src={mob.image} alt="" className="entity-thumb play-entity-thumb" />}
                         {mob.name}
-                      </span>
+                      </button>
                       <span className="mob-meta-actions">
                         <span className="entity-meta">{mob.hp}/{mob.maxHp}</span>
                         <button
@@ -113,10 +122,15 @@ export function PlayPanel({
               <ul className="entity-list">
                 {roomItems.map((item, index) => (
                   <li key={`${item.id}-${index}`} className="entity-item">
-                    <span className="entity-name-with-thumb">
+                    <button
+                      type="button"
+                      className="entity-name-with-thumb entity-thumb-clickable"
+                      title={`View ${item.name} details`}
+                      onClick={() => onOpenItemDetail(item)}
+                    >
                       {item.image && <img src={item.image} alt="" className="entity-thumb play-entity-thumb" />}
                       {item.name}
-                    </span>
+                    </button>
                     <button
                       type="button"
                       className="mob-command-button"
