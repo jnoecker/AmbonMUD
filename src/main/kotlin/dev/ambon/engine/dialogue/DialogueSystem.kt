@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GameSystem
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -13,6 +14,7 @@ class DialogueSystem(
     private val mobs: MobRegistry,
     private val players: PlayerRegistry,
     private val outbound: OutboundBus,
+    private val gmcpEmitter: GmcpEmitter? = null,
 ) : GameSystem {
     data class ConversationState(
         val mobId: MobId,
@@ -94,6 +96,7 @@ class DialogueSystem(
                     "${state.mobName} nods.",
                 ),
             )
+            gmcpEmitter?.sendDialogueEnd(sessionId, state.mobName, "ended")
             return DialogueOutcome.Ok(action = chosen.action)
         }
 
@@ -108,12 +111,14 @@ class DialogueSystem(
         return DialogueOutcome.Ok(action = chosen.action)
     }
 
-    fun endConversation(sessionId: SessionId) {
-        conversations.remove(sessionId)
+    suspend fun endConversation(sessionId: SessionId) {
+        val state = conversations.remove(sessionId) ?: return
+        gmcpEmitter?.sendDialogueEnd(sessionId, state.mobName, "ended")
     }
 
     override suspend fun onPlayerDisconnected(sessionId: SessionId) {
-        conversations.remove(sessionId)
+        val state = conversations.remove(sessionId) ?: return
+        gmcpEmitter?.sendDialogueEnd(sessionId, state.mobName, "disconnected")
     }
 
     suspend fun onPlayerMoved(sessionId: SessionId) {
@@ -124,6 +129,7 @@ class DialogueSystem(
                 "You walk away from your conversation with ${state.mobName}.",
             ),
         )
+        gmcpEmitter?.sendDialogueEnd(sessionId, state.mobName, "moved")
     }
 
     suspend fun onMobRemoved(mobId: MobId) {
@@ -133,6 +139,7 @@ class DialogueSystem(
             outbound.send(
                 OutboundEvent.SendText(sid, "${state.mobName} is no longer available."),
             )
+            gmcpEmitter?.sendDialogueEnd(sid, state.mobName, "mob_removed")
         }
     }
 
@@ -148,6 +155,7 @@ class DialogueSystem(
         val visibleChoices = filterChoices(node.choices, playerLevel, playerClass)
         if (visibleChoices.isEmpty()) {
             conversations.remove(sessionId)
+            gmcpEmitter?.sendDialogueEnd(sessionId, mobName, "ended")
             return
         }
 
@@ -156,6 +164,13 @@ class DialogueSystem(
                 OutboundEvent.SendInfo(sessionId, "  ${index + 1}. ${choice.text}"),
             )
         }
+
+        gmcpEmitter?.sendDialogueNode(
+            sessionId,
+            mobName,
+            node.text,
+            visibleChoices.mapIndexed { index, choice -> (index + 1) to choice.text },
+        )
     }
 
     private fun filterChoices(
@@ -171,11 +186,12 @@ class DialogueSystem(
             levelOk && classOk
         }
 
-    private fun endConversationWithMessage(
+    private suspend fun endConversationWithMessage(
         sessionId: SessionId,
         mobName: String,
     ): String {
         conversations.remove(sessionId)
+        gmcpEmitter?.sendDialogueEnd(sessionId, mobName, "ended")
         return "$mobName has nothing more to say."
     }
 
