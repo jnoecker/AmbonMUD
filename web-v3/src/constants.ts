@@ -67,20 +67,6 @@ export const CHAT_CHANNELS: Array<{
     messagePlaceholder: "Out of character message",
     targetPlaceholder: null,
   },
-  {
-    id: "gtell",
-    label: "Group",
-    requiresTarget: false,
-    messagePlaceholder: "Message your group",
-    targetPlaceholder: null,
-  },
-  {
-    id: "gchat",
-    label: "Guild",
-    requiresTarget: false,
-    messagePlaceholder: "Message your guild",
-    targetPlaceholder: null,
-  },
 ];
 export const MAX_CHAT_MESSAGES_PER_CHANNEL = 120;
 
