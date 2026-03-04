@@ -260,12 +260,12 @@ shops:
 rooms:
   caravan_gate:
     title: "Caravan Gate"
-    description: "A rutted track widens into a makeshift gate of lashed timbers. Beyond it, the hills rise in broken steps toward old ruins. A hand-painted sign reads: 'WELCOME, STAY ALIVE.'"
+    description: "A rutted track widens into a makeshift gate of lashed timbers. Beyond it, the hills rise in broken steps toward old ruins. A hand-painted sign reads: 'WELCOME, STAY ALIVE.' The track leads south back toward the Wanderer's Inn."
     exits:
       n: campfire_ring
       e: river_ford
       w: old_milestone
-      s: ambon_hub:hall_of_portals
+      s: ambon_hub:wanderers_inn
 
   old_milestone:
     title: "Old Milestone"

@@ -46,12 +46,16 @@ mobs:
             next: advice
           - text: "Goodbye."
       about_portals:
-        text: "Each archway leads to a different realm. The northern passage opens into the fae wood — home of Aineroia, Lady of the Fae Wood. The southern arch leads to the Kingdom of PBrae — a castle in the mountains. East leads to a scholar's retreat. West, through the gallery, is the Kingdom of Wesleyalis — a treehouse in a prehistoric rainforest. And below — through the trapdoor in the floor — lies the Kingdom of Trailey: a spy compound disguised as a very boring suburb."
+        text: "Each archway leads to a different realm. The northern passage opens into the fae wood — home of Aineroia, Lady of the Fae Wood. The southern arch leads to the Kingdom of PBrae — a castle in the mountains. East leads to a scholar's retreat. West, through the gallery, is the Kingdom of Wesleyalis — a treehouse in a prehistoric rainforest. And below — through the trapdoor in the floor — lies the Kingdom of Trailey: a spy compound disguised as a very boring suburb. There's more through the gallery, too — the Wanderer's Inn has a back door to old ruins, and a trapdoor to a labyrinth. And the gallery itself has a southern archway into a peaceful forest glade."
         choices:
           - text: "Tell me about the western passage."
             next: western
           - text: "What's down there?"
             next: trailey_info
+          - text: "What about the ruins and the labyrinth?"
+            next: ruins_and_labyrinth
+          - text: "Tell me about the forest glade."
+            next: tutorial_glade
           - text: "Thank you."
       western:
         text: "Head west through the Wayfinder Gallery and the Blank Arches. The western arch there opens into the Kingdom of Wesleyalis — a massive treehouse in a prehistoric rainforest, ruled by King Wesley the Artist and Princess Aurora. Ancient bees the size of horses. Dinosaurs in the deep jungle. Paintings that come to life. Proceed with respect for art."
@@ -64,6 +68,18 @@ mobs:
         text: "The Kingdom of Trailey lies below — a HOA cul-de-sac where every house looks exactly the same and all of them conceal a high-tech spy compound inside. Ruled by King Trevor and Queen Hailey. Trevor maintains a mechanical shooting range and a roughhousing pit with a very large, very enthusiastic opponent. Hailey's zone is a competition gymnasium inside a human-scale dollhouse, with the finest perfume vault in any known dimension. Upstairs, Humpty Dumpty refuses to stay fallen. Approach all three with appropriate readiness."
         choices:
           - text: "Sounds like my kind of neighborhood."
+          - text: "Tell me about the other portals."
+            next: about_portals
+      ruins_and_labyrinth:
+        text: "Head west to the gallery, then north to the Wanderer's Inn. Through the inn's back door you'll find the Demo Ruins — a caravan camp at the edge of crumbling stonework, with traders, creatures, and old treasure. Below the inn, an iron trapdoor leads into the Labyrinth — an endless maze of repeating corridors. Adventurers enter to test their sense of direction. Some are still looking for the exit."
+        choices:
+          - text: "I'll check them out."
+          - text: "Tell me about the other portals."
+            next: about_portals
+      tutorial_glade:
+        text: "Through the gallery's southern archway lies the Tutorial Glade — a sun-dappled forest clearing. It's a gentle place, good for new adventurers finding their footing. Follow the mossy trail north and you'll find creatures to practice on, equipment to gather, and a few surprises."
+        choices:
+          - text: "Sounds peaceful. I'll start there."
           - text: "Tell me about the other portals."
             next: about_portals
       training:
@@ -105,15 +121,18 @@ rooms:
   wayfinder_gallery:
     image: ambon_hub/wayfinder_gallery.png
     title: "Wayfinder Gallery"
-    description: "A narrow gallery lined with relief maps of places that don't exist yet. A brass needle floats over each plaque, twitching toward the hall as if eager to be used. A warm glow spills from a doorway to the north."
+    description: "A narrow gallery lined with relief maps of places that don't exist yet. A brass needle floats over each plaque, twitching toward the hall as if eager to be used. A warm glow spills from a doorway to the north. To the south, a vine-wrapped archway opens onto dappled green light and the scent of wild grass."
     exits:
       e: hall_of_portals
       w: blank_arches
       n: wanderers_inn
+      s: tutorial_glade:awakening_clearing
 
   wanderers_inn:
     image: ambon_hub/wanderers_inn.png
     title: "The Wanderer's Inn"
-    description: "A cozy common room filled with the scent of woodsmoke and fresh bread. Low beams cross the ceiling, hung with dried herbs. A fire crackles in a broad hearth and mismatched chairs cluster around worn tables. The innkeeper stands behind a short counter, ready to help. A sign on the wall reads: 'RENT A ROOM — type recall anytime to return here.'"
+    description: "A cozy common room filled with the scent of woodsmoke and fresh bread. Low beams cross the ceiling, hung with dried herbs. A fire crackles in a broad hearth and mismatched chairs cluster around worn tables. The innkeeper stands behind a short counter, ready to help. A sign on the wall reads: 'RENT A ROOM — type recall anytime to return here.' A heavy door to the east is propped open, revealing a rutted track and the smell of campfire smoke. A bolted iron trapdoor in the corner is etched with the words: 'THE LABYRINTH — ENTER AT OWN RISK.'"
     exits:
       s: wayfinder_gallery
+      e: demo_ruins:caravan_gate
+      d: labyrinth:cell_00_00
