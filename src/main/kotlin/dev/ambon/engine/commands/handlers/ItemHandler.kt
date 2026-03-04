@@ -20,6 +20,7 @@ class ItemHandler(
     private val questSystem: QuestSystem? = null,
     private val abilitySystem: AbilitySystem? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
+    private val markStatsDirty: (SessionId) -> Unit = {},
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val progression: PlayerProgression = PlayerProgression(),
 ) : CommandHandler {
@@ -82,7 +83,7 @@ class ItemHandler(
                             "You wear ${result.item.item.displayName} on your ${result.slot.label()}.",
                         ),
                     )
-                    afterEquipChange(sessionId, combat, items, gmcpEmitter)
+                    afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
                 }
                 is ItemRegistry.EquipResult.NotFound ->
                     outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
@@ -112,7 +113,7 @@ class ItemHandler(
                             "You remove ${result.item.item.displayName} from your ${result.slot.label()}.",
                         ),
                     )
-                    afterEquipChange(sessionId, combat, items, gmcpEmitter)
+                    afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
                 }
                 is ItemRegistry.UnequipResult.SlotEmpty ->
                     outbound.send(
@@ -189,7 +190,7 @@ class ItemHandler(
                     }
                     if (result.consumed) {
                         outbound.send(OutboundEvent.SendInfo(sessionId, "${result.item.item.displayName} is consumed."))
-                        afterEquipChange(sessionId, combat, items, gmcpEmitter)
+                        afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
                     } else if (result.remainingCharges != null) {
                         outbound.send(
                             OutboundEvent.SendInfo(
@@ -229,7 +230,7 @@ class ItemHandler(
                 when (val result = items.giveToPlayer(me.sessionId, targetSid, cmd.keyword)) {
                     is ItemRegistry.GiveResult.Given -> {
                         if (result.location == ItemRegistry.HeldItemLocation.EQUIPPED) {
-                            afterEquipChange(sessionId, combat, items, gmcpEmitter)
+                            afterEquipChange(sessionId, combat, items, gmcpEmitter, markStatsDirty)
                         }
                         outbound.send(OutboundEvent.SendInfo(sessionId, "You give ${result.item.item.displayName} to ${target.name}."))
                         outbound.send(OutboundEvent.SendInfo(targetSid, "${me.name} gives you ${result.item.item.displayName}."))
