@@ -1,9 +1,14 @@
 zone: ambon_hub
+image:
+  room: ambon_hub/default_room.png
+  mob: ambon_hub/default_mob.png
+  item: ambon_hub/default_item.png
 lifespan: 0
 startRoom: hall_of_portals
 
 mobs:
   innkeeper:
+    image: ambon_hub/innkeeper.png
     name: "the Innkeeper"
     room: wanderers_inn
     dialogue:
@@ -28,6 +33,7 @@ mobs:
             action: set_recall
           - text: "I'll think about it."
   portal_keeper:
+    image: ambon_hub/portal_keeper.png
     name: "the Portal Keeper"
     room: hall_of_portals
     dialogue:
@@ -73,6 +79,7 @@ mobs:
 
 rooms:
   hall_of_portals:
+    image: ambon_hub/hall_of_portals.png
     title: "Hall of Portals"
     description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.' Northern light filters green through fae leaves. Eastern light smells of old books. Southern light carries mountain air and the faint crunch of gravel. Western light is warm, tropical, and faintly buzzes. In the center of the floor, a trapdoor — sealed with a welcome mat that reads 'HOME' — descends to an entirely different kind of neighborhood."
     exits:
@@ -84,6 +91,7 @@ rooms:
       u: crafting_workshop:entrance
 
   blank_arches:
+    image: ambon_hub/blank_arches.png
     title: "Blank Arches"
     description: "Unkeyed archways stand here like paused sentences. New chalkwork marks several passages for low-rank adventurers, each arch pulsing with a different color of mist. To the west, an archway framed with painted vines and tropical flowers hums with warm, buzzing energy — beyond it, distant birdcall and the smell of rainforest and something ancient and sweet."
     exits:
@@ -95,6 +103,7 @@ rooms:
       w: wesleyalis:gravel_road_2
 
   wayfinder_gallery:
+    image: ambon_hub/wayfinder_gallery.png
     title: "Wayfinder Gallery"
     description: "A narrow gallery lined with relief maps of places that don't exist yet. A brass needle floats over each plaque, twitching toward the hall as if eager to be used. A warm glow spills from a doorway to the north."
     exits:
@@ -103,6 +112,7 @@ rooms:
       n: wanderers_inn
 
   wanderers_inn:
+    image: ambon_hub/wanderers_inn.png
     title: "The Wanderer's Inn"
     description: "A cozy common room filled with the scent of woodsmoke and fresh bread. Low beams cross the ceiling, hung with dried herbs. A fire crackles in a broad hearth and mismatched chairs cluster around worn tables. The innkeeper stands behind a short counter, ready to help. A sign on the wall reads: 'RENT A ROOM — type recall anytime to return here.'"
     exits:
