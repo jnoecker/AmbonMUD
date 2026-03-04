@@ -39,6 +39,8 @@ class StatusEffectTestFixture(
             override fun mobHpDirty(mobId: MobId) {
                 mobHpDirty.add(mobId)
             }
+
+            override fun playerCombatDirty(sessionId: SessionId) = Unit
         }
 
     val system: StatusEffectSystem =

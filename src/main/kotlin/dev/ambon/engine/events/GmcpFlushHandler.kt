@@ -16,6 +16,7 @@ class GmcpFlushHandler(
     private val gmcpDirtyStatusEffects: MutableSet<SessionId>,
     private val gmcpDirtyMobs: MutableSet<MobId>,
     private val gmcpDirtyGroup: MutableSet<SessionId>,
+    private val gmcpDirtyCombat: MutableSet<SessionId>,
     private val players: PlayerRegistry,
     private val mobs: MobRegistry,
     private val statusEffectSystem: StatusEffectSystem,
@@ -55,6 +56,12 @@ class GmcpFlushHandler(
     suspend fun flushDirtyGroup() {
         drainDirty(gmcpDirtyGroup) { sid ->
             gmcpEmitter.sendGroupSync(sid, groupSystem, players)
+        }
+    }
+
+    suspend fun flushDirtyCombat() {
+        drainDirty(gmcpDirtyCombat) { sid ->
+            gmcpEmitter.sendCharCombat(sid)
         }
     }
 

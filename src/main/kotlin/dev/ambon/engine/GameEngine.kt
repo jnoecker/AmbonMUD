@@ -183,6 +183,7 @@ class GameEngine(
             gmcpDirtyVitals = gmcpDirtyVitals,
             gmcpDirtyStatusEffects = gmcpDirtyStatusEffects,
             gmcpDirtyGroup = gmcpDirtyGroup,
+            gmcpDirtyCombat = gmcpDirtyCombat,
             handoffManager = handoffManager,
             removePendingWhoRequestsFor = interEngineEventHandler::removePendingWhoRequestsFor,
             sessionLifecycle = sessionLifecycleCoordinator,
@@ -286,6 +287,7 @@ class GameEngine(
             gmcpDirtyStatusEffects = gmcpDirtyStatusEffects,
             gmcpDirtyMobs = gmcpDirtyMobs,
             gmcpDirtyGroup = gmcpDirtyGroup,
+            gmcpDirtyCombat = gmcpDirtyCombat,
             players = players,
             mobs = mobs,
             statusEffectSystem = statusEffectSystem,
@@ -356,6 +358,9 @@ class GameEngine(
     /** Sessions whose group membership changed this tick and need a Group.Info push. */
     private val gmcpDirtyGroup = mutableSetOf<SessionId>()
 
+    /** Sessions whose combat target changed this tick and need a Char.Combat push. */
+    private val gmcpDirtyCombat = mutableSetOf<SessionId>()
+
     val gmcpEmitter =
         GmcpEmitter(
             outbound = outbound,
@@ -366,6 +371,17 @@ class GameEngine(
             },
             progression = progression,
             isInCombat = { sid -> combatSystem.isInCombat(sid) },
+            getCombatTarget = { sid ->
+                combatSystem.getCombatTarget(sid)?.let { mob ->
+                    CombatTargetInfo(
+                        id = mob.id.value,
+                        name = mob.name,
+                        hp = mob.hp,
+                        maxHp = mob.maxHp,
+                        image = mob.image,
+                    )
+                }
+            },
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -380,6 +396,10 @@ class GameEngine(
         gmcpDirtyStatusEffects.add(sessionId)
     }
 
+    fun markCombatDirty(sessionId: SessionId) {
+        gmcpDirtyCombat.add(sessionId)
+    }
+
     private val dirtyNotifier =
         object : DirtyNotifier {
             override fun playerVitalsDirty(sessionId: SessionId) = markVitalsDirty(sessionId)
@@ -387,6 +407,8 @@ class GameEngine(
             override fun playerStatusDirty(sessionId: SessionId) = markStatusDirty(sessionId)
 
             override fun mobHpDirty(mobId: MobId) = markMobHpDirty(mobId)
+
+            override fun playerCombatDirty(sessionId: SessionId) = markCombatDirty(sessionId)
         }
 
     fun markGroupDirty(sessionId: SessionId) {
@@ -838,6 +860,7 @@ class GameEngine(
                     flushDirtyGmcpMobs()
                     flushDirtyGmcpStatusEffects()
                     flushDirtyGmcpGroup()
+                    flushDirtyGmcpCombat()
                     metrics.recordTickPhase("gmcp_flush", gmcpFlushPhaseSample)
 
                     // Phase 4: Outbound flush — run scheduled actions and reset expired zones.
@@ -953,6 +976,10 @@ class GameEngine(
 
     private suspend fun flushDirtyGmcpGroup() {
         gmcpFlushHandler.flushDirtyGroup()
+    }
+
+    private suspend fun flushDirtyGmcpCombat() {
+        gmcpFlushHandler.flushDirtyCombat()
     }
 
     private suspend fun onCombatMobRemoved(
