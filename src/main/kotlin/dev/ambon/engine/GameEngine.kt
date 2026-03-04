@@ -667,6 +667,8 @@ class GameEngine(
             gmcpEmitter = gmcpEmitter,
             worldState = worldState,
             gatheringRegistry = gatheringRegistry,
+            shopRegistry = shopRegistry,
+            economyConfig = engineConfig.economy,
         )
 
         listOf(

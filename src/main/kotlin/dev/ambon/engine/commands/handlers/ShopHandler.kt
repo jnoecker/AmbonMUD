@@ -13,7 +13,7 @@ import dev.ambon.engine.events.OutboundEvent
 import kotlin.math.roundToInt
 
 class ShopHandler(
-    ctx: EngineContext,
+    private val ctx: EngineContext,
     private val shopRegistry: ShopRegistry? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
     private val economyConfig: EconomyConfig = EconomyConfig(),
@@ -58,6 +58,7 @@ class ShopHandler(
                     ),
                 )
             }
+            emitShopGmcp(sessionId, me)
         }
     }
 
@@ -94,6 +95,7 @@ class ShopHandler(
             markVitalsDirty(sessionId)
             outbound.send(OutboundEvent.SendText(sessionId, "You buy ${item.displayName} for $buyPrice gold."))
             syncItemsGmcp(sessionId, items, gmcpEmitter)
+            emitShopGmcp(sessionId, me)
         }
     }
 
@@ -129,6 +131,21 @@ class ShopHandler(
             markVitalsDirty(sessionId)
             outbound.send(OutboundEvent.SendText(sessionId, "You sell ${removed.item.displayName} for $sellPrice gold."))
             syncItemsGmcp(sessionId, items, gmcpEmitter)
+            emitShopGmcp(sessionId, me)
         }
+    }
+
+    private suspend fun emitShopGmcp(sessionId: SessionId, me: dev.ambon.engine.PlayerState) {
+        val emitter = gmcpEmitter ?: return
+        val registry = shopRegistry ?: return
+        val shop = registry.shopInRoom(me.roomId) ?: return
+        val shopItems = registry.shopItems(shop)
+        emitter.sendShopList(
+            sessionId,
+            shop.name,
+            shopItems,
+            buyMultiplier = economyConfig.buyMultiplier,
+            sellMultiplier = economyConfig.sellMultiplier,
+        )
     }
 }

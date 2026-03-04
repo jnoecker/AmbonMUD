@@ -47,6 +47,7 @@ import type {
   RoomItem,
   RoomPlayer,
   RoomState,
+  ShopState,
   SkillSummary,
   StatusEffect,
   StatusVarLabels,
@@ -141,6 +142,7 @@ function App() {
   const [, setCharStats] = useState<CharStats | null>(null);
   const [, setQuests] = useState<QuestEntry[]>([]);
   const [, setMobInfo] = useState<MobInfo[]>([]);
+  const [shop, setShop] = useState<ShopState | null>(null);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -219,6 +221,7 @@ function App() {
     setCharStats(null);
     setQuests([]);
     setMobInfo([]);
+    setShop(null);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setActiveChatChannel("say");
@@ -248,6 +251,7 @@ function App() {
           setGuildMembers,
           setDialogue,
           setCombatTarget,
+          setShop,
           setFriends,
           pushFriendNotification,
           setChatByChannel,
@@ -615,6 +619,9 @@ function App() {
           skills={skills}
           combatTarget={combatTarget}
           vitals={vitals}
+          shop={shop}
+          inventory={inventory}
+          gold={vitals.gold}
           onOpenMap={() => setActivePopout("map")}
           onOpenRoom={() => setActivePopout("room")}
           onFlee={() => {
@@ -660,6 +667,14 @@ function App() {
           }}
           onPickUpItem={(itemName) => {
             sendCommand(`get ${itemName}`, true);
+            focusComposer();
+          }}
+          onBuyItem={(keyword) => {
+            sendCommand(`buy ${keyword}`, true);
+            focusComposer();
+          }}
+          onSellItem={(keyword) => {
+            sendCommand(`sell ${keyword}`, true);
             focusComposer();
           }}
         />

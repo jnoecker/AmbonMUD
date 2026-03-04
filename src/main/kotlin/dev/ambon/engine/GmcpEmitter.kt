@@ -18,6 +18,7 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.ActiveEffectSnapshot
 import dev.ambon.engine.status.StatusEffectSystem
+import kotlin.math.roundToInt
 
 data class CombatTargetInfo(
     val id: String,
@@ -707,6 +708,45 @@ class GmcpEmitter(
         emit(sessionId, "Guild.Chat", GuildChatGmcpPayload(sender = sender, message = message), supportCheck = "Guild.Info")
     }
 
+    // ---------- shop ----------
+
+    suspend fun sendShopList(
+        sessionId: SessionId,
+        shopName: String,
+        shopItems: List<Pair<dev.ambon.domain.ids.ItemId, dev.ambon.domain.items.Item>>,
+        buyMultiplier: Double,
+        sellMultiplier: Double,
+    ) {
+        emit(
+            sessionId,
+            "Shop.List",
+            ShopListPayload(
+                name = shopName,
+                sellMultiplier = sellMultiplier,
+                items = shopItems.map { (itemId, item) ->
+                    ShopItemPayload(
+                        id = itemId.value,
+                        name = item.displayName,
+                        keyword = item.keyword,
+                        description = item.description,
+                        slot = item.slot?.label(),
+                        damage = item.damage,
+                        armor = item.armor,
+                        buyPrice = (item.basePrice * buyMultiplier).roundToInt(),
+                        basePrice = item.basePrice,
+                        consumable = item.consumable,
+                        image = item.image,
+                    )
+                },
+            ),
+            supportCheck = "Shop",
+        )
+    }
+
+    suspend fun sendShopClose(sessionId: SessionId) {
+        emitRaw(sessionId, "Shop.Close", "{}", supportCheck = "Shop")
+    }
+
     // ---------- emit helpers ----------
 
     private suspend fun <T : Any> emit(
@@ -735,9 +775,11 @@ class GmcpEmitter(
         ItemPayload(
             id = item.id.value,
             name = item.item.displayName,
+            keyword = item.item.keyword,
             slot = item.item.slot?.label(),
             damage = item.item.damage,
             armor = item.item.armor,
+            basePrice = item.item.basePrice,
             image = item.item.image,
         )
 
@@ -785,9 +827,11 @@ class GmcpEmitter(
     private data class ItemPayload(
         val id: String,
         val name: String,
+        val keyword: String,
         val slot: String?,
         val damage: Int,
         val armor: Int,
+        val basePrice: Int = 0,
         val image: String? = null,
     )
 
@@ -1043,6 +1087,28 @@ class GmcpEmitter(
         val questGiver: Boolean,
         val shopKeeper: Boolean,
         val dialogue: Boolean,
+    )
+
+    // ---------- shop payloads ----------
+
+    private data class ShopListPayload(
+        val name: String,
+        val sellMultiplier: Double,
+        val items: List<ShopItemPayload>,
+    )
+
+    private data class ShopItemPayload(
+        val id: String,
+        val name: String,
+        val keyword: String,
+        val description: String,
+        val slot: String?,
+        val damage: Int,
+        val armor: Int,
+        val buyPrice: Int,
+        val basePrice: Int,
+        val consumable: Boolean,
+        val image: String? = null,
     )
 
     private companion object {

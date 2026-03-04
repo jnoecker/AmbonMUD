@@ -75,6 +75,8 @@ internal fun buildTestRouter(
         gmcpEmitter = null,
         worldState = worldState,
         gatheringRegistry = gatheringRegistry,
+        shopRegistry = shopRegistry,
+        economyConfig = economyConfig,
     )
     listOf(
         UiHandler(ctx = ctx, onPhase = onPhase),

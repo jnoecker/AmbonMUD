@@ -1150,4 +1150,94 @@ class GmcpEmitterTest {
             assertTrue(events[0].jsonData.contains("\"mana\":30"))
             assertTrue(events[0].jsonData.contains("\"maxMana\":60"))
         }
+
+    // ── Shop ──
+
+    @Test
+    fun `sendShopList emits correct JSON when supported`() =
+        runTest {
+            val e = emitter("Shop")
+            val items = listOf(
+                ItemId("zone:sword") to Item(
+                    keyword = "sword",
+                    displayName = "Iron Sword",
+                    description = "A sturdy blade.",
+                    slot = ItemSlot.HAND,
+                    damage = 5,
+                    armor = 0,
+                    basePrice = 100,
+                    consumable = false,
+                ),
+                ItemId("zone:potion") to Item(
+                    keyword = "potion",
+                    displayName = "Health Potion",
+                    description = "Restores health.",
+                    consumable = true,
+                    basePrice = 20,
+                ),
+            )
+            e.sendShopList(sid, "Market Stall", items, buyMultiplier = 1.5, sellMultiplier = 0.5)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            val data = events[0]
+            assertEquals("Shop.List", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"name\":\"Market Stall\""))
+            assertTrue(data.jsonData.contains("\"sellMultiplier\":0.5"))
+            // sword: 100 * 1.5 = 150
+            assertTrue(data.jsonData.contains("\"buyPrice\":150"))
+            assertTrue(data.jsonData.contains("\"keyword\":\"sword\""))
+            assertTrue(data.jsonData.contains("\"slot\":\"hand\""))
+            assertTrue(data.jsonData.contains("\"damage\":5"))
+            // potion: 20 * 1.5 = 30
+            assertTrue(data.jsonData.contains("\"buyPrice\":30"))
+            assertTrue(data.jsonData.contains("\"consumable\":true"))
+        }
+
+    @Test
+    fun `sendShopList skipped when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendShopList(sid, "Shop", emptyList(), buyMultiplier = 1.0, sellMultiplier = 0.5)
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    @Test
+    fun `sendShopClose emits empty object when supported`() =
+        runTest {
+            val e = emitter("Shop")
+            e.sendShopClose(sid)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            val data = events[0]
+            assertEquals("Shop.Close", data.gmcpPackage)
+            assertEquals("{}", data.jsonData)
+        }
+
+    @Test
+    fun `sendShopClose skipped when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendShopClose(sid)
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    @Test
+    fun `basePrice appears in Char Items List`() =
+        runTest {
+            val e = emitter("Char.Items")
+            val priced = ItemInstance(
+                id = ItemId("zone:shield"),
+                item = Item(
+                    keyword = "shield",
+                    displayName = "Iron Shield",
+                    slot = ItemSlot.BODY,
+                    damage = 0,
+                    armor = 5,
+                    basePrice = 75,
+                ),
+            )
+            e.sendCharItemsList(sid, listOf(priced), emptyMap())
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"basePrice\":75"), "Expected basePrice in Char.Items.List. got=${data.jsonData}")
+        }
 }
