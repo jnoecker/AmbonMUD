@@ -4,7 +4,6 @@ import type {
   MobileTab,
   RoomState,
   StatusVarLabels,
-  SocialTab,
   TabCycle,
   Vitals,
 } from "./types";
@@ -26,13 +25,6 @@ export const TABS: Array<{ id: MobileTab; label: string }> = [
   { id: "chat", label: "Social" },
   { id: "character", label: "Character" },
 ];
-export const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [
-  { id: "chat", label: "Chat" },
-  { id: "guild", label: "Guild" },
-  { id: "friends", label: "Friends" },
-  { id: "who", label: "Who" },
-];
-
 export const CHAT_CHANNELS: Array<{
   id: ChatChannel;
   label: string;
@@ -73,6 +65,13 @@ export const CHAT_CHANNELS: Array<{
     label: "OOC",
     requiresTarget: false,
     messagePlaceholder: "Out of character message",
+    targetPlaceholder: null,
+  },
+  {
+    id: "gtell",
+    label: "Group",
+    requiresTarget: false,
+    messagePlaceholder: "Message your group",
     targetPlaceholder: null,
   },
 ];
