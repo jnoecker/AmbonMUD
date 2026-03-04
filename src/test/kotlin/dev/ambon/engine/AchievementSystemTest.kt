@@ -25,19 +25,43 @@ import org.junit.jupiter.api.Test
 class AchievementSystemTest {
     private val roomId = TEST_ROOM_ID
 
-    private fun setup(vararg achievements: AchievementDef): Triple<AchievementSystem, PlayerRegistry, LocalOutboundBus> {
+    private fun setup(vararg achievements: AchievementDef): Triple<AchievementSystem, PlayerRegistry, LocalOutboundBus> =
+        setupWithGmcp(*achievements).let { Triple(it.system, it.players, it.outbound) }
+
+    private data class TestHarness(
+        val system: AchievementSystem,
+        val players: PlayerRegistry,
+        val outbound: LocalOutboundBus,
+        val gmcpEmitter: GmcpEmitter?,
+    )
+
+    private fun setupWithGmcp(
+        vararg achievements: AchievementDef,
+        enableGmcp: Boolean = false,
+    ): TestHarness {
         val items = ItemRegistry()
         val players = dev.ambon.test.buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
         val outbound = LocalOutboundBus()
         val registry = AchievementRegistry()
         achievements.forEach { registry.register(it) }
+        val gmcpEmitter =
+            if (enableGmcp) {
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, _ -> true },
+                    progression = PlayerProgression(),
+                )
+            } else {
+                null
+            }
         val system =
             AchievementSystem(
                 registry = registry,
                 players = players,
                 outbound = outbound,
+                gmcpEmitter = gmcpEmitter,
             )
-        return Triple(system, players, outbound)
+        return TestHarness(system, players, outbound, gmcpEmitter)
     }
 
     // ── KILL criteria ─────────────────────────────────────────────────────────
@@ -493,5 +517,73 @@ class AchievementSystemTest {
 
             players.setDisplayTitle(sid, null)
             assertNull(players.get(sid)?.activeTitle)
+        }
+
+    // ── GMCP achievement progress updates ───────────────────────────────────
+
+    @Test
+    fun `onMobKilled sends GMCP Char Achievements on progress change`() =
+        runTest {
+            val ach =
+                AchievementDef(
+                    id = "combat/slayer",
+                    displayName = "Slayer",
+                    description = "Kill 3 rats.",
+                    category = AchievementCategory.COMBAT,
+                    criteria =
+                        listOf(
+                            AchievementCriterion(
+                                type = CriterionType.KILL,
+                                targetId = "zone:rat",
+                                count = 3,
+                                description = "Kill 3 rats",
+                            ),
+                        ),
+                )
+            val harness = setupWithGmcp(ach, enableGmcp = true)
+            val sid = SessionId(1L)
+            harness.players.loginOrFail(sid, "Hero")
+            harness.outbound.drainAll() // clear login events
+
+            harness.system.onMobKilled(sid, "zone:rat")
+
+            val gmcpEvents = harness.outbound.drainAll().filterIsInstance<OutboundEvent.GmcpData>()
+            val achEvent = gmcpEvents.find { it.gmcpPackage == "Char.Achievements" }
+            assertTrue(achEvent != null, "Expected Char.Achievements GMCP event on progress change")
+            assertTrue(achEvent!!.jsonData.contains("\"current\":1"), "Expected current=1 in progress payload")
+        }
+
+    @Test
+    fun `onMobKilled sends GMCP Char Achievements on unlock`() =
+        runTest {
+            val ach =
+                AchievementDef(
+                    id = "combat/quick",
+                    displayName = "Quick Kill",
+                    description = "Kill 1 rat.",
+                    category = AchievementCategory.COMBAT,
+                    criteria =
+                        listOf(
+                            AchievementCriterion(
+                                type = CriterionType.KILL,
+                                targetId = "zone:rat",
+                                count = 1,
+                                description = "Kill a rat",
+                            ),
+                        ),
+                    rewards = AchievementRewards(xp = 50),
+                )
+            val harness = setupWithGmcp(ach, enableGmcp = true)
+            val sid = SessionId(1L)
+            harness.players.loginOrFail(sid, "Hero")
+            harness.outbound.drainAll()
+
+            harness.system.onMobKilled(sid, "zone:rat")
+
+            val gmcpEvents = harness.outbound.drainAll().filterIsInstance<OutboundEvent.GmcpData>()
+            val achEvents = gmcpEvents.filter { it.gmcpPackage == "Char.Achievements" }
+            assertTrue(achEvents.isNotEmpty(), "Expected Char.Achievements GMCP event on unlock")
+            val payload = achEvents.last().jsonData
+            assertTrue(payload.contains("\"completed\""), "Expected completed list in unlock payload")
         }
 }
