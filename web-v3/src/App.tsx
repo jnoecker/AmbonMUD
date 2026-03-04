@@ -510,6 +510,8 @@ function App() {
           roomImage={room.image}
           roomTitle={room.title}
           exits={exits}
+          mobs={mobs}
+          roomItems={roomItems}
           terminalHostRef={terminalHostRef}
           commandInputRef={composerInputRef}
           composerValue={composerValue}
@@ -530,6 +532,18 @@ function App() {
           }}
           onFlee={() => {
             sendCommand("flee", true);
+            focusComposer();
+          }}
+          onTalkToMob={(mobName) => {
+            sendCommand(`talk ${mobName}`, true);
+            focusComposer();
+          }}
+          onAttackMob={(mobName) => {
+            sendCommand(`kill ${mobName}`, true);
+            focusComposer();
+          }}
+          onPickUpItem={(itemName) => {
+            sendCommand(`get ${itemName}`, true);
             focusComposer();
           }}
         />
