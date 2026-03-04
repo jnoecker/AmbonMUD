@@ -728,6 +728,33 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `zone image defaults apply when entity has no image`() {
+        val world = WorldLoader.loadFromResource("world/ok_image_defaults.yaml")
+
+        // Room without explicit image gets zone default
+        val plaza = world.rooms.getValue(RoomId("ok_image_defaults:plaza"))
+        assertEquals("/images/defaults/room.png", plaza.image)
+
+        // Room with explicit image keeps its own
+        val alley = world.rooms.getValue(RoomId("ok_image_defaults:alley"))
+        assertEquals("/images/alley/custom.png", alley.image)
+
+        // Mob without explicit image gets zone default
+        val mobs = world.mobSpawns.associateBy { it.id.value }
+        assertEquals("/images/defaults/mob.png", mobs.getValue("ok_image_defaults:guard").image)
+
+        // Mob with explicit image keeps its own
+        assertEquals("/images/mobs/thief.png", mobs.getValue("ok_image_defaults:thief").image)
+
+        // Item without explicit image gets zone default
+        val items = world.itemSpawns.associateBy { it.instance.id.value }
+        assertEquals("/images/defaults/item.png", items.getValue("ok_image_defaults:bread").instance.item.image)
+
+        // Item with explicit image keeps its own
+        assertEquals("/images/items/dagger.png", items.getValue("ok_image_defaults:dagger").instance.item.image)
+    }
+
+    @Test
     fun `WorldFactory loads from explicit resource list`() {
         val world = WorldFactory.demoWorld(resources = listOf("world/mz_forest.yaml", "world/mz_swamp.yaml"))
         assertTrue(world.rooms.isNotEmpty())
