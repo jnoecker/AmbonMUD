@@ -138,9 +138,9 @@ function App() {
   const [detailMob, setDetailMob] = useState<RoomMob | null>(null);
   const [detailItem, setDetailItem] = useState<RoomItem | null>(null);
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
-  const [_charStats, setCharStats] = useState<CharStats | null>(null);
-  const [_quests, setQuests] = useState<QuestEntry[]>([]);
-  const [_mobInfo, setMobInfo] = useState<MobInfo[]>([]);
+  const [, setCharStats] = useState<CharStats | null>(null);
+  const [, setQuests] = useState<QuestEntry[]>([]);
+  const [, setMobInfo] = useState<MobInfo[]>([]);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
