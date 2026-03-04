@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { COMPASS_DIRECTIONS } from "../../constants";
-import type { CombatTarget, DialogueState, RoomItem, RoomMob, RoomPlayer, RoomState, SkillSummary, Vitals } from "../../types";
+import type { CombatTarget, DialogueState, ItemSummary, RoomItem, RoomMob, RoomPlayer, RoomState, ShopState, SkillSummary, Vitals } from "../../types";
 import { percent } from "../../utils";
 import { AttackIcon, CompassCoreIcon, DirectionIcon, ExpandRoomIcon, MapScrollIcon, PickupIcon, TalkIcon } from "../Icons";
 import { CombatPanel } from "./CombatPanel";
@@ -24,6 +25,9 @@ interface WorldPanelProps {
   skills: SkillSummary[];
   combatTarget: CombatTarget | null;
   vitals: Vitals;
+  shop: ShopState | null;
+  inventory: ItemSummary[];
+  gold: number;
   dialogue: DialogueState | null;
   onOpenMap: () => void;
   onOpenRoom: () => void;
@@ -35,6 +39,8 @@ interface WorldPanelProps {
   onTalkToMob: (mobName: string) => void;
   onAttackMob: (mobName: string) => void;
   onPickUpItem: (itemName: string) => void;
+  onBuyItem: (keyword: string) => void;
+  onSellItem: (keyword: string) => void;
 }
 
 export function WorldPanel({
@@ -57,6 +63,9 @@ export function WorldPanel({
   skills,
   combatTarget,
   vitals,
+  shop,
+  inventory,
+  gold,
   dialogue,
   onOpenMap,
   onOpenRoom,
@@ -68,7 +77,15 @@ export function WorldPanel({
   onTalkToMob,
   onAttackMob,
   onPickUpItem,
+  onBuyItem,
+  onSellItem,
 }: WorldPanelProps) {
+  const [shopTab, setShopTab] = useState<"buy" | "sell">("buy");
+
+  useEffect(() => {
+    setShopTab("buy");
+  }, [shop]);
+
   return (
     <section className="panel panel-world" aria-label="World state">
       <div className="world-stack">
@@ -169,6 +186,89 @@ export function WorldPanel({
               </div>
             ) : (
               <p className="dialogue-ending">The conversation has ended.</p>
+            )}
+          </article>
+        ) : shop ? (
+          <article className="subpanel shop-panel" aria-label="Shop">
+            <div className="shop-header">
+              <h3>{shop.name}</h3>
+              <span className="shop-gold">{gold.toLocaleString()} gold</span>
+            </div>
+            <div className="shop-tabs" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                className={`shop-tab${shopTab === "buy" ? " shop-tab-active" : ""}`}
+                aria-selected={shopTab === "buy"}
+                onClick={() => setShopTab("buy")}
+              >
+                Buy
+              </button>
+              <button
+                type="button"
+                role="tab"
+                className={`shop-tab${shopTab === "sell" ? " shop-tab-active" : ""}`}
+                aria-selected={shopTab === "sell"}
+                onClick={() => setShopTab("sell")}
+              >
+                Sell
+              </button>
+            </div>
+            {shopTab === "buy" ? (
+              <ul className="shop-item-list">
+                {shop.items.length === 0 ? (
+                  <li><p className="empty-note">Nothing for sale.</p></li>
+                ) : shop.items.map((item) => (
+                  <li key={item.id} className="shop-item">
+                    <div className="shop-item-top">
+                      <span className="shop-item-name">{item.name}</span>
+                      <span className="shop-item-price">{item.buyPrice} gp</span>
+                    </div>
+                    {(item.slot || item.damage > 0 || item.armor > 0) && (
+                      <p className="shop-item-meta">
+                        {[item.slot, item.damage > 0 ? `${item.damage} dmg` : null, item.armor > 0 ? `${item.armor} armor` : null].filter(Boolean).join(" \u00b7 ")}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      className="soft-button shop-buy-button"
+                      disabled={gold < item.buyPrice}
+                      onClick={() => onBuyItem(item.keyword)}
+                    >
+                      Buy
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="shop-item-list">
+                {inventory.length === 0 ? (
+                  <li><p className="empty-note">Your inventory is empty.</p></li>
+                ) : inventory.map((item) => {
+                  const sellPrice = Math.round((item.basePrice ?? 0) * shop.sellMultiplier);
+                  return (
+                    <li key={item.id} className="shop-item">
+                      <div className="shop-item-top">
+                        <span className="shop-item-name">{item.name}</span>
+                        {sellPrice > 0 ? (
+                          <span className="shop-item-price">{sellPrice} gp</span>
+                        ) : (
+                          <span className="shop-item-worthless">Worthless</span>
+                        )}
+                      </div>
+                      {sellPrice > 0 ? (
+                        <button
+                          type="button"
+                          className="soft-button shop-sell-button"
+                          onClick={() => onSellItem(item.name)}
+                        >
+                          Sell
+                        </button>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </article>
         ) : showSkillsPanel ? (

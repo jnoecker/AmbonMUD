@@ -88,8 +88,30 @@ internal suspend fun requireSameRoom(
 }
 
 /** Convenience extension that delegates to the full [sendLook], pulling all dependencies from this context. */
-internal suspend fun EngineContext.sendLook(sessionId: SessionId) =
+internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
     sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter, gatheringRegistry)
+    emitShopGmcp(sessionId)
+}
+
+/** Emits `Shop.List` if the player is in a shop room, otherwise emits `Shop.Close`. */
+internal suspend fun EngineContext.emitShopGmcp(sessionId: SessionId) {
+    val emitter = gmcpEmitter ?: return
+    val registry = shopRegistry ?: return
+    val me = players.get(sessionId) ?: return
+    val shop = registry.shopInRoom(me.roomId)
+    if (shop != null) {
+        val shopItems = registry.shopItems(shop)
+        emitter.sendShopList(
+            sessionId,
+            shop.name,
+            shopItems,
+            buyMultiplier = economyConfig.buyMultiplier,
+            sellMultiplier = economyConfig.sellMultiplier,
+        )
+    } else {
+        emitter.sendShopClose(sessionId)
+    }
+}
 
 /** Sends a full room description (title, description, exits, items, resources, players, mobs) to [sessionId]. */
 internal suspend fun sendLook(

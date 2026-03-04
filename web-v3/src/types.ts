@@ -89,7 +89,28 @@ export interface ItemSummary {
   id: string;
   name: string;
   slot: string | null;
+  basePrice?: number;
   image?: string | null;
+}
+
+export interface ShopItem {
+  id: string;
+  name: string;
+  keyword: string;
+  description: string;
+  slot: string | null;
+  damage: number;
+  armor: number;
+  buyPrice: number;
+  basePrice: number;
+  consumable: boolean;
+  image: string | null;
+}
+
+export interface ShopState {
+  name: string;
+  sellMultiplier: number;
+  items: ShopItem[];
 }
 
 export interface RoomItem {
