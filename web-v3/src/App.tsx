@@ -29,6 +29,8 @@ import type {
   ChatMessage,
   CharacterInfo,
   GroupInfo,
+  GuildInfo,
+  GuildMemberEntry,
   ItemSummary,
   MobileTab,
   PopoutPanel,
@@ -53,6 +55,7 @@ function createEmptyChatByChannel(): Record<ChatChannel, ChatMessage[]> {
     shout: [],
     ooc: [],
     gtell: [],
+    gchat: [],
   };
 }
 
@@ -116,6 +119,8 @@ function App() {
   const [equipment, setEquipment] = useState<Record<string, ItemSummary>>({});
   const [achievements, setAchievements] = useState<AchievementData>({ completed: [], inProgress: [] });
   const [groupInfo, setGroupInfo] = useState<GroupInfo>({ leader: null, members: [] });
+  const [guildInfo, setGuildInfo] = useState<GuildInfo>({ name: null, tag: null, rank: null, motd: null, memberCount: 0, maxSize: 50 });
+  const [guildMembers, setGuildMembers] = useState<GuildMemberEntry[]>([]);
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
   const [whoPlayers, setWhoPlayers] = useState<string[]>([]);
 
@@ -167,6 +172,8 @@ function App() {
     setEquipment({});
     setAchievements({ completed: [], inProgress: [] });
     setGroupInfo({ leader: null, members: [] });
+    setGuildInfo({ name: null, tag: null, rank: null, motd: null, memberCount: 0, maxSize: 50 });
+    setGuildMembers([]);
     setChatByChannel(createEmptyChatByChannel());
     setWhoPlayers([]);
     setActiveChatChannel("say");
@@ -192,6 +199,8 @@ function App() {
           setSkills,
           setAchievements,
           setGroupInfo,
+          setGuildInfo,
+          setGuildMembers,
           setChatByChannel,
           updateMap,
         },
@@ -565,6 +574,8 @@ function App() {
           messages={chatByChannel[activeChatChannel]}
           whoPlayers={whoPlayers}
           groupInfo={groupInfo}
+          guildInfo={guildInfo}
+          guildMembers={guildMembers}
           onChannelChange={setActiveChatChannel}
           onRequestWho={() => {
             sendCommand("who", true);
