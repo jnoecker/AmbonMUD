@@ -3,6 +3,8 @@ import type { CombatTarget, RoomMob, SkillSummary, Vitals } from "../../types";
 import { percent } from "../../utils";
 import { CrosshairIcon, FleeIcon, RefreshIcon, SkillCastIcon } from "../Icons";
 
+type AbilityTab = "all" | "offense" | "defense";
+
 interface CombatPanelProps {
   connected: boolean;
   hasRoomDetails: boolean;
@@ -29,6 +31,8 @@ export function CombatPanel({
   onAttackMob,
 }: CombatPanelProps) {
   const [now, setNow] = useState(() => Date.now());
+  const [activeTab, setActiveTab] = useState<AbilityTab>("all");
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(Date.now()), 250);
@@ -92,54 +96,94 @@ export function CombatPanel({
         </div>
       )}
 
-      {/* Ability grid */}
+      {/* Ability subtabs + grid */}
       {skills.length > 0 && (
-        <div className="combat-ability-grid">
-          {skills.map((skill) => {
-            const elapsed = Math.max(0, now - skill.receivedAt);
-            const remainingMs = Math.max(0, skill.cooldownRemainingMs - elapsed);
-            const cooldownSeconds = Math.ceil(remainingMs / 1000);
-            const isReady = remainingMs <= 0;
-            const hasEnoughMana = vitals.mana >= skill.manaCost;
-            const isDisabled = !isReady || !hasEnoughMana;
-            const cooldownFraction = skill.cooldownMs > 0 ? remainingMs / skill.cooldownMs : 0;
+        <>
+          <div className="combat-tab-bar">
+            {(["all", "offense", "defense"] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={`combat-tab ${activeTab === tab ? "combat-tab-active" : ""}`}
+                onClick={() => { setActiveTab(tab); setExpanded(false); }}
+              >
+                {tab === "all" ? "All" : tab === "offense" ? "Offense" : "Defense"}
+              </button>
+            ))}
+          </div>
+          {(() => {
+            const filtered = skills
+              .filter((s) =>
+                activeTab === "all"
+                  ? true
+                  : activeTab === "offense"
+                    ? s.targetType === "ENEMY"
+                    : s.targetType === "SELF" || s.targetType === "ALLY",
+              )
+              .sort((a, b) => b.levelRequired - a.levelRequired);
+            const visible = expanded ? filtered : filtered.slice(0, 6);
 
             return (
-              <button
-                key={skill.id}
-                type="button"
-                className={`combat-ability-button ${isDisabled ? "combat-ability-button-disabled" : ""}`}
-                title={
-                  !isReady
-                    ? `${skill.name} — ${cooldownSeconds}s cooldown`
-                    : !hasEnoughMana
-                      ? `${skill.name} — not enough mana (${skill.manaCost})`
-                      : `Cast ${skill.name} (${skill.manaCost} mana)`
-                }
-                disabled={isDisabled}
-                onClick={() => onCastSkill(skill.id, skill.cooldownMs)}
-              >
-                <span className="combat-ability-icon-wrap">
-                  <SkillCastIcon
-                    className="combat-ability-icon"
-                    classRestriction={skill.classRestriction}
-                    targetType={skill.targetType}
-                  />
-                </span>
-                <span className="combat-ability-label">
-                  <span className="combat-ability-name">{skill.name}</span>
-                  <span className="combat-ability-cost">{skill.manaCost}m</span>
-                </span>
-                {!isReady && (
-                  <span
-                    className="combat-ability-cooldown-bar"
-                    style={{ width: `${cooldownFraction * 100}%` }}
-                  />
+              <>
+                <div className="combat-ability-grid">
+                  {visible.map((skill) => {
+                    const elapsed = Math.max(0, now - skill.receivedAt);
+                    const remainingMs = Math.max(0, skill.cooldownRemainingMs - elapsed);
+                    const cooldownSeconds = Math.ceil(remainingMs / 1000);
+                    const isReady = remainingMs <= 0;
+                    const hasEnoughMana = vitals.mana >= skill.manaCost;
+                    const isDisabled = !isReady || !hasEnoughMana;
+                    const cooldownFraction = skill.cooldownMs > 0 ? remainingMs / skill.cooldownMs : 0;
+
+                    return (
+                      <button
+                        key={skill.id}
+                        type="button"
+                        className={`combat-ability-button ${isDisabled ? "combat-ability-button-disabled" : ""}`}
+                        title={
+                          !isReady
+                            ? `${skill.name} — ${cooldownSeconds}s cooldown`
+                            : !hasEnoughMana
+                              ? `${skill.name} — not enough mana (${skill.manaCost})`
+                              : `Cast ${skill.name} (${skill.manaCost} mana)`
+                        }
+                        disabled={isDisabled}
+                        onClick={() => onCastSkill(skill.id, skill.cooldownMs)}
+                      >
+                        <span className="combat-ability-icon-wrap">
+                          <SkillCastIcon
+                            className="combat-ability-icon"
+                            classRestriction={skill.classRestriction}
+                            targetType={skill.targetType}
+                          />
+                        </span>
+                        <span className="combat-ability-label">
+                          <span className="combat-ability-name">{skill.name}</span>
+                          <span className="combat-ability-cost">{skill.manaCost} mana</span>
+                        </span>
+                        {!isReady && (
+                          <span
+                            className="combat-ability-cooldown-bar"
+                            style={{ width: `${cooldownFraction * 100}%` }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {filtered.length > 6 && (
+                  <button
+                    type="button"
+                    className="combat-show-all"
+                    onClick={() => setExpanded((v) => !v)}
+                  >
+                    {expanded ? "Show less" : `Show all (${filtered.length})`}
+                  </button>
                 )}
-              </button>
+              </>
             );
-          })}
-        </div>
+          })()}
+        </>
       )}
 
       {/* Action bar */}
