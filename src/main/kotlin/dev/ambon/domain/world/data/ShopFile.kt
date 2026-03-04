@@ -4,4 +4,5 @@ data class ShopFile(
     val name: String,
     val room: String,
     val items: List<String> = emptyList(),
+    val image: String? = null,
 )
