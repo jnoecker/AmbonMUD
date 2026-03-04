@@ -5,6 +5,8 @@ import type {
   ChatMessage,
   CharacterInfo,
   CompletedAchievement,
+  FriendEntry,
+  FriendNotification,
   GroupInfo,
   GroupMember,
   GuildInfo,
@@ -39,6 +41,8 @@ interface GmcpContext {
   setGroupInfo: Dispatch<SetStateAction<GroupInfo>>;
   setGuildInfo: Dispatch<SetStateAction<GuildInfo>>;
   setGuildMembers: Dispatch<SetStateAction<GuildMemberEntry[]>>;
+  setFriends: Dispatch<SetStateAction<FriendEntry[]>>;
+  pushFriendNotification: (notification: FriendNotification) => void;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>) => void;
 }
@@ -406,6 +410,61 @@ export function applyGmcpPackage(
           next.splice(0, next.length - MAX_CHAT_MESSAGES_PER_CHANNEL);
         }
         return { ...prev, gchat: next };
+      });
+      break;
+    }
+
+    case "Friends.List": {
+      if (!Array.isArray(data)) {
+        ctx.setFriends([]);
+        break;
+      }
+      ctx.setFriends(
+        data
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => ({
+            name: typeof e.name === "string" ? e.name : "Unknown",
+            online: e.online === true,
+            level: typeof e.level === "number" ? e.level : null,
+            zone: typeof e.zone === "string" ? e.zone : null,
+          })),
+      );
+      break;
+    }
+
+    case "Friends.Online": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const name = typeof packet.name === "string" ? packet.name : null;
+      if (!name) break;
+      const level = typeof packet.level === "number" ? packet.level : null;
+      ctx.setFriends((prev) => {
+        const existing = prev.find((f) => f.name === name);
+        if (existing) {
+          return prev.map((f) => f.name === name ? { ...f, online: true, level } : f);
+        }
+        return [...prev, { name, online: true, level, zone: null }];
+      });
+      ctx.pushFriendNotification({
+        id: `${Date.now()}-${Math.random()}`,
+        name,
+        event: "online",
+        receivedAt: Date.now(),
+      });
+      break;
+    }
+
+    case "Friends.Offline": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const name = typeof packet.name === "string" ? packet.name : null;
+      if (!name) break;
+      ctx.setFriends((prev) =>
+        prev.map((f) => f.name === name ? { ...f, online: false, zone: null } : f),
+      );
+      ctx.pushFriendNotification({
+        id: `${Date.now()}-${Math.random()}`,
+        name,
+        event: "offline",
+        receivedAt: Date.now(),
       });
       break;
     }
