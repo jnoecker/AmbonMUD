@@ -24,6 +24,11 @@ class QuestSystem(
     /** Invoked after a quest is successfully completed; used by AchievementSystem. */
     var onQuestCompleted: (suspend (SessionId, String) -> Unit)? = null
 
+    /** Invoked to emit quest GMCP; set by GameEngine during wiring. */
+    var onQuestListChanged: (suspend (SessionId) -> Unit)? = null
+    var onQuestObjectiveUpdated: (suspend (SessionId, String, Int, Int, Int) -> Unit)? = null
+    var onQuestCompletedGmcp: (suspend (SessionId, String, String) -> Unit)? = null
+
     /**
      * Returns quests offered by this mob that the player can accept
      * (not already active, not already completed).
@@ -63,6 +68,7 @@ class QuestSystem(
         for (obj in quest.objectives) {
             outbound.send(OutboundEvent.SendText(sessionId, "  - ${obj.description}"))
         }
+        onQuestListChanged?.invoke(sessionId)
         return null
     }
 
@@ -79,6 +85,7 @@ class QuestSystem(
         ps.activeQuests = ps.activeQuests - questId
         players.persistPlayer(ps.sessionId)
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest abandoned: ${quest?.name ?: questId}"))
+        onQuestListChanged?.invoke(sessionId)
         return null
     }
 
@@ -140,6 +147,7 @@ class QuestSystem(
                 newObjectives[index] = updated
                 questChanged = true
                 sendObjectiveProgress(sessionId, objDef.description, updated)
+                onQuestObjectiveUpdated?.invoke(sessionId, questId, index, updated.current, updated.required)
             }
 
             if (questChanged) {
@@ -229,6 +237,7 @@ class QuestSystem(
         ps.completedQuestIds = ps.completedQuestIds + questId
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Quest complete: ${quest.name}!"))
+        onQuestCompletedGmcp?.invoke(sessionId, questId, quest.name)
         onQuestCompleted?.invoke(sessionId, questId)
 
         grantRewards(sessionId, rewards, ps, players, outbound)
