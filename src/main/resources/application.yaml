@@ -118,8 +118,8 @@ ambonmud:
 
   engine:
     mob:
-      minActionDelayMillis: 2000
-      maxActionDelayMillis: 5000
+      minActionDelayMillis: 8000
+      maxActionDelayMillis: 20000
       tiers:
         weak:
           baseHp: 5
