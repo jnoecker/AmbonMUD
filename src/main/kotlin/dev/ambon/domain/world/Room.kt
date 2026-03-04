@@ -14,4 +14,6 @@ data class Room(
     val features: List<RoomFeature> = emptyList(),
     /** Crafting station available in this room, if any. */
     val station: CraftingStationType? = null,
+    /** URL to an image representing this room. */
+    val image: String? = null,
 )

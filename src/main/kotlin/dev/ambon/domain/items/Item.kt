@@ -22,4 +22,5 @@ data class Item(
     val onUse: ItemUseEffect? = null,
     val matchByKey: Boolean = false,
     val basePrice: Int = 0,
+    val image: String? = null,
 )

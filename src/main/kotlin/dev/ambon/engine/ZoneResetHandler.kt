@@ -29,6 +29,7 @@ internal fun spawnToMobState(spawn: MobSpawn): MobState =
         behaviorTree = spawn.behaviorTree,
         templateKey = spawn.id.value,
         questIds = spawn.questIds,
+        image = spawn.image,
     )
 
 /**
