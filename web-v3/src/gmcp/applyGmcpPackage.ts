@@ -282,6 +282,8 @@ export function applyGmcpPackage(
     case "Room.UpdateMob": {
       const packet = data as Partial<Record<string, unknown>>;
       if (typeof packet.id !== "string") break;
+      const updatedHp = safeNumber(packet.hp);
+      const updatedMaxHp = Math.max(1, safeNumber(packet.maxHp, 1));
       ctx.setMobs((prev) =>
         prev.map((mob) => {
           if (mob.id !== packet.id) return mob;
@@ -293,6 +295,12 @@ export function applyGmcpPackage(
           };
         }),
       );
+      // Keep combat target HP in sync
+      ctx.setCombatTarget((prev) =>
+        prev && prev.targetId === packet.id
+          ? { ...prev, targetHp: updatedHp, targetMaxHp: updatedMaxHp }
+          : prev,
+      );
       break;
     }
 
@@ -300,6 +308,8 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       if (typeof packet.id !== "string") break;
       ctx.setMobs((prev) => prev.filter((mob) => mob.id !== packet.id));
+      // Clear combat target if the removed mob was our target
+      ctx.setCombatTarget((prev) => (prev && prev.targetId === packet.id ? null : prev));
       break;
     }
 

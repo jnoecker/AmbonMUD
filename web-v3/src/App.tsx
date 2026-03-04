@@ -378,23 +378,6 @@ function App() {
     return () => window.cancelAnimationFrame(handle);
   }, [activePopout, drawMap]);
 
-  // Sync combat target HP from mobs list; clear if target mob disappears
-  useEffect(() => {
-    if (!combatTarget?.targetId) return;
-    const mob = mobs.find((m) => m.id === combatTarget.targetId);
-    if (!mob) {
-      setCombatTarget(null);
-      return;
-    }
-    if (mob.hp !== combatTarget.targetHp || mob.maxHp !== combatTarget.targetMaxHp) {
-      setCombatTarget((prev) =>
-        prev && prev.targetId === mob.id
-          ? { ...prev, targetHp: mob.hp, targetMaxHp: mob.maxHp }
-          : prev,
-      );
-    }
-  }, [mobs, combatTarget?.targetId, combatTarget?.targetHp, combatTarget?.targetMaxHp]);
-
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 
   const equipmentSlots = useMemo(() => {
