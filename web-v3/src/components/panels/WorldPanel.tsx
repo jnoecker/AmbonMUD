@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { COMPASS_DIRECTIONS } from "../../constants";
 import type { CombatTarget, DialogueState, ItemSummary, RoomItem, RoomMob, RoomPlayer, RoomState, ShopState, SkillSummary, Vitals } from "../../types";
 import { percent } from "../../utils";
@@ -81,10 +81,11 @@ export function WorldPanel({
   onSellItem,
 }: WorldPanelProps) {
   const [shopTab, setShopTab] = useState<"buy" | "sell">("buy");
-
-  useEffect(() => {
-    setShopTab("buy");
-  }, [shop]);
+  const prevShopRef = useRef(shop);
+  if (prevShopRef.current !== shop) {
+    prevShopRef.current = shop;
+    if (shopTab !== "buy") setShopTab("buy");
+  }
 
   return (
     <section className="panel panel-world" aria-label="World state">
