@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
+import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.EffectType
@@ -50,6 +51,15 @@ class CombatSystem(
     private val config: CombatSystemConfig = CombatSystemConfig(),
     private val callbacks: CombatSystemCallbacks = CombatSystemCallbacks(),
 ) : GameSystem {
+    /** Callback for combat events; wired by GameEngine after construction. */
+    var onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> }
+
+    /** Callback for XP gain events; wired by GameEngine after construction. */
+    var onXpGained: suspend (SessionId, Long, String) -> Unit = { _, _, _ -> }
+
+    /** Callback for gold gain events; wired by GameEngine after construction. */
+    var onGoldGained: suspend (SessionId, Long, String) -> Unit = { _, _, _ -> }
+
     // Per-mob combat state (tracks tick timing)
     private data class MobCombatState(
         val mobId: MobId,
@@ -304,6 +314,7 @@ class CombatSystem(
                     roomId = player.roomId,
                     deathMessage = "You collapse, too wounded to keep fighting.",
                     roomMessage = "${player.name} has fallen in battle.",
+                    killerName = mob.name,
                 )
                 ran++
                 continue
@@ -337,6 +348,15 @@ class CombatSystem(
 
                 val playerHitText = "You hit ${mob.name} for $effectivePlayerDamage damage$playerFeedbackSuffix."
                 outbound.send(OutboundEvent.SendText(sessionId, playerHitText))
+                onCombatEvent(
+                    sessionId,
+                    CombatEvent.MeleeHit(
+                        targetName = mob.name,
+                        targetId = mob.id.value,
+                        damage = effectivePlayerDamage,
+                        sourceIsPlayer = true,
+                    ),
+                )
                 if (config.detailedFeedbackEnabled && config.detailedFeedbackRoomBroadcastEnabled) {
                     broadcastToRoom(
                         players,
@@ -391,6 +411,14 @@ class CombatSystem(
             val dodgePct = (PlayerState.statBonus(targetStats.dex, 1) * config.dexDodgePerPoint).coerceIn(0, config.maxDodgePercent)
             if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
                 outbound.send(OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s attack!"))
+                onCombatEvent(
+                    targetSid,
+                    CombatEvent.Dodge(
+                        targetName = target.name,
+                        targetId = null,
+                        sourceIsPlayer = false,
+                    ),
+                )
             } else {
                 val mobRoll = rollRange(rng, mob.damage.min, mob.damage.max)
                 var mobDamage = mobRoll
@@ -415,6 +443,27 @@ class CombatSystem(
                         "${mob.name} hits you for $mobDamage damage$mobFeedbackSuffix."
                     }
                 outbound.send(OutboundEvent.SendText(targetSid, mobHitText))
+                if (shieldAbsorbed > 0) {
+                    onCombatEvent(
+                        targetSid,
+                        CombatEvent.ShieldAbsorb(
+                            attackerName = mob.name,
+                            absorbed = shieldAbsorbed,
+                            remaining = statusEffects?.absorbPlayerDamage(targetSid, 0) ?: 0,
+                        ),
+                    )
+                }
+                if (mobDamage > 0) {
+                    onCombatEvent(
+                        targetSid,
+                        CombatEvent.MeleeHit(
+                            targetName = target.name,
+                            targetId = null,
+                            damage = mobDamage,
+                            sourceIsPlayer = false,
+                        ),
+                    )
+                }
                 if (config.detailedFeedbackEnabled && config.detailedFeedbackRoomBroadcastEnabled) {
                     broadcastToRoom(
                         players,
@@ -435,6 +484,7 @@ class CombatSystem(
                     roomId = target.roomId,
                     deathMessage = "You have been slain by ${mob.name}.",
                     roomMessage = "${target.name} has been slain by ${mob.name}.",
+                    killerName = mob.name,
                 )
             }
 
@@ -465,7 +515,13 @@ class CombatSystem(
         roomId: RoomId,
         deathMessage: String,
         roomMessage: String,
+        killerName: String = "unknown",
+        killerIsPlayer: Boolean = false,
     ) {
+        onCombatEvent(
+            sessionId,
+            CombatEvent.Death(killerName = killerName, killerIsPlayer = killerIsPlayer),
+        )
         outbound.send(OutboundEvent.SendText(sessionId, deathMessage))
         outbound.send(OutboundEvent.SendText(sessionId, "You are safe now — rest and your wounds will mend."))
         broadcastToRoom(players, outbound, roomId, roomMessage, exclude = sessionId)
@@ -574,8 +630,17 @@ class CombatSystem(
         rollDrops(mob)
         callbacks.onRoomItemsChanged(mob.roomId)
         broadcastToRoom(players, outbound, mob.roomId, "${mob.name} dies.")
-        grantKillGold(killerSessionId, mob)
+        val goldGained = grantKillGold(killerSessionId, mob)
         grantGroupKillXp(killerSessionId, mob)
+        onCombatEvent(
+            killerSessionId,
+            CombatEvent.Kill(
+                targetName = mob.name,
+                targetId = mob.id.value,
+                xpGained = mob.xpReward,
+                goldGained = goldGained,
+            ),
+        )
 
         // Fire quest/achievement callbacks for all contributors
         if (mob.templateKey.isNotEmpty()) {
@@ -588,19 +653,21 @@ class CombatSystem(
     private suspend fun grantKillGold(
         sessionId: SessionId,
         mob: MobState,
-    ) {
-        if (mob.goldMax <= 0L) return
-        val player = players.get(sessionId) ?: return
+    ): Long {
+        if (mob.goldMax <= 0L) return 0L
+        val player = players.get(sessionId) ?: return 0L
         val goldDrop =
             if (mob.goldMin >= mob.goldMax) {
                 mob.goldMin
             } else {
                 mob.goldMin + rng.nextLong(mob.goldMax - mob.goldMin + 1)
             }
-        if (goldDrop <= 0L) return
+        if (goldDrop <= 0L) return 0L
         player.gold += goldDrop
         dirtyNotifier.playerVitalsDirty(sessionId)
         outbound.send(OutboundEvent.SendText(sessionId, "You find $goldDrop gold."))
+        onGoldGained(sessionId, goldDrop, mob.name)
+        return goldDrop
     }
 
     private suspend fun grantGroupKillXp(
@@ -638,6 +705,7 @@ class CombatSystem(
             val result = players.grantXp(sid, reward, progression) ?: continue
             metrics.onXpAwarded(reward, "kill")
             outbound.send(OutboundEvent.SendText(sid, "You gain $reward XP."))
+            onXpGained(sid, reward, mob.name)
             dirtyNotifier.playerVitalsDirty(sid)
             if (result.levelsGained > 0) {
                 metrics.onLevelUp()

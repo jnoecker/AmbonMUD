@@ -13,6 +13,7 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.ceilSeconds
+import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.healHp
 import dev.ambon.engine.items.ItemRegistry
@@ -38,6 +39,7 @@ class AbilitySystem(
     private val statusEffects: StatusEffectSystem? = null,
     private val groupSystem: GroupSystem? = null,
     private val mobs: MobRegistry? = null,
+    private val onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> },
 ) : GameSystem {
     private val learnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
     private val cooldowns = mutableMapOf<SessionId, MutableMap<AbilityId, Long>>()
@@ -145,6 +147,17 @@ class AbilitySystem(
                         "Your ${ability.displayName} hits ${mob.name} for $damage damage.",
                     ),
                 )
+                onCombatEvent(
+                    sessionId,
+                    CombatEvent.AbilityHit(
+                        abilityId = ability.id.value,
+                        abilityName = ability.displayName,
+                        targetName = mob.name,
+                        targetId = mob.id.value,
+                        damage = damage,
+                        sourceIsPlayer = true,
+                    ),
+                )
                 if (mob.hp <= 0) {
                     combat.handleSpellKill(sessionId, mob)
                 }
@@ -177,6 +190,17 @@ class AbilitySystem(
                         OutboundEvent.SendText(
                             sessionId,
                             "Your ${ability.displayName} hits ${m.name} for $damage damage.",
+                        ),
+                    )
+                    onCombatEvent(
+                        sessionId,
+                        CombatEvent.AbilityHit(
+                            abilityId = ability.id.value,
+                            abilityName = ability.displayName,
+                            targetName = m.name,
+                            targetId = m.id.value,
+                            damage = damage,
+                            sourceIsPlayer = true,
                         ),
                     )
                     if (m.hp <= 0) {
@@ -239,6 +263,15 @@ class AbilitySystem(
                 if (healed > 0) {
                     dirtyNotifier.playerVitalsDirty(sessionId)
                     combat.addHealingThreat(sessionId, healed)
+                    onCombatEvent(
+                        sessionId,
+                        CombatEvent.Heal(
+                            abilityName = ability.displayName,
+                            targetName = player.name,
+                            amount = healed,
+                            sourceIsPlayer = true,
+                        ),
+                    )
                 }
                 outbound.send(
                     OutboundEvent.SendText(
@@ -315,6 +348,15 @@ class AbilitySystem(
                 if (healed > 0) {
                     dirtyNotifier.playerVitalsDirty(targetSid)
                     combat.addHealingThreat(sessionId, healed)
+                    onCombatEvent(
+                        sessionId,
+                        CombatEvent.Heal(
+                            abilityName = ability.displayName,
+                            targetName = target.name,
+                            amount = healed,
+                            sourceIsPlayer = true,
+                        ),
+                    )
                 }
                 if (targetSid == sessionId) {
                     outbound.send(
@@ -379,7 +421,7 @@ class AbilitySystem(
         return null
     }
 
-    private fun deductManaAndCooldown(
+    private suspend fun deductManaAndCooldown(
         sessionId: SessionId,
         player: PlayerState,
         ability: AbilityDefinition,
@@ -389,8 +431,12 @@ class AbilitySystem(
         dirtyNotifier.playerVitalsDirty(sessionId)
         if (ability.cooldownMs > 0) {
             cooldowns.getOrPut(sessionId) { mutableMapOf() }[ability.id] = now + ability.cooldownMs
+            onCooldownStarted(sessionId, ability.id.value, ability.cooldownMs)
         }
     }
+
+    /** Invoked after a cooldown starts; used by GameEngine to emit Char.Cooldown GMCP. */
+    var onCooldownStarted: suspend (SessionId, String, Long) -> Unit = { _, _, _ -> }
 
     fun knownAbilities(sessionId: SessionId): List<AbilityDefinition> {
         val known = learnedAbilities[sessionId] ?: return emptyList()

@@ -51,9 +51,11 @@ internal suspend fun afterEquipChange(
     combat: CombatSystem,
     items: ItemRegistry,
     gmcpEmitter: GmcpEmitter?,
+    markStatsDirty: ((SessionId) -> Unit)? = null,
 ) {
     combat.syncPlayerDefense(sessionId)
     syncItemsGmcp(sessionId, items, gmcpEmitter)
+    markStatsDirty?.invoke(sessionId)
 }
 
 /**
@@ -223,6 +225,7 @@ internal suspend fun sendLook(
     gmcpEmitter?.sendRoomInfo(sessionId, room)
     gmcpEmitter?.sendRoomPlayers(sessionId, rawRoomPlayers)
     gmcpEmitter?.sendRoomMobs(sessionId, rawRoomMobs)
+    gmcpEmitter?.sendRoomMobInfo(sessionId, gmcpEmitter.buildMobInfoEntries(rawRoomMobs))
     gmcpEmitter?.sendRoomItems(sessionId, here)
 }
 

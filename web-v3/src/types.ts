@@ -8,6 +8,8 @@ export interface GroupMember {
   level: number;
   hp: number;
   maxHp: number;
+  mana: number;
+  maxMana: number;
   playerClass: string;
 }
 
@@ -207,5 +209,67 @@ export interface SkillSummary {
   targetType: string;
   classRestriction: string | null;
   receivedAt: number;
+}
+
+export interface CombatEventData {
+  type: string;
+  targetName: string | null;
+  targetId: string | null;
+  abilityId: string | null;
+  abilityName: string | null;
+  damage: number;
+  healing: number;
+  absorbed: number;
+  shieldRemaining: number;
+  sourceIsPlayer: boolean;
+  xpGained: number;
+  goldGained: number;
+}
+
+export interface CharStats {
+  strength: number;
+  dexterity: number;
+  constitution: number;
+  intelligence: number;
+  wisdom: number;
+  charisma: number;
+  effectiveStrength: number;
+  effectiveDexterity: number;
+  effectiveConstitution: number;
+  effectiveIntelligence: number;
+  effectiveWisdom: number;
+  effectiveCharisma: number;
+  baseDamageMin: number;
+  baseDamageMax: number;
+  armor: number;
+  dodgePercent: number;
+}
+
+export interface QuestObjective {
+  description: string;
+  current: number;
+  required: number;
+}
+
+export interface QuestEntry {
+  id: string;
+  name: string;
+  description: string;
+  objectives: QuestObjective[];
+}
+
+export interface GainEvent {
+  type: string;
+  amount: number;
+  source: string | null;
+}
+
+export interface MobInfo {
+  id: string;
+  level: number;
+  tier: string;
+  questGiver: boolean;
+  shopKeeper: boolean;
+  dialogue: boolean;
 }
 

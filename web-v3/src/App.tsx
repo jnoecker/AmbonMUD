@@ -25,19 +25,24 @@ import { useMiniMap } from "./hooks/useMiniMap";
 import { useMudSocket } from "./hooks/useMudSocket";
 import type {
   AchievementData,
+  CharStats,
   ChatChannel,
   ChatMessage,
   CharacterInfo,
+  CombatEventData,
   CombatTarget,
   DialogueState,
   FriendEntry,
   FriendNotification,
+  GainEvent,
   GroupInfo,
   GuildInfo,
   GuildMemberEntry,
   ItemSummary,
   MobileTab,
+  MobInfo,
   PopoutPanel,
+  QuestEntry,
   RoomMob,
   RoomItem,
   RoomPlayer,
@@ -134,7 +139,20 @@ function App() {
   const [detailMob, setDetailMob] = useState<RoomMob | null>(null);
   const [detailItem, setDetailItem] = useState<RoomItem | null>(null);
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
+  const [, setCharStats] = useState<CharStats | null>(null);
+  const [, setQuests] = useState<QuestEntry[]>([]);
+  const [, setMobInfo] = useState<MobInfo[]>([]);
   const [shop, setShop] = useState<ShopState | null>(null);
+  const combatEventsRef = useRef<CombatEventData[]>([]);
+  const gainEventsRef = useRef<GainEvent[]>([]);
+
+  const pushCombatEvent = useCallback((event: CombatEventData) => {
+    combatEventsRef.current = [...combatEventsRef.current.slice(-99), event];
+  }, []);
+
+  const pushGainEvent = useCallback((event: GainEvent) => {
+    gainEventsRef.current = [...gainEventsRef.current.slice(-49), event];
+  }, []);
 
   const { mapCanvasRef, drawMap, updateMap, resetMap } = useMiniMap();
   const {
@@ -200,7 +218,12 @@ function App() {
     setDialogue(null);
     setWhoPlayers([]);
     setCombatTarget(null);
+    setCharStats(null);
+    setQuests([]);
+    setMobInfo([]);
     setShop(null);
+    combatEventsRef.current = [];
+    gainEventsRef.current = [];
     setActiveChatChannel("say");
     resetMap();
   }, [resetMap]);
@@ -233,10 +256,15 @@ function App() {
           pushFriendNotification,
           setChatByChannel,
           updateMap,
+          pushCombatEvent,
+          setCharStats,
+          setQuests,
+          pushGainEvent,
+          setMobInfo,
         },
       );
     },
-    [pushFriendNotification, updateMap],
+    [pushFriendNotification, pushCombatEvent, pushGainEvent, updateMap],
   );
 
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine } = useMudSocket({

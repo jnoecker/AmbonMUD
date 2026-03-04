@@ -4,10 +4,13 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
+import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.resolvePlayerStats
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 
@@ -17,10 +20,13 @@ class GmcpFlushHandler(
     private val gmcpDirtyMobs: MutableSet<MobId>,
     private val gmcpDirtyGroup: MutableSet<SessionId>,
     private val gmcpDirtyCombat: MutableSet<SessionId>,
+    private val gmcpDirtyStats: MutableSet<SessionId>,
     private val players: PlayerRegistry,
     private val mobs: MobRegistry,
+    private val items: ItemRegistry,
     private val statusEffectSystem: StatusEffectSystem,
     private val groupSystem: GroupSystem,
+    private val combatSystem: CombatSystem,
     private val gmcpEmitter: GmcpEmitter,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
@@ -62,6 +68,24 @@ class GmcpFlushHandler(
     suspend fun flushDirtyCombat() {
         drainDirty(gmcpDirtyCombat) { sid ->
             gmcpEmitter.sendCharCombat(sid)
+        }
+    }
+
+    suspend fun flushDirtyStats() {
+        drainDirty(gmcpDirtyStats) { sid ->
+            val player = players.get(sid) ?: return@drainDirty
+            val effectiveStats = resolvePlayerStats(player, items, statusEffectSystem)
+            val equipBonuses = items.equipmentBonuses(sid)
+            val dexDodge = (dev.ambon.engine.PlayerState.statBonus(effectiveStats.dex, 1) * 2).coerceIn(0, 30)
+            gmcpEmitter.sendCharStats(
+                sessionId = sid,
+                player = player,
+                effectiveStats = effectiveStats,
+                baseDamageMin = combatSystem.minDamage,
+                baseDamageMax = combatSystem.maxDamage,
+                armor = equipBonuses.armor,
+                dodgePercent = dexDodge,
+            )
         }
     }
 

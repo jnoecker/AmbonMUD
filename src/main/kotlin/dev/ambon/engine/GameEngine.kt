@@ -165,6 +165,8 @@ class GameEngine(
             onAfterLogin = { sid ->
                 guildSystem?.onPlayerLogin(sid)
                 friendsSystem.onPlayerLogin(sid)
+                sendQuestListGmcp(sid)
+                markStatsDirty(sid)
             },
         )
     }
@@ -288,10 +290,13 @@ class GameEngine(
             gmcpDirtyMobs = gmcpDirtyMobs,
             gmcpDirtyGroup = gmcpDirtyGroup,
             gmcpDirtyCombat = gmcpDirtyCombat,
+            gmcpDirtyStats = gmcpDirtyStats,
             players = players,
             mobs = mobs,
+            items = items,
             statusEffectSystem = statusEffectSystem,
             groupSystem = groupSystem,
+            combatSystem = combatSystem,
             gmcpEmitter = gmcpEmitter,
             metrics = metrics,
         )
@@ -361,6 +366,9 @@ class GameEngine(
     /** Sessions whose combat target changed this tick and need a Char.Combat push. */
     private val gmcpDirtyCombat = mutableSetOf<SessionId>()
 
+    /** Sessions whose stats changed this tick and need a Char.Stats push. */
+    private val gmcpDirtyStats = mutableSetOf<SessionId>()
+
     val gmcpEmitter =
         GmcpEmitter(
             outbound = outbound,
@@ -400,6 +408,10 @@ class GameEngine(
         gmcpDirtyCombat.add(sessionId)
     }
 
+    fun markStatsDirty(sessionId: SessionId) {
+        gmcpDirtyStats.add(sessionId)
+    }
+
     private val dirtyNotifier =
         object : DirtyNotifier {
             override fun playerVitalsDirty(sessionId: SessionId) = markVitalsDirty(sessionId)
@@ -409,6 +421,8 @@ class GameEngine(
             override fun mobHpDirty(mobId: MobId) = markMobHpDirty(mobId)
 
             override fun playerCombatDirty(sessionId: SessionId) = markCombatDirty(sessionId)
+
+            override fun playerStatsDirty(sessionId: SessionId) = markStatsDirty(sessionId)
         }
 
     fun markGroupDirty(sessionId: SessionId) {
@@ -524,7 +538,12 @@ class GameEngine(
             statusEffects = statusEffectSystem,
             groupSystem = groupSystem,
             mobs = mobs,
-        )
+            onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) },
+        ).also {
+            it.onCooldownStarted = { sid, abilityId, cooldownMs ->
+                gmcpEmitter.sendCharCooldown(sid, abilityId, cooldownMs)
+            }
+        }
 
     private val shopRegistry = ShopRegistry(items)
 
@@ -569,8 +588,22 @@ class GameEngine(
         )
 
     init {
+        // Late-wire combat event / gain callbacks (avoids circular type inference with gmcpEmitter)
+        combatSystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
+        combatSystem.onXpGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "xp", amount, source) }
+        combatSystem.onGoldGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "gold", amount, source) }
+        statusEffectSystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
+
         questSystem.onQuestCompleted = { sid, questId ->
             achievementSystem.onQuestCompleted(sid, questId)
+        }
+        questSystem.onQuestListChanged = { sid -> sendQuestListGmcp(sid) }
+        questSystem.onQuestObjectiveUpdated = { sid, questId, objIndex, current, required ->
+            gmcpEmitter.sendQuestUpdate(sid, questId, objIndex, current, required)
+        }
+        questSystem.onQuestCompletedGmcp = { sid, questId, questName ->
+            gmcpEmitter.sendQuestComplete(sid, questId, questName)
+            sendQuestListGmcp(sid)
         }
     }
 
@@ -671,6 +704,7 @@ class GameEngine(
                 questSystem = questSystem,
                 abilitySystem = abilitySystem,
                 markVitalsDirty = ::markVitalsDirty,
+                markStatsDirty = ::markStatsDirty,
                 metrics = metrics,
                 progression = progression,
             ),
@@ -863,6 +897,7 @@ class GameEngine(
                     flushDirtyGmcpStatusEffects()
                     flushDirtyGmcpGroup()
                     flushDirtyGmcpCombat()
+                    flushDirtyGmcpStats()
                     metrics.recordTickPhase("gmcp_flush", gmcpFlushPhaseSample)
 
                     // Phase 4: Outbound flush — run scheduled actions and reset expired zones.
@@ -984,6 +1019,31 @@ class GameEngine(
         gmcpFlushHandler.flushDirtyCombat()
     }
 
+    private suspend fun flushDirtyGmcpStats() {
+        gmcpFlushHandler.flushDirtyStats()
+    }
+
+    suspend fun sendQuestListGmcp(sessionId: SessionId) {
+        val ps = players.get(sessionId) ?: return
+        val entries = ps.activeQuests.mapNotNull { (questId, state) ->
+            val def = questRegistry.get(questId) ?: return@mapNotNull null
+            QuestListEntry(
+                id = questId,
+                name = def.name,
+                description = def.description,
+                objectives = def.objectives.mapIndexed { idx, objDef ->
+                    val prog = state.objectives.getOrNull(idx)
+                    QuestObjectiveEntry(
+                        description = objDef.description,
+                        current = prog?.current ?: 0,
+                        required = prog?.required ?: objDef.count,
+                    )
+                },
+            )
+        }
+        gmcpEmitter.sendQuestList(sessionId, entries)
+    }
+
     private suspend fun onCombatMobRemoved(
         mobId: MobId,
         roomId: RoomId,
@@ -1013,6 +1073,7 @@ class GameEngine(
         level: Int,
     ) {
         markVitalsDirty(sessionId)
+        markStatsDirty(sessionId)
         val pc = players.get(sessionId)?.playerClass
         val newAbilities = abilitySystem.syncAbilities(sessionId, level, pc)
         for (ability in newAbilities) {
@@ -1024,6 +1085,7 @@ class GameEngine(
             gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
                 abilitySystem.cooldownRemainingMs(sessionId, abilityId)
             }
+            gmcpEmitter.sendCharGain(sessionId, "levelUp", level.toLong(), newLevel = level)
         }
         achievementSystem.onLevelReached(sessionId, level)
     }

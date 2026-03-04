@@ -8,6 +8,7 @@ import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.GameSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.healHp
 import dev.ambon.engine.remapKey
@@ -25,6 +26,8 @@ class StatusEffectSystem(
     private val rng: Random = Random(),
     private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
 ) : GameSystem {
+    /** Callback for combat events (DOT/HOT ticks); wired by GameEngine after construction. */
+    var onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> }
     private val playerEffects = mutableMapOf<SessionId, MutableList<ActiveEffect>>()
     private val mobEffects = mutableMapOf<MobId, MutableList<ActiveEffect>>()
 
@@ -171,6 +174,15 @@ class StatusEffectSystem(
                                     "${def.displayName} burns you for $value damage.",
                                 ),
                             )
+                            onCombatEvent(
+                                sessionId,
+                                CombatEvent.DotTick(
+                                    effectName = def.displayName,
+                                    targetName = player.name,
+                                    targetId = null,
+                                    damage = value,
+                                ),
+                            )
                         }
                         EffectType.HOT -> {
                             val before = player.hp
@@ -182,6 +194,14 @@ class StatusEffectSystem(
                                     OutboundEvent.SendText(
                                         sessionId,
                                         "${def.displayName} heals you for $healed HP.",
+                                    ),
+                                )
+                                onCombatEvent(
+                                    sessionId,
+                                    CombatEvent.HotTick(
+                                        effectName = def.displayName,
+                                        targetName = player.name,
+                                        amount = healed,
                                     ),
                                 )
                             }
@@ -215,6 +235,15 @@ class StatusEffectSystem(
                             OutboundEvent.SendText(
                                 source,
                                 "${def.displayName} burns ${mob.name} for $value damage.",
+                            ),
+                        )
+                        onCombatEvent(
+                            source,
+                            CombatEvent.DotTick(
+                                effectName = def.displayName,
+                                targetName = mob.name,
+                                targetId = mobId.value,
+                                damage = value,
                             ),
                         )
                     }
