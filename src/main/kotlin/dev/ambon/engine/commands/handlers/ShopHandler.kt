@@ -80,7 +80,7 @@ class ShopHandler(
             }
             val (itemId, item) = match
             val buyPrice = (item.basePrice * economyConfig.buyMultiplier).roundToInt().toLong()
-            if (me.gold < buyPrice) {
+            if (!me.isStaff && me.gold < buyPrice) {
                 outbound.send(OutboundEvent.SendText(sessionId, "You can't afford ${item.displayName} ($buyPrice gold)."))
                 return
             }
@@ -89,7 +89,7 @@ class ShopHandler(
                 outbound.send(OutboundEvent.SendText(sessionId, "That item is out of stock."))
                 return
             }
-            me.gold -= buyPrice
+            if (!me.isStaff) me.gold -= buyPrice
             items.addToInventory(sessionId, newItem)
             markVitalsDirty(sessionId)
             outbound.send(OutboundEvent.SendText(sessionId, "You buy ${item.displayName} for $buyPrice gold."))
