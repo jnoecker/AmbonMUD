@@ -1,4 +1,8 @@
 zone: low_training_mines
+image:
+  room: low_training_mines/default_room.png
+  mob: low_training_mines/default_mob.png
+  item: low_training_mines/default_item.png
 lifespan: 25
 startRoom: orelift_station
 

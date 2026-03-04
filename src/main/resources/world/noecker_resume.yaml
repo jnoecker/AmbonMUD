@@ -1,4 +1,8 @@
 zone: noecker_resume
+image:
+  room: noecker_resume/default_room.png
+  mob: noecker_resume/default_mob.png
+  item: noecker_resume/default_item.png
 lifespan: 45
 startRoom: lobby
 

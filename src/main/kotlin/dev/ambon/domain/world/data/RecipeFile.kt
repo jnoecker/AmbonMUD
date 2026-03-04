@@ -16,4 +16,5 @@ data class RecipeFile(
     val station: String? = null,
     val stationBonus: Int = 0,
     val xpReward: Int = 25,
+    val image: String? = null,
 )

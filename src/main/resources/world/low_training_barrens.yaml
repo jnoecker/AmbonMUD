@@ -1,4 +1,8 @@
 zone: low_training_barrens
+image:
+  room: low_training_barrens/default_room.png
+  mob: low_training_barrens/default_mob.png
+  item: low_training_barrens/default_item.png
 lifespan: 20
 startRoom: windcut_gate
 
