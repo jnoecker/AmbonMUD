@@ -1111,7 +1111,7 @@ body {
 .guild-tab-info,
 .group-tab-members {
   overflow-y: auto;
-  max-height: 160px;
+  max-height: 45%;
   padding: var(--space-3);
   border-bottom: 1px solid var(--line-faint);
   display: flex;
@@ -1134,7 +1134,7 @@ body {
 
 .guild-roster-scroll {
   overflow-y: auto;
-  max-height: 90px;
+  flex: 1 1 0;
 }
 
 .embedded-chat-feed {
