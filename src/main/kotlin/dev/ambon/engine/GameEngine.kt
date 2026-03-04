@@ -520,6 +520,7 @@ class GameEngine(
             mobs = mobs,
             players = players,
             outbound = outbound,
+            gmcpEmitter = gmcpEmitter,
         )
 
     private val questSystem =

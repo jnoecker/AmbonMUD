@@ -5,6 +5,8 @@ import type {
   ChatMessage,
   CharacterInfo,
   CompletedAchievement,
+  DialogueChoice,
+  DialogueState,
   FriendEntry,
   FriendNotification,
   GroupInfo,
@@ -43,6 +45,7 @@ interface GmcpContext {
   setGuildMembers: Dispatch<SetStateAction<GuildMemberEntry[]>>;
   setFriends: Dispatch<SetStateAction<FriendEntry[]>>;
   pushFriendNotification: (notification: FriendNotification) => void;
+  setDialogue: Dispatch<SetStateAction<DialogueState | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>) => void;
 }
@@ -494,6 +497,27 @@ export function applyGmcpPackage(
         }
         return { ...prev, [mappedChannel]: next };
       });
+      break;
+    }
+
+    case "Dialogue.Node": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const mobName = typeof packet.mobName === "string" ? packet.mobName : "Unknown";
+      const text = typeof packet.text === "string" ? packet.text : "";
+      const choices: DialogueChoice[] = Array.isArray(packet.choices)
+        ? packet.choices
+            .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+            .map((e) => ({
+              index: typeof e.index === "number" ? e.index : 0,
+              text: typeof e.text === "string" ? e.text : "",
+            }))
+        : [];
+      ctx.setDialogue({ mobName, text, choices });
+      break;
+    }
+
+    case "Dialogue.End": {
+      ctx.setDialogue(null);
       break;
     }
 

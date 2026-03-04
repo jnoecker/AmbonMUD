@@ -46,6 +46,17 @@ export interface GuildMemberEntry {
   level: number | null;
 }
 
+export interface DialogueChoice {
+  index: number;
+  text: string;
+}
+
+export interface DialogueState {
+  mobName: string;
+  text: string;
+  choices: DialogueChoice[];
+}
+
 export interface Vitals {
   hp: number;
   maxHp: number;
