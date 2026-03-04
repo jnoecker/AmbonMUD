@@ -6,6 +6,8 @@ interface PlayPanelProps {
   preLogin: boolean;
   connected: boolean;
   hasRoomDetails: boolean;
+  roomImage: string | null | undefined;
+  roomTitle: string;
   exits: Array<[string, string]>;
   terminalHostRef: RefObject<HTMLDivElement | null>;
   commandInputRef: RefObject<HTMLInputElement | null>;
@@ -23,6 +25,8 @@ export function PlayPanel({
   preLogin,
   connected,
   hasRoomDetails,
+  roomImage,
+  roomTitle,
   exits,
   terminalHostRef,
   commandInputRef,
@@ -43,6 +47,11 @@ export function PlayPanel({
           <p className="prelogin-banner-title">Welcome back. Your session is connected.</p>
           <p className="prelogin-banner-text">Use the command bar below to enter your character name and password. World and character panels will populate right after login.</p>
         </section>
+      )}
+      {roomImage && (
+        <div className="room-banner" aria-label="Room scene">
+          <img src={roomImage} alt={roomTitle} className="room-banner-image" />
+        </div>
       )}
       <div className="terminal-card" onMouseDown={onTerminalMouseDown}><div ref={terminalHostRef} className="terminal-host" aria-label="AmbonMUD terminal" /></div>
 

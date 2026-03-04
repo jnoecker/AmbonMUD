@@ -1429,11 +1429,17 @@ body {
   height: 100%;
 }
 
-.room-hero-image {
-  width: 100%;
-  max-height: 200px;
-  object-fit: cover;
+.room-banner {
+  overflow: hidden;
   border-radius: var(--radius-md);
+  margin: 0 var(--space-2) var(--space-1);
+}
+
+.room-banner-image {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
 }
 
 .room-description-wrap {
@@ -2404,10 +2410,11 @@ body {
     grid-template-areas:
       "header"
       "prelogin"
+      "banner"
       "terminal"
       "command"
       "movement";
-    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
   }
 
   .panel-play > .panel-header {
@@ -2416,6 +2423,10 @@ body {
 
   .panel-play > .prelogin-banner {
     grid-area: prelogin;
+  }
+
+  .panel-play > .room-banner {
+    grid-area: banner;
   }
 
   .panel-play > .terminal-card {
@@ -2602,6 +2613,13 @@ body {
   font-family: "Cormorant Garamond", "Georgia", serif;
   font-size: 1.8rem;
   color: #d5def7;
+}
+
+.room-popout-image {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
 }
 
 .room-popout-text {

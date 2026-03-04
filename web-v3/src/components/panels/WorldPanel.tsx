@@ -91,9 +91,6 @@ export function WorldPanel({
                   <span className="sr-only">Mini-map</span>
                 </button>
               </div>
-              {room.image && (
-                <img src={room.image} alt={room.title} className="room-hero-image" />
-              )}
               <div className="room-description-wrap" aria-label="Room description">
                 <p className="room-description">{room.description || "No room description available yet."}</p>
                 <button
