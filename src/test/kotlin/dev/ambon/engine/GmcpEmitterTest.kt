@@ -703,4 +703,67 @@ class GmcpEmitterTest {
             e.sendGuildChat(sid, "Alice", "hello")
             assertTrue(drainGmcp().isEmpty())
         }
+
+    // ── Dialogue ──
+
+    @Test
+    fun `sendDialogueNode emits correct JSON with choices`() =
+        runTest {
+            val e = emitter("Dialogue")
+            e.sendDialogueNode(
+                sid,
+                "a wise sage",
+                "Hello there!",
+                listOf(1 to "Tell me more.", 2 to "Goodbye."),
+            )
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            val data = events[0]
+            assertEquals("Dialogue.Node", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"mobName\":\"a wise sage\""))
+            assertTrue(data.jsonData.contains("\"text\":\"Hello there!\""))
+            assertTrue(data.jsonData.contains("\"index\":1"))
+            assertTrue(data.jsonData.contains("\"index\":2"))
+            assertTrue(data.jsonData.contains("\"text\":\"Tell me more.\""))
+            assertTrue(data.jsonData.contains("\"text\":\"Goodbye.\""))
+        }
+
+    @Test
+    fun `sendDialogueNode emits empty choices array`() =
+        runTest {
+            val e = emitter("Dialogue")
+            e.sendDialogueNode(sid, "a sage", "End of dialogue.", emptyList())
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            assertTrue(events[0].jsonData.contains("\"choices\":[]"))
+        }
+
+    @Test
+    fun `sendDialogueNode skipped when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendDialogueNode(sid, "a sage", "Hello!", listOf(1 to "Hi"))
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    @Test
+    fun `sendDialogueEnd emits correct JSON with reason`() =
+        runTest {
+            val e = emitter("Dialogue")
+            e.sendDialogueEnd(sid, "a wise sage", "ended")
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            val data = events[0]
+            assertEquals("Dialogue.End", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"mobName\":\"a wise sage\""))
+            assertTrue(data.jsonData.contains("\"reason\":\"ended\""))
+        }
+
+    @Test
+    fun `sendDialogueEnd skipped when not supported`() =
+        runTest {
+            val e = emitter()
+            e.sendDialogueEnd(sid, "a sage", "moved")
+            assertTrue(drainGmcp().isEmpty())
+        }
 }

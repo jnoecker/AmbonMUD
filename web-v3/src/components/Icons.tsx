@@ -306,6 +306,16 @@ export function SkillCastIcon({
   return <EnemyCastIcon className={className} />;
 }
 
+export function TalkIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M6.4 6.2h11.2A2.4 2.4 0 0 1 20 8.6v5.4a2.4 2.4 0 0 1-2.4 2.4H11l-3.6 2.8v-2.8H6.4A2.4 2.4 0 0 1 4 14V8.6a2.4 2.4 0 0 1 2.4-2.4Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.4 10.2h3.6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.82" />
+      <path d="M8.4 12.8h6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.82" />
+    </svg>
+  );
+}
+
 export function MapScrollIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">

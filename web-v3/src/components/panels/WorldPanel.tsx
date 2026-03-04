@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { COMPASS_DIRECTIONS } from "../../constants";
-import type { RoomItem, RoomMob, RoomPlayer, RoomState, SkillSummary } from "../../types";
+import type { DialogueState, RoomItem, RoomMob, RoomPlayer, RoomState, SkillSummary } from "../../types";
 import { percent } from "../../utils";
-import { AttackIcon, CompassCoreIcon, DirectionIcon, ExpandRoomIcon, MapScrollIcon, PickupIcon, SkillCastIcon } from "../Icons";
+import { AttackIcon, CompassCoreIcon, DirectionIcon, ExpandRoomIcon, MapScrollIcon, PickupIcon, SkillCastIcon, TalkIcon } from "../Icons";
 
 interface WorldPanelProps {
   connected: boolean;
@@ -22,11 +22,14 @@ interface WorldPanelProps {
   hiddenRoomItemsCount: number;
   showSkillsPanel: boolean;
   skills: SkillSummary[];
+  dialogue: DialogueState | null;
   onOpenMap: () => void;
   onOpenRoom: () => void;
   onRefreshSkills: () => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
   onMove: (direction: string) => void;
+  onDialogueChoice: (index: number) => void;
+  onTalkToMob: (mobName: string) => void;
   onAttackMob: (mobName: string) => void;
   onPickUpItem: (itemName: string) => void;
 }
@@ -49,11 +52,14 @@ export function WorldPanel({
   hiddenRoomItemsCount,
   showSkillsPanel,
   skills,
+  dialogue,
   onOpenMap,
   onOpenRoom,
   onRefreshSkills,
   onCastSkill,
   onMove,
+  onDialogueChoice,
+  onTalkToMob,
   onAttackMob,
   onPickUpItem,
 }: WorldPanelProps) {
@@ -143,7 +149,31 @@ export function WorldPanel({
           )}
         </article>
 
-        {showSkillsPanel ? (
+        {dialogue ? (
+          <article className="subpanel dialogue-panel" aria-label="NPC dialogue">
+            <h3 className="dialogue-npc-name">{dialogue.mobName}</h3>
+            <div className="dialogue-text">
+              <p>{dialogue.text}</p>
+            </div>
+            {dialogue.choices.length > 0 ? (
+              <div className="dialogue-choices">
+                {dialogue.choices.map((choice) => (
+                  <button
+                    key={choice.index}
+                    type="button"
+                    className="dialogue-choice-button"
+                    onClick={() => onDialogueChoice(choice.index)}
+                  >
+                    <span className="dialogue-choice-index">{choice.index}.</span>
+                    {choice.text}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="dialogue-ending">The conversation has ended.</p>
+            )}
+          </article>
+        ) : showSkillsPanel ? (
           <article className="subpanel split-list skills-combat-panel" aria-label="Combat skills">
             <div className="skills-combat-header">
               <h3>Skills</h3>
@@ -223,6 +253,15 @@ export function WorldPanel({
                           <span>{mob.name}</span>
                           <span className="mob-meta-actions">
                             <span className="entity-meta">{mob.hp}/{mob.maxHp}</span>
+                            <button
+                              type="button"
+                              className="mob-command-button"
+                              title={`Talk to ${mob.name}`}
+                              aria-label={`Talk to ${mob.name}`}
+                              onClick={() => onTalkToMob(mob.name)}
+                            >
+                              <TalkIcon className="mob-command-icon" />
+                            </button>
                             <button
                               type="button"
                               className="mob-command-button"

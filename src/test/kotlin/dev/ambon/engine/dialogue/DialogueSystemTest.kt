@@ -5,6 +5,7 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.LoginResult
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
@@ -82,12 +83,17 @@ class DialogueSystemTest {
                 ),
         )
 
-    private fun createEnv(): TestEnv {
+    private fun createEnv(withGmcp: Boolean = false): TestEnv {
         val mobs = MobRegistry()
         val outbound = LocalOutboundBus()
         val items = ItemRegistry()
         val players = dev.ambon.test.buildTestPlayerRegistry(testRoom, InMemoryPlayerRepository(), items)
-        val system = DialogueSystem(mobs, players, outbound)
+        val gmcpEmitter = if (withGmcp) {
+            GmcpEmitter(outbound = outbound, supportsPackage = { _, _ -> true })
+        } else {
+            null
+        }
+        val system = DialogueSystem(mobs, players, outbound, gmcpEmitter)
         return TestEnv(mobs, players, outbound, system, items)
     }
 
@@ -400,5 +406,137 @@ class DialogueSystemTest {
                 outcome is DialogueOutcome.Err && outcome.message.contains("not in a conversation"),
                 "Expected error. got=$outcome",
             )
+        }
+
+    // ── GMCP dialogue tests ──
+
+    private fun List<OutboundEvent>.gmcpPackages(): List<OutboundEvent.GmcpData> =
+        filterIsInstance<OutboundEvent.GmcpData>()
+
+    @Test
+    fun `start conversation emits Dialogue Node GMCP`() =
+        runTest {
+            val env = createEnv(withGmcp = true)
+            val sid = env.loginPlayer()
+            env.addDialogueMob()
+
+            env.system.startConversation(sid, "sage")
+
+            val gmcp = env.outbound.drainAll().gmcpPackages()
+            val node = gmcp.find { it.gmcpPackage == "Dialogue.Node" }
+            assertTrue(node != null, "Expected Dialogue.Node GMCP. got=$gmcp")
+            assertTrue(node!!.jsonData.contains("\"mobName\":\"a wise sage\""))
+            assertTrue(node.jsonData.contains("\"text\":\"Hello there!\""))
+            assertTrue(node.jsonData.contains("\"index\":1"))
+            assertTrue(node.jsonData.contains("\"index\":2"))
+        }
+
+    @Test
+    fun `select terminal choice emits Dialogue End GMCP`() =
+        runTest {
+            val env = createEnv(withGmcp = true)
+            val sid = env.loginPlayer()
+            env.addDialogueMob()
+            env.system.startConversation(sid, "sage")
+            env.outbound.drainAll()
+
+            env.system.selectChoice(sid, 2) // "Goodbye." (null next)
+
+            val gmcp = env.outbound.drainAll().gmcpPackages()
+            val end = gmcp.find { it.gmcpPackage == "Dialogue.End" }
+            assertTrue(end != null, "Expected Dialogue.End GMCP. got=$gmcp")
+            assertTrue(end!!.jsonData.contains("\"reason\":\"ended\""))
+        }
+
+    @Test
+    fun `advancing to next node emits Dialogue Node GMCP`() =
+        runTest {
+            val env = createEnv(withGmcp = true)
+            val sid = env.loginPlayer()
+            env.addDialogueMob()
+            env.system.startConversation(sid, "sage")
+            env.outbound.drainAll()
+
+            env.system.selectChoice(sid, 1) // "Tell me more."
+
+            val gmcp = env.outbound.drainAll().gmcpPackages()
+            val node = gmcp.find { it.gmcpPackage == "Dialogue.Node" }
+            assertTrue(node != null, "Expected Dialogue.Node GMCP. got=$gmcp")
+            assertTrue(node!!.jsonData.contains("\"text\":\"This is more info.\""))
+        }
+
+    @Test
+    fun `player move emits Dialogue End GMCP with moved reason`() =
+        runTest {
+            val env = createEnv(withGmcp = true)
+            val sid = env.loginPlayer()
+            env.addDialogueMob()
+            env.system.startConversation(sid, "sage")
+            env.outbound.drainAll()
+
+            env.system.onPlayerMoved(sid)
+
+            val gmcp = env.outbound.drainAll().gmcpPackages()
+            val end = gmcp.find { it.gmcpPackage == "Dialogue.End" }
+            assertTrue(end != null, "Expected Dialogue.End GMCP. got=$gmcp")
+            assertTrue(end!!.jsonData.contains("\"reason\":\"moved\""))
+        }
+
+    @Test
+    fun `mob removal emits Dialogue End GMCP with mob_removed reason`() =
+        runTest {
+            val env = createEnv(withGmcp = true)
+            val sid = env.loginPlayer()
+            val mobId = env.addDialogueMob()
+            env.system.startConversation(sid, "sage")
+            env.outbound.drainAll()
+
+            env.system.onMobRemoved(mobId)
+
+            val gmcp = env.outbound.drainAll().gmcpPackages()
+            val end = gmcp.find { it.gmcpPackage == "Dialogue.End" }
+            assertTrue(end != null, "Expected Dialogue.End GMCP. got=$gmcp")
+            assertTrue(end!!.jsonData.contains("\"reason\":\"mob_removed\""))
+        }
+
+    @Test
+    fun `disconnect emits Dialogue End GMCP with disconnected reason`() =
+        runTest {
+            val env = createEnv(withGmcp = true)
+            val sid = env.loginPlayer()
+            env.addDialogueMob()
+            env.system.startConversation(sid, "sage")
+            env.outbound.drainAll()
+
+            env.system.onPlayerDisconnected(sid)
+
+            val gmcp = env.outbound.drainAll().gmcpPackages()
+            val end = gmcp.find { it.gmcpPackage == "Dialogue.End" }
+            assertTrue(end != null, "Expected Dialogue.End GMCP. got=$gmcp")
+            assertTrue(end!!.jsonData.contains("\"reason\":\"disconnected\""))
+        }
+
+    @Test
+    fun `auto-end node emits Dialogue End GMCP`() =
+        runTest {
+            val autoEndDialogue = DialogueTree(
+                rootNodeId = "root",
+                nodes = mapOf(
+                    "root" to DialogueNode(
+                        text = "The gate closes behind you.",
+                        choices = emptyList(),
+                    ),
+                ),
+            )
+            val env = createEnv(withGmcp = true)
+            val sid = env.loginPlayer()
+            env.addDialogueMob(dialogue = autoEndDialogue)
+
+            env.system.startConversation(sid, "sage")
+
+            val gmcp = env.outbound.drainAll().gmcpPackages()
+            val end = gmcp.find { it.gmcpPackage == "Dialogue.End" }
+            assertTrue(end != null, "Expected Dialogue.End for auto-end node. got=$gmcp")
+            assertTrue(end!!.jsonData.contains("\"reason\":\"ended\""))
         }
 }

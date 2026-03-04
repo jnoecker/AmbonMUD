@@ -1635,6 +1635,80 @@ body {
   grid-template-columns: minmax(0, 1fr);
 }
 
+/* ── Dialogue panel ─────────────────────────────────────────── */
+
+.dialogue-panel {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
+.dialogue-npc-name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-primary-soft-gold);
+  letter-spacing: 0.02em;
+}
+
+.dialogue-text {
+  border-left: 3px solid var(--color-primary-soft-gold);
+  padding: 0.6rem 0.75rem;
+  background: rgb(34 41 60 / 50%);
+  border-radius: 0 6px 6px 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.dialogue-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dialogue-choice-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--line-faint);
+  border-radius: 6px;
+  background: rgb(54 63 90 / 60%);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  text-align: left;
+}
+
+.dialogue-choice-button:hover {
+  transform: translateX(2px);
+  background: rgb(54 63 90 / 85%);
+  border-color: var(--color-primary-pale-blue);
+}
+
+.dialogue-choice-button:focus-visible {
+  outline: 2px solid var(--color-primary-lavender);
+  outline-offset: 1px;
+}
+
+.dialogue-choice-index {
+  color: var(--color-primary-pale-blue);
+  font-weight: 600;
+  min-width: 1.2em;
+}
+
+.dialogue-ending {
+  font-style: italic;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 0.3rem 0;
+}
+
 .skills-combat-panel {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);

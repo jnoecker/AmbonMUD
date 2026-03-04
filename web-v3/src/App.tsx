@@ -28,6 +28,7 @@ import type {
   ChatChannel,
   ChatMessage,
   CharacterInfo,
+  DialogueState,
   FriendEntry,
   FriendNotification,
   GroupInfo,
@@ -126,6 +127,7 @@ function App() {
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [friendNotifications, setFriendNotifications] = useState<FriendNotification[]>([]);
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
+  const [dialogue, setDialogue] = useState<DialogueState | null>(null);
   const [whoPlayers, setWhoPlayers] = useState<string[]>([]);
 
   const { mapCanvasRef, drawMap, updateMap, resetMap } = useMiniMap();
@@ -189,6 +191,7 @@ function App() {
     setFriends([]);
     setFriendNotifications([]);
     setChatByChannel(createEmptyChatByChannel());
+    setDialogue(null);
     setWhoPlayers([]);
     setActiveChatChannel("say");
     resetMap();
@@ -215,6 +218,7 @@ function App() {
           setGroupInfo,
           setGuildInfo,
           setGuildMembers,
+          setDialogue,
           setFriends,
           pushFriendNotification,
           setChatByChannel,
@@ -570,6 +574,15 @@ function App() {
           }}
           onMove={(direction) => {
             sendCommand(direction, true);
+            focusComposer();
+          }}
+          dialogue={dialogue}
+          onDialogueChoice={(index) => {
+            sendCommand(`${index}`, true);
+            focusComposer();
+          }}
+          onTalkToMob={(mobName) => {
+            sendCommand(`talk ${mobName}`, true);
             focusComposer();
           }}
           onAttackMob={(mobName) => {
