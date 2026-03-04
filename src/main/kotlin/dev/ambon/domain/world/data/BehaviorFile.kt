@@ -10,4 +10,5 @@ data class BehaviorParamsFile(
     val fleeHpPercent: Int = 20,
     val aggroMessage: String? = null,
     val fleeMessage: String? = null,
+    val maxWanderDistance: Int = 3,
 )

@@ -529,8 +529,8 @@ data class MobTiersConfig(
 }
 
 data class MobEngineConfig(
-    val minActionDelayMillis: Long = 2_000L,
-    val maxActionDelayMillis: Long = 5_000L,
+    val minActionDelayMillis: Long = 8_000L,
+    val maxActionDelayMillis: Long = 20_000L,
     val tiers: MobTiersConfig = MobTiersConfig(),
 )
 
