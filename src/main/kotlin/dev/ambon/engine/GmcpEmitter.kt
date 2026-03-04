@@ -368,6 +368,33 @@ class GmcpEmitter(
         emit(sessionId, "Friends.Offline", FriendOfflinePayload(name = friendName))
     }
 
+    // ---------- dialogue ----------
+
+    suspend fun sendDialogueNode(
+        sessionId: SessionId,
+        mobName: String,
+        text: String,
+        choices: List<Pair<Int, String>>,
+    ) {
+        emit(
+            sessionId,
+            "Dialogue.Node",
+            DialogueNodePayload(
+                mobName = mobName,
+                text = text,
+                choices = choices.map { (index, choiceText) -> DialogueChoicePayload(index = index, text = choiceText) },
+            ),
+        )
+    }
+
+    suspend fun sendDialogueEnd(
+        sessionId: SessionId,
+        mobName: String,
+        reason: String,
+    ) {
+        emit(sessionId, "Dialogue.End", DialogueEndPayload(mobName = mobName, reason = reason), supportCheck = "Dialogue")
+    }
+
     // ---------- guild ----------
 
     suspend fun sendGuildInfo(
@@ -621,6 +648,22 @@ class GmcpEmitter(
     private data class GuildChatGmcpPayload(
         val sender: String,
         val message: String,
+    )
+
+    private data class DialogueChoicePayload(
+        val index: Int,
+        val text: String,
+    )
+
+    private data class DialogueNodePayload(
+        val mobName: String,
+        val text: String,
+        val choices: List<DialogueChoicePayload>,
+    )
+
+    private data class DialogueEndPayload(
+        val mobName: String,
+        val reason: String,
     )
 
     private companion object {
