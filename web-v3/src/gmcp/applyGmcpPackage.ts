@@ -20,6 +20,8 @@ import type {
   RoomItem,
   RoomPlayer,
   RoomState,
+  ShopItem,
+  ShopState,
   SkillSummary,
   StatusEffect,
   StatusVarLabels,
@@ -48,6 +50,7 @@ interface GmcpContext {
   pushFriendNotification: (notification: FriendNotification) => void;
   setDialogue: Dispatch<SetStateAction<DialogueState | null>>;
   setCombatTarget: Dispatch<SetStateAction<CombatTarget | null>>;
+  setShop: Dispatch<SetStateAction<ShopState | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>) => void;
 }
@@ -147,7 +150,9 @@ export function applyGmcpPackage(
             .map((entry) => ({
               id: typeof entry.id === "string" ? entry.id : `${Date.now()}-${Math.random()}`,
               name: typeof entry.name === "string" ? entry.name : "Unknown item",
+              keyword: typeof entry.keyword === "string" ? entry.keyword : (typeof entry.name === "string" ? entry.name : "item"),
               slot: typeof entry.slot === "string" ? entry.slot : null,
+              basePrice: typeof entry.basePrice === "number" ? entry.basePrice : undefined,
               image: typeof entry.image === "string" ? entry.image : null,
             }))
         : [];
@@ -160,6 +165,7 @@ export function applyGmcpPackage(
           equipmentMap[slot] = {
             id: typeof item.id === "string" ? item.id : `${slot}-${Date.now()}`,
             name: typeof item.name === "string" ? item.name : "Unknown item",
+            keyword: typeof item.keyword === "string" ? item.keyword : (typeof item.name === "string" ? item.name : "item"),
             slot,
             image: typeof item.image === "string" ? item.image : null,
           };
@@ -178,7 +184,9 @@ export function applyGmcpPackage(
         {
           id: typeof packet.id === "string" ? packet.id : `${Date.now()}-${Math.random()}`,
           name: typeof packet.name === "string" ? packet.name : "Unknown item",
+          keyword: typeof packet.keyword === "string" ? packet.keyword : (typeof packet.name === "string" ? packet.name : "item"),
           slot: typeof packet.slot === "string" ? packet.slot : null,
+          basePrice: typeof packet.basePrice === "number" ? packet.basePrice : undefined,
           image: typeof packet.image === "string" ? packet.image : null,
         },
       ]);
@@ -555,6 +563,36 @@ export function applyGmcpPackage(
 
     case "Dialogue.End": {
       ctx.setDialogue(null);
+      break;
+    }
+
+    case "Shop.List": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const name = typeof packet.name === "string" ? packet.name : "Shop";
+      const sellMultiplier = typeof packet.sellMultiplier === "number" ? packet.sellMultiplier : 0.5;
+      const items: ShopItem[] = Array.isArray(packet.items)
+        ? packet.items
+            .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+            .map((e) => ({
+              id: typeof e.id === "string" ? e.id : "",
+              name: typeof e.name === "string" ? e.name : "Unknown",
+              keyword: typeof e.keyword === "string" ? e.keyword : "",
+              description: typeof e.description === "string" ? e.description : "",
+              slot: typeof e.slot === "string" ? e.slot : null,
+              damage: safeNumber(e.damage),
+              armor: safeNumber(e.armor),
+              buyPrice: safeNumber(e.buyPrice),
+              basePrice: safeNumber(e.basePrice),
+              consumable: e.consumable === true,
+              image: typeof e.image === "string" ? e.image : null,
+            }))
+        : [];
+      ctx.setShop({ name, sellMultiplier, items });
+      break;
+    }
+
+    case "Shop.Close": {
+      ctx.setShop(null);
       break;
     }
 
