@@ -2097,6 +2097,32 @@ body {
   height: 14px;
 }
 
+.play-entities {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.play-entity-group {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.play-entity-heading {
+  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-size: 0.95rem;
+  color: #9fb0d8;
+  margin: 0 0 var(--space-2);
+  letter-spacing: 0.03em;
+}
+
+.play-entity-thumb {
+  width: 38px;
+  height: 38px;
+}
+
 .item-popout-actions {
   display: inline-flex;
   align-items: center;
@@ -2408,17 +2434,13 @@ body {
     grid-area: play;
     display: grid;
     grid-template-areas:
-      "header"
       "prelogin"
       "banner"
+      "entities"
       "terminal"
       "command"
       "movement";
     grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
-  }
-
-  .panel-play > .panel-header {
-    grid-area: header;
   }
 
   .panel-play > .prelogin-banner {
@@ -2427,6 +2449,10 @@ body {
 
   .panel-play > .room-banner {
     grid-area: banner;
+  }
+
+  .panel-play > .play-entities {
+    grid-area: entities;
   }
 
   .panel-play > .terminal-card {
