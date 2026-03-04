@@ -1,7 +1,7 @@
 export type MobileTab = "play" | "world" | "chat" | "character";
 export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
-export type SocialTab = "chat" | "guild" | "group" | "who";
+export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
 export interface GroupMember {
   name: string;
@@ -14,6 +14,20 @@ export interface GroupMember {
 export interface GroupInfo {
   leader: string | null;
   members: GroupMember[];
+}
+
+export interface FriendEntry {
+  name: string;
+  online: boolean;
+  level: number | null;
+  zone: string | null;
+}
+
+export interface FriendNotification {
+  id: string;
+  name: string;
+  event: "online" | "offline";
+  receivedAt: number;
 }
 
 export interface GuildInfo {

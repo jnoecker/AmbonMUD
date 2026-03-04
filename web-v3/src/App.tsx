@@ -28,6 +28,8 @@ import type {
   ChatChannel,
   ChatMessage,
   CharacterInfo,
+  FriendEntry,
+  FriendNotification,
   GroupInfo,
   GuildInfo,
   GuildMemberEntry,
@@ -121,6 +123,8 @@ function App() {
   const [groupInfo, setGroupInfo] = useState<GroupInfo>({ leader: null, members: [] });
   const [guildInfo, setGuildInfo] = useState<GuildInfo>({ name: null, tag: null, rank: null, motd: null, memberCount: 0, maxSize: 50 });
   const [guildMembers, setGuildMembers] = useState<GuildMemberEntry[]>([]);
+  const [friends, setFriends] = useState<FriendEntry[]>([]);
+  const [friendNotifications, setFriendNotifications] = useState<FriendNotification[]>([]);
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
   const [whoPlayers, setWhoPlayers] = useState<string[]>([]);
 
@@ -136,6 +140,14 @@ function App() {
 
   const writeSystem = useCallback((message: string) => {
     terminalRef.current?.write(`\r\n\x1b[2m${message}\x1b[0m\r\n`);
+  }, []);
+
+  const MAX_FRIEND_NOTIFICATIONS = 5;
+  const pushFriendNotification = useCallback((notification: FriendNotification) => {
+    setFriendNotifications((prev) => {
+      const next = [...prev, notification];
+      return next.length > MAX_FRIEND_NOTIFICATIONS ? next.slice(-MAX_FRIEND_NOTIFICATIONS) : next;
+    });
   }, []);
 
   const focusComposer = useCallback(() => {
@@ -174,6 +186,8 @@ function App() {
     setGroupInfo({ leader: null, members: [] });
     setGuildInfo({ name: null, tag: null, rank: null, motd: null, memberCount: 0, maxSize: 50 });
     setGuildMembers([]);
+    setFriends([]);
+    setFriendNotifications([]);
     setChatByChannel(createEmptyChatByChannel());
     setWhoPlayers([]);
     setActiveChatChannel("say");
@@ -201,12 +215,14 @@ function App() {
           setGroupInfo,
           setGuildInfo,
           setGuildMembers,
+          setFriends,
+          pushFriendNotification,
           setChatByChannel,
           updateMap,
         },
       );
     },
-    [updateMap],
+    [pushFriendNotification, updateMap],
   );
 
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine } = useMudSocket({
@@ -576,6 +592,8 @@ function App() {
           groupInfo={groupInfo}
           guildInfo={guildInfo}
           guildMembers={guildMembers}
+          friends={friends}
+          friendNotifications={friendNotifications}
           onChannelChange={setActiveChatChannel}
           onRequestWho={() => {
             sendCommand("who", true);
