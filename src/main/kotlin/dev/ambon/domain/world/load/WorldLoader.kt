@@ -135,7 +135,7 @@ object WorldLoader {
                         description = rf.description,
                         exits = emptyMap(),
                         station = station,
-                        image = rf.image,
+                        image = rf.image?.let { "/images/$it" },
                     )
             }
 
@@ -296,7 +296,7 @@ object WorldLoader {
                         dialogue = dialogue,
                         behaviorTree = behaviorTree,
                         questIds = questIds,
-                        image = mf.image,
+                        image = mf.image?.let { "/images/$it" },
                     )
             }
 
@@ -403,7 +403,7 @@ object WorldLoader {
                                         onUse = onUse,
                                         matchByKey = itemFile.matchByKey,
                                         basePrice = basePrice,
-                                        image = itemFile.image,
+                                        image = itemFile.image?.let { "/images/$it" },
                                     ),
                             ),
                         roomId = roomId,
