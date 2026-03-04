@@ -1099,6 +1099,129 @@ body {
   color: var(--text-disabled);
 }
 
+.friends-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.friend-notifications {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.friend-notification {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-style: italic;
+  animation: friend-notify-fade 30s ease-out forwards;
+}
+
+.friend-notification-online {
+  color: var(--color-primary-moss-green);
+}
+
+.friend-notification-offline {
+  color: var(--text-disabled);
+}
+
+@keyframes friend-notify-fade {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+.friend-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.friend-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 5px 8px;
+  border-radius: 6px;
+  transition: background 140ms var(--ease-out-soft);
+}
+
+.friend-item:hover {
+  background: rgb(80 94 136 / 30%);
+}
+
+.friend-item-offline {
+  opacity: 0.55;
+}
+
+.friend-item-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.friend-item-name {
+  font-weight: 600;
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.friend-item-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.friend-item-zone {
+  white-space: nowrap;
+  color: var(--color-primary-pale-blue);
+  font-style: italic;
+}
+
+.friend-item-level {
+  white-space: nowrap;
+  color: var(--text-disabled);
+}
+
+.friend-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.friend-status-dot-online {
+  background: var(--color-primary-moss-green);
+  box-shadow: 0 0 4px rgb(141 169 123 / 60%);
+}
+
+.friend-status-dot-offline {
+  background: var(--text-disabled);
+}
+
+.friend-notification-text {
+  white-space: nowrap;
+}
+
+
 .chat-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

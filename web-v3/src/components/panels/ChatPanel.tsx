@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { CHAT_CHANNELS } from "../../constants";
 import { RefreshIcon, TellIcon } from "../Icons";
-import type { ChatChannel, ChatMessage, GroupInfo, GuildInfo, GuildMemberEntry, SocialTab } from "../../types";
+import type { ChatChannel, ChatMessage, FriendEntry, FriendNotification, GroupInfo, GuildInfo, GuildMemberEntry, SocialTab } from "../../types";
 
 interface ChatPanelProps {
   connected: boolean;
@@ -14,6 +14,8 @@ interface ChatPanelProps {
   groupInfo: GroupInfo;
   guildInfo: GuildInfo;
   guildMembers: GuildMemberEntry[];
+  friends: FriendEntry[];
+  friendNotifications: FriendNotification[];
   onChannelChange: (channel: ChatChannel) => void;
   onRequestWho: () => void;
   onSendMessage: (channel: ChatChannel, message: string, target: string | null) => boolean;
@@ -45,6 +47,7 @@ function extractTellTargetFromWhoEntry(entry: string): string {
 
 const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [
   { id: "chat", label: "Chat" },
+  { id: "friends", label: "Friends" },
   { id: "guild", label: "Guild" },
   { id: "group", label: "Group" },
   { id: "who", label: "Who" },
@@ -60,6 +63,8 @@ export function ChatPanel({
   groupInfo,
   guildInfo,
   guildMembers,
+  friends,
+  friendNotifications,
   onChannelChange,
   onRequestWho,
   onSendMessage,
@@ -125,6 +130,27 @@ export function ChatPanel({
       return a.name.localeCompare(b.name);
     });
   }, [guildMembers]);
+
+  const sortedFriends = useMemo(() => {
+    return [...friends].sort((a, b) => {
+      const onlineDiff = (a.online ? 0 : 1) - (b.online ? 0 : 1);
+      if (onlineDiff !== 0) return onlineDiff;
+      return a.name.localeCompare(b.name);
+    });
+  }, [friends]);
+
+  const [friendsNow, setFriendsNow] = useState(() => Date.now());
+  const hasFriendNotifications = friendNotifications.length > 0;
+
+  useEffect(() => {
+    if (!hasFriendNotifications || activeSocialTab !== "friends") return;
+    const interval = window.setInterval(() => setFriendsNow(Date.now()), 5_000);
+    return () => window.clearInterval(interval);
+  }, [hasFriendNotifications, activeSocialTab]);
+
+  const recentNotifications = useMemo(() => {
+    return friendNotifications.filter((n) => friendsNow - n.receivedAt < 30_000);
+  }, [friendNotifications, friendsNow]);
 
   return (
     <section className="panel panel-chat" aria-label="Social channels">
@@ -226,6 +252,66 @@ export function ChatPanel({
               />
               <button type="submit" className="soft-button" disabled={!canChat}>Send</button>
             </form>
+          </>
+        )}
+
+        {activeSocialTab === "friends" && (
+          <>
+            <div aria-hidden="true" />
+            <div ref={feedRef} className="chat-feed" role="region" aria-label="Friends list">
+              <section className="chat-feed-panel chat-feed-panel-flip" aria-label="Friends subwindow">
+                {!canChat ? (
+                  <p className="empty-note">
+                    {connected ? "Log in through the terminal to unlock social features." : "Reconnect to load social data."}
+                  </p>
+                ) : sortedFriends.length === 0 && recentNotifications.length === 0 ? (
+                  <p className="empty-note">No friends yet. Use `friend add &lt;name&gt;` to add someone.</p>
+                ) : (
+                  <div className="friends-panel-content">
+                    {recentNotifications.length > 0 && (
+                      <ul className="friend-notifications">
+                        {recentNotifications.map((n) => (
+                          <li key={n.id} className={`friend-notification friend-notification-${n.event}`}>
+                            <span className={`friend-status-dot friend-status-dot-${n.event === "online" ? "online" : "offline"}`} />
+                            <span className="friend-notification-text">
+                              {n.name} {n.event === "online" ? "came online" : "went offline"}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {sortedFriends.length > 0 && (
+                      <ul className="friend-list">
+                        {sortedFriends.map((friend) => (
+                          <li key={friend.name} className={`friend-item ${friend.online ? "" : "friend-item-offline"}`}>
+                            <div className="friend-item-left">
+                              <span className={`friend-status-dot friend-status-dot-${friend.online ? "online" : "offline"}`} />
+                              <span className="friend-item-name">{friend.name}</span>
+                            </div>
+                            <div className="friend-item-right">
+                              {friend.online && friend.zone && <span className="friend-item-zone">{friend.zone}</span>}
+                              {friend.level !== null && <span className="friend-item-level">Lv {friend.level}</span>}
+                              {friend.online && (
+                                <button
+                                  type="button"
+                                  className="who-tell-button"
+                                  title={`Tell ${friend.name}`}
+                                  aria-label={`Tell ${friend.name}`}
+                                  onClick={() => handleTellFromWho(friend.name)}
+                                >
+                                  <TellIcon className="who-tell-icon" />
+                                </button>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </section>
+            </div>
+            <div aria-hidden="true" />
           </>
         )}
 
