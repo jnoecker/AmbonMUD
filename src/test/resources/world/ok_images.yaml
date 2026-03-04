@@ -1,0 +1,28 @@
+zone: ok_images
+startRoom: clearing
+
+rooms:
+  clearing:
+    title: "Forest Clearing"
+    description: "A sunlit clearing."
+    image: forest/clearing.png
+    exits:
+      north: cave
+
+  cave:
+    title: "Dark Cave"
+    description: "A dark cave."
+    exits:
+      south: clearing
+
+mobs:
+  wolf:
+    name: "a grey wolf"
+    room: clearing
+    image: mobs/wolf.png
+
+items:
+  gem:
+    displayName: "a glowing gem"
+    room: clearing
+    image: items/gem.png
