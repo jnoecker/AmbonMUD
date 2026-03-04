@@ -119,6 +119,8 @@ object WorldLoader {
                 }
             }
 
+            val imageDefaults = file.image
+
             // First pass per file: create room shells, detect collisions
             for ((rawId, rf) in file.rooms) {
                 val id = normalizeId(zone, rawId)
@@ -135,7 +137,7 @@ object WorldLoader {
                         description = rf.description,
                         exits = emptyMap(),
                         station = station,
-                        image = rf.image?.let { "/images/$it" },
+                        image = (rf.image ?: imageDefaults?.room)?.let { "/images/$it" },
                     )
             }
 
@@ -296,7 +298,7 @@ object WorldLoader {
                         dialogue = dialogue,
                         behaviorTree = behaviorTree,
                         questIds = questIds,
-                        image = mf.image?.let { "/images/$it" },
+                        image = (mf.image ?: imageDefaults?.mob)?.let { "/images/$it" },
                     )
             }
 
@@ -403,7 +405,7 @@ object WorldLoader {
                                         onUse = onUse,
                                         matchByKey = itemFile.matchByKey,
                                         basePrice = basePrice,
-                                        image = itemFile.image?.let { "/images/$it" },
+                                        image = (itemFile.image ?: imageDefaults?.item)?.let { "/images/$it" },
                                     ),
                             ),
                         roomId = roomId,

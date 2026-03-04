@@ -1,0 +1,41 @@
+zone: ok_image_defaults
+startRoom: plaza
+
+image:
+  room: defaults/room.png
+  mob: defaults/mob.png
+  item: defaults/item.png
+
+rooms:
+  plaza:
+    title: "Town Plaza"
+    description: "A busy plaza."
+    exits:
+      north: alley
+
+  alley:
+    title: "Dark Alley"
+    description: "A narrow alley."
+    image: alley/custom.png
+    exits:
+      south: plaza
+
+mobs:
+  guard:
+    name: "a town guard"
+    room: plaza
+
+  thief:
+    name: "a sneaky thief"
+    room: alley
+    image: mobs/thief.png
+
+items:
+  bread:
+    displayName: "a loaf of bread"
+    room: plaza
+
+  dagger:
+    displayName: "a rusty dagger"
+    room: alley
+    image: items/dagger.png
