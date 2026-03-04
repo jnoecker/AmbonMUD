@@ -60,6 +60,7 @@ class GmcpEmitter(
                 description = room.description,
                 zone = room.id.zone,
                 exits = room.exits.entries.associate { (dir, roomId) -> dir.name.lowercase() to roomId.value },
+                image = room.image,
             ),
         )
     }
@@ -133,7 +134,7 @@ class GmcpEmitter(
         sessionId: SessionId,
         items: List<ItemInstance>,
     ) {
-        emit(sessionId, "Room.Items", items.map { RoomItemPayload(id = it.id.value, name = it.item.displayName) })
+        emit(sessionId, "Room.Items", items.map { RoomItemPayload(id = it.id.value, name = it.item.displayName, image = it.item.image) })
     }
 
     suspend fun sendRoomAddMob(
@@ -473,6 +474,7 @@ class GmcpEmitter(
             slot = item.item.slot?.label(),
             damage = item.item.damage,
             armor = item.item.armor,
+            image = item.item.image,
         )
 
     private fun toRoomMobPayload(mob: MobState) =
@@ -481,6 +483,7 @@ class GmcpEmitter(
             name = mob.name,
             hp = mob.hp,
             maxHp = mob.maxHp,
+            image = mob.image,
         )
 
     // ---------- payload types ----------
@@ -504,6 +507,7 @@ class GmcpEmitter(
         val description: String,
         val zone: String,
         val exits: Map<String, String>,
+        val image: String? = null,
     )
 
     private data class ItemPayload(
@@ -512,6 +516,7 @@ class GmcpEmitter(
         val slot: String?,
         val damage: Int,
         val armor: Int,
+        val image: String? = null,
     )
 
     private data class CharItemsListPayload(
@@ -538,6 +543,7 @@ class GmcpEmitter(
         val name: String,
         val hp: Int,
         val maxHp: Int,
+        val image: String? = null,
     )
 
     private data class RoomRemoveMobPayload(
@@ -547,6 +553,7 @@ class GmcpEmitter(
     private data class RoomItemPayload(
         val id: String,
         val name: String,
+        val image: String? = null,
     )
 
     private data class CharSkillPayload(

@@ -67,6 +67,9 @@ export function PopoutLayer({
           <div className="popout-content">
             <article className="room-popout-copy">
               <h3 className="room-popout-title">{room.title}</h3>
+              {room.image && (
+                <img src={room.image} alt={room.title} className="room-hero-image" />
+              )}
               <p className="room-popout-text">{room.description || "No room description available yet."}</p>
               <p className="room-popout-exits">
                 {exits.length === 0
@@ -85,7 +88,10 @@ export function PopoutLayer({
               <ul className="item-list">
                 {inventory.map((item) => (
                   <li key={item.id}>
-                    <span>{item.name}</span>
+                    <span className="entity-name-with-thumb">
+                      {item.image && <img src={item.image} alt="" className="entity-thumb" />}
+                      {item.name}
+                    </span>
                     <span className="item-popout-actions">
                       {item.slot && (
                         <button
@@ -127,7 +133,10 @@ export function PopoutLayer({
                     <li key={slot}>
                       <span className="equipment-slot">{slot}</span>
                       <span className="equipment-popout-row">
-                        <span>{equipment[slot]?.name ?? "Unknown"}</span>
+                        <span className="entity-name-with-thumb">
+                          {equipment[slot]?.image && <img src={equipment[slot].image!} alt="" className="entity-thumb" />}
+                          {equipment[slot]?.name ?? "Unknown"}
+                        </span>
                         <button
                           type="button"
                           className="mob-command-button"

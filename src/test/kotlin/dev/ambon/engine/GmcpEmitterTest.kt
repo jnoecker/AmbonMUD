@@ -479,12 +479,14 @@ class GmcpEmitterTest {
         name: String = "a rat",
         hp: Int = 8,
         maxHp: Int = 10,
+        image: String? = null,
     ) = MobState(
         id = MobId(id),
         name = name,
         roomId = RoomId("test:room1"),
         hp = hp,
         maxHp = maxHp,
+        image = image,
     )
 
     @Test
@@ -765,5 +767,81 @@ class GmcpEmitterTest {
             val e = emitter()
             e.sendDialogueEnd(sid, "a sage", "moved")
             assertTrue(drainGmcp().isEmpty())
+        }
+
+    // ── Image field tests ──
+
+    @Test
+    fun `sendRoomInfo includes image when set`() =
+        runTest {
+            val e = emitter("Room.Info")
+            val r = Room(
+                id = RoomId("forest:clearing"),
+                title = "A Sunny Clearing",
+                description = "Sunlight.",
+                exits = emptyMap(),
+                image = "/images/forest/clearing.png",
+            )
+            e.sendRoomInfo(sid, r)
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"image\":\"/images/forest/clearing.png\""))
+        }
+
+    @Test
+    fun `sendRoomInfo omits image when null`() =
+        runTest {
+            val e = emitter("Room.Info")
+            e.sendRoomInfo(sid, room())
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"image\":null"))
+        }
+
+    @Test
+    fun `sendRoomMobs includes image when set on mob`() =
+        runTest {
+            val e = emitter("Room.Mobs")
+            e.sendRoomMobs(sid, listOf(mob(image = "/images/mobs/rat.png")))
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"image\":\"/images/mobs/rat.png\""))
+        }
+
+    @Test
+    fun `sendRoomItems includes image when set on item`() =
+        runTest {
+            val e = emitter("Room.Items")
+            val itemWithImage = ItemInstance(
+                id = ItemId("forest:sword"),
+                item = Item(
+                    keyword = "sword",
+                    displayName = "Iron Sword",
+                    slot = ItemSlot.HAND,
+                    damage = 3,
+                    armor = 0,
+                    image = "/images/items/sword.png",
+                ),
+            )
+            e.sendRoomItems(sid, listOf(itemWithImage))
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"image\":\"/images/items/sword.png\""))
+        }
+
+    @Test
+    fun `sendCharItemsList includes image when set on item`() =
+        runTest {
+            val e = emitter("Char.Items")
+            val itemWithImage = ItemInstance(
+                id = ItemId("forest:axe"),
+                item = Item(
+                    keyword = "axe",
+                    displayName = "Battle Axe",
+                    slot = ItemSlot.HAND,
+                    damage = 5,
+                    armor = 0,
+                    image = "/images/items/axe.png",
+                ),
+            )
+            e.sendCharItemsList(sid, listOf(itemWithImage), emptyMap())
+            val data = drainGmcp()[0]
+            assertTrue(data.jsonData.contains("\"image\":\"/images/items/axe.png\""))
         }
 }
