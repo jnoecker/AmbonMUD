@@ -42,6 +42,7 @@ import type {
   RoomItem,
   RoomPlayer,
   RoomState,
+  ShopState,
   SkillSummary,
   StatusEffect,
   StatusVarLabels,
@@ -133,6 +134,7 @@ function App() {
   const [detailMob, setDetailMob] = useState<RoomMob | null>(null);
   const [detailItem, setDetailItem] = useState<RoomItem | null>(null);
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
+  const [shop, setShop] = useState<ShopState | null>(null);
 
   const { mapCanvasRef, drawMap, updateMap, resetMap } = useMiniMap();
   const {
@@ -198,6 +200,7 @@ function App() {
     setDialogue(null);
     setWhoPlayers([]);
     setCombatTarget(null);
+    setShop(null);
     setActiveChatChannel("say");
     resetMap();
   }, [resetMap]);
@@ -225,6 +228,7 @@ function App() {
           setGuildMembers,
           setDialogue,
           setCombatTarget,
+          setShop,
           setFriends,
           pushFriendNotification,
           setChatByChannel,
@@ -587,6 +591,9 @@ function App() {
           skills={skills}
           combatTarget={combatTarget}
           vitals={vitals}
+          shop={shop}
+          inventory={inventory}
+          gold={vitals.gold}
           onOpenMap={() => setActivePopout("map")}
           onOpenRoom={() => setActivePopout("room")}
           onFlee={() => {
@@ -632,6 +639,14 @@ function App() {
           }}
           onPickUpItem={(itemName) => {
             sendCommand(`get ${itemName}`, true);
+            focusComposer();
+          }}
+          onBuyItem={(keyword) => {
+            sendCommand(`buy ${keyword}`, true);
+            focusComposer();
+          }}
+          onSellItem={(keyword) => {
+            sendCommand(`sell ${keyword}`, true);
             focusComposer();
           }}
         />

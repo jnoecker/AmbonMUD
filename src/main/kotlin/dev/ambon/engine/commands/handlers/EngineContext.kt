@@ -1,11 +1,13 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.config.EconomyConfig
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.items.ItemRegistry
@@ -29,4 +31,6 @@ data class EngineContext(
     val gmcpEmitter: GmcpEmitter?,
     val worldState: WorldStateRegistry?,
     val gatheringRegistry: GatheringRegistry? = null,
+    val shopRegistry: ShopRegistry? = null,
+    val economyConfig: EconomyConfig = EconomyConfig(),
 )

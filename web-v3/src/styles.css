@@ -1722,6 +1722,117 @@ body {
   padding: 0.3rem 0;
 }
 
+/* ── Shop panel ────────────────────────────────────────── */
+
+.shop-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shop-header h3 {
+  margin: 0;
+}
+
+.shop-gold {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary-soft-gold);
+}
+
+.shop-tabs {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.shop-tab {
+  flex: 1;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s var(--ease-in-out-smooth), color 0.15s;
+}
+
+.shop-tab:hover {
+  background: rgb(255 255 255 / 6%);
+}
+
+.shop-tab-active {
+  background: var(--surface-chip);
+  color: var(--text-primary);
+  border-color: var(--glass-edge);
+}
+
+.shop-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+  max-height: 280px;
+}
+
+.shop-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 3%);
+  border: 1px solid var(--line-faint);
+}
+
+.shop-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shop-item-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.shop-item-price {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-primary-soft-gold);
+  white-space: nowrap;
+}
+
+.shop-item-meta {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.shop-item-worthless {
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--text-disabled);
+}
+
+.shop-buy-button,
+.shop-sell-button {
+  align-self: flex-end;
+  padding: 0.25rem 0.8rem;
+  font-size: 0.78rem;
+}
+
 .skills-combat-panel {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
