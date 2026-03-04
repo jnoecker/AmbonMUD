@@ -139,6 +139,7 @@ class AdminHandler(
                     armor = template.armor,
                     xpReward = template.xpReward,
                     drops = template.drops,
+                    spawnRoomId = me.roomId,
                     image = template.image,
                 ),
             )

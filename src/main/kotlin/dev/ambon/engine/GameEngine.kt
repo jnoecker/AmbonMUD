@@ -710,7 +710,7 @@ class GameEngine(
 
     init {
         world.mobSpawns.forEach { spawn ->
-            mobs.upsert(spawnToMobState(spawn))
+            mobs.upsert(spawnToMobState(spawn, world))
         }
         items.loadSpawns(world.itemSpawns)
         shopRegistry.register(world.shopDefinitions)
@@ -967,7 +967,7 @@ class GameEngine(
             scheduler.scheduleIn(respawnMs) {
                 if (mobs.get(spawn.id) != null) return@scheduleIn
                 if (world.rooms[spawn.roomId] == null) return@scheduleIn
-                val respawned = spawnToMobState(spawn)
+                val respawned = spawnToMobState(spawn, world)
                 mobs.upsert(respawned)
                 mobSystem.onMobSpawned(spawn.id)
                 behaviorTreeSystem.onMobSpawned(spawn.id)
