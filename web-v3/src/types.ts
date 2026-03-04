@@ -1,7 +1,7 @@
 export type MobileTab = "play" | "world" | "chat" | "character";
 export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | null;
-export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell";
-export type SocialTab = "chat" | "group" | "who";
+export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
+export type SocialTab = "chat" | "guild" | "group" | "who";
 
 export interface GroupMember {
   name: string;
@@ -14,6 +14,22 @@ export interface GroupMember {
 export interface GroupInfo {
   leader: string | null;
   members: GroupMember[];
+}
+
+export interface GuildInfo {
+  name: string | null;
+  tag: string | null;
+  rank: string | null;
+  motd: string | null;
+  memberCount: number;
+  maxSize: number;
+}
+
+export interface GuildMemberEntry {
+  name: string;
+  rank: string;
+  online: boolean;
+  level: number | null;
 }
 
 export interface Vitals {

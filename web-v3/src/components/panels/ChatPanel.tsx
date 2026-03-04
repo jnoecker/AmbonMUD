@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { CHAT_CHANNELS } from "../../constants";
 import { RefreshIcon, TellIcon } from "../Icons";
-import type { ChatChannel, ChatMessage, GroupInfo, SocialTab } from "../../types";
+import type { ChatChannel, ChatMessage, GroupInfo, GuildInfo, GuildMemberEntry, SocialTab } from "../../types";
 
 interface ChatPanelProps {
   connected: boolean;
@@ -12,6 +12,8 @@ interface ChatPanelProps {
   messages: ChatMessage[];
   whoPlayers: string[];
   groupInfo: GroupInfo;
+  guildInfo: GuildInfo;
+  guildMembers: GuildMemberEntry[];
   onChannelChange: (channel: ChatChannel) => void;
   onRequestWho: () => void;
   onSendMessage: (channel: ChatChannel, message: string, target: string | null) => boolean;
@@ -25,6 +27,7 @@ function createEmptyDrafts(): Record<ChatChannel, string> {
     shout: "",
     ooc: "",
     gtell: "",
+    gchat: "",
   };
 }
 
@@ -42,6 +45,7 @@ function extractTellTargetFromWhoEntry(entry: string): string {
 
 const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [
   { id: "chat", label: "Chat" },
+  { id: "guild", label: "Guild" },
   { id: "group", label: "Group" },
   { id: "who", label: "Who" },
 ];
@@ -54,6 +58,8 @@ export function ChatPanel({
   messages,
   whoPlayers,
   groupInfo,
+  guildInfo,
+  guildMembers,
   onChannelChange,
   onRequestWho,
   onSendMessage,
@@ -99,7 +105,26 @@ export function ChatPanel({
   };
 
   const inGroup = groupInfo.members.length > 0;
+  const inGuild = guildInfo.name !== null;
 
+  const rankLabel = (rank: string) => {
+    switch (rank) {
+      case "LEADER": return "Leader";
+      case "OFFICER": return "Officer";
+      default: return "Member";
+    }
+  };
+
+  const sortedGuildMembers = useMemo(() => {
+    const rankOrder: Record<string, number> = { LEADER: 0, OFFICER: 1, MEMBER: 2 };
+    return [...guildMembers].sort((a, b) => {
+      const onlineDiff = (a.online ? 0 : 1) - (b.online ? 0 : 1);
+      if (onlineDiff !== 0) return onlineDiff;
+      const rankDiff = (rankOrder[a.rank] ?? 2) - (rankOrder[b.rank] ?? 2);
+      if (rankDiff !== 0) return rankDiff;
+      return a.name.localeCompare(b.name);
+    });
+  }, [guildMembers]);
 
   return (
     <section className="panel panel-chat" aria-label="Social channels">
@@ -201,6 +226,59 @@ export function ChatPanel({
               />
               <button type="submit" className="soft-button" disabled={!canChat}>Send</button>
             </form>
+          </>
+        )}
+
+        {activeSocialTab === "guild" && (
+          <>
+            <div aria-hidden="true" />
+            <div ref={feedRef} className="chat-feed" role="region" aria-label="Guild info">
+              <section className="chat-feed-panel chat-feed-panel-flip" aria-label="Guild subwindow">
+                {!canChat ? (
+                  <p className="empty-note">
+                    {connected ? "Log in through the terminal to unlock social features." : "Reconnect to load social data."}
+                  </p>
+                ) : !inGuild ? (
+                  <p className="empty-note">You are not in a guild. Use `guild create &lt;name&gt; &lt;tag&gt;` to found one.</p>
+                ) : (
+                  <div className="guild-panel-content">
+                    <div className="guild-info-header">
+                      <span className="guild-name">{guildInfo.name}</span>
+                      {guildInfo.tag && <span className="guild-tag">[{guildInfo.tag}]</span>}
+                    </div>
+                    {guildInfo.rank && (
+                      <div className="guild-rank">Your rank: {rankLabel(guildInfo.rank)}</div>
+                    )}
+                    {guildInfo.motd && (
+                      <div className="guild-motd">
+                        <span className="guild-motd-label">MOTD</span>
+                        <p className="guild-motd-text">{guildInfo.motd}</p>
+                      </div>
+                    )}
+                    <div className="guild-roster-header">
+                      Roster ({guildInfo.memberCount} / {guildInfo.maxSize})
+                    </div>
+                    {sortedGuildMembers.length === 0 ? (
+                      <p className="empty-note">No roster data yet.</p>
+                    ) : (
+                      <ul className="guild-member-list">
+                        {sortedGuildMembers.map((member) => (
+                          <li key={member.name} className={`guild-member-item ${member.online ? "" : "guild-member-offline"}`}>
+                            <span className="guild-member-name">{member.name}</span>
+                            <span className="guild-member-details">
+                              <span className={`guild-member-status ${member.online ? "guild-member-status-online" : "guild-member-status-offline"}`} />
+                              <span className="guild-member-rank">{rankLabel(member.rank)}</span>
+                              {member.level !== null && <span className="guild-member-level">Lv {member.level}</span>}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </section>
+            </div>
+            <div aria-hidden="true" />
           </>
         )}
 

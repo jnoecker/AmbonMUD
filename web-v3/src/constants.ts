@@ -74,6 +74,13 @@ export const CHAT_CHANNELS: Array<{
     messagePlaceholder: "Message your group",
     targetPlaceholder: null,
   },
+  {
+    id: "gchat",
+    label: "Guild",
+    requiresTarget: false,
+    messagePlaceholder: "Message your guild",
+    targetPlaceholder: null,
+  },
 ];
 export const MAX_CHAT_MESSAGES_PER_CHANNEL = 120;
 

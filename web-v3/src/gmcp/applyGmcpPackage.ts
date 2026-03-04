@@ -7,6 +7,8 @@ import type {
   CompletedAchievement,
   GroupInfo,
   GroupMember,
+  GuildInfo,
+  GuildMemberEntry,
   InProgressAchievement,
   ItemSummary,
   RoomMob,
@@ -35,11 +37,13 @@ interface GmcpContext {
   setSkills: Dispatch<SetStateAction<SkillSummary[]>>;
   setAchievements: Dispatch<SetStateAction<AchievementData>>;
   setGroupInfo: Dispatch<SetStateAction<GroupInfo>>;
+  setGuildInfo: Dispatch<SetStateAction<GuildInfo>>;
+  setGuildMembers: Dispatch<SetStateAction<GuildMemberEntry[]>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>) => void;
 }
 
-const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell"]);
+const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
 
 function isChatChannel(value: string): value is ChatChannel {
   return CHAT_CHANNEL_SET.has(value as ChatChannel);
@@ -348,6 +352,61 @@ export function applyGmcpPackage(
             }))
         : [];
       ctx.setGroupInfo({ leader, members });
+      break;
+    }
+
+    case "Guild.Info": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setGuildInfo({
+        name: typeof packet.name === "string" ? packet.name : null,
+        tag: typeof packet.tag === "string" ? packet.tag : null,
+        rank: typeof packet.rank === "string" ? packet.rank : null,
+        motd: typeof packet.motd === "string" ? packet.motd : null,
+        memberCount: safeNumber(packet.memberCount),
+        maxSize: safeNumber(packet.maxSize, 50),
+      });
+      break;
+    }
+
+    case "Guild.Members": {
+      if (!Array.isArray(data)) {
+        ctx.setGuildMembers([]);
+        break;
+      }
+      ctx.setGuildMembers(
+        data
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => ({
+            name: typeof e.name === "string" ? e.name : "Unknown",
+            rank: typeof e.rank === "string" ? e.rank : "MEMBER",
+            online: e.online === true,
+            level: typeof e.level === "number" ? e.level : null,
+          })),
+      );
+      break;
+    }
+
+    case "Guild.Chat": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const sender = typeof packet.sender === "string" && packet.sender.length > 0 ? packet.sender : "Unknown";
+      const message = typeof packet.message === "string" ? packet.message.trim() : "";
+      if (message.length === 0) break;
+
+      const entry: ChatMessage = {
+        id: `${Date.now()}-${Math.random()}`,
+        channel: "gchat",
+        sender,
+        message,
+        receivedAt: Date.now(),
+      };
+
+      ctx.setChatByChannel((prev) => {
+        const next = [...prev.gchat, entry];
+        if (next.length > MAX_CHAT_MESSAGES_PER_CHANNEL) {
+          next.splice(0, next.length - MAX_CHAT_MESSAGES_PER_CHANNEL);
+        }
+        return { ...prev, gchat: next };
+      });
       break;
     }
 
