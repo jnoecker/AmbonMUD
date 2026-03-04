@@ -7,6 +7,7 @@ import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.WorldFactory
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Tag
@@ -707,6 +708,23 @@ class WorldLoaderTest {
                 )
             }
         assertTrue(ex.message!!.contains("nonexistent", ignoreCase = true), "Got: ${ex.message}")
+    }
+
+    @Test
+    fun `image paths are prefixed with images`() {
+        val world = WorldLoader.loadFromResource("world/ok_images.yaml")
+
+        val room = world.rooms.getValue(RoomId("ok_images:clearing"))
+        assertEquals("/images/forest/clearing.png", room.image)
+
+        val cave = world.rooms.getValue(RoomId("ok_images:cave"))
+        assertNull(cave.image)
+
+        val mob = world.mobSpawns.single()
+        assertEquals("/images/mobs/wolf.png", mob.image)
+
+        val items = world.itemSpawns.associateBy { it.instance.id.value }
+        assertEquals("/images/items/gem.png", items.getValue("ok_images:gem").instance.item.image)
     }
 
     @Test
