@@ -1,4 +1,8 @@
 zone: tutorial_glade
+image:
+  room: tutorial_glade/default_room.png
+  mob: tutorial_glade/default_mob.png
+  item: tutorial_glade/default_item.png
 lifespan: 30
 startRoom: awakening_clearing
 
@@ -153,9 +157,10 @@ rooms:
 
   awakening_clearing:
     title: "Awakening Clearing"
-    description: "You stand in a sun-dappled clearing ringed by ancient oaks. Soft grass cushions your feet, and birdsong drifts from the canopy above. A gnarled walking stick lies half-hidden in the clover. A mossy trail leads north into the trees."
+    description: "You stand in a sun-dappled clearing ringed by ancient oaks. Soft grass cushions your feet, and birdsong drifts from the canopy above. A gnarled walking stick lies half-hidden in the clover. A mossy trail leads north into the trees. To the south, a vine-wrapped archway shimmers faintly — the way back to the Wayfinder Gallery."
     exits:
       n: mossy_trail
+      s: ambon_hub:wayfinder_gallery
 
   mossy_trail:
     title: "Mossy Trail"
