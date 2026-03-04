@@ -1,4 +1,8 @@
 zone: demo_ruins
+image:
+  room: demo_ruins/default_room.png
+  mob: demo_ruins/default_mob.png
+  item: demo_ruins/default_item.png
 lifespan: 45
 startRoom: caravan_gate
 

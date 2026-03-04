@@ -1,4 +1,8 @@
 zone: tutorial_glade
+image:
+  room: tutorial_glade/default_room.png
+  mob: tutorial_glade/default_mob.png
+  item: tutorial_glade/default_item.png
 lifespan: 30
 startRoom: awakening_clearing
 

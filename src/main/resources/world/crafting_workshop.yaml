@@ -1,29 +1,38 @@
 zone: crafting_workshop
+image:
+  room: crafting_workshop/default_room.png
+  mob: crafting_workshop/default_mob.png
+  item: crafting_workshop/default_item.png
 lifespan: 0
 startRoom: entrance
 
 items:
   copper_ore:
+    image: crafting_workshop/copper_ore.png
     displayName: "a chunk of copper ore"
     keyword: copper
     description: "A rough chunk of copper ore, glinting faintly with green and orange."
     basePrice: 5
   iron_ore:
+    image: crafting_workshop/iron_ore.png
     displayName: "a chunk of iron ore"
     keyword: iron
     description: "A dense chunk of iron ore, heavy and dark gray."
     basePrice: 12
   wildflower:
+    image: crafting_workshop/wildflower.png
     displayName: "a wildflower"
     keyword: wildflower
     description: "A bright wildflower with delicate petals."
     basePrice: 3
   healing_herb:
+    image: crafting_workshop/healing_herb.png
     displayName: "a healing herb"
     keyword: herb
     description: "A fragrant herb known for its restorative properties."
     basePrice: 8
   copper_sword:
+    image: crafting_workshop/copper_sword.png
     displayName: "a copper sword"
     keyword: "copper sword"
     description: "A simple sword forged from copper. Better than bare fists."
@@ -31,6 +40,7 @@ items:
     damage: 4
     basePrice: 25
   iron_sword:
+    image: crafting_workshop/iron_sword.png
     displayName: "an iron sword"
     keyword: "iron sword"
     description: "A sturdy iron sword, well-balanced and sharp."
@@ -39,6 +49,7 @@ items:
     strength: 1
     basePrice: 80
   copper_helm:
+    image: crafting_workshop/copper_helm.png
     displayName: "a copper helm"
     keyword: "copper helm"
     description: "A simple helm fashioned from hammered copper."
@@ -46,6 +57,7 @@ items:
     armor: 2
     basePrice: 20
   minor_healing_potion:
+    image: crafting_workshop/minor_healing_potion.png
     displayName: "a minor healing potion"
     keyword: "healing potion"
     description: "A small vial of glowing green liquid that restores health."
@@ -54,6 +66,7 @@ items:
       healHp: 15
     basePrice: 15
   strength_elixir:
+    image: crafting_workshop/strength_elixir.png
     displayName: "a strength elixir"
     keyword: "strength elixir"
     description: "A thick red elixir that temporarily bolsters physical power."
@@ -64,6 +77,7 @@ items:
 
 mobs:
   supply_merchant:
+    image: crafting_workshop/supply_merchant.png
     name: "the Supply Merchant"
     room: supply_shop
     dialogue:
@@ -80,6 +94,7 @@ mobs:
 
 shops:
   supply_shop:
+    image: crafting_workshop/supply_shop.png
     name: "Crafter's Supply Shop"
     room: supply_shop
     items:
@@ -90,6 +105,7 @@ shops:
 
 rooms:
   entrance:
+    image: crafting_workshop/entrance.png
     title: "Crafting Workshop Entrance"
     description: "A spacious workshop entrance with tool racks lining the walls and the smell of coal smoke and dried herbs in the air. A staircase descends back to the Hub. Signs point in every direction: MINE to the north, HERB GARDEN to the east, FORGE to the west, and SUPPLY SHOP to the south."
     exits:
@@ -100,18 +116,21 @@ rooms:
       d: ambon_hub:hall_of_portals
 
   mine_tunnel:
+    image: crafting_workshop/mine_tunnel.png
     title: "Mine Tunnel"
     description: "A rough-hewn tunnel cut into bedrock. Torches flicker along the walls, illuminating veins of copper and iron running through the stone. The air is cool and smells of damp earth."
     exits:
       s: entrance
 
   herb_garden:
+    image: crafting_workshop/herb_garden.png
     title: "Herb Garden"
     description: "A tranquil garden bathed in sunlight filtering through a glass ceiling. Rows of wildflowers and medicinal herbs grow in raised beds. Butterflies flit between the blooms."
     exits:
       w: entrance
 
   forge_room:
+    image: crafting_workshop/forge_room.png
     title: "The Forge"
     description: "A sweltering room dominated by a roaring forge. An anvil stands beside it, scarred with a thousand hammer marks. Racks of tongs and hammers hang within easy reach."
     station: FORGE
@@ -120,6 +139,7 @@ rooms:
       n: alchemy_lab
 
   alchemy_lab:
+    image: crafting_workshop/alchemy_lab.png
     title: "Alchemy Laboratory"
     description: "Glass vials and copper tubing cover every surface. A large alchemy table sits in the center, stained with colorful residues. Shelves hold jars of dried ingredients."
     station: ALCHEMY_TABLE
@@ -127,6 +147,7 @@ rooms:
       s: forge_room
 
   supply_shop:
+    image: crafting_workshop/supply_shop.png
     title: "Crafter's Supply Shop"
     description: "A tidy shop with bins of raw materials and a friendly merchant behind the counter. Prices are posted on a chalkboard."
     exits:
@@ -184,6 +205,7 @@ gatheringNodes:
 
 recipes:
   copper_sword:
+    image: crafting_workshop/copper_sword.png
     displayName: "Copper Sword"
     skill: SMITHING
     skillRequired: 1
@@ -195,6 +217,7 @@ recipes:
     stationBonus: 0
     xpReward: 20
   copper_helm:
+    image: crafting_workshop/copper_helm.png
     displayName: "Copper Helm"
     skill: SMITHING
     skillRequired: 5
@@ -206,6 +229,7 @@ recipes:
     stationBonus: 0
     xpReward: 25
   iron_sword:
+    image: crafting_workshop/iron_sword.png
     displayName: "Iron Sword"
     skill: SMITHING
     skillRequired: 20
@@ -219,6 +243,7 @@ recipes:
     stationBonus: 0
     xpReward: 50
   minor_healing_potion:
+    image: crafting_workshop/minor_healing_potion.png
     displayName: "Minor Healing Potion"
     skill: ALCHEMY
     skillRequired: 1
@@ -230,6 +255,7 @@ recipes:
     stationBonus: 1
     xpReward: 15
   strength_elixir:
+    image: crafting_workshop/strength_elixir.png
     displayName: "Strength Elixir"
     skill: ALCHEMY
     skillRequired: 20
