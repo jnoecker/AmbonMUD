@@ -134,6 +134,7 @@ class AchievementSystem(
         if (changed) {
             ps.achievementProgress = updatedProgress
             checkAndUnlock(sessionId, ps.achievementProgress)
+            gmcpEmitter?.sendCharAchievements(sessionId, ps, registry)
         }
     }
 
@@ -230,9 +231,7 @@ class AchievementSystem(
             )
         }
 
-        // GMCP update
-        val updatedPs = players.get(sessionId) ?: return
-        gmcpEmitter?.sendCharAchievements(sessionId, updatedPs, registry)
+        // GMCP update is sent by updateAchievementProgress after checkAndUnlock returns
     }
 
     private fun formatProgress(
