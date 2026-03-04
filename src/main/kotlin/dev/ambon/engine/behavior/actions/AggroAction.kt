@@ -8,6 +8,7 @@ data object AggroAction : BtNode {
     override suspend fun tick(ctx: BtContext): BtResult {
         val playersInRoom = ctx.players.playersInRoom(ctx.mob.roomId)
         for (p in playersInRoom) {
+            if (p.isStaff) continue
             val started = ctx.startMobCombat(ctx.mob.id, p.sessionId)
             if (started) return BtResult.SUCCESS
         }
