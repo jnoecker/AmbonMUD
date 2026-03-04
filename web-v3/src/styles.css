@@ -2966,6 +2966,35 @@ body {
   opacity: 0.8;
 }
 
+/* Ability subtabs */
+
+.combat-tab-bar {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.combat-tab {
+  padding: 0.2rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid var(--line-faint);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.combat-tab:hover {
+  background: rgb(168 151 210 / 10%);
+}
+
+.combat-tab-active {
+  background: rgb(168 151 210 / 18%);
+  color: var(--text-primary);
+  border-color: var(--color-primary-lavender);
+}
+
 /* Ability grid */
 
 .combat-ability-grid {
@@ -2974,10 +3003,20 @@ body {
   gap: 0.35rem;
 }
 
-@media (min-width: 1024px) {
-  .combat-ability-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.combat-show-all {
+  background: none;
+  border: none;
+  color: var(--color-primary-lavender);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0;
+  text-align: center;
+  width: 100%;
+}
+
+.combat-show-all:hover {
+  text-decoration: underline;
 }
 
 .combat-ability-button {
@@ -3029,9 +3068,6 @@ body {
 }
 
 .combat-ability-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   font-weight: 600;
 }
 
