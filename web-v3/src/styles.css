@@ -2832,3 +2832,312 @@ body {
     transform: perspective(760px) rotateX(0deg) translateY(0);
   }
 }
+
+/* ── Combat Panel ─────────────────────────────────────────── */
+
+.combat-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.combat-target-card {
+  padding: 0.5rem 0.65rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgb(168 151 210 / 12%), rgb(140 174 201 / 10%));
+  border: 1px solid var(--line-faint);
+}
+
+.combat-target-info {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.35rem;
+}
+
+.combat-target-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-primary-lavender);
+  flex-shrink: 0;
+}
+
+.combat-target-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(168 151 210 / 18%);
+}
+
+.combat-target-thumb-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-primary-lavender);
+}
+
+.combat-target-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.combat-target-name {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.combat-target-hp-text {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.combat-in-combat-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.25rem 0;
+  color: var(--color-primary-dusty-rose);
+  font-weight: 600;
+  font-size: 0.88rem;
+  animation: combatPulse 2s ease-in-out infinite;
+}
+
+.combat-badge-icon {
+  width: 18px;
+  height: 18px;
+}
+
+@keyframes combatPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Target select (mob picker) */
+
+.combat-target-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.combat-target-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: rgb(168 151 210 / 6%);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.combat-target-option:hover:not(:disabled) {
+  background: rgb(168 151 210 / 14%);
+  border-color: var(--line-faint);
+}
+
+.combat-target-option-active {
+  border-color: var(--color-primary-lavender);
+  color: var(--text-primary);
+  cursor: default;
+}
+
+.combat-target-option-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.combat-target-option-hp {
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+
+/* Ability grid */
+
+.combat-ability-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.35rem;
+}
+
+@media (min-width: 1024px) {
+  .combat-ability-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.combat-ability-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 8px;
+  border: 1px solid var(--line-faint);
+  background: linear-gradient(135deg, rgb(168 151 210 / 10%), rgb(140 174 201 / 8%));
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.combat-ability-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgb(168 151 210 / 25%);
+  border-color: var(--color-primary-lavender);
+}
+
+.combat-ability-button-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.combat-ability-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.combat-ability-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.combat-ability-label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.combat-ability-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.combat-ability-cost {
+  font-size: 0.68rem;
+  color: var(--color-primary-pale-blue);
+  opacity: 0.85;
+}
+
+.combat-ability-cooldown-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--color-primary-dusty-rose);
+  border-radius: 0 0 8px 8px;
+  transition: width 0.25s linear;
+  opacity: 0.7;
+}
+
+/* Action bar */
+
+.combat-action-bar {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.combat-action-bar > * {
+  flex: 1;
+}
+
+.combat-action-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.combat-flee-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgb(184 143 170 / 40%);
+  background: linear-gradient(135deg, rgb(184 143 170 / 22%), rgb(184 143 170 / 12%));
+  color: var(--color-primary-dusty-rose);
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.combat-flee-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgb(184 143 170 / 30%);
+  background: linear-gradient(135deg, rgb(184 143 170 / 32%), rgb(184 143 170 / 18%));
+}
+
+.combat-action-bar .soft-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+/* PlayPanel compact target mini-bar */
+
+.combat-target-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  margin: 0.15rem 0.3rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgb(184 143 170 / 14%), rgb(168 151 210 / 10%));
+  border: 1px solid rgb(184 143 170 / 25%);
+  font-size: 0.78rem;
+  animation: combatPulse 2s ease-in-out infinite;
+}
+
+.combat-mini-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-primary-dusty-rose);
+  flex-shrink: 0;
+}
+
+.combat-mini-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.combat-mini-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgb(0 0 0 / 25%);
+  overflow: hidden;
+  min-width: 40px;
+}
+
+.combat-mini-hp {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}

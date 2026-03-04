@@ -10,6 +10,8 @@ interface DirtyNotifier {
 
     fun mobHpDirty(mobId: MobId)
 
+    fun playerCombatDirty(sessionId: SessionId)
+
     companion object {
         val NO_OP: DirtyNotifier =
             object : DirtyNotifier {
@@ -18,6 +20,8 @@ interface DirtyNotifier {
                 override fun playerStatusDirty(sessionId: SessionId) = Unit
 
                 override fun mobHpDirty(mobId: MobId) = Unit
+
+                override fun playerCombatDirty(sessionId: SessionId) = Unit
             }
     }
 }

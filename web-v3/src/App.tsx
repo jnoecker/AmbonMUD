@@ -28,6 +28,7 @@ import type {
   ChatChannel,
   ChatMessage,
   CharacterInfo,
+  CombatTarget,
   DialogueState,
   FriendEntry,
   FriendNotification,
@@ -131,6 +132,7 @@ function App() {
   const [whoPlayers, setWhoPlayers] = useState<string[]>([]);
   const [detailMob, setDetailMob] = useState<RoomMob | null>(null);
   const [detailItem, setDetailItem] = useState<RoomItem | null>(null);
+  const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
 
   const { mapCanvasRef, drawMap, updateMap, resetMap } = useMiniMap();
   const {
@@ -195,6 +197,7 @@ function App() {
     setChatByChannel(createEmptyChatByChannel());
     setDialogue(null);
     setWhoPlayers([]);
+    setCombatTarget(null);
     setActiveChatChannel("say");
     resetMap();
   }, [resetMap]);
@@ -221,6 +224,7 @@ function App() {
           setGuildInfo,
           setGuildMembers,
           setDialogue,
+          setCombatTarget,
           setFriends,
           pushFriendNotification,
           setChatByChannel,
@@ -374,6 +378,23 @@ function App() {
     return () => window.cancelAnimationFrame(handle);
   }, [activePopout, drawMap]);
 
+  // Sync combat target HP from mobs list; clear if target mob disappears
+  useEffect(() => {
+    if (!combatTarget?.targetId) return;
+    const mob = mobs.find((m) => m.id === combatTarget.targetId);
+    if (!mob) {
+      setCombatTarget(null);
+      return;
+    }
+    if (mob.hp !== combatTarget.targetHp || mob.maxHp !== combatTarget.targetMaxHp) {
+      setCombatTarget((prev) =>
+        prev && prev.targetId === mob.id
+          ? { ...prev, targetHp: mob.hp, targetMaxHp: mob.maxHp }
+          : prev,
+      );
+    }
+  }, [mobs, combatTarget?.targetId, combatTarget?.targetHp, combatTarget?.targetMaxHp]);
+
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 
   const equipmentSlots = useMemo(() => {
@@ -518,6 +539,7 @@ function App() {
           exits={exits}
           mobs={mobs}
           roomItems={roomItems}
+          combatTarget={combatTarget}
           terminalHostRef={terminalHostRef}
           commandInputRef={composerInputRef}
           composerValue={composerValue}
@@ -580,8 +602,14 @@ function App() {
           hiddenRoomItemsCount={hiddenRoomItemsCount}
           showSkillsPanel={vitals.inCombat}
           skills={skills}
+          combatTarget={combatTarget}
+          vitals={vitals}
           onOpenMap={() => setActivePopout("map")}
           onOpenRoom={() => setActivePopout("room")}
+          onFlee={() => {
+            sendCommand("flee", true);
+            focusComposer();
+          }}
           onRefreshSkills={() => {
             sendCommand("skills", true);
             focusComposer();

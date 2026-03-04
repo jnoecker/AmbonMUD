@@ -4,6 +4,7 @@ import type {
   ChatChannel,
   ChatMessage,
   CharacterInfo,
+  CombatTarget,
   CompletedAchievement,
   DialogueChoice,
   DialogueState,
@@ -46,6 +47,7 @@ interface GmcpContext {
   setFriends: Dispatch<SetStateAction<FriendEntry[]>>;
   pushFriendNotification: (notification: FriendNotification) => void;
   setDialogue: Dispatch<SetStateAction<DialogueState | null>>;
+  setCombatTarget: Dispatch<SetStateAction<CombatTarget | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>) => void;
 }
@@ -89,6 +91,23 @@ export function applyGmcpPackage(
         gold: safeNumber(packet.gold),
         inCombat: packet.inCombat === true,
       });
+      break;
+    }
+
+    case "Char.Combat": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const targetId = typeof packet.targetId === "string" ? packet.targetId : null;
+      if (targetId === null) {
+        ctx.setCombatTarget(null);
+      } else {
+        ctx.setCombatTarget({
+          targetId,
+          targetName: typeof packet.targetName === "string" ? packet.targetName : null,
+          targetHp: typeof packet.targetHp === "number" ? packet.targetHp : null,
+          targetMaxHp: typeof packet.targetMaxHp === "number" ? packet.targetMaxHp : null,
+          targetImage: typeof packet.targetImage === "string" ? packet.targetImage : null,
+        });
+      }
       break;
     }
 
