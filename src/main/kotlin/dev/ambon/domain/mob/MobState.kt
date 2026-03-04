@@ -23,4 +23,5 @@ data class MobState(
     override val behaviorTree: BtNode? = null,
     val templateKey: String = "",
     override val questIds: List<String> = emptyList(),
+    override val image: String? = null,
 ) : MobTemplate

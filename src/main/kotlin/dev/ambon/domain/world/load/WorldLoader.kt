@@ -135,6 +135,7 @@ object WorldLoader {
                         description = rf.description,
                         exits = emptyMap(),
                         station = station,
+                        image = rf.image,
                     )
             }
 
@@ -295,6 +296,7 @@ object WorldLoader {
                         dialogue = dialogue,
                         behaviorTree = behaviorTree,
                         questIds = questIds,
+                        image = mf.image,
                     )
             }
 
@@ -401,6 +403,7 @@ object WorldLoader {
                                         onUse = onUse,
                                         matchByKey = itemFile.matchByKey,
                                         basePrice = basePrice,
+                                        image = itemFile.image,
                                     ),
                             ),
                         roomId = roomId,

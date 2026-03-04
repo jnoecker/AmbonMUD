@@ -139,6 +139,7 @@ class AdminHandler(
                     armor = template.armor,
                     xpReward = template.xpReward,
                     drops = template.drops,
+                    image = template.image,
                 ),
             )
             outbound.send(OutboundEvent.SendInfo(sessionId, "${template.name} appears."))
