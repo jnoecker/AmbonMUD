@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { COMPASS_DIRECTIONS } from "../../constants";
 import type { CombatTarget, DialogueState, ItemSummary, RoomItem, RoomMob, RoomPlayer, RoomState, ShopState, SkillSummary, Vitals } from "../../types";
 import { percent } from "../../utils";
@@ -80,13 +80,6 @@ export function WorldPanel({
   onBuyItem,
   onSellItem,
 }: WorldPanelProps) {
-  const [shopTab, setShopTab] = useState<"buy" | "sell">("buy");
-  const prevShopRef = useRef(shop);
-  if (prevShopRef.current !== shop) {
-    prevShopRef.current = shop;
-    if (shopTab !== "buy") setShopTab("buy");
-  }
-
   return (
     <section className="panel panel-world" aria-label="World state">
       <div className="world-stack">
@@ -190,88 +183,7 @@ export function WorldPanel({
             )}
           </article>
         ) : shop ? (
-          <article className="subpanel shop-panel" aria-label="Shop">
-            <div className="shop-header">
-              <h3>{shop.name}</h3>
-              <span className="shop-gold">{gold.toLocaleString()} gold</span>
-            </div>
-            <div className="shop-tabs" role="tablist">
-              <button
-                type="button"
-                role="tab"
-                className={`shop-tab${shopTab === "buy" ? " shop-tab-active" : ""}`}
-                aria-selected={shopTab === "buy"}
-                onClick={() => setShopTab("buy")}
-              >
-                Buy
-              </button>
-              <button
-                type="button"
-                role="tab"
-                className={`shop-tab${shopTab === "sell" ? " shop-tab-active" : ""}`}
-                aria-selected={shopTab === "sell"}
-                onClick={() => setShopTab("sell")}
-              >
-                Sell
-              </button>
-            </div>
-            {shopTab === "buy" ? (
-              <ul className="shop-item-list">
-                {shop.items.length === 0 ? (
-                  <li><p className="empty-note">Nothing for sale.</p></li>
-                ) : shop.items.map((item) => (
-                  <li key={item.id} className="shop-item">
-                    <div className="shop-item-top">
-                      <span className="shop-item-name">{item.name}</span>
-                      <span className="shop-item-price">{item.buyPrice} gp</span>
-                    </div>
-                    {(item.slot || item.damage > 0 || item.armor > 0) && (
-                      <p className="shop-item-meta">
-                        {[item.slot, item.damage > 0 ? `${item.damage} dmg` : null, item.armor > 0 ? `${item.armor} armor` : null].filter(Boolean).join(" \u00b7 ")}
-                      </p>
-                    )}
-                    <button
-                      type="button"
-                      className="soft-button shop-buy-button"
-                      disabled={gold < item.buyPrice}
-                      onClick={() => onBuyItem(item.keyword)}
-                    >
-                      Buy
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <ul className="shop-item-list">
-                {inventory.length === 0 ? (
-                  <li><p className="empty-note">Your inventory is empty.</p></li>
-                ) : inventory.map((item) => {
-                  const sellPrice = Math.round((item.basePrice ?? 0) * shop.sellMultiplier);
-                  return (
-                    <li key={item.id} className="shop-item">
-                      <div className="shop-item-top">
-                        <span className="shop-item-name">{item.name}</span>
-                        {sellPrice > 0 ? (
-                          <span className="shop-item-price">{sellPrice} gp</span>
-                        ) : (
-                          <span className="shop-item-worthless">Worthless</span>
-                        )}
-                      </div>
-                      {sellPrice > 0 ? (
-                        <button
-                          type="button"
-                          className="soft-button shop-sell-button"
-                          onClick={() => onSellItem(item.name)}
-                        >
-                          Sell
-                        </button>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </article>
+          <ShopContent key={shop.name} shop={shop} inventory={inventory} gold={gold} onBuyItem={onBuyItem} onSellItem={onSellItem} />
         ) : showSkillsPanel ? (
           <CombatPanel
             connected={connected}
@@ -379,3 +291,101 @@ export function WorldPanel({
   );
 }
 
+interface ShopContentProps {
+  shop: ShopState;
+  inventory: ItemSummary[];
+  gold: number;
+  onBuyItem: (keyword: string) => void;
+  onSellItem: (keyword: string) => void;
+}
+
+function ShopContent({ shop, inventory, gold, onBuyItem, onSellItem }: ShopContentProps) {
+  const [shopTab, setShopTab] = useState<"buy" | "sell">("buy");
+
+  return (
+    <article className="subpanel shop-panel" aria-label="Shop">
+      <div className="shop-header">
+        <h3>{shop.name}</h3>
+        <span className="shop-gold">{gold} gold</span>
+      </div>
+      <div className="shop-tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          className={`shop-tab${shopTab === "buy" ? " shop-tab-active" : ""}`}
+          aria-selected={shopTab === "buy"}
+          onClick={() => setShopTab("buy")}
+        >
+          Buy
+        </button>
+        <button
+          type="button"
+          role="tab"
+          className={`shop-tab${shopTab === "sell" ? " shop-tab-active" : ""}`}
+          aria-selected={shopTab === "sell"}
+          onClick={() => setShopTab("sell")}
+        >
+          Sell
+        </button>
+      </div>
+      {shopTab === "buy" ? (
+        <ul className="shop-item-list">
+          {shop.items.map((item) => (
+            <li key={item.id} className="shop-item">
+              <div className="shop-item-top">
+                <span className="shop-item-name">
+                  {item.image && <img src={item.image} alt="" className="entity-thumb" />}
+                  {item.name}
+                </span>
+                <span className="shop-item-price">{item.buyPrice}g</span>
+              </div>
+              {(item.slot || item.damage > 0 || item.armor > 0) && (
+                <p className="shop-item-meta">
+                  {[item.slot, item.damage > 0 && `${item.damage} dmg`, item.armor > 0 && `${item.armor} arm`].filter(Boolean).join(" \u00b7 ")}
+                </p>
+              )}
+              <button
+                type="button"
+                className="shop-buy-button"
+                disabled={gold < item.buyPrice}
+                onClick={() => onBuyItem(item.keyword)}
+              >
+                Buy
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <ul className="shop-item-list">
+          {inventory.map((item, index) => {
+            const sellPrice = Math.round((item.basePrice ?? 0) * shop.sellMultiplier);
+            return (
+              <li key={`${item.id}-${index}`} className="shop-item">
+                <div className="shop-item-top">
+                  <span className="shop-item-name">
+                    {item.image && <img src={item.image} alt="" className="entity-thumb" />}
+                    {item.name}
+                  </span>
+                  {sellPrice > 0 ? (
+                    <span className="shop-item-price">{sellPrice}g</span>
+                  ) : (
+                    <span className="shop-item-worthless">Worthless</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="shop-sell-button"
+                  disabled={sellPrice <= 0}
+                  onClick={() => onSellItem(item.keyword)}
+                >
+                  Sell
+                </button>
+              </li>
+            );
+          })}
+          {inventory.length === 0 && <p className="empty-note">Your inventory is empty.</p>}
+        </ul>
+      )}
+    </article>
+  );
+}
