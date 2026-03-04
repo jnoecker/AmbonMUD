@@ -129,6 +129,8 @@ function App() {
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
   const [dialogue, setDialogue] = useState<DialogueState | null>(null);
   const [whoPlayers, setWhoPlayers] = useState<string[]>([]);
+  const [detailMob, setDetailMob] = useState<RoomMob | null>(null);
+  const [detailItem, setDetailItem] = useState<RoomItem | null>(null);
 
   const { mapCanvasRef, drawMap, updateMap, resetMap } = useMiniMap();
   const {
@@ -420,6 +422,10 @@ function App() {
         ? "Room Details"
       : activePopout === "equipment"
         ? "Equipment"
+      : activePopout === "mobDetail"
+        ? (detailMob?.name ?? "Mob")
+      : activePopout === "itemDetail"
+        ? (detailItem?.name ?? "Item")
         : "Currently Wearing";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
@@ -546,6 +552,14 @@ function App() {
             sendCommand(`get ${itemName}`, true);
             focusComposer();
           }}
+          onOpenMobDetail={(mob) => {
+            setDetailMob(mob);
+            setActivePopout("mobDetail");
+          }}
+          onOpenItemDetail={(item) => {
+            setDetailItem(item);
+            setActivePopout("itemDetail");
+          }}
         />
 
         <WorldPanel
@@ -662,6 +676,8 @@ function App() {
         equipmentSlots={equipmentSlots}
         mapCanvasRef={mapCanvasRef}
         canManageItems={connected && hasCharacterProfile}
+        detailMob={detailMob}
+        detailItem={detailItem}
         onWearItem={(itemName) => {
           sendCommand(`wear ${itemName}`, true);
           focusComposer();
@@ -673,6 +689,21 @@ function App() {
         onRemoveItem={(slot) => {
           sendCommand(`remove ${slot}`, true);
           focusComposer();
+        }}
+        onTalkToMob={(mobName) => {
+          sendCommand(`talk ${mobName}`, true);
+          focusComposer();
+          setActivePopout(null);
+        }}
+        onAttackMob={(mobName) => {
+          sendCommand(`kill ${mobName}`, true);
+          focusComposer();
+          setActivePopout(null);
+        }}
+        onPickUpItem={(itemName) => {
+          sendCommand(`get ${itemName}`, true);
+          focusComposer();
+          setActivePopout(null);
         }}
         onClose={() => setActivePopout(null)}
       />

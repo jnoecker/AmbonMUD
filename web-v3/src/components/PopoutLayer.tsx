@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
-import type { ItemSummary, PopoutPanel, RoomState } from "../types";
-import { DropItemIcon, RemoveItemIcon, WearItemIcon } from "./Icons";
+import type { ItemSummary, PopoutPanel, RoomItem, RoomMob, RoomState } from "../types";
+import { percent } from "../utils";
+import { AttackIcon, DropItemIcon, PickupIcon, RemoveItemIcon, TalkIcon, WearItemIcon } from "./Icons";
 
 interface PopoutLayerProps {
   activePopout: PopoutPanel;
@@ -12,9 +13,14 @@ interface PopoutLayerProps {
   equipmentSlots: string[];
   mapCanvasRef: RefObject<HTMLCanvasElement | null>;
   canManageItems: boolean;
+  detailMob: RoomMob | null;
+  detailItem: RoomItem | null;
   onWearItem: (itemName: string) => void;
   onDropItem: (itemName: string) => void;
   onRemoveItem: (slot: string) => void;
+  onTalkToMob: (mobName: string) => void;
+  onAttackMob: (mobName: string) => void;
+  onPickUpItem: (itemName: string) => void;
   onClose: () => void;
 }
 
@@ -28,17 +34,25 @@ export function PopoutLayer({
   equipmentSlots,
   mapCanvasRef,
   canManageItems,
+  detailMob,
+  detailItem,
   onWearItem,
   onDropItem,
   onRemoveItem,
+  onTalkToMob,
+  onAttackMob,
+  onPickUpItem,
   onClose,
 }: PopoutLayerProps) {
   if (!activePopout) return null;
 
+  const isEntityDetail = activePopout === "mobDetail" || activePopout === "itemDetail";
+  const dialogClass = isEntityDetail ? "popout-dialog entity-detail-dialog" : "popout-dialog";
+
   return (
     <div className="popout-backdrop" onClick={onClose}>
       <section
-        className="popout-dialog"
+        className={dialogClass}
         role="dialog"
         aria-modal="true"
         aria-label={popoutTitle}
@@ -152,6 +166,62 @@ export function PopoutLayer({
                   ))}
                 </ul>
             )}
+          </div>
+        )}
+
+        {activePopout === "mobDetail" && detailMob && (
+          <div className="popout-content entity-detail-body">
+            {detailMob.image ? (
+              <img src={detailMob.image} alt={detailMob.name} className="entity-detail-image" />
+            ) : (
+              <div className="entity-detail-placeholder" aria-hidden="true" />
+            )}
+            <h3 className="entity-detail-name">{detailMob.name}</h3>
+            <div className="entity-detail-hp">
+              <span className="entity-detail-hp-label">{detailMob.hp} / {detailMob.maxHp} HP</span>
+              <div className="meter-track">
+                <span className="meter-fill meter-fill-hp" style={{ width: `${percent(detailMob.hp, detailMob.maxHp)}%` }} />
+              </div>
+            </div>
+            <div className="entity-detail-actions">
+              <button
+                type="button"
+                className="entity-detail-action-button"
+                onClick={() => onTalkToMob(detailMob.name)}
+              >
+                <TalkIcon className="entity-detail-action-icon" />
+                Talk
+              </button>
+              <button
+                type="button"
+                className="entity-detail-action-button entity-detail-action-attack"
+                onClick={() => onAttackMob(detailMob.name)}
+              >
+                <AttackIcon className="entity-detail-action-icon" />
+                Attack
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activePopout === "itemDetail" && detailItem && (
+          <div className="popout-content entity-detail-body">
+            {detailItem.image ? (
+              <img src={detailItem.image} alt={detailItem.name} className="entity-detail-image" />
+            ) : (
+              <div className="entity-detail-placeholder" aria-hidden="true" />
+            )}
+            <h3 className="entity-detail-name">{detailItem.name}</h3>
+            <div className="entity-detail-actions">
+              <button
+                type="button"
+                className="entity-detail-action-button"
+                onClick={() => onPickUpItem(detailItem.name)}
+              >
+                <PickupIcon className="entity-detail-action-icon" />
+                Pick up
+              </button>
+            </div>
           </div>
         )}
       </section>
