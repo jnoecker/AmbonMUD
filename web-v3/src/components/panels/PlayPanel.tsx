@@ -1,7 +1,7 @@
 import type { FormEvent, KeyboardEvent, MouseEvent, RefObject } from "react";
-import type { RoomItem, RoomMob } from "../../types";
+import type { CombatTarget, RoomItem, RoomMob } from "../../types";
 import { percent } from "../../utils";
-import { AttackIcon, DirectionIcon, FleeIcon, PickupIcon, TalkIcon } from "../Icons";
+import { AttackIcon, CrosshairIcon, DirectionIcon, FleeIcon, PickupIcon, TalkIcon } from "../Icons";
 import { isDirection } from "../isDirection";
 
 interface PlayPanelProps {
@@ -13,6 +13,7 @@ interface PlayPanelProps {
   exits: Array<[string, string]>;
   mobs: RoomMob[];
   roomItems: RoomItem[];
+  combatTarget: CombatTarget | null;
   terminalHostRef: RefObject<HTMLDivElement | null>;
   commandInputRef: RefObject<HTMLInputElement | null>;
   composerValue: string;
@@ -39,6 +40,7 @@ export function PlayPanel({
   exits,
   mobs,
   roomItems,
+  combatTarget,
   terminalHostRef,
   commandInputRef,
   composerValue,
@@ -68,6 +70,19 @@ export function PlayPanel({
       {roomImage && (
         <div className="room-banner" aria-label="Room scene">
           <img src={roomImage} alt={roomTitle} className="room-banner-image" />
+        </div>
+      )}
+      {combatTarget?.targetId && (
+        <div className="combat-target-mini" aria-label="Combat target">
+          <CrosshairIcon className="combat-mini-icon" />
+          <span className="combat-mini-name">{combatTarget.targetName}</span>
+          <div className="combat-mini-bar">
+            <span
+              className="meter-fill meter-fill-hp"
+              style={{ width: `${percent(combatTarget.targetHp ?? 0, combatTarget.targetMaxHp ?? 1)}%` }}
+            />
+          </div>
+          <span className="combat-mini-hp">{combatTarget.targetHp}/{combatTarget.targetMaxHp}</span>
         </div>
       )}
       {showEntities && (

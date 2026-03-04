@@ -844,4 +844,65 @@ class GmcpEmitterTest {
             val data = drainGmcp()[0]
             assertTrue(data.jsonData.contains("\"image\":\"/images/items/axe.png\""))
         }
+
+    // ── Char.Combat ──
+
+    private fun combatEmitter(target: CombatTargetInfo? = null, vararg supported: String): GmcpEmitter {
+        val packages = supported.toSet()
+        return GmcpEmitter(
+            outbound = outbound,
+            supportsPackage = { _, pkg ->
+                packages.any { s -> pkg == s || pkg.startsWith("$s.") }
+            },
+            progression = progression,
+            getCombatTarget = { target },
+        )
+    }
+
+    @Test
+    fun `sendCharCombat emits target data when in combat`() =
+        runTest {
+            val target = CombatTargetInfo(
+                id = "mob-1",
+                name = "Goblin",
+                hp = 15,
+                maxHp = 30,
+                image = "/images/goblin.png",
+            )
+            val e = combatEmitter(target, "Char")
+            e.sendCharCombat(sid)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            val data = events[0]
+            assertEquals("Char.Combat", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"targetId\":\"mob-1\""))
+            assertTrue(data.jsonData.contains("\"targetName\":\"Goblin\""))
+            assertTrue(data.jsonData.contains("\"targetHp\":15"))
+            assertTrue(data.jsonData.contains("\"targetMaxHp\":30"))
+            assertTrue(data.jsonData.contains("\"targetImage\":\"/images/goblin.png\""))
+        }
+
+    @Test
+    fun `sendCharCombat emits null target when not in combat`() =
+        runTest {
+            val e = combatEmitter(null, "Char")
+            e.sendCharCombat(sid)
+            val events = drainGmcp()
+            assertEquals(1, events.size)
+            val data = events[0]
+            assertEquals("Char.Combat", data.gmcpPackage)
+            assertTrue(data.jsonData.contains("\"targetId\":null"))
+            assertTrue(data.jsonData.contains("\"targetName\":null"))
+            assertTrue(data.jsonData.contains("\"targetHp\":null"))
+            assertTrue(data.jsonData.contains("\"targetMaxHp\":null"))
+        }
+
+    @Test
+    fun `sendCharCombat does nothing when not supported`() =
+        runTest {
+            val target = CombatTargetInfo(id = "mob-1", name = "Goblin", hp = 15, maxHp = 30)
+            val e = combatEmitter(target)
+            e.sendCharCombat(sid)
+            assertTrue(drainGmcp().isEmpty())
+        }
 }

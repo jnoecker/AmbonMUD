@@ -17,11 +17,20 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.ActiveEffectSnapshot
 import dev.ambon.engine.status.StatusEffectSystem
 
+data class CombatTargetInfo(
+    val id: String,
+    val name: String,
+    val hp: Int,
+    val maxHp: Int,
+    val image: String? = null,
+)
+
 class GmcpEmitter(
     private val outbound: OutboundBus,
     private val supportsPackage: (SessionId, String) -> Boolean,
     private val progression: PlayerProgression? = null,
     private val isInCombat: (SessionId) -> Boolean = { false },
+    private val getCombatTarget: (SessionId) -> CombatTargetInfo? = { null },
 ) {
     private val json = jacksonObjectMapper()
 
@@ -44,6 +53,22 @@ class GmcpEmitter(
                 gold = player.gold,
                 inCombat = isInCombat(sessionId),
             ),
+        )
+    }
+
+    suspend fun sendCharCombat(sessionId: SessionId) {
+        val target = getCombatTarget(sessionId)
+        emit(
+            sessionId,
+            "Char.Combat",
+            CharCombatPayload(
+                targetId = target?.id,
+                targetName = target?.name,
+                targetHp = target?.hp,
+                targetMaxHp = target?.maxHp,
+                targetImage = target?.image,
+            ),
+            supportCheck = "Char",
         )
     }
 
@@ -499,6 +524,14 @@ class GmcpEmitter(
         val xpToNextLevel: Long?,
         val gold: Long,
         val inCombat: Boolean,
+    )
+
+    private data class CharCombatPayload(
+        val targetId: String?,
+        val targetName: String?,
+        val targetHp: Int?,
+        val targetMaxHp: Int?,
+        val targetImage: String?,
     )
 
     private data class RoomInfoPayload(

@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
 import { COMPASS_DIRECTIONS } from "../../constants";
-import type { DialogueState, RoomItem, RoomMob, RoomPlayer, RoomState, SkillSummary } from "../../types";
+import type { CombatTarget, DialogueState, RoomItem, RoomMob, RoomPlayer, RoomState, SkillSummary, Vitals } from "../../types";
 import { percent } from "../../utils";
-import { AttackIcon, CompassCoreIcon, DirectionIcon, ExpandRoomIcon, MapScrollIcon, PickupIcon, SkillCastIcon, TalkIcon } from "../Icons";
+import { AttackIcon, CompassCoreIcon, DirectionIcon, ExpandRoomIcon, MapScrollIcon, PickupIcon, TalkIcon } from "../Icons";
+import { CombatPanel } from "./CombatPanel";
 
 interface WorldPanelProps {
   connected: boolean;
@@ -22,9 +22,12 @@ interface WorldPanelProps {
   hiddenRoomItemsCount: number;
   showSkillsPanel: boolean;
   skills: SkillSummary[];
+  combatTarget: CombatTarget | null;
+  vitals: Vitals;
   dialogue: DialogueState | null;
   onOpenMap: () => void;
   onOpenRoom: () => void;
+  onFlee: () => void;
   onRefreshSkills: () => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
   onMove: (direction: string) => void;
@@ -52,9 +55,12 @@ export function WorldPanel({
   hiddenRoomItemsCount,
   showSkillsPanel,
   skills,
+  combatTarget,
+  vitals,
   dialogue,
   onOpenMap,
   onOpenRoom,
+  onFlee,
   onRefreshSkills,
   onCastSkill,
   onMove,
@@ -63,14 +69,6 @@ export function WorldPanel({
   onAttackMob,
   onPickUpItem,
 }: WorldPanelProps) {
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    if (!showSkillsPanel) return undefined;
-    const interval = window.setInterval(() => setNow(Date.now()), 250);
-    return () => window.clearInterval(interval);
-  }, [showSkillsPanel]);
-
   return (
     <section className="panel panel-world" aria-label="World state">
       <div className="world-stack">
@@ -174,58 +172,18 @@ export function WorldPanel({
             )}
           </article>
         ) : showSkillsPanel ? (
-          <article className="subpanel split-list skills-combat-panel" aria-label="Combat skills">
-            <div className="skills-combat-header">
-              <h3>Skills</h3>
-              <button
-                type="button"
-                className="soft-button"
-                onClick={onRefreshSkills}
-                disabled={!connected || !hasRoomDetails}
-              >
-                Refresh
-              </button>
-            </div>
-            {skills.length === 0 ? (
-              <p className="empty-note">No skills loaded yet. Press refresh or try `skills`.</p>
-            ) : (
-              <ul className="skills-combat-list">
-                {skills.map((skill) => {
-                  const elapsed = Math.max(0, now - skill.receivedAt);
-                  const remainingMs = Math.max(0, skill.cooldownRemainingMs - elapsed);
-                  const cooldownSeconds = Math.ceil(remainingMs / 1000);
-                  const isReady = remainingMs <= 0;
-                  return (
-                    <li key={skill.id} className="skills-combat-item">
-                      <div className="skills-combat-item-top">
-                        <span className="skills-combat-name">{skill.name}</span>
-                        <span className="skills-combat-meta">{skill.manaCost} mana</span>
-                      </div>
-                      <p className="skills-combat-desc">{skill.description || `${skill.targetType} skill`}</p>
-                      <div className="skills-combat-actions">
-                        <span className={`skills-combat-cooldown ${isReady ? "skills-combat-cooldown-ready" : ""}`}>
-                          {isReady ? "Ready" : `${cooldownSeconds}s`}
-                        </span>
-                        <button
-                          type="button"
-                          className="mob-command-button"
-                          title={`Cast ${skill.name}`}
-                          aria-label={`Cast ${skill.name}`}
-                          onClick={() => onCastSkill(skill.id, skill.cooldownMs)}
-                        >
-                          <SkillCastIcon
-                            className="mob-command-icon"
-                            classRestriction={skill.classRestriction}
-                            targetType={skill.targetType}
-                          />
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </article>
+          <CombatPanel
+            connected={connected}
+            hasRoomDetails={hasRoomDetails}
+            combatTarget={combatTarget}
+            vitals={vitals}
+            skills={skills}
+            mobs={mobs}
+            onCastSkill={onCastSkill}
+            onRefreshSkills={onRefreshSkills}
+            onFlee={onFlee}
+            onAttackMob={onAttackMob}
+          />
         ) : (
           <article className="subpanel split-list">
             <div>
