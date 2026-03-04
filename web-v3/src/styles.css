@@ -966,6 +966,139 @@ body {
   text-align: right;
 }
 
+.guild-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.guild-info-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.guild-name {
+  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.guild-tag {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-primary-soft-gold);
+}
+
+.guild-rank {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.guild-motd {
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  background: rgb(50 60 88 / 70%);
+  border: 1px solid var(--line-faint);
+}
+
+.guild-motd-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.guild-motd-text {
+  margin: 0;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.guild-roster-header {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.guild-member-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.guild-member-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 5px 8px;
+  border-radius: 6px;
+  transition: background 140ms var(--ease-out-soft);
+}
+
+.guild-member-item:hover {
+  background: rgb(80 94 136 / 30%);
+}
+
+.guild-member-offline {
+  opacity: 0.55;
+}
+
+.guild-member-name {
+  font-weight: 600;
+  font-size: 0.82rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.guild-member-details {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.guild-member-status {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.guild-member-status-online {
+  background: var(--color-primary-moss-green);
+  box-shadow: 0 0 4px rgb(141 169 123 / 60%);
+}
+
+.guild-member-status-offline {
+  background: var(--text-disabled);
+}
+
+.guild-member-rank {
+  white-space: nowrap;
+}
+
+.guild-member-level {
+  white-space: nowrap;
+  color: var(--text-disabled);
+}
+
 .chat-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
