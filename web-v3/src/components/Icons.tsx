@@ -339,6 +339,16 @@ export function RefreshIcon({ className }: { className?: string }) {
   );
 }
 
+export function CrosshairIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="7.2" stroke="currentColor" strokeWidth="1.9" />
+      <circle cx="12" cy="12" r="2.6" stroke="currentColor" strokeWidth="1.9" opacity="0.9" />
+      <path d="M12 4v2.8M12 17.2V20M4 12h2.8M17.2 12H20" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function ExpandRoomIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">

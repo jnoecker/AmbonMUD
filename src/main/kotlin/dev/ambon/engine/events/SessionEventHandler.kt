@@ -17,6 +17,7 @@ class SessionEventHandler(
     private val gmcpDirtyVitals: MutableSet<SessionId>,
     private val gmcpDirtyStatusEffects: MutableSet<SessionId>,
     private val gmcpDirtyGroup: MutableSet<SessionId>,
+    private val gmcpDirtyCombat: MutableSet<SessionId>,
     private val handoffManager: HandoffManager?,
     private val removePendingWhoRequestsFor: (SessionId) -> Unit,
     private val sessionLifecycle: SessionLifecycleCoordinator,
@@ -52,6 +53,7 @@ class SessionEventHandler(
         sessionLifecycle.onPlayerDisconnected(sessionId)
         gmcpDirtyStatusEffects.remove(sessionId)
         gmcpDirtyGroup.remove(sessionId)
+        gmcpDirtyCombat.remove(sessionId)
 
         if (me != null) {
             onPlayerLoggedOut(me, sessionId)

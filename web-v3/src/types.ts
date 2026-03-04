@@ -166,6 +166,14 @@ export interface StatusVarLabels {
   xp: string;
 }
 
+export interface CombatTarget {
+  targetId: string | null;
+  targetName: string | null;
+  targetHp: number | null;
+  targetMaxHp: number | null;
+  targetImage: string | null;
+}
+
 export interface SkillSummary {
   id: string;
   name: string;

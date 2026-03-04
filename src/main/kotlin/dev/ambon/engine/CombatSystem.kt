@@ -201,6 +201,7 @@ class CombatSystem(
     ) {
         playerTarget[sessionId] = mobId
         dirtyNotifier.playerVitalsDirty(sessionId)
+        dirtyNotifier.playerCombatDirty(sessionId)
         if (!activeMobs.containsKey(mobId)) {
             activeMobs[mobId] = MobCombatState(mobId = mobId, nextTickAtMs = now + config.tickMillis)
         }
@@ -475,6 +476,7 @@ class CombatSystem(
         playerTarget.remove(sessionId)
         threatTable.removePlayer(sessionId)
         dirtyNotifier.playerVitalsDirty(sessionId)
+        dirtyNotifier.playerCombatDirty(sessionId)
         cleanupEmptyMobs()
     }
 
@@ -485,6 +487,7 @@ class CombatSystem(
         for (sid in toRemove) {
             playerTarget.remove(sid)
             dirtyNotifier.playerVitalsDirty(sid)
+            dirtyNotifier.playerCombatDirty(sid)
         }
         threatTable.removeMob(mobId)
     }
