@@ -82,17 +82,20 @@ export interface RoomState {
   title: string;
   description: string;
   exits: Record<string, string>;
+  image?: string | null;
 }
 
 export interface ItemSummary {
   id: string;
   name: string;
   slot: string | null;
+  image?: string | null;
 }
 
 export interface RoomItem {
   id: string;
   name: string;
+  image?: string | null;
 }
 
 export interface RoomPlayer {
@@ -105,6 +108,7 @@ export interface RoomMob {
   name: string;
   hp: number;
   maxHp: number;
+  image?: string | null;
 }
 
 export interface StatusEffect {
