@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { CHAT_CHANNELS, SOCIAL_TABS } from "../../constants";
+import { CHAT_CHANNELS } from "../../constants";
 import { RefreshIcon, TellIcon } from "../Icons";
-import type { ChatChannel, ChatMessage, SocialTab } from "../../types";
+import type { ChatChannel, ChatMessage, GroupInfo, SocialTab } from "../../types";
 
 interface ChatPanelProps {
   connected: boolean;
@@ -11,6 +11,7 @@ interface ChatPanelProps {
   activeChannel: ChatChannel;
   messages: ChatMessage[];
   whoPlayers: string[];
+  groupInfo: GroupInfo;
   onChannelChange: (channel: ChatChannel) => void;
   onRequestWho: () => void;
   onSendMessage: (channel: ChatChannel, message: string, target: string | null) => boolean;
@@ -23,6 +24,7 @@ function createEmptyDrafts(): Record<ChatChannel, string> {
     gossip: "",
     shout: "",
     ooc: "",
+    gtell: "",
   };
 }
 
@@ -38,6 +40,12 @@ function extractTellTargetFromWhoEntry(entry: string): string {
   return name || entry.trim();
 }
 
+const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [
+  { id: "chat", label: "Chat" },
+  { id: "group", label: "Group" },
+  { id: "who", label: "Who" },
+];
+
 export function ChatPanel({
   connected,
   canChat,
@@ -45,6 +53,7 @@ export function ChatPanel({
   activeChannel,
   messages,
   whoPlayers,
+  groupInfo,
   onChannelChange,
   onRequestWho,
   onSendMessage,
@@ -88,6 +97,9 @@ export function ChatPanel({
     onChannelChange("tell");
     window.requestAnimationFrame(() => messageInputRef.current?.focus());
   };
+
+  const inGroup = groupInfo.members.length > 0;
+
 
   return (
     <section className="panel panel-chat" aria-label="Social channels">
@@ -192,6 +204,50 @@ export function ChatPanel({
           </>
         )}
 
+        {activeSocialTab === "group" && (
+          <>
+            <div aria-hidden="true" />
+            <div ref={feedRef} className="chat-feed" role="region" aria-label="Group members">
+              <section className="chat-feed-panel chat-feed-panel-flip" aria-label="Group subwindow">
+                {!canChat ? (
+                  <p className="empty-note">
+                    {connected ? "Log in through the terminal to unlock social features." : "Reconnect to load social data."}
+                  </p>
+                ) : !inGroup ? (
+                  <p className="empty-note">You are not in a group. Use `group invite &lt;name&gt;` to start one.</p>
+                ) : (
+                  <ul className="group-member-list">
+                    {groupInfo.members.map((member) => {
+                      const isLeader = member.name === groupInfo.leader;
+                      const hpPct = Math.min(100, (member.hp / Math.max(1, member.maxHp)) * 100);
+                      return (
+                        <li key={member.name} className="group-member-item">
+                          <div className="group-member-header">
+                            <span className="group-member-name">
+                              {isLeader && <span className="group-leader-badge" title="Leader">&#9733;</span>}
+                              {member.name}
+                            </span>
+                            <span className="group-member-class">{member.playerClass} {member.level}</span>
+                          </div>
+                          <div className="meter-track group-member-hp-track">
+                            <span
+                              className="meter-fill meter-fill-hp"
+                              style={{ width: `${hpPct}%` }}
+                            />
+                          </div>
+                          <div className="group-member-hp-text">{member.hp} / {member.maxHp}</div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </section>
+            </div>
+            <div aria-hidden="true" />
+          </>
+        )}
+
+
         {activeSocialTab === "who" && (
           <>
             <div aria-hidden="true" />
@@ -234,14 +290,7 @@ export function ChatPanel({
               </button>
             </div>
           </>
-        )}
 
-        {(activeSocialTab === "guild" || activeSocialTab === "friends") && (
-          <div className="chat-feed social-placeholder-feed">
-            <div className="social-placeholder">
-              <p className="social-placeholder-text">Coming soon</p>
-            </div>
-          </div>
         )}
       </div>
     </section>

@@ -28,6 +28,7 @@ import type {
   ChatChannel,
   ChatMessage,
   CharacterInfo,
+  GroupInfo,
   ItemSummary,
   MobileTab,
   PopoutPanel,
@@ -51,6 +52,7 @@ function createEmptyChatByChannel(): Record<ChatChannel, ChatMessage[]> {
     gossip: [],
     shout: [],
     ooc: [],
+    gtell: [],
   };
 }
 
@@ -113,6 +115,7 @@ function App() {
   const [inventory, setInventory] = useState<ItemSummary[]>([]);
   const [equipment, setEquipment] = useState<Record<string, ItemSummary>>({});
   const [achievements, setAchievements] = useState<AchievementData>({ completed: [], inProgress: [] });
+  const [groupInfo, setGroupInfo] = useState<GroupInfo>({ leader: null, members: [] });
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
   const [whoPlayers, setWhoPlayers] = useState<string[]>([]);
 
@@ -163,6 +166,7 @@ function App() {
     setInventory([]);
     setEquipment({});
     setAchievements({ completed: [], inProgress: [] });
+    setGroupInfo({ leader: null, members: [] });
     setChatByChannel(createEmptyChatByChannel());
     setWhoPlayers([]);
     setActiveChatChannel("say");
@@ -187,6 +191,7 @@ function App() {
           setEffects,
           setSkills,
           setAchievements,
+          setGroupInfo,
           setChatByChannel,
           updateMap,
         },
@@ -559,6 +564,7 @@ function App() {
           activeChannel={activeChatChannel}
           messages={chatByChannel[activeChatChannel]}
           whoPlayers={whoPlayers}
+          groupInfo={groupInfo}
           onChannelChange={setActiveChatChannel}
           onRequestWho={() => {
             sendCommand("who", true);

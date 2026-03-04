@@ -8,7 +8,7 @@ import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 
 class GroupHandler(
-    ctx: EngineContext,
+    private val ctx: EngineContext,
     private val groupSystem: GroupSystem? = null,
 ) : CommandHandler {
     private val outbound = ctx.outbound
@@ -43,6 +43,15 @@ class GroupHandler(
         cmd: Command.Gtell,
     ) {
         val gs = requireSystemOrNull(sessionId, groupSystem, "Groups", outbound) ?: return
-        outbound.sendIfError(sessionId, gs.gtell(sessionId, cmd.message))
+        val err = gs.gtell(sessionId, cmd.message)
+        if (err != null) {
+            outbound.sendIfError(sessionId, err)
+            return
+        }
+        val group = gs.getGroup(sessionId) ?: return
+        val senderName = ctx.players.get(sessionId)?.name ?: return
+        for (memberSid in group.members) {
+            ctx.gmcpEmitter?.sendCommChannel(memberSid, "gtell", senderName, cmd.message)
+        }
     }
 }
