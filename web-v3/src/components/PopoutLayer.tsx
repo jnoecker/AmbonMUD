@@ -68,7 +68,7 @@ export function PopoutLayer({
             <article className="room-popout-copy">
               <h3 className="room-popout-title">{room.title}</h3>
               {room.image && (
-                <img src={room.image} alt={room.title} className="room-hero-image" />
+                <img src={room.image} alt={room.title} className="room-popout-image" />
               )}
               <p className="room-popout-text">{room.description || "No room description available yet."}</p>
               <p className="room-popout-exits">
