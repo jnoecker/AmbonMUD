@@ -363,7 +363,7 @@ class BehaviorTreeSystemTest {
     @Test
     fun `wander action moves mob to random adjacent room`() =
         runTest {
-            val tree = WanderAction
+            val tree = WanderAction()
             val e = env(behaviorTree = tree)
 
             e.system.tick() // schedule
@@ -406,10 +406,53 @@ class BehaviorTreeSystemTest {
                     mobMemory = MobBehaviorMemory(),
                 )
 
-            val result = WanderAction.tick(ctx)
+            val result = WanderAction().tick(ctx)
 
             assertEquals(BtResult.FAILURE, result, "Expected FAILURE — no same-zone exits")
             assertEquals(borderRoom.id, mobs.get(mob.id)!!.roomId, "Mob must not have crossed zone boundary")
+        }
+
+    @Test
+    fun `wander action respects maxDistance from spawn room`() =
+        runTest {
+            // roomA -> roomB -> roomC (linear). Mob spawns at roomA with maxDistance=1.
+            // It can reach roomB (distance 1) but not roomC (distance 2).
+            val distanceMap = mapOf(roomA.id to 0, roomB.id to 1, roomC.id to 2)
+            val mobs = MobRegistry()
+            val items = ItemRegistry()
+            val players = dev.ambon.test.buildTestPlayerRegistry(roomA.id, InMemoryPlayerRepository(), items)
+
+            // Place mob at roomB (distance 1 from spawn). Only exit toward roomC is distance 2 — blocked.
+            val mob = MobState(
+                MobId("zone:wanderer"),
+                "a wanderer",
+                roomB.id,
+                spawnRoomId = roomA.id,
+                spawnDistanceMap = distanceMap,
+            )
+            mobs.upsert(mob)
+
+            val ctx = BtContext(
+                mob = mob,
+                world = world,
+                mobs = mobs,
+                players = players,
+                outbound = LocalOutboundBus(),
+                clock = MutableClock(0L),
+                rng = Random(42),
+                isMobInCombat = { false },
+                startMobCombat = { _, _ -> false },
+                fleeMob = { false },
+                gmcpEmitter = null,
+                mobMemory = MobBehaviorMemory(),
+            )
+
+            val result = WanderAction(maxDistance = 1).tick(ctx)
+
+            // The only allowed exit is back to roomA (distance 0). roomC (distance 2) is blocked.
+            assertEquals(BtResult.SUCCESS, result)
+            val newRoom = mobs.get(mob.id)!!.roomId
+            assertTrue(newRoom == roomA.id, "Mob should only move to roomA (within maxDistance), got $newRoom")
         }
 
     // --- Say action tests ---

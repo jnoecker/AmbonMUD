@@ -22,6 +22,8 @@ data class MobState(
     override val dialogue: DialogueTree? = null,
     override val behaviorTree: BtNode? = null,
     val templateKey: String = "",
+    val spawnRoomId: RoomId? = null,
+    val spawnDistanceMap: Map<RoomId, Int> = emptyMap(),
     override val questIds: List<String> = emptyList(),
     override val image: String? = null,
 ) : MobTemplate

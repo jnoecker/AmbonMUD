@@ -35,7 +35,7 @@ object BehaviorTemplates {
             "aggro_guard" -> aggroGuard(params)
             "patrol" -> patrol(params, zone)
             "patrol_aggro" -> patrolAggro(params, zone)
-            "wander" -> wander()
+            "wander" -> wander(params)
             "wander_aggro" -> wanderAggro(params)
             "coward" -> coward(params)
             else -> null
@@ -73,11 +73,11 @@ object BehaviorTemplates {
             ),
         )
 
-    private fun wander(): BtNode =
+    private fun wander(params: BehaviorParamsFile): BtNode =
         SelectorNode(
             listOf(
                 IsInCombat,
-                WanderAction,
+                WanderAction(params.maxWanderDistance),
             ),
         )
 
@@ -86,7 +86,7 @@ object BehaviorTemplates {
             listOf(
                 IsInCombat,
                 aggroSequence(params),
-                WanderAction,
+                WanderAction(params.maxWanderDistance),
             ),
         )
 
@@ -102,7 +102,7 @@ object BehaviorTemplates {
         return SelectorNode(
             listOf(
                 SequenceNode(fleeChildren),
-                WanderAction,
+                WanderAction(params.maxWanderDistance),
             ),
         )
     }

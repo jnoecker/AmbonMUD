@@ -5,11 +5,18 @@ import dev.ambon.engine.behavior.BtNode
 import dev.ambon.engine.behavior.BtResult
 import dev.ambon.engine.behavior.moveMobWithNotify
 
-data object WanderAction : BtNode {
+data class WanderAction(
+    val maxDistance: Int = 3,
+) : BtNode {
     override suspend fun tick(ctx: BtContext): BtResult {
         val room = ctx.world.rooms[ctx.mob.roomId] ?: return BtResult.FAILURE
         val homeZone = ctx.mob.roomId.zone
-        val exits = room.exits.values.filter { it.zone == homeZone }
+        val distanceMap = ctx.mob.spawnDistanceMap
+
+        val exits = room.exits.values.filter { dest ->
+            dest.zone == homeZone &&
+                (distanceMap.isEmpty() || (distanceMap[dest] ?: Int.MAX_VALUE) <= maxDistance)
+        }
         if (exits.isEmpty()) return BtResult.FAILURE
 
         val destination = exits[ctx.rng.nextInt(exits.size)]

@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.idZone
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.MobSpawn
@@ -11,8 +12,28 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import java.time.Clock
 
+/** BFS from [start], staying within the same zone. Returns room → hop distance. */
+internal fun computeDistanceMap(start: RoomId, world: World): Map<RoomId, Int> {
+    val zone = start.zone
+    val distances = mutableMapOf(start to 0)
+    val queue = ArrayDeque<RoomId>()
+    queue.add(start)
+    while (queue.isNotEmpty()) {
+        val current = queue.removeFirst()
+        val dist = distances[current]!!
+        val room = world.rooms[current] ?: continue
+        for (exit in room.exits.values) {
+            if (exit.zone != zone) continue
+            if (exit in distances) continue
+            distances[exit] = dist + 1
+            queue.add(exit)
+        }
+    }
+    return distances
+}
+
 /** Converts a [MobSpawn] definition into a live [MobState] instance. */
-internal fun spawnToMobState(spawn: MobSpawn): MobState =
+internal fun spawnToMobState(spawn: MobSpawn, world: World): MobState =
     MobState(
         id = spawn.id,
         name = spawn.name,
@@ -28,6 +49,8 @@ internal fun spawnToMobState(spawn: MobSpawn): MobState =
         dialogue = spawn.dialogue,
         behaviorTree = spawn.behaviorTree,
         templateKey = spawn.id.value,
+        spawnRoomId = spawn.roomId,
+        spawnDistanceMap = computeDistanceMap(spawn.roomId, world),
         questIds = spawn.questIds,
         image = spawn.image,
     )
@@ -99,7 +122,7 @@ internal class ZoneResetHandler(
         }
 
         for (spawn in zoneMobSpawns) {
-            mobs.upsert(spawnToMobState(spawn))
+            mobs.upsert(spawnToMobState(spawn, world))
             mobSystem.onMobSpawned(spawn.id)
             behaviorTreeSystem.onMobSpawned(spawn.id)
         }
