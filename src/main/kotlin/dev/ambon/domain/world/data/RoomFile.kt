@@ -15,4 +15,6 @@ data class RoomFile(
     val features: Map<String, FeatureFile> = emptyMap(),
     /** Crafting station type available in this room (e.g. "forge", "alchemy_table", "workbench"). */
     val station: String? = null,
+    /** URL to an image representing this room. */
+    val image: String? = null,
 )
