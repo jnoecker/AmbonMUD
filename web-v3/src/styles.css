@@ -2881,11 +2881,11 @@ body {
   .dashboard {
     flex: 1;
     min-height: 0;
-    grid-template-columns: minmax(220px, 0.78fr) minmax(0, 1.85fr) minmax(240px, 0.95fr);
+    grid-template-columns: minmax(0, 2fr) minmax(240px, 0.95fr);
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
-      "world play character"
-      "world play chat";
+      "play character"
+      "play chat";
   }
 
   .panel {
@@ -2899,24 +2899,14 @@ body {
     display: grid;
     grid-template-areas:
       "prelogin"
-      "banner"
-      "entities"
       "terminal"
       "command"
       "movement";
-    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
   }
 
   .panel-play > .prelogin-banner {
     grid-area: prelogin;
-  }
-
-  .panel-play > .room-banner {
-    grid-area: banner;
-  }
-
-  .panel-play > .play-entities {
-    grid-area: entities;
   }
 
   .panel-play > .terminal-card {
@@ -2943,10 +2933,7 @@ body {
   }
 
   .panel-world {
-    grid-area: world;
-    display: grid;
-    grid-template-rows: minmax(0, 1fr);
-    overflow: hidden;
+    display: none;
   }
 
   .panel-character {
@@ -3016,7 +3003,7 @@ body {
 
   .dashboard {
     gap: 10px;
-    grid-template-columns: minmax(200px, 0.74fr) minmax(0, 1.72fr) minmax(220px, 0.86fr);
+    grid-template-columns: minmax(0, 2fr) minmax(220px, 0.86fr);
   }
 
   .panel {
@@ -3030,7 +3017,7 @@ body {
 
 @media (min-width: 1360px) {
   .dashboard {
-    grid-template-columns: minmax(240px, 0.9fr) minmax(0, 2.2fr) minmax(260px, 1.04fr);
+    grid-template-columns: minmax(0, 2.2fr) minmax(260px, 1.04fr);
   }
 }
 
