@@ -154,13 +154,13 @@ export class WorldScene {
   constructor() {
     this.titleText = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 18, fill: TITLE_COLOR, fontWeight: "bold" },
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 22, fill: TITLE_COLOR, fontWeight: "bold", dropShadow: { color: 0x000000, alpha: 0.7, blur: 4, distance: 2 } },
     });
     this.titleText.anchor.set(0.5, 0);
 
     this.descText = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 12, fill: "#9ea3bf", wordWrap: true, wordWrapWidth: 400 },
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 14, fill: "#d0d4e8", wordWrap: true, wordWrapWidth: 400, dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 1 } },
     });
     this.descText.anchor.set(0.5, 0);
     this.descText.alpha = 0.8;
@@ -284,26 +284,27 @@ export class WorldScene {
     this.titleText.y = 16;
 
     this.descText.x = w / 2;
-    this.descText.y = 44;
+    this.descText.y = 48;
 
-    // Player at center-bottom
-    const playerY = h * 0.65;
+    // Player in lower-left
+    const playerX = w * 0.18;
+    const playerY = h * 0.72;
     if (this.playerSprite) {
-      this.playerSprite.x = w / 2;
+      this.playerSprite.x = playerX;
       this.playerSprite.y = playerY;
     }
-    this.playerLabel.x = w / 2;
+    this.playerLabel.x = playerX;
     this.playerLabel.y = playerY + SPRITE_SIZE / 2 + 4;
 
     // Status effects above the player sprite
-    this.statusEffects.update(gameStateRef.current.effects, w / 2, playerY - SPRITE_SIZE / 2 - 28);
+    this.statusEffects.update(gameStateRef.current.effects, playerX, playerY - SPRITE_SIZE / 2 - 28);
 
-    // Layout mobs in a row above the player
+    // Layout mobs in lower-right
     const mobEntries = [...this.mobSprites.values()];
     if (mobEntries.length > 0) {
-      const mobY = h * 0.38;
+      const mobY = h * 0.72;
       const totalWidth = mobEntries.length * (SPRITE_SIZE + 20) - 20;
-      let startX = (w - totalWidth) / 2 + SPRITE_SIZE / 2;
+      let startX = w - totalWidth / 2 - SPRITE_SIZE / 2 - 20;
       for (const { sprite, label, hitArea } of mobEntries) {
         sprite.x = startX;
         sprite.y = mobY;
@@ -311,16 +312,15 @@ export class WorldScene {
         label.y = mobY + SPRITE_SIZE / 2 + 4;
         hitArea.x = startX - SPRITE_SIZE / 2;
         hitArea.y = mobY - SPRITE_SIZE / 2;
-        startX += SPRITE_SIZE + 20;
+        startX -= SPRITE_SIZE + 20;
       }
     }
 
-    // Layout other players in a row offset from center
+    // Layout other players near the player sprite
     const otherPlayerEntries = [...this.playerSprites.values()];
     if (otherPlayerEntries.length > 0) {
-      const opY = h * 0.58;
-      const totalWidth = otherPlayerEntries.length * (SPRITE_SIZE + 16) - 16;
-      let startX = (w - totalWidth) / 2 + SPRITE_SIZE / 2 - 80;
+      const opY = h * 0.62;
+      let startX = playerX + SPRITE_SIZE / 2 + 16;
       for (const { sprite, label } of otherPlayerEntries) {
         sprite.x = startX;
         sprite.y = opY;
@@ -330,9 +330,10 @@ export class WorldScene {
       }
     }
 
-    // Layout item labels below player
+    // Layout item labels in center of room
     if (this.itemLabels.length > 0) {
-      let itemY = playerY + SPRITE_SIZE / 2 + 24;
+      const itemBaseY = h * 0.55;
+      let itemY = itemBaseY;
       for (const label of this.itemLabels) {
         label.x = w / 2;
         label.y = itemY;
@@ -559,7 +560,7 @@ export class WorldScene {
       const sprite = new Sprite(texture);
       sprite.width = this.width;
       sprite.height = this.height;
-      sprite.alpha = 0.35;
+      sprite.alpha = 0.6;
       this.container.addChildAt(sprite, 0);
       this.background = sprite;
     } catch {

@@ -146,8 +146,8 @@ function App() {
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
   const [dialogue, setDialogue] = useState<DialogueState | null>(null);
   const [whoPlayers, setWhoPlayers] = useState<string[]>([]);
-  const [detailMob, setDetailMob] = useState<RoomMob | null>(null);
-  const [detailItem, setDetailItem] = useState<RoomItem | null>(null);
+  const [detailMob] = useState<RoomMob | null>(null);
+  const [detailItem] = useState<RoomItem | null>(null);
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
   const [, setCharStats] = useState<CharStats | null>(null);
   const [quests, setQuests] = useState<QuestEntry[]>([]);
@@ -635,12 +635,7 @@ function App() {
           preLogin={preLogin}
           connected={connected}
           hasRoomDetails={hasRoomDetails}
-          roomImage={room.image}
-          roomTitle={room.title}
           exits={exits}
-          mobs={mobs}
-          roomItems={roomItems}
-          combatTarget={combatTarget}
           commandInputRef={composerInputRef}
           composerValue={composerValue}
           commandPlaceholder={commandPlaceholder}
@@ -657,26 +652,6 @@ function App() {
           onFlee={() => {
             sendCommand("flee", true);
             focusComposer();
-          }}
-          onTalkToMob={(mobName) => {
-            sendCommand(`talk ${mobName}`, true);
-            focusComposer();
-          }}
-          onAttackMob={(mobName) => {
-            sendCommand(`kill ${mobName}`, true);
-            focusComposer();
-          }}
-          onPickUpItem={(itemName) => {
-            sendCommand(`get ${itemName}`, true);
-            focusComposer();
-          }}
-          onOpenMobDetail={(mob) => {
-            setDetailMob(mob);
-            setActivePopout("mobDetail");
-          }}
-          onOpenItemDetail={(item) => {
-            setDetailItem(item);
-            setActivePopout("itemDetail");
           }}
           onOpenTerminal={() => setActivePopout("terminal")}
         />
