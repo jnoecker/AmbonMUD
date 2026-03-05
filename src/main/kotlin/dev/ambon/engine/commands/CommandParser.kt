@@ -199,6 +199,10 @@ sealed interface Command {
 
     data object TitleClear : Command
 
+    data class SetGender(
+        val gender: String,
+    ) : Command
+
     sealed interface GroupCmd : Command {
         data class Invite(
             val target: String,
@@ -736,6 +740,9 @@ object CommandParser {
                 else -> Command.TitleSet(rest.trim())
             }
         }?.let { return it }
+
+        // gender <male/female/enby>
+        requiredArg(line, listOf("gender"), "gender <male|female|enby>", { Command.SetGender(it) })?.let { return it }
 
         // Crafting & Gathering
         requiredArg(line, listOf("gather", "harvest", "mine"), "gather <node>") { Command.Gather(it) }

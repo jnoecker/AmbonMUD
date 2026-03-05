@@ -128,9 +128,11 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       ctx.setCharacter({
         name: typeof packet.name === "string" && packet.name.length > 0 ? packet.name : "-",
+        gender: typeof packet.gender === "string" ? packet.gender : "",
         race: typeof packet.race === "string" ? packet.race : "",
         className: typeof packet.class === "string" ? packet.class : "",
         level: typeof packet.level === "number" ? packet.level : null,
+        sprite: typeof packet.sprite === "string" ? packet.sprite : null,
       });
       break;
     }

@@ -36,6 +36,7 @@ object PlayersTable : Table("players") {
     val intelligence = integer("intelligence").default(10)
     val wisdom = integer("wisdom").default(10)
     val charisma = integer("charisma").default(10)
+    val gender = varchar("gender", 16).default("ENBY")
     val race = varchar("race", 32).default("HUMAN")
     val playerClass = varchar("player_class", 32).default("WARRIOR")
     val level = integer("level").default(1)
@@ -76,6 +77,7 @@ object PlayersTable : Table("players") {
             intelligence = row[intelligence],
             wisdom = row[wisdom],
             charisma = row[charisma],
+            gender = row[gender],
             race = row[race],
             playerClass = row[playerClass],
             level = row[level],
@@ -115,6 +117,7 @@ object PlayersTable : Table("players") {
         statement[intelligence] = record.intelligence
         statement[wisdom] = record.wisdom
         statement[charisma] = record.charisma
+        statement[gender] = record.gender
         statement[race] = record.race
         statement[playerClass] = record.playerClass
         statement[level] = record.level

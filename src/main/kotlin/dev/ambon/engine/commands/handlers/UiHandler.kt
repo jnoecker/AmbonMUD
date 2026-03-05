@@ -105,6 +105,7 @@ class UiHandler(
                     gchat/g <message>
                     title <titleName>
                     title clear
+                    gender <male|female|enby>
                     ansi on/off
                     colors
                     clear
