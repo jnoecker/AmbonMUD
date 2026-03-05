@@ -8,10 +8,12 @@ startRoom: awakening_clearing
 
 mobs:
   territorial_hare:
+    image: tutorial_glade/territorial_hare.png
     name: "a territorial hare"
     room: mushroom_grove
     tier: weak
   scrappy_fox:
+    image: tutorial_glade/scrappy_fox.png
     name: "a scrappy fox"
     room: berry_thicket
     tier: weak
@@ -19,26 +21,31 @@ mobs:
       - itemId: fox_pelt_vest
         chance: 1.0
   cave_spider:
+    image: tutorial_glade/cave_spider.png
     name: "a cave spider"
     room: vine_curtain
     tier: weak
   proud_stag:
+    image: tutorial_glade/proud_stag.png
     name: "a proud stag"
     room: deer_meadow
     drops:
       - itemId: antler_helm
         chance: 1.0
   forest_guardian:
+    image: tutorial_glade/forest_guardian.png
     name: "an ancient forest guardian"
     room: guardian_grove
     drops:
       - itemId: guardian_token
         chance: 1.0
   snapping_turtle:
+    image: tutorial_glade/snapping_turtle.png
     name: "a snapping turtle"
     room: muddy_bank
     tier: weak
   mother_hare:
+    image: tutorial_glade/mother_hare.png
     name: "a protective mother hare"
     room: rabbit_warren
     tier: weak
@@ -46,6 +53,7 @@ mobs:
       - itemId: soft_rabbit_pelt
         chance: 1.0
   grey_wolf:
+    image: tutorial_glade/grey_wolf.png
     name: "a grey wolf"
     room: wolf_den
     level: 2
@@ -55,6 +63,7 @@ mobs:
 
 items:
   walking_stick:
+    image: tutorial_glade/walking_stick.png
     displayName: "a gnarled walking stick"
     keyword: "stick"
     description: "A crooked branch worn smooth by someone's grip. It feels solid enough to swing."
@@ -63,6 +72,7 @@ items:
     room: awakening_clearing
 
   leather_cap:
+    image: tutorial_glade/leather_cap.png
     displayName: "a worn leather cap"
     keyword: "cap"
     description: "A simple leather cap left behind on a stump. It still fits snugly."
@@ -71,6 +81,7 @@ items:
     room: hermit_camp
 
   fox_pelt_vest:
+    image: tutorial_glade/fox_pelt_vest.png
     displayName: "a fox pelt vest"
     keyword: "vest"
     description: "A rough vest stitched from russet fur. It smells of pine needles."
@@ -78,6 +89,7 @@ items:
     armor: 1
 
   antler_helm:
+    image: tutorial_glade/antler_helm.png
     displayName: "an antler helm"
     keyword: "helm"
     description: "A helm fashioned from shed antlers and woven bark. The tines curve protectively."
@@ -86,6 +98,7 @@ items:
     constitution: 1
 
   crystal_shard:
+    image: tutorial_glade/crystal_shard.png
     displayName: "a crystal shard"
     keyword: "shard"
     description: "A sliver of pale crystal humming with faint energy. Its edge is surprisingly keen."
@@ -94,6 +107,7 @@ items:
     room: crystal_spring
 
   gnawed_bone:
+    image: tutorial_glade/gnawed_bone.png
     displayName: "a gnawed bone"
     keyword: "bone"
     description: "A thick bone gnawed to a blunt point. Crude, but it could leave a mark."
@@ -102,6 +116,7 @@ items:
     room: burrow_stash
 
   wolf_fang_pendant:
+    image: tutorial_glade/wolf_fang_pendant.png
     displayName: "a wolf fang pendant"
     keyword: "pendant"
     description: "A large fang strung on a braided cord. It pulses with a feral warmth."
@@ -110,6 +125,7 @@ items:
     constitution: 1
 
   woven_bark_armor:
+    image: tutorial_glade/woven_bark_armor.png
     displayName: "woven bark armor"
     keyword: "armor"
     description: "Strips of living bark woven into a flexible chest piece. Sap still beads on its surface."
@@ -119,34 +135,40 @@ items:
     room: den_stash
 
   old_journal_page:
+    image: tutorial_glade/old_journal_page.png
     displayName: "an old journal page"
     keyword: "journal"
     description: "A yellowed page torn from a journal. The handwriting is cramped: 'Day 7. The forest teaches, if you listen.'"
     room: hermit_camp
 
   glowing_mushroom:
+    image: tutorial_glade/glowing_mushroom.png
     displayName: "a glowing mushroom"
     keyword: "mushroom"
     description: "A fat mushroom cap that emits a soft blue-green glow. It feels cool and slightly damp."
     room: mushroom_grove
 
   smooth_river_stone:
+    image: tutorial_glade/smooth_river_stone.png
     displayName: "a smooth river stone"
     keyword: "stone"
     description: "A perfectly smooth stone warmed by the sun. It fits comfortably in your palm."
     room: pond_island
 
   soft_rabbit_pelt:
+    image: tutorial_glade/soft_rabbit_pelt.png
     displayName: "a soft rabbit pelt"
     keyword: "pelt"
     description: "A small patch of downy fur, impossibly soft to the touch."
 
   guardian_token:
+    image: tutorial_glade/guardian_token.png
     displayName: "a guardian token"
     keyword: "token"
     description: "A disc of polished wood carved with a leaf pattern. It hums faintly when held."
 
   carved_bowl:
+    image: tutorial_glade/carved_bowl.png
     displayName: "a carved wooden bowl"
     keyword: "bowl"
     description: "A small bowl carved from a single knot of wood. Initials are scratched into the bottom."
@@ -156,6 +178,7 @@ rooms:
   # --- Main Path Phase 1: Exploration ---
 
   awakening_clearing:
+    image: tutorial_glade/awakening_clearing.png
     title: "Awakening Clearing"
     description: "You stand in a sun-dappled clearing ringed by ancient oaks. Soft grass cushions your feet, and birdsong drifts from the canopy above. A gnarled walking stick lies half-hidden in the clover. A mossy trail leads north into the trees. To the south, a vine-wrapped archway shimmers faintly — the way back to the Wayfinder Gallery."
     exits:
@@ -163,6 +186,7 @@ rooms:
       s: ambon_hub:wayfinder_gallery
 
   mossy_trail:
+    image: tutorial_glade/mossy_trail.png
     title: "Mossy Trail"
     description: "A narrow trail winds between moss-covered stones and leaning birch trees. Ferns brush your knees as you walk, and the air smells of damp earth and wild mint."
     exits:
@@ -170,6 +194,7 @@ rooms:
       s: awakening_clearing
 
   old_signpost:
+    image: tutorial_glade/old_signpost.png
     title: "Old Signpost"
     description: "A weathered signpost stands at a fork in the trail. One arm points north and reads 'CAMP', another points vaguely into the undergrowth. Most of the paint has peeled away, but someone has scratched fresh arrows into the wood."
     exits:
@@ -177,6 +202,7 @@ rooms:
       s: mossy_trail
 
   hermit_camp:
+    image: tutorial_glade/hermit_camp.png
     title: "Hermit's Camp"
     description: "A small campsite tucked beneath a leaning pine. A bedroll lies unrolled beside a cold fire ring, and a leather cap sits on a mossy stump as if placed there moments ago. Whoever camped here left in a hurry."
     exits:
@@ -184,6 +210,7 @@ rooms:
       s: old_signpost
 
   stream_crossing:
+    image: tutorial_glade/stream_crossing.png
     title: "Stream Crossing"
     description: "A clear stream cuts across the trail, burbling over smooth stepping stones. Sunlight flashes off the water, and dragonflies hover above the current. The main path continues north, and a faint trail leads east toward the sound of frogs."
     exits:
@@ -194,6 +221,7 @@ rooms:
   # --- Main Path Phase 2: First Combat ---
 
   mushroom_grove:
+    image: tutorial_glade/mushroom_grove.png
     title: "Mushroom Grove"
     description: "Giant mushrooms grow in clusters here, their spotted caps rising waist-high. Spores drift in lazy spirals through shafts of green light. Something rustles beneath the nearest cap, and the air tastes faintly of copper. A large burrow opens to the east."
     exits:
@@ -202,6 +230,7 @@ rooms:
       e: burrow_entrance
 
   fern_hollow:
+    image: tutorial_glade/fern_hollow.png
     title: "Fern Hollow"
     description: "A sheltered hollow carpeted in soft ferns. The canopy is thick here, muffling all sound to a gentle hush. It feels safe, a place to catch your breath before pressing on."
     exits:
@@ -209,6 +238,7 @@ rooms:
       s: mushroom_grove
 
   berry_thicket:
+    image: tutorial_glade/berry_thicket.png
     title: "Berry Thicket"
     description: "Thorny bushes heavy with dark berries crowd the trail. Claw marks score the bark of nearby trees, and tufts of russet fur cling to the lowest branches. Something guards this patch jealously."
     exits:
@@ -216,6 +246,7 @@ rooms:
       s: fern_hollow
 
   fallen_log_bridge:
+    image: tutorial_glade/fallen_log_bridge.png
     title: "Fallen Log Bridge"
     description: "A massive fallen tree spans a narrow ravine. Its bark is worn smooth by the passage of many feet, and ferns sprout from cracks along its length. The drop below is not far, but the rocks look unfriendly."
     exits:
@@ -223,6 +254,7 @@ rooms:
       s: berry_thicket
 
   sunlit_glade:
+    image: tutorial_glade/sunlit_glade.png
     title: "Sunlit Glade"
     description: "A beautiful glade where the canopy parts to let in a column of golden light. Wildflowers bloom in every color, and butterflies spiral upward in the warmth. The forest feels alive and listening."
     exits:
@@ -232,6 +264,7 @@ rooms:
   # --- Main Path Phase 3: Harder Challenges ---
 
   deer_meadow:
+    image: tutorial_glade/deer_meadow.png
     title: "Deer Meadow"
     description: "A broad meadow of tall grass and clover. Hoof prints pattern the soft earth, and the forest thickens to the north. A rocky trail leads east between moss-covered boulders."
     exits:
@@ -240,6 +273,7 @@ rooms:
       e: rocky_outcrop
 
   ancient_oak:
+    image: tutorial_glade/ancient_oak.png
     title: "Ancient Oak"
     description: "An enormous oak dominates the clearing, its trunk wider than three people standing arm to arm. Thick roots ripple across the ground like frozen waves, and a fraying rope ladder dangles from a high branch. A passage leads north through tangled vines."
     exits:
@@ -248,6 +282,7 @@ rooms:
       u: rope_ladder
 
   vine_curtain:
+    image: tutorial_glade/vine_curtain.png
     title: "Vine Curtain"
     description: "Dense curtains of hanging vines obscure the path ahead. Pale webs glitter between the strands, and something skitters just out of sight. The air is cooler here, with a faint mineral tang."
     exits:
@@ -255,6 +290,7 @@ rooms:
       s: ancient_oak
 
   crystal_spring:
+    image: tutorial_glade/crystal_spring.png
     title: "Crystal Spring"
     description: "An underground spring wells up into a shallow pool of impossibly clear water. Pale crystals jut from the rocks at its edge, catching the dim light and throwing tiny rainbows across the moss. A particularly sharp shard lies loose on the bank."
     exits:
@@ -262,6 +298,7 @@ rooms:
       s: vine_curtain
 
   guardian_grove:
+    image: tutorial_glade/guardian_grove.png
     title: "Guardian Grove"
     description: "A solemn ring of silver-barked trees surrounds a mossy mound. The air here feels heavy with old purpose, and the branches interlock overhead like clasped hands. An ancient figure stands motionless at the center, watching."
     exits:
@@ -269,6 +306,7 @@ rooms:
       s: crystal_spring
 
   forest_gate:
+    image: tutorial_glade/forest_gate.png
     title: "Forest Gate"
     description: "A natural archway of intertwined branches frames the path ahead. Beyond it, the forest gives way to open sky and the faint smell of worked stone. You sense that passing through means leaving the forest's shelter behind."
     exits:
@@ -278,6 +316,7 @@ rooms:
   # --- Side Area A: Pond (east of stream_crossing) ---
 
   lily_pond:
+    image: tutorial_glade/lily_pond.png
     title: "Lily Pond"
     description: "A tranquil pond dotted with white lily pads. Fish dart beneath the surface in flashes of silver, and a bullfrog watches you from a mossy rock."
     exits:
@@ -285,6 +324,7 @@ rooms:
       e: pond_island
 
   pond_island:
+    image: tutorial_glade/pond_island.png
     title: "Pond Island"
     description: "A miniature island barely large enough to stand on. Reeds ring its edge, and the water laps gently at your feet. A smooth stone sits on the highest point, placed there with obvious care."
     exits:
@@ -292,6 +332,7 @@ rooms:
       s: muddy_bank
 
   muddy_bank:
+    image: tutorial_glade/muddy_bank.png
     title: "Muddy Bank"
     description: "The pond's southern bank is churned to thick mud. Shell fragments and small bones litter the ground, and something heavy has dragged itself back and forth between the water and a hollow log."
     exits:
@@ -300,6 +341,7 @@ rooms:
   # --- Side Area B: Rabbit Warren (east of mushroom_grove) ---
 
   burrow_entrance:
+    image: tutorial_glade/burrow_entrance.png
     title: "Burrow Entrance"
     description: "A large burrow mouth gapes at the base of a mossy hillock. Scratched earth and scattered tufts of fur mark it as well-used. The opening is just wide enough to squeeze through."
     exits:
@@ -307,6 +349,7 @@ rooms:
       d: rabbit_warren
 
   rabbit_warren:
+    image: tutorial_glade/rabbit_warren.png
     title: "Rabbit Warren"
     description: "A low, earthy chamber lined with packed dirt and dry grass. Dozens of smaller tunnels branch off in every direction, and the air is warm with the scent of fur and fresh-turned soil."
     exits:
@@ -314,6 +357,7 @@ rooms:
       d: burrow_stash
 
   burrow_stash:
+    image: tutorial_glade/burrow_stash.png
     title: "Burrow Stash"
     description: "A dead-end chamber at the deepest point of the warren. Bones, shiny pebbles, and bits of cloth have been dragged here and arranged in a rough nest. Something has been hoarding treasures."
     exits:
@@ -322,6 +366,7 @@ rooms:
   # --- Side Area C: Treehouse (up from ancient_oak) ---
 
   rope_ladder:
+    image: tutorial_glade/rope_ladder.png
     title: "Rope Ladder"
     description: "You cling to a fraying rope ladder that sways with every movement. The ground falls away below, and the oak's branches creak in the wind. A wooden platform is visible above."
     exits:
@@ -329,6 +374,7 @@ rooms:
       u: treehouse_platform
 
   treehouse_platform:
+    image: tutorial_glade/treehouse_platform.png
     title: "Treehouse Platform"
     description: "A weathered platform built into the oak's crown. Warped planks and rusted nails speak of someone's long-abandoned project. A carved bowl sits in the corner, and a ladder continues upward."
     exits:
@@ -336,6 +382,7 @@ rooms:
       u: lookout_perch
 
   lookout_perch:
+    image: tutorial_glade/lookout_perch.png
     title: "Lookout Perch"
     description: "The highest point in the forest. From here you can see the canopy stretching in every direction like a green ocean, broken only by a distant stone archway to the north. The wind carries the sound of birdsong and, faintly, running water."
     exits:
@@ -344,6 +391,7 @@ rooms:
   # --- Side Area D: Wolf Den (east of deer_meadow) ---
 
   rocky_outcrop:
+    image: tutorial_glade/rocky_outcrop.png
     title: "Rocky Outcrop"
     description: "Jagged boulders jut from the hillside, scored with deep claw marks. Tufts of grey fur cling to the rough stone, and a low growl echoes from somewhere ahead."
     exits:
@@ -351,6 +399,7 @@ rooms:
       e: wolf_den
 
   wolf_den:
+    image: tutorial_glade/wolf_den.png
     title: "Wolf Den"
     description: "A shallow cave beneath an overhang of rock and twisted roots. Bones are scattered across the floor, and the smell of musk hangs heavy in the still air. Yellow eyes watch you from the shadows."
     exits:
@@ -358,6 +407,7 @@ rooms:
       e: den_stash
 
   den_stash:
+    image: tutorial_glade/den_stash.png
     title: "Den Stash"
     description: "The deepest recess of the wolf's den. Trinkets and torn cloth lie tangled among old bones. Something useful has been dragged here and half-buried beneath a pile of leaves."
     exits:
@@ -366,24 +416,28 @@ rooms:
   # --- Class Starting Rooms ---
 
   warrior_barracks:
+    image: tutorial_glade/warrior_barracks.png
     title: "Training Barracks"
     description: "A spartan chamber that smells of iron and sawdust. Weapon racks line the walls — blunted swords, practice spears, and a battered shield or two. A straw dummy in the corner has been punched into a lopsided slouch. Through the open archway to the south, sunlight spills across a grassy clearing."
     exits:
       s: awakening_clearing
 
   mage_study:
+    image: tutorial_glade/mage_study.png
     title: "The Arcane Alcove"
     description: "A circular chamber etched floor to ceiling with softly glowing runes. A leather-bound tome floats at chest height, its pages turning on their own. The air carries the sharp tang of ozone and old parchment, and faint sparks drift upward from a brass brazier. A narrow passage opens to the south."
     exits:
       s: awakening_clearing
 
   cleric_chapel:
+    image: tutorial_glade/cleric_chapel.png
     title: "The Wayside Chapel"
     description: "A modest stone chapel where candlelight throws warm shadows across the walls. A low altar bears offerings of dried wildflowers, smooth river pebbles, and a folded cloth. The silence here is deep and deliberate. A doorway to the south leads into open air."
     exits:
       s: awakening_clearing
 
   rogue_hideout:
+    image: tutorial_glade/rogue_hideout.png
     title: "The Shadow Den"
     description: "A cramped hideout tucked beneath the roots of a massive oak. The only light filters through gaps in the bark overhead, picking out coils of rope, lockpicks, and a battered satchel hanging from a peg. Someone has scratched a rough map into the dirt floor. A concealed passage slopes south toward daylight."
     exits:
