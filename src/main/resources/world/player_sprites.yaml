@@ -9,12 +9,14 @@ startRoom: entrance
 rooms:
   entrance:
     image: player_sprites/entrance.png
-    desc: "A grand marble atrium with softly glowing crystal displays. Enchanted portraits line the walls, depicting adventurers of every race and calling."
+    title: "Entrance"
+    description: "A grand marble atrium with softly glowing crystal displays. Enchanted portraits line the walls, depicting adventurers of every race and calling."
     exits:
       n: novice_hall
   novice_hall:
     image: player_sprites/novice_hall.png
-    desc: "A warm corridor lined with training dummies and practice targets. The air smells of fresh leather and chalk."
+    title: "Novice Hall"
+    description: "A warm corridor lined with training dummies and practice targets. The air smells of fresh leather and chalk."
     exits:
       s: entrance
       n: apprentice_hall
@@ -24,7 +26,8 @@ rooms:
       d: novice_rogues
   apprentice_hall:
     image: player_sprites/apprentice_hall.png
-    desc: "A wider passage with polished stone floors and mounted weapons behind glass. Faint battle sounds echo from adjacent chambers."
+    title: "Apprentice Hall"
+    description: "A wider passage with polished stone floors and mounted weapons behind glass. Faint battle sounds echo from adjacent chambers."
     exits:
       s: novice_hall
       n: journeyman_hall
@@ -34,7 +37,8 @@ rooms:
       d: apprentice_rogues
   journeyman_hall:
     image: player_sprites/journeyman_hall.png
-    desc: "An impressive gallery with vaulted ceilings and enchanted tapestries depicting famous battles. Arcane lanterns cast a steady glow."
+    title: "Journeyman Hall"
+    description: "An impressive gallery with vaulted ceilings and enchanted tapestries depicting famous battles. Arcane lanterns cast a steady glow."
     exits:
       s: apprentice_hall
       n: expert_hall
@@ -44,7 +48,8 @@ rooms:
       d: journeyman_rogues
   expert_hall:
     image: player_sprites/expert_hall.png
-    desc: "A prestigious corridor of dark oak and silver filigree. Trophy cases display legendary artifacts and commendations."
+    title: "Expert Hall"
+    description: "A prestigious corridor of dark oak and silver filigree. Trophy cases display legendary artifacts and commendations."
     exits:
       s: journeyman_hall
       n: master_hall
@@ -54,7 +59,8 @@ rooms:
       d: expert_rogues
   master_hall:
     image: player_sprites/master_hall.png
-    desc: "A resplendent hall of gleaming obsidian and gold inlay. The air hums with barely contained power."
+    title: "Master Hall"
+    description: "A resplendent hall of gleaming obsidian and gold inlay. The air hums with barely contained power."
     exits:
       s: expert_hall
       n: legend_hall
@@ -64,7 +70,8 @@ rooms:
       d: master_rogues
   legend_hall:
     image: player_sprites/legend_hall.png
-    desc: "An ethereal sanctuary where reality shimmers at the edges. Constellations drift across the ceiling, and the floor seems to float above an endless void."
+    title: "Legend Hall"
+    description: "An ethereal sanctuary where reality shimmers at the edges. Constellations drift across the ceiling, and the floor seems to float above an endless void."
     exits:
       s: master_hall
       e: legend_warriors
@@ -73,122 +80,146 @@ rooms:
       d: legend_rogues
   novice_warriors:
     image: player_sprites/novice_warriors.png
-    desc: "A dusty training yard with wooden swords and straw dummies. Young recruits practice basic stances."
+    title: "Novice Warriors"
+    description: "A dusty training yard with wooden swords and straw dummies. Young recruits practice basic stances."
     exits:
       w: novice_hall
   novice_mages:
     image: player_sprites/novice_mages.png
-    desc: "A cramped study filled with primer spellbooks and sputtering candles. Apprentices struggle with basic incantations."
+    title: "Novice Mages"
+    description: "A cramped study filled with primer spellbooks and sputtering candles. Apprentices struggle with basic incantations."
     exits:
       e: novice_hall
   novice_clerics:
     image: player_sprites/novice_clerics.png
-    desc: "A humble chapel with simple wooden pews and a small altar. Acolytes kneel in quiet prayer."
+    title: "Novice Clerics"
+    description: "A humble chapel with simple wooden pews and a small altar. Acolytes kneel in quiet prayer."
     exits:
       d: novice_hall
   novice_rogues:
     image: player_sprites/novice_rogues.png
-    desc: "A shadowy alcove with lockpick sets and rope coils scattered about. Fledgling thieves practice sleight of hand."
+    title: "Novice Rogues"
+    description: "A shadowy alcove with lockpick sets and rope coils scattered about. Fledgling thieves practice sleight of hand."
     exits:
       u: novice_hall
   apprentice_warriors:
     image: player_sprites/apprentice_warriors.png
-    desc: "A proper armory with iron weapons and training rings. Soldiers spar with disciplined form."
+    title: "Apprentice Warriors"
+    description: "A proper armory with iron weapons and training rings. Soldiers spar with disciplined form."
     exits:
       w: apprentice_hall
   apprentice_mages:
     image: player_sprites/apprentice_mages.png
-    desc: "A well-stocked library with glowing runes etched into the reading desks. Channelers weave threads of mana."
+    title: "Apprentice Mages"
+    description: "A well-stocked library with glowing runes etched into the reading desks. Channelers weave threads of mana."
     exits:
       e: apprentice_hall
   apprentice_clerics:
     image: player_sprites/apprentice_clerics.png
-    desc: "A serene sanctuary with stained glass windows casting colored light. Healers tend to minor wounds."
+    title: "Apprentice Clerics"
+    description: "A serene sanctuary with stained glass windows casting colored light. Healers tend to minor wounds."
     exits:
       d: apprentice_hall
   apprentice_rogues:
     image: player_sprites/apprentice_rogues.png
-    desc: "A dimly lit den with targets, tripwires, and hidden compartments. Thieves hone their craft in silence."
+    title: "Apprentice Rogues"
+    description: "A dimly lit den with targets, tripwires, and hidden compartments. Thieves hone their craft in silence."
     exits:
       u: apprentice_hall
   journeyman_warriors:
     image: player_sprites/journeyman_warriors.png
-    desc: "A battle-scarred arena with enchanted training golems. Knights test their mettle against formidable opponents."
+    title: "Journeyman Warriors"
+    description: "A battle-scarred arena with enchanted training golems. Knights test their mettle against formidable opponents."
     exits:
       w: journeyman_hall
   journeyman_mages:
     image: player_sprites/journeyman_mages.png
-    desc: "A conjuration chamber crackling with residual energy. Conjurers summon elemental wisps that dance through the air."
+    title: "Journeyman Mages"
+    description: "A conjuration chamber crackling with residual energy. Conjurers summon elemental wisps that dance through the air."
     exits:
       e: journeyman_hall
   journeyman_clerics:
     image: player_sprites/journeyman_clerics.png
-    desc: "A radiant temple with floating prayer beads and divine sigils. Priests channel healing light with practiced ease."
+    title: "Journeyman Clerics"
+    description: "A radiant temple with floating prayer beads and divine sigils. Priests channel healing light with practiced ease."
     exits:
       d: journeyman_hall
   journeyman_rogues:
     image: player_sprites/journeyman_rogues.png
-    desc: "A labyrinthine vault of shifting walls and concealed traps. Assassins move like whispers through the maze."
+    title: "Journeyman Rogues"
+    description: "A labyrinthine vault of shifting walls and concealed traps. Assassins move like whispers through the maze."
     exits:
       u: journeyman_hall
   expert_warriors:
     image: player_sprites/expert_warriors.png
-    desc: "A war room with enchanted battle maps and masterwork weapons. Champions bear the scars of countless victories."
+    title: "Expert Warriors"
+    description: "A war room with enchanted battle maps and masterwork weapons. Champions bear the scars of countless victories."
     exits:
       w: expert_hall
   expert_mages:
     image: player_sprites/expert_mages.png
-    desc: "An arcane sanctum where spell circles burn permanently into the floor. Sorcerers command devastating magical forces."
+    title: "Expert Mages"
+    description: "An arcane sanctum where spell circles burn permanently into the floor. Sorcerers command devastating magical forces."
     exits:
       e: expert_hall
   expert_clerics:
     image: player_sprites/expert_clerics.png
-    desc: "A blessed cathedral resonating with divine harmonics. Templars radiate an aura of holy protection."
+    title: "Expert Clerics"
+    description: "A blessed cathedral resonating with divine harmonics. Templars radiate an aura of holy protection."
     exits:
       d: expert_hall
   expert_rogues:
     image: player_sprites/expert_rogues.png
-    desc: "A vault of absolute darkness pierced only by the glint of poisoned blades. Shadows move with lethal purpose."
+    title: "Expert Rogues"
+    description: "A vault of absolute darkness pierced only by the glint of poisoned blades. Shadows move with lethal purpose."
     exits:
       u: expert_hall
   master_warriors:
     image: player_sprites/master_warriors.png
-    desc: "A legendary forge-arena where enchanted weapons clash with thunderous force. Warlords command the very essence of combat."
+    title: "Master Warriors"
+    description: "A legendary forge-arena where enchanted weapons clash with thunderous force. Warlords command the very essence of combat."
     exits:
       w: master_hall
   master_mages:
     image: player_sprites/master_mages.png
-    desc: "A reality-bending sanctum where space folds and time stutters. Wizards reshape the fabric of existence."
+    title: "Master Mages"
+    description: "A reality-bending sanctum where space folds and time stutters. Wizards reshape the fabric of existence."
     exits:
       e: master_hall
   master_clerics:
     image: player_sprites/master_clerics.png
-    desc: "A celestial observatory bathed in divine radiance. Bishops commune directly with higher powers."
+    title: "Master Clerics"
+    description: "A celestial observatory bathed in divine radiance. Bishops commune directly with higher powers."
     exits:
       d: master_hall
   master_rogues:
     image: player_sprites/master_rogues.png
-    desc: "A chamber that seems to exist between moments. Nightblades phase through solid matter at will."
+    title: "Master Rogues"
+    description: "A chamber that seems to exist between moments. Nightblades phase through solid matter at will."
     exits:
       u: master_hall
   legend_warriors:
     image: player_sprites/legend_warriors.png
-    desc: "A mythic colosseum suspended among storm clouds. Warlords of godslaying renown stand as monuments to martial perfection."
+    title: "Legend Warriors"
+    description: "A mythic colosseum suspended among storm clouds. Warlords of godslaying renown stand as monuments to martial perfection."
     exits:
       w: legend_hall
   legend_mages:
     image: player_sprites/legend_mages.png
-    desc: "A nexus of pure magical energy where archmages exist as living spells. Reality itself bends to their will."
+    title: "Legend Mages"
+    description: "A nexus of pure magical energy where archmages exist as living spells. Reality itself bends to their will."
     exits:
       e: legend_hall
   legend_clerics:
     image: player_sprites/legend_clerics.png
-    desc: "A fragment of the divine plane made manifest. Prophets glow with the light of celestial ascension."
+    title: "Legend Clerics"
+    description: "A fragment of the divine plane made manifest. Prophets glow with the light of celestial ascension."
     exits:
       d: legend_hall
   legend_rogues:
     image: player_sprites/legend_rogues.png
-    desc: "A void between worlds where shadowlords rule the spaces between shadows. Even light fears to enter."
+    title: "Legend Rogues"
+    description: "A void between worlds where shadowlords rule the spaces between shadows. Even light fears to enter."
     exits:
       u: legend_hall
 
