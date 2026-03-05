@@ -86,10 +86,21 @@ export function CharacterPanel({
         <article className="subpanel character-identity-subpanel">
           {hasCharacterProfile ? (
             <>
-              <p className="identity-name">{character.name}</p>
-              <p className="identity-detail">
-                {[displayRace, displayClassName].filter((part) => part.length > 0).join(" ") || "-"}
-              </p>
+              <div className="identity-row">
+                {character.sprite && (
+                  <img
+                    src={character.sprite}
+                    alt={`${character.name} sprite`}
+                    className="character-sprite-img"
+                  />
+                )}
+                <div className="identity-text">
+                  <p className="identity-name">{character.name}</p>
+                  <p className="identity-detail">
+                    {[displayRace, displayClassName].filter((part) => part.length > 0).join(" ") || "-"}
+                  </p>
+                </div>
+              </div>
               <dl className="stat-grid identity-stat-grid">
                 <div><dt>Level</dt><dd>{vitals.level ?? character.level ?? "-"}</dd></div>
                 <div><dt>Total XP</dt><dd>{vitals.xp.toLocaleString()}</dd></div>

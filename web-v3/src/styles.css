@@ -2263,15 +2263,17 @@ body {
   font-family: "Cormorant Garamond", "Georgia", serif;
   font-weight: 600;
   color: #e7edff;
+  line-height: 1.15;
 }
 
 .identity-detail {
-  margin: 0;
+  margin: 2px 0 0;
   color: #b2bfdf;
+  line-height: 1.2;
 }
 
 .identity-stat-grid {
-  margin-top: var(--space-3);
+  margin-top: var(--space-4);
   gap: 6px;
 }
 
@@ -2289,6 +2291,27 @@ body {
 
 .character-identity-subpanel {
   overflow: hidden;
+}
+
+.identity-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.identity-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.character-sprite-img {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgb(167 182 216 / 25%);
+  background: rgb(42 44 57 / 40%);
 }
 
 .meter-stack {
