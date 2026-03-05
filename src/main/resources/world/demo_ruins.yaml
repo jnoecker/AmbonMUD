@@ -8,6 +8,7 @@ startRoom: caravan_gate
 
 mobs:
   gate_scout:
+    image: demo_ruins/gate_scout.png
     name: "a wary caravan scout"
     room: caravan_gate
     behavior:
@@ -18,18 +19,21 @@ mobs:
       - itemId: travel_cloak
         chance: 1.0
   camp_cook:
+    image: demo_ruins/camp_cook.png
     name: "a soot-faced camp cook"
     room: campfire_ring
     drops:
       - itemId: cook_knife
         chance: 1.0
   shrine_acolyte:
+    image: demo_ruins/shrine_acolyte.png
     name: "a whispering shrine acolyte"
     room: shrine_antechamber
     drops:
       - itemId: acolyte_mask
         chance: 1.0
   beetle_swarm:
+    image: demo_ruins/beetle_swarm.png
     name: "a swarm of glassy beetles"
     room: beetle_grotto
     behavior:
@@ -41,6 +45,7 @@ mobs:
       - itemId: beetle_shell
         chance: 1.0
   stone_sentinel:
+    image: demo_ruins/stone_sentinel.png
     name: "a cracked stone sentinel"
     room: cracked_sanctum
     behavior:
@@ -48,6 +53,7 @@ mobs:
       params:
         patrolRoute: [cracked_sanctum, shrine_antechamber, shrine_approach, shrine_antechamber]
   bridge_bandit:
+    image: demo_ruins/bridge_bandit.png
     name: "a bridge bandit"
     room: rope_bridge
     behavior:
@@ -58,11 +64,13 @@ mobs:
       - itemId: bandit_dagger
         chance: 1.0
   drowned_warder:
+    image: demo_ruins/drowned_warder.png
     name: "a drowned warder"
     room: flooded_steps
     behavior:
       template: aggro_guard
   orchard_keeper:
+    image: demo_ruins/orchard_keeper.png
     name: "an orchard keeper"
     room: mirror_orchard
     quests:
@@ -71,12 +79,14 @@ mobs:
       root:
         text: "These beetles are ruining my orchard. If you have time, I could use some help."
   archive_scribe:
+    image: demo_ruins/archive_scribe.png
     name: "a dust-choked archive scribe"
     room: archive_stacks
     drops:
       - itemId: archive_key
         chance: 1.0
   sunken_treasurer:
+    image: demo_ruins/sunken_treasurer.png
     name: "a sunken treasurer"
     room: submerged_vault
     drops:
@@ -85,6 +95,7 @@ mobs:
 
 items:
   brass_lantern:
+    image: demo_ruins/brass_lantern.png
     displayName: "a brass lantern"
     keyword: "lantern"
     description: "A heavy brass lantern with a mica window. It smells faintly of whale oil."
@@ -92,6 +103,7 @@ items:
     basePrice: 5
 
   travel_cloak:
+    image: demo_ruins/travel_cloak.png
     displayName: "a weathered travel cloak"
     keyword: "cloak"
     description: "A sturdy cloak patched at the hem. It still repels drizzle."
@@ -100,6 +112,7 @@ items:
     basePrice: 15
 
   iron_pot:
+    image: demo_ruins/iron_pot.png
     displayName: "a dented iron pot"
     keyword: "pot"
     description: "Blackened from many meals. Something herbal clings to the scent."
@@ -107,6 +120,7 @@ items:
     basePrice: 3
 
   cook_knife:
+    image: demo_ruins/cook_knife.png
     displayName: "a camp cook's knife"
     keyword: "knife"
     description: "Sharp enough to make you careful."
@@ -115,6 +129,7 @@ items:
     basePrice: 10
 
   river_charm:
+    image: demo_ruins/river_charm.png
     displayName: "a braided river charm"
     keyword: "charm"
     description: "A reed braid wrapped around a smooth river stone, cool to the touch."
@@ -123,6 +138,7 @@ items:
     basePrice: 8
 
   bandit_dagger:
+    image: demo_ruins/bandit_dagger.png
     displayName: "a nicked dagger"
     keyword: "dagger"
     description: "A small blade with a chipped tip and a confident grip."
@@ -131,6 +147,7 @@ items:
     basePrice: 20
 
   shrine_censer:
+    image: demo_ruins/shrine_censer.png
     displayName: "a bronze censer"
     keyword: "censer"
     description: "A little brazier on chains, stained green with age."
@@ -138,6 +155,7 @@ items:
     basePrice: 6
 
   acolyte_mask:
+    image: demo_ruins/acolyte_mask.png
     displayName: "a stitched linen mask"
     keyword: "mask"
     description: "A pale mask with tiny bead eyes. It makes your breath sound far away."
@@ -146,18 +164,21 @@ items:
     basePrice: 12
 
   beetle_shell:
+    image: demo_ruins/beetle_shell.png
     displayName: "a beetle shell shard"
     keyword: "shell"
     description: "A shard of iridescent shell that catches light like broken glass."
     basePrice: 2
 
   sentinel_tablet:
+    image: demo_ruins/sentinel_tablet.png
     displayName: "a cracked stone tablet"
     keyword: "tablet"
     description: "A slate tablet etched with a faded oath. The cracks look like a map."
     room: cracked_sanctum
 
   rusted_buckler:
+    image: demo_ruins/rusted_buckler.png
     displayName: "a rusted buckler"
     keyword: "buckler"
     description: "A small shield with flaking paint and a stubborn strap."
@@ -167,17 +188,20 @@ items:
     basePrice: 18
 
   archive_key:
+    image: demo_ruins/archive_key.png
     displayName: "a thin iron key"
     keyword: "key"
     description: "A narrow key with an odd, asymmetrical tooth pattern."
 
   scribe_quill:
+    image: demo_ruins/scribe_quill.png
     displayName: "a brittle quill"
     keyword: "quill"
     description: "A feather quill that crumbles if you squeeze it too hard."
     room: archive_stacks
 
   pearl_ring:
+    image: demo_ruins/pearl_ring.png
     displayName: "a tarnished pearl ring"
     keyword: "ring"
     description: "A band set with a cloudy pearl. It gleams faintly when wet."
@@ -186,6 +210,7 @@ items:
     basePrice: 35
 
   vault_mace:
+    image: demo_ruins/vault_mace.png
     displayName: "a silt-caked ceremonial mace"
     keyword: "mace"
     description: "A ceremonial mace with river silt packed into its carvings."
@@ -195,6 +220,7 @@ items:
     basePrice: 40
 
   mirror_apple:
+    image: demo_ruins/mirror_apple.png
     displayName: "a mirror-bright apple"
     keyword: "apple"
     description: "Perfectly smooth, reflecting your face like a tiny moon."
@@ -206,6 +232,7 @@ items:
     basePrice: 8
 
   mossy_helm:
+    image: demo_ruins/mossy_helm.png
     displayName: "a mossy helm"
     keyword: "helm"
     description: "A helmet overgrown with soft moss. It smells like rain and stone."
@@ -215,6 +242,7 @@ items:
     basePrice: 25
 
   rope_gloves:
+    image: demo_ruins/rope_gloves.png
     displayName: "a pair of rope-worn gloves"
     keyword: "gloves"
     description: "Gloves rubbed smooth from climbing. The palms are tough as leather."
@@ -224,6 +252,7 @@ items:
     basePrice: 10
 
   health_potion:
+    image: demo_ruins/health_potion.png
     displayName: "a small health potion"
     keyword: "potion"
     description: "A corked vial of ruby liquid that smells of mint and copper."
@@ -259,6 +288,7 @@ shops:
 
 rooms:
   caravan_gate:
+    image: demo_ruins/caravan_gate.png
     title: "Caravan Gate"
     description: "A rutted track widens into a makeshift gate of lashed timbers. Beyond it, the hills rise in broken steps toward old ruins. A hand-painted sign reads: 'WELCOME, STAY ALIVE.' The track leads south back toward the Wanderer's Inn."
     exits:
@@ -268,6 +298,7 @@ rooms:
       s: ambon_hub:wanderers_inn
 
   old_milestone:
+    image: demo_ruins/old_milestone.png
     title: "Old Milestone"
     description: "A toppled stone marker lies half-buried in grass. The original carving has been scraped away, replaced by newer tally marks and a crude arrow."
     exits:
@@ -275,6 +306,7 @@ rooms:
       w: windbreak_ridge
 
   windbreak_ridge:
+    image: demo_ruins/windbreak_ridge.png
     title: "Windbreak Ridge"
     description: "A low ridge blocks the worst of the wind. From here you can see the ruins: arches like broken teeth and a tower slumped into itself."
     exits:
@@ -282,6 +314,7 @@ rooms:
       n: fallen_archway
 
   campfire_ring:
+    image: demo_ruins/campfire_ring.png
     title: "Campfire Ring"
     description: "Stones circle a bed of ash where caravans rest. Scuffed bedrolls and empty crates suggest someone left in a hurry."
     exits:
@@ -290,6 +323,7 @@ rooms:
       e: trader_tents
 
   trader_tents:
+    image: demo_ruins/trader_tents.png
     title: "Trader Tents"
     description: "Two canvas tents lean against each other for support. A few trade goods remain: cracked pottery, coils of rope, and a bundle of damp kindling."
     exits:
@@ -297,6 +331,7 @@ rooms:
       n: rope_bridge
 
   river_ford:
+    image: demo_ruins/river_ford.png
     title: "River Ford"
     description: "Cold water braids around pale stones. Something metallic glitters under the surface, and reeds hiss in the breeze like whispered warnings."
     exits:
@@ -305,6 +340,7 @@ rooms:
       e: fisher_ledge
 
   fisher_ledge:
+    image: demo_ruins/fisher_ledge.png
     title: "Fisher's Ledge"
     description: "A narrow ledge overlooks a deeper pool. Old hooks and lines dangle from a dead branch, and the water below turns dark too quickly."
     exits:
@@ -312,6 +348,7 @@ rooms:
       n: flooded_steps
 
   reed_maze:
+    image: demo_ruins/reed_maze.png
     title: "Reed Maze"
     description: "Reeds tower overhead, bending into corridors that look different every time you blink. Water laps at your ankles, carrying silt and tiny shells."
     exits:
@@ -320,6 +357,7 @@ rooms:
       e: muddy_island
 
   muddy_island:
+    image: demo_ruins/muddy_island.png
     title: "Muddy Island"
     description: "A raised patch of ground dotted with driftwood and river trash. Someone has arranged stones in a spiral here, half sunk into the mud."
     exits:
@@ -327,6 +365,7 @@ rooms:
       n: shrine_approach
 
   shrine_approach:
+    image: demo_ruins/shrine_approach.png
     title: "Shrine Approach"
     description: "A broken causeway of stone blocks leads to a half-submerged shrine. Small bells hang from a leaning post, chiming softly without wind."
     exits:
@@ -335,6 +374,7 @@ rooms:
       e: flooded_steps
 
   shrine_antechamber:
+    image: demo_ruins/shrine_antechamber.png
     title: "Shrine Antechamber"
     description: "Carved pillars rise from shallow water. Salt stains and moss blur the old reliefs: a river, a crown, and a figure holding a key."
     exits:
@@ -344,6 +384,7 @@ rooms:
       w: reed_maze
 
   cracked_sanctum:
+    image: demo_ruins/cracked_sanctum.png
     title: "Cracked Sanctum"
     description: "The shrine's heart is fractured by a jagged crack running floor to ceiling. Cold air spills from the split, carrying a faint scent of ink and wet stone."
     exits:
@@ -352,6 +393,7 @@ rooms:
       w: guard_post
 
   guard_post:
+    image: demo_ruins/guard_post.png
     title: "Abandoned Guard Post"
     description: "A small stone room with arrow slits facing the river. A shattered stool and a pile of moldy straw show where someone once kept watch."
     exits:
@@ -359,6 +401,7 @@ rooms:
       n: fallen_archway
 
   fallen_archway:
+    image: demo_ruins/fallen_archway.png
     title: "Fallen Archway"
     description: "A grand arch has collapsed into a heap of dressed stone. You can pass through the rubble if you pick your footing carefully."
     exits:
@@ -368,6 +411,7 @@ rooms:
       w: windbreak_ridge
 
   rope_bridge:
+    image: demo_ruins/rope_bridge.png
     title: "Rope Bridge"
     description: "A swaying rope bridge spans a narrow ravine. Planks creak underfoot, and the ropes are frayed in places where hands have gripped too often."
     exits:
@@ -376,6 +420,7 @@ rooms:
       s: trader_tents
 
   tower_base:
+    image: demo_ruins/tower_base.png
     title: "Tower Base"
     description: "The base of a broken watchtower. The interior smells of damp wood and old smoke, and stairs spiral upward in uneasy darkness."
     exits:
@@ -384,6 +429,7 @@ rooms:
       n: courtyard_of_thorns
 
   tower_stairs:
+    image: demo_ruins/tower_stairs.png
     title: "Tower Stairs"
     description: "A narrow spiral staircase climbs through crumbling stone. Loose grit slides under your boots with every step."
     exits:
@@ -391,6 +437,7 @@ rooms:
       u: tower_overlook
 
   tower_overlook:
+    image: demo_ruins/tower_overlook.png
     title: "Tower Overlook"
     description: "From the broken parapet you see the river's bend, the camp below, and—farther north—a strange orchard of pale trees reflecting moonlight even now."
     exits:
@@ -398,6 +445,7 @@ rooms:
       n: mirror_orchard
 
   courtyard_of_thorns:
+    image: demo_ruins/courtyard_of_thorns.png
     title: "Courtyard of Thorns"
     description: "A courtyard choked with thorny vines. Statues lie face-down, and the stones are scratched with hurried messages: 'NOT THE WATER' and 'DON'T FOLLOW THE BELLS.'"
     exits:
@@ -407,6 +455,7 @@ rooms:
       w: beetle_grotto
 
   beetle_grotto:
+    image: demo_ruins/beetle_grotto.png
     title: "Beetle Grotto"
     description: "A hollow under the ruined wall where beetles click and scuttle. Their shells glitter like shards of bottle glass, and the air tastes faintly of copper."
     exits:
@@ -414,6 +463,7 @@ rooms:
       n: mossy_passage
 
   mossy_passage:
+    image: demo_ruins/mossy_passage.png
     title: "Mossy Passage"
     description: "A passageway lined with green-black moss. Every sound becomes muffled, as if the stone is listening and swallowing echoes."
     exits:
@@ -422,6 +472,7 @@ rooms:
       e: fissure_descent
 
   archive_entrance:
+    image: demo_ruins/archive_entrance.png
     title: "Archive Entrance"
     description: "A low doorway marked with a worn sigil: an eye above a river. The threshold is clean, as if someone has recently swept away the dust."
     exits:
@@ -436,6 +487,7 @@ rooms:
         text: "The Archive of the River Compact. Handle all documents with care. Unauthorized access to the sealed vault is a punishable offense. — The Last Curator"
 
   archive_stacks:
+    image: demo_ruins/archive_stacks.png
     title: "Archive Stacks"
     description: "Tall shelves lean at odd angles, packed with swollen books and scroll cases. Here and there, wax seals bear the same eye-and-river sigil."
     exits:
@@ -444,6 +496,7 @@ rooms:
       n: ledger_room
 
   reading_nook:
+    image: demo_ruins/reading_nook.png
     title: "Reading Nook"
     description: "A small alcove with a stone desk and a melted-down candle stub. Someone has scratched a neat diagram of rooms and arrows into the desktop."
     exits:
@@ -460,12 +513,14 @@ rooms:
         resetWithZone: true
 
   curator_cell:
+    image: demo_ruins/curator_cell.png
     title: "Curator's Cell"
     description: "A narrow cell with iron rings set into the wall. The air smells of old perfume and damp parchment, and the floor is dry despite the ruin outside."
     exits:
       w: reading_nook
 
   ledger_room:
+    image: demo_ruins/ledger_room.png
     title: "Ledger Room"
     description: "A chamber dominated by a stone table and an enormous ledger bound in green leather. Pages are stuck together as if they were dipped in river water and dried."
     exits:
@@ -481,6 +536,7 @@ rooms:
         resetWithZone: true
 
   hidden_vault_door:
+    image: demo_ruins/hidden_vault_door.png
     title: "Hidden Vault Door"
     description: "A round door of stone with a keyhole carved into the shape of a river delta. The surrounding stone is etched with tiny names, most too worn to read."
     exits:
@@ -494,6 +550,7 @@ rooms:
           resetWithZone: true
 
   fissure_descent:
+    image: demo_ruins/fissure_descent.png
     title: "Fissure Descent"
     description: "A slanted crack descends into the earth. Water drips steadily, and the walls are striated with pale mineral bands like frozen lightning."
     exits:
@@ -503,6 +560,7 @@ rooms:
       d: undercroft_pool
 
   flooded_steps:
+    image: demo_ruins/flooded_steps.png
     title: "Flooded Steps"
     description: "Stone steps vanish into dark water. The surface ripples in slow circles as if something below is breathing."
     exits:
@@ -512,6 +570,7 @@ rooms:
       e: silt_tunnel
 
   silt_tunnel:
+    image: demo_ruins/silt_tunnel.png
     title: "Silt Tunnel"
     description: "A low tunnel packed with damp silt. Your footsteps leave crisp prints that fill with water moments later, as if the ground is trying to erase you."
     exits:
@@ -520,6 +579,7 @@ rooms:
       e: river_cistern
 
   river_cistern:
+    image: demo_ruins/river_cistern.png
     title: "River Cistern"
     description: "A circular cistern where river water filters through cracks in the stone. A faint glow pulses beneath the surface like a heartbeat."
     exits:
@@ -527,6 +587,7 @@ rooms:
       n: undercroft_pool
 
   undercroft_pool:
+    image: demo_ruins/undercroft_pool.png
     title: "Undercroft Pool"
     description: "A subterranean pool stretches into shadow. On the far side, stonework rises into a sealed platform—an old counting place, perhaps, for offerings and debts."
     exits:
@@ -536,6 +597,7 @@ rooms:
       n: submerged_vault
 
   submerged_vault:
+    image: demo_ruins/submerged_vault.png
     title: "Submerged Vault"
     description: "A vault chamber half-filled with still water. Coins and ornaments glitter under the surface, and carved columns depict a crowned figure bargaining with a river."
     exits:
@@ -543,6 +605,7 @@ rooms:
       s: undercroft_pool
 
   mirror_orchard:
+    image: demo_ruins/mirror_orchard.png
     title: "Mirror Orchard"
     description: "Pale trees grow in perfect rows, their leaves glossy as glass. Every branch reflects you from a slightly different angle, as if the orchard is taking inventory."
     exits:
@@ -551,6 +614,7 @@ rooms:
       w: moonwell_edge
 
   orchard_path:
+    image: demo_ruins/orchard_path.png
     title: "Orchard Path"
     description: "A gravel path crunches softly. The air here is cool and sweet, and the trees' reflections slide over your skin like moonlight in water."
     exits:
@@ -559,6 +623,7 @@ rooms:
       n: overlook_of_names
 
   moonwell_edge:
+    image: demo_ruins/moonwell_edge.png
     title: "Moonwell Edge"
     description: "A circular well lined with white stone. The water is impossibly clear, showing stars even though the sky above is hidden by tree canopy."
     exits:
@@ -568,12 +633,14 @@ rooms:
       d: whisper_well
 
   whisper_well:
+    image: demo_ruins/whisper_well.png
     title: "Whisper Well"
     description: "A narrow chamber beneath the well. Every drip echoes as a word you almost understand. Names float up from the water and vanish before you can grasp them."
     exits:
       u: moonwell_edge
 
   overlook_of_names:
+    image: demo_ruins/overlook_of_names.png
     title: "Overlook of Names"
     description: "A stone terrace overlooking both orchard and ruins. The balustrade is carved with a long list of names; some are crisp, others scratched away."
     exits:
