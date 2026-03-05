@@ -79,6 +79,7 @@ export interface CharacterInfo {
   className: string;
   level: number | null;
   sprite: string | null;
+  isStaff: boolean;
 }
 
 export interface RoomState {

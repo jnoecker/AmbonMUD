@@ -135,6 +135,7 @@ export function applyGmcpPackage(
         className: typeof packet.class === "string" ? packet.class : "",
         level: typeof packet.level === "number" ? packet.level : null,
         sprite: typeof packet.sprite === "string" ? packet.sprite : null,
+        isStaff: packet.isStaff === true,
       });
       break;
     }
