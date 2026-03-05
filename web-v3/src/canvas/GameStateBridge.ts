@@ -1,6 +1,7 @@
 import type {
   CharacterInfo,
   CombatTarget,
+  GroupInfo,
   RoomMob,
   RoomPlayer,
   RoomItem,
@@ -21,6 +22,7 @@ export interface GameStateSnapshot {
   effects: StatusEffect[];
   character: CharacterInfo;
   mobInfo: MobInfo[];
+  groupInfo: GroupInfo;
 }
 
 export const canvasCallbacks: {
@@ -45,5 +47,6 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     effects: [],
     character: { name: "-", gender: "", race: "", className: "", level: null, sprite: null, isStaff: false },
     mobInfo: [],
+    groupInfo: { leader: null, members: [] },
   },
 };

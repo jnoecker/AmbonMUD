@@ -12,6 +12,7 @@ import { WorldPanel } from "./components/panels/WorldPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef } from "./canvas/GameStateBridge";
+import { canvasEvents } from "./canvas/CanvasEventBus";
 import { LoginModal } from "./canvas/LoginModal";
 import {
   DEFAULT_STATUS_VAR_LABELS,
@@ -160,10 +161,12 @@ function App() {
 
   const pushCombatEvent = useCallback((event: CombatEventData) => {
     combatEventsRef.current = [...combatEventsRef.current.slice(-99), event];
+    canvasEvents.push(event);
   }, []);
 
   const pushGainEvent = useCallback((event: GainEvent) => {
     gainEventsRef.current = [...gainEventsRef.current.slice(-49), event];
+    canvasEvents.push(event);
   }, []);
 
   const MAX_QUEST_NOTIFICATIONS = 5;
@@ -456,6 +459,7 @@ function App() {
       effects,
       character,
       mobInfo,
+      groupInfo,
     };
   });
 
