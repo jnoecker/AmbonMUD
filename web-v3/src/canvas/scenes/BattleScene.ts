@@ -3,6 +3,7 @@ import { gameStateRef } from "../GameStateBridge";
 import { canvasEvents } from "../CanvasEventBus";
 import { CombatAnimator } from "../systems/CombatAnimator";
 import { GainPopupSystem } from "../systems/GainPopup";
+import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 
 const SPRITE_SIZE = 80;
 const SMALL_SPRITE = 56;
@@ -44,6 +45,7 @@ export class BattleScene {
 
   private combatAnimator: CombatAnimator;
   private gainPopups: GainPopupSystem;
+  private statusEffects = new StatusEffectDisplay();
   private uiGraphics = new Graphics();
 
   private lastPlayerSpritePath: string | null = null;
@@ -93,6 +95,7 @@ export class BattleScene {
     this.container.addChild(this.enemyHpBar);
     this.container.addChild(this.enemyLabel);
     this.container.addChild(this.enemyHpText);
+    this.container.addChild(this.statusEffects.container);
     this.container.addChild(this.combatAnimator.container);
     this.container.addChild(this.gainPopups.container);
   }
@@ -233,6 +236,9 @@ export class BattleScene {
       this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + SPRITE_SIZE / 2 + 46, HP_BAR_WIDTH * manaPct / 100, MANA_BAR_HEIGHT, 2);
       this.playerManaBar.fill(MANA_COLOR);
     }
+
+    // Status effects above the player
+    this.statusEffects.update(gameStateRef.current.effects, playerPos.x, playerPos.y - SPRITE_SIZE / 2 - 28);
 
     // Enemy position (right side)
     const enemyPos = this.getEnemyPosition();
