@@ -2,6 +2,7 @@ import type { Application } from "pixi.js";
 import { gameStateRef } from "./GameStateBridge";
 import { WorldScene } from "./scenes/WorldScene";
 import { BattleScene } from "./scenes/BattleScene";
+import { DialogueOverlay } from "./systems/DialogueOverlay";
 
 export type SceneName = "world" | "battle";
 
@@ -9,6 +10,7 @@ export class SceneManager {
   private app: Application;
   private worldScene: WorldScene;
   private battleScene: BattleScene;
+  private dialogueOverlay: DialogueOverlay;
   private currentScene: SceneName = "world";
   private wasInCombat = false;
 
@@ -16,10 +18,13 @@ export class SceneManager {
     this.app = app;
     this.worldScene = new WorldScene();
     this.battleScene = new BattleScene();
+    this.dialogueOverlay = new DialogueOverlay();
 
     this.app.stage.addChild(this.worldScene.container);
     this.battleScene.container.visible = false;
     this.app.stage.addChild(this.battleScene.container);
+    // Dialogue overlay renders on top of both scenes
+    this.app.stage.addChild(this.dialogueOverlay.container);
 
     this.resize(this.app.screen.width, this.app.screen.height);
   }
@@ -27,6 +32,7 @@ export class SceneManager {
   resize(width: number, height: number) {
     this.worldScene.resize(width, height);
     this.battleScene.resize(width, height);
+    this.dialogueOverlay.resize(width, height);
   }
 
   update(deltaMs: number) {
@@ -46,6 +52,9 @@ export class SceneManager {
     } else {
       this.battleScene.update(deltaMs);
     }
+
+    // Dialogue overlay updates regardless of scene
+    this.dialogueOverlay.update();
   }
 
   private switchTo(scene: SceneName) {
@@ -70,5 +79,6 @@ export class SceneManager {
   destroy() {
     this.worldScene.destroy();
     this.battleScene.destroy();
+    this.dialogueOverlay.destroy();
   }
 }
