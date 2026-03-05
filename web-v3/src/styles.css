@@ -3641,3 +3641,165 @@ body {
   color: var(--text-secondary);
   flex-shrink: 0;
 }
+
+/* ── Staff admin panel ──────────────────────────────────────────── */
+
+.staff-admin-button {
+  background: linear-gradient(140deg, rgb(190 168 115 / 28%), rgb(168 151 100 / 22%));
+  border-color: rgb(190 168 115 / 44%);
+  color: var(--color-primary-soft-gold);
+  font-weight: 700;
+}
+
+.staff-admin-button:hover {
+  background: linear-gradient(140deg, rgb(190 168 115 / 40%), rgb(168 151 100 / 32%));
+  border-color: rgb(190 168 115 / 60%);
+}
+
+.admin-dialog {
+  max-width: 460px;
+}
+
+.admin-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.admin-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.admin-action-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 6px;
+  border: 1px solid rgb(106 96 136 / 24%);
+  border-radius: var(--radius-md);
+  background: linear-gradient(140deg, rgb(70 83 117 / 80%), rgb(60 76 111 / 74%));
+  color: var(--text-primary);
+  cursor: pointer;
+  transition:
+    background 170ms var(--ease-out-soft),
+    border-color 170ms var(--ease-out-soft),
+    transform 170ms var(--ease-out-soft);
+}
+
+.admin-action-tile:hover {
+  background: linear-gradient(140deg, rgb(80 95 134 / 86%), rgb(68 86 124 / 80%));
+  border-color: rgb(168 151 210 / 36%);
+  transform: translateY(-1px);
+}
+
+.admin-action-tile-active {
+  background: linear-gradient(140deg, rgb(168 151 210 / 30%), rgb(140 174 201 / 26%));
+  border-color: rgb(168 151 210 / 52%);
+  box-shadow: 0 0 12px rgb(168 151 210 / 18%);
+}
+
+.admin-action-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.admin-action-desc {
+  font-size: 0.66rem;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  animation: questDetailsSlide 200ms var(--ease-out-soft);
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-field-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.admin-input {
+  border: 1px solid rgb(106 96 136 / 30%);
+  border-radius: 8px;
+  background: var(--surface-input);
+  color: var(--text-primary);
+  font-family: "JetBrains Mono", "Cascadia Mono", monospace;
+  font-size: 0.82rem;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 150ms var(--ease-out-soft);
+}
+
+.admin-input:focus {
+  border-color: rgb(168 151 210 / 56%);
+}
+
+.admin-input::placeholder {
+  color: var(--text-disabled);
+}
+
+.admin-shutdown-warning {
+  font-size: 0.78rem;
+  color: var(--color-primary-dusty-rose);
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgb(184 143 170 / 12%);
+  border: 1px solid rgb(184 143 170 / 24%);
+  text-align: center;
+}
+
+.admin-submit {
+  border: 1px solid rgb(140 174 201 / 40%);
+  border-radius: 8px;
+  background: linear-gradient(140deg, rgb(140 174 201 / 22%), rgb(168 151 210 / 18%));
+  color: var(--color-primary-pale-blue);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition:
+    background 150ms var(--ease-out-soft),
+    border-color 150ms var(--ease-out-soft);
+}
+
+.admin-submit:hover {
+  background: linear-gradient(140deg, rgb(140 174 201 / 34%), rgb(168 151 210 / 28%));
+  border-color: rgb(140 174 201 / 60%);
+}
+
+.admin-submit-danger {
+  border-color: rgb(184 143 170 / 44%);
+  background: linear-gradient(140deg, rgb(184 143 170 / 18%), rgb(170 130 150 / 14%));
+  color: var(--color-primary-dusty-rose);
+}
+
+.admin-submit-danger:hover {
+  background: linear-gradient(140deg, rgb(184 143 170 / 28%), rgb(170 130 150 / 22%));
+  border-color: rgb(184 143 170 / 60%);
+}
+
+.admin-submit-confirm {
+  background: linear-gradient(140deg, rgb(200 100 100 / 30%), rgb(184 80 80 / 24%));
+  border-color: rgb(200 100 100 / 50%);
+  color: #e8a0a0;
+  animation: questNotifSlide 200ms var(--ease-out-soft);
+}
+
+.admin-submit-confirm:hover {
+  background: linear-gradient(140deg, rgb(200 100 100 / 42%), rgb(184 80 80 / 36%));
+  border-color: rgb(200 100 100 / 66%);
+}

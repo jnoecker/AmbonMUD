@@ -8,6 +8,7 @@ import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { PlayPanel } from "./components/panels/PlayPanel";
 import { WorldPanel } from "./components/panels/WorldPanel";
+import { AdminPanel } from "./components/panels/AdminPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import {
   DEFAULT_STATUS_VAR_LABELS,
@@ -115,6 +116,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<MobileTab>("play");
   const [activeChatChannel, setActiveChatChannel] = useState<ChatChannel>("say");
   const [activePopout, setActivePopout] = useState<PopoutPanel>(null);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [composerValue, setComposerValue] = useState("");
 
   const [vitals, setVitals] = useState<Vitals>(EMPTY_VITALS);
@@ -236,6 +238,7 @@ function App() {
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setActiveChatChannel("say");
+    setShowAdminPanel(false);
     resetMap();
   }, [resetMap]);
 
@@ -545,6 +548,17 @@ function App() {
         </div>
 
         <div className="connection-cluster">
+          {character.isStaff && (
+            <button
+              type="button"
+              className="soft-button staff-admin-button"
+              onClick={() => setShowAdminPanel(true)}
+              title="Staff Administration"
+              aria-label="Open staff administration panel"
+            >
+              Staff
+            </button>
+          )}
           <span
             className={`connection-pill ${connected ? "connection-pill-online" : "connection-pill-offline"}`}
             role="status"
@@ -787,6 +801,16 @@ function App() {
         }}
         onClose={() => setActivePopout(null)}
       />
+
+      {showAdminPanel && (
+        <AdminPanel
+          onCommand={(command) => {
+            sendCommand(command, true);
+            focusComposer();
+          }}
+          onClose={() => setShowAdminPanel(false)}
+        />
+      )}
 
       <MobileTabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
