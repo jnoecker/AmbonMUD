@@ -118,6 +118,8 @@ export class WorldScene {
   readonly container = new Container();
 
   private background: Sprite | null = null;
+  private titleText: Text;
+  private descText: Text;
   private exitGraphics = new Graphics();
   private exitLabels: Text[] = [];
   private playerSprite: Sprite | null = null;
@@ -154,6 +156,19 @@ export class WorldScene {
   private backdropHit = new Graphics();
 
   constructor() {
+    this.titleText = new Text({
+      text: "",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 18, fill: "#d8dcef", fontWeight: "bold", dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 2 } },
+    });
+    this.titleText.anchor.set(0, 0);
+
+    this.descText = new Text({
+      text: "",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 12, fill: "#b0b4c8", wordWrap: true, wordWrapWidth: 400, dropShadow: { color: 0x000000, alpha: 0.7, blur: 3, distance: 1 } },
+    });
+    this.descText.anchor.set(0, 0);
+    this.descText.alpha = 0.85;
+
     this.playerLabel = new Text({
       text: "",
       style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: PLAYER_LABEL_FONT_SIZE, fill: PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.7, blur: 3, distance: 1 } },
@@ -171,6 +186,8 @@ export class WorldScene {
     this.container.addChild(this.exitGraphics);
     this.container.addChild(this.roleGraphics);
     this.container.addChild(this.statusEffects.container);
+    this.container.addChild(this.titleText);
+    this.container.addChild(this.descText);
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.backdropHit);
@@ -223,6 +240,8 @@ export class WorldScene {
         this.transitionElapsed = 0;
       }
       this.lastRoomId = room.id;
+      this.titleText.text = room.title !== "-" ? room.title : "";
+      this.descText.text = room.description || "";
       // Dismiss popout on room change
       this.entityPopout.hide();
       this.backdropHit.visible = false;
@@ -288,6 +307,15 @@ export class WorldScene {
 
     // Minimap in top-left
     this.minimap.layout(12, 12);
+
+    // Room title and description to the right of minimap
+    const textLeft = 184;
+    const textMaxWidth = Math.max(200, w - textLeft - 20);
+    this.titleText.x = textLeft;
+    this.titleText.y = 16;
+    this.descText.x = textLeft;
+    this.descText.y = 40;
+    this.descText.style.wordWrapWidth = textMaxWidth;
 
     // Player in lower-left
     const playerX = w * 0.18;
