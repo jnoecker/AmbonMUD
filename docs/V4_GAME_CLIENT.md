@@ -124,6 +124,7 @@ web-v3/src/
 │   ├── GameStateBridge.ts           # Shared ref for React → PixiJS state
 │   ├── CanvasEventBus.ts            # Push events (combat hits, gains)
 │   ├── PixiCanvas.tsx               # React component wrapping PixiJS Application
+│   ├── LoginModal.tsx               # Modal login form (name, password, race/class selection)
 │   ├── SceneManager.ts              # Scene state machine (world ↔ battle ↔ transition)
 │   ├── scenes/
 │   │   ├── WorldScene.ts            # Tile-based room view, player/NPC sprites, exits
@@ -167,7 +168,9 @@ web-v3/src/
 
 ## GMCP Packages Driving the Canvas
 
-All packages below are **already parsed by v3**. The canvas reads them via the state bridge — no new server work needed.
+### Existing Packages (already parsed by v3)
+
+All packages below work today. The canvas reads them via the state bridge — no new server work needed.
 
 | Canvas Feature | GMCP Source | What It Drives |
 |---------------|-------------|----------------|
@@ -187,12 +190,65 @@ All packages below are **already parsed by v3**. The canvas reads them via the s
 | Dialogue | `Dialogue.Node`, `Dialogue.End` | NPC dialogue overlay on canvas |
 | Room transitions | `Room.Info` (room change) | Fade/slide animation between rooms |
 
+### New Package: `Login.Prompt` (requires server work)
+
+The current login flow is entirely text-based — the server sends plain text prompts ("Enter your name:", "Password:", race/class numbered lists) and the player types responses in the terminal. With the terminal gone from the main view, we need structured GMCP data to drive a modal login form.
+
+**Proposed `Login.Prompt` package:**
+
+| Package | Purpose | Payload Fields |
+|---------|---------|----------------|
+| `Login.Prompt` | Login state machine step | `state`, plus state-specific fields (see below) |
+| `Login.Error` | Validation error during login | `state`, `message` |
+
+**`Login.Prompt` states and payloads:**
+
+```json
+// State: "name" — ask for character name
+{ "state": "name" }
+
+// State: "password" — ask for password (existing account)
+{ "state": "password", "name": "Alice" }
+
+// State: "confirmCreate" — new account confirmation
+{ "state": "confirmCreate", "name": "Alice" }
+
+// State: "newPassword" — set password for new account
+{ "state": "newPassword", "name": "Alice" }
+
+// State: "raceSelection" — choose race
+{ "state": "raceSelection", "name": "Alice",
+  "races": [
+    { "id": "HUMAN", "name": "Human", "stats": "+0 STR, +2 DEX, ..." },
+    { "id": "ELF", "name": "Elf", "stats": "+2 INT, +1 WIS, ..." }
+  ] }
+
+// State: "classSelection" — choose class
+{ "state": "classSelection", "name": "Alice", "race": "HUMAN",
+  "classes": [
+    { "id": "WARRIOR", "name": "Warrior", "stats": "+10 HP/lvl, +0 Mana/lvl" },
+    { "id": "MAGE", "name": "Mage", "stats": "+0 HP/lvl, +10 Mana/lvl" }
+  ] }
+
+// Error example
+{ "state": "password", "message": "Incorrect password. Try again." }
+```
+
+**Server changes required:**
+
+1. Add `Login.Prompt` and `Login.Error` as new `GmcpData` emissions in `LoginFlowHandler.kt`, alongside the existing `SendInfo`/`SendError` text prompts (both are sent — text for terminal popout, GMCP for modal).
+2. Add `Login` to the default GMCP support set in `KtorWebSocketTransport.kt` so it's subscribed before login.
+3. Client sends login responses as regular text lines (same as today: name, password, "yes", race number, class number). No new inbound protocol needed.
+
+This is a **backward-compatible addition** — telnet clients and the terminal popout continue to work with text prompts. The modal is a progressive enhancement driven by GMCP.
+
 ## Phase Breakdown
 
-### Phase 1: Canvas Replaces Terminal
+### Phase 1: Canvas Replaces Terminal + Login Modal
 
-**Goal:** PixiJS canvas takes over the terminal's space in PlayPanel. Terminal moves to a popout. Existing side panels unchanged.
+**Goal:** PixiJS canvas takes over the terminal's space in PlayPanel. Terminal moves to a popout. Modal login form replaces the text-based login flow. Existing side panels unchanged.
 
+**Canvas setup:**
 - Add `pixi.js` dependency to `web-v3/package.json`
 - Create `GameStateBridge.ts` and `CanvasEventBus.ts`
 - Create `PixiCanvas.tsx` React wrapper (mounts PixiJS `Application`, handles resize)
@@ -202,7 +258,22 @@ All packages below are **already parsed by v3**. The canvas reads them via the s
 - Add "Terminal" button to open xterm in a popout (via existing `PopoutLayer` mechanism)
 - Move xterm setup into popout — terminal stays connected and receives all text even when popout is closed
 - Wire `useEffect` in `App.tsx` to sync state bridge
-- Pre-login state (before character exists): canvas shows a static scene or the login banner; command input still works for login flow
+
+**Login modal:**
+- Add `Login.Prompt` and `Login.Error` GMCP packages to `LoginFlowHandler.kt` (server-side, alongside existing text prompts)
+- Add `Login` to default GMCP support set in `KtorWebSocketTransport.kt`
+- Add `Login.Prompt` and `Login.Error` handlers to `applyGmcpPackage.ts`
+- Create `LoginModal.tsx` — a React modal overlay (not PixiJS) that renders over the canvas:
+  - **Name step:** text input + "Enter" button
+  - **Password step:** password input (masked)
+  - **Create confirmation:** "No user named X found. Create new character?" Yes/No buttons
+  - **New password step:** password input + confirm password
+  - **Race selection:** card grid showing races with stat bonuses (data from `Login.Prompt`)
+  - **Class selection:** card grid showing classes with stat descriptions
+  - **Error display:** inline error messages from `Login.Error`
+- Modal submits each step as a plain text line via `sendCommand` (same protocol as today)
+- Pre-login state: canvas shows a title scene (static artwork or animated background) behind the login modal
+- After successful login (`Char.Name` GMCP arrives), modal closes and canvas switches to `WorldScene`
 
 **Art approach:** Start with simple colored rectangles / placeholder sprites. Art can be swapped in later without code changes.
 
