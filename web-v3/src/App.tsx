@@ -753,6 +753,7 @@ function App() {
         canManageItems={connected && hasCharacterProfile}
         detailMob={detailMob}
         detailItem={detailItem}
+        players={players}
         onWearItem={(itemName) => {
           sendCommand(`wear ${itemName}`, true);
           focusComposer();
@@ -763,6 +764,10 @@ function App() {
         }}
         onRemoveItem={(slot) => {
           sendCommand(`remove ${slot}`, true);
+          focusComposer();
+        }}
+        onGiveItem={(itemKeyword, playerName) => {
+          sendCommand(`give ${itemKeyword} ${playerName}`, true);
           focusComposer();
         }}
         onTalkToMob={(mobName) => {
