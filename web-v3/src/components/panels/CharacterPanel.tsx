@@ -86,6 +86,15 @@ export function CharacterPanel({
         <article className="subpanel character-identity-subpanel">
           {hasCharacterProfile ? (
             <>
+              {character.sprite && (
+                <div className="character-sprite-frame">
+                  <img
+                    src={character.sprite}
+                    alt={`${character.name} sprite`}
+                    className="character-sprite-img"
+                  />
+                </div>
+              )}
               <p className="identity-name">{character.name}</p>
               <p className="identity-detail">
                 {[displayRace, displayClassName].filter((part) => part.length > 0).join(" ") || "-"}

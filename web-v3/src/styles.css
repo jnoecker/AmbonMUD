@@ -2291,6 +2291,22 @@ body {
   overflow: hidden;
 }
 
+.character-sprite-frame {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-3);
+}
+
+.character-sprite-img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 2px solid rgb(167 182 216 / 25%);
+  background: rgb(42 44 57 / 40%);
+  image-rendering: auto;
+}
+
 .meter-stack {
   display: flex;
   flex-direction: column;
