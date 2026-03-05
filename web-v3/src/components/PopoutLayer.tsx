@@ -1,7 +1,8 @@
+import { useState } from "react";
 import type { RefObject } from "react";
-import type { ItemSummary, PopoutPanel, RoomItem, RoomMob, RoomState } from "../types";
+import type { ItemSummary, PopoutPanel, RoomItem, RoomMob, RoomPlayer, RoomState } from "../types";
 import { percent } from "../utils";
-import { AttackIcon, DropItemIcon, PickupIcon, RemoveItemIcon, TalkIcon, WearItemIcon } from "./Icons";
+import { AttackIcon, DropItemIcon, GiveItemIcon, PickupIcon, RemoveItemIcon, TalkIcon, WearItemIcon } from "./Icons";
 
 interface PopoutLayerProps {
   activePopout: PopoutPanel;
@@ -15,9 +16,11 @@ interface PopoutLayerProps {
   canManageItems: boolean;
   detailMob: RoomMob | null;
   detailItem: RoomItem | null;
+  players: RoomPlayer[];
   onWearItem: (itemName: string) => void;
   onDropItem: (itemName: string) => void;
   onRemoveItem: (slot: string) => void;
+  onGiveItem: (itemKeyword: string, playerName: string) => void;
   onTalkToMob: (mobName: string) => void;
   onAttackMob: (mobName: string) => void;
   onPickUpItem: (itemName: string) => void;
@@ -36,14 +39,17 @@ export function PopoutLayer({
   canManageItems,
   detailMob,
   detailItem,
+  players,
   onWearItem,
   onDropItem,
   onRemoveItem,
+  onGiveItem,
   onTalkToMob,
   onAttackMob,
   onPickUpItem,
   onClose,
 }: PopoutLayerProps) {
+  const [givePickerItemId, setGivePickerItemId] = useState<string | null>(null);
   if (!activePopout) return null;
 
   const isEntityDetail = activePopout === "mobDetail" || activePopout === "itemDetail";
@@ -101,35 +107,69 @@ export function PopoutLayer({
             ) : (
               <ul className="item-list">
                 {inventory.map((item) => (
-                  <li key={item.id}>
-                    <span className="entity-name-with-thumb">
-                      {item.image && <img src={item.image} alt="" className="entity-thumb" />}
-                      {item.name}
-                    </span>
-                    <span className="item-popout-actions">
-                      {item.slot && (
+                  <li key={item.id} className="item-list-entry">
+                    <div className="item-list-row">
+                      <span className="entity-name-with-thumb">
+                        {item.image && <img src={item.image} alt="" className="entity-thumb" />}
+                        {item.name}
+                      </span>
+                      <span className="item-popout-actions">
+                        {item.slot && (
+                          <button
+                            type="button"
+                            className="mob-command-button"
+                            title={`Wear ${item.name}`}
+                            aria-label={`Wear ${item.name}`}
+                            disabled={!canManageItems}
+                            onClick={() => onWearItem(item.name)}
+                          >
+                            <WearItemIcon className="mob-command-icon" />
+                          </button>
+                        )}
+                        {players.length > 0 && (
+                          <button
+                            type="button"
+                            className={`mob-command-button ${givePickerItemId === item.id ? "mob-command-button-active" : ""}`}
+                            title={`Give ${item.name}`}
+                            aria-label={`Give ${item.name}`}
+                            aria-expanded={givePickerItemId === item.id}
+                            disabled={!canManageItems}
+                            onClick={() => setGivePickerItemId(givePickerItemId === item.id ? null : item.id)}
+                          >
+                            <GiveItemIcon className="mob-command-icon" />
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="mob-command-button"
-                          title={`Wear ${item.name}`}
-                          aria-label={`Wear ${item.name}`}
+                          title={`Drop ${item.name}`}
+                          aria-label={`Drop ${item.name}`}
                           disabled={!canManageItems}
-                          onClick={() => onWearItem(item.name)}
+                          onClick={() => onDropItem(item.name)}
                         >
-                          <WearItemIcon className="mob-command-icon" />
+                          <DropItemIcon className="mob-command-icon" />
                         </button>
-                      )}
-                      <button
-                        type="button"
-                        className="mob-command-button"
-                        title={`Drop ${item.name}`}
-                        aria-label={`Drop ${item.name}`}
-                        disabled={!canManageItems}
-                        onClick={() => onDropItem(item.name)}
-                      >
-                        <DropItemIcon className="mob-command-icon" />
-                      </button>
-                    </span>
+                      </span>
+                    </div>
+                    {givePickerItemId === item.id && (
+                      <div className="give-player-picker" role="listbox" aria-label={`Give ${item.name} to`}>
+                        <span className="give-picker-label">Give to:</span>
+                        {players.map((player) => (
+                          <button
+                            key={player.name}
+                            type="button"
+                            role="option"
+                            className="give-player-option"
+                            onClick={() => {
+                              onGiveItem(item.keyword, player.name);
+                              setGivePickerItemId(null);
+                            }}
+                          >
+                            {player.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -177,6 +177,17 @@ export function DropItemIcon({ className }: { className?: string }) {
   );
 }
 
+export function GiveItemIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M12 4v11" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.6 11.6 12 15l3.4-3.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19.2 17.2a2.4 2.4 0 1 0 0 .1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.82" />
+      <path d="M4.8 17.2a2.4 2.4 0 1 0 0 .1" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.82" />
+    </svg>
+  );
+}
+
 export function RemoveItemIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
