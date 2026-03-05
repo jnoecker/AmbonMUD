@@ -2517,6 +2517,60 @@ body {
   flex-shrink: 0;
 }
 
+.item-list-entry {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-list-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mob-command-button-active {
+  background: rgb(168 151 210 / 30%);
+  border-color: rgb(168 151 210 / 50%);
+}
+
+/* ── Give player picker ─────────────────────────────────────────── */
+
+.give-player-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0 2px;
+  animation: questDetailsSlide 180ms var(--ease-out-soft);
+}
+
+.give-picker-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-right: 2px;
+}
+
+.give-player-option {
+  border: 1px solid rgb(140 174 201 / 36%);
+  border-radius: 6px;
+  background: rgb(140 174 201 / 14%);
+  color: var(--color-primary-pale-blue);
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition:
+    background 150ms var(--ease-out-soft),
+    border-color 150ms var(--ease-out-soft);
+}
+
+.give-player-option:hover {
+  background: rgb(140 174 201 / 28%);
+  border-color: rgb(140 174 201 / 56%);
+}
+
 .equipment-popout-row {
   display: inline-flex;
   align-items: center;
