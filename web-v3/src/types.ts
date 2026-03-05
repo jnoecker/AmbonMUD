@@ -1,5 +1,5 @@
 export type MobileTab = "play" | "world" | "chat" | "character";
-export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | "mobDetail" | "itemDetail" | "help" | null;
+export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | "mobDetail" | "itemDetail" | "help" | "terminal" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
@@ -282,5 +282,30 @@ export interface MobInfo {
   questGiver: boolean;
   shopKeeper: boolean;
   dialogue: boolean;
+}
+
+export interface LoginRaceOption {
+  id: string;
+  name: string;
+  stats: string;
+}
+
+export interface LoginClassOption {
+  id: string;
+  name: string;
+  stats: string;
+}
+
+export type LoginPromptState =
+  | { state: "name" }
+  | { state: "password"; name: string }
+  | { state: "confirmCreate"; name: string }
+  | { state: "newPassword"; name: string }
+  | { state: "raceSelection"; name: string; races: LoginRaceOption[] }
+  | { state: "classSelection"; name: string; race: string; classes: LoginClassOption[] };
+
+export interface LoginErrorState {
+  state: string;
+  message: string;
 }
 
