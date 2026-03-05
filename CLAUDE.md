@@ -19,9 +19,8 @@ The `gh` CLI is available in cloud/remote mode (verified Feb 2026). Use it norma
 ```bash
 ./gradlew run            # Start server (telnet :4000, web :8080)
 ./gradlew demo           # Start server + auto-launch browser demo
-./gradlew test           # Run full test suite
-./gradlew ktlintCheck    # Lint (Kotlin official style)
-./gradlew ktlintCheck test  # CI parity check
+./gradlew ktlintCheck    # Lint (Kotlin official style) — run before every PR
+./gradlew test           # Full test suite (CI only — avoid running locally)
 ```
 
 Run a single test class:
@@ -317,9 +316,10 @@ All other standard rules remain enforced. The most important ones to know:
 ## Testing Patterns
 
 ### General
-- Run `ktlintCheck test` before finalizing any change.
+- Run `ktlintCheck` before opening a PR or finalizing any change. The pre-commit hook enforces this automatically.
+- **Do not run the full test suite locally** — tests run on GitHub CI. Only run tests you've directly touched or that you expect your change to break.
 - Add tests for every behavioral change; this codebase treats tests as design constraints.
-- Prefer focused test runs while iterating (`--tests "ClassName"`), then run full suite before finalizing.
+- If CI tests fail after pushing, fix the failures promptly.
 
 ### Deterministic time
 Always use `MutableClock` for code that depends on time. Never use `System.currentTimeMillis()` or similar in production code — use the injected `Clock`.
