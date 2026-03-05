@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
+import { HelpIcon } from "./components/Icons";
 import { MobileTabBar } from "./components/MobileTabBar";
 import { PopoutLayer } from "./components/PopoutLayer";
 import { ChatPanel } from "./components/panels/ChatPanel";
@@ -477,6 +478,8 @@ function App() {
         ? (detailMob?.name ?? "Mob")
       : activePopout === "itemDetail"
         ? (detailItem?.name ?? "Item")
+      : activePopout === "help"
+        ? "Command Reference"
         : "Currently Wearing";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
@@ -548,6 +551,16 @@ function App() {
         </div>
 
         <div className="connection-cluster">
+          <button
+            type="button"
+            className="soft-button help-trigger"
+            onClick={() => setActivePopout("help")}
+            aria-label="Help"
+            title="Command reference"
+          >
+            <HelpIcon className="help-trigger-icon" />
+            <span className="help-trigger-label">Help</span>
+          </button>
           {character.isStaff && (
             <button
               type="button"
@@ -768,6 +781,7 @@ function App() {
         detailMob={detailMob}
         detailItem={detailItem}
         players={players}
+        isStaff={character.isStaff}
         onWearItem={(itemName) => {
           sendCommand(`wear ${itemName}`, true);
           focusComposer();

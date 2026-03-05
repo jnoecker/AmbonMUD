@@ -402,6 +402,16 @@ export function QuestsTabIcon({ className }: { className?: string }) {
   );
 }
 
+export function HelpIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="8.4" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M9.6 9.4a2.6 2.6 0 0 1 5 .8c0 1.4-1.8 1.8-2.4 2.4-.2.2-.2.5-.2.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="16.2" r="0.1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function ExpandRoomIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">

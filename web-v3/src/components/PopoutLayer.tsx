@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { RefObject } from "react";
 import type { ItemSummary, PopoutPanel, RoomItem, RoomMob, RoomPlayer, RoomState } from "../types";
 import { percent } from "../utils";
+import { HelpContent } from "./HelpContent";
 import { AttackIcon, DropItemIcon, GiveItemIcon, PickupIcon, RemoveItemIcon, TalkIcon, WearItemIcon } from "./Icons";
 
 interface PopoutLayerProps {
@@ -17,6 +18,7 @@ interface PopoutLayerProps {
   detailMob: RoomMob | null;
   detailItem: RoomItem | null;
   players: RoomPlayer[];
+  isStaff: boolean;
   onWearItem: (itemName: string) => void;
   onDropItem: (itemName: string) => void;
   onRemoveItem: (slot: string) => void;
@@ -40,6 +42,7 @@ export function PopoutLayer({
   detailMob,
   detailItem,
   players,
+  isStaff,
   onWearItem,
   onDropItem,
   onRemoveItem,
@@ -262,6 +265,12 @@ export function PopoutLayer({
                 Pick up
               </button>
             </div>
+          </div>
+        )}
+
+        {activePopout === "help" && (
+          <div className="popout-content">
+            <HelpContent isStaff={isStaff} />
           </div>
         )}
       </section>
