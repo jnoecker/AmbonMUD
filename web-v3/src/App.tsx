@@ -460,6 +460,7 @@ function App() {
       character,
       mobInfo,
       groupInfo,
+      dialogue,
     };
   });
 

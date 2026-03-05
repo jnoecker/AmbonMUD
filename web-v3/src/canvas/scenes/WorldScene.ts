@@ -1,5 +1,6 @@
 import { Container, Graphics, Sprite, Text, Texture, Assets } from "pixi.js";
 import { gameStateRef, canvasCallbacks } from "../GameStateBridge";
+import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 import type { MobInfo } from "../../types";
 
 const EXIT_ARROW_COLOR = 0xb9aed8;
@@ -128,6 +129,7 @@ export class WorldScene {
   private itemLabels: Text[] = [];
   private playerSprites: Map<string, { sprite: Sprite; label: Text }> = new Map();
   private roleGraphics = new Graphics();
+  private statusEffects = new StatusEffectDisplay();
 
   private lastRoomId: string | null = null;
   private lastRoomImage: string | null | undefined = undefined;
@@ -171,6 +173,7 @@ export class WorldScene {
 
     this.container.addChild(this.exitGraphics);
     this.container.addChild(this.roleGraphics);
+    this.container.addChild(this.statusEffects.container);
     this.container.addChild(this.titleText);
     this.container.addChild(this.descText);
     this.container.addChild(this.playerLabel);
@@ -291,6 +294,9 @@ export class WorldScene {
     }
     this.playerLabel.x = w / 2;
     this.playerLabel.y = playerY + SPRITE_SIZE / 2 + 4;
+
+    // Status effects above the player sprite
+    this.statusEffects.update(gameStateRef.current.effects, w / 2, playerY - SPRITE_SIZE / 2 - 28);
 
     // Layout mobs in a row above the player
     const mobEntries = [...this.mobSprites.values()];
