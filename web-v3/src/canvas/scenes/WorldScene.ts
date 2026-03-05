@@ -1,21 +1,23 @@
 import { Container, Graphics, Sprite, Text, Texture, Assets } from "pixi.js";
 import { gameStateRef, canvasCallbacks } from "../GameStateBridge";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
+import { Minimap } from "../systems/Minimap";
+import { EntityPopout } from "../systems/EntityPopout";
 import type { MobInfo } from "../../types";
 
 const EXIT_ARROW_COLOR = 0xb9aed8;
 const EXIT_LABEL_COLOR = "#b9aed8";
-const TITLE_COLOR = "#d8dcef";
 const PLAYER_LABEL_COLOR = "#d8dcef";
 const OTHER_PLAYER_LABEL_COLOR = "#81a2be";
 const MOB_LABEL_COLOR = "#f0c674";
 const ITEM_LABEL_COLOR = "#8abeb7";
-const PLAYER_LABEL_FONT_SIZE = 13;
-const MOB_LABEL_FONT_SIZE = 12;
-const ARROW_SIZE = 18;
-const SPRITE_SIZE = 64;
-const ROLE_ICON_SIZE = 10;
-const ROLE_ICON_GAP = 3;
+const PLAYER_LABEL_FONT_SIZE = 15;
+const MOB_LABEL_FONT_SIZE = 14;
+const ITEM_LABEL_FONT_SIZE = 13;
+const ARROW_SIZE = 22;
+const SPRITE_SIZE = 128;
+const ROLE_ICON_SIZE = 12;
+const ROLE_ICON_GAP = 4;
 const TRANSITION_DURATION_MS = 300;
 
 interface DirectionLayout {
@@ -93,7 +95,7 @@ function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo) {
 
   const totalWidth = icons.length * ROLE_ICON_SIZE + (icons.length - 1) * ROLE_ICON_GAP;
   let x = cx - totalWidth / 2 + ROLE_ICON_SIZE / 2;
-  const y = cy - SPRITE_SIZE / 2 - 12;
+  const y = cy - SPRITE_SIZE / 2 - 14;
 
   for (const color of icons) {
     g.fill(color);
@@ -103,15 +105,12 @@ function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo) {
   }
 }
 
-// Quest giver exclamation mark
 function drawQuestMarker(g: Graphics, cx: number, cy: number) {
-  const y = cy - SPRITE_SIZE / 2 - 20;
+  const y = cy - SPRITE_SIZE / 2 - 24;
   g.fill(ROLE_QUEST_COLOR);
-  // exclamation mark body
-  g.roundRect(cx - 2, y - 8, 4, 10, 1);
+  g.roundRect(cx - 2.5, y - 10, 5, 12, 1);
   g.fill();
-  // dot
-  g.circle(cx, y + 6, 2);
+  g.circle(cx, y + 7, 2.5);
   g.fill();
 }
 
@@ -127,9 +126,11 @@ export class WorldScene {
   private playerLabel: Text;
   private mobSprites: Map<string, { sprite: Sprite; label: Text; hitArea: Graphics }> = new Map();
   private itemLabels: Text[] = [];
-  private playerSprites: Map<string, { sprite: Sprite; label: Text }> = new Map();
+  private playerSprites: Map<string, { sprite: Sprite; label: Text; hitArea: Graphics }> = new Map();
   private roleGraphics = new Graphics();
   private statusEffects = new StatusEffectDisplay();
+  private minimap = new Minimap();
+  private entityPopout = new EntityPopout();
 
   private lastRoomId: string | null = null;
   private lastRoomImage: string | null | undefined = undefined;
@@ -151,25 +152,36 @@ export class WorldScene {
   // Exit hit areas for click-to-move
   private exitHitAreas: Array<{ dir: string; area: Graphics }> = [];
 
+  // Click-away to dismiss popout
+  private backdropHit = new Graphics();
+
   constructor() {
     this.titleText = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 22, fill: TITLE_COLOR, fontWeight: "bold", dropShadow: { color: 0x000000, alpha: 0.7, blur: 4, distance: 2 } },
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 18, fill: "#d8dcef", fontWeight: "bold", dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 2 } },
     });
-    this.titleText.anchor.set(0.5, 0);
+    this.titleText.anchor.set(0, 0);
 
     this.descText = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 14, fill: "#d0d4e8", wordWrap: true, wordWrapWidth: 400, dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 1 } },
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 12, fill: "#b0b4c8", wordWrap: true, wordWrapWidth: 400, dropShadow: { color: 0x000000, alpha: 0.7, blur: 3, distance: 1 } },
     });
-    this.descText.anchor.set(0.5, 0);
-    this.descText.alpha = 0.8;
+    this.descText.anchor.set(0, 0);
+    this.descText.alpha = 0.85;
 
     this.playerLabel = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: PLAYER_LABEL_FONT_SIZE, fill: PLAYER_LABEL_COLOR },
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: PLAYER_LABEL_FONT_SIZE, fill: PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.7, blur: 3, distance: 1 } },
     });
     this.playerLabel.anchor.set(0.5, 0);
+
+    // Backdrop for dismissing popout
+    this.backdropHit.eventMode = "static";
+    this.backdropHit.visible = false;
+    this.backdropHit.on("pointerdown", () => {
+      this.entityPopout.hide();
+      this.backdropHit.visible = false;
+    });
 
     this.container.addChild(this.exitGraphics);
     this.container.addChild(this.roleGraphics);
@@ -177,12 +189,21 @@ export class WorldScene {
     this.container.addChild(this.titleText);
     this.container.addChild(this.descText);
     this.container.addChild(this.playerLabel);
+    this.container.addChild(this.minimap.container);
+    this.container.addChild(this.backdropHit);
+    this.container.addChild(this.entityPopout.container);
   }
 
   resize(width: number, height: number) {
     this.width = width;
     this.height = height;
-    this.descText.style.wordWrapWidth = Math.min(400, width - 40);
+    this.entityPopout.resize(width, height);
+
+    // Update backdrop size
+    this.backdropHit.clear();
+    this.backdropHit.rect(0, 0, width, height);
+    this.backdropHit.fill({ color: 0x000000, alpha: 0.001 });
+
     this.layoutAll();
   }
 
@@ -212,18 +233,22 @@ export class WorldScene {
 
     const roomChanged = room.id !== this.lastRoomId;
     if (roomChanged) {
-      // Start fade transition (skip if this is the first room)
       if (this.lastRoomId !== null) {
         this.transitioning = true;
         this.transitionPhase = "fadeOut";
         this.transitionProgress = 0;
         this.transitionElapsed = 0;
       }
-
       this.lastRoomId = room.id;
       this.titleText.text = room.title !== "-" ? room.title : "";
       this.descText.text = room.description || "";
+      // Dismiss popout on room change
+      this.entityPopout.hide();
+      this.backdropHit.visible = false;
     }
+
+    // Update minimap
+    this.minimap.updateRoom(room.id, room.exits, room.title !== "-" ? room.title : "");
 
     if (room.image !== this.lastRoomImage) {
       this.lastRoomImage = room.image;
@@ -280,64 +305,73 @@ export class WorldScene {
       this.background.height = h;
     }
 
-    this.titleText.x = w / 2;
-    this.titleText.y = 16;
+    // Minimap in top-left
+    this.minimap.layout(12, 12);
 
-    this.descText.x = w / 2;
-    this.descText.y = 48;
+    // Room title and description to the right of minimap
+    const textLeft = 184;
+    const textMaxWidth = Math.max(200, w - textLeft - 20);
+    this.titleText.x = textLeft;
+    this.titleText.y = 16;
+    this.descText.x = textLeft;
+    this.descText.y = 40;
+    this.descText.style.wordWrapWidth = textMaxWidth;
 
     // Player in lower-left
     const playerX = w * 0.18;
-    const playerY = h * 0.72;
+    const playerY = h * 0.70;
     if (this.playerSprite) {
       this.playerSprite.x = playerX;
       this.playerSprite.y = playerY;
     }
     this.playerLabel.x = playerX;
-    this.playerLabel.y = playerY + SPRITE_SIZE / 2 + 4;
+    this.playerLabel.y = playerY + SPRITE_SIZE / 2 + 6;
 
     // Status effects above the player sprite
-    this.statusEffects.update(gameStateRef.current.effects, playerX, playerY - SPRITE_SIZE / 2 - 28);
+    this.statusEffects.update(gameStateRef.current.effects, playerX, playerY - SPRITE_SIZE / 2 - 32);
 
     // Layout mobs in lower-right
     const mobEntries = [...this.mobSprites.values()];
     if (mobEntries.length > 0) {
-      const mobY = h * 0.72;
-      const totalWidth = mobEntries.length * (SPRITE_SIZE + 20) - 20;
-      let startX = w - totalWidth / 2 - SPRITE_SIZE / 2 - 20;
+      const mobY = h * 0.70;
+      const spacing = SPRITE_SIZE + 24;
+      const totalWidth = mobEntries.length * spacing - 24;
+      let startX = w - totalWidth / 2 - SPRITE_SIZE / 2 - 24;
       for (const { sprite, label, hitArea } of mobEntries) {
         sprite.x = startX;
         sprite.y = mobY;
         label.x = startX;
-        label.y = mobY + SPRITE_SIZE / 2 + 4;
+        label.y = mobY + SPRITE_SIZE / 2 + 6;
         hitArea.x = startX - SPRITE_SIZE / 2;
         hitArea.y = mobY - SPRITE_SIZE / 2;
-        startX -= SPRITE_SIZE + 20;
+        startX -= spacing;
       }
     }
 
     // Layout other players near the player sprite
     const otherPlayerEntries = [...this.playerSprites.values()];
     if (otherPlayerEntries.length > 0) {
-      const opY = h * 0.62;
-      let startX = playerX + SPRITE_SIZE / 2 + 16;
-      for (const { sprite, label } of otherPlayerEntries) {
+      const opY = h * 0.58;
+      let startX = playerX + SPRITE_SIZE / 2 + 20;
+      for (const { sprite, label, hitArea } of otherPlayerEntries) {
         sprite.x = startX;
         sprite.y = opY;
         label.x = startX;
-        label.y = opY + SPRITE_SIZE / 2 + 4;
-        startX += SPRITE_SIZE + 16;
+        label.y = opY + (SPRITE_SIZE * 0.75) / 2 + 6;
+        hitArea.x = startX - (SPRITE_SIZE * 0.75) / 2;
+        hitArea.y = opY - (SPRITE_SIZE * 0.75) / 2;
+        startX += SPRITE_SIZE * 0.75 + 20;
       }
     }
 
     // Layout item labels in center of room
     if (this.itemLabels.length > 0) {
-      const itemBaseY = h * 0.55;
+      const itemBaseY = h * 0.52;
       let itemY = itemBaseY;
       for (const label of this.itemLabels) {
         label.x = w / 2;
         label.y = itemY;
-        itemY += 18;
+        itemY += 22;
       }
     }
 
@@ -354,7 +388,7 @@ export class WorldScene {
       if (!layout && labelIdx < this.exitLabels.length) {
         const label = this.exitLabels[labelIdx];
         label.x = w / 2;
-        label.y = h - 20 - (Object.keys(exits).length - labelIdx) * 18;
+        label.y = h - 20 - (Object.keys(exits).length - labelIdx) * 22;
         labelIdx++;
         continue;
       }
@@ -365,7 +399,7 @@ export class WorldScene {
       if (labelIdx < this.exitLabels.length) {
         const label = this.exitLabels[labelIdx];
         label.x = cx;
-        label.y = cy + (dir.toLowerCase() === "north" || dir.toLowerCase() === "up" ? -22 : 22);
+        label.y = cy + (dir.toLowerCase() === "north" || dir.toLowerCase() === "up" ? -26 : 26);
         labelIdx++;
       }
     }
@@ -377,23 +411,15 @@ export class WorldScene {
         const entry = this.mobSprites.get(info.id);
         if (!entry) continue;
         const { sprite } = entry;
-
-        // Draw quest giver exclamation mark
-        if (info.questGiver) {
-          drawQuestMarker(this.roleGraphics, sprite.x, sprite.y);
-        }
-
-        // Draw role indicator dots
+        if (info.questGiver) drawQuestMarker(this.roleGraphics, sprite.x, sprite.y);
         drawRoleIcons(this.roleGraphics, sprite.x, sprite.y, info);
       }
     }
 
-    // Update exit hit areas
     this.layoutExitHitAreas(exits);
   }
 
   private layoutExitHitAreas(exits: Record<string, string>) {
-    // Clean up old hit areas
     for (const { area } of this.exitHitAreas) {
       this.container.removeChild(area);
       area.destroy();
@@ -410,7 +436,7 @@ export class WorldScene {
       const cx = layout.offsetX(w);
       const cy = layout.offsetY(h);
       const area = new Graphics();
-      area.rect(cx - 30, cy - 20, 60, 40);
+      area.rect(cx - 35, cy - 25, 70, 50);
       area.fill({ color: 0x000000, alpha: 0.001 });
       area.eventMode = "static";
       area.cursor = "pointer";
@@ -435,16 +461,16 @@ export class WorldScene {
     for (const dir of Object.keys(exits)) {
       const label = new Text({
         text: dir,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: EXIT_LABEL_COLOR },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: EXIT_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 1 } },
       });
       label.anchor.set(0.5);
-      label.alpha = 0.7;
+      label.alpha = 0.8;
       this.exitLabels.push(label);
       this.container.addChild(label);
     }
   }
 
-  private rebuildMobs(mobs: Array<{ id: string; name: string; image?: string | null }>) {
+  private rebuildMobs(mobs: Array<{ id: string; name: string; hp: number; maxHp: number; image?: string | null }>) {
     for (const { sprite, label, hitArea } of this.mobSprites.values()) {
       this.container.removeChild(sprite);
       this.container.removeChild(label);
@@ -468,7 +494,7 @@ export class WorldScene {
 
       const label = new Text({
         text: mob.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: MOB_LABEL_FONT_SIZE, fill: MOB_LABEL_COLOR },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: MOB_LABEL_FONT_SIZE, fill: MOB_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
 
@@ -479,9 +505,11 @@ export class WorldScene {
       hitArea.eventMode = "static";
       hitArea.cursor = "pointer";
 
-      const mobName = mob.name;
+      const mobData = mob;
       hitArea.on("pointerdown", () => {
-        canvasCallbacks.sendCommand?.(`look ${mobName}`);
+        const info = gameStateRef.current.mobInfo.find((m) => m.id === mobData.id) ?? null;
+        this.entityPopout.showMob(mobData.name, mobData.image, mobData.hp, mobData.maxHp, info);
+        this.backdropHit.visible = true;
       });
 
       this.container.addChild(sprite);
@@ -491,7 +519,7 @@ export class WorldScene {
     }
   }
 
-  private rebuildItems(items: Array<{ id: string; name: string }>) {
+  private rebuildItems(items: Array<{ id: string; name: string; image?: string | null }>) {
     for (const label of this.itemLabels) {
       this.container.removeChild(label);
       label.destroy();
@@ -500,17 +528,18 @@ export class WorldScene {
 
     for (const item of items) {
       const label = new Text({
-        text: `[${item.name}]`,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: ITEM_LABEL_COLOR },
+        text: `[ ${item.name} ]`,
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: ITEM_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.5, blur: 3, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
-      label.alpha = 0.8;
+      label.alpha = 0.9;
       label.eventMode = "static";
       label.cursor = "pointer";
 
-      const itemName = item.name;
+      const itemData = item;
       label.on("pointerdown", () => {
-        canvasCallbacks.sendCommand?.(`get ${itemName}`);
+        this.entityPopout.showItem(itemData.name, itemData.image);
+        this.backdropHit.visible = true;
       });
 
       this.itemLabels.push(label);
@@ -519,30 +548,46 @@ export class WorldScene {
   }
 
   private rebuildPlayers(players: Array<{ name: string; level: number }>) {
-    for (const { sprite, label } of this.playerSprites.values()) {
+    for (const { sprite, label, hitArea } of this.playerSprites.values()) {
       this.container.removeChild(sprite);
       this.container.removeChild(label);
+      this.container.removeChild(hitArea);
       sprite.destroy();
       label.destroy();
+      hitArea.destroy();
     }
     this.playerSprites.clear();
 
+    const otherSize = SPRITE_SIZE * 0.75;
     for (const player of players) {
       const sprite = new Sprite(Texture.WHITE);
-      sprite.width = SPRITE_SIZE * 0.8;
-      sprite.height = SPRITE_SIZE * 0.8;
+      sprite.width = otherSize;
+      sprite.height = otherSize;
       sprite.anchor.set(0.5);
       sprite.tint = 0x81a2be;
 
       const label = new Text({
         text: player.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: OTHER_PLAYER_LABEL_COLOR },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: OTHER_PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
 
+      const hitArea = new Graphics();
+      hitArea.rect(0, 0, otherSize, otherSize);
+      hitArea.fill({ color: 0x000000, alpha: 0.001 });
+      hitArea.eventMode = "static";
+      hitArea.cursor = "pointer";
+
+      const playerData = player;
+      hitArea.on("pointerdown", () => {
+        this.entityPopout.showPlayer(playerData.name, playerData.level);
+        this.backdropHit.visible = true;
+      });
+
       this.container.addChild(sprite);
       this.container.addChild(label);
-      this.playerSprites.set(player.name, { sprite, label });
+      this.container.addChild(hitArea);
+      this.playerSprites.set(player.name, { sprite, label, hitArea });
     }
   }
 
@@ -564,7 +609,7 @@ export class WorldScene {
       this.container.addChildAt(sprite, 0);
       this.background = sprite;
     } catch {
-      // Image not available; continue without background
+      // Image not available
     }
   }
 
@@ -576,7 +621,6 @@ export class WorldScene {
     }
 
     if (!spritePath) {
-      // Placeholder colored rectangle
       const sprite = new Sprite(Texture.WHITE);
       sprite.width = SPRITE_SIZE;
       sprite.height = SPRITE_SIZE;
@@ -596,7 +640,6 @@ export class WorldScene {
       this.container.addChild(sprite);
       this.playerSprite = sprite;
     } catch {
-      // Fallback to placeholder
       const sprite = new Sprite(Texture.WHITE);
       sprite.width = SPRITE_SIZE;
       sprite.height = SPRITE_SIZE;
@@ -621,6 +664,8 @@ export class WorldScene {
     for (const { area } of this.exitHitAreas) {
       area.destroy();
     }
+    this.minimap.destroy();
+    this.entityPopout.destroy();
     this.container.destroy({ children: true });
   }
 }

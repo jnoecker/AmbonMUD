@@ -5,13 +5,13 @@ import { CombatAnimator } from "../systems/CombatAnimator";
 import { GainPopupSystem } from "../systems/GainPopup";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 
-const SPRITE_SIZE = 80;
-const SMALL_SPRITE = 56;
-const HP_BAR_WIDTH = 100;
-const HP_BAR_HEIGHT = 8;
-const MANA_BAR_HEIGHT = 6;
-const LABEL_FONT_SIZE = 12;
-const PARTY_LABEL_FONT_SIZE = 11;
+const SPRITE_SIZE = 128;
+const SMALL_SPRITE = 80;
+const HP_BAR_WIDTH = 140;
+const HP_BAR_HEIGHT = 10;
+const MANA_BAR_HEIGHT = 8;
+const LABEL_FONT_SIZE = 15;
+const PARTY_LABEL_FONT_SIZE = 13;
 
 const PLAYER_TINT = 0x81a2be;
 const ENEMY_TINT = 0xf0c674;
@@ -68,7 +68,7 @@ export class BattleScene {
 
     this.playerHpText = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 10, fill: HP_TEXT_COLOR },
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 12, fill: HP_TEXT_COLOR },
     });
     this.playerHpText.anchor.set(0.5, 0);
 
@@ -80,7 +80,7 @@ export class BattleScene {
 
     this.enemyHpText = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 10, fill: HP_TEXT_COLOR },
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 12, fill: HP_TEXT_COLOR },
     });
     this.enemyHpText.anchor.set(0.5, 0);
 
