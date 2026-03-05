@@ -16,6 +16,7 @@ const MOB_LABEL_FONT_SIZE = 14;
 const ITEM_LABEL_FONT_SIZE = 13;
 const ARROW_SIZE = 22;
 const SPRITE_SIZE = 128;
+const ITEM_SPRITE_SIZE = 64;
 const ROLE_ICON_SIZE = 12;
 const ROLE_ICON_GAP = 4;
 const TRANSITION_DURATION_MS = 300;
@@ -125,7 +126,7 @@ export class WorldScene {
   private playerSprite: Sprite | null = null;
   private playerLabel: Text;
   private mobSprites: Map<string, { sprite: Sprite; label: Text; hitArea: Graphics }> = new Map();
-  private itemLabels: Text[] = [];
+  private itemSprites: Array<{ sprite: Sprite; label: Text; hitArea: Graphics }> = [];
   private playerSprites: Map<string, { sprite: Sprite; label: Text; hitArea: Graphics }> = new Map();
   private roleGraphics = new Graphics();
   private statusEffects = new StatusEffectDisplay();
@@ -330,28 +331,33 @@ export class WorldScene {
     // Status effects above the player sprite
     this.statusEffects.update(gameStateRef.current.effects, playerX, playerY - SPRITE_SIZE / 2 - 32);
 
-    // Layout mobs in lower-right
+    // Layout mobs spread across the right portion, evenly spaced
     const mobEntries = [...this.mobSprites.values()];
     if (mobEntries.length > 0) {
-      const mobY = h * 0.70;
-      const spacing = SPRITE_SIZE + 24;
-      const totalWidth = mobEntries.length * spacing - 24;
-      let startX = w - totalWidth / 2 - SPRITE_SIZE / 2 - 24;
+      const mobY = h * 0.68;
+      const mobAreaLeft = w * 0.38;
+      const mobAreaRight = w - 24;
+      const mobAreaWidth = mobAreaRight - mobAreaLeft;
+      const mobSpacing = mobEntries.length === 1
+        ? 0
+        : Math.min(SPRITE_SIZE + 24, mobAreaWidth / mobEntries.length);
+      const totalMobWidth = (mobEntries.length - 1) * mobSpacing;
+      let mobX = mobAreaLeft + (mobAreaWidth - totalMobWidth) / 2;
       for (const { sprite, label, hitArea } of mobEntries) {
-        sprite.x = startX;
+        sprite.x = mobX;
         sprite.y = mobY;
-        label.x = startX;
+        label.x = mobX;
         label.y = mobY + SPRITE_SIZE / 2 + 6;
-        hitArea.x = startX - SPRITE_SIZE / 2;
+        hitArea.x = mobX - SPRITE_SIZE / 2;
         hitArea.y = mobY - SPRITE_SIZE / 2;
-        startX -= spacing;
+        mobX += mobSpacing;
       }
     }
 
     // Layout other players near the player sprite
     const otherPlayerEntries = [...this.playerSprites.values()];
     if (otherPlayerEntries.length > 0) {
-      const opY = h * 0.58;
+      const opY = h * 0.55;
       let startX = playerX + SPRITE_SIZE / 2 + 20;
       for (const { sprite, label, hitArea } of otherPlayerEntries) {
         sprite.x = startX;
@@ -364,14 +370,20 @@ export class WorldScene {
       }
     }
 
-    // Layout item labels in center of room
-    if (this.itemLabels.length > 0) {
-      const itemBaseY = h * 0.52;
-      let itemY = itemBaseY;
-      for (const label of this.itemLabels) {
-        label.x = w / 2;
-        label.y = itemY;
-        itemY += 22;
+    // Layout item sprites in a horizontal row, centered
+    if (this.itemSprites.length > 0) {
+      const itemY = h * 0.42;
+      const itemSpacing = Math.min(ITEM_SPRITE_SIZE + 16, (w * 0.6) / Math.max(1, this.itemSprites.length));
+      const totalItemWidth = (this.itemSprites.length - 1) * itemSpacing;
+      let itemX = w / 2 - totalItemWidth / 2;
+      for (const { sprite, label, hitArea } of this.itemSprites) {
+        sprite.x = itemX;
+        sprite.y = itemY;
+        label.x = itemX;
+        label.y = itemY + ITEM_SPRITE_SIZE / 2 + 2;
+        hitArea.x = itemX - ITEM_SPRITE_SIZE / 2;
+        hitArea.y = itemY - ITEM_SPRITE_SIZE / 2;
+        itemX += itemSpacing;
       }
     }
 
@@ -509,7 +521,7 @@ export class WorldScene {
       hitArea.on("pointerdown", () => {
         const info = gameStateRef.current.mobInfo.find((m) => m.id === mobData.id) ?? null;
         this.entityPopout.showMob(mobData.name, mobData.image, mobData.hp, mobData.maxHp, info);
-        this.backdropHit.visible = true;
+        this.showPopout();
       });
 
       this.container.addChild(sprite);
@@ -520,30 +532,49 @@ export class WorldScene {
   }
 
   private rebuildItems(items: Array<{ id: string; name: string; image?: string | null }>) {
-    for (const label of this.itemLabels) {
+    for (const { sprite, label, hitArea } of this.itemSprites) {
+      this.container.removeChild(sprite);
       this.container.removeChild(label);
+      this.container.removeChild(hitArea);
+      sprite.destroy();
       label.destroy();
+      hitArea.destroy();
     }
-    this.itemLabels = [];
+    this.itemSprites = [];
 
     for (const item of items) {
+      const sprite = new Sprite(Texture.WHITE);
+      sprite.width = ITEM_SPRITE_SIZE;
+      sprite.height = ITEM_SPRITE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.tint = 0x8abeb7;
+
+      if (item.image) {
+        this.loadSpriteTexture(sprite, item.image);
+      }
+
       const label = new Text({
-        text: `[ ${item.name} ]`,
+        text: item.name,
         style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: ITEM_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.5, blur: 3, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
-      label.alpha = 0.9;
-      label.eventMode = "static";
-      label.cursor = "pointer";
+
+      const hitArea = new Graphics();
+      hitArea.rect(0, 0, ITEM_SPRITE_SIZE, ITEM_SPRITE_SIZE);
+      hitArea.fill({ color: 0x000000, alpha: 0.001 });
+      hitArea.eventMode = "static";
+      hitArea.cursor = "pointer";
 
       const itemData = item;
-      label.on("pointerdown", () => {
+      hitArea.on("pointerdown", () => {
         this.entityPopout.showItem(itemData.name, itemData.image);
-        this.backdropHit.visible = true;
+        this.showPopout();
       });
 
-      this.itemLabels.push(label);
+      this.container.addChild(sprite);
       this.container.addChild(label);
+      this.container.addChild(hitArea);
+      this.itemSprites.push({ sprite, label, hitArea });
     }
   }
 
@@ -581,7 +612,7 @@ export class WorldScene {
       const playerData = player;
       hitArea.on("pointerdown", () => {
         this.entityPopout.showPlayer(playerData.name, playerData.level);
-        this.backdropHit.visible = true;
+        this.showPopout();
       });
 
       this.container.addChild(sprite);
@@ -658,6 +689,13 @@ export class WorldScene {
     } catch {
       // Keep placeholder tint
     }
+  }
+
+  private showPopout() {
+    // Re-add backdrop and popout so they render on top of dynamically added sprites
+    this.container.addChild(this.backdropHit);
+    this.container.addChild(this.entityPopout.container);
+    this.backdropHit.visible = true;
   }
 
   destroy() {

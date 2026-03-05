@@ -48,6 +48,9 @@ export class BattleScene {
   private statusEffects = new StatusEffectDisplay();
   private uiGraphics = new Graphics();
 
+  private background: Sprite | null = null;
+  private lastRoomImage: string | null | undefined = "\0";
+
   private lastPlayerSpritePath: string | null = null;
   private lastEnemyImage: string | null = null;
   private lastPartyKey = "";
@@ -103,6 +106,10 @@ export class BattleScene {
   resize(width: number, height: number) {
     this.width = width;
     this.height = height;
+    if (this.background) {
+      this.background.width = width;
+      this.background.height = height;
+    }
   }
 
   /** Called when entering battle scene */
@@ -112,6 +119,11 @@ export class BattleScene {
     this.container.alpha = 0;
     this.combatAnimator.clear();
     this.gainPopups.clear();
+    // Reset tracking so update() re-creates everything
+    this.lastRoomImage = "\0";
+    this.lastPlayerSpritePath = "\0";
+    this.lastEnemyImage = "\0";
+    this.lastPartyKey = "\0";
   }
 
   update(deltaMs: number) {
@@ -126,7 +138,13 @@ export class BattleScene {
     }
 
     const state = gameStateRef.current;
-    const { vitals, character, combatTarget, groupInfo } = state;
+    const { vitals, character, combatTarget, groupInfo, room } = state;
+
+    // Update room background
+    if (room.image !== this.lastRoomImage) {
+      this.lastRoomImage = room.image;
+      this.loadBackground(room.image ?? null);
+    }
 
     // Update player sprite
     const spritePath = character.sprite;
@@ -193,9 +211,9 @@ export class BattleScene {
 
     this.uiGraphics.clear();
 
-    // Subtle battle background tint
+    // Red-tinted combat overlay on top of room background
     this.uiGraphics.rect(0, 0, w, h);
-    this.uiGraphics.fill({ color: 0x1a1a2e, alpha: 0.3 });
+    this.uiGraphics.fill({ color: 0x2a0a0a, alpha: 0.55 });
 
     // Ground line
     const groundY = h * 0.75;
@@ -250,19 +268,22 @@ export class BattleScene {
     this.enemyLabel.x = enemyPos.x;
     this.enemyLabel.y = enemyPos.y + SPRITE_SIZE / 2 + 6;
 
-    // Enemy HP bar
-    const enemyHp = combatTarget?.targetHp ?? 0;
-    const enemyMaxHp = combatTarget?.targetMaxHp ?? 1;
-    const enemyHpPct = percent(enemyHp, enemyMaxHp);
+    // Enemy HP bar (only when we have a target)
     this.enemyHpBar.clear();
-    this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + SPRITE_SIZE / 2 + 24, HP_BAR_WIDTH, HP_BAR_HEIGHT, 2);
-    this.enemyHpBar.fill(HP_BG_COLOR);
-    if (enemyHpPct > 0) {
-      this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + SPRITE_SIZE / 2 + 24, HP_BAR_WIDTH * enemyHpPct / 100, HP_BAR_HEIGHT, 2);
-      this.enemyHpBar.fill(0xef5350);
+    if (combatTarget?.targetName) {
+      const enemyHp = combatTarget.targetHp ?? 0;
+      const enemyMaxHp = combatTarget.targetMaxHp ?? 1;
+      const enemyHpPct = percent(enemyHp, enemyMaxHp);
+      this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + SPRITE_SIZE / 2 + 24, HP_BAR_WIDTH, HP_BAR_HEIGHT, 2);
+      this.enemyHpBar.fill(HP_BG_COLOR);
+      if (enemyHpPct > 0) {
+        this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + SPRITE_SIZE / 2 + 24, HP_BAR_WIDTH * enemyHpPct / 100, HP_BAR_HEIGHT, 2);
+        this.enemyHpBar.fill(0xef5350);
+      }
+      this.enemyHpText.text = `${enemyHp}/${enemyMaxHp}`;
+    } else {
+      this.enemyHpText.text = "";
     }
-
-    this.enemyHpText.text = combatTarget?.targetName ? `${enemyHp}/${enemyMaxHp}` : "";
     this.enemyHpText.x = enemyPos.x;
     this.enemyHpText.y = enemyPos.y + SPRITE_SIZE / 2 + 34;
 
@@ -330,6 +351,26 @@ export class BattleScene {
       this.container.addChild(label);
       this.container.addChild(hpBar);
       this.partyMembers.push({ sprite, label, hpBar });
+    }
+  }
+
+  private async loadBackground(imagePath: string | null) {
+    if (this.background) {
+      this.container.removeChild(this.background);
+      this.background.destroy();
+      this.background = null;
+    }
+    if (!imagePath) return;
+    try {
+      const texture = await Assets.load(imagePath);
+      const sprite = new Sprite(texture);
+      sprite.width = this.width;
+      sprite.height = this.height;
+      sprite.alpha = 0.5;
+      this.container.addChildAt(sprite, 0); // behind everything
+      this.background = sprite;
+    } catch {
+      // No background
     }
   }
 

@@ -1,4 +1,4 @@
-import { Container, Graphics, Text, Sprite, Texture, Assets } from "pixi.js";
+import { Container, Graphics, Text, Sprite, Texture, Assets, Rectangle } from "pixi.js";
 import { canvasCallbacks } from "../GameStateBridge";
 
 const POPOUT_WIDTH = 200;
@@ -28,7 +28,7 @@ export class EntityPopout {
   private previewSprite: Sprite | null = null;
   private titleText: Text;
   private subtitleText: Text;
-  private buttons: Array<{ bg: Graphics; label: Text }> = [];
+  private buttons: Container[] = [];
   private closeBtn: Graphics;
   private visible = false;
   private width = 0;
@@ -102,11 +102,9 @@ export class EntityPopout {
 
   private show(title: string, subtitle: string, image: string | null, tint: number, actions: PopoutAction[]) {
     // Clear old buttons
-    for (const { bg, label } of this.buttons) {
-      this.container.removeChild(bg);
-      this.container.removeChild(label);
-      bg.destroy();
-      label.destroy();
+    for (const btn of this.buttons) {
+      this.container.removeChild(btn);
+      btn.destroy({ children: true });
     }
     this.buttons = [];
 
@@ -169,48 +167,58 @@ export class EntityPopout {
     this.subtitleText.x = cx;
     this.subtitleText.y = popY + titleBottom;
 
-    // Create action buttons
+    // Create action buttons — each button is a Container with a fixed hitArea.
+    // Graphics + Text live inside it so pointer events are handled on the
+    // Container and never lost to child overlap or Graphics-bounds shifts.
+    const btnW = POPOUT_WIDTH - POPOUT_PADDING * 2;
     let btnY = popY + buttonsTop;
     for (const action of actions) {
-      const btnBg = new Graphics();
-      btnBg.roundRect(popX + POPOUT_PADDING, btnY, POPOUT_WIDTH - POPOUT_PADDING * 2, BUTTON_HEIGHT, BUTTON_RADIUS);
-      btnBg.fill(BUTTON_BG);
-      btnBg.roundRect(popX + POPOUT_PADDING, btnY, POPOUT_WIDTH - POPOUT_PADDING * 2, BUTTON_HEIGHT, BUTTON_RADIUS);
-      btnBg.stroke({ color: action.color, width: 1, alpha: 0.5 });
-      btnBg.eventMode = "static";
-      btnBg.cursor = "pointer";
+      const btnContainer = new Container();
+      btnContainer.x = popX + POPOUT_PADDING;
+      btnContainer.y = btnY;
+      btnContainer.eventMode = "static";
+      btnContainer.cursor = "pointer";
+      btnContainer.hitArea = new Rectangle(0, 0, btnW, BUTTON_HEIGHT);
 
-      const cmd = action.command;
-      btnBg.on("pointerdown", () => {
-        canvasCallbacks.sendCommand?.(cmd);
-        this.hide();
-      });
-      btnBg.on("pointerover", () => {
+      const btnBg = new Graphics();
+      const drawNormal = () => {
         btnBg.clear();
-        btnBg.roundRect(popX + POPOUT_PADDING, btnY, POPOUT_WIDTH - POPOUT_PADDING * 2, BUTTON_HEIGHT, BUTTON_RADIUS);
-        btnBg.fill(BUTTON_HOVER_BG);
-        btnBg.roundRect(popX + POPOUT_PADDING, btnY, POPOUT_WIDTH - POPOUT_PADDING * 2, BUTTON_HEIGHT, BUTTON_RADIUS);
-        btnBg.stroke({ color: action.color, width: 1.5, alpha: 0.8 });
-      });
-      btnBg.on("pointerout", () => {
-        btnBg.clear();
-        btnBg.roundRect(popX + POPOUT_PADDING, btnY, POPOUT_WIDTH - POPOUT_PADDING * 2, BUTTON_HEIGHT, BUTTON_RADIUS);
+        btnBg.roundRect(0, 0, btnW, BUTTON_HEIGHT, BUTTON_RADIUS);
         btnBg.fill(BUTTON_BG);
-        btnBg.roundRect(popX + POPOUT_PADDING, btnY, POPOUT_WIDTH - POPOUT_PADDING * 2, BUTTON_HEIGHT, BUTTON_RADIUS);
+        btnBg.roundRect(0, 0, btnW, BUTTON_HEIGHT, BUTTON_RADIUS);
         btnBg.stroke({ color: action.color, width: 1, alpha: 0.5 });
-      });
+      };
+      const drawHover = () => {
+        btnBg.clear();
+        btnBg.roundRect(0, 0, btnW, BUTTON_HEIGHT, BUTTON_RADIUS);
+        btnBg.fill(BUTTON_HOVER_BG);
+        btnBg.roundRect(0, 0, btnW, BUTTON_HEIGHT, BUTTON_RADIUS);
+        btnBg.stroke({ color: action.color, width: 1.5, alpha: 0.8 });
+      };
+      drawNormal();
 
       const btnLabel = new Text({
         text: action.label,
         style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 12, fill: BUTTON_TEXT_COLOR },
       });
       btnLabel.anchor.set(0.5);
-      btnLabel.x = cx;
-      btnLabel.y = btnY + BUTTON_HEIGHT / 2;
+      btnLabel.x = btnW / 2;
+      btnLabel.y = BUTTON_HEIGHT / 2;
+      btnLabel.eventMode = "none";
 
-      this.container.addChild(btnBg);
-      this.container.addChild(btnLabel);
-      this.buttons.push({ bg: btnBg, label: btnLabel });
+      btnContainer.addChild(btnBg);
+      btnContainer.addChild(btnLabel);
+
+      const cmd = action.command;
+      btnContainer.on("pointerdown", () => {
+        canvasCallbacks.sendCommand?.(cmd);
+        this.hide();
+      });
+      btnContainer.on("pointerover", drawHover);
+      btnContainer.on("pointerout", drawNormal);
+
+      this.container.addChild(btnContainer);
+      this.buttons.push(btnContainer);
 
       btnY += BUTTON_HEIGHT + BUTTON_GAP;
     }
