@@ -1,6 +1,6 @@
 # V4 Game Client — PixiJS Canvas on v3
 
-> JRPG-style visual layer added incrementally to the existing v3 web client. No rewrite — PixiJS renders alongside existing React panels, sharing the same state and GMCP infrastructure.
+> JRPG-style game client built by replacing the xterm terminal in the existing v3 web client with a PixiJS canvas. The canvas becomes the primary game view; the terminal is available as a popout for debugging and features not yet visual. All existing GMCP infrastructure, React panels, and state management are preserved.
 
 ## Why Evolve v3 Instead of Rewriting
 
@@ -21,25 +21,34 @@ By adding PixiJS directly to `web-v3/`, we:
 | **PixiJS** | 8.x | 2D WebGL/WebGPU sprite engine for game canvas |
 | **@pixi/react** | (optional) | React wrapper for PixiJS — evaluate during Phase 1 |
 
-Everything else stays: React 19, Vite, TypeScript, xterm.js. No Tauri, no Zustand migration, no Tailwind.
+Everything else stays: React 19, Vite, TypeScript, xterm.js (retained for popout terminal). No Tauri, no Zustand migration, no Tailwind.
 
 ## Architecture
 
+The PixiJS canvas **replaces the xterm terminal** in `PlayPanel` as the primary game view. The terminal moves to a popout (like the existing map/equipment popouts). Surrounding panels (World, Chat, Character) stay in place.
+
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                 Existing v3 App Shell                     │
+│                      App Shell                            │
 │                                                           │
-│  ┌────────────────┐  ┌─────────────────────────────────┐ │
-│  │  React Panels   │  │       PixiJS Canvas (NEW)       │ │
-│  │  (unchanged)    │  │  ┌───────────────────────────┐  │ │
-│  │                 │  │  │     SceneManager          │  │ │
-│  │  - PlayPanel    │  │  │  ┌─────────┐ ┌─────────┐ │  │ │
-│  │  - WorldPanel   │  │  │  │ World   │ │ Battle  │ │  │ │
-│  │  - ChatPanel    │  │  │  │ Scene   │ │ Scene   │ │  │ │
-│  │  - CharPanel    │  │  │  └─────────┘ └─────────┘ │  │ │
-│  │  - CombatPanel  │  │  └───────────────────────────┘  │ │
-│  │  - AdminPanel   │  │                                  │ │
-│  └────────────────┘  └─────────────────────────────────┘ │
+│  ┌──────────────────────────────┐  ┌──────────────────┐  │
+│  │     PixiJS Canvas (NEW)      │  │  React Panels     │  │
+│  │  ┌────────────────────────┐  │  │  (unchanged)      │  │
+│  │  │     SceneManager       │  │  │                    │  │
+│  │  │  ┌────────┐ ┌───────┐ │  │  │  - WorldPanel     │  │
+│  │  │  │ World  │ │Battle │ │  │  │  - ChatPanel      │  │
+│  │  │  │ Scene  │ │Scene  │ │  │  │  - CharPanel      │  │
+│  │  │  └────────┘ └───────┘ │  │  │  - CombatPanel    │  │
+│  │  └────────────────────────┘  │  │  - AdminPanel     │  │
+│  │                               │  │                    │  │
+│  │  [Command Input Bar]         │  └──────────────────┘  │
+│  │  [🖥 Terminal] button        │                         │
+│  └──────────────────────────────┘                         │
+│                                                           │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │  Popout Layer (existing)                              │ │
+│  │  map | equipment | room | help | terminal (NEW)       │ │
+│  └─────────────────────────────────────────────────────┘ │
 │                                                           │
 │  ┌─────────────────────────────────────────────────────┐ │
 │  │          GameStateBridge (NEW)                        │ │
@@ -51,6 +60,14 @@ Everything else stays: React 19, Vite, TypeScript, xterm.js. No Tauri, no Zustan
 │  └─────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────┘
 ```
+
+### Terminal as Popout
+
+The xterm terminal is not removed — it moves to a new `"terminal"` popout panel (same mechanism as the existing map, equipment, and help popouts in `PopoutLayer`). A button below the canvas (or in the header) opens it. The terminal continues to receive all server text output so it stays in sync. This provides:
+
+- A fallback for any gameplay that doesn't have canvas representation yet
+- A debugging view to see raw server output
+- Familiar MUD experience for players who prefer text
 
 ### State Bridge Pattern
 
@@ -99,7 +116,7 @@ export const canvasEvents = {
 
 ## New File Structure
 
-All new files go under `web-v3/src/canvas/`. Existing files are untouched unless noted.
+All new files go under `web-v3/src/canvas/`. Existing files are modified minimally.
 
 ```
 web-v3/src/
@@ -126,22 +143,27 @@ web-v3/src/
 │   ├── tilesets/                    # NEW — world tileset images
 │   └── ui/                          # NEW — canvas UI element graphics
 │
-│  (existing files — unchanged)
-├── App.tsx                          # Modified: add GameStateBridge sync + PixiCanvas
+│  (existing files)
+├── App.tsx                          # Modified: swap terminal for canvas, terminal to popout
 ├── gmcp/applyGmcpPackage.ts        # Modified: also push combat/gain events to CanvasEventBus
-├── components/panels/...            # Unchanged
+├── components/panels/PlayPanel.tsx  # Modified: canvas replaces terminal host div
+├── components/PopoutLayer.tsx       # Modified: add "terminal" popout variant
+├── types.ts                         # Modified: add "terminal" to PopoutPanel union
 ├── hooks/...                        # Unchanged
-├── types.ts                         # Unchanged (canvas code imports existing types)
 └── ...
 ```
 
 ### Changes to Existing Files
 
-Only two files need modification:
+1. **`App.tsx`** — Replace the `terminalHostRef` div in the main layout with `<PixiCanvas />`. Move xterm initialization into the terminal popout. Add `useEffect` to sync `gameStateRef`. The command input bar stays in place below the canvas — it sends commands the same way it does today.
 
-1. **`App.tsx`** — Add `<PixiCanvas />` component in the layout, add `useEffect` to sync `gameStateRef`, conditionally show/hide canvas vs terminal based on a toggle or game state.
+2. **`components/panels/PlayPanel.tsx`** — The `terminalHostRef` div is replaced by the `<PixiCanvas />` component. The room image header, command composer, and action buttons (move, flee, talk, attack, pickup) remain unchanged. Add a small "Terminal" button that opens the terminal popout.
 
-2. **`gmcp/applyGmcpPackage.ts`** — In the `Char.Combat.Event` and `Char.Gain` handlers, also push to `canvasEvents` so the canvas can animate them independently of React state.
+3. **`components/PopoutLayer.tsx`** — Add a `"terminal"` case that renders the xterm terminal at full popout size. The terminal continues receiving all server text via `onTextMessage` regardless of whether the popout is open.
+
+4. **`types.ts`** — Add `"terminal"` to the `PopoutPanel` union type.
+
+5. **`gmcp/applyGmcpPackage.ts`** — In the `Char.Combat.Event` and `Char.Gain` handlers, also push to `canvasEvents` so the canvas can animate them independently of React state.
 
 ## GMCP Packages Driving the Canvas
 
@@ -167,18 +189,20 @@ All packages below are **already parsed by v3**. The canvas reads them via the s
 
 ## Phase Breakdown
 
-### Phase 1: PixiJS Foundation + World Scene
+### Phase 1: Canvas Replaces Terminal
 
-**Goal:** PixiJS canvas renders the current room with the player sprite. Existing panels continue working alongside it.
+**Goal:** PixiJS canvas takes over the terminal's space in PlayPanel. Terminal moves to a popout. Existing side panels unchanged.
 
 - Add `pixi.js` dependency to `web-v3/package.json`
 - Create `GameStateBridge.ts` and `CanvasEventBus.ts`
 - Create `PixiCanvas.tsx` React wrapper (mounts PixiJS `Application`, handles resize)
 - Implement `SceneManager` with `WorldScene` as the initial scene
 - `WorldScene`: render room title/image as background, player sprite centered, exit indicators (directional arrows or paths), NPC sprites from `Room.Mobs`
-- Add `<PixiCanvas />` to `App.tsx` layout — initially as an optional view alongside the terminal
-- Add toggle or layout mode to switch between terminal-primary and canvas-primary views
+- Modify `PlayPanel.tsx`: replace `terminalHostRef` div with `<PixiCanvas />`; keep command input bar and action buttons below canvas
+- Add "Terminal" button to open xterm in a popout (via existing `PopoutLayer` mechanism)
+- Move xterm setup into popout — terminal stays connected and receives all text even when popout is closed
 - Wire `useEffect` in `App.tsx` to sync state bridge
+- Pre-login state (before character exists): canvas shows a static scene or the login banner; command input still works for login flow
 
 **Art approach:** Start with simple colored rectangles / placeholder sprites. Art can be swapped in later without code changes.
 
@@ -187,17 +211,17 @@ All packages below are **already parsed by v3**. The canvas reads them via the s
 **Goal:** Moving between rooms feels fluid. NPCs show their role visually.
 
 - `TransitionScene`: fade or slide animation triggered when `Room.Info` changes
-- NPC role overlays from `Room.MobInfo` — quest giver (❗), shop (🛒), dialogue (💬) icons above mob sprites
+- NPC role overlays from `Room.MobInfo` — quest giver, shop, dialogue icons above mob sprites
 - Other players in room rendered as labeled sprites (from `Room.Players`)
 - Room items rendered as small sprites on the ground (from `Room.Items`)
-- Click-to-interact on NPC/item sprites → sends commands via existing `sendCommand`
+- Click-to-interact on NPC/item sprites — sends commands via existing `sendCommand`
 
 ### Phase 3: Battle Scene + Combat Animations
 
 **Goal:** Combat is visually represented with a JRPG-style battle view.
 
 - `BattleScene`: triggered when `Char.Combat` provides a target (or `Char.Vitals.inCombat` becomes true)
-- Player sprite on one side, enemy sprite(s) on the other
+- **Party on the left, enemies on the right** (Final Fantasy layout). Group members from `Group.Info` shown as stacked sprites on the left if in a party; solo player otherwise
 - `CombatAnimator` drains `canvasEvents.combatEvents` each frame and queues animations:
   - `meleeHit` → slash animation + red damage number
   - `abilityHit` → spell VFX (particle burst) + damage number
@@ -231,15 +255,25 @@ All packages below are **already parsed by v3**. The canvas reads them via the s
 
 ## Key Design Decisions
 
-### Canvas Placement in Layout
+### Layout Vision: JRPG Canvas + WoW-Style Panels
 
-The PixiJS canvas is **not a replacement** for the terminal. It's an additional view. Options:
+The overall feel is a **JRPG game view** (canvas fills the main area) surrounded by **WoW-style panels** that can be opened, closed, and rearranged:
 
-- **Side-by-side**: Canvas on one side, terminal + panels on the other (desktop)
-- **Tabbed**: Canvas as a new tab alongside Play/World/Chat/Character (mobile)
-- **Overlay**: Canvas behind the terminal, with terminal having a semi-transparent background
+- **Canvas** occupies the space the terminal previously held — it's the primary game view
+- **Side panels** (World, Chat, Character) stay in their current positions as persistent HUD elements
+- **Popouts** (map, equipment, room details, terminal) overlay the canvas when opened — like WoW's bag/character/quest windows
+- Over time, more game features move from side panels into the canvas or into popouts, trending toward a clean JRPG view with on-demand HUD panels
 
-The exact layout is a UI decision that can be iterated on. Phase 1 starts with the simplest option (a new panel/tab) and refines from there.
+The existing v3 panel infrastructure already supports this pattern. The `PopoutLayer` component handles overlay rendering, and the `activePopout` state machine manages which one is visible.
+
+### Terminal Popout Behavior
+
+The xterm terminal is always mounted (even when the popout is closed) so it stays in sync with server output. When the popout opens, the terminal is reparented into the popout container and `fitAddon.fit()` is called. This means:
+
+- No messages are lost when the popout is closed
+- Opening the terminal shows full scrollback history
+- Players can check raw server output any time without losing their place
+- The terminal popout is useful as a debug tool during canvas development — features not yet represented visually are still accessible via text
 
 ### Combat Event Animation Queue
 
