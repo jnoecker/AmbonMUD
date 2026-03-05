@@ -895,7 +895,7 @@ class GmcpEmitter(
         @get:JsonProperty("class") val playerClass: String,
         val level: Int,
         val sprite: String?,
-        val isStaff: Boolean = false,
+        val isStaff: Boolean,
     )
 
     private data class CommChannelPayload(

@@ -3642,6 +3642,61 @@ body {
   flex-shrink: 0;
 }
 
+/* ── Help trigger button ────────────────────────────────────────────── */
+
+.help-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+}
+
+.help-trigger-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.help-trigger-label {
+  font-size: 0.82rem;
+}
+
+/* ── Help content inside popout ─────────────────────────────────────── */
+
+.help-search-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-bottom: var(--space-3);
+}
+
+.help-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid rgb(131 147 186 / 30%);
+  border-radius: var(--radius-md);
+  background: rgb(47 52 70 / 60%);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+.help-search-input::placeholder {
+  color: #8f9cbe;
+}
+
+.help-search-input:focus {
+  border-color: rgb(123 132 170 / 80%);
+  box-shadow: 0 0 0 2px rgb(126 107 162 / 24%);
+}
+
+.help-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
 /* ── Staff admin panel ──────────────────────────────────────────── */
 
 .staff-admin-button {
@@ -3666,6 +3721,66 @@ body {
   gap: var(--space-4);
 }
 
+.help-category-title {
+  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-2);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid rgb(131 147 186 / 20%);
+}
+
+.help-command-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+}
+
+.help-command-entry {
+  display: flex;
+  gap: var(--space-3);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background-color 120ms;
+}
+
+.help-command-entry:hover {
+  background: rgb(131 147 186 / 10%);
+}
+
+.help-command-syntax {
+  flex: 0 0 auto;
+  min-width: 200px;
+  font-family: "JetBrains Mono", "Cascadia Mono", monospace;
+  font-size: 0.82rem;
+  color: var(--accent-lavender, #c4b8e8);
+  white-space: nowrap;
+}
+
+.help-command-desc {
+  flex: 1;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .help-command-entry {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .help-command-syntax {
+    min-width: 0;
+  }
+
+  .help-trigger-label {
+    display: none;
+  }
+}
 .admin-action-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
