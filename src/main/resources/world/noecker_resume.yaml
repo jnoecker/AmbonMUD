@@ -8,6 +8,7 @@ startRoom: lobby
 
 mobs:
   ambon_architect:
+    image: noecker_resume/ambon_architect.png
     name: "the Resident Architect"
     room: ambon_workshop
     dialogue:
@@ -117,6 +118,7 @@ mobs:
           - text: "Impressive. Thanks."
 
   impostor_syndrome:
+    image: noecker_resume/impostor_syndrome.png
     name: "an Impostor Syndrome Wisp"
     room: lobby
     tier: weak
@@ -130,6 +132,7 @@ mobs:
     respawnSeconds: 120
 
   memory_leak:
+    image: noecker_resume/memory_leak.png
     name: "a Memory Leak"
     room: proteus_bay
     tier: weak
@@ -141,6 +144,7 @@ mobs:
     respawnSeconds: 90
 
   null_pointer_exception:
+    image: noecker_resume/null_pointer_exception.png
     name: "a NullPointerException"
     room: juola_lab
     tier: weak
@@ -153,6 +157,7 @@ mobs:
     respawnSeconds: 120
 
   scope_creep:
+    image: noecker_resume/scope_creep.png
     name: "a Scope Creep"
     room: freelance_hq
     tier: weak
@@ -164,6 +169,7 @@ mobs:
     respawnSeconds: 60
 
   legacy_monolith:
+    image: noecker_resume/legacy_monolith.png
     name: "the Legacy Monolith"
     room: migration_bridge
     tier: weak
@@ -177,6 +183,7 @@ mobs:
     respawnSeconds: 300
 
   fda_auditor:
+    image: noecker_resume/fda_auditor.png
     name: "an FDA Compliance Auditor"
     room: fda_archive
     tier: weak
@@ -188,6 +195,7 @@ mobs:
     respawnSeconds: 150
 
   runaway_lambda:
+    image: noecker_resume/runaway_lambda.png
     name: "a Runaway Lambda"
     room: lambda_shrine
     tier: weak
@@ -199,6 +207,7 @@ mobs:
     respawnSeconds: 30
 
   budget_committee:
+    image: noecker_resume/budget_committee.png
     name: "a Budget Committee"
     room: savings_vault
     tier: weak
@@ -211,6 +220,7 @@ mobs:
     respawnSeconds: 120
 
   phone_screen:
+    image: noecker_resume/phone_screen.png
     name: "a Technical Phone Screen"
     room: karat_studio
     tier: weak
@@ -222,6 +232,7 @@ mobs:
     respawnSeconds: 90
 
   stack_overflow_error:
+    image: noecker_resume/stack_overflow_error.png
     name: "a Stack Overflow Error"
     room: gatech_annex
     tier: weak
@@ -235,6 +246,7 @@ mobs:
 
 items:
   lambda_arrow:
+    image: noecker_resume/lambda_arrow.png
     displayName: "a Lambda Arrow"
     description: "Small, stateless, and devastatingly focused. Engraved: 'Do one thing well and exit cleanly.'"
     slot: hand
@@ -243,6 +255,7 @@ items:
     room: lambda_shrine
 
   ci_cd_wrench:
+    image: noecker_resume/ci_cd_wrench.png
     displayName: "a CI/CD Wrench"
     description: "Reduced deployment time by 60%. Turn it left: pipeline improves. Turn it right: someone requests another stage."
     slot: hand
@@ -251,6 +264,7 @@ items:
     room: pipeline_bay
 
   type_safe_compiler:
+    image: noecker_resume/type_safe_compiler.png
     displayName: "a Type-Safe Compiler"
     description: "Refuses to let you swing it incorrectly. Kotlin-forged; catches your runtime errors before they hurt anyone."
     slot: hand
@@ -259,6 +273,7 @@ items:
     room: gatech_annex
 
   well_architected_shield:
+    image: noecker_resume/well_architected_shield.png
     displayName: "a Well-Architected Shield"
     description: "Five pillars embossed on the face: Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization. Stops questionable cloud defaults cold."
     slot: hand
@@ -267,6 +282,7 @@ items:
     room: migration_bridge
 
   aws_cert_badge:
+    image: noecker_resume/aws_cert_badge.png
     displayName: "an AWS Certification Badge"
     description: "Stamped: 'Solutions Architect – Associate, Aug 2023'. It hums softly when you start drawing box-and-arrow diagrams."
     slot: head
@@ -276,6 +292,7 @@ items:
     room: cloud_platform
 
   valedictorian_medal:
+    image: noecker_resume/valedictorian_medal.png
     displayName: "a Valedictorian Medal"
     description: "Summa cum laude. Valedictorian in Computer Science, Mathematics, and Liberal Arts at Duquesne University. Bright enough to briefly silence your inner critic."
     slot: head
@@ -285,6 +302,7 @@ items:
     room: education_wing
 
   code_review_coffee:
+    image: noecker_resume/code_review_coffee.png
     displayName: "a Code Review Coffee"
     keyword: coffee
     description: "Black, strong, and it leaves comments. Recommended before any production deploy or Daubert challenge."
@@ -295,6 +313,7 @@ items:
     room: war_room
 
   unit_test_suite:
+    image: noecker_resume/unit_test_suite.png
     displayName: "a Unit Test Suite"
     keyword: potion
     description: "Confidence in a flask. Drink and briefly feel like every edge case is covered. JUnit and Jest flavors available."
@@ -305,36 +324,42 @@ items:
     room: freelance_hq
 
   patent_scroll:
+    image: noecker_resume/patent_scroll.png
     displayName: "a Patent Scroll"
     description: "Authorship Technologies — US-11605055-B2 and US-10657494-B2. It crackles faintly and smells of peer review and legal fees."
     basePrice: 5
     room: patent_annex
 
   cost_savings_coin:
+    image: noecker_resume/cost_savings_coin.png
     displayName: "a Cost-Savings Coin"
     description: "Heavy gold, stamped '$100K/month'. Earned by replacing expensive data sources with smarter, cheaper ones at Signifyd."
     basePrice: 50
     room: savings_vault
 
   jgaap_sourcebook:
+    image: noecker_resume/jgaap_sourcebook.png
     displayName: "a JGAAP Sourcebook"
     description: "Open-source forensic authorship analysis. Margin note: 'Every methodology must be reproducible or it doesn't count.'"
     basePrice: 8
     room: juola_lab
 
   audit_trail:
+    image: noecker_resume/audit_trail.png
     displayName: "an Immutable Audit Trail"
     description: "A tamper-evident ledger. Timestamped, cross-referenced, and defensible under Daubert admissibility standards."
     basePrice: 10
     room: fda_archive
 
   observability_compass:
+    image: noecker_resume/observability_compass.png
     displayName: "an Observability Compass"
     description: "Points toward structured logs, distributed traces, and the root cause you missed the first three times."
     basePrice: 15
     room: war_room
 
   interview_rubric:
+    image: noecker_resume/interview_rubric.png
     displayName: "an Interview Rubric"
     description: "Three thousand interviews condensed into calibrated checkboxes: tradeoffs, communication clarity, production readiness."
     basePrice: 8
@@ -350,6 +375,7 @@ shops:
 
 rooms:
   lobby:
+    image: noecker_resume/lobby.png
     title: "The Lobby (Resume: John Noecker Jr.)"
     description: "A bright, airy foyer. A framed summary on the wall reads: JOHN NOECKER JR. | Backend & Distributed Systems Engineer | 15+ years designing scalable, fault-tolerant cloud systems | AWS-first, JVM-heavy (Java/Kotlin) | Spring Boot, DynamoDB, Lambda, API Gateway, CI/CD, Docker | 3,000+ technical interviews conducted | 500+ engineers mentored | ambon.dev. A Career Services Desk stands nearby. An Impostor Syndrome Wisp lurks in the corner but will probably flee if you confront it."
     exits:
@@ -358,12 +384,14 @@ rooms:
       w: ambon_hub:hall_of_portals
 
   ambon_workshop:
+    image: noecker_resume/ambon_workshop.png
     title: "AmbonMUD Workshop"
     description: "A server room that smells faintly of coroutines and carefully considered abstractions. Diagrams cover every surface: event bus interfaces, gRPC streaming topologies, zone shard registries, a layered persistence chain with Redis in the middle. A sticky note on the whiteboard reads: 'It started as a demo. It grew a distributed systems story.' The Resident Architect stands nearby, apparently happy to explain any of it."
     exits:
       w: lobby
 
   timeline_entry:
+    image: noecker_resume/timeline_entry.png
     title: "Career Timeline Entrance"
     description: "A long corridor lined with professional plaques in chronological order. The air carries the faint smell of fresh commits and hard-earned lessons. The earliest chapters are to the north."
     exits:
@@ -371,6 +399,7 @@ rooms:
       n: proteus_bay
 
   proteus_bay:
+    image: noecker_resume/proteus_bay.png
     title: "PROTEUS Workbench (2009-2010)"
     description: "An early-career workshop smelling of large datasets and the quiet satisfaction of real software shipped. A placard reads: 'Built tools to parse extremely large datasets — achieved 1000x reduction in processing time over ad-hoc workflows. Performance, scalability, reliability from day one.' A Memory Leak drifts through looking for something to consume."
     exits:
@@ -378,6 +407,7 @@ rooms:
       n: juola_lab
 
   juola_lab:
+    image: noecker_resume/juola_lab.png
     title: "Juola & Associates Lab (2010-2016)"
     description: "A research lab where the most dangerous bug is an unrepeatable result. Bookshelves hold forensic analysis tools, legal filings, and authorship attribution papers. A chalkboard reads: 'Applied to The Cuckoo's Calling, Satoshi Nakamoto, and Chevron v. Donziger. Methodologies defensible under Daubert admissibility standards.' A NullPointerException guards the door with misplaced confidence."
     exits:
@@ -386,12 +416,14 @@ rooms:
       n: signifyd_floor
 
   patent_annex:
+    image: noecker_resume/patent_annex.png
     title: "Patent Annex"
     description: "A quiet room with framed certificates on the wall: 'Authorship Technologies — Patrick Juola, John Noecker Jr., et al. U.S. Patents: US-11605055-B2, US-10657494-B2.' A second plaque notes a $1.6M government grant and peer-reviewed publications. The patent scroll rests on the table."
     exits:
       w: juola_lab
 
   signifyd_floor:
+    image: noecker_resume/signifyd_floor.png
     title: "Signifyd Market Floor (2016-2018)"
     description: "A bustling trading floor where fraud decisions move fast and correctness is non-negotiable. Service boundaries and data flow diagrams are etched into the cobblestones. A bronze plaque reads: 'Reduced recurring data costs ~$100K/month. Improved throughput and latency via smarter caching strategies. Production systems at scale.'"
     exits:
@@ -400,12 +432,14 @@ rooms:
       n: enzyme_workshop
 
   savings_vault:
+    image: noecker_resume/savings_vault.png
     title: "Optimization Vault"
     description: "A vault lined with cost graphs and vendor invoices. The ledger shows a clean line trending sharply downward after smarter data sourcing decisions. The Budget Committee is stationed here, still asking follow-up questions about last quarter's numbers."
     exits:
       w: signifyd_floor
 
   enzyme_workshop:
+    image: noecker_resume/enzyme_workshop.png
     title: "Enzyme Workshop (2019-2020)"
     description: "A clean room for systems that must be auditable and correct. TypeScript and Node.js blueprints are pinned everywhere. A sign reads: 'Greenfield platform for FDA 510(k) data extraction — backend validation, audit trails, and regulatory correctness required at every layer.' Runes of traceability hover in the air."
     exits:
@@ -414,12 +448,14 @@ rooms:
       n: freelance_hq
 
   fda_archive:
+    image: noecker_resume/fda_archive.png
     title: "FDA 510(k) Archive"
     description: "Shelves packed with regulatory documents and extraction pipeline specs. Every action logged. Every transformation traceable. A sign over the door: 'Automate the boring parts. Never compromise the audit trail.' The Compliance Auditor paces the stacks, clipboard raised."
     exits:
       w: enzyme_workshop
 
   freelance_hq:
+    image: noecker_resume/freelance_hq.png
     title: "Noecker & Associates HQ (2020-Present)"
     description: "A crossroads of ambiguous requirements and high-stakes deliveries. Whiteboards read: 'Staff-level scope — architecture, delivery, production support. Reduced deployment time 60%. AWS Well-Architected migrations. Observability-first: structured logging, metrics, alerting. Reduced mean time-to-diagnosis in production.' A Scope Creep wanders in from an adjacent room, as usual."
     exits:
@@ -429,12 +465,14 @@ rooms:
       n: cloud_platform
 
   migration_bridge:
+    image: noecker_resume/migration_bridge.png
     title: "Legacy Migration Bridge"
     description: "A bridge over a chasm labeled 'Monolith to Cloud'. Each plank is a deliberate step: incremental delivery, backward compatibility, zero-downtime cutover. The Well-Architected Shield leans against the railing. The Legacy Monolith blocks the far end, absolutely certain its four-hour deploy pipeline is fine."
     exits:
       w: freelance_hq
 
   pipeline_bay:
+    image: noecker_resume/pipeline_bay.png
     title: "Pipeline Foundry"
     description: "Jenkins gears mesh with Docker valves in a satisfying clank. A banner overhead: 'Deployment time reduced 60% — CI/CD pipelines rebuilt with repeatability and speed.' The CI/CD Wrench sits on the workbench, still warm from the last optimization run."
     exits:
@@ -442,12 +480,14 @@ rooms:
       n: war_room
 
   war_room:
+    image: noecker_resume/war_room.png
     title: "Incident War Room"
     description: "Screens glow with live dashboards. Structured logs scroll in disciplined rows. Distributed traces thread through services like bright string, shortening the gap between symptom and root cause. An Observability Compass rests on the table. A Code Review Coffee sits beside it, still warm."
     exits:
       s: pipeline_bay
 
   cloud_platform:
+    image: noecker_resume/cloud_platform.png
     title: "Cloud Observatory"
     description: "An observatory of AWS architecture diagrams and cost curves. Lambda, EC2, S3, DynamoDB, API Gateway, CloudFormation — the full toolkit laid out like star charts. A note reads: 'AWS Certified Solutions Architect, Associate — reliability, cost control, and operational safety in every design.' The AWS Certification Badge is displayed in a case by the telescope."
     exits:
@@ -456,12 +496,14 @@ rooms:
       n: karat_studio
 
   lambda_shrine:
+    image: noecker_resume/lambda_shrine.png
     title: "Serverless Shrine"
     description: "A shrine etched with Lambda, API Gateway, SQS, and DynamoDB insignia. Offerings include small, focused functions and clean event contracts. A Runaway Lambda darts between exits, stateless and entirely too eager to invoke itself again."
     exits:
       w: cloud_platform
 
   karat_studio:
+    image: noecker_resume/karat_studio.png
     title: "Karat Interview Studio (2019-Present)"
     description: "A studio with a timer on the wall and three thousand stories in the chairs. A chalkboard reads: 'Senior Interview Engineer — partners include Citi, Indeed, and Roblox. Calibrated feedback on tradeoffs, communication clarity, and production readiness.' The Interview Rubric is on the table. A Technical Phone Screen prowls the room looking for someone to quiz."
     exits:
@@ -470,12 +512,14 @@ rooms:
       n: education_wing
 
   mentorship_lounge:
+    image: noecker_resume/mentorship_lounge.png
     title: "Mentorship Mezzanine"
     description: "A warm lounge overlooking the interview rooms below. Wall notes: '500+ engineers mentored through Karat and Brilliant Black Minds. Actionable feedback over vague encouragement. State-approved apprenticeship curriculum authored and delivered. A decade of hiring, training, and operations at an independent small business.'"
     exits:
       w: karat_studio
 
   education_wing:
+    image: noecker_resume/education_wing.png
     title: "Duquesne Hall (Education)"
     description: "A grand hall where Computer Science and Mathematics share the same chalkboard. A plaque reads: 'B.S. Computer Science | B.A. Mathematics | Duquesne University — Graduated summa cum laude. Valedictorian in Liberal Arts, Computer Science, and Mathematics.' The Valedictorian Medal gleams under the lights. A doorway east leads to graduate studies."
     exits:
@@ -484,12 +528,14 @@ rooms:
       n: graduation_stage
 
   gatech_annex:
+    image: noecker_resume/gatech_annex.png
     title: "Georgia Tech Annex"
     description: "A studio of graduate-level diagrams: machine learning, artificial intelligence, robotics. The notes are meticulous and competitive. A Stack Overflow Error has taken up residence at the recursion terminal, growing with every stack frame. A Type-Safe Compiler sits ominously on the desk nearby."
     exits:
       w: education_wing
 
   graduation_stage:
+    image: noecker_resume/graduation_stage.png
     title: "Graduation Stage"
     description: "A bright stage with spotlights and a waiting podium. The view from here takes in the full arc: PROTEUS datasets to cloud migrations, forensic linguistics to fraud systems, FDA pipelines to three thousand interview rooms. A terminal in the corner blinks: ambon.dev — more systems to build, more worlds to ship."
     exits:
