@@ -11,6 +11,8 @@ import { PlayPanel } from "./components/panels/PlayPanel";
 import { WorldPanel } from "./components/panels/WorldPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
+import { gameStateRef } from "./canvas/GameStateBridge";
+import { LoginModal } from "./canvas/LoginModal";
 import {
   DEFAULT_STATUS_VAR_LABELS,
   EMPTY_CHAR,
@@ -41,6 +43,8 @@ import type {
   GuildInfo,
   GuildMemberEntry,
   ItemSummary,
+  LoginErrorState,
+  LoginPromptState,
   MobileTab,
   MobInfo,
   PopoutPanel,
@@ -109,7 +113,8 @@ function parseWhoEntries(messageChunk: string): string[] | null {
 }
 
 function App() {
-  const terminalHostRef = useRef<HTMLDivElement | null>(null);
+  const terminalHiddenRef = useRef<HTMLDivElement | null>(null);
+  const terminalPopoutRef = useRef<HTMLDivElement | null>(null);
   const composerInputRef = useRef<HTMLInputElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
@@ -148,6 +153,8 @@ function App() {
   const [, setMobInfo] = useState<MobInfo[]>([]);
   const [shop, setShop] = useState<ShopState | null>(null);
   const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
+  const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
+  const [loginError, setLoginError] = useState<LoginErrorState | null>(null);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -196,7 +203,8 @@ function App() {
   const fitTerminal = useCallback(() => {
     const term = terminalRef.current;
     const fitAddon = fitAddonRef.current;
-    const host = terminalHostRef.current;
+    // Fit to whichever container the terminal is currently in
+    const host = terminalPopoutRef.current ?? terminalHiddenRef.current;
     if (!term || !fitAddon || !host) return;
     if (host.clientWidth <= 0 || host.clientHeight <= 0) return;
 
@@ -236,6 +244,8 @@ function App() {
     setMobInfo([]);
     setShop(null);
     setQuestNotifications([]);
+    setLoginPrompt(null);
+    setLoginError(null);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setActiveChatChannel("say");
@@ -277,6 +287,8 @@ function App() {
           pushGainEvent,
           pushQuestNotification,
           setMobInfo,
+          setLoginPrompt,
+          setLoginError,
         },
       );
     },
@@ -320,7 +332,7 @@ function App() {
   );
 
   useEffect(() => {
-    if (!terminalHostRef.current) return;
+    if (!terminalHiddenRef.current) return;
 
     const term = new Terminal({
       cursorBlink: false,
@@ -339,29 +351,17 @@ function App() {
 
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
-    term.open(terminalHostRef.current);
+    term.open(terminalHiddenRef.current);
 
     terminalRef.current = term;
     fitAddonRef.current = fitAddon;
-    fitTerminal();
-
-    const resizeObserver = new ResizeObserver(() => {
-      fitTerminal();
-      drawMap();
-    });
-    resizeObserver.observe(terminalHostRef.current);
-    const firstFrameFit = window.requestAnimationFrame(() => fitTerminal());
-    const delayedFit = window.setTimeout(() => fitTerminal(), 80);
 
     return () => {
-      resizeObserver.disconnect();
-      window.cancelAnimationFrame(firstFrameFit);
-      window.clearTimeout(delayedFit);
       term.dispose();
       fitAddonRef.current = null;
       terminalRef.current = null;
     };
-  }, [drawMap, fitTerminal]);
+  }, []);
 
   useEffect(() => {
     connect();
@@ -382,14 +382,14 @@ function App() {
   }, [connect, disconnect, drawMap, fitTerminal]);
 
   useEffect(() => {
-    if (activeTab !== "play") return;
+    if (activePopout !== "terminal") return;
     const frameFit = window.requestAnimationFrame(() => fitTerminal());
     const delayedFit = window.setTimeout(() => fitTerminal(), 90);
     return () => {
       window.cancelAnimationFrame(frameFit);
       window.clearTimeout(delayedFit);
     };
-  }, [activeTab, connected, character.name, room.id, room.title, fitTerminal]);
+  }, [activePopout, fitTerminal]);
 
   useEffect(() => {
     const fontSet = document.fonts;
@@ -425,6 +425,39 @@ function App() {
     const handle = window.requestAnimationFrame(() => drawMap());
     return () => window.cancelAnimationFrame(handle);
   }, [activePopout, drawMap]);
+
+  // Reparent terminal into popout when opened, back to hidden when closed
+  useEffect(() => {
+    const term = terminalRef.current;
+    if (!term) return;
+    const termEl = term.element;
+    if (!termEl) return;
+
+    if (activePopout === "terminal" && terminalPopoutRef.current) {
+      terminalPopoutRef.current.appendChild(termEl);
+      window.requestAnimationFrame(() => fitTerminal());
+      const delayedFit = window.setTimeout(() => fitTerminal(), 80);
+      return () => window.clearTimeout(delayedFit);
+    } else if (terminalHiddenRef.current && termEl.parentElement !== terminalHiddenRef.current) {
+      terminalHiddenRef.current.appendChild(termEl);
+    }
+  }, [activePopout, fitTerminal]);
+
+  // Sync React state into the game state bridge for PixiJS
+  useEffect(() => {
+    gameStateRef.current = {
+      room,
+      vitals,
+      mobs,
+      players,
+      roomItems,
+      combatTarget,
+      inCombat: vitals.inCombat,
+      effects,
+      character,
+      mobInfo: [],
+    };
+  });
 
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 
@@ -480,6 +513,8 @@ function App() {
         ? (detailItem?.name ?? "Item")
       : activePopout === "help"
         ? "Command Reference"
+      : activePopout === "terminal"
+        ? "Terminal"
         : "Currently Wearing";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
@@ -594,14 +629,9 @@ function App() {
           mobs={mobs}
           roomItems={roomItems}
           combatTarget={combatTarget}
-          terminalHostRef={terminalHostRef}
           commandInputRef={composerInputRef}
           composerValue={composerValue}
           commandPlaceholder={commandPlaceholder}
-          onTerminalMouseDown={(event) => {
-            event.preventDefault();
-            focusComposer();
-          }}
           onComposerChange={(value) => {
             setComposerValue(value);
             resetComposerCompletion();
@@ -636,6 +666,7 @@ function App() {
             setDetailItem(item);
             setActivePopout("itemDetail");
           }}
+          onOpenTerminal={() => setActivePopout("terminal")}
         />
 
         <WorldPanel
@@ -777,6 +808,7 @@ function App() {
         equipment={equipment}
         equipmentSlots={equipmentSlots}
         mapCanvasRef={mapCanvasRef}
+        terminalPopoutRef={terminalPopoutRef}
         canManageItems={connected && hasCharacterProfile}
         detailMob={detailMob}
         detailItem={detailItem}
@@ -816,6 +848,17 @@ function App() {
         onClose={() => setActivePopout(null)}
       />
 
+      {loginPrompt && (
+        <LoginModal
+          loginPrompt={loginPrompt}
+          loginError={loginError}
+          onSubmit={(value) => {
+            sendLine(value);
+            terminalRef.current?.write(`${value}\r\n`);
+          }}
+        />
+      )}
+
       {showAdminPanel && (
         <AdminPanel
           onCommand={(command) => {
@@ -827,6 +870,9 @@ function App() {
       )}
 
       <MobileTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Hidden terminal container — xterm lives here when popout is closed */}
+      <div ref={terminalHiddenRef} className="terminal-hidden" aria-hidden="true" />
 
       <p className="sr-only" aria-live="polite">{liveMessage}</p>
     </main>
