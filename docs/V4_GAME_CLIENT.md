@@ -18,36 +18,103 @@
 
 The client connects to the MUD server via **WebSocket** and uses **GMCP** (Generic MUD Communication Protocol) for all structured data. Text output is rendered in a scrollback panel; GMCP drives the game UI.
 
-### GMCP Package Dependencies
+### GMCP Package Reference
 
-The client requires these GMCP packages from the server:
+All packages listed below are **implemented** in both the server (`GmcpEmitter.kt`) and the web-v3 client (`applyGmcpPackage.ts`).
 
-| Package | Purpose | Status |
-|---------|---------|--------|
-| `Char.Vitals` | HP, mana, XP, gold, combat state | Existing |
-| `Char.Name` | Name, race, class, level | Existing |
-| `Char.Combat` | Current combat target info | Existing |
-| `Char.Combat.Event` | Per-hit/dodge/kill combat events | **New** |
-| `Char.Stats` | Base + effective stats, derived combat values | **New** |
-| `Char.Skills` | Known abilities with cooldowns | Existing |
-| `Char.Cooldown` | Individual ability cooldown start events | **New** |
-| `Char.StatusEffects` | Active buffs/debuffs | Existing |
-| `Char.Items` | Inventory and equipment | Existing |
-| `Char.Achievements` | Completed and in-progress achievements | Existing |
-| `Char.Gain` | XP/gold/level-up event notifications | **New** |
-| `Room.Info` | Room title, description, exits | Existing |
-| `Room.Players` | Other players in room | Existing |
-| `Room.Mobs` | Mobs in room (id, name, hp) | Existing |
-| `Room.MobInfo` | Mob metadata (level, tier, quest/shop/dialogue flags) | **New** |
-| `Room.Items` | Items on the ground | Existing |
-| `Quest.List` | Full quest log | **New** |
-| `Quest.Update` | Single objective progress update | **New** |
-| `Quest.Complete` | Quest completion notification | **New** |
-| `Group.Info` | Party members (with mana) | Enhanced |
-| `Comm.Channel` | Chat messages | Existing |
-| `Dialogue` | NPC dialogue trees | Existing |
-| `Guild` | Guild info, members, chat | Existing |
-| `Friends` | Friends list and online/offline events | Existing |
+#### Character Packages
+
+| Package | Purpose | Payload Fields |
+|---------|---------|----------------|
+| `Char.StatusVars` | Label mapping for vitals fields | `hp`, `maxHp`, `mana`, `maxMana`, `level`, `xp` |
+| `Char.Vitals` | HP, mana, XP, gold, combat state | `hp`, `maxHp`, `mana`, `maxMana`, `level`, `xp`, `xpIntoLevel`, `xpToNextLevel`, `gold`, `inCombat` |
+| `Char.Name` | Identity, appearance | `name`, `gender`, `race`, `class`, `level`, `sprite` |
+| `Char.Stats` | Base + effective stats, derived combat values | `strength`..`charisma`, `effectiveStrength`..`effectiveCharisma`, `baseDamageMin`, `baseDamageMax`, `armor`, `dodgePercent` |
+| `Char.Skills` | Known abilities with cooldowns | `id`, `name`, `description`, `manaCost`, `cooldownMs`, `cooldownRemainingMs`, `levelRequired`, `targetType`, `classRestriction` |
+| `Char.Cooldown` | Individual ability cooldown start event | `abilityId`, `cooldownMs` |
+| `Char.StatusEffects` | Active buffs/debuffs | Array of `{ id, name, type, remainingMs, stacks }` |
+| `Char.Items.List` | Full inventory and equipment | `inventory[]`, `equipment{}` — each item: `id`, `name`, `keyword`, `slot`, `damage`, `armor`, `basePrice`, `image` |
+| `Char.Items.Add` | Item added to inventory | Single item payload (same fields as above) |
+| `Char.Items.Remove` | Item removed from inventory | `id`, `name` |
+| `Char.Achievements` | Completed and in-progress achievements | `completed[]` (`id`, `name`, `title`), `inProgress[]` (`id`, `name`, `current`, `required`) |
+| `Char.Gain` | XP/gold/level-up event notifications | `type`, `amount`, `source?`, `newLevel?`, `hpGained?`, `manaGained?` |
+
+#### Combat Packages
+
+| Package | Purpose | Payload Fields |
+|---------|---------|----------------|
+| `Char.Combat` | Current combat target info | `targetId`, `targetName`, `targetHp`, `targetMaxHp`, `targetImage` |
+| `Char.Combat.Event` | Per-hit/dodge/kill combat events | `type` (`meleeHit`, `abilityHit`, `heal`, `dodge`, `dotTick`, `hotTick`, `kill`, `death`, `shieldAbsorb`), plus type-specific fields: `targetName`, `targetId`, `damage`, `amount`, `sourceIsPlayer`, `abilityId`, `abilityName`, `effectName`, `xpGained`, `goldGained`, `killerName`, `killerIsPlayer`, `attackerName`, `absorbed`, `remaining` |
+
+#### Room Packages
+
+| Package | Purpose | Payload Fields |
+|---------|---------|----------------|
+| `Room.Info` | Room title, description, exits, image | `id`, `title`, `description`, `zone`, `exits{}`, `image?` |
+| `Room.Players` | Other players in room (full list) | Array of `{ name, level }` |
+| `Room.AddPlayer` | Delta: player entered room | `name`, `level` |
+| `Room.RemovePlayer` | Delta: player left room | `name` |
+| `Room.Mobs` | Mobs in room (full list) | Array of `{ id, name, hp, maxHp, image? }` |
+| `Room.AddMob` | Delta: mob spawned/entered room | `id`, `name`, `hp`, `maxHp`, `image?` |
+| `Room.UpdateMob` | Delta: mob HP/state changed | `id`, `name`, `hp`, `maxHp`, `image?` |
+| `Room.RemoveMob` | Delta: mob died/left room | `id` |
+| `Room.MobInfo` | Mob metadata (level, tier, NPC flags) | Array of `{ id, level, tier, questGiver, shopKeeper, dialogue }` |
+| `Room.Items` | Items on the ground (full list) | Array of `{ id, name, image? }` |
+
+#### Quest Packages
+
+| Package | Purpose | Payload Fields |
+|---------|---------|----------------|
+| `Quest.List` | Full quest log | Array of `{ id, name, description, objectives[] }` — each objective: `{ description, current, required }` |
+| `Quest.Update` | Single objective progress update | `questId`, `objectiveIndex`, `current`, `required` |
+| `Quest.Complete` | Quest completion notification | `questId`, `questName` |
+
+#### Social Packages
+
+| Package | Purpose | Payload Fields |
+|---------|---------|----------------|
+| `Comm.Channel` | Chat messages (say, tell, gossip, shout, ooc, gtell) | `channel`, `sender`, `message` |
+| `Group.Info` | Party members with full vitals | `leader`, `members[]` (`name`, `level`, `hp`, `maxHp`, `mana`, `maxMana`, `class`) |
+| `Guild.Info` | Guild summary | `name`, `tag`, `rank`, `motd`, `memberCount`, `maxSize` |
+| `Guild.Members` | Guild roster | Array of `{ name, rank, online, level? }` |
+| `Guild.Chat` | Guild chat message | `sender`, `message` |
+| `Friends.List` | Friends list with status | Array of `{ name, online, level?, zone? }` |
+| `Friends.Online` | Friend came online | `name`, `level` |
+| `Friends.Offline` | Friend went offline | `name` |
+
+#### Dialogue Packages
+
+| Package | Purpose | Payload Fields |
+|---------|---------|----------------|
+| `Dialogue.Node` | NPC dialogue with choices | `mobName`, `text`, `choices[]` (`index`, `text`) |
+| `Dialogue.End` | Dialogue ended | `mobName`, `reason` |
+
+#### Shop Packages
+
+| Package | Purpose | Payload Fields |
+|---------|---------|----------------|
+| `Shop.List` | Shop inventory opened | `name`, `sellMultiplier`, `items[]` (`id`, `name`, `keyword`, `description`, `slot?`, `damage`, `armor`, `buyPrice`, `basePrice`, `consumable`, `image?`) |
+| `Shop.Close` | Shop closed | `{}` |
+
+#### System Packages
+
+| Package | Purpose | Payload Fields |
+|---------|---------|----------------|
+| `Core.Ping` | Keep-alive ping | `{}` |
+
+### Full Character Sync
+
+On login (and when a client negotiates GMCP support), the server sends a full sync in this order:
+
+1. `Char.StatusVars`
+2. `Char.Vitals`
+3. `Char.Name`
+4. `Char.Items.List`
+5. `Char.Skills`
+6. `Char.StatusEffects`
+7. `Char.Achievements`
+8. `Group.Info`
+9. `Guild.Info` (if in a guild)
 
 ## Architecture Overview
 
@@ -164,14 +231,14 @@ src/
 
 - Battle scene triggered by `Char.Combat` (target acquired)
 - `Char.Combat.Event` drives per-action animations:
-  - `MeleeHit` → slash animation + damage number
-  - `AbilityHit` → spell VFX + damage number
-  - `Heal` → green particles + heal number
-  - `Dodge` → "DODGE" text popup
-  - `Kill` → death animation + XP/gold popup (from `Char.Gain`)
-  - `Death` → player death animation
-  - `ShieldAbsorb` → shield flash + absorbed number
-  - `DotTick` / `HotTick` → periodic damage/heal numbers
+  - `meleeHit` → slash animation + damage number
+  - `abilityHit` → spell VFX + damage number
+  - `heal` → green particles + heal number
+  - `dodge` → "DODGE" text popup
+  - `kill` → death animation + XP/gold popup (from `Char.Gain`)
+  - `death` → player death animation
+  - `shieldAbsorb` → shield flash + absorbed number
+  - `dotTick` / `hotTick` → periodic damage/heal numbers
 - `Char.Cooldown` → real-time cooldown bars on skill bar
 - Ability hotbar with click-to-cast
 
@@ -191,7 +258,7 @@ src/
 
 ### Phase 6: Social + Polish
 
-- Party panel with HP + mana bars (from enhanced `Group.Info`)
+- Party panel with HP + mana bars (from `Group.Info`)
 - Chat panel with channel tabs
 - Friends list with online status
 - Guild panel
