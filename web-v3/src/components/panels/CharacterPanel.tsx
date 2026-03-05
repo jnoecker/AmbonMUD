@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { AchievementData, CharacterInfo, QuestEntry, QuestNotification, StatusEffect, StatusVarLabels, Vitals } from "../../types";
-import { Bar, CharacterAvatarIcon, EquipmentIcon, WearingIcon } from "../Icons";
+import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, QuestsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
 type DetailTab = "vitals" | "effects" | "achievements" | "quests";
 
@@ -132,37 +132,46 @@ export function CharacterPanel({
               type="button"
               role="tab"
               aria-selected={activeDetailTab === "vitals"}
+              aria-label="Vitals"
+              title="Vitals"
               className={`character-detail-tab ${activeDetailTab === "vitals" ? "character-detail-tab-active" : ""}`}
               onClick={() => setActiveDetailTab("vitals")}
             >
-              Vitals
+              <VitalsTabIcon className="detail-tab-icon" />
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeDetailTab === "effects"}
+              aria-label="Effects"
+              title="Effects"
               className={`character-detail-tab ${activeDetailTab === "effects" ? "character-detail-tab-active" : ""}`}
               onClick={() => setActiveDetailTab("effects")}
             >
-              Effects
+              <EffectsTabIcon className="detail-tab-icon" />
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeDetailTab === "achievements"}
+              aria-label="Achievements"
+              title="Achievements"
               className={`character-detail-tab ${activeDetailTab === "achievements" ? "character-detail-tab-active" : ""}`}
               onClick={() => setActiveDetailTab("achievements")}
             >
-              Achievements
+              <AchievementsTabIcon className="detail-tab-icon" />
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeDetailTab === "quests"}
+              aria-label="Quests"
+              title="Quests"
               className={`character-detail-tab ${activeDetailTab === "quests" ? "character-detail-tab-active" : ""}`}
               onClick={() => setActiveDetailTab("quests")}
             >
-              Quests{quests.length > 0 && <span className="quest-tab-badge">{quests.length}</span>}
+              <QuestsTabIcon className="detail-tab-icon" />
+              {quests.length > 0 && <span className="quest-tab-badge">{quests.length}</span>}
             </button>
           </div>
 

@@ -1930,10 +1930,14 @@ body {
 
 .character-detail-tab {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   border: 1px solid rgb(106 96 136 / 30%);
   border-bottom: 0;
   border-radius: 11px 11px 0 0;
-  padding: 8px 13px 7px;
+  padding: 7px 14px;
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -1945,6 +1949,12 @@ body {
     box-shadow 170ms var(--ease-out-soft),
     background-color 170ms var(--ease-out-soft),
     color 170ms var(--ease-out-soft);
+}
+
+.detail-tab-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .character-detail-tab::after {
