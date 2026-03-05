@@ -349,6 +349,48 @@ export function CrosshairIcon({ className }: { className?: string }) {
   );
 }
 
+// ── Character detail tab icons ──────────────────────────────────────
+
+export function VitalsTabIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M12 20.4s-7.2-4.8-7.2-10.2a4.6 4.6 0 0 1 7.2-3.8 4.6 4.6 0 0 1 7.2 3.8c0 5.4-7.2 10.2-7.2 10.2Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 9.6v4.8M9.6 12h4.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.82" />
+    </svg>
+  );
+}
+
+export function EffectsTabIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M12 3.6 13.6 9l5.6.2-4.4 3.4 1.6 5.4-4.4-3.2-4.4 3.2 1.6-5.4L4.8 9.2l5.6-.2L12 3.6Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function AchievementsTabIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M8.2 4.8h7.6v6.4c0 2.2-1.7 3.8-3.8 3.8s-3.8-1.6-3.8-3.8V4.8Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.2 7.2H6a1.6 1.6 0 0 0-1.6 1.6v.8A2.4 2.4 0 0 0 6.8 12h1.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.82" />
+      <path d="M15.8 7.2H18a1.6 1.6 0 0 1 1.6 1.6v.8A2.4 2.4 0 0 1 17.2 12h-1.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.82" />
+      <path d="M10 15v1.4c0 .6-.4 1.2-1 1.4L8 18.2h8l-1-.4c-.6-.2-1-.8-1-1.4V15" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7.6 19.2h8.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function QuestsTabIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M6 6.8a2.2 2.2 0 1 1 0 4.4m0-4.4h10.8a2.2 2.2 0 0 1 2.2 2.2v8.2a2.8 2.8 0 0 1-2.8 2.8H8.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.2 20a2.4 2.4 0 1 1 0-4.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.2 15.2V6.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.92" />
+      <path d="M11 10.6h4.4M11 13.2h3" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.78" />
+    </svg>
+  );
+}
+
 export function ExpandRoomIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
