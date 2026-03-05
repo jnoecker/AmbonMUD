@@ -74,6 +74,7 @@ rooms:
     description: "An ethereal sanctuary where reality shimmers at the edges. Constellations drift across the ceiling, and the floor seems to float above an endless void."
     exits:
       s: master_hall
+      n: staff_hall
       e: legend_warriors
       w: legend_mages
       u: legend_clerics
@@ -222,6 +223,41 @@ rooms:
     description: "A void between worlds where shadowlords rule the spaces between shadows. Even light fears to enter."
     exits:
       u: legend_hall
+
+  staff_hall:
+    image: player_sprites/staff_hall.png
+    title: "Staff Hall"
+    description: "A transcendent chamber beyond mortal comprehension. The walls are woven from living starlight and the floor pulses with the heartbeat of the world itself. Only those who have surpassed legend dare enter."
+    exits:
+      s: legend_hall
+      e: staff_warriors
+      w: staff_mages
+      u: staff_clerics
+      d: staff_rogues
+  staff_warriors:
+    image: player_sprites/staff_warriors.png
+    title: "Staff Warriors"
+    description: "An infinite battlefield where the greatest warriors across all timelines clash in eternal combat. The very concept of defeat has been banished from this place."
+    exits:
+      w: staff_hall
+  staff_mages:
+    image: player_sprites/staff_mages.png
+    title: "Staff Mages"
+    description: "A dimension of pure arcane energy where reality is merely a suggestion. Spells of world-shaping magnitude orbit like lazy fireflies."
+    exits:
+      e: staff_hall
+  staff_clerics:
+    image: player_sprites/staff_clerics.png
+    title: "Staff Clerics"
+    description: "The throne room of divinity itself, where mortal and celestial merge into one. Pillars of crystallized prayer support a ceiling of infinite sky."
+    exits:
+      d: staff_hall
+  staff_rogues:
+    image: player_sprites/staff_rogues.png
+    title: "Staff Rogues"
+    description: "A paradox of space that exists everywhere and nowhere simultaneously. Masters of shadow have transcended the boundary between seen and unseen."
+    exits:
+      u: staff_hall
 
 mobs:
   human_enby_cleric_l1:
@@ -3680,3 +3716,579 @@ mobs:
     xpReward: 2000
     goldMin: 200
     goldMax: 500
+  human_enby_cleric_l60:
+    image: player_sprites/human_enby_cleric_l60.png
+    name: "a transcendent human high oracle"
+    room: staff_clerics
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  human_enby_mage_l60:
+    image: player_sprites/human_enby_mage_l60.png
+    name: "a transcendent human archmage"
+    room: staff_mages
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  human_enby_rogue_l60:
+    image: player_sprites/human_enby_rogue_l60.png
+    name: "a transcendent human phantom lord"
+    room: staff_rogues
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  human_enby_warrior_l60:
+    image: player_sprites/human_enby_warrior_l60.png
+    name: "a transcendent human god of war"
+    room: staff_warriors
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  human_female_cleric_l60:
+    image: player_sprites/human_female_cleric_l60.png
+    name: "a transcendent human high priestess"
+    room: staff_clerics
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  human_female_mage_l60:
+    image: player_sprites/human_female_mage_l60.png
+    name: "a transcendent human archsorceress"
+    room: staff_mages
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  human_female_rogue_l60:
+    image: player_sprites/human_female_rogue_l60.png
+    name: "a transcendent human phantom mistress"
+    room: staff_rogues
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  human_female_warrior_l60:
+    image: player_sprites/human_female_warrior_l60.png
+    name: "a transcendent human goddess of war"
+    room: staff_warriors
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  human_male_cleric_l60:
+    image: player_sprites/human_male_cleric_l60.png
+    name: "a transcendent human high priest"
+    room: staff_clerics
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  human_male_mage_l60:
+    image: player_sprites/human_male_mage_l60.png
+    name: "a transcendent human archsorcerer"
+    room: staff_mages
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  human_male_rogue_l60:
+    image: player_sprites/human_male_rogue_l60.png
+    name: "a transcendent human phantom lord"
+    room: staff_rogues
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  human_male_warrior_l60:
+    image: player_sprites/human_male_warrior_l60.png
+    name: "a transcendent human god of war"
+    room: staff_warriors
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  elf_enby_cleric_l60:
+    image: player_sprites/elf_enby_cleric_l60.png
+    name: "a transcendent elven high oracle"
+    room: staff_clerics
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  elf_enby_mage_l60:
+    image: player_sprites/elf_enby_mage_l60.png
+    name: "a transcendent elven archmage"
+    room: staff_mages
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  elf_enby_rogue_l60:
+    image: player_sprites/elf_enby_rogue_l60.png
+    name: "a transcendent elven phantom lord"
+    room: staff_rogues
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  elf_enby_warrior_l60:
+    image: player_sprites/elf_enby_warrior_l60.png
+    name: "a transcendent elven god of war"
+    room: staff_warriors
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  elf_female_cleric_l60:
+    image: player_sprites/elf_female_cleric_l60.png
+    name: "a transcendent elven high priestess"
+    room: staff_clerics
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  elf_female_mage_l60:
+    image: player_sprites/elf_female_mage_l60.png
+    name: "a transcendent elven archsorceress"
+    room: staff_mages
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  elf_female_rogue_l60:
+    image: player_sprites/elf_female_rogue_l60.png
+    name: "a transcendent elven phantom mistress"
+    room: staff_rogues
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  elf_female_warrior_l60:
+    image: player_sprites/elf_female_warrior_l60.png
+    name: "a transcendent elven goddess of war"
+    room: staff_warriors
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  elf_male_cleric_l60:
+    image: player_sprites/elf_male_cleric_l60.png
+    name: "a transcendent elven high priest"
+    room: staff_clerics
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  elf_male_mage_l60:
+    image: player_sprites/elf_male_mage_l60.png
+    name: "a transcendent elven archsorcerer"
+    room: staff_mages
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  elf_male_rogue_l60:
+    image: player_sprites/elf_male_rogue_l60.png
+    name: "a transcendent elven phantom lord"
+    room: staff_rogues
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  elf_male_warrior_l60:
+    image: player_sprites/elf_male_warrior_l60.png
+    name: "a transcendent elven god of war"
+    room: staff_warriors
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  dwarf_enby_cleric_l60:
+    image: player_sprites/dwarf_enby_cleric_l60.png
+    name: "a transcendent dwarven high oracle"
+    room: staff_clerics
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  dwarf_enby_mage_l60:
+    image: player_sprites/dwarf_enby_mage_l60.png
+    name: "a transcendent dwarven archmage"
+    room: staff_mages
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  dwarf_enby_rogue_l60:
+    image: player_sprites/dwarf_enby_rogue_l60.png
+    name: "a transcendent dwarven phantom lord"
+    room: staff_rogues
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  dwarf_enby_warrior_l60:
+    image: player_sprites/dwarf_enby_warrior_l60.png
+    name: "a transcendent dwarven god of war"
+    room: staff_warriors
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  dwarf_female_cleric_l60:
+    image: player_sprites/dwarf_female_cleric_l60.png
+    name: "a transcendent dwarven high priestess"
+    room: staff_clerics
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  dwarf_female_mage_l60:
+    image: player_sprites/dwarf_female_mage_l60.png
+    name: "a transcendent dwarven archsorceress"
+    room: staff_mages
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  dwarf_female_rogue_l60:
+    image: player_sprites/dwarf_female_rogue_l60.png
+    name: "a transcendent dwarven phantom mistress"
+    room: staff_rogues
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  dwarf_female_warrior_l60:
+    image: player_sprites/dwarf_female_warrior_l60.png
+    name: "a transcendent dwarven goddess of war"
+    room: staff_warriors
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  dwarf_male_cleric_l60:
+    image: player_sprites/dwarf_male_cleric_l60.png
+    name: "a transcendent dwarven high priest"
+    room: staff_clerics
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  dwarf_male_mage_l60:
+    image: player_sprites/dwarf_male_mage_l60.png
+    name: "a transcendent dwarven archsorcerer"
+    room: staff_mages
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  dwarf_male_rogue_l60:
+    image: player_sprites/dwarf_male_rogue_l60.png
+    name: "a transcendent dwarven phantom lord"
+    room: staff_rogues
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  dwarf_male_warrior_l60:
+    image: player_sprites/dwarf_male_warrior_l60.png
+    name: "a transcendent dwarven god of war"
+    room: staff_warriors
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  halfling_enby_cleric_l60:
+    image: player_sprites/halfling_enby_cleric_l60.png
+    name: "a transcendent halfling high oracle"
+    room: staff_clerics
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  halfling_enby_mage_l60:
+    image: player_sprites/halfling_enby_mage_l60.png
+    name: "a transcendent halfling archmage"
+    room: staff_mages
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  halfling_enby_rogue_l60:
+    image: player_sprites/halfling_enby_rogue_l60.png
+    name: "a transcendent halfling phantom lord"
+    room: staff_rogues
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  halfling_enby_warrior_l60:
+    image: player_sprites/halfling_enby_warrior_l60.png
+    name: "a transcendent halfling god of war"
+    room: staff_warriors
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  halfling_female_cleric_l60:
+    image: player_sprites/halfling_female_cleric_l60.png
+    name: "a transcendent halfling high priestess"
+    room: staff_clerics
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  halfling_female_mage_l60:
+    image: player_sprites/halfling_female_mage_l60.png
+    name: "a transcendent halfling archsorceress"
+    room: staff_mages
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  halfling_female_rogue_l60:
+    image: player_sprites/halfling_female_rogue_l60.png
+    name: "a transcendent halfling phantom mistress"
+    room: staff_rogues
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  halfling_female_warrior_l60:
+    image: player_sprites/halfling_female_warrior_l60.png
+    name: "a transcendent halfling goddess of war"
+    room: staff_warriors
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  halfling_male_cleric_l60:
+    image: player_sprites/halfling_male_cleric_l60.png
+    name: "a transcendent halfling high priest"
+    room: staff_clerics
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  halfling_male_mage_l60:
+    image: player_sprites/halfling_male_mage_l60.png
+    name: "a transcendent halfling archsorcerer"
+    room: staff_mages
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  halfling_male_rogue_l60:
+    image: player_sprites/halfling_male_rogue_l60.png
+    name: "a transcendent halfling phantom lord"
+    room: staff_rogues
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
+  halfling_male_warrior_l60:
+    image: player_sprites/halfling_male_warrior_l60.png
+    name: "a transcendent halfling god of war"
+    room: staff_warriors
+    level: 60
+    hp: 1100
+    minDamage: 80
+    maxDamage: 130
+    armor: 55
+    xpReward: 3000
+    goldMin: 300
+    goldMax: 750
