@@ -74,9 +74,11 @@ export interface Vitals {
 
 export interface CharacterInfo {
   name: string;
+  gender: string;
   race: string;
   className: string;
   level: number | null;
+  sprite: string | null;
 }
 
 export interface RoomState {
