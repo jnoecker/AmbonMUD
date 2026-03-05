@@ -1,310 +1,285 @@
-# V4 Game Client Architecture
+# V4 Game Client — PixiJS Canvas on v3
 
-> JRPG-style game client built with Tauri, targeting a rich visual experience over the MUD server's GMCP protocol.
+> JRPG-style visual layer added incrementally to the existing v3 web client. No rewrite — PixiJS renders alongside existing React panels, sharing the same state and GMCP infrastructure.
 
-## Tech Stack
+## Why Evolve v3 Instead of Rewriting
 
-| Layer | Technology | Rationale |
-|-------|-----------|-----------|
-| Shell | **Tauri 2** (Rust) | Native window, small binary, cross-platform, file-system access for settings/logs |
-| UI | **React 19** + **TypeScript** | Component model, hooks for state management, large ecosystem |
-| Rendering | **PixiJS 8** | 2D WebGL/WebGPU sprite engine; handles tilemaps, animations, particles |
-| State | **Zustand** | Minimal boilerplate, works well with frequent GMCP updates |
-| Styling | **Tailwind CSS 4** | Utility-first for UI panels; game canvas is PixiJS-rendered |
-| Audio | **Howler.js** | Cross-platform audio with sprite support for SFX |
-| Build | **Vite 6** | Fast HMR for development, optimized production builds |
+The v3 client already handles **35+ GMCP packages**, has a complete type system (~285 lines), WebSocket lifecycle management, 6 UI panels, command history, and a minimap. A fresh v4 rewrite would re-implement ~60% of this before touching a single sprite.
 
-## Communication Protocol
+By adding PixiJS directly to `web-v3/`, we:
 
-The client connects to the MUD server via **WebSocket** and uses **GMCP** (Generic MUD Communication Protocol) for all structured data. Text output is rendered in a scrollback panel; GMCP drives the game UI.
+- Skip re-building GMCP parsing, state management, and UI panels
+- Ship visual features faster (start with sprites on day one)
+- Keep the working client running throughout development
+- Maintain the existing CI pipeline (`bun run lint && bun run build`)
+- Avoid maintaining two parallel clients during any transition period
 
-### GMCP Package Reference
+## Tech Stack (Additions to v3)
 
-All packages listed below are **implemented** in both the server (`GmcpEmitter.kt`) and the web-v3 client (`applyGmcpPackage.ts`).
+| Addition | Version | Purpose |
+|----------|---------|---------|
+| **PixiJS** | 8.x | 2D WebGL/WebGPU sprite engine for game canvas |
+| **@pixi/react** | (optional) | React wrapper for PixiJS — evaluate during Phase 1 |
 
-#### Character Packages
+Everything else stays: React 19, Vite, TypeScript, xterm.js. No Tauri, no Zustand migration, no Tailwind.
 
-| Package | Purpose | Payload Fields |
-|---------|---------|----------------|
-| `Char.StatusVars` | Label mapping for vitals fields | `hp`, `maxHp`, `mana`, `maxMana`, `level`, `xp` |
-| `Char.Vitals` | HP, mana, XP, gold, combat state | `hp`, `maxHp`, `mana`, `maxMana`, `level`, `xp`, `xpIntoLevel`, `xpToNextLevel`, `gold`, `inCombat` |
-| `Char.Name` | Identity, appearance | `name`, `gender`, `race`, `class`, `level`, `sprite` |
-| `Char.Stats` | Base + effective stats, derived combat values | `strength`..`charisma`, `effectiveStrength`..`effectiveCharisma`, `baseDamageMin`, `baseDamageMax`, `armor`, `dodgePercent` |
-| `Char.Skills` | Known abilities with cooldowns | `id`, `name`, `description`, `manaCost`, `cooldownMs`, `cooldownRemainingMs`, `levelRequired`, `targetType`, `classRestriction` |
-| `Char.Cooldown` | Individual ability cooldown start event | `abilityId`, `cooldownMs` |
-| `Char.StatusEffects` | Active buffs/debuffs | Array of `{ id, name, type, remainingMs, stacks }` |
-| `Char.Items.List` | Full inventory and equipment | `inventory[]`, `equipment{}` — each item: `id`, `name`, `keyword`, `slot`, `damage`, `armor`, `basePrice`, `image` |
-| `Char.Items.Add` | Item added to inventory | Single item payload (same fields as above) |
-| `Char.Items.Remove` | Item removed from inventory | `id`, `name` |
-| `Char.Achievements` | Completed and in-progress achievements | `completed[]` (`id`, `name`, `title`), `inProgress[]` (`id`, `name`, `current`, `required`) |
-| `Char.Gain` | XP/gold/level-up event notifications | `type`, `amount`, `source?`, `newLevel?`, `hpGained?`, `manaGained?` |
-
-#### Combat Packages
-
-| Package | Purpose | Payload Fields |
-|---------|---------|----------------|
-| `Char.Combat` | Current combat target info | `targetId`, `targetName`, `targetHp`, `targetMaxHp`, `targetImage` |
-| `Char.Combat.Event` | Per-hit/dodge/kill combat events | `type` (`meleeHit`, `abilityHit`, `heal`, `dodge`, `dotTick`, `hotTick`, `kill`, `death`, `shieldAbsorb`), plus type-specific fields: `targetName`, `targetId`, `damage`, `amount`, `sourceIsPlayer`, `abilityId`, `abilityName`, `effectName`, `xpGained`, `goldGained`, `killerName`, `killerIsPlayer`, `attackerName`, `absorbed`, `remaining` |
-
-#### Room Packages
-
-| Package | Purpose | Payload Fields |
-|---------|---------|----------------|
-| `Room.Info` | Room title, description, exits, image | `id`, `title`, `description`, `zone`, `exits{}`, `image?` |
-| `Room.Players` | Other players in room (full list) | Array of `{ name, level }` |
-| `Room.AddPlayer` | Delta: player entered room | `name`, `level` |
-| `Room.RemovePlayer` | Delta: player left room | `name` |
-| `Room.Mobs` | Mobs in room (full list) | Array of `{ id, name, hp, maxHp, image? }` |
-| `Room.AddMob` | Delta: mob spawned/entered room | `id`, `name`, `hp`, `maxHp`, `image?` |
-| `Room.UpdateMob` | Delta: mob HP/state changed | `id`, `name`, `hp`, `maxHp`, `image?` |
-| `Room.RemoveMob` | Delta: mob died/left room | `id` |
-| `Room.MobInfo` | Mob metadata (level, tier, NPC flags) | Array of `{ id, level, tier, questGiver, shopKeeper, dialogue }` |
-| `Room.Items` | Items on the ground (full list) | Array of `{ id, name, image? }` |
-
-#### Quest Packages
-
-| Package | Purpose | Payload Fields |
-|---------|---------|----------------|
-| `Quest.List` | Full quest log | Array of `{ id, name, description, objectives[] }` — each objective: `{ description, current, required }` |
-| `Quest.Update` | Single objective progress update | `questId`, `objectiveIndex`, `current`, `required` |
-| `Quest.Complete` | Quest completion notification | `questId`, `questName` |
-
-#### Social Packages
-
-| Package | Purpose | Payload Fields |
-|---------|---------|----------------|
-| `Comm.Channel` | Chat messages (say, tell, gossip, shout, ooc, gtell) | `channel`, `sender`, `message` |
-| `Group.Info` | Party members with full vitals | `leader`, `members[]` (`name`, `level`, `hp`, `maxHp`, `mana`, `maxMana`, `class`) |
-| `Guild.Info` | Guild summary | `name`, `tag`, `rank`, `motd`, `memberCount`, `maxSize` |
-| `Guild.Members` | Guild roster | Array of `{ name, rank, online, level? }` |
-| `Guild.Chat` | Guild chat message | `sender`, `message` |
-| `Friends.List` | Friends list with status | Array of `{ name, online, level?, zone? }` |
-| `Friends.Online` | Friend came online | `name`, `level` |
-| `Friends.Offline` | Friend went offline | `name` |
-
-#### Dialogue Packages
-
-| Package | Purpose | Payload Fields |
-|---------|---------|----------------|
-| `Dialogue.Node` | NPC dialogue with choices | `mobName`, `text`, `choices[]` (`index`, `text`) |
-| `Dialogue.End` | Dialogue ended | `mobName`, `reason` |
-
-#### Shop Packages
-
-| Package | Purpose | Payload Fields |
-|---------|---------|----------------|
-| `Shop.List` | Shop inventory opened | `name`, `sellMultiplier`, `items[]` (`id`, `name`, `keyword`, `description`, `slot?`, `damage`, `armor`, `buyPrice`, `basePrice`, `consumable`, `image?`) |
-| `Shop.Close` | Shop closed | `{}` |
-
-#### System Packages
-
-| Package | Purpose | Payload Fields |
-|---------|---------|----------------|
-| `Core.Ping` | Keep-alive ping | `{}` |
-
-### Full Character Sync
-
-On login (and when a client negotiates GMCP support), the server sends a full sync in this order:
-
-1. `Char.StatusVars`
-2. `Char.Vitals`
-3. `Char.Name`
-4. `Char.Items.List`
-5. `Char.Skills`
-6. `Char.StatusEffects`
-7. `Char.Achievements`
-8. `Group.Info`
-9. `Guild.Info` (if in a guild)
-
-## Architecture Overview
+## Architecture
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                    Tauri Shell (Rust)                 │
-│  ┌────────────────────────────────────────────────┐  │
-│  │              React Application                  │  │
-│  │                                                 │  │
-│  │  ┌─────────────┐  ┌──────────────────────────┐ │  │
-│  │  │  UI Panels   │  │     PixiJS Canvas        │ │  │
-│  │  │  (React)     │  │  ┌──────────────────┐   │ │  │
-│  │  │              │  │  │  Scene Manager    │   │ │  │
-│  │  │  - Vitals    │  │  │  - World View     │   │ │  │
-│  │  │  - Inventory │  │  │  - Battle Scene   │   │ │  │
-│  │  │  - Skills    │  │  │  - Dialogue       │   │ │  │
-│  │  │  - Chat      │  │  │  - Effects/VFX    │   │ │  │
-│  │  │  - Quests    │  │  └──────────────────┘   │ │  │
-│  │  │  - Map       │  │                          │ │  │
-│  │  └─────────────┘  └──────────────────────────┘ │  │
-│  │                                                 │  │
-│  │  ┌──────────────────────────────────────────┐  │  │
-│  │  │           Zustand Store                   │  │  │
-│  │  │  vitals | room | combat | quests | ...    │  │  │
-│  │  └──────────────────────────────────────────┘  │  │
-│  │                                                 │  │
-│  │  ┌──────────────────────────────────────────┐  │  │
-│  │  │        GMCP Protocol Layer                │  │  │
-│  │  │  WebSocket → parse → dispatch to store    │  │  │
-│  │  └──────────────────────────────────────────┘  │  │
-│  └────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                 Existing v3 App Shell                     │
+│                                                           │
+│  ┌────────────────┐  ┌─────────────────────────────────┐ │
+│  │  React Panels   │  │       PixiJS Canvas (NEW)       │ │
+│  │  (unchanged)    │  │  ┌───────────────────────────┐  │ │
+│  │                 │  │  │     SceneManager          │  │ │
+│  │  - PlayPanel    │  │  │  ┌─────────┐ ┌─────────┐ │  │ │
+│  │  - WorldPanel   │  │  │  │ World   │ │ Battle  │ │  │ │
+│  │  - ChatPanel    │  │  │  │ Scene   │ │ Scene   │ │  │ │
+│  │  - CharPanel    │  │  │  └─────────┘ └─────────┘ │  │ │
+│  │  - CombatPanel  │  │  └───────────────────────────┘  │ │
+│  │  - AdminPanel   │  │                                  │ │
+│  └────────────────┘  └─────────────────────────────────┘ │
+│                                                           │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │          GameStateBridge (NEW)                        │ │
+│  │  React useState → shared ref object → PixiJS reads   │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                           │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │  Existing: useMudSocket, applyGmcpPackage, types.ts  │ │
+│  └─────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────┘
 ```
 
-## Module Structure
+### State Bridge Pattern
+
+PixiJS code runs outside React's render cycle. Instead of migrating to Zustand, a lightweight bridge exposes current state to the canvas via a mutable ref object:
+
+```typescript
+// canvas/GameStateBridge.ts
+export interface GameStateSnapshot {
+  room: RoomState;
+  vitals: Vitals;
+  mobs: RoomMob[];
+  players: RoomPlayer[];
+  combatTarget: CombatTarget | null;
+  inCombat: boolean;
+  effects: StatusEffect[];
+  character: CharacterInfo;
+}
+
+// Single ref updated by React on every relevant state change
+export const gameStateRef: { current: GameStateSnapshot } = {
+  current: { /* defaults */ },
+};
+```
+
+In `App.tsx`, a `useEffect` keeps the ref in sync:
+
+```typescript
+useEffect(() => {
+  gameStateRef.current = { room, vitals, mobs, players, combatTarget, inCombat: vitals.inCombat, effects, character };
+});
+```
+
+PixiJS reads `gameStateRef.current` on each frame tick — no prop drilling, no coupling.
+
+For events that need push semantics (combat events, gain popups), use a simple event emitter or a ring buffer that PixiJS drains each frame:
+
+```typescript
+// canvas/CanvasEventBus.ts
+export const canvasEvents = {
+  combatEvents: [] as CombatEventData[],
+  gainEvents: [] as GainEvent[],
+  push(event: CombatEventData | GainEvent) { /* append */ },
+  drain(): { combat: CombatEventData[], gains: GainEvent[] } { /* take all, clear */ },
+};
+```
+
+## New File Structure
+
+All new files go under `web-v3/src/canvas/`. Existing files are untouched unless noted.
 
 ```
-src/
-├── main.tsx                    # Tauri + React entry point
-├── App.tsx                     # Root layout (canvas + panels)
-├── connection/
-│   ├── WebSocketManager.ts     # WebSocket lifecycle, reconnect
-│   ├── GmcpParser.ts           # Parse GMCP packages from WS frames
-│   └── GmcpDispatcher.ts       # Route GMCP data → Zustand slices
-├── store/
-│   ├── index.ts                # Combined Zustand store
-│   ├── vitalsSlice.ts          # HP, mana, XP, gold
-│   ├── roomSlice.ts            # Room info, exits, players, mobs, items
-│   ├── combatSlice.ts          # Combat target, combat events queue
-│   ├── statsSlice.ts           # Base + effective stats
-│   ├── inventorySlice.ts       # Items, equipment
-│   ├── skillsSlice.ts          # Abilities, cooldowns
-│   ├── questSlice.ts           # Active quests, objectives
-│   ├── chatSlice.ts            # Chat channels, messages
-│   ├── groupSlice.ts           # Party info
-│   └── ...                     # Additional slices as needed
-├── canvas/
-│   ├── PixiApp.tsx             # PixiJS application wrapper
-│   ├── SceneManager.ts         # Scene state machine
+web-v3/src/
+├── canvas/                          # NEW — all PixiJS code lives here
+│   ├── GameStateBridge.ts           # Shared ref for React → PixiJS state
+│   ├── CanvasEventBus.ts            # Push events (combat hits, gains)
+│   ├── PixiCanvas.tsx               # React component wrapping PixiJS Application
+│   ├── SceneManager.ts              # Scene state machine (world ↔ battle ↔ transition)
 │   ├── scenes/
-│   │   ├── WorldScene.ts       # Overworld tilemap + player sprite
-│   │   ├── BattleScene.ts      # JRPG battle view (driven by Char.Combat.Event)
-│   │   ├── DialogueScene.ts    # NPC dialogue overlay
-│   │   └── TransitionScene.ts  # Room transition animations
+│   │   ├── WorldScene.ts            # Tile-based room view, player/NPC sprites, exits
+│   │   ├── BattleScene.ts           # JRPG battle view driven by combat events
+│   │   ├── TransitionScene.ts       # Room transition animations
+│   │   └── DialogueOverlay.ts       # NPC dialogue rendered on canvas
 │   ├── sprites/
-│   │   ├── CharacterSprite.ts  # Player + NPC animated sprites
-│   │   ├── MobSprite.ts        # Enemy sprites with HP bars
-│   │   └── EffectSprite.ts     # VFX (hits, heals, particles)
+│   │   ├── CharacterSprite.ts       # Player + NPC animated sprites
+│   │   ├── MobSprite.ts             # Enemy sprites with HP bars
+│   │   └── EffectSprite.ts          # VFX (hits, heals, particles)
 │   └── systems/
-│       ├── CombatAnimator.ts   # Queues Char.Combat.Event → animations
-│       ├── GainPopup.ts        # Animated XP/gold/level-up popups
-│       └── CooldownOverlay.ts  # Ability cooldown visuals
-├── panels/
-│   ├── VitalsPanel.tsx         # HP/mana/XP bars
-│   ├── InventoryPanel.tsx      # Bag + equipment grid
-│   ├── SkillBar.tsx            # Ability hotbar with cooldowns
-│   ├── QuestPanel.tsx          # Quest log with objective tracking
-│   ├── ChatPanel.tsx           # Scrollback + channel tabs
-│   ├── MiniMap.tsx             # Auto-mapped zone minimap
-│   ├── PartyPanel.tsx          # Group member vitals (HP + mana)
-│   └── StatsPanel.tsx          # Character stats sheet
-├── audio/
-│   ├── AudioManager.ts         # Howler.js wrapper
-│   ├── sfx.ts                  # SFX sprite definitions
-│   └── music.ts                # BGM management
-└── assets/
-    ├── sprites/                # Character/mob/item spritesheets
-    ├── tilesets/               # World tileset images
-    ├── ui/                     # UI element graphics
-    └── audio/                  # SFX + music files
+│       ├── CombatAnimator.ts        # Queues combat events → sprite animations
+│       ├── GainPopup.ts             # Floating XP/gold/level-up numbers
+│       └── CooldownOverlay.ts       # Ability cooldown visuals on canvas
+├── assets/
+│   ├── sprites/                     # NEW — character/mob/item spritesheets
+│   ├── tilesets/                    # NEW — world tileset images
+│   └── ui/                          # NEW — canvas UI element graphics
+│
+│  (existing files — unchanged)
+├── App.tsx                          # Modified: add GameStateBridge sync + PixiCanvas
+├── gmcp/applyGmcpPackage.ts        # Modified: also push combat/gain events to CanvasEventBus
+├── components/panels/...            # Unchanged
+├── hooks/...                        # Unchanged
+├── types.ts                         # Unchanged (canvas code imports existing types)
+└── ...
 ```
+
+### Changes to Existing Files
+
+Only two files need modification:
+
+1. **`App.tsx`** — Add `<PixiCanvas />` component in the layout, add `useEffect` to sync `gameStateRef`, conditionally show/hide canvas vs terminal based on a toggle or game state.
+
+2. **`gmcp/applyGmcpPackage.ts`** — In the `Char.Combat.Event` and `Char.Gain` handlers, also push to `canvasEvents` so the canvas can animate them independently of React state.
+
+## GMCP Packages Driving the Canvas
+
+All packages below are **already parsed by v3**. The canvas reads them via the state bridge — no new server work needed.
+
+| Canvas Feature | GMCP Source | What It Drives |
+|---------------|-------------|----------------|
+| Room rendering | `Room.Info` | Tile layout, exits, room image |
+| Player sprite | `Char.Name` | Sprite selection, position |
+| NPCs in room | `Room.Mobs`, `Room.AddMob`, `Room.RemoveMob` | Mob sprites, HP bars |
+| Other players | `Room.Players`, `Room.AddPlayer`, `Room.RemovePlayer` | Player name labels |
+| Room items | `Room.Items` | Item sprites on ground |
+| NPC metadata | `Room.MobInfo` | Quest marker / shop icon / chat bubble overlays |
+| Combat start | `Char.Combat` | Transition to battle scene, target highlight |
+| Combat actions | `Char.Combat.Event` | Per-hit animations (slash, spell VFX, heal particles, dodge text, death) |
+| Combat end | `Char.Vitals` (`inCombat: false`) | Transition back to world scene |
+| Damage/heal numbers | `Char.Combat.Event` | Floating damage/heal popups |
+| XP/gold popups | `Char.Gain` | Animated reward popups |
+| Cooldowns | `Char.Cooldown`, `Char.Skills` | Cooldown overlays on skill sprites |
+| Status effects | `Char.StatusEffects` | Buff/debuff icons on player sprite |
+| Dialogue | `Dialogue.Node`, `Dialogue.End` | NPC dialogue overlay on canvas |
+| Room transitions | `Room.Info` (room change) | Fade/slide animation between rooms |
 
 ## Phase Breakdown
 
-### Phase 1: Foundation (connection + state + basic panels)
+### Phase 1: PixiJS Foundation + World Scene
 
-- Tauri project scaffold with React + Vite
-- WebSocket connection to MUD server
-- GMCP parser and dispatcher
-- Zustand store with core slices (vitals, room, character)
-- Basic UI panels: vitals bars, room info, scrollback text
-- Login flow
+**Goal:** PixiJS canvas renders the current room with the player sprite. Existing panels continue working alongside it.
 
-### Phase 2: PixiJS Canvas + World View
+- Add `pixi.js` dependency to `web-v3/package.json`
+- Create `GameStateBridge.ts` and `CanvasEventBus.ts`
+- Create `PixiCanvas.tsx` React wrapper (mounts PixiJS `Application`, handles resize)
+- Implement `SceneManager` with `WorldScene` as the initial scene
+- `WorldScene`: render room title/image as background, player sprite centered, exit indicators (directional arrows or paths), NPC sprites from `Room.Mobs`
+- Add `<PixiCanvas />` to `App.tsx` layout — initially as an optional view alongside the terminal
+- Add toggle or layout mode to switch between terminal-primary and canvas-primary views
+- Wire `useEffect` in `App.tsx` to sync state bridge
 
-- PixiJS application integration
-- Scene manager state machine
-- World scene with tile-based room rendering
-- Player sprite on current room tile
-- Room transition animations on movement
-- Exits rendered as directional indicators
+**Art approach:** Start with simple colored rectangles / placeholder sprites. Art can be swapped in later without code changes.
 
-### Phase 3: Combat System
+### Phase 2: Room Transitions + NPC Indicators
 
-- Battle scene triggered by `Char.Combat` (target acquired)
-- `Char.Combat.Event` drives per-action animations:
-  - `meleeHit` → slash animation + damage number
-  - `abilityHit` → spell VFX + damage number
-  - `heal` → green particles + heal number
-  - `dodge` → "DODGE" text popup
-  - `kill` → death animation + XP/gold popup (from `Char.Gain`)
+**Goal:** Moving between rooms feels fluid. NPCs show their role visually.
+
+- `TransitionScene`: fade or slide animation triggered when `Room.Info` changes
+- NPC role overlays from `Room.MobInfo` — quest giver (❗), shop (🛒), dialogue (💬) icons above mob sprites
+- Other players in room rendered as labeled sprites (from `Room.Players`)
+- Room items rendered as small sprites on the ground (from `Room.Items`)
+- Click-to-interact on NPC/item sprites → sends commands via existing `sendCommand`
+
+### Phase 3: Battle Scene + Combat Animations
+
+**Goal:** Combat is visually represented with a JRPG-style battle view.
+
+- `BattleScene`: triggered when `Char.Combat` provides a target (or `Char.Vitals.inCombat` becomes true)
+- Player sprite on one side, enemy sprite(s) on the other
+- `CombatAnimator` drains `canvasEvents.combatEvents` each frame and queues animations:
+  - `meleeHit` → slash animation + red damage number
+  - `abilityHit` → spell VFX (particle burst) + damage number
+  - `heal` / `hotTick` → green particles + heal number
+  - `dodge` → "DODGE" text popup, sprite sidestep
+  - `dotTick` → periodic damage number (purple)
+  - `kill` → enemy death animation
   - `death` → player death animation
   - `shieldAbsorb` → shield flash + absorbed number
-  - `dotTick` / `hotTick` → periodic damage/heal numbers
-- `Char.Cooldown` → real-time cooldown bars on skill bar
-- Ability hotbar with click-to-cast
+- `GainPopup` shows floating "+X XP" / "+X Gold" / "Level Up!" from `Char.Gain` events
+- Enemy HP bar on the battle scene (from `Char.Combat` target HP)
+- Transition back to `WorldScene` when combat ends
 
-### Phase 4: Inventory, Equipment, Stats
+### Phase 4: Dialogue + Status Overlays
 
-- Inventory grid panel (drag-and-drop)
-- Equipment paper-doll display
-- `Char.Stats` panel showing base/effective stats + combat values
-- Item tooltips with stat comparison
+**Goal:** NPC conversations and character status are rendered on canvas.
 
-### Phase 5: Quests, Dialogue, NPCs
+- `DialogueOverlay`: renders `Dialogue.Node` as a text box with clickable choices over the world/battle scene
+- Status effect icons on player sprite (buff = blue border, debuff = red border, with stack count)
+- `CooldownOverlay`: if abilities are shown on canvas (optional hotbar), render cooldown sweep animations driven by `Char.Cooldown`
 
-- Quest panel with `Quest.List` / `Quest.Update` / `Quest.Complete`
-- Objective tracking HUD
-- NPC dialogue overlay (from `Dialogue.Node` / `Dialogue.End`)
-- `Room.MobInfo` drives NPC icons (quest marker, shop icon, chat bubble)
+### Phase 5: Polish + Sprite System
 
-### Phase 6: Social + Polish
+**Goal:** Swap placeholder art for real sprites. Improve visual fidelity.
 
-- Party panel with HP + mana bars (from `Group.Info`)
-- Chat panel with channel tabs
-- Friends list with online status
-- Guild panel
-- Minimap with auto-mapping
-- Audio system (BGM per zone, SFX for combat events)
-- Settings panel (audio, display, keybindings)
+- Spritesheet loading system (texture atlases for characters, mobs, items)
+- Animated sprite states (idle, walk, attack, cast, hit, death)
+- Particle system for spell effects, environmental ambiance
+- Improved room rendering (tileset-based if art is available, otherwise styled backgrounds)
+- Canvas-based minimap as alternative to the current `useMiniMap` canvas
 
 ## Key Design Decisions
 
+### Canvas Placement in Layout
+
+The PixiJS canvas is **not a replacement** for the terminal. It's an additional view. Options:
+
+- **Side-by-side**: Canvas on one side, terminal + panels on the other (desktop)
+- **Tabbed**: Canvas as a new tab alongside Play/World/Chat/Character (mobile)
+- **Overlay**: Canvas behind the terminal, with terminal having a semi-transparent background
+
+The exact layout is a UI decision that can be iterated on. Phase 1 starts with the simplest option (a new panel/tab) and refines from there.
+
 ### Combat Event Animation Queue
 
-`Char.Combat.Event` packets arrive as individual events (not batched). The `CombatAnimator` maintains a queue:
+`Char.Combat.Event` packets arrive individually. The `CombatAnimator` maintains a FIFO queue:
 
-1. Event arrives → pushed to animation queue
-2. Queue processes events sequentially with timing
-3. Each event type maps to a specific animation + sound
-4. Animations are non-blocking (next event can start before previous finishes if timing allows)
+1. `CanvasEventBus` receives event → pushed to queue
+2. Each frame, `CombatAnimator` checks if the current animation slot is free
+3. If free, dequeue next event → map to animation + timing
+4. Animations can overlap (damage numbers float independently of sprite animations)
 
-This ensures combat feels responsive even at high tick rates.
+This keeps combat responsive even at the 100ms server tick rate.
 
-### State Architecture
+### Click-to-Interact
 
-GMCP packages map 1:1 to Zustand store slices. The dispatcher routes each package to the appropriate slice update. React components subscribe to specific slices for minimal re-renders.
+Canvas sprites are clickable. Clicking an NPC/item sends the same commands the existing panels send:
 
+- Click mob → `kill <mob>` (or `talk <mob>` if quest giver / dialogue NPC)
+- Click item → `get <item>`
+- Click exit → movement command
+
+All commands go through the existing `sendCommand` callback — the canvas never touches the WebSocket directly.
+
+### Sprite Resolution
+
+The server already sends `image` fields on rooms, mobs, and items (nullable strings in GMCP payloads). The `sprite` field on `Char.Name` identifies the player sprite. These are the hooks for mapping game entities to sprite assets. When no image is specified, fall back to a default sprite per entity type.
+
+## What This Plan Does NOT Include
+
+- **Tauri / native desktop wrapper** — browser-served from Ktor is sufficient. Can revisit if distribution needs change.
+- **Audio (Howler.js)** — deferred. Can be added as a standalone enhancement later without architectural impact.
+- **State management migration (Zustand)** — the ref bridge pattern works. If the bridge becomes unwieldy at scale, Zustand is a straightforward incremental migration from the bridge pattern.
+- **New GMCP packages** — everything the canvas needs is already emitted by the server. No backend changes required for any phase.
+
+## Validation
+
+Same commands as v3, run from `web-v3/`:
+
+```bash
+bun run lint
+bun run build
 ```
-WebSocket frame
-  → GmcpParser.parse(frame)
-  → GmcpDispatcher.dispatch(package, data)
-  → store.getState().updateVitals(data)  // example
-  → React re-renders subscribed components
-  → PixiJS reads store for canvas updates
-```
 
-### Canvas/React Split
-
-- **React** handles all UI panels (vitals, inventory, chat, quests) — these are standard DOM elements styled with Tailwind
-- **PixiJS** handles the game canvas (world view, battle scene, VFX) — these are WebGL-rendered sprites
-- Both read from the same Zustand store
-- Canvas is a single `<canvas>` element managed by PixiJS; React panels overlay/surround it
-
-### Offline-First Settings
-
-Tauri's file-system access stores user preferences locally:
-- Keybindings
-- Audio volumes
-- Display preferences
-- Server connection history
-
-These persist across sessions without server-side storage.
+PixiJS adds ~150 kB to the bundle (tree-shaken). Monitor bundle size during development — the v3 client is already >500 kB, so lazy-loading the canvas module is recommended.
