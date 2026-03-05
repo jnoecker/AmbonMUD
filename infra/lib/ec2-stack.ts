@@ -242,7 +242,7 @@ export class Ec2Stack extends Stack {
       blockDevices: [
         {
           deviceName: '/dev/xvda',
-          volume: ec2.BlockDeviceVolume.ebs(8, {
+          volume: ec2.BlockDeviceVolume.ebs(16, {
             volumeType: ec2.EbsDeviceVolumeType.GP3,
             encrypted: true,
           }),

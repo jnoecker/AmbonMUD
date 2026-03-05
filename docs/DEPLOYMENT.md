@@ -367,10 +367,10 @@ CDK `cdk diff` shows exactly what will change before deploying. In-place tier up
 | Component | ~Monthly |
 |-----------|---------|
 | EC2 t4g.nano (2 vCPU burst / 512 MB) | ~$3.07 |
-| EBS gp3 8 GB (encrypted) | ~$0.64 |
+| EBS gp3 16 GB (encrypted) | ~$1.28 |
 | Elastic IP (free while attached) | $0 |
 | Route 53 hosted zone (optional) | ~$0.50 |
-| **Total** | **~$4–5/mo** |
+| **Total** | **~$5–6/mo** |
 
 No RDS, no Redis, no NAT gateway, no load balancer. YAML persistence stores player data at `/app/data` on the root EBS volume.
 
