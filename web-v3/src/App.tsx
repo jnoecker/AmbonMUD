@@ -465,6 +465,7 @@ function App() {
     return () => { canvasCallbacks.sendCommand = null; };
   }, [sendCommand]);
 
+
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 
   const equipmentSlots = useMemo(() => {
