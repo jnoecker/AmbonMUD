@@ -21,6 +21,7 @@ import type {
   ItemSummary,
   MobInfo,
   QuestEntry,
+  QuestNotification,
   RoomMob,
   RoomItem,
   RoomPlayer,
@@ -62,6 +63,7 @@ interface GmcpContext {
   setCharStats: Dispatch<SetStateAction<CharStats | null>>;
   setQuests: Dispatch<SetStateAction<QuestEntry[]>>;
   pushGainEvent: (event: GainEvent) => void;
+  pushQuestNotification: (notification: QuestNotification) => void;
   setMobInfo: Dispatch<SetStateAction<MobInfo[]>>;
 }
 
@@ -671,7 +673,15 @@ export function applyGmcpPackage(
       const packet = data as Partial<Record<string, unknown>>;
       const questId = typeof packet.questId === "string" ? packet.questId : null;
       if (!questId) break;
+      const questName = typeof packet.questName === "string" ? packet.questName : "Quest";
       ctx.setQuests((prev) => prev.filter((q) => q.id !== questId));
+      ctx.pushQuestNotification({
+        id: `${Date.now()}-${Math.random()}`,
+        questId,
+        questName,
+        event: "complete",
+        receivedAt: Date.now(),
+      });
       break;
     }
 

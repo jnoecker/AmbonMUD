@@ -43,6 +43,7 @@ import type {
   MobInfo,
   PopoutPanel,
   QuestEntry,
+  QuestNotification,
   RoomMob,
   RoomItem,
   RoomPlayer,
@@ -140,9 +141,10 @@ function App() {
   const [detailItem, setDetailItem] = useState<RoomItem | null>(null);
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
   const [, setCharStats] = useState<CharStats | null>(null);
-  const [, setQuests] = useState<QuestEntry[]>([]);
+  const [quests, setQuests] = useState<QuestEntry[]>([]);
   const [, setMobInfo] = useState<MobInfo[]>([]);
   const [shop, setShop] = useState<ShopState | null>(null);
+  const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -152,6 +154,14 @@ function App() {
 
   const pushGainEvent = useCallback((event: GainEvent) => {
     gainEventsRef.current = [...gainEventsRef.current.slice(-49), event];
+  }, []);
+
+  const MAX_QUEST_NOTIFICATIONS = 5;
+  const pushQuestNotification = useCallback((notification: QuestNotification) => {
+    setQuestNotifications((prev) => {
+      const next = [...prev, notification];
+      return next.length > MAX_QUEST_NOTIFICATIONS ? next.slice(-MAX_QUEST_NOTIFICATIONS) : next;
+    });
   }, []);
 
   const { mapCanvasRef, drawMap, updateMap, resetMap } = useMiniMap();
@@ -222,6 +232,7 @@ function App() {
     setQuests([]);
     setMobInfo([]);
     setShop(null);
+    setQuestNotifications([]);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setActiveChatChannel("say");
@@ -260,11 +271,12 @@ function App() {
           setCharStats,
           setQuests,
           pushGainEvent,
+          pushQuestNotification,
           setMobInfo,
         },
       );
     },
-    [pushFriendNotification, pushCombatEvent, pushGainEvent, updateMap],
+    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, updateMap],
   );
 
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine } = useMudSocket({
@@ -715,6 +727,15 @@ function App() {
           visibleEffects={visibleEffects}
           hiddenEffectsCount={hiddenEffectsCount}
           achievements={achievements}
+          quests={quests}
+          questNotifications={questNotifications}
+          onDismissQuestNotification={(id) => {
+            setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
+          }}
+          onAbandonQuest={(questName) => {
+            sendCommand(`quest abandon ${questName}`, true);
+            focusComposer();
+          }}
           onOpenEquipment={() => setActivePopout("equipment")}
           onOpenWearing={() => setActivePopout("wearing")}
         />
