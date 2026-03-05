@@ -33,8 +33,8 @@ export function PixiCanvas() {
       const scene = new SceneManager(app);
       sceneRef.current = scene;
 
-      app.ticker.add(() => {
-        scene.update();
+      app.ticker.add((ticker) => {
+        scene.update(ticker.deltaMS);
       });
 
       const ro = new ResizeObserver(() => {

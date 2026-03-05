@@ -11,7 +11,7 @@ import { PlayPanel } from "./components/panels/PlayPanel";
 import { WorldPanel } from "./components/panels/WorldPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
-import { gameStateRef } from "./canvas/GameStateBridge";
+import { canvasCallbacks, gameStateRef } from "./canvas/GameStateBridge";
 import { LoginModal } from "./canvas/LoginModal";
 import {
   DEFAULT_STATUS_VAR_LABELS,
@@ -150,7 +150,7 @@ function App() {
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
   const [, setCharStats] = useState<CharStats | null>(null);
   const [quests, setQuests] = useState<QuestEntry[]>([]);
-  const [, setMobInfo] = useState<MobInfo[]>([]);
+  const [mobInfo, setMobInfo] = useState<MobInfo[]>([]);
   const [shop, setShop] = useState<ShopState | null>(null);
   const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
   const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
@@ -455,9 +455,16 @@ function App() {
       inCombat: vitals.inCombat,
       effects,
       character,
-      mobInfo: [],
+      mobInfo,
     };
   });
+
+  // Wire sendCommand callback for PixiJS click-to-interact
+  useEffect(() => {
+    canvasCallbacks.sendCommand = (cmd: string) => sendCommand(cmd, true);
+    return () => { canvasCallbacks.sendCommand = null; };
+  }, [sendCommand]);
+
 
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 

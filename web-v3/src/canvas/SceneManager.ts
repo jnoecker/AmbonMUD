@@ -19,9 +19,9 @@ export class SceneManager {
     this.worldScene.resize(width, height);
   }
 
-  update() {
+  update(deltaMs: number) {
     if (this.currentScene === "world") {
-      this.worldScene.update();
+      this.worldScene.update(deltaMs);
     }
   }
 
