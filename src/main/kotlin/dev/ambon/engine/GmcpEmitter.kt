@@ -72,7 +72,6 @@ class GmcpEmitter(
                 targetMaxHp = target?.maxHp,
                 targetImage = target?.image,
             ),
-            supportCheck = "Char",
         )
     }
 
