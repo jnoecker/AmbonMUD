@@ -1,8 +1,8 @@
-import { useState } from "react";
-import type { AchievementData, CharacterInfo, StatusEffect, StatusVarLabels, Vitals } from "../../types";
-import { Bar, CharacterAvatarIcon, EquipmentIcon, WearingIcon } from "../Icons";
+import { useEffect, useState } from "react";
+import type { AchievementData, CharacterInfo, QuestEntry, QuestNotification, StatusEffect, StatusVarLabels, Vitals } from "../../types";
+import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, QuestsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
-type DetailTab = "vitals" | "effects" | "achievements";
+type DetailTab = "vitals" | "effects" | "achievements" | "quests";
 
 interface CharacterPanelProps {
   connected: boolean;
@@ -20,6 +20,10 @@ interface CharacterPanelProps {
   visibleEffects: StatusEffect[];
   hiddenEffectsCount: number;
   achievements: AchievementData;
+  quests: QuestEntry[];
+  questNotifications: QuestNotification[];
+  onDismissQuestNotification: (id: string) => void;
+  onAbandonQuest: (questName: string) => void;
   onOpenEquipment: () => void;
   onOpenWearing: () => void;
 }
@@ -40,12 +44,26 @@ export function CharacterPanel({
   visibleEffects,
   hiddenEffectsCount,
   achievements,
+  quests,
+  questNotifications,
+  onDismissQuestNotification,
+  onAbandonQuest,
   onOpenEquipment,
   onOpenWearing,
 }: CharacterPanelProps) {
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("vitals");
+  const [expandedQuestId, setExpandedQuestId] = useState<string | null>(null);
 
   const totalAchievements = achievements.completed.length + achievements.inProgress.length;
+
+  // Auto-dismiss quest notifications after 6 seconds
+  useEffect(() => {
+    if (questNotifications.length === 0) return;
+    const timer = window.setTimeout(() => {
+      onDismissQuestNotification(questNotifications[0].id);
+    }, 6000);
+    return () => window.clearTimeout(timer);
+  }, [questNotifications, onDismissQuestNotification]);
 
   return (
     <section className="panel panel-character" aria-label="Character status">
@@ -125,28 +143,46 @@ export function CharacterPanel({
               type="button"
               role="tab"
               aria-selected={activeDetailTab === "vitals"}
+              aria-label="Vitals"
+              title="Vitals"
               className={`character-detail-tab ${activeDetailTab === "vitals" ? "character-detail-tab-active" : ""}`}
               onClick={() => setActiveDetailTab("vitals")}
             >
-              Vitals
+              <VitalsTabIcon className="detail-tab-icon" />
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeDetailTab === "effects"}
+              aria-label="Effects"
+              title="Effects"
               className={`character-detail-tab ${activeDetailTab === "effects" ? "character-detail-tab-active" : ""}`}
               onClick={() => setActiveDetailTab("effects")}
             >
-              Effects
+              <EffectsTabIcon className="detail-tab-icon" />
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeDetailTab === "achievements"}
+              aria-label="Achievements"
+              title="Achievements"
               className={`character-detail-tab ${activeDetailTab === "achievements" ? "character-detail-tab-active" : ""}`}
               onClick={() => setActiveDetailTab("achievements")}
             >
-              Achievements
+              <AchievementsTabIcon className="detail-tab-icon" />
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeDetailTab === "quests"}
+              aria-label="Quests"
+              title="Quests"
+              className={`character-detail-tab ${activeDetailTab === "quests" ? "character-detail-tab-active" : ""}`}
+              onClick={() => setActiveDetailTab("quests")}
+            >
+              <QuestsTabIcon className="detail-tab-icon" />
+              {quests.length > 0 && <span className="quest-tab-badge">{quests.length}</span>}
             </button>
           </div>
 
@@ -236,6 +272,102 @@ export function CharacterPanel({
                         </div>
                       </li>
                     ))}
+                  </ul>
+                )}
+              </section>
+            )}
+
+            {activeDetailTab === "quests" && (
+              <section
+                key="quests"
+                className="character-detail-panel character-detail-panel-flip character-quests"
+                role="tabpanel"
+                aria-label="Quests"
+              >
+                {questNotifications.length > 0 && (
+                  <div className="quest-notifications">
+                    {questNotifications.map((n) => (
+                      <div
+                        key={n.id}
+                        className={`quest-notification quest-notification-${n.event}`}
+                        role="status"
+                      >
+                        <span className="quest-notification-text">
+                          {n.event === "complete" ? "Completed: " : "Updated: "}
+                          <strong>{n.questName}</strong>
+                        </span>
+                        <button
+                          type="button"
+                          className="quest-notification-dismiss"
+                          onClick={() => onDismissQuestNotification(n.id)}
+                          aria-label="Dismiss notification"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {quests.length === 0 ? (
+                  <p className="empty-note">{hasCharacterProfile ? "No active quests." : "Quests will appear here during gameplay."}</p>
+                ) : (
+                  <ul className="quest-list">
+                    {quests.map((quest) => {
+                      const isExpanded = expandedQuestId === quest.id;
+                      const totalObjectives = quest.objectives.length;
+                      const completedObjectives = quest.objectives.filter((o) => o.current >= o.required).length;
+                      return (
+                        <li key={quest.id} className={`quest-item ${isExpanded ? "quest-item-expanded" : ""}`}>
+                          <button
+                            type="button"
+                            className="quest-item-header"
+                            onClick={() => setExpandedQuestId(isExpanded ? null : quest.id)}
+                            aria-expanded={isExpanded}
+                          >
+                            <span className="quest-item-name">{quest.name}</span>
+                            <span className="quest-item-progress-badge">
+                              {completedObjectives}/{totalObjectives}
+                            </span>
+                          </button>
+                          {isExpanded && (
+                            <div className="quest-item-details">
+                              <p className="quest-item-description">{quest.description}</p>
+                              <ul className="quest-objectives">
+                                {quest.objectives.map((obj, idx) => {
+                                  const done = obj.current >= obj.required;
+                                  return (
+                                    <li key={idx} className={`quest-objective ${done ? "quest-objective-done" : ""}`}>
+                                      <div className="quest-objective-header">
+                                        <span className="quest-objective-check">{done ? "✓" : "○"}</span>
+                                        <span className="quest-objective-text">{obj.description}</span>
+                                        <span className="quest-objective-count">{obj.current}/{obj.required}</span>
+                                      </div>
+                                      {!done && (
+                                        <div className="meter-track quest-objective-track">
+                                          <span
+                                            className="meter-fill meter-fill-quest"
+                                            style={{ width: `${Math.min(100, (obj.current / Math.max(1, obj.required)) * 100)}%` }}
+                                          />
+                                        </div>
+                                      )}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                              <div className="quest-item-actions">
+                                <button
+                                  type="button"
+                                  className="quest-abandon-button"
+                                  onClick={() => onAbandonQuest(quest.name)}
+                                >
+                                  Abandon
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </section>

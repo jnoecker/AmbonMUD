@@ -266,6 +266,14 @@ export interface GainEvent {
   source: string | null;
 }
 
+export interface QuestNotification {
+  id: string;
+  questId: string;
+  questName: string;
+  event: "complete" | "update";
+  receivedAt: number;
+}
+
 export interface MobInfo {
   id: string;
   level: number;
