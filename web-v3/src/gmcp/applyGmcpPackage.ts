@@ -19,6 +19,8 @@ import type {
   GuildMemberEntry,
   InProgressAchievement,
   ItemSummary,
+  LoginErrorState,
+  LoginPromptState,
   MobInfo,
   QuestEntry,
   QuestNotification,
@@ -65,6 +67,8 @@ interface GmcpContext {
   pushGainEvent: (event: GainEvent) => void;
   pushQuestNotification: (notification: QuestNotification) => void;
   setMobInfo: Dispatch<SetStateAction<MobInfo[]>>;
+  setLoginPrompt: Dispatch<SetStateAction<LoginPromptState | null>>;
+  setLoginError: Dispatch<SetStateAction<LoginErrorState | null>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -137,6 +141,9 @@ export function applyGmcpPackage(
         sprite: typeof packet.sprite === "string" ? packet.sprite : null,
         isStaff: packet.isStaff === true,
       });
+      // Login complete — dismiss modal
+      ctx.setLoginPrompt(null);
+      ctx.setLoginError(null);
       break;
     }
 
@@ -759,6 +766,19 @@ export function applyGmcpPackage(
 
     case "Shop.Close": {
       ctx.setShop(null);
+      break;
+    }
+
+    case "Login.Prompt": {
+      const packet = data as LoginPromptState;
+      ctx.setLoginPrompt(packet);
+      ctx.setLoginError(null);
+      break;
+    }
+
+    case "Login.Error": {
+      const packet = data as LoginErrorState;
+      ctx.setLoginError(packet);
       break;
     }
 

@@ -1,8 +1,9 @@
-import type { FormEvent, KeyboardEvent, MouseEvent, RefObject } from "react";
+import type { FormEvent, KeyboardEvent, RefObject } from "react";
 import type { CombatTarget, RoomItem, RoomMob } from "../../types";
 import { percent } from "../../utils";
 import { AttackIcon, CrosshairIcon, DirectionIcon, FleeIcon, PickupIcon, TalkIcon } from "../Icons";
 import { isDirection } from "../isDirection";
+import { PixiCanvas } from "../../canvas/PixiCanvas";
 
 interface PlayPanelProps {
   preLogin: boolean;
@@ -14,11 +15,9 @@ interface PlayPanelProps {
   mobs: RoomMob[];
   roomItems: RoomItem[];
   combatTarget: CombatTarget | null;
-  terminalHostRef: RefObject<HTMLDivElement | null>;
   commandInputRef: RefObject<HTMLInputElement | null>;
   composerValue: string;
   commandPlaceholder: string;
-  onTerminalMouseDown: (event: MouseEvent<HTMLDivElement>) => void;
   onComposerChange: (value: string) => void;
   onComposerKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   onSubmitComposer: (event: FormEvent<HTMLFormElement>) => void;
@@ -29,6 +28,7 @@ interface PlayPanelProps {
   onPickUpItem: (itemName: string) => void;
   onOpenMobDetail: (mob: RoomMob) => void;
   onOpenItemDetail: (item: RoomItem) => void;
+  onOpenTerminal: () => void;
 }
 
 export function PlayPanel({
@@ -41,11 +41,9 @@ export function PlayPanel({
   mobs,
   roomItems,
   combatTarget,
-  terminalHostRef,
   commandInputRef,
   composerValue,
   commandPlaceholder,
-  onTerminalMouseDown,
   onComposerChange,
   onComposerKeyDown,
   onSubmitComposer,
@@ -56,6 +54,7 @@ export function PlayPanel({
   onPickUpItem,
   onOpenMobDetail,
   onOpenItemDetail,
+  onOpenTerminal,
 }: PlayPanelProps) {
   const showEntities = hasRoomDetails && (mobs.length > 0 || roomItems.length > 0);
 
@@ -163,7 +162,9 @@ export function PlayPanel({
           )}
         </div>
       )}
-      <div className="terminal-card" onMouseDown={onTerminalMouseDown}><div ref={terminalHostRef} className="terminal-host" aria-label="AmbonMUD terminal" /></div>
+      <div className="terminal-card">
+        <PixiCanvas />
+      </div>
 
       <form className="command-form" onSubmit={onSubmitComposer}>
         <label htmlFor="command-input" className="sr-only">Command input</label>
@@ -214,6 +215,14 @@ export function PlayPanel({
             <span className="chip-label">flee</span>
           </button>
         )}
+        <button
+          type="button"
+          className="chip-button chip-button-utility"
+          title="Open terminal"
+          onClick={onOpenTerminal}
+        >
+          <span className="chip-label">Terminal</span>
+        </button>
       </div>
     </section>
   );

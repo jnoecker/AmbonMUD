@@ -1,5 +1,6 @@
 package dev.ambon.engine.events
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.Race
@@ -162,6 +163,7 @@ internal class LoginFlowHandler(
         val raw = line.trim()
         if (raw.isEmpty()) {
             outbound.send(OutboundEvent.SendError(sessionId, "Please enter a name."))
+            emitLoginError(sessionId, "name", "Please enter a name.")
             promptForName(sessionId)
             return
         }
@@ -169,12 +171,14 @@ internal class LoginFlowHandler(
         val name = extractLoginName(raw)
         if (name.isEmpty()) {
             outbound.send(OutboundEvent.SendError(sessionId, "Please enter a name."))
+            emitLoginError(sessionId, "name", "Please enter a name.")
             promptForName(sessionId)
             return
         }
 
         if (!players.isValidName(name)) {
             outbound.send(OutboundEvent.SendError(sessionId, invalidNameMessage))
+            emitLoginError(sessionId, "name", invalidNameMessage)
             promptForName(sessionId)
             return
         }
@@ -231,6 +235,7 @@ internal class LoginFlowHandler(
 
             else -> {
                 outbound.send(OutboundEvent.SendError(sessionId, "Please answer yes or no."))
+                emitLoginError(sessionId, "confirmCreate", "Please answer yes or no.")
                 promptForCreateConfirmation(sessionId, state.name)
             }
         }
@@ -245,6 +250,7 @@ internal class LoginFlowHandler(
         val password = line
         if (password.isBlank()) {
             outbound.send(OutboundEvent.SendError(sessionId, "Blank password. Returning to login."))
+            emitLoginError(sessionId, "password", "Blank password. Returning to login.")
             if (recordFailedLoginAttemptAndCloseIfNeeded(sessionId)) return
             pendingLogins[sessionId] = LoginState.AwaitingName
             promptForName(sessionId)
@@ -269,6 +275,7 @@ internal class LoginFlowHandler(
         val password = line
         if (password.isBlank()) {
             outbound.send(OutboundEvent.SendError(sessionId, "Blank password. Returning to login."))
+            emitLoginError(sessionId, "newPassword", "Blank password. Returning to login.")
             if (recordFailedLoginAttemptAndCloseIfNeeded(sessionId)) return
             pendingLogins[sessionId] = LoginState.AwaitingName
             promptForName(sessionId)
@@ -277,6 +284,7 @@ internal class LoginFlowHandler(
 
         if (password.length > 72) {
             outbound.send(OutboundEvent.SendError(sessionId, invalidPasswordMessage))
+            emitLoginError(sessionId, "newPassword", invalidPasswordMessage)
             promptForNewPassword(sessionId)
             return
         }
@@ -299,6 +307,7 @@ internal class LoginFlowHandler(
 
         if (race == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Invalid choice. Enter a number or race name."))
+            emitLoginError(sessionId, "raceSelection", "Invalid choice. Enter a number or race name.")
             promptForRaceSelection(sessionId)
             return
         }
@@ -321,6 +330,7 @@ internal class LoginFlowHandler(
 
         if (playerClass == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Invalid choice. Enter a number or class name."))
+            emitLoginError(sessionId, "classSelection", "Invalid choice. Enter a number or class name.")
             promptForClassSelection(sessionId)
             return
         }
@@ -336,6 +346,7 @@ internal class LoginFlowHandler(
     internal suspend fun promptForName(sessionId: SessionId) {
         outbound.send(OutboundEvent.SendInfo(sessionId, "Enter your name:"))
         outbound.send(OutboundEvent.SendPrompt(sessionId))
+        emitLoginPrompt(sessionId, mapOf("state" to "name"))
     }
 
     private suspend fun handlePendingAuthResult(result: PendingAuthResult) {
@@ -391,19 +402,18 @@ internal class LoginFlowHandler(
                     dev.ambon.engine.LoginCredentialPrep.WrongPassword -> {
                         val attempts = currentState.wrongPasswordAttempts + 1
                         if (attempts > maxWrongPasswordRetries) {
-                            outbound.send(OutboundEvent.SendError(sid, "Incorrect password too many times. Returning to login."))
+                            val msg = "Incorrect password too many times. Returning to login."
+                            outbound.send(OutboundEvent.SendError(sid, msg))
+                            emitLoginError(sid, "password", msg)
                             if (recordFailedLoginAttemptAndCloseIfNeeded(sid)) return
                             pendingLogins[sid] = LoginState.AwaitingName
                             promptForName(sid)
                             return
                         }
                         val attemptsRemaining = (maxWrongPasswordRetries + 1) - attempts
-                        outbound.send(
-                            OutboundEvent.SendError(
-                                sid,
-                                "Incorrect password. $attemptsRemaining attempt(s) before returning to login.",
-                            ),
-                        )
+                        val msg = "Incorrect password. $attemptsRemaining attempt(s) before returning to login."
+                        outbound.send(OutboundEvent.SendError(sid, msg))
+                        emitLoginError(sid, "password", msg)
                         pendingLogins[sid] = LoginState.AwaitingExistingPassword(currentState.name, attempts)
                         promptForExistingPassword(sid)
                     }
@@ -575,13 +585,17 @@ internal class LoginFlowHandler(
     }
 
     private suspend fun promptForExistingPassword(sessionId: SessionId) {
+        val name = (pendingLogins[sessionId] as? LoginState.AwaitingExistingPassword)?.name ?: ""
         outbound.send(OutboundEvent.SendInfo(sessionId, "Password:"))
         outbound.send(OutboundEvent.SendPrompt(sessionId))
+        emitLoginPrompt(sessionId, mapOf("state" to "password", "name" to name))
     }
 
     private suspend fun promptForNewPassword(sessionId: SessionId) {
+        val name = (pendingLogins[sessionId] as? LoginState.AwaitingNewPassword)?.name ?: ""
         outbound.send(OutboundEvent.SendInfo(sessionId, "Create a password:"))
         outbound.send(OutboundEvent.SendPrompt(sessionId))
+        emitLoginPrompt(sessionId, mapOf("state" to "newPassword", "name" to name))
     }
 
     private suspend fun promptForCreateConfirmation(
@@ -590,9 +604,11 @@ internal class LoginFlowHandler(
     ) {
         outbound.send(OutboundEvent.SendInfo(sessionId, "No user named '$name' was found. Create a new user? (yes/no)"))
         outbound.send(OutboundEvent.SendPrompt(sessionId))
+        emitLoginPrompt(sessionId, mapOf("state" to "confirmCreate", "name" to name))
     }
 
     private suspend fun promptForRaceSelection(sessionId: SessionId) {
+        val state = pendingLogins[sessionId] as? LoginState.AwaitingRaceSelection
         outbound.send(OutboundEvent.SendInfo(sessionId, "Choose your race:"))
         for ((index, race) in Race.entries.withIndex()) {
             val s = race.statMods
@@ -609,9 +625,14 @@ internal class LoginFlowHandler(
             outbound.send(OutboundEvent.SendInfo(sessionId, "  ${index + 1}. ${race.displayName}$desc"))
         }
         outbound.send(OutboundEvent.SendPrompt(sessionId))
+        emitLoginPrompt(
+            sessionId,
+            mapOf("state" to "raceSelection", "name" to (state?.name ?: ""), "races" to racePayloads()),
+        )
     }
 
     private suspend fun promptForClassSelection(sessionId: SessionId) {
+        val state = pendingLogins[sessionId] as? LoginState.AwaitingClassSelection
         outbound.send(OutboundEvent.SendInfo(sessionId, "Choose your class:"))
         for ((index, pc) in availableClasses.withIndex()) {
             outbound.send(
@@ -622,6 +643,15 @@ internal class LoginFlowHandler(
             )
         }
         outbound.send(OutboundEvent.SendPrompt(sessionId))
+        emitLoginPrompt(
+            sessionId,
+            mapOf(
+                "state" to "classSelection",
+                "name" to (state?.name ?: ""),
+                "race" to (state?.race?.name ?: ""),
+                "classes" to classPayloads(),
+            ),
+        )
     }
 
     private fun extractLoginName(input: String): String {
@@ -629,4 +659,55 @@ internal class LoginFlowHandler(
         val match = nameCommandRegex.matchEntire(input)
         return match?.groupValues?.get(1)?.trim() ?: input
     }
+
+    // ---------- Login GMCP ----------
+
+    private val loginJson = jacksonObjectMapper()
+
+    private suspend fun emitLoginPrompt(
+        sessionId: SessionId,
+        payload: Map<String, Any>,
+    ) {
+        outbound.send(
+            OutboundEvent.GmcpData(sessionId, "Login.Prompt", loginJson.writeValueAsString(payload)),
+        )
+    }
+
+    private suspend fun emitLoginError(
+        sessionId: SessionId,
+        state: String,
+        message: String,
+    ) {
+        outbound.send(
+            OutboundEvent.GmcpData(
+                sessionId,
+                "Login.Error",
+                loginJson.writeValueAsString(mapOf("state" to state, "message" to message)),
+            ),
+        )
+    }
+
+    private fun racePayloads(): List<Map<String, String>> =
+        Race.entries.map { race ->
+            val s = race.statMods
+            val mods =
+                buildList {
+                    if (s.str != 0) add("STR %+d".format(s.str))
+                    if (s.dex != 0) add("DEX %+d".format(s.dex))
+                    if (s.con != 0) add("CON %+d".format(s.con))
+                    if (s.int != 0) add("INT %+d".format(s.int))
+                    if (s.wis != 0) add("WIS %+d".format(s.wis))
+                    if (s.cha != 0) add("CHA %+d".format(s.cha))
+                }.joinToString(", ")
+            mapOf("id" to race.name, "name" to race.displayName, "stats" to mods)
+        }
+
+    private fun classPayloads(): List<Map<String, String>> =
+        availableClasses.map { pc ->
+            mapOf(
+                "id" to pc.name,
+                "name" to pc.displayName,
+                "stats" to "+${pc.hpPerLevel} HP/lvl, +${pc.manaPerLevel} Mana/lvl",
+            )
+        }
 }

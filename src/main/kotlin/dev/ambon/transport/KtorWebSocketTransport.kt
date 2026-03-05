@@ -189,7 +189,7 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
         InboundEvent.GmcpReceived(
             sessionId,
             "Core.Supports.Set",
-            """["Char.Vitals 1","Room.Info 1","Char.StatusVars 1","Char.Items 1","Room.Players 1","Room.Mobs 1","Room.Items 1","Char.Skills 1","Char.Name 1","Char.StatusEffects 1","Char.Achievements 1","Comm.Channel 1","Guild 1","Group.Info 1","Friends 1","Core.Ping 1","Dialogue 1","Shop 1","Char.Combat.Event 1","Char.Stats 1","Quest 1","Char.Cooldown 1","Char.Gain 1","Room.MobInfo 1"]""",
+            """["Char.Vitals 1","Room.Info 1","Char.StatusVars 1","Char.Items 1","Room.Players 1","Room.Mobs 1","Room.Items 1","Char.Skills 1","Char.Name 1","Char.StatusEffects 1","Char.Achievements 1","Comm.Channel 1","Guild 1","Group.Info 1","Friends 1","Core.Ping 1","Dialogue 1","Shop 1","Char.Combat.Event 1","Char.Stats 1","Quest 1","Char.Cooldown 1","Char.Gain 1","Room.MobInfo 1","Login 1"]""",
         ),
     )
     metrics.onWsConnected()
