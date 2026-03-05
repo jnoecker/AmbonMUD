@@ -23,6 +23,12 @@ export interface GameStateSnapshot {
   mobInfo: MobInfo[];
 }
 
+export const canvasCallbacks: {
+  sendCommand: ((command: string) => void) | null;
+} = {
+  sendCommand: null,
+};
+
 export const gameStateRef: { current: GameStateSnapshot } = {
   current: {
     room: { id: null, title: "-", description: "", exits: {} },
