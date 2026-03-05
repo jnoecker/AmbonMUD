@@ -1,0 +1,3651 @@
+zone: player_sprites
+image:
+  room: player_sprites/default_room.png
+  mob: player_sprites/default_mob.png
+  item: player_sprites/default_item.png
+lifespan: 0
+startRoom: entrance
+
+rooms:
+  entrance:
+    image: player_sprites/entrance.png
+    desc: "A grand marble atrium with softly glowing crystal displays. Enchanted portraits line the walls, depicting adventurers of every race and calling."
+    exits:
+      n: novice_hall
+  novice_hall:
+    image: player_sprites/novice_hall.png
+    desc: "A warm corridor lined with training dummies and practice targets. The air smells of fresh leather and chalk."
+    exits:
+      s: entrance
+      n: apprentice_hall
+      e: novice_warriors
+      w: novice_mages
+      u: novice_clerics
+      d: novice_rogues
+  apprentice_hall:
+    image: player_sprites/apprentice_hall.png
+    desc: "A wider passage with polished stone floors and mounted weapons behind glass. Faint battle sounds echo from adjacent chambers."
+    exits:
+      s: novice_hall
+      n: journeyman_hall
+      e: apprentice_warriors
+      w: apprentice_mages
+      u: apprentice_clerics
+      d: apprentice_rogues
+  journeyman_hall:
+    image: player_sprites/journeyman_hall.png
+    desc: "An impressive gallery with vaulted ceilings and enchanted tapestries depicting famous battles. Arcane lanterns cast a steady glow."
+    exits:
+      s: apprentice_hall
+      n: expert_hall
+      e: journeyman_warriors
+      w: journeyman_mages
+      u: journeyman_clerics
+      d: journeyman_rogues
+  expert_hall:
+    image: player_sprites/expert_hall.png
+    desc: "A prestigious corridor of dark oak and silver filigree. Trophy cases display legendary artifacts and commendations."
+    exits:
+      s: journeyman_hall
+      n: master_hall
+      e: expert_warriors
+      w: expert_mages
+      u: expert_clerics
+      d: expert_rogues
+  master_hall:
+    image: player_sprites/master_hall.png
+    desc: "A resplendent hall of gleaming obsidian and gold inlay. The air hums with barely contained power."
+    exits:
+      s: expert_hall
+      n: legend_hall
+      e: master_warriors
+      w: master_mages
+      u: master_clerics
+      d: master_rogues
+  legend_hall:
+    image: player_sprites/legend_hall.png
+    desc: "An ethereal sanctuary where reality shimmers at the edges. Constellations drift across the ceiling, and the floor seems to float above an endless void."
+    exits:
+      s: master_hall
+      e: legend_warriors
+      w: legend_mages
+      u: legend_clerics
+      d: legend_rogues
+  novice_warriors:
+    image: player_sprites/novice_warriors.png
+    desc: "A dusty training yard with wooden swords and straw dummies. Young recruits practice basic stances."
+    exits:
+      w: novice_hall
+  novice_mages:
+    image: player_sprites/novice_mages.png
+    desc: "A cramped study filled with primer spellbooks and sputtering candles. Apprentices struggle with basic incantations."
+    exits:
+      e: novice_hall
+  novice_clerics:
+    image: player_sprites/novice_clerics.png
+    desc: "A humble chapel with simple wooden pews and a small altar. Acolytes kneel in quiet prayer."
+    exits:
+      d: novice_hall
+  novice_rogues:
+    image: player_sprites/novice_rogues.png
+    desc: "A shadowy alcove with lockpick sets and rope coils scattered about. Fledgling thieves practice sleight of hand."
+    exits:
+      u: novice_hall
+  apprentice_warriors:
+    image: player_sprites/apprentice_warriors.png
+    desc: "A proper armory with iron weapons and training rings. Soldiers spar with disciplined form."
+    exits:
+      w: apprentice_hall
+  apprentice_mages:
+    image: player_sprites/apprentice_mages.png
+    desc: "A well-stocked library with glowing runes etched into the reading desks. Channelers weave threads of mana."
+    exits:
+      e: apprentice_hall
+  apprentice_clerics:
+    image: player_sprites/apprentice_clerics.png
+    desc: "A serene sanctuary with stained glass windows casting colored light. Healers tend to minor wounds."
+    exits:
+      d: apprentice_hall
+  apprentice_rogues:
+    image: player_sprites/apprentice_rogues.png
+    desc: "A dimly lit den with targets, tripwires, and hidden compartments. Thieves hone their craft in silence."
+    exits:
+      u: apprentice_hall
+  journeyman_warriors:
+    image: player_sprites/journeyman_warriors.png
+    desc: "A battle-scarred arena with enchanted training golems. Knights test their mettle against formidable opponents."
+    exits:
+      w: journeyman_hall
+  journeyman_mages:
+    image: player_sprites/journeyman_mages.png
+    desc: "A conjuration chamber crackling with residual energy. Conjurers summon elemental wisps that dance through the air."
+    exits:
+      e: journeyman_hall
+  journeyman_clerics:
+    image: player_sprites/journeyman_clerics.png
+    desc: "A radiant temple with floating prayer beads and divine sigils. Priests channel healing light with practiced ease."
+    exits:
+      d: journeyman_hall
+  journeyman_rogues:
+    image: player_sprites/journeyman_rogues.png
+    desc: "A labyrinthine vault of shifting walls and concealed traps. Assassins move like whispers through the maze."
+    exits:
+      u: journeyman_hall
+  expert_warriors:
+    image: player_sprites/expert_warriors.png
+    desc: "A war room with enchanted battle maps and masterwork weapons. Champions bear the scars of countless victories."
+    exits:
+      w: expert_hall
+  expert_mages:
+    image: player_sprites/expert_mages.png
+    desc: "An arcane sanctum where spell circles burn permanently into the floor. Sorcerers command devastating magical forces."
+    exits:
+      e: expert_hall
+  expert_clerics:
+    image: player_sprites/expert_clerics.png
+    desc: "A blessed cathedral resonating with divine harmonics. Templars radiate an aura of holy protection."
+    exits:
+      d: expert_hall
+  expert_rogues:
+    image: player_sprites/expert_rogues.png
+    desc: "A vault of absolute darkness pierced only by the glint of poisoned blades. Shadows move with lethal purpose."
+    exits:
+      u: expert_hall
+  master_warriors:
+    image: player_sprites/master_warriors.png
+    desc: "A legendary forge-arena where enchanted weapons clash with thunderous force. Warlords command the very essence of combat."
+    exits:
+      w: master_hall
+  master_mages:
+    image: player_sprites/master_mages.png
+    desc: "A reality-bending sanctum where space folds and time stutters. Wizards reshape the fabric of existence."
+    exits:
+      e: master_hall
+  master_clerics:
+    image: player_sprites/master_clerics.png
+    desc: "A celestial observatory bathed in divine radiance. Bishops commune directly with higher powers."
+    exits:
+      d: master_hall
+  master_rogues:
+    image: player_sprites/master_rogues.png
+    desc: "A chamber that seems to exist between moments. Nightblades phase through solid matter at will."
+    exits:
+      u: master_hall
+  legend_warriors:
+    image: player_sprites/legend_warriors.png
+    desc: "A mythic colosseum suspended among storm clouds. Warlords of godslaying renown stand as monuments to martial perfection."
+    exits:
+      w: legend_hall
+  legend_mages:
+    image: player_sprites/legend_mages.png
+    desc: "A nexus of pure magical energy where archmages exist as living spells. Reality itself bends to their will."
+    exits:
+      e: legend_hall
+  legend_clerics:
+    image: player_sprites/legend_clerics.png
+    desc: "A fragment of the divine plane made manifest. Prophets glow with the light of celestial ascension."
+    exits:
+      d: legend_hall
+  legend_rogues:
+    image: player_sprites/legend_rogues.png
+    desc: "A void between worlds where shadowlords rule the spaces between shadows. Even light fears to enter."
+    exits:
+      u: legend_hall
+
+mobs:
+  human_enby_cleric_l1:
+    image: player_sprites/human_enby_cleric_l1.png
+    name: "a humble human acolyte"
+    room: novice_clerics
+    level: 1
+    hp: 14
+    minDamage: 1
+    maxDamage: 3
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  human_enby_cleric_l10:
+    image: player_sprites/human_enby_cleric_l10.png
+    name: "a devoted human healer"
+    room: apprentice_clerics
+    level: 10
+    hp: 78
+    minDamage: 6
+    maxDamage: 13
+    armor: 9
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  human_enby_cleric_l20:
+    image: player_sprites/human_enby_cleric_l20.png
+    name: "a radiant human priest"
+    room: journeyman_clerics
+    level: 20
+    hp: 156
+    minDamage: 13
+    maxDamage: 23
+    armor: 16
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  human_enby_cleric_l30:
+    image: player_sprites/human_enby_cleric_l30.png
+    name: "a blessed human templar"
+    room: expert_clerics
+    level: 30
+    hp: 273
+    minDamage: 20
+    maxDamage: 36
+    armor: 28
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  human_enby_cleric_l40:
+    image: player_sprites/human_enby_cleric_l40.png
+    name: "a exalted human bishop"
+    room: master_clerics
+    level: 40
+    hp: 429
+    minDamage: 29
+    maxDamage: 52
+    armor: 38
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  human_enby_cleric_l50:
+    image: player_sprites/human_enby_cleric_l50.png
+    name: "a celestial human prophet"
+    room: legend_clerics
+    level: 50
+    hp: 624
+    minDamage: 39
+    maxDamage: 65
+    armor: 50
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  human_female_cleric_l1:
+    image: player_sprites/human_female_cleric_l1.png
+    name: "a humble human acolyte"
+    room: novice_clerics
+    level: 1
+    hp: 14
+    minDamage: 1
+    maxDamage: 3
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  human_female_cleric_l10:
+    image: player_sprites/human_female_cleric_l10.png
+    name: "a devoted human healer"
+    room: apprentice_clerics
+    level: 10
+    hp: 78
+    minDamage: 6
+    maxDamage: 13
+    armor: 9
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  human_female_cleric_l20:
+    image: player_sprites/human_female_cleric_l20.png
+    name: "a radiant human priest"
+    room: journeyman_clerics
+    level: 20
+    hp: 156
+    minDamage: 13
+    maxDamage: 23
+    armor: 16
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  human_female_cleric_l30:
+    image: player_sprites/human_female_cleric_l30.png
+    name: "a blessed human templar"
+    room: expert_clerics
+    level: 30
+    hp: 273
+    minDamage: 20
+    maxDamage: 36
+    armor: 28
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  human_female_cleric_l40:
+    image: player_sprites/human_female_cleric_l40.png
+    name: "a exalted human bishop"
+    room: master_clerics
+    level: 40
+    hp: 429
+    minDamage: 29
+    maxDamage: 52
+    armor: 38
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  human_female_cleric_l50:
+    image: player_sprites/human_female_cleric_l50.png
+    name: "a celestial human prophet"
+    room: legend_clerics
+    level: 50
+    hp: 624
+    minDamage: 39
+    maxDamage: 65
+    armor: 50
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  human_male_cleric_l1:
+    image: player_sprites/human_male_cleric_l1.png
+    name: "a humble human acolyte"
+    room: novice_clerics
+    level: 1
+    hp: 14
+    minDamage: 1
+    maxDamage: 3
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  human_male_cleric_l10:
+    image: player_sprites/human_male_cleric_l10.png
+    name: "a devoted human healer"
+    room: apprentice_clerics
+    level: 10
+    hp: 78
+    minDamage: 6
+    maxDamage: 13
+    armor: 9
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  human_male_cleric_l20:
+    image: player_sprites/human_male_cleric_l20.png
+    name: "a radiant human priest"
+    room: journeyman_clerics
+    level: 20
+    hp: 156
+    minDamage: 13
+    maxDamage: 23
+    armor: 16
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  human_male_cleric_l30:
+    image: player_sprites/human_male_cleric_l30.png
+    name: "a blessed human templar"
+    room: expert_clerics
+    level: 30
+    hp: 273
+    minDamage: 20
+    maxDamage: 36
+    armor: 28
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  human_male_cleric_l40:
+    image: player_sprites/human_male_cleric_l40.png
+    name: "a exalted human bishop"
+    room: master_clerics
+    level: 40
+    hp: 429
+    minDamage: 29
+    maxDamage: 52
+    armor: 38
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  human_male_cleric_l50:
+    image: player_sprites/human_male_cleric_l50.png
+    name: "a celestial human prophet"
+    room: legend_clerics
+    level: 50
+    hp: 624
+    minDamage: 39
+    maxDamage: 65
+    armor: 50
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  elf_enby_cleric_l1:
+    image: player_sprites/elf_enby_cleric_l1.png
+    name: "a humble elf acolyte"
+    room: novice_clerics
+    level: 1
+    hp: 14
+    minDamage: 1
+    maxDamage: 3
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  elf_enby_cleric_l10:
+    image: player_sprites/elf_enby_cleric_l10.png
+    name: "a devoted elf healer"
+    room: apprentice_clerics
+    level: 10
+    hp: 78
+    minDamage: 6
+    maxDamage: 13
+    armor: 9
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  elf_enby_cleric_l20:
+    image: player_sprites/elf_enby_cleric_l20.png
+    name: "a radiant elf priest"
+    room: journeyman_clerics
+    level: 20
+    hp: 156
+    minDamage: 13
+    maxDamage: 23
+    armor: 16
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  elf_enby_cleric_l30:
+    image: player_sprites/elf_enby_cleric_l30.png
+    name: "a blessed elf templar"
+    room: expert_clerics
+    level: 30
+    hp: 273
+    minDamage: 20
+    maxDamage: 36
+    armor: 28
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  elf_enby_cleric_l40:
+    image: player_sprites/elf_enby_cleric_l40.png
+    name: "a exalted elf bishop"
+    room: master_clerics
+    level: 40
+    hp: 429
+    minDamage: 29
+    maxDamage: 52
+    armor: 38
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  elf_enby_cleric_l50:
+    image: player_sprites/elf_enby_cleric_l50.png
+    name: "a celestial elf prophet"
+    room: legend_clerics
+    level: 50
+    hp: 624
+    minDamage: 39
+    maxDamage: 65
+    armor: 50
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  elf_female_cleric_l1:
+    image: player_sprites/elf_female_cleric_l1.png
+    name: "a humble elf acolyte"
+    room: novice_clerics
+    level: 1
+    hp: 14
+    minDamage: 1
+    maxDamage: 3
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  elf_female_cleric_l10:
+    image: player_sprites/elf_female_cleric_l10.png
+    name: "a devoted elf healer"
+    room: apprentice_clerics
+    level: 10
+    hp: 78
+    minDamage: 6
+    maxDamage: 13
+    armor: 9
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  elf_female_cleric_l20:
+    image: player_sprites/elf_female_cleric_l20.png
+    name: "a radiant elf priest"
+    room: journeyman_clerics
+    level: 20
+    hp: 156
+    minDamage: 13
+    maxDamage: 23
+    armor: 16
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  elf_female_cleric_l30:
+    image: player_sprites/elf_female_cleric_l30.png
+    name: "a blessed elf templar"
+    room: expert_clerics
+    level: 30
+    hp: 273
+    minDamage: 20
+    maxDamage: 36
+    armor: 28
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  elf_female_cleric_l40:
+    image: player_sprites/elf_female_cleric_l40.png
+    name: "a exalted elf bishop"
+    room: master_clerics
+    level: 40
+    hp: 429
+    minDamage: 29
+    maxDamage: 52
+    armor: 38
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  elf_female_cleric_l50:
+    image: player_sprites/elf_female_cleric_l50.png
+    name: "a celestial elf prophet"
+    room: legend_clerics
+    level: 50
+    hp: 624
+    minDamage: 39
+    maxDamage: 65
+    armor: 50
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  elf_male_cleric_l1:
+    image: player_sprites/elf_male_cleric_l1.png
+    name: "a humble elf acolyte"
+    room: novice_clerics
+    level: 1
+    hp: 14
+    minDamage: 1
+    maxDamage: 3
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  elf_male_cleric_l10:
+    image: player_sprites/elf_male_cleric_l10.png
+    name: "a devoted elf healer"
+    room: apprentice_clerics
+    level: 10
+    hp: 78
+    minDamage: 6
+    maxDamage: 13
+    armor: 9
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  elf_male_cleric_l20:
+    image: player_sprites/elf_male_cleric_l20.png
+    name: "a radiant elf priest"
+    room: journeyman_clerics
+    level: 20
+    hp: 156
+    minDamage: 13
+    maxDamage: 23
+    armor: 16
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  elf_male_cleric_l30:
+    image: player_sprites/elf_male_cleric_l30.png
+    name: "a blessed elf templar"
+    room: expert_clerics
+    level: 30
+    hp: 273
+    minDamage: 20
+    maxDamage: 36
+    armor: 28
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  elf_male_cleric_l40:
+    image: player_sprites/elf_male_cleric_l40.png
+    name: "a exalted elf bishop"
+    room: master_clerics
+    level: 40
+    hp: 429
+    minDamage: 29
+    maxDamage: 52
+    armor: 38
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  elf_male_cleric_l50:
+    image: player_sprites/elf_male_cleric_l50.png
+    name: "a celestial elf prophet"
+    room: legend_clerics
+    level: 50
+    hp: 624
+    minDamage: 39
+    maxDamage: 65
+    armor: 50
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  dwarf_enby_cleric_l1:
+    image: player_sprites/dwarf_enby_cleric_l1.png
+    name: "a humble dwarf acolyte"
+    room: novice_clerics
+    level: 1
+    hp: 14
+    minDamage: 1
+    maxDamage: 3
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  dwarf_enby_cleric_l10:
+    image: player_sprites/dwarf_enby_cleric_l10.png
+    name: "a devoted dwarf healer"
+    room: apprentice_clerics
+    level: 10
+    hp: 78
+    minDamage: 6
+    maxDamage: 13
+    armor: 9
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  dwarf_enby_cleric_l20:
+    image: player_sprites/dwarf_enby_cleric_l20.png
+    name: "a radiant dwarf priest"
+    room: journeyman_clerics
+    level: 20
+    hp: 156
+    minDamage: 13
+    maxDamage: 23
+    armor: 16
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  dwarf_enby_cleric_l30:
+    image: player_sprites/dwarf_enby_cleric_l30.png
+    name: "a blessed dwarf templar"
+    room: expert_clerics
+    level: 30
+    hp: 273
+    minDamage: 20
+    maxDamage: 36
+    armor: 28
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  dwarf_enby_cleric_l40:
+    image: player_sprites/dwarf_enby_cleric_l40.png
+    name: "a exalted dwarf bishop"
+    room: master_clerics
+    level: 40
+    hp: 429
+    minDamage: 29
+    maxDamage: 52
+    armor: 38
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  dwarf_enby_cleric_l50:
+    image: player_sprites/dwarf_enby_cleric_l50.png
+    name: "a celestial dwarf prophet"
+    room: legend_clerics
+    level: 50
+    hp: 624
+    minDamage: 39
+    maxDamage: 65
+    armor: 50
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  dwarf_female_cleric_l1:
+    image: player_sprites/dwarf_female_cleric_l1.png
+    name: "a humble dwarf acolyte"
+    room: novice_clerics
+    level: 1
+    hp: 14
+    minDamage: 1
+    maxDamage: 3
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  dwarf_female_cleric_l10:
+    image: player_sprites/dwarf_female_cleric_l10.png
+    name: "a devoted dwarf healer"
+    room: apprentice_clerics
+    level: 10
+    hp: 78
+    minDamage: 6
+    maxDamage: 13
+    armor: 9
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  dwarf_female_cleric_l20:
+    image: player_sprites/dwarf_female_cleric_l20.png
+    name: "a radiant dwarf priest"
+    room: journeyman_clerics
+    level: 20
+    hp: 156
+    minDamage: 13
+    maxDamage: 23
+    armor: 16
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  dwarf_female_cleric_l30:
+    image: player_sprites/dwarf_female_cleric_l30.png
+    name: "a blessed dwarf templar"
+    room: expert_clerics
+    level: 30
+    hp: 273
+    minDamage: 20
+    maxDamage: 36
+    armor: 28
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  dwarf_female_cleric_l40:
+    image: player_sprites/dwarf_female_cleric_l40.png
+    name: "a exalted dwarf bishop"
+    room: master_clerics
+    level: 40
+    hp: 429
+    minDamage: 29
+    maxDamage: 52
+    armor: 38
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  dwarf_female_cleric_l50:
+    image: player_sprites/dwarf_female_cleric_l50.png
+    name: "a celestial dwarf prophet"
+    room: legend_clerics
+    level: 50
+    hp: 624
+    minDamage: 39
+    maxDamage: 65
+    armor: 50
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  dwarf_male_cleric_l1:
+    image: player_sprites/dwarf_male_cleric_l1.png
+    name: "a humble dwarf acolyte"
+    room: novice_clerics
+    level: 1
+    hp: 14
+    minDamage: 1
+    maxDamage: 3
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  dwarf_male_cleric_l10:
+    image: player_sprites/dwarf_male_cleric_l10.png
+    name: "a devoted dwarf healer"
+    room: apprentice_clerics
+    level: 10
+    hp: 78
+    minDamage: 6
+    maxDamage: 13
+    armor: 9
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  dwarf_male_cleric_l20:
+    image: player_sprites/dwarf_male_cleric_l20.png
+    name: "a radiant dwarf priest"
+    room: journeyman_clerics
+    level: 20
+    hp: 156
+    minDamage: 13
+    maxDamage: 23
+    armor: 16
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  dwarf_male_cleric_l30:
+    image: player_sprites/dwarf_male_cleric_l30.png
+    name: "a blessed dwarf templar"
+    room: expert_clerics
+    level: 30
+    hp: 273
+    minDamage: 20
+    maxDamage: 36
+    armor: 28
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  dwarf_male_cleric_l40:
+    image: player_sprites/dwarf_male_cleric_l40.png
+    name: "a exalted dwarf bishop"
+    room: master_clerics
+    level: 40
+    hp: 429
+    minDamage: 29
+    maxDamage: 52
+    armor: 38
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  dwarf_male_cleric_l50:
+    image: player_sprites/dwarf_male_cleric_l50.png
+    name: "a celestial dwarf prophet"
+    room: legend_clerics
+    level: 50
+    hp: 624
+    minDamage: 39
+    maxDamage: 65
+    armor: 50
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  halfling_enby_cleric_l1:
+    image: player_sprites/halfling_enby_cleric_l1.png
+    name: "a humble halfling acolyte"
+    room: novice_clerics
+    level: 1
+    hp: 14
+    minDamage: 1
+    maxDamage: 3
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  halfling_enby_cleric_l10:
+    image: player_sprites/halfling_enby_cleric_l10.png
+    name: "a devoted halfling healer"
+    room: apprentice_clerics
+    level: 10
+    hp: 78
+    minDamage: 6
+    maxDamage: 13
+    armor: 9
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  halfling_enby_cleric_l20:
+    image: player_sprites/halfling_enby_cleric_l20.png
+    name: "a radiant halfling priest"
+    room: journeyman_clerics
+    level: 20
+    hp: 156
+    minDamage: 13
+    maxDamage: 23
+    armor: 16
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  halfling_enby_cleric_l30:
+    image: player_sprites/halfling_enby_cleric_l30.png
+    name: "a blessed halfling templar"
+    room: expert_clerics
+    level: 30
+    hp: 273
+    minDamage: 20
+    maxDamage: 36
+    armor: 28
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  halfling_enby_cleric_l40:
+    image: player_sprites/halfling_enby_cleric_l40.png
+    name: "a exalted halfling bishop"
+    room: master_clerics
+    level: 40
+    hp: 429
+    minDamage: 29
+    maxDamage: 52
+    armor: 38
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  halfling_enby_cleric_l50:
+    image: player_sprites/halfling_enby_cleric_l50.png
+    name: "a celestial halfling prophet"
+    room: legend_clerics
+    level: 50
+    hp: 624
+    minDamage: 39
+    maxDamage: 65
+    armor: 50
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  halfling_female_cleric_l1:
+    image: player_sprites/halfling_female_cleric_l1.png
+    name: "a humble halfling acolyte"
+    room: novice_clerics
+    level: 1
+    hp: 14
+    minDamage: 1
+    maxDamage: 3
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  halfling_female_cleric_l10:
+    image: player_sprites/halfling_female_cleric_l10.png
+    name: "a devoted halfling healer"
+    room: apprentice_clerics
+    level: 10
+    hp: 78
+    minDamage: 6
+    maxDamage: 13
+    armor: 9
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  halfling_female_cleric_l20:
+    image: player_sprites/halfling_female_cleric_l20.png
+    name: "a radiant halfling priest"
+    room: journeyman_clerics
+    level: 20
+    hp: 156
+    minDamage: 13
+    maxDamage: 23
+    armor: 16
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  halfling_female_cleric_l30:
+    image: player_sprites/halfling_female_cleric_l30.png
+    name: "a blessed halfling templar"
+    room: expert_clerics
+    level: 30
+    hp: 273
+    minDamage: 20
+    maxDamage: 36
+    armor: 28
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  halfling_female_cleric_l40:
+    image: player_sprites/halfling_female_cleric_l40.png
+    name: "a exalted halfling bishop"
+    room: master_clerics
+    level: 40
+    hp: 429
+    minDamage: 29
+    maxDamage: 52
+    armor: 38
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  halfling_female_cleric_l50:
+    image: player_sprites/halfling_female_cleric_l50.png
+    name: "a celestial halfling prophet"
+    room: legend_clerics
+    level: 50
+    hp: 624
+    minDamage: 39
+    maxDamage: 65
+    armor: 50
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  halfling_male_cleric_l1:
+    image: player_sprites/halfling_male_cleric_l1.png
+    name: "a humble halfling acolyte"
+    room: novice_clerics
+    level: 1
+    hp: 14
+    minDamage: 1
+    maxDamage: 3
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  halfling_male_cleric_l10:
+    image: player_sprites/halfling_male_cleric_l10.png
+    name: "a devoted halfling healer"
+    room: apprentice_clerics
+    level: 10
+    hp: 78
+    minDamage: 6
+    maxDamage: 13
+    armor: 9
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  halfling_male_cleric_l20:
+    image: player_sprites/halfling_male_cleric_l20.png
+    name: "a radiant halfling priest"
+    room: journeyman_clerics
+    level: 20
+    hp: 156
+    minDamage: 13
+    maxDamage: 23
+    armor: 16
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  halfling_male_cleric_l30:
+    image: player_sprites/halfling_male_cleric_l30.png
+    name: "a blessed halfling templar"
+    room: expert_clerics
+    level: 30
+    hp: 273
+    minDamage: 20
+    maxDamage: 36
+    armor: 28
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  halfling_male_cleric_l40:
+    image: player_sprites/halfling_male_cleric_l40.png
+    name: "a exalted halfling bishop"
+    room: master_clerics
+    level: 40
+    hp: 429
+    minDamage: 29
+    maxDamage: 52
+    armor: 38
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  halfling_male_cleric_l50:
+    image: player_sprites/halfling_male_cleric_l50.png
+    name: "a celestial halfling prophet"
+    room: legend_clerics
+    level: 50
+    hp: 624
+    minDamage: 39
+    maxDamage: 65
+    armor: 50
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  human_enby_mage_l1:
+    image: player_sprites/human_enby_mage_l1.png
+    name: "a novice human apprentice"
+    room: novice_mages
+    level: 1
+    hp: 10
+    minDamage: 3
+    maxDamage: 6
+    armor: 0
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  human_enby_mage_l10:
+    image: player_sprites/human_enby_mage_l10.png
+    name: "a practiced human channeler"
+    room: apprentice_mages
+    level: 10
+    hp: 55
+    minDamage: 15
+    maxDamage: 30
+    armor: 4
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  human_enby_mage_l20:
+    image: player_sprites/human_enby_mage_l20.png
+    name: "a skilled human conjurer"
+    room: journeyman_mages
+    level: 20
+    hp: 110
+    minDamage: 30
+    maxDamage: 52
+    armor: 7
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  human_enby_mage_l30:
+    image: player_sprites/human_enby_mage_l30.png
+    name: "a powerful human sorcerer"
+    room: expert_mages
+    level: 30
+    hp: 193
+    minDamage: 45
+    maxDamage: 82
+    armor: 11
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  human_enby_mage_l40:
+    image: player_sprites/human_enby_mage_l40.png
+    name: "a arcane human wizard"
+    room: master_mages
+    level: 40
+    hp: 302
+    minDamage: 68
+    maxDamage: 120
+    armor: 16
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  human_enby_mage_l50:
+    image: player_sprites/human_enby_mage_l50.png
+    name: "a transcendent human archmage"
+    room: legend_mages
+    level: 50
+    hp: 440
+    minDamage: 90
+    maxDamage: 150
+    armor: 20
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  human_female_mage_l1:
+    image: player_sprites/human_female_mage_l1.png
+    name: "a novice human apprentice"
+    room: novice_mages
+    level: 1
+    hp: 10
+    minDamage: 3
+    maxDamage: 6
+    armor: 0
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  human_female_mage_l10:
+    image: player_sprites/human_female_mage_l10.png
+    name: "a practiced human channeler"
+    room: apprentice_mages
+    level: 10
+    hp: 55
+    minDamage: 15
+    maxDamage: 30
+    armor: 4
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  human_female_mage_l20:
+    image: player_sprites/human_female_mage_l20.png
+    name: "a skilled human conjurer"
+    room: journeyman_mages
+    level: 20
+    hp: 110
+    minDamage: 30
+    maxDamage: 52
+    armor: 7
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  human_female_mage_l30:
+    image: player_sprites/human_female_mage_l30.png
+    name: "a powerful human sorcerer"
+    room: expert_mages
+    level: 30
+    hp: 193
+    minDamage: 45
+    maxDamage: 82
+    armor: 11
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  human_female_mage_l40:
+    image: player_sprites/human_female_mage_l40.png
+    name: "a arcane human wizard"
+    room: master_mages
+    level: 40
+    hp: 302
+    minDamage: 68
+    maxDamage: 120
+    armor: 16
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  human_female_mage_l50:
+    image: player_sprites/human_female_mage_l50.png
+    name: "a transcendent human archmage"
+    room: legend_mages
+    level: 50
+    hp: 440
+    minDamage: 90
+    maxDamage: 150
+    armor: 20
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  human_male_mage_l1:
+    image: player_sprites/human_male_mage_l1.png
+    name: "a novice human apprentice"
+    room: novice_mages
+    level: 1
+    hp: 10
+    minDamage: 3
+    maxDamage: 6
+    armor: 0
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  human_male_mage_l10:
+    image: player_sprites/human_male_mage_l10.png
+    name: "a practiced human channeler"
+    room: apprentice_mages
+    level: 10
+    hp: 55
+    minDamage: 15
+    maxDamage: 30
+    armor: 4
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  human_male_mage_l20:
+    image: player_sprites/human_male_mage_l20.png
+    name: "a skilled human conjurer"
+    room: journeyman_mages
+    level: 20
+    hp: 110
+    minDamage: 30
+    maxDamage: 52
+    armor: 7
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  human_male_mage_l30:
+    image: player_sprites/human_male_mage_l30.png
+    name: "a powerful human sorcerer"
+    room: expert_mages
+    level: 30
+    hp: 193
+    minDamage: 45
+    maxDamage: 82
+    armor: 11
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  human_male_mage_l40:
+    image: player_sprites/human_male_mage_l40.png
+    name: "a arcane human wizard"
+    room: master_mages
+    level: 40
+    hp: 302
+    minDamage: 68
+    maxDamage: 120
+    armor: 16
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  human_male_mage_l50:
+    image: player_sprites/human_male_mage_l50.png
+    name: "a transcendent human archmage"
+    room: legend_mages
+    level: 50
+    hp: 440
+    minDamage: 90
+    maxDamage: 150
+    armor: 20
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  elf_enby_mage_l1:
+    image: player_sprites/elf_enby_mage_l1.png
+    name: "a novice elf apprentice"
+    room: novice_mages
+    level: 1
+    hp: 10
+    minDamage: 3
+    maxDamage: 6
+    armor: 0
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  elf_enby_mage_l10:
+    image: player_sprites/elf_enby_mage_l10.png
+    name: "a practiced elf channeler"
+    room: apprentice_mages
+    level: 10
+    hp: 55
+    minDamage: 15
+    maxDamage: 30
+    armor: 4
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  elf_enby_mage_l20:
+    image: player_sprites/elf_enby_mage_l20.png
+    name: "a skilled elf conjurer"
+    room: journeyman_mages
+    level: 20
+    hp: 110
+    minDamage: 30
+    maxDamage: 52
+    armor: 7
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  elf_enby_mage_l30:
+    image: player_sprites/elf_enby_mage_l30.png
+    name: "a powerful elf sorcerer"
+    room: expert_mages
+    level: 30
+    hp: 193
+    minDamage: 45
+    maxDamage: 82
+    armor: 11
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  elf_enby_mage_l40:
+    image: player_sprites/elf_enby_mage_l40.png
+    name: "a arcane elf wizard"
+    room: master_mages
+    level: 40
+    hp: 302
+    minDamage: 68
+    maxDamage: 120
+    armor: 16
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  elf_enby_mage_l50:
+    image: player_sprites/elf_enby_mage_l50.png
+    name: "a transcendent elf archmage"
+    room: legend_mages
+    level: 50
+    hp: 440
+    minDamage: 90
+    maxDamage: 150
+    armor: 20
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  elf_female_mage_l1:
+    image: player_sprites/elf_female_mage_l1.png
+    name: "a novice elf apprentice"
+    room: novice_mages
+    level: 1
+    hp: 10
+    minDamage: 3
+    maxDamage: 6
+    armor: 0
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  elf_female_mage_l10:
+    image: player_sprites/elf_female_mage_l10.png
+    name: "a practiced elf channeler"
+    room: apprentice_mages
+    level: 10
+    hp: 55
+    minDamage: 15
+    maxDamage: 30
+    armor: 4
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  elf_female_mage_l20:
+    image: player_sprites/elf_female_mage_l20.png
+    name: "a skilled elf conjurer"
+    room: journeyman_mages
+    level: 20
+    hp: 110
+    minDamage: 30
+    maxDamage: 52
+    armor: 7
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  elf_female_mage_l30:
+    image: player_sprites/elf_female_mage_l30.png
+    name: "a powerful elf sorcerer"
+    room: expert_mages
+    level: 30
+    hp: 193
+    minDamage: 45
+    maxDamage: 82
+    armor: 11
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  elf_female_mage_l40:
+    image: player_sprites/elf_female_mage_l40.png
+    name: "a arcane elf wizard"
+    room: master_mages
+    level: 40
+    hp: 302
+    minDamage: 68
+    maxDamage: 120
+    armor: 16
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  elf_female_mage_l50:
+    image: player_sprites/elf_female_mage_l50.png
+    name: "a transcendent elf archmage"
+    room: legend_mages
+    level: 50
+    hp: 440
+    minDamage: 90
+    maxDamage: 150
+    armor: 20
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  elf_male_mage_l1:
+    image: player_sprites/elf_male_mage_l1.png
+    name: "a novice elf apprentice"
+    room: novice_mages
+    level: 1
+    hp: 10
+    minDamage: 3
+    maxDamage: 6
+    armor: 0
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  elf_male_mage_l10:
+    image: player_sprites/elf_male_mage_l10.png
+    name: "a practiced elf channeler"
+    room: apprentice_mages
+    level: 10
+    hp: 55
+    minDamage: 15
+    maxDamage: 30
+    armor: 4
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  elf_male_mage_l20:
+    image: player_sprites/elf_male_mage_l20.png
+    name: "a skilled elf conjurer"
+    room: journeyman_mages
+    level: 20
+    hp: 110
+    minDamage: 30
+    maxDamage: 52
+    armor: 7
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  elf_male_mage_l30:
+    image: player_sprites/elf_male_mage_l30.png
+    name: "a powerful elf sorcerer"
+    room: expert_mages
+    level: 30
+    hp: 193
+    minDamage: 45
+    maxDamage: 82
+    armor: 11
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  elf_male_mage_l40:
+    image: player_sprites/elf_male_mage_l40.png
+    name: "a arcane elf wizard"
+    room: master_mages
+    level: 40
+    hp: 302
+    minDamage: 68
+    maxDamage: 120
+    armor: 16
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  elf_male_mage_l50:
+    image: player_sprites/elf_male_mage_l50.png
+    name: "a transcendent elf archmage"
+    room: legend_mages
+    level: 50
+    hp: 440
+    minDamage: 90
+    maxDamage: 150
+    armor: 20
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  dwarf_enby_mage_l1:
+    image: player_sprites/dwarf_enby_mage_l1.png
+    name: "a novice dwarf apprentice"
+    room: novice_mages
+    level: 1
+    hp: 10
+    minDamage: 3
+    maxDamage: 6
+    armor: 0
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  dwarf_enby_mage_l10:
+    image: player_sprites/dwarf_enby_mage_l10.png
+    name: "a practiced dwarf channeler"
+    room: apprentice_mages
+    level: 10
+    hp: 55
+    minDamage: 15
+    maxDamage: 30
+    armor: 4
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  dwarf_enby_mage_l20:
+    image: player_sprites/dwarf_enby_mage_l20.png
+    name: "a skilled dwarf conjurer"
+    room: journeyman_mages
+    level: 20
+    hp: 110
+    minDamage: 30
+    maxDamage: 52
+    armor: 7
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  dwarf_enby_mage_l30:
+    image: player_sprites/dwarf_enby_mage_l30.png
+    name: "a powerful dwarf sorcerer"
+    room: expert_mages
+    level: 30
+    hp: 193
+    minDamage: 45
+    maxDamage: 82
+    armor: 11
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  dwarf_enby_mage_l40:
+    image: player_sprites/dwarf_enby_mage_l40.png
+    name: "a arcane dwarf wizard"
+    room: master_mages
+    level: 40
+    hp: 302
+    minDamage: 68
+    maxDamage: 120
+    armor: 16
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  dwarf_enby_mage_l50:
+    image: player_sprites/dwarf_enby_mage_l50.png
+    name: "a transcendent dwarf archmage"
+    room: legend_mages
+    level: 50
+    hp: 440
+    minDamage: 90
+    maxDamage: 150
+    armor: 20
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  dwarf_female_mage_l1:
+    image: player_sprites/dwarf_female_mage_l1.png
+    name: "a novice dwarf apprentice"
+    room: novice_mages
+    level: 1
+    hp: 10
+    minDamage: 3
+    maxDamage: 6
+    armor: 0
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  dwarf_female_mage_l10:
+    image: player_sprites/dwarf_female_mage_l10.png
+    name: "a practiced dwarf channeler"
+    room: apprentice_mages
+    level: 10
+    hp: 55
+    minDamage: 15
+    maxDamage: 30
+    armor: 4
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  dwarf_female_mage_l20:
+    image: player_sprites/dwarf_female_mage_l20.png
+    name: "a skilled dwarf conjurer"
+    room: journeyman_mages
+    level: 20
+    hp: 110
+    minDamage: 30
+    maxDamage: 52
+    armor: 7
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  dwarf_female_mage_l30:
+    image: player_sprites/dwarf_female_mage_l30.png
+    name: "a powerful dwarf sorcerer"
+    room: expert_mages
+    level: 30
+    hp: 193
+    minDamage: 45
+    maxDamage: 82
+    armor: 11
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  dwarf_female_mage_l40:
+    image: player_sprites/dwarf_female_mage_l40.png
+    name: "a arcane dwarf wizard"
+    room: master_mages
+    level: 40
+    hp: 302
+    minDamage: 68
+    maxDamage: 120
+    armor: 16
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  dwarf_female_mage_l50:
+    image: player_sprites/dwarf_female_mage_l50.png
+    name: "a transcendent dwarf archmage"
+    room: legend_mages
+    level: 50
+    hp: 440
+    minDamage: 90
+    maxDamage: 150
+    armor: 20
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  dwarf_male_mage_l1:
+    image: player_sprites/dwarf_male_mage_l1.png
+    name: "a novice dwarf apprentice"
+    room: novice_mages
+    level: 1
+    hp: 10
+    minDamage: 3
+    maxDamage: 6
+    armor: 0
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  dwarf_male_mage_l10:
+    image: player_sprites/dwarf_male_mage_l10.png
+    name: "a practiced dwarf channeler"
+    room: apprentice_mages
+    level: 10
+    hp: 55
+    minDamage: 15
+    maxDamage: 30
+    armor: 4
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  dwarf_male_mage_l20:
+    image: player_sprites/dwarf_male_mage_l20.png
+    name: "a skilled dwarf conjurer"
+    room: journeyman_mages
+    level: 20
+    hp: 110
+    minDamage: 30
+    maxDamage: 52
+    armor: 7
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  dwarf_male_mage_l30:
+    image: player_sprites/dwarf_male_mage_l30.png
+    name: "a powerful dwarf sorcerer"
+    room: expert_mages
+    level: 30
+    hp: 193
+    minDamage: 45
+    maxDamage: 82
+    armor: 11
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  dwarf_male_mage_l40:
+    image: player_sprites/dwarf_male_mage_l40.png
+    name: "a arcane dwarf wizard"
+    room: master_mages
+    level: 40
+    hp: 302
+    minDamage: 68
+    maxDamage: 120
+    armor: 16
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  dwarf_male_mage_l50:
+    image: player_sprites/dwarf_male_mage_l50.png
+    name: "a transcendent dwarf archmage"
+    room: legend_mages
+    level: 50
+    hp: 440
+    minDamage: 90
+    maxDamage: 150
+    armor: 20
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  halfling_enby_mage_l1:
+    image: player_sprites/halfling_enby_mage_l1.png
+    name: "a novice halfling apprentice"
+    room: novice_mages
+    level: 1
+    hp: 10
+    minDamage: 3
+    maxDamage: 6
+    armor: 0
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  halfling_enby_mage_l10:
+    image: player_sprites/halfling_enby_mage_l10.png
+    name: "a practiced halfling channeler"
+    room: apprentice_mages
+    level: 10
+    hp: 55
+    minDamage: 15
+    maxDamage: 30
+    armor: 4
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  halfling_enby_mage_l20:
+    image: player_sprites/halfling_enby_mage_l20.png
+    name: "a skilled halfling conjurer"
+    room: journeyman_mages
+    level: 20
+    hp: 110
+    minDamage: 30
+    maxDamage: 52
+    armor: 7
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  halfling_enby_mage_l30:
+    image: player_sprites/halfling_enby_mage_l30.png
+    name: "a powerful halfling sorcerer"
+    room: expert_mages
+    level: 30
+    hp: 193
+    minDamage: 45
+    maxDamage: 82
+    armor: 11
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  halfling_enby_mage_l40:
+    image: player_sprites/halfling_enby_mage_l40.png
+    name: "a arcane halfling wizard"
+    room: master_mages
+    level: 40
+    hp: 302
+    minDamage: 68
+    maxDamage: 120
+    armor: 16
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  halfling_enby_mage_l50:
+    image: player_sprites/halfling_enby_mage_l50.png
+    name: "a transcendent halfling archmage"
+    room: legend_mages
+    level: 50
+    hp: 440
+    minDamage: 90
+    maxDamage: 150
+    armor: 20
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  halfling_female_mage_l1:
+    image: player_sprites/halfling_female_mage_l1.png
+    name: "a novice halfling apprentice"
+    room: novice_mages
+    level: 1
+    hp: 10
+    minDamage: 3
+    maxDamage: 6
+    armor: 0
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  halfling_female_mage_l10:
+    image: player_sprites/halfling_female_mage_l10.png
+    name: "a practiced halfling channeler"
+    room: apprentice_mages
+    level: 10
+    hp: 55
+    minDamage: 15
+    maxDamage: 30
+    armor: 4
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  halfling_female_mage_l20:
+    image: player_sprites/halfling_female_mage_l20.png
+    name: "a skilled halfling conjurer"
+    room: journeyman_mages
+    level: 20
+    hp: 110
+    minDamage: 30
+    maxDamage: 52
+    armor: 7
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  halfling_female_mage_l30:
+    image: player_sprites/halfling_female_mage_l30.png
+    name: "a powerful halfling sorcerer"
+    room: expert_mages
+    level: 30
+    hp: 193
+    minDamage: 45
+    maxDamage: 82
+    armor: 11
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  halfling_female_mage_l40:
+    image: player_sprites/halfling_female_mage_l40.png
+    name: "a arcane halfling wizard"
+    room: master_mages
+    level: 40
+    hp: 302
+    minDamage: 68
+    maxDamage: 120
+    armor: 16
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  halfling_female_mage_l50:
+    image: player_sprites/halfling_female_mage_l50.png
+    name: "a transcendent halfling archmage"
+    room: legend_mages
+    level: 50
+    hp: 440
+    minDamage: 90
+    maxDamage: 150
+    armor: 20
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  halfling_male_mage_l1:
+    image: player_sprites/halfling_male_mage_l1.png
+    name: "a novice halfling apprentice"
+    room: novice_mages
+    level: 1
+    hp: 10
+    minDamage: 3
+    maxDamage: 6
+    armor: 0
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  halfling_male_mage_l10:
+    image: player_sprites/halfling_male_mage_l10.png
+    name: "a practiced halfling channeler"
+    room: apprentice_mages
+    level: 10
+    hp: 55
+    minDamage: 15
+    maxDamage: 30
+    armor: 4
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  halfling_male_mage_l20:
+    image: player_sprites/halfling_male_mage_l20.png
+    name: "a skilled halfling conjurer"
+    room: journeyman_mages
+    level: 20
+    hp: 110
+    minDamage: 30
+    maxDamage: 52
+    armor: 7
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  halfling_male_mage_l30:
+    image: player_sprites/halfling_male_mage_l30.png
+    name: "a powerful halfling sorcerer"
+    room: expert_mages
+    level: 30
+    hp: 193
+    minDamage: 45
+    maxDamage: 82
+    armor: 11
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  halfling_male_mage_l40:
+    image: player_sprites/halfling_male_mage_l40.png
+    name: "a arcane halfling wizard"
+    room: master_mages
+    level: 40
+    hp: 302
+    minDamage: 68
+    maxDamage: 120
+    armor: 16
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  halfling_male_mage_l50:
+    image: player_sprites/halfling_male_mage_l50.png
+    name: "a transcendent halfling archmage"
+    room: legend_mages
+    level: 50
+    hp: 440
+    minDamage: 90
+    maxDamage: 150
+    armor: 20
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  human_enby_rogue_l1:
+    image: player_sprites/human_enby_rogue_l1.png
+    name: "a green human pickpocket"
+    room: novice_rogues
+    level: 1
+    hp: 12
+    minDamage: 3
+    maxDamage: 5
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  human_enby_rogue_l10:
+    image: player_sprites/human_enby_rogue_l10.png
+    name: "a cunning human thief"
+    room: apprentice_rogues
+    level: 10
+    hp: 67
+    minDamage: 13
+    maxDamage: 26
+    armor: 5
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  human_enby_rogue_l20:
+    image: player_sprites/human_enby_rogue_l20.png
+    name: "a stealthy human assassin"
+    room: journeyman_rogues
+    level: 20
+    hp: 134
+    minDamage: 26
+    maxDamage: 46
+    armor: 9
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  human_enby_rogue_l30:
+    image: player_sprites/human_enby_rogue_l30.png
+    name: "a deadly human shadow"
+    room: expert_rogues
+    level: 30
+    hp: 234
+    minDamage: 39
+    maxDamage: 72
+    armor: 15
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  human_enby_rogue_l40:
+    image: player_sprites/human_enby_rogue_l40.png
+    name: "a phantom human nightblade"
+    room: master_rogues
+    level: 40
+    hp: 368
+    minDamage: 58
+    maxDamage: 104
+    armor: 21
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  human_enby_rogue_l50:
+    image: player_sprites/human_enby_rogue_l50.png
+    name: "a mythic human shadowlord"
+    room: legend_rogues
+    level: 50
+    hp: 536
+    minDamage: 78
+    maxDamage: 130
+    armor: 27
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  human_female_rogue_l1:
+    image: player_sprites/human_female_rogue_l1.png
+    name: "a green human pickpocket"
+    room: novice_rogues
+    level: 1
+    hp: 12
+    minDamage: 3
+    maxDamage: 5
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  human_female_rogue_l10:
+    image: player_sprites/human_female_rogue_l10.png
+    name: "a cunning human thief"
+    room: apprentice_rogues
+    level: 10
+    hp: 67
+    minDamage: 13
+    maxDamage: 26
+    armor: 5
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  human_female_rogue_l20:
+    image: player_sprites/human_female_rogue_l20.png
+    name: "a stealthy human assassin"
+    room: journeyman_rogues
+    level: 20
+    hp: 134
+    minDamage: 26
+    maxDamage: 46
+    armor: 9
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  human_female_rogue_l30:
+    image: player_sprites/human_female_rogue_l30.png
+    name: "a deadly human shadow"
+    room: expert_rogues
+    level: 30
+    hp: 234
+    minDamage: 39
+    maxDamage: 72
+    armor: 15
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  human_female_rogue_l40:
+    image: player_sprites/human_female_rogue_l40.png
+    name: "a phantom human nightblade"
+    room: master_rogues
+    level: 40
+    hp: 368
+    minDamage: 58
+    maxDamage: 104
+    armor: 21
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  human_female_rogue_l50:
+    image: player_sprites/human_female_rogue_l50.png
+    name: "a mythic human shadowlord"
+    room: legend_rogues
+    level: 50
+    hp: 536
+    minDamage: 78
+    maxDamage: 130
+    armor: 27
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  human_male_rogue_l1:
+    image: player_sprites/human_male_rogue_l1.png
+    name: "a green human pickpocket"
+    room: novice_rogues
+    level: 1
+    hp: 12
+    minDamage: 3
+    maxDamage: 5
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  human_male_rogue_l10:
+    image: player_sprites/human_male_rogue_l10.png
+    name: "a cunning human thief"
+    room: apprentice_rogues
+    level: 10
+    hp: 67
+    minDamage: 13
+    maxDamage: 26
+    armor: 5
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  human_male_rogue_l20:
+    image: player_sprites/human_male_rogue_l20.png
+    name: "a stealthy human assassin"
+    room: journeyman_rogues
+    level: 20
+    hp: 134
+    minDamage: 26
+    maxDamage: 46
+    armor: 9
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  human_male_rogue_l30:
+    image: player_sprites/human_male_rogue_l30.png
+    name: "a deadly human shadow"
+    room: expert_rogues
+    level: 30
+    hp: 234
+    minDamage: 39
+    maxDamage: 72
+    armor: 15
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  human_male_rogue_l40:
+    image: player_sprites/human_male_rogue_l40.png
+    name: "a phantom human nightblade"
+    room: master_rogues
+    level: 40
+    hp: 368
+    minDamage: 58
+    maxDamage: 104
+    armor: 21
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  human_male_rogue_l50:
+    image: player_sprites/human_male_rogue_l50.png
+    name: "a mythic human shadowlord"
+    room: legend_rogues
+    level: 50
+    hp: 536
+    minDamage: 78
+    maxDamage: 130
+    armor: 27
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  elf_enby_rogue_l1:
+    image: player_sprites/elf_enby_rogue_l1.png
+    name: "a green elf pickpocket"
+    room: novice_rogues
+    level: 1
+    hp: 12
+    minDamage: 3
+    maxDamage: 5
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  elf_enby_rogue_l10:
+    image: player_sprites/elf_enby_rogue_l10.png
+    name: "a cunning elf thief"
+    room: apprentice_rogues
+    level: 10
+    hp: 67
+    minDamage: 13
+    maxDamage: 26
+    armor: 5
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  elf_enby_rogue_l20:
+    image: player_sprites/elf_enby_rogue_l20.png
+    name: "a stealthy elf assassin"
+    room: journeyman_rogues
+    level: 20
+    hp: 134
+    minDamage: 26
+    maxDamage: 46
+    armor: 9
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  elf_enby_rogue_l30:
+    image: player_sprites/elf_enby_rogue_l30.png
+    name: "a deadly elf shadow"
+    room: expert_rogues
+    level: 30
+    hp: 234
+    minDamage: 39
+    maxDamage: 72
+    armor: 15
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  elf_enby_rogue_l40:
+    image: player_sprites/elf_enby_rogue_l40.png
+    name: "a phantom elf nightblade"
+    room: master_rogues
+    level: 40
+    hp: 368
+    minDamage: 58
+    maxDamage: 104
+    armor: 21
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  elf_enby_rogue_l50:
+    image: player_sprites/elf_enby_rogue_l50.png
+    name: "a mythic elf shadowlord"
+    room: legend_rogues
+    level: 50
+    hp: 536
+    minDamage: 78
+    maxDamage: 130
+    armor: 27
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  elf_female_rogue_l1:
+    image: player_sprites/elf_female_rogue_l1.png
+    name: "a green elf pickpocket"
+    room: novice_rogues
+    level: 1
+    hp: 12
+    minDamage: 3
+    maxDamage: 5
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  elf_female_rogue_l10:
+    image: player_sprites/elf_female_rogue_l10.png
+    name: "a cunning elf thief"
+    room: apprentice_rogues
+    level: 10
+    hp: 67
+    minDamage: 13
+    maxDamage: 26
+    armor: 5
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  elf_female_rogue_l20:
+    image: player_sprites/elf_female_rogue_l20.png
+    name: "a stealthy elf assassin"
+    room: journeyman_rogues
+    level: 20
+    hp: 134
+    minDamage: 26
+    maxDamage: 46
+    armor: 9
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  elf_female_rogue_l30:
+    image: player_sprites/elf_female_rogue_l30.png
+    name: "a deadly elf shadow"
+    room: expert_rogues
+    level: 30
+    hp: 234
+    minDamage: 39
+    maxDamage: 72
+    armor: 15
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  elf_female_rogue_l40:
+    image: player_sprites/elf_female_rogue_l40.png
+    name: "a phantom elf nightblade"
+    room: master_rogues
+    level: 40
+    hp: 368
+    minDamage: 58
+    maxDamage: 104
+    armor: 21
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  elf_female_rogue_l50:
+    image: player_sprites/elf_female_rogue_l50.png
+    name: "a mythic elf shadowlord"
+    room: legend_rogues
+    level: 50
+    hp: 536
+    minDamage: 78
+    maxDamage: 130
+    armor: 27
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  elf_male_rogue_l1:
+    image: player_sprites/elf_male_rogue_l1.png
+    name: "a green elf pickpocket"
+    room: novice_rogues
+    level: 1
+    hp: 12
+    minDamage: 3
+    maxDamage: 5
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  elf_male_rogue_l10:
+    image: player_sprites/elf_male_rogue_l10.png
+    name: "a cunning elf thief"
+    room: apprentice_rogues
+    level: 10
+    hp: 67
+    minDamage: 13
+    maxDamage: 26
+    armor: 5
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  elf_male_rogue_l20:
+    image: player_sprites/elf_male_rogue_l20.png
+    name: "a stealthy elf assassin"
+    room: journeyman_rogues
+    level: 20
+    hp: 134
+    minDamage: 26
+    maxDamage: 46
+    armor: 9
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  elf_male_rogue_l30:
+    image: player_sprites/elf_male_rogue_l30.png
+    name: "a deadly elf shadow"
+    room: expert_rogues
+    level: 30
+    hp: 234
+    minDamage: 39
+    maxDamage: 72
+    armor: 15
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  elf_male_rogue_l40:
+    image: player_sprites/elf_male_rogue_l40.png
+    name: "a phantom elf nightblade"
+    room: master_rogues
+    level: 40
+    hp: 368
+    minDamage: 58
+    maxDamage: 104
+    armor: 21
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  elf_male_rogue_l50:
+    image: player_sprites/elf_male_rogue_l50.png
+    name: "a mythic elf shadowlord"
+    room: legend_rogues
+    level: 50
+    hp: 536
+    minDamage: 78
+    maxDamage: 130
+    armor: 27
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  dwarf_enby_rogue_l1:
+    image: player_sprites/dwarf_enby_rogue_l1.png
+    name: "a green dwarf pickpocket"
+    room: novice_rogues
+    level: 1
+    hp: 12
+    minDamage: 3
+    maxDamage: 5
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  dwarf_enby_rogue_l10:
+    image: player_sprites/dwarf_enby_rogue_l10.png
+    name: "a cunning dwarf thief"
+    room: apprentice_rogues
+    level: 10
+    hp: 67
+    minDamage: 13
+    maxDamage: 26
+    armor: 5
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  dwarf_enby_rogue_l20:
+    image: player_sprites/dwarf_enby_rogue_l20.png
+    name: "a stealthy dwarf assassin"
+    room: journeyman_rogues
+    level: 20
+    hp: 134
+    minDamage: 26
+    maxDamage: 46
+    armor: 9
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  dwarf_enby_rogue_l30:
+    image: player_sprites/dwarf_enby_rogue_l30.png
+    name: "a deadly dwarf shadow"
+    room: expert_rogues
+    level: 30
+    hp: 234
+    minDamage: 39
+    maxDamage: 72
+    armor: 15
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  dwarf_enby_rogue_l40:
+    image: player_sprites/dwarf_enby_rogue_l40.png
+    name: "a phantom dwarf nightblade"
+    room: master_rogues
+    level: 40
+    hp: 368
+    minDamage: 58
+    maxDamage: 104
+    armor: 21
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  dwarf_enby_rogue_l50:
+    image: player_sprites/dwarf_enby_rogue_l50.png
+    name: "a mythic dwarf shadowlord"
+    room: legend_rogues
+    level: 50
+    hp: 536
+    minDamage: 78
+    maxDamage: 130
+    armor: 27
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  dwarf_female_rogue_l1:
+    image: player_sprites/dwarf_female_rogue_l1.png
+    name: "a green dwarf pickpocket"
+    room: novice_rogues
+    level: 1
+    hp: 12
+    minDamage: 3
+    maxDamage: 5
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  dwarf_female_rogue_l10:
+    image: player_sprites/dwarf_female_rogue_l10.png
+    name: "a cunning dwarf thief"
+    room: apprentice_rogues
+    level: 10
+    hp: 67
+    minDamage: 13
+    maxDamage: 26
+    armor: 5
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  dwarf_female_rogue_l20:
+    image: player_sprites/dwarf_female_rogue_l20.png
+    name: "a stealthy dwarf assassin"
+    room: journeyman_rogues
+    level: 20
+    hp: 134
+    minDamage: 26
+    maxDamage: 46
+    armor: 9
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  dwarf_female_rogue_l30:
+    image: player_sprites/dwarf_female_rogue_l30.png
+    name: "a deadly dwarf shadow"
+    room: expert_rogues
+    level: 30
+    hp: 234
+    minDamage: 39
+    maxDamage: 72
+    armor: 15
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  dwarf_female_rogue_l40:
+    image: player_sprites/dwarf_female_rogue_l40.png
+    name: "a phantom dwarf nightblade"
+    room: master_rogues
+    level: 40
+    hp: 368
+    minDamage: 58
+    maxDamage: 104
+    armor: 21
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  dwarf_female_rogue_l50:
+    image: player_sprites/dwarf_female_rogue_l50.png
+    name: "a mythic dwarf shadowlord"
+    room: legend_rogues
+    level: 50
+    hp: 536
+    minDamage: 78
+    maxDamage: 130
+    armor: 27
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  dwarf_male_rogue_l1:
+    image: player_sprites/dwarf_male_rogue_l1.png
+    name: "a green dwarf pickpocket"
+    room: novice_rogues
+    level: 1
+    hp: 12
+    minDamage: 3
+    maxDamage: 5
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  dwarf_male_rogue_l10:
+    image: player_sprites/dwarf_male_rogue_l10.png
+    name: "a cunning dwarf thief"
+    room: apprentice_rogues
+    level: 10
+    hp: 67
+    minDamage: 13
+    maxDamage: 26
+    armor: 5
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  dwarf_male_rogue_l20:
+    image: player_sprites/dwarf_male_rogue_l20.png
+    name: "a stealthy dwarf assassin"
+    room: journeyman_rogues
+    level: 20
+    hp: 134
+    minDamage: 26
+    maxDamage: 46
+    armor: 9
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  dwarf_male_rogue_l30:
+    image: player_sprites/dwarf_male_rogue_l30.png
+    name: "a deadly dwarf shadow"
+    room: expert_rogues
+    level: 30
+    hp: 234
+    minDamage: 39
+    maxDamage: 72
+    armor: 15
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  dwarf_male_rogue_l40:
+    image: player_sprites/dwarf_male_rogue_l40.png
+    name: "a phantom dwarf nightblade"
+    room: master_rogues
+    level: 40
+    hp: 368
+    minDamage: 58
+    maxDamage: 104
+    armor: 21
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  dwarf_male_rogue_l50:
+    image: player_sprites/dwarf_male_rogue_l50.png
+    name: "a mythic dwarf shadowlord"
+    room: legend_rogues
+    level: 50
+    hp: 536
+    minDamage: 78
+    maxDamage: 130
+    armor: 27
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  halfling_enby_rogue_l1:
+    image: player_sprites/halfling_enby_rogue_l1.png
+    name: "a green halfling pickpocket"
+    room: novice_rogues
+    level: 1
+    hp: 12
+    minDamage: 3
+    maxDamage: 5
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  halfling_enby_rogue_l10:
+    image: player_sprites/halfling_enby_rogue_l10.png
+    name: "a cunning halfling thief"
+    room: apprentice_rogues
+    level: 10
+    hp: 67
+    minDamage: 13
+    maxDamage: 26
+    armor: 5
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  halfling_enby_rogue_l20:
+    image: player_sprites/halfling_enby_rogue_l20.png
+    name: "a stealthy halfling assassin"
+    room: journeyman_rogues
+    level: 20
+    hp: 134
+    minDamage: 26
+    maxDamage: 46
+    armor: 9
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  halfling_enby_rogue_l30:
+    image: player_sprites/halfling_enby_rogue_l30.png
+    name: "a deadly halfling shadow"
+    room: expert_rogues
+    level: 30
+    hp: 234
+    minDamage: 39
+    maxDamage: 72
+    armor: 15
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  halfling_enby_rogue_l40:
+    image: player_sprites/halfling_enby_rogue_l40.png
+    name: "a phantom halfling nightblade"
+    room: master_rogues
+    level: 40
+    hp: 368
+    minDamage: 58
+    maxDamage: 104
+    armor: 21
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  halfling_enby_rogue_l50:
+    image: player_sprites/halfling_enby_rogue_l50.png
+    name: "a mythic halfling shadowlord"
+    room: legend_rogues
+    level: 50
+    hp: 536
+    minDamage: 78
+    maxDamage: 130
+    armor: 27
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  halfling_female_rogue_l1:
+    image: player_sprites/halfling_female_rogue_l1.png
+    name: "a green halfling pickpocket"
+    room: novice_rogues
+    level: 1
+    hp: 12
+    minDamage: 3
+    maxDamage: 5
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  halfling_female_rogue_l10:
+    image: player_sprites/halfling_female_rogue_l10.png
+    name: "a cunning halfling thief"
+    room: apprentice_rogues
+    level: 10
+    hp: 67
+    minDamage: 13
+    maxDamage: 26
+    armor: 5
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  halfling_female_rogue_l20:
+    image: player_sprites/halfling_female_rogue_l20.png
+    name: "a stealthy halfling assassin"
+    room: journeyman_rogues
+    level: 20
+    hp: 134
+    minDamage: 26
+    maxDamage: 46
+    armor: 9
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  halfling_female_rogue_l30:
+    image: player_sprites/halfling_female_rogue_l30.png
+    name: "a deadly halfling shadow"
+    room: expert_rogues
+    level: 30
+    hp: 234
+    minDamage: 39
+    maxDamage: 72
+    armor: 15
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  halfling_female_rogue_l40:
+    image: player_sprites/halfling_female_rogue_l40.png
+    name: "a phantom halfling nightblade"
+    room: master_rogues
+    level: 40
+    hp: 368
+    minDamage: 58
+    maxDamage: 104
+    armor: 21
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  halfling_female_rogue_l50:
+    image: player_sprites/halfling_female_rogue_l50.png
+    name: "a mythic halfling shadowlord"
+    room: legend_rogues
+    level: 50
+    hp: 536
+    minDamage: 78
+    maxDamage: 130
+    armor: 27
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  halfling_male_rogue_l1:
+    image: player_sprites/halfling_male_rogue_l1.png
+    name: "a green halfling pickpocket"
+    room: novice_rogues
+    level: 1
+    hp: 12
+    minDamage: 3
+    maxDamage: 5
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  halfling_male_rogue_l10:
+    image: player_sprites/halfling_male_rogue_l10.png
+    name: "a cunning halfling thief"
+    room: apprentice_rogues
+    level: 10
+    hp: 67
+    minDamage: 13
+    maxDamage: 26
+    armor: 5
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  halfling_male_rogue_l20:
+    image: player_sprites/halfling_male_rogue_l20.png
+    name: "a stealthy halfling assassin"
+    room: journeyman_rogues
+    level: 20
+    hp: 134
+    minDamage: 26
+    maxDamage: 46
+    armor: 9
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  halfling_male_rogue_l30:
+    image: player_sprites/halfling_male_rogue_l30.png
+    name: "a deadly halfling shadow"
+    room: expert_rogues
+    level: 30
+    hp: 234
+    minDamage: 39
+    maxDamage: 72
+    armor: 15
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  halfling_male_rogue_l40:
+    image: player_sprites/halfling_male_rogue_l40.png
+    name: "a phantom halfling nightblade"
+    room: master_rogues
+    level: 40
+    hp: 368
+    minDamage: 58
+    maxDamage: 104
+    armor: 21
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  halfling_male_rogue_l50:
+    image: player_sprites/halfling_male_rogue_l50.png
+    name: "a mythic halfling shadowlord"
+    room: legend_rogues
+    level: 50
+    hp: 536
+    minDamage: 78
+    maxDamage: 130
+    armor: 27
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  human_enby_warrior_l1:
+    image: player_sprites/human_enby_warrior_l1.png
+    name: "a fledgling human recruit"
+    room: novice_warriors
+    level: 1
+    hp: 18
+    minDamage: 2
+    maxDamage: 4
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  human_enby_warrior_l10:
+    image: player_sprites/human_enby_warrior_l10.png
+    name: "a trained human soldier"
+    room: apprentice_warriors
+    level: 10
+    hp: 100
+    minDamage: 10
+    maxDamage: 20
+    armor: 8
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  human_enby_warrior_l20:
+    image: player_sprites/human_enby_warrior_l20.png
+    name: "a seasoned human knight"
+    room: journeyman_warriors
+    level: 20
+    hp: 200
+    minDamage: 20
+    maxDamage: 35
+    armor: 15
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  human_enby_warrior_l30:
+    image: player_sprites/human_enby_warrior_l30.png
+    name: "a battle-hardened human champion"
+    room: expert_warriors
+    level: 30
+    hp: 350
+    minDamage: 30
+    maxDamage: 55
+    armor: 25
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  human_enby_warrior_l40:
+    image: player_sprites/human_enby_warrior_l40.png
+    name: "a fearsome human warlord"
+    room: master_warriors
+    level: 40
+    hp: 550
+    minDamage: 45
+    maxDamage: 80
+    armor: 35
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  human_enby_warrior_l50:
+    image: player_sprites/human_enby_warrior_l50.png
+    name: "a godslaying human warlord"
+    room: legend_warriors
+    level: 50
+    hp: 800
+    minDamage: 60
+    maxDamage: 100
+    armor: 45
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  human_female_warrior_l1:
+    image: player_sprites/human_female_warrior_l1.png
+    name: "a fledgling human recruit"
+    room: novice_warriors
+    level: 1
+    hp: 18
+    minDamage: 2
+    maxDamage: 4
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  human_female_warrior_l10:
+    image: player_sprites/human_female_warrior_l10.png
+    name: "a trained human soldier"
+    room: apprentice_warriors
+    level: 10
+    hp: 100
+    minDamage: 10
+    maxDamage: 20
+    armor: 8
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  human_female_warrior_l20:
+    image: player_sprites/human_female_warrior_l20.png
+    name: "a seasoned human knight"
+    room: journeyman_warriors
+    level: 20
+    hp: 200
+    minDamage: 20
+    maxDamage: 35
+    armor: 15
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  human_female_warrior_l30:
+    image: player_sprites/human_female_warrior_l30.png
+    name: "a battle-hardened human champion"
+    room: expert_warriors
+    level: 30
+    hp: 350
+    minDamage: 30
+    maxDamage: 55
+    armor: 25
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  human_female_warrior_l40:
+    image: player_sprites/human_female_warrior_l40.png
+    name: "a fearsome human warlord"
+    room: master_warriors
+    level: 40
+    hp: 550
+    minDamage: 45
+    maxDamage: 80
+    armor: 35
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  human_female_warrior_l50:
+    image: player_sprites/human_female_warrior_l50.png
+    name: "a godslaying human warlord"
+    room: legend_warriors
+    level: 50
+    hp: 800
+    minDamage: 60
+    maxDamage: 100
+    armor: 45
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  human_male_warrior_l1:
+    image: player_sprites/human_male_warrior_l1.png
+    name: "a fledgling human recruit"
+    room: novice_warriors
+    level: 1
+    hp: 18
+    minDamage: 2
+    maxDamage: 4
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  human_male_warrior_l10:
+    image: player_sprites/human_male_warrior_l10.png
+    name: "a trained human soldier"
+    room: apprentice_warriors
+    level: 10
+    hp: 100
+    minDamage: 10
+    maxDamage: 20
+    armor: 8
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  human_male_warrior_l20:
+    image: player_sprites/human_male_warrior_l20.png
+    name: "a seasoned human knight"
+    room: journeyman_warriors
+    level: 20
+    hp: 200
+    minDamage: 20
+    maxDamage: 35
+    armor: 15
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  human_male_warrior_l30:
+    image: player_sprites/human_male_warrior_l30.png
+    name: "a battle-hardened human champion"
+    room: expert_warriors
+    level: 30
+    hp: 350
+    minDamage: 30
+    maxDamage: 55
+    armor: 25
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  human_male_warrior_l40:
+    image: player_sprites/human_male_warrior_l40.png
+    name: "a fearsome human warlord"
+    room: master_warriors
+    level: 40
+    hp: 550
+    minDamage: 45
+    maxDamage: 80
+    armor: 35
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  human_male_warrior_l50:
+    image: player_sprites/human_male_warrior_l50.png
+    name: "a godslaying human warlord"
+    room: legend_warriors
+    level: 50
+    hp: 800
+    minDamage: 60
+    maxDamage: 100
+    armor: 45
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  elf_enby_warrior_l1:
+    image: player_sprites/elf_enby_warrior_l1.png
+    name: "a fledgling elf recruit"
+    room: novice_warriors
+    level: 1
+    hp: 18
+    minDamage: 2
+    maxDamage: 4
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  elf_enby_warrior_l10:
+    image: player_sprites/elf_enby_warrior_l10.png
+    name: "a trained elf soldier"
+    room: apprentice_warriors
+    level: 10
+    hp: 100
+    minDamage: 10
+    maxDamage: 20
+    armor: 8
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  elf_enby_warrior_l20:
+    image: player_sprites/elf_enby_warrior_l20.png
+    name: "a seasoned elf knight"
+    room: journeyman_warriors
+    level: 20
+    hp: 200
+    minDamage: 20
+    maxDamage: 35
+    armor: 15
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  elf_enby_warrior_l30:
+    image: player_sprites/elf_enby_warrior_l30.png
+    name: "a battle-hardened elf champion"
+    room: expert_warriors
+    level: 30
+    hp: 350
+    minDamage: 30
+    maxDamage: 55
+    armor: 25
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  elf_enby_warrior_l40:
+    image: player_sprites/elf_enby_warrior_l40.png
+    name: "a fearsome elf warlord"
+    room: master_warriors
+    level: 40
+    hp: 550
+    minDamage: 45
+    maxDamage: 80
+    armor: 35
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  elf_enby_warrior_l50:
+    image: player_sprites/elf_enby_warrior_l50.png
+    name: "a godslaying elf warlord"
+    room: legend_warriors
+    level: 50
+    hp: 800
+    minDamage: 60
+    maxDamage: 100
+    armor: 45
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  elf_female_warrior_l1:
+    image: player_sprites/elf_female_warrior_l1.png
+    name: "a fledgling elf recruit"
+    room: novice_warriors
+    level: 1
+    hp: 18
+    minDamage: 2
+    maxDamage: 4
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  elf_female_warrior_l10:
+    image: player_sprites/elf_female_warrior_l10.png
+    name: "a trained elf soldier"
+    room: apprentice_warriors
+    level: 10
+    hp: 100
+    minDamage: 10
+    maxDamage: 20
+    armor: 8
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  elf_female_warrior_l20:
+    image: player_sprites/elf_female_warrior_l20.png
+    name: "a seasoned elf knight"
+    room: journeyman_warriors
+    level: 20
+    hp: 200
+    minDamage: 20
+    maxDamage: 35
+    armor: 15
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  elf_female_warrior_l30:
+    image: player_sprites/elf_female_warrior_l30.png
+    name: "a battle-hardened elf champion"
+    room: expert_warriors
+    level: 30
+    hp: 350
+    minDamage: 30
+    maxDamage: 55
+    armor: 25
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  elf_female_warrior_l40:
+    image: player_sprites/elf_female_warrior_l40.png
+    name: "a fearsome elf warlord"
+    room: master_warriors
+    level: 40
+    hp: 550
+    minDamage: 45
+    maxDamage: 80
+    armor: 35
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  elf_female_warrior_l50:
+    image: player_sprites/elf_female_warrior_l50.png
+    name: "a godslaying elf warlord"
+    room: legend_warriors
+    level: 50
+    hp: 800
+    minDamage: 60
+    maxDamage: 100
+    armor: 45
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  elf_male_warrior_l1:
+    image: player_sprites/elf_male_warrior_l1.png
+    name: "a fledgling elf recruit"
+    room: novice_warriors
+    level: 1
+    hp: 18
+    minDamage: 2
+    maxDamage: 4
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  elf_male_warrior_l10:
+    image: player_sprites/elf_male_warrior_l10.png
+    name: "a trained elf soldier"
+    room: apprentice_warriors
+    level: 10
+    hp: 100
+    minDamage: 10
+    maxDamage: 20
+    armor: 8
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  elf_male_warrior_l20:
+    image: player_sprites/elf_male_warrior_l20.png
+    name: "a seasoned elf knight"
+    room: journeyman_warriors
+    level: 20
+    hp: 200
+    minDamage: 20
+    maxDamage: 35
+    armor: 15
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  elf_male_warrior_l30:
+    image: player_sprites/elf_male_warrior_l30.png
+    name: "a battle-hardened elf champion"
+    room: expert_warriors
+    level: 30
+    hp: 350
+    minDamage: 30
+    maxDamage: 55
+    armor: 25
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  elf_male_warrior_l40:
+    image: player_sprites/elf_male_warrior_l40.png
+    name: "a fearsome elf warlord"
+    room: master_warriors
+    level: 40
+    hp: 550
+    minDamage: 45
+    maxDamage: 80
+    armor: 35
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  elf_male_warrior_l50:
+    image: player_sprites/elf_male_warrior_l50.png
+    name: "a godslaying elf warlord"
+    room: legend_warriors
+    level: 50
+    hp: 800
+    minDamage: 60
+    maxDamage: 100
+    armor: 45
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  dwarf_enby_warrior_l1:
+    image: player_sprites/dwarf_enby_warrior_l1.png
+    name: "a fledgling dwarf recruit"
+    room: novice_warriors
+    level: 1
+    hp: 18
+    minDamage: 2
+    maxDamage: 4
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  dwarf_enby_warrior_l10:
+    image: player_sprites/dwarf_enby_warrior_l10.png
+    name: "a trained dwarf soldier"
+    room: apprentice_warriors
+    level: 10
+    hp: 100
+    minDamage: 10
+    maxDamage: 20
+    armor: 8
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  dwarf_enby_warrior_l20:
+    image: player_sprites/dwarf_enby_warrior_l20.png
+    name: "a seasoned dwarf knight"
+    room: journeyman_warriors
+    level: 20
+    hp: 200
+    minDamage: 20
+    maxDamage: 35
+    armor: 15
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  dwarf_enby_warrior_l30:
+    image: player_sprites/dwarf_enby_warrior_l30.png
+    name: "a battle-hardened dwarf champion"
+    room: expert_warriors
+    level: 30
+    hp: 350
+    minDamage: 30
+    maxDamage: 55
+    armor: 25
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  dwarf_enby_warrior_l40:
+    image: player_sprites/dwarf_enby_warrior_l40.png
+    name: "a fearsome dwarf warlord"
+    room: master_warriors
+    level: 40
+    hp: 550
+    minDamage: 45
+    maxDamage: 80
+    armor: 35
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  dwarf_enby_warrior_l50:
+    image: player_sprites/dwarf_enby_warrior_l50.png
+    name: "a godslaying dwarf warlord"
+    room: legend_warriors
+    level: 50
+    hp: 800
+    minDamage: 60
+    maxDamage: 100
+    armor: 45
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  dwarf_female_warrior_l1:
+    image: player_sprites/dwarf_female_warrior_l1.png
+    name: "a fledgling dwarf recruit"
+    room: novice_warriors
+    level: 1
+    hp: 18
+    minDamage: 2
+    maxDamage: 4
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  dwarf_female_warrior_l10:
+    image: player_sprites/dwarf_female_warrior_l10.png
+    name: "a trained dwarf soldier"
+    room: apprentice_warriors
+    level: 10
+    hp: 100
+    minDamage: 10
+    maxDamage: 20
+    armor: 8
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  dwarf_female_warrior_l20:
+    image: player_sprites/dwarf_female_warrior_l20.png
+    name: "a seasoned dwarf knight"
+    room: journeyman_warriors
+    level: 20
+    hp: 200
+    minDamage: 20
+    maxDamage: 35
+    armor: 15
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  dwarf_female_warrior_l30:
+    image: player_sprites/dwarf_female_warrior_l30.png
+    name: "a battle-hardened dwarf champion"
+    room: expert_warriors
+    level: 30
+    hp: 350
+    minDamage: 30
+    maxDamage: 55
+    armor: 25
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  dwarf_female_warrior_l40:
+    image: player_sprites/dwarf_female_warrior_l40.png
+    name: "a fearsome dwarf warlord"
+    room: master_warriors
+    level: 40
+    hp: 550
+    minDamage: 45
+    maxDamage: 80
+    armor: 35
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  dwarf_female_warrior_l50:
+    image: player_sprites/dwarf_female_warrior_l50.png
+    name: "a godslaying dwarf warlord"
+    room: legend_warriors
+    level: 50
+    hp: 800
+    minDamage: 60
+    maxDamage: 100
+    armor: 45
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  dwarf_male_warrior_l1:
+    image: player_sprites/dwarf_male_warrior_l1.png
+    name: "a fledgling dwarf recruit"
+    room: novice_warriors
+    level: 1
+    hp: 18
+    minDamage: 2
+    maxDamage: 4
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  dwarf_male_warrior_l10:
+    image: player_sprites/dwarf_male_warrior_l10.png
+    name: "a trained dwarf soldier"
+    room: apprentice_warriors
+    level: 10
+    hp: 100
+    minDamage: 10
+    maxDamage: 20
+    armor: 8
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  dwarf_male_warrior_l20:
+    image: player_sprites/dwarf_male_warrior_l20.png
+    name: "a seasoned dwarf knight"
+    room: journeyman_warriors
+    level: 20
+    hp: 200
+    minDamage: 20
+    maxDamage: 35
+    armor: 15
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  dwarf_male_warrior_l30:
+    image: player_sprites/dwarf_male_warrior_l30.png
+    name: "a battle-hardened dwarf champion"
+    room: expert_warriors
+    level: 30
+    hp: 350
+    minDamage: 30
+    maxDamage: 55
+    armor: 25
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  dwarf_male_warrior_l40:
+    image: player_sprites/dwarf_male_warrior_l40.png
+    name: "a fearsome dwarf warlord"
+    room: master_warriors
+    level: 40
+    hp: 550
+    minDamage: 45
+    maxDamage: 80
+    armor: 35
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  dwarf_male_warrior_l50:
+    image: player_sprites/dwarf_male_warrior_l50.png
+    name: "a godslaying dwarf warlord"
+    room: legend_warriors
+    level: 50
+    hp: 800
+    minDamage: 60
+    maxDamage: 100
+    armor: 45
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  halfling_enby_warrior_l1:
+    image: player_sprites/halfling_enby_warrior_l1.png
+    name: "a fledgling halfling recruit"
+    room: novice_warriors
+    level: 1
+    hp: 18
+    minDamage: 2
+    maxDamage: 4
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  halfling_enby_warrior_l10:
+    image: player_sprites/halfling_enby_warrior_l10.png
+    name: "a trained halfling soldier"
+    room: apprentice_warriors
+    level: 10
+    hp: 100
+    minDamage: 10
+    maxDamage: 20
+    armor: 8
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  halfling_enby_warrior_l20:
+    image: player_sprites/halfling_enby_warrior_l20.png
+    name: "a seasoned halfling knight"
+    room: journeyman_warriors
+    level: 20
+    hp: 200
+    minDamage: 20
+    maxDamage: 35
+    armor: 15
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  halfling_enby_warrior_l30:
+    image: player_sprites/halfling_enby_warrior_l30.png
+    name: "a battle-hardened halfling champion"
+    room: expert_warriors
+    level: 30
+    hp: 350
+    minDamage: 30
+    maxDamage: 55
+    armor: 25
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  halfling_enby_warrior_l40:
+    image: player_sprites/halfling_enby_warrior_l40.png
+    name: "a fearsome halfling warlord"
+    room: master_warriors
+    level: 40
+    hp: 550
+    minDamage: 45
+    maxDamage: 80
+    armor: 35
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  halfling_enby_warrior_l50:
+    image: player_sprites/halfling_enby_warrior_l50.png
+    name: "a godslaying halfling warlord"
+    room: legend_warriors
+    level: 50
+    hp: 800
+    minDamage: 60
+    maxDamage: 100
+    armor: 45
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  halfling_female_warrior_l1:
+    image: player_sprites/halfling_female_warrior_l1.png
+    name: "a fledgling halfling recruit"
+    room: novice_warriors
+    level: 1
+    hp: 18
+    minDamage: 2
+    maxDamage: 4
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  halfling_female_warrior_l10:
+    image: player_sprites/halfling_female_warrior_l10.png
+    name: "a trained halfling soldier"
+    room: apprentice_warriors
+    level: 10
+    hp: 100
+    minDamage: 10
+    maxDamage: 20
+    armor: 8
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  halfling_female_warrior_l20:
+    image: player_sprites/halfling_female_warrior_l20.png
+    name: "a seasoned halfling knight"
+    room: journeyman_warriors
+    level: 20
+    hp: 200
+    minDamage: 20
+    maxDamage: 35
+    armor: 15
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  halfling_female_warrior_l30:
+    image: player_sprites/halfling_female_warrior_l30.png
+    name: "a battle-hardened halfling champion"
+    room: expert_warriors
+    level: 30
+    hp: 350
+    minDamage: 30
+    maxDamage: 55
+    armor: 25
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  halfling_female_warrior_l40:
+    image: player_sprites/halfling_female_warrior_l40.png
+    name: "a fearsome halfling warlord"
+    room: master_warriors
+    level: 40
+    hp: 550
+    minDamage: 45
+    maxDamage: 80
+    armor: 35
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  halfling_female_warrior_l50:
+    image: player_sprites/halfling_female_warrior_l50.png
+    name: "a godslaying halfling warlord"
+    room: legend_warriors
+    level: 50
+    hp: 800
+    minDamage: 60
+    maxDamage: 100
+    armor: 45
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
+  halfling_male_warrior_l1:
+    image: player_sprites/halfling_male_warrior_l1.png
+    name: "a fledgling halfling recruit"
+    room: novice_warriors
+    level: 1
+    hp: 18
+    minDamage: 2
+    maxDamage: 4
+    armor: 1
+    xpReward: 20
+    goldMin: 1
+    goldMax: 5
+  halfling_male_warrior_l10:
+    image: player_sprites/halfling_male_warrior_l10.png
+    name: "a trained halfling soldier"
+    room: apprentice_warriors
+    level: 10
+    hp: 100
+    minDamage: 10
+    maxDamage: 20
+    armor: 8
+    xpReward: 150
+    goldMin: 15
+    goldMax: 45
+  halfling_male_warrior_l20:
+    image: player_sprites/halfling_male_warrior_l20.png
+    name: "a seasoned halfling knight"
+    room: journeyman_warriors
+    level: 20
+    hp: 200
+    minDamage: 20
+    maxDamage: 35
+    armor: 15
+    xpReward: 350
+    goldMin: 35
+    goldMax: 100
+  halfling_male_warrior_l30:
+    image: player_sprites/halfling_male_warrior_l30.png
+    name: "a battle-hardened halfling champion"
+    room: expert_warriors
+    level: 30
+    hp: 350
+    minDamage: 30
+    maxDamage: 55
+    armor: 25
+    xpReward: 650
+    goldMin: 70
+    goldMax: 200
+  halfling_male_warrior_l40:
+    image: player_sprites/halfling_male_warrior_l40.png
+    name: "a fearsome halfling warlord"
+    room: master_warriors
+    level: 40
+    hp: 550
+    minDamage: 45
+    maxDamage: 80
+    armor: 35
+    xpReward: 1200
+    goldMin: 120
+    goldMax: 350
+  halfling_male_warrior_l50:
+    image: player_sprites/halfling_male_warrior_l50.png
+    name: "a godslaying halfling warlord"
+    room: legend_warriors
+    level: 50
+    hp: 800
+    minDamage: 60
+    maxDamage: 100
+    armor: 45
+    xpReward: 2000
+    goldMin: 200
+    goldMax: 500
