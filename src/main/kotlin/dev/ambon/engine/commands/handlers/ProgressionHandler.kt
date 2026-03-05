@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands.handlers
 
+import dev.ambon.domain.Gender
 import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.Race
 import dev.ambon.domain.ids.SessionId
@@ -33,6 +34,7 @@ class ProgressionHandler(
         router.on<Command.Spells> { sid, _ -> handleSpells(sid) }
         router.on<Command.Effects> { sid, _ -> handleEffects(sid) }
         router.on<Command.Balance> { sid, _ -> handleBalance(sid) }
+        router.on<Command.SetGender> { sid, cmd -> handleSetGender(sid, cmd) }
     }
 
     private suspend fun handleScore(sessionId: SessionId) {
@@ -156,6 +158,20 @@ class ProgressionHandler(
     private suspend fun handleBalance(sessionId: SessionId) {
         players.withPlayer(sessionId) { me ->
             outbound.send(OutboundEvent.SendInfo(sessionId, "You have ${me.gold} gold."))
+        }
+    }
+
+    private suspend fun handleSetGender(sessionId: SessionId, cmd: Command.SetGender) {
+        val gender = Gender.fromString(cmd.gender)
+        if (gender == null) {
+            val options = Gender.entries.joinToString(", ") { it.name.lowercase() }
+            outbound.send(OutboundEvent.SendError(sessionId, "Unknown gender '${cmd.gender}'. Options: $options"))
+            return
+        }
+        players.withPlayer(sessionId) { me ->
+            me.gender = gender.name
+            outbound.send(OutboundEvent.SendInfo(sessionId, "Gender set to ${gender.displayName}."))
+            gmcpEmitter?.sendCharName(sessionId, me)
         }
     }
 }

@@ -3,6 +3,7 @@ package dev.ambon.engine
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.Gender
 import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -237,9 +238,11 @@ class GmcpEmitter(
             "Char.Name",
             CharNamePayload(
                 name = player.name,
+                gender = player.gender,
                 race = player.race,
                 playerClass = player.playerClass,
                 level = player.level,
+                sprite = resolveSprite(player),
             ),
         )
     }
@@ -886,9 +889,11 @@ class GmcpEmitter(
 
     private data class CharNamePayload(
         val name: String,
+        val gender: String,
         val race: String,
         @get:JsonProperty("class") val playerClass: String,
         val level: Int,
+        val sprite: String?,
     )
 
     private data class CommChannelPayload(
@@ -1125,6 +1130,17 @@ class GmcpEmitter(
             xpReward < 400L -> 5
             xpReward < 800L -> 7
             else -> ((xpReward / 100) + 5).toInt().coerceIn(1, 50)
+        }
+
+        private val SPRITE_LEVEL_TIERS = intArrayOf(50, 40, 30, 20, 10, 1)
+
+        fun resolveSprite(player: PlayerState): String? {
+            if (player.isStaff) return null
+            val gender = Gender.fromString(player.gender) ?: Gender.ENBY
+            val race = player.race.lowercase()
+            val cls = player.playerClass.lowercase()
+            val tier = SPRITE_LEVEL_TIERS.firstOrNull { player.level >= it } ?: 1
+            return "/images/player_sprites/${race}_${gender.spriteCode}_${cls}_l$tier.png"
         }
     }
 }
