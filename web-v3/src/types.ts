@@ -148,6 +148,8 @@ export interface MapRoom {
   x: number;
   y: number;
   exits: Record<string, string>;
+  title: string;
+  image: string | null;
 }
 
 export interface TabCycle {

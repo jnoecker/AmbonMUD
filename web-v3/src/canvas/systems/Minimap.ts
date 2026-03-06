@@ -49,6 +49,7 @@ export class Minimap {
   private thumbSprites = new Map<string, Sprite>();
   private thumbMasks = new Map<string, Graphics>();
   private loadingImages = new Set<string>();
+  private fogTexture: Texture | null = null;
 
   // Click navigation
   private clickAreas: Array<{ roomId: string; area: Graphics }> = [];
@@ -80,6 +81,8 @@ export class Minimap {
     btn.on("pointerdown", () => {
       canvasCallbacks.openMap?.();
     });
+
+    this.loadFogTexture();
 
     // Inner content group that gets masked
     const inner = new Container();
@@ -236,10 +239,14 @@ export class Minimap {
         this.mapGraphics.fill({ color: FOG_COLOR, alpha: 0.5 });
         this.mapGraphics.circle(nx, ny, radius);
         this.mapGraphics.stroke({ color: 0x3a4060, width: 1, alpha: 0.35 });
+        // Show fog-of-war texture for unexplored rooms
+        if (this.fogTexture) {
+          this.ensureThumb(`__fog__${id}`, null, nx, ny, radius, 0.7, this.fogTexture);
+        }
       }
 
       if (node.image) {
-        this.ensureThumb(id, node.image, nx, ny, radius, isCurrent ? 1 : 0.8);
+        this.ensureThumb(id, node.image, nx, ny, radius, isCurrent ? 1 : 0.8, null);
       }
 
       // Clickable navigation for adjacent rooms
@@ -263,7 +270,7 @@ export class Minimap {
     }
   }
 
-  private ensureThumb(roomId: string, imagePath: string, nx: number, ny: number, radius: number, alpha: number) {
+  private ensureThumb(roomId: string, imagePath: string | null, nx: number, ny: number, radius: number, alpha: number, preloaded: Texture | null) {
     const existing = this.thumbSprites.get(roomId);
     if (existing) {
       existing.x = nx;
@@ -282,32 +289,41 @@ export class Minimap {
       return;
     }
 
-    if (this.loadingImages.has(roomId)) return;
+    if (preloaded) {
+      this.createThumbSprite(roomId, preloaded, nx, ny, radius, alpha);
+      return;
+    }
+
+    if (!imagePath || this.loadingImages.has(roomId)) return;
     this.loadingImages.add(roomId);
 
     Assets.load(imagePath).then((texture: Texture) => {
       this.loadingImages.delete(roomId);
-      const sprite = new Sprite(texture);
-      sprite.anchor.set(0.5);
-      sprite.width = radius * 2;
-      sprite.height = radius * 2;
-      sprite.x = nx;
-      sprite.y = ny;
-      sprite.alpha = alpha;
-      sprite.eventMode = "none";
-
-      const mask = new Graphics();
-      mask.circle(nx, ny, radius);
-      mask.fill(0xffffff);
-      sprite.mask = mask;
-
-      this.nodeContainer.addChild(mask);
-      this.nodeContainer.addChild(sprite);
-      this.thumbSprites.set(roomId, sprite);
-      this.thumbMasks.set(roomId, mask);
+      this.createThumbSprite(roomId, texture, nx, ny, radius, alpha);
     }).catch(() => {
       this.loadingImages.delete(roomId);
     });
+  }
+
+  private createThumbSprite(roomId: string, texture: Texture, nx: number, ny: number, radius: number, alpha: number) {
+    const sprite = new Sprite(texture);
+    sprite.anchor.set(0.5);
+    sprite.width = radius * 2;
+    sprite.height = radius * 2;
+    sprite.x = nx;
+    sprite.y = ny;
+    sprite.alpha = alpha;
+    sprite.eventMode = "none";
+
+    const mask = new Graphics();
+    mask.circle(nx, ny, radius);
+    mask.fill(0xffffff);
+    sprite.mask = mask;
+
+    this.nodeContainer.addChild(mask);
+    this.nodeContainer.addChild(sprite);
+    this.thumbSprites.set(roomId, sprite);
+    this.thumbMasks.set(roomId, mask);
   }
 
   private clearThumbs() {
@@ -320,6 +336,12 @@ export class Minimap {
     this.thumbSprites.clear();
     this.thumbMasks.clear();
     this.loadingImages.clear();
+  }
+
+  private async loadFogTexture() {
+    try {
+      this.fogTexture = await Assets.load("/images/global_assets/minimap-unexplored.png");
+    } catch { /* no fog texture */ }
   }
 
   private inBounds(x: number, y: number): boolean {

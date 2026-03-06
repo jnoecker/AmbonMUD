@@ -60,7 +60,7 @@ interface GmcpContext {
   setCombatTarget: Dispatch<SetStateAction<CombatTarget | null>>;
   setShop: Dispatch<SetStateAction<ShopState | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
-  updateMap: (roomId: string, exits: Record<string, string>) => void;
+  updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null) => void;
   pushCombatEvent: (event: CombatEventData) => void;
   setCharStats: Dispatch<SetStateAction<CharStats | null>>;
   setQuests: Dispatch<SetStateAction<QuestEntry[]>>;
@@ -160,7 +160,11 @@ export function applyGmcpPackage(
         image: typeof packet.image === "string" ? packet.image : null,
       });
 
-      if (id) ctx.updateMap(id, exits);
+      if (id) {
+        const title = typeof packet.title === "string" && packet.title.length > 0 ? packet.title : "";
+        const image = typeof packet.image === "string" ? packet.image : null;
+        ctx.updateMap(id, exits, title, image);
+      }
       break;
     }
 
