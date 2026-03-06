@@ -223,6 +223,7 @@ class GmcpEmitter(
                     levelRequired = a.levelRequired,
                     targetType = a.targetType.name,
                     classRestriction = a.requiredClass?.name,
+                    image = a.image,
                 )
             },
         )
@@ -893,6 +894,7 @@ class GmcpEmitter(
         val levelRequired: Int,
         val targetType: String,
         val classRestriction: String?,
+        val image: String? = null,
     )
 
     private data class CharNamePayload(

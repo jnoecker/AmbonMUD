@@ -389,6 +389,7 @@ ambonmud:
         # --- Warrior (26 abilities) ---
         power_strike:
           displayName: "Power Strike"
+          image: "/images/abilities/power_strike.png"
           description: "A powerful melee strike."
           manaCost: 5
           cooldownMs: 0
@@ -401,6 +402,7 @@ ambonmud:
             maxDamage: 10
         taunt:
           displayName: "Taunt"
+          image: "/images/abilities/taunt.png"
           description: "Force a mob to attack you by generating massive threat."
           manaCost: 5
           cooldownMs: 10000
@@ -413,6 +415,7 @@ ambonmud:
             margin: 10.0
         battle_shout:
           displayName: "Battle Shout"
+          image: "/images/abilities/battle_shout.png"
           description: "A war cry that increases your strength."
           manaCost: 10
           cooldownMs: 60000
@@ -424,6 +427,7 @@ ambonmud:
             statusEffectId: battle_shout
         shield_bash:
           displayName: "Shield Bash"
+          image: "/images/abilities/shield_bash.png"
           description: "Bash your foe with your shield."
           manaCost: 10
           cooldownMs: 3000
@@ -436,6 +440,7 @@ ambonmud:
             maxDamage: 14
         whirlwind_strike:
           displayName: "Whirlwind Strike"
+          image: "/images/abilities/whirlwind_strike.png"
           description: "Spin around hitting nearby enemies in combat."
           manaCost: 12
           cooldownMs: 4000
@@ -448,6 +453,7 @@ ambonmud:
             maxDamage: 11
         war_cry:
           displayName: "War Cry"
+          image: "/images/abilities/war_cry.png"
           description: "Rally yourself with a battle cry."
           manaCost: 15
           cooldownMs: 8000
@@ -460,6 +466,7 @@ ambonmud:
             maxHeal: 15
         riposte:
           displayName: "Riposte"
+          image: "/images/abilities/riposte.png"
           description: "A skilled counter-attack against your foe."
           manaCost: 8
           cooldownMs: 2000
@@ -472,6 +479,7 @@ ambonmud:
             maxDamage: 16
         block:
           displayName: "Block"
+          image: "/images/abilities/block.png"
           description: "Protect yourself with a defensive stance."
           manaCost: 10
           cooldownMs: 5000
@@ -483,6 +491,7 @@ ambonmud:
             statusEffectId: thornhide_armor
         cleave:
           displayName: "Cleave"
+          image: "/images/abilities/cleave.png"
           description: "Split your enemy with a heavy overhead strike."
           manaCost: 14
           cooldownMs: 6000
@@ -495,6 +504,7 @@ ambonmud:
             maxDamage: 24
         counter_attack:
           displayName: "Counter Attack"
+          image: "/images/abilities/counter_attack.png"
           description: "Strike your opponent as they attack you."
           manaCost: 6
           cooldownMs: 3000
@@ -507,6 +517,7 @@ ambonmud:
             maxDamage: 15
         berserker_rage:
           displayName: "Berserker Rage"
+          image: "/images/abilities/berserker_rage.png"
           description: "Enter a state of primal fury, increasing damage output."
           manaCost: 20
           cooldownMs: 10000
@@ -518,6 +529,7 @@ ambonmud:
             statusEffectId: berserker_state
         charge:
           displayName: "Charge"
+          image: "/images/abilities/charge.png"
           description: "Rush forward and slam your enemy."
           manaCost: 12
           cooldownMs: 7000
@@ -530,6 +542,7 @@ ambonmud:
             maxDamage: 26
         parry:
           displayName: "Parry"
+          image: "/images/abilities/parry.png"
           description: "Deflect incoming attacks with your weapon."
           manaCost: 8
           cooldownMs: 4000
@@ -541,6 +554,7 @@ ambonmud:
             statusEffectId: thornhide_armor
         crushing_blow:
           displayName: "Crushing Blow"
+          image: "/images/abilities/crushing_blow.png"
           description: "Deliver a devastating blow with all your might."
           manaCost: 18
           cooldownMs: 8000
@@ -553,6 +567,7 @@ ambonmud:
             maxDamage: 32
         revenge:
           displayName: "Revenge"
+          image: "/images/abilities/revenge.png"
           description: "Strike back at an enemy that just hurt you."
           manaCost: 10
           cooldownMs: 5000
@@ -565,6 +580,7 @@ ambonmud:
             maxDamage: 22
         last_stand:
           displayName: "Last Stand"
+          image: "/images/abilities/last_stand.png"
           description: "Make a final desperate defense against all attacks."
           manaCost: 25
           cooldownMs: 12000
@@ -576,6 +592,7 @@ ambonmud:
             statusEffectId: thornhide_armor
         execution:
           displayName: "Execution"
+          image: "/images/abilities/execution.png"
           description: "A finishing move to strike down weakened foes."
           manaCost: 16
           cooldownMs: 6000
@@ -588,6 +605,7 @@ ambonmud:
             maxDamage: 40
         second_wind:
           displayName: "Second Wind"
+          image: "/images/abilities/second_wind.png"
           description: "Push through your exhaustion and recover."
           manaCost: 20
           cooldownMs: 10000
@@ -600,6 +618,7 @@ ambonmud:
             maxHeal: 35
         unbreakable:
           displayName: "Unbreakable"
+          image: "/images/abilities/unbreakable.png"
           description: "Strengthen your resolve to become an immovable force."
           manaCost: 22
           cooldownMs: 15000
@@ -611,6 +630,7 @@ ambonmud:
             statusEffectId: berserker_state
         mass_taunt:
           displayName: "Mass Taunt"
+          image: "/images/abilities/mass_taunt.png"
           description: "Taunt all nearby enemies."
           manaCost: 15
           cooldownMs: 12000
@@ -623,6 +643,7 @@ ambonmud:
             margin: 15.0
         whirlwind_assault:
           displayName: "Whirlwind Assault"
+          image: "/images/abilities/whirlwind_assault.png"
           description: "Execute a devastating spin attack hitting all foes."
           manaCost: 28
           cooldownMs: 10000
@@ -635,6 +656,7 @@ ambonmud:
             maxDamage: 20
         savage_charge:
           displayName: "Savage Charge"
+          image: "/images/abilities/savage_charge.png"
           description: "A relentless assault that knocks back enemies."
           manaCost: 24
           cooldownMs: 8000
@@ -647,6 +669,7 @@ ambonmud:
             maxDamage: 44
         iron_resolve:
           displayName: "Iron Resolve"
+          image: "/images/abilities/iron_resolve.png"
           description: "Harden your body against damage."
           manaCost: 20
           cooldownMs: 12000
@@ -658,6 +681,7 @@ ambonmud:
             statusEffectId: thornhide_armor
         endgame_strike:
           displayName: "Endgame Strike"
+          image: "/images/abilities/endgame_strike.png"
           description: "A powerful attack reserved for experienced warriors."
           manaCost: 26
           cooldownMs: 9000
@@ -670,6 +694,7 @@ ambonmud:
             maxDamage: 50
         champions_triumph:
           displayName: "Champion's Triumph"
+          image: "/images/abilities/champions_triumph.png"
           description: "The ultimate warrior ability—strike with glory."
           manaCost: 30
           cooldownMs: 15000
@@ -683,6 +708,7 @@ ambonmud:
         # --- Mage (26 abilities) ---
         arcane_bolt:
           displayName: "Arcane Bolt"
+          image: "/images/abilities/arcane_bolt.png"
           description: "Hurl a bolt of arcane energy."
           manaCost: 6
           cooldownMs: 0
@@ -695,6 +721,7 @@ ambonmud:
             maxDamage: 9
         ignite:
           displayName: "Ignite"
+          image: "/images/abilities/ignite.png"
           description: "Sets the target ablaze, burning them for damage over time."
           manaCost: 12
           cooldownMs: 8000
@@ -706,6 +733,7 @@ ambonmud:
             statusEffectId: ignite
         frost_nova:
           displayName: "Frost Nova"
+          image: "/images/abilities/frost_nova.png"
           description: "Blast your enemy with freezing cold."
           manaCost: 15
           cooldownMs: 3000
@@ -718,6 +746,7 @@ ambonmud:
             maxDamage: 18
         fireball:
           displayName: "Fireball"
+          image: "/images/abilities/fireball.png"
           description: "Hurl a ball of fire that hits all enemies in combat with your group."
           manaCost: 25
           cooldownMs: 8000
@@ -730,6 +759,7 @@ ambonmud:
             maxDamage: 7
         mana_bolt:
           displayName: "Mana Bolt"
+          image: "/images/abilities/mana_bolt.png"
           description: "Drain mana from your foe and hurl it as a projectile."
           manaCost: 10
           cooldownMs: 4000
@@ -742,6 +772,7 @@ ambonmud:
             maxDamage: 14
         inferno:
           displayName: "Inferno"
+          image: "/images/abilities/inferno.png"
           description: "Engulf your foe in searing flames."
           manaCost: 25
           cooldownMs: 5000
@@ -754,6 +785,7 @@ ambonmud:
             maxDamage: 28
         flame_armor:
           displayName: "Flame Armor"
+          image: "/images/abilities/flame_armor.png"
           description: "Surround yourself with protective flames."
           manaCost: 14
           cooldownMs: 10000
@@ -765,6 +797,7 @@ ambonmud:
             statusEffectId: flame_armor
         frost_armor:
           displayName: "Frost Armor"
+          image: "/images/abilities/frost_armor.png"
           description: "Encase yourself in a shield of ice."
           manaCost: 14
           cooldownMs: 10000
@@ -776,6 +809,7 @@ ambonmud:
             statusEffectId: frost_armor
         chain_lightning:
           displayName: "Chain Lightning"
+          image: "/images/abilities/chain_lightning.png"
           description: "Hurl lightning that bounces between enemies."
           manaCost: 18
           cooldownMs: 6000
@@ -788,6 +822,7 @@ ambonmud:
             maxDamage: 14
         blizzard:
           displayName: "Blizzard"
+          image: "/images/abilities/blizzard.png"
           description: "Summon a whirlwind of snow and ice."
           manaCost: 28
           cooldownMs: 9000
@@ -800,6 +835,7 @@ ambonmud:
             maxDamage: 18
         pyroclasm:
           displayName: "Pyroclasm"
+          image: "/images/abilities/pyroclasm.png"
           description: "Unleash explosive volcanic energy."
           manaCost: 30
           cooldownMs: 10000
@@ -812,6 +848,7 @@ ambonmud:
             maxDamage: 36
         ice_storm:
           displayName: "Ice Storm"
+          image: "/images/abilities/ice_storm.png"
           description: "Create a deadly storm of icicles."
           manaCost: 26
           cooldownMs: 8000
@@ -824,6 +861,7 @@ ambonmud:
             maxDamage: 20
         meteor_shower:
           displayName: "Meteor Shower"
+          image: "/images/abilities/meteor_shower.png"
           description: "Rain meteors down upon your enemies."
           manaCost: 32
           cooldownMs: 12000
@@ -836,6 +874,7 @@ ambonmud:
             maxDamage: 24
         arcane_explosion:
           displayName: "Arcane Explosion"
+          image: "/images/abilities/arcane_explosion.png"
           description: "Detonate raw arcane energy in all directions."
           manaCost: 28
           cooldownMs: 10000
@@ -848,6 +887,7 @@ ambonmud:
             maxDamage: 22
         temporal_warp:
           displayName: "Temporal Warp"
+          image: "/images/abilities/temporal_warp.png"
           description: "Twist spacetime to damage your foe."
           manaCost: 24
           cooldownMs: 7000
@@ -860,6 +900,7 @@ ambonmud:
             maxDamage: 32
         flame_burst:
           displayName: "Flame Burst"
+          image: "/images/abilities/flame_burst.png"
           description: "Create a controlled explosion of fire."
           manaCost: 20
           cooldownMs: 6000
@@ -872,6 +913,7 @@ ambonmud:
             maxDamage: 28
         absolute_zero:
           displayName: "Absolute Zero"
+          image: "/images/abilities/absolute_zero.png"
           description: "Freeze your enemy solid with absolute cold."
           manaCost: 26
           cooldownMs: 9000
@@ -883,6 +925,7 @@ ambonmud:
             statusEffectId: frozen
         inferno_nova:
           displayName: "Inferno Nova"
+          image: "/images/abilities/inferno_nova.png"
           description: "Detonate a miniature inferno."
           manaCost: 28
           cooldownMs: 10000
@@ -895,6 +938,7 @@ ambonmud:
             maxDamage: 40
         time_fracture:
           displayName: "Time Fracture"
+          image: "/images/abilities/time_fracture.png"
           description: "Shatter time around your enemy."
           manaCost: 30
           cooldownMs: 11000
@@ -907,6 +951,7 @@ ambonmud:
             maxDamage: 44
         mana_shield:
           displayName: "Mana Shield"
+          image: "/images/abilities/mana_shield.png"
           description: "Shield yourself with pure magical energy."
           manaCost: 22
           cooldownMs: 8000
@@ -918,6 +963,7 @@ ambonmud:
             statusEffectId: mana_shield
         arcane_overload:
           displayName: "Arcane Overload"
+          image: "/images/abilities/arcane_overload.png"
           description: "Charge yourself with dangerous arcane power."
           manaCost: 34
           cooldownMs: 13000
@@ -930,6 +976,7 @@ ambonmud:
             maxDamage: 48
         cataclysm:
           displayName: "Cataclysm"
+          image: "/images/abilities/cataclysm.png"
           description: "Bring total destruction to a wide area."
           manaCost: 36
           cooldownMs: 14000
@@ -942,6 +989,7 @@ ambonmud:
             maxDamage: 30
         temporal_twist:
           displayName: "Temporal Twist"
+          image: "/images/abilities/temporal_twist.png"
           description: "Manipulate time itself against your enemies."
           manaCost: 28
           cooldownMs: 10000
@@ -954,6 +1002,7 @@ ambonmud:
             maxDamage: 50
         spellsteal:
           displayName: "Spellsteal"
+          image: "/images/abilities/spellsteal.png"
           description: "Drain the magical essence from your enemy."
           manaCost: 20
           cooldownMs: 8000
@@ -966,6 +1015,7 @@ ambonmud:
             maxDamage: 40
         arcane_mastery:
           displayName: "Arcane Mastery"
+          image: "/images/abilities/arcane_mastery.png"
           description: "The apex of magical power—absolute arcane dominion."
           manaCost: 38
           cooldownMs: 15000
@@ -979,6 +1029,7 @@ ambonmud:
         # --- Cleric (26 abilities) ---
         minor_heal:
           displayName: "Minor Heal"
+          image: "/images/abilities/minor_heal.png"
           description: "Mend wounds with holy light. Target a group member or self."
           manaCost: 8
           cooldownMs: 0
@@ -991,6 +1042,7 @@ ambonmud:
             maxHeal: 10
         holy_light:
           displayName: "Holy Light"
+          image: "/images/abilities/holy_light.png"
           description: "Blessed healing light washes over the target."
           manaCost: 10
           cooldownMs: 2000
@@ -1003,6 +1055,7 @@ ambonmud:
             maxHeal: 13
         rejuvenation:
           displayName: "Rejuvenation"
+          image: "/images/abilities/rejuvenation.png"
           description: "Heals a target over time. Target a group member or self."
           manaCost: 12
           cooldownMs: 15000
@@ -1014,6 +1067,7 @@ ambonmud:
             statusEffectId: rejuvenation
         shield_of_faith:
           displayName: "Shield of Faith"
+          image: "/images/abilities/shield_of_faith.png"
           description: "Grants a shield that absorbs damage. Target a group member or self."
           manaCost: 15
           cooldownMs: 30000
@@ -1025,6 +1079,7 @@ ambonmud:
             statusEffectId: shield_of_faith
         smite:
           displayName: "Smite"
+          image: "/images/abilities/smite.png"
           description: "Strike your foe with divine wrath."
           manaCost: 12
           cooldownMs: 3000
@@ -1037,6 +1092,7 @@ ambonmud:
             maxDamage: 12
         consecration:
           displayName: "Consecration"
+          image: "/images/abilities/consecration.png"
           description: "Bless the ground beneath you with holy power."
           manaCost: 16
           cooldownMs: 12000
@@ -1048,6 +1104,7 @@ ambonmud:
             statusEffectId: consecrated_ground
         greater_heal:
           displayName: "Greater Heal"
+          image: "/images/abilities/greater_heal.png"
           description: "A powerful wave of restorative energy. Target a group member or self."
           manaCost: 22
           cooldownMs: 8000
@@ -1060,6 +1117,7 @@ ambonmud:
             maxHeal: 25
         holy_fire:
           displayName: "Holy Fire"
+          image: "/images/abilities/holy_fire.png"
           description: "Strike with holy flames that burn over time."
           manaCost: 14
           cooldownMs: 6000
@@ -1071,6 +1129,7 @@ ambonmud:
             statusEffectId: ignite
         blessing_of_protection:
           displayName: "Blessing of Protection"
+          image: "/images/abilities/blessing_of_protection.png"
           description: "Grant a blessing that protects the target."
           manaCost: 18
           cooldownMs: 20000
@@ -1082,6 +1141,7 @@ ambonmud:
             statusEffectId: shield_of_faith
         divine_light:
           displayName: "Divine Light"
+          image: "/images/abilities/divine_light.png"
           description: "Channel the light of the divine to heal."
           manaCost: 20
           cooldownMs: 6000
@@ -1094,6 +1154,7 @@ ambonmud:
             maxHeal: 30
         resurrection:
           displayName: "Resurrection"
+          image: "/images/abilities/resurrection.png"
           description: "Return a fallen ally to life with holy power."
           manaCost: 40
           cooldownMs: 30000
@@ -1106,6 +1167,7 @@ ambonmud:
             maxHeal: 40
         holy_nova:
           displayName: "Holy Nova"
+          image: "/images/abilities/holy_nova.png"
           description: "Unleash a wave of holy energy healing nearby allies."
           manaCost: 26
           cooldownMs: 10000
@@ -1118,6 +1180,7 @@ ambonmud:
             maxDamage: 14
         sanctified_heal:
           displayName: "Sanctified Heal"
+          image: "/images/abilities/sanctified_heal.png"
           description: "A more powerful healing spell blessed by the divine."
           manaCost: 28
           cooldownMs: 10000
@@ -1130,6 +1193,7 @@ ambonmud:
             maxHeal: 36
         guardian_angel:
           displayName: "Guardian Angel"
+          image: "/images/abilities/guardian_angel.png"
           description: "Call upon a guardian spirit to protect an ally."
           manaCost: 24
           cooldownMs: 15000
@@ -1141,6 +1205,7 @@ ambonmud:
             statusEffectId: divine_blessing
         divine_intervention:
           displayName: "Divine Intervention"
+          image: "/images/abilities/divine_intervention.png"
           description: "Perform a miraculous intervention to heal."
           manaCost: 30
           cooldownMs: 12000
@@ -1153,6 +1218,7 @@ ambonmud:
             maxHeal: 44
         mass_heal:
           displayName: "Mass Heal"
+          image: "/images/abilities/mass_heal.png"
           description: "Heal multiple allies at once with holy light."
           manaCost: 32
           cooldownMs: 14000
@@ -1165,6 +1231,7 @@ ambonmud:
             maxDamage: 18
         holy_wrath:
           displayName: "Holy Wrath"
+          image: "/images/abilities/holy_wrath.png"
           description: "Strike enemies with the wrath of the holy."
           manaCost: 22
           cooldownMs: 7000
@@ -1177,6 +1244,7 @@ ambonmud:
             maxDamage: 28
         divine_aegis:
           displayName: "Divine Aegis"
+          image: "/images/abilities/divine_aegis.png"
           description: "Surround yourself with divine protection."
           manaCost: 26
           cooldownMs: 12000
@@ -1188,6 +1256,7 @@ ambonmud:
             statusEffectId: divine_blessing
         benediction:
           displayName: "Benediction"
+          image: "/images/abilities/benediction.png"
           description: "Bestow a blessing that heals over time."
           manaCost: 20
           cooldownMs: 10000
@@ -1199,6 +1268,7 @@ ambonmud:
             statusEffectId: holy_light
         holy_shield:
           displayName: "Holy Shield"
+          image: "/images/abilities/holy_shield.png"
           description: "Create a shield of pure holy energy."
           manaCost: 24
           cooldownMs: 15000
@@ -1210,6 +1280,7 @@ ambonmud:
             statusEffectId: shield_of_faith
         illumination:
           displayName: "Illumination"
+          image: "/images/abilities/illumination.png"
           description: "Flood an area with brilliant holy light."
           manaCost: 28
           cooldownMs: 11000
@@ -1222,6 +1293,7 @@ ambonmud:
             maxDamage: 20
         consecrated_ground:
           displayName: "Consecrated Ground (Spell)"
+          image: "/images/abilities/consecrated_ground.png"
           description: "Sanctify the ground for continuous healing."
           manaCost: 30
           cooldownMs: 12000
@@ -1233,6 +1305,7 @@ ambonmud:
             statusEffectId: consecrated_ground
         divine_favor:
           displayName: "Divine Favor"
+          image: "/images/abilities/divine_favor.png"
           description: "Call down the favor of the divine."
           manaCost: 28
           cooldownMs: 10000
@@ -1245,6 +1318,7 @@ ambonmud:
             maxHeal: 50
         holy_vengeance:
           displayName: "Holy Vengeance"
+          image: "/images/abilities/holy_vengeance.png"
           description: "Strike your enemies with divine vengeance."
           manaCost: 26
           cooldownMs: 9000
@@ -1257,6 +1331,7 @@ ambonmud:
             maxDamage: 36
         divine_protection:
           displayName: "Divine Protection"
+          image: "/images/abilities/divine_protection.png"
           description: "The ultimate protective blessing."
           manaCost: 32
           cooldownMs: 15000
@@ -1268,6 +1343,7 @@ ambonmud:
             statusEffectId: shield_of_faith
         salvation:
           displayName: "Salvation"
+          image: "/images/abilities/salvation.png"
           description: "Perform a miraculous salvation of an ally."
           manaCost: 36
           cooldownMs: 16000
@@ -1280,6 +1356,7 @@ ambonmud:
             maxHeal: 60
         divine_ascension:
           displayName: "Divine Ascension"
+          image: "/images/abilities/divine_ascension.png"
           description: "The ultimate cleric ability—ascend to divine power."
           manaCost: 40
           cooldownMs: 18000
@@ -1293,6 +1370,7 @@ ambonmud:
         # --- Rogue (26 abilities) ---
         backstab:
           displayName: "Backstab"
+          image: "/images/abilities/backstab.png"
           description: "Strike from the shadows."
           manaCost: 6
           cooldownMs: 0
@@ -1305,6 +1383,7 @@ ambonmud:
             maxDamage: 11
         poison_strike:
           displayName: "Poison Strike"
+          image: "/images/abilities/poison_strike.png"
           description: "A venomous strike that poisons the target. Stacks up to 4 times."
           manaCost: 8
           cooldownMs: 5000
@@ -1316,6 +1395,7 @@ ambonmud:
             statusEffectId: poison
         evasion:
           displayName: "Evasion"
+          image: "/images/abilities/evasion.png"
           description: "Dodge attacks with enhanced reflexes."
           manaCost: 10
           cooldownMs: 8000
@@ -1327,6 +1407,7 @@ ambonmud:
             statusEffectId: shadow_veil
         shadow_clone:
           displayName: "Shadow Clone"
+          image: "/images/abilities/shadow_clone.png"
           description: "Create a shadow duplicate of yourself to confuse enemies."
           manaCost: 14
           cooldownMs: 10000
@@ -1338,6 +1419,7 @@ ambonmud:
             statusEffectId: shadow_veil
         shadow_step:
           displayName: "Shadow Step"
+          image: "/images/abilities/shadow_step.png"
           description: "Slip into the shadows to recover."
           manaCost: 18
           cooldownMs: 6000
@@ -1350,6 +1432,7 @@ ambonmud:
             maxHeal: 18
         ambush:
           displayName: "Ambush"
+          image: "/images/abilities/ambush.png"
           description: "Attack from hiding with a surprise strike."
           manaCost: 12
           cooldownMs: 4000
@@ -1362,6 +1445,7 @@ ambonmud:
             maxDamage: 20
         death_mark:
           displayName: "Death Mark"
+          image: "/images/abilities/death_mark.png"
           description: "Mark a target for death, weakening their defenses."
           manaCost: 10
           cooldownMs: 6000
@@ -1373,6 +1457,7 @@ ambonmud:
             statusEffectId: death_mark
         smoke_bomb:
           displayName: "Smoke Bomb"
+          image: "/images/abilities/smoke_bomb.png"
           description: "Create a cloud of smoke to obscure vision."
           manaCost: 12
           cooldownMs: 8000
@@ -1384,6 +1469,7 @@ ambonmud:
             statusEffectId: shadow_veil
         shadow_dance:
           displayName: "Shadow Dance"
+          image: "/images/abilities/shadow_dance.png"
           description: "Dance through the shadows, striking from within."
           manaCost: 16
           cooldownMs: 7000
@@ -1396,6 +1482,7 @@ ambonmud:
             maxDamage: 24
         assassinate:
           displayName: "Assassinate"
+          image: "/images/abilities/assassinate.png"
           description: "Perform a swift execution strike."
           manaCost: 20
           cooldownMs: 8000
@@ -1408,6 +1495,7 @@ ambonmud:
             maxDamage: 30
         blindside:
           displayName: "Blindside"
+          image: "/images/abilities/blindside.png"
           description: "Attack from an unexpected angle."
           manaCost: 14
           cooldownMs: 5000
@@ -1420,6 +1508,7 @@ ambonmud:
             maxDamage: 26
         silent_killer:
           displayName: "Silent Killer"
+          image: "/images/abilities/silent_killer.png"
           description: "Strike without a sound, leaving no trace."
           manaCost: 18
           cooldownMs: 7000
@@ -1432,6 +1521,7 @@ ambonmud:
             maxDamage: 32
         shadow_mastery:
           displayName: "Shadow Mastery"
+          image: "/images/abilities/shadow_mastery.png"
           description: "Master the art of shadow manipulation."
           manaCost: 22
           cooldownMs: 9000
@@ -1443,6 +1533,7 @@ ambonmud:
             statusEffectId: shadow_veil
         venomous_blade:
           displayName: "Venomous Blade"
+          image: "/images/abilities/venomous_blade.png"
           description: "Coat your weapon in deadly venom."
           manaCost: 16
           cooldownMs: 6000
@@ -1454,6 +1545,7 @@ ambonmud:
             statusEffectId: venomous
         death_from_above:
           displayName: "Death From Above"
+          image: "/images/abilities/death_from_above.png"
           description: "Strike from a height with lethal force."
           manaCost: 20
           cooldownMs: 8000
@@ -1466,6 +1558,7 @@ ambonmud:
             maxDamage: 38
         smoke_screen:
           displayName: "Smoke Screen"
+          image: "/images/abilities/smoke_screen.png"
           description: "Create a thick curtain of smoke."
           manaCost: 14
           cooldownMs: 7000
@@ -1477,6 +1570,7 @@ ambonmud:
             statusEffectId: shadow_veil
         nightfall:
           displayName: "Nightfall"
+          image: "/images/abilities/nightfall.png"
           description: "Shroud yourself in darkness."
           manaCost: 24
           cooldownMs: 10000
@@ -1488,6 +1582,7 @@ ambonmud:
             statusEffectId: blinded
         death_sentence:
           displayName: "Death Sentence"
+          image: "/images/abilities/death_sentence.png"
           description: "Condemn a target to death with a blade."
           manaCost: 22
           cooldownMs: 9000
@@ -1499,6 +1594,7 @@ ambonmud:
             statusEffectId: death_mark
         shadow_clone_assault:
           displayName: "Shadow Clone Assault"
+          image: "/images/abilities/shadow_clone_assault.png"
           description: "Send shadow clones to attack your enemies."
           manaCost: 26
           cooldownMs: 11000
@@ -1511,6 +1607,7 @@ ambonmud:
             maxDamage: 20
         crimson_blade:
           displayName: "Crimson Blade"
+          image: "/images/abilities/crimson_blade.png"
           description: "Strike with a blade that thirsts for blood."
           manaCost: 24
           cooldownMs: 8000
@@ -1523,6 +1620,7 @@ ambonmud:
             maxDamage: 44
         deadly_precision:
           displayName: "Deadly Precision"
+          image: "/images/abilities/deadly_precision.png"
           description: "Strike with surgical precision."
           manaCost: 20
           cooldownMs: 7000
@@ -1535,6 +1633,7 @@ ambonmud:
             maxDamage: 42
         lethal_strike:
           displayName: "Lethal Strike"
+          image: "/images/abilities/lethal_strike.png"
           description: "A strike aimed at vital points."
           manaCost: 28
           cooldownMs: 10000
@@ -1547,6 +1646,7 @@ ambonmud:
             maxDamage: 50
         deaths_embrace:
           displayName: "Death's Embrace"
+          image: "/images/abilities/deaths_embrace.png"
           description: "Embrace the shadows to become unstoppable."
           manaCost: 30
           cooldownMs: 12000
@@ -1558,6 +1658,7 @@ ambonmud:
             statusEffectId: shadow_veil
         shadow_finale:
           displayName: "Shadow Finale"
+          image: "/images/abilities/shadow_finale.png"
           description: "Execute a devastating shadow technique."
           manaCost: 32
           cooldownMs: 12000
@@ -1570,6 +1671,7 @@ ambonmud:
             maxDamage: 58
         assassins_triumph:
           displayName: "Assassin's Triumph"
+          image: "/images/abilities/assassins_triumph.png"
           description: "The ultimate rogue ability—become the shadow itself."
           manaCost: 36
           cooldownMs: 15000

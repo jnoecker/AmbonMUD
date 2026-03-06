@@ -182,6 +182,9 @@ Sessions
 | Flyway migrations | `src/main/resources/db/migration/` (V1–V7: players table through achievements) |
 | Proto definitions | `src/main/proto/ambonmud/v1/engine_service.proto`, `events.proto` |
 | Web demo client (static) | `src/main/resources/web/` |
+| V4 canvas client (React + PixiJS) | `web-v3/` (built to `src/main/resources/web-v3/`) |
+| Ability sprites | `src/main/resources/world/images/abilities/` (102 PNGs) |
+| Compass/direction sprites | `src/main/resources/world/images/global_assets/` |
 | World YAML format spec | `docs/WORLD_YAML_SPEC.md` |
 | Runtime player saves | `data/players/` (git-ignored, do not commit) |
 
@@ -274,6 +277,9 @@ When adding new `InterEngineMessage` variants, update serialization in `InterEng
 
 ### GMCP
 Update `GmcpEmitter.kt` and the v3 web client's GMCP handler at `web-v3/src/gmcp/applyGmcpPackage.ts`. Telnet negotiation is in `NetworkSession.kt` (WILL GMCP) and `TelnetLineDecoder.kt`.
+
+### Ability/spell image
+Add `image` field to `AbilityDefinitionConfig` (AppConfig.kt), `AbilityDefinition`, `AbilityRegistryLoader`, and `GmcpEmitter.CharSkillPayload`. Client reads it from `Char.Skills` GMCP into `SkillSummary.image`.
 
 ## Kotlin Style (ktlint)
 
