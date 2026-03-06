@@ -5,7 +5,7 @@ import { percent } from "../utils";
 import { HelpContent } from "./HelpContent";
 import { AttackIcon, DropItemIcon, GiveItemIcon, PickupIcon, RemoveItemIcon, TalkIcon, WearItemIcon } from "./Icons";
 
-const PANEL_POPOUTS = new Set<string>(["character", "chat", "world"]);
+const PANEL_POPOUTS = new Set<string>(["character", "chat", "world", "shop"]);
 
 interface PopoutLayerProps {
   activePopout: PopoutPanel;

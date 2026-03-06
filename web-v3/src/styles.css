@@ -1821,6 +1821,226 @@ body {
   font-size: 0.78rem;
 }
 
+/* ── Shop popout (dedicated view) ──────────────────────── */
+
+.shop-popout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.shop-popout-wallet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgb(190 168 115 / 12%), rgb(190 168 115 / 6%));
+  border: 1px solid rgb(190 168 115 / 22%);
+}
+
+.shop-popout-gold-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4b85c, #bea873);
+  box-shadow: 0 0 6px rgb(190 168 115 / 40%);
+  flex-shrink: 0;
+}
+
+.shop-popout-gold-amount {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-primary-soft-gold);
+}
+
+.shop-popout-gold-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.shop-popout-tabs {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.shop-popout-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s var(--ease-in-out-smooth), color 0.15s, border-color 0.15s;
+}
+
+.shop-popout-tab:hover {
+  background: rgb(255 255 255 / 6%);
+}
+
+.shop-popout-tab-active {
+  background: var(--surface-chip);
+  color: var(--text-primary);
+  border-color: var(--glass-edge);
+}
+
+.shop-popout-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.shop-popout-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.shop-popout-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgb(210 198 232 / 80%), rgb(191 217 236 / 76%));
+}
+
+.shop-popout-card {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 4%);
+  border: 1px solid var(--line-faint);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.shop-popout-card:hover {
+  background: rgb(255 255 255 / 7%);
+  border-color: var(--line-soft);
+}
+
+.shop-popout-card-unaffordable {
+  opacity: 0.6;
+}
+
+.shop-popout-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.shop-popout-card-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.shop-popout-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--line-faint);
+}
+
+.shop-popout-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.shop-popout-card-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.shop-popout-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.shop-popout-card-stats {
+  font-size: 0.75rem;
+  color: var(--color-primary-pale-blue);
+  font-weight: 600;
+}
+
+.shop-popout-card-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.shop-popout-card-price {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-primary-soft-gold);
+  white-space: nowrap;
+}
+
+.shop-popout-card-price-cant {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-disabled);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.shop-popout-buy-btn,
+.shop-popout-sell-btn {
+  padding: 4px 14px !important;
+  font-size: 0.78rem !important;
+}
+
+.shop-popout-buy-btn:not(:disabled) {
+  background: linear-gradient(135deg, rgb(142 169 123 / 80%), rgb(113 150 92 / 76%)) !important;
+  border-color: rgb(142 169 123 / 40%) !important;
+}
+
+.shop-popout-buy-btn:not(:disabled):hover {
+  background: linear-gradient(135deg, rgb(152 179 133 / 88%), rgb(123 160 102 / 84%)) !important;
+}
+
+.shop-popout-sell-btn:not(:disabled) {
+  background: linear-gradient(135deg, rgb(190 168 115 / 70%), rgb(170 148 95 / 66%)) !important;
+  border-color: rgb(190 168 115 / 36%) !important;
+}
+
+.shop-popout-sell-btn:not(:disabled):hover {
+  background: linear-gradient(135deg, rgb(200 178 125 / 78%), rgb(180 158 105 / 74%)) !important;
+}
+
+/* Shop action bar button glow */
+.action-bar-btn-shop {
+  background: linear-gradient(135deg, rgb(190 168 115 / 60%), rgb(170 148 95 / 54%));
+  border-color: rgb(190 168 115 / 30%);
+  animation: shopPulse 2s ease-in-out infinite;
+}
+
+.action-bar-btn-shop:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgb(200 178 125 / 74%), rgb(180 158 105 / 70%));
+}
+
+@keyframes shopPulse {
+  0%, 100% { box-shadow: 0 0 4px rgb(190 168 115 / 20%); }
+  50% { box-shadow: 0 0 12px rgb(190 168 115 / 50%); }
+}
+
 .skills-combat-panel {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
