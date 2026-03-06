@@ -622,17 +622,24 @@ class GmcpEmitter(
 
     /**
      * Builds [MobInfoEntry] list from raw [MobState] data and an optional set of shop mob IDs.
+     * [questAvailableMobIds] — mobs offering quests the player can accept.
+     * [questCompleteMobIds] — mobs with a turn-in quest whose objectives the player has completed.
      */
     fun buildMobInfoEntries(
         mobs: List<MobState>,
         shopMobIds: Set<String> = emptySet(),
+        questAvailableMobIds: Set<String> = emptySet(),
+        questCompleteMobIds: Set<String> = emptySet(),
     ): List<MobInfoEntry> = mobs.map { mob ->
+        val mid = mob.id.value
         MobInfoEntry(
-            id = mob.id.value,
+            id = mid,
             level = estimateMobLevel(mob.xpReward),
             tier = "standard",
             questGiver = mob.questIds.isNotEmpty(),
-            shopKeeper = mob.id.value in shopMobIds,
+            questAvailable = mid in questAvailableMobIds,
+            questComplete = mid in questCompleteMobIds,
+            shopKeeper = mid in shopMobIds,
             dialogue = mob.dialogue != null,
             aggressive = mob.aggressive,
         )
@@ -1167,6 +1174,8 @@ data class MobInfoEntry(
     val level: Int,
     val tier: String,
     val questGiver: Boolean,
+    val questAvailable: Boolean,
+    val questComplete: Boolean,
     val shopKeeper: Boolean,
     val dialogue: Boolean,
     val aggressive: Boolean,

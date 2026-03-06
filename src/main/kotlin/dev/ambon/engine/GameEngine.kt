@@ -669,6 +669,7 @@ class GameEngine(
             gatheringRegistry = gatheringRegistry,
             shopRegistry = shopRegistry,
             economyConfig = engineConfig.economy,
+            questSystem = questSystem,
         )
 
         listOf(

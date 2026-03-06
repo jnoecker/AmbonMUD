@@ -6,6 +6,7 @@ import { EntityPopout } from "../systems/EntityPopout";
 import type { MobInfo } from "../../types";
 
 const SHOP_BADGE_SIZE = 72;
+const QUEST_ICON_SIZE = 28;
 
 const EXIT_ARROW_COLOR = 0xb9aed8;
 const EXIT_LABEL_COLOR = "#b9aed8";
@@ -85,14 +86,13 @@ function drawArrow(g: Graphics, cx: number, cy: number, dir: "up" | "down" | "le
 }
 
 // Role indicator colors
-const ROLE_QUEST_COLOR = 0xf0c674;
 const ROLE_SHOP_COLOR = 0x81a2be;
 const DIALOGUE_ICON_SIZE = 28;
 const AGGRO_ICON_SIZE = 24;
 
 function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo) {
   const icons: number[] = [];
-  if (info.questGiver) icons.push(ROLE_QUEST_COLOR);
+  // quest indicators are handled by sprites now
   if (info.shopKeeper) icons.push(ROLE_SHOP_COLOR);
   // dialogue is handled by sprite indicator, not dot
   if (icons.length === 0) return;
@@ -107,15 +107,6 @@ function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo) {
     g.fill();
     x += ROLE_ICON_SIZE + ROLE_ICON_GAP;
   }
-}
-
-function drawQuestMarker(g: Graphics, cx: number, cy: number) {
-  const y = cy - SPRITE_SIZE / 2 - 24;
-  g.fill(ROLE_QUEST_COLOR);
-  g.roundRect(cx - 2.5, y - 10, 5, 12, 1);
-  g.fill();
-  g.circle(cx, y + 7, 2.5);
-  g.fill();
 }
 
 export class WorldScene {
@@ -140,6 +131,10 @@ export class WorldScene {
   private dialogueIcons: Map<string, Sprite> = new Map();
   private aggroTexture: Texture | null = null;
   private aggroIcons: Map<string, Sprite> = new Map();
+  private questAvailableTexture: Texture | null = null;
+  private questAvailableIcons: Map<string, Sprite> = new Map();
+  private questCompleteTexture: Texture | null = null;
+  private questCompleteIcons: Map<string, Sprite> = new Map();
 
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
@@ -229,6 +224,7 @@ export class WorldScene {
     this.loadShopIcon();
     this.loadDialogueTexture();
     this.loadAggroTexture();
+    this.loadQuestTextures();
 
     this.container.addChild(this.exitGraphics);
     this.container.addChild(this.roleGraphics);
@@ -335,7 +331,7 @@ export class WorldScene {
       this.rebuildPlayers(players);
     }
 
-    const mobInfoKey = mobInfo.map((m) => `${m.id}:${m.questGiver}:${m.shopKeeper}:${m.dialogue}:${m.aggressive}`).join("|");
+    const mobInfoKey = mobInfo.map((m) => `${m.id}:${m.questAvailable}:${m.questComplete}:${m.shopKeeper}:${m.dialogue}:${m.aggressive}`).join("|");
     if (mobInfoKey !== this.lastMobInfoKey) {
       this.lastMobInfoKey = mobInfoKey;
     }
@@ -480,12 +476,13 @@ export class WorldScene {
     const mobInfo = state.mobInfo;
     const activeDialogueMobs = new Set<string>();
     const activeAggroMobs = new Set<string>();
+    const activeQuestAvail = new Set<string>();
+    const activeQuestComplete = new Set<string>();
     if (mobInfo.length > 0) {
       for (const info of mobInfo) {
         const entry = this.mobSprites.get(info.id);
         if (!entry) continue;
         const { sprite } = entry;
-        if (info.questGiver) drawQuestMarker(this.roleGraphics, sprite.x, sprite.y);
         drawRoleIcons(this.roleGraphics, sprite.x, sprite.y, info);
         if (info.dialogue) {
           activeDialogueMobs.add(info.id);
@@ -495,23 +492,20 @@ export class WorldScene {
           activeAggroMobs.add(info.id);
           this.ensureAggroIcon(info.id, sprite.x, sprite.y);
         }
+        if (info.questComplete) {
+          activeQuestComplete.add(info.id);
+          this.ensureQuestIcon(info.id, sprite.x, sprite.y, "complete");
+        } else if (info.questAvailable) {
+          activeQuestAvail.add(info.id);
+          this.ensureQuestIcon(info.id, sprite.x, sprite.y, "available");
+        }
       }
     }
     // Remove stale indicator icons
-    for (const [id, icon] of this.dialogueIcons) {
-      if (!activeDialogueMobs.has(id)) {
-        this.container.removeChild(icon);
-        icon.destroy();
-        this.dialogueIcons.delete(id);
-      }
-    }
-    for (const [id, icon] of this.aggroIcons) {
-      if (!activeAggroMobs.has(id)) {
-        this.container.removeChild(icon);
-        icon.destroy();
-        this.aggroIcons.delete(id);
-      }
-    }
+    this.pruneIcons(this.dialogueIcons, activeDialogueMobs);
+    this.pruneIcons(this.aggroIcons, activeAggroMobs);
+    this.pruneIcons(this.questAvailableIcons, activeQuestAvail);
+    this.pruneIcons(this.questCompleteIcons, activeQuestComplete);
 
     this.layoutExitHitAreas(exits);
   }
@@ -586,6 +580,16 @@ export class WorldScene {
       icon.destroy();
     }
     this.aggroIcons.clear();
+    for (const icon of this.questAvailableIcons.values()) {
+      this.container.removeChild(icon);
+      icon.destroy();
+    }
+    this.questAvailableIcons.clear();
+    for (const icon of this.questCompleteIcons.values()) {
+      this.container.removeChild(icon);
+      icon.destroy();
+    }
+    this.questCompleteIcons.clear();
     this.mobSprites.clear();
 
     for (const mob of mobs) {
@@ -830,8 +834,8 @@ export class WorldScene {
       this.dialogueIcons.set(mobId, icon);
       this.container.addChild(icon);
     }
-    icon.x = cx;
-    icon.y = cy - SPRITE_SIZE / 2 - 20;
+    icon.x = cx - 20;
+    icon.y = cy - SPRITE_SIZE / 2 - 8;
   }
 
   private ensureAggroIcon(mobId: string, cx: number, cy: number) {
@@ -848,6 +852,51 @@ export class WorldScene {
     }
     icon.x = cx + SPRITE_SIZE / 2 - 4;
     icon.y = cy - SPRITE_SIZE / 2 - 8;
+  }
+
+  private async loadQuestTextures() {
+    try {
+      this.questAvailableTexture = await Assets.load("/images/global_assets/quest_available_indicator.png");
+    } catch { /* no sprite */ }
+    try {
+      this.questCompleteTexture = await Assets.load("/images/global_assets/quest_complete_indicator.png");
+    } catch { /* no sprite */ }
+  }
+
+  private ensureQuestIcon(mobId: string, cx: number, cy: number, type: "available" | "complete") {
+    const map = type === "complete" ? this.questCompleteIcons : this.questAvailableIcons;
+    const otherMap = type === "complete" ? this.questAvailableIcons : this.questCompleteIcons;
+    const texture = type === "complete" ? this.questCompleteTexture : this.questAvailableTexture;
+    // Remove conflicting icon (available vs complete are mutually exclusive)
+    const other = otherMap.get(mobId);
+    if (other) {
+      this.container.removeChild(other);
+      other.destroy();
+      otherMap.delete(mobId);
+    }
+    if (!texture) return;
+    let icon = map.get(mobId);
+    if (!icon) {
+      icon = new Sprite(texture);
+      icon.width = QUEST_ICON_SIZE;
+      icon.height = QUEST_ICON_SIZE;
+      icon.anchor.set(0.5);
+      icon.eventMode = "none";
+      map.set(mobId, icon);
+      this.container.addChild(icon);
+    }
+    icon.x = cx;
+    icon.y = cy - SPRITE_SIZE / 2 - 20;
+  }
+
+  private pruneIcons(map: Map<string, Sprite>, active: Set<string>) {
+    for (const [id, icon] of map) {
+      if (!active.has(id)) {
+        this.container.removeChild(icon);
+        icon.destroy();
+        map.delete(id);
+      }
+    }
   }
 
   private showPopout() {
