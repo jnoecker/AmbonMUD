@@ -1693,6 +1693,58 @@ ambonmud:
     debug:
       enableSwarmClass: false
 
+    classes:
+      definitions:
+        WARRIOR:
+          displayName: "Warrior"
+          hpPerLevel: 8
+          manaPerLevel: 4
+          description: "A stalwart melee fighter."
+          primaryStat: STR
+        MAGE:
+          displayName: "Mage"
+          hpPerLevel: 4
+          manaPerLevel: 16
+          description: "A master of the arcane arts."
+          primaryStat: INT
+        CLERIC:
+          displayName: "Cleric"
+          hpPerLevel: 6
+          manaPerLevel: 12
+          description: "A divine healer and protector."
+          primaryStat: WIS
+        ROGUE:
+          displayName: "Rogue"
+          hpPerLevel: 5
+          manaPerLevel: 8
+          description: "A cunning striker from the shadows."
+          primaryStat: DEX
+        SWARM:
+          displayName: "Swarm"
+          hpPerLevel: 2
+          manaPerLevel: 3
+          description: "A debug class for load testing."
+          selectable: false
+
+    races:
+      definitions:
+        HUMAN:
+          displayName: "Human"
+          description: "Versatile and adaptable."
+          statMods: { str: 1, dex: 0, con: 0, int: 0, wis: 0, cha: 1 }
+        ELF:
+          displayName: "Elf"
+          description: "Graceful and magically attuned."
+          statMods: { str: -1, dex: 2, con: -2, int: 1, wis: 0, cha: 0 }
+        DWARF:
+          displayName: "Dwarf"
+          description: "Tough and resilient."
+          statMods: { str: 1, dex: -1, con: 2, int: 0, wis: 1, cha: -2 }
+        HALFLING:
+          displayName: "Halfling"
+          description: "Quick and charming."
+          statMods: { str: -2, dex: 2, con: -1, int: 0, wis: 1, cha: 1 }
+
     classStartRooms:
       WARRIOR: tutorial_glade:warrior_barracks
       MAGE: tutorial_glade:mage_study

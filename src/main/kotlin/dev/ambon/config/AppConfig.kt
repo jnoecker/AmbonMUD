@@ -417,12 +417,47 @@ data class EngineConfig(
     val crafting: CraftingConfig = CraftingConfig(),
     val friends: FriendsConfig = FriendsConfig(),
     val debug: EngineDebugConfig = EngineDebugConfig(),
+    val classes: ClassEngineConfig = ClassEngineConfig(),
+    val races: RaceEngineConfig = RaceEngineConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
 )
 
 data class EngineDebugConfig(
     val enableSwarmClass: Boolean = false,
+)
+
+data class ClassDefinitionConfig(
+    val displayName: String = "",
+    val hpPerLevel: Int = 4,
+    val manaPerLevel: Int = 8,
+    val description: String = "",
+    val selectable: Boolean = true,
+    val primaryStat: String = "",
+    val startRoom: String = "",
+)
+
+data class ClassEngineConfig(
+    val definitions: Map<String, ClassDefinitionConfig> = emptyMap(),
+)
+
+data class RaceStatModsConfig(
+    val str: Int = 0,
+    val dex: Int = 0,
+    val con: Int = 0,
+    val int: Int = 0,
+    val wis: Int = 0,
+    val cha: Int = 0,
+)
+
+data class RaceDefinitionConfig(
+    val displayName: String = "",
+    val description: String = "",
+    val statMods: RaceStatModsConfig = RaceStatModsConfig(),
+)
+
+data class RaceEngineConfig(
+    val definitions: Map<String, RaceDefinitionConfig> = emptyMap(),
 )
 
 data class ProgressionConfig(
