@@ -54,6 +54,7 @@ internal fun spawnToMobState(spawn: MobSpawn, world: World): MobState =
         spawnDistanceMap = computeDistanceMap(spawn.roomId, world),
         questIds = spawn.questIds,
         image = spawn.image,
+        video = spawn.video,
     )
 
 /**

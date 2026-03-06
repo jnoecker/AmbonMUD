@@ -23,4 +23,5 @@ data class Item(
     val matchByKey: Boolean = false,
     val basePrice: Int = 0,
     val image: String? = null,
+    val video: String? = null,
 )

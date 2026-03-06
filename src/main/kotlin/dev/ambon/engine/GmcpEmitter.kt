@@ -89,6 +89,7 @@ class GmcpEmitter(
                 zone = room.id.zone,
                 exits = room.exits.entries.associate { (dir, roomId) -> dir.name.lowercase() to roomId.value },
                 image = room.image,
+                video = room.video,
                 music = room.music,
                 ambient = room.ambient,
             ),
@@ -164,7 +165,18 @@ class GmcpEmitter(
         sessionId: SessionId,
         items: List<ItemInstance>,
     ) {
-        emit(sessionId, "Room.Items", items.map { RoomItemPayload(id = it.id.value, name = it.item.displayName, image = it.item.image) })
+        emit(
+            sessionId,
+            "Room.Items",
+            items.map {
+                RoomItemPayload(
+                    id = it.id.value,
+                    name = it.item.displayName,
+                    image = it.item.image,
+                    video = it.item.video,
+                )
+            },
+        )
     }
 
     suspend fun sendRoomAddMob(
@@ -750,6 +762,7 @@ class GmcpEmitter(
                         basePrice = item.basePrice,
                         consumable = item.consumable,
                         image = item.image,
+                        video = item.video,
                     )
                 },
             ),
@@ -795,6 +808,7 @@ class GmcpEmitter(
             armor = item.item.armor,
             basePrice = item.item.basePrice,
             image = item.item.image,
+            video = item.item.video,
         )
 
     private fun toRoomMobPayload(mob: MobState) =
@@ -804,6 +818,7 @@ class GmcpEmitter(
             hp = mob.hp,
             maxHp = mob.maxHp,
             image = mob.image,
+            video = mob.video,
         )
 
     // ---------- payload types ----------
@@ -836,6 +851,7 @@ class GmcpEmitter(
         val zone: String,
         val exits: Map<String, String>,
         val image: String? = null,
+        val video: String? = null,
         val music: String? = null,
         val ambient: String? = null,
     )
@@ -849,6 +865,7 @@ class GmcpEmitter(
         val armor: Int,
         val basePrice: Int = 0,
         val image: String? = null,
+        val video: String? = null,
     )
 
     private data class CharItemsListPayload(
@@ -876,6 +893,7 @@ class GmcpEmitter(
         val hp: Int,
         val maxHp: Int,
         val image: String? = null,
+        val video: String? = null,
     )
 
     private data class RoomRemoveMobPayload(
@@ -886,6 +904,7 @@ class GmcpEmitter(
         val id: String,
         val name: String,
         val image: String? = null,
+        val video: String? = null,
     )
 
     private data class CharSkillPayload(
@@ -1129,6 +1148,7 @@ class GmcpEmitter(
         val basePrice: Int,
         val consumable: Boolean,
         val image: String? = null,
+        val video: String? = null,
     )
 
     private companion object {

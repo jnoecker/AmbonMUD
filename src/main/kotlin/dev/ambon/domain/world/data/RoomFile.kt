@@ -17,6 +17,8 @@ data class RoomFile(
     val station: String? = null,
     /** URL to an image representing this room. */
     val image: String? = null,
+    /** URL to a video cinematic for this room. */
+    val video: String? = null,
     /** Background music track for this room (overrides zone default). */
     val music: String? = null,
     /** Ambient sound loop for this room (overrides zone default). */
