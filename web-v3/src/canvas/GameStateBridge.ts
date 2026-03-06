@@ -41,12 +41,14 @@ export const canvasCallbacks: {
   openMap: (() => void) | null;
   openRoom: (() => void) | null;
   onTargetSelected: ((targetName: string) => void) | null;
+  openVideo: ((videoUrl: string) => void) | null;
 } = {
   sendCommand: null,
   openShop: null,
   openMap: null,
   openRoom: null,
   onTargetSelected: null,
+  openVideo: null,
 };
 
 export const pendingCastRef: { current: PendingCast | null } = { current: null };

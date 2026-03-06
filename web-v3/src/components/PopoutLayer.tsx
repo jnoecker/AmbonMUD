@@ -88,6 +88,14 @@ export function PopoutLayer({
               {room.image && (
                 <img src={room.image} alt={room.title} className="room-popout-image" />
               )}
+              {room.video && (
+                <video
+                  src={room.video}
+                  controls
+                  className="room-popout-video"
+                  style={{ width: "100%", maxHeight: 300, borderRadius: 8, marginTop: 8 }}
+                />
+              )}
               <p className="room-popout-text">{room.description || "No room description available yet."}</p>
               <p className="room-popout-exits">
                 {exits.length === 0

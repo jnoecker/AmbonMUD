@@ -23,4 +23,5 @@ interface MobTemplate {
     val behaviorTree: BtNode?
     val questIds: List<String>
     val image: String?
+    val video: String?
 }

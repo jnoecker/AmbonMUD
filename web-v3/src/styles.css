@@ -5013,3 +5013,54 @@ body {
   color: var(--text-secondary);
   text-align: center;
 }
+
+/* ── Video cinematic modal ────────────────────────── */
+
+.video-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 80%);
+  backdrop-filter: blur(8px);
+}
+
+.video-modal {
+  position: relative;
+  width: min(800px, 92vw);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-edge);
+  background: rgb(18 22 34 / 96%);
+  box-shadow: 0 8px 32px rgb(0 0 0 / 60%);
+  padding: 8px;
+}
+
+.video-modal-close {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-edge);
+  background: rgb(42 16 64 / 90%);
+  color: #ce93d8;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.video-modal-close:hover {
+  background: rgb(62 26 84 / 90%);
+}
+
+.video-modal-player {
+  width: 100%;
+  border-radius: 8px;
+  outline: none;
+}

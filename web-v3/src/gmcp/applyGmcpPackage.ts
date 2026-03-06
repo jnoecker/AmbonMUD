@@ -158,6 +158,7 @@ export function applyGmcpPackage(
         description: typeof packet.description === "string" ? packet.description : "",
         exits,
         image: typeof packet.image === "string" ? packet.image : null,
+        video: typeof packet.video === "string" ? packet.video : null,
         music: typeof packet.music === "string" ? packet.music : null,
         ambient: typeof packet.ambient === "string" ? packet.ambient : null,
       });
@@ -182,6 +183,7 @@ export function applyGmcpPackage(
               slot: typeof entry.slot === "string" ? entry.slot : null,
               basePrice: typeof entry.basePrice === "number" ? entry.basePrice : undefined,
               image: typeof entry.image === "string" ? entry.image : null,
+              video: typeof entry.video === "string" ? entry.video : null,
             }))
         : [];
 
@@ -196,6 +198,7 @@ export function applyGmcpPackage(
             keyword: typeof item.keyword === "string" ? item.keyword : (typeof item.name === "string" ? item.name : "item"),
             slot,
             image: typeof item.image === "string" ? item.image : null,
+            video: typeof item.video === "string" ? item.video : null,
           };
         }
       }
@@ -216,6 +219,7 @@ export function applyGmcpPackage(
           slot: typeof packet.slot === "string" ? packet.slot : null,
           basePrice: typeof packet.basePrice === "number" ? packet.basePrice : undefined,
           image: typeof packet.image === "string" ? packet.image : null,
+          video: typeof packet.video === "string" ? packet.video : null,
         },
       ]);
       break;
@@ -240,6 +244,7 @@ export function applyGmcpPackage(
             id: typeof entry.id === "string" ? entry.id : `room-item-${index}-${Date.now()}`,
             name: typeof entry.name === "string" ? entry.name : "Unknown item",
             image: typeof entry.image === "string" ? entry.image : null,
+            video: typeof entry.video === "string" ? entry.video : null,
           })),
       );
       break;
@@ -293,6 +298,7 @@ export function applyGmcpPackage(
             hp: safeNumber(entry.hp),
             maxHp: Math.max(1, safeNumber(entry.maxHp, 1)),
             image: typeof entry.image === "string" ? entry.image : null,
+            video: typeof entry.video === "string" ? entry.video : null,
           })),
       );
       break;
@@ -310,6 +316,7 @@ export function applyGmcpPackage(
           hp: safeNumber(packet.hp),
           maxHp: Math.max(1, safeNumber(packet.maxHp, 1)),
           image: typeof packet.image === "string" ? packet.image : null,
+          video: typeof packet.video === "string" ? packet.video : null,
         },
       ]);
       break;
@@ -328,6 +335,7 @@ export function applyGmcpPackage(
             hp: safeNumber(packet.hp, mob.hp),
             maxHp: Math.max(1, safeNumber(packet.maxHp, mob.maxHp)),
             image: typeof packet.image === "string" ? packet.image : mob.image,
+            video: typeof packet.video === "string" ? packet.video : mob.video,
           };
         }),
       );
@@ -768,6 +776,7 @@ export function applyGmcpPackage(
               basePrice: safeNumber(e.basePrice),
               consumable: e.consumable === true,
               image: typeof e.image === "string" ? e.image : null,
+              video: typeof e.video === "string" ? e.video : null,
             }))
         : [];
       ctx.setShop({ name, sellMultiplier, items });

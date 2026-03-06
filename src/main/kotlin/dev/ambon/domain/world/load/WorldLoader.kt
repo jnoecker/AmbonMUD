@@ -139,6 +139,7 @@ object WorldLoader {
                         exits = emptyMap(),
                         station = station,
                         image = (rf.image ?: imageDefaults?.room)?.let { "/images/$it" },
+                        video = rf.video?.let { "/videos/$it" },
                         music = (rf.music ?: audioDefaults?.music)?.let { "/audio/$it" },
                         ambient = (rf.ambient ?: audioDefaults?.ambient)?.let { "/audio/$it" },
                     )
@@ -302,6 +303,7 @@ object WorldLoader {
                         behaviorTree = behaviorTree,
                         questIds = questIds,
                         image = (mf.image ?: imageDefaults?.mob)?.let { "/images/$it" },
+                        video = mf.video?.let { "/videos/$it" },
                         aggressive = mf.behavior?.template?.contains("aggro") == true,
                     )
             }
@@ -410,6 +412,7 @@ object WorldLoader {
                                         matchByKey = itemFile.matchByKey,
                                         basePrice = basePrice,
                                         image = (itemFile.image ?: imageDefaults?.item)?.let { "/images/$it" },
+                                        video = itemFile.video?.let { "/videos/$it" },
                                     ),
                             ),
                         roomId = roomId,

@@ -87,6 +87,7 @@ export interface RoomState {
   description: string;
   exits: Record<string, string>;
   image?: string | null;
+  video?: string | null;
   music?: string | null;
   ambient?: string | null;
 }
@@ -98,6 +99,7 @@ export interface ItemSummary {
   slot: string | null;
   basePrice?: number;
   image?: string | null;
+  video?: string | null;
 }
 
 export interface ShopItem {
@@ -112,6 +114,7 @@ export interface ShopItem {
   basePrice: number;
   consumable: boolean;
   image: string | null;
+  video: string | null;
 }
 
 export interface ShopState {
@@ -124,6 +127,7 @@ export interface RoomItem {
   id: string;
   name: string;
   image?: string | null;
+  video?: string | null;
 }
 
 export interface RoomPlayer {
@@ -137,6 +141,7 @@ export interface RoomMob {
   hp: number;
   maxHp: number;
   image?: string | null;
+  video?: string | null;
 }
 
 export interface StatusEffect {

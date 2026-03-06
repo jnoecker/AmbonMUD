@@ -16,6 +16,8 @@ data class Room(
     val station: CraftingStationType? = null,
     /** URL to an image representing this room. */
     val image: String? = null,
+    /** URL to a video cinematic for this room. */
+    val video: String? = null,
     /** Background music track URL for this room. */
     val music: String? = null,
     /** Ambient sound loop URL for this room. */

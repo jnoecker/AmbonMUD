@@ -112,6 +112,10 @@ export class WorldScene {
   private targetingText: Text | null = null;
   private targetingBg = new Graphics();
 
+  private videoBtn: Sprite | null = null;
+  private videoAnimTime = 0;
+  private lastRoomVideo: string | null | undefined = undefined;
+
   private lastRoomId: string | null = null;
   private lastRoomImage: string | null | undefined = undefined;
   private lastPlayerSpritePath: string | null = null;
@@ -253,6 +257,16 @@ export class WorldScene {
       this.drawCompassOverlay();
     }
 
+    // Animate video indicator: glow pulse + breathing scale
+    if (this.videoBtn) {
+      this.videoAnimTime += deltaMs / 1000;
+      const t = this.videoAnimTime;
+      const pulse = 0.7 + 0.3 * Math.sin(t * 2.0);
+      this.videoBtn.alpha = pulse;
+      const breathe = 1.0 + 0.08 * Math.sin(t * 1.6);
+      this.videoBtn.scale.set(breathe);
+    }
+
     // Handle room transition animation
     if (this.transitioning) {
       this.transitionElapsed += deltaMs;
@@ -295,6 +309,11 @@ export class WorldScene {
     if (room.image !== this.lastRoomImage) {
       this.lastRoomImage = room.image;
       this.loadBackground(room.image ?? null);
+    }
+
+    if (room.video !== this.lastRoomVideo) {
+      this.lastRoomVideo = room.video;
+      this.updateVideoButton(room.video ?? null);
     }
 
     const spritePath = character.sprite;
@@ -519,6 +538,12 @@ export class WorldScene {
       this.stairsDownHit.visible = hasDown;
       this.stairsDownHit.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE - 8;
       this.stairsDownHit.y = 4;
+    }
+
+    // Video button: bottom-center
+    if (this.videoBtn) {
+      this.videoBtn.x = w / 2;
+      this.videoBtn.y = h - 80;
     }
 
     // Role indicators
@@ -820,7 +845,7 @@ export class WorldScene {
     }
   }
 
-  private rebuildMobs(mobs: Array<{ id: string; name: string; hp: number; maxHp: number; image?: string | null }>) {
+  private rebuildMobs(mobs: Array<{ id: string; name: string; hp: number; maxHp: number; image?: string | null; video?: string | null }>) {
     for (const { sprite, label, hitArea } of this.mobSprites.values()) {
       this.container.removeChild(sprite);
       this.container.removeChild(label);
@@ -882,7 +907,7 @@ export class WorldScene {
           return;
         }
         const info = gameStateRef.current.mobInfo.find((m) => m.id === mobData.id) ?? null;
-        this.entityPopout.showMob(mobData.name, mobData.image, mobData.hp, mobData.maxHp, info);
+        this.entityPopout.showMob(mobData.name, mobData.image, mobData.video, mobData.hp, mobData.maxHp, info);
         this.showPopout();
       });
 
@@ -893,7 +918,7 @@ export class WorldScene {
     }
   }
 
-  private rebuildItems(items: Array<{ id: string; name: string; image?: string | null }>) {
+  private rebuildItems(items: Array<{ id: string; name: string; image?: string | null; video?: string | null }>) {
     for (const { sprite, label, hitArea } of this.itemSprites) {
       this.container.removeChild(sprite);
       this.container.removeChild(label);
@@ -929,7 +954,7 @@ export class WorldScene {
 
       const itemData = item;
       hitArea.on("pointerdown", () => {
-        this.entityPopout.showItem(itemData.name, itemData.image);
+        this.entityPopout.showItem(itemData.name, itemData.image, itemData.video);
         this.showPopout();
       });
 
@@ -1008,6 +1033,42 @@ export class WorldScene {
     } catch {
       // Image not available
     }
+  }
+
+  private updateVideoButton(videoUrl: string | null) {
+    if (this.videoBtn) {
+      this.container.removeChild(this.videoBtn);
+      this.videoBtn.destroy({ children: true });
+      this.videoBtn = null;
+    }
+
+    if (!videoUrl) return;
+
+    const SIZE = 72;
+    const sprite = new Sprite(Texture.WHITE);
+    sprite.width = SIZE;
+    sprite.height = SIZE;
+    sprite.anchor.set(0.5);
+    sprite.tint = 0xce93d8;
+    sprite.eventMode = "static";
+    sprite.cursor = "pointer";
+
+    Assets.load("/images/global_assets/video_available_indicator.png").then((tex) => {
+      sprite.texture = tex;
+      sprite.tint = 0xffffff;
+    }).catch(() => { /* keep placeholder */ });
+
+    const url = videoUrl;
+    sprite.on("pointerdown", () => {
+      canvasCallbacks.openVideo?.(url);
+    });
+
+    // Position: bottom-center, above action bar
+    sprite.x = this.width / 2;
+    sprite.y = this.height - 80;
+
+    this.container.addChild(sprite);
+    this.videoBtn = sprite;
   }
 
   private async loadPlayerSprite(spritePath: string | null) {

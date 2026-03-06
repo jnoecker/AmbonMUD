@@ -23,6 +23,13 @@ It is written for code generators that need to emit valid zone files.
 zone: <string, required, non-blank after trim>
 lifespan: <integer minutes >= 0, optional>
 startRoom: <room-id string, required>
+image:                  # zone-wide image defaults
+  room: <string, optional>
+  mob: <string, optional>
+  item: <string, optional>
+audio:                  # zone-wide audio defaults
+  music: <string, optional>
+  ambient: <string, optional>
 rooms: <map<string, Room>, required, must be non-empty>
 mobs: <map<string, Mob>, optional, default {}>
 items: <map<string, Item>, optional, default {}>
@@ -52,6 +59,10 @@ title: <string, required>
 description: <string, required>
 exits: <map<string direction, string target-room-id>, optional, default {}>
 station: <string, optional - one of FORGE|ALCHEMY_TABLE|WORKBENCH (case-insensitive)>
+image: <string, optional - relative path under /images/>
+video: <string, optional - relative path under /videos/, shown as clickable cinematic>
+music: <string, optional - overrides zone audio.music>
+ambient: <string, optional - overrides zone audio.ambient>
 ```
 
 `station` notes:
@@ -89,6 +100,8 @@ drops:          <list<Drop>, optional, default []>
 behavior:       <Behavior, optional - assigns a behavior tree to this mob; see Behavior section>
 respawnSeconds: <long > 0, optional - seconds after death before this mob respawns in its origin room;
                 omit to rely on zone-wide reset only>
+image:          <string, optional - relative path under /images/>
+video:          <string, optional - relative path under /videos/, shown in context menu>
 ```
 
 `respawnSeconds` notes:
@@ -182,6 +195,8 @@ onUse: <OnUse, optional>
 room: <room-id string, optional>
 matchByKey: <boolean, optional, default false>
 basePrice: <integer, optional, default 0, must be >= 0>
+image: <string, optional - relative path under /images/>
+video: <string, optional - relative path under /videos/, shown in context menu>
 ```
 
 `basePrice` notes:
