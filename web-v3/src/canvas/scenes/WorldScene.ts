@@ -87,13 +87,13 @@ function drawArrow(g: Graphics, cx: number, cy: number, dir: "up" | "down" | "le
 // Role indicator colors
 const ROLE_QUEST_COLOR = 0xf0c674;
 const ROLE_SHOP_COLOR = 0x81a2be;
-const ROLE_DIALOGUE_COLOR = 0xb9aed8;
+const DIALOGUE_ICON_SIZE = 28;
 
 function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo) {
   const icons: number[] = [];
   if (info.questGiver) icons.push(ROLE_QUEST_COLOR);
   if (info.shopKeeper) icons.push(ROLE_SHOP_COLOR);
-  if (info.dialogue) icons.push(ROLE_DIALOGUE_COLOR);
+  // dialogue is handled by sprite indicator, not dot
   if (icons.length === 0) return;
 
   const totalWidth = icons.length * ROLE_ICON_SIZE + (icons.length - 1) * ROLE_ICON_GAP;
@@ -134,6 +134,9 @@ export class WorldScene {
   private statusEffects = new StatusEffectDisplay();
   private minimap = new Minimap();
   private entityPopout = new EntityPopout();
+
+  private dialogueTexture: Texture | null = null;
+  private dialogueIcons: Map<string, Sprite> = new Map();
 
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
@@ -210,7 +213,7 @@ export class WorldScene {
     const hs = SHOP_BADGE_SIZE;
     this.shopHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
     this.shopHitArea.fill({ color: 0x000000, alpha: 0.001 });
-    this.shopHitArea.eventMode = "none";
+    this.shopHitArea.eventMode = "auto";
     this.shopBadge.addChild(this.shopHitArea);
     this.shopLabel = new Text({
       text: "Shop",
@@ -221,6 +224,7 @@ export class WorldScene {
     this.shopLabel.eventMode = "none";
     this.shopBadge.addChild(this.shopLabel);
     this.loadShopIcon();
+    this.loadDialogueTexture();
 
     this.container.addChild(this.exitGraphics);
     this.container.addChild(this.roleGraphics);
@@ -470,6 +474,7 @@ export class WorldScene {
 
     // Draw NPC role indicators
     const mobInfo = state.mobInfo;
+    const activeDialogueMobs = new Set<string>();
     if (mobInfo.length > 0) {
       for (const info of mobInfo) {
         const entry = this.mobSprites.get(info.id);
@@ -477,6 +482,18 @@ export class WorldScene {
         const { sprite } = entry;
         if (info.questGiver) drawQuestMarker(this.roleGraphics, sprite.x, sprite.y);
         drawRoleIcons(this.roleGraphics, sprite.x, sprite.y, info);
+        if (info.dialogue) {
+          activeDialogueMobs.add(info.id);
+          this.ensureDialogueIcon(info.id, sprite.x, sprite.y);
+        }
+      }
+    }
+    // Remove stale dialogue icons
+    for (const [id, icon] of this.dialogueIcons) {
+      if (!activeDialogueMobs.has(id)) {
+        this.container.removeChild(icon);
+        icon.destroy();
+        this.dialogueIcons.delete(id);
       }
     }
 
@@ -543,6 +560,11 @@ export class WorldScene {
       label.destroy();
       hitArea.destroy();
     }
+    for (const icon of this.dialogueIcons.values()) {
+      this.container.removeChild(icon);
+      icon.destroy();
+    }
+    this.dialogueIcons.clear();
     this.mobSprites.clear();
 
     for (const mob of mobs) {
@@ -757,6 +779,30 @@ export class WorldScene {
     } catch {
       // Fallback: no icon shown
     }
+  }
+
+  private async loadDialogueTexture() {
+    try {
+      this.dialogueTexture = await Assets.load("/images/global_assets/dialog_indicator.png");
+    } catch {
+      // Fallback: no dialogue sprites
+    }
+  }
+
+  private ensureDialogueIcon(mobId: string, cx: number, cy: number) {
+    if (!this.dialogueTexture) return;
+    let icon = this.dialogueIcons.get(mobId);
+    if (!icon) {
+      icon = new Sprite(this.dialogueTexture);
+      icon.width = DIALOGUE_ICON_SIZE;
+      icon.height = DIALOGUE_ICON_SIZE;
+      icon.anchor.set(0.5);
+      icon.eventMode = "none";
+      this.dialogueIcons.set(mobId, icon);
+      this.container.addChild(icon);
+    }
+    icon.x = cx;
+    icon.y = cy - SPRITE_SIZE / 2 - 20;
   }
 
   private showPopout() {
