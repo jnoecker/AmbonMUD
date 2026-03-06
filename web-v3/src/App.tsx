@@ -126,6 +126,7 @@ function App() {
   const [terminalVisible, setTerminalVisible] = useState(false);
   const [terminalOpaque, setTerminalOpaque] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoClosing, setVideoClosing] = useState(false);
 
   const [vitals, setVitals] = useState<Vitals>(EMPTY_VITALS);
   const [statusVarLabels, setStatusVarLabels] = useState<StatusVarLabels>(DEFAULT_STATUS_VAR_LABELS);
@@ -921,10 +922,29 @@ function App() {
       )}
 
       {videoUrl && (
-        <div className="video-modal-overlay" onClick={() => setVideoUrl(null)}>
+        <div
+          className={`video-modal-overlay ${videoClosing ? "video-fade-out" : "video-fade-in"}`}
+          onClick={() => {
+            setVideoClosing(true);
+            setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
+          }}
+          onAnimationEnd={(e) => {
+            if (e.animationName === "videoFadeOut") { setVideoUrl(null); setVideoClosing(false); }
+          }}
+        >
           <div className="video-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="video-modal-close" onClick={() => setVideoUrl(null)}>✕</button>
-            <video src={videoUrl} controls autoPlay className="video-modal-player" />
+            <button className="video-modal-close" onClick={() => {
+              setVideoClosing(true);
+              setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
+            }}>✕</button>
+            <video
+              ref={(el) => { if (el) el.playbackRate = 0.5; }}
+              src={videoUrl}
+              controls
+              autoPlay
+              muted
+              className="video-modal-player"
+            />
           </div>
         </div>
       )}
