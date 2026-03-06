@@ -299,6 +299,7 @@ object WorldLoader {
                         behaviorTree = behaviorTree,
                         questIds = questIds,
                         image = (mf.image ?: imageDefaults?.mob)?.let { "/images/$it" },
+                        aggressive = mf.behavior?.template?.contains("aggro") == true,
                     )
             }
 
