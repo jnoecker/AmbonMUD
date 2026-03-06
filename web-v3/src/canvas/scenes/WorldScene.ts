@@ -8,8 +8,6 @@ import type { MobInfo } from "../../types";
 const SHOP_BADGE_SIZE = 72;
 const QUEST_ICON_SIZE = 28;
 
-const EXIT_ARROW_COLOR = 0xb9aed8;
-const EXIT_LABEL_COLOR = "#b9aed8";
 const PLAYER_LABEL_COLOR = "#d8dcef";
 const OTHER_PLAYER_LABEL_COLOR = "#81a2be";
 const MOB_LABEL_COLOR = "#f0c674";
@@ -17,7 +15,9 @@ const ITEM_LABEL_COLOR = "#8abeb7";
 const PLAYER_LABEL_FONT_SIZE = 15;
 const MOB_LABEL_FONT_SIZE = 14;
 const ITEM_LABEL_FONT_SIZE = 13;
-const ARROW_SIZE = 22;
+const COMPASS_SIZE = 120;
+const COMPASS_MARGIN = 16;
+const STAIR_ICON_SIZE = 56;
 const BASE_SPRITE_SIZE = 128;
 const BASE_ITEM_SPRITE_SIZE = 64;
 const REF_WIDTH = 1200;
@@ -31,67 +31,6 @@ const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(ma
 const ROLE_ICON_SIZE = 12;
 const ROLE_ICON_GAP = 4;
 const TRANSITION_DURATION_MS = 300;
-
-interface DirectionLayout {
-  arrow: (g: Graphics, cx: number, cy: number) => void;
-  labelAnchorX: number;
-  labelAnchorY: number;
-  offsetX: (w: number) => number;
-  offsetY: (h: number) => number;
-}
-
-const DIRECTION_LAYOUTS: Record<string, DirectionLayout> = {
-  north: {
-    arrow: (g, cx, cy) => drawArrow(g, cx, cy - 4, "up"),
-    labelAnchorX: 0.5, labelAnchorY: 1,
-    offsetX: (w) => w / 2, offsetY: () => 38,
-  },
-  south: {
-    arrow: (g, cx, cy) => drawArrow(g, cx, cy + 4, "down"),
-    labelAnchorX: 0.5, labelAnchorY: 0,
-    offsetX: (w) => w / 2, offsetY: (h) => h - 38,
-  },
-  east: {
-    arrow: (g, cx, cy) => drawArrow(g, cx + 4, cy, "right"),
-    labelAnchorX: 0, labelAnchorY: 0.5,
-    offsetX: (w) => w - 50, offsetY: (h) => h / 2,
-  },
-  west: {
-    arrow: (g, cx, cy) => drawArrow(g, cx - 4, cy, "left"),
-    labelAnchorX: 1, labelAnchorY: 0.5,
-    offsetX: () => 50, offsetY: (h) => h / 2,
-  },
-  up: {
-    arrow: (g, cx, cy) => drawArrow(g, cx, cy - 4, "up"),
-    labelAnchorX: 1, labelAnchorY: 1,
-    offsetX: (w) => w - 60, offsetY: () => 50,
-  },
-  down: {
-    arrow: (g, cx, cy) => drawArrow(g, cx, cy + 4, "down"),
-    labelAnchorX: 1, labelAnchorY: 0,
-    offsetX: (w) => w - 60, offsetY: (h) => h - 50,
-  },
-};
-
-function drawArrow(g: Graphics, cx: number, cy: number, dir: "up" | "down" | "left" | "right") {
-  const s = ARROW_SIZE;
-  g.fill(EXIT_ARROW_COLOR);
-  switch (dir) {
-    case "up":
-      g.poly([cx, cy - s / 2, cx - s / 2, cy + s / 2, cx + s / 2, cy + s / 2]);
-      break;
-    case "down":
-      g.poly([cx, cy + s / 2, cx - s / 2, cy - s / 2, cx + s / 2, cy - s / 2]);
-      break;
-    case "left":
-      g.poly([cx - s / 2, cy, cx + s / 2, cy - s / 2, cx + s / 2, cy + s / 2]);
-      break;
-    case "right":
-      g.poly([cx + s / 2, cy, cx - s / 2, cy - s / 2, cx - s / 2, cy + s / 2]);
-      break;
-  }
-  g.fill();
-}
 
 // Role indicator colors
 const ROLE_SHOP_COLOR = 0x81a2be;
@@ -124,8 +63,6 @@ export class WorldScene {
   private titleText: Text;
   private descText: Text;
   private descBg = new Graphics();
-  private exitGraphics = new Graphics();
-  private exitLabels: Text[] = [];
   private playerSprite: Sprite | null = null;
   private playerLabel: Text;
   private mobSprites: Map<string, { sprite: Sprite; label: Text; hitArea: Graphics }> = new Map();
@@ -148,6 +85,16 @@ export class WorldScene {
   private roomExpandBtn = new Graphics();
   private currentMobSize = BASE_SPRITE_SIZE;
 
+  // Compass rose navigation
+  private compassContainer = new Container();
+  private compassHighlightGraphics = new Graphics();
+  private compassHitAreas: Array<{ dir: string; area: Graphics }> = [];
+  private stairsUpSprite: Sprite | null = null;
+  private stairsDownSprite: Sprite | null = null;
+  private stairsUpHit: Graphics | null = null;
+  private stairsDownHit: Graphics | null = null;
+  private lastExitDirs: string[] = [];
+
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
   private shopLabel: Text;
@@ -157,7 +104,6 @@ export class WorldScene {
   private lastRoomId: string | null = null;
   private lastRoomImage: string | null | undefined = undefined;
   private lastPlayerSpritePath: string | null = null;
-  private lastExitsKey = "";
   private lastMobsKey = "";
   private lastItemsKey = "";
   private lastPlayersKey = "";
@@ -170,9 +116,6 @@ export class WorldScene {
   private transitionPhase: "fadeOut" | "fadeIn" = "fadeOut";
   private transitionProgress = 0;
   private transitionElapsed = 0;
-
-  // Exit hit areas for click-to-move
-  private exitHitAreas: Array<{ dir: string; area: Graphics }> = [];
 
   // Click-away to dismiss popout
   private backdropHit = new Graphics();
@@ -258,8 +201,9 @@ export class WorldScene {
     this.loadDialogueTexture();
     this.loadAggroTexture();
     this.loadQuestTextures();
+    this.buildCompassRose();
+    this.loadCompassAssets();
 
-    this.container.addChild(this.exitGraphics);
     this.container.addChild(this.roleGraphics);
     this.container.addChild(this.statusEffects.container);
     this.container.addChild(this.titleText);
@@ -269,6 +213,7 @@ export class WorldScene {
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
+    this.container.addChild(this.compassContainer);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
   }
@@ -332,12 +277,6 @@ export class WorldScene {
     if (room.image !== this.lastRoomImage) {
       this.lastRoomImage = room.image;
       this.loadBackground(room.image ?? null);
-    }
-
-    const exitsKey = Object.keys(room.exits).sort().join(",");
-    if (exitsKey !== this.lastExitsKey) {
-      this.lastExitsKey = exitsKey;
-      this.rebuildExits(room.exits);
     }
 
     const spritePath = character.sprite;
@@ -530,34 +469,40 @@ export class WorldScene {
       this.shopBadge.y = 220;
     }
 
-    // Exits
-    this.exitGraphics.clear();
-    // Role indicators
-    this.roleGraphics.clear();
-
+    // Compass rose in bottom-right
     const state = gameStateRef.current;
     const exits = state.room.exits;
-    let labelIdx = 0;
-    for (const dir of Object.keys(exits)) {
-      const layout = DIRECTION_LAYOUTS[dir.toLowerCase()];
-      if (!layout && labelIdx < this.exitLabels.length) {
-        const label = this.exitLabels[labelIdx];
-        label.x = w / 2;
-        label.y = h - 20 - (Object.keys(exits).length - labelIdx) * 22;
-        labelIdx++;
-        continue;
-      }
-      if (!layout) continue;
-      const cx = layout.offsetX(w);
-      const cy = layout.offsetY(h);
-      layout.arrow(this.exitGraphics, cx, cy);
-      if (labelIdx < this.exitLabels.length) {
-        const label = this.exitLabels[labelIdx];
-        label.x = cx;
-        label.y = cy + (dir.toLowerCase() === "north" || dir.toLowerCase() === "up" ? -26 : 26);
-        labelIdx++;
-      }
+    const exitDirs = Object.keys(exits).map((d) => d.toLowerCase());
+    this.compassContainer.x = w - COMPASS_SIZE / 2 - COMPASS_MARGIN;
+    this.compassContainer.y = h - COMPASS_SIZE / 2 - COMPASS_MARGIN;
+    this.updateCompassHighlights(exitDirs);
+
+    // Stairs icons next to compass
+    const hasUp = exitDirs.includes("up");
+    const hasDown = exitDirs.includes("down");
+    if (this.stairsUpSprite) {
+      this.stairsUpSprite.visible = hasUp;
+      this.stairsUpSprite.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE / 2 - 8;
+      this.stairsUpSprite.y = -STAIR_ICON_SIZE / 2 - 4;
     }
+    if (this.stairsUpHit) {
+      this.stairsUpHit.visible = hasUp;
+      this.stairsUpHit.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE - 8;
+      this.stairsUpHit.y = -STAIR_ICON_SIZE / 2 - 4;
+    }
+    if (this.stairsDownSprite) {
+      this.stairsDownSprite.visible = hasDown;
+      this.stairsDownSprite.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE / 2 - 8;
+      this.stairsDownSprite.y = STAIR_ICON_SIZE / 2 + 4;
+    }
+    if (this.stairsDownHit) {
+      this.stairsDownHit.visible = hasDown;
+      this.stairsDownHit.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE - 8;
+      this.stairsDownHit.y = 4;
+    }
+
+    // Role indicators
+    this.roleGraphics.clear();
 
     // Draw NPC role indicators
     const mobInfo = state.mobInfo;
@@ -593,58 +538,124 @@ export class WorldScene {
     this.pruneIcons(this.aggroIcons, activeAggroMobs);
     this.pruneIcons(this.questAvailableIcons, activeQuestAvail);
     this.pruneIcons(this.questCompleteIcons, activeQuestComplete);
-
-    this.layoutExitHitAreas(exits);
   }
 
-  private layoutExitHitAreas(exits: Record<string, string>) {
-    for (const { area } of this.exitHitAreas) {
-      this.container.removeChild(area);
-      area.destroy();
-    }
-    this.exitHitAreas = [];
+  private buildCompassRose() {
+    const s = COMPASS_SIZE;
+    const r = s / 2;
 
-    const w = this.width;
-    const h = this.height;
+    // Highlight layer drawn behind the sprite
+    this.compassContainer.addChild(this.compassHighlightGraphics);
 
-    for (const dir of Object.keys(exits)) {
-      const layout = DIRECTION_LAYOUTS[dir.toLowerCase()];
-      if (!layout) continue;
+    // Clickable hit area wedges for each cardinal direction
+    const directions: Array<{ dir: string; points: number[] }> = [
+      { dir: "north", points: [0, -r, -r * 0.4, -r * 0.15, r * 0.4, -r * 0.15] },
+      { dir: "south", points: [0, r, -r * 0.4, r * 0.15, r * 0.4, r * 0.15] },
+      { dir: "east", points: [r, 0, r * 0.15, -r * 0.4, r * 0.15, r * 0.4] },
+      { dir: "west", points: [-r, 0, -r * 0.15, -r * 0.4, -r * 0.15, r * 0.4] },
+    ];
 
-      const cx = layout.offsetX(w);
-      const cy = layout.offsetY(h);
+    for (const { dir, points } of directions) {
       const area = new Graphics();
-      area.rect(cx - 35, cy - 25, 70, 50);
+      area.poly(points);
       area.fill({ color: 0x000000, alpha: 0.001 });
       area.eventMode = "static";
       area.cursor = "pointer";
-
-      const direction = dir;
       area.on("pointerdown", () => {
-        canvasCallbacks.sendCommand?.(direction);
+        canvasCallbacks.sendCommand?.(dir);
       });
-
-      this.container.addChild(area);
-      this.exitHitAreas.push({ dir, area });
+      this.compassContainer.addChild(area);
+      this.compassHitAreas.push({ dir, area });
     }
   }
 
-  private rebuildExits(exits: Record<string, string>) {
-    for (const label of this.exitLabels) {
-      this.container.removeChild(label);
-      label.destroy();
-    }
-    this.exitLabels = [];
+  private async loadCompassAssets() {
+    try {
+      const texture = await Assets.load("/images/global_assets/compass_rose.png");
+      const sprite = new Sprite(texture);
+      sprite.width = COMPASS_SIZE;
+      sprite.height = COMPASS_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.eventMode = "none";
+      // Insert after highlight graphics but before hit areas
+      this.compassContainer.addChildAt(sprite, 1);
+    } catch { /* fallback: no compass image */ }
 
-    for (const dir of Object.keys(exits)) {
-      const label = new Text({
-        text: dir,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: EXIT_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 1 } },
-      });
-      label.anchor.set(0.5);
-      label.alpha = 0.8;
-      this.exitLabels.push(label);
-      this.container.addChild(label);
+    try {
+      const tex = await Assets.load("/images/global_assets/stairs_up.png");
+      const sprite = new Sprite(tex);
+      sprite.width = STAIR_ICON_SIZE;
+      sprite.height = STAIR_ICON_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.eventMode = "none";
+      sprite.visible = false;
+      this.stairsUpSprite = sprite;
+      this.compassContainer.addChild(sprite);
+
+      const hit = new Graphics();
+      hit.rect(0, 0, STAIR_ICON_SIZE, STAIR_ICON_SIZE);
+      hit.fill({ color: 0x000000, alpha: 0.001 });
+      hit.eventMode = "static";
+      hit.cursor = "pointer";
+      hit.visible = false;
+      hit.on("pointerdown", () => { canvasCallbacks.sendCommand?.("up"); });
+      this.stairsUpHit = hit;
+      this.compassContainer.addChild(hit);
+    } catch { /* no stairs up icon */ }
+
+    try {
+      const tex = await Assets.load("/images/global_assets/stairs_down.png");
+      const sprite = new Sprite(tex);
+      sprite.width = STAIR_ICON_SIZE;
+      sprite.height = STAIR_ICON_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.eventMode = "none";
+      sprite.visible = false;
+      this.stairsDownSprite = sprite;
+      this.compassContainer.addChild(sprite);
+
+      const hit = new Graphics();
+      hit.rect(0, 0, STAIR_ICON_SIZE, STAIR_ICON_SIZE);
+      hit.fill({ color: 0x000000, alpha: 0.001 });
+      hit.eventMode = "static";
+      hit.cursor = "pointer";
+      hit.visible = false;
+      hit.on("pointerdown", () => { canvasCallbacks.sendCommand?.("down"); });
+      this.stairsDownHit = hit;
+      this.compassContainer.addChild(hit);
+    } catch { /* no stairs down icon */ }
+  }
+
+  private updateCompassHighlights(exitDirs: string[]) {
+    const key = exitDirs.sort().join(",");
+    const lastKey = this.lastExitDirs.sort().join(",");
+    if (key === lastKey) return;
+    this.lastExitDirs = [...exitDirs];
+
+    const g = this.compassHighlightGraphics;
+    g.clear();
+
+    const r = COMPASS_SIZE / 2;
+    const cardinals = ["north", "south", "east", "west"];
+    const angles: Record<string, number> = { north: -Math.PI / 2, east: 0, south: Math.PI / 2, west: Math.PI };
+
+    for (const dir of cardinals) {
+      const available = exitDirs.includes(dir);
+      const angle = angles[dir];
+      // Draw a subtle glow wedge for available directions
+      if (available) {
+        g.moveTo(0, 0);
+        g.arc(0, 0, r * 0.85, angle - Math.PI / 6, angle + Math.PI / 6);
+        g.lineTo(0, 0);
+        g.fill({ color: 0xb9aed8, alpha: 0.25 });
+      }
+    }
+
+    // Update hit area cursors
+    for (const { dir, area } of this.compassHitAreas) {
+      const available = exitDirs.includes(dir);
+      area.cursor = available ? "pointer" : "default";
+      area.alpha = available ? 1 : 0.3;
     }
   }
 
@@ -994,9 +1005,7 @@ export class WorldScene {
   }
 
   destroy() {
-    for (const { area } of this.exitHitAreas) {
-      area.destroy();
-    }
+    this.compassContainer.destroy({ children: true });
     this.minimap.destroy();
     this.entityPopout.destroy();
     this.container.destroy({ children: true });
