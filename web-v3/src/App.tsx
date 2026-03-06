@@ -509,6 +509,12 @@ function App() {
     audio.playAmbient(room.ambient ?? null);
   }, [room.ambient]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Combat audio effects: speed up + filter on combat, pulse on low HP
+  const hpPercent = vitals.maxHp > 0 ? vitals.hp / vitals.maxHp : 1;
+  useEffect(() => {
+    audio.setCombatState(vitals.inCombat, hpPercent);
+  }, [vitals.inCombat, hpPercent]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 
   const equipmentSlots = useMemo(() => {
