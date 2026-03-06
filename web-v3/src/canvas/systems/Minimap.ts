@@ -1,4 +1,4 @@
-import { Container, Graphics } from "pixi.js";
+import { Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
 import { canvasCallbacks } from "../GameStateBridge";
 
 const MAP_OFFSETS: Record<string, { dx: number; dy: number }> = {
@@ -15,12 +15,13 @@ interface MapNode {
   y: number;
   exits: Record<string, string>;
   title: string;
+  image: string | null;
 }
 
-const MAP_SIZE = 160;
-const CELL = 28;
-const NODE_RADIUS = 8;
-const CURRENT_RADIUS = 10;
+const MAP_SIZE = 200;
+const CELL = 36;
+const NODE_RADIUS = 14;
+const CURRENT_RADIUS = 16;
 const BG_COLOR = 0x141828;
 const BG_ALPHA = 0.85;
 const BORDER_COLOR = 0x3a4060;
@@ -28,15 +29,23 @@ const NODE_COLOR = 0x4a6080;
 const CURRENT_COLOR = 0xb9aed8;
 const CURRENT_GLOW = 0xe8d8a8;
 const LINE_COLOR = 0x4a5070;
+const FOG_COLOR = 0x2a3050;
+
 export class Minimap {
   readonly container = new Container();
 
   private bg = new Graphics();
   private mapGraphics = new Graphics();
+  private nodeContainer = new Container();
   private expandButton = new Graphics();
   private visited = new Map<string, MapNode>();
   private currentRoomId: string | null = null;
   private lastKey = "";
+
+  // Sprite cache for room thumbnails
+  private thumbSprites = new Map<string, Sprite>();
+  private thumbMasks = new Map<string, Graphics>();
+  private loadingImages = new Set<string>();
 
   // Click navigation
   private clickAreas: Array<{ roomId: string; area: Graphics }> = [];
@@ -68,13 +77,14 @@ export class Minimap {
 
     this.container.addChild(this.bg);
     this.container.addChild(this.mapGraphics);
+    this.container.addChild(this.nodeContainer);
     this.container.addChild(this.expandButton);
   }
 
-  updateRoom(roomId: string | null, exits: Record<string, string>, title: string) {
+  updateRoom(roomId: string | null, exits: Record<string, string>, title: string, image: string | null) {
     if (!roomId) return;
 
-    const key = `${roomId}:${JSON.stringify(exits)}`;
+    const key = `${roomId}:${JSON.stringify(exits)}:${image ?? ""}`;
     if (key === this.lastKey) return;
     this.lastKey = key;
 
@@ -86,22 +96,23 @@ export class Minimap {
         const neighbor = this.visited.get(neighborId);
         const offset = MAP_OFFSETS[dir];
         if (!neighbor || !offset) continue;
-        this.visited.set(roomId, { x: neighbor.x - offset.dx, y: neighbor.y - offset.dy, exits, title });
+        this.visited.set(roomId, { x: neighbor.x - offset.dx, y: neighbor.y - offset.dy, exits, title, image });
         placed = true;
         break;
       }
       if (!placed) {
         if (this.visited.size === 0) {
-          this.visited.set(roomId, { x: 0, y: 0, exits, title });
+          this.visited.set(roomId, { x: 0, y: 0, exits, title, image });
         } else {
           const previous = Array.from(this.visited.values()).at(-1);
-          this.visited.set(roomId, { x: (previous?.x ?? 0) + 1, y: previous?.y ?? 0, exits, title });
+          this.visited.set(roomId, { x: (previous?.x ?? 0) + 1, y: previous?.y ?? 0, exits, title, image });
         }
       }
     } else {
       const node = this.visited.get(roomId)!;
       node.exits = exits;
       node.title = title;
+      node.image = image;
     }
 
     // Place unknown neighbors
@@ -110,7 +121,7 @@ export class Minimap {
       const source = this.visited.get(roomId);
       const offset = MAP_OFFSETS[dir];
       if (!source || !offset) continue;
-      this.visited.set(targetId, { x: source.x + offset.dx, y: source.y + offset.dy, exits: {}, title: "" });
+      this.visited.set(targetId, { x: source.x + offset.dx, y: source.y + offset.dy, exits: {}, title: "", image: null });
     }
 
     this.redraw();
@@ -120,6 +131,7 @@ export class Minimap {
     this.visited.clear();
     this.currentRoomId = null;
     this.lastKey = "";
+    this.clearThumbs();
     this.redraw();
   }
 
@@ -143,6 +155,11 @@ export class Minimap {
     this.bg.stroke({ color: BORDER_COLOR, width: 1 });
 
     this.mapGraphics.clear();
+
+    // Hide all existing thumbs — visible ones will be re-shown below
+    for (const sprite of this.thumbSprites.values()) {
+      sprite.visible = false;
+    }
 
     if (!this.currentRoomId) return;
     const current = this.visited.get(this.currentRoomId);
@@ -179,45 +196,118 @@ export class Minimap {
       if (!this.inBounds(nx, ny)) continue;
 
       const isCurrent = id === this.currentRoomId;
+      const radius = isCurrent ? CURRENT_RADIUS : NODE_RADIUS;
+      const visited = node.title !== "";
 
       if (isCurrent) {
         // Glow ring
-        this.mapGraphics.circle(nx, ny, CURRENT_RADIUS + 3);
+        this.mapGraphics.circle(nx, ny, radius + 3);
         this.mapGraphics.stroke({ color: CURRENT_GLOW, width: 1.5, alpha: 0.6 });
-        // Current node
-        this.mapGraphics.circle(nx, ny, CURRENT_RADIUS);
-        this.mapGraphics.fill(CURRENT_COLOR);
+      }
+
+      // Draw circle background (visible behind image or as fallback)
+      if (visited) {
+        this.mapGraphics.circle(nx, ny, radius);
+        this.mapGraphics.fill({ color: isCurrent ? CURRENT_COLOR : NODE_COLOR });
+        this.mapGraphics.circle(nx, ny, radius);
+        this.mapGraphics.stroke({ color: isCurrent ? CURRENT_GLOW : 0x5a6a90, width: 1, alpha: isCurrent ? 0.8 : 0.5 });
       } else {
-        this.mapGraphics.circle(nx, ny, NODE_RADIUS);
-        this.mapGraphics.fill({ color: NODE_COLOR, alpha: node.title ? 1 : 0.4 });
-        this.mapGraphics.circle(nx, ny, NODE_RADIUS);
-        this.mapGraphics.stroke({ color: 0x5a6a90, width: 1, alpha: 0.5 });
+        // Fog node — unvisited
+        this.mapGraphics.circle(nx, ny, radius);
+        this.mapGraphics.fill({ color: FOG_COLOR, alpha: 0.6 });
+        this.mapGraphics.circle(nx, ny, radius);
+        this.mapGraphics.stroke({ color: 0x3a4060, width: 1, alpha: 0.4 });
+      }
 
-        // Clickable navigation for adjacent rooms
-        if (this.isAdjacentToCurrent(id)) {
-          const area = new Graphics();
-          area.circle(nx, ny, NODE_RADIUS + 2);
-          area.fill({ color: 0x000000, alpha: 0.001 });
-          area.eventMode = "static";
-          area.cursor = "pointer";
+      // Show room image as circular thumb
+      if (node.image) {
+        this.ensureThumb(id, node.image, nx, ny, radius, isCurrent ? 1 : 0.85);
+      }
 
-          const dir = this.getDirectionTo(id);
-          if (dir) {
-            area.on("pointerdown", () => {
-              canvasCallbacks.sendCommand?.(dir);
-            });
-          }
+      // Clickable navigation for adjacent rooms
+      if (!isCurrent && this.isAdjacentToCurrent(id)) {
+        const area = new Graphics();
+        area.circle(nx, ny, radius + 2);
+        area.fill({ color: 0x000000, alpha: 0.001 });
+        area.eventMode = "static";
+        area.cursor = "pointer";
 
-          this.container.addChild(area);
-          this.clickAreas.push({ roomId: id, area });
+        const dir = this.getDirectionTo(id);
+        if (dir) {
+          area.on("pointerdown", () => {
+            canvasCallbacks.sendCommand?.(dir);
+          });
         }
+
+        this.container.addChild(area);
+        this.clickAreas.push({ roomId: id, area });
       }
     }
+  }
 
+  private ensureThumb(roomId: string, imagePath: string, nx: number, ny: number, radius: number, alpha: number) {
+    const existing = this.thumbSprites.get(roomId);
+    if (existing) {
+      existing.x = nx;
+      existing.y = ny;
+      existing.width = radius * 2;
+      existing.height = radius * 2;
+      existing.alpha = alpha;
+      existing.visible = true;
+
+      const mask = this.thumbMasks.get(roomId);
+      if (mask) {
+        mask.clear();
+        mask.circle(nx, ny, radius);
+        mask.fill(0xffffff);
+      }
+      return;
+    }
+
+    // Don't re-trigger load if already loading
+    if (this.loadingImages.has(roomId)) return;
+    this.loadingImages.add(roomId);
+
+    Assets.load(imagePath).then((texture: Texture) => {
+      this.loadingImages.delete(roomId);
+      const sprite = new Sprite(texture);
+      sprite.anchor.set(0.5);
+      sprite.width = radius * 2;
+      sprite.height = radius * 2;
+      sprite.x = nx;
+      sprite.y = ny;
+      sprite.alpha = alpha;
+      sprite.eventMode = "none";
+
+      // Circular mask
+      const mask = new Graphics();
+      mask.circle(nx, ny, radius);
+      mask.fill(0xffffff);
+      sprite.mask = mask;
+
+      this.nodeContainer.addChild(mask);
+      this.nodeContainer.addChild(sprite);
+      this.thumbSprites.set(roomId, sprite);
+      this.thumbMasks.set(roomId, mask);
+    }).catch(() => {
+      this.loadingImages.delete(roomId);
+    });
+  }
+
+  private clearThumbs() {
+    for (const sprite of this.thumbSprites.values()) {
+      sprite.destroy();
+    }
+    for (const mask of this.thumbMasks.values()) {
+      mask.destroy();
+    }
+    this.thumbSprites.clear();
+    this.thumbMasks.clear();
+    this.loadingImages.clear();
   }
 
   private inBounds(x: number, y: number): boolean {
-    const margin = NODE_RADIUS + 2;
+    const margin = CURRENT_RADIUS + 4;
     return x >= margin && x <= MAP_SIZE - margin && y >= margin && y <= MAP_SIZE - margin;
   }
 
@@ -239,6 +329,7 @@ export class Minimap {
   }
 
   destroy() {
+    this.clearThumbs();
     this.container.destroy({ children: true });
   }
 }
