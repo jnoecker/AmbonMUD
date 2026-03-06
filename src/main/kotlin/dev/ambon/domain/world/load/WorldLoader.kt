@@ -120,7 +120,6 @@ object WorldLoader {
             }
 
             val imageDefaults = file.image
-            val videoDefaults = file.video
             val audioDefaults = file.audio
 
             // First pass per file: create room shells, detect collisions
@@ -140,7 +139,7 @@ object WorldLoader {
                         exits = emptyMap(),
                         station = station,
                         image = (rf.image ?: imageDefaults?.room)?.let { "/images/$it" },
-                        video = (rf.video ?: videoDefaults?.room)?.let { "/videos/$it" },
+                        video = rf.video?.let { "/videos/$it" },
                         music = (rf.music ?: audioDefaults?.music)?.let { "/audio/$it" },
                         ambient = (rf.ambient ?: audioDefaults?.ambient)?.let { "/audio/$it" },
                     )
@@ -304,7 +303,7 @@ object WorldLoader {
                         behaviorTree = behaviorTree,
                         questIds = questIds,
                         image = (mf.image ?: imageDefaults?.mob)?.let { "/images/$it" },
-                        video = (mf.video ?: videoDefaults?.mob)?.let { "/videos/$it" },
+                        video = mf.video?.let { "/videos/$it" },
                         aggressive = mf.behavior?.template?.contains("aggro") == true,
                     )
             }
@@ -413,7 +412,7 @@ object WorldLoader {
                                         matchByKey = itemFile.matchByKey,
                                         basePrice = basePrice,
                                         image = (itemFile.image ?: imageDefaults?.item)?.let { "/images/$it" },
-                                        video = (itemFile.video ?: videoDefaults?.item)?.let { "/videos/$it" },
+                                        video = itemFile.video?.let { "/videos/$it" },
                                     ),
                             ),
                         roomId = roomId,

@@ -5,7 +5,6 @@ data class WorldFile(
     val lifespan: Long? = null,
     val startRoom: String,
     val image: ZoneImageDefaults? = null,
-    val video: ZoneVideoDefaults? = null,
     val audio: ZoneAudioDefaults? = null,
     val rooms: Map<String, RoomFile>,
     val mobs: Map<String, MobFile> = emptyMap(),
@@ -17,12 +16,6 @@ data class WorldFile(
 )
 
 data class ZoneImageDefaults(
-    val room: String? = null,
-    val mob: String? = null,
-    val item: String? = null,
-)
-
-data class ZoneVideoDefaults(
     val room: String? = null,
     val mob: String? = null,
     val item: String? = null,

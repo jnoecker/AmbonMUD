@@ -27,10 +27,6 @@ image:                  # zone-wide image defaults
   room: <string, optional>
   mob: <string, optional>
   item: <string, optional>
-video:                  # zone-wide video cinematic defaults
-  room: <string, optional>
-  mob: <string, optional>
-  item: <string, optional>
 audio:                  # zone-wide audio defaults
   music: <string, optional>
   ambient: <string, optional>
