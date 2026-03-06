@@ -32,9 +32,13 @@ export interface GameStateSnapshot {
 export const canvasCallbacks: {
   sendCommand: ((command: string) => void) | null;
   openShop: (() => void) | null;
+  openMap: (() => void) | null;
+  openRoom: (() => void) | null;
 } = {
   sendCommand: null,
   openShop: null,
+  openMap: null,
+  openRoom: null,
 };
 
 export const gameStateRef: { current: GameStateSnapshot } = {

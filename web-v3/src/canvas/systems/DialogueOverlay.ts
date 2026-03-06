@@ -121,9 +121,9 @@ export class DialogueOverlay {
 
     contentHeight += BOX_PADDING;
 
-    // Position the box at bottom-center
+    // Position the box at dead center
     const boxX = (this.width - boxWidth) / 2;
-    const boxY = this.height - contentHeight - 20;
+    const boxY = Math.max(20, (this.height - contentHeight) / 2);
 
     this.bg.clear();
     this.bg.roundRect(boxX, boxY, boxWidth, contentHeight, 6);

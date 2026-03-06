@@ -8,8 +8,6 @@ import type { MobInfo } from "../../types";
 const SHOP_BADGE_SIZE = 72;
 const QUEST_ICON_SIZE = 28;
 
-const EXIT_ARROW_COLOR = 0xb9aed8;
-const EXIT_LABEL_COLOR = "#b9aed8";
 const PLAYER_LABEL_COLOR = "#d8dcef";
 const OTHER_PLAYER_LABEL_COLOR = "#81a2be";
 const MOB_LABEL_COLOR = "#f0c674";
@@ -17,80 +15,29 @@ const ITEM_LABEL_COLOR = "#8abeb7";
 const PLAYER_LABEL_FONT_SIZE = 15;
 const MOB_LABEL_FONT_SIZE = 14;
 const ITEM_LABEL_FONT_SIZE = 13;
-const ARROW_SIZE = 22;
-const SPRITE_SIZE = 128;
-const ITEM_SPRITE_SIZE = 64;
+const COMPASS_SIZE = 120;
+const COMPASS_MARGIN = 16;
+const STAIR_ICON_SIZE = 56;
+const BASE_SPRITE_SIZE = 128;
+const BASE_ITEM_SPRITE_SIZE = 64;
+const REF_WIDTH = 1200;
+const REF_HEIGHT = 800;
+const MIN_SPRITE_SIZE = 64;
+const MAX_SPRITE_SIZE = 192;
+const MIN_ITEM_SIZE = 32;
+const MAX_ITEM_SIZE = 96;
+
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 const ROLE_ICON_SIZE = 12;
 const ROLE_ICON_GAP = 4;
 const TRANSITION_DURATION_MS = 300;
-
-interface DirectionLayout {
-  arrow: (g: Graphics, cx: number, cy: number) => void;
-  labelAnchorX: number;
-  labelAnchorY: number;
-  offsetX: (w: number) => number;
-  offsetY: (h: number) => number;
-}
-
-const DIRECTION_LAYOUTS: Record<string, DirectionLayout> = {
-  north: {
-    arrow: (g, cx, cy) => drawArrow(g, cx, cy - 4, "up"),
-    labelAnchorX: 0.5, labelAnchorY: 1,
-    offsetX: (w) => w / 2, offsetY: () => 38,
-  },
-  south: {
-    arrow: (g, cx, cy) => drawArrow(g, cx, cy + 4, "down"),
-    labelAnchorX: 0.5, labelAnchorY: 0,
-    offsetX: (w) => w / 2, offsetY: (h) => h - 38,
-  },
-  east: {
-    arrow: (g, cx, cy) => drawArrow(g, cx + 4, cy, "right"),
-    labelAnchorX: 0, labelAnchorY: 0.5,
-    offsetX: (w) => w - 50, offsetY: (h) => h / 2,
-  },
-  west: {
-    arrow: (g, cx, cy) => drawArrow(g, cx - 4, cy, "left"),
-    labelAnchorX: 1, labelAnchorY: 0.5,
-    offsetX: () => 50, offsetY: (h) => h / 2,
-  },
-  up: {
-    arrow: (g, cx, cy) => drawArrow(g, cx, cy - 4, "up"),
-    labelAnchorX: 1, labelAnchorY: 1,
-    offsetX: (w) => w - 60, offsetY: () => 50,
-  },
-  down: {
-    arrow: (g, cx, cy) => drawArrow(g, cx, cy + 4, "down"),
-    labelAnchorX: 1, labelAnchorY: 0,
-    offsetX: (w) => w - 60, offsetY: (h) => h - 50,
-  },
-};
-
-function drawArrow(g: Graphics, cx: number, cy: number, dir: "up" | "down" | "left" | "right") {
-  const s = ARROW_SIZE;
-  g.fill(EXIT_ARROW_COLOR);
-  switch (dir) {
-    case "up":
-      g.poly([cx, cy - s / 2, cx - s / 2, cy + s / 2, cx + s / 2, cy + s / 2]);
-      break;
-    case "down":
-      g.poly([cx, cy + s / 2, cx - s / 2, cy - s / 2, cx + s / 2, cy - s / 2]);
-      break;
-    case "left":
-      g.poly([cx - s / 2, cy, cx + s / 2, cy - s / 2, cx + s / 2, cy + s / 2]);
-      break;
-    case "right":
-      g.poly([cx + s / 2, cy, cx - s / 2, cy - s / 2, cx - s / 2, cy + s / 2]);
-      break;
-  }
-  g.fill();
-}
 
 // Role indicator colors
 const ROLE_SHOP_COLOR = 0x81a2be;
 const DIALOGUE_ICON_SIZE = 28;
 const AGGRO_ICON_SIZE = 24;
 
-function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo) {
+function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo, spriteSize: number) {
   const icons: number[] = [];
   // quest indicators are handled by sprites now
   if (info.shopKeeper) icons.push(ROLE_SHOP_COLOR);
@@ -99,7 +46,7 @@ function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo) {
 
   const totalWidth = icons.length * ROLE_ICON_SIZE + (icons.length - 1) * ROLE_ICON_GAP;
   let x = cx - totalWidth / 2 + ROLE_ICON_SIZE / 2;
-  const y = cy - SPRITE_SIZE / 2 - 14;
+  const y = cy - spriteSize / 2 - 14;
 
   for (const color of icons) {
     g.fill(color);
@@ -115,8 +62,7 @@ export class WorldScene {
   private background: Sprite | null = null;
   private titleText: Text;
   private descText: Text;
-  private exitGraphics = new Graphics();
-  private exitLabels: Text[] = [];
+  private descBg = new Graphics();
   private playerSprite: Sprite | null = null;
   private playerLabel: Text;
   private mobSprites: Map<string, { sprite: Sprite; label: Text; hitArea: Graphics }> = new Map();
@@ -136,6 +82,19 @@ export class WorldScene {
   private questCompleteTexture: Texture | null = null;
   private questCompleteIcons: Map<string, Sprite> = new Map();
 
+  private roomExpandBtn = new Graphics();
+  private currentMobSize = BASE_SPRITE_SIZE;
+
+  // Compass rose navigation
+  private compassContainer = new Container();
+  private compassHighlightGraphics = new Graphics();
+  private compassHitAreas: Array<{ dir: string; area: Graphics }> = [];
+  private stairsUpSprite: Sprite | null = null;
+  private stairsDownSprite: Sprite | null = null;
+  private stairsUpHit: Graphics | null = null;
+  private stairsDownHit: Graphics | null = null;
+  private lastExitDirs: string[] = [];
+
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
   private shopLabel: Text;
@@ -145,7 +104,6 @@ export class WorldScene {
   private lastRoomId: string | null = null;
   private lastRoomImage: string | null | undefined = undefined;
   private lastPlayerSpritePath: string | null = null;
-  private lastExitsKey = "";
   private lastMobsKey = "";
   private lastItemsKey = "";
   private lastPlayersKey = "";
@@ -159,25 +117,43 @@ export class WorldScene {
   private transitionProgress = 0;
   private transitionElapsed = 0;
 
-  // Exit hit areas for click-to-move
-  private exitHitAreas: Array<{ dir: string; area: Graphics }> = [];
-
   // Click-away to dismiss popout
   private backdropHit = new Graphics();
 
   constructor() {
     this.titleText = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 18, fill: "#d8dcef", fontWeight: "bold", dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 2 } },
+      style: { fontFamily: "Cormorant Garamond, Georgia, serif", fontSize: 26, fill: "#d8dcef", fontWeight: "700", dropShadow: { color: 0x000000, alpha: 0.8, blur: 6, distance: 3 } },
     });
     this.titleText.anchor.set(0, 0);
 
     this.descText = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 12, fill: "#b0b4c8", wordWrap: true, wordWrapWidth: 400, dropShadow: { color: 0x000000, alpha: 0.7, blur: 3, distance: 1 } },
+      style: { fontFamily: "Cormorant Garamond, Georgia, serif", fontSize: 18, fill: "#d0d4e8", fontWeight: "500", wordWrap: true, wordWrapWidth: 400, dropShadow: { color: 0x000000, alpha: 0.9, blur: 6, distance: 2 } },
     });
     this.descText.anchor.set(0, 0);
-    this.descText.alpha = 0.85;
+    this.descText.alpha = 0.95;
+
+    // Room expand button next to title
+    const rb = this.roomExpandBtn;
+    rb.roundRect(0, 0, 20, 20, 4);
+    rb.fill({ color: 0x141828, alpha: 0.85 });
+    rb.roundRect(0, 0, 20, 20, 4);
+    rb.stroke({ color: 0x3a4060, width: 1 });
+    const rc = 0xb9aed8;
+    rb.moveTo(4, 7); rb.lineTo(4, 4); rb.lineTo(7, 4);
+    rb.stroke({ color: rc, width: 1.5 });
+    rb.moveTo(13, 4); rb.lineTo(16, 4); rb.lineTo(16, 7);
+    rb.stroke({ color: rc, width: 1.5 });
+    rb.moveTo(16, 13); rb.lineTo(16, 16); rb.lineTo(13, 16);
+    rb.stroke({ color: rc, width: 1.5 });
+    rb.moveTo(7, 16); rb.lineTo(4, 16); rb.lineTo(4, 13);
+    rb.stroke({ color: rc, width: 1.5 });
+    rb.eventMode = "static";
+    rb.cursor = "pointer";
+    rb.on("pointerdown", () => {
+      canvasCallbacks.openRoom?.();
+    });
 
     this.playerLabel = new Text({
       text: "",
@@ -225,15 +201,19 @@ export class WorldScene {
     this.loadDialogueTexture();
     this.loadAggroTexture();
     this.loadQuestTextures();
+    this.buildCompassRose();
+    this.loadCompassAssets();
 
-    this.container.addChild(this.exitGraphics);
     this.container.addChild(this.roleGraphics);
     this.container.addChild(this.statusEffects.container);
     this.container.addChild(this.titleText);
+    this.container.addChild(this.descBg);
     this.container.addChild(this.descText);
+    this.container.addChild(this.roomExpandBtn);
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
+    this.container.addChild(this.compassContainer);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
   }
@@ -292,17 +272,11 @@ export class WorldScene {
     }
 
     // Update minimap
-    this.minimap.updateRoom(room.id, room.exits, room.title !== "-" ? room.title : "");
+    this.minimap.updateRoom(room.id, room.exits, room.title !== "-" ? room.title : "", room.image ?? null);
 
     if (room.image !== this.lastRoomImage) {
       this.lastRoomImage = room.image;
       this.loadBackground(room.image ?? null);
-    }
-
-    const exitsKey = Object.keys(room.exits).sort().join(",");
-    if (exitsKey !== this.lastExitsKey) {
-      this.lastExitsKey = exitsKey;
-      this.rebuildExits(room.exits);
     }
 
     const spritePath = character.sprite;
@@ -356,17 +330,58 @@ export class WorldScene {
       this.background.height = h;
     }
 
-    // Minimap in top-left
-    this.minimap.layout(12, 12);
+    // Minimap in top-right
+    const mapDiam = this.minimap.diameter;
+    const mapMargin = 12;
+    this.minimap.layout(w - mapDiam - mapMargin, mapMargin);
 
-    // Room title and description to the right of minimap
-    const textLeft = 184;
-    const textMaxWidth = Math.max(200, w - textLeft - 20);
+    // Room title and description in top-left, constrained to not overlap minimap
+    const textLeft = 16;
+    const textMaxWidth = Math.max(200, w - mapDiam - mapMargin * 2 - textLeft - 20);
     this.titleText.x = textLeft;
-    this.titleText.y = 16;
-    this.descText.x = textLeft;
-    this.descText.y = 40;
-    this.descText.style.wordWrapWidth = textMaxWidth;
+    this.titleText.y = 14;
+    this.descText.x = textLeft + 10;
+    this.descText.y = 48 + 8;
+    this.descText.style.wordWrapWidth = textMaxWidth - 20;
+
+    // Semi-transparent background pill behind description
+    this.descBg.clear();
+    if (this.descText.text) {
+      const pad = 10;
+      this.descBg.roundRect(
+        textLeft, 48,
+        Math.min(this.descText.width + pad * 2, textMaxWidth),
+        this.descText.height + pad * 2,
+        8,
+      );
+      this.descBg.fill({ color: 0x0a0e1a, alpha: 0.55 });
+    }
+
+    // Room expand button next to title
+    this.roomExpandBtn.x = textLeft + this.titleText.width + 12;
+    this.roomExpandBtn.y = this.titleText.y;
+
+    // Dynamic entity sizing
+    const scale = Math.min(w / REF_WIDTH, h / REF_HEIGHT);
+    const playerSize = clamp(BASE_SPRITE_SIZE * scale, MIN_SPRITE_SIZE, MAX_SPRITE_SIZE);
+
+    const mobEntries = [...this.mobSprites.values()];
+    const mobCount = mobEntries.length;
+    const mobAreaLeft = w * 0.38;
+    const mobAreaRight = w - 24;
+    const mobAreaWidth = mobAreaRight - mobAreaLeft;
+    const mobBaseSize = BASE_SPRITE_SIZE * scale;
+    const mobFitSize = mobCount > 0 ? (mobAreaWidth - 16) / mobCount - 16 : mobBaseSize;
+    const mobSize = clamp(Math.min(mobBaseSize, mobFitSize), MIN_SPRITE_SIZE, MAX_SPRITE_SIZE);
+    this.currentMobSize = mobSize;
+
+    const itemCount = this.itemSprites.length;
+    const itemAreaWidth = w * 0.6;
+    const itemBaseSize = BASE_ITEM_SPRITE_SIZE * scale;
+    const itemFitSize = itemCount > 0 ? (itemAreaWidth - 8) / itemCount - 8 : itemBaseSize;
+    const itemSize = clamp(Math.min(itemBaseSize, itemFitSize), MIN_ITEM_SIZE, MAX_ITEM_SIZE);
+
+    const otherSize = playerSize * 0.75;
 
     // Player in lower-left
     const playerX = w * 0.18;
@@ -374,32 +389,35 @@ export class WorldScene {
     if (this.playerSprite) {
       this.playerSprite.x = playerX;
       this.playerSprite.y = playerY;
+      this.playerSprite.width = playerSize;
+      this.playerSprite.height = playerSize;
     }
     this.playerLabel.x = playerX;
-    this.playerLabel.y = playerY + SPRITE_SIZE / 2 + 6;
+    this.playerLabel.y = playerY + playerSize / 2 + 6;
 
     // Status effects above the player sprite
-    this.statusEffects.update(gameStateRef.current.effects, playerX, playerY - SPRITE_SIZE / 2 - 32);
+    this.statusEffects.update(gameStateRef.current.effects, playerX, playerY - playerSize / 2 - 32);
 
     // Layout mobs spread across the right portion, evenly spaced
-    const mobEntries = [...this.mobSprites.values()];
-    if (mobEntries.length > 0) {
+    if (mobCount > 0) {
       const mobY = h * 0.68;
-      const mobAreaLeft = w * 0.38;
-      const mobAreaRight = w - 24;
-      const mobAreaWidth = mobAreaRight - mobAreaLeft;
-      const mobSpacing = mobEntries.length === 1
+      const mobSpacing = mobCount === 1
         ? 0
-        : Math.min(SPRITE_SIZE + 24, mobAreaWidth / mobEntries.length);
-      const totalMobWidth = (mobEntries.length - 1) * mobSpacing;
+        : Math.min(mobSize + 24, mobAreaWidth / mobCount);
+      const totalMobWidth = (mobCount - 1) * mobSpacing;
       let mobX = mobAreaLeft + (mobAreaWidth - totalMobWidth) / 2;
       for (const { sprite, label, hitArea } of mobEntries) {
         sprite.x = mobX;
         sprite.y = mobY;
+        sprite.width = mobSize;
+        sprite.height = mobSize;
         label.x = mobX;
-        label.y = mobY + SPRITE_SIZE / 2 + 6;
-        hitArea.x = mobX - SPRITE_SIZE / 2;
-        hitArea.y = mobY - SPRITE_SIZE / 2;
+        label.y = mobY + mobSize / 2 + 6;
+        hitArea.clear();
+        hitArea.rect(0, 0, mobSize, mobSize);
+        hitArea.fill({ color: 0x000000, alpha: 0.001 });
+        hitArea.x = mobX - mobSize / 2;
+        hitArea.y = mobY - mobSize / 2;
         mobX += mobSpacing;
       }
     }
@@ -408,69 +426,85 @@ export class WorldScene {
     const otherPlayerEntries = [...this.playerSprites.values()];
     if (otherPlayerEntries.length > 0) {
       const opY = h * 0.55;
-      let startX = playerX + SPRITE_SIZE / 2 + 20;
+      let startX = playerX + playerSize / 2 + 20;
       for (const { sprite, label, hitArea } of otherPlayerEntries) {
         sprite.x = startX;
         sprite.y = opY;
+        sprite.width = otherSize;
+        sprite.height = otherSize;
         label.x = startX;
-        label.y = opY + (SPRITE_SIZE * 0.75) / 2 + 6;
-        hitArea.x = startX - (SPRITE_SIZE * 0.75) / 2;
-        hitArea.y = opY - (SPRITE_SIZE * 0.75) / 2;
-        startX += SPRITE_SIZE * 0.75 + 20;
+        label.y = opY + otherSize / 2 + 6;
+        hitArea.clear();
+        hitArea.rect(0, 0, otherSize, otherSize);
+        hitArea.fill({ color: 0x000000, alpha: 0.001 });
+        hitArea.x = startX - otherSize / 2;
+        hitArea.y = opY - otherSize / 2;
+        startX += otherSize + 20;
       }
     }
 
     // Layout item sprites in a horizontal row, centered
-    if (this.itemSprites.length > 0) {
+    if (itemCount > 0) {
       const itemY = h * 0.42;
-      const itemSpacing = Math.min(ITEM_SPRITE_SIZE + 16, (w * 0.6) / Math.max(1, this.itemSprites.length));
-      const totalItemWidth = (this.itemSprites.length - 1) * itemSpacing;
+      const itemSpacing = Math.min(itemSize + 16, itemAreaWidth / Math.max(1, itemCount));
+      const totalItemWidth = (itemCount - 1) * itemSpacing;
       let itemX = w / 2 - totalItemWidth / 2;
       for (const { sprite, label, hitArea } of this.itemSprites) {
         sprite.x = itemX;
         sprite.y = itemY;
+        sprite.width = itemSize;
+        sprite.height = itemSize;
         label.x = itemX;
-        label.y = itemY + ITEM_SPRITE_SIZE / 2 + 2;
-        hitArea.x = itemX - ITEM_SPRITE_SIZE / 2;
-        hitArea.y = itemY - ITEM_SPRITE_SIZE / 2;
+        label.y = itemY + itemSize / 2 + 2;
+        hitArea.clear();
+        hitArea.rect(0, 0, itemSize, itemSize);
+        hitArea.fill({ color: 0x000000, alpha: 0.001 });
+        hitArea.x = itemX - itemSize / 2;
+        hitArea.y = itemY - itemSize / 2;
         itemX += itemSpacing;
       }
     }
 
-    // Shop badge position — below minimap on the left
+    // Shop badge position — below minimap on the right
     if (this.shopBadge.visible) {
-      this.shopBadge.x = 92;
-      this.shopBadge.y = 220;
+      this.shopBadge.x = w - mapDiam / 2 - mapMargin;
+      this.shopBadge.y = mapMargin + mapDiam + 40;
     }
 
-    // Exits
-    this.exitGraphics.clear();
-    // Role indicators
-    this.roleGraphics.clear();
-
+    // Compass rose in bottom-right
     const state = gameStateRef.current;
     const exits = state.room.exits;
-    let labelIdx = 0;
-    for (const dir of Object.keys(exits)) {
-      const layout = DIRECTION_LAYOUTS[dir.toLowerCase()];
-      if (!layout && labelIdx < this.exitLabels.length) {
-        const label = this.exitLabels[labelIdx];
-        label.x = w / 2;
-        label.y = h - 20 - (Object.keys(exits).length - labelIdx) * 22;
-        labelIdx++;
-        continue;
-      }
-      if (!layout) continue;
-      const cx = layout.offsetX(w);
-      const cy = layout.offsetY(h);
-      layout.arrow(this.exitGraphics, cx, cy);
-      if (labelIdx < this.exitLabels.length) {
-        const label = this.exitLabels[labelIdx];
-        label.x = cx;
-        label.y = cy + (dir.toLowerCase() === "north" || dir.toLowerCase() === "up" ? -26 : 26);
-        labelIdx++;
-      }
+    const exitDirs = Object.keys(exits).map((d) => d.toLowerCase());
+    this.compassContainer.x = w - COMPASS_SIZE / 2 - COMPASS_MARGIN;
+    this.compassContainer.y = h - COMPASS_SIZE / 2 - COMPASS_MARGIN;
+    this.updateCompassHighlights(exitDirs);
+
+    // Stairs icons next to compass
+    const hasUp = exitDirs.includes("up");
+    const hasDown = exitDirs.includes("down");
+    if (this.stairsUpSprite) {
+      this.stairsUpSprite.visible = hasUp;
+      this.stairsUpSprite.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE / 2 - 8;
+      this.stairsUpSprite.y = -STAIR_ICON_SIZE / 2 - 4;
     }
+    if (this.stairsUpHit) {
+      this.stairsUpHit.visible = hasUp;
+      this.stairsUpHit.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE - 8;
+      this.stairsUpHit.y = -STAIR_ICON_SIZE / 2 - 4;
+    }
+    if (this.stairsDownSprite) {
+      this.stairsDownSprite.visible = hasDown;
+      this.stairsDownSprite.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE / 2 - 8;
+      this.stairsDownSprite.y = STAIR_ICON_SIZE / 2 + 4;
+    }
+    if (this.stairsDownHit) {
+      this.stairsDownHit.visible = hasDown;
+      this.stairsDownHit.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE - 8;
+      this.stairsDownHit.y = 4;
+    }
+
+    // Role indicators
+    this.roleGraphics.clear();
 
     // Draw NPC role indicators
     const mobInfo = state.mobInfo;
@@ -483,7 +517,7 @@ export class WorldScene {
         const entry = this.mobSprites.get(info.id);
         if (!entry) continue;
         const { sprite } = entry;
-        drawRoleIcons(this.roleGraphics, sprite.x, sprite.y, info);
+        drawRoleIcons(this.roleGraphics, sprite.x, sprite.y, info, this.currentMobSize);
         if (info.dialogue) {
           activeDialogueMobs.add(info.id);
           this.ensureDialogueIcon(info.id, sprite.x, sprite.y);
@@ -506,58 +540,124 @@ export class WorldScene {
     this.pruneIcons(this.aggroIcons, activeAggroMobs);
     this.pruneIcons(this.questAvailableIcons, activeQuestAvail);
     this.pruneIcons(this.questCompleteIcons, activeQuestComplete);
-
-    this.layoutExitHitAreas(exits);
   }
 
-  private layoutExitHitAreas(exits: Record<string, string>) {
-    for (const { area } of this.exitHitAreas) {
-      this.container.removeChild(area);
-      area.destroy();
-    }
-    this.exitHitAreas = [];
+  private buildCompassRose() {
+    const s = COMPASS_SIZE;
+    const r = s / 2;
 
-    const w = this.width;
-    const h = this.height;
+    // Highlight layer drawn behind the sprite
+    this.compassContainer.addChild(this.compassHighlightGraphics);
 
-    for (const dir of Object.keys(exits)) {
-      const layout = DIRECTION_LAYOUTS[dir.toLowerCase()];
-      if (!layout) continue;
+    // Clickable hit area wedges for each cardinal direction
+    const directions: Array<{ dir: string; points: number[] }> = [
+      { dir: "north", points: [0, -r, -r * 0.4, -r * 0.15, r * 0.4, -r * 0.15] },
+      { dir: "south", points: [0, r, -r * 0.4, r * 0.15, r * 0.4, r * 0.15] },
+      { dir: "east", points: [r, 0, r * 0.15, -r * 0.4, r * 0.15, r * 0.4] },
+      { dir: "west", points: [-r, 0, -r * 0.15, -r * 0.4, -r * 0.15, r * 0.4] },
+    ];
 
-      const cx = layout.offsetX(w);
-      const cy = layout.offsetY(h);
+    for (const { dir, points } of directions) {
       const area = new Graphics();
-      area.rect(cx - 35, cy - 25, 70, 50);
+      area.poly(points);
       area.fill({ color: 0x000000, alpha: 0.001 });
       area.eventMode = "static";
       area.cursor = "pointer";
-
-      const direction = dir;
       area.on("pointerdown", () => {
-        canvasCallbacks.sendCommand?.(direction);
+        canvasCallbacks.sendCommand?.(dir);
       });
-
-      this.container.addChild(area);
-      this.exitHitAreas.push({ dir, area });
+      this.compassContainer.addChild(area);
+      this.compassHitAreas.push({ dir, area });
     }
   }
 
-  private rebuildExits(exits: Record<string, string>) {
-    for (const label of this.exitLabels) {
-      this.container.removeChild(label);
-      label.destroy();
-    }
-    this.exitLabels = [];
+  private async loadCompassAssets() {
+    try {
+      const texture = await Assets.load("/images/global_assets/compass_rose.png");
+      const sprite = new Sprite(texture);
+      sprite.width = COMPASS_SIZE;
+      sprite.height = COMPASS_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.eventMode = "none";
+      // Insert after highlight graphics but before hit areas
+      this.compassContainer.addChildAt(sprite, 1);
+    } catch { /* fallback: no compass image */ }
 
-    for (const dir of Object.keys(exits)) {
-      const label = new Text({
-        text: dir,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: EXIT_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 1 } },
-      });
-      label.anchor.set(0.5);
-      label.alpha = 0.8;
-      this.exitLabels.push(label);
-      this.container.addChild(label);
+    try {
+      const tex = await Assets.load("/images/global_assets/stairs_up.png");
+      const sprite = new Sprite(tex);
+      sprite.width = STAIR_ICON_SIZE;
+      sprite.height = STAIR_ICON_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.eventMode = "none";
+      sprite.visible = false;
+      this.stairsUpSprite = sprite;
+      this.compassContainer.addChild(sprite);
+
+      const hit = new Graphics();
+      hit.rect(0, 0, STAIR_ICON_SIZE, STAIR_ICON_SIZE);
+      hit.fill({ color: 0x000000, alpha: 0.001 });
+      hit.eventMode = "static";
+      hit.cursor = "pointer";
+      hit.visible = false;
+      hit.on("pointerdown", () => { canvasCallbacks.sendCommand?.("up"); });
+      this.stairsUpHit = hit;
+      this.compassContainer.addChild(hit);
+    } catch { /* no stairs up icon */ }
+
+    try {
+      const tex = await Assets.load("/images/global_assets/stairs_down.png");
+      const sprite = new Sprite(tex);
+      sprite.width = STAIR_ICON_SIZE;
+      sprite.height = STAIR_ICON_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.eventMode = "none";
+      sprite.visible = false;
+      this.stairsDownSprite = sprite;
+      this.compassContainer.addChild(sprite);
+
+      const hit = new Graphics();
+      hit.rect(0, 0, STAIR_ICON_SIZE, STAIR_ICON_SIZE);
+      hit.fill({ color: 0x000000, alpha: 0.001 });
+      hit.eventMode = "static";
+      hit.cursor = "pointer";
+      hit.visible = false;
+      hit.on("pointerdown", () => { canvasCallbacks.sendCommand?.("down"); });
+      this.stairsDownHit = hit;
+      this.compassContainer.addChild(hit);
+    } catch { /* no stairs down icon */ }
+  }
+
+  private updateCompassHighlights(exitDirs: string[]) {
+    const key = exitDirs.sort().join(",");
+    const lastKey = this.lastExitDirs.sort().join(",");
+    if (key === lastKey) return;
+    this.lastExitDirs = [...exitDirs];
+
+    const g = this.compassHighlightGraphics;
+    g.clear();
+
+    const r = COMPASS_SIZE / 2;
+    const cardinals = ["north", "south", "east", "west"];
+    const angles: Record<string, number> = { north: -Math.PI / 2, east: 0, south: Math.PI / 2, west: Math.PI };
+
+    for (const dir of cardinals) {
+      const available = exitDirs.includes(dir);
+      const angle = angles[dir];
+      // Draw a subtle glow wedge for available directions
+      if (available) {
+        g.moveTo(0, 0);
+        g.arc(0, 0, r * 0.85, angle - Math.PI / 6, angle + Math.PI / 6);
+        g.lineTo(0, 0);
+        g.fill({ color: 0xb9aed8, alpha: 0.25 });
+      }
+    }
+
+    // Update hit area cursors
+    for (const { dir, area } of this.compassHitAreas) {
+      const available = exitDirs.includes(dir);
+      area.cursor = available ? "pointer" : "default";
+      area.alpha = available ? 1 : 0.3;
     }
   }
 
@@ -594,8 +694,8 @@ export class WorldScene {
 
     for (const mob of mobs) {
       const sprite = new Sprite(Texture.WHITE);
-      sprite.width = SPRITE_SIZE;
-      sprite.height = SPRITE_SIZE;
+      sprite.width = BASE_SPRITE_SIZE;
+      sprite.height = BASE_SPRITE_SIZE;
       sprite.anchor.set(0.5);
       sprite.tint = 0xf0c674;
 
@@ -611,7 +711,7 @@ export class WorldScene {
 
       // Click hit area
       const hitArea = new Graphics();
-      hitArea.rect(0, 0, SPRITE_SIZE, SPRITE_SIZE);
+      hitArea.rect(0, 0, BASE_SPRITE_SIZE, BASE_SPRITE_SIZE);
       hitArea.fill({ color: 0x000000, alpha: 0.001 });
       hitArea.eventMode = "static";
       hitArea.cursor = "pointer";
@@ -643,8 +743,8 @@ export class WorldScene {
 
     for (const item of items) {
       const sprite = new Sprite(Texture.WHITE);
-      sprite.width = ITEM_SPRITE_SIZE;
-      sprite.height = ITEM_SPRITE_SIZE;
+      sprite.width = BASE_ITEM_SPRITE_SIZE;
+      sprite.height = BASE_ITEM_SPRITE_SIZE;
       sprite.anchor.set(0.5);
       sprite.tint = 0x8abeb7;
 
@@ -659,7 +759,7 @@ export class WorldScene {
       label.anchor.set(0.5, 0);
 
       const hitArea = new Graphics();
-      hitArea.rect(0, 0, ITEM_SPRITE_SIZE, ITEM_SPRITE_SIZE);
+      hitArea.rect(0, 0, BASE_ITEM_SPRITE_SIZE, BASE_ITEM_SPRITE_SIZE);
       hitArea.fill({ color: 0x000000, alpha: 0.001 });
       hitArea.eventMode = "static";
       hitArea.cursor = "pointer";
@@ -688,7 +788,7 @@ export class WorldScene {
     }
     this.playerSprites.clear();
 
-    const otherSize = SPRITE_SIZE * 0.75;
+    const otherSize = BASE_SPRITE_SIZE * 0.75;
     for (const player of players) {
       const sprite = new Sprite(Texture.WHITE);
       sprite.width = otherSize;
@@ -752,8 +852,8 @@ export class WorldScene {
 
     if (!spritePath) {
       const sprite = new Sprite(Texture.WHITE);
-      sprite.width = SPRITE_SIZE;
-      sprite.height = SPRITE_SIZE;
+      sprite.width = BASE_SPRITE_SIZE;
+      sprite.height = BASE_SPRITE_SIZE;
       sprite.anchor.set(0.5);
       sprite.tint = 0x81a2be;
       this.container.addChild(sprite);
@@ -764,15 +864,15 @@ export class WorldScene {
     try {
       const texture = await Assets.load(spritePath);
       const sprite = new Sprite(texture);
-      sprite.width = SPRITE_SIZE;
-      sprite.height = SPRITE_SIZE;
+      sprite.width = BASE_SPRITE_SIZE;
+      sprite.height = BASE_SPRITE_SIZE;
       sprite.anchor.set(0.5);
       this.container.addChild(sprite);
       this.playerSprite = sprite;
     } catch {
       const sprite = new Sprite(Texture.WHITE);
-      sprite.width = SPRITE_SIZE;
-      sprite.height = SPRITE_SIZE;
+      sprite.width = BASE_SPRITE_SIZE;
+      sprite.height = BASE_SPRITE_SIZE;
       sprite.anchor.set(0.5);
       sprite.tint = 0x81a2be;
       this.container.addChild(sprite);
@@ -835,7 +935,7 @@ export class WorldScene {
       this.container.addChild(icon);
     }
     icon.x = cx - 20;
-    icon.y = cy - SPRITE_SIZE / 2 - 8;
+    icon.y = cy - this.currentMobSize / 2 - 8;
   }
 
   private ensureAggroIcon(mobId: string, cx: number, cy: number) {
@@ -850,8 +950,8 @@ export class WorldScene {
       this.aggroIcons.set(mobId, icon);
       this.container.addChild(icon);
     }
-    icon.x = cx + SPRITE_SIZE / 2 - 4;
-    icon.y = cy - SPRITE_SIZE / 2 - 8;
+    icon.x = cx + this.currentMobSize / 2 - 4;
+    icon.y = cy - this.currentMobSize / 2 - 8;
   }
 
   private async loadQuestTextures() {
@@ -886,7 +986,7 @@ export class WorldScene {
       this.container.addChild(icon);
     }
     icon.x = cx;
-    icon.y = cy - SPRITE_SIZE / 2 - 20;
+    icon.y = cy - this.currentMobSize / 2 - 20;
   }
 
   private pruneIcons(map: Map<string, Sprite>, active: Set<string>) {
@@ -907,9 +1007,7 @@ export class WorldScene {
   }
 
   destroy() {
-    for (const { area } of this.exitHitAreas) {
-      area.destroy();
-    }
+    this.compassContainer.destroy({ children: true });
     this.minimap.destroy();
     this.entityPopout.destroy();
     this.container.destroy({ children: true });
