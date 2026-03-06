@@ -7,7 +7,7 @@ const NODE_FILL = "#4a6080";
 const CURRENT_FILL = "#b9aed8";
 const CURRENT_GLOW = "rgba(232, 216, 168, 0.5)";
 const CURRENT_GLOW_STROKE = "rgba(232, 216, 168, 0.8)";
-const LINE_STROKE = "rgba(74, 80, 112, 0.5)";
+const LINE_STROKE = "rgba(40, 35, 28, 0.6)";
 const FOG_FILL = "rgba(42, 48, 80, 0.5)";
 const FOG_STROKE = "rgba(58, 64, 96, 0.35)";
 const NODE_STROKE = "rgba(90, 106, 144, 0.5)";
@@ -23,6 +23,7 @@ function renderMap(
   imageCache: Map<string, HTMLImageElement>,
   loadingImages: Set<string>,
   fogImage: HTMLImageElement | null,
+  bgImage: HTMLImageElement | null,
   scheduleRedraw: () => void,
 ) {
   const ctx = canvas.getContext("2d");
@@ -41,8 +42,16 @@ function renderMap(
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, width, height);
 
-  ctx.fillStyle = BG_COLOR;
-  ctx.fillRect(0, 0, width, height);
+  // Background: map scroll image or dark fallback
+  if (bgImage && bgImage.complete) {
+    ctx.drawImage(bgImage, 0, 0, width, height);
+    // Slight dark overlay so nodes remain readable
+    ctx.fillStyle = "rgba(10, 12, 22, 0.25)";
+    ctx.fillRect(0, 0, width, height);
+  } else {
+    ctx.fillStyle = BG_COLOR;
+    ctx.fillRect(0, 0, width, height);
+  }
 
   if (!currentId) return;
   const current = visited.get(currentId);
@@ -170,18 +179,25 @@ export function useMiniMap() {
   const imageCache = useRef<Map<string, HTMLImageElement>>(new Map());
   const loadingImages = useRef<Set<string>>(new Set());
   const fogImageRef = useRef<HTMLImageElement | null>(null);
+  const bgImageRef = useRef<HTMLImageElement | null>(null);
 
-  // Pre-load the fog-of-war icon
+  // Pre-load the fog-of-war icon and map background
   if (fogImageRef.current == null) {
     const img = new Image();
     img.src = "/images/global_assets/minimap-unexplored.png";
     fogImageRef.current = img;
+  }
+  if (bgImageRef.current == null) {
+    const img = new Image();
+    img.src = "/images/global_assets/map_background.png";
+    bgImageRef.current = img;
   }
 
   const drawMap = useCallback(() => {
     const canvas = mapCanvasRef.current;
     if (!canvas) return;
     const fog = fogImageRef.current?.complete ? fogImageRef.current : null;
+    const bg = bgImageRef.current?.complete ? bgImageRef.current : null;
     renderMap(
       canvas,
       visitedRef.current,
@@ -189,11 +205,13 @@ export function useMiniMap() {
       imageCache.current,
       loadingImages.current,
       fog,
+      bg,
       () => {
         const c = mapCanvasRef.current;
         if (c) {
           const f = fogImageRef.current?.complete ? fogImageRef.current : null;
-          renderMap(c, visitedRef.current, currentRoomIdRef.current, imageCache.current, loadingImages.current, f, () => {});
+          const b = bgImageRef.current?.complete ? bgImageRef.current : null;
+          renderMap(c, visitedRef.current, currentRoomIdRef.current, imageCache.current, loadingImages.current, f, b, () => {});
         }
       },
     );
