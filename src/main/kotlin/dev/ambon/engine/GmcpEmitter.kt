@@ -89,6 +89,8 @@ class GmcpEmitter(
                 zone = room.id.zone,
                 exits = room.exits.entries.associate { (dir, roomId) -> dir.name.lowercase() to roomId.value },
                 image = room.image,
+                music = room.music,
+                ambient = room.ambient,
             ),
         )
     }
@@ -834,6 +836,8 @@ class GmcpEmitter(
         val zone: String,
         val exits: Map<String, String>,
         val image: String? = null,
+        val music: String? = null,
+        val ambient: String? = null,
     )
 
     private data class ItemPayload(

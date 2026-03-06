@@ -120,6 +120,7 @@ object WorldLoader {
             }
 
             val imageDefaults = file.image
+            val audioDefaults = file.audio
 
             // First pass per file: create room shells, detect collisions
             for ((rawId, rf) in file.rooms) {
@@ -138,6 +139,8 @@ object WorldLoader {
                         exits = emptyMap(),
                         station = station,
                         image = (rf.image ?: imageDefaults?.room)?.let { "/images/$it" },
+                        music = (rf.music ?: audioDefaults?.music)?.let { "/audio/$it" },
+                        ambient = (rf.ambient ?: audioDefaults?.ambient)?.let { "/audio/$it" },
                     )
             }
 

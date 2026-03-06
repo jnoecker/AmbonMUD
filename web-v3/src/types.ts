@@ -87,6 +87,8 @@ export interface RoomState {
   description: string;
   exits: Record<string, string>;
   image?: string | null;
+  music?: string | null;
+  ambient?: string | null;
 }
 
 export interface ItemSummary {

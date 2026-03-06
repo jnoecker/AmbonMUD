@@ -127,6 +127,11 @@ internal fun Application.ambonMUDWebModule(
         )
 
         staticResources(
+            remotePath = "/audio",
+            basePackage = "world/audio",
+        )
+
+        staticResources(
             remotePath = "/",
             basePackage = "web-v3",
             index = "index.html",
