@@ -11,7 +11,7 @@ const LINE_STROKE = "rgba(40, 35, 28, 0.6)";
 const FOG_FILL = "rgba(42, 48, 80, 0.5)";
 const FOG_STROKE = "rgba(58, 64, 96, 0.35)";
 const NODE_STROKE = "rgba(90, 106, 144, 0.5)";
-const CELL = 48;
+const CELL = 64;
 const NODE_RADIUS = 18;
 const CURRENT_RADIUS = 24;
 

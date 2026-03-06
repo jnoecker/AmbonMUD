@@ -20,7 +20,7 @@ interface MapNode {
 
 const MAP_DIAMETER = 280;
 const MAP_RADIUS = MAP_DIAMETER / 2;
-const CELL = 40;
+const CELL = 56;
 const NODE_RADIUS = 16;
 const CURRENT_RADIUS = 20;
 const BG_COLOR = 0x141828;
