@@ -3038,7 +3038,13 @@ body {
   }
 
   .action-bar-command {
-    min-width: 100%;
+    width: 36px;
+    min-width: 36px;
+    margin-left: auto;
+  }
+
+  .action-bar-command:focus-within {
+    width: clamp(160px, 50vw, 280px);
   }
 
   .action-bar-vitals {
@@ -3611,25 +3617,46 @@ body {
 
 .action-bar-command {
   display: flex;
-  gap: var(--space-2);
-  flex: 1;
-  min-width: 0;
+  gap: var(--space-1);
+  width: 36px;
+  min-width: 36px;
   border: 1px solid var(--line-faint);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: linear-gradient(180deg, rgb(74 86 121 / 84%), rgb(62 79 114 / 80%));
+  padding: 2px;
+  transition: width 200ms var(--ease-in-out-smooth);
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.action-bar-command:focus-within {
+  width: clamp(200px, 30vw, 360px);
+  border-radius: var(--radius-lg);
   padding: 3px;
 }
 
 .action-bar-command .command-input {
-  padding: 6px 10px;
-  font-size: 0.88rem;
+  padding: 4px 8px;
+  font-size: 0.82rem;
+  opacity: 0;
+  width: 0;
+  min-width: 0;
+  transition: opacity 150ms var(--ease-in-out-smooth);
+}
+
+.action-bar-command:focus-within .command-input {
+  opacity: 1;
+  width: 100%;
+  flex: 1;
 }
 
 .action-bar-send {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 10px !important;
+  padding: 4px 8px !important;
+  flex-shrink: 0;
 }
 
 .action-bar-send-icon {
