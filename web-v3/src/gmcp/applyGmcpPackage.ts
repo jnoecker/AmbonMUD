@@ -384,6 +384,7 @@ export function applyGmcpPackage(
             levelRequired: Math.max(1, safeNumber(entry.levelRequired, 1)),
             targetType: typeof entry.targetType === "string" ? entry.targetType : "ENEMY",
             classRestriction: typeof entry.classRestriction === "string" ? entry.classRestriction : null,
+            image: typeof entry.image === "string" ? entry.image : null,
             receivedAt: now,
           })),
       );

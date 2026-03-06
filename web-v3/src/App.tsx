@@ -7,10 +7,11 @@ import { PopoutLayer } from "./components/PopoutLayer";
 import { ShopPopout } from "./components/ShopPopout";
 import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
+import { SpellbookPanel } from "./components/SpellbookPanel";
 import { PlayPanel } from "./components/panels/PlayPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
-import { canvasCallbacks, gameStateRef } from "./canvas/GameStateBridge";
+import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
 import { canvasEvents } from "./canvas/CanvasEventBus";
 import { LoginModal } from "./canvas/LoginModal";
 import {
@@ -24,6 +25,7 @@ import {
 import { useCommandHistory } from "./hooks/useCommandHistory";
 import { useMiniMap } from "./hooks/useMiniMap";
 import { useMudSocket } from "./hooks/useMudSocket";
+import { useQuickbar } from "./hooks/useQuickbar";
 import type {
   AchievementData,
   CharStats,
@@ -131,6 +133,8 @@ function App() {
   const [roomItems, setRoomItems] = useState<RoomItem[]>([]);
   const [effects, setEffects] = useState<StatusEffect[]>([]);
   const [skills, setSkills] = useState<SkillSummary[]>([]);
+  const quickbar = useQuickbar(skills);
+  const [toast, setToast] = useState<string | null>(null);
   const [inventory, setInventory] = useState<ItemSummary[]>([]);
   const [equipment, setEquipment] = useState<Record<string, ItemSummary>>({});
   const [achievements, setAchievements] = useState<AchievementData>({ completed: [], inProgress: [] });
@@ -142,8 +146,6 @@ function App() {
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
   const [dialogue, setDialogue] = useState<DialogueState | null>(null);
   const [whoPlayers, setWhoPlayers] = useState<string[]>([]);
-  const [detailMob] = useState<RoomMob | null>(null);
-  const [detailItem] = useState<RoomItem | null>(null);
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
   const [, setCharStats] = useState<CharStats | null>(null);
   const [quests, setQuests] = useState<QuestEntry[]>([]);
@@ -534,10 +536,6 @@ function App() {
         ? "Room Details"
       : activePopout === "equipment"
         ? "Equipment"
-      : activePopout === "mobDetail"
-        ? (detailMob?.name ?? "Mob")
-      : activePopout === "itemDetail"
-        ? (detailItem?.name ?? "Item")
       : activePopout === "help"
         ? "Command Reference"
       : activePopout === "character"
@@ -546,6 +544,8 @@ function App() {
         ? "Social"
       : activePopout === "shop"
         ? (shop?.name ?? "Shop")
+      : activePopout === "spellbook"
+        ? "Spellbook"
         : "Currently Wearing";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
@@ -606,8 +606,8 @@ function App() {
     [connected, focusComposer, hasCharacterProfile, sendCommand],
   );
 
-  const handleCastSkill = useCallback(
-    (skillId: string, cooldownMs: number) => {
+  const completeCast = useCallback(
+    (skillId: string, cooldownMs: number, targetName?: string) => {
       const now = Date.now();
       setSkills((prev) =>
         prev.map((skill) => (
@@ -620,21 +620,60 @@ function App() {
             : skill
         )),
       );
-      sendCommand(`cast ${skillId}`, true);
+      const cmd = targetName ? `cast ${skillId} ${targetName}` : `cast ${skillId}`;
+      sendCommand(cmd, true);
+      pendingCastRef.current = null;
       focusComposer();
     },
     [focusComposer, sendCommand],
   );
 
-  // Keyboard shortcuts: digits 1-6 cast skills when no text input is focused
+  const handleCastSkill = useCallback(
+    (skillId: string, cooldownMs: number) => {
+      const skill = skills.find((s) => s.id === skillId);
+      if (!skill) return;
+      const needsTarget = skill.targetType === "ENEMY" || skill.targetType === "ALLY";
+      // If it needs a target and we already have a combat target, use that
+      if (needsTarget && gameStateRef.current.combatTarget?.targetName) {
+        completeCast(skillId, cooldownMs, gameStateRef.current.combatTarget.targetName);
+        return;
+      }
+      // If it needs a target but we don't have one, enter targeting mode
+      if (needsTarget) {
+        pendingCastRef.current = { skillId, skillName: skill.name, targetType: skill.targetType };
+        setToast(`Select a target for ${skill.name}`);
+        return;
+      }
+      completeCast(skillId, cooldownMs);
+    },
+    [skills, completeCast],
+  );
+
+  // Wire up canvas target selection callback
+  useEffect(() => {
+    canvasCallbacks.onTargetSelected = (targetName: string) => {
+      const pending = pendingCastRef.current;
+      if (!pending) return;
+      setToast(null);
+      completeCast(pending.skillId, 0, targetName);
+    };
+    return () => { canvasCallbacks.onTargetSelected = null; };
+  }, [completeCast]);
+
+  // Keyboard shortcuts: digits 1-6 cast quickbar skills when no text input is focused
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape" && pendingCastRef.current) {
+        pendingCastRef.current = null;
+        setToast(null);
+        return;
+      }
       if (!hasCharacterProfile || !connected) return;
       const target = event.target as HTMLElement;
       if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
       const digit = parseInt(event.key, 10);
-      if (digit >= 1 && digit <= 6) {
-        const skill = skills[digit - 1];
+      if (digit >= 1 && digit <= 9) {
+        const skill = quickbar.slots[digit - 1];
         if (!skill) return;
         const elapsed = Date.now() - skill.receivedAt;
         const remaining = Math.max(0, skill.cooldownRemainingMs - elapsed);
@@ -644,7 +683,17 @@ function App() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [connected, hasCharacterProfile, skills, handleCastSkill]);
+  }, [connected, hasCharacterProfile, quickbar.slots, handleCastSkill]);
+
+  // Auto-dismiss toast after 4 seconds
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => {
+      setToast(null);
+      pendingCastRef.current = null;
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   return (
     <main className="app-shell">
@@ -691,11 +740,14 @@ function App() {
           connected={connected}
           hasCharacterProfile={hasCharacterProfile}
           vitals={vitals}
-          skills={skills}
+          quickbarSlots={quickbar.slots}
           shop={shop}
           activePopout={activePopout}
           onOpenPopout={setActivePopout}
           onCastSkill={handleCastSkill}
+          onQuickbarSwap={quickbar.swap}
+          onQuickbarAssign={quickbar.assign}
+          onQuickbarClear={quickbar.clear}
           composerInputRef={composerInputRef}
           composerValue={composerValue}
           commandPlaceholder={commandPlaceholder}
@@ -712,10 +764,7 @@ function App() {
             setTerminalVisible(false);
             setTerminalOpaque(false);
           }}
-          onSubmitComposer={(event) => {
-            submitComposer(event);
-            setTerminalOpaque(true);
-          }}
+          onSubmitComposer={submitComposer}
         />
       </div>
 
@@ -729,8 +778,6 @@ function App() {
         equipmentSlots={equipmentSlots}
         mapCanvasRef={mapCanvasRef}
         canManageItems={connected && hasCharacterProfile}
-        detailMob={detailMob}
-        detailItem={detailItem}
         players={players}
         isStaff={character.isStaff}
         onWearItem={(itemName) => {
@@ -748,21 +795,6 @@ function App() {
         onGiveItem={(itemKeyword, playerName) => {
           sendCommand(`give ${itemKeyword} ${playerName}`, true);
           focusComposer();
-        }}
-        onTalkToMob={(mobName) => {
-          sendCommand(`talk ${mobName}`, true);
-          focusComposer();
-          setActivePopout(null);
-        }}
-        onAttackMob={(mobName) => {
-          sendCommand(`kill ${mobName}`, true);
-          focusComposer();
-          setActivePopout(null);
-        }}
-        onPickUpItem={(itemName) => {
-          sendCommand(`get ${itemName}`, true);
-          focusComposer();
-          setActivePopout(null);
         }}
         onClose={() => setActivePopout(null)}
       >
@@ -834,6 +866,20 @@ function App() {
             }}
           />
         )}
+
+        {activePopout === "spellbook" && (
+          <SpellbookPanel
+            skills={skills}
+            quickbarSlotIds={quickbar.slotIds}
+            playerClass={displayClassName}
+            playerLevel={vitals.level ?? 1}
+            onShowSkillInfo={(skill) => {
+              const cd = skill.cooldownMs > 0 ? `${skill.cooldownMs / 1000}s cooldown` : "No cooldown";
+              setToast(`${skill.name} — ${skill.manaCost} MP, ${cd}, ${skill.targetType.toLowerCase()} target`);
+            }}
+            onAssignSlot={quickbar.assign}
+          />
+        )}
       </PopoutLayer>
 
       {loginPrompt && (
@@ -861,6 +907,12 @@ function App() {
       <div ref={terminalHiddenRef} className="terminal-hidden" aria-hidden="true" />
 
       <p className="sr-only" aria-live="polite">{liveMessage}</p>
+
+      {toast && (
+        <div className="game-toast" role="alert">
+          {toast}
+        </div>
+      )}
     </main>
   );
 }

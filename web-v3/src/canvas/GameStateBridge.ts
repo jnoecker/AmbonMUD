@@ -29,17 +29,27 @@ export interface GameStateSnapshot {
   shop: ShopState | null;
 }
 
+export interface PendingCast {
+  skillId: string;
+  skillName: string;
+  targetType: string;
+}
+
 export const canvasCallbacks: {
   sendCommand: ((command: string) => void) | null;
   openShop: (() => void) | null;
   openMap: (() => void) | null;
   openRoom: (() => void) | null;
+  onTargetSelected: ((targetName: string) => void) | null;
 } = {
   sendCommand: null,
   openShop: null,
   openMap: null,
   openRoom: null,
+  onTargetSelected: null,
 };
+
+export const pendingCastRef: { current: PendingCast | null } = { current: null };
 
 export const gameStateRef: { current: GameStateSnapshot } = {
   current: {

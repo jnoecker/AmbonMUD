@@ -49,4 +49,5 @@ data class AbilityDefinition(
     val targetType: TargetType,
     val effect: AbilityEffect,
     val requiredClass: PlayerClass? = null,
+    val image: String? = null,
 )

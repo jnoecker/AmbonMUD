@@ -1,5 +1,5 @@
 import { Container, Graphics, Sprite, Text, Texture, Assets } from "pixi.js";
-import { gameStateRef, canvasCallbacks } from "../GameStateBridge";
+import { gameStateRef, canvasCallbacks, pendingCastRef } from "../GameStateBridge";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 import { Minimap } from "../systems/Minimap";
 import { EntityPopout } from "../systems/EntityPopout";
@@ -88,7 +88,15 @@ export class WorldScene {
   // Compass rose navigation
   private compassContainer = new Container();
   private compassHighlightGraphics = new Graphics();
+  private compassOverlayGraphics = new Graphics();
   private compassHitAreas: Array<{ dir: string; area: Graphics }> = [];
+  private compassAnimTime = 0;
+  private compassActiveExits: string[] = [];
+  private compassSparkles: Array<{
+    x: number; y: number; vx: number; vy: number;
+    life: number; maxLife: number; size: number; drift: number;
+  }> = [];
+  private directionMarkers: Map<string, Sprite> = new Map();
   private stairsUpSprite: Sprite | null = null;
   private stairsDownSprite: Sprite | null = null;
   private stairsUpHit: Graphics | null = null;
@@ -100,6 +108,9 @@ export class WorldScene {
   private shopLabel: Text;
   private shopHitArea = new Graphics();
   private shopVisible = false;
+
+  private targetingText: Text | null = null;
+  private targetingBg = new Graphics();
 
   private lastRoomId: string | null = null;
   private lastRoomImage: string | null | undefined = undefined;
@@ -234,6 +245,13 @@ export class WorldScene {
   update(deltaMs: number) {
     const state = gameStateRef.current;
     const { room, character, mobs, roomItems, players, mobInfo } = state;
+
+    // Animate compass direction indicators + sparkles
+    if (this.compassActiveExits.length > 0) {
+      this.compassAnimTime += deltaMs / 1000;
+      this.updateCompassSparkles(deltaMs / 1000);
+      this.drawCompassOverlay();
+    }
 
     // Handle room transition animation
     if (this.transitioning) {
@@ -540,6 +558,48 @@ export class WorldScene {
     this.pruneIcons(this.aggroIcons, activeAggroMobs);
     this.pruneIcons(this.questAvailableIcons, activeQuestAvail);
     this.pruneIcons(this.questCompleteIcons, activeQuestComplete);
+
+    // Targeting mode overlay
+    this.updateTargetingOverlay();
+  }
+
+  private updateTargetingOverlay() {
+    const pending = pendingCastRef.current;
+    if (pending) {
+      if (!this.targetingText) {
+        this.targetingText = new Text({
+          text: "",
+          style: {
+            fontFamily: "Lora, Georgia, serif",
+            fontSize: 14,
+            fill: "#f0c0d0",
+            dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 1 },
+          },
+        });
+        this.targetingText.anchor.set(0.5, 0);
+        this.container.addChild(this.targetingBg);
+        this.container.addChild(this.targetingText);
+      }
+      const msg = `Select target for ${pending.skillName}`;
+      if (this.targetingText.text !== msg) this.targetingText.text = msg;
+      const tw = this.targetingText.width;
+      const tx = this.width / 2;
+      const ty = 10;
+      this.targetingText.x = tx;
+      this.targetingText.y = ty + 6;
+      this.targetingBg.clear();
+      this.targetingBg.roundRect(tx - tw / 2 - 12, ty, tw + 24, 28, 6);
+      this.targetingBg.fill({ color: 0x2a1a30, alpha: 0.85 });
+      this.targetingBg.roundRect(tx - tw / 2 - 12, ty, tw + 24, 28, 6);
+      this.targetingBg.stroke({ color: 0xd46a8a, width: 1, alpha: 0.6 });
+      this.targetingBg.visible = true;
+      this.targetingText.visible = true;
+    } else {
+      if (this.targetingText) {
+        this.targetingText.visible = false;
+        this.targetingBg.visible = false;
+      }
+    }
   }
 
   private buildCompassRose() {
@@ -548,6 +608,8 @@ export class WorldScene {
 
     // Highlight layer drawn behind the sprite
     this.compassContainer.addChild(this.compassHighlightGraphics);
+    // Overlay layer drawn on top of the sprite (glow lines + orbs)
+    this.compassContainer.addChild(this.compassOverlayGraphics);
 
     // Clickable hit area wedges for each cardinal direction
     const directions: Array<{ dir: string; points: number[] }> = [
@@ -579,9 +641,32 @@ export class WorldScene {
       sprite.height = COMPASS_SIZE;
       sprite.anchor.set(0.5);
       sprite.eventMode = "none";
-      // Insert after highlight graphics but before hit areas
+      // Insert after highlight graphics but before overlay
       this.compassContainer.addChildAt(sprite, 1);
+      // Move overlay to be on top of sprite
+      this.compassContainer.setChildIndex(this.compassOverlayGraphics, this.compassContainer.children.indexOf(sprite) + 1);
     } catch { /* fallback: no compass image */ }
+
+    try {
+      const markerTex = await Assets.load("/images/global_assets/direction_marker.png");
+      const markerSize = 22;
+      const r = COMPASS_SIZE / 2;
+      const angles: Record<string, number> = { north: -Math.PI / 2, east: 0, south: Math.PI / 2, west: Math.PI };
+      for (const dir of ["north", "south", "east", "west"]) {
+        const marker = new Sprite(markerTex);
+        marker.width = markerSize;
+        marker.height = markerSize;
+        marker.anchor.set(0.5);
+        marker.eventMode = "none";
+        marker.visible = false;
+        marker.position.set(
+          Math.cos(angles[dir]) * (r + 4),
+          Math.sin(angles[dir]) * (r + 4),
+        );
+        this.directionMarkers.set(dir, marker);
+        this.compassContainer.addChild(marker);
+      }
+    } catch { /* fallback: no direction marker image */ }
 
     try {
       const tex = await Assets.load("/images/global_assets/stairs_up.png");
@@ -633,24 +718,14 @@ export class WorldScene {
     const lastKey = this.lastExitDirs.sort().join(",");
     if (key === lastKey) return;
     this.lastExitDirs = [...exitDirs];
+    this.compassActiveExits = exitDirs.filter((d) => ["north", "south", "east", "west"].includes(d));
+    this.compassSparkles.length = 0;
 
-    const g = this.compassHighlightGraphics;
-    g.clear();
+    this.compassHighlightGraphics.clear();
 
-    const r = COMPASS_SIZE / 2;
-    const cardinals = ["north", "south", "east", "west"];
-    const angles: Record<string, number> = { north: -Math.PI / 2, east: 0, south: Math.PI / 2, west: Math.PI };
-
-    for (const dir of cardinals) {
-      const available = exitDirs.includes(dir);
-      const angle = angles[dir];
-      // Draw a subtle glow wedge for available directions
-      if (available) {
-        g.moveTo(0, 0);
-        g.arc(0, 0, r * 0.85, angle - Math.PI / 6, angle + Math.PI / 6);
-        g.lineTo(0, 0);
-        g.fill({ color: 0xb9aed8, alpha: 0.25 });
-      }
+    // Show/hide direction marker sprites
+    for (const [dir, marker] of this.directionMarkers) {
+      marker.visible = this.compassActiveExits.includes(dir);
     }
 
     // Update hit area cursors
@@ -658,6 +733,90 @@ export class WorldScene {
       const available = exitDirs.includes(dir);
       area.cursor = available ? "pointer" : "default";
       area.alpha = available ? 1 : 0.3;
+    }
+
+    // Force an immediate overlay redraw
+    this.drawCompassOverlay();
+  }
+
+  private updateCompassSparkles(dt: number) {
+    const angles: Record<string, number> = { north: -Math.PI / 2, east: 0, south: Math.PI / 2, west: Math.PI };
+    const r = COMPASS_SIZE / 2;
+
+    // Spawn new sparkles — ~8 per direction per second
+    for (const dir of this.compassActiveExits) {
+      const angle = angles[dir];
+      if (angle === undefined) continue;
+      const spawnCount = Math.floor(8 * dt + (Math.random() < (8 * dt) % 1 ? 1 : 0));
+      for (let i = 0; i < spawnCount; i++) {
+        const speed = 28 + Math.random() * 22;
+        const perpSpread = (Math.random() - 0.5) * 0.5;
+        const a = angle + perpSpread;
+        const life = 0.5 + Math.random() * 0.5;
+        this.compassSparkles.push({
+          x: Math.cos(angle) * 4,
+          y: Math.sin(angle) * 4,
+          vx: Math.cos(a) * speed,
+          vy: Math.sin(a) * speed,
+          life,
+          maxLife: life,
+          size: 1.2 + Math.random() * 1.8,
+          drift: (Math.random() - 0.5) * 30,
+        });
+      }
+    }
+
+    // Age and cull
+    for (let i = this.compassSparkles.length - 1; i >= 0; i--) {
+      const s = this.compassSparkles[i];
+      s.life -= dt;
+      if (s.life <= 0 || Math.hypot(s.x, s.y) > r + 4) {
+        this.compassSparkles.splice(i, 1);
+        continue;
+      }
+      // Flutter: perpendicular sinusoidal drift
+      const perpX = -s.vy;
+      const perpY = s.vx;
+      const perpLen = Math.hypot(perpX, perpY) || 1;
+      s.x += (s.vx + (perpX / perpLen) * s.drift * Math.sin(s.life * 12)) * dt;
+      s.y += (s.vy + (perpY / perpLen) * s.drift * Math.sin(s.life * 12)) * dt;
+    }
+  }
+
+  private drawCompassOverlay() {
+    const g = this.compassOverlayGraphics;
+    g.clear();
+
+    const r = COMPASS_SIZE / 2;
+    const angles: Record<string, number> = { north: -Math.PI / 2, east: 0, south: Math.PI / 2, west: Math.PI };
+    // Animate direction marker sprites: bob outward + gentle pulse
+    const bob = 2 * Math.sin(this.compassAnimTime * 3);
+    const pulse = 0.85 + 0.15 * Math.sin(this.compassAnimTime * 2.8);
+
+    for (const dir of this.compassActiveExits) {
+      const marker = this.directionMarkers.get(dir);
+      const angle = angles[dir];
+      if (!marker || angle === undefined) continue;
+      marker.position.set(
+        Math.cos(angle) * (r + 4 + bob),
+        Math.sin(angle) * (r + 4 + bob),
+      );
+      marker.alpha = pulse;
+    }
+
+    // Draw sparkles
+    for (const s of this.compassSparkles) {
+      const t = s.life / s.maxLife;
+      const fadeAlpha = t < 0.3 ? t / 0.3 : 1;
+      // Outer soft glow
+      g.circle(s.x, s.y, s.size * 1.8);
+      g.fill({ color: 0xd46a8a, alpha: 0.15 * fadeAlpha });
+      // Core
+      g.circle(s.x, s.y, s.size);
+      g.fill({ color: 0xf0a0b8, alpha: 0.7 * fadeAlpha });
+      // Hot center
+      g.circle(s.x, s.y, s.size * 0.4);
+      g.fill({ color: 0xffd0e0, alpha: 0.9 * fadeAlpha });
     }
   }
 
@@ -718,6 +877,10 @@ export class WorldScene {
 
       const mobData = mob;
       hitArea.on("pointerdown", () => {
+        if (pendingCastRef.current) {
+          canvasCallbacks.onTargetSelected?.(mobData.name);
+          return;
+        }
         const info = gameStateRef.current.mobInfo.find((m) => m.id === mobData.id) ?? null;
         this.entityPopout.showMob(mobData.name, mobData.image, mobData.hp, mobData.maxHp, info);
         this.showPopout();
@@ -810,6 +973,10 @@ export class WorldScene {
 
       const playerData = player;
       hitArea.on("pointerdown", () => {
+        if (pendingCastRef.current) {
+          canvasCallbacks.onTargetSelected?.(playerData.name);
+          return;
+        }
         this.entityPopout.showPlayer(playerData.name, playerData.level);
         this.showPopout();
       });

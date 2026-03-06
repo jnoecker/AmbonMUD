@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { FormEvent, KeyboardEvent, RefObject } from "react";
+import type { DragEvent, FormEvent, KeyboardEvent, RefObject } from "react";
 import type { PopoutPanel, ShopState, SkillSummary, Vitals } from "../types";
 import { percent } from "../utils";
 import {
@@ -8,6 +8,7 @@ import {
   ChatBubbleIcon,
   ShopIcon,
   HelpIcon,
+  SpellbookIcon,
   SkillCastIcon,
   SendIcon,
 } from "./Icons";
@@ -16,11 +17,14 @@ interface ActionBarProps {
   connected: boolean;
   hasCharacterProfile: boolean;
   vitals: Vitals;
-  skills: SkillSummary[];
+  quickbarSlots: (SkillSummary | null)[];
   shop: ShopState | null;
   activePopout: PopoutPanel;
   onOpenPopout: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
+  onQuickbarSwap: (fromIndex: number, toIndex: number) => void;
+  onQuickbarAssign: (slotIndex: number, skillId: string) => void;
+  onQuickbarClear: (slotIndex: number) => void;
   composerInputRef: RefObject<HTMLInputElement | null>;
   composerValue: string;
   commandPlaceholder: string;
@@ -43,10 +47,20 @@ function SkillSlot({
   skill,
   index,
   onCast,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onClear,
 }: {
   skill: SkillSummary;
   index: number;
   onCast: (skillId: string, cooldownMs: number) => void;
+  onDragStart: (e: DragEvent, index: number) => void;
+  onDragOver: (e: DragEvent) => void;
+  onDragLeave: (e: DragEvent) => void;
+  onDrop: (e: DragEvent, index: number) => void;
+  onClear: (index: number) => void;
 }) {
   const [now, setNow] = useState(() => Date.now());
 
@@ -67,11 +81,20 @@ function SkillSlot({
     <button
       type="button"
       className={`action-bar-skill${onCooldown ? " action-bar-skill-cooldown" : ""}`}
-      title={`${skill.name} (${skill.manaCost} mana) — key ${index + 1}`}
+      title={`${skill.name} (${skill.manaCost} mana) — key ${index + 1}\nRight-click to remove`}
       disabled={onCooldown}
+      draggable
       onClick={() => onCast(skill.id, skill.cooldownMs)}
+      onContextMenu={(e) => { e.preventDefault(); onClear(index); }}
+      onDragStart={(e) => onDragStart(e, index)}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => onDrop(e, index)}
     >
-      <SkillCastIcon className="action-bar-skill-icon" classRestriction={skill.classRestriction} targetType={skill.targetType} />
+      {skill.image
+        ? <img src={skill.image} alt="" className="action-bar-skill-img" draggable={false} />
+        : <SkillCastIcon className="action-bar-skill-icon" classRestriction={skill.classRestriction} targetType={skill.targetType} />
+      }
       {onCooldown && (
         <span
           className="action-bar-skill-sweep"
@@ -83,15 +106,42 @@ function SkillSlot({
   );
 }
 
+function EmptySlot({
+  index,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+}: {
+  index: number;
+  onDragOver: (e: DragEvent) => void;
+  onDragLeave: (e: DragEvent) => void;
+  onDrop: (e: DragEvent, index: number) => void;
+}) {
+  return (
+    <div
+      className="action-bar-skill action-bar-skill-empty"
+      title={`Slot ${index + 1} — drag a spell here`}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => onDrop(e, index)}
+    >
+      <span className="action-bar-skill-key">{index + 1}</span>
+    </div>
+  );
+}
+
 export function ActionBar({
   connected,
   hasCharacterProfile,
   vitals,
-  skills,
+  quickbarSlots,
   shop,
   activePopout,
   onOpenPopout,
   onCastSkill,
+  onQuickbarSwap,
+  onQuickbarAssign,
+  onQuickbarClear,
   composerInputRef,
   composerValue,
   commandPlaceholder,
@@ -106,12 +156,46 @@ export function ActionBar({
   const panels: PanelButton[] = [
     { panel: "character", label: "Character", icon: <CharacterAvatarIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "equipment", label: "Equipment", icon: <EquipmentIcon className="action-bar-btn-icon" />, requiresProfile: true },
+    { panel: "spellbook", label: "Spellbook", icon: <SpellbookIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "chat", label: "Social", icon: <ChatBubbleIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "help", label: "Help", icon: <HelpIcon className="action-bar-btn-icon" />, requiresProfile: false },
   ];
 
   const shopActive = shop !== null;
-  const visibleSkills = skills.slice(0, 6);
+  const hasAnySlot = quickbarSlots.some((s) => s !== null);
+
+  // Drag-and-drop handlers for quickbar reordering
+  const handleDragStart = (e: DragEvent, index: number) => {
+    e.dataTransfer.setData("quickbar-index", String(index));
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const target = (e.currentTarget as HTMLElement);
+    if (!target.classList.contains("drag-over")) target.classList.add("drag-over");
+  };
+
+  const handleDragLeave = (e: DragEvent) => {
+    (e.currentTarget as HTMLElement).classList.remove("drag-over");
+  };
+
+  const handleDrop = (e: DragEvent, toIndex: number) => {
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).classList.remove("drag-over");
+    // From quickbar slot reorder
+    const fromIndexStr = e.dataTransfer.getData("quickbar-index");
+    if (fromIndexStr) {
+      onQuickbarSwap(parseInt(fromIndexStr, 10), toIndex);
+      return;
+    }
+    // From spellbook drag
+    const skillId = e.dataTransfer.getData("skill-id");
+    if (skillId) {
+      onQuickbarAssign(toIndex, skillId);
+    }
+  };
 
   return (
     <nav className="action-bar" aria-label="Action bar">
@@ -162,14 +246,47 @@ export function ActionBar({
             </div>
             <span className="action-bar-vital-text">{vitals.mana}/{vitals.maxMana}</span>
           </div>
+          {vitals.xpToNextLevel !== null && (
+            <div className="action-bar-vital" title={`XP: ${vitals.xpIntoLevel} / ${vitals.xpToNextLevel}`}>
+              <span className="action-bar-vital-label">XP</span>
+              <div className="action-bar-vital-track">
+                <span className="action-bar-vital-fill action-bar-vital-fill-xp" style={{ width: `${percent(vitals.xpIntoLevel, vitals.xpToNextLevel)}%` }} />
+              </div>
+              <span className="action-bar-vital-text">{vitals.xpIntoLevel}/{vitals.xpToNextLevel}</span>
+            </div>
+          )}
+          <div className="action-bar-gold" title={`Gold: ${vitals.gold}`}>
+            <span className="action-bar-gold-coin" />
+            <span className="action-bar-gold-text">{vitals.gold.toLocaleString()}</span>
+          </div>
         </div>
       )}
 
-      {loggedIn && visibleSkills.length > 0 && (
+      {loggedIn && hasAnySlot && (
         <div className="action-bar-skills">
-          {visibleSkills.map((skill, i) => (
-            <SkillSlot key={skill.id} skill={skill} index={i} onCast={onCastSkill} />
-          ))}
+          {quickbarSlots.map((skill, i) =>
+            skill ? (
+              <SkillSlot
+                key={`slot-${i}`}
+                skill={skill}
+                index={i}
+                onCast={onCastSkill}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClear={onQuickbarClear}
+              />
+            ) : (
+              <EmptySlot
+                key={`slot-${i}`}
+                index={i}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              />
+            ),
+          )}
         </div>
       )}
 

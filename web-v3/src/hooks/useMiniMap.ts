@@ -15,6 +15,15 @@ const CELL = 64;
 const NODE_RADIUS = 18;
 const CURRENT_RADIUS = 24;
 
+// Inset fractions so map nodes stay within the visible scroll parchment area.
+// The scroll image has rollers on the sides and curled edges top/bottom.
+const SCROLL_INSET_LEFT = 0.16;
+const SCROLL_INSET_RIGHT = 0.18;
+const SCROLL_INSET_TOP = 0.16;
+const SCROLL_INSET_BOTTOM = 0.20;
+// How much to zoom the background image (1.0 = fill canvas, >1 = zoom in)
+const BG_ZOOM = 1.15;
+
 /** Pure drawing function — no hooks, no closures over React state */
 function renderMap(
   canvas: HTMLCanvasElement,
@@ -42,9 +51,13 @@ function renderMap(
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, width, height);
 
-  // Background: map scroll image or dark fallback
+  // Background: map scroll image (zoomed in) or dark fallback
   if (bgImage && bgImage.complete) {
-    ctx.drawImage(bgImage, 0, 0, width, height);
+    const zw = width * BG_ZOOM;
+    const zh = height * BG_ZOOM;
+    const zx = (width - zw) / 2;
+    const zy = (height - zh) / 2;
+    ctx.drawImage(bgImage, zx, zy, zw, zh);
     // Slight dark overlay so nodes remain readable
     ctx.fillStyle = "rgba(10, 12, 22, 0.25)";
     ctx.fillRect(0, 0, width, height);
@@ -60,6 +73,25 @@ function renderMap(
   const centerX = width / 2;
   const centerY = height / 2;
 
+  // Scroll parchment bounds — nodes must stay within these
+  const scrollLeft = width * SCROLL_INSET_LEFT;
+  const scrollRight = width * (1 - SCROLL_INSET_RIGHT);
+  const scrollTop = height * SCROLL_INSET_TOP;
+  const scrollBottom = height * (1 - SCROLL_INSET_BOTTOM);
+
+  // Pad inward by the largest node radius so nodes don't overlap the scroll edge
+  const nodePad = CURRENT_RADIUS + 6;
+  function inScrollBounds(px: number, py: number): boolean {
+    return px >= scrollLeft + nodePad && px <= scrollRight - nodePad &&
+           py >= scrollTop + nodePad && py <= scrollBottom - nodePad;
+  }
+
+  // Clip everything to scroll parchment bounds
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(scrollLeft, scrollTop, scrollRight - scrollLeft, scrollBottom - scrollTop);
+  ctx.clip();
+
   // Connecting lines
   ctx.strokeStyle = LINE_STROKE;
   ctx.lineWidth = 2;
@@ -71,8 +103,7 @@ function renderMap(
       if (!target) continue;
       const tx = centerX + (target.x - current.x) * CELL;
       const ty = centerY + (target.y - current.y) * CELL;
-      if ((sx >= -20 && sx <= width + 20 && sy >= -20 && sy <= height + 20) ||
-          (tx >= -20 && tx <= width + 20 && ty >= -20 && ty <= height + 20)) {
+      if (inScrollBounds(sx, sy) || inScrollBounds(tx, ty)) {
         ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.lineTo(tx, ty);
@@ -85,7 +116,7 @@ function renderMap(
   for (const [id, node] of visited.entries()) {
     const x = centerX + (node.x - current.x) * CELL;
     const y = centerY + (node.y - current.y) * CELL;
-    if (x < -30 || x > width + 30 || y < -30 || y > height + 30) continue;
+    if (!inScrollBounds(x, y)) continue;
 
     const isCurrent = id === currentId;
     const radius = isCurrent ? CURRENT_RADIUS : NODE_RADIUS;
@@ -170,6 +201,9 @@ function renderMap(
       ctx.fillText(label, x, y + radius + (isCurrent ? 5 : 3));
     }
   }
+
+  // Restore from scroll-bounds clip
+  ctx.restore();
 }
 
 export function useMiniMap() {

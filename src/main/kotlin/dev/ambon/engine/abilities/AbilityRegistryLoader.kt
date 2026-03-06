@@ -61,6 +61,7 @@ object AbilityRegistryLoader {
                     targetType = targetType,
                     effect = effect,
                     requiredClass = requiredClass,
+                    image = defConfig.image.ifBlank { null },
                 ),
             )
         }

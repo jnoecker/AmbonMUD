@@ -1,11 +1,10 @@
 import { useState } from "react";
 import type { ReactNode, RefObject } from "react";
-import type { ItemSummary, PopoutPanel, RoomItem, RoomMob, RoomPlayer, RoomState } from "../types";
-import { percent } from "../utils";
+import type { ItemSummary, PopoutPanel, RoomPlayer, RoomState } from "../types";
 import { HelpContent } from "./HelpContent";
-import { AttackIcon, DropItemIcon, GiveItemIcon, PickupIcon, RemoveItemIcon, TalkIcon, WearItemIcon } from "./Icons";
+import { DropItemIcon, GiveItemIcon, RemoveItemIcon, WearItemIcon } from "./Icons";
 
-const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop"]);
+const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop", "spellbook"]);
 
 interface PopoutLayerProps {
   activePopout: PopoutPanel;
@@ -17,17 +16,12 @@ interface PopoutLayerProps {
   equipmentSlots: string[];
   mapCanvasRef: RefObject<HTMLCanvasElement | null>;
   canManageItems: boolean;
-  detailMob: RoomMob | null;
-  detailItem: RoomItem | null;
   players: RoomPlayer[];
   isStaff: boolean;
   onWearItem: (itemName: string) => void;
   onDropItem: (itemName: string) => void;
   onRemoveItem: (slot: string) => void;
   onGiveItem: (itemKeyword: string, playerName: string) => void;
-  onTalkToMob: (mobName: string) => void;
-  onAttackMob: (mobName: string) => void;
-  onPickUpItem: (itemName: string) => void;
   onClose: () => void;
   children?: ReactNode;
 }
@@ -42,30 +36,22 @@ export function PopoutLayer({
   equipmentSlots,
   mapCanvasRef,
   canManageItems,
-  detailMob,
-  detailItem,
   players,
   isStaff,
   onWearItem,
   onDropItem,
   onRemoveItem,
   onGiveItem,
-  onTalkToMob,
-  onAttackMob,
-  onPickUpItem,
   onClose,
   children,
 }: PopoutLayerProps) {
   const [givePickerItemId, setGivePickerItemId] = useState<string | null>(null);
   if (!activePopout) return null;
 
-  const isEntityDetail = activePopout === "mobDetail" || activePopout === "itemDetail";
   const isPanelPopout = PANEL_POPOUTS.has(activePopout);
-  const dialogClass = isEntityDetail
-    ? "popout-dialog entity-detail-dialog"
-    : isPanelPopout
-      ? "popout-dialog popout-dialog-panel"
-      : "popout-dialog";
+  const dialogClass = isPanelPopout
+    ? "popout-dialog popout-dialog-panel"
+    : "popout-dialog";
 
   return (
     <div className="popout-backdrop" onClick={onClose}>
@@ -218,62 +204,6 @@ export function PopoutLayer({
                   ))}
                 </ul>
             )}
-          </div>
-        )}
-
-        {activePopout === "mobDetail" && detailMob && (
-          <div className="popout-content entity-detail-body">
-            {detailMob.image ? (
-              <img src={detailMob.image} alt={detailMob.name} className="entity-detail-image" />
-            ) : (
-              <div className="entity-detail-placeholder" aria-hidden="true" />
-            )}
-            <h3 className="entity-detail-name">{detailMob.name}</h3>
-            <div className="entity-detail-hp">
-              <span className="entity-detail-hp-label">{detailMob.hp} / {detailMob.maxHp} HP</span>
-              <div className="meter-track">
-                <span className="meter-fill meter-fill-hp" style={{ width: `${percent(detailMob.hp, detailMob.maxHp)}%` }} />
-              </div>
-            </div>
-            <div className="entity-detail-actions">
-              <button
-                type="button"
-                className="entity-detail-action-button"
-                onClick={() => onTalkToMob(detailMob.name)}
-              >
-                <TalkIcon className="entity-detail-action-icon" />
-                Talk
-              </button>
-              <button
-                type="button"
-                className="entity-detail-action-button entity-detail-action-attack"
-                onClick={() => onAttackMob(detailMob.name)}
-              >
-                <AttackIcon className="entity-detail-action-icon" />
-                Attack
-              </button>
-            </div>
-          </div>
-        )}
-
-        {activePopout === "itemDetail" && detailItem && (
-          <div className="popout-content entity-detail-body">
-            {detailItem.image ? (
-              <img src={detailItem.image} alt={detailItem.name} className="entity-detail-image" />
-            ) : (
-              <div className="entity-detail-placeholder" aria-hidden="true" />
-            )}
-            <h3 className="entity-detail-name">{detailItem.name}</h3>
-            <div className="entity-detail-actions">
-              <button
-                type="button"
-                className="entity-detail-action-button"
-                onClick={() => onPickUpItem(detailItem.name)}
-              >
-                <PickupIcon className="entity-detail-action-icon" />
-                Pick up
-              </button>
-            </div>
           </div>
         )}
 
