@@ -112,7 +112,8 @@ export class WorldScene {
   private targetingText: Text | null = null;
   private targetingBg = new Graphics();
 
-  private videoBtn: Container | null = null;
+  private videoBtn: Sprite | null = null;
+  private videoAnimTime = 0;
   private lastRoomVideo: string | null | undefined = undefined;
 
   private lastRoomId: string | null = null;
@@ -254,6 +255,13 @@ export class WorldScene {
       this.compassAnimTime += deltaMs / 1000;
       this.updateCompassSparkles(deltaMs / 1000);
       this.drawCompassOverlay();
+    }
+
+    // Animate video indicator: gentle pulse
+    if (this.videoBtn) {
+      this.videoAnimTime += deltaMs / 1000;
+      const pulse = 0.8 + 0.2 * Math.sin(this.videoAnimTime * 2.2);
+      this.videoBtn.alpha = pulse;
     }
 
     // Handle room transition animation
@@ -1027,38 +1035,31 @@ export class WorldScene {
 
     if (!videoUrl) return;
 
-    const btn = new Container();
-    btn.eventMode = "static";
-    btn.cursor = "pointer";
+    const SIZE = 56;
+    const sprite = new Sprite(Texture.WHITE);
+    sprite.width = SIZE;
+    sprite.height = SIZE;
+    sprite.anchor.set(0.5);
+    sprite.tint = 0xce93d8;
+    sprite.eventMode = "static";
+    sprite.cursor = "pointer";
 
-    const SIZE = 48;
-    const bg = new Graphics();
-    bg.roundRect(0, 0, SIZE, SIZE, 10);
-    bg.fill({ color: 0x2a1040, alpha: 0.85 });
-    bg.roundRect(0, 0, SIZE, SIZE, 10);
-    bg.stroke({ color: 0xce93d8, width: 1.5 });
-    btn.addChild(bg);
-
-    // Draw play triangle
-    const tri = new Graphics();
-    tri.moveTo(SIZE * 0.35, SIZE * 0.25);
-    tri.lineTo(SIZE * 0.35, SIZE * 0.75);
-    tri.lineTo(SIZE * 0.75, SIZE * 0.5);
-    tri.closePath();
-    tri.fill(0xce93d8);
-    btn.addChild(tri);
+    Assets.load("/images/global_assets/video_available_indicator.png").then((tex) => {
+      sprite.texture = tex;
+      sprite.tint = 0xffffff;
+    }).catch(() => { /* keep placeholder */ });
 
     const url = videoUrl;
-    btn.on("pointerdown", () => {
+    sprite.on("pointerdown", () => {
       canvasCallbacks.openVideo?.(url);
     });
 
     // Position: top-left below title area
-    btn.x = 16;
-    btn.y = 60;
+    sprite.x = 16 + SIZE / 2;
+    sprite.y = 60 + SIZE / 2;
 
-    this.container.addChild(btn);
-    this.videoBtn = btn;
+    this.container.addChild(sprite);
+    this.videoBtn = sprite;
   }
 
   private async loadPlayerSprite(spritePath: string | null) {
