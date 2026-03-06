@@ -5,10 +5,7 @@ import { Minimap } from "../systems/Minimap";
 import { EntityPopout } from "../systems/EntityPopout";
 import type { MobInfo } from "../../types";
 
-const SHOP_BADGE_BG = 0x2a3460;
-const SHOP_BADGE_BORDER = 0xbea873;
-const SHOP_BADGE_TEXT = "#bea873";
-const SHOP_BADGE_HOVER_BG = 0x3a4a70;
+const SHOP_BADGE_SIZE = 72;
 
 const EXIT_ARROW_COLOR = 0xb9aed8;
 const EXIT_LABEL_COLOR = "#b9aed8";
@@ -139,7 +136,9 @@ export class WorldScene {
   private entityPopout = new EntityPopout();
 
   private shopBadge: Container;
-  private shopBadgeBg = new Graphics();
+  private shopSprite: Sprite | null = null;
+  private shopLabel: Text;
+  private shopHitArea = new Graphics();
   private shopVisible = false;
 
   private lastRoomId: string | null = null;
@@ -193,28 +192,35 @@ export class WorldScene {
       this.backdropHit.visible = false;
     });
 
-    // Shop badge — floating button when a shop is available
+    // Shop badge — floating kiosk icon when a shop is available
     this.shopBadge = new Container();
     this.shopBadge.visible = false;
     this.shopBadge.eventMode = "static";
     this.shopBadge.cursor = "pointer";
-    const shopLabel = new Text({
-      text: "Shop",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: SHOP_BADGE_TEXT, fontWeight: "bold" },
-    });
-    shopLabel.anchor.set(0.5);
-    shopLabel.eventMode = "none";
-    this.shopBadge.addChild(this.shopBadgeBg);
-    this.shopBadge.addChild(shopLabel);
     this.shopBadge.on("pointerdown", () => {
       canvasCallbacks.openShop?.();
     });
     this.shopBadge.on("pointerover", () => {
-      this.drawShopBadgeBg(SHOP_BADGE_HOVER_BG);
+      if (this.shopSprite) this.shopSprite.alpha = 1;
     });
     this.shopBadge.on("pointerout", () => {
-      this.drawShopBadgeBg(SHOP_BADGE_BG);
+      if (this.shopSprite) this.shopSprite.alpha = 0.85;
     });
+    // Invisible hit area so clicks register even before sprite loads
+    const hs = SHOP_BADGE_SIZE;
+    this.shopHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.shopHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.shopHitArea.eventMode = "none";
+    this.shopBadge.addChild(this.shopHitArea);
+    this.shopLabel = new Text({
+      text: "Shop",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#bea873", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.shopLabel.anchor.set(0.5, 0);
+    this.shopLabel.y = hs / 2 + 2;
+    this.shopLabel.eventMode = "none";
+    this.shopBadge.addChild(this.shopLabel);
+    this.loadShopIcon();
 
     this.container.addChild(this.exitGraphics);
     this.container.addChild(this.roleGraphics);
@@ -331,9 +337,6 @@ export class WorldScene {
     if (hasShop !== this.shopVisible) {
       this.shopVisible = hasShop;
       this.shopBadge.visible = hasShop;
-      if (hasShop) {
-        this.drawShopBadgeBg(SHOP_BADGE_BG);
-      }
     }
 
     this.layoutAll();
@@ -430,10 +433,10 @@ export class WorldScene {
       }
     }
 
-    // Shop badge position — top-right
+    // Shop badge position — below minimap on the left
     if (this.shopBadge.visible) {
-      this.shopBadge.x = w - 56;
-      this.shopBadge.y = 28;
+      this.shopBadge.x = 92;
+      this.shopBadge.y = 220;
     }
 
     // Exits
@@ -740,14 +743,20 @@ export class WorldScene {
     }
   }
 
-  private drawShopBadgeBg(color: number) {
-    const bw = 80;
-    const bh = 32;
-    this.shopBadgeBg.clear();
-    this.shopBadgeBg.roundRect(-bw / 2, -bh / 2, bw, bh, 8);
-    this.shopBadgeBg.fill({ color, alpha: 0.92 });
-    this.shopBadgeBg.roundRect(-bw / 2, -bh / 2, bw, bh, 8);
-    this.shopBadgeBg.stroke({ color: SHOP_BADGE_BORDER, width: 1.5 });
+  private async loadShopIcon() {
+    try {
+      const texture = await Assets.load("/images/global_assets/shop_kiosk.png");
+      const sprite = new Sprite(texture);
+      sprite.width = SHOP_BADGE_SIZE;
+      sprite.height = SHOP_BADGE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.alpha = 0.85;
+      sprite.eventMode = "none";
+      this.shopSprite = sprite;
+      this.shopBadge.addChild(sprite);
+    } catch {
+      // Fallback: no icon shown
+    }
   }
 
   private showPopout() {
