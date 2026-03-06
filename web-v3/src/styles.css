@@ -128,7 +128,7 @@ body {
 
 .top-banner {
   isolation: isolate;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   justify-content: space-between;
   gap: var(--space-4);
@@ -150,6 +150,8 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  border-radius: inherit;
+  overflow: hidden;
   background-image: url("./assets/banner-magic-v2.png");
   background-size: cover;
   background-position: center 36%;
@@ -163,6 +165,8 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  border-radius: inherit;
+  overflow: hidden;
   background:
     linear-gradient(102deg, rgb(112 100 158 / 30%) 0%, rgb(93 102 140 / 24%) 34%, rgb(84 113 146 / 22%) 63%, rgb(94 123 158 / 28%) 100%),
     linear-gradient(180deg, rgb(16 18 30 / 36%), rgb(16 18 30 / 18%));
@@ -210,6 +214,110 @@ body {
 .connection-pill-offline {
   color: #ecc4ce;
   background: rgb(121 81 93 / 58%);
+}
+
+/* ── Audio controls ──────────────────────────────────────────── */
+
+.audio-controls {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.audio-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+
+.audio-toggle-btn.audio-enabled {
+  background: linear-gradient(135deg, rgb(91 121 84 / 78%), rgb(73 107 80 / 74%));
+  border-color: rgb(120 160 110 / 40%);
+}
+
+.audio-toggle-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.audio-expand-btn {
+  width: 22px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  font-size: 0.7rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.audio-sliders {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(145deg, rgb(55 62 88 / 96%), rgb(42 50 72 / 94%));
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(12px);
+  min-width: 180px;
+}
+
+.audio-slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.audio-slider-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.audio-slider {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgb(255 255 255 / 12%);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.audio-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #b9aed8, #8da2c8);
+  border: 1px solid rgb(255 255 255 / 20%);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
+}
+
+.audio-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #b9aed8, #8da2c8);
+  border: 1px solid rgb(255 255 255 / 20%);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
 }
 
 .soft-button {
