@@ -779,3 +779,5 @@ rooms:
     exits:
       n: coop_turkey_roost
       w: coop_egg_vault
+audio:
+  music: pbrae/music.mp3

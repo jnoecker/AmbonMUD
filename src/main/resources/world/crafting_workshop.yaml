@@ -268,3 +268,5 @@ recipes:
     station: ALCHEMY_TABLE
     stationBonus: 1
     xpReward: 45
+audio:
+  music: crafting_workshop/music.mp3

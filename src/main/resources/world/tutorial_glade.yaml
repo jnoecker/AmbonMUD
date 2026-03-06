@@ -442,3 +442,5 @@ rooms:
     description: "A cramped hideout tucked beneath the roots of a massive oak. The only light filters through gaps in the bark overhead, picking out coils of rope, lockpicks, and a battered satchel hanging from a peg. Someone has scratched a rough map into the dirt floor. A concealed passage slopes south toward daylight."
     exits:
       s: awakening_clearing
+audio:
+  music: tutorial_glade/music.mp3
