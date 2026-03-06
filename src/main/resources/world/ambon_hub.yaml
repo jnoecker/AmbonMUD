@@ -136,3 +136,5 @@ rooms:
       s: wayfinder_gallery
       e: demo_ruins:caravan_gate
       d: labyrinth:cell_00_00
+audio:
+  music: ambon_hub/music.mp3

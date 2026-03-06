@@ -591,3 +591,5 @@ rooms:
     description: "The western corner of the basement has been claimed by overflow stuffies — the ones that couldn't fit in Aurora's room, a situation everyone considered mathematically impossible until it happened. They sit on shelves, in baskets, and in a large bean bag designated 'THE STUFFIE CHAIR' by a hand-painted sign. A mural at child-height on the wall shows the stuffie family tree: a genealogy of plush spanning a remarkable number of species. Several stuffies watch you from the shelves with the dignified patience of things that are very, very loved. The main basement is to the east."
     exits:
       e: basement_main
+audio:
+  music: wesleyalis/music.mp3

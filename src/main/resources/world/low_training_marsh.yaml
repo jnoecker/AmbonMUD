@@ -1312,3 +1312,5 @@ rooms:
     exits:
       s: brine_foot
       w: ghostpole_slough
+audio:
+  music: low_training_marsh/music.mp3

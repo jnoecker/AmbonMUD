@@ -583,3 +583,5 @@ rooms:
     description: "The Roughhousing Pit is exactly what the name suggests, engineered to contain it. The walls are padded foam three feet thick. The floor is crash mat over crash mat, eight layers deep. Obstacles — foam cubes, a tilting platform, monkey bars bolted to the ceiling — make it navigable only by the confident and the committed. At the center, Big Biff the Roughhousing Inflate-O-Goon sits on a beanbag the size of a small car, eating a sandwich with enormous contentment. He appears to be made of something that yields on impact and then springs back considerably harder. He has the cheerful energy of someone who genuinely loves roughhousing and is honestly excited to see you. A deflated remnant near the door suggests how previous visits ended. The entry range is west."
     exits:
       w: trevors_entry
+audio:
+  music: trailey/music.mp3
