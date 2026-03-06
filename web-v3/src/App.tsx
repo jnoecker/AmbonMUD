@@ -924,7 +924,7 @@ function App() {
         <div className="video-modal-overlay" onClick={() => setVideoUrl(null)}>
           <div className="video-modal" onClick={(e) => e.stopPropagation()}>
             <button className="video-modal-close" onClick={() => setVideoUrl(null)}>✕</button>
-            <video src={videoUrl} controls autoPlay className="video-modal-player" />
+            <video ref={(el) => { if (el) el.playbackRate = 0.5; }} src={videoUrl} controls autoPlay className="video-modal-player" />
           </div>
         </div>
       )}
