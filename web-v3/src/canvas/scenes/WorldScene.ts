@@ -123,6 +123,7 @@ export class WorldScene {
   private background: Sprite | null = null;
   private titleText: Text;
   private descText: Text;
+  private descBg = new Graphics();
   private exitGraphics = new Graphics();
   private exitLabels: Text[] = [];
   private playerSprite: Sprite | null = null;
@@ -185,10 +186,10 @@ export class WorldScene {
 
     this.descText = new Text({
       text: "",
-      style: { fontFamily: "Cormorant Garamond, Georgia, serif", fontSize: 16, fill: "#b0b4c8", fontWeight: "500", wordWrap: true, wordWrapWidth: 400, dropShadow: { color: 0x000000, alpha: 0.7, blur: 5, distance: 1 } },
+      style: { fontFamily: "Cormorant Garamond, Georgia, serif", fontSize: 18, fill: "#d0d4e8", fontWeight: "500", wordWrap: true, wordWrapWidth: 400, dropShadow: { color: 0x000000, alpha: 0.9, blur: 6, distance: 2 } },
     });
     this.descText.anchor.set(0, 0);
-    this.descText.alpha = 0.90;
+    this.descText.alpha = 0.95;
 
     // Room expand button next to title
     const rb = this.roomExpandBtn;
@@ -262,6 +263,7 @@ export class WorldScene {
     this.container.addChild(this.roleGraphics);
     this.container.addChild(this.statusEffects.container);
     this.container.addChild(this.titleText);
+    this.container.addChild(this.descBg);
     this.container.addChild(this.descText);
     this.container.addChild(this.roomExpandBtn);
     this.container.addChild(this.playerLabel);
@@ -397,9 +399,22 @@ export class WorldScene {
     const textMaxWidth = Math.max(200, w - textLeft - 20);
     this.titleText.x = textLeft;
     this.titleText.y = 14;
-    this.descText.x = textLeft;
-    this.descText.y = 48;
-    this.descText.style.wordWrapWidth = textMaxWidth;
+    this.descText.x = textLeft + 10;
+    this.descText.y = 48 + 8;
+    this.descText.style.wordWrapWidth = textMaxWidth - 20;
+
+    // Semi-transparent background pill behind description
+    this.descBg.clear();
+    if (this.descText.text) {
+      const pad = 10;
+      this.descBg.roundRect(
+        textLeft, 48,
+        Math.min(this.descText.width + pad * 2, textMaxWidth),
+        this.descText.height + pad * 2,
+        8,
+      );
+      this.descBg.fill({ color: 0x0a0e1a, alpha: 0.55 });
+    }
 
     // Room expand button next to title
     this.roomExpandBtn.x = textLeft + this.titleText.width + 12;

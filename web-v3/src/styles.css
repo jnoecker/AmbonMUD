@@ -1903,7 +1903,7 @@ body {
 
 .shop-popout-list::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: linear-gradient(180deg, rgb(210 198 232 / 80%), rgb(191 217 236 / 76%));
+  background: linear-gradient(180deg, rgb(90 82 120 / 70%), rgb(70 90 110 / 65%));
 }
 
 .shop-popout-card {
@@ -3176,10 +3176,11 @@ body {
   width: min(980px, 100%);
   max-height: calc(100vh - 40px);
   border-radius: var(--radius-xl);
-  border: 1px solid rgb(106 96 136 / 26%);
+  border: 1px solid rgb(106 96 136 / 22%);
   background:
-    linear-gradient(165deg, rgb(195 183 222 / 95%), rgb(177 196 220 / 92%)),
-    linear-gradient(0deg, rgb(24 22 35 / 10%), rgb(24 22 35 / 10%));
+    linear-gradient(165deg, rgb(48 55 82 / 97%), rgb(38 47 71 / 95%)),
+    linear-gradient(0deg, rgb(24 22 35 / 20%), rgb(24 22 35 / 20%));
+  color: var(--text-primary);
   box-shadow: var(--shadow-lg), var(--shadow-glow);
   display: flex;
   flex-direction: column;
@@ -3192,7 +3193,7 @@ body {
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid rgb(107 107 123 / 14%);
+  border-bottom: 1px solid rgb(107 107 123 / 22%);
 }
 
 .popout-header h2 {
@@ -3216,7 +3217,7 @@ body {
 
 .popout-content::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: linear-gradient(180deg, rgb(210 198 232 / 84%), rgb(191 217 236 / 80%));
+  background: linear-gradient(180deg, rgb(90 82 120 / 70%), rgb(70 90 110 / 65%));
 }
 
 .room-popout-copy {
@@ -3229,7 +3230,7 @@ body {
   margin: 0;
   font-family: "Cormorant Garamond", "Georgia", serif;
   font-size: 1.8rem;
-  color: #d5def7;
+  color: var(--text-primary);
 }
 
 .room-popout-image {
