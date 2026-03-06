@@ -1116,6 +1116,7 @@ class GmcpEmitterTest {
                         questGiver = true,
                         shopKeeper = false,
                         dialogue = true,
+                        aggressive = false,
                     ),
                 ),
             )

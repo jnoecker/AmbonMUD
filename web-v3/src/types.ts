@@ -281,6 +281,7 @@ export interface MobInfo {
   questGiver: boolean;
   shopKeeper: boolean;
   dialogue: boolean;
+  aggressive: boolean;
 }
 
 export interface LoginRaceOption {

@@ -634,6 +634,7 @@ class GmcpEmitter(
             questGiver = mob.questIds.isNotEmpty(),
             shopKeeper = mob.id.value in shopMobIds,
             dialogue = mob.dialogue != null,
+            aggressive = mob.aggressive,
         )
     }
 
@@ -1168,4 +1169,5 @@ data class MobInfoEntry(
     val questGiver: Boolean,
     val shopKeeper: Boolean,
     val dialogue: Boolean,
+    val aggressive: Boolean,
 )
