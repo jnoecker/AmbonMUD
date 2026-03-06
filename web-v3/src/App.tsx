@@ -8,7 +8,6 @@ import { ShopPopout } from "./components/ShopPopout";
 import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { PlayPanel } from "./components/panels/PlayPanel";
-import { WorldPanel } from "./components/panels/WorldPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef } from "./canvas/GameStateBridge";
@@ -20,9 +19,6 @@ import {
   EMPTY_ROOM,
   EMPTY_VITALS,
   MAX_VISIBLE_EFFECTS,
-  MAX_VISIBLE_WORLD_ITEMS,
-  MAX_VISIBLE_WORLD_MOBS,
-  MAX_VISIBLE_WORLD_PLAYERS,
   SLOT_ORDER,
 } from "./constants";
 import { useCommandHistory } from "./hooks/useCommandHistory";
@@ -482,6 +478,13 @@ function App() {
     return () => { canvasCallbacks.openShop = null; };
   }, []);
 
+  // Wire canvas minimap expand and room expand buttons
+  useEffect(() => {
+    canvasCallbacks.openMap = () => setActivePopout("map");
+    canvasCallbacks.openRoom = () => setActivePopout("room");
+    return () => { canvasCallbacks.openMap = null; canvasCallbacks.openRoom = null; };
+  }, []);
+
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 
   const equipmentSlots = useMemo(() => {
@@ -502,12 +505,6 @@ function App() {
       : `${vitals.xpIntoLevel.toLocaleString()} / ${vitals.xpToNextLevel.toLocaleString()}`;
   const xpValue = vitals.xpToNextLevel === null ? 1 : vitals.xpIntoLevel;
   const xpMax = vitals.xpToNextLevel === null ? 1 : Math.max(1, vitals.xpToNextLevel);
-  const visiblePlayers = players.slice(0, MAX_VISIBLE_WORLD_PLAYERS);
-  const hiddenPlayersCount = Math.max(0, players.length - visiblePlayers.length);
-  const visibleMobs = mobs.slice(0, MAX_VISIBLE_WORLD_MOBS);
-  const hiddenMobsCount = Math.max(0, mobs.length - visibleMobs.length);
-  const visibleRoomItems = roomItems.slice(0, MAX_VISIBLE_WORLD_ITEMS);
-  const hiddenRoomItemsCount = Math.max(0, roomItems.length - visibleRoomItems.length);
   const visibleEffects = effects.slice(0, MAX_VISIBLE_EFFECTS);
   const hiddenEffectsCount = Math.max(0, effects.length - visibleEffects.length);
   const displayRace = character.race ? titleCaseWords(character.race) : "";
@@ -515,8 +512,6 @@ function App() {
   const hasCharacterProfile = character.name !== "-";
   const hasRoomDetails = room.id !== null || room.title !== "-";
   const preLogin = connected && !hasCharacterProfile && !hasRoomDetails;
-  const availableExitSet = useMemo(() => new Set(exits.map(([direction]) => direction.toLowerCase())), [exits]);
-  const canOpenMap = hasRoomDetails;
   const canOpenEquipment = hasCharacterProfile;
   const commandPlaceholder = connected
     ? preLogin
@@ -542,8 +537,6 @@ function App() {
         ? "Character"
       : activePopout === "chat"
         ? "Social"
-      : activePopout === "world"
-        ? "World"
       : activePopout === "shop"
         ? (shop?.name ?? "Shop")
         : "Currently Wearing";
@@ -687,7 +680,6 @@ function App() {
           hasCharacterProfile={hasCharacterProfile}
           vitals={vitals}
           skills={skills}
-          quests={quests}
           shop={shop}
           activePopout={activePopout}
           onOpenPopout={setActivePopout}
@@ -802,73 +794,6 @@ function App() {
               focusComposer();
             }}
             onSendMessage={sendChatMessage}
-          />
-        )}
-
-        {activePopout === "world" && (
-          <WorldPanel
-            connected={connected}
-            hasRoomDetails={hasRoomDetails}
-            canOpenMap={canOpenMap}
-            room={room}
-            exits={exits}
-            availableExitSet={availableExitSet}
-            players={players}
-            mobs={mobs}
-            visiblePlayers={visiblePlayers}
-            hiddenPlayersCount={hiddenPlayersCount}
-            visibleMobs={visibleMobs}
-            hiddenMobsCount={hiddenMobsCount}
-            roomItems={roomItems}
-            visibleRoomItems={visibleRoomItems}
-            hiddenRoomItemsCount={hiddenRoomItemsCount}
-            showSkillsPanel={vitals.inCombat}
-            skills={skills}
-            combatTarget={combatTarget}
-            vitals={vitals}
-            shop={shop}
-            inventory={inventory}
-            gold={vitals.gold}
-            onOpenMap={() => setActivePopout("map")}
-            onOpenRoom={() => setActivePopout("room")}
-            onFlee={() => {
-              sendCommand("flee", true);
-              focusComposer();
-            }}
-            onRefreshSkills={() => {
-              sendCommand("skills", true);
-              focusComposer();
-            }}
-            onCastSkill={handleCastSkill}
-            onMove={(direction) => {
-              sendCommand(direction, true);
-              focusComposer();
-            }}
-            dialogue={dialogue}
-            onDialogueChoice={(index) => {
-              sendCommand(`${index}`, true);
-              focusComposer();
-            }}
-            onTalkToMob={(mobName) => {
-              sendCommand(`talk ${mobName}`, true);
-              focusComposer();
-            }}
-            onAttackMob={(mobName) => {
-              sendCommand(`kill ${mobName}`, true);
-              focusComposer();
-            }}
-            onPickUpItem={(itemName) => {
-              sendCommand(`get ${itemName}`, true);
-              focusComposer();
-            }}
-            onBuyItem={(keyword) => {
-              sendCommand(`buy ${keyword}`, true);
-              focusComposer();
-            }}
-            onSellItem={(keyword) => {
-              sendCommand(`sell ${keyword}`, true);
-              focusComposer();
-            }}
           />
         )}
 

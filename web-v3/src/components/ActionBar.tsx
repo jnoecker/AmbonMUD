@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import type { FormEvent, KeyboardEvent, RefObject } from "react";
-import type { PopoutPanel, QuestEntry, ShopState, SkillSummary, Vitals } from "../types";
+import type { PopoutPanel, ShopState, SkillSummary, Vitals } from "../types";
 import { percent } from "../utils";
 import {
   CharacterAvatarIcon,
   EquipmentIcon,
   ChatBubbleIcon,
-  MapScrollIcon,
   ShopIcon,
   TerminalIcon,
   HelpIcon,
-  GlobeIcon,
   SkillCastIcon,
   SendIcon,
 } from "./Icons";
@@ -20,7 +18,6 @@ interface ActionBarProps {
   hasCharacterProfile: boolean;
   vitals: Vitals;
   skills: SkillSummary[];
-  quests: QuestEntry[];
   shop: ShopState | null;
   activePopout: PopoutPanel;
   onOpenPopout: (panel: PopoutPanel) => void;
@@ -90,7 +87,6 @@ export function ActionBar({
   hasCharacterProfile,
   vitals,
   skills,
-  quests,
   shop,
   activePopout,
   onOpenPopout,
@@ -108,13 +104,10 @@ export function ActionBar({
     { panel: "character", label: "Character", icon: <CharacterAvatarIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "equipment", label: "Equipment", icon: <EquipmentIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "chat", label: "Social", icon: <ChatBubbleIcon className="action-bar-btn-icon" />, requiresProfile: true },
-    { panel: "world", label: "World", icon: <GlobeIcon className="action-bar-btn-icon" />, requiresProfile: true },
-    { panel: "map", label: "Map", icon: <MapScrollIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "terminal", label: "Terminal", icon: <TerminalIcon className="action-bar-btn-icon" />, requiresProfile: false },
     { panel: "help", label: "Help", icon: <HelpIcon className="action-bar-btn-icon" />, requiresProfile: false },
   ];
 
-  const questBadge = quests.length > 0 ? quests.length : undefined;
   const shopActive = shop !== null;
   const visibleSkills = skills.slice(0, 6);
 
@@ -124,7 +117,6 @@ export function ActionBar({
         {panels.map((btn) => {
           const disabled = btn.requiresProfile && !loggedIn;
           const active = activePopout === btn.panel;
-          const badge = btn.panel === "map" ? questBadge : undefined;
           return (
             <button
               key={btn.panel}
@@ -136,7 +128,6 @@ export function ActionBar({
               onClick={() => onOpenPopout(active ? null : btn.panel)}
             >
               {btn.icon}
-              {badge != null && badge > 0 && <span className="action-bar-badge">{badge}</span>}
             </button>
           );
         })}

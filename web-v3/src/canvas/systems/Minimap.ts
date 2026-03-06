@@ -1,4 +1,4 @@
-import { Container, Graphics, Text } from "pixi.js";
+import { Container, Graphics } from "pixi.js";
 import { canvasCallbacks } from "../GameStateBridge";
 
 const MAP_OFFSETS: Record<string, { dx: number; dy: number }> = {
@@ -18,7 +18,6 @@ interface MapNode {
 }
 
 const MAP_SIZE = 160;
-const MAP_PADDING = 10;
 const CELL = 28;
 const NODE_RADIUS = 8;
 const CURRENT_RADIUS = 10;
@@ -29,14 +28,12 @@ const NODE_COLOR = 0x4a6080;
 const CURRENT_COLOR = 0xb9aed8;
 const CURRENT_GLOW = 0xe8d8a8;
 const LINE_COLOR = 0x4a5070;
-const LABEL_COLOR = "#8890b0";
-
 export class Minimap {
   readonly container = new Container();
 
   private bg = new Graphics();
   private mapGraphics = new Graphics();
-  private titleLabel: Text;
+  private expandButton = new Graphics();
   private visited = new Map<string, MapNode>();
   private currentRoomId: string | null = null;
   private lastKey = "";
@@ -45,15 +42,33 @@ export class Minimap {
   private clickAreas: Array<{ roomId: string; area: Graphics }> = [];
 
   constructor() {
-    this.titleLabel = new Text({
-      text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 10, fill: LABEL_COLOR },
+    // Expand button in bottom-right corner of minimap
+    const btn = this.expandButton;
+    btn.roundRect(0, 0, 20, 20, 4);
+    btn.fill({ color: BG_COLOR, alpha: 0.95 });
+    btn.roundRect(0, 0, 20, 20, 4);
+    btn.stroke({ color: BORDER_COLOR, width: 1 });
+    // Draw expand icon (four outward corner lines)
+    const ic = CURRENT_COLOR;
+    btn.moveTo(4, 7); btn.lineTo(4, 4); btn.lineTo(7, 4);
+    btn.stroke({ color: ic, width: 1.5 });
+    btn.moveTo(13, 4); btn.lineTo(16, 4); btn.lineTo(16, 7);
+    btn.stroke({ color: ic, width: 1.5 });
+    btn.moveTo(16, 13); btn.lineTo(16, 16); btn.lineTo(13, 16);
+    btn.stroke({ color: ic, width: 1.5 });
+    btn.moveTo(7, 16); btn.lineTo(4, 16); btn.lineTo(4, 13);
+    btn.stroke({ color: ic, width: 1.5 });
+    btn.x = MAP_SIZE - 24;
+    btn.y = MAP_SIZE - 24;
+    btn.eventMode = "static";
+    btn.cursor = "pointer";
+    btn.on("pointerdown", () => {
+      canvasCallbacks.openMap?.();
     });
-    this.titleLabel.anchor.set(0.5, 1);
 
     this.container.addChild(this.bg);
     this.container.addChild(this.mapGraphics);
-    this.container.addChild(this.titleLabel);
+    this.container.addChild(this.expandButton);
   }
 
   updateRoom(roomId: string | null, exits: Record<string, string>, title: string) {
@@ -199,11 +214,6 @@ export class Minimap {
       }
     }
 
-    // Room title below map
-    const currentNode = this.visited.get(this.currentRoomId);
-    this.titleLabel.text = currentNode?.title ?? "";
-    this.titleLabel.x = MAP_SIZE / 2;
-    this.titleLabel.y = MAP_SIZE + MAP_PADDING + 14;
   }
 
   private inBounds(x: number, y: number): boolean {

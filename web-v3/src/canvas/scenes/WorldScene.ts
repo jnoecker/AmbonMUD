@@ -18,8 +18,16 @@ const PLAYER_LABEL_FONT_SIZE = 15;
 const MOB_LABEL_FONT_SIZE = 14;
 const ITEM_LABEL_FONT_SIZE = 13;
 const ARROW_SIZE = 22;
-const SPRITE_SIZE = 128;
-const ITEM_SPRITE_SIZE = 64;
+const BASE_SPRITE_SIZE = 128;
+const BASE_ITEM_SPRITE_SIZE = 64;
+const REF_WIDTH = 1200;
+const REF_HEIGHT = 800;
+const MIN_SPRITE_SIZE = 64;
+const MAX_SPRITE_SIZE = 192;
+const MIN_ITEM_SIZE = 32;
+const MAX_ITEM_SIZE = 96;
+
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 const ROLE_ICON_SIZE = 12;
 const ROLE_ICON_GAP = 4;
 const TRANSITION_DURATION_MS = 300;
@@ -90,7 +98,7 @@ const ROLE_SHOP_COLOR = 0x81a2be;
 const DIALOGUE_ICON_SIZE = 28;
 const AGGRO_ICON_SIZE = 24;
 
-function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo) {
+function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo, spriteSize: number) {
   const icons: number[] = [];
   // quest indicators are handled by sprites now
   if (info.shopKeeper) icons.push(ROLE_SHOP_COLOR);
@@ -99,7 +107,7 @@ function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo) {
 
   const totalWidth = icons.length * ROLE_ICON_SIZE + (icons.length - 1) * ROLE_ICON_GAP;
   let x = cx - totalWidth / 2 + ROLE_ICON_SIZE / 2;
-  const y = cy - SPRITE_SIZE / 2 - 14;
+  const y = cy - spriteSize / 2 - 14;
 
   for (const color of icons) {
     g.fill(color);
@@ -136,6 +144,9 @@ export class WorldScene {
   private questCompleteTexture: Texture | null = null;
   private questCompleteIcons: Map<string, Sprite> = new Map();
 
+  private roomExpandBtn = new Graphics();
+  private currentMobSize = BASE_SPRITE_SIZE;
+
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
   private shopLabel: Text;
@@ -168,16 +179,37 @@ export class WorldScene {
   constructor() {
     this.titleText = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 18, fill: "#d8dcef", fontWeight: "bold", dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 2 } },
+      style: { fontFamily: "Cormorant Garamond, Georgia, serif", fontSize: 26, fill: "#d8dcef", fontWeight: "700", dropShadow: { color: 0x000000, alpha: 0.8, blur: 6, distance: 3 } },
     });
     this.titleText.anchor.set(0, 0);
 
     this.descText = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 12, fill: "#b0b4c8", wordWrap: true, wordWrapWidth: 400, dropShadow: { color: 0x000000, alpha: 0.7, blur: 3, distance: 1 } },
+      style: { fontFamily: "Cormorant Garamond, Georgia, serif", fontSize: 16, fill: "#b0b4c8", fontWeight: "500", wordWrap: true, wordWrapWidth: 400, dropShadow: { color: 0x000000, alpha: 0.7, blur: 5, distance: 1 } },
     });
     this.descText.anchor.set(0, 0);
-    this.descText.alpha = 0.85;
+    this.descText.alpha = 0.90;
+
+    // Room expand button next to title
+    const rb = this.roomExpandBtn;
+    rb.roundRect(0, 0, 20, 20, 4);
+    rb.fill({ color: 0x141828, alpha: 0.85 });
+    rb.roundRect(0, 0, 20, 20, 4);
+    rb.stroke({ color: 0x3a4060, width: 1 });
+    const rc = 0xb9aed8;
+    rb.moveTo(4, 7); rb.lineTo(4, 4); rb.lineTo(7, 4);
+    rb.stroke({ color: rc, width: 1.5 });
+    rb.moveTo(13, 4); rb.lineTo(16, 4); rb.lineTo(16, 7);
+    rb.stroke({ color: rc, width: 1.5 });
+    rb.moveTo(16, 13); rb.lineTo(16, 16); rb.lineTo(13, 16);
+    rb.stroke({ color: rc, width: 1.5 });
+    rb.moveTo(7, 16); rb.lineTo(4, 16); rb.lineTo(4, 13);
+    rb.stroke({ color: rc, width: 1.5 });
+    rb.eventMode = "static";
+    rb.cursor = "pointer";
+    rb.on("pointerdown", () => {
+      canvasCallbacks.openRoom?.();
+    });
 
     this.playerLabel = new Text({
       text: "",
@@ -231,6 +263,7 @@ export class WorldScene {
     this.container.addChild(this.statusEffects.container);
     this.container.addChild(this.titleText);
     this.container.addChild(this.descText);
+    this.container.addChild(this.roomExpandBtn);
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
@@ -363,10 +396,36 @@ export class WorldScene {
     const textLeft = 184;
     const textMaxWidth = Math.max(200, w - textLeft - 20);
     this.titleText.x = textLeft;
-    this.titleText.y = 16;
+    this.titleText.y = 14;
     this.descText.x = textLeft;
-    this.descText.y = 40;
+    this.descText.y = 48;
     this.descText.style.wordWrapWidth = textMaxWidth;
+
+    // Room expand button next to title
+    this.roomExpandBtn.x = textLeft + this.titleText.width + 12;
+    this.roomExpandBtn.y = this.titleText.y;
+
+    // Dynamic entity sizing
+    const scale = Math.min(w / REF_WIDTH, h / REF_HEIGHT);
+    const playerSize = clamp(BASE_SPRITE_SIZE * scale, MIN_SPRITE_SIZE, MAX_SPRITE_SIZE);
+
+    const mobEntries = [...this.mobSprites.values()];
+    const mobCount = mobEntries.length;
+    const mobAreaLeft = w * 0.38;
+    const mobAreaRight = w - 24;
+    const mobAreaWidth = mobAreaRight - mobAreaLeft;
+    const mobBaseSize = BASE_SPRITE_SIZE * scale;
+    const mobFitSize = mobCount > 0 ? (mobAreaWidth - 16) / mobCount - 16 : mobBaseSize;
+    const mobSize = clamp(Math.min(mobBaseSize, mobFitSize), MIN_SPRITE_SIZE, MAX_SPRITE_SIZE);
+    this.currentMobSize = mobSize;
+
+    const itemCount = this.itemSprites.length;
+    const itemAreaWidth = w * 0.6;
+    const itemBaseSize = BASE_ITEM_SPRITE_SIZE * scale;
+    const itemFitSize = itemCount > 0 ? (itemAreaWidth - 8) / itemCount - 8 : itemBaseSize;
+    const itemSize = clamp(Math.min(itemBaseSize, itemFitSize), MIN_ITEM_SIZE, MAX_ITEM_SIZE);
+
+    const otherSize = playerSize * 0.75;
 
     // Player in lower-left
     const playerX = w * 0.18;
@@ -374,32 +433,35 @@ export class WorldScene {
     if (this.playerSprite) {
       this.playerSprite.x = playerX;
       this.playerSprite.y = playerY;
+      this.playerSprite.width = playerSize;
+      this.playerSprite.height = playerSize;
     }
     this.playerLabel.x = playerX;
-    this.playerLabel.y = playerY + SPRITE_SIZE / 2 + 6;
+    this.playerLabel.y = playerY + playerSize / 2 + 6;
 
     // Status effects above the player sprite
-    this.statusEffects.update(gameStateRef.current.effects, playerX, playerY - SPRITE_SIZE / 2 - 32);
+    this.statusEffects.update(gameStateRef.current.effects, playerX, playerY - playerSize / 2 - 32);
 
     // Layout mobs spread across the right portion, evenly spaced
-    const mobEntries = [...this.mobSprites.values()];
-    if (mobEntries.length > 0) {
+    if (mobCount > 0) {
       const mobY = h * 0.68;
-      const mobAreaLeft = w * 0.38;
-      const mobAreaRight = w - 24;
-      const mobAreaWidth = mobAreaRight - mobAreaLeft;
-      const mobSpacing = mobEntries.length === 1
+      const mobSpacing = mobCount === 1
         ? 0
-        : Math.min(SPRITE_SIZE + 24, mobAreaWidth / mobEntries.length);
-      const totalMobWidth = (mobEntries.length - 1) * mobSpacing;
+        : Math.min(mobSize + 24, mobAreaWidth / mobCount);
+      const totalMobWidth = (mobCount - 1) * mobSpacing;
       let mobX = mobAreaLeft + (mobAreaWidth - totalMobWidth) / 2;
       for (const { sprite, label, hitArea } of mobEntries) {
         sprite.x = mobX;
         sprite.y = mobY;
+        sprite.width = mobSize;
+        sprite.height = mobSize;
         label.x = mobX;
-        label.y = mobY + SPRITE_SIZE / 2 + 6;
-        hitArea.x = mobX - SPRITE_SIZE / 2;
-        hitArea.y = mobY - SPRITE_SIZE / 2;
+        label.y = mobY + mobSize / 2 + 6;
+        hitArea.clear();
+        hitArea.rect(0, 0, mobSize, mobSize);
+        hitArea.fill({ color: 0x000000, alpha: 0.001 });
+        hitArea.x = mobX - mobSize / 2;
+        hitArea.y = mobY - mobSize / 2;
         mobX += mobSpacing;
       }
     }
@@ -408,31 +470,41 @@ export class WorldScene {
     const otherPlayerEntries = [...this.playerSprites.values()];
     if (otherPlayerEntries.length > 0) {
       const opY = h * 0.55;
-      let startX = playerX + SPRITE_SIZE / 2 + 20;
+      let startX = playerX + playerSize / 2 + 20;
       for (const { sprite, label, hitArea } of otherPlayerEntries) {
         sprite.x = startX;
         sprite.y = opY;
+        sprite.width = otherSize;
+        sprite.height = otherSize;
         label.x = startX;
-        label.y = opY + (SPRITE_SIZE * 0.75) / 2 + 6;
-        hitArea.x = startX - (SPRITE_SIZE * 0.75) / 2;
-        hitArea.y = opY - (SPRITE_SIZE * 0.75) / 2;
-        startX += SPRITE_SIZE * 0.75 + 20;
+        label.y = opY + otherSize / 2 + 6;
+        hitArea.clear();
+        hitArea.rect(0, 0, otherSize, otherSize);
+        hitArea.fill({ color: 0x000000, alpha: 0.001 });
+        hitArea.x = startX - otherSize / 2;
+        hitArea.y = opY - otherSize / 2;
+        startX += otherSize + 20;
       }
     }
 
     // Layout item sprites in a horizontal row, centered
-    if (this.itemSprites.length > 0) {
+    if (itemCount > 0) {
       const itemY = h * 0.42;
-      const itemSpacing = Math.min(ITEM_SPRITE_SIZE + 16, (w * 0.6) / Math.max(1, this.itemSprites.length));
-      const totalItemWidth = (this.itemSprites.length - 1) * itemSpacing;
+      const itemSpacing = Math.min(itemSize + 16, itemAreaWidth / Math.max(1, itemCount));
+      const totalItemWidth = (itemCount - 1) * itemSpacing;
       let itemX = w / 2 - totalItemWidth / 2;
       for (const { sprite, label, hitArea } of this.itemSprites) {
         sprite.x = itemX;
         sprite.y = itemY;
+        sprite.width = itemSize;
+        sprite.height = itemSize;
         label.x = itemX;
-        label.y = itemY + ITEM_SPRITE_SIZE / 2 + 2;
-        hitArea.x = itemX - ITEM_SPRITE_SIZE / 2;
-        hitArea.y = itemY - ITEM_SPRITE_SIZE / 2;
+        label.y = itemY + itemSize / 2 + 2;
+        hitArea.clear();
+        hitArea.rect(0, 0, itemSize, itemSize);
+        hitArea.fill({ color: 0x000000, alpha: 0.001 });
+        hitArea.x = itemX - itemSize / 2;
+        hitArea.y = itemY - itemSize / 2;
         itemX += itemSpacing;
       }
     }
@@ -483,7 +555,7 @@ export class WorldScene {
         const entry = this.mobSprites.get(info.id);
         if (!entry) continue;
         const { sprite } = entry;
-        drawRoleIcons(this.roleGraphics, sprite.x, sprite.y, info);
+        drawRoleIcons(this.roleGraphics, sprite.x, sprite.y, info, this.currentMobSize);
         if (info.dialogue) {
           activeDialogueMobs.add(info.id);
           this.ensureDialogueIcon(info.id, sprite.x, sprite.y);
@@ -594,8 +666,8 @@ export class WorldScene {
 
     for (const mob of mobs) {
       const sprite = new Sprite(Texture.WHITE);
-      sprite.width = SPRITE_SIZE;
-      sprite.height = SPRITE_SIZE;
+      sprite.width = BASE_SPRITE_SIZE;
+      sprite.height = BASE_SPRITE_SIZE;
       sprite.anchor.set(0.5);
       sprite.tint = 0xf0c674;
 
@@ -611,7 +683,7 @@ export class WorldScene {
 
       // Click hit area
       const hitArea = new Graphics();
-      hitArea.rect(0, 0, SPRITE_SIZE, SPRITE_SIZE);
+      hitArea.rect(0, 0, BASE_SPRITE_SIZE, BASE_SPRITE_SIZE);
       hitArea.fill({ color: 0x000000, alpha: 0.001 });
       hitArea.eventMode = "static";
       hitArea.cursor = "pointer";
@@ -643,8 +715,8 @@ export class WorldScene {
 
     for (const item of items) {
       const sprite = new Sprite(Texture.WHITE);
-      sprite.width = ITEM_SPRITE_SIZE;
-      sprite.height = ITEM_SPRITE_SIZE;
+      sprite.width = BASE_ITEM_SPRITE_SIZE;
+      sprite.height = BASE_ITEM_SPRITE_SIZE;
       sprite.anchor.set(0.5);
       sprite.tint = 0x8abeb7;
 
@@ -659,7 +731,7 @@ export class WorldScene {
       label.anchor.set(0.5, 0);
 
       const hitArea = new Graphics();
-      hitArea.rect(0, 0, ITEM_SPRITE_SIZE, ITEM_SPRITE_SIZE);
+      hitArea.rect(0, 0, BASE_ITEM_SPRITE_SIZE, BASE_ITEM_SPRITE_SIZE);
       hitArea.fill({ color: 0x000000, alpha: 0.001 });
       hitArea.eventMode = "static";
       hitArea.cursor = "pointer";
@@ -688,7 +760,7 @@ export class WorldScene {
     }
     this.playerSprites.clear();
 
-    const otherSize = SPRITE_SIZE * 0.75;
+    const otherSize = BASE_SPRITE_SIZE * 0.75;
     for (const player of players) {
       const sprite = new Sprite(Texture.WHITE);
       sprite.width = otherSize;
@@ -752,8 +824,8 @@ export class WorldScene {
 
     if (!spritePath) {
       const sprite = new Sprite(Texture.WHITE);
-      sprite.width = SPRITE_SIZE;
-      sprite.height = SPRITE_SIZE;
+      sprite.width = BASE_SPRITE_SIZE;
+      sprite.height = BASE_SPRITE_SIZE;
       sprite.anchor.set(0.5);
       sprite.tint = 0x81a2be;
       this.container.addChild(sprite);
@@ -764,15 +836,15 @@ export class WorldScene {
     try {
       const texture = await Assets.load(spritePath);
       const sprite = new Sprite(texture);
-      sprite.width = SPRITE_SIZE;
-      sprite.height = SPRITE_SIZE;
+      sprite.width = BASE_SPRITE_SIZE;
+      sprite.height = BASE_SPRITE_SIZE;
       sprite.anchor.set(0.5);
       this.container.addChild(sprite);
       this.playerSprite = sprite;
     } catch {
       const sprite = new Sprite(Texture.WHITE);
-      sprite.width = SPRITE_SIZE;
-      sprite.height = SPRITE_SIZE;
+      sprite.width = BASE_SPRITE_SIZE;
+      sprite.height = BASE_SPRITE_SIZE;
       sprite.anchor.set(0.5);
       sprite.tint = 0x81a2be;
       this.container.addChild(sprite);
@@ -835,7 +907,7 @@ export class WorldScene {
       this.container.addChild(icon);
     }
     icon.x = cx - 20;
-    icon.y = cy - SPRITE_SIZE / 2 - 8;
+    icon.y = cy - this.currentMobSize / 2 - 8;
   }
 
   private ensureAggroIcon(mobId: string, cx: number, cy: number) {
@@ -850,8 +922,8 @@ export class WorldScene {
       this.aggroIcons.set(mobId, icon);
       this.container.addChild(icon);
     }
-    icon.x = cx + SPRITE_SIZE / 2 - 4;
-    icon.y = cy - SPRITE_SIZE / 2 - 8;
+    icon.x = cx + this.currentMobSize / 2 - 4;
+    icon.y = cy - this.currentMobSize / 2 - 8;
   }
 
   private async loadQuestTextures() {
@@ -886,7 +958,7 @@ export class WorldScene {
       this.container.addChild(icon);
     }
     icon.x = cx;
-    icon.y = cy - SPRITE_SIZE / 2 - 20;
+    icon.y = cy - this.currentMobSize / 2 - 20;
   }
 
   private pruneIcons(map: Map<string, Sprite>, active: Set<string>) {
