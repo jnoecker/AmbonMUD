@@ -423,3 +423,40 @@ export function ExpandRoomIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function ChatBubbleIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M5.4 5.8h13.2A2.4 2.4 0 0 1 21 8.2v6a2.4 2.4 0 0 1-2.4 2.4H10.8l-4 3v-3H5.4A2.4 2.4 0 0 1 3 14.2v-6a2.4 2.4 0 0 1 2.4-2.4Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 10h8M8 12.8h5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.8" />
+    </svg>
+  );
+}
+
+export function GlobeIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M3.8 12h16.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.78" />
+      <path d="M12 3.8c2.2 2.4 3.4 5.2 3.4 8.2s-1.2 5.8-3.4 8.2c-2.2-2.4-3.4-5.2-3.4-8.2s1.2-5.8 3.4-8.2Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function TerminalIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <rect x="3.6" y="4.8" width="16.8" height="14.4" rx="2.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7.2 9.6 10 12l-2.8 2.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12.4 14.4h4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.8" />
+    </svg>
+  );
+}
+
+export function SendIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M4.4 12h15.2M13.2 5.6 19.6 12l-6.4 6.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

@@ -1,9 +1,11 @@
 import { useState } from "react";
-import type { RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 import type { ItemSummary, PopoutPanel, RoomItem, RoomMob, RoomPlayer, RoomState } from "../types";
 import { percent } from "../utils";
 import { HelpContent } from "./HelpContent";
 import { AttackIcon, DropItemIcon, GiveItemIcon, PickupIcon, RemoveItemIcon, TalkIcon, WearItemIcon } from "./Icons";
+
+const PANEL_POPOUTS = new Set<string>(["character", "chat", "world"]);
 
 interface PopoutLayerProps {
   activePopout: PopoutPanel;
@@ -28,6 +30,7 @@ interface PopoutLayerProps {
   onAttackMob: (mobName: string) => void;
   onPickUpItem: (itemName: string) => void;
   onClose: () => void;
+  children?: ReactNode;
 }
 
 export function PopoutLayer({
@@ -53,12 +56,18 @@ export function PopoutLayer({
   onAttackMob,
   onPickUpItem,
   onClose,
+  children,
 }: PopoutLayerProps) {
   const [givePickerItemId, setGivePickerItemId] = useState<string | null>(null);
   if (!activePopout) return null;
 
   const isEntityDetail = activePopout === "mobDetail" || activePopout === "itemDetail";
-  const dialogClass = isEntityDetail ? "popout-dialog entity-detail-dialog" : "popout-dialog";
+  const isPanelPopout = PANEL_POPOUTS.has(activePopout);
+  const dialogClass = isEntityDetail
+    ? "popout-dialog entity-detail-dialog"
+    : isPanelPopout
+      ? "popout-dialog popout-dialog-panel"
+      : "popout-dialog";
 
   return (
     <div className="popout-backdrop" onClick={onClose}>
@@ -281,8 +290,13 @@ export function PopoutLayer({
             <div ref={terminalPopoutRef} className="terminal-host terminal-popout-host" aria-label="AmbonMUD terminal" />
           </div>
         )}
+
+        {isPanelPopout && children && (
+          <div className="popout-content popout-panel-content">
+            {children}
+          </div>
+        )}
       </section>
     </div>
   );
 }
-
