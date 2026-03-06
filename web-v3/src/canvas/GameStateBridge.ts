@@ -7,6 +7,7 @@ import type {
   RoomPlayer,
   RoomItem,
   RoomState,
+  ShopState,
   StatusEffect,
   Vitals,
   MobInfo,
@@ -25,12 +26,15 @@ export interface GameStateSnapshot {
   mobInfo: MobInfo[];
   groupInfo: GroupInfo;
   dialogue: DialogueState | null;
+  shop: ShopState | null;
 }
 
 export const canvasCallbacks: {
   sendCommand: ((command: string) => void) | null;
+  openShop: (() => void) | null;
 } = {
   sendCommand: null,
+  openShop: null,
 };
 
 export const gameStateRef: { current: GameStateSnapshot } = {
@@ -51,5 +55,6 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     mobInfo: [],
     groupInfo: { leader: null, members: [] },
     dialogue: null,
+    shop: null,
   },
 };
