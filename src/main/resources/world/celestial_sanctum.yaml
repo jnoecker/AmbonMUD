@@ -238,3 +238,5 @@ rooms:
     description: "The highest point in the sanctum, open on all sides to the boundless sky. A great armillary sphere of golden rings turns slowly in the center, tracking movements of bodies too distant for most to care about. The horizon curves visibly from here. Below, far below, you can see the whole of the world — kingdoms, oceans, and the faint glow of cities. It is easy to feel very powerful from up here. It is easy to feel very small too."
     exits:
       s: sky_throne
+audio:
+  music: celestial_sanctum/music.mp3

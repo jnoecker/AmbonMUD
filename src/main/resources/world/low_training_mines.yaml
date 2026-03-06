@@ -1312,3 +1312,5 @@ rooms:
     exits:
       s: hammerloop
       w: orewound
+audio:
+  music: low_training_mines/music.mp3

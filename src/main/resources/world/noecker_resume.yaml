@@ -540,3 +540,5 @@ rooms:
     description: "A bright stage with spotlights and a waiting podium. The view from here takes in the full arc: PROTEUS datasets to cloud migrations, forensic linguistics to fraud systems, FDA pipelines to three thousand interview rooms. A terminal in the corner blinks: ambon.dev — more systems to build, more worlds to ship."
     exits:
       s: education_wing
+audio:
+  music: noecker_resume/music.mp3

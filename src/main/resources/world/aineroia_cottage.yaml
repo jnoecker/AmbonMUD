@@ -353,3 +353,5 @@ rooms:
     description: "Clearly marked by a low iron fence and a sign reading 'HEED', this bed is beautiful and dangerous in equal measure. Nightbloom, corpsecap, vinemaw vine, and others whose names haven't been written grow here in deliberate isolation. Even the air is a little wrong."
     exits:
       w: back_porch
+audio:
+  music: aineroia_cottage/music.mp3

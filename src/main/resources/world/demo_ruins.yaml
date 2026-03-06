@@ -51,7 +51,7 @@ mobs:
     behavior:
       template: patrol
       params:
-        patrolRoute: [cracked_sanctum, shrine_antechamber, shrine_approach, shrine_antechamber]
+        patrolRoute: [ cracked_sanctum, shrine_antechamber, shrine_approach, shrine_antechamber ]
   bridge_bandit:
     image: demo_ruins/bridge_bandit.png
     name: "a bridge bandit"
@@ -646,3 +646,5 @@ rooms:
     exits:
       s: orchard_path
       w: moonwell_edge
+audio:
+  music: demo_ruins/music.mp3

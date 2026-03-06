@@ -1312,3 +1312,5 @@ rooms:
     exits:
       s: kestrel_pit
       w: sunvault_rise
+audio:
+  music: low_training_barrens/music.mp3

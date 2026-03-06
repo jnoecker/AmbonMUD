@@ -1312,3 +1312,5 @@ rooms:
     exits:
       s: white_echo
       w: summit_ledger
+audio:
+  music: low_training_highlands/music.mp3
