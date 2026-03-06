@@ -8,7 +8,6 @@ import { ShopPopout } from "./components/ShopPopout";
 import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { PlayPanel } from "./components/panels/PlayPanel";
-import { WorldPanel } from "./components/panels/WorldPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef } from "./canvas/GameStateBridge";
@@ -20,9 +19,6 @@ import {
   EMPTY_ROOM,
   EMPTY_VITALS,
   MAX_VISIBLE_EFFECTS,
-  MAX_VISIBLE_WORLD_ITEMS,
-  MAX_VISIBLE_WORLD_MOBS,
-  MAX_VISIBLE_WORLD_PLAYERS,
   SLOT_ORDER,
 } from "./constants";
 import { useCommandHistory } from "./hooks/useCommandHistory";
@@ -114,7 +110,7 @@ function parseWhoEntries(messageChunk: string): string[] | null {
 
 function App() {
   const terminalHiddenRef = useRef<HTMLDivElement | null>(null);
-  const terminalPopoutRef = useRef<HTMLDivElement | null>(null);
+  const terminalOverlayRef = useRef<HTMLDivElement | null>(null);
   const composerInputRef = useRef<HTMLInputElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
@@ -123,6 +119,8 @@ function App() {
   const [activePopout, setActivePopout] = useState<PopoutPanel>(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [composerValue, setComposerValue] = useState("");
+  const [terminalVisible, setTerminalVisible] = useState(false);
+  const [terminalOpaque, setTerminalOpaque] = useState(false);
 
   const [vitals, setVitals] = useState<Vitals>(EMPTY_VITALS);
   const [statusVarLabels, setStatusVarLabels] = useState<StatusVarLabels>(DEFAULT_STATUS_VAR_LABELS);
@@ -205,7 +203,7 @@ function App() {
     const term = terminalRef.current;
     const fitAddon = fitAddonRef.current;
     // Fit to whichever container the terminal is currently in
-    const host = terminalPopoutRef.current ?? terminalHiddenRef.current;
+    const host = terminalOverlayRef.current ?? terminalHiddenRef.current;
     if (!term || !fitAddon || !host) return;
     if (host.clientWidth <= 0 || host.clientHeight <= 0) return;
 
@@ -389,15 +387,16 @@ function App() {
     };
   }, [connect, disconnect, drawMap, fitTerminal]);
 
+  // Refit terminal when overlay becomes visible
   useEffect(() => {
-    if (activePopout !== "terminal") return;
+    if (!terminalVisible) return;
     const frameFit = window.requestAnimationFrame(() => fitTerminal());
     const delayedFit = window.setTimeout(() => fitTerminal(), 90);
     return () => {
       window.cancelAnimationFrame(frameFit);
       window.clearTimeout(delayedFit);
     };
-  }, [activePopout, fitTerminal]);
+  }, [terminalVisible, fitTerminal]);
 
   useEffect(() => {
     const fontSet = document.fonts;
@@ -434,22 +433,28 @@ function App() {
     return () => window.cancelAnimationFrame(handle);
   }, [activePopout, drawMap]);
 
-  // Reparent terminal into popout when opened, back to hidden when closed
+  // Reparent terminal into overlay when visible, back to hidden when not
   useEffect(() => {
     const term = terminalRef.current;
     if (!term) return;
     const termEl = term.element;
     if (!termEl) return;
 
-    if (activePopout === "terminal" && terminalPopoutRef.current) {
-      terminalPopoutRef.current.appendChild(termEl);
-      window.requestAnimationFrame(() => fitTerminal());
-      const delayedFit = window.setTimeout(() => fitTerminal(), 80);
+    if (terminalVisible && terminalOverlayRef.current) {
+      terminalOverlayRef.current.appendChild(termEl);
+      window.requestAnimationFrame(() => {
+        fitTerminal();
+        term.scrollToBottom();
+      });
+      const delayedFit = window.setTimeout(() => {
+        fitTerminal();
+        term.scrollToBottom();
+      }, 80);
       return () => window.clearTimeout(delayedFit);
     } else if (terminalHiddenRef.current && termEl.parentElement !== terminalHiddenRef.current) {
       terminalHiddenRef.current.appendChild(termEl);
     }
-  }, [activePopout, fitTerminal]);
+  }, [terminalVisible, fitTerminal]);
 
   // Sync React state into the game state bridge for PixiJS
   useEffect(() => {
@@ -482,6 +487,13 @@ function App() {
     return () => { canvasCallbacks.openShop = null; };
   }, []);
 
+  // Wire canvas minimap expand and room expand buttons
+  useEffect(() => {
+    canvasCallbacks.openMap = () => setActivePopout("map");
+    canvasCallbacks.openRoom = () => setActivePopout("room");
+    return () => { canvasCallbacks.openMap = null; canvasCallbacks.openRoom = null; };
+  }, []);
+
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 
   const equipmentSlots = useMemo(() => {
@@ -502,12 +514,6 @@ function App() {
       : `${vitals.xpIntoLevel.toLocaleString()} / ${vitals.xpToNextLevel.toLocaleString()}`;
   const xpValue = vitals.xpToNextLevel === null ? 1 : vitals.xpIntoLevel;
   const xpMax = vitals.xpToNextLevel === null ? 1 : Math.max(1, vitals.xpToNextLevel);
-  const visiblePlayers = players.slice(0, MAX_VISIBLE_WORLD_PLAYERS);
-  const hiddenPlayersCount = Math.max(0, players.length - visiblePlayers.length);
-  const visibleMobs = mobs.slice(0, MAX_VISIBLE_WORLD_MOBS);
-  const hiddenMobsCount = Math.max(0, mobs.length - visibleMobs.length);
-  const visibleRoomItems = roomItems.slice(0, MAX_VISIBLE_WORLD_ITEMS);
-  const hiddenRoomItemsCount = Math.max(0, roomItems.length - visibleRoomItems.length);
   const visibleEffects = effects.slice(0, MAX_VISIBLE_EFFECTS);
   const hiddenEffectsCount = Math.max(0, effects.length - visibleEffects.length);
   const displayRace = character.race ? titleCaseWords(character.race) : "";
@@ -515,8 +521,6 @@ function App() {
   const hasCharacterProfile = character.name !== "-";
   const hasRoomDetails = room.id !== null || room.title !== "-";
   const preLogin = connected && !hasCharacterProfile && !hasRoomDetails;
-  const availableExitSet = useMemo(() => new Set(exits.map(([direction]) => direction.toLowerCase())), [exits]);
-  const canOpenMap = hasRoomDetails;
   const canOpenEquipment = hasCharacterProfile;
   const commandPlaceholder = connected
     ? preLogin
@@ -536,14 +540,10 @@ function App() {
         ? (detailItem?.name ?? "Item")
       : activePopout === "help"
         ? "Command Reference"
-      : activePopout === "terminal"
-        ? "Terminal"
       : activePopout === "character"
         ? "Character"
       : activePopout === "chat"
         ? "Social"
-      : activePopout === "world"
-        ? "World"
       : activePopout === "shop"
         ? (shop?.name ?? "Shop")
         : "Currently Wearing";
@@ -680,14 +680,18 @@ function App() {
       </header>
 
       <div className="dashboard">
-        <PlayPanel preLogin={preLogin} />
+        <PlayPanel
+          preLogin={preLogin}
+          terminalOverlayRef={terminalOverlayRef}
+          terminalVisible={terminalVisible}
+          terminalOpaque={terminalOpaque}
+        />
 
         <ActionBar
           connected={connected}
           hasCharacterProfile={hasCharacterProfile}
           vitals={vitals}
           skills={skills}
-          quests={quests}
           shop={shop}
           activePopout={activePopout}
           onOpenPopout={setActivePopout}
@@ -698,9 +702,20 @@ function App() {
           onComposerChange={(value) => {
             setComposerValue(value);
             resetComposerCompletion();
+            if (value.length > 0) setTerminalOpaque(true);
           }}
           onComposerKeyDown={onComposerKeyDown}
-          onSubmitComposer={submitComposer}
+          onComposerFocus={() => {
+            setTerminalVisible(true);
+          }}
+          onComposerBlur={() => {
+            setTerminalVisible(false);
+            setTerminalOpaque(false);
+          }}
+          onSubmitComposer={(event) => {
+            submitComposer(event);
+            setTerminalOpaque(true);
+          }}
         />
       </div>
 
@@ -713,7 +728,6 @@ function App() {
         equipment={equipment}
         equipmentSlots={equipmentSlots}
         mapCanvasRef={mapCanvasRef}
-        terminalPopoutRef={terminalPopoutRef}
         canManageItems={connected && hasCharacterProfile}
         detailMob={detailMob}
         detailItem={detailItem}
@@ -802,73 +816,6 @@ function App() {
               focusComposer();
             }}
             onSendMessage={sendChatMessage}
-          />
-        )}
-
-        {activePopout === "world" && (
-          <WorldPanel
-            connected={connected}
-            hasRoomDetails={hasRoomDetails}
-            canOpenMap={canOpenMap}
-            room={room}
-            exits={exits}
-            availableExitSet={availableExitSet}
-            players={players}
-            mobs={mobs}
-            visiblePlayers={visiblePlayers}
-            hiddenPlayersCount={hiddenPlayersCount}
-            visibleMobs={visibleMobs}
-            hiddenMobsCount={hiddenMobsCount}
-            roomItems={roomItems}
-            visibleRoomItems={visibleRoomItems}
-            hiddenRoomItemsCount={hiddenRoomItemsCount}
-            showSkillsPanel={vitals.inCombat}
-            skills={skills}
-            combatTarget={combatTarget}
-            vitals={vitals}
-            shop={shop}
-            inventory={inventory}
-            gold={vitals.gold}
-            onOpenMap={() => setActivePopout("map")}
-            onOpenRoom={() => setActivePopout("room")}
-            onFlee={() => {
-              sendCommand("flee", true);
-              focusComposer();
-            }}
-            onRefreshSkills={() => {
-              sendCommand("skills", true);
-              focusComposer();
-            }}
-            onCastSkill={handleCastSkill}
-            onMove={(direction) => {
-              sendCommand(direction, true);
-              focusComposer();
-            }}
-            dialogue={dialogue}
-            onDialogueChoice={(index) => {
-              sendCommand(`${index}`, true);
-              focusComposer();
-            }}
-            onTalkToMob={(mobName) => {
-              sendCommand(`talk ${mobName}`, true);
-              focusComposer();
-            }}
-            onAttackMob={(mobName) => {
-              sendCommand(`kill ${mobName}`, true);
-              focusComposer();
-            }}
-            onPickUpItem={(itemName) => {
-              sendCommand(`get ${itemName}`, true);
-              focusComposer();
-            }}
-            onBuyItem={(keyword) => {
-              sendCommand(`buy ${keyword}`, true);
-              focusComposer();
-            }}
-            onSellItem={(keyword) => {
-              sendCommand(`sell ${keyword}`, true);
-              focusComposer();
-            }}
           />
         )}
 

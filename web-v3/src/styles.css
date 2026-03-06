@@ -478,6 +478,7 @@ body {
 }
 
 .terminal-card {
+  position: relative;
   border-radius: var(--radius-lg);
   border: 1px solid rgb(88 89 114 / 30%);
   background:
@@ -1627,7 +1628,8 @@ body {
   width: 100%;
   height: 180px;
   border-radius: var(--radius-md);
-  border: 1px solid rgb(107 107 123 / 20%);
+  border: 1px solid rgb(58 64 96 / 50%);
+  background: #141828;
 }
 
 .split-list {
@@ -1903,7 +1905,7 @@ body {
 
 .shop-popout-list::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: linear-gradient(180deg, rgb(210 198 232 / 80%), rgb(191 217 236 / 76%));
+  background: linear-gradient(180deg, rgb(90 82 120 / 70%), rgb(70 90 110 / 65%));
 }
 
 .shop-popout-card {
@@ -3036,7 +3038,13 @@ body {
   }
 
   .action-bar-command {
-    min-width: 100%;
+    width: 36px;
+    min-width: 36px;
+    margin-left: auto;
+  }
+
+  .action-bar-command:focus-within {
+    width: clamp(160px, 50vw, 280px);
   }
 
   .action-bar-vitals {
@@ -3176,10 +3184,11 @@ body {
   width: min(980px, 100%);
   max-height: calc(100vh - 40px);
   border-radius: var(--radius-xl);
-  border: 1px solid rgb(106 96 136 / 26%);
+  border: 1px solid rgb(106 96 136 / 22%);
   background:
-    linear-gradient(165deg, rgb(195 183 222 / 95%), rgb(177 196 220 / 92%)),
-    linear-gradient(0deg, rgb(24 22 35 / 10%), rgb(24 22 35 / 10%));
+    linear-gradient(165deg, rgb(48 55 82 / 97%), rgb(38 47 71 / 95%)),
+    linear-gradient(0deg, rgb(24 22 35 / 20%), rgb(24 22 35 / 20%));
+  color: var(--text-primary);
   box-shadow: var(--shadow-lg), var(--shadow-glow);
   display: flex;
   flex-direction: column;
@@ -3192,7 +3201,7 @@ body {
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid rgb(107 107 123 / 14%);
+  border-bottom: 1px solid rgb(107 107 123 / 22%);
 }
 
 .popout-header h2 {
@@ -3216,7 +3225,7 @@ body {
 
 .popout-content::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: linear-gradient(180deg, rgb(210 198 232 / 84%), rgb(191 217 236 / 80%));
+  background: linear-gradient(180deg, rgb(90 82 120 / 70%), rgb(70 90 110 / 65%));
 }
 
 .room-popout-copy {
@@ -3229,7 +3238,7 @@ body {
   margin: 0;
   font-family: "Cormorant Garamond", "Georgia", serif;
   font-size: 1.8rem;
-  color: #d5def7;
+  color: var(--text-primary);
 }
 
 .room-popout-image {
@@ -3608,25 +3617,46 @@ body {
 
 .action-bar-command {
   display: flex;
-  gap: var(--space-2);
-  flex: 1;
-  min-width: 0;
+  gap: var(--space-1);
+  width: 36px;
+  min-width: 36px;
   border: 1px solid var(--line-faint);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: linear-gradient(180deg, rgb(74 86 121 / 84%), rgb(62 79 114 / 80%));
+  padding: 2px;
+  transition: width 200ms var(--ease-in-out-smooth);
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.action-bar-command:focus-within {
+  width: clamp(200px, 30vw, 360px);
+  border-radius: var(--radius-lg);
   padding: 3px;
 }
 
 .action-bar-command .command-input {
-  padding: 6px 10px;
-  font-size: 0.88rem;
+  padding: 4px 8px;
+  font-size: 0.82rem;
+  opacity: 0;
+  width: 0;
+  min-width: 0;
+  transition: opacity 150ms var(--ease-in-out-smooth);
+}
+
+.action-bar-command:focus-within .command-input {
+  opacity: 1;
+  width: 100%;
+  flex: 1;
 }
 
 .action-bar-send {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 10px !important;
+  padding: 4px 8px !important;
+  flex-shrink: 0;
 }
 
 .action-bar-send-icon {
@@ -4340,28 +4370,40 @@ body {
   pointer-events: none;
 }
 
-/* Terminal popout */
-.terminal-popout-content {
+/* Terminal overlay — appears over canvas when command input is focused */
+.terminal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  min-height: 300px;
+  justify-content: flex-end;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s var(--ease-in-out-smooth);
 }
 
-.terminal-popout-host {
-  flex: 1;
-  min-height: 300px;
-  max-height: none;
+.terminal-overlay-visible {
+  opacity: 1;
+  pointer-events: auto;
+  background: rgb(18 22 34 / 50%);
 }
 
-.terminal-popout-host .xterm,
-.terminal-popout-host .xterm-screen,
-.terminal-popout-host .xterm-viewport {
-  border-radius: 9px;
+.terminal-overlay-opaque {
+  background: rgb(18 22 34 / 88%);
+}
+
+.terminal-overlay .xterm,
+.terminal-overlay .xterm-screen,
+.terminal-overlay .xterm-viewport {
+  border-radius: 0;
   height: 100% !important;
 }
 
-.terminal-popout-host .xterm-viewport {
-  background: #2f3446 !important;
+.terminal-overlay .xterm-viewport {
+  background: transparent !important;
 }
 
 /* Login modal */

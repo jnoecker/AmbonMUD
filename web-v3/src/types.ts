@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | "mobDetail" | "itemDetail" | "help" | "terminal" | "character" | "chat" | "world" | "shop" | null;
+export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | "mobDetail" | "itemDetail" | "help" | "character" | "chat" | "shop" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
@@ -148,6 +148,8 @@ export interface MapRoom {
   x: number;
   y: number;
   exits: Record<string, string>;
+  title: string;
+  image: string | null;
 }
 
 export interface TabCycle {
