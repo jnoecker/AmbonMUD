@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import type { FormEvent, KeyboardEvent, RefObject } from "react";
-import type { PopoutPanel, QuestEntry, SkillSummary, Vitals } from "../types";
+import type { PopoutPanel, QuestEntry, ShopState, SkillSummary, Vitals } from "../types";
 import { percent } from "../utils";
 import {
   CharacterAvatarIcon,
   EquipmentIcon,
   ChatBubbleIcon,
   MapScrollIcon,
+  ShopIcon,
   TerminalIcon,
   HelpIcon,
   GlobeIcon,
@@ -20,6 +21,7 @@ interface ActionBarProps {
   vitals: Vitals;
   skills: SkillSummary[];
   quests: QuestEntry[];
+  shop: ShopState | null;
   activePopout: PopoutPanel;
   onOpenPopout: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
@@ -89,6 +91,7 @@ export function ActionBar({
   vitals,
   skills,
   quests,
+  shop,
   activePopout,
   onOpenPopout,
   onCastSkill,
@@ -112,6 +115,7 @@ export function ActionBar({
   ];
 
   const questBadge = quests.length > 0 ? quests.length : undefined;
+  const shopActive = shop !== null;
   const visibleSkills = skills.slice(0, 6);
 
   return (
@@ -136,6 +140,17 @@ export function ActionBar({
             </button>
           );
         })}
+        {shopActive && (
+          <button
+            type="button"
+            className={`action-bar-btn action-bar-btn-shop${activePopout === "shop" ? " action-bar-btn-active" : ""}`}
+            title={shop.name}
+            aria-label={`Open ${shop.name}`}
+            onClick={() => onOpenPopout(activePopout === "shop" ? null : "shop")}
+          >
+            <ShopIcon className="action-bar-btn-icon" />
+          </button>
+        )}
       </div>
 
       {loggedIn && (

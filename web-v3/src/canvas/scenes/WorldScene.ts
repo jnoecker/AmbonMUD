@@ -5,6 +5,11 @@ import { Minimap } from "../systems/Minimap";
 import { EntityPopout } from "../systems/EntityPopout";
 import type { MobInfo } from "../../types";
 
+const SHOP_BADGE_BG = 0x2a3460;
+const SHOP_BADGE_BORDER = 0xbea873;
+const SHOP_BADGE_TEXT = "#bea873";
+const SHOP_BADGE_HOVER_BG = 0x3a4a70;
+
 const EXIT_ARROW_COLOR = 0xb9aed8;
 const EXIT_LABEL_COLOR = "#b9aed8";
 const PLAYER_LABEL_COLOR = "#d8dcef";
@@ -133,6 +138,10 @@ export class WorldScene {
   private minimap = new Minimap();
   private entityPopout = new EntityPopout();
 
+  private shopBadge: Container;
+  private shopBadgeBg = new Graphics();
+  private shopVisible = false;
+
   private lastRoomId: string | null = null;
   private lastRoomImage: string | null | undefined = undefined;
   private lastPlayerSpritePath: string | null = null;
@@ -184,6 +193,29 @@ export class WorldScene {
       this.backdropHit.visible = false;
     });
 
+    // Shop badge — floating button when a shop is available
+    this.shopBadge = new Container();
+    this.shopBadge.visible = false;
+    this.shopBadge.eventMode = "static";
+    this.shopBadge.cursor = "pointer";
+    const shopLabel = new Text({
+      text: "Shop",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: SHOP_BADGE_TEXT, fontWeight: "bold" },
+    });
+    shopLabel.anchor.set(0.5);
+    shopLabel.eventMode = "none";
+    this.shopBadge.addChild(this.shopBadgeBg);
+    this.shopBadge.addChild(shopLabel);
+    this.shopBadge.on("pointerdown", () => {
+      canvasCallbacks.openShop?.();
+    });
+    this.shopBadge.on("pointerover", () => {
+      this.drawShopBadgeBg(SHOP_BADGE_HOVER_BG);
+    });
+    this.shopBadge.on("pointerout", () => {
+      this.drawShopBadgeBg(SHOP_BADGE_BG);
+    });
+
     this.container.addChild(this.exitGraphics);
     this.container.addChild(this.roleGraphics);
     this.container.addChild(this.statusEffects.container);
@@ -191,6 +223,7 @@ export class WorldScene {
     this.container.addChild(this.descText);
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
+    this.container.addChild(this.shopBadge);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
   }
@@ -293,6 +326,16 @@ export class WorldScene {
       this.lastMobInfoKey = mobInfoKey;
     }
 
+    // Shop badge visibility
+    const hasShop = state.shop !== null;
+    if (hasShop !== this.shopVisible) {
+      this.shopVisible = hasShop;
+      this.shopBadge.visible = hasShop;
+      if (hasShop) {
+        this.drawShopBadgeBg(SHOP_BADGE_BG);
+      }
+    }
+
     this.layoutAll();
   }
 
@@ -385,6 +428,12 @@ export class WorldScene {
         hitArea.y = itemY - ITEM_SPRITE_SIZE / 2;
         itemX += itemSpacing;
       }
+    }
+
+    // Shop badge position — top-right
+    if (this.shopBadge.visible) {
+      this.shopBadge.x = w - 56;
+      this.shopBadge.y = 28;
     }
 
     // Exits
@@ -689,6 +738,16 @@ export class WorldScene {
     } catch {
       // Keep placeholder tint
     }
+  }
+
+  private drawShopBadgeBg(color: number) {
+    const bw = 80;
+    const bh = 32;
+    this.shopBadgeBg.clear();
+    this.shopBadgeBg.roundRect(-bw / 2, -bh / 2, bw, bh, 8);
+    this.shopBadgeBg.fill({ color, alpha: 0.92 });
+    this.shopBadgeBg.roundRect(-bw / 2, -bh / 2, bw, bh, 8);
+    this.shopBadgeBg.stroke({ color: SHOP_BADGE_BORDER, width: 1.5 });
   }
 
   private showPopout() {

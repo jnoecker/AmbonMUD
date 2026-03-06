@@ -4,6 +4,7 @@ import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { ActionBar } from "./components/ActionBar";
 import { PopoutLayer } from "./components/PopoutLayer";
+import { ShopPopout } from "./components/ShopPopout";
 import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { PlayPanel } from "./components/panels/PlayPanel";
@@ -276,7 +277,14 @@ function App() {
           setGuildMembers,
           setDialogue,
           setCombatTarget,
-          setShop,
+          setShop: (value) => {
+            setShop(value);
+            if (value) {
+              setActivePopout("shop");
+            } else {
+              setActivePopout((prev) => prev === "shop" ? null : prev);
+            }
+          },
           setFriends,
           pushFriendNotification,
           setChatByChannel,
@@ -458,6 +466,7 @@ function App() {
       mobInfo,
       groupInfo,
       dialogue,
+      shop,
     };
   });
 
@@ -467,6 +476,11 @@ function App() {
     return () => { canvasCallbacks.sendCommand = null; };
   }, [sendCommand]);
 
+  // Wire canvas shop badge to open shop popout
+  useEffect(() => {
+    canvasCallbacks.openShop = () => setActivePopout("shop");
+    return () => { canvasCallbacks.openShop = null; };
+  }, []);
 
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 
@@ -530,6 +544,8 @@ function App() {
         ? "Social"
       : activePopout === "world"
         ? "World"
+      : activePopout === "shop"
+        ? (shop?.name ?? "Shop")
         : "Currently Wearing";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
@@ -672,6 +688,7 @@ function App() {
           vitals={vitals}
           skills={skills}
           quests={quests}
+          shop={shop}
           activePopout={activePopout}
           onOpenPopout={setActivePopout}
           onCastSkill={handleCastSkill}
@@ -844,6 +861,22 @@ function App() {
               sendCommand(`get ${itemName}`, true);
               focusComposer();
             }}
+            onBuyItem={(keyword) => {
+              sendCommand(`buy ${keyword}`, true);
+              focusComposer();
+            }}
+            onSellItem={(keyword) => {
+              sendCommand(`sell ${keyword}`, true);
+              focusComposer();
+            }}
+          />
+        )}
+
+        {activePopout === "shop" && shop && (
+          <ShopPopout
+            shop={shop}
+            inventory={inventory}
+            gold={vitals.gold}
             onBuyItem={(keyword) => {
               sendCommand(`buy ${keyword}`, true);
               focusComposer();
