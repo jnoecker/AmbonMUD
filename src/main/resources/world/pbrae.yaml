@@ -322,6 +322,7 @@ rooms:
     description: "A great waterfall roars off the eastern face of the mountain, plunging into the forest canopy far below in a billowing curtain of mist and spray. A permanent rainbow hangs in the mist. Carved into the cliff face are the initials 'P' and 'B' inside a heart, worn smooth by years of waterfall weather. The summit lies to the west."
     exits:
       w: mountain_summit
+    video: pbrae/zone_intro_thundering_waterfall.mp4
 
   mountain_path:
     image: pbrae/mountain_path.png

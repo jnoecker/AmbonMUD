@@ -836,7 +836,7 @@ export class WorldScene {
     }
   }
 
-  private rebuildMobs(mobs: Array<{ id: string; name: string; hp: number; maxHp: number; image?: string | null }>) {
+  private rebuildMobs(mobs: Array<{ id: string; name: string; hp: number; maxHp: number; image?: string | null; video?: string | null }>) {
     for (const { sprite, label, hitArea } of this.mobSprites.values()) {
       this.container.removeChild(sprite);
       this.container.removeChild(label);
@@ -909,7 +909,7 @@ export class WorldScene {
     }
   }
 
-  private rebuildItems(items: Array<{ id: string; name: string; image?: string | null }>) {
+  private rebuildItems(items: Array<{ id: string; name: string; image?: string | null; video?: string | null }>) {
     for (const { sprite, label, hitArea } of this.itemSprites) {
       this.container.removeChild(sprite);
       this.container.removeChild(label);
