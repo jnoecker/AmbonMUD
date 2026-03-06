@@ -1,7 +1,6 @@
 import type {
   ChatChannel,
   CharacterInfo,
-  MobileTab,
   RoomState,
   StatusVarLabels,
   TabCycle,
@@ -19,12 +18,6 @@ export const EXIT_ORDER = ["north", "south", "east", "west", "up", "down"];
 export const COMPASS_DIRECTIONS = ["north", "east", "south", "west", "up", "down"] as const;
 export type Direction = (typeof COMPASS_DIRECTIONS)[number];
 export const SLOT_ORDER = ["head", "body", "hand"];
-export const TABS: Array<{ id: MobileTab; label: string }> = [
-  { id: "play", label: "Play" },
-  { id: "world", label: "World" },
-  { id: "chat", label: "Social" },
-  { id: "character", label: "Character" },
-];
 export const CHAT_CHANNELS: Array<{
   id: ChatChannel;
   label: string;
