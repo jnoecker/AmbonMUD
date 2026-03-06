@@ -463,6 +463,17 @@ export function ShopIcon({ className }: { className?: string }) {
   );
 }
 
+export function SpellbookIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v16H6.5A2.5 2.5 0 0 0 4 20.5V4.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M4 18h16v2.5a1.5 1.5 0 0 1-1.5 1.5H6.5A2.5 2.5 0 0 1 4 19.5V18Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M12 6l1.8 2.5L12 11l-1.8-2.5L12 6Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" opacity="0.7" />
+      <circle cx="12" cy="8.5" r="0.8" fill="currentColor" opacity="0.6" />
+    </svg>
+  );
+}
+
 export function SendIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
