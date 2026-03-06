@@ -23,5 +23,6 @@ data class MobSpawn(
     override val behaviorTree: BtNode? = null,
     override val questIds: List<String> = emptyList(),
     override val image: String? = null,
+    override val video: String? = null,
     val aggressive: Boolean = false,
 ) : MobTemplate

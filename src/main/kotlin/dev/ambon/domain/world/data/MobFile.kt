@@ -18,4 +18,5 @@ data class MobFile(
     val behavior: BehaviorFile? = null,
     val quests: List<String> = emptyList(),
     val image: String? = null,
+    val video: String? = null,
 )

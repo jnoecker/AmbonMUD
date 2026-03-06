@@ -112,6 +112,9 @@ export class WorldScene {
   private targetingText: Text | null = null;
   private targetingBg = new Graphics();
 
+  private videoBtn: Container | null = null;
+  private lastRoomVideo: string | null | undefined = undefined;
+
   private lastRoomId: string | null = null;
   private lastRoomImage: string | null | undefined = undefined;
   private lastPlayerSpritePath: string | null = null;
@@ -295,6 +298,11 @@ export class WorldScene {
     if (room.image !== this.lastRoomImage) {
       this.lastRoomImage = room.image;
       this.loadBackground(room.image ?? null);
+    }
+
+    if (room.video !== this.lastRoomVideo) {
+      this.lastRoomVideo = room.video;
+      this.updateVideoButton(room.video ?? null);
     }
 
     const spritePath = character.sprite;
@@ -882,7 +890,7 @@ export class WorldScene {
           return;
         }
         const info = gameStateRef.current.mobInfo.find((m) => m.id === mobData.id) ?? null;
-        this.entityPopout.showMob(mobData.name, mobData.image, mobData.hp, mobData.maxHp, info);
+        this.entityPopout.showMob(mobData.name, mobData.image, mobData.video, mobData.hp, mobData.maxHp, info);
         this.showPopout();
       });
 
@@ -929,7 +937,7 @@ export class WorldScene {
 
       const itemData = item;
       hitArea.on("pointerdown", () => {
-        this.entityPopout.showItem(itemData.name, itemData.image);
+        this.entityPopout.showItem(itemData.name, itemData.image, itemData.video);
         this.showPopout();
       });
 
@@ -1008,6 +1016,49 @@ export class WorldScene {
     } catch {
       // Image not available
     }
+  }
+
+  private updateVideoButton(videoUrl: string | null) {
+    if (this.videoBtn) {
+      this.container.removeChild(this.videoBtn);
+      this.videoBtn.destroy({ children: true });
+      this.videoBtn = null;
+    }
+
+    if (!videoUrl) return;
+
+    const btn = new Container();
+    btn.eventMode = "static";
+    btn.cursor = "pointer";
+
+    const SIZE = 48;
+    const bg = new Graphics();
+    bg.roundRect(0, 0, SIZE, SIZE, 10);
+    bg.fill({ color: 0x2a1040, alpha: 0.85 });
+    bg.roundRect(0, 0, SIZE, SIZE, 10);
+    bg.stroke({ color: 0xce93d8, width: 1.5 });
+    btn.addChild(bg);
+
+    // Draw play triangle
+    const tri = new Graphics();
+    tri.moveTo(SIZE * 0.35, SIZE * 0.25);
+    tri.lineTo(SIZE * 0.35, SIZE * 0.75);
+    tri.lineTo(SIZE * 0.75, SIZE * 0.5);
+    tri.closePath();
+    tri.fill(0xce93d8);
+    btn.addChild(tri);
+
+    const url = videoUrl;
+    btn.on("pointerdown", () => {
+      canvasCallbacks.openVideo?.(url);
+    });
+
+    // Position: top-left below title area
+    btn.x = 16;
+    btn.y = 60;
+
+    this.container.addChild(btn);
+    this.videoBtn = btn;
   }
 
   private async loadPlayerSprite(spritePath: string | null) {

@@ -125,6 +125,7 @@ function App() {
   const [composerValue, setComposerValue] = useState("");
   const [terminalVisible, setTerminalVisible] = useState(false);
   const [terminalOpaque, setTerminalOpaque] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   const [vitals, setVitals] = useState<Vitals>(EMPTY_VITALS);
   const [statusVarLabels, setStatusVarLabels] = useState<StatusVarLabels>(DEFAULT_STATUS_VAR_LABELS);
@@ -498,6 +499,12 @@ function App() {
     canvasCallbacks.openMap = () => setActivePopout("map");
     canvasCallbacks.openRoom = () => setActivePopout("room");
     return () => { canvasCallbacks.openMap = null; canvasCallbacks.openRoom = null; };
+  }, []);
+
+  // Wire canvas video cinematic callback
+  useEffect(() => {
+    canvasCallbacks.openVideo = (url: string) => setVideoUrl(url);
+    return () => { canvasCallbacks.openVideo = null; };
   }, []);
 
   // Play room audio when music/ambient URLs change
@@ -911,6 +918,15 @@ function App() {
             terminalRef.current?.write(`${value}\r\n`);
           }}
         />
+      )}
+
+      {videoUrl && (
+        <div className="video-modal-overlay" onClick={() => setVideoUrl(null)}>
+          <div className="video-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="video-modal-close" onClick={() => setVideoUrl(null)}>✕</button>
+            <video src={videoUrl} controls autoPlay className="video-modal-player" />
+          </div>
+        </div>
       )}
 
       {showAdminPanel && (
