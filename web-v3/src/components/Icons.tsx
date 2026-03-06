@@ -481,3 +481,42 @@ export function SendIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function VolumeOnIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M11 5 6 9H2v6h4l5 4V5Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function VolumeOffIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M11 5 6 9H2v6h4l5 4V5Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function MusicNoteIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M9 18V5l12-2v13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="6" cy="18" r="3" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="18" cy="16" r="3" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+export function WavesIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M2 12c1.5-2 3-3 4.5-3s3 2 4.5 3 3 3 4.5 3 3-1 4.5-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M2 7c1.5-2 3-3 4.5-3s3 2 4.5 3 3 3 4.5 3 3-1 4.5-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M2 17c1.5-2 3-3 4.5-3s3 2 4.5 3 3 3 4.5 3 3-1 4.5-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}

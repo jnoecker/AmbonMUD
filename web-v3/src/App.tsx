@@ -3,6 +3,7 @@ import type { FormEvent, KeyboardEvent } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { ActionBar } from "./components/ActionBar";
+import { AudioControls } from "./components/AudioControls";
 import { PopoutLayer } from "./components/PopoutLayer";
 import { ShopPopout } from "./components/ShopPopout";
 import { ChatPanel } from "./components/panels/ChatPanel";
@@ -25,6 +26,7 @@ import {
 import { useCommandHistory } from "./hooks/useCommandHistory";
 import { useMiniMap } from "./hooks/useMiniMap";
 import { useMudSocket } from "./hooks/useMudSocket";
+import { useAudioEngine } from "./hooks/useAudioEngine";
 import { useQuickbar } from "./hooks/useQuickbar";
 import type {
   AchievementData,
@@ -133,6 +135,7 @@ function App() {
   const [roomItems, setRoomItems] = useState<RoomItem[]>([]);
   const [effects, setEffects] = useState<StatusEffect[]>([]);
   const [skills, setSkills] = useState<SkillSummary[]>([]);
+  const audio = useAudioEngine();
   const quickbar = useQuickbar(skills);
   const [toast, setToast] = useState<string | null>(null);
   const [inventory, setInventory] = useState<ItemSummary[]>([]);
@@ -317,6 +320,7 @@ function App() {
       setComposerValue("");
       resetComposerTraversal();
       resetHud();
+      audio.stopAll();
       writeSystem("Connection closed.");
     },
     onError: () => {
@@ -495,6 +499,15 @@ function App() {
     canvasCallbacks.openRoom = () => setActivePopout("room");
     return () => { canvasCallbacks.openMap = null; canvasCallbacks.openRoom = null; };
   }, []);
+
+  // Play room audio when music/ambient URLs change
+  useEffect(() => {
+    audio.playMusic(room.music ?? null);
+  }, [room.music]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    audio.playAmbient(room.ambient ?? null);
+  }, [room.ambient]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 
@@ -706,6 +719,7 @@ function App() {
         </div>
 
         <div className="connection-cluster">
+          <AudioControls audio={audio} />
           {character.isStaff && (
             <button
               type="button"

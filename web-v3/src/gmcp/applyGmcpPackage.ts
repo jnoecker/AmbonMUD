@@ -158,6 +158,8 @@ export function applyGmcpPackage(
         description: typeof packet.description === "string" ? packet.description : "",
         exits,
         image: typeof packet.image === "string" ? packet.image : null,
+        music: typeof packet.music === "string" ? packet.music : null,
+        ambient: typeof packet.ambient === "string" ? packet.ambient : null,
       });
 
       if (id) {
