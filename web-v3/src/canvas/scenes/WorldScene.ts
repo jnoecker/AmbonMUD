@@ -330,12 +330,14 @@ export class WorldScene {
       this.background.height = h;
     }
 
-    // Minimap in top-left
-    this.minimap.layout(12, 12);
+    // Minimap in top-right
+    const mapDiam = this.minimap.diameter;
+    const mapMargin = 12;
+    this.minimap.layout(w - mapDiam - mapMargin, mapMargin);
 
-    // Room title and description to the right of minimap
-    const textLeft = 184;
-    const textMaxWidth = Math.max(200, w - textLeft - 20);
+    // Room title and description in top-left, constrained to not overlap minimap
+    const textLeft = 16;
+    const textMaxWidth = Math.max(200, w - mapDiam - mapMargin * 2 - textLeft - 20);
     this.titleText.x = textLeft;
     this.titleText.y = 14;
     this.descText.x = textLeft + 10;
@@ -463,10 +465,10 @@ export class WorldScene {
       }
     }
 
-    // Shop badge position — below minimap on the left
+    // Shop badge position — below minimap on the right
     if (this.shopBadge.visible) {
-      this.shopBadge.x = 92;
-      this.shopBadge.y = 220;
+      this.shopBadge.x = w - mapDiam / 2 - mapMargin;
+      this.shopBadge.y = mapMargin + mapDiam + 40;
     }
 
     // Compass rose in bottom-right

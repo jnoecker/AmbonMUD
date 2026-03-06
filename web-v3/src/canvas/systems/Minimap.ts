@@ -18,13 +18,15 @@ interface MapNode {
   image: string | null;
 }
 
-const MAP_SIZE = 200;
-const CELL = 36;
-const NODE_RADIUS = 14;
-const CURRENT_RADIUS = 16;
+const MAP_DIAMETER = 280;
+const MAP_RADIUS = MAP_DIAMETER / 2;
+const CELL = 40;
+const NODE_RADIUS = 16;
+const CURRENT_RADIUS = 20;
 const BG_COLOR = 0x141828;
-const BG_ALPHA = 0.85;
+const BG_ALPHA = 0.88;
 const BORDER_COLOR = 0x3a4060;
+const OUTER_GLOW_COLOR = 0x4a5880;
 const NODE_COLOR = 0x4a6080;
 const CURRENT_COLOR = 0xb9aed8;
 const CURRENT_GLOW = 0xe8d8a8;
@@ -35,6 +37,7 @@ export class Minimap {
   readonly container = new Container();
 
   private bg = new Graphics();
+  private clipMask = new Graphics();
   private mapGraphics = new Graphics();
   private nodeContainer = new Container();
   private expandButton = new Graphics();
@@ -51,34 +54,47 @@ export class Minimap {
   private clickAreas: Array<{ roomId: string; area: Graphics }> = [];
 
   constructor() {
-    // Expand button in bottom-right corner of minimap
+    // Circular clip mask — everything inside the map is clipped to this
+    this.clipMask.circle(MAP_RADIUS, MAP_RADIUS, MAP_RADIUS - 2);
+    this.clipMask.fill(0xffffff);
+
+    // Expand button at bottom-center of the circle
     const btn = this.expandButton;
-    btn.roundRect(0, 0, 20, 20, 4);
+    btn.roundRect(0, 0, 22, 22, 4);
     btn.fill({ color: BG_COLOR, alpha: 0.95 });
-    btn.roundRect(0, 0, 20, 20, 4);
+    btn.roundRect(0, 0, 22, 22, 4);
     btn.stroke({ color: BORDER_COLOR, width: 1 });
-    // Draw expand icon (four outward corner lines)
     const ic = CURRENT_COLOR;
-    btn.moveTo(4, 7); btn.lineTo(4, 4); btn.lineTo(7, 4);
+    btn.moveTo(5, 8); btn.lineTo(5, 5); btn.lineTo(8, 5);
     btn.stroke({ color: ic, width: 1.5 });
-    btn.moveTo(13, 4); btn.lineTo(16, 4); btn.lineTo(16, 7);
+    btn.moveTo(14, 5); btn.lineTo(17, 5); btn.lineTo(17, 8);
     btn.stroke({ color: ic, width: 1.5 });
-    btn.moveTo(16, 13); btn.lineTo(16, 16); btn.lineTo(13, 16);
+    btn.moveTo(17, 14); btn.lineTo(17, 17); btn.lineTo(14, 17);
     btn.stroke({ color: ic, width: 1.5 });
-    btn.moveTo(7, 16); btn.lineTo(4, 16); btn.lineTo(4, 13);
+    btn.moveTo(8, 17); btn.lineTo(5, 17); btn.lineTo(5, 14);
     btn.stroke({ color: ic, width: 1.5 });
-    btn.x = MAP_SIZE - 24;
-    btn.y = MAP_SIZE - 24;
+    btn.x = MAP_RADIUS - 11;
+    btn.y = MAP_DIAMETER - 30;
     btn.eventMode = "static";
     btn.cursor = "pointer";
     btn.on("pointerdown", () => {
       canvasCallbacks.openMap?.();
     });
 
+    // Inner content group that gets masked
+    const inner = new Container();
+    inner.addChild(this.mapGraphics);
+    inner.addChild(this.nodeContainer);
+    inner.mask = this.clipMask;
+
     this.container.addChild(this.bg);
-    this.container.addChild(this.mapGraphics);
-    this.container.addChild(this.nodeContainer);
+    this.container.addChild(this.clipMask);
+    this.container.addChild(inner);
     this.container.addChild(this.expandButton);
+  }
+
+  get diameter(): number {
+    return MAP_DIAMETER;
   }
 
   updateRoom(roomId: string | null, exits: Record<string, string>, title: string, image: string | null) {
@@ -148,15 +164,21 @@ export class Minimap {
     }
     this.clickAreas = [];
 
+    // Draw circular background with decorative border
     this.bg.clear();
-    this.bg.roundRect(0, 0, MAP_SIZE, MAP_SIZE, 8);
+    // Outer glow ring
+    this.bg.circle(MAP_RADIUS, MAP_RADIUS, MAP_RADIUS);
+    this.bg.stroke({ color: OUTER_GLOW_COLOR, width: 2, alpha: 0.4 });
+    // Main fill
+    this.bg.circle(MAP_RADIUS, MAP_RADIUS, MAP_RADIUS - 1);
     this.bg.fill({ color: BG_COLOR, alpha: BG_ALPHA });
-    this.bg.roundRect(0, 0, MAP_SIZE, MAP_SIZE, 8);
-    this.bg.stroke({ color: BORDER_COLOR, width: 1 });
+    // Inner accent ring
+    this.bg.circle(MAP_RADIUS, MAP_RADIUS, MAP_RADIUS - 3);
+    this.bg.stroke({ color: BORDER_COLOR, width: 1, alpha: 0.6 });
 
     this.mapGraphics.clear();
 
-    // Hide all existing thumbs — visible ones will be re-shown below
+    // Hide all existing thumbs
     for (const sprite of this.thumbSprites.values()) {
       sprite.visible = false;
     }
@@ -165,8 +187,8 @@ export class Minimap {
     const current = this.visited.get(this.currentRoomId);
     if (!current) return;
 
-    const cx = MAP_SIZE / 2;
-    const cy = MAP_SIZE / 2;
+    const cx = MAP_RADIUS;
+    const cy = MAP_RADIUS;
 
     // Draw connecting lines
     for (const node of this.visited.values()) {
@@ -179,11 +201,10 @@ export class Minimap {
         const tx = cx + (target.x - current.x) * CELL;
         const ty = cy + (target.y - current.y) * CELL;
 
-        // Only draw if at least one end is visible
         if (this.inBounds(sx, sy) || this.inBounds(tx, ty)) {
           this.mapGraphics.moveTo(sx, sy);
           this.mapGraphics.lineTo(tx, ty);
-          this.mapGraphics.stroke({ color: LINE_COLOR, width: 1.5, alpha: 0.6 });
+          this.mapGraphics.stroke({ color: LINE_COLOR, width: 2, alpha: 0.5 });
         }
       }
     }
@@ -201,33 +222,30 @@ export class Minimap {
 
       if (isCurrent) {
         // Glow ring
-        this.mapGraphics.circle(nx, ny, radius + 3);
-        this.mapGraphics.stroke({ color: CURRENT_GLOW, width: 1.5, alpha: 0.6 });
+        this.mapGraphics.circle(nx, ny, radius + 4);
+        this.mapGraphics.stroke({ color: CURRENT_GLOW, width: 2, alpha: 0.5 });
       }
 
-      // Draw circle background (visible behind image or as fallback)
       if (visited) {
         this.mapGraphics.circle(nx, ny, radius);
         this.mapGraphics.fill({ color: isCurrent ? CURRENT_COLOR : NODE_COLOR });
         this.mapGraphics.circle(nx, ny, radius);
         this.mapGraphics.stroke({ color: isCurrent ? CURRENT_GLOW : 0x5a6a90, width: 1, alpha: isCurrent ? 0.8 : 0.5 });
       } else {
-        // Fog node — unvisited
         this.mapGraphics.circle(nx, ny, radius);
-        this.mapGraphics.fill({ color: FOG_COLOR, alpha: 0.6 });
+        this.mapGraphics.fill({ color: FOG_COLOR, alpha: 0.5 });
         this.mapGraphics.circle(nx, ny, radius);
-        this.mapGraphics.stroke({ color: 0x3a4060, width: 1, alpha: 0.4 });
+        this.mapGraphics.stroke({ color: 0x3a4060, width: 1, alpha: 0.35 });
       }
 
-      // Show room image as circular thumb
       if (node.image) {
-        this.ensureThumb(id, node.image, nx, ny, radius, isCurrent ? 1 : 0.85);
+        this.ensureThumb(id, node.image, nx, ny, radius, isCurrent ? 1 : 0.8);
       }
 
       // Clickable navigation for adjacent rooms
       if (!isCurrent && this.isAdjacentToCurrent(id)) {
         const area = new Graphics();
-        area.circle(nx, ny, radius + 2);
+        area.circle(nx, ny, radius + 3);
         area.fill({ color: 0x000000, alpha: 0.001 });
         area.eventMode = "static";
         area.cursor = "pointer";
@@ -264,7 +282,6 @@ export class Minimap {
       return;
     }
 
-    // Don't re-trigger load if already loading
     if (this.loadingImages.has(roomId)) return;
     this.loadingImages.add(roomId);
 
@@ -279,7 +296,6 @@ export class Minimap {
       sprite.alpha = alpha;
       sprite.eventMode = "none";
 
-      // Circular mask
       const mask = new Graphics();
       mask.circle(nx, ny, radius);
       mask.fill(0xffffff);
@@ -307,8 +323,11 @@ export class Minimap {
   }
 
   private inBounds(x: number, y: number): boolean {
-    const margin = CURRENT_RADIUS + 4;
-    return x >= margin && x <= MAP_SIZE - margin && y >= margin && y <= MAP_SIZE - margin;
+    // Circle-based bounds check — only show nodes within the map circle
+    const dx = x - MAP_RADIUS;
+    const dy = y - MAP_RADIUS;
+    const maxR = MAP_RADIUS - CURRENT_RADIUS - 6;
+    return dx * dx + dy * dy <= maxR * maxR;
   }
 
   private isAdjacentToCurrent(targetId: string): boolean {
