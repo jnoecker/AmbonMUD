@@ -4,16 +4,59 @@ import type { CombatEventData } from "../../types";
 const FLOAT_SPEED = 50;
 const LIFETIME_MS = 1200;
 
+// Lunge animation
+const LUNGE_DURATION_MS = 280;
+const LUNGE_RETURN_MS = 200;
+const LUNGE_DISTANCE = 0.35; // fraction of distance between attacker and target
+
+// Slash effect
+const SLASH_DURATION_MS = 300;
+const SLASH_SIZE = 48;
+
+// Shake effect
+const SHAKE_DURATION_MS = 250;
+const SHAKE_INTENSITY = 6;
+
+// Cast glow
+const GLOW_DURATION_MS = 400;
+const GLOW_RADIUS = 60;
+
 interface FloatingNumber {
   text: Text;
   elapsed: number;
-  dx: number; // horizontal drift
+  dx: number;
 }
 
 interface FlashEffect {
   target: "player" | "enemy";
   elapsed: number;
   duration: number;
+  color: number;
+}
+
+interface LungeEffect {
+  who: "player" | "enemy";
+  elapsed: number;
+  phase: "lunge" | "return";
+  dx: number;
+  dy: number;
+}
+
+interface SlashEffect {
+  x: number;
+  y: number;
+  elapsed: number;
+  angle: number;
+}
+
+interface ShakeEffect {
+  who: "player" | "enemy";
+  elapsed: number;
+}
+
+interface GlowEffect {
+  who: "player" | "enemy";
+  elapsed: number;
   color: number;
 }
 
@@ -33,16 +76,20 @@ export class CombatAnimator {
   readonly container = new Container();
   private floats: FloatingNumber[] = [];
   private flashes: FlashEffect[] = [];
+  private lunges: LungeEffect[] = [];
+  private slashes: SlashEffect[] = [];
+  private shakes: ShakeEffect[] = [];
+  private glows: GlowEffect[] = [];
   private flashGraphics = new Graphics();
+  private slashGraphics = new Graphics();
+  private glowGraphics = new Graphics();
 
   constructor() {
+    this.container.addChild(this.glowGraphics);
     this.container.addChild(this.flashGraphics);
+    this.container.addChild(this.slashGraphics);
   }
 
-  /**
-   * Process a combat event and spawn appropriate visual feedback.
-   * playerX/playerY and enemyX/enemyY are the centers of the respective sprites.
-   */
   processEvent(event: CombatEventData, playerX: number, playerY: number, enemyX: number, enemyY: number) {
     const type = event.type;
 
@@ -54,26 +101,49 @@ export class CombatAnimator {
     if (type === "kill") {
       this.spawnFloat("DEFEATED", EVENT_COLORS.kill, enemyX, enemyY - 20);
       this.addFlash("enemy", 0xff6b6b, 400);
+      this.addShake("enemy");
       return;
     }
 
     if (type === "death") {
       this.spawnFloat("DEATH", EVENT_COLORS.death, playerX, playerY - 20);
       this.addFlash("player", 0xef5350, 400);
+      this.addShake("player");
       return;
     }
 
     if (event.damage > 0) {
       const color = EVENT_COLORS[type] ?? EVENT_COLORS.meleeHit;
-      const x = event.sourceIsPlayer ? enemyX : playerX;
-      const y = event.sourceIsPlayer ? enemyY : playerY;
-      this.spawnFloat(`-${event.damage}`, color, x, y);
-      this.addFlash(event.sourceIsPlayer ? "enemy" : "player", 0xff6b6b, 200);
+      const targetX = event.sourceIsPlayer ? enemyX : playerX;
+      const targetY = event.sourceIsPlayer ? enemyY : playerY;
+      this.spawnFloat(`-${event.damage}`, color, targetX, targetY);
+
+      // Attacker lunges toward target
+      const attacker: "player" | "enemy" = event.sourceIsPlayer ? "player" : "enemy";
+      const defender: "player" | "enemy" = event.sourceIsPlayer ? "enemy" : "player";
+      const dx = targetX - (event.sourceIsPlayer ? playerX : enemyX);
+      const dy = targetY - (event.sourceIsPlayer ? playerY : enemyY);
+      this.addLunge(attacker, dx * LUNGE_DISTANCE, dy * LUNGE_DISTANCE);
+
+      // Slash at the impact point
+      this.addSlash(targetX, targetY);
+
+      // Defender shakes on hit
+      this.addShake(defender);
+
+      // Flash on hit
+      this.addFlash(defender, 0xff6b6b, 200);
+
+      // Ability cast glow on caster
+      if (type === "abilityHit") {
+        this.addGlow(attacker, 0xb9aed8);
+      }
     }
 
     if (event.healing > 0) {
       const color = EVENT_COLORS[type] ?? EVENT_COLORS.heal;
       this.spawnFloat(`+${event.healing}`, color, playerX, playerY);
+      this.addGlow("player", 0x81c784);
     }
 
     if (event.absorbed > 0) {
@@ -103,6 +173,27 @@ export class CombatAnimator {
     this.flashes.push({ target, elapsed: 0, duration, color });
   }
 
+  private addLunge(who: "player" | "enemy", dx: number, dy: number) {
+    // Only one lunge per character at a time
+    this.lunges = this.lunges.filter((l) => l.who !== who);
+    this.lunges.push({ who, elapsed: 0, phase: "lunge", dx, dy });
+  }
+
+  private addSlash(x: number, y: number) {
+    const angle = -Math.PI / 4 + (Math.random() - 0.5) * 0.4;
+    this.slashes.push({ x, y, elapsed: 0, angle });
+  }
+
+  private addShake(who: "player" | "enemy") {
+    // Only one shake per character at a time
+    this.shakes = this.shakes.filter((s) => s.who !== who);
+    this.shakes.push({ who, elapsed: 0 });
+  }
+
+  private addGlow(who: "player" | "enemy", color: number) {
+    this.glows.push({ who, elapsed: 0, color });
+  }
+
   update(deltaMs: number) {
     // Update floating numbers
     for (let i = this.floats.length - 1; i >= 0; i--) {
@@ -127,6 +218,75 @@ export class CombatAnimator {
         this.flashes.splice(i, 1);
       }
     }
+
+    // Update lunges
+    for (let i = this.lunges.length - 1; i >= 0; i--) {
+      const lunge = this.lunges[i];
+      lunge.elapsed += deltaMs;
+      if (lunge.phase === "lunge" && lunge.elapsed >= LUNGE_DURATION_MS) {
+        lunge.phase = "return";
+        lunge.elapsed = 0;
+      }
+      if (lunge.phase === "return" && lunge.elapsed >= LUNGE_RETURN_MS) {
+        this.lunges.splice(i, 1);
+      }
+    }
+
+    // Update slashes
+    for (let i = this.slashes.length - 1; i >= 0; i--) {
+      this.slashes[i].elapsed += deltaMs;
+      if (this.slashes[i].elapsed >= SLASH_DURATION_MS) {
+        this.slashes.splice(i, 1);
+      }
+    }
+
+    // Update shakes
+    for (let i = this.shakes.length - 1; i >= 0; i--) {
+      this.shakes[i].elapsed += deltaMs;
+      if (this.shakes[i].elapsed >= SHAKE_DURATION_MS) {
+        this.shakes.splice(i, 1);
+      }
+    }
+
+    // Update glows
+    for (let i = this.glows.length - 1; i >= 0; i--) {
+      this.glows[i].elapsed += deltaMs;
+      if (this.glows[i].elapsed >= GLOW_DURATION_MS) {
+        this.glows.splice(i, 1);
+      }
+    }
+  }
+
+  /** Get the offset for a sprite due to lunge animation */
+  getLungeOffset(who: "player" | "enemy"): { x: number; y: number } {
+    const lunge = this.lunges.find((l) => l.who === who);
+    if (!lunge) return { x: 0, y: 0 };
+
+    let t: number;
+    if (lunge.phase === "lunge") {
+      // Ease-out quad for punchy snap forward
+      const raw = Math.min(1, lunge.elapsed / LUNGE_DURATION_MS);
+      t = 1 - (1 - raw) * (1 - raw);
+    } else {
+      // Ease-in-out for smooth return
+      const raw = Math.min(1, lunge.elapsed / LUNGE_RETURN_MS);
+      t = 1 - raw * raw;
+    }
+
+    return { x: lunge.dx * t, y: lunge.dy * t };
+  }
+
+  /** Get the shake offset for a sprite */
+  getShakeOffset(who: "player" | "enemy"): { x: number; y: number } {
+    const shake = this.shakes.find((s) => s.who === who);
+    if (!shake) return { x: 0, y: 0 };
+
+    const progress = shake.elapsed / SHAKE_DURATION_MS;
+    const decay = 1 - progress;
+    const frequency = 30; // Hz
+    const x = Math.sin(shake.elapsed * frequency * 0.06) * SHAKE_INTENSITY * decay;
+    const y = Math.cos(shake.elapsed * frequency * 0.04) * SHAKE_INTENSITY * decay * 0.5;
+    return { x, y };
   }
 
   /** Draw flash overlays at the given sprite positions */
@@ -144,6 +304,74 @@ export class CombatAnimator {
     }
   }
 
+  /** Draw slash effects */
+  drawSlashes() {
+    this.slashGraphics.clear();
+    for (const slash of this.slashes) {
+      const progress = slash.elapsed / SLASH_DURATION_MS;
+
+      // Phase 1 (0–0.4): slash draws in. Phase 2 (0.4–1.0): slash fades out.
+      const drawPhase = Math.min(1, progress / 0.4);
+      const fadePhase = progress > 0.4 ? (progress - 0.4) / 0.6 : 0;
+      const alpha = 0.9 * (1 - fadePhase);
+
+      const halfLen = SLASH_SIZE * drawPhase;
+      const cos = Math.cos(slash.angle);
+      const sin = Math.sin(slash.angle);
+
+      const x1 = slash.x - cos * halfLen;
+      const y1 = slash.y - sin * halfLen;
+      const x2 = slash.x + cos * halfLen;
+      const y2 = slash.y + sin * halfLen;
+
+      // Main red slash
+      this.slashGraphics.moveTo(x1, y1);
+      this.slashGraphics.lineTo(x2, y2);
+      this.slashGraphics.stroke({ color: 0xff4444, alpha, width: 3 });
+
+      // Bright core
+      this.slashGraphics.moveTo(x1, y1);
+      this.slashGraphics.lineTo(x2, y2);
+      this.slashGraphics.stroke({ color: 0xffaaaa, alpha: alpha * 0.7, width: 1.5 });
+
+      // Second cross-slash (offset slightly)
+      if (progress > 0.08) {
+        const angle2 = slash.angle + Math.PI / 2.5;
+        const cos2 = Math.cos(angle2);
+        const sin2 = Math.sin(angle2);
+        const phase2 = Math.min(1, (progress - 0.08) / 0.35);
+        const halfLen2 = SLASH_SIZE * 0.7 * phase2;
+        const fade2 = progress > 0.45 ? (progress - 0.45) / 0.55 : 0;
+        const alpha2 = 0.7 * (1 - fade2);
+
+        this.slashGraphics.moveTo(slash.x - cos2 * halfLen2, slash.y - sin2 * halfLen2);
+        this.slashGraphics.lineTo(slash.x + cos2 * halfLen2, slash.y + sin2 * halfLen2);
+        this.slashGraphics.stroke({ color: 0xff4444, alpha: alpha2, width: 2.5 });
+      }
+    }
+  }
+
+  /** Draw cast/heal glows behind sprites */
+  drawGlows(playerX: number, playerY: number, enemyX: number, enemyY: number) {
+    this.glowGraphics.clear();
+    for (const glow of this.glows) {
+      const progress = glow.elapsed / GLOW_DURATION_MS;
+      // Glow expands and fades
+      const scale = 0.6 + progress * 0.5;
+      const alpha = 0.35 * (1 - progress);
+      const cx = glow.who === "player" ? playerX : enemyX;
+      const cy = glow.who === "player" ? playerY : enemyY;
+      const r = GLOW_RADIUS * scale;
+
+      this.glowGraphics.circle(cx, cy, r);
+      this.glowGraphics.fill({ color: glow.color, alpha });
+
+      // Inner bright core
+      this.glowGraphics.circle(cx, cy, r * 0.5);
+      this.glowGraphics.fill({ color: 0xffffff, alpha: alpha * 0.4 });
+    }
+  }
+
   clear() {
     for (const f of this.floats) {
       this.container.removeChild(f.text);
@@ -151,6 +379,12 @@ export class CombatAnimator {
     }
     this.floats = [];
     this.flashes = [];
+    this.lunges = [];
+    this.slashes = [];
+    this.shakes = [];
+    this.glows = [];
     this.flashGraphics.clear();
+    this.slashGraphics.clear();
+    this.glowGraphics.clear();
   }
 }

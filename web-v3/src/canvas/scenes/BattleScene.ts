@@ -221,15 +221,19 @@ export class BattleScene {
     this.uiGraphics.lineTo(w, groundY);
     this.uiGraphics.stroke({ color: 0x4a4a6a, alpha: 0.4, width: 1 });
 
-    // Player position (left side)
+    // Player position (left side) with lunge + shake offsets
     const playerPos = this.getPlayerPosition();
+    const playerLunge = this.combatAnimator.getLungeOffset("player");
+    const playerShake = this.combatAnimator.getShakeOffset("player");
+    const playerDrawX = playerPos.x + playerLunge.x + playerShake.x;
+    const playerDrawY = playerPos.y + playerLunge.y + playerShake.y;
     if (this.playerSprite) {
-      this.playerSprite.x = playerPos.x;
-      this.playerSprite.y = playerPos.y;
+      this.playerSprite.x = playerDrawX;
+      this.playerSprite.y = playerDrawY;
     }
 
-    this.playerLabel.x = playerPos.x;
-    this.playerLabel.y = playerPos.y + SPRITE_SIZE / 2 + 6;
+    this.playerLabel.x = playerDrawX;
+    this.playerLabel.y = playerDrawY + SPRITE_SIZE / 2 + 6;
 
     // Player HP bar
     const playerHpPct = percent(vitals.hp, vitals.maxHp);
@@ -256,17 +260,21 @@ export class BattleScene {
     }
 
     // Status effects above the player
-    this.statusEffects.update(gameStateRef.current.effects, playerPos.x, playerPos.y - SPRITE_SIZE / 2 - 28);
+    this.statusEffects.update(gameStateRef.current.effects, playerDrawX, playerDrawY - SPRITE_SIZE / 2 - 28);
 
-    // Enemy position (right side)
+    // Enemy position (right side) with lunge + shake offsets
     const enemyPos = this.getEnemyPosition();
+    const enemyLunge = this.combatAnimator.getLungeOffset("enemy");
+    const enemyShake = this.combatAnimator.getShakeOffset("enemy");
+    const enemyDrawX = enemyPos.x + enemyLunge.x + enemyShake.x;
+    const enemyDrawY = enemyPos.y + enemyLunge.y + enemyShake.y;
     if (this.enemySprite) {
-      this.enemySprite.x = enemyPos.x;
-      this.enemySprite.y = enemyPos.y;
+      this.enemySprite.x = enemyDrawX;
+      this.enemySprite.y = enemyDrawY;
     }
 
-    this.enemyLabel.x = enemyPos.x;
-    this.enemyLabel.y = enemyPos.y + SPRITE_SIZE / 2 + 6;
+    this.enemyLabel.x = enemyDrawX;
+    this.enemyLabel.y = enemyDrawY + SPRITE_SIZE / 2 + 6;
 
     // Enemy HP bar (only when we have a target)
     this.enemyHpBar.clear();
@@ -314,11 +322,13 @@ export class BattleScene {
       }
     }
 
-    // Draw combat flash overlays
+    // Draw combat effects
+    this.combatAnimator.drawGlows(playerDrawX, playerDrawY, enemyDrawX, enemyDrawY);
     this.combatAnimator.drawFlashes(
-      playerPos.x, playerPos.y, SPRITE_SIZE, SPRITE_SIZE,
-      enemyPos.x, enemyPos.y, SPRITE_SIZE, SPRITE_SIZE,
+      playerDrawX, playerDrawY, SPRITE_SIZE, SPRITE_SIZE,
+      enemyDrawX, enemyDrawY, SPRITE_SIZE, SPRITE_SIZE,
     );
+    this.combatAnimator.drawSlashes();
   }
 
   private rebuildParty(members: Array<{ name: string; hp: number; maxHp: number }>) {
