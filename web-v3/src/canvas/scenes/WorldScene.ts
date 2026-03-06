@@ -257,11 +257,14 @@ export class WorldScene {
       this.drawCompassOverlay();
     }
 
-    // Animate video indicator: gentle pulse
+    // Animate video indicator: glow pulse + breathing scale
     if (this.videoBtn) {
       this.videoAnimTime += deltaMs / 1000;
-      const pulse = 0.8 + 0.2 * Math.sin(this.videoAnimTime * 2.2);
+      const t = this.videoAnimTime;
+      const pulse = 0.7 + 0.3 * Math.sin(t * 2.0);
       this.videoBtn.alpha = pulse;
+      const breathe = 1.0 + 0.08 * Math.sin(t * 1.6);
+      this.videoBtn.scale.set(breathe);
     }
 
     // Handle room transition animation
@@ -535,6 +538,12 @@ export class WorldScene {
       this.stairsDownHit.visible = hasDown;
       this.stairsDownHit.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE - 8;
       this.stairsDownHit.y = 4;
+    }
+
+    // Video button: bottom-center
+    if (this.videoBtn) {
+      this.videoBtn.x = w / 2;
+      this.videoBtn.y = h - 80;
     }
 
     // Role indicators
@@ -1035,7 +1044,7 @@ export class WorldScene {
 
     if (!videoUrl) return;
 
-    const SIZE = 56;
+    const SIZE = 72;
     const sprite = new Sprite(Texture.WHITE);
     sprite.width = SIZE;
     sprite.height = SIZE;
@@ -1054,9 +1063,9 @@ export class WorldScene {
       canvasCallbacks.openVideo?.(url);
     });
 
-    // Position: top-left below title area
-    sprite.x = 16 + SIZE / 2;
-    sprite.y = 60 + SIZE / 2;
+    // Position: bottom-center, above action bar
+    sprite.x = this.width / 2;
+    sprite.y = this.height - 80;
 
     this.container.addChild(sprite);
     this.videoBtn = sprite;
