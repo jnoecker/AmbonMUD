@@ -734,6 +734,7 @@ export function applyGmcpPackage(
             questGiver: entry.questGiver === true,
             shopKeeper: entry.shopKeeper === true,
             dialogue: entry.dialogue === true,
+            aggressive: entry.aggressive === true,
           })),
       );
       break;

@@ -88,6 +88,7 @@ function drawArrow(g: Graphics, cx: number, cy: number, dir: "up" | "down" | "le
 const ROLE_QUEST_COLOR = 0xf0c674;
 const ROLE_SHOP_COLOR = 0x81a2be;
 const DIALOGUE_ICON_SIZE = 28;
+const AGGRO_ICON_SIZE = 24;
 
 function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo) {
   const icons: number[] = [];
@@ -137,6 +138,8 @@ export class WorldScene {
 
   private dialogueTexture: Texture | null = null;
   private dialogueIcons: Map<string, Sprite> = new Map();
+  private aggroTexture: Texture | null = null;
+  private aggroIcons: Map<string, Sprite> = new Map();
 
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
@@ -225,6 +228,7 @@ export class WorldScene {
     this.shopBadge.addChild(this.shopLabel);
     this.loadShopIcon();
     this.loadDialogueTexture();
+    this.loadAggroTexture();
 
     this.container.addChild(this.exitGraphics);
     this.container.addChild(this.roleGraphics);
@@ -331,7 +335,7 @@ export class WorldScene {
       this.rebuildPlayers(players);
     }
 
-    const mobInfoKey = mobInfo.map((m) => `${m.id}:${m.questGiver}:${m.shopKeeper}:${m.dialogue}`).join("|");
+    const mobInfoKey = mobInfo.map((m) => `${m.id}:${m.questGiver}:${m.shopKeeper}:${m.dialogue}:${m.aggressive}`).join("|");
     if (mobInfoKey !== this.lastMobInfoKey) {
       this.lastMobInfoKey = mobInfoKey;
     }
@@ -475,6 +479,7 @@ export class WorldScene {
     // Draw NPC role indicators
     const mobInfo = state.mobInfo;
     const activeDialogueMobs = new Set<string>();
+    const activeAggroMobs = new Set<string>();
     if (mobInfo.length > 0) {
       for (const info of mobInfo) {
         const entry = this.mobSprites.get(info.id);
@@ -486,14 +491,25 @@ export class WorldScene {
           activeDialogueMobs.add(info.id);
           this.ensureDialogueIcon(info.id, sprite.x, sprite.y);
         }
+        if (info.aggressive) {
+          activeAggroMobs.add(info.id);
+          this.ensureAggroIcon(info.id, sprite.x, sprite.y);
+        }
       }
     }
-    // Remove stale dialogue icons
+    // Remove stale indicator icons
     for (const [id, icon] of this.dialogueIcons) {
       if (!activeDialogueMobs.has(id)) {
         this.container.removeChild(icon);
         icon.destroy();
         this.dialogueIcons.delete(id);
+      }
+    }
+    for (const [id, icon] of this.aggroIcons) {
+      if (!activeAggroMobs.has(id)) {
+        this.container.removeChild(icon);
+        icon.destroy();
+        this.aggroIcons.delete(id);
       }
     }
 
@@ -565,6 +581,11 @@ export class WorldScene {
       icon.destroy();
     }
     this.dialogueIcons.clear();
+    for (const icon of this.aggroIcons.values()) {
+      this.container.removeChild(icon);
+      icon.destroy();
+    }
+    this.aggroIcons.clear();
     this.mobSprites.clear();
 
     for (const mob of mobs) {
@@ -789,6 +810,14 @@ export class WorldScene {
     }
   }
 
+  private async loadAggroTexture() {
+    try {
+      this.aggroTexture = await Assets.load("/images/global_assets/aggro_indicator.png");
+    } catch {
+      // Fallback: no aggro sprites
+    }
+  }
+
   private ensureDialogueIcon(mobId: string, cx: number, cy: number) {
     if (!this.dialogueTexture) return;
     let icon = this.dialogueIcons.get(mobId);
@@ -803,6 +832,22 @@ export class WorldScene {
     }
     icon.x = cx;
     icon.y = cy - SPRITE_SIZE / 2 - 20;
+  }
+
+  private ensureAggroIcon(mobId: string, cx: number, cy: number) {
+    if (!this.aggroTexture) return;
+    let icon = this.aggroIcons.get(mobId);
+    if (!icon) {
+      icon = new Sprite(this.aggroTexture);
+      icon.width = AGGRO_ICON_SIZE;
+      icon.height = AGGRO_ICON_SIZE;
+      icon.anchor.set(0.5);
+      icon.eventMode = "none";
+      this.aggroIcons.set(mobId, icon);
+      this.container.addChild(icon);
+    }
+    icon.x = cx + SPRITE_SIZE / 2 - 4;
+    icon.y = cy - SPRITE_SIZE / 2 - 8;
   }
 
   private showPopout() {

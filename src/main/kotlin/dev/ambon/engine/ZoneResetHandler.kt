@@ -48,6 +48,7 @@ internal fun spawnToMobState(spawn: MobSpawn, world: World): MobState =
         goldMax = spawn.goldMax,
         dialogue = spawn.dialogue,
         behaviorTree = spawn.behaviorTree,
+        aggressive = spawn.aggressive,
         templateKey = spawn.id.value,
         spawnRoomId = spawn.roomId,
         spawnDistanceMap = computeDistanceMap(spawn.roomId, world),
