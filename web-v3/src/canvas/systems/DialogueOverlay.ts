@@ -23,6 +23,7 @@ export class DialogueOverlay {
 
   private lastDialogueKey: string | null = null;
   private width = 0;
+  private height = 0;
 
   constructor() {
     this.npcNameText = new Text({
@@ -41,8 +42,9 @@ export class DialogueOverlay {
     this.container.visible = false;
   }
 
-  resize(width: number) {
+  resize(width: number, height: number) {
     this.width = width;
+    this.height = height;
   }
 
   update() {
@@ -119,9 +121,9 @@ export class DialogueOverlay {
 
     contentHeight += BOX_PADDING;
 
-    // Position the box at upper-center
+    // Position the box at dead center
     const boxX = (this.width - boxWidth) / 2;
-    const boxY = 90;
+    const boxY = Math.max(20, (this.height - contentHeight) / 2);
 
     this.bg.clear();
     this.bg.roundRect(boxX, boxY, boxWidth, contentHeight, 6);

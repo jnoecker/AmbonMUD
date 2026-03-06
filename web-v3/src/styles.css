@@ -478,6 +478,7 @@ body {
 }
 
 .terminal-card {
+  position: relative;
   border-radius: var(--radius-lg);
   border: 1px solid rgb(88 89 114 / 30%);
   background:
@@ -4341,28 +4342,40 @@ body {
   pointer-events: none;
 }
 
-/* Terminal popout */
-.terminal-popout-content {
+/* Terminal overlay — appears over canvas when command input is focused */
+.terminal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  min-height: 300px;
+  justify-content: flex-end;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s var(--ease-in-out-smooth);
 }
 
-.terminal-popout-host {
-  flex: 1;
-  min-height: 300px;
-  max-height: none;
+.terminal-overlay-visible {
+  opacity: 1;
+  pointer-events: auto;
+  background: rgb(18 22 34 / 50%);
 }
 
-.terminal-popout-host .xterm,
-.terminal-popout-host .xterm-screen,
-.terminal-popout-host .xterm-viewport {
-  border-radius: 9px;
+.terminal-overlay-opaque {
+  background: rgb(18 22 34 / 88%);
+}
+
+.terminal-overlay .xterm,
+.terminal-overlay .xterm-screen,
+.terminal-overlay .xterm-viewport {
+  border-radius: 0;
   height: 100% !important;
 }
 
-.terminal-popout-host .xterm-viewport {
-  background: #2f3446 !important;
+.terminal-overlay .xterm-viewport {
+  background: transparent !important;
 }
 
 /* Login modal */

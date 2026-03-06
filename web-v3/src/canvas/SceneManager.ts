@@ -32,7 +32,7 @@ export class SceneManager {
   resize(width: number, height: number) {
     this.worldScene.resize(width, height);
     this.battleScene.resize(width, height);
-    this.dialogueOverlay.resize(width);
+    this.dialogueOverlay.resize(width, height);
   }
 
   update(deltaMs: number) {

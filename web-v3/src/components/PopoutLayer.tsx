@@ -16,7 +16,6 @@ interface PopoutLayerProps {
   equipment: Record<string, ItemSummary>;
   equipmentSlots: string[];
   mapCanvasRef: RefObject<HTMLCanvasElement | null>;
-  terminalPopoutRef: RefObject<HTMLDivElement | null>;
   canManageItems: boolean;
   detailMob: RoomMob | null;
   detailItem: RoomItem | null;
@@ -42,7 +41,6 @@ export function PopoutLayer({
   equipment,
   equipmentSlots,
   mapCanvasRef,
-  terminalPopoutRef,
   canManageItems,
   detailMob,
   detailItem,
@@ -282,12 +280,6 @@ export function PopoutLayer({
         {activePopout === "help" && (
           <div className="popout-content">
             <HelpContent isStaff={isStaff} />
-          </div>
-        )}
-
-        {activePopout === "terminal" && (
-          <div className="popout-content terminal-popout-content">
-            <div ref={terminalPopoutRef} className="terminal-host terminal-popout-host" aria-label="AmbonMUD terminal" />
           </div>
         )}
 

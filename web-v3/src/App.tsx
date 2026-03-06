@@ -110,7 +110,7 @@ function parseWhoEntries(messageChunk: string): string[] | null {
 
 function App() {
   const terminalHiddenRef = useRef<HTMLDivElement | null>(null);
-  const terminalPopoutRef = useRef<HTMLDivElement | null>(null);
+  const terminalOverlayRef = useRef<HTMLDivElement | null>(null);
   const composerInputRef = useRef<HTMLInputElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
@@ -119,6 +119,8 @@ function App() {
   const [activePopout, setActivePopout] = useState<PopoutPanel>(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [composerValue, setComposerValue] = useState("");
+  const [terminalVisible, setTerminalVisible] = useState(false);
+  const [terminalOpaque, setTerminalOpaque] = useState(false);
 
   const [vitals, setVitals] = useState<Vitals>(EMPTY_VITALS);
   const [statusVarLabels, setStatusVarLabels] = useState<StatusVarLabels>(DEFAULT_STATUS_VAR_LABELS);
@@ -201,7 +203,7 @@ function App() {
     const term = terminalRef.current;
     const fitAddon = fitAddonRef.current;
     // Fit to whichever container the terminal is currently in
-    const host = terminalPopoutRef.current ?? terminalHiddenRef.current;
+    const host = terminalOverlayRef.current ?? terminalHiddenRef.current;
     if (!term || !fitAddon || !host) return;
     if (host.clientWidth <= 0 || host.clientHeight <= 0) return;
 
@@ -385,15 +387,16 @@ function App() {
     };
   }, [connect, disconnect, drawMap, fitTerminal]);
 
+  // Refit terminal when overlay becomes visible
   useEffect(() => {
-    if (activePopout !== "terminal") return;
+    if (!terminalVisible) return;
     const frameFit = window.requestAnimationFrame(() => fitTerminal());
     const delayedFit = window.setTimeout(() => fitTerminal(), 90);
     return () => {
       window.cancelAnimationFrame(frameFit);
       window.clearTimeout(delayedFit);
     };
-  }, [activePopout, fitTerminal]);
+  }, [terminalVisible, fitTerminal]);
 
   useEffect(() => {
     const fontSet = document.fonts;
@@ -430,22 +433,28 @@ function App() {
     return () => window.cancelAnimationFrame(handle);
   }, [activePopout, drawMap]);
 
-  // Reparent terminal into popout when opened, back to hidden when closed
+  // Reparent terminal into overlay when visible, back to hidden when not
   useEffect(() => {
     const term = terminalRef.current;
     if (!term) return;
     const termEl = term.element;
     if (!termEl) return;
 
-    if (activePopout === "terminal" && terminalPopoutRef.current) {
-      terminalPopoutRef.current.appendChild(termEl);
-      window.requestAnimationFrame(() => fitTerminal());
-      const delayedFit = window.setTimeout(() => fitTerminal(), 80);
+    if (terminalVisible && terminalOverlayRef.current) {
+      terminalOverlayRef.current.appendChild(termEl);
+      window.requestAnimationFrame(() => {
+        fitTerminal();
+        term.scrollToBottom();
+      });
+      const delayedFit = window.setTimeout(() => {
+        fitTerminal();
+        term.scrollToBottom();
+      }, 80);
       return () => window.clearTimeout(delayedFit);
     } else if (terminalHiddenRef.current && termEl.parentElement !== terminalHiddenRef.current) {
       terminalHiddenRef.current.appendChild(termEl);
     }
-  }, [activePopout, fitTerminal]);
+  }, [terminalVisible, fitTerminal]);
 
   // Sync React state into the game state bridge for PixiJS
   useEffect(() => {
@@ -531,8 +540,6 @@ function App() {
         ? (detailItem?.name ?? "Item")
       : activePopout === "help"
         ? "Command Reference"
-      : activePopout === "terminal"
-        ? "Terminal"
       : activePopout === "character"
         ? "Character"
       : activePopout === "chat"
@@ -673,7 +680,12 @@ function App() {
       </header>
 
       <div className="dashboard">
-        <PlayPanel preLogin={preLogin} />
+        <PlayPanel
+          preLogin={preLogin}
+          terminalOverlayRef={terminalOverlayRef}
+          terminalVisible={terminalVisible}
+          terminalOpaque={terminalOpaque}
+        />
 
         <ActionBar
           connected={connected}
@@ -690,9 +702,20 @@ function App() {
           onComposerChange={(value) => {
             setComposerValue(value);
             resetComposerCompletion();
+            if (value.length > 0) setTerminalOpaque(true);
           }}
           onComposerKeyDown={onComposerKeyDown}
-          onSubmitComposer={submitComposer}
+          onComposerFocus={() => {
+            setTerminalVisible(true);
+          }}
+          onComposerBlur={() => {
+            setTerminalVisible(false);
+            setTerminalOpaque(false);
+          }}
+          onSubmitComposer={(event) => {
+            submitComposer(event);
+            setTerminalOpaque(true);
+          }}
         />
       </div>
 
@@ -705,7 +728,6 @@ function App() {
         equipment={equipment}
         equipmentSlots={equipmentSlots}
         mapCanvasRef={mapCanvasRef}
-        terminalPopoutRef={terminalPopoutRef}
         canManageItems={connected && hasCharacterProfile}
         detailMob={detailMob}
         detailItem={detailItem}
