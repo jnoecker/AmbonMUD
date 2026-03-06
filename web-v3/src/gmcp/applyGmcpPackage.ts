@@ -732,6 +732,8 @@ export function applyGmcpPackage(
             level: safeNumber(entry.level, 1),
             tier: typeof entry.tier === "string" ? entry.tier : "standard",
             questGiver: entry.questGiver === true,
+            questAvailable: entry.questAvailable === true,
+            questComplete: entry.questComplete === true,
             shopKeeper: entry.shopKeeper === true,
             dialogue: entry.dialogue === true,
             aggressive: entry.aggressive === true,

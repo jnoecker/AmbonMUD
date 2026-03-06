@@ -279,6 +279,8 @@ export interface MobInfo {
   level: number;
   tier: string;
   questGiver: boolean;
+  questAvailable: boolean;
+  questComplete: boolean;
   shopKeeper: boolean;
   dialogue: boolean;
   aggressive: boolean;
