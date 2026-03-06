@@ -7,6 +7,22 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import java.util.Random
 
+/**
+ * Applies healing to [target], marks vitals dirty if HP changed, and returns the actual amount healed.
+ */
+internal fun applyHeal(
+    sessionId: SessionId,
+    target: PlayerState,
+    amount: Int,
+    dirtyNotifier: DirtyNotifier,
+): Int {
+    val before = target.hp
+    target.healHp(amount)
+    val healed = target.hp - before
+    if (healed > 0) dirtyNotifier.playerVitalsDirty(sessionId)
+    return healed
+}
+
 /** Standard error when `players.get(sessionId)` returns null in a system method returning `String?`. */
 internal const val ERR_NOT_CONNECTED = "You are not connected."
 

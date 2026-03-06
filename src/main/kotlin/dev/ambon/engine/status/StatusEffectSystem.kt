@@ -8,9 +8,9 @@ import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.GameSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.applyHeal
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.healHp
 import dev.ambon.engine.remapKey
 import dev.ambon.engine.rollRange
 import dev.ambon.engine.takeDamage
@@ -185,11 +185,8 @@ class StatusEffectSystem(
                             )
                         }
                         EffectType.HOT -> {
-                            val before = player.hp
-                            player.healHp(value)
-                            val healed = player.hp - before
+                            val healed = applyHeal(sessionId, player, value, dirtyNotifier)
                             if (healed > 0) {
-                                dirtyNotifier.playerVitalsDirty(sessionId)
                                 outbound.send(
                                     OutboundEvent.SendText(
                                         sessionId,
