@@ -3,6 +3,7 @@ package dev.ambon.engine.abilities
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.ERR_NOT_CONNECTED
@@ -11,11 +12,11 @@ import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
+import dev.ambon.engine.applyHeal
 import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.ceilSeconds
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.healHp
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.remapKey
 import dev.ambon.engine.resolvePlayerStats
@@ -137,30 +138,7 @@ class AbilitySystem(
             is AbilityEffect.DirectDamage -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
                 val baseDamage = rollRange(rng, effect.damage.min, effect.damage.max)
-                val damage = (baseDamage + intBonus).coerceAtLeast(1)
-                mob.takeDamage(damage)
-                dirtyNotifier.mobHpDirty(mob.id)
-                combat.addThreat(mob.id, sessionId, damage.toDouble())
-                outbound.send(
-                    OutboundEvent.SendText(
-                        sessionId,
-                        "Your ${ability.displayName} hits ${mob.name} for $damage damage.",
-                    ),
-                )
-                onCombatEvent(
-                    sessionId,
-                    CombatEvent.AbilityHit(
-                        abilityId = ability.id.value,
-                        abilityName = ability.displayName,
-                        targetName = mob.name,
-                        targetId = mob.id.value,
-                        damage = damage,
-                        sourceIsPlayer = true,
-                    ),
-                )
-                if (mob.hp <= 0) {
-                    combat.handleSpellKill(sessionId, mob)
-                }
+                applySpellDamage(sessionId, mob, ability, baseDamage, intBonus)
             }
             is AbilityEffect.AreaDamage -> {
                 val mobRegistry = mobs ?: return "Area damage is not available."
@@ -182,30 +160,7 @@ class AbilitySystem(
                 deductManaAndCooldown(sessionId, player, ability, now)
                 for (m in targetMobs) {
                     val baseDamage = rollRange(rng, effect.damage.min, effect.damage.max)
-                    val damage = (baseDamage + intBonus).coerceAtLeast(1)
-                    m.takeDamage(damage)
-                    dirtyNotifier.mobHpDirty(m.id)
-                    combat.addThreat(m.id, sessionId, damage.toDouble())
-                    outbound.send(
-                        OutboundEvent.SendText(
-                            sessionId,
-                            "Your ${ability.displayName} hits ${m.name} for $damage damage.",
-                        ),
-                    )
-                    onCombatEvent(
-                        sessionId,
-                        CombatEvent.AbilityHit(
-                            abilityId = ability.id.value,
-                            abilityName = ability.displayName,
-                            targetName = m.name,
-                            targetId = m.id.value,
-                            damage = damage,
-                            sourceIsPlayer = true,
-                        ),
-                    )
-                    if (m.hp <= 0) {
-                        combat.handleSpellKill(sessionId, m)
-                    }
+                    applySpellDamage(sessionId, m, ability, baseDamage, intBonus)
                 }
             }
             is AbilityEffect.Taunt -> {
@@ -257,11 +212,8 @@ class AbilitySystem(
             is AbilityEffect.DirectHeal -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
                 val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
-                val before = player.hp
-                player.healHp(healAmount)
-                val healed = player.hp - before
+                val healed = applyHeal(sessionId, player, healAmount, dirtyNotifier)
                 if (healed > 0) {
-                    dirtyNotifier.playerVitalsDirty(sessionId)
                     combat.addHealingThreat(sessionId, healed)
                     onCombatEvent(
                         sessionId,
@@ -342,11 +294,8 @@ class AbilitySystem(
             is AbilityEffect.DirectHeal -> {
                 deductManaAndCooldown(sessionId, player, ability, now)
                 val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
-                val before = target.hp
-                target.healHp(healAmount)
-                val healed = target.hp - before
+                val healed = applyHeal(targetSid, target, healAmount, dirtyNotifier)
                 if (healed > 0) {
-                    dirtyNotifier.playerVitalsDirty(targetSid)
                     combat.addHealingThreat(sessionId, healed)
                     onCombatEvent(
                         sessionId,
@@ -419,6 +368,39 @@ class AbilitySystem(
             exclude = sessionId,
         )
         return null
+    }
+
+    private suspend fun applySpellDamage(
+        sessionId: SessionId,
+        mob: MobState,
+        ability: AbilityDefinition,
+        baseDamage: Int,
+        intBonus: Int,
+    ) {
+        val damage = (baseDamage + intBonus).coerceAtLeast(1)
+        mob.takeDamage(damage)
+        dirtyNotifier.mobHpDirty(mob.id)
+        combat.addThreat(mob.id, sessionId, damage.toDouble())
+        outbound.send(
+            OutboundEvent.SendText(
+                sessionId,
+                "Your ${ability.displayName} hits ${mob.name} for $damage damage.",
+            ),
+        )
+        onCombatEvent(
+            sessionId,
+            CombatEvent.AbilityHit(
+                abilityId = ability.id.value,
+                abilityName = ability.displayName,
+                targetName = mob.name,
+                targetId = mob.id.value,
+                damage = damage,
+                sourceIsPlayer = true,
+            ),
+        )
+        if (mob.hp <= 0) {
+            combat.handleSpellKill(sessionId, mob)
+        }
     }
 
     private suspend fun deductManaAndCooldown(

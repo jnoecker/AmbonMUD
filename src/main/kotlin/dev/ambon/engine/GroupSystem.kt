@@ -152,13 +152,8 @@ class GroupSystem(
         groupBySession[inviteeSid] = group
 
         // Notify all group members
-        for (sid in group.members) {
-            markGroupDirty(sid)
-            if (sid == inviteeSid) {
-                outbound.send(OutboundEvent.SendText(sid, "You join ${inviter.name}'s group."))
-            } else {
-                outbound.send(OutboundEvent.SendText(sid, "${invitee.name} joins the group."))
-            }
+        notifyMembers(group) { sid ->
+            if (sid == inviteeSid) "You join ${inviter.name}'s group." else "${invitee.name} joins the group."
         }
 
         return null
@@ -186,15 +181,9 @@ class GroupSystem(
         if (group.leader == sessionId) {
             group.leader = group.members.first()
             val newLeaderName = players.get(group.leader)?.name ?: "Someone"
-            for (sid in group.members) {
-                markGroupDirty(sid)
-                outbound.send(OutboundEvent.SendText(sid, "$playerName leaves the group. $newLeaderName is now the leader."))
-            }
+            notifyMembers(group, "$playerName leaves the group. $newLeaderName is now the leader.")
         } else {
-            for (sid in group.members) {
-                markGroupDirty(sid)
-                outbound.send(OutboundEvent.SendText(sid, "$playerName leaves the group."))
-            }
+            notifyMembers(group, "$playerName leaves the group.")
         }
 
         return null
@@ -231,10 +220,7 @@ class GroupSystem(
             return null
         }
 
-        for (sid in group.members) {
-            markGroupDirty(sid)
-            outbound.send(OutboundEvent.SendText(sid, "$kickedName has been kicked from the group."))
-        }
+        notifyMembers(group, "$kickedName has been kicked from the group.")
 
         return null
     }
@@ -323,6 +309,20 @@ class GroupSystem(
         }
         if (group.leader == oldSid) {
             group.leader = newSid
+        }
+    }
+
+    private suspend fun notifyMembers(group: Group, message: String) {
+        for (sid in group.members) {
+            markGroupDirty(sid)
+            outbound.send(OutboundEvent.SendText(sid, message))
+        }
+    }
+
+    private suspend fun notifyMembers(group: Group, messageFor: (SessionId) -> String) {
+        for (sid in group.members) {
+            markGroupDirty(sid)
+            outbound.send(OutboundEvent.SendText(sid, messageFor(sid)))
         }
     }
 
