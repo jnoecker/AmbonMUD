@@ -1114,6 +1114,8 @@ class GmcpEmitterTest {
                         level = 3,
                         tier = "standard",
                         questGiver = true,
+                        questAvailable = true,
+                        questComplete = false,
                         shopKeeper = false,
                         dialogue = true,
                         aggressive = false,

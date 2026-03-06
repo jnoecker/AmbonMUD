@@ -7,6 +7,7 @@ import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.crafting.GatheringRegistry
@@ -33,4 +34,5 @@ data class EngineContext(
     val gatheringRegistry: GatheringRegistry? = null,
     val shopRegistry: ShopRegistry? = null,
     val economyConfig: EconomyConfig = EconomyConfig(),
+    val questSystem: QuestSystem? = null,
 )

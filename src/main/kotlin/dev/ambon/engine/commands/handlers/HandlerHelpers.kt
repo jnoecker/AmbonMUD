@@ -16,6 +16,7 @@ import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
+import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.OutboundEvent
@@ -91,7 +92,7 @@ internal suspend fun requireSameRoom(
 
 /** Convenience extension that delegates to the full [sendLook], pulling all dependencies from this context. */
 internal suspend fun EngineContext.sendLook(sessionId: SessionId) {
-    sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter, gatheringRegistry)
+    sendLook(sessionId, world, players, mobs, items, worldState, outbound, gmcpEmitter, gatheringRegistry, questSystem)
     emitShopGmcp(sessionId)
 }
 
@@ -126,6 +127,7 @@ internal suspend fun sendLook(
     outbound: OutboundBus,
     gmcpEmitter: GmcpEmitter?,
     gatheringRegistry: GatheringRegistry? = null,
+    questSystem: QuestSystem? = null,
 ) {
     val me = players.get(sessionId) ?: return
     val roomId = me.roomId
@@ -225,7 +227,17 @@ internal suspend fun sendLook(
     gmcpEmitter?.sendRoomInfo(sessionId, room)
     gmcpEmitter?.sendRoomPlayers(sessionId, rawRoomPlayers)
     gmcpEmitter?.sendRoomMobs(sessionId, rawRoomMobs)
-    gmcpEmitter?.sendRoomMobInfo(sessionId, gmcpEmitter.buildMobInfoEntries(rawRoomMobs))
+    val mobIds = rawRoomMobs.map { it.id.value }
+    val questAvailable = questSystem?.questAvailableMobIds(sessionId, mobIds) ?: emptySet()
+    val questComplete = questSystem?.questCompleteMobIds(sessionId, mobIds) ?: emptySet()
+    gmcpEmitter?.sendRoomMobInfo(
+        sessionId,
+        gmcpEmitter.buildMobInfoEntries(
+            rawRoomMobs,
+            questAvailableMobIds = questAvailable,
+            questCompleteMobIds = questComplete,
+        ),
+    )
     gmcpEmitter?.sendRoomItems(sessionId, here)
 }
 

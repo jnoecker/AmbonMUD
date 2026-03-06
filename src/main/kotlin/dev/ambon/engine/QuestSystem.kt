@@ -43,6 +43,27 @@ class QuestSystem(
         }
     }
 
+    /** Returns mob IDs that offer quests the player can accept. */
+    fun questAvailableMobIds(sessionId: SessionId, mobIds: Collection<String>): Set<String> {
+        val ps = players.get(sessionId) ?: return emptySet()
+        return mobIds.filterTo(mutableSetOf()) { mobId ->
+            registry.questsForMob(mobId).any { quest ->
+                !ps.activeQuests.containsKey(quest.id) && !ps.completedQuestIds.contains(quest.id)
+            }
+        }
+    }
+
+    /** Returns mob IDs that have a turn-in quest whose objectives the player has completed. */
+    fun questCompleteMobIds(sessionId: SessionId, mobIds: Collection<String>): Set<String> {
+        val ps = players.get(sessionId) ?: return emptySet()
+        return mobIds.filterTo(mutableSetOf()) { mobId ->
+            registry.questsForMob(mobId).any { quest ->
+                quest.completionType == CompletionType.NPC_TURN_IN &&
+                    ps.activeQuests[quest.id]?.objectives?.all { it.isComplete } == true
+            }
+        }
+    }
+
     /**
      * Accept a quest by id. Returns an error string, or null on success.
      */
