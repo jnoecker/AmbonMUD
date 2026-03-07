@@ -103,8 +103,8 @@ class PlayerProgression(
      */
     fun applyLevelStats(ps: PlayerState, level: Int) {
         val (classHpPerLevel, classManaPerLevel) = resolveClassScaling(ps.playerClass)
-        val newMaxHp = maxHpForLevel(level, ps.getStat(bindings.hpScalingStat), classHpPerLevel)
-        val newMaxMana = maxManaForLevel(level, ps.getStat(bindings.manaScalingStat), classManaPerLevel)
+        val newMaxHp = maxHpForLevel(level, ps.stats[bindings.hpScalingStat], classHpPerLevel)
+        val newMaxMana = maxManaForLevel(level, ps.stats[bindings.manaScalingStat], classManaPerLevel)
         ps.baseMaxHp = newMaxHp
         ps.maxHp = newMaxHp
         ps.hp = ps.hp.coerceIn(1, newMaxHp)
@@ -180,8 +180,8 @@ class PlayerProgression(
         player: PlayerState,
         amount: Long,
     ): LevelUpResult {
-        val hpStat = player.getStat(bindings.hpScalingStat)
-        val manaStat = player.getStat(bindings.manaScalingStat)
+        val hpStat = player.stats[bindings.hpScalingStat]
+        val manaStat = player.stats[bindings.manaScalingStat]
         val (classHpPerLevel, classManaPerLevel) = resolveClassScaling(player.playerClass)
         val currentXpTotal = player.xpTotal.coerceAtLeast(0L)
         val currentLevel = computeLevel(currentXpTotal)

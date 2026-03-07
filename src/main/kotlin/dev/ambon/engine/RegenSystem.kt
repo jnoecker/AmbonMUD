@@ -101,7 +101,7 @@ class RegenSystem(
 
     private fun regenIntervalMs(player: PlayerState, equipBonus: Int): Long =
         regenInterval(
-            player.getStat(bindings.hpRegenStat) + equipBonus,
+            player.stats[bindings.hpRegenStat] + equipBonus,
             baseIntervalMs,
             bindings.hpRegenMsPerPoint,
             minIntervalMs,
@@ -109,7 +109,7 @@ class RegenSystem(
 
     private fun manaRegenIntervalMs(player: PlayerState, equipBonus: Int): Long =
         regenInterval(
-            player.getStat(bindings.manaRegenStat) + equipBonus,
+            player.stats[bindings.manaRegenStat] + equipBonus,
             manaBaseIntervalMs,
             bindings.manaRegenMsPerPoint,
             manaMinIntervalMs,

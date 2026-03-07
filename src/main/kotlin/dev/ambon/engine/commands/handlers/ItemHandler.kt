@@ -253,7 +253,7 @@ class ItemHandler(
 
         players.withPlayer(sessionId) { player ->
             val equipCha = items.equipment(sessionId).values.sumOf { it.item.stats.cha }
-            val adjustedXp = progression.applyCharismaXpBonus(player.charisma + equipCha, scaledXp)
+            val adjustedXp = progression.applyCharismaXpBonus(player.stats["CHA"] + equipCha, scaledXp)
 
             val result = players.grantXp(sessionId, adjustedXp, progression) ?: return
             metrics.onXpAwarded(adjustedXp, "item_use")
@@ -262,7 +262,7 @@ class ItemHandler(
             if (result.levelsGained <= 0) return
             metrics.onLevelUp()
 
-            val levelUpMessage = progression.buildLevelUpMessage(result, player.constitution, player.intelligence, player.playerClass)
+            val levelUpMessage = progression.buildLevelUpMessage(result, player.stats["CON"], player.stats["INT"], player.playerClass)
             outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
 
             if (abilitySystem != null) {

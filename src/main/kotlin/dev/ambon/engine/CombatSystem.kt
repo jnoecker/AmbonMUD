@@ -702,7 +702,7 @@ class CombatSystem(
         for (sid in recipients) {
             val player = players.get(sid) ?: continue
             val equipStats = items.equipmentBonuses(sid).stats.toStatMap()
-            val totalBonusStat = player.getStat(config.bindings.xpBonusStat) + equipStats[config.bindings.xpBonusStat]
+            val totalBonusStat = player.stats[config.bindings.xpBonusStat] + equipStats[config.bindings.xpBonusStat]
             val reward = progression.applyCharismaXpBonus(totalBonusStat, perPlayerXp)
 
             val result = players.grantXp(sid, reward, progression) ?: continue
@@ -715,8 +715,8 @@ class CombatSystem(
                 val levelUpMessage =
                     progression.buildLevelUpMessage(
                         result,
-                        player.getStat(config.bindings.hpScalingStat),
-                        player.getStat(config.bindings.manaScalingStat),
+                        player.stats[config.bindings.hpScalingStat],
+                        player.stats[config.bindings.manaScalingStat],
                         player.playerClass,
                     )
                 outbound.send(OutboundEvent.SendText(sid, levelUpMessage))

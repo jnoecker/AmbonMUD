@@ -14,7 +14,6 @@ import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.getStat
 import dev.ambon.engine.status.StatusEffectSystem
 
 class ProgressionHandler(
@@ -87,7 +86,7 @@ class ProgressionHandler(
                     OutboundEvent.SendInfo(
                         sessionId,
                         "  " + row.joinToString("  ") { def ->
-                            val base = me.getStat(def.id)
+                            val base = me.stats[def.id]
                             val equipBonus = equipped.values.sumOf { it.item.stats.toStatMap()[def.id] }
                             "${def.abbreviation}: ${formatStat(base, equipBonus)}"
                         },

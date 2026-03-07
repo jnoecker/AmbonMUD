@@ -500,7 +500,7 @@ class GmcpEmitter(
         armor: Int,
         dodgePercent: Int,
     ) {
-        val baseStats = player.asStatMap()
+        val baseStats = player.stats
         val statEntries = statRegistry?.all()?.map { def ->
             CharStatEntry(
                 id = def.id,

@@ -23,12 +23,14 @@ data class PlayerState(
     var baseMaxHp: Int = BASE_MAX_HP,
     var hp: Int = BASE_MAX_HP,
     var maxHp: Int = BASE_MAX_HP,
-    var strength: Int = BASE_STAT,
-    var dexterity: Int = BASE_STAT,
-    var constitution: Int = BASE_STAT,
-    var intelligence: Int = BASE_STAT,
-    var wisdom: Int = BASE_STAT,
-    var charisma: Int = BASE_STAT,
+    var stats: StatMap = StatMap.of(
+        "STR" to BASE_STAT,
+        "DEX" to BASE_STAT,
+        "CON" to BASE_STAT,
+        "INT" to BASE_STAT,
+        "WIS" to BASE_STAT,
+        "CHA" to BASE_STAT,
+    ),
     var gender: String = "ENBY",
     var race: String = "HUMAN",
     var playerClass: String = "WARRIOR",
@@ -78,9 +80,7 @@ data class PlayerState(
 
     override fun toString(): String =
         "PlayerState(sessionId=$sessionId, name=$name, roomId=$roomId, playerId=$playerId, " +
-            "baseMaxHp=$baseMaxHp, hp=$hp, maxHp=$maxHp, " +
-            "strength=$strength, dexterity=$dexterity, constitution=$constitution, " +
-            "intelligence=$intelligence, wisdom=$wisdom, charisma=$charisma, " +
+            "baseMaxHp=$baseMaxHp, hp=$hp, maxHp=$maxHp, stats=$stats, " +
             "race=$race, playerClass=$playerClass, level=$level, xpTotal=$xpTotal, " +
             "ansiEnabled=$ansiEnabled, isStaff=$isStaff, " +
             "mana=$mana, maxMana=$maxMana, baseMana=$baseMana, gold=$gold, " +
@@ -131,12 +131,14 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         roomId = roomId,
         playerId = id,
         hp = hp,
-        strength = strength,
-        dexterity = dexterity,
-        constitution = constitution,
-        intelligence = intelligence,
-        wisdom = wisdom,
-        charisma = charisma,
+        stats = StatMap.of(
+            "STR" to strength,
+            "DEX" to dexterity,
+            "CON" to constitution,
+            "INT" to intelligence,
+            "WIS" to wisdom,
+            "CHA" to charisma,
+        ),
         gender = gender,
         race = race,
         playerClass = playerClass,
@@ -174,12 +176,12 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         id = pid,
         name = name,
         roomId = roomId,
-        strength = strength,
-        dexterity = dexterity,
-        constitution = constitution,
-        intelligence = intelligence,
-        wisdom = wisdom,
-        charisma = charisma,
+        strength = stats["STR"],
+        dexterity = stats["DEX"],
+        constitution = stats["CON"],
+        intelligence = stats["INT"],
+        wisdom = stats["WIS"],
+        charisma = stats["CHA"],
         gender = gender,
         race = race,
         playerClass = playerClass,
@@ -219,42 +221,12 @@ fun MobState.takeDamage(amount: Int) {
     hp = (hp - amount).coerceAtLeast(0)
 }
 
-/**
- * Returns the base value of the named stat from this player's individual fields.
- * Bridge method used during the StatBlock → StatMap migration (Phase 2); removed in Phase 3
- * when [PlayerState] stores stats as a [StatMap] directly.
- */
-fun PlayerState.getStat(id: String): Int =
-    when (id.uppercase()) {
-        "STR" -> strength
-        "DEX" -> dexterity
-        "CON" -> constitution
-        "INT" -> intelligence
-        "WIS" -> wisdom
-        "CHA" -> charisma
-        else -> PlayerState.BASE_STAT
-    }
-
 /** Combines [player] base stats with [equip] bonuses and optional status-effect [mods]. */
 fun resolveEffectiveStats(
     player: PlayerState,
     equip: ItemRegistry.EquipmentBonuses,
     mods: StatMap = StatMap.EMPTY,
-): StatMap {
-    val base = player.asStatMap()
-    return base + equip.stats.toStatMap() + mods
-}
-
-/** Returns the player's base stats as a [StatMap]. Bridge method removed in Phase 3. */
-fun PlayerState.asStatMap(): StatMap =
-    StatMap.of(
-        "STR" to strength,
-        "DEX" to dexterity,
-        "CON" to constitution,
-        "INT" to intelligence,
-        "WIS" to wisdom,
-        "CHA" to charisma,
-    )
+): StatMap = player.stats + equip.stats.toStatMap() + mods
 
 /**
  * Convenience overload that gathers equipment bonuses and status-effect mods

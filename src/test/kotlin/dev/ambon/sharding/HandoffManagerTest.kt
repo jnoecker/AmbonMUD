@@ -110,7 +110,7 @@ class HandoffManagerTest {
                 hp = 15,
                 maxHp = 20,
                 baseMaxHp = 18,
-                constitution = 3,
+                stats = dev.ambon.domain.StatMap.of("CON" to 3),
                 level = 5,
                 xpTotal = 25_000L,
                 ansiEnabled = true,
