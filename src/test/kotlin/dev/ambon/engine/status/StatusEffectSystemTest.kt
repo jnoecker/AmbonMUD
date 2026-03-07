@@ -1,6 +1,5 @@
 package dev.ambon.engine.status
 
-import dev.ambon.domain.StatBlock
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
@@ -623,19 +622,4 @@ class StatusEffectSystemTest {
 
             assertFalse(h.system.hasPlayerEffect(sid, EffectType.DOT))
         }
-
-    // ── StatBlock Addition ──
-
-    @Test
-    fun `StatBlock plus operator sums all fields`() {
-        val a = StatBlock(str = 1, dex = 2, con = 3, int = 4, wis = 5, cha = 6)
-        val b = StatBlock(str = 10, dex = 20, con = 30, int = 40, wis = 50, cha = 60)
-        val sum = a + b
-        assertEquals(11, sum.str)
-        assertEquals(22, sum.dex)
-        assertEquals(33, sum.con)
-        assertEquals(44, sum.int)
-        assertEquals(55, sum.wis)
-        assertEquals(66, sum.cha)
-    }
 }

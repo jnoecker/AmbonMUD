@@ -1,9 +1,6 @@
 package dev.ambon.engine
 
-import dev.ambon.domain.StatBlock
 import dev.ambon.domain.StatMap
-import dev.ambon.domain.toStatBlock
-import dev.ambon.domain.toStatMap
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -76,32 +73,5 @@ class StatMapTest {
         // Should see STR=5, not both STR=3 and str=2
         assertEquals(5, result["STR"])
         assertEquals(1, result.values.size)
-    }
-
-    @Test
-    fun `StatBlock round-trips through StatMap`() {
-        val block = StatBlock(str = 11, dex = 10, con = 12, int = 8, wis = 9, cha = 13)
-        val map = block.toStatMap()
-        val roundTripped = map.toStatBlock()
-        assertEquals(block, roundTripped)
-    }
-
-    @Test
-    fun `toStatMap omits zero-value fields`() {
-        val block = StatBlock(str = 2, cha = -1)
-        val map = block.toStatMap()
-        assertEquals(setOf("STR", "CHA"), map.values.keys)
-    }
-
-    @Test
-    fun `toStatBlock defaults to 0 for absent keys`() {
-        val map = StatMap.of("STR" to 5)
-        val block = map.toStatBlock()
-        assertEquals(5, block.str)
-        assertEquals(0, block.dex)
-        assertEquals(0, block.con)
-        assertEquals(0, block.int)
-        assertEquals(0, block.wis)
-        assertEquals(0, block.cha)
     }
 }
