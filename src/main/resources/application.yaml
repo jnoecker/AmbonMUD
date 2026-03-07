@@ -200,185 +200,150 @@ ambonmud:
     statusEffects:
       definitions:
         ignite:
-          displayName: "Ignite"
+          displayName: Ignite
           effectType: DOT
           durationMs: 6000
           tickIntervalMs: 2000
-          tickMinValue: 3
-          tickMaxValue: 5
           stackBehavior: REFRESH
         poison:
-          displayName: "Poison"
+          displayName: Poison
           effectType: DOT
           durationMs: 10000
           tickIntervalMs: 2000
-          tickMinValue: 2
-          tickMaxValue: 4
           stackBehavior: STACK
           maxStacks: 3
         shield_of_faith:
-          displayName: "Shield of Faith"
+          displayName: Shield of Faith
           effectType: SHIELD
           durationMs: 30000
           shieldAmount: 20
           stackBehavior: NONE
         battle_shout:
-          displayName: "Battle Shout"
+          displayName: Battle Shout
           effectType: STAT_BUFF
           durationMs: 60000
-          strMod: 3
           stackBehavior: REFRESH
         rejuvenation:
-          displayName: "Rejuvenation"
+          displayName: Rejuvenation
           effectType: HOT
           durationMs: 10000
           tickIntervalMs: 2000
-          tickMinValue: 2
-          tickMaxValue: 3
           stackBehavior: REFRESH
         frost_grip:
-          displayName: "Frost Grip"
+          displayName: Frost Grip
           effectType: ROOT
           durationMs: 4000
           stackBehavior: NONE
         concuss:
-          displayName: "Concuss"
+          displayName: Concuss
           effectType: STUN
           durationMs: 2000
           stackBehavior: NONE
-        # --- Warrior Status Effects ---
         whirlwind_rage:
-          displayName: "Whirlwind Rage"
+          displayName: Whirlwind Rage
           effectType: STAT_BUFF
           durationMs: 8000
           tickIntervalMs: 1000
-          tickMinValue: 1
-          tickMaxValue: 2
-          strMod: 5
-          dexMod: 2
           stackBehavior: REFRESH
         berserker_state:
-          displayName: "Berserker State"
+          displayName: Berserker State
           effectType: STAT_BUFF
           durationMs: 10000
-          strMod: 7
-          conMod: 3
           stackBehavior: REFRESH
         thornhide_armor:
-          displayName: "Thornhide Armor"
+          displayName: Thornhide Armor
           effectType: SHIELD
           durationMs: 15000
           shieldAmount: 30
           stackBehavior: REFRESH
         weakened:
-          displayName: "Weakened"
+          displayName: Weakened
           effectType: STAT_DEBUFF
           durationMs: 8000
-          strMod: -3
           stackBehavior: REFRESH
-        # --- Mage Status Effects ---
         mana_shield:
-          displayName: "Mana Shield"
+          displayName: Mana Shield
           effectType: SHIELD
           durationMs: 20000
           shieldAmount: 25
           stackBehavior: REFRESH
         flame_armor:
-          displayName: "Flame Armor"
+          displayName: Flame Armor
           effectType: STAT_BUFF
           durationMs: 12000
-          intMod: 4
           stackBehavior: REFRESH
         frost_armor:
-          displayName: "Frost Armor"
+          displayName: Frost Armor
           effectType: SHIELD
           durationMs: 12000
           shieldAmount: 28
           stackBehavior: REFRESH
         frozen:
-          displayName: "Frozen"
+          displayName: Frozen
           effectType: STUN
           durationMs: 3000
           stackBehavior: NONE
         chilled:
-          displayName: "Chilled"
+          displayName: Chilled
           effectType: STAT_DEBUFF
           durationMs: 6000
-          dexMod: -2
           stackBehavior: REFRESH
         arcane_burn:
-          displayName: "Arcane Burn"
+          displayName: Arcane Burn
           effectType: DOT
           durationMs: 8000
           tickIntervalMs: 2000
-          tickMinValue: 4
-          tickMaxValue: 6
           stackBehavior: STACK
           maxStacks: 2
-        # --- Cleric Status Effects ---
         holy_light:
-          displayName: "Holy Light"
+          displayName: Holy Light
           effectType: HOT
           durationMs: 12000
           tickIntervalMs: 2000
-          tickMinValue: 3
-          tickMaxValue: 5
           stackBehavior: REFRESH
         divine_blessing:
-          displayName: "Divine Blessing"
+          displayName: Divine Blessing
           effectType: STAT_BUFF
           durationMs: 15000
-          wisMod: 4
-          conMod: 2
           stackBehavior: REFRESH
         consecrated_ground:
-          displayName: "Consecrated Ground"
+          displayName: Consecrated Ground
           effectType: HOT
           durationMs: 20000
           tickIntervalMs: 2000
-          tickMinValue: 2
-          tickMaxValue: 3
           stackBehavior: REFRESH
         purified:
-          displayName: "Purified"
+          displayName: Purified
           effectType: STAT_BUFF
           durationMs: 10000
-          wisMod: 3
           stackBehavior: REFRESH
-        # --- Rogue Status Effects ---
         shadow_veil:
-          displayName: "Shadow Veil"
+          displayName: Shadow Veil
           effectType: SHIELD
           durationMs: 10000
           shieldAmount: 15
           stackBehavior: REFRESH
         venomous:
-          displayName: "Venomous"
+          displayName: Venomous
           effectType: DOT
           durationMs: 12000
           tickIntervalMs: 2000
-          tickMinValue: 3
-          tickMaxValue: 5
           stackBehavior: STACK
           maxStacks: 4
         shadow_mark:
-          displayName: "Shadow Mark"
+          displayName: Shadow Mark
           effectType: STAT_DEBUFF
           durationMs: 8000
-          dexMod: -3
           stackBehavior: REFRESH
         death_mark:
-          displayName: "Death Mark"
+          displayName: Death Mark
           effectType: STAT_DEBUFF
           durationMs: 10000
-          dexMod: -4
-          strMod: -2
           stackBehavior: REFRESH
         blinded:
-          displayName: "Blinded"
+          displayName: Blinded
           effectType: STAT_DEBUFF
           durationMs: 5000
-          dexMod: -5
           stackBehavior: NONE
     economy:
       buyMultiplier: 1.0
@@ -389,1302 +354,1064 @@ ambonmud:
       xpBonusPerMember: 0.10
     abilities:
       definitions:
-        # --- Warrior (26 abilities) ---
         power_strike:
-          displayName: "Power Strike"
-          image: "abilities/power_strike.png"
-          description: "A powerful melee strike."
+          displayName: Power Strike
           manaCost: 5
           cooldownMs: 0
           levelRequired: 1
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 5
-            maxDamage: 10
+          description: A powerful melee strike.
+          image: ab2a08730f7da555c1b9ccbb47186e09e91d3a8e653fa9288f6be6f0c5f3b483.png
         taunt:
-          displayName: "Taunt"
-          image: "abilities/taunt.png"
-          description: "Force a mob to attack you by generating massive threat."
+          displayName: Taunt
           manaCost: 5
           cooldownMs: 10000
           levelRequired: 2
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: TAUNT
-            flatThreat: 50.0
-            margin: 10.0
+            flatThreat: 50
+            margin: 10
+          description: Force a mob to attack you by generating massive threat.
+          image: de886c19deef56b43fa74e64ad3a5b796b31dde3335cc31a2850759752b36adf.png
         battle_shout:
-          displayName: "Battle Shout"
-          image: "abilities/battle_shout.png"
-          description: "A war cry that increases your strength."
+          displayName: Battle Shout
           manaCost: 10
           cooldownMs: 60000
           levelRequired: 3
           targetType: SELF
-          requiredClass: WARRIOR
           effect:
             type: APPLY_STATUS
             statusEffectId: battle_shout
+          description: A war cry that increases your strength.
+          image: f7e770ac54807bb4d865243d78d301c874497d511954b32c6c3b100c22140150.png
         shield_bash:
-          displayName: "Shield Bash"
-          image: "abilities/shield_bash.png"
-          description: "Bash your foe with your shield."
+          displayName: Shield Bash
           manaCost: 10
           cooldownMs: 3000
           levelRequired: 5
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 8
-            maxDamage: 14
+          description: Bash your foe with your shield.
+          image: 8ac90d576af9dc42da572ff03feb51ea4f4ca8858fdef73479c5cb726e41c730.png
         whirlwind_strike:
-          displayName: "Whirlwind Strike"
-          image: "abilities/whirlwind_strike.png"
-          description: "Spin around hitting nearby enemies in combat."
+          displayName: Whirlwind Strike
           manaCost: 12
           cooldownMs: 4000
           levelRequired: 7
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: AREA_DAMAGE
-            minDamage: 6
-            maxDamage: 11
+          description: Spin around hitting nearby enemies in combat.
+          image: f952ac0fdb8b366ea71d9aa9b08f9db5c2201bc1489b4f838c11272674cb2aff.png
         war_cry:
-          displayName: "War Cry"
-          image: "abilities/war_cry.png"
-          description: "Rally yourself with a battle cry."
+          displayName: War Cry
           manaCost: 15
           cooldownMs: 8000
           levelRequired: 10
           targetType: SELF
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_HEAL
-            minHeal: 8
-            maxHeal: 15
+          description: Rally yourself with a battle cry.
+          image: 047c899d4765611f66f2747802250eef8942bc6b0d2298037b1d8a7e261a3e71.png
         riposte:
-          displayName: "Riposte"
-          image: "abilities/riposte.png"
-          description: "A skilled counter-attack against your foe."
+          displayName: Riposte
           manaCost: 8
           cooldownMs: 2000
           levelRequired: 12
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 10
-            maxDamage: 16
+          description: A skilled counter-attack against your foe.
+          image: 24cc795236ebd93e83e46e9352b64a486f89747a1fa5b4b83d82fa00faee1d4e.png
         block:
-          displayName: "Block"
-          image: "abilities/block.png"
-          description: "Protect yourself with a defensive stance."
+          displayName: Block
           manaCost: 10
           cooldownMs: 5000
           levelRequired: 14
           targetType: SELF
-          requiredClass: WARRIOR
           effect:
             type: APPLY_STATUS
             statusEffectId: thornhide_armor
+          description: Protect yourself with a defensive stance.
+          image: 352e4869d300d6e01731539a769f65515386fc67d41de0749b33591f377a18c5.png
         cleave:
-          displayName: "Cleave"
-          image: "abilities/cleave.png"
-          description: "Split your enemy with a heavy overhead strike."
+          displayName: Cleave
           manaCost: 14
           cooldownMs: 6000
           levelRequired: 16
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 14
-            maxDamage: 24
+          description: Split your enemy with a heavy overhead strike.
+          image: 97046af4e29e9557e3f5c281864efe543e8cffb31d33990bb906912a7f3ac491.png
         counter_attack:
-          displayName: "Counter Attack"
-          image: "abilities/counter_attack.png"
-          description: "Strike your opponent as they attack you."
+          displayName: Counter Attack
           manaCost: 6
           cooldownMs: 3000
           levelRequired: 18
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 9
-            maxDamage: 15
+          description: Strike your opponent as they attack you.
+          image: 79281276a6b780e054077d69cfdce7d90cf62ef13911db9278b58ce12df8a224.png
         berserker_rage:
-          displayName: "Berserker Rage"
-          image: "abilities/berserker_rage.png"
-          description: "Enter a state of primal fury, increasing damage output."
+          displayName: Berserker Rage
           manaCost: 20
           cooldownMs: 10000
           levelRequired: 20
           targetType: SELF
-          requiredClass: WARRIOR
           effect:
             type: APPLY_STATUS
             statusEffectId: berserker_state
+          description: Enter a state of primal fury, increasing damage output.
+          image: ead28f85bd540d67d491b73d937e4da37143b9018eec335cb0991c50dd573036.png
         charge:
-          displayName: "Charge"
-          image: "abilities/charge.png"
-          description: "Rush forward and slam your enemy."
+          displayName: Charge
           manaCost: 12
           cooldownMs: 7000
           levelRequired: 22
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 16
-            maxDamage: 26
+          description: Rush forward and slam your enemy.
+          image: 96740803295130d4bb50c73290373d277eefebb04b2d68e29a565f8f41d6c937.png
         parry:
-          displayName: "Parry"
-          image: "abilities/parry.png"
-          description: "Deflect incoming attacks with your weapon."
+          displayName: Parry
           manaCost: 8
           cooldownMs: 4000
           levelRequired: 24
           targetType: SELF
-          requiredClass: WARRIOR
           effect:
             type: APPLY_STATUS
             statusEffectId: thornhide_armor
+          description: Deflect incoming attacks with your weapon.
+          image: a73b7f4393007f699f76c6ed5b1d0dca86fcd37e59e4d59454c7371b0d33f389.png
         crushing_blow:
-          displayName: "Crushing Blow"
-          image: "abilities/crushing_blow.png"
-          description: "Deliver a devastating blow with all your might."
+          displayName: Crushing Blow
           manaCost: 18
           cooldownMs: 8000
           levelRequired: 26
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 20
-            maxDamage: 32
+          description: Deliver a devastating blow with all your might.
+          image: 161709dc6553d45345fa44014020b9badde74a0e4fae54c7d7c9f031e17ff990.png
         revenge:
-          displayName: "Revenge"
-          image: "abilities/revenge.png"
-          description: "Strike back at an enemy that just hurt you."
+          displayName: Revenge
           manaCost: 10
           cooldownMs: 5000
           levelRequired: 28
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 12
-            maxDamage: 22
+          description: Strike back at an enemy that just hurt you.
+          image: 1c97e59ea9827af353a4763d184716f884a3cde04d67a068a370680db67fd3d4.png
         last_stand:
-          displayName: "Last Stand"
-          image: "abilities/last_stand.png"
-          description: "Make a final desperate defense against all attacks."
+          displayName: Last Stand
           manaCost: 25
           cooldownMs: 12000
           levelRequired: 30
           targetType: SELF
-          requiredClass: WARRIOR
           effect:
             type: APPLY_STATUS
             statusEffectId: thornhide_armor
+          description: Make a final desperate defense against all attacks.
+          image: 5338cbdd361c64edaad86606dcc5b10327d35596479553ed0f7b949cc9a3ed3c.png
         execution:
-          displayName: "Execution"
-          image: "abilities/execution.png"
-          description: "A finishing move to strike down weakened foes."
+          displayName: Execution
           manaCost: 16
           cooldownMs: 6000
           levelRequired: 34
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 24
-            maxDamage: 40
+          description: A finishing move to strike down weakened foes.
+          image: 31820f7b345a4c0271c306a6235d63f1c90521ad7822d4060b5764eb68c64175.png
         second_wind:
-          displayName: "Second Wind"
-          image: "abilities/second_wind.png"
-          description: "Push through your exhaustion and recover."
+          displayName: Second Wind
           manaCost: 20
           cooldownMs: 10000
           levelRequired: 36
           targetType: SELF
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_HEAL
-            minHeal: 20
-            maxHeal: 35
+          description: Push through your exhaustion and recover.
+          image: 03b02133a4f680f74f8ec905a091e56ed216479211020816ffc8c5b30c621cb1.png
         unbreakable:
-          displayName: "Unbreakable"
-          image: "abilities/unbreakable.png"
-          description: "Strengthen your resolve to become an immovable force."
+          displayName: Unbreakable
           manaCost: 22
           cooldownMs: 15000
           levelRequired: 38
           targetType: SELF
-          requiredClass: WARRIOR
           effect:
             type: APPLY_STATUS
             statusEffectId: berserker_state
+          description: Strengthen your resolve to become an immovable force.
+          image: 2298d0b466fdf04f1af54a1af93e244ed5b69b95baab06f705a728f9d9ed895e.png
         mass_taunt:
-          displayName: "Mass Taunt"
-          image: "abilities/mass_taunt.png"
-          description: "Taunt all nearby enemies."
+          displayName: Mass Taunt
           manaCost: 15
           cooldownMs: 12000
           levelRequired: 40
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: TAUNT
-            flatThreat: 75.0
-            margin: 15.0
+            flatThreat: 75
+            margin: 15
+          description: Taunt all nearby enemies.
+          image: a0f26ec50b539db2d851668cdc4be68cd2f5e628278093f438ed526d6c3ea70e.png
         whirlwind_assault:
-          displayName: "Whirlwind Assault"
-          image: "abilities/whirlwind_assault.png"
-          description: "Execute a devastating spin attack hitting all foes."
+          displayName: Whirlwind Assault
           manaCost: 28
           cooldownMs: 10000
           levelRequired: 42
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: AREA_DAMAGE
-            minDamage: 12
-            maxDamage: 20
+          description: Execute a devastating spin attack hitting all foes.
+          image: 2c67e786f803f6f84c090e1bca2f464361ab2db313119d262ed6a5b4d20ee26a.png
         savage_charge:
-          displayName: "Savage Charge"
-          image: "abilities/savage_charge.png"
-          description: "A relentless assault that knocks back enemies."
+          displayName: Savage Charge
           manaCost: 24
           cooldownMs: 8000
           levelRequired: 44
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 28
-            maxDamage: 44
+          description: A relentless assault that knocks back enemies.
+          image: 8b2f1b4f364b17b408fb1d6f9c865ea1c031aac846253c2635194f6c5a0515ed.png
         iron_resolve:
-          displayName: "Iron Resolve"
-          image: "abilities/iron_resolve.png"
-          description: "Harden your body against damage."
+          displayName: Iron Resolve
           manaCost: 20
           cooldownMs: 12000
           levelRequired: 46
           targetType: SELF
-          requiredClass: WARRIOR
           effect:
             type: APPLY_STATUS
             statusEffectId: thornhide_armor
+          description: Harden your body against damage.
+          image: d870efc3a6a7370b7e5ef6b346877723a6c47d0fb897416653b37b911a7f2398.png
         endgame_strike:
-          displayName: "Endgame Strike"
-          image: "abilities/endgame_strike.png"
-          description: "A powerful attack reserved for experienced warriors."
+          displayName: Endgame Strike
           manaCost: 26
           cooldownMs: 9000
           levelRequired: 48
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 32
-            maxDamage: 50
+          description: A powerful attack reserved for experienced warriors.
+          image: 65708ad0f814b25915ffd2309e32af234ee626ffcdbba7db3f585af78500266b.png
         champions_triumph:
-          displayName: "Champion's Triumph"
-          image: "abilities/champions_triumph.png"
-          description: "The ultimate warrior ability—strike with glory."
+          displayName: Champion's Triumph
           manaCost: 30
           cooldownMs: 15000
           levelRequired: 50
           targetType: ENEMY
-          requiredClass: WARRIOR
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 38
-            maxDamage: 58
-        # --- Mage (26 abilities) ---
+          description: The ultimate warrior ability—strike with glory.
+          image: 02194440d0be6aeee2a14b40638c224289292ffc9f0edf47c50fbb4c8e6e402b.png
         arcane_bolt:
-          displayName: "Arcane Bolt"
-          image: "abilities/arcane_bolt.png"
-          description: "Hurl a bolt of arcane energy."
+          displayName: Arcane Bolt
           manaCost: 6
           cooldownMs: 0
           levelRequired: 1
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 4
-            maxDamage: 9
+          description: Hurl a bolt of arcane energy.
+          image: ec2908ff724a25a25422b87638d55096688cc74cbea945603b1125080fb5253a.png
         ignite:
-          displayName: "Ignite"
-          image: "abilities/ignite.png"
-          description: "Sets the target ablaze, burning them for damage over time."
+          displayName: Ignite
           manaCost: 12
           cooldownMs: 8000
           levelRequired: 3
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: APPLY_STATUS
             statusEffectId: ignite
+          description: Sets the target ablaze, burning them for damage over time.
+          image: bd938d69ea0d67461f8087c334417e8c4a4e76a51c5a3f090878410d0f46658e.png
         frost_nova:
-          displayName: "Frost Nova"
-          image: "abilities/frost_nova.png"
-          description: "Blast your enemy with freezing cold."
+          displayName: Frost Nova
           manaCost: 15
           cooldownMs: 3000
           levelRequired: 5
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 10
-            maxDamage: 18
+          description: Blast your enemy with freezing cold.
+          image: d5225446bd44011072af8b0c06ba9b9ab88e77e8e5fa7466cf39ed7d472a6893.png
         fireball:
-          displayName: "Fireball"
-          image: "abilities/fireball.png"
-          description: "Hurl a ball of fire that hits all enemies in combat with your group."
+          displayName: Fireball
           manaCost: 25
           cooldownMs: 8000
           levelRequired: 5
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: AREA_DAMAGE
-            minDamage: 3
-            maxDamage: 7
+          description: Hurl a ball of fire that hits all enemies in combat with your group.
+          image: 32958d24276dc69e58bad11827905288ded2858b00477d3888bff3e6f07acc54.png
         mana_bolt:
-          displayName: "Mana Bolt"
-          image: "abilities/mana_bolt.png"
-          description: "Drain mana from your foe and hurl it as a projectile."
+          displayName: Mana Bolt
           manaCost: 10
           cooldownMs: 4000
           levelRequired: 7
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 8
-            maxDamage: 14
+          description: Drain mana from your foe and hurl it as a projectile.
+          image: 4949e88933eb0e9f3533655a06f968671b3648f1a4017361483634fe95549fc7.png
         inferno:
-          displayName: "Inferno"
-          image: "abilities/inferno.png"
-          description: "Engulf your foe in searing flames."
+          displayName: Inferno
           manaCost: 25
           cooldownMs: 5000
           levelRequired: 10
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 16
-            maxDamage: 28
+          description: Engulf your foe in searing flames.
+          image: e1bb41c9ed546207cd52b8968da399b3e39efe51b34165465a5da7dead01e146.png
         flame_armor:
-          displayName: "Flame Armor"
-          image: "abilities/flame_armor.png"
-          description: "Surround yourself with protective flames."
+          displayName: Flame Armor
           manaCost: 14
           cooldownMs: 10000
           levelRequired: 12
           targetType: SELF
-          requiredClass: MAGE
           effect:
             type: APPLY_STATUS
             statusEffectId: flame_armor
+          description: Surround yourself with protective flames.
+          image: 6eca5316d8bfcf30aa083b0609bcec1a4ca96d00eb55236afa7016d6defa408d.png
         frost_armor:
-          displayName: "Frost Armor"
-          image: "abilities/frost_armor.png"
-          description: "Encase yourself in a shield of ice."
+          displayName: Frost Armor
           manaCost: 14
           cooldownMs: 10000
           levelRequired: 14
           targetType: SELF
-          requiredClass: MAGE
           effect:
             type: APPLY_STATUS
             statusEffectId: frost_armor
+          description: Encase yourself in a shield of ice.
+          image: d8c80f63390b818bf03aab1f7c9dc8cb0bb2fd75a8a47707c980c19822c9875a.png
         chain_lightning:
-          displayName: "Chain Lightning"
-          image: "abilities/chain_lightning.png"
-          description: "Hurl lightning that bounces between enemies."
+          displayName: Chain Lightning
           manaCost: 18
           cooldownMs: 6000
           levelRequired: 16
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: AREA_DAMAGE
-            minDamage: 8
-            maxDamage: 14
+          description: Hurl lightning that bounces between enemies.
+          image: d01dcb985a8095ba1a16ac3c01b39569579a9713336d6e4715e5e681db33a4f2.png
         blizzard:
-          displayName: "Blizzard"
-          image: "abilities/blizzard.png"
-          description: "Summon a whirlwind of snow and ice."
+          displayName: Blizzard
           manaCost: 28
           cooldownMs: 9000
           levelRequired: 18
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: AREA_DAMAGE
-            minDamage: 10
-            maxDamage: 18
+          description: Summon a whirlwind of snow and ice.
+          image: 39666965ed50aba61aee1674644ff59e1c757fe5fb6bfc77e0f75b3699995a69.png
         pyroclasm:
-          displayName: "Pyroclasm"
-          image: "abilities/pyroclasm.png"
-          description: "Unleash explosive volcanic energy."
+          displayName: Pyroclasm
           manaCost: 30
           cooldownMs: 10000
           levelRequired: 20
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 22
-            maxDamage: 36
+          description: Unleash explosive volcanic energy.
+          image: 1dd957e18c4f2efe0e2f99e38d3feac79f2c9c40de5f852efae0a7c49a33b310.png
         ice_storm:
-          displayName: "Ice Storm"
-          image: "abilities/ice_storm.png"
-          description: "Create a deadly storm of icicles."
+          displayName: Ice Storm
           manaCost: 26
           cooldownMs: 8000
           levelRequired: 24
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: AREA_DAMAGE
-            minDamage: 12
-            maxDamage: 20
+          description: Create a deadly storm of icicles.
+          image: 313fe9655e37366dc52dd5c4f655df1fe9c7c6a9566f5a16f909c409aaf1d614.png
         meteor_shower:
-          displayName: "Meteor Shower"
-          image: "abilities/meteor_shower.png"
-          description: "Rain meteors down upon your enemies."
+          displayName: Meteor Shower
           manaCost: 32
           cooldownMs: 12000
           levelRequired: 26
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: AREA_DAMAGE
-            minDamage: 14
-            maxDamage: 24
+          description: Rain meteors down upon your enemies.
+          image: 6f24361997ad65c556955d87ef2ef1f95541cc12c2893ed682a9d23a81ce8b5e.png
         arcane_explosion:
-          displayName: "Arcane Explosion"
-          image: "abilities/arcane_explosion.png"
-          description: "Detonate raw arcane energy in all directions."
+          displayName: Arcane Explosion
           manaCost: 28
           cooldownMs: 10000
           levelRequired: 28
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: AREA_DAMAGE
-            minDamage: 13
-            maxDamage: 22
+          description: Detonate raw arcane energy in all directions.
+          image: ac3e85c7ecf8f23687e02af35c41f8da5a6a64545f5b21ea04244c46b2536402.png
         temporal_warp:
-          displayName: "Temporal Warp"
-          image: "abilities/temporal_warp.png"
-          description: "Twist spacetime to damage your foe."
+          displayName: Temporal Warp
           manaCost: 24
           cooldownMs: 7000
           levelRequired: 30
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 20
-            maxDamage: 32
+          description: Twist spacetime to damage your foe.
+          image: 1b99a864a32b64ddd49354babce6e88b624416fa9c1c265e8ba8123e40eab895.png
         flame_burst:
-          displayName: "Flame Burst"
-          image: "abilities/flame_burst.png"
-          description: "Create a controlled explosion of fire."
+          displayName: Flame Burst
           manaCost: 20
           cooldownMs: 6000
           levelRequired: 32
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 18
-            maxDamage: 28
+          description: Create a controlled explosion of fire.
+          image: 9ae5bd0f5ebfca4c8cfc44b271ce33217f9a21469aa404fbb70f160179c0a6da.png
         absolute_zero:
-          displayName: "Absolute Zero"
-          image: "abilities/absolute_zero.png"
-          description: "Freeze your enemy solid with absolute cold."
+          displayName: Absolute Zero
           manaCost: 26
           cooldownMs: 9000
           levelRequired: 34
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: APPLY_STATUS
             statusEffectId: frozen
+          description: Freeze your enemy solid with absolute cold.
+          image: b40890a3128877d5b4a4ca1c440dff1b5deae84526c62a7f9b99a4d24b0f4f23.png
         inferno_nova:
-          displayName: "Inferno Nova"
-          image: "abilities/inferno_nova.png"
-          description: "Detonate a miniature inferno."
+          displayName: Inferno Nova
           manaCost: 28
           cooldownMs: 10000
           levelRequired: 36
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 26
-            maxDamage: 40
+          description: Detonate a miniature inferno.
+          image: 5fc49cbe1fdd3452705ad74109eccfe87f6ff01ff987a774ea1123dff72e8942.png
         time_fracture:
-          displayName: "Time Fracture"
-          image: "abilities/time_fracture.png"
-          description: "Shatter time around your enemy."
+          displayName: Time Fracture
           manaCost: 30
           cooldownMs: 11000
           levelRequired: 38
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 28
-            maxDamage: 44
+          description: Shatter time around your enemy.
+          image: d692ee3fc28cd82464726671d8bcf8c03dedd0924e626dc8552e00e2d9b678e2.png
         mana_shield:
-          displayName: "Mana Shield"
-          image: "abilities/mana_shield.png"
-          description: "Shield yourself with pure magical energy."
+          displayName: Mana Shield
           manaCost: 22
           cooldownMs: 8000
           levelRequired: 40
           targetType: SELF
-          requiredClass: MAGE
           effect:
             type: APPLY_STATUS
             statusEffectId: mana_shield
+          description: Shield yourself with pure magical energy.
+          image: 4dcdcadcf3e76bf44982ee8608240917c1c60f57cc4cf6a57640c720547af284.png
         arcane_overload:
-          displayName: "Arcane Overload"
-          image: "abilities/arcane_overload.png"
-          description: "Charge yourself with dangerous arcane power."
+          displayName: Arcane Overload
           manaCost: 34
           cooldownMs: 13000
           levelRequired: 42
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 30
-            maxDamage: 48
+          description: Charge yourself with dangerous arcane power.
+          image: 1a00a8f8c8a1f5fd477cfa53bbcc0a5fa9ab4030f6769f9af14e23478a68c79d.png
         cataclysm:
-          displayName: "Cataclysm"
-          image: "abilities/cataclysm.png"
-          description: "Bring total destruction to a wide area."
+          displayName: Cataclysm
           manaCost: 36
           cooldownMs: 14000
           levelRequired: 44
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: AREA_DAMAGE
-            minDamage: 18
-            maxDamage: 30
+          description: Bring total destruction to a wide area.
+          image: eb46ef85ec1d6f988ab026c251dcbb3d852fabb3e76341e7588a401ce3b263fb.png
         temporal_twist:
-          displayName: "Temporal Twist"
-          image: "abilities/temporal_twist.png"
-          description: "Manipulate time itself against your enemies."
+          displayName: Temporal Twist
           manaCost: 28
           cooldownMs: 10000
           levelRequired: 46
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 32
-            maxDamage: 50
+          description: Manipulate time itself against your enemies.
+          image: 494d61f2dc796fe54495789d581b418386da47a65add2bebd29d9087e62af3b9.png
         spellsteal:
-          displayName: "Spellsteal"
-          image: "abilities/spellsteal.png"
-          description: "Drain the magical essence from your enemy."
+          displayName: Spellsteal
           manaCost: 20
           cooldownMs: 8000
           levelRequired: 48
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 26
-            maxDamage: 40
+          description: Drain the magical essence from your enemy.
+          image: 7b88ce752c748a71604f5b92b802b5fd0ccac93506cc95766bfb50a00749b9a1.png
         arcane_mastery:
-          displayName: "Arcane Mastery"
-          image: "abilities/arcane_mastery.png"
-          description: "The apex of magical power—absolute arcane dominion."
+          displayName: Arcane Mastery
           manaCost: 38
           cooldownMs: 15000
           levelRequired: 50
           targetType: ENEMY
-          requiredClass: MAGE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 40
-            maxDamage: 62
-        # --- Cleric (26 abilities) ---
+          description: The apex of magical power—absolute arcane dominion.
+          image: a39e356d9b113562902dc60d687eaa003b709cda9daca28ac891a11c08f83d3a.png
         minor_heal:
-          displayName: "Minor Heal"
-          image: "abilities/minor_heal.png"
-          description: "Mend wounds with holy light. Target a group member or self."
+          displayName: Minor Heal
           manaCost: 8
           cooldownMs: 0
           levelRequired: 1
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
-            minHeal: 6
-            maxHeal: 10
+          description: Mend wounds with holy light. Target a group member or self.
+          image: b9cd9c95e41a731aba0cad8177e8a88f9a444e29f3e0c793438f602452411101.png
         holy_light:
-          displayName: "Holy Light"
-          image: "abilities/holy_light.png"
-          description: "Blessed healing light washes over the target."
+          displayName: Holy Light
           manaCost: 10
           cooldownMs: 2000
           levelRequired: 2
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
-            minHeal: 8
-            maxHeal: 13
+          description: Blessed healing light washes over the target.
+          image: c61ca5a762e6605a34ef62972210b0999d5af1be08abd835178b5b37457b29d1.png
         rejuvenation:
-          displayName: "Rejuvenation"
-          image: "abilities/rejuvenation.png"
-          description: "Heals a target over time. Target a group member or self."
+          displayName: Rejuvenation
           manaCost: 12
           cooldownMs: 15000
           levelRequired: 4
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: rejuvenation
+          description: Heals a target over time. Target a group member or self.
+          image: 0d125b0c7970b2b5d55ad91f57cd45f10e4bf110662b7f8f4d6539435ed68fec.png
         shield_of_faith:
-          displayName: "Shield of Faith"
-          image: "abilities/shield_of_faith.png"
-          description: "Grants a shield that absorbs damage. Target a group member or self."
+          displayName: Shield of Faith
           manaCost: 15
           cooldownMs: 30000
           levelRequired: 5
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: shield_of_faith
+          description: Grants a shield that absorbs damage. Target a group member or self.
+          image: 84771fe7d1643b6a2f52bcb3c0ecf8f6255fa3fdd8f89be2c6533c965323d8f7.png
         smite:
-          displayName: "Smite"
-          image: "abilities/smite.png"
-          description: "Strike your foe with divine wrath."
+          displayName: Smite
           manaCost: 12
           cooldownMs: 3000
           levelRequired: 5
           targetType: ENEMY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 6
-            maxDamage: 12
+          description: Strike your foe with divine wrath.
+          image: 65e93ad2dc64384a12852b94de5fc8e3e4257ffc2ae38068bcdf3d5032832399.png
         consecration:
-          displayName: "Consecration"
-          image: "abilities/consecration.png"
-          description: "Bless the ground beneath you with holy power."
+          displayName: Consecration
           manaCost: 16
           cooldownMs: 12000
           levelRequired: 7
           targetType: SELF
-          requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: consecrated_ground
+          description: Bless the ground beneath you with holy power.
+          image: 01564fa8c172c13e66b67d6f62282703345378f3c499a47f2cfe0e745bb0a15b.png
         greater_heal:
-          displayName: "Greater Heal"
-          image: "abilities/greater_heal.png"
-          description: "A powerful wave of restorative energy. Target a group member or self."
+          displayName: Greater Heal
           manaCost: 22
           cooldownMs: 8000
           levelRequired: 10
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
-            minHeal: 15
-            maxHeal: 25
+          description: A powerful wave of restorative energy. Target a group member or self.
+          image: f94c5813b693b094df8a09be55a863508c46acef78b37649cb61966381ea9724.png
         holy_fire:
-          displayName: "Holy Fire"
-          image: "abilities/holy_fire.png"
-          description: "Strike with holy flames that burn over time."
+          displayName: Holy Fire
           manaCost: 14
           cooldownMs: 6000
           levelRequired: 12
           targetType: ENEMY
-          requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: ignite
+          description: Strike with holy flames that burn over time.
+          image: af0692b05b5400f06fc407d7327fd328acf5bb7ffe4697a9b1e4b78461c79ae9.png
         blessing_of_protection:
-          displayName: "Blessing of Protection"
-          image: "abilities/blessing_of_protection.png"
-          description: "Grant a blessing that protects the target."
+          displayName: Blessing of Protection
           manaCost: 18
           cooldownMs: 20000
           levelRequired: 14
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: shield_of_faith
+          description: Grant a blessing that protects the target.
+          image: 5dbe541c1afc8f94d1d0dcf89951fe92deb6f922101e1777b81a5c20b683057d.png
         divine_light:
-          displayName: "Divine Light"
-          image: "abilities/divine_light.png"
-          description: "Channel the light of the divine to heal."
+          displayName: Divine Light
           manaCost: 20
           cooldownMs: 6000
           levelRequired: 16
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
-            minHeal: 18
-            maxHeal: 30
+          description: Channel the light of the divine to heal.
+          image: e06a1110942aee2e38bf9debcdd36a72028dacf9338ec70381dcd30c23753216.png
         resurrection:
-          displayName: "Resurrection"
-          image: "abilities/resurrection.png"
-          description: "Return a fallen ally to life with holy power."
+          displayName: Resurrection
           manaCost: 40
           cooldownMs: 30000
           levelRequired: 18
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
-            minHeal: 25
-            maxHeal: 40
+          description: Return a fallen ally to life with holy power.
+          image: e130436f9a0945ed6b54632a3511e6966b60b50b53b7676a69ca26e836a29702.png
         holy_nova:
-          displayName: "Holy Nova"
-          image: "abilities/holy_nova.png"
-          description: "Unleash a wave of holy energy healing nearby allies."
+          displayName: Holy Nova
           manaCost: 26
           cooldownMs: 10000
           levelRequired: 20
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: AREA_DAMAGE
-            minDamage: 8
-            maxDamage: 14
+          description: Unleash a wave of holy energy healing nearby allies.
+          image: 9e1c95069b98aaa81be60c17fb9e8b40c2fb1cd1013f8c8820b85f0c09f2bd02.png
         sanctified_heal:
-          displayName: "Sanctified Heal"
-          image: "abilities/sanctified_heal.png"
-          description: "A more powerful healing spell blessed by the divine."
+          displayName: Sanctified Heal
           manaCost: 28
           cooldownMs: 10000
           levelRequired: 22
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
-            minHeal: 22
-            maxHeal: 36
+          description: A more powerful healing spell blessed by the divine.
+          image: f217d9ad914372717bb1069021279da1c02d7caee126666d47d4e891ac513582.png
         guardian_angel:
-          displayName: "Guardian Angel"
-          image: "abilities/guardian_angel.png"
-          description: "Call upon a guardian spirit to protect an ally."
+          displayName: Guardian Angel
           manaCost: 24
           cooldownMs: 15000
           levelRequired: 24
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: divine_blessing
+          description: Call upon a guardian spirit to protect an ally.
+          image: 41a5bbf8dfe8e3d7330a05265fc254ae16db45e99afa3f04412bbd97a959e146.png
         divine_intervention:
-          displayName: "Divine Intervention"
-          image: "abilities/divine_intervention.png"
-          description: "Perform a miraculous intervention to heal."
+          displayName: Divine Intervention
           manaCost: 30
           cooldownMs: 12000
           levelRequired: 26
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
-            minHeal: 28
-            maxHeal: 44
+          description: Perform a miraculous intervention to heal.
+          image: e509a0482702d1754cb9532d67996582545975aa5e4537e4021659ceb52b1bee.png
         mass_heal:
-          displayName: "Mass Heal"
-          image: "abilities/mass_heal.png"
-          description: "Heal multiple allies at once with holy light."
+          displayName: Mass Heal
           manaCost: 32
           cooldownMs: 14000
           levelRequired: 28
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: AREA_DAMAGE
-            minDamage: 10
-            maxDamage: 18
+          description: Heal multiple allies at once with holy light.
+          image: 11c529bba2cfce374c4aae8015a0928c2fefcacbc0a1f88aff71ac3d8321de41.png
         holy_wrath:
-          displayName: "Holy Wrath"
-          image: "abilities/holy_wrath.png"
-          description: "Strike enemies with the wrath of the holy."
+          displayName: Holy Wrath
           manaCost: 22
           cooldownMs: 7000
           levelRequired: 30
           targetType: ENEMY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 16
-            maxDamage: 28
+          description: Strike enemies with the wrath of the holy.
+          image: 4a2f6d1b7730149b7a489707dd8e22874a18d32dd2b1024e13788029725813a2.png
         divine_aegis:
-          displayName: "Divine Aegis"
-          image: "abilities/divine_aegis.png"
-          description: "Surround yourself with divine protection."
+          displayName: Divine Aegis
           manaCost: 26
           cooldownMs: 12000
           levelRequired: 32
           targetType: SELF
-          requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: divine_blessing
+          description: Surround yourself with divine protection.
+          image: 467fe6cb2fccb6b3b93378e85232be74cab8e7f574a102f30a4962c18913cd84.png
         benediction:
-          displayName: "Benediction"
-          image: "abilities/benediction.png"
-          description: "Bestow a blessing that heals over time."
+          displayName: Benediction
           manaCost: 20
           cooldownMs: 10000
           levelRequired: 34
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: holy_light
+          description: Bestow a blessing that heals over time.
+          image: 6b7026ca539ee37207d4a692d925437054da7c8939d64891feaabfe526ceb55f.png
         holy_shield:
-          displayName: "Holy Shield"
-          image: "abilities/holy_shield.png"
-          description: "Create a shield of pure holy energy."
+          displayName: Holy Shield
           manaCost: 24
           cooldownMs: 15000
           levelRequired: 36
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: shield_of_faith
+          description: Create a shield of pure holy energy.
+          image: 02c13f2a7bae38e57fd0769887d987e41d14491c706c1d8ef8a425088f3c761b.png
         illumination:
-          displayName: "Illumination"
-          image: "abilities/illumination.png"
-          description: "Flood an area with brilliant holy light."
+          displayName: Illumination
           manaCost: 28
           cooldownMs: 11000
           levelRequired: 38
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: AREA_DAMAGE
-            minDamage: 12
-            maxDamage: 20
+          description: Flood an area with brilliant holy light.
+          image: c7157fa07fb58937017c75fd93898c3e385101936e17dcc7dbde89fa48296eef.png
         consecrated_ground:
-          displayName: "Consecrated Ground (Spell)"
-          image: "abilities/consecrated_ground.png"
-          description: "Sanctify the ground for continuous healing."
+          displayName: Consecrated Ground (Spell)
           manaCost: 30
           cooldownMs: 12000
           levelRequired: 40
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: consecrated_ground
+          description: Sanctify the ground for continuous healing.
+          image: d203c1be1f33b77737d8cd6cd0b16776f33fe4b997174d2a7a3ee0b80d8c670c.png
         divine_favor:
-          displayName: "Divine Favor"
-          image: "abilities/divine_favor.png"
-          description: "Call down the favor of the divine."
+          displayName: Divine Favor
           manaCost: 28
           cooldownMs: 10000
           levelRequired: 42
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
-            minHeal: 32
-            maxHeal: 50
+          description: Call down the favor of the divine.
+          image: f19f9e9f86bbe732c011896afcc80ba751757b43bed4dfde83e3f206bd375d07.png
         holy_vengeance:
-          displayName: "Holy Vengeance"
-          image: "abilities/holy_vengeance.png"
-          description: "Strike your enemies with divine vengeance."
+          displayName: Holy Vengeance
           manaCost: 26
           cooldownMs: 9000
           levelRequired: 44
           targetType: ENEMY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 22
-            maxDamage: 36
+          description: Strike your enemies with divine vengeance.
+          image: e702f8efb2d7f8d0e00dac543d8ae842021adacafd6f3df6bed16aa475fbb791.png
         divine_protection:
-          displayName: "Divine Protection"
-          image: "abilities/divine_protection.png"
-          description: "The ultimate protective blessing."
+          displayName: Divine Protection
           manaCost: 32
           cooldownMs: 15000
           levelRequired: 46
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: APPLY_STATUS
             statusEffectId: shield_of_faith
+          description: The ultimate protective blessing.
+          image: 317f4c15aeaf48dbecb0657caddb3a80e7603081364c92f1b251770a5eba977d.png
         salvation:
-          displayName: "Salvation"
-          image: "abilities/salvation.png"
-          description: "Perform a miraculous salvation of an ally."
+          displayName: Salvation
           manaCost: 36
           cooldownMs: 16000
           levelRequired: 48
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
-            minHeal: 40
-            maxHeal: 60
+          description: Perform a miraculous salvation of an ally.
+          image: b3347fb36f867b2d688adb97f9a37031afafa485c20693338e72671e58e64263.png
         divine_ascension:
-          displayName: "Divine Ascension"
-          image: "abilities/divine_ascension.png"
-          description: "The ultimate cleric ability—ascend to divine power."
+          displayName: Divine Ascension
           manaCost: 40
           cooldownMs: 18000
           levelRequired: 50
           targetType: ALLY
-          requiredClass: CLERIC
           effect:
             type: DIRECT_HEAL
-            minHeal: 50
-            maxHeal: 75
-        # --- Rogue (26 abilities) ---
+          description: The ultimate cleric ability—ascend to divine power.
+          image: 3e20a645c275ca87204faf4d7e5e9265e3bdcae107eaf7d81fe69d9f04ce3f61.png
         backstab:
-          displayName: "Backstab"
-          image: "abilities/backstab.png"
-          description: "Strike from the shadows."
+          displayName: Backstab
           manaCost: 6
           cooldownMs: 0
           levelRequired: 1
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 5
-            maxDamage: 11
+          description: Strike from the shadows.
+          image: dc4e7c1bf2f02173e2dfab0d540468baae8cde750ee4ea0025db9cfe57dd9b11.png
         poison_strike:
-          displayName: "Poison Strike"
-          image: "abilities/poison_strike.png"
-          description: "A venomous strike that poisons the target. Stacks up to 4 times."
+          displayName: Poison Strike
           manaCost: 8
           cooldownMs: 5000
           levelRequired: 3
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: APPLY_STATUS
             statusEffectId: poison
+          description: A venomous strike that poisons the target. Stacks up to 4 times.
+          image: 101645ecafc8fa6013d17e1c6db4abd13a84f0c6b1aca430db824f8d3e83bebd.png
         evasion:
-          displayName: "Evasion"
-          image: "abilities/evasion.png"
-          description: "Dodge attacks with enhanced reflexes."
+          displayName: Evasion
           manaCost: 10
           cooldownMs: 8000
           levelRequired: 5
           targetType: SELF
-          requiredClass: ROGUE
           effect:
             type: APPLY_STATUS
             statusEffectId: shadow_veil
+          description: Dodge attacks with enhanced reflexes.
+          image: 822b3ffcf0ed70e984b1c839fb7578bc57db892724a990c73269f40f6ed851a8.png
         shadow_clone:
-          displayName: "Shadow Clone"
-          image: "abilities/shadow_clone.png"
-          description: "Create a shadow duplicate of yourself to confuse enemies."
+          displayName: Shadow Clone
           manaCost: 14
           cooldownMs: 10000
           levelRequired: 7
           targetType: SELF
-          requiredClass: ROGUE
           effect:
             type: APPLY_STATUS
             statusEffectId: shadow_veil
+          description: Create a shadow duplicate of yourself to confuse enemies.
+          image: 5670b09a45c04f7ed1f358159a147999241984d784b31522ea94b74bf566bb80.png
         shadow_step:
-          displayName: "Shadow Step"
-          image: "abilities/shadow_step.png"
-          description: "Slip into the shadows to recover."
+          displayName: Shadow Step
           manaCost: 18
           cooldownMs: 6000
           levelRequired: 10
           targetType: SELF
-          requiredClass: ROGUE
           effect:
             type: DIRECT_HEAL
-            minHeal: 10
-            maxHeal: 18
+          description: Slip into the shadows to recover.
+          image: cd77f5794d8cc7ece2ec74959c676c5d790f31ef2bb00fa888ac85aefe06201d.png
         ambush:
-          displayName: "Ambush"
-          image: "abilities/ambush.png"
-          description: "Attack from hiding with a surprise strike."
+          displayName: Ambush
           manaCost: 12
           cooldownMs: 4000
           levelRequired: 12
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 12
-            maxDamage: 20
+          description: Attack from hiding with a surprise strike.
+          image: 47de514b2cad080738afe3b4099240c9d2893dd0fec998539566817601be2632.png
         death_mark:
-          displayName: "Death Mark"
-          image: "abilities/death_mark.png"
-          description: "Mark a target for death, weakening their defenses."
+          displayName: Death Mark
           manaCost: 10
           cooldownMs: 6000
           levelRequired: 14
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: APPLY_STATUS
             statusEffectId: death_mark
+          description: Mark a target for death, weakening their defenses.
+          image: c19966e95179cfbeefa4e53cf6da5dd2fcb9f11065b6acae1bc9d124213eaecf.png
         smoke_bomb:
-          displayName: "Smoke Bomb"
-          image: "abilities/smoke_bomb.png"
-          description: "Create a cloud of smoke to obscure vision."
+          displayName: Smoke Bomb
           manaCost: 12
           cooldownMs: 8000
           levelRequired: 16
           targetType: SELF
-          requiredClass: ROGUE
           effect:
             type: APPLY_STATUS
             statusEffectId: shadow_veil
+          description: Create a cloud of smoke to obscure vision.
+          image: f15ef5810d95741195de79ee13e77579e746b66e959716b4cf09279510d20ef9.png
         shadow_dance:
-          displayName: "Shadow Dance"
-          image: "abilities/shadow_dance.png"
-          description: "Dance through the shadows, striking from within."
+          displayName: Shadow Dance
           manaCost: 16
           cooldownMs: 7000
           levelRequired: 18
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 14
-            maxDamage: 24
+          description: Dance through the shadows, striking from within.
+          image: 1868bea6f0595cbf84e30315cbaa88a8d0e3eeaab9132e65aa856aa90523ae04.png
         assassinate:
-          displayName: "Assassinate"
-          image: "abilities/assassinate.png"
-          description: "Perform a swift execution strike."
+          displayName: Assassinate
           manaCost: 20
           cooldownMs: 8000
           levelRequired: 20
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 18
-            maxDamage: 30
+          description: Perform a swift execution strike.
+          image: 6739458948b9f878a8b57d343cf2bfe08fcb4c58adf7c97219a39072387b2f1b.png
         blindside:
-          displayName: "Blindside"
-          image: "abilities/blindside.png"
-          description: "Attack from an unexpected angle."
+          displayName: Blindside
           manaCost: 14
           cooldownMs: 5000
           levelRequired: 22
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 16
-            maxDamage: 26
+          description: Attack from an unexpected angle.
+          image: 98e4dcbd3ec4f384c9a281072f2aa0044d0572ec979d59c979a2e9eae14fe866.png
         silent_killer:
-          displayName: "Silent Killer"
-          image: "abilities/silent_killer.png"
-          description: "Strike without a sound, leaving no trace."
+          displayName: Silent Killer
           manaCost: 18
           cooldownMs: 7000
           levelRequired: 24
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 20
-            maxDamage: 32
+          description: Strike without a sound, leaving no trace.
+          image: 2b7bfaae82b65bcc7e4b4181c3a3997efa1a7d107822eed8c5f8851f7d509c99.png
         shadow_mastery:
-          displayName: "Shadow Mastery"
-          image: "abilities/shadow_mastery.png"
-          description: "Master the art of shadow manipulation."
+          displayName: Shadow Mastery
           manaCost: 22
           cooldownMs: 9000
           levelRequired: 26
           targetType: SELF
-          requiredClass: ROGUE
           effect:
             type: APPLY_STATUS
             statusEffectId: shadow_veil
+          description: Master the art of shadow manipulation.
+          image: 713193362b4fb87366b07f031bb41ada421fa9a31d44659a8d0bd8adb1856a82.png
         venomous_blade:
-          displayName: "Venomous Blade"
-          image: "abilities/venomous_blade.png"
-          description: "Coat your weapon in deadly venom."
+          displayName: Venomous Blade
           manaCost: 16
           cooldownMs: 6000
           levelRequired: 28
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: APPLY_STATUS
             statusEffectId: venomous
+          description: Coat your weapon in deadly venom.
+          image: dde114e9d9e54a482930b99acaefb75348675fd4afe9df814f690f568e7e08d7.png
         death_from_above:
-          displayName: "Death From Above"
-          image: "abilities/death_from_above.png"
-          description: "Strike from a height with lethal force."
+          displayName: Death From Above
           manaCost: 20
           cooldownMs: 8000
           levelRequired: 30
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 24
-            maxDamage: 38
+          description: Strike from a height with lethal force.
+          image: ea07501fc0288e8fcfbf9e82f957389556e59dac30d667e27a22f9a42b6b0ba1.png
         smoke_screen:
-          displayName: "Smoke Screen"
-          image: "abilities/smoke_screen.png"
-          description: "Create a thick curtain of smoke."
+          displayName: Smoke Screen
           manaCost: 14
           cooldownMs: 7000
           levelRequired: 32
           targetType: SELF
-          requiredClass: ROGUE
           effect:
             type: APPLY_STATUS
             statusEffectId: shadow_veil
+          description: Create a thick curtain of smoke.
+          image: 98f4e915896065aad0ae2420cbffa53c1b731bf6ebc6229fea344d29b0d7bff1.png
         nightfall:
-          displayName: "Nightfall"
-          image: "abilities/nightfall.png"
-          description: "Shroud yourself in darkness."
+          displayName: Nightfall
           manaCost: 24
           cooldownMs: 10000
           levelRequired: 34
           targetType: SELF
-          requiredClass: ROGUE
           effect:
             type: APPLY_STATUS
             statusEffectId: blinded
+          description: Shroud yourself in darkness.
+          image: 72421853e861db79075d287c91236c0171ab38e384e678114cf22115a6fc1263.png
         death_sentence:
-          displayName: "Death Sentence"
-          image: "abilities/death_sentence.png"
-          description: "Condemn a target to death with a blade."
+          displayName: Death Sentence
           manaCost: 22
           cooldownMs: 9000
           levelRequired: 36
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: APPLY_STATUS
             statusEffectId: death_mark
+          description: Condemn a target to death with a blade.
+          image: 66b7c1baf78b76c157af5dbb67b5a88055a718aeec8c77642222d139b6d799d8.png
         shadow_clone_assault:
-          displayName: "Shadow Clone Assault"
-          image: "abilities/shadow_clone_assault.png"
-          description: "Send shadow clones to attack your enemies."
+          displayName: Shadow Clone Assault
           manaCost: 26
           cooldownMs: 11000
           levelRequired: 38
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: AREA_DAMAGE
-            minDamage: 12
-            maxDamage: 20
+          description: Send shadow clones to attack your enemies.
+          image: 77dd15164498f572bb65235cb45f1345c412b224c2122a54adb2374be5e77ad7.png
         crimson_blade:
-          displayName: "Crimson Blade"
-          image: "abilities/crimson_blade.png"
-          description: "Strike with a blade that thirsts for blood."
+          displayName: Crimson Blade
           manaCost: 24
           cooldownMs: 8000
           levelRequired: 40
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 28
-            maxDamage: 44
+          description: Strike with a blade that thirsts for blood.
+          image: 62a2067ebd4ad0bf3d0ce366d2e884e49c7edb0e2c2b9f03171b1baa470bea72.png
         deadly_precision:
-          displayName: "Deadly Precision"
-          image: "abilities/deadly_precision.png"
-          description: "Strike with surgical precision."
+          displayName: Deadly Precision
           manaCost: 20
           cooldownMs: 7000
           levelRequired: 42
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 26
-            maxDamage: 42
+          description: Strike with surgical precision.
+          image: 08d349cfbb15290f775657fec67b3a072798f9db357f5dd70c3daec0868ac5e6.png
         lethal_strike:
-          displayName: "Lethal Strike"
-          image: "abilities/lethal_strike.png"
-          description: "A strike aimed at vital points."
+          displayName: Lethal Strike
           manaCost: 28
           cooldownMs: 10000
           levelRequired: 44
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 32
-            maxDamage: 50
+          description: A strike aimed at vital points.
+          image: 024fcfc93cc866f8ff312b59e67151288b3754547515f4433e03b9e430bddade.png
         deaths_embrace:
-          displayName: "Death's Embrace"
-          image: "abilities/deaths_embrace.png"
-          description: "Embrace the shadows to become unstoppable."
+          displayName: Death's Embrace
           manaCost: 30
           cooldownMs: 12000
           levelRequired: 46
           targetType: SELF
-          requiredClass: ROGUE
           effect:
             type: APPLY_STATUS
             statusEffectId: shadow_veil
+          description: Embrace the shadows to become unstoppable.
+          image: 8bf41af6158732f30808c50928c491ecd62f12a09f1ef6aa0d49c20eea8be170.png
         shadow_finale:
-          displayName: "Shadow Finale"
-          image: "abilities/shadow_finale.png"
-          description: "Execute a devastating shadow technique."
+          displayName: Shadow Finale
           manaCost: 32
           cooldownMs: 12000
           levelRequired: 48
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 38
-            maxDamage: 58
+          description: Execute a devastating shadow technique.
+          image: c6112d8526b8a3ca978b3eeeada4402fae3c4ecdf00fb421a94208542b644a3b.png
         assassins_triumph:
-          displayName: "Assassin's Triumph"
-          image: "abilities/assassins_triumph.png"
-          description: "The ultimate rogue ability—become the shadow itself."
+          displayName: Assassin's Triumph
           manaCost: 36
           cooldownMs: 15000
           levelRequired: 50
           targetType: ENEMY
-          requiredClass: ROGUE
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 44
-            maxDamage: 68
+          description: The ultimate rogue ability—become the shadow itself.
+          image: 5da18c4bb24ad009372c1feacb9b9a24bb7df1f45af581c3db9fe519060f575b.png
 
     crafting:
       maxSkillLevel: 100
@@ -1699,87 +1426,111 @@ ambonmud:
     classes:
       definitions:
         WARRIOR:
-          displayName: "Warrior"
+          displayName: Warrior
           hpPerLevel: 8
           manaPerLevel: 4
-          description: "A stalwart melee fighter."
+          description: A stalwart melee fighter.
           primaryStat: STR
           threatMultiplier: 1.5
         MAGE:
-          displayName: "Mage"
+          displayName: Mage
           hpPerLevel: 4
           manaPerLevel: 16
-          description: "A master of the arcane arts."
+          description: A master of the arcane arts.
           primaryStat: INT
         CLERIC:
-          displayName: "Cleric"
+          displayName: Cleric
           hpPerLevel: 6
           manaPerLevel: 12
-          description: "A divine healer and protector."
+          description: A divine healer and protector.
           primaryStat: WIS
         ROGUE:
-          displayName: "Rogue"
+          displayName: Rogue
           hpPerLevel: 5
           manaPerLevel: 8
-          description: "A cunning striker from the shadows."
+          description: A cunning striker from the shadows.
           primaryStat: DEX
         SWARM:
-          displayName: "Swarm"
+          displayName: Swarm
           hpPerLevel: 2
           manaPerLevel: 3
-          description: "A debug class for load testing."
+          description: A debug class for load testing.
           selectable: false
 
     races:
       definitions:
         HUMAN:
-          displayName: "Human"
-          description: "Versatile and adaptable."
-          statMods: { str: 1, dex: 0, con: 0, int: 0, wis: 0, cha: 1 }
+          displayName: Human
+          description: Versatile and adaptable.
+          statMods:
+            str: 1
+            dex: 0
+            con: 0
+            int: 0
+            wis: 0
+            cha: 1
         ELF:
-          displayName: "Elf"
-          description: "Graceful and magically attuned."
-          statMods: { str: -1, dex: 2, con: -2, int: 1, wis: 0, cha: 0 }
+          displayName: Elf
+          description: Graceful and magically attuned.
+          statMods:
+            str: -1
+            dex: 2
+            con: -2
+            int: 1
+            wis: 0
+            cha: 0
         DWARF:
-          displayName: "Dwarf"
-          description: "Tough and resilient."
-          statMods: { str: 1, dex: -1, con: 2, int: 0, wis: 1, cha: -2 }
+          displayName: Dwarf
+          description: Tough and resilient.
+          statMods:
+            str: 1
+            dex: -1
+            con: 2
+            int: 0
+            wis: 1
+            cha: -2
         HALFLING:
-          displayName: "Halfling"
-          description: "Quick and charming."
-          statMods: { str: -2, dex: 2, con: -1, int: 0, wis: 1, cha: 1 }
+          displayName: Halfling
+          description: Quick and charming.
+          statMods:
+            str: -2
+            dex: 2
+            con: -1
+            int: 0
+            wis: 1
+            cha: 1
 
     stats:
       definitions:
         STR:
-          displayName: "Strength"
-          abbreviation: "STR"
-          description: "Physical power. Increases melee damage."
+          displayName: Strength
+          abbreviation: STR
+          description: Physical power. Increases melee damage.
           baseStat: 10
         DEX:
-          displayName: "Dexterity"
-          abbreviation: "DEX"
-          description: "Agility and reflexes. Increases dodge chance."
+          displayName: Dexterity
+          abbreviation: DEX
+          description: Agility and reflexes. Increases dodge chance.
           baseStat: 10
         CON:
-          displayName: "Constitution"
-          abbreviation: "CON"
-          description: "Endurance and health. Increases max HP and HP regen."
+          displayName: Constitution
+          abbreviation: CON
+          description: Endurance and health. Increases max HP and HP regen.
           baseStat: 10
         INT:
-          displayName: "Intelligence"
-          abbreviation: "INT"
-          description: "Arcane aptitude. Increases max mana and spell damage."
+          displayName: Intelligence
+          abbreviation: INT
+          description: Arcane aptitude. Increases max mana and spell damage.
           baseStat: 10
         WIS:
-          displayName: "Wisdom"
-          abbreviation: "WIS"
-          description: "Insight and perception. Increases mana regen."
+          displayName: Wisdom
+          abbreviation: WIS
+          description: Insight and perception. Increases mana regen.
           baseStat: 10
         CHA:
-          displayName: "Charisma"
-          abbreviation: "CHA"
-          description: "Force of personality. Increases XP gain."
+          displayName: Charisma
+          abbreviation: CHA
+          description: Force of personality. Increases XP gain.
           baseStat: 10
       bindings:
         meleeDamageStat: STR
@@ -1872,3 +1623,5 @@ ambonmud:
       outboundChannel: ambon:outbound
       instanceId: ""
       sharedSecret: "CHANGE_ME"
+  images:
+    baseUrl: https://assets.ambon.dev/

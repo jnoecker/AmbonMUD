@@ -8,56 +8,56 @@ startRoom: switchback_foot
 
 mobs:
   cliff_ram_01:
-    image: low_training_highlands/cliff_ram_01.png
+    image: 0e9fe80385feb4022bce6d85e9c6185031fffa91730489c0c858b2502da1767f.png
     name: "a cliff ram"
     room: switchback_foot
     tier: weak
     level: 2
 
   storm_kite_02:
-    image: low_training_highlands/storm_kite_02.png
+    image: b57922e5b4a0dd89bf7c8aa41077f3cdffd4ae91d8eb774c355cc5c799bbf7be.png
     name: "a storm kite"
     room: broken_switchback
     tier: weak
     level: 3
 
   ridge_outlaw_03:
-    image: low_training_highlands/ridge_outlaw_03.png
+    image: 4a74d3aa704850e227c9ab328e2c72c95eb1a0258086859809a877db7ec6e5c6.png
     name: "a ridge outlaw"
     room: skybridge_span
     tier: weak
     level: 2
 
   frost_stalker_04:
-    image: low_training_highlands/frost_stalker_04.png
+    image: ae074c067104f9ba015abc7048d8c3e5ed3c5202afcefb029d0c3c7490fdafca.png
     name: "a frost stalker"
     room: thunder_roost
     tier: weak
     level: 3
 
   crag_warden_05:
-    image: low_training_highlands/crag_warden_05.png
+    image: 96ee3d8d484fdaa7b123206d35912f19bd6f78ada4a66d09105b96bb5fc19ac7.png
     name: "a crag warden"
     room: goatpath_terrace
     tier: weak
     level: 2
 
   howling_marauder_06:
-    image: low_training_highlands/howling_marauder_06.png
+    image: 2c74d829e8a06677e743e398c2d5e951103702324780d3099e8c8a3a15480b73.png
     name: "a howling marauder"
     room: cloudpines
     tier: weak
     level: 3
 
   granite_hawk_07:
-    image: low_training_highlands/granite_hawk_07.png
+    image: 578155b0f5f7ae9612b15cbd705bf65424599cd77cf17e20a504568a8bbcc0a6.png
     name: "a granite hawk"
     room: shale_turn
     tier: weak
     level: 2
 
   mist_sentry_08:
-    image: low_training_highlands/mist_sentry_08.png
+    image: a5d138ef1fec60a8a8ac24c7a44276da288667776c80b42271d74c4bd7773b5e.png
     name: "a mist sentry"
     room: ridge_lanterns
     tier: weak
@@ -67,14 +67,14 @@ mobs:
         chance: 0.25
 
   hail_hunter_09:
-    image: low_training_highlands/hail_hunter_09.png
+    image: 455ed3196c4747bedb2441bda481da41075e0068df62a5e92d1a4227a9212ac1.png
     name: "a hail hunter"
     room: frozen_runoff
     tier: weak
     level: 2
 
   sky_raider_10:
-    image: low_training_highlands/sky_raider_10.png
+    image: a9f7283b4e918fd69686c6cefed34ab6a5877ec091663d2a749155e483e1eab2.png
     name: "a sky raider"
     room: hawk_perch
     tier: weak
@@ -84,14 +84,14 @@ mobs:
         chance: 0.35
 
   cliff_ram_11:
-    image: low_training_highlands/cliff_ram_11.png
+    image: 51e4f9bc522aa9f302e0b1a5e33c92f2aaae66e3d19c98267dcb8822ec63b09d.png
     name: "a cliff ram"
     room: narrow_col
     tier: weak
     level: 3
 
   storm_kite_12:
-    image: low_training_highlands/storm_kite_12.png
+    image: 4cc40857742ac00e53def39931a596c3b5e2bebc1dffdb201f6dd39c255bea18.png
     name: "a storm kite"
     room: storm_knot
     tier: standard
@@ -101,14 +101,14 @@ mobs:
         chance: 0.35
 
   ridge_outlaw_13:
-    image: low_training_highlands/ridge_outlaw_13.png
+    image: 7ec801d5922e21067a3cdc31936c5ab6dd2366e87a36694bb1f1ea49e8db5bef.png
     name: "a ridge outlaw"
     room: cliffside_hovel
     tier: weak
     level: 3
 
   frost_stalker_14:
-    image: low_training_highlands/frost_stalker_14.png
+    image: e7373b0e0cee3af829903bd278583ddbc18979a3f2f6ec2bb3a8b709a230e636.png
     name: "a frost stalker"
     room: avalanche_cut
     tier: weak
@@ -118,14 +118,14 @@ mobs:
         chance: 0.35
 
   crag_warden_15:
-    image: low_training_highlands/crag_warden_15.png
+    image: 8c5cb20920d76bb96f8c65799cd2d39e0bed686721de21e5f7d0d61e5b7236b0.png
     name: "a crag warden"
     room: knucklebone_ridge
     tier: weak
     level: 3
 
   howling_marauder_16:
-    image: low_training_highlands/howling_marauder_16.png
+    image: 4923370e0d8552baed98be509a039d5f46117f911919badafe10037a5a33bfd1.png
     name: "a howling marauder"
     room: mistwall_gap
     tier: standard
@@ -135,14 +135,14 @@ mobs:
         chance: 0.35
 
   granite_hawk_17:
-    image: low_training_highlands/granite_hawk_17.png
+    image: ea5be11c508d7619f76ff4615d233fa9146365d4c8c0f0efff71656eb1790c16.png
     name: "a granite hawk"
     room: banner_stones
     tier: weak
     level: 3
 
   mist_sentry_18:
-    image: low_training_highlands/mist_sentry_18.png
+    image: da3525d4c396932aa8a59ee862eb7fc8adb041370dc5b20b83997689ff33c124.png
     name: "a mist sentry"
     room: echoes_saddle
     tier: weak
@@ -152,14 +152,14 @@ mobs:
         chance: 0.35
 
   hail_hunter_19:
-    image: low_training_highlands/hail_hunter_19.png
+    image: 8883858828d1d6e3dc77d8deca4750db7ddc793f3ce722fdeedeab5b88229369.png
     name: "a hail hunter"
     room: old_signal_tower
     tier: standard
     level: 4
 
   sky_raider_20:
-    image: low_training_highlands/sky_raider_20.png
+    image: e1048fd84d157f9239badecc4037945a9fc5aff2ab0d5cf108b6a11299544e45.png
     name: "a sky raider"
     room: lightning_spire
     tier: standard
@@ -169,14 +169,14 @@ mobs:
         chance: 0.50
 
   cliff_ram_21:
-    image: low_training_highlands/cliff_ram_21.png
+    image: 6b1b5f0650f31fa35d524b9e3b32bd14ce40ae8ad966f19a77e1a58f716d21fe.png
     name: "a cliff ram"
     room: windharrow
     tier: standard
     level: 4
 
   storm_kite_22:
-    image: low_training_highlands/storm_kite_22.png
+    image: 7fb3ff5528ea4cfd59f24f86964eab0daac4100edb431fd8318e0dad41d821d4.png
     name: "a storm kite"
     room: granite_step
     tier: standard
@@ -186,14 +186,14 @@ mobs:
         chance: 0.50
 
   ridge_outlaw_23:
-    image: low_training_highlands/ridge_outlaw_23.png
+    image: bb8fa714df44218acf7f180d1cf1603814a01be33cf6ccb837dbb98b90306407.png
     name: "a ridge outlaw"
     room: raincatch_basin
     tier: standard
     level: 4
 
   frost_stalker_24:
-    image: low_training_highlands/frost_stalker_24.png
+    image: 84bba8ee90164e328a5495fe82b3d0321e1d6f8a3a4e39e36d8db868f090c69e.png
     name: "a frost stalker"
     room: coldfire_camp
     tier: standard
@@ -203,14 +203,14 @@ mobs:
         chance: 0.50
 
   crag_warden_25:
-    image: low_training_highlands/crag_warden_25.png
+    image: 21e1db9d010694ff0f3fecc604d04d4cb758d27d1a5fa349331d33bcf310732e.png
     name: "a crag warden"
     room: ridgeback_shelf
     tier: standard
     level: 4
 
   howling_marauder_26:
-    image: low_training_highlands/howling_marauder_26.png
+    image: 65dd7ead4eeaa949309e53ba0796e989c5bede87a104da9adff39497691bd38c.png
     name: "a howling marauder"
     room: snowmelt_pass
     tier: standard
@@ -220,14 +220,14 @@ mobs:
         chance: 0.50
 
   granite_hawk_27:
-    image: low_training_highlands/granite_hawk_27.png
+    image: 58570fb1f8f97032dbff1477f392609b4f220e478f483793d5597f25cfa89fc2.png
     name: "a granite hawk"
     room: cragwatch
     tier: standard
     level: 4
 
   mist_sentry_28:
-    image: low_training_highlands/mist_sentry_28.png
+    image: 0e32b597eddb18f020e351777fb5763ee321fb248bdbc06bd452f1ebdb44f315.png
     name: "a mist sentry"
     room: cloudbreak_lip
     tier: standard
@@ -237,14 +237,14 @@ mobs:
         chance: 0.70
 
   hail_hunter_29:
-    image: low_training_highlands/hail_hunter_29.png
+    image: b63dc55f0bf2c255ce8fea8b5f1632cad05bab861193a673f112b6862175ba82.png
     name: "a hail hunter"
     room: thunderhead_path
     tier: standard
     level: 5
 
   sky_raider_30:
-    image: low_training_highlands/sky_raider_30.png
+    image: f37d5479a6c770e6cb3e1e09e0ff2eb9a820dbdc0609473403e70551f5718971.png
     name: "a sky raider"
     room: high_cairn
     tier: elite
@@ -254,14 +254,14 @@ mobs:
         chance: 0.80
 
   cliff_ram_31:
-    image: low_training_highlands/cliff_ram_31.png
+    image: 1ec6299d26c54e5442f2eb23cd02947f5f8be3777199c968e898a5a3fd24363f.png
     name: "a cliff ram"
     room: shearwall_turn
     tier: standard
     level: 5
 
   storm_kite_32:
-    image: low_training_highlands/storm_kite_32.png
+    image: 0bc5fe3e849bcb235450da12bd3a8052ad2f4baf6f2aad57344651bfcf751382.png
     name: "a storm kite"
     room: raven_lift
     tier: standard
@@ -271,14 +271,14 @@ mobs:
         chance: 0.70
 
   ridge_outlaw_33:
-    image: low_training_highlands/ridge_outlaw_33.png
+    image: ba1d371cd3b349b18cd5359211120daccf7d0a500e3f842769048abf38e4579b.png
     name: "a ridge outlaw"
     room: hailgate
     tier: elite
     level: 5
 
   frost_stalker_34:
-    image: low_training_highlands/frost_stalker_34.png
+    image: 8be3cea9057a50461bca44d269f4e8ddcd08a7457811dcfd8c806321cdbf4533.png
     name: "a frost stalker"
     room: split_ice_stair
     tier: standard
@@ -288,14 +288,14 @@ mobs:
         chance: 0.70
 
   crag_warden_35:
-    image: low_training_highlands/crag_warden_35.png
+    image: 14a3f56d1e0051f6a6b0748150c58a17f360824110c7531c838bcb3256d5586c.png
     name: "a crag warden"
     room: needle_shelf
     tier: standard
     level: 5
 
   howling_marauder_36:
-    image: low_training_highlands/howling_marauder_36.png
+    image: 41aa32061d4cd8c91773c857094675799b8d3fd31536ed25d12a7d2ae9c176b6.png
     name: "a howling marauder"
     room: white_echo
     tier: elite
@@ -305,14 +305,14 @@ mobs:
         chance: 0.80
 
   granite_hawk_37:
-    image: low_training_highlands/granite_hawk_37.png
+    image: e6e3506093ab2ac96b91e7f1c6ade0902cbb3718a0e11c0ab6c73b7b3a4cd014.png
     name: "a granite hawk"
     room: farseer_post
     tier: elite
     level: 6
 
   mist_sentry_38:
-    image: low_training_highlands/mist_sentry_38.png
+    image: 82da88551b97ff09c67e5bc18b116934f6811ed570d54df17d9eb7212ed624b3.png
     name: "a mist sentry"
     room: stormbell_span
     tier: elite
@@ -322,14 +322,14 @@ mobs:
         chance: 1.0
 
   hail_hunter_39:
-    image: low_training_highlands/hail_hunter_39.png
+    image: 2a35ec5f80e7b72bb257f063925a079ef12ff57e96d9737b96431bdb138143cf.png
     name: "a hail hunter"
     room: skycut_notch
     tier: elite
     level: 8
 
   sky_raider_40:
-    image: low_training_highlands/sky_raider_40.png
+    image: 521aac1ba85ab7ba55befa6752205f20e67e13700c5520c990d845651ce7914c.png
     name: "a sky raider"
     room: highwind_chute
     tier: elite
@@ -340,7 +340,7 @@ mobs:
 
 items:
   gear_01:
-    image: low_training_highlands/gear_01.png
+    image: 836b036c0c361e570fb7d8e69d287c464ce044ec1340de9c84ca69bbc3968df0.png
     displayName: "a ridgeforged hatchet"
     keyword: "hatchet"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
@@ -349,7 +349,7 @@ items:
     room: switchback_foot
 
   gear_02:
-    image: low_training_highlands/gear_02.png
+    image: 60096c4548479a502e61d07c407f8c7d1d9106fd1f840c9f235f3e81030cdc6a.png
     displayName: "a stormproof coat"
     keyword: "coat"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
@@ -358,7 +358,7 @@ items:
     room: broken_switchback
 
   gear_03:
-    image: low_training_highlands/gear_03.png
+    image: 2983544b40bb332d74fb04eb8f9abd8e6bda53636ab95f704b40370177bda5d5.png
     displayName: "a frostlined bandolier"
     keyword: "bandolier"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
@@ -367,7 +367,7 @@ items:
     room: skybridge_span
 
   gear_04:
-    image: low_training_highlands/gear_04.png
+    image: 56bf9153d9ec1167fb30214bcb9915377340deac866ec0798799a75ca4856d7e.png
     displayName: "a granite hood"
     keyword: "hood"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
@@ -376,7 +376,7 @@ items:
     room: thunder_roost
 
   gear_05:
-    image: low_training_highlands/gear_05.png
+    image: 02dac256cdc76813d82fe87bb0bd17e5149701302df2b2fd6518ab5d296fbae7.png
     displayName: "a windbound gauntlet"
     keyword: "gauntlet"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
@@ -385,7 +385,7 @@ items:
     room: goatpath_terrace
 
   gear_06:
-    image: low_training_highlands/gear_06.png
+    image: 782a65fdbd2021258907628e33b4dde845f7696af1f901450b5a963501f6a4ea.png
     displayName: "a spiked pauldron"
     keyword: "pauldron"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
@@ -394,7 +394,7 @@ items:
     room: cloudpines
 
   gear_07:
-    image: low_training_highlands/gear_07.png
+    image: 7693f46a9e0a060c12ff5bc5aedb62c9fe9c2d5c77e40ecabe3ee19bfcd253f3.png
     displayName: "a ropebound axe"
     keyword: "axe"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
@@ -403,7 +403,7 @@ items:
     room: shale_turn
 
   gear_08:
-    image: low_training_highlands/gear_08.png
+    image: 979cc26694d854e264da08174886e32e42d78b25a5b5e5bdb14936b8bc369f09.png
     displayName: "a ironclad mail"
     keyword: "mail"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
@@ -412,7 +412,7 @@ items:
     room: ridge_lanterns
 
   gear_09:
-    image: low_training_highlands/gear_09.png
+    image: cebbd76bd55333098f58adf5f88e4aeacbfcef11eee4b11fa96cc55d0fff2e85.png
     displayName: "a summit blade"
     keyword: "blade"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-1 circuit in this zone."
@@ -421,7 +421,7 @@ items:
     room: frozen_runoff
 
   gear_10:
-    image: low_training_highlands/gear_10.png
+    image: d0eda8b892067b2f9d70b6e82107db890f161d8873c2f71375e58202108439fa.png
     displayName: "a skyworn vest"
     keyword: "vest"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
@@ -430,7 +430,7 @@ items:
     room: hawk_perch
 
   gear_11:
-    image: low_training_highlands/gear_11.png
+    image: 7657a6989a379d37489e6f7b4c31e9c7ab5fcd7c19bbcb53d0da1fc74525d7ad.png
     displayName: "a ridgeforged hatchet"
     keyword: "hatchet"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
@@ -439,7 +439,7 @@ items:
     room: narrow_col
 
   gear_12:
-    image: low_training_highlands/gear_12.png
+    image: a0d8796f80c67c7f019ec54e8c03a3159d94a2b42b5e0c1a34c2d81835ccb7a3.png
     displayName: "a stormproof coat"
     keyword: "coat"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
@@ -448,7 +448,7 @@ items:
     room: storm_knot
 
   gear_13:
-    image: low_training_highlands/gear_13.png
+    image: 9cc7af38c4fea426203c9c006155e14de356566ddb13dbfaa3973f6bb82ee9d0.png
     displayName: "a frostlined bandolier"
     keyword: "bandolier"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
@@ -457,7 +457,7 @@ items:
     room: cliffside_hovel
 
   gear_14:
-    image: low_training_highlands/gear_14.png
+    image: cf7dd6d07b56613bd80e77b7772e158d568825adbde1472ce6149cb9bd714b72.png
     displayName: "a granite hood"
     keyword: "hood"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
@@ -466,7 +466,7 @@ items:
     room: avalanche_cut
 
   gear_15:
-    image: low_training_highlands/gear_15.png
+    image: e9c49e5bc6d67ea8371470bc7e2f3ce65d13f97bbd8a6a5d75662ca9dd0815d2.png
     displayName: "a windbound gauntlet"
     keyword: "gauntlet"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
@@ -475,7 +475,7 @@ items:
     room: knucklebone_ridge
 
   gear_16:
-    image: low_training_highlands/gear_16.png
+    image: 65a44e3ae5f6d99ab876256cbdc644b1ec8fa6486c2ed9cb64434a2acd5ca3d9.png
     displayName: "a spiked pauldron"
     keyword: "pauldron"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
@@ -484,7 +484,7 @@ items:
     room: mistwall_gap
 
   gear_17:
-    image: low_training_highlands/gear_17.png
+    image: e56e701d90608cf9dc07495d8acdab24d2aba192739fdcf5f8f3112cf93ba73a.png
     displayName: "a ropebound axe"
     keyword: "axe"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
@@ -493,7 +493,7 @@ items:
     room: banner_stones
 
   gear_18:
-    image: low_training_highlands/gear_18.png
+    image: 63366fd9023583558b6ed9230beecb80b1970284ff53d089c11993aa265032c1.png
     displayName: "a ironclad mail"
     keyword: "mail"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-2 circuit in this zone."
@@ -502,7 +502,7 @@ items:
     room: echoes_saddle
 
   gear_19:
-    image: low_training_highlands/gear_19.png
+    image: 4dd2bdb4b187fd8c579629d930329f1f3393027e52418e33509b887512ec89f1.png
     displayName: "a summit blade"
     keyword: "blade"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
@@ -511,7 +511,7 @@ items:
     room: old_signal_tower
 
   gear_20:
-    image: low_training_highlands/gear_20.png
+    image: a8b98cdcafce722b6661386ca5bed851b3532813dacb574f5c4b0949c63c0fa4.png
     displayName: "a skyworn vest"
     keyword: "vest"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
@@ -521,7 +521,7 @@ items:
     room: lightning_spire
 
   gear_21:
-    image: low_training_highlands/gear_21.png
+    image: fc8ab0692341b30cda254f22207d2a6d44e0bdb0eee8ba5a72b86b6722f2a218.png
     displayName: "a ridgeforged hatchet"
     keyword: "hatchet"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
@@ -531,7 +531,7 @@ items:
     room: windharrow
 
   gear_22:
-    image: low_training_highlands/gear_22.png
+    image: ceac591b3efc62a680d83e7afbd3ce40a7417c16a59339b7ae361b9a58169b8d.png
     displayName: "a stormproof coat"
     keyword: "coat"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
@@ -540,7 +540,7 @@ items:
     room: granite_step
 
   gear_23:
-    image: low_training_highlands/gear_23.png
+    image: aab13c1c407ca3e0170a1d07715e24b4b95cec53ef0d28bc07d05034f4486bb0.png
     displayName: "a frostlined bandolier"
     keyword: "bandolier"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
@@ -550,7 +550,7 @@ items:
     room: raincatch_basin
 
   gear_24:
-    image: low_training_highlands/gear_24.png
+    image: 6b51e16ffb096d2e3448b8df1e739866a564aa27db7a17d676f1764e88acd612.png
     displayName: "a granite hood"
     keyword: "hood"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
@@ -560,7 +560,7 @@ items:
     room: coldfire_camp
 
   gear_25:
-    image: low_training_highlands/gear_25.png
+    image: 3a27c158251ef8288c748470ea310616ae4dbb8de0b81395ae309ceeb53c8b1d.png
     displayName: "a windbound gauntlet"
     keyword: "gauntlet"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
@@ -569,7 +569,7 @@ items:
     room: ridgeback_shelf
 
   gear_26:
-    image: low_training_highlands/gear_26.png
+    image: 1d9a5621077cb4ba79ccd88f6a1bbc1493d64a76d3f4e4e58365c33b53756a4f.png
     displayName: "a spiked pauldron"
     keyword: "pauldron"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
@@ -579,7 +579,7 @@ items:
     room: snowmelt_pass
 
   gear_27:
-    image: low_training_highlands/gear_27.png
+    image: 034e0107aa769bcdaa56f264d2184eab1205b6ce9eb93f3e7bbdf84e69b49011.png
     displayName: "a ropebound axe"
     keyword: "axe"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
@@ -589,7 +589,7 @@ items:
     room: cragwatch
 
   gear_28:
-    image: low_training_highlands/gear_28.png
+    image: 8c0833b76e75145d10fe87e6d8b991c39ae921bb5e17cd5235bd9c714bd4a091.png
     displayName: "a ironclad mail"
     keyword: "mail"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
@@ -598,7 +598,7 @@ items:
     room: cloudbreak_lip
 
   gear_29:
-    image: low_training_highlands/gear_29.png
+    image: a70144f9b6fb78e5995363b44ceb281399dafec2327162f921afbf898d441059.png
     displayName: "a summit blade"
     keyword: "blade"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
@@ -608,7 +608,7 @@ items:
     room: thunderhead_path
 
   gear_30:
-    image: low_training_highlands/gear_30.png
+    image: 33c627e4e96c20de3259009ce6867f1929bf5edf8441e739c47f330683493a58.png
     displayName: "a skyworn vest"
     keyword: "vest"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
@@ -618,7 +618,7 @@ items:
     room: high_cairn
 
   gear_31:
-    image: low_training_highlands/gear_31.png
+    image: 6fc7e4773c7ab96b65bb979a255fbe7c0c0c0be38d2b050107c63efcbcc3b549.png
     displayName: "a ridgeforged hatchet"
     keyword: "hatchet"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
@@ -627,7 +627,7 @@ items:
     room: shearwall_turn
 
   gear_32:
-    image: low_training_highlands/gear_32.png
+    image: 945b42d3c5194a9ad4d6024aa0b0b96b320db0c201359efdae47aee3c8d948ed.png
     displayName: "a stormproof coat"
     keyword: "coat"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
@@ -637,7 +637,7 @@ items:
     room: raven_lift
 
   gear_33:
-    image: low_training_highlands/gear_33.png
+    image: f3140ad68987379b4f3ba3a0de276798926078c3481ae289942bb51d080b1490.png
     displayName: "a frostlined bandolier"
     keyword: "bandolier"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
@@ -647,7 +647,7 @@ items:
     room: hailgate
 
   gear_34:
-    image: low_training_highlands/gear_34.png
+    image: e6ae6b62ccdacef8939c2da16d088955836db24839d82bf50883cbd3dbed7920.png
     displayName: "a granite hood"
     keyword: "hood"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
@@ -656,7 +656,7 @@ items:
     room: split_ice_stair
 
   gear_35:
-    image: low_training_highlands/gear_35.png
+    image: bf2433f041a563b501c20101963c4159494fda059d769a74cc617eb6dad5a0f1.png
     displayName: "a windbound gauntlet"
     keyword: "gauntlet"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
@@ -666,7 +666,7 @@ items:
     room: needle_shelf
 
   gear_36:
-    image: low_training_highlands/gear_36.png
+    image: 40cbb1e4a82b215f23a3a1f0eed3bb5b253f54bd895d9b41e1dea37f2973a909.png
     displayName: "a spiked pauldron"
     keyword: "pauldron"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
@@ -676,7 +676,7 @@ items:
     room: white_echo
 
   gear_37:
-    image: low_training_highlands/gear_37.png
+    image: 5b7fbd43f4bfba7ffee959537af38519eb785bae628db2d2f4d45153bec8fa6e.png
     displayName: "a ropebound axe"
     keyword: "axe"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-5 circuit in this zone."
@@ -685,7 +685,7 @@ items:
     room: farseer_post
 
   gear_38:
-    image: low_training_highlands/gear_38.png
+    image: d9e36ed305a35f2ee7e24ce7eb03e63ab5c7f654007e76bf495c585e764ff35a.png
     displayName: "a ironclad mail"
     keyword: "mail"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-5 circuit in this zone."
@@ -695,7 +695,7 @@ items:
     room: stormbell_span
 
   gear_39:
-    image: low_training_highlands/gear_39.png
+    image: ce3e62da3e4012bb2e58da57bbf0b55171f26864b5d7491c207933a964ef1ec5.png
     displayName: "a summit blade"
     keyword: "blade"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-5 circuit in this zone."
@@ -705,7 +705,7 @@ items:
     room: skycut_notch
 
   gear_40:
-    image: low_training_highlands/gear_40.png
+    image: d9521bcd6dbe860c36d4fe6edec7d562ef7c1013894f6b282548d122d467922b.png
     displayName: "a skyworn vest"
     keyword: "vest"
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-5 circuit in this zone."
@@ -714,7 +714,7 @@ items:
     room: highwind_chute
 
   ration_01:
-    image: low_training_highlands/ration_01.png
+    image: edac39fce3a491a3a4cad60f5cb1b9186926fe689e0a5fc96ee5fa1c7ec1f7ad.png
     displayName: "a field ration pack #1"
     keyword: "ration"
     description: "Emergency restorative supplies cached along the deepest patrol routes."
@@ -726,7 +726,7 @@ items:
     room: white_echo
 
   ration_02:
-    image: low_training_highlands/ration_02.png
+    image: d641023dd0aa4e4c2e5eec91251112a5f4b56da8544e0ae6f1567a6902928a33.png
     displayName: "a field ration pack #2"
     keyword: "ration"
     description: "Emergency restorative supplies cached along the deepest patrol routes."
@@ -738,7 +738,7 @@ items:
     room: farseer_post
 
   ration_03:
-    image: low_training_highlands/ration_03.png
+    image: 0c5658b05afb410d5ad39857b5ef5cf1030e3ad4a5f46cd0557adb18a9773e7a.png
     displayName: "a field ration pack #3"
     keyword: "ration"
     description: "Emergency restorative supplies cached along the deepest patrol routes."
@@ -750,7 +750,7 @@ items:
     room: stormbell_span
 
   ration_04:
-    image: low_training_highlands/ration_04.png
+    image: 6c328535a5dcefc2e3f90b20fc39385298d5aea2bbbda4dc198a7742d502aebd.png
     displayName: "a field ration pack #4"
     keyword: "ration"
     description: "Emergency restorative supplies cached along the deepest patrol routes."
@@ -762,7 +762,7 @@ items:
     room: skycut_notch
 
   ration_05:
-    image: low_training_highlands/ration_05.png
+    image: d47db602827c525bfc3cdbbd5644571f8450ba92ce4a736e898958e9e104776d.png
     displayName: "a field ration pack #5"
     keyword: "ration"
     description: "Emergency restorative supplies cached along the deepest patrol routes."
@@ -774,7 +774,7 @@ items:
     room: highwind_chute
 
   ration_06:
-    image: low_training_highlands/ration_06.png
+    image: 6b740a8b50731667b8a5b4a4160cd98c0967976794677ffb0eca818c909af737.png
     displayName: "a field ration pack #6"
     keyword: "ration"
     description: "Emergency restorative supplies cached along the deepest patrol routes."
@@ -786,7 +786,7 @@ items:
     room: broken_astrolabe
 
   trophy_01:
-    image: low_training_highlands/trophy_01.png
+    image: 2b6be1aa99b1a057eac24b7ca50f450eae127043298c56dad24f09d675b9a242.png
     displayName: "a thundering sigil"
     keyword: "sigil"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -794,7 +794,7 @@ items:
     damage: 5
 
   trophy_02:
-    image: low_training_highlands/trophy_02.png
+    image: 488e4112c0a78f5b0fe11555253cf2e7883da4e5606390c50f3aafa42592f5e9.png
     displayName: "a echoing token"
     keyword: "token"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -803,7 +803,7 @@ items:
     constitution: 1
 
   trophy_03:
-    image: low_training_highlands/trophy_03.png
+    image: 9cc3b99bf852c040c4ecd0f5d429db86492edc445c1996f08912dc00c6d5490b.png
     displayName: "a runed totem"
     keyword: "totem"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -812,7 +812,7 @@ items:
     constitution: 1
 
   trophy_04:
-    image: low_training_highlands/trophy_04.png
+    image: bff04c12b5ca40cc06774268a1c6162b25975775f05fca9f74a98b4a6725c7a2.png
     displayName: "a stormcut seal"
     keyword: "seal"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -820,7 +820,7 @@ items:
     damage: 6
 
   trophy_05:
-    image: low_training_highlands/trophy_05.png
+    image: 7f34926767f0daa90d6ed0e4a2024cb3300e7c202f319973d273e7fdecf7d3bc.png
     displayName: "a snowworn relic"
     keyword: "relic"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -829,7 +829,7 @@ items:
     constitution: 1
 
   trophy_06:
-    image: low_training_highlands/trophy_06.png
+    image: fa93960d93cd2f4543438a22ae8854b797f972f6333940fb23c6b9e7934bc111.png
     displayName: "a skybound medallion"
     keyword: "medallion"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -838,7 +838,7 @@ items:
     constitution: 1
 
   trophy_07:
-    image: low_training_highlands/trophy_07.png
+    image: d0cf9ef62aae3afbaa0145857261999fc37dd591f86183cae55920acc14e90e6.png
     displayName: "a horizon crest"
     keyword: "crest"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -846,7 +846,7 @@ items:
     damage: 6
 
   trophy_08:
-    image: low_training_highlands/trophy_08.png
+    image: 5a9694ab5d48dff64d3d59489bceead2ef8dbda9b3a0110eb42128e7ce49a416.png
     displayName: "a deepwind idol"
     keyword: "idol"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -855,7 +855,7 @@ items:
     constitution: 1
 
   trophy_09:
-    image: low_training_highlands/trophy_09.png
+    image: d13d625d31998737a783de863bfe83bfd6bb5d3bf11737bf5e47dc72a9a0a3ad.png
     displayName: "a summit brand"
     keyword: "brand"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -864,7 +864,7 @@ items:
     constitution: 2
 
   trophy_10:
-    image: low_training_highlands/trophy_10.png
+    image: eda17dcd7b64063232d274284a9b10d03fae4b44cffb3e41950bf9ef87c7a74c.png
     displayName: "a glacier mark"
     keyword: "mark"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -872,7 +872,7 @@ items:
     damage: 8
 
   trophy_11:
-    image: low_training_highlands/trophy_11.png
+    image: 50a45eab31871d361dcf85295fd6465ff1af9c2529315b81ca71aa4102fd0616.png
     displayName: "a thundering sigil"
     keyword: "sigil"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -881,7 +881,7 @@ items:
     constitution: 2
 
   trophy_12:
-    image: low_training_highlands/trophy_12.png
+    image: 80e8e749219d4d5db6e87fc1ad4c1e87383cad64a2dc0e42fc6cc26d80f9da7d.png
     displayName: "a echoing token"
     keyword: "token"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -891,7 +891,7 @@ items:
 
 rooms:
   switchback_foot:
-    image: low_training_highlands/switchback_foot.png
+    image: a9f5a368cee18b41426b3966e04157cd203d274373d051be686c0fc783bc1421.jpg
     title: "Switchback Foot"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Switchback Foot anchors one segment of the zone circuit."
     exits:
@@ -900,7 +900,7 @@ rooms:
       s: ambon_hub:blank_arches
 
   broken_switchback:
-    image: low_training_highlands/broken_switchback.png
+    image: 98f9320237a50d2096a89b15e675ccb78f0ff3d8cb0f2b130e8a809c99ee9415.jpg
     title: "Broken Switchback"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Broken Switchback anchors one segment of the zone circuit."
     exits:
@@ -909,7 +909,7 @@ rooms:
       w: switchback_foot
 
   skybridge_span:
-    image: low_training_highlands/skybridge_span.png
+    image: 53b84cbeb2ad2c6204e82c9ef8fcaaf90b378990c15ca97e1d05313a600085cf.jpg
     title: "Skybridge Span"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Skybridge Span anchors one segment of the zone circuit."
     exits:
@@ -918,7 +918,7 @@ rooms:
       w: broken_switchback
 
   thunder_roost:
-    image: low_training_highlands/thunder_roost.png
+    image: b937538d68a722392a0ff842936f8e6bb082ae220ecd78c8b6f10d0d8f9d148d.jpg
     title: "Thunder Roost"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Thunder Roost anchors one segment of the zone circuit."
     exits:
@@ -927,7 +927,7 @@ rooms:
       w: skybridge_span
 
   goatpath_terrace:
-    image: low_training_highlands/goatpath_terrace.png
+    image: 5dbb101071c09c47b130cd7df108fd4d98148774cec7892d4790c895197f0ade.jpg
     title: "Goatpath Terrace"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Goatpath Terrace anchors one segment of the zone circuit."
     exits:
@@ -936,7 +936,7 @@ rooms:
       w: thunder_roost
 
   cloudpines:
-    image: low_training_highlands/cloudpines.png
+    image: 7637c4c3a8c9a8029d1911f4313bd073c44a1b45ea05434b8db18a75a7bd1964.jpg
     title: "Cloudpines"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Cloudpines anchors one segment of the zone circuit."
     exits:
@@ -945,7 +945,7 @@ rooms:
       w: goatpath_terrace
 
   shale_turn:
-    image: low_training_highlands/shale_turn.png
+    image: 5590bf6e7520b3374e6fe24f5d3a078a97a0a6980e47bd918ab9ca6430f847a8.jpg
     title: "Shale Turn"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Shale Turn anchors one segment of the zone circuit."
     exits:
@@ -954,7 +954,7 @@ rooms:
       w: cloudpines
 
   ridge_lanterns:
-    image: low_training_highlands/ridge_lanterns.png
+    image: 86122bbd5ceb20a9d356dbfa03320961b08cee84ec129092d4c403a9af598991.jpg
     title: "Ridge Lanterns"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Ridge Lanterns anchors one segment of the zone circuit."
     exits:
@@ -963,7 +963,7 @@ rooms:
       w: shale_turn
 
   frozen_runoff:
-    image: low_training_highlands/frozen_runoff.png
+    image: 39145a49af41baa069e494c8e3074b1a87294edd31a4be1e8cb1132173b19b20.jpg
     title: "Frozen Runoff"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Initial climbs focus on footing and line-of-sight discipline. Frozen Runoff anchors one segment of the zone circuit."
     exits:
@@ -971,7 +971,7 @@ rooms:
       w: ridge_lanterns
 
   hawk_perch:
-    image: low_training_highlands/hawk_perch.png
+    image: b744db961307dd92c7cdd40122122ea46a168d8353b450576d0631274356ebc6.jpg
     title: "Hawk Perch"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Hawk Perch anchors one segment of the zone circuit."
     exits:
@@ -980,7 +980,7 @@ rooms:
       s: switchback_foot
 
   narrow_col:
-    image: low_training_highlands/narrow_col.png
+    image: 3b26eddd795490c146dea5ee949ea464b536f3b373e03ea54dd564c531ac88f9.jpg
     title: "Narrow Col"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Narrow Col anchors one segment of the zone circuit."
     exits:
@@ -990,7 +990,7 @@ rooms:
       w: hawk_perch
 
   storm_knot:
-    image: low_training_highlands/storm_knot.png
+    image: 67cd35b621a9bd43797682538df5fa064acbc948dce22a79745b1d3f40b038dd.jpg
     title: "Storm Knot"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Storm Knot anchors one segment of the zone circuit."
     exits:
@@ -1000,7 +1000,7 @@ rooms:
       w: narrow_col
 
   cliffside_hovel:
-    image: low_training_highlands/cliffside_hovel.png
+    image: ec88fa1e097cf7ecc5a4f475ec949a7d3b0e409ef5729a95c192ed84174a7098.jpg
     title: "Cliffside Hovel"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Cliffside Hovel anchors one segment of the zone circuit."
     exits:
@@ -1010,7 +1010,7 @@ rooms:
       w: storm_knot
 
   avalanche_cut:
-    image: low_training_highlands/avalanche_cut.png
+    image: 746c10f4566d6573ae21d5e0eb33ed2698ac5fc83f452756a134fea39c489ead.jpg
     title: "Avalanche Cut"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Avalanche Cut anchors one segment of the zone circuit."
     exits:
@@ -1020,7 +1020,7 @@ rooms:
       w: cliffside_hovel
 
   knucklebone_ridge:
-    image: low_training_highlands/knucklebone_ridge.png
+    image: ca28b0054622a7637f02a7d8aa344064143537c3bc1d0aed28ab58d19736896a.jpg
     title: "Knucklebone Ridge"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Knucklebone Ridge anchors one segment of the zone circuit."
     exits:
@@ -1030,7 +1030,7 @@ rooms:
       w: avalanche_cut
 
   mistwall_gap:
-    image: low_training_highlands/mistwall_gap.png
+    image: 6806f9a4bfd7b948329a2ed0f927a3622b6c20f66e91a8ccd68f1ab7fbbaad1b.jpg
     title: "Mistwall Gap"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Mistwall Gap anchors one segment of the zone circuit."
     exits:
@@ -1040,7 +1040,7 @@ rooms:
       w: knucklebone_ridge
 
   banner_stones:
-    image: low_training_highlands/banner_stones.png
+    image: b856872be13de6e8a98fe3e58eba78c201f572aa6aba3912dc02bfa9a74263fb.jpg
     title: "Banner Stones"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Banner Stones anchors one segment of the zone circuit."
     exits:
@@ -1050,7 +1050,7 @@ rooms:
       w: mistwall_gap
 
   echoes_saddle:
-    image: low_training_highlands/echoes_saddle.png
+    image: f88d2815f7ac3a384dbe666930269117136f149d81266e33c587e5e9ca053489.jpg
     title: "Echoes Saddle"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Crosswinds and exposed ledges punish overextension. Echoes Saddle anchors one segment of the zone circuit."
     exits:
@@ -1059,7 +1059,7 @@ rooms:
       w: banner_stones
 
   old_signal_tower:
-    image: low_training_highlands/old_signal_tower.png
+    image: ca84af779537b957a5dcb7c01905e1bdfde79b2b16059d5235bd8d4eba1652fc.jpg
     title: "Old Signal Tower"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Old Signal Tower anchors one segment of the zone circuit."
     exits:
@@ -1068,7 +1068,7 @@ rooms:
       s: hawk_perch
 
   lightning_spire:
-    image: low_training_highlands/lightning_spire.png
+    image: 7e61d9ce52f8a7008e1e420076b81f6e96d200765f2fd17934abcf6e494bdfb8.jpg
     title: "Lightning Spire"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Lightning Spire anchors one segment of the zone circuit."
     exits:
@@ -1078,7 +1078,7 @@ rooms:
       w: old_signal_tower
 
   windharrow:
-    image: low_training_highlands/windharrow.png
+    image: 1a91a454cbbff56b4f7219df5e8b935975232bc5fa523f9d8c6d62d96e3c2e99.jpg
     title: "Windharrow"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Windharrow anchors one segment of the zone circuit."
     exits:
@@ -1088,7 +1088,7 @@ rooms:
       w: lightning_spire
 
   granite_step:
-    image: low_training_highlands/granite_step.png
+    image: 5e41d3b32572131ad3e03277395abad59e241dc21a9c9d6e591f3b7b3906e74b.jpg
     title: "Granite Step"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Granite Step anchors one segment of the zone circuit."
     exits:
@@ -1098,7 +1098,7 @@ rooms:
       w: windharrow
 
   raincatch_basin:
-    image: low_training_highlands/raincatch_basin.png
+    image: debbaa4257d55b9fa668d6bb410c338ec34ac2d54b81837a699ad9e6861e7e85.jpg
     title: "Raincatch Basin"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Raincatch Basin anchors one segment of the zone circuit."
     exits:
@@ -1108,7 +1108,7 @@ rooms:
       w: granite_step
 
   coldfire_camp:
-    image: low_training_highlands/coldfire_camp.png
+    image: ab66c49f468905d414c6011d793ce5456d376f852454b1b684bfd5034fd43b8d.jpg
     title: "Coldfire Camp"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Coldfire Camp anchors one segment of the zone circuit."
     exits:
@@ -1118,7 +1118,7 @@ rooms:
       w: raincatch_basin
 
   ridgeback_shelf:
-    image: low_training_highlands/ridgeback_shelf.png
+    image: 8852d9eb93066f739a504aeec083911301aea4014b779124890a936806848604.jpg
     title: "Ridgeback Shelf"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Ridgeback Shelf anchors one segment of the zone circuit."
     exits:
@@ -1128,7 +1128,7 @@ rooms:
       w: coldfire_camp
 
   snowmelt_pass:
-    image: low_training_highlands/snowmelt_pass.png
+    image: 6a49dec7f9c3edb68204d59d31748cdb13b90f2c4197e7998fcb4d8096ade02c.jpg
     title: "Snowmelt Pass"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Snowmelt Pass anchors one segment of the zone circuit."
     exits:
@@ -1138,7 +1138,7 @@ rooms:
       w: ridgeback_shelf
 
   cragwatch:
-    image: low_training_highlands/cragwatch.png
+    image: eb98ec3e2ed72af8cc218d1b6eb5f29e551f281d9c4249e541fc01b2421aebeb.jpg
     title: "Cragwatch"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Patrol density drops as routes narrow through broken stone. Cragwatch anchors one segment of the zone circuit."
     exits:
@@ -1147,7 +1147,7 @@ rooms:
       w: snowmelt_pass
 
   cloudbreak_lip:
-    image: low_training_highlands/cloudbreak_lip.png
+    image: beb2c135f1efebedfbbe23a4e7c381365e3b8d9d136ae2d1319e0ab27f9c9d81.jpg
     title: "Cloudbreak Lip"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Cloudbreak Lip anchors one segment of the zone circuit."
     exits:
@@ -1156,7 +1156,7 @@ rooms:
       s: old_signal_tower
 
   thunderhead_path:
-    image: low_training_highlands/thunderhead_path.png
+    image: d776b0b65f4a346c127dcb7b8077d7c63933cac6f08f9e2f06da31c7eb25f7a8.jpg
     title: "Thunderhead Path"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Thunderhead Path anchors one segment of the zone circuit."
     exits:
@@ -1166,7 +1166,7 @@ rooms:
       w: cloudbreak_lip
 
   high_cairn:
-    image: low_training_highlands/high_cairn.png
+    image: 473bb58714d25a7423fb3d94aa82fdaa948de5ffa0b4dd667ddb063694aad75c.jpg
     title: "High Cairn"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. High Cairn anchors one segment of the zone circuit."
     exits:
@@ -1176,7 +1176,7 @@ rooms:
       w: thunderhead_path
 
   shearwall_turn:
-    image: low_training_highlands/shearwall_turn.png
+    image: dc9f1a6c53267edd0341dd3de2273b4413230824eb14495fd5397e501c7f0103.jpg
     title: "Shearwall Turn"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Shearwall Turn anchors one segment of the zone circuit."
     exits:
@@ -1186,7 +1186,7 @@ rooms:
       w: high_cairn
 
   raven_lift:
-    image: low_training_highlands/raven_lift.png
+    image: 517f63161146f7dd106789f9b3d8b4e94a4375d7e3c36acef4b1cbd336ce6847.jpg
     title: "Raven Lift"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Raven Lift anchors one segment of the zone circuit."
     exits:
@@ -1196,7 +1196,7 @@ rooms:
       w: shearwall_turn
 
   hailgate:
-    image: low_training_highlands/hailgate.png
+    image: 54a34b0c5b52a94691ece6fea01c8157a98f612f2cd30843f8b6f5bea2d25759.jpg
     title: "Hailgate"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Hailgate anchors one segment of the zone circuit."
     exits:
@@ -1206,7 +1206,7 @@ rooms:
       w: raven_lift
 
   split_ice_stair:
-    image: low_training_highlands/split_ice_stair.png
+    image: f3c63548cfd19649a750ee88e9c79303249013b2e99a25abc3498929ec3547f8.jpg
     title: "Split Ice Stair"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Split Ice Stair anchors one segment of the zone circuit."
     exits:
@@ -1216,7 +1216,7 @@ rooms:
       w: hailgate
 
   needle_shelf:
-    image: low_training_highlands/needle_shelf.png
+    image: 7461f1995b93951700d8982f2a7125123917cf9666bad22ffc25b5ea368093aa.jpg
     title: "Needle Shelf"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. Needle Shelf anchors one segment of the zone circuit."
     exits:
@@ -1226,7 +1226,7 @@ rooms:
       w: split_ice_stair
 
   white_echo:
-    image: low_training_highlands/white_echo.png
+    image: 6c2ea80e7d41fbad4686932d8a46c43871e8c7cbe278c95779ddcb0d4de1ed17.jpg
     title: "White Echo"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. Lightning-prone spans and outlaw camps define this belt. White Echo anchors one segment of the zone circuit."
     exits:
@@ -1235,7 +1235,7 @@ rooms:
       w: needle_shelf
 
   farseer_post:
-    image: low_training_highlands/farseer_post.png
+    image: 27711c4e9db1da11ca5fc306ba5256bd63d6789bac9d148d6e05e89a3437bff6.jpg
     title: "Farseer Post"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Farseer Post anchors one segment of the zone circuit."
     exits:
@@ -1243,7 +1243,7 @@ rooms:
       s: cloudbreak_lip
 
   stormbell_span:
-    image: low_training_highlands/stormbell_span.png
+    image: 398fb668b0a9880a777d90f6033537d10e5e912997e08e9208ee4429e5b9d1dc.jpg
     title: "Stormbell Span"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Stormbell Span anchors one segment of the zone circuit."
     exits:
@@ -1252,7 +1252,7 @@ rooms:
       w: farseer_post
 
   skycut_notch:
-    image: low_training_highlands/skycut_notch.png
+    image: 098040a08062587d22c8b9d67ae121cb13e71d3ac132f1308e20d382be618921.jpg
     title: "Skycut Notch"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Skycut Notch anchors one segment of the zone circuit."
     exits:
@@ -1261,7 +1261,7 @@ rooms:
       w: stormbell_span
 
   highwind_chute:
-    image: low_training_highlands/highwind_chute.png
+    image: 0ff8d81f543f29fae4905df3bfb135d76ce1083a02ba1b1478d16d77a4e2ff6f.jpg
     title: "Highwind Chute"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Highwind Chute anchors one segment of the zone circuit."
     exits:
@@ -1270,7 +1270,7 @@ rooms:
       w: skycut_notch
 
   broken_astrolabe:
-    image: low_training_highlands/broken_astrolabe.png
+    image: 0eabd75d04b37559e5500791d2313cbf7937d950393fceedfff549a074185158.jpg
     title: "Broken Astrolabe"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Broken Astrolabe anchors one segment of the zone circuit."
     exits:
@@ -1279,7 +1279,7 @@ rooms:
       w: highwind_chute
 
   frostspire_tread:
-    image: low_training_highlands/frostspire_tread.png
+    image: ae1a1300dd5a884a76856f471b21b0d518f796a6cc188f4136c418b5bc92e227.jpg
     title: "Frostspire Tread"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Frostspire Tread anchors one segment of the zone circuit."
     exits:
@@ -1288,7 +1288,7 @@ rooms:
       w: broken_astrolabe
 
   goatking_step:
-    image: low_training_highlands/goatking_step.png
+    image: fcb74fb798e2ca58c7ae19b2814b267ffeaaee8feeb0641da0f9b20f87d80127.jpg
     title: "Goatking Step"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Goatking Step anchors one segment of the zone circuit."
     exits:
@@ -1297,7 +1297,7 @@ rooms:
       w: frostspire_tread
 
   summit_ledger:
-    image: low_training_highlands/summit_ledger.png
+    image: d6b5c2ea68c9eba4dec1b94168178fe179a50456e2a1a48228e33d85dc7f6277.jpg
     title: "Summit Ledger"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Summit Ledger anchors one segment of the zone circuit."
     exits:
@@ -1306,7 +1306,7 @@ rooms:
       w: goatking_step
 
   last_banner:
-    image: low_training_highlands/last_banner.png
+    image: 7b127d92159685d4c380ad3935d09fff397fd61e770c649fdea6ee2fbdd7c6f2.jpg
     title: "Last Banner"
     description: "Cold wind pushes through cliffside switchbacks where cairns and signal banners mark the official highland training route. The summit lanes are run only by crews proving end-route readiness. Last Banner anchors one segment of the zone circuit."
     exits:
