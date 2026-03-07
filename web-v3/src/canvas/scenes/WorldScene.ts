@@ -367,6 +367,11 @@ export class WorldScene {
       this.background.height = h;
     }
 
+    // Scale text sizes for small canvases (mobile)
+    const textScale = Math.max(0.6, Math.min(1.0, w / 700));
+    this.titleText.style.fontSize = Math.round(26 * textScale);
+    this.descText.style.fontSize = Math.round(18 * textScale);
+
     // Minimap in top-right
     const mapDiam = this.minimap.diameter;
     const mapMargin = 12;
@@ -508,12 +513,15 @@ export class WorldScene {
       this.shopBadge.y = mapMargin + mapDiam + 40;
     }
 
-    // Compass rose in bottom-right
+    // Compass rose in bottom-right — scale down on small canvases
     const state = gameStateRef.current;
     const exits = state.room.exits;
     const exitDirs = Object.keys(exits).map((d) => d.toLowerCase());
-    this.compassContainer.x = w - COMPASS_SIZE / 2 - COMPASS_MARGIN;
-    this.compassContainer.y = h - COMPASS_SIZE / 2 - COMPASS_MARGIN;
+    const compassScale = Math.max(0.5, Math.min(1.0, Math.min(w, h) / 380));
+    this.compassContainer.scale.set(compassScale);
+    const scaledCompassHalf = (COMPASS_SIZE / 2) * compassScale;
+    this.compassContainer.x = w - scaledCompassHalf - COMPASS_MARGIN;
+    this.compassContainer.y = h - scaledCompassHalf - COMPASS_MARGIN;
     this.updateCompassHighlights(exitDirs);
 
     // Stairs icons next to compass
