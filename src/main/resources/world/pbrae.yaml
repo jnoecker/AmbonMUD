@@ -322,8 +322,7 @@ rooms:
     description: "A great waterfall roars off the eastern face of the mountain, plunging into the forest canopy far below in a billowing curtain of mist and spray. A permanent rainbow hangs in the mist. Carved into the cliff face are the initials 'P' and 'B' inside a heart, worn smooth by years of waterfall weather. The summit lies to the west."
     exits:
       w: mountain_summit
-    video: pbrae/zone_intro_thundering_waterfall.mp4
-
+    video: 14910f6508f261c5f8a367ce67f93e85df3b36307b1f5fbe8f147fbb1ddb90e0.mp4
   mountain_path:
     image: 2faaa5e5f1dd9a2c61d122aa8668ddfcea24d1cbba9023e78d49cb7630c4bec2.jpg
     title: "Winding Mountain Path"
@@ -781,4 +780,4 @@ rooms:
       n: coop_turkey_roost
       w: coop_egg_vault
 audio:
-  music: pbrae/music.mp3
+  music: 812692f05c9345959bbb6d0aa1ffe49cf44d620e8b061ac92a1d7b733fb14a1b.mp3
