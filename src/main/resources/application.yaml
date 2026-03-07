@@ -1695,6 +1695,7 @@ ambonmud:
           manaPerLevel: 4
           description: "A stalwart melee fighter."
           primaryStat: STR
+          threatMultiplier: 1.5
         MAGE:
           displayName: "Mage"
           hpPerLevel: 4
@@ -1797,6 +1798,9 @@ ambonmud:
       ROGUE: tutorial_glade:rogue_hideout
       SWARM: labyrinth:cell_00_00
 
+    characterCreation:
+      startingGold: 0
+
   progression:
     maxLevel: 50
     xp:
@@ -1810,6 +1814,8 @@ ambonmud:
       manaPerLevel: 5
       fullHealOnLevelUp: true
       fullManaOnLevelUp: true
+      baseHp: 10
+      baseMana: 20
 
   transport:
     telnet:

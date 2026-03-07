@@ -78,6 +78,7 @@ fun buildTestPlayerRegistry(
     classRegistry: PlayerClassRegistry? = null,
     raceRegistry: RaceRegistry? = null,
     statRegistry: StatRegistry? = null,
+    startingGold: Long = 0L,
 ): PlayerRegistry =
     PlayerRegistry(
         startRoom = startRoom,
@@ -91,6 +92,7 @@ fun buildTestPlayerRegistry(
         classRegistry = classRegistry,
         raceRegistry = raceRegistry,
         statRegistry = statRegistry,
+        startingGold = startingGold,
     )
 
 suspend fun InMemoryPlayerRepository.createTestPlayer(

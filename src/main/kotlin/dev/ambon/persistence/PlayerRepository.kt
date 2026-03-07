@@ -20,6 +20,7 @@ data class PlayerCreationRequest(
     val intelligence: Int = 10,
     val wisdom: Int = 10,
     val charisma: Int = 10,
+    val gold: Long = 0L,
 )
 
 /**
@@ -43,6 +44,7 @@ fun PlayerCreationRequest.toNewPlayerRecord(id: PlayerId): PlayerRecord =
         intelligence = intelligence,
         wisdom = wisdom,
         charisma = charisma,
+        gold = gold,
     )
 
 interface PlayerRepository {

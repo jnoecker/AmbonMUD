@@ -88,13 +88,13 @@ class PlayerProgression(
         level: Int,
         statValue: Int = PlayerState.BASE_STAT,
         hpPerLevel: Int = config.rewards.hpPerLevel,
-    ): Int = maxResourceForLevel(level, statValue, hpPerLevel, PlayerState.BASE_MAX_HP, bindings.hpScalingDivisor)
+    ): Int = maxResourceForLevel(level, statValue, hpPerLevel, config.rewards.baseHp, bindings.hpScalingDivisor)
 
     fun maxManaForLevel(
         level: Int,
         statValue: Int = PlayerState.BASE_STAT,
         manaPerLevel: Int = config.rewards.manaPerLevel,
-    ): Int = maxResourceForLevel(level, statValue, manaPerLevel, PlayerState.BASE_MANA, bindings.manaScalingDivisor)
+    ): Int = maxResourceForLevel(level, statValue, manaPerLevel, config.rewards.baseMana, bindings.manaScalingDivisor)
 
     /**
      * Applies the level-derived base HP/mana stats to [ps], clamping current
