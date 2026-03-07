@@ -2,32 +2,26 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
-import { ActionBar } from "./components/ActionBar";
-import { AudioControls } from "./components/AudioControls";
-import { PopoutLayer } from "./components/PopoutLayer";
-import { ShopPopout } from "./components/ShopPopout";
-import { ChatPanel } from "./components/panels/ChatPanel";
-import { CharacterPanel } from "./components/panels/CharacterPanel";
-import { SpellbookPanel } from "./components/SpellbookPanel";
-import { PlayPanel } from "./components/panels/PlayPanel";
-import { AdminPanel } from "./components/panels/AdminPanel";
-import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
-import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
-import { canvasEvents } from "./canvas/CanvasEventBus";
-import { LoginModal } from "./canvas/LoginModal";
+import { HelpIcon } from "@v3/components/Icons";
+import { PopoutLayer } from "@v3/components/PopoutLayer";
+import { ChatPanel } from "@v3/components/panels/ChatPanel";
+import { CharacterPanel } from "@v3/components/panels/CharacterPanel";
+import { AdminPanel } from "@v3/components/panels/AdminPanel";
+import { applyGmcpPackage } from "@v3/gmcp/applyGmcpPackage";
 import {
   DEFAULT_STATUS_VAR_LABELS,
   EMPTY_CHAR,
   EMPTY_ROOM,
   EMPTY_VITALS,
   MAX_VISIBLE_EFFECTS,
+  MAX_VISIBLE_WORLD_ITEMS,
+  MAX_VISIBLE_WORLD_MOBS,
+  MAX_VISIBLE_WORLD_PLAYERS,
   SLOT_ORDER,
-} from "./constants";
-import { useCommandHistory } from "./hooks/useCommandHistory";
-import { useMiniMap } from "./hooks/useMiniMap";
-import { useMudSocket } from "./hooks/useMudSocket";
-import { useAudioEngine } from "./hooks/useAudioEngine";
-import { useQuickbar } from "./hooks/useQuickbar";
+} from "@v3/constants";
+import { useCommandHistory } from "@v3/hooks/useCommandHistory";
+import { useMiniMap } from "@v3/hooks/useMiniMap";
+import { useMudSocket } from "@v3/hooks/useMudSocket";
 import type {
   AchievementData,
   CharStats,
@@ -44,10 +38,7 @@ import type {
   GuildInfo,
   GuildMemberEntry,
   ItemSummary,
-  LoginErrorState,
-  LoginPromptState,
   MobInfo,
-  PopoutPanel,
   QuestEntry,
   QuestNotification,
   RoomMob,
@@ -59,8 +50,12 @@ import type {
   StatusEffect,
   StatusVarLabels,
   Vitals,
-} from "./types";
-import { sortExits, titleCaseWords } from "./utils";
+} from "@v3/types";
+import { sortExits, titleCaseWords } from "@v3/utils";
+import { MobileTabBar } from "./components/MobileTabBar";
+import { PlayPanel } from "./components/panels/PlayPanel";
+import { WorldPanel } from "./components/panels/WorldPanel";
+import type { MobileTab } from "./terminalTypes";
 import "@xterm/xterm/css/xterm.css";
 import "./styles.css";
 
@@ -113,20 +108,16 @@ function parseWhoEntries(messageChunk: string): string[] | null {
 }
 
 function App() {
-  const terminalHiddenRef = useRef<HTMLDivElement | null>(null);
-  const terminalOverlayRef = useRef<HTMLDivElement | null>(null);
+  const terminalHostRef = useRef<HTMLDivElement | null>(null);
   const composerInputRef = useRef<HTMLInputElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
 
+  const [activeTab, setActiveTab] = useState<MobileTab>("play");
   const [activeChatChannel, setActiveChatChannel] = useState<ChatChannel>("say");
-  const [activePopout, setActivePopout] = useState<PopoutPanel>(null);
+  const [activePopout, setActivePopout] = useState<import("@v3/types").PopoutPanel>(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [composerValue, setComposerValue] = useState("");
-  const [terminalVisible, setTerminalVisible] = useState(false);
-  const [terminalOpaque, setTerminalOpaque] = useState(false);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [videoClosing, setVideoClosing] = useState(false);
 
   const [vitals, setVitals] = useState<Vitals>(EMPTY_VITALS);
   const [statusVarLabels, setStatusVarLabels] = useState<StatusVarLabels>(DEFAULT_STATUS_VAR_LABELS);
@@ -137,9 +128,6 @@ function App() {
   const [roomItems, setRoomItems] = useState<RoomItem[]>([]);
   const [effects, setEffects] = useState<StatusEffect[]>([]);
   const [skills, setSkills] = useState<SkillSummary[]>([]);
-  const audio = useAudioEngine();
-  const quickbar = useQuickbar(skills);
-  const [toast, setToast] = useState<string | null>(null);
   const [inventory, setInventory] = useState<ItemSummary[]>([]);
   const [equipment, setEquipment] = useState<Record<string, ItemSummary>>({});
   const [achievements, setAchievements] = useState<AchievementData>({ completed: [], inProgress: [] });
@@ -154,22 +142,18 @@ function App() {
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
   const [, setCharStats] = useState<CharStats | null>(null);
   const [quests, setQuests] = useState<QuestEntry[]>([]);
-  const [mobInfo, setMobInfo] = useState<MobInfo[]>([]);
+  const [, setMobInfo] = useState<MobInfo[]>([]);
   const [shop, setShop] = useState<ShopState | null>(null);
   const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
-  const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
-  const [loginError, setLoginError] = useState<LoginErrorState | null>(null);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
   const pushCombatEvent = useCallback((event: CombatEventData) => {
     combatEventsRef.current = [...combatEventsRef.current.slice(-99), event];
-    canvasEvents.push(event);
   }, []);
 
   const pushGainEvent = useCallback((event: GainEvent) => {
     gainEventsRef.current = [...gainEventsRef.current.slice(-49), event];
-    canvasEvents.push(event);
   }, []);
 
   const MAX_QUEST_NOTIFICATIONS = 5;
@@ -209,8 +193,7 @@ function App() {
   const fitTerminal = useCallback(() => {
     const term = terminalRef.current;
     const fitAddon = fitAddonRef.current;
-    // Fit to whichever container the terminal is currently in
-    const host = terminalOverlayRef.current ?? terminalHiddenRef.current;
+    const host = terminalHostRef.current;
     if (!term || !fitAddon || !host) return;
     if (host.clientWidth <= 0 || host.clientHeight <= 0) return;
 
@@ -250,8 +233,6 @@ function App() {
     setMobInfo([]);
     setShop(null);
     setQuestNotifications([]);
-    setLoginPrompt(null);
-    setLoginError(null);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setActiveChatChannel("say");
@@ -282,14 +263,7 @@ function App() {
           setGuildMembers,
           setDialogue,
           setCombatTarget,
-          setShop: (value) => {
-            setShop(value);
-            if (value) {
-              setActivePopout("shop");
-            } else {
-              setActivePopout((prev) => prev === "shop" ? null : prev);
-            }
-          },
+          setShop,
           setFriends,
           pushFriendNotification,
           setChatByChannel,
@@ -300,8 +274,6 @@ function App() {
           pushGainEvent,
           pushQuestNotification,
           setMobInfo,
-          setLoginPrompt,
-          setLoginError,
         },
       );
     },
@@ -322,7 +294,6 @@ function App() {
       setComposerValue("");
       resetComposerTraversal();
       resetHud();
-      audio.stopAll();
       writeSystem("Connection closed.");
     },
     onError: () => {
@@ -346,7 +317,7 @@ function App() {
   );
 
   useEffect(() => {
-    if (!terminalHiddenRef.current) return;
+    if (!terminalHostRef.current) return;
 
     const term = new Terminal({
       cursorBlink: false,
@@ -365,17 +336,29 @@ function App() {
 
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
-    term.open(terminalHiddenRef.current);
+    term.open(terminalHostRef.current);
 
     terminalRef.current = term;
     fitAddonRef.current = fitAddon;
+    fitTerminal();
+
+    const resizeObserver = new ResizeObserver(() => {
+      fitTerminal();
+      drawMap();
+    });
+    resizeObserver.observe(terminalHostRef.current);
+    const firstFrameFit = window.requestAnimationFrame(() => fitTerminal());
+    const delayedFit = window.setTimeout(() => fitTerminal(), 80);
 
     return () => {
+      resizeObserver.disconnect();
+      window.cancelAnimationFrame(firstFrameFit);
+      window.clearTimeout(delayedFit);
       term.dispose();
       fitAddonRef.current = null;
       terminalRef.current = null;
     };
-  }, []);
+  }, [drawMap, fitTerminal]);
 
   useEffect(() => {
     connect();
@@ -395,16 +378,15 @@ function App() {
     };
   }, [connect, disconnect, drawMap, fitTerminal]);
 
-  // Refit terminal when overlay becomes visible
   useEffect(() => {
-    if (!terminalVisible) return;
+    if (activeTab !== "play") return;
     const frameFit = window.requestAnimationFrame(() => fitTerminal());
     const delayedFit = window.setTimeout(() => fitTerminal(), 90);
     return () => {
       window.cancelAnimationFrame(frameFit);
       window.clearTimeout(delayedFit);
     };
-  }, [terminalVisible, fitTerminal]);
+  }, [activeTab, connected, character.name, room.id, room.title, fitTerminal]);
 
   useEffect(() => {
     const fontSet = document.fonts;
@@ -441,88 +423,6 @@ function App() {
     return () => window.cancelAnimationFrame(handle);
   }, [activePopout, drawMap]);
 
-  // Reparent terminal into overlay when visible, back to hidden when not
-  useEffect(() => {
-    const term = terminalRef.current;
-    if (!term) return;
-    const termEl = term.element;
-    if (!termEl) return;
-
-    if (terminalVisible && terminalOverlayRef.current) {
-      terminalOverlayRef.current.appendChild(termEl);
-      window.requestAnimationFrame(() => {
-        fitTerminal();
-        term.scrollToBottom();
-      });
-      const delayedFit = window.setTimeout(() => {
-        fitTerminal();
-        term.scrollToBottom();
-      }, 80);
-      return () => window.clearTimeout(delayedFit);
-    } else if (terminalHiddenRef.current && termEl.parentElement !== terminalHiddenRef.current) {
-      terminalHiddenRef.current.appendChild(termEl);
-    }
-  }, [terminalVisible, fitTerminal]);
-
-  // Sync React state into the game state bridge for PixiJS
-  useEffect(() => {
-    gameStateRef.current = {
-      room,
-      vitals,
-      mobs,
-      players,
-      roomItems,
-      combatTarget,
-      inCombat: vitals.inCombat,
-      effects,
-      character,
-      mobInfo,
-      groupInfo,
-      dialogue,
-      shop,
-    };
-  });
-
-  // Wire sendCommand callback for PixiJS click-to-interact
-  useEffect(() => {
-    canvasCallbacks.sendCommand = (cmd: string) => sendCommand(cmd, true);
-    return () => { canvasCallbacks.sendCommand = null; };
-  }, [sendCommand]);
-
-  // Wire canvas shop badge to open shop popout
-  useEffect(() => {
-    canvasCallbacks.openShop = () => setActivePopout("shop");
-    return () => { canvasCallbacks.openShop = null; };
-  }, []);
-
-  // Wire canvas minimap expand and room expand buttons
-  useEffect(() => {
-    canvasCallbacks.openMap = () => setActivePopout("map");
-    canvasCallbacks.openRoom = () => setActivePopout("room");
-    return () => { canvasCallbacks.openMap = null; canvasCallbacks.openRoom = null; };
-  }, []);
-
-  // Wire canvas video cinematic callback
-  useEffect(() => {
-    canvasCallbacks.openVideo = (url: string) => setVideoUrl(url);
-    return () => { canvasCallbacks.openVideo = null; };
-  }, []);
-
-  // Play room audio when music/ambient URLs change
-  useEffect(() => {
-    audio.playMusic(room.music ?? null);
-  }, [room.music]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    audio.playAmbient(room.ambient ?? null);
-  }, [room.ambient]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Combat audio effects: speed up + filter on combat, pulse on low HP
-  const hpPercent = vitals.maxHp > 0 ? vitals.hp / vitals.maxHp : 1;
-  useEffect(() => {
-    audio.setCombatState(vitals.inCombat, hpPercent);
-  }, [vitals.inCombat, hpPercent]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 
   const equipmentSlots = useMemo(() => {
@@ -543,6 +443,12 @@ function App() {
       : `${vitals.xpIntoLevel.toLocaleString()} / ${vitals.xpToNextLevel.toLocaleString()}`;
   const xpValue = vitals.xpToNextLevel === null ? 1 : vitals.xpIntoLevel;
   const xpMax = vitals.xpToNextLevel === null ? 1 : Math.max(1, vitals.xpToNextLevel);
+  const visiblePlayers = players.slice(0, MAX_VISIBLE_WORLD_PLAYERS);
+  const hiddenPlayersCount = Math.max(0, players.length - visiblePlayers.length);
+  const visibleMobs = mobs.slice(0, MAX_VISIBLE_WORLD_MOBS);
+  const hiddenMobsCount = Math.max(0, mobs.length - visibleMobs.length);
+  const visibleRoomItems = roomItems.slice(0, MAX_VISIBLE_WORLD_ITEMS);
+  const hiddenRoomItemsCount = Math.max(0, roomItems.length - visibleRoomItems.length);
   const visibleEffects = effects.slice(0, MAX_VISIBLE_EFFECTS);
   const hiddenEffectsCount = Math.max(0, effects.length - visibleEffects.length);
   const displayRace = character.race ? titleCaseWords(character.race) : "";
@@ -550,6 +456,8 @@ function App() {
   const hasCharacterProfile = character.name !== "-";
   const hasRoomDetails = room.id !== null || room.title !== "-";
   const preLogin = connected && !hasCharacterProfile && !hasRoomDetails;
+  const availableExitSet = useMemo(() => new Set(exits.map(([direction]) => direction.toLowerCase())), [exits]);
+  const canOpenMap = hasRoomDetails;
   const canOpenEquipment = hasCharacterProfile;
   const commandPlaceholder = connected
     ? preLogin
@@ -565,14 +473,6 @@ function App() {
         ? "Equipment"
       : activePopout === "help"
         ? "Command Reference"
-      : activePopout === "character"
-        ? "Character"
-      : activePopout === "chat"
-        ? "Social"
-      : activePopout === "shop"
-        ? (shop?.name ?? "Shop")
-      : activePopout === "spellbook"
-        ? "Spellbook"
         : "Currently Wearing";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
@@ -633,95 +533,6 @@ function App() {
     [connected, focusComposer, hasCharacterProfile, sendCommand],
   );
 
-  const completeCast = useCallback(
-    (skillId: string, cooldownMs: number, targetName?: string) => {
-      const now = Date.now();
-      setSkills((prev) =>
-        prev.map((skill) => (
-          skill.id === skillId
-            ? {
-                ...skill,
-                cooldownRemainingMs: Math.max(skill.cooldownRemainingMs, cooldownMs),
-                receivedAt: now,
-              }
-            : skill
-        )),
-      );
-      const cmd = targetName ? `cast ${skillId} ${targetName}` : `cast ${skillId}`;
-      sendCommand(cmd, true);
-      pendingCastRef.current = null;
-      focusComposer();
-    },
-    [focusComposer, sendCommand],
-  );
-
-  const handleCastSkill = useCallback(
-    (skillId: string, cooldownMs: number) => {
-      const skill = skills.find((s) => s.id === skillId);
-      if (!skill) return;
-      const needsTarget = skill.targetType === "ENEMY" || skill.targetType === "ALLY";
-      // If it needs a target and we already have a combat target, use that
-      if (needsTarget && gameStateRef.current.combatTarget?.targetName) {
-        completeCast(skillId, cooldownMs, gameStateRef.current.combatTarget.targetName);
-        return;
-      }
-      // If it needs a target but we don't have one, enter targeting mode
-      if (needsTarget) {
-        pendingCastRef.current = { skillId, skillName: skill.name, targetType: skill.targetType };
-        setToast(`Select a target for ${skill.name}`);
-        return;
-      }
-      completeCast(skillId, cooldownMs);
-    },
-    [skills, completeCast],
-  );
-
-  // Wire up canvas target selection callback
-  useEffect(() => {
-    canvasCallbacks.onTargetSelected = (targetName: string) => {
-      const pending = pendingCastRef.current;
-      if (!pending) return;
-      setToast(null);
-      completeCast(pending.skillId, 0, targetName);
-    };
-    return () => { canvasCallbacks.onTargetSelected = null; };
-  }, [completeCast]);
-
-  // Keyboard shortcuts: digits 1-6 cast quickbar skills when no text input is focused
-  useEffect(() => {
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape" && pendingCastRef.current) {
-        pendingCastRef.current = null;
-        setToast(null);
-        return;
-      }
-      if (!hasCharacterProfile || !connected) return;
-      const target = event.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
-      const digit = parseInt(event.key, 10);
-      if (digit >= 1 && digit <= 9) {
-        const skill = quickbar.slots[digit - 1];
-        if (!skill) return;
-        const elapsed = Date.now() - skill.receivedAt;
-        const remaining = Math.max(0, skill.cooldownRemainingMs - elapsed);
-        if (remaining > 0) return;
-        handleCastSkill(skill.id, skill.cooldownMs);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [connected, hasCharacterProfile, quickbar.slots, handleCastSkill]);
-
-  // Auto-dismiss toast after 4 seconds
-  useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => {
-      setToast(null);
-      pendingCastRef.current = null;
-    }, 4000);
-    return () => clearTimeout(timer);
-  }, [toast]);
-
   return (
     <main className="app-shell">
       <div className="ambient-orb ambient-orb-a" aria-hidden="true" />
@@ -730,13 +541,23 @@ function App() {
       <header className="top-banner">
         <div>
           <h1 className="top-banner-title">AmbonMUD</h1>
+          <span className="top-banner-mode">Terminal</span>
         </div>
 
         <div className="connection-cluster">
-          <a href="/terminal/" className="soft-button client-switch-link" title="Switch to Terminal client">
-            Terminal View
+          <a href="/" className="soft-button client-switch-link" title="Switch to Canvas client">
+            Canvas View
           </a>
-          <AudioControls audio={audio} />
+          <button
+            type="button"
+            className="soft-button help-trigger"
+            onClick={() => setActivePopout("help")}
+            aria-label="Help"
+            title="Command reference"
+          >
+            <HelpIcon className="help-trigger-icon" />
+            <span className="help-trigger-label">Help</span>
+          </button>
           {character.isStaff && (
             <button
               type="button"
@@ -759,43 +580,188 @@ function App() {
         </div>
       </header>
 
-      <div className="dashboard">
+      <div className="dashboard" data-active-tab={activeTab}>
         <PlayPanel
           preLogin={preLogin}
-          terminalOverlayRef={terminalOverlayRef}
-          terminalVisible={terminalVisible}
-          terminalOpaque={terminalOpaque}
-        />
-
-        <ActionBar
           connected={connected}
-          hasCharacterProfile={hasCharacterProfile}
-          vitals={vitals}
-          quickbarSlots={quickbar.slots}
-          shop={shop}
-          activePopout={activePopout}
-          onOpenPopout={setActivePopout}
-          onCastSkill={handleCastSkill}
-          onQuickbarSwap={quickbar.swap}
-          onQuickbarAssign={quickbar.assign}
-          onQuickbarClear={quickbar.clear}
-          composerInputRef={composerInputRef}
+          hasRoomDetails={hasRoomDetails}
+          roomImage={room.image}
+          roomTitle={room.title}
+          exits={exits}
+          mobs={mobs}
+          roomItems={roomItems}
+          combatTarget={combatTarget}
+          terminalHostRef={terminalHostRef}
+          commandInputRef={composerInputRef}
           composerValue={composerValue}
           commandPlaceholder={commandPlaceholder}
+          onTerminalMouseDown={(event) => {
+            event.preventDefault();
+            focusComposer();
+          }}
           onComposerChange={(value) => {
             setComposerValue(value);
             resetComposerCompletion();
-            if (value.length > 0) setTerminalOpaque(true);
           }}
           onComposerKeyDown={onComposerKeyDown}
-          onComposerFocus={() => {
-            setTerminalVisible(true);
-          }}
-          onComposerBlur={() => {
-            setTerminalVisible(false);
-            setTerminalOpaque(false);
-          }}
           onSubmitComposer={submitComposer}
+          onMove={(direction) => {
+            sendCommand(direction, true);
+            focusComposer();
+          }}
+          onFlee={() => {
+            sendCommand("flee", true);
+            focusComposer();
+          }}
+          onTalkToMob={(mobName) => {
+            sendCommand(`talk ${mobName}`, true);
+            focusComposer();
+          }}
+          onAttackMob={(mobName) => {
+            sendCommand(`kill ${mobName}`, true);
+            focusComposer();
+          }}
+          onPickUpItem={(itemName) => {
+            sendCommand(`get ${itemName}`, true);
+            focusComposer();
+          }}
+          onOpenMobDetail={(mob) => {
+            sendCommand(`look ${mob.name}`, true);
+            focusComposer();
+          }}
+          onOpenItemDetail={(item) => {
+            sendCommand(`look ${item.name}`, true);
+            focusComposer();
+          }}
+        />
+
+        <WorldPanel
+          connected={connected}
+          hasRoomDetails={hasRoomDetails}
+          canOpenMap={canOpenMap}
+          room={room}
+          exits={exits}
+          availableExitSet={availableExitSet}
+          players={players}
+          mobs={mobs}
+          visiblePlayers={visiblePlayers}
+          hiddenPlayersCount={hiddenPlayersCount}
+          visibleMobs={visibleMobs}
+          hiddenMobsCount={hiddenMobsCount}
+          roomItems={roomItems}
+          visibleRoomItems={visibleRoomItems}
+          hiddenRoomItemsCount={hiddenRoomItemsCount}
+          showSkillsPanel={vitals.inCombat}
+          skills={skills}
+          combatTarget={combatTarget}
+          vitals={vitals}
+          shop={shop}
+          inventory={inventory}
+          gold={vitals.gold}
+          onOpenMap={() => setActivePopout("map")}
+          onOpenRoom={() => setActivePopout("room")}
+          onFlee={() => {
+            sendCommand("flee", true);
+            focusComposer();
+          }}
+          onRefreshSkills={() => {
+            sendCommand("skills", true);
+            focusComposer();
+          }}
+          onCastSkill={(skillId, cooldownMs) => {
+            const now = Date.now();
+            setSkills((prev) =>
+              prev.map((skill) => (
+                skill.id === skillId
+                  ? {
+                      ...skill,
+                      cooldownRemainingMs: Math.max(skill.cooldownRemainingMs, cooldownMs),
+                      receivedAt: now,
+                    }
+                  : skill
+              )),
+            );
+            sendCommand(`cast ${skillId}`, true);
+            focusComposer();
+          }}
+          onMove={(direction) => {
+            sendCommand(direction, true);
+            focusComposer();
+          }}
+          dialogue={dialogue}
+          onDialogueChoice={(index) => {
+            sendCommand(`${index}`, true);
+            focusComposer();
+          }}
+          onTalkToMob={(mobName) => {
+            sendCommand(`talk ${mobName}`, true);
+            focusComposer();
+          }}
+          onAttackMob={(mobName) => {
+            sendCommand(`kill ${mobName}`, true);
+            focusComposer();
+          }}
+          onPickUpItem={(itemName) => {
+            sendCommand(`get ${itemName}`, true);
+            focusComposer();
+          }}
+          onBuyItem={(keyword) => {
+            sendCommand(`buy ${keyword}`, true);
+            focusComposer();
+          }}
+          onSellItem={(keyword) => {
+            sendCommand(`sell ${keyword}`, true);
+            focusComposer();
+          }}
+        />
+
+        <ChatPanel
+          connected={connected}
+          canChat={connected && hasCharacterProfile}
+          playerName={character.name}
+          activeChannel={activeChatChannel}
+          chatByChannel={chatByChannel}
+          whoPlayers={whoPlayers}
+          groupInfo={groupInfo}
+          guildInfo={guildInfo}
+          guildMembers={guildMembers}
+          friends={friends}
+          friendNotifications={friendNotifications}
+          onChannelChange={setActiveChatChannel}
+          onRequestWho={() => {
+            sendCommand("who", true);
+            focusComposer();
+          }}
+          onSendMessage={sendChatMessage}
+        />
+
+        <CharacterPanel
+          connected={connected}
+          hasCharacterProfile={hasCharacterProfile}
+          canOpenEquipment={canOpenEquipment}
+          character={character}
+          displayRace={displayRace}
+          displayClassName={displayClassName}
+          vitals={vitals}
+          statusVarLabels={statusVarLabels}
+          xpValue={xpValue}
+          xpMax={xpMax}
+          xpText={xpText}
+          effects={effects}
+          visibleEffects={visibleEffects}
+          hiddenEffectsCount={hiddenEffectsCount}
+          achievements={achievements}
+          quests={quests}
+          questNotifications={questNotifications}
+          onDismissQuestNotification={(id) => {
+            setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
+          }}
+          onAbandonQuest={(questName) => {
+            sendCommand(`quest abandon ${questName}`, true);
+            focusComposer();
+          }}
+          onOpenEquipment={() => setActivePopout("equipment")}
+          onOpenWearing={() => setActivePopout("wearing")}
         />
       </div>
 
@@ -828,129 +794,7 @@ function App() {
           focusComposer();
         }}
         onClose={() => setActivePopout(null)}
-      >
-        {activePopout === "character" && (
-          <CharacterPanel
-            connected={connected}
-            hasCharacterProfile={hasCharacterProfile}
-            canOpenEquipment={canOpenEquipment}
-            character={character}
-            displayRace={displayRace}
-            displayClassName={displayClassName}
-            vitals={vitals}
-            statusVarLabels={statusVarLabels}
-            xpValue={xpValue}
-            xpMax={xpMax}
-            xpText={xpText}
-            effects={effects}
-            visibleEffects={visibleEffects}
-            hiddenEffectsCount={hiddenEffectsCount}
-            achievements={achievements}
-            quests={quests}
-            questNotifications={questNotifications}
-            onDismissQuestNotification={(id) => {
-              setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
-            }}
-            onAbandonQuest={(questName) => {
-              sendCommand(`quest abandon ${questName}`, true);
-              focusComposer();
-            }}
-            onOpenEquipment={() => setActivePopout("equipment")}
-            onOpenWearing={() => setActivePopout("wearing")}
-          />
-        )}
-
-        {activePopout === "chat" && (
-          <ChatPanel
-            connected={connected}
-            canChat={connected && hasCharacterProfile}
-            playerName={character.name}
-            activeChannel={activeChatChannel}
-            chatByChannel={chatByChannel}
-            whoPlayers={whoPlayers}
-            groupInfo={groupInfo}
-            guildInfo={guildInfo}
-            guildMembers={guildMembers}
-            friends={friends}
-            friendNotifications={friendNotifications}
-            onChannelChange={setActiveChatChannel}
-            onRequestWho={() => {
-              sendCommand("who", true);
-              focusComposer();
-            }}
-            onSendMessage={sendChatMessage}
-          />
-        )}
-
-        {activePopout === "shop" && shop && (
-          <ShopPopout
-            shop={shop}
-            inventory={inventory}
-            gold={vitals.gold}
-            onBuyItem={(keyword) => {
-              sendCommand(`buy ${keyword}`, true);
-              focusComposer();
-            }}
-            onSellItem={(keyword) => {
-              sendCommand(`sell ${keyword}`, true);
-              focusComposer();
-            }}
-          />
-        )}
-
-        {activePopout === "spellbook" && (
-          <SpellbookPanel
-            skills={skills}
-            quickbarSlotIds={quickbar.slotIds}
-            playerClass={displayClassName}
-            playerLevel={vitals.level ?? 1}
-            onShowSkillInfo={(skill) => {
-              const cd = skill.cooldownMs > 0 ? `${skill.cooldownMs / 1000}s cooldown` : "No cooldown";
-              setToast(`${skill.name} — ${skill.manaCost} MP, ${cd}, ${skill.targetType.toLowerCase()} target`);
-            }}
-            onAssignSlot={quickbar.assign}
-          />
-        )}
-      </PopoutLayer>
-
-      {loginPrompt && (
-        <LoginModal
-          loginPrompt={loginPrompt}
-          loginError={loginError}
-          onSubmit={(value) => {
-            sendLine(value);
-            terminalRef.current?.write(`${value}\r\n`);
-          }}
-        />
-      )}
-
-      {videoUrl && (
-        <div
-          className={`video-modal-overlay ${videoClosing ? "video-fade-out" : "video-fade-in"}`}
-          onClick={() => {
-            setVideoClosing(true);
-            setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
-          }}
-          onAnimationEnd={(e) => {
-            if (e.animationName === "videoFadeOut") { setVideoUrl(null); setVideoClosing(false); }
-          }}
-        >
-          <div className="video-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="video-modal-close" onClick={() => {
-              setVideoClosing(true);
-              setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
-            }}>✕</button>
-            <video
-              ref={(el) => { if (el) el.playbackRate = 0.5; }}
-              src={videoUrl}
-              controls
-              autoPlay
-              muted
-              className="video-modal-player"
-            />
-          </div>
-        </div>
-      )}
+      />
 
       {showAdminPanel && (
         <AdminPanel
@@ -962,16 +806,9 @@ function App() {
         />
       )}
 
-      {/* Hidden terminal container — xterm lives here when popout is closed */}
-      <div ref={terminalHiddenRef} className="terminal-hidden" aria-hidden="true" />
+      <MobileTabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
       <p className="sr-only" aria-live="polite">{liveMessage}</p>
-
-      {toast && (
-        <div className="game-toast" role="alert">
-          {toast}
-        </div>
-      )}
     </main>
   );
 }
