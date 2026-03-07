@@ -12,6 +12,7 @@ interface MobTemplate {
     val id: MobId
     val name: String
     val roomId: RoomId
+    val description: String
     val maxHp: Int
     val damage: DamageRange
     val armor: Int

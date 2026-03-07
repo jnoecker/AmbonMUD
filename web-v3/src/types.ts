@@ -126,6 +126,7 @@ export interface ShopState {
 export interface RoomItem {
   id: string;
   name: string;
+  description?: string;
   image?: string | null;
   video?: string | null;
 }
@@ -138,6 +139,7 @@ export interface RoomPlayer {
 export interface RoomMob {
   id: string;
   name: string;
+  description?: string;
   hp: number;
   maxHp: number;
   image?: string | null;

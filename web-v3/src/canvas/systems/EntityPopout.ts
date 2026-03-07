@@ -63,7 +63,7 @@ export class EntityPopout {
     this.height = height;
   }
 
-  showMob(name: string, image: string | null | undefined, video: string | null | undefined, hp: number, maxHp: number, info: { questGiver?: boolean; shopKeeper?: boolean; dialogue?: boolean } | null) {
+  showMob(name: string, description: string | null | undefined, image: string | null | undefined, video: string | null | undefined, hp: number, maxHp: number, info: { questGiver?: boolean; shopKeeper?: boolean; dialogue?: boolean } | null) {
     const actions: PopoutAction[] = [
       { label: "Look", command: `look ${name}`, color: 0x64b5f6 },
       { label: "Attack", command: `kill ${name}`, color: 0xef5350 },
@@ -72,7 +72,7 @@ export class EntityPopout {
     if (info?.shopKeeper) actions.push({ label: "Shop", command: `list`, color: 0x81a2be });
     if (video) actions.push({ label: "▶ Cinematic", command: `__video__:${video}`, color: 0xce93d8 });
 
-    const subtitle = maxHp > 0 ? `HP: ${hp}/${maxHp}` : "";
+    const subtitle = description || (maxHp > 0 ? `HP: ${hp}/${maxHp}` : "");
     this.show(name, subtitle, image ?? null, 0xf0c674, actions);
   }
 
@@ -84,13 +84,13 @@ export class EntityPopout {
     this.show(name, `Level ${level}`, null, 0x81a2be, actions);
   }
 
-  showItem(name: string, image: string | null | undefined, video: string | null | undefined) {
+  showItem(name: string, description: string | null | undefined, image: string | null | undefined, video: string | null | undefined) {
     const actions: PopoutAction[] = [
       { label: "Get", command: `get ${name}`, color: 0x8abeb7 },
       { label: "Look", command: `look ${name}`, color: 0x64b5f6 },
     ];
     if (video) actions.push({ label: "▶ Cinematic", command: `__video__:${video}`, color: 0xce93d8 });
-    this.show(name, "Item", image ?? null, 0x8abeb7, actions);
+    this.show(name, description || "Item", image ?? null, 0x8abeb7, actions);
   }
 
   hide() {

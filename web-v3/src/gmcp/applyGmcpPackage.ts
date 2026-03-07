@@ -244,6 +244,7 @@ export function applyGmcpPackage(
           .map((entry, index) => ({
             id: typeof entry.id === "string" ? entry.id : `room-item-${index}-${Date.now()}`,
             name: typeof entry.name === "string" ? entry.name : "Unknown item",
+            description: typeof entry.description === "string" ? entry.description : undefined,
             image: typeof entry.image === "string" ? entry.image : null,
             video: typeof entry.video === "string" ? entry.video : null,
           })),
@@ -296,6 +297,7 @@ export function applyGmcpPackage(
           .map((entry) => ({
             id: typeof entry.id === "string" ? entry.id : `${Date.now()}-${Math.random()}`,
             name: typeof entry.name === "string" ? entry.name : "Unknown mob",
+            description: typeof entry.description === "string" ? entry.description : undefined,
             hp: safeNumber(entry.hp),
             maxHp: Math.max(1, safeNumber(entry.maxHp, 1)),
             image: typeof entry.image === "string" ? entry.image : null,
@@ -314,6 +316,7 @@ export function applyGmcpPackage(
         {
           id,
           name: typeof packet.name === "string" ? packet.name : "Unknown mob",
+          description: typeof packet.description === "string" ? packet.description : undefined,
           hp: safeNumber(packet.hp),
           maxHp: Math.max(1, safeNumber(packet.maxHp, 1)),
           image: typeof packet.image === "string" ? packet.image : null,
@@ -335,6 +338,7 @@ export function applyGmcpPackage(
             ...mob,
             hp: safeNumber(packet.hp, mob.hp),
             maxHp: Math.max(1, safeNumber(packet.maxHp, mob.maxHp)),
+            description: typeof packet.description === "string" ? packet.description : mob.description,
             image: typeof packet.image === "string" ? packet.image : mob.image,
             video: typeof packet.video === "string" ? packet.video : mob.video,
           };

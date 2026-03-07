@@ -133,9 +133,15 @@ class CommandParserTest {
     }
 
     @Test
-    fun `look direction invalid usage`() {
+    fun `look at target when not a direction`() {
         val c = CommandParser.parse("look sideways")
-        assertTrue(c is Command.Invalid)
+        assertEquals(Command.LookAt("sideways"), c)
+    }
+
+    @Test
+    fun `look at multi-word target`() {
+        val c = CommandParser.parse("look goblin warrior")
+        assertEquals(Command.LookAt("goblin warrior"), c)
     }
 
     @Test

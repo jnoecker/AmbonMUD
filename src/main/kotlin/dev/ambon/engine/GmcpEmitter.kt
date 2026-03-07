@@ -175,6 +175,7 @@ class GmcpEmitter(
                 RoomItemPayload(
                     id = it.id.value,
                     name = it.item.displayName,
+                    description = it.item.description,
                     image = it.item.image,
                     video = it.item.video,
                 )
@@ -819,6 +820,7 @@ class GmcpEmitter(
         RoomMobPayload(
             id = mob.id.value,
             name = mob.name,
+            description = mob.description,
             hp = mob.hp,
             maxHp = mob.maxHp,
             image = mob.image,
@@ -894,6 +896,7 @@ class GmcpEmitter(
     private data class RoomMobPayload(
         val id: String,
         val name: String,
+        val description: String = "",
         val hp: Int,
         val maxHp: Int,
         val image: String? = null,
@@ -907,6 +910,7 @@ class GmcpEmitter(
     private data class RoomItemPayload(
         val id: String,
         val name: String,
+        val description: String = "",
         val image: String? = null,
         val video: String? = null,
     )

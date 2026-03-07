@@ -306,6 +306,7 @@ object WorldLoader {
                     MobSpawn(
                         id = mobId,
                         name = mf.name,
+                        description = mf.description,
                         roomId = roomId,
                         maxHp = resolvedHp,
                         damage = DamageRange(resolvedMinDamage, resolvedMaxDamage),
