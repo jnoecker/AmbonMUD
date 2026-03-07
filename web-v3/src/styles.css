@@ -3125,9 +3125,13 @@ body {
     width: min(100%, 160px);
   }
 
+  /* Keep banner horizontal but compact — avoids the ~115px stacked height */
   .top-banner {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 6px 10px;
+    gap: var(--space-2);
   }
 
   .top-banner::before {
@@ -3142,9 +3146,13 @@ body {
       linear-gradient(180deg, rgb(24 22 35 / 20%), rgb(24 22 35 / 10%));
   }
 
+  .top-banner-title {
+    font-size: clamp(1.3rem, 4.5vw, 1.8rem);
+  }
+
   .connection-cluster {
-    width: 100%;
-    justify-content: space-between;
+    gap: var(--space-2);
+    margin-left: auto;
   }
 
   .terminal-host {
@@ -3152,11 +3160,15 @@ body {
     max-height: 46vh;
   }
 
+  /* Use 100dvh so iOS Safari address bar doesn't clip content.
+     Override the base padding-bottom relic (was calc(16px + 72px) = 88px
+     left over from a removed mobile tab bar). */
   .app-shell {
-    height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    padding: 8px 8px 0;
   }
 
   .panel-play {
@@ -3168,10 +3180,12 @@ body {
     flex-wrap: wrap;
   }
 
+  /* Fill available space instead of a fixed clamped width */
   .action-bar-command {
-    width: clamp(160px, 50vw, 280px);
-    min-width: 36px;
-    margin-left: auto;
+    flex: 1;
+    min-width: 120px;
+    width: auto;
+    margin-left: 0;
   }
 
   .action-bar-vitals {
@@ -3187,9 +3201,42 @@ body {
   }
 }
 
+/* ── Tiny phones (≤ 480px) ─────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Hide title — saves ~35px and avoids crowding the connection cluster */
+  .top-banner-title {
+    display: none;
+  }
+
+  .top-banner {
+    padding: 4px 8px;
+  }
+
+  /* Bigger touch targets */
+  .action-bar-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .action-bar-btn-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Popout uses nearly full screen on tiny phones */
+  .popout-dialog {
+    max-height: calc(100dvh - 20px);
+  }
+
+  .popout-dialog-panel {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+  }
+}
+
 @media (min-width: 960px) {
   .app-shell {
-    height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
@@ -3309,7 +3356,7 @@ body {
 
 .popout-dialog {
   width: min(980px, 100%);
-  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   border-radius: var(--radius-xl);
   border: 1px solid rgb(106 96 136 / 22%);
   background:
@@ -3782,7 +3829,7 @@ body {
 
 .popout-dialog-panel {
   width: min(90vw, 560px);
-  max-height: 80vh;
+  max-height: min(80dvh, 640px);
 }
 
 .popout-panel-content {
