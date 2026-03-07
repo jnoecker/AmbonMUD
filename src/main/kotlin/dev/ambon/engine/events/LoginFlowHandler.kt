@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.PlayerClassDef
 import dev.ambon.domain.RaceDef
+import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
 import dev.ambon.engine.AchievementRegistry
@@ -615,7 +616,7 @@ internal class LoginFlowHandler(
         emitLoginPrompt(sessionId, mapOf("state" to "confirmCreate", "name" to name))
     }
 
-    private fun formatStatMods(s: dev.ambon.domain.StatBlock): String =
+    private fun formatStatMods(s: StatBlock): String =
         buildList {
             if (s.str != 0) add("STR %+d".format(s.str))
             if (s.dex != 0) add("DEX %+d".format(s.dex))

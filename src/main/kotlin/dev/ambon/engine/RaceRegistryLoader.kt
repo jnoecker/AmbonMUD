@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.config.RaceEngineConfig
+import dev.ambon.config.RaceStatModsConfig
 import dev.ambon.domain.RaceDef
 import dev.ambon.domain.StatBlock
 
@@ -15,16 +16,12 @@ object RaceRegistryLoader {
                     id = key.uppercase(),
                     displayName = defConfig.displayName.ifEmpty { key },
                     description = defConfig.description,
-                    statMods = StatBlock(
-                        str = defConfig.statMods.str,
-                        dex = defConfig.statMods.dex,
-                        con = defConfig.statMods.con,
-                        int = defConfig.statMods.int,
-                        wis = defConfig.statMods.wis,
-                        cha = defConfig.statMods.cha,
-                    ),
+                    statMods = defConfig.statMods.toStatBlock(),
                 ),
             )
         }
     }
+
+    private fun RaceStatModsConfig.toStatBlock(): StatBlock =
+        StatBlock(str = str, dex = dex, con = con, int = int, wis = wis, cha = cha)
 }
