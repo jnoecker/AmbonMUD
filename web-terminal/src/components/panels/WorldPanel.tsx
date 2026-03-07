@@ -1,0 +1,391 @@
+import { useState } from "react";
+import { COMPASS_DIRECTIONS } from "@v3/constants";
+import type { CombatTarget, DialogueState, ItemSummary, RoomItem, RoomMob, RoomPlayer, RoomState, ShopState, SkillSummary, Vitals } from "@v3/types";
+import { percent } from "@v3/utils";
+import { AttackIcon, CompassCoreIcon, DirectionIcon, ExpandRoomIcon, MapScrollIcon, PickupIcon, TalkIcon } from "@v3/components/Icons";
+import { CombatPanel } from "@v3/components/panels/CombatPanel";
+
+interface WorldPanelProps {
+  connected: boolean;
+  hasRoomDetails: boolean;
+  canOpenMap: boolean;
+  room: RoomState;
+  exits: Array<[string, string]>;
+  availableExitSet: Set<string>;
+  players: RoomPlayer[];
+  mobs: RoomMob[];
+  visiblePlayers: RoomPlayer[];
+  hiddenPlayersCount: number;
+  visibleMobs: RoomMob[];
+  hiddenMobsCount: number;
+  roomItems: RoomItem[];
+  visibleRoomItems: RoomItem[];
+  hiddenRoomItemsCount: number;
+  showSkillsPanel: boolean;
+  skills: SkillSummary[];
+  combatTarget: CombatTarget | null;
+  vitals: Vitals;
+  shop: ShopState | null;
+  inventory: ItemSummary[];
+  gold: number;
+  dialogue: DialogueState | null;
+  onOpenMap: () => void;
+  onOpenRoom: () => void;
+  onFlee: () => void;
+  onRefreshSkills: () => void;
+  onCastSkill: (skillId: string, cooldownMs: number) => void;
+  onMove: (direction: string) => void;
+  onDialogueChoice: (index: number) => void;
+  onTalkToMob: (mobName: string) => void;
+  onAttackMob: (mobName: string) => void;
+  onPickUpItem: (itemName: string) => void;
+  onBuyItem: (keyword: string) => void;
+  onSellItem: (keyword: string) => void;
+}
+
+export function WorldPanel({
+  connected,
+  hasRoomDetails,
+  canOpenMap,
+  room,
+  exits,
+  availableExitSet,
+  players,
+  mobs,
+  visiblePlayers,
+  hiddenPlayersCount,
+  visibleMobs,
+  hiddenMobsCount,
+  roomItems,
+  visibleRoomItems,
+  hiddenRoomItemsCount,
+  showSkillsPanel,
+  skills,
+  combatTarget,
+  vitals,
+  shop,
+  inventory,
+  gold,
+  dialogue,
+  onOpenMap,
+  onOpenRoom,
+  onFlee,
+  onRefreshSkills,
+  onCastSkill,
+  onMove,
+  onDialogueChoice,
+  onTalkToMob,
+  onAttackMob,
+  onPickUpItem,
+  onBuyItem,
+  onSellItem,
+}: WorldPanelProps) {
+  return (
+    <section className="panel panel-world" aria-label="World state">
+      <div className="world-stack">
+        <article className="subpanel">
+          {hasRoomDetails ? (
+            <div className="room-main">
+              <div className="room-title-row">
+                <p className="room-title">{room.title}</p>
+                <button
+                  type="button"
+                  className="map-icon-trigger room-map-trigger"
+                  onClick={onOpenMap}
+                  disabled={!canOpenMap}
+                  aria-label={canOpenMap ? "Open mini-map" : "Mini-map unavailable before login"}
+                  title={canOpenMap ? "Open mini-map" : "Mini-map unavailable before login"}
+                >
+                  <MapScrollIcon className="map-icon-svg" />
+                  <span className="sr-only">Mini-map</span>
+                </button>
+              </div>
+              <div className="room-description-wrap" aria-label="Room description">
+                <p className="room-description">{room.description || "No room description available yet."}</p>
+                <button
+                  type="button"
+                  className="map-icon-trigger room-expand-trigger"
+                  onClick={onOpenRoom}
+                  aria-label="Expand room text"
+                  title="Expand room text"
+                >
+                  <ExpandRoomIcon className="map-icon-svg room-expand-icon" />
+                  <span className="sr-only">Expand room text</span>
+                </button>
+              </div>
+              <div className="compass-block" aria-label="Current exits">
+                <div className="compass-rose" role="group" aria-label="Directional exits">
+                  {COMPASS_DIRECTIONS.map((direction) => {
+                    const enabled = availableExitSet.has(direction);
+                    return (
+                      <button
+                        key={direction}
+                        type="button"
+                        className={`compass-node compass-node-${direction}`}
+                        disabled={!enabled}
+                        aria-label={enabled ? `Move ${direction}` : `${direction} exit unavailable`}
+                        title={enabled ? `Move ${direction}` : `${direction} unavailable`}
+                        onClick={() => onMove(direction)}
+                      >
+                        <DirectionIcon direction={direction} className="compass-node-icon" />
+                      </button>
+                    );
+                  })}
+                  <span className="compass-core" aria-hidden="true">
+                    <CompassCoreIcon className="compass-core-icon" />
+                  </span>
+                </div>
+                <p className="compass-caption">
+                  {exits.length === 0 ? "No exits listed." : `Available: ${exits.map(([direction]) => direction).join(", ")}`}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="prelogin-card">
+              <h3>{connected ? "World Gate" : "World Offline"}</h3>
+              <p className="prelogin-card-title">{connected ? "Awaiting your credentials" : "Disconnected from AmbonMUD"}</p>
+              <p className="room-description">
+                {connected
+                  ? "Once you finish login in the terminal, this panel will show your current room, exits, players, and nearby mobs."
+                  : "Reconnect to establish a session. The world map and local room context will appear as soon as a session is active."}
+              </p>
+              <div className="prelogin-runes" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+          )}
+        </article>
+
+        {dialogue ? (
+          <article className="subpanel dialogue-panel" aria-label="NPC dialogue">
+            <h3 className="dialogue-npc-name">{dialogue.mobName}</h3>
+            <div className="dialogue-text">
+              <p>{dialogue.text}</p>
+            </div>
+            {dialogue.choices.length > 0 ? (
+              <div className="dialogue-choices">
+                {dialogue.choices.map((choice) => (
+                  <button
+                    key={choice.index}
+                    type="button"
+                    className="dialogue-choice-button"
+                    onClick={() => onDialogueChoice(choice.index)}
+                  >
+                    <span className="dialogue-choice-index">{choice.index}.</span>
+                    {choice.text}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="dialogue-ending">The conversation has ended.</p>
+            )}
+          </article>
+        ) : shop ? (
+          <ShopContent key={shop.name} shop={shop} inventory={inventory} gold={gold} onBuyItem={onBuyItem} onSellItem={onSellItem} />
+        ) : showSkillsPanel ? (
+          <CombatPanel
+            connected={connected}
+            hasRoomDetails={hasRoomDetails}
+            combatTarget={combatTarget}
+            vitals={vitals}
+            skills={skills}
+            mobs={mobs}
+            onCastSkill={onCastSkill}
+            onRefreshSkills={onRefreshSkills}
+            onFlee={onFlee}
+            onAttackMob={onAttackMob}
+          />
+        ) : (
+          <article className="subpanel split-list">
+            <div>
+              <h3>Players</h3>
+              {players.length === 0 ? <p className="empty-note">{hasRoomDetails ? "Nobody else is here." : "Online players will appear here after login."}</p> : (
+                <>
+                  <ul className="entity-list">
+                    {visiblePlayers.map((player) => (
+                      <li key={player.name} className="entity-item"><span>{player.name}</span><span className="entity-meta">Lv {player.level}</span></li>
+                    ))}
+                  </ul>
+                  {hiddenPlayersCount > 0 && <p className="empty-note">+{hiddenPlayersCount} more players</p>}
+                </>
+              )}
+            </div>
+
+            <div>
+              <h3>Mobs</h3>
+              {mobs.length === 0 ? <p className="empty-note">{hasRoomDetails ? "No mobs in this room." : "Nearby creatures will appear here after login."}</p> : (
+                <>
+                  <ul className="entity-list">
+                    {visibleMobs.map((mob) => (
+                      <li key={mob.id} className="mob-card">
+                        <div className="entity-item">
+                          <span className="entity-name-with-thumb">
+                            {mob.image && <img src={mob.image} alt="" className="entity-thumb" />}
+                            {mob.name}
+                          </span>
+                          <span className="mob-meta-actions">
+                            <span className="entity-meta">{mob.hp}/{mob.maxHp}</span>
+                            <button
+                              type="button"
+                              className="mob-command-button"
+                              title={`Talk to ${mob.name}`}
+                              aria-label={`Talk to ${mob.name}`}
+                              onClick={() => onTalkToMob(mob.name)}
+                            >
+                              <TalkIcon className="mob-command-icon" />
+                            </button>
+                            <button
+                              type="button"
+                              className="mob-command-button"
+                              title={`Attack ${mob.name}`}
+                              aria-label={`Attack ${mob.name}`}
+                              onClick={() => onAttackMob(mob.name)}
+                            >
+                              <AttackIcon className="mob-command-icon" />
+                            </button>
+                          </span>
+                        </div>
+                        <div className="meter-track"><span className="meter-fill meter-fill-hp" style={{ width: `${percent(mob.hp, mob.maxHp)}%` }} /></div>
+                      </li>
+                    ))}
+                  </ul>
+                  {hiddenMobsCount > 0 && <p className="empty-note">+{hiddenMobsCount} more mobs</p>}
+                </>
+              )}
+            </div>
+
+            <div>
+              <h3>Items</h3>
+              {roomItems.length === 0 ? <p className="empty-note">{hasRoomDetails ? "No items in this room." : "Room items will appear here after login."}</p> : (
+                <>
+                  <ul className="entity-list">
+                    {visibleRoomItems.map((item, index) => (
+                      <li key={`${item.id}-${index}`} className="entity-item">
+                        <span className="entity-name-with-thumb">
+                          {item.image && <img src={item.image} alt="" className="entity-thumb" />}
+                          {item.name}
+                        </span>
+                        <button
+                          type="button"
+                          className="mob-command-button"
+                          title={`Pick up ${item.name}`}
+                          aria-label={`Pick up ${item.name}`}
+                          disabled={!connected || !hasRoomDetails}
+                          onClick={() => onPickUpItem(item.name)}
+                        >
+                          <PickupIcon className="mob-command-icon" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  {hiddenRoomItemsCount > 0 && <p className="empty-note">+{hiddenRoomItemsCount} more items</p>}
+                </>
+              )}
+            </div>
+          </article>
+        )}
+      </div>
+    </section>
+  );
+}
+
+interface ShopContentProps {
+  shop: ShopState;
+  inventory: ItemSummary[];
+  gold: number;
+  onBuyItem: (keyword: string) => void;
+  onSellItem: (keyword: string) => void;
+}
+
+function ShopContent({ shop, inventory, gold, onBuyItem, onSellItem }: ShopContentProps) {
+  const [shopTab, setShopTab] = useState<"buy" | "sell">("buy");
+
+  return (
+    <article className="subpanel shop-panel" aria-label="Shop">
+      <div className="shop-header">
+        <h3>{shop.name}</h3>
+        <span className="shop-gold">{gold} gold</span>
+      </div>
+      <div className="shop-tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          className={`shop-tab${shopTab === "buy" ? " shop-tab-active" : ""}`}
+          aria-selected={shopTab === "buy"}
+          onClick={() => setShopTab("buy")}
+        >
+          Buy
+        </button>
+        <button
+          type="button"
+          role="tab"
+          className={`shop-tab${shopTab === "sell" ? " shop-tab-active" : ""}`}
+          aria-selected={shopTab === "sell"}
+          onClick={() => setShopTab("sell")}
+        >
+          Sell
+        </button>
+      </div>
+      {shopTab === "buy" ? (
+        <ul className="shop-item-list">
+          {shop.items.map((item) => (
+            <li key={item.id} className="shop-item">
+              <div className="shop-item-top">
+                <span className="shop-item-name">
+                  {item.image && <img src={item.image} alt="" className="entity-thumb" />}
+                  {item.name}
+                </span>
+                <span className="shop-item-price">{item.buyPrice}g</span>
+              </div>
+              {(item.slot || item.damage > 0 || item.armor > 0) && (
+                <p className="shop-item-meta">
+                  {[item.slot, item.damage > 0 && `${item.damage} dmg`, item.armor > 0 && `${item.armor} arm`].filter(Boolean).join(" \u00b7 ")}
+                </p>
+              )}
+              <button
+                type="button"
+                className="shop-buy-button"
+                disabled={gold < item.buyPrice}
+                onClick={() => onBuyItem(item.keyword)}
+              >
+                Buy
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <ul className="shop-item-list">
+          {inventory.map((item, index) => {
+            const sellPrice = Math.round((item.basePrice ?? 0) * shop.sellMultiplier);
+            return (
+              <li key={`${item.id}-${index}`} className="shop-item">
+                <div className="shop-item-top">
+                  <span className="shop-item-name">
+                    {item.image && <img src={item.image} alt="" className="entity-thumb" />}
+                    {item.name}
+                  </span>
+                  {sellPrice > 0 ? (
+                    <span className="shop-item-price">{sellPrice}g</span>
+                  ) : (
+                    <span className="shop-item-worthless">Worthless</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="shop-sell-button"
+                  disabled={sellPrice <= 0}
+                  onClick={() => onSellItem(item.keyword)}
+                >
+                  Sell
+                </button>
+              </li>
+            );
+          })}
+          {inventory.length === 0 && <p className="empty-note">Your inventory is empty.</p>}
+        </ul>
+      )}
+    </article>
+  );
+}

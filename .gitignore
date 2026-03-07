@@ -63,6 +63,8 @@ Thumbs.db
 infra/cdk.out/
 infra/cdk.context.json
 infra/node_modules/
+web-v3/node_modules/
+web-terminal/node_modules/
 
 # IAM policy files and trust docs contain account IDs — generate locally, never commit
 infra/iam/
