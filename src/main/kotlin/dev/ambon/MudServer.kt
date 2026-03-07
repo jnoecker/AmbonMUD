@@ -195,6 +195,7 @@ class MudServer(
             hashingContext = authDispatcher,
             classRegistry = classRegistry,
             raceRegistry = raceRegistry,
+            statRegistry = statRegistry,
         )
 
     // --- Sharding infrastructure (null when sharding is disabled) ---

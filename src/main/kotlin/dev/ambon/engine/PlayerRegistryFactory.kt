@@ -22,6 +22,7 @@ fun createPlayerRegistry(
     hashingContext: CoroutineContext,
     classRegistry: PlayerClassRegistry? = null,
     raceRegistry: RaceRegistry? = null,
+    statRegistry: StatRegistry? = null,
 ): PlayerRegistry =
     PlayerRegistry(
         startRoom = startRoom,
@@ -33,4 +34,5 @@ fun createPlayerRegistry(
         hashingContext = hashingContext,
         classRegistry = classRegistry,
         raceRegistry = raceRegistry,
+        statRegistry = statRegistry,
     )
