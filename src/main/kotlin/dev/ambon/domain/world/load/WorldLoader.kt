@@ -61,14 +61,30 @@ object WorldLoader {
     fun loadFromResource(
         path: String,
         tiers: MobTiersConfig = MobTiersConfig(),
-    ): World = loadFromResources(listOf(path), tiers)
+        imagesBaseUrl: String = "/images/",
+        videosBaseUrl: String = "/videos/",
+        audioBaseUrl: String = "/audio/",
+    ): World =
+        loadFromResources(
+            listOf(path),
+            tiers,
+            imagesBaseUrl = imagesBaseUrl,
+            videosBaseUrl = videosBaseUrl,
+            audioBaseUrl = audioBaseUrl,
+        )
 
     fun loadFromResources(
         paths: List<String>,
         tiers: MobTiersConfig = MobTiersConfig(),
         zoneFilter: Set<String> = emptySet(),
         startRoomOverride: RoomId? = null,
+        imagesBaseUrl: String = "/images/",
+        videosBaseUrl: String = "/videos/",
+        audioBaseUrl: String = "/audio/",
     ): World {
+        val imagesBase = normalizeBaseUrl(imagesBaseUrl)
+        val videosBase = normalizeBaseUrl(videosBaseUrl)
+        val audioBase = normalizeBaseUrl(audioBaseUrl)
         if (paths.isEmpty()) throw WorldLoadException("No zone files provided")
 
         val allFiles = paths.map { path -> readWorldFile(path) }
@@ -138,10 +154,10 @@ object WorldLoader {
                         description = rf.description,
                         exits = emptyMap(),
                         station = station,
-                        image = (rf.image ?: imageDefaults?.room)?.let { "/images/$it" },
-                        video = rf.video?.let { "/videos/$it" },
-                        music = (rf.music ?: audioDefaults?.music)?.let { "/audio/$it" },
-                        ambient = (rf.ambient ?: audioDefaults?.ambient)?.let { "/audio/$it" },
+                        image = (rf.image ?: imageDefaults?.room)?.let { "$imagesBase$it" },
+                        video = rf.video?.let { "$videosBase$it" },
+                        music = (rf.music ?: audioDefaults?.music)?.let { "$audioBase$it" },
+                        ambient = (rf.ambient ?: audioDefaults?.ambient)?.let { "$audioBase$it" },
                     )
             }
 
@@ -302,8 +318,8 @@ object WorldLoader {
                         dialogue = dialogue,
                         behaviorTree = behaviorTree,
                         questIds = questIds,
-                        image = (mf.image ?: imageDefaults?.mob)?.let { "/images/$it" },
-                        video = mf.video?.let { "/videos/$it" },
+                        image = (mf.image ?: imageDefaults?.mob)?.let { "$imagesBase$it" },
+                        video = mf.video?.let { "$videosBase$it" },
                         aggressive = mf.behavior?.template?.contains("aggro") == true,
                     )
             }
@@ -413,8 +429,8 @@ object WorldLoader {
                                         onUse = onUse,
                                         matchByKey = itemFile.matchByKey,
                                         basePrice = basePrice,
-                                        image = (itemFile.image ?: imageDefaults?.item)?.let { "/images/$it" },
-                                        video = itemFile.video?.let { "/videos/$it" },
+                                        image = (itemFile.image ?: imageDefaults?.item)?.let { "$imagesBase$it" },
+                                        video = itemFile.video?.let { "$videosBase$it" },
                                     ),
                             ),
                         roomId = roomId,
@@ -806,6 +822,8 @@ object WorldLoader {
             throw WorldLoadException("Zone '$zone' startRoom '${file.startRoom}' does not exist (normalized as '${start.value}')")
         }
     }
+
+    private fun normalizeBaseUrl(url: String): String = if (url.endsWith("/")) url else "$url/"
 
     /**
      * Normalize a room id that is expected to be "local to zone" unless qualified.

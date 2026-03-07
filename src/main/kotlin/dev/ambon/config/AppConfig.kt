@@ -37,6 +37,9 @@ data class AppConfig(
     val grpc: GrpcConfig = GrpcConfig(),
     val gateway: GatewayConfig = GatewayConfig(),
     val sharding: ShardingConfig = ShardingConfig(),
+    val images: ImagesConfig = ImagesConfig(),
+    val videos: VideosConfig = VideosConfig(),
+    val audio: AudioConfig = AudioConfig(),
 ) {
     fun validated(): AppConfig {
         server.telnetPort.requireValidPort("ambonMUD.server.telnetPort")
@@ -1030,6 +1033,18 @@ data class ShardingConfig(
     val playerIndex: PlayerIndexConfig = PlayerIndexConfig(),
     /** Zone instancing (layering) settings. */
     val instancing: InstanceConfig = InstanceConfig(),
+)
+
+data class ImagesConfig(
+    val baseUrl: String = "/images/",
+)
+
+data class VideosConfig(
+    val baseUrl: String = "/videos/",
+)
+
+data class AudioConfig(
+    val baseUrl: String = "/audio/",
 )
 
 private fun Int.requireValidPort(fieldName: String) {

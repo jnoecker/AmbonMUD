@@ -8,56 +8,56 @@ startRoom: windcut_gate
 
 mobs:
   dustback_rat_01:
-    image: low_training_barrens/dustback_rat_01.png
+    image: f7127dcb071cc73c589fb4cb798943fe917018d6ae131c5f6473bc0e65d4c29b.png
     name: "a dustback rat"
     room: windcut_gate
     tier: weak
     level: 2
 
   thorn_jackal_02:
-    image: low_training_barrens/thorn_jackal_02.png
+    image: 40cf9f61204924f7f6d6ce5a5c7e6f0885fea823d811abe3f89e14f650e9e026.png
     name: "a thorn jackal"
     room: cracked_causeway
     tier: weak
     level: 3
 
   cinder_scout_03:
-    image: low_training_barrens/cinder_scout_03.png
+    image: d6db401bd4990271700659d6d4d26755a0becc5c22a3f45bb30c6286c0589eb4.png
     name: "a cinder scout"
     room: thorn_scrub
     tier: weak
     level: 2
 
   salt_skulk_04:
-    image: low_training_barrens/salt_skulk_04.png
+    image: 3857662e423ce8a234edaf46807e9c9b490e753d4221bee5a0d525b6a4c03f03.png
     name: "a salt skulk"
     room: watch_fire
     tier: weak
     level: 3
 
   ash_raider_05:
-    image: low_training_barrens/ash_raider_05.png
+    image: 92692444c5f2f31b00fb62d8980ab760028cd269170d0ab0fb6ec5ee6310c134.png
     name: "an ash raider"
     room: bonewash_trail
     tier: weak
     level: 2
 
   ragged_vulture_06:
-    image: low_training_barrens/ragged_vulture_06.png
+    image: d3480bbfafb688dbe7e8aedcbb39464cac2145c58490fbd3bde58906a1dfb1f9.png
     name: "a ragged vulture"
     room: saltflats_rim
     tier: weak
     level: 3
 
   sunscar_crawler_07:
-    image: low_training_barrens/sunscar_crawler_07.png
+    image: 019b1e87f67745b2d00f9cb7515dfeabb76eb2002d8f2b677b47d823a7e1f65a.png
     name: "a sunscar crawler"
     room: jackal_run
     tier: weak
     level: 2
 
   hollow_runner_08:
-    image: low_training_barrens/hollow_runner_08.png
+    image: 3fce3634a1119bafd61a774b7b60db00a2dd0cadf9ccf7ad5bd0d3f7f570eeb4.png
     name: "a hollow runner"
     room: cinder_marker
     tier: weak
@@ -67,14 +67,14 @@ mobs:
         chance: 0.25
 
   flint_hunter_09:
-    image: low_training_barrens/flint_hunter_09.png
+    image: 1803d04a9b3a4f4b375b30a535b185a4bd83e247baef50730d1c85cb2031d5dd.png
     name: "a flint hunter"
     room: split_badlands
     tier: weak
     level: 2
 
   glasswind_marauder_10:
-    image: low_training_barrens/glasswind_marauder_10.png
+    image: 6eed2b43b248c89275dc22f9c42e7b09c936227e80eec87a7c560485591445ba.png
     name: "a glasswind marauder"
     room: dry_well
     tier: weak
@@ -84,14 +84,14 @@ mobs:
         chance: 0.35
 
   dustback_rat_11:
-    image: low_training_barrens/dustback_rat_11.png
+    image: 25b8b66ba21d36dfcde77175aa920780bce14dab8f24582b3d97961df6d5636c.png
     name: "a dustback rat"
     room: flint_ledge
     tier: weak
     level: 3
 
   thorn_jackal_12:
-    image: low_training_barrens/thorn_jackal_12.png
+    image: f463a44b6b0b9645ed2945d5dfe4658b2c5d8e298ed068d97a7f331960cf3c0e.png
     name: "a thorn jackal"
     room: windscar_notch
     tier: standard
@@ -101,14 +101,14 @@ mobs:
         chance: 0.35
 
   cinder_scout_13:
-    image: low_training_barrens/cinder_scout_13.png
+    image: 472bd94b49e78f1df66bdbd54347c70c96029783fa9be38707a3fc4e7c35c16e.png
     name: "a cinder scout"
     room: raptor_post
     tier: weak
     level: 3
 
   salt_skulk_14:
-    image: low_training_barrens/salt_skulk_14.png
+    image: 92e9c8071b18a4378927edbbeae8afa51c2081c2a6fb2bc65bfbc141e4166646.png
     name: "a salt skulk"
     room: ash_spur
     tier: weak
@@ -118,14 +118,14 @@ mobs:
         chance: 0.35
 
   ash_raider_15:
-    image: low_training_barrens/ash_raider_15.png
+    image: 45ff03bb963239f1d667954acffd9999d7d978a52ca53b9119fb9bcf308a2f12.png
     name: "an ash raider"
     room: scavenger_haul
     tier: weak
     level: 3
 
   ragged_vulture_16:
-    image: low_training_barrens/ragged_vulture_16.png
+    image: 73b1e4adf36f49c64616b0935ba8ef9cf54ca4869d985121e2821173aefcea34.png
     name: "a ragged vulture"
     room: shattered_span
     tier: standard
@@ -135,14 +135,14 @@ mobs:
         chance: 0.35
 
   sunscar_crawler_17:
-    image: low_training_barrens/sunscar_crawler_17.png
+    image: ce5f0c5b0e2cab7cc801f8ce0fa9f247818b84c4b9e1127a8341e117f3735c63.png
     name: "a sunscar crawler"
     room: low_bluff
     tier: weak
     level: 3
 
   hollow_runner_18:
-    image: low_training_barrens/hollow_runner_18.png
+    image: 270fabfe599f943a17e6c9fc60d64fa2cf84b9932f88cf273b6da5230353ac09.png
     name: "a hollow runner"
     room: ember_ditch
     tier: weak
@@ -152,14 +152,14 @@ mobs:
         chance: 0.35
 
   flint_hunter_19:
-    image: low_training_barrens/flint_hunter_19.png
+    image: db3b1fce6f1ee0485a626319294f7a5bbadd6bc83677ec286311a1ed05b115d8.png
     name: "a flint hunter"
     room: hornet_scrub
     tier: standard
     level: 4
 
   glasswind_marauder_20:
-    image: low_training_barrens/glasswind_marauder_20.png
+    image: 85795072862bcc1c4123765fc2ac2e69ee7dc5c28600cac3792c077bdb965deb.png
     name: "a glasswind marauder"
     room: dustbowl_hollow
     tier: standard
@@ -169,14 +169,14 @@ mobs:
         chance: 0.50
 
   dustback_rat_21:
-    image: low_training_barrens/dustback_rat_21.png
+    image: d9ed53036c5afd17d8c6e01d8d00a0ce7db789614dfce9c3ba93d11493eb2840.png
     name: "a dustback rat"
     room: cairn_turn
     tier: standard
     level: 4
 
   thorn_jackal_22:
-    image: low_training_barrens/thorn_jackal_22.png
+    image: 37d32f952e1b38a20435e90cf0b3ef7891cc73091c26a7bca43743822a6aca4a.png
     name: "a thorn jackal"
     room: storm_drain
     tier: standard
@@ -186,14 +186,14 @@ mobs:
         chance: 0.50
 
   cinder_scout_23:
-    image: low_training_barrens/cinder_scout_23.png
+    image: 69c7a910545d40f8fa5d0c00053f437db5be0cfb2a70bd2ce5072a122b9f5490.png
     name: "a cinder scout"
     room: ridge_marker
     tier: standard
     level: 4
 
   salt_skulk_24:
-    image: low_training_barrens/salt_skulk_24.png
+    image: efa87756e2f4a52284f156704d749f424354a3d3c1830fd265185fa60ad8a219.png
     name: "a salt skulk"
     room: deadfall_gully
     tier: standard
@@ -203,14 +203,14 @@ mobs:
         chance: 0.50
 
   ash_raider_25:
-    image: low_training_barrens/ash_raider_25.png
+    image: 0c5a5593b345f554e82f1213e1a820e62c8218fe8cc39bc04bef4c9165e3fdc2.png
     name: "an ash raider"
     room: sunbleach_step
     tier: standard
     level: 4
 
   ragged_vulture_26:
-    image: low_training_barrens/ragged_vulture_26.png
+    image: 53b2e42b342ae48b5f73c8b21f49bea1c1cbb166f5e3aa23074f5f5e8a65ffcb.png
     name: "a ragged vulture"
     room: brittle_ravine
     tier: standard
@@ -220,14 +220,14 @@ mobs:
         chance: 0.50
 
   sunscar_crawler_27:
-    image: low_training_barrens/sunscar_crawler_27.png
+    image: e62e429e05ad8759af5a8386b12d5f8e4f86f310f0355b9780b97c1941e891fb.png
     name: "a sunscar crawler"
     room: long_scree
     tier: standard
     level: 4
 
   hollow_runner_28:
-    image: low_training_barrens/hollow_runner_28.png
+    image: 9170494b33b2c8bcb576b9ad58eeeb3cfc84fb6dab22ffc1182246588ab530b4.png
     name: "a hollow runner"
     room: hollow_watch
     tier: standard
@@ -237,14 +237,14 @@ mobs:
         chance: 0.70
 
   flint_hunter_29:
-    image: low_training_barrens/flint_hunter_29.png
+    image: a726c25ed5ae1fc77cfbb021af5607d41f035cb96d42898ddb2707179542e4f3.png
     name: "a flint hunter"
     room: vulture_climb
     tier: standard
     level: 5
 
   glasswind_marauder_30:
-    image: low_training_barrens/glasswind_marauder_30.png
+    image: 43646d8ad5862f63967bf0e514f0f677dd238d95a5a6e275824fc15d449ee544.png
     name: "a glasswind marauder"
     room: red_mesa_edge
     tier: elite
@@ -254,14 +254,14 @@ mobs:
         chance: 0.80
 
   dustback_rat_31:
-    image: low_training_barrens/dustback_rat_31.png
+    image: 6f74c64cdee34ac13ef3d346f364a104abef7be09c3e4f51f50932c84965f54f.png
     name: "a dustback rat"
     room: flayed_track
     tier: standard
     level: 5
 
   thorn_jackal_32:
-    image: low_training_barrens/thorn_jackal_32.png
+    image: 1025e04921f20cd877e55748bf506b73874009c3f866fd9fb7a2d1351d60d1cd.png
     name: "a thorn jackal"
     room: char_pillar
     tier: standard
@@ -271,14 +271,14 @@ mobs:
         chance: 0.70
 
   cinder_scout_33:
-    image: low_training_barrens/cinder_scout_33.png
+    image: 7d4e23ba3caa9d4b0845581d4c7c0ff003b4b4586ee995b48c6b902aacc7e077.png
     name: "a cinder scout"
     room: sandspine_run
     tier: elite
     level: 5
 
   salt_skulk_34:
-    image: low_training_barrens/salt_skulk_34.png
+    image: b17f65e3868c06cda9eaa7380093ba3a7157ad9ced99a3dc78dcc00f53fbf7ae.png
     name: "a salt skulk"
     room: husk_basin
     tier: standard
@@ -288,14 +288,14 @@ mobs:
         chance: 0.70
 
   ash_raider_35:
-    image: low_training_barrens/ash_raider_35.png
+    image: e07929425defecbc14b67d3d30a58b6016734d7b30dd5b26d84fbcbfd5d1d574.png
     name: "an ash raider"
     room: dunehook_cross
     tier: standard
     level: 5
 
   ragged_vulture_36:
-    image: low_training_barrens/ragged_vulture_36.png
+    image: d8ad037440fcb7f9eec4243ae104ae30f35f7294d9dce10f23f2a20c2465f992.png
     name: "a ragged vulture"
     room: kestrel_pit
     tier: elite
@@ -305,14 +305,14 @@ mobs:
         chance: 0.80
 
   sunscar_crawler_37:
-    image: low_training_barrens/sunscar_crawler_37.png
+    image: c8c9009efc18f8081e136ac285cce435b5406587ffbd18d3ac7ebaeadf21eb34.png
     name: "a sunscar crawler"
     room: chalk_spur
     tier: elite
     level: 6
 
   hollow_runner_38:
-    image: low_training_barrens/hollow_runner_38.png
+    image: 3a44903b27d332600f6a58b9d41e5730dde5514403ce6b71ae9c598bb35b0276.png
     name: "a hollow runner"
     room: dead_heliograph
     tier: elite
@@ -322,14 +322,14 @@ mobs:
         chance: 1.0
 
   flint_hunter_39:
-    image: low_training_barrens/flint_hunter_39.png
+    image: 330245a4dc08d36692d566cedb64bcb4583ec974d3dd10441ef9c9942a8e146a.png
     name: "a flint hunter"
     room: glasswind_walk
     tier: elite
     level: 8
 
   glasswind_marauder_40:
-    image: low_training_barrens/glasswind_marauder_40.png
+    image: 0e041c3777956180d7aabad0010072c4f20a981147df9f784e46a208f3227e67.png
     name: "a glasswind marauder"
     room: razorwash
     tier: elite
@@ -340,7 +340,7 @@ mobs:
 
 items:
   gear_01:
-    image: low_training_barrens/gear_01.png
+    image: ff89eeecc9aa1e4b58faa014ca086a7227d5c85aed63047f66691fc4cc43c230.png
     displayName: "a stitched club"
     keyword: "club"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
@@ -349,7 +349,7 @@ items:
     room: windcut_gate
 
   gear_02:
-    image: low_training_barrens/gear_02.png
+    image: 24aae2994b7ab8b2ffcd125d345e89e7c70802da774851ab34ed9f3606a1cc67.png
     displayName: "a sunbaked cloak"
     keyword: "cloak"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
@@ -358,7 +358,7 @@ items:
     room: cracked_causeway
 
   gear_03:
-    image: low_training_barrens/gear_03.png
+    image: 40ab34a8d4317eea5d147c5907880f8183e20cd76c17e4958fc46d9fb79d0ffc.png
     displayName: "a thornbound knife"
     keyword: "knife"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
@@ -367,7 +367,7 @@ items:
     room: thorn_scrub
 
   gear_04:
-    image: low_training_barrens/gear_04.png
+    image: 70bb965f5ca82d73ffe2abce6e0183c71da5081c4c4f5e3628c54e93cafe4567.png
     displayName: "a ashcoated mantle"
     keyword: "mantle"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
@@ -376,7 +376,7 @@ items:
     room: watch_fire
 
   gear_05:
-    image: low_training_barrens/gear_05.png
+    image: 1c1b3c0ef091481398cb5bdbc94f8cb8c19bc9c33a53df50ec60c044e9ce7679.png
     displayName: "a flinted helm"
     keyword: "helm"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
@@ -385,7 +385,7 @@ items:
     room: bonewash_trail
 
   gear_06:
-    image: low_training_barrens/gear_06.png
+    image: e57862a6de76788daa3a51ffe12707ab4deb2770b80b29917986cec2911fa7f4.png
     displayName: "a windscarred bracer"
     keyword: "bracer"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
@@ -394,7 +394,7 @@ items:
     room: saltflats_rim
 
   gear_07:
-    image: low_training_barrens/gear_07.png
+    image: 7a58539bc2e623e26f956a687a27b752ea736e88f147f4e7c4fcc5679f28f535.png
     displayName: "a dustproof sling"
     keyword: "sling"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
@@ -403,7 +403,7 @@ items:
     room: jackal_run
 
   gear_08:
-    image: low_training_barrens/gear_08.png
+    image: 1ce48d17c7061f0e96ef65b533e1c0ee6253cf046cdba9ad0f9e50e49f18682e.png
     displayName: "a roughhide mail"
     keyword: "mail"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
@@ -412,7 +412,7 @@ items:
     room: cinder_marker
 
   gear_09:
-    image: low_training_barrens/gear_09.png
+    image: 8d06a479224c32abd9d1b9511acdcf441a6fdbab426fb89c47fdd80288513e64.png
     displayName: "a cinderwoven blade"
     keyword: "blade"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-1 circuit in this zone."
@@ -421,7 +421,7 @@ items:
     room: split_badlands
 
   gear_10:
-    image: low_training_barrens/gear_10.png
+    image: 6a4223797dddd903bbf6d246d79627d3a560e9e91c2406b3b31b27bcae73b5a0.png
     displayName: "a salted vest"
     keyword: "vest"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
@@ -430,7 +430,7 @@ items:
     room: dry_well
 
   gear_11:
-    image: low_training_barrens/gear_11.png
+    image: 5b11633eaf0dfd95781b932316dae0c13a0649498ecff6c1e2aec7548f4d3ca1.png
     displayName: "a stitched club"
     keyword: "club"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
@@ -439,7 +439,7 @@ items:
     room: flint_ledge
 
   gear_12:
-    image: low_training_barrens/gear_12.png
+    image: 838c4d5471577c24db642fbe5f9a8d1d7d7d02cfb28d897ab6b5d9e27753dd85.png
     displayName: "a sunbaked cloak"
     keyword: "cloak"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
@@ -448,7 +448,7 @@ items:
     room: windscar_notch
 
   gear_13:
-    image: low_training_barrens/gear_13.png
+    image: d16048f313bd15ee1bc7d51f627e817ecf77b56991b18795894bcc445bf016ba.png
     displayName: "a thornbound knife"
     keyword: "knife"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
@@ -457,7 +457,7 @@ items:
     room: raptor_post
 
   gear_14:
-    image: low_training_barrens/gear_14.png
+    image: 83c352982572d1d214a8e123178fec3938b37faac3e0ad77b85fba6231ae78d4.png
     displayName: "a ashcoated mantle"
     keyword: "mantle"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
@@ -466,7 +466,7 @@ items:
     room: ash_spur
 
   gear_15:
-    image: low_training_barrens/gear_15.png
+    image: 603704ade90ba77a32b3614bb7f0157cd82c155cfd9ef2e9df0b4906eee5a5f9.png
     displayName: "a flinted helm"
     keyword: "helm"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
@@ -475,7 +475,7 @@ items:
     room: scavenger_haul
 
   gear_16:
-    image: low_training_barrens/gear_16.png
+    image: 465b502a3ff0a781880ac53a1f9e3d02cc9b203dd96a0876d26e53a56ffbfb23.png
     displayName: "a windscarred bracer"
     keyword: "bracer"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
@@ -484,7 +484,7 @@ items:
     room: shattered_span
 
   gear_17:
-    image: low_training_barrens/gear_17.png
+    image: c5cc802c6071fc7c8b2b4223a7236c6917d266ecf89512b4b0083db2c1faa271.png
     displayName: "a dustproof sling"
     keyword: "sling"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
@@ -493,7 +493,7 @@ items:
     room: low_bluff
 
   gear_18:
-    image: low_training_barrens/gear_18.png
+    image: 96482ff82e0c1ba7c3473ca3974c02afadaebb20178644f37e43bd174b211a65.png
     displayName: "a roughhide mail"
     keyword: "mail"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-2 circuit in this zone."
@@ -502,7 +502,7 @@ items:
     room: ember_ditch
 
   gear_19:
-    image: low_training_barrens/gear_19.png
+    image: 5502fb13cf135d88218063c36a30fee344a0aa9badeabd49bf403c3e30b36c4d.png
     displayName: "a cinderwoven blade"
     keyword: "blade"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
@@ -511,7 +511,7 @@ items:
     room: hornet_scrub
 
   gear_20:
-    image: low_training_barrens/gear_20.png
+    image: c7cc97bfded060586fd96082ce52215db977029e421d3dbd2dad27a20cb44d9b.png
     displayName: "a salted vest"
     keyword: "vest"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
@@ -521,7 +521,7 @@ items:
     room: dustbowl_hollow
 
   gear_21:
-    image: low_training_barrens/gear_21.png
+    image: 62c3300916bab951b5e31959fe235711658d3bd3081a6eb6824b35381a808089.png
     displayName: "a stitched club"
     keyword: "club"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
@@ -531,7 +531,7 @@ items:
     room: cairn_turn
 
   gear_22:
-    image: low_training_barrens/gear_22.png
+    image: c5c3ab995a55fba2a2b280921b0bfcc3edb41e2c86d69d6bcc5a651349e6e0ec.png
     displayName: "a sunbaked cloak"
     keyword: "cloak"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
@@ -540,7 +540,7 @@ items:
     room: storm_drain
 
   gear_23:
-    image: low_training_barrens/gear_23.png
+    image: 1da427228624209ec696a5f4bc11c0d88550a2996185c74b566d90b9cee3e8e4.png
     displayName: "a thornbound knife"
     keyword: "knife"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
@@ -550,7 +550,7 @@ items:
     room: ridge_marker
 
   gear_24:
-    image: low_training_barrens/gear_24.png
+    image: f57cabb2c4a30574a35bc0068082722455cd905cf2e656dfc62ab9298fcb5e83.png
     displayName: "a ashcoated mantle"
     keyword: "mantle"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
@@ -560,7 +560,7 @@ items:
     room: deadfall_gully
 
   gear_25:
-    image: low_training_barrens/gear_25.png
+    image: c259e05c9151ddbc55ba84b7812830e5cfa5428e99ae3f47b0e0c8dada1f5ddb.png
     displayName: "a flinted helm"
     keyword: "helm"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
@@ -569,7 +569,7 @@ items:
     room: sunbleach_step
 
   gear_26:
-    image: low_training_barrens/gear_26.png
+    image: af392032b9967470e904816c9cae0888baa88b0383e1307d005bdf1ae5ef7cd0.png
     displayName: "a windscarred bracer"
     keyword: "bracer"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
@@ -579,7 +579,7 @@ items:
     room: brittle_ravine
 
   gear_27:
-    image: low_training_barrens/gear_27.png
+    image: 9742aadd1a48a3742fbb0d245f095a72c4577bffafdead954c536815694d3444.png
     displayName: "a dustproof sling"
     keyword: "sling"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
@@ -589,7 +589,7 @@ items:
     room: long_scree
 
   gear_28:
-    image: low_training_barrens/gear_28.png
+    image: ca56a5ffa993da318b8f2fabe0c4dabf6663beb8431dbc9c06d22ea6ef2502dc.png
     displayName: "a roughhide mail"
     keyword: "mail"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
@@ -598,7 +598,7 @@ items:
     room: hollow_watch
 
   gear_29:
-    image: low_training_barrens/gear_29.png
+    image: 6970335ce4371e353b6bda7b33b6b2304f139218054b56a456d50c619065c005.png
     displayName: "a cinderwoven blade"
     keyword: "blade"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
@@ -608,7 +608,7 @@ items:
     room: vulture_climb
 
   gear_30:
-    image: low_training_barrens/gear_30.png
+    image: b5729e895a956fb19a61c6271167b2ce6fa09bc66f700779c3a6d5195918dd6c.png
     displayName: "a salted vest"
     keyword: "vest"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
@@ -618,7 +618,7 @@ items:
     room: red_mesa_edge
 
   gear_31:
-    image: low_training_barrens/gear_31.png
+    image: 2e599f6513a77796fbb7c92c6c1c26c65a82a5fde133570caf36b9179d06e083.png
     displayName: "a stitched club"
     keyword: "club"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
@@ -627,7 +627,7 @@ items:
     room: flayed_track
 
   gear_32:
-    image: low_training_barrens/gear_32.png
+    image: 0f4751fb06fa18043afe6b32db356606407c1e3f285511502c2d2e14e86d2ed9.png
     displayName: "a sunbaked cloak"
     keyword: "cloak"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
@@ -637,7 +637,7 @@ items:
     room: char_pillar
 
   gear_33:
-    image: low_training_barrens/gear_33.png
+    image: 1f0701eb870dbe391de30079def15ac2fe96b60289580f614e2eba2cab8b38c1.png
     displayName: "a thornbound knife"
     keyword: "knife"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
@@ -647,7 +647,7 @@ items:
     room: sandspine_run
 
   gear_34:
-    image: low_training_barrens/gear_34.png
+    image: 6d51af4fc9b7c5e843a4ec85240d5a2c14fac346b50cf6c9a408cd30a8c16fba.png
     displayName: "a ashcoated mantle"
     keyword: "mantle"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
@@ -656,7 +656,7 @@ items:
     room: husk_basin
 
   gear_35:
-    image: low_training_barrens/gear_35.png
+    image: 2c3042ab4ee417db4fddaa145f07c881aeb17904ff076bc84b388b01cfececca.png
     displayName: "a flinted helm"
     keyword: "helm"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
@@ -666,7 +666,7 @@ items:
     room: dunehook_cross
 
   gear_36:
-    image: low_training_barrens/gear_36.png
+    image: 6cafeec93eca4882098980c407c3a7ee8553119826c2c9f151b04149c81c4220.png
     displayName: "a windscarred bracer"
     keyword: "bracer"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
@@ -676,7 +676,7 @@ items:
     room: kestrel_pit
 
   gear_37:
-    image: low_training_barrens/gear_37.png
+    image: 0fcead146adcd95cf5a10dffd2b3f22155dbb2e7bb1dc763871ab4c7a63e260c.png
     displayName: "a dustproof sling"
     keyword: "sling"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-5 circuit in this zone."
@@ -685,7 +685,7 @@ items:
     room: chalk_spur
 
   gear_38:
-    image: low_training_barrens/gear_38.png
+    image: ffcbd7daa4c5eee0fcee8941c1235e45a4928d87c3f0e84874ff4d3fd74d2afb.png
     displayName: "a roughhide mail"
     keyword: "mail"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-5 circuit in this zone."
@@ -695,7 +695,7 @@ items:
     room: dead_heliograph
 
   gear_39:
-    image: low_training_barrens/gear_39.png
+    image: 431572cb8b5fcee23c949b063ae5733ffcbe191067ab2daa4a97b87ee47bc42e.png
     displayName: "a cinderwoven blade"
     keyword: "blade"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-5 circuit in this zone."
@@ -705,7 +705,7 @@ items:
     room: glasswind_walk
 
   gear_40:
-    image: low_training_barrens/gear_40.png
+    image: e5b8589718702aa9b1eec93c425fefbe4cf0d9333b3d807d1005cfaee48babde.png
     displayName: "a salted vest"
     keyword: "vest"
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-5 circuit in this zone."
@@ -714,7 +714,7 @@ items:
     room: razorwash
 
   ration_01:
-    image: low_training_barrens/ration_01.png
+    image: 87c754f36c32de917360bb2c5c5d5480f7cf58eb8eaa3c96c547b6d8ff10d3e5.png
     displayName: "a field ration pack #1"
     keyword: "ration"
     description: "Emergency restorative supplies cached along the deepest patrol routes."
@@ -726,7 +726,7 @@ items:
     room: kestrel_pit
 
   ration_02:
-    image: low_training_barrens/ration_02.png
+    image: 5c0e50151a3b76f4a77d8eb355ed34b8d5bfee2da0a9e1011c4df0dc91146c98.png
     displayName: "a field ration pack #2"
     keyword: "ration"
     description: "Emergency restorative supplies cached along the deepest patrol routes."
@@ -738,7 +738,7 @@ items:
     room: chalk_spur
 
   ration_03:
-    image: low_training_barrens/ration_03.png
+    image: 516c6dbd3e54e65552abcf454cb52096bd8f68b273ead83a8215946f67c208ae.png
     displayName: "a field ration pack #3"
     keyword: "ration"
     description: "Emergency restorative supplies cached along the deepest patrol routes."
@@ -750,7 +750,7 @@ items:
     room: dead_heliograph
 
   ration_04:
-    image: low_training_barrens/ration_04.png
+    image: 9ae9cb66d3a74a2a2b544679b7383861f03d279a4d5dc5e2918cb204cc8b886a.png
     displayName: "a field ration pack #4"
     keyword: "ration"
     description: "Emergency restorative supplies cached along the deepest patrol routes."
@@ -762,7 +762,7 @@ items:
     room: glasswind_walk
 
   ration_05:
-    image: low_training_barrens/ration_05.png
+    image: a302d7a249dc22f10c0aefb40146c1030644e6c4a8b237bb312d466ebeead489.png
     displayName: "a field ration pack #5"
     keyword: "ration"
     description: "Emergency restorative supplies cached along the deepest patrol routes."
@@ -774,7 +774,7 @@ items:
     room: razorwash
 
   ration_06:
-    image: low_training_barrens/ration_06.png
+    image: dd3ff036738a3fe4ca91d5e69fcbdc6dd9b7c157edcf592d3847d536133d1002.png
     displayName: "a field ration pack #6"
     keyword: "ration"
     description: "Emergency restorative supplies cached along the deepest patrol routes."
@@ -786,7 +786,7 @@ items:
     room: shiver_flats
 
   trophy_01:
-    image: low_training_barrens/trophy_01.png
+    image: b6a6c8807041a8ae3ea93f163adc931dff3fa94adbb0f60011b780e4070aa268.png
     displayName: "a scarred token"
     keyword: "token"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -794,7 +794,7 @@ items:
     damage: 5
 
   trophy_02:
-    image: low_training_barrens/trophy_02.png
+    image: 1677941f3811197d8e17391459dbc89203a1395e3b64d6607222c5c533568125.png
     displayName: "a burnished badge"
     keyword: "badge"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -803,7 +803,7 @@ items:
     constitution: 1
 
   trophy_03:
-    image: low_training_barrens/trophy_03.png
+    image: c104b437fcbf29860a5ad07701b2ebac0d645cbb352aa8177459aec6653c3729.png
     displayName: "a gilded fetish"
     keyword: "fetish"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -812,7 +812,7 @@ items:
     constitution: 1
 
   trophy_04:
-    image: low_training_barrens/trophy_04.png
+    image: 2f513c9a7af7d9f5bf6f4c8c0ab12ee6b2c47993c53e85f33de3549a203e0449.png
     displayName: "a weathered medallion"
     keyword: "medallion"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -820,7 +820,7 @@ items:
     damage: 6
 
   trophy_05:
-    image: low_training_barrens/trophy_05.png
+    image: f527e9b522448ff1a4105b860f2bbf891cdd6e449e90e653483daa46cfab7f87.png
     displayName: "a etched charm"
     keyword: "charm"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -829,7 +829,7 @@ items:
     constitution: 1
 
   trophy_06:
-    image: low_training_barrens/trophy_06.png
+    image: b7aaff37824bca60a40d29d8d56ae5aa6e5618a0dd1cb042e30c679e339ea023.png
     displayName: "a jagged seal"
     keyword: "seal"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -838,7 +838,7 @@ items:
     constitution: 1
 
   trophy_07:
-    image: low_training_barrens/trophy_07.png
+    image: 43cc6f52ac8e4155c48f23c884f522555d1a71def613ac744a2e66cc4998076a.png
     displayName: "a obsidian amulet"
     keyword: "amulet"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -846,7 +846,7 @@ items:
     damage: 6
 
   trophy_08:
-    image: low_training_barrens/trophy_08.png
+    image: e8f0b5bfb7f48cd465cb4e3321387264d02b59e32b940c35e655498069616356.png
     displayName: "a hushed idol"
     keyword: "idol"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -855,7 +855,7 @@ items:
     constitution: 1
 
   trophy_09:
-    image: low_training_barrens/trophy_09.png
+    image: 926ded759bd6908858e41b7dc5fd0c56d46e9dcd7c68f12757c212c2548077fa.png
     displayName: "a storm crest"
     keyword: "crest"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -864,7 +864,7 @@ items:
     constitution: 2
 
   trophy_10:
-    image: low_training_barrens/trophy_10.png
+    image: c1d68f0c1628870182119159677d518d6680bfc4167d6204c9c2731c51f07978.png
     displayName: "a bloodred mark"
     keyword: "mark"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -872,7 +872,7 @@ items:
     damage: 8
 
   trophy_11:
-    image: low_training_barrens/trophy_11.png
+    image: 867e3c6fa711f9f16e5af1fd23e6329b44720a4cc444b0c1d1989e76fb86f276.png
     displayName: "a scarred token"
     keyword: "token"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -881,7 +881,7 @@ items:
     constitution: 2
 
   trophy_12:
-    image: low_training_barrens/trophy_12.png
+    image: fb753f8e2c5330e1f3fb7f4e913ec265c383d15dfeb0447615142eed3fc6df62.png
     displayName: "a burnished badge"
     keyword: "badge"
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
@@ -891,7 +891,7 @@ items:
 
 rooms:
   windcut_gate:
-    image: low_training_barrens/windcut_gate.png
+    image: d1da0add15ab9d589e3b4d806348b4f6f86a280dac390076c65876050a937030.jpg
     title: "Windcut Gate"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Windcut Gate anchors one segment of the zone circuit."
     exits:
@@ -900,7 +900,7 @@ rooms:
       w: ambon_hub:blank_arches
 
   cracked_causeway:
-    image: low_training_barrens/cracked_causeway.png
+    image: 2ef6bd8a0331d2ad9a50c827477794ed0c0c4963a5ababf665703fafbf407f5b.jpg
     title: "Cracked Causeway"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Cracked Causeway anchors one segment of the zone circuit."
     exits:
@@ -909,7 +909,7 @@ rooms:
       w: windcut_gate
 
   thorn_scrub:
-    image: low_training_barrens/thorn_scrub.png
+    image: ddb6e27ffa288c78ab61f20b71872aa24a3269ae18de2d596452452b42b8b773.jpg
     title: "Thorn Scrub"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Thorn Scrub anchors one segment of the zone circuit."
     exits:
@@ -918,7 +918,7 @@ rooms:
       w: cracked_causeway
 
   watch_fire:
-    image: low_training_barrens/watch_fire.png
+    image: 7aaadcd85537e00e7ecf67bb0e848d6d94baa12bf83f2fe382d53545007b40b4.jpg
     title: "Watch Fire"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Watch Fire anchors one segment of the zone circuit."
     exits:
@@ -927,7 +927,7 @@ rooms:
       w: thorn_scrub
 
   bonewash_trail:
-    image: low_training_barrens/bonewash_trail.png
+    image: 911ef0b544942812300284d5d74db8a53dbf06a2cd98a0c4a6cbe04fa119fd9c.jpg
     title: "Bonewash Trail"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Bonewash Trail anchors one segment of the zone circuit."
     exits:
@@ -936,7 +936,7 @@ rooms:
       w: watch_fire
 
   saltflats_rim:
-    image: low_training_barrens/saltflats_rim.png
+    image: 73fe7b66b369217d63e04404a644a348ddff3e9d5c8804fb286e760f3242b916.jpg
     title: "Saltflats Rim"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Saltflats Rim anchors one segment of the zone circuit."
     exits:
@@ -945,7 +945,7 @@ rooms:
       w: bonewash_trail
 
   jackal_run:
-    image: low_training_barrens/jackal_run.png
+    image: ddfa6f82dfcb644de56b6b4657ce02c23837f24d1c19f6a6cbd29d51e1e79b90.jpg
     title: "Jackal Run"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Jackal Run anchors one segment of the zone circuit."
     exits:
@@ -954,7 +954,7 @@ rooms:
       w: saltflats_rim
 
   cinder_marker:
-    image: low_training_barrens/cinder_marker.png
+    image: 0a03d48149bc451c5e2e2df50faf752a49ee0cee1ca93619a0b422b200a648ae.jpg
     title: "Cinder Marker"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Cinder Marker anchors one segment of the zone circuit."
     exits:
@@ -963,7 +963,7 @@ rooms:
       w: jackal_run
 
   split_badlands:
-    image: low_training_barrens/split_badlands.png
+    image: 880fc664ed6b439869e122adae017c75297fd99784d5e4267c7849c8f21e8842.jpg
     title: "Split Badlands"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. The perimeter lanes are mapped and flagged for first-pass drills. Split Badlands anchors one segment of the zone circuit."
     exits:
@@ -971,7 +971,7 @@ rooms:
       w: cinder_marker
 
   dry_well:
-    image: low_training_barrens/dry_well.png
+    image: 3aa713a0d5b1cdd26178b8118b16872ff51295ee603a3803acccdf2c9489d652.jpg
     title: "Dry Well"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Dry Well anchors one segment of the zone circuit."
     exits:
@@ -980,7 +980,7 @@ rooms:
       s: windcut_gate
 
   flint_ledge:
-    image: low_training_barrens/flint_ledge.png
+    image: 97fe9e96dd9aaa2b64220c296a550a0589c479255c39195190cacbc587198868.jpg
     title: "Flint Ledge"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Flint Ledge anchors one segment of the zone circuit."
     exits:
@@ -990,7 +990,7 @@ rooms:
       w: dry_well
 
   windscar_notch:
-    image: low_training_barrens/windscar_notch.png
+    image: 65b5057a456c3ebf72375fde0077cd6b2937aa8498f04596ca615633c3f796dc.jpg
     title: "Windscar Notch"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Windscar Notch anchors one segment of the zone circuit."
     exits:
@@ -1000,7 +1000,7 @@ rooms:
       w: flint_ledge
 
   raptor_post:
-    image: low_training_barrens/raptor_post.png
+    image: c5d594a91dd42416ef1015b6726c9d34e42aa2689f225913610346977e35a741.jpg
     title: "Raptor Post"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Raptor Post anchors one segment of the zone circuit."
     exits:
@@ -1010,7 +1010,7 @@ rooms:
       w: windscar_notch
 
   ash_spur:
-    image: low_training_barrens/ash_spur.png
+    image: 2376613d3601adff33fad1629348ccde250744b9f7d3c4c620ecf715fc8d6611.jpg
     title: "Ash Spur"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Ash Spur anchors one segment of the zone circuit."
     exits:
@@ -1020,7 +1020,7 @@ rooms:
       w: raptor_post
 
   scavenger_haul:
-    image: low_training_barrens/scavenger_haul.png
+    image: 9d4838b13f3ffd9b0bc3d9543faecc2e7b06f7d3f8bac4e78bb6432b32cdda9e.jpg
     title: "Scavenger Haul"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Scavenger Haul anchors one segment of the zone circuit."
     exits:
@@ -1030,7 +1030,7 @@ rooms:
       w: ash_spur
 
   shattered_span:
-    image: low_training_barrens/shattered_span.png
+    image: ff68d5daa1b5ffcff74ba914898c5679099fa5c5a15b082856c0db15fff0e694.jpg
     title: "Shattered Span"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Shattered Span anchors one segment of the zone circuit."
     exits:
@@ -1040,7 +1040,7 @@ rooms:
       w: scavenger_haul
 
   low_bluff:
-    image: low_training_barrens/low_bluff.png
+    image: ccee641db2e13b50974cdb8bb8370c58451dc0796ed17de3cb185b309019453d.jpg
     title: "Low Bluff"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Low Bluff anchors one segment of the zone circuit."
     exits:
@@ -1050,7 +1050,7 @@ rooms:
       w: shattered_span
 
   ember_ditch:
-    image: low_training_barrens/ember_ditch.png
+    image: a60970db7830e86a05d18d0bf736019a966a6a115f9049dd3f22195be0667fbf.jpg
     title: "Ember Ditch"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Visibility shifts with dust gusts and fast-moving scavenger packs. Ember Ditch anchors one segment of the zone circuit."
     exits:
@@ -1059,7 +1059,7 @@ rooms:
       w: low_bluff
 
   hornet_scrub:
-    image: low_training_barrens/hornet_scrub.png
+    image: a12efdd46aa1655cfb2a2769041e42d8c8668265c526ab433aed3d52945254d1.jpg
     title: "Hornet Scrub"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Hornet Scrub anchors one segment of the zone circuit."
     exits:
@@ -1068,7 +1068,7 @@ rooms:
       s: dry_well
 
   dustbowl_hollow:
-    image: low_training_barrens/dustbowl_hollow.png
+    image: fb6a4b39d4119fde4124315cd1c3477ca0ec58731d50485124651c3384fd1cf1.jpg
     title: "Dustbowl Hollow"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Dustbowl Hollow anchors one segment of the zone circuit."
     exits:
@@ -1078,7 +1078,7 @@ rooms:
       w: hornet_scrub
 
   cairn_turn:
-    image: low_training_barrens/cairn_turn.png
+    image: 83803a84c31be0138dae9b5a8a2c9b80abb7094f74d77ef6cec02503ebb460e7.jpg
     title: "Cairn Turn"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Cairn Turn anchors one segment of the zone circuit."
     exits:
@@ -1088,7 +1088,7 @@ rooms:
       w: dustbowl_hollow
 
   storm_drain:
-    image: low_training_barrens/storm_drain.png
+    image: 4226523ff85b7f2bb4aae5886f09bb680e8b4349b778472d5436fbfc7e34dd70.jpg
     title: "Storm Drain"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Storm Drain anchors one segment of the zone circuit."
     exits:
@@ -1098,7 +1098,7 @@ rooms:
       w: cairn_turn
 
   ridge_marker:
-    image: low_training_barrens/ridge_marker.png
+    image: f908069044285b25e4662cef6235ec091de398143b80b92407d3c5cdaaba707b.jpg
     title: "Ridge Marker"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Ridge Marker anchors one segment of the zone circuit."
     exits:
@@ -1108,7 +1108,7 @@ rooms:
       w: storm_drain
 
   deadfall_gully:
-    image: low_training_barrens/deadfall_gully.png
+    image: 289a80c8aa49fc9c0d7b984ce34fa6f69ec6a897f5b2151aa2465d971239fba8.jpg
     title: "Deadfall Gully"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Deadfall Gully anchors one segment of the zone circuit."
     exits:
@@ -1118,7 +1118,7 @@ rooms:
       w: ridge_marker
 
   sunbleach_step:
-    image: low_training_barrens/sunbleach_step.png
+    image: 9f8a712323f54917a8bf85ce7743a0073a6e32cb8ebad92614952ddcc8205c2f.jpg
     title: "Sunbleach Step"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Sunbleach Step anchors one segment of the zone circuit."
     exits:
@@ -1128,7 +1128,7 @@ rooms:
       w: deadfall_gully
 
   brittle_ravine:
-    image: low_training_barrens/brittle_ravine.png
+    image: 5048e75090c9ec3cce186678f8fe4aab4583b702af95f1837378fe5202642c26.jpg
     title: "Brittle Ravine"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Brittle Ravine anchors one segment of the zone circuit."
     exits:
@@ -1138,7 +1138,7 @@ rooms:
       w: sunbleach_step
 
   long_scree:
-    image: low_training_barrens/long_scree.png
+    image: fd25ab030728f1d5cdc242f6d9350918de9570c2e21c157735276092f7cd983d.jpg
     title: "Long Scree"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Route hazards become less predictable and supply points thin out. Long Scree anchors one segment of the zone circuit."
     exits:
@@ -1147,7 +1147,7 @@ rooms:
       w: brittle_ravine
 
   hollow_watch:
-    image: low_training_barrens/hollow_watch.png
+    image: 61727e40cbc7ad9003a519ba6fda5c14bd43ba9f0183b38139a46505f2149b89.jpg
     title: "Hollow Watch"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Hollow Watch anchors one segment of the zone circuit."
     exits:
@@ -1156,7 +1156,7 @@ rooms:
       s: hornet_scrub
 
   vulture_climb:
-    image: low_training_barrens/vulture_climb.png
+    image: d3cd8c34a6c5348e9e7483f0f5518544261ca05e5fcff59f01c04c42894daef1.jpg
     title: "Vulture Climb"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Vulture Climb anchors one segment of the zone circuit."
     exits:
@@ -1166,7 +1166,7 @@ rooms:
       w: hollow_watch
 
   red_mesa_edge:
-    image: low_training_barrens/red_mesa_edge.png
+    image: 7bf1931dabaf2c4f1375fd17f36282bbe85e1db200694908055473f00c563f0b.jpg
     title: "Red Mesa Edge"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Red Mesa Edge anchors one segment of the zone circuit."
     exits:
@@ -1176,7 +1176,7 @@ rooms:
       w: vulture_climb
 
   flayed_track:
-    image: low_training_barrens/flayed_track.png
+    image: c38cb08f1708577474fcadf62ae7c7bde5eccd9eeef91e060e92cc87b38e5d01.jpg
     title: "Flayed Track"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Flayed Track anchors one segment of the zone circuit."
     exits:
@@ -1186,7 +1186,7 @@ rooms:
       w: red_mesa_edge
 
   char_pillar:
-    image: low_training_barrens/char_pillar.png
+    image: 3cca0228d5e05607a36cc6c6bdca2831181e023f6822c6f7faf32627469c3529.jpg
     title: "Char Pillar"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Char Pillar anchors one segment of the zone circuit."
     exits:
@@ -1196,7 +1196,7 @@ rooms:
       w: flayed_track
 
   sandspine_run:
-    image: low_training_barrens/sandspine_run.png
+    image: ed28a5ece9e62fad8c5b2c042da7839393d4afe8a610c96d26a6ae00bc6eca22.jpg
     title: "Sandspine Run"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Sandspine Run anchors one segment of the zone circuit."
     exits:
@@ -1206,7 +1206,7 @@ rooms:
       w: char_pillar
 
   husk_basin:
-    image: low_training_barrens/husk_basin.png
+    image: 419792e1c1dde1221f07a373e573c2de5bebdfee362c8aa8cf38c23310b27f90.jpg
     title: "Husk Basin"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Husk Basin anchors one segment of the zone circuit."
     exits:
@@ -1216,7 +1216,7 @@ rooms:
       w: sandspine_run
 
   dunehook_cross:
-    image: low_training_barrens/dunehook_cross.png
+    image: a38e47c7199d7681cae5276084f3ed45ee5d19221425d5f38fe77d63d9365770.jpg
     title: "Dunehook Cross"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Dunehook Cross anchors one segment of the zone circuit."
     exits:
@@ -1226,7 +1226,7 @@ rooms:
       w: husk_basin
 
   kestrel_pit:
-    image: low_training_barrens/kestrel_pit.png
+    image: 3a621876fe04fb7c9574627d09296772720294d4105a92ae790b802d2141f371.jpg
     title: "Kestrel Pit"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Raid routes cross here, demanding careful pulls and fallback plans. Kestrel Pit anchors one segment of the zone circuit."
     exits:
@@ -1235,7 +1235,7 @@ rooms:
       w: dunehook_cross
 
   chalk_spur:
-    image: low_training_barrens/chalk_spur.png
+    image: 300f4136c8e6d07d2f8a0bed11077d57387c2eec3e49826a72e2580781b262dd.jpg
     title: "Chalk Spur"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Chalk Spur anchors one segment of the zone circuit."
     exits:
@@ -1243,7 +1243,7 @@ rooms:
       s: hollow_watch
 
   dead_heliograph:
-    image: low_training_barrens/dead_heliograph.png
+    image: b65dd762e39227e0ad3014f021e7c482f60bcb1c14cf2c7545880e0e69f96a93.jpg
     title: "Dead Heliograph"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Dead Heliograph anchors one segment of the zone circuit."
     exits:
@@ -1252,7 +1252,7 @@ rooms:
       w: chalk_spur
 
   glasswind_walk:
-    image: low_training_barrens/glasswind_walk.png
+    image: 2292706482b0cd9c755c892ae7d4b600ef5d270fb86c5c077a3126da248bc221.jpg
     title: "Glasswind Walk"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Glasswind Walk anchors one segment of the zone circuit."
     exits:
@@ -1261,7 +1261,7 @@ rooms:
       w: dead_heliograph
 
   razorwash:
-    image: low_training_barrens/razorwash.png
+    image: fad27ff9cd78f16ae9fee41bac43e589a46fbe2f77914a4984ccef624f6d6554.jpg
     title: "Razorwash"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Razorwash anchors one segment of the zone circuit."
     exits:
@@ -1270,7 +1270,7 @@ rooms:
       w: glasswind_walk
 
   shiver_flats:
-    image: low_training_barrens/shiver_flats.png
+    image: 41ec9d344e7e026292731bcc0cf8b9e6cb9b480144243adea8c1513feadf4885.jpg
     title: "Shiver Flats"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Shiver Flats anchors one segment of the zone circuit."
     exits:
@@ -1279,7 +1279,7 @@ rooms:
       w: razorwash
 
   lone_obelisk:
-    image: low_training_barrens/lone_obelisk.png
+    image: a8fd4a6683c19dfe27f5101b69b4bdf2b106f00b0e5cafbebbf3716107ffaed6.jpg
     title: "Lone Obelisk"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Lone Obelisk anchors one segment of the zone circuit."
     exits:
@@ -1288,7 +1288,7 @@ rooms:
       w: shiver_flats
 
   bonefan_cut:
-    image: low_training_barrens/bonefan_cut.png
+    image: 0676d9fc5fac7c6f6113e44d69fa4541d773c3357a596ba11d2342f5871dbc75.jpg
     title: "Bonefan Cut"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Bonefan Cut anchors one segment of the zone circuit."
     exits:
@@ -1297,7 +1297,7 @@ rooms:
       w: lone_obelisk
 
   sunvault_rise:
-    image: low_training_barrens/sunvault_rise.png
+    image: 5e7f68a1dadf998f83be8c1d45c732b39c902ddc679eb6f568512eea65d3e5a0.jpg
     title: "Sunvault Rise"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Sunvault Rise anchors one segment of the zone circuit."
     exits:
@@ -1306,7 +1306,7 @@ rooms:
       w: bonefan_cut
 
   far_redoubt:
-    image: low_training_barrens/far_redoubt.png
+    image: bfbde4381dc049a4a5bb30705d0ecf885c74855443d6a3721c5b93026510666f.jpg
     title: "Far Redoubt"
     description: "Dust shears across broken slate and thorn scrub while old trail markers direct fresh recruits deeper into the badlands. Only veteran groups usually push this far into the wind-cut basin. Far Redoubt anchors one segment of the zone circuit."
     exits:

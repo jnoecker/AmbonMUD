@@ -176,6 +176,9 @@ class MudServer(
             tiers = config.engine.mob.tiers,
             zoneFilter = zoneFilter,
             startRoom = config.world.startRoom?.let { RoomId(it) },
+            imagesBaseUrl = config.images.baseUrl,
+            videosBaseUrl = config.videos.baseUrl,
+            audioBaseUrl = config.audio.baseUrl,
         )
     private val worldState = WorldStateRegistry(world)
     private val tickMillis: Long = config.server.tickMillis
@@ -344,6 +347,7 @@ class MudServer(
                     classRegistryOverride = classRegistry,
                     raceRegistryOverride = raceRegistry,
                     statRegistryOverride = statRegistry,
+                    imagesBaseUrl = config.images.baseUrl,
                 ).run()
             }
 

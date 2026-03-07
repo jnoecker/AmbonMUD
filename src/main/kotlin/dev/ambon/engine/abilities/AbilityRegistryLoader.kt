@@ -8,7 +8,9 @@ object AbilityRegistryLoader {
     fun load(
         config: AbilityEngineConfig,
         registry: AbilityRegistry,
+        imagesBaseUrl: String = "/images/",
     ) {
+        val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
         for ((key, defConfig) in config.definitions) {
             val targetType =
                 when (defConfig.targetType.uppercase()) {
@@ -55,7 +57,7 @@ object AbilityRegistryLoader {
                     targetType = targetType,
                     effect = effect,
                     requiredClass = requiredClass,
-                    image = defConfig.image.ifBlank { null },
+                    image = defConfig.image.ifBlank { null }?.let { "$imagesBase$it" },
                 ),
             )
         }
