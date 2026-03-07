@@ -2,7 +2,6 @@ package dev.ambon.engine
 
 import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.toStatMap
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.metrics.GameMetrics
 import java.time.Clock
@@ -53,7 +52,7 @@ class RegenSystem(
             ran++
 
             val sessionId = player.sessionId
-            val equipStats = items.equipmentBonuses(sessionId).stats.toStatMap()
+            val equipStats = items.equipmentBonuses(sessionId).stats
 
             applyRegen(
                 now = now,

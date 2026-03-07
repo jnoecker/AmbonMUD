@@ -1,6 +1,6 @@
 package dev.ambon.engine
 
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
@@ -172,7 +172,7 @@ class PlayerRegistry(
         val now = clock.millis()
         val hash = withContext(hashingContext) { passwordHasher.hash(password) }
         val baseStat = PlayerState.BASE_STAT
-        val raceMods = raceRegistry?.get(raceId)?.statMods ?: StatBlock.ZERO
+        val raceMods = raceRegistry?.get(raceId)?.statMods ?: StatMap.EMPTY
         val classStartRoom = classStartRooms[classId.uppercase()]
             ?: classRegistry?.get(classId)?.startRoom?.let { RoomId(it) }
         val record =
@@ -186,12 +186,12 @@ class PlayerRegistry(
                         ansiEnabled = defaultAnsiEnabled,
                         race = raceId,
                         playerClass = classId,
-                        strength = baseStat + raceMods.str,
-                        dexterity = baseStat + raceMods.dex,
-                        constitution = baseStat + raceMods.con,
-                        intelligence = baseStat + raceMods.int,
-                        wisdom = baseStat + raceMods.wis,
-                        charisma = baseStat + raceMods.cha,
+                        strength = baseStat + raceMods["STR"],
+                        dexterity = baseStat + raceMods["DEX"],
+                        constitution = baseStat + raceMods["CON"],
+                        intelligence = baseStat + raceMods["INT"],
+                        wisdom = baseStat + raceMods["WIS"],
+                        charisma = baseStat + raceMods["CHA"],
                     ),
                 )
             } catch (_: PersistenceException) {

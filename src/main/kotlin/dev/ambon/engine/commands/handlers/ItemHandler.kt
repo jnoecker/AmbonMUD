@@ -252,7 +252,7 @@ class ItemHandler(
         if (scaledXp <= 0L) return
 
         players.withPlayer(sessionId) { player ->
-            val equipCha = items.equipment(sessionId).values.sumOf { it.item.stats.cha }
+            val equipCha = items.equipment(sessionId).values.sumOf { it.item.stats["CHA"] }
             val adjustedXp = progression.applyCharismaXpBonus(player.stats["CHA"] + equipCha, scaledXp)
 
             val result = players.grantXp(sessionId, adjustedXp, progression) ?: return

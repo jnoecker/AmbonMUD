@@ -7,7 +7,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.config.MobTiersConfig
 import dev.ambon.domain.DamageRange
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.crafting.CraftingSkill
 import dev.ambon.domain.crafting.CraftingStationType
 import dev.ambon.domain.crafting.GatheringNodeDef
@@ -398,13 +398,15 @@ object WorldLoader {
                                         damage = damage,
                                         armor = armor,
                                         stats =
-                                            StatBlock(
-                                                str = itemFile.strength,
-                                                dex = itemFile.dexterity,
-                                                con = constitution,
-                                                int = itemFile.intelligence,
-                                                wis = itemFile.wisdom,
-                                                cha = itemFile.charisma,
+                                            StatMap(
+                                                buildMap {
+                                                    if (itemFile.strength != 0) put("STR", itemFile.strength)
+                                                    if (itemFile.dexterity != 0) put("DEX", itemFile.dexterity)
+                                                    if (constitution != 0) put("CON", constitution)
+                                                    if (itemFile.intelligence != 0) put("INT", itemFile.intelligence)
+                                                    if (itemFile.wisdom != 0) put("WIS", itemFile.wisdom)
+                                                    if (itemFile.charisma != 0) put("CHA", itemFile.charisma)
+                                                },
                                             ),
                                         consumable = itemFile.consumable,
                                         charges = charges,

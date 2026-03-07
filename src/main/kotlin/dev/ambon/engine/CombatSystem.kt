@@ -6,7 +6,6 @@ import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
-import dev.ambon.domain.toStatMap
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -701,7 +700,7 @@ class CombatSystem(
 
         for (sid in recipients) {
             val player = players.get(sid) ?: continue
-            val equipStats = items.equipmentBonuses(sid).stats.toStatMap()
+            val equipStats = items.equipmentBonuses(sid).stats
             val totalBonusStat = player.stats[config.bindings.xpBonusStat] + equipStats[config.bindings.xpBonusStat]
             val reward = progression.applyCharismaXpBonus(totalBonusStat, perPlayerXp)
 

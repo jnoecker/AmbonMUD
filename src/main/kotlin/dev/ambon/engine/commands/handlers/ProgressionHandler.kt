@@ -4,7 +4,6 @@ import dev.ambon.domain.Gender
 import dev.ambon.domain.StatDefinition
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
-import dev.ambon.domain.toStatMap
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.abilities.AbilitySystem
@@ -87,7 +86,7 @@ class ProgressionHandler(
                         sessionId,
                         "  " + row.joinToString("  ") { def ->
                             val base = me.stats[def.id]
-                            val equipBonus = equipped.values.sumOf { it.item.stats.toStatMap()[def.id] }
+                            val equipBonus = equipped.values.sumOf { it.item.stats[def.id] }
                             "${def.abbreviation}: ${formatStat(base, equipBonus)}"
                         },
                     ),

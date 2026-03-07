@@ -10,7 +10,6 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.quest.QuestState
-import dev.ambon.domain.toStatMap
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PlayerId
 import dev.ambon.persistence.PlayerRecord
@@ -226,7 +225,7 @@ fun resolveEffectiveStats(
     player: PlayerState,
     equip: ItemRegistry.EquipmentBonuses,
     mods: StatMap = StatMap.EMPTY,
-): StatMap = player.stats + equip.stats.toStatMap() + mods
+): StatMap = player.stats + equip.stats + mods
 
 /**
  * Convenience overload that gathers equipment bonuses and status-effect mods
