@@ -132,6 +132,7 @@ class AdminHandler(
                 MobState(
                     id = newMobId,
                     name = template.name,
+                    description = template.description,
                     roomId = me.roomId,
                     hp = template.maxHp,
                     maxHp = template.maxHp,

@@ -26,6 +26,10 @@ sealed interface Command {
         val dir: Direction,
     ) : Command
 
+    data class LookAt(
+        val target: String,
+    ) : Command
+
     data object Exits : Command
 
     data class Say(
@@ -401,16 +405,15 @@ object CommandParser {
             if (msg.isEmpty()) Command.Unknown(line) else Command.Tell(target, msg)
         }?.let { return it }
 
-        // look <dir> / l <dir>
+        // look <dir> / look <target> / l <dir> / l <target>
         matchPrefix(
             line = line,
             aliases = listOf("look", "l"),
         ) { rest ->
             if (rest.isBlank()) return@matchPrefix null
-            val dir =
-                parseDirectionOrNull(rest.trim())
-                    ?: return@matchPrefix Command.Invalid(line, "Usage: look <direction> (e.g., look north)")
-            Command.LookDir(dir)
+            val trimmed = rest.trim()
+            val dir = parseDirectionOrNull(trimmed)
+            if (dir != null) Command.LookDir(dir) else Command.LookAt(trimmed)
         }?.let { return it }
 
         // inventory aliases

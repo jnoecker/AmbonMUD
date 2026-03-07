@@ -11,6 +11,7 @@ data class MobSpawn(
     override val id: MobId,
     override val name: String,
     override val roomId: RoomId,
+    override val description: String = "",
     override val maxHp: Int = 10,
     override val damage: DamageRange = DamageRange(1, 4),
     override val armor: Int = 0,
