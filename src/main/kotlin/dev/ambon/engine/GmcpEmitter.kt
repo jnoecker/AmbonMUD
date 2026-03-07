@@ -36,9 +36,10 @@ class GmcpEmitter(
     private val isInCombat: (SessionId) -> Boolean = { false },
     private val getCombatTarget: (SessionId) -> CombatTargetInfo? = { null },
     private val statRegistry: StatRegistry? = null,
-    private val imagesBaseUrl: String = "/images/",
+    imagesBaseUrl: String = "/images/",
 ) {
     private val json = jacksonObjectMapper()
+    private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
 
     suspend fun sendCharVitals(
         sessionId: SessionId,
@@ -1176,8 +1177,7 @@ class GmcpEmitter(
         val race = player.race.lowercase()
         val cls = player.playerClass.lowercase()
         val tier = if (player.isStaff) STAFF_SPRITE_TIER else SPRITE_LEVEL_TIERS.firstOrNull { player.level >= it } ?: 1
-        val base = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
-        return "${base}player_sprites/${race}_${gender.spriteCode}_${cls}_l$tier.png"
+        return "${imagesBase}player_sprites/${race}_${gender.spriteCode}_${cls}_l$tier.png"
     }
 }
 
