@@ -8,7 +8,7 @@ startRoom: before_gate
 
 mobs:
   aineroia:
-    image: aineroia_cottage/aineroia.png
+    image: cd9420ca60bd02fe2eed89ca848d5f353a2a3364f5b8345dfac24b1111a3b1a2.png
     name: "Aineroia, Lady of the Fae Wood"
     room: study
     tier: boss
@@ -21,7 +21,7 @@ mobs:
     goldMax: 0
 
   fae_sprite_east:
-    image: aineroia_cottage/fae_sprite_east.png
+    image: f3e2d4cdc816033c00320e2cc8aab314c3ed18cfa30db32cc3219f04e35039b3.png
     name: "a wandering fae sprite"
     room: north_magical_plants
     tier: weak
@@ -31,7 +31,7 @@ mobs:
       template: wander
 
   fae_sprite_west:
-    image: aineroia_cottage/fae_sprite_west.png
+    image: 24c22a367a24d5b0aa7c63537527ddd0792690c2fd8ce37cbdd4d11b62f62c98.png
     name: "a wandering fae sprite"
     room: west_garden
     tier: weak
@@ -41,7 +41,7 @@ mobs:
       template: wander
 
   phantom_cat:
-    image: aineroia_cottage/phantom_cat.png
+    image: 261e9ff51e5671687626bdadd44fae064a2f99ed10bd82474638d60eab6481df.png
     name: "a phantom cat"
     room: west_sitting_room
     tier: weak
@@ -51,7 +51,7 @@ mobs:
       template: wander
 
   vinemaw:
-    image: aineroia_cottage/vinemaw.png
+    image: 759f4bc5d8db70ab79ffcddd1e8cee84bf4fa379fe0c3b8d42e750191f3207bb.png
     name: "a vinemaw"
     room: poison_garden
     tier: standard
@@ -64,7 +64,7 @@ mobs:
 
 items:
   moonpetal:
-    image: aineroia_cottage/moonpetal.png
+    image: ea1dee7f8a914fc1d6ef6ba17ede753a2558456ea7833cf36b48fce95e983a1b.png
     displayName: "a moonpetal herb"
     keyword: "moonpetal"
     description: "A luminescent herb with wide, cool-to-the-touch petals. It smells faintly of night air and restores a measure of vitality when consumed."
@@ -75,7 +75,7 @@ items:
     basePrice: 15
 
   phoenix_feather:
-    image: aineroia_cottage/phoenix_feather.png
+    image: 7b09ea4f579b3b3e5ad64d7551eff47410164161bd5a9d3381fa37f58c8607e6.png
     displayName: "a phoenix feather"
     keyword: "feather"
     description: "A long tail feather in deepest crimson and molten gold, still faintly warm. It doesn't burn — but something inside it does."
@@ -83,7 +83,7 @@ items:
     basePrice: 30
 
   corpsecap_spore:
-    image: aineroia_cottage/corpsecap_spore.png
+    image: 3c355149c2cd2aa337f3e0de9fb856a0649f19b8656cebfa9c373994ceac5f6f.png
     displayName: "a corpsecap spore"
     keyword: "spore"
     description: "A small glass capsule containing a single dried spore from a corpsecap mushroom. Labeled: 'DO NOT INHALE'. Probably useful for something terrible."
@@ -92,7 +92,7 @@ items:
 
 rooms:
   before_gate:
-    image: aineroia_cottage/before_gate.png
+    image: 121d25ae502ca308ba2918a0f2727df46fc4e7b32955c5585705cf2d1aa8cb24.jpg
     title: "Before the Gate"
     description: "Twisted ironwood posts rise from tangled roots to support a gate of woven briars, its arch laced with tiny white blossoms that never fall. Beyond the gate, a mossy path winds toward a cottage barely glimpsed through ancient oaks. The air smells of rain and old magic."
     exits:
@@ -100,7 +100,7 @@ rooms:
       s: ambon_hub:hall_of_portals
 
   south_pathway:
-    image: aineroia_cottage/south_pathway.png
+    image: d906d2cf706ef5aee76d7fa7a32e40bf9878044c788cf882141bf18349d563d3.jpg
     title: "Southern Path"
     description: "A mossy path of flat stones meanders through the fae wood. Luminescent mushrooms line the edges in hues of blue and violet. The trees here have no names — they predate naming. The gate is to the south; the path winds further north."
     exits:
@@ -110,7 +110,7 @@ rooms:
       s: before_gate
 
   north_pathway:
-    image: aineroia_cottage/north_pathway.png
+    image: 722e7dc5a5259d6e4c23e3879cf761ff06f67a0cb01aebfbb2913cf17f7268ee.jpg
     title: "Northern Path"
     description: "The path widens as the cottage comes fully into view ahead. Warm light fills the windows, and cascading ivy covers the stone walls. To the west, a pond catches the strange fae-wood light; to the east, a garden of impossible plants blooms in colors with no names."
     exits:
@@ -120,7 +120,7 @@ rooms:
       s: south_pathway
 
   west_garden:
-    image: aineroia_cottage/west_garden.png
+    image: 3da873383b2f9d22b32d6a980bf598931b9f4e3c0b896e9b953c7ac394f26032.jpg
     title: "Western Garden"
     description: "A wild garden grows with studied abandon — flowering vines weave through low stone borders that might once have been walls. Nothing here is tamed, but nothing is uncared for either. The air hums faintly, as if the soil itself is thinking."
     exits:
@@ -128,7 +128,7 @@ rooms:
       e: east_garden
 
   east_garden:
-    image: aineroia_cottage/east_garden.png
+    image: ff8f08ec757b23709986e01a673177af1ce3ef5611afc43e62d5c6bea0fcdbd1.jpg
     title: "Eastern Garden"
     description: "A garden of herbs and wild grasses, crossed by a narrow drainage channel of shimmering water. The soil is dark and rich, smelling faintly of copper and loam. Bees that are not quite bees drift between blossoms."
     exits:
@@ -137,7 +137,7 @@ rooms:
       e: south_pathway
 
   small_pond:
-    image: aineroia_cottage/small_pond.png
+    image: 832180b31e312ce96930b6ac87b6d085f822527def5bebb3e4cb554ea4bd5736.jpg
     title: "A Small Pond"
     description: "A glass-still pond fills a natural hollow in the cottage grounds. The bottom is invisible — not from depth, but from an inky darkness that coils like dropped ink. Fireflies circle the edge without ever settling."
     exits:
@@ -146,7 +146,7 @@ rooms:
       s: west_garden
 
   beside_pond:
-    image: aineroia_cottage/beside_pond.png
+    image: 291f8d440c88bfdf09edab3a011457a2dfa321de78fe738b9f69ace29a78dfa9.jpg
     title: "Beside the Pond"
     description: "The air beside the pond is cool and heavy with the scent of waterlilies. A low stone bench sits here, worn smooth by centuries of use. The cottage looms to the north, its ivy-draped walls broken by warm lit windows."
     exits:
@@ -156,7 +156,7 @@ rooms:
       s: east_garden
 
   north_magical_plants:
-    image: aineroia_cottage/north_magical_plants.png
+    image: 0e7f029f001cc50fececc67bb03a2f504cdb6eba2686de6d6b41c9c779e8df9e.jpg
     title: "Northern Magical Garden"
     description: "A raised garden bed holds plants found nowhere else in the mortal world: luminous fern fronds that retract when approached, blossoms with shifting geometric petals, and something that breathes. The air carries a faint electric charge."
     exits:
@@ -165,7 +165,7 @@ rooms:
       s: south_magical_plants
 
   south_magical_plants:
-    image: aineroia_cottage/south_magical_plants.png
+    image: f63dfb2c24e7b4a9ba0b19ebcf9ce00645685bd6f3e87db9bb81fee60934e7f3.jpg
     title: "Southern Magical Garden"
     description: "This portion of the magical garden spills toward the wild wood, less ordered and more alive. A vine with silver leaves coils and uncoils slowly, and tiny orbs of light drift just above the soil as if pollinating invisible blooms."
     exits:
@@ -173,7 +173,7 @@ rooms:
       w: south_pathway
 
   west_flower_garden:
-    image: aineroia_cottage/west_flower_garden.png
+    image: 12368b3d26639d49fe362dc72a6e0ec1ef63b951545bce6d59555891c845b14f.jpg
     title: "Western Flower Garden"
     description: "An explosion of color — beds of deep violet moonflowers alternate with silver starbloom and crimson foxbell. The blossoms are enormous, healthy beyond reason, and several track your movement with unhurried curiosity."
     exits:
@@ -182,7 +182,7 @@ rooms:
       s: small_pond
 
   east_flower_garden:
-    image: aineroia_cottage/east_flower_garden.png
+    image: f56c89fee10c4e6c235c5c40980b369294d8798379180066180a36ec46794dae.jpg
     title: "Eastern Flower Garden"
     description: "More flowers bloom here in impossible profusion, tended by unseen hands. A stone birdbath filled with shimmering water sits at the center; a phoenix feather floats on the surface, still warm to the touch."
     exits:
@@ -192,7 +192,7 @@ rooms:
       s: beside_pond
 
   porch:
-    image: aineroia_cottage/porch.png
+    image: ea85d2ccd88d2d131c2dd7a7e51bf82e2c535adca9b10ad32bba7ce5999bc514.jpg
     title: "The Cottage Porch"
     description: "A covered porch of white birchwood spans the cottage front, its roof hung with wind chimes of crystal and bone. Ferns grow in clay pots along the rail. The heavy cottage door stands slightly ajar, letting out the smell of woodsmoke and herbs."
     exits:
@@ -202,7 +202,7 @@ rooms:
       s: north_pathway
 
   front_porch:
-    image: aineroia_cottage/front_porch.png
+    image: 82ad832e572368832edab46ea37c50c2bb75e3c890aad5274e024e695e2b8546.jpg
     title: "Front Porch"
     description: "The eastern end of the porch is sheltered by a trellis dripping with night-blooming jasmine. A rocking chair sits here, a half-read book balanced on its arm, as though someone stepped away moments ago and expected to return."
     exits:
@@ -211,7 +211,7 @@ rooms:
       s: north_magical_plants
 
   west_sitting_room:
-    image: aineroia_cottage/west_sitting_room.png
+    image: 1c673a12f747811a6b2df643e7150e2bee2b0cacabff192258816a248afe1ab1.jpg
     title: "Western Sitting Room"
     description: "Woven rugs cover the stone floor, and shelves hold curious objects — a glass globe containing a perpetual miniature storm, a jar of preserved fae wings, a stuffed creature with too many eyes. Everything is arranged with obvious care and no obvious logic."
     exits:
@@ -220,7 +220,7 @@ rooms:
       s: west_flower_garden
 
   east_sitting_room:
-    image: aineroia_cottage/east_sitting_room.png
+    image: f9a3124832c2988e1d26c15feec4d1858b21ae3c219a9cb6e855782d28c6a4e5.jpg
     title: "Eastern Sitting Room"
     description: "A deep hearthrug anchors two high-backed chairs near a cold fireplace. Above the mantle hangs a painting showing a sunrise over a city that doesn't exist — the sky is the wrong color, violet at the top fading to gold, and the light shifts when you look directly at it."
     exits:
@@ -230,7 +230,7 @@ rooms:
       s: east_flower_garden
 
   foyer:
-    image: aineroia_cottage/foyer.png
+    image: da1ecda96b2998c18be28b0bdf9e47374b9bc9fb8bac93e5d84b1ccdd4ddf5e3.jpg
     title: "Foyer"
     description: "The foyer is modest and warm. Hooks on the wall hold a velvet cloak and a traveling staff twisted from something that was not quite wood. A hall leads north into the cottage, sitting rooms extend to the west, and the study is to the east. The front door is to the south."
     exits:
@@ -240,7 +240,7 @@ rooms:
       s: porch
 
   study:
-    image: aineroia_cottage/study.png
+    image: 70d3e21981408b3ec7ecd3ad639981c1022e7c6cad3afba1443530d00fc27ab7.jpg
     title: "Study"
     description: "The study is cramped with consequence — floor-to-ceiling shelves of grimoires, star charts pinned over older star charts, a broad desk scattered with correspondence in languages not yet invented. Candles burn without melting. A smell of ozone and old books fills the air."
     exits:
@@ -248,7 +248,7 @@ rooms:
       s: front_porch
 
   west_bedroom:
-    image: aineroia_cottage/west_bedroom.png
+    image: d4d0f9c5848e6c369855d68dcacee99c9f1750118f99b4796afa51e4c83252cf.jpg
     title: "Western Bedroom"
     description: "A guest bedroom kept with quiet precision. The bed is made tight as a drum, the pillow undented. A porcelain basin sits on the dresser, filled with water that doesn't ripple. A pressed flower from an unknown species hangs framed above the headboard."
     exits:
@@ -257,7 +257,7 @@ rooms:
       s: west_sitting_room
 
   east_bedroom:
-    image: aineroia_cottage/east_bedroom.png
+    image: 7bc201483842cbab7b9bfbf7e875859de4aa508e1e267c71b1aee0391d7e5310.jpg
     title: "Eastern Bedroom"
     description: "The second bedroom is less formal, with a soft quilt in shades of deep blue and silver. A window gives out onto the herb garden. A small writing desk holds an unfinished letter; the ink on the quill never dries."
     exits:
@@ -267,7 +267,7 @@ rooms:
       s: east_sitting_room
 
   hall:
-    image: aineroia_cottage/hall.png
+    image: 08fd3802bbc129bb64c37105baac0a9e2a46d866ad29e9cd6046b758c84e2909.jpg
     title: "The Hall"
     description: "A central hall of polished dark wood connects the rooms of the cottage's middle floor. The floorboards don't creak, even underfoot. Doors lead west to the bedrooms and east to the closet. The kitchen is to the north; the foyer waits to the south."
     exits:
@@ -277,7 +277,7 @@ rooms:
       s: foyer
 
   closet:
-    image: aineroia_cottage/closet.png
+    image: c0bcb5596ada9640522db2daa79b07c704f7397c22e6769ae19d3333b2c2e12b.jpg
     title: "Closet"
     description: "A narrow closet lined with cedar shelves. Stacks of cloth, rolled scrolls, labeled jars, and miscellany crowd every surface. There is more here than the closet seems to be able to hold."
     exits:
@@ -285,7 +285,7 @@ rooms:
       w: hall
 
   west_kitchen:
-    image: aineroia_cottage/west_kitchen.png
+    image: 721a338963eb978654c3557a2dad792a520d66a13c61d328c4322ded04c55c5c.jpg
     title: "Western Kitchen"
     description: "The western end of the long kitchen is given to prep work — a broad wooden block, a rack of unusual knives, and bundles of hanging herbs. The herbs sway in no detectable draft, their scent shifting from moment to moment."
     exits:
@@ -294,7 +294,7 @@ rooms:
       s: west_bedroom
 
   center_kitchen:
-    image: aineroia_cottage/center_kitchen.png
+    image: b862ac6a8397f599e8a41993beba0bb63e9e709c89448233bde35abadc459459.jpg
     title: "Center Kitchen"
     description: "The heart of the kitchen holds the main cookfire, a clay oven built into the chimney wall. A cauldron of something simmers on an unseen heat, filling the room with steam that smells of forest rain and copper."
     exits:
@@ -304,7 +304,7 @@ rooms:
       s: east_bedroom
 
   east_kitchen:
-    image: aineroia_cottage/east_kitchen.png
+    image: e859680f37291c000753afa56dcf9a3eae1dce5a60c8202888990c3fda0d1111.jpg
     title: "Eastern Kitchen"
     description: "The kitchen's eastern section serves as both workspace and passage. The back door leads north to the porch and herb gardens. Shelves hold covered crocks of preserved things in colors that don't occur in nature."
     exits:
@@ -314,7 +314,7 @@ rooms:
       s: hall
 
   pantry:
-    image: aineroia_cottage/pantry.png
+    image: 41941b8258117e3a020a49f087b0e392d121109183abf7a533ff4bca12fa862e.jpg
     title: "Pantry"
     description: "The pantry is cool and dim, lined with shelves from floor to ceiling. Jars of preserved herbs, dried ingredients, and labeled tinctures fill every space. A few glow softly. The organization makes sense only to its owner."
     exits:
@@ -322,7 +322,7 @@ rooms:
       s: closet
 
   west_herb_garden:
-    image: aineroia_cottage/west_herb_garden.png
+    image: ee590ea4e18615de06364caf80e0ff625f3fdcf182158b69e5dbc3d6903256fc.jpg
     title: "Western Herb Garden"
     description: "Neatly tended rows of herbs grow in raised beds of dark, rich earth. Many are recognizable — thyme, rosemary, lavender — but some are not. Small labels stake the ground before each unfamiliar plant, written in a language you can almost read."
     exits:
@@ -330,7 +330,7 @@ rooms:
       s: west_kitchen
 
   east_herb_garden:
-    image: aineroia_cottage/east_herb_garden.png
+    image: 663e54e1d1a6f7c9cfa306294416cae2831a77a719fcbbf232dff7dca3ae0c66.jpg
     title: "Eastern Herb Garden"
     description: "The eastern beds are given over to stranger varieties — silvermoss, nightshade hybrids, a flowering root that only blooms after midnight. The air is pungent and faintly dizzying, as though breathing it is a mild enchantment in itself."
     exits:
@@ -339,7 +339,7 @@ rooms:
       s: center_kitchen
 
   back_porch:
-    image: aineroia_cottage/back_porch.png
+    image: 68c6e36587960e102f064fe22909a12e496924549f5514c860fe557bd123dfc5.jpg
     title: "Back Porch"
     description: "The back porch doubles as a workspace — bundles of drying herbs hang from the rafters, clay pots of specimens line the rail, and a worn workbench holds mortar, pestle, and things half-processed. The herb gardens spread to either side."
     exits:
@@ -348,7 +348,7 @@ rooms:
       s: east_kitchen
 
   poison_garden:
-    image: aineroia_cottage/poison_garden.png
+    image: 852460298d0ad35381779ffb05d5530801bcad3bac6414e67ea9521f146dd7c9.jpg
     title: "Poisonous Plant Garden"
     description: "Clearly marked by a low iron fence and a sign reading 'HEED', this bed is beautiful and dangerous in equal measure. Nightbloom, corpsecap, vinemaw vine, and others whose names haven't been written grow here in deliberate isolation. Even the air is a little wrong."
     exits:

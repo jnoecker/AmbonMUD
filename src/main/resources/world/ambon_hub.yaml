@@ -8,7 +8,7 @@ startRoom: hall_of_portals
 
 mobs:
   innkeeper:
-    image: ambon_hub/innkeeper.png
+    image: b2cd0fae5e52248078b5f7ece23bd58e63cb4f37d974f74956eafc71f74c1a01.png
     name: "the Innkeeper"
     room: wanderers_inn
     dialogue:
@@ -33,7 +33,7 @@ mobs:
             action: set_recall
           - text: "I'll think about it."
   portal_keeper:
-    image: ambon_hub/portal_keeper.png
+    image: a27a9d8c0b5977b1fa0f7553b1b95400494a51662cb3a77c4e1079dd69c7c1fa.png
     name: "the Portal Keeper"
     room: hall_of_portals
     dialogue:
@@ -95,7 +95,7 @@ mobs:
 
 rooms:
   hall_of_portals:
-    image: ambon_hub/hall_of_portals.png
+    image: 4789f1a1e68c123f14630a57aafdb891172312e7a79df19d7a606c98c843dcd0.jpg
     title: "Hall of Portals"
     description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.' Northern light filters green through fae leaves. Eastern light smells of old books. Southern light carries mountain air and the faint crunch of gravel. Western light is warm, tropical, and faintly buzzes. In the center of the floor, a trapdoor — sealed with a welcome mat that reads 'HOME' — descends to an entirely different kind of neighborhood."
     exits:
@@ -107,7 +107,7 @@ rooms:
       u: crafting_workshop:entrance
 
   blank_arches:
-    image: ambon_hub/blank_arches.png
+    image: c5c24327e550e1493fb096e726644a4b183ca640c02ad33f8dad294bfc7af44d.jpg
     title: "Blank Arches"
     description: "Unkeyed archways stand here like paused sentences. New chalkwork marks several passages for low-rank adventurers, each arch pulsing with a different color of mist. To the west, an archway framed with painted vines and tropical flowers hums with warm, buzzing energy — beyond it, distant birdcall and the smell of rainforest and something ancient and sweet."
     exits:
@@ -119,7 +119,7 @@ rooms:
       w: wesleyalis:gravel_road_2
 
   wayfinder_gallery:
-    image: ambon_hub/wayfinder_gallery.png
+    image: 8b602d97e2dee51662c87ff1a2eded40006aafa6ea8706e47905d8e7ff9861ea.jpg
     title: "Wayfinder Gallery"
     description: "A narrow gallery lined with relief maps of places that don't exist yet. A brass needle floats over each plaque, twitching toward the hall as if eager to be used. A warm glow spills from a doorway to the north. To the south, a vine-wrapped archway opens onto dappled green light and the scent of wild grass."
     exits:
@@ -129,7 +129,7 @@ rooms:
       s: tutorial_glade:awakening_clearing
 
   wanderers_inn:
-    image: ambon_hub/wanderers_inn.png
+    image: 5156f9c562d3f399ecc64ef196fa7787a5c449f9737f52e1bcd28675cba00b78.jpg
     title: "The Wanderer's Inn"
     description: "A cozy common room filled with the scent of woodsmoke and fresh bread. Low beams cross the ceiling, hung with dried herbs. A fire crackles in a broad hearth and mismatched chairs cluster around worn tables. The innkeeper stands behind a short counter, ready to help. A sign on the wall reads: 'RENT A ROOM — type recall anytime to return here.' A heavy door to the east is propped open, revealing a rutted track and the smell of campfire smoke. A bolted iron trapdoor in the corner is etched with the words: 'THE LABYRINTH — ENTER AT OWN RISK.'"
     exits:

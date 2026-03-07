@@ -8,13 +8,13 @@ startRoom: entrance
 
 rooms:
   entrance:
-    image: player_sprites/entrance.png
+    image: 373654bfc27c78ce430e2ac528015d141081e55bce71a940dd8a7d0c3409a308.jpg
     title: "Entrance"
     description: "A grand marble atrium with softly glowing crystal displays. Enchanted portraits line the walls, depicting adventurers of every race and calling."
     exits:
       n: novice_hall
   novice_hall:
-    image: player_sprites/novice_hall.png
+    image: 69e0cbc1c8591e8c272b5f1a9d45642d8b1266dbf76b17f565358914cbcefbc1.jpg
     title: "Novice Hall"
     description: "A warm corridor lined with training dummies and practice targets. The air smells of fresh leather and chalk."
     exits:
@@ -25,7 +25,7 @@ rooms:
       u: novice_clerics
       d: novice_rogues
   apprentice_hall:
-    image: player_sprites/apprentice_hall.png
+    image: a57c500b94e3222e287e698b3f1a9bd6007441efedac54ee31ad34392562a87f.jpg
     title: "Apprentice Hall"
     description: "A wider passage with polished stone floors and mounted weapons behind glass. Faint battle sounds echo from adjacent chambers."
     exits:
@@ -36,7 +36,7 @@ rooms:
       u: apprentice_clerics
       d: apprentice_rogues
   journeyman_hall:
-    image: player_sprites/journeyman_hall.png
+    image: bcb26dfbc44208cb66383dc663157e1c53421b4adbd560604761d67cdf5fc459.jpg
     title: "Journeyman Hall"
     description: "An impressive gallery with vaulted ceilings and enchanted tapestries depicting famous battles. Arcane lanterns cast a steady glow."
     exits:
@@ -47,7 +47,7 @@ rooms:
       u: journeyman_clerics
       d: journeyman_rogues
   expert_hall:
-    image: player_sprites/expert_hall.png
+    image: e175d3b2c425093285015477eb81a305c54910390bca46f54b49c06ca4a5479d.jpg
     title: "Expert Hall"
     description: "A prestigious corridor of dark oak and silver filigree. Trophy cases display legendary artifacts and commendations."
     exits:
@@ -58,7 +58,7 @@ rooms:
       u: expert_clerics
       d: expert_rogues
   master_hall:
-    image: player_sprites/master_hall.png
+    image: 3223f491d21b88c273163570fd729a5681ee3fa7c725656a7e95fb2e5efaf0b7.jpg
     title: "Master Hall"
     description: "A resplendent hall of gleaming obsidian and gold inlay. The air hums with barely contained power."
     exits:
@@ -69,7 +69,7 @@ rooms:
       u: master_clerics
       d: master_rogues
   legend_hall:
-    image: player_sprites/legend_hall.png
+    image: 2017b50b466e81f08063f7cb96271ac946881a5285c802fe6e73ba7908a6cb03.jpg
     title: "Legend Hall"
     description: "An ethereal sanctuary where reality shimmers at the edges. Constellations drift across the ceiling, and the floor seems to float above an endless void."
     exits:
@@ -80,152 +80,152 @@ rooms:
       u: legend_clerics
       d: legend_rogues
   novice_warriors:
-    image: player_sprites/novice_warriors.png
+    image: d08fe2f0b2f370c06185de9d776520b8ed9036a4486324cfb2e473af79cc5a22.jpg
     title: "Novice Warriors"
     description: "A dusty training yard with wooden swords and straw dummies. Young recruits practice basic stances."
     exits:
       w: novice_hall
   novice_mages:
-    image: player_sprites/novice_mages.png
+    image: 2bbdbe36774e46ae569c31f4ac5b6ddec70e9843b5c110deaf0122cbfbcb8b9a.jpg
     title: "Novice Mages"
     description: "A cramped study filled with primer spellbooks and sputtering candles. Apprentices struggle with basic incantations."
     exits:
       e: novice_hall
   novice_clerics:
-    image: player_sprites/novice_clerics.png
+    image: 2621dcb51226327935289ba10184367628e7bc8c97a97895f56f0ab7143bfc5c.jpg
     title: "Novice Clerics"
     description: "A humble chapel with simple wooden pews and a small altar. Acolytes kneel in quiet prayer."
     exits:
       d: novice_hall
   novice_rogues:
-    image: player_sprites/novice_rogues.png
+    image: acc365430ba797f5cae0bce9f8ccf4e058c14d7abf48f9fe0063204984d2f4ac.jpg
     title: "Novice Rogues"
     description: "A shadowy alcove with lockpick sets and rope coils scattered about. Fledgling thieves practice sleight of hand."
     exits:
       u: novice_hall
   apprentice_warriors:
-    image: player_sprites/apprentice_warriors.png
+    image: 5822857f14c7d81cc48bee8c14039aada972236ab63e030875a172cbaf7beae7.jpg
     title: "Apprentice Warriors"
     description: "A proper armory with iron weapons and training rings. Soldiers spar with disciplined form."
     exits:
       w: apprentice_hall
   apprentice_mages:
-    image: player_sprites/apprentice_mages.png
+    image: a3a4abb41908b2d4f61dbee44313b7d9ba723c00f49b51c59f1c4865674f64eb.jpg
     title: "Apprentice Mages"
     description: "A well-stocked library with glowing runes etched into the reading desks. Channelers weave threads of mana."
     exits:
       e: apprentice_hall
   apprentice_clerics:
-    image: player_sprites/apprentice_clerics.png
+    image: b714e795e9a1b6f76837dc919f0740adb85ee8b4ac507b756ce77828228cf76f.jpg
     title: "Apprentice Clerics"
     description: "A serene sanctuary with stained glass windows casting colored light. Healers tend to minor wounds."
     exits:
       d: apprentice_hall
   apprentice_rogues:
-    image: player_sprites/apprentice_rogues.png
+    image: 73f22381c6052e02d53479f9a8846db5218c4b8cb6a59bad4a5d9eb39c7b48e6.jpg
     title: "Apprentice Rogues"
     description: "A dimly lit den with targets, tripwires, and hidden compartments. Thieves hone their craft in silence."
     exits:
       u: apprentice_hall
   journeyman_warriors:
-    image: player_sprites/journeyman_warriors.png
+    image: 20fcf210f69e11559bd8da48bdd46c3b6be773146e8383bc3114804de72c2a77.jpg
     title: "Journeyman Warriors"
     description: "A battle-scarred arena with enchanted training golems. Knights test their mettle against formidable opponents."
     exits:
       w: journeyman_hall
   journeyman_mages:
-    image: player_sprites/journeyman_mages.png
+    image: 68adfda0dc11a187311e5d9f876c302354467f39d898725a90e6601e0b2b1eb1.jpg
     title: "Journeyman Mages"
     description: "A conjuration chamber crackling with residual energy. Conjurers summon elemental wisps that dance through the air."
     exits:
       e: journeyman_hall
   journeyman_clerics:
-    image: player_sprites/journeyman_clerics.png
+    image: f189773dd8c8605a195abcbab071b380d16325ebd07516e2d62777cbbcfc3b91.jpg
     title: "Journeyman Clerics"
     description: "A radiant temple with floating prayer beads and divine sigils. Priests channel healing light with practiced ease."
     exits:
       d: journeyman_hall
   journeyman_rogues:
-    image: player_sprites/journeyman_rogues.png
+    image: ba92dcef6faed6a5a8865efe209078a3bce19f416ba0c2d9d2efa5b2283eff55.jpg
     title: "Journeyman Rogues"
     description: "A labyrinthine vault of shifting walls and concealed traps. Assassins move like whispers through the maze."
     exits:
       u: journeyman_hall
   expert_warriors:
-    image: player_sprites/expert_warriors.png
+    image: 2117c06ee84d872619cc8b8bc3853bbc13fc9665f78550ac28f28e124f45f574.jpg
     title: "Expert Warriors"
     description: "A war room with enchanted battle maps and masterwork weapons. Champions bear the scars of countless victories."
     exits:
       w: expert_hall
   expert_mages:
-    image: player_sprites/expert_mages.png
+    image: 6f70bcb2094b768ba8d9d9ec5e4b8ce990edd568ead9af6b89cc361f4a3221a8.jpg
     title: "Expert Mages"
     description: "An arcane sanctum where spell circles burn permanently into the floor. Sorcerers command devastating magical forces."
     exits:
       e: expert_hall
   expert_clerics:
-    image: player_sprites/expert_clerics.png
+    image: 0ac5a910af0182e71be7b3b6d07f746d6b4bde6cf511caa63c61f53b76f8b264.jpg
     title: "Expert Clerics"
     description: "A blessed cathedral resonating with divine harmonics. Templars radiate an aura of holy protection."
     exits:
       d: expert_hall
   expert_rogues:
-    image: player_sprites/expert_rogues.png
+    image: d9b68fa6387ecf135417c04fae937d8f6c9fbd6427fabb18e6e4b5deddbd9610.jpg
     title: "Expert Rogues"
     description: "A vault of absolute darkness pierced only by the glint of poisoned blades. Shadows move with lethal purpose."
     exits:
       u: expert_hall
   master_warriors:
-    image: player_sprites/master_warriors.png
+    image: 8c20d228cd5367f558be2dda6ef8f41eaeec42ca684f2479d371c0ecfca71228.jpg
     title: "Master Warriors"
     description: "A legendary forge-arena where enchanted weapons clash with thunderous force. Warlords command the very essence of combat."
     exits:
       w: master_hall
   master_mages:
-    image: player_sprites/master_mages.png
+    image: f616be187a5fe160eeb3e51bf28e69fe6313d2af71070c5146bbd75ee2d3c070.jpg
     title: "Master Mages"
     description: "A reality-bending sanctum where space folds and time stutters. Wizards reshape the fabric of existence."
     exits:
       e: master_hall
   master_clerics:
-    image: player_sprites/master_clerics.png
+    image: 42f8a46e87192c3452fb692e01006ec7783bdd3a3cbac8fe06e59e892c3593b7.jpg
     title: "Master Clerics"
     description: "A celestial observatory bathed in divine radiance. Bishops commune directly with higher powers."
     exits:
       d: master_hall
   master_rogues:
-    image: player_sprites/master_rogues.png
+    image: c4e41e5b8f2eb48ae54d67713a3d94ea59b0da2070e56e7cfeceade06e40349f.jpg
     title: "Master Rogues"
     description: "A chamber that seems to exist between moments. Nightblades phase through solid matter at will."
     exits:
       u: master_hall
   legend_warriors:
-    image: player_sprites/legend_warriors.png
+    image: e5df9b6fb21c5a3bf9051c5aaec3fef2be19a78bfbd7bfd3e810195953662bcc.jpg
     title: "Legend Warriors"
     description: "A mythic colosseum suspended among storm clouds. Warlords of godslaying renown stand as monuments to martial perfection."
     exits:
       w: legend_hall
   legend_mages:
-    image: player_sprites/legend_mages.png
+    image: 60c90bccd45ac23f95eddedc0745ac500b403d751aba488459956605e74f134c.jpg
     title: "Legend Mages"
     description: "A nexus of pure magical energy where archmages exist as living spells. Reality itself bends to their will."
     exits:
       e: legend_hall
   legend_clerics:
-    image: player_sprites/legend_clerics.png
+    image: 5b3a650e29e87acacd8d28298697ae9e2ac8b20b9132acb393beb68f5c167aa6.jpg
     title: "Legend Clerics"
     description: "A fragment of the divine plane made manifest. Prophets glow with the light of celestial ascension."
     exits:
       d: legend_hall
   legend_rogues:
-    image: player_sprites/legend_rogues.png
+    image: e9fc26b7047d0c0fc6b2a5dbc48719cfba5ddaa0d244e883f6e8c8163af3ce19.jpg
     title: "Legend Rogues"
     description: "A void between worlds where shadowlords rule the spaces between shadows. Even light fears to enter."
     exits:
       u: legend_hall
 
   staff_hall:
-    image: player_sprites/staff_hall.png
+    image: 22931a32abe1abd5a1d8b988d3a85eba6e0ee5f0c56c9227becffbcf7465d363.jpg
     title: "Staff Hall"
     description: "A transcendent chamber beyond mortal comprehension. The walls are woven from living starlight and the floor pulses with the heartbeat of the world itself. Only those who have surpassed legend dare enter."
     exits:
@@ -235,25 +235,25 @@ rooms:
       u: staff_clerics
       d: staff_rogues
   staff_warriors:
-    image: player_sprites/staff_warriors.png
+    image: 4f89ee0bb438b97b5bb91c6afa2dbfb524090b731d04d6947c76f89471580a7a.jpg
     title: "Staff Warriors"
     description: "An infinite battlefield where the greatest warriors across all timelines clash in eternal combat. The very concept of defeat has been banished from this place."
     exits:
       w: staff_hall
   staff_mages:
-    image: player_sprites/staff_mages.png
+    image: 179d4a2f52f9c1abe519c1da5592c9ac40070f151646cafc7d4fd69a8d57ba10.jpg
     title: "Staff Mages"
     description: "A dimension of pure arcane energy where reality is merely a suggestion. Spells of world-shaping magnitude orbit like lazy fireflies."
     exits:
       e: staff_hall
   staff_clerics:
-    image: player_sprites/staff_clerics.png
+    image: db18ff704176bfaf6e470156548129ade6c6b6e80bf5df28ae6858f43d8ddf91.jpg
     title: "Staff Clerics"
     description: "The throne room of divinity itself, where mortal and celestial merge into one. Pillars of crystallized prayer support a ceiling of infinite sky."
     exits:
       d: staff_hall
   staff_rogues:
-    image: player_sprites/staff_rogues.png
+    image: ccfe94b842fb169c922b3071ee8cd9d1fc76e05852df9339b9d30d969ff00d68.jpg
     title: "Staff Rogues"
     description: "A paradox of space that exists everywhere and nowhere simultaneously. Masters of shadow have transcended the boundary between seen and unseen."
     exits:
@@ -261,7 +261,7 @@ rooms:
 
 mobs:
   human_enby_cleric_l1:
-    image: player_sprites/human_enby_cleric_l1.png
+    image: 15e48a5b48de40e17092b8163eab090ccd134b73bec0d55b8158ae56d497be6a.png
     name: "a humble human acolyte"
     room: novice_clerics
     level: 1
@@ -273,7 +273,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   human_enby_cleric_l10:
-    image: player_sprites/human_enby_cleric_l10.png
+    image: 46259d5ee60ddfc2944ae102ac76d44405667c355472cd33cff270f0bcb66ed1.png
     name: "a devoted human healer"
     room: apprentice_clerics
     level: 10
@@ -285,7 +285,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   human_enby_cleric_l20:
-    image: player_sprites/human_enby_cleric_l20.png
+    image: f1edfd5728a96ad20a6b820cc7fcfc38933ef8326f7b329c4a00b7f4e90fdfad.png
     name: "a radiant human priest"
     room: journeyman_clerics
     level: 20
@@ -297,7 +297,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   human_enby_cleric_l30:
-    image: player_sprites/human_enby_cleric_l30.png
+    image: 429ce0acc4be10043fd2405dc61632bf2f5b68c4683ac81a31318fa35e47d95e.png
     name: "a blessed human templar"
     room: expert_clerics
     level: 30
@@ -309,7 +309,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   human_enby_cleric_l40:
-    image: player_sprites/human_enby_cleric_l40.png
+    image: 3d4c772d9d1c1d1b10da641131946071b63b38ec975ead9cddd350eaac8b773a.png
     name: "a exalted human bishop"
     room: master_clerics
     level: 40
@@ -321,7 +321,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   human_enby_cleric_l50:
-    image: player_sprites/human_enby_cleric_l50.png
+    image: 753417dc51de72b3d295c837c6a0f61c1d4ff84937970582c5b701cf82e9996e.png
     name: "a celestial human prophet"
     room: legend_clerics
     level: 50
@@ -333,7 +333,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   human_female_cleric_l1:
-    image: player_sprites/human_female_cleric_l1.png
+    image: ba3b2a7628b25dfc419190c73863360ecb29b34ffbb0e861fd5d7f3ed8100a7d.png
     name: "a humble human acolyte"
     room: novice_clerics
     level: 1
@@ -345,7 +345,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   human_female_cleric_l10:
-    image: player_sprites/human_female_cleric_l10.png
+    image: f018fc876a504573205c78392ff86d45ecb24f54bf1213c383c87b212ed444a3.png
     name: "a devoted human healer"
     room: apprentice_clerics
     level: 10
@@ -357,7 +357,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   human_female_cleric_l20:
-    image: player_sprites/human_female_cleric_l20.png
+    image: 798f65912c32be091e195cfd815378d94b3ab126e4644277d3c03691c44e28e8.png
     name: "a radiant human priest"
     room: journeyman_clerics
     level: 20
@@ -369,7 +369,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   human_female_cleric_l30:
-    image: player_sprites/human_female_cleric_l30.png
+    image: 18b7fb9965978b235172144c35e25059d8fc941c89211866e196aa5615f74a59.png
     name: "a blessed human templar"
     room: expert_clerics
     level: 30
@@ -381,7 +381,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   human_female_cleric_l40:
-    image: player_sprites/human_female_cleric_l40.png
+    image: f9bf285b4591e2aae9cac6366e47b628e58bfd2b9897514c18a13bd5e0d4ecdb.png
     name: "a exalted human bishop"
     room: master_clerics
     level: 40
@@ -393,7 +393,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   human_female_cleric_l50:
-    image: player_sprites/human_female_cleric_l50.png
+    image: 67bf4f71353ef635487e8898d85033bfca574e4aae54eb6697dd47d97ec3b351.png
     name: "a celestial human prophet"
     room: legend_clerics
     level: 50
@@ -405,7 +405,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   human_male_cleric_l1:
-    image: player_sprites/human_male_cleric_l1.png
+    image: 141023dec50ef289f7ae1eddcd7d273de94f303cd041c80c889f65d5681e8f4b.png
     name: "a humble human acolyte"
     room: novice_clerics
     level: 1
@@ -417,7 +417,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   human_male_cleric_l10:
-    image: player_sprites/human_male_cleric_l10.png
+    image: 89cf999008418023c0c1868194353e1547afea41d6a52d3a2b3aa43955a9e9de.png
     name: "a devoted human healer"
     room: apprentice_clerics
     level: 10
@@ -429,7 +429,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   human_male_cleric_l20:
-    image: player_sprites/human_male_cleric_l20.png
+    image: 2ecd1bec80f61e6217db322f1fe3892bce3756e1b90c05c9babaa34ff9b467ea.png
     name: "a radiant human priest"
     room: journeyman_clerics
     level: 20
@@ -441,7 +441,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   human_male_cleric_l30:
-    image: player_sprites/human_male_cleric_l30.png
+    image: 38bf94da5c6441ae3c035699606c8cdd4c51f81f55e592a05c1196d6ec3ec70c.png
     name: "a blessed human templar"
     room: expert_clerics
     level: 30
@@ -453,7 +453,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   human_male_cleric_l40:
-    image: player_sprites/human_male_cleric_l40.png
+    image: 3d6e992c69f0b69795a8bd49c1479c0af5c313323213a5c53e30ccf29da835dd.png
     name: "a exalted human bishop"
     room: master_clerics
     level: 40
@@ -465,7 +465,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   human_male_cleric_l50:
-    image: player_sprites/human_male_cleric_l50.png
+    image: 9bd3d129e32c4207ddee3540f4f4591154bb35e2266a9b4823357b2bb1b9b5d6.png
     name: "a celestial human prophet"
     room: legend_clerics
     level: 50
@@ -477,7 +477,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   elf_enby_cleric_l1:
-    image: player_sprites/elf_enby_cleric_l1.png
+    image: bf5535c6249cab54c0a9c8d883c994c3556930c7f7cf3275aba67eb9c1595f18.png
     name: "a humble elf acolyte"
     room: novice_clerics
     level: 1
@@ -489,7 +489,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   elf_enby_cleric_l10:
-    image: player_sprites/elf_enby_cleric_l10.png
+    image: f960d727da65c8e2e44b92cd834ae919920378696feb241e46a15da872f77a70.png
     name: "a devoted elf healer"
     room: apprentice_clerics
     level: 10
@@ -501,7 +501,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   elf_enby_cleric_l20:
-    image: player_sprites/elf_enby_cleric_l20.png
+    image: c9f53bae00efa52bdc3e3868febda8a26f8197801c9b9480955c65773af3354b.png
     name: "a radiant elf priest"
     room: journeyman_clerics
     level: 20
@@ -513,7 +513,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   elf_enby_cleric_l30:
-    image: player_sprites/elf_enby_cleric_l30.png
+    image: 0501902b4cd9894b34efcb14c6c11265e36c182f4ed009d38ccd92831aaf9e98.png
     name: "a blessed elf templar"
     room: expert_clerics
     level: 30
@@ -525,7 +525,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   elf_enby_cleric_l40:
-    image: player_sprites/elf_enby_cleric_l40.png
+    image: e9478d2135a540ba88629173ffb34371d7f481a3ab9c32afcea22bcd16694d3a.png
     name: "a exalted elf bishop"
     room: master_clerics
     level: 40
@@ -537,7 +537,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   elf_enby_cleric_l50:
-    image: player_sprites/elf_enby_cleric_l50.png
+    image: 657b6eb3cc450b7fdb5065071d530b0e53ba511cc39a7e00c2fefe4ca644eac9.png
     name: "a celestial elf prophet"
     room: legend_clerics
     level: 50
@@ -549,7 +549,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   elf_female_cleric_l1:
-    image: player_sprites/elf_female_cleric_l1.png
+    image: 2bf4c3fe25838712d523b31a5c83886924f4a10c86bc8f79eb1acba60b3a7abd.png
     name: "a humble elf acolyte"
     room: novice_clerics
     level: 1
@@ -561,7 +561,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   elf_female_cleric_l10:
-    image: player_sprites/elf_female_cleric_l10.png
+    image: 55cf3ad62222f3821642c0960398782e3d54cca2fe0b9cb925a9d597bdb5a305.png
     name: "a devoted elf healer"
     room: apprentice_clerics
     level: 10
@@ -573,7 +573,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   elf_female_cleric_l20:
-    image: player_sprites/elf_female_cleric_l20.png
+    image: 1baf3434c0f99777ad7d8aeaf8c16d61d863930cc2d93ba289e007560493faee.png
     name: "a radiant elf priest"
     room: journeyman_clerics
     level: 20
@@ -585,7 +585,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   elf_female_cleric_l30:
-    image: player_sprites/elf_female_cleric_l30.png
+    image: 2633b0871cdeae8a02028c03b15d14568f257e66a7f13bb89bb3f914a6ec2c24.png
     name: "a blessed elf templar"
     room: expert_clerics
     level: 30
@@ -597,7 +597,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   elf_female_cleric_l40:
-    image: player_sprites/elf_female_cleric_l40.png
+    image: 5b4f24beff3165e3e5ed49a80dca41080ccd9aacf3727235bcee97e159c4e6cf.png
     name: "a exalted elf bishop"
     room: master_clerics
     level: 40
@@ -609,7 +609,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   elf_female_cleric_l50:
-    image: player_sprites/elf_female_cleric_l50.png
+    image: 7d6cc118eb257baee495fd9cd57a7fa538863543072330d58e5101f553d158aa.png
     name: "a celestial elf prophet"
     room: legend_clerics
     level: 50
@@ -621,7 +621,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   elf_male_cleric_l1:
-    image: player_sprites/elf_male_cleric_l1.png
+    image: 9cf1cb6588801836ed7e4dcdf0df3e534557f5f4ed3c053d6731acf1cc8d1682.png
     name: "a humble elf acolyte"
     room: novice_clerics
     level: 1
@@ -633,7 +633,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   elf_male_cleric_l10:
-    image: player_sprites/elf_male_cleric_l10.png
+    image: 9fd869b6ad5abd2cf6fb86921b75a367cde9e92c535dbb7f1bb6702d5fcfc441.png
     name: "a devoted elf healer"
     room: apprentice_clerics
     level: 10
@@ -645,7 +645,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   elf_male_cleric_l20:
-    image: player_sprites/elf_male_cleric_l20.png
+    image: 50c8de6d0ad551f568efc118787f56b43b0bfeff6e5de1efd534c51130da9da5.png
     name: "a radiant elf priest"
     room: journeyman_clerics
     level: 20
@@ -657,7 +657,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   elf_male_cleric_l30:
-    image: player_sprites/elf_male_cleric_l30.png
+    image: 684dfc92a6a9e142a3605a5bd6a413fc5b2dd4c960a930599ce9c0b8cb602ff6.png
     name: "a blessed elf templar"
     room: expert_clerics
     level: 30
@@ -669,7 +669,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   elf_male_cleric_l40:
-    image: player_sprites/elf_male_cleric_l40.png
+    image: 93ad6750a38c760fbca494976afd6f842946588d4dd9915b61559dd34b75d2ee.png
     name: "a exalted elf bishop"
     room: master_clerics
     level: 40
@@ -681,7 +681,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   elf_male_cleric_l50:
-    image: player_sprites/elf_male_cleric_l50.png
+    image: 20675793b46626b41f180bd34a30e2e4b639eb6ad12c5cf8bc01e6c6d39c5053.png
     name: "a celestial elf prophet"
     room: legend_clerics
     level: 50
@@ -693,7 +693,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   dwarf_enby_cleric_l1:
-    image: player_sprites/dwarf_enby_cleric_l1.png
+    image: 66137443af78d77976b71e5f901fb543e598ed6c0dff462fcfc4a0586405d3de.png
     name: "a humble dwarf acolyte"
     room: novice_clerics
     level: 1
@@ -705,7 +705,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   dwarf_enby_cleric_l10:
-    image: player_sprites/dwarf_enby_cleric_l10.png
+    image: dc45b921c56734563ada1ac4f97b1a395e2b265e98f4af191bad0f275f8c304a.png
     name: "a devoted dwarf healer"
     room: apprentice_clerics
     level: 10
@@ -717,7 +717,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   dwarf_enby_cleric_l20:
-    image: player_sprites/dwarf_enby_cleric_l20.png
+    image: fb3c0d2d48b12414be4118034ebfeb8a29d5446e440552b36c68cd0359d406b9.png
     name: "a radiant dwarf priest"
     room: journeyman_clerics
     level: 20
@@ -729,7 +729,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   dwarf_enby_cleric_l30:
-    image: player_sprites/dwarf_enby_cleric_l30.png
+    image: fd867ed5c780992b8d70935e8aa29521cfbac23bb53c6f37569d62a9bea017c2.png
     name: "a blessed dwarf templar"
     room: expert_clerics
     level: 30
@@ -741,7 +741,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   dwarf_enby_cleric_l40:
-    image: player_sprites/dwarf_enby_cleric_l40.png
+    image: ebf801f64b4da1528b568b56e8581db11d4399ae02cc6a0e2369ecbbd6fe1533.png
     name: "a exalted dwarf bishop"
     room: master_clerics
     level: 40
@@ -753,7 +753,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   dwarf_enby_cleric_l50:
-    image: player_sprites/dwarf_enby_cleric_l50.png
+    image: bb9d751da26e094808d010bbedd10d60b470b613087925edbc4db4db6b23569e.png
     name: "a celestial dwarf prophet"
     room: legend_clerics
     level: 50
@@ -765,7 +765,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   dwarf_female_cleric_l1:
-    image: player_sprites/dwarf_female_cleric_l1.png
+    image: 93c6f26c41b97294589c4cfc41275c47ab43beea3763ef2a964daf1997d1e5ed.png
     name: "a humble dwarf acolyte"
     room: novice_clerics
     level: 1
@@ -777,7 +777,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   dwarf_female_cleric_l10:
-    image: player_sprites/dwarf_female_cleric_l10.png
+    image: 45c51eb0f8c5baaa33bad5e7f5943de71e14edbf361fda0562ac27fbde1c901e.png
     name: "a devoted dwarf healer"
     room: apprentice_clerics
     level: 10
@@ -789,7 +789,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   dwarf_female_cleric_l20:
-    image: player_sprites/dwarf_female_cleric_l20.png
+    image: 6e9cbe7b8c276f0f6f02bf3f23f904220b24eb676b73ce83e6b1da8c69217432.png
     name: "a radiant dwarf priest"
     room: journeyman_clerics
     level: 20
@@ -801,7 +801,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   dwarf_female_cleric_l30:
-    image: player_sprites/dwarf_female_cleric_l30.png
+    image: 6090615aa7dc07b94d0b9825325577a200f0166b78104109d0bdf5545cf3d7bd.png
     name: "a blessed dwarf templar"
     room: expert_clerics
     level: 30
@@ -813,7 +813,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   dwarf_female_cleric_l40:
-    image: player_sprites/dwarf_female_cleric_l40.png
+    image: 4ca2f05c568b3ab2a374d4c54cc7fae08e3b6dcb994df7c31e2b160927476d45.png
     name: "a exalted dwarf bishop"
     room: master_clerics
     level: 40
@@ -825,7 +825,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   dwarf_female_cleric_l50:
-    image: player_sprites/dwarf_female_cleric_l50.png
+    image: 439d1c668a745217b7ed5741b7aec7fb34eed5e144a2eff8424bc18b2e264e58.png
     name: "a celestial dwarf prophet"
     room: legend_clerics
     level: 50
@@ -837,7 +837,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   dwarf_male_cleric_l1:
-    image: player_sprites/dwarf_male_cleric_l1.png
+    image: 842ecf35030869eb562b90cc67fa65ff3af041b8915046f8afd09395e7d20df5.png
     name: "a humble dwarf acolyte"
     room: novice_clerics
     level: 1
@@ -849,7 +849,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   dwarf_male_cleric_l10:
-    image: player_sprites/dwarf_male_cleric_l10.png
+    image: b200e04ad11dc0a2d97e00dac26c9eda6e69a0273d016ec9dad2678b73d677bb.png
     name: "a devoted dwarf healer"
     room: apprentice_clerics
     level: 10
@@ -861,7 +861,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   dwarf_male_cleric_l20:
-    image: player_sprites/dwarf_male_cleric_l20.png
+    image: 7d1895c2d107274f47c2e2a9e3fa87b661b186158455adc5e7df8df6fd02b740.png
     name: "a radiant dwarf priest"
     room: journeyman_clerics
     level: 20
@@ -873,7 +873,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   dwarf_male_cleric_l30:
-    image: player_sprites/dwarf_male_cleric_l30.png
+    image: e54d45d0a228ed815a3f32300f4267ef05374aa07629a283cf72c5e24a01cd3d.png
     name: "a blessed dwarf templar"
     room: expert_clerics
     level: 30
@@ -885,7 +885,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   dwarf_male_cleric_l40:
-    image: player_sprites/dwarf_male_cleric_l40.png
+    image: edc7936dfb5b8f43c7065e3345a976a0cb500b973b0e9f3172c46344f3c4c7a4.png
     name: "a exalted dwarf bishop"
     room: master_clerics
     level: 40
@@ -897,7 +897,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   dwarf_male_cleric_l50:
-    image: player_sprites/dwarf_male_cleric_l50.png
+    image: 3ad537c63eb466dece4a6c0901c65fe13b7f9327560259ed25422b18d611db69.png
     name: "a celestial dwarf prophet"
     room: legend_clerics
     level: 50
@@ -909,7 +909,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   halfling_enby_cleric_l1:
-    image: player_sprites/halfling_enby_cleric_l1.png
+    image: c9be9798514a238f35945f2a67eac74d3c832a7d6013c730d458d4f0acd5ccb9.png
     name: "a humble halfling acolyte"
     room: novice_clerics
     level: 1
@@ -921,7 +921,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   halfling_enby_cleric_l10:
-    image: player_sprites/halfling_enby_cleric_l10.png
+    image: 1da0c104639f2fadcb6694747451046f3608a0ffad0892687bac3ba949c56415.png
     name: "a devoted halfling healer"
     room: apprentice_clerics
     level: 10
@@ -933,7 +933,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   halfling_enby_cleric_l20:
-    image: player_sprites/halfling_enby_cleric_l20.png
+    image: ebfe9a67402afd8ea33d5f86bd3a8a91981bb5b0d9ce2e50f7b1ac4b867298a3.png
     name: "a radiant halfling priest"
     room: journeyman_clerics
     level: 20
@@ -945,7 +945,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   halfling_enby_cleric_l30:
-    image: player_sprites/halfling_enby_cleric_l30.png
+    image: 52ce204b9d5ab10ea671dc9693260faafd8db8cf597cf3b791252c482907557e.png
     name: "a blessed halfling templar"
     room: expert_clerics
     level: 30
@@ -957,7 +957,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   halfling_enby_cleric_l40:
-    image: player_sprites/halfling_enby_cleric_l40.png
+    image: 736bba333e4801bcfb43c9d727df86d4aa91078b536b4305e6490c69e1625977.png
     name: "a exalted halfling bishop"
     room: master_clerics
     level: 40
@@ -969,7 +969,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   halfling_enby_cleric_l50:
-    image: player_sprites/halfling_enby_cleric_l50.png
+    image: 8041fe00f31a6288d3706f8c9d1c2fb5fc846bb44362343316ea2dddd5ff0455.png
     name: "a celestial halfling prophet"
     room: legend_clerics
     level: 50
@@ -981,7 +981,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   halfling_female_cleric_l1:
-    image: player_sprites/halfling_female_cleric_l1.png
+    image: f96501fa508ff35cbb6bc5d5f657fa7179e1a88d0cca74b2bd4a3d14f4410975.png
     name: "a humble halfling acolyte"
     room: novice_clerics
     level: 1
@@ -993,7 +993,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   halfling_female_cleric_l10:
-    image: player_sprites/halfling_female_cleric_l10.png
+    image: f6ea16dceb1547659e928473da23a6c15a850b45224b6ae8c9f0c3358483dd44.png
     name: "a devoted halfling healer"
     room: apprentice_clerics
     level: 10
@@ -1005,7 +1005,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   halfling_female_cleric_l20:
-    image: player_sprites/halfling_female_cleric_l20.png
+    image: 702dc12c3e4820d43ccc6b67d058ce5554a3b2630f85f59ef3ccac39afdb47a4.png
     name: "a radiant halfling priest"
     room: journeyman_clerics
     level: 20
@@ -1017,7 +1017,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   halfling_female_cleric_l30:
-    image: player_sprites/halfling_female_cleric_l30.png
+    image: 3dae66b2e5fc03ab98f9e9ee297dce588d5ed19b8cc02336bdc513a819544dfd.png
     name: "a blessed halfling templar"
     room: expert_clerics
     level: 30
@@ -1029,7 +1029,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   halfling_female_cleric_l40:
-    image: player_sprites/halfling_female_cleric_l40.png
+    image: 45cfbd7d5be0cc626a372f3d24f68964e1fbb0d89b8247d03ce2deefe594327a.png
     name: "a exalted halfling bishop"
     room: master_clerics
     level: 40
@@ -1041,7 +1041,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   halfling_female_cleric_l50:
-    image: player_sprites/halfling_female_cleric_l50.png
+    image: e5c675571f76ea893a51e955106b89c0b9c56e6ba19d2dea14a16238a28c9175.png
     name: "a celestial halfling prophet"
     room: legend_clerics
     level: 50
@@ -1053,7 +1053,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   halfling_male_cleric_l1:
-    image: player_sprites/halfling_male_cleric_l1.png
+    image: df58f8837e2ee15a32b485f46163fecaf001678f472ac3116952a0e339c44aad.png
     name: "a humble halfling acolyte"
     room: novice_clerics
     level: 1
@@ -1065,7 +1065,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   halfling_male_cleric_l10:
-    image: player_sprites/halfling_male_cleric_l10.png
+    image: 39f8943e38085b72b7ad00ce1221153be7392403187549ef84c9af3062e1b5be.png
     name: "a devoted halfling healer"
     room: apprentice_clerics
     level: 10
@@ -1077,7 +1077,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   halfling_male_cleric_l20:
-    image: player_sprites/halfling_male_cleric_l20.png
+    image: c748a6ac5e3d8eae8c74383bbd8603b756667f9e9ff7535be50c60c1573b4c7a.png
     name: "a radiant halfling priest"
     room: journeyman_clerics
     level: 20
@@ -1089,7 +1089,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   halfling_male_cleric_l30:
-    image: player_sprites/halfling_male_cleric_l30.png
+    image: 3ea128e5092820b0c06daad0e1cf0c5ceeb3aae432cc31758eaadb7708fad7bf.png
     name: "a blessed halfling templar"
     room: expert_clerics
     level: 30
@@ -1101,7 +1101,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   halfling_male_cleric_l40:
-    image: player_sprites/halfling_male_cleric_l40.png
+    image: 55a0d1b4bae97fc9092322ebbaf0330a28c98dbfe909f6f9c0cada852aa90b19.png
     name: "a exalted halfling bishop"
     room: master_clerics
     level: 40
@@ -1113,7 +1113,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   halfling_male_cleric_l50:
-    image: player_sprites/halfling_male_cleric_l50.png
+    image: 6ee341dfad3897a2993642a588500f16393d47c9145c5d64db80c71a2a45ea8a.png
     name: "a celestial halfling prophet"
     room: legend_clerics
     level: 50
@@ -1125,7 +1125,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   human_enby_mage_l1:
-    image: player_sprites/human_enby_mage_l1.png
+    image: 5dbfe2cd1ec975cc70ab3a10853e109812d0cb92af33d757914bf17a7b10d2ad.png
     name: "a novice human apprentice"
     room: novice_mages
     level: 1
@@ -1137,7 +1137,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   human_enby_mage_l10:
-    image: player_sprites/human_enby_mage_l10.png
+    image: 69d169ecf65fee8e1e5c2bdbbfec45d9edc4b547080398bb6c943a48f5f2fdc2.png
     name: "a practiced human channeler"
     room: apprentice_mages
     level: 10
@@ -1149,7 +1149,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   human_enby_mage_l20:
-    image: player_sprites/human_enby_mage_l20.png
+    image: 4d4caa07f6e6264f573c12ef6e1001ee0b6d82c47addba9e3c2cfd9177e055f2.png
     name: "a skilled human conjurer"
     room: journeyman_mages
     level: 20
@@ -1161,7 +1161,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   human_enby_mage_l30:
-    image: player_sprites/human_enby_mage_l30.png
+    image: f483f0404f6a03e6b4790597d4baf6c580d52c4eb5837908e50c266a4841569a.png
     name: "a powerful human sorcerer"
     room: expert_mages
     level: 30
@@ -1173,7 +1173,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   human_enby_mage_l40:
-    image: player_sprites/human_enby_mage_l40.png
+    image: e420fe2af5bacee63ea30dd0f1a5889bcb7632c0f0f3d341f9502d736e0c2af2.png
     name: "a arcane human wizard"
     room: master_mages
     level: 40
@@ -1185,7 +1185,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   human_enby_mage_l50:
-    image: player_sprites/human_enby_mage_l50.png
+    image: 44eb90e30163896d41ce83c24497b719401da6fe3905abb31c2b2824cfb64c20.png
     name: "a transcendent human archmage"
     room: legend_mages
     level: 50
@@ -1197,7 +1197,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   human_female_mage_l1:
-    image: player_sprites/human_female_mage_l1.png
+    image: b63438174f91e15993ab255284054e013991e019f0d9da1543ef3de102ed183e.png
     name: "a novice human apprentice"
     room: novice_mages
     level: 1
@@ -1209,7 +1209,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   human_female_mage_l10:
-    image: player_sprites/human_female_mage_l10.png
+    image: b20c91f6bdcd238112dc6a13aec6d29a382aa2226d208f73fd86185ae581d91c.png
     name: "a practiced human channeler"
     room: apprentice_mages
     level: 10
@@ -1221,7 +1221,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   human_female_mage_l20:
-    image: player_sprites/human_female_mage_l20.png
+    image: 2370a249af6eb976ff1d273fe2e647328767d5f42b8b48a619078c35b6d07b70.png
     name: "a skilled human conjurer"
     room: journeyman_mages
     level: 20
@@ -1233,7 +1233,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   human_female_mage_l30:
-    image: player_sprites/human_female_mage_l30.png
+    image: 946504ae9301d5dfc832394eff4288451a91a54185ec0c607dcefe87a4df199a.png
     name: "a powerful human sorcerer"
     room: expert_mages
     level: 30
@@ -1245,7 +1245,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   human_female_mage_l40:
-    image: player_sprites/human_female_mage_l40.png
+    image: 7d500d02a2f7c498bff9804519eef39bd97e2f0ba002ffb80ee736ef18f6423b.png
     name: "a arcane human wizard"
     room: master_mages
     level: 40
@@ -1257,7 +1257,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   human_female_mage_l50:
-    image: player_sprites/human_female_mage_l50.png
+    image: 0cef614a0a6177a6b5349683941ac8600f64dcbad87adaa74c9ecaf136b9492d.png
     name: "a transcendent human archmage"
     room: legend_mages
     level: 50
@@ -1269,7 +1269,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   human_male_mage_l1:
-    image: player_sprites/human_male_mage_l1.png
+    image: 3b444bb68df49f4a9428714c3e7ee388ac33069248e79b41848c3325432ed344.png
     name: "a novice human apprentice"
     room: novice_mages
     level: 1
@@ -1281,7 +1281,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   human_male_mage_l10:
-    image: player_sprites/human_male_mage_l10.png
+    image: bbc890d05428314998cf299af66ef528f17f04cbec50a326934fa4ed2b129002.png
     name: "a practiced human channeler"
     room: apprentice_mages
     level: 10
@@ -1293,7 +1293,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   human_male_mage_l20:
-    image: player_sprites/human_male_mage_l20.png
+    image: d35aad1cb5d4b7dd2958e55d90018924f3d1b7a4c84fb3ea56b6d52c7c87500a.png
     name: "a skilled human conjurer"
     room: journeyman_mages
     level: 20
@@ -1305,7 +1305,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   human_male_mage_l30:
-    image: player_sprites/human_male_mage_l30.png
+    image: 6c430dec1175263708769fee432b0c6004d8a6fc79887c42387e89ed577d2914.png
     name: "a powerful human sorcerer"
     room: expert_mages
     level: 30
@@ -1317,7 +1317,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   human_male_mage_l40:
-    image: player_sprites/human_male_mage_l40.png
+    image: 3a339139eeeae482cef8b6749b9baee012bbe990656fb095bf26b11fd0717765.png
     name: "a arcane human wizard"
     room: master_mages
     level: 40
@@ -1329,7 +1329,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   human_male_mage_l50:
-    image: player_sprites/human_male_mage_l50.png
+    image: e1ca1e662813b211e374d437ea9a9a1f3c694c35633b37746e52baf83d44e5a0.png
     name: "a transcendent human archmage"
     room: legend_mages
     level: 50
@@ -1341,7 +1341,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   elf_enby_mage_l1:
-    image: player_sprites/elf_enby_mage_l1.png
+    image: 4bcb7dfd04f0e34a1d7c38cff84afc75ec30b0748a0737bb6c2603d98eeecd9b.png
     name: "a novice elf apprentice"
     room: novice_mages
     level: 1
@@ -1353,7 +1353,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   elf_enby_mage_l10:
-    image: player_sprites/elf_enby_mage_l10.png
+    image: c327777f32c72330fe53aaaffb639de5532acf6b070775e75909b48727e2e892.png
     name: "a practiced elf channeler"
     room: apprentice_mages
     level: 10
@@ -1365,7 +1365,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   elf_enby_mage_l20:
-    image: player_sprites/elf_enby_mage_l20.png
+    image: 4b0f6a3074408bba8d6d4ae95e682dacc5466037def3a7cb3905c63d84427c3b.png
     name: "a skilled elf conjurer"
     room: journeyman_mages
     level: 20
@@ -1377,7 +1377,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   elf_enby_mage_l30:
-    image: player_sprites/elf_enby_mage_l30.png
+    image: 731b450f94c09e2d1d2c3266ae87db83660ee8f8c988fe75b48c18d4d04d11e5.png
     name: "a powerful elf sorcerer"
     room: expert_mages
     level: 30
@@ -1389,7 +1389,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   elf_enby_mage_l40:
-    image: player_sprites/elf_enby_mage_l40.png
+    image: cafdee21f444418139bd9c44b892e82c43fe2b6081bda970c7a6a45baaf1756f.png
     name: "a arcane elf wizard"
     room: master_mages
     level: 40
@@ -1401,7 +1401,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   elf_enby_mage_l50:
-    image: player_sprites/elf_enby_mage_l50.png
+    image: e3ac72d6edcaea025fd7d60f6be4ffd8030b34ea5519271744fe332167b34693.png
     name: "a transcendent elf archmage"
     room: legend_mages
     level: 50
@@ -1413,7 +1413,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   elf_female_mage_l1:
-    image: player_sprites/elf_female_mage_l1.png
+    image: 797112799f649b0cd7588ce7f66c0212af5ddac4ecee47bcdc175dab44d0d904.png
     name: "a novice elf apprentice"
     room: novice_mages
     level: 1
@@ -1425,7 +1425,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   elf_female_mage_l10:
-    image: player_sprites/elf_female_mage_l10.png
+    image: acd6bee886a9a018baf629e57375dfdda0284b2d5b745d4fa91cd8de3fbd2376.png
     name: "a practiced elf channeler"
     room: apprentice_mages
     level: 10
@@ -1437,7 +1437,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   elf_female_mage_l20:
-    image: player_sprites/elf_female_mage_l20.png
+    image: 354193c556007f46cff6d0fa374783337442754bacdca6d4a9ff083f12586cde.png
     name: "a skilled elf conjurer"
     room: journeyman_mages
     level: 20
@@ -1449,7 +1449,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   elf_female_mage_l30:
-    image: player_sprites/elf_female_mage_l30.png
+    image: 698e74d04078955a9414ed2a046e559ba275c78fb9e73765d852ea17b932b6fc.png
     name: "a powerful elf sorcerer"
     room: expert_mages
     level: 30
@@ -1461,7 +1461,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   elf_female_mage_l40:
-    image: player_sprites/elf_female_mage_l40.png
+    image: 587df4a42909b62589294488d6e77c139eebabccff9ef29a4f24cb9c3fc9a255.png
     name: "a arcane elf wizard"
     room: master_mages
     level: 40
@@ -1473,7 +1473,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   elf_female_mage_l50:
-    image: player_sprites/elf_female_mage_l50.png
+    image: e6d0d4acbcf89e9bee2095c28aa53ceefba0d9bd309cc2539ccdf57561278795.png
     name: "a transcendent elf archmage"
     room: legend_mages
     level: 50
@@ -1485,7 +1485,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   elf_male_mage_l1:
-    image: player_sprites/elf_male_mage_l1.png
+    image: da4d047ac695ec7e50281a8e213837d9cc27eacfcbfbe82662a54796f5dd7676.png
     name: "a novice elf apprentice"
     room: novice_mages
     level: 1
@@ -1497,7 +1497,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   elf_male_mage_l10:
-    image: player_sprites/elf_male_mage_l10.png
+    image: d828a52b45e6609eabf70ab8c21c0bce9cf04eb7ac875bec997a469af9a8c49b.png
     name: "a practiced elf channeler"
     room: apprentice_mages
     level: 10
@@ -1509,7 +1509,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   elf_male_mage_l20:
-    image: player_sprites/elf_male_mage_l20.png
+    image: da6a1e11606388e9ca0298b33581c0fd2f69dd2e47379781254c7c155a44b97e.png
     name: "a skilled elf conjurer"
     room: journeyman_mages
     level: 20
@@ -1521,7 +1521,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   elf_male_mage_l30:
-    image: player_sprites/elf_male_mage_l30.png
+    image: 4efbab6b08c3d04e113d7e2857445fb5285a0a36a6edc38d05377aa386f6063b.png
     name: "a powerful elf sorcerer"
     room: expert_mages
     level: 30
@@ -1533,7 +1533,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   elf_male_mage_l40:
-    image: player_sprites/elf_male_mage_l40.png
+    image: 41ace627e41b68bedd208611b43b650c5f0a3ade468ee997074686ff92976395.png
     name: "a arcane elf wizard"
     room: master_mages
     level: 40
@@ -1545,7 +1545,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   elf_male_mage_l50:
-    image: player_sprites/elf_male_mage_l50.png
+    image: 69620d7dd791c2c585ca6a0c15a0450f9faa45efa4383660058d47d7080fdc79.png
     name: "a transcendent elf archmage"
     room: legend_mages
     level: 50
@@ -1557,7 +1557,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   dwarf_enby_mage_l1:
-    image: player_sprites/dwarf_enby_mage_l1.png
+    image: 28f74f3662c39d68007f2957a6bff3b60b3977d1146139c9d54a53fad73435a4.png
     name: "a novice dwarf apprentice"
     room: novice_mages
     level: 1
@@ -1569,7 +1569,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   dwarf_enby_mage_l10:
-    image: player_sprites/dwarf_enby_mage_l10.png
+    image: c29c530b5390be284e6acc137b10f5ed37213efd00e8b4249ab5011b6b41e827.png
     name: "a practiced dwarf channeler"
     room: apprentice_mages
     level: 10
@@ -1581,7 +1581,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   dwarf_enby_mage_l20:
-    image: player_sprites/dwarf_enby_mage_l20.png
+    image: b45e42e4152989097e54d5d8d85c9a47782a3e282e78476380f2be5d265ecbe9.png
     name: "a skilled dwarf conjurer"
     room: journeyman_mages
     level: 20
@@ -1593,7 +1593,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   dwarf_enby_mage_l30:
-    image: player_sprites/dwarf_enby_mage_l30.png
+    image: 735f028cd724768011b84082182ad34ed0a236e54d0f682a0c17d002ad34350c.png
     name: "a powerful dwarf sorcerer"
     room: expert_mages
     level: 30
@@ -1605,7 +1605,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   dwarf_enby_mage_l40:
-    image: player_sprites/dwarf_enby_mage_l40.png
+    image: 9c67fd8e184ce8b907b75ce07dd99613db04a0f86931794b83d42d4fd201a5aa.png
     name: "a arcane dwarf wizard"
     room: master_mages
     level: 40
@@ -1617,7 +1617,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   dwarf_enby_mage_l50:
-    image: player_sprites/dwarf_enby_mage_l50.png
+    image: c4fcaed4b3192b4beac4dbcdc862ee16d9253cbbdf2980bfec48fc2103e42ba2.png
     name: "a transcendent dwarf archmage"
     room: legend_mages
     level: 50
@@ -1629,7 +1629,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   dwarf_female_mage_l1:
-    image: player_sprites/dwarf_female_mage_l1.png
+    image: 05096dbc45c1ddd1b65421fa18becadef42a705521d30d857ca86710470915cf.png
     name: "a novice dwarf apprentice"
     room: novice_mages
     level: 1
@@ -1641,7 +1641,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   dwarf_female_mage_l10:
-    image: player_sprites/dwarf_female_mage_l10.png
+    image: bec095aaad6557c60af48d9ac6f8f1cdcc57418ad78de9dbc601d24258491ba1.png
     name: "a practiced dwarf channeler"
     room: apprentice_mages
     level: 10
@@ -1653,7 +1653,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   dwarf_female_mage_l20:
-    image: player_sprites/dwarf_female_mage_l20.png
+    image: 05cc546c0b318eeb9fc67109a4bc4518e1ed20cdd8125de7b3152f71d1b9278d.png
     name: "a skilled dwarf conjurer"
     room: journeyman_mages
     level: 20
@@ -1665,7 +1665,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   dwarf_female_mage_l30:
-    image: player_sprites/dwarf_female_mage_l30.png
+    image: 9351dc09142812e23e5298890c13d73cabd80093df24c62af6484c43fbdcd08c.png
     name: "a powerful dwarf sorcerer"
     room: expert_mages
     level: 30
@@ -1677,7 +1677,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   dwarf_female_mage_l40:
-    image: player_sprites/dwarf_female_mage_l40.png
+    image: e5171fca0632807e3bb66f457b837f74286a3a72c36d815c73eb79b6490bedfa.png
     name: "a arcane dwarf wizard"
     room: master_mages
     level: 40
@@ -1689,7 +1689,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   dwarf_female_mage_l50:
-    image: player_sprites/dwarf_female_mage_l50.png
+    image: de9cedf59ccf1d0fda14def386db81258d44164cc829cd3e58de6b540f867aac.png
     name: "a transcendent dwarf archmage"
     room: legend_mages
     level: 50
@@ -1701,7 +1701,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   dwarf_male_mage_l1:
-    image: player_sprites/dwarf_male_mage_l1.png
+    image: 907bce8e6acea06703ae259e189c022392e79b3985ddd4b9e05e41d1c8ee2fe5.png
     name: "a novice dwarf apprentice"
     room: novice_mages
     level: 1
@@ -1713,7 +1713,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   dwarf_male_mage_l10:
-    image: player_sprites/dwarf_male_mage_l10.png
+    image: af913d12652271e9355c9ce34c7d9882089201ad74622a8f6f3f8023fa0d7a3c.png
     name: "a practiced dwarf channeler"
     room: apprentice_mages
     level: 10
@@ -1725,7 +1725,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   dwarf_male_mage_l20:
-    image: player_sprites/dwarf_male_mage_l20.png
+    image: 2f190ad42ee74031c6efcf07e09678cf88595b754c118595eca21b63a906dc1b.png
     name: "a skilled dwarf conjurer"
     room: journeyman_mages
     level: 20
@@ -1737,7 +1737,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   dwarf_male_mage_l30:
-    image: player_sprites/dwarf_male_mage_l30.png
+    image: 0e5a514f604851afc1334ce52c12a6af0746c5fa994a57cb19d8e05cbf94c707.png
     name: "a powerful dwarf sorcerer"
     room: expert_mages
     level: 30
@@ -1749,7 +1749,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   dwarf_male_mage_l40:
-    image: player_sprites/dwarf_male_mage_l40.png
+    image: d84128566c3599d56263ff2e0cc9b7ae7a6f0c1588d5a52593235ae94da947ba.png
     name: "a arcane dwarf wizard"
     room: master_mages
     level: 40
@@ -1761,7 +1761,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   dwarf_male_mage_l50:
-    image: player_sprites/dwarf_male_mage_l50.png
+    image: b0702249ce07558c7751bab11eb820636589149d4ce427df704a41fa9671fcbc.png
     name: "a transcendent dwarf archmage"
     room: legend_mages
     level: 50
@@ -1773,7 +1773,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   halfling_enby_mage_l1:
-    image: player_sprites/halfling_enby_mage_l1.png
+    image: 788a1001e2525f6f93831bead44c2ec0c7c1492dbd2b254d1f02a088a5aff6ad.png
     name: "a novice halfling apprentice"
     room: novice_mages
     level: 1
@@ -1785,7 +1785,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   halfling_enby_mage_l10:
-    image: player_sprites/halfling_enby_mage_l10.png
+    image: 409a290657813f59f06b9e1aa769f290a44331573c5759aed23fd8b88343b0c3.png
     name: "a practiced halfling channeler"
     room: apprentice_mages
     level: 10
@@ -1797,7 +1797,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   halfling_enby_mage_l20:
-    image: player_sprites/halfling_enby_mage_l20.png
+    image: 9b4c3195fa900d8a3286b629455572a6462668c1b8f4295b8aa4d2583181e608.png
     name: "a skilled halfling conjurer"
     room: journeyman_mages
     level: 20
@@ -1809,7 +1809,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   halfling_enby_mage_l30:
-    image: player_sprites/halfling_enby_mage_l30.png
+    image: c098a8347fb27ec9f5f078c9902e4dfb7baa08f5042176ba6d0a6cffcd3d8c32.png
     name: "a powerful halfling sorcerer"
     room: expert_mages
     level: 30
@@ -1821,7 +1821,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   halfling_enby_mage_l40:
-    image: player_sprites/halfling_enby_mage_l40.png
+    image: 78f1b5f94ebd01a8c0d49fbcfc9555b4ff124c20e380eac9dc08b69e4eb41f3d.png
     name: "a arcane halfling wizard"
     room: master_mages
     level: 40
@@ -1833,7 +1833,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   halfling_enby_mage_l50:
-    image: player_sprites/halfling_enby_mage_l50.png
+    image: 94ee7336b392b5deba5d574aa55f75915e0f053f7a78dbe7e812800e39dba3f0.png
     name: "a transcendent halfling archmage"
     room: legend_mages
     level: 50
@@ -1845,7 +1845,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   halfling_female_mage_l1:
-    image: player_sprites/halfling_female_mage_l1.png
+    image: 8a43f2201a0a9174f0e28e0bc0b2918fce33f06ca05dc51444eb1ee5c7c2b556.png
     name: "a novice halfling apprentice"
     room: novice_mages
     level: 1
@@ -1857,7 +1857,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   halfling_female_mage_l10:
-    image: player_sprites/halfling_female_mage_l10.png
+    image: ad83ec250cadb0d4891dd0106d08bb7cdfb638db8a9039fd678d7d61f64718ef.png
     name: "a practiced halfling channeler"
     room: apprentice_mages
     level: 10
@@ -1869,7 +1869,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   halfling_female_mage_l20:
-    image: player_sprites/halfling_female_mage_l20.png
+    image: b4afaa63e6901496e7a86e393e5f784fe3a039a73190b6fae7eec3c4badd83b2.png
     name: "a skilled halfling conjurer"
     room: journeyman_mages
     level: 20
@@ -1881,7 +1881,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   halfling_female_mage_l30:
-    image: player_sprites/halfling_female_mage_l30.png
+    image: 8b7c312817f85d76df65613b0aa57ec54b36174411b8c05db01928024a91d053.png
     name: "a powerful halfling sorcerer"
     room: expert_mages
     level: 30
@@ -1893,7 +1893,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   halfling_female_mage_l40:
-    image: player_sprites/halfling_female_mage_l40.png
+    image: 3d069b556759389e26f5d07433447c9dfbf6a30c6df4ee1ab339f513965fab50.png
     name: "a arcane halfling wizard"
     room: master_mages
     level: 40
@@ -1905,7 +1905,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   halfling_female_mage_l50:
-    image: player_sprites/halfling_female_mage_l50.png
+    image: bbe81b1e70424eaffeb8f77557de3bc31d66e099d9bf589d412754172c7982f3.png
     name: "a transcendent halfling archmage"
     room: legend_mages
     level: 50
@@ -1917,7 +1917,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   halfling_male_mage_l1:
-    image: player_sprites/halfling_male_mage_l1.png
+    image: beddf8fbf708bcc8e4f58ae8c2f9db55038b2adf2e0b19653844bc2e253b608c.png
     name: "a novice halfling apprentice"
     room: novice_mages
     level: 1
@@ -1929,7 +1929,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   halfling_male_mage_l10:
-    image: player_sprites/halfling_male_mage_l10.png
+    image: 75dfbd0b9fd68fc8bebec2693ae9be1d2ec49afefafe020a040462749af3bb98.png
     name: "a practiced halfling channeler"
     room: apprentice_mages
     level: 10
@@ -1941,7 +1941,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   halfling_male_mage_l20:
-    image: player_sprites/halfling_male_mage_l20.png
+    image: d6137c734f86a7de032692acc73fd11408d7a14748e341803ed34c3fa50b5788.png
     name: "a skilled halfling conjurer"
     room: journeyman_mages
     level: 20
@@ -1953,7 +1953,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   halfling_male_mage_l30:
-    image: player_sprites/halfling_male_mage_l30.png
+    image: 395df4f9def9ce8a0b50942ff9d8c5472706d3da0ce64e730231e6b867e6887b.png
     name: "a powerful halfling sorcerer"
     room: expert_mages
     level: 30
@@ -1965,7 +1965,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   halfling_male_mage_l40:
-    image: player_sprites/halfling_male_mage_l40.png
+    image: 8220f7571c3cfddb6be531a037b49601fbbf86d20d5ec6c3aa9645cb003fb037.png
     name: "a arcane halfling wizard"
     room: master_mages
     level: 40
@@ -1977,7 +1977,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   halfling_male_mage_l50:
-    image: player_sprites/halfling_male_mage_l50.png
+    image: 63746327a64f80e5b98aba345cc73b6b7279bcbb40db120fefbda7e13d3cf529.png
     name: "a transcendent halfling archmage"
     room: legend_mages
     level: 50
@@ -1989,7 +1989,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   human_enby_rogue_l1:
-    image: player_sprites/human_enby_rogue_l1.png
+    image: 8804bf32e2331b1b87070c5c4dc68b3a9199e971c3ff3aa2adb97417fc0c4442.png
     name: "a green human pickpocket"
     room: novice_rogues
     level: 1
@@ -2001,7 +2001,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   human_enby_rogue_l10:
-    image: player_sprites/human_enby_rogue_l10.png
+    image: 07002797587ba42de30de90a3777d7911f09b51efccb3798634c5e0231c0f9ef.png
     name: "a cunning human thief"
     room: apprentice_rogues
     level: 10
@@ -2013,7 +2013,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   human_enby_rogue_l20:
-    image: player_sprites/human_enby_rogue_l20.png
+    image: dc69eac163d41b5b2b88bbb9598766cc8a3f159bc65f8d8ed4415b3d32b28df0.png
     name: "a stealthy human assassin"
     room: journeyman_rogues
     level: 20
@@ -2025,7 +2025,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   human_enby_rogue_l30:
-    image: player_sprites/human_enby_rogue_l30.png
+    image: 1db9da7aa36ade97276fa6ce39a2dd44fc10ea132667175af5d8794568bc76bd.png
     name: "a deadly human shadow"
     room: expert_rogues
     level: 30
@@ -2037,7 +2037,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   human_enby_rogue_l40:
-    image: player_sprites/human_enby_rogue_l40.png
+    image: a9a350dea9e9cbf957518ba819db38d4c4ac223e233f3e4ef85c07b0eb8e2c53.png
     name: "a phantom human nightblade"
     room: master_rogues
     level: 40
@@ -2049,7 +2049,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   human_enby_rogue_l50:
-    image: player_sprites/human_enby_rogue_l50.png
+    image: daf62ada5ce1c244605a9a584b32e3483aa1921a44eb81620983e71c7926d0a8.png
     name: "a mythic human shadowlord"
     room: legend_rogues
     level: 50
@@ -2061,7 +2061,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   human_female_rogue_l1:
-    image: player_sprites/human_female_rogue_l1.png
+    image: 022b32f94cbb775f8b1ee6e75d3152d61335df1b535679005021bb05e06498bf.png
     name: "a green human pickpocket"
     room: novice_rogues
     level: 1
@@ -2073,7 +2073,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   human_female_rogue_l10:
-    image: player_sprites/human_female_rogue_l10.png
+    image: aeb4b3c61da125a5bea73ebced0ec7a28f3dc255968701473a8dc2088fc9a431.png
     name: "a cunning human thief"
     room: apprentice_rogues
     level: 10
@@ -2085,7 +2085,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   human_female_rogue_l20:
-    image: player_sprites/human_female_rogue_l20.png
+    image: 21272a95a616927c8b15f4d1e3474e81414e0c2069d6591aabb07f4a66baac55.png
     name: "a stealthy human assassin"
     room: journeyman_rogues
     level: 20
@@ -2097,7 +2097,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   human_female_rogue_l30:
-    image: player_sprites/human_female_rogue_l30.png
+    image: 68ae6441f0c90b072ac55f9c488adb929120c11b2fdfe52871dbac68e57c9e0f.png
     name: "a deadly human shadow"
     room: expert_rogues
     level: 30
@@ -2109,7 +2109,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   human_female_rogue_l40:
-    image: player_sprites/human_female_rogue_l40.png
+    image: 07736c7dacff4f2e9cc7a23d7659d999d1290e1ca88bf251955b1a9b1f36fd08.png
     name: "a phantom human nightblade"
     room: master_rogues
     level: 40
@@ -2121,7 +2121,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   human_female_rogue_l50:
-    image: player_sprites/human_female_rogue_l50.png
+    image: 638422265b4541da2ba98df2b37884f4a727f36da60a4a7ad544aa34b40b2233.png
     name: "a mythic human shadowlord"
     room: legend_rogues
     level: 50
@@ -2133,7 +2133,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   human_male_rogue_l1:
-    image: player_sprites/human_male_rogue_l1.png
+    image: 3d1a0cf802b6d99df890fb5b117fd7f58d87035800141a60f70966764074a9cd.png
     name: "a green human pickpocket"
     room: novice_rogues
     level: 1
@@ -2145,7 +2145,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   human_male_rogue_l10:
-    image: player_sprites/human_male_rogue_l10.png
+    image: d85ffc383f69b692aa17c92fa5263cfd5f3951b26b2f7c107180254a9c086f2f.png
     name: "a cunning human thief"
     room: apprentice_rogues
     level: 10
@@ -2157,7 +2157,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   human_male_rogue_l20:
-    image: player_sprites/human_male_rogue_l20.png
+    image: cb69237a342abaaf93f6975d9f27e7b4095da6bc680251ee75b4cee185cae7e4.png
     name: "a stealthy human assassin"
     room: journeyman_rogues
     level: 20
@@ -2169,7 +2169,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   human_male_rogue_l30:
-    image: player_sprites/human_male_rogue_l30.png
+    image: 5db38dbeee743cec0d37ef0fc5e5ac24be75ae6938c9d9f48d9a736be352f7ef.png
     name: "a deadly human shadow"
     room: expert_rogues
     level: 30
@@ -2181,7 +2181,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   human_male_rogue_l40:
-    image: player_sprites/human_male_rogue_l40.png
+    image: 3ebdb6a6ffae9dfec7252a41f5015fc2c6b27ea5cdbd065240499dfe0aa2e1ae.png
     name: "a phantom human nightblade"
     room: master_rogues
     level: 40
@@ -2193,7 +2193,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   human_male_rogue_l50:
-    image: player_sprites/human_male_rogue_l50.png
+    image: f89c47c5a1c76ee365444aa82c1f563ce09d2a77d218bda1efccd8ae8dabb785.png
     name: "a mythic human shadowlord"
     room: legend_rogues
     level: 50
@@ -2205,7 +2205,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   elf_enby_rogue_l1:
-    image: player_sprites/elf_enby_rogue_l1.png
+    image: 92cb91aa1497ad59adbad140cc32a1b64e6f58096b61e5250743c0926c994f53.png
     name: "a green elf pickpocket"
     room: novice_rogues
     level: 1
@@ -2217,7 +2217,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   elf_enby_rogue_l10:
-    image: player_sprites/elf_enby_rogue_l10.png
+    image: 0dce41dc79436c687fd5184f3eca17398f7cccb5adcc82bf2de37ea1d3e6c845.png
     name: "a cunning elf thief"
     room: apprentice_rogues
     level: 10
@@ -2229,7 +2229,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   elf_enby_rogue_l20:
-    image: player_sprites/elf_enby_rogue_l20.png
+    image: 2dcb34e0c1b986ce8cc2cc8d0f67a1fe312d600622748edc897b01048df51ad8.png
     name: "a stealthy elf assassin"
     room: journeyman_rogues
     level: 20
@@ -2241,7 +2241,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   elf_enby_rogue_l30:
-    image: player_sprites/elf_enby_rogue_l30.png
+    image: ed01fc380d27b4866b25e3f46247cc301b1adc23fe7ced5b4446b5b84cf02a9b.png
     name: "a deadly elf shadow"
     room: expert_rogues
     level: 30
@@ -2253,7 +2253,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   elf_enby_rogue_l40:
-    image: player_sprites/elf_enby_rogue_l40.png
+    image: fc7ad287ebe6db0dc15ded1a98ca5e24d4fb9427776a2cea93431c27208cbd3f.png
     name: "a phantom elf nightblade"
     room: master_rogues
     level: 40
@@ -2265,7 +2265,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   elf_enby_rogue_l50:
-    image: player_sprites/elf_enby_rogue_l50.png
+    image: 9e213b904e31a7c623234a60ea17c4da89f4ff73d0a29c93d0d92da931e10bc0.png
     name: "a mythic elf shadowlord"
     room: legend_rogues
     level: 50
@@ -2277,7 +2277,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   elf_female_rogue_l1:
-    image: player_sprites/elf_female_rogue_l1.png
+    image: f412c8e110e5b0f0e45937baf0e75a3fb1fe5d301e853069b35c069994d0f843.png
     name: "a green elf pickpocket"
     room: novice_rogues
     level: 1
@@ -2289,7 +2289,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   elf_female_rogue_l10:
-    image: player_sprites/elf_female_rogue_l10.png
+    image: 8d809d7faedf80b7d81789b3c19f05a2cc12c1d73bd20d09c132988e1f6c5473.png
     name: "a cunning elf thief"
     room: apprentice_rogues
     level: 10
@@ -2301,7 +2301,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   elf_female_rogue_l20:
-    image: player_sprites/elf_female_rogue_l20.png
+    image: 5fbe8ed5604af90d14ded0010f1124453f6cf8232905f3d39043017972d70598.png
     name: "a stealthy elf assassin"
     room: journeyman_rogues
     level: 20
@@ -2313,7 +2313,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   elf_female_rogue_l30:
-    image: player_sprites/elf_female_rogue_l30.png
+    image: 1b37e5ffa28fb709c46eaaed6aa8949249303c43935a197cc00b5b0d026aab0a.png
     name: "a deadly elf shadow"
     room: expert_rogues
     level: 30
@@ -2325,7 +2325,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   elf_female_rogue_l40:
-    image: player_sprites/elf_female_rogue_l40.png
+    image: 5070697d2f00d0a8ea785d023072bf13a04305ec89ac47975a3f068cd2855fe8.png
     name: "a phantom elf nightblade"
     room: master_rogues
     level: 40
@@ -2337,7 +2337,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   elf_female_rogue_l50:
-    image: player_sprites/elf_female_rogue_l50.png
+    image: 92c5ba1cff755af189c2b7e2200bbfccf626328d6d012542298d68b68ed3d251.png
     name: "a mythic elf shadowlord"
     room: legend_rogues
     level: 50
@@ -2349,7 +2349,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   elf_male_rogue_l1:
-    image: player_sprites/elf_male_rogue_l1.png
+    image: 5177d669d6de8a4d43331bc10391a39b323564e2a2687568cdeff0f2448cf21a.png
     name: "a green elf pickpocket"
     room: novice_rogues
     level: 1
@@ -2361,7 +2361,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   elf_male_rogue_l10:
-    image: player_sprites/elf_male_rogue_l10.png
+    image: 9d605b7cfc4f999f0149eff1a77fa5f5f9df0e3f4a21ef54126f14c8ba1973ff.png
     name: "a cunning elf thief"
     room: apprentice_rogues
     level: 10
@@ -2373,7 +2373,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   elf_male_rogue_l20:
-    image: player_sprites/elf_male_rogue_l20.png
+    image: f5fae14b995dc43aa8fe395f014ec703591c57d540dda17774f1c3d6a23bed82.png
     name: "a stealthy elf assassin"
     room: journeyman_rogues
     level: 20
@@ -2385,7 +2385,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   elf_male_rogue_l30:
-    image: player_sprites/elf_male_rogue_l30.png
+    image: 53b5e1ba2d3f9df4cd4c10a98a38eb6334cbcd82d66d0c4e248f1ce1ddf37a1f.png
     name: "a deadly elf shadow"
     room: expert_rogues
     level: 30
@@ -2397,7 +2397,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   elf_male_rogue_l40:
-    image: player_sprites/elf_male_rogue_l40.png
+    image: 9d38b29c6b3322fbfbf4be786b7c8b504bb29919d8df56131bbd836f8680930a.png
     name: "a phantom elf nightblade"
     room: master_rogues
     level: 40
@@ -2409,7 +2409,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   elf_male_rogue_l50:
-    image: player_sprites/elf_male_rogue_l50.png
+    image: c59209e5a40fee8395851c67344e8e6be042ff905ee79c8ad0cb5d75a3bc07ce.png
     name: "a mythic elf shadowlord"
     room: legend_rogues
     level: 50
@@ -2421,7 +2421,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   dwarf_enby_rogue_l1:
-    image: player_sprites/dwarf_enby_rogue_l1.png
+    image: 7ecea67a95d080836ba14f411ae339d274cc92cfa61d866bec4b4fea96226bbc.png
     name: "a green dwarf pickpocket"
     room: novice_rogues
     level: 1
@@ -2433,7 +2433,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   dwarf_enby_rogue_l10:
-    image: player_sprites/dwarf_enby_rogue_l10.png
+    image: 0621903bede71dd017c29c76027a3b81aaeb64de0a67d185301e87ae5fba4302.png
     name: "a cunning dwarf thief"
     room: apprentice_rogues
     level: 10
@@ -2445,7 +2445,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   dwarf_enby_rogue_l20:
-    image: player_sprites/dwarf_enby_rogue_l20.png
+    image: 1d43d4843a12f2c02345537638cf227d537252390069e7277624b264009585b3.png
     name: "a stealthy dwarf assassin"
     room: journeyman_rogues
     level: 20
@@ -2457,7 +2457,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   dwarf_enby_rogue_l30:
-    image: player_sprites/dwarf_enby_rogue_l30.png
+    image: 599b9cb2dc7425e0debc94f4ebf2cae44da756d16fe4dd6cdf5fbaf5c9ae3db0.png
     name: "a deadly dwarf shadow"
     room: expert_rogues
     level: 30
@@ -2469,7 +2469,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   dwarf_enby_rogue_l40:
-    image: player_sprites/dwarf_enby_rogue_l40.png
+    image: 66c5e97eab096bcab8c3058670ef3ac0d8972b8aaaf2783c49a32a87098b5bfb.png
     name: "a phantom dwarf nightblade"
     room: master_rogues
     level: 40
@@ -2481,7 +2481,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   dwarf_enby_rogue_l50:
-    image: player_sprites/dwarf_enby_rogue_l50.png
+    image: 86980966e486cccb3c3f5745bd82f5d8122bfc46c7ce36cc587a5138fda1af17.png
     name: "a mythic dwarf shadowlord"
     room: legend_rogues
     level: 50
@@ -2493,7 +2493,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   dwarf_female_rogue_l1:
-    image: player_sprites/dwarf_female_rogue_l1.png
+    image: 9fdf19eb7ece0ea74c51c23a7482e493b704acc250875795a5f5f28161ca8ddc.png
     name: "a green dwarf pickpocket"
     room: novice_rogues
     level: 1
@@ -2505,7 +2505,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   dwarf_female_rogue_l10:
-    image: player_sprites/dwarf_female_rogue_l10.png
+    image: c5a7f92a810c35b0a0b1d6d68990f4cd4be5171d1717df2326cea9146406acb8.png
     name: "a cunning dwarf thief"
     room: apprentice_rogues
     level: 10
@@ -2517,7 +2517,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   dwarf_female_rogue_l20:
-    image: player_sprites/dwarf_female_rogue_l20.png
+    image: b8c9b2635b3de1ff58332a09c0d41e93da1e563f70ceae02a2a25fe422e50f0b.png
     name: "a stealthy dwarf assassin"
     room: journeyman_rogues
     level: 20
@@ -2529,7 +2529,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   dwarf_female_rogue_l30:
-    image: player_sprites/dwarf_female_rogue_l30.png
+    image: 2b1d784307566d3b5a1da6908facdef56526e34fe5642d4da175ea1026ef70fd.png
     name: "a deadly dwarf shadow"
     room: expert_rogues
     level: 30
@@ -2541,7 +2541,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   dwarf_female_rogue_l40:
-    image: player_sprites/dwarf_female_rogue_l40.png
+    image: 27401b12797a482933acf719d2b611fd1a44b88b0a0d9ef97fb41536d91458a3.png
     name: "a phantom dwarf nightblade"
     room: master_rogues
     level: 40
@@ -2553,7 +2553,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   dwarf_female_rogue_l50:
-    image: player_sprites/dwarf_female_rogue_l50.png
+    image: c4cd04d48a950373d017beb489cc0c24a173cbceb10eb278a9a5ad2edad9dfab.png
     name: "a mythic dwarf shadowlord"
     room: legend_rogues
     level: 50
@@ -2565,7 +2565,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   dwarf_male_rogue_l1:
-    image: player_sprites/dwarf_male_rogue_l1.png
+    image: c067c1bb7765e8e1cd271168ebd605e0198aaa0e3158c8d9f9332cfcd0f10b02.png
     name: "a green dwarf pickpocket"
     room: novice_rogues
     level: 1
@@ -2577,7 +2577,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   dwarf_male_rogue_l10:
-    image: player_sprites/dwarf_male_rogue_l10.png
+    image: b535db9e2c09345618b84fe4405c36a21747100d9341c5e24059c0b6ce80c82b.png
     name: "a cunning dwarf thief"
     room: apprentice_rogues
     level: 10
@@ -2589,7 +2589,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   dwarf_male_rogue_l20:
-    image: player_sprites/dwarf_male_rogue_l20.png
+    image: 34f783da74c8802abe3699bde594f750bd60202a3fc3dd8461ca781f592fedb4.png
     name: "a stealthy dwarf assassin"
     room: journeyman_rogues
     level: 20
@@ -2601,7 +2601,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   dwarf_male_rogue_l30:
-    image: player_sprites/dwarf_male_rogue_l30.png
+    image: ccd058209cab3fbd9ea1878a04bc547fd7bb828aea256a890322b7cf28f24e88.png
     name: "a deadly dwarf shadow"
     room: expert_rogues
     level: 30
@@ -2613,7 +2613,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   dwarf_male_rogue_l40:
-    image: player_sprites/dwarf_male_rogue_l40.png
+    image: 9b30448290eef30ffde380c93d2b0c397c9f06040e45d2db17300ff87d7ac6e7.png
     name: "a phantom dwarf nightblade"
     room: master_rogues
     level: 40
@@ -2625,7 +2625,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   dwarf_male_rogue_l50:
-    image: player_sprites/dwarf_male_rogue_l50.png
+    image: ff46b97cb02b59e69020c96b1114cc09b742b42d7d2192dad7c55c06ad82df23.png
     name: "a mythic dwarf shadowlord"
     room: legend_rogues
     level: 50
@@ -2637,7 +2637,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   halfling_enby_rogue_l1:
-    image: player_sprites/halfling_enby_rogue_l1.png
+    image: e4613300adc1adcd47311b43f2eb4cebccfb1f6d5b391b49a29b6e8f0b69afe4.png
     name: "a green halfling pickpocket"
     room: novice_rogues
     level: 1
@@ -2649,7 +2649,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   halfling_enby_rogue_l10:
-    image: player_sprites/halfling_enby_rogue_l10.png
+    image: 7fb801e9fc6b90bba5d9adb13ca3010a1a8ffe75bc36f9cf62dc03a703a5805d.png
     name: "a cunning halfling thief"
     room: apprentice_rogues
     level: 10
@@ -2661,7 +2661,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   halfling_enby_rogue_l20:
-    image: player_sprites/halfling_enby_rogue_l20.png
+    image: db8fdb4173a44617585d4415b174aa0b769767898384bbc29c81ed8dcefcfe72.png
     name: "a stealthy halfling assassin"
     room: journeyman_rogues
     level: 20
@@ -2673,7 +2673,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   halfling_enby_rogue_l30:
-    image: player_sprites/halfling_enby_rogue_l30.png
+    image: b0b0f57e0b490b5bb76ceab60a221efa1407261b405daa087518353f4ff36e86.png
     name: "a deadly halfling shadow"
     room: expert_rogues
     level: 30
@@ -2685,7 +2685,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   halfling_enby_rogue_l40:
-    image: player_sprites/halfling_enby_rogue_l40.png
+    image: b157a42f9f328a9864bcc3c018a7e809d82f49a3f9ed289af16e46989b0f6ea9.png
     name: "a phantom halfling nightblade"
     room: master_rogues
     level: 40
@@ -2697,7 +2697,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   halfling_enby_rogue_l50:
-    image: player_sprites/halfling_enby_rogue_l50.png
+    image: e2fe85da8e3b155df8c1d3a01302b54a35492fd2c9e7c1a20c410e53bd3cedd2.png
     name: "a mythic halfling shadowlord"
     room: legend_rogues
     level: 50
@@ -2709,7 +2709,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   halfling_female_rogue_l1:
-    image: player_sprites/halfling_female_rogue_l1.png
+    image: de8a1ce0b1549ac0a67b390c89d421380089d44bca3038d45b1b2f240e99c85f.png
     name: "a green halfling pickpocket"
     room: novice_rogues
     level: 1
@@ -2721,7 +2721,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   halfling_female_rogue_l10:
-    image: player_sprites/halfling_female_rogue_l10.png
+    image: 0bdcbcc7c289ad37b437c63b430c2e240fcc06bca4e1aab8ed9ab36bf64ad495.png
     name: "a cunning halfling thief"
     room: apprentice_rogues
     level: 10
@@ -2733,7 +2733,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   halfling_female_rogue_l20:
-    image: player_sprites/halfling_female_rogue_l20.png
+    image: adc92b730b4b05dabd5f03e395ecb1b06f42c66786683ecbc836dc905d3d4309.png
     name: "a stealthy halfling assassin"
     room: journeyman_rogues
     level: 20
@@ -2745,7 +2745,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   halfling_female_rogue_l30:
-    image: player_sprites/halfling_female_rogue_l30.png
+    image: 90469276edfb31c7896c95fcc20538614cc2a5635ae2d23a5c9209d288142ef1.png
     name: "a deadly halfling shadow"
     room: expert_rogues
     level: 30
@@ -2757,7 +2757,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   halfling_female_rogue_l40:
-    image: player_sprites/halfling_female_rogue_l40.png
+    image: cbea373bf9b872f369582418b15397366fe3a6e088f38f5958abbaf2a1faa8ed.png
     name: "a phantom halfling nightblade"
     room: master_rogues
     level: 40
@@ -2769,7 +2769,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   halfling_female_rogue_l50:
-    image: player_sprites/halfling_female_rogue_l50.png
+    image: a15a6d54491a01afea0ccac1abc2619330679cd00e864784d7e24bb6fec07569.png
     name: "a mythic halfling shadowlord"
     room: legend_rogues
     level: 50
@@ -2781,7 +2781,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   halfling_male_rogue_l1:
-    image: player_sprites/halfling_male_rogue_l1.png
+    image: d781fc0500cb281c1f6dbcb73527b601984ea37bd6e4eab360f4ff5467d97ee0.png
     name: "a green halfling pickpocket"
     room: novice_rogues
     level: 1
@@ -2793,7 +2793,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   halfling_male_rogue_l10:
-    image: player_sprites/halfling_male_rogue_l10.png
+    image: 994abe22a6c365d510e5bcb03a59138eaf9fe087bbe79af89fb0c246c02d41e7.png
     name: "a cunning halfling thief"
     room: apprentice_rogues
     level: 10
@@ -2805,7 +2805,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   halfling_male_rogue_l20:
-    image: player_sprites/halfling_male_rogue_l20.png
+    image: f8a4d865d5831bcd8563a2e765c7fcc494ee16ac9e5fb051b333e8f7d6273b47.png
     name: "a stealthy halfling assassin"
     room: journeyman_rogues
     level: 20
@@ -2817,7 +2817,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   halfling_male_rogue_l30:
-    image: player_sprites/halfling_male_rogue_l30.png
+    image: 27466274f872d29dccaeb495c1c98393ff2aaf3fa7564ae29d97d9ce2dca03eb.png
     name: "a deadly halfling shadow"
     room: expert_rogues
     level: 30
@@ -2829,7 +2829,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   halfling_male_rogue_l40:
-    image: player_sprites/halfling_male_rogue_l40.png
+    image: f175e9c682e51e8af6971e4c6752ec02a4a7278c9c4a69b2058902bc90821a81.png
     name: "a phantom halfling nightblade"
     room: master_rogues
     level: 40
@@ -2841,7 +2841,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   halfling_male_rogue_l50:
-    image: player_sprites/halfling_male_rogue_l50.png
+    image: fe0e0b9cf07d355b13be22b9655c1044da3cbb684b3dd0fa2e11b964f0d5e1be.png
     name: "a mythic halfling shadowlord"
     room: legend_rogues
     level: 50
@@ -2853,7 +2853,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   human_enby_warrior_l1:
-    image: player_sprites/human_enby_warrior_l1.png
+    image: 688a7ecece115bd281b603093824384a929e91b3d0595822cf7e976603a3f103.png
     name: "a fledgling human recruit"
     room: novice_warriors
     level: 1
@@ -2865,7 +2865,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   human_enby_warrior_l10:
-    image: player_sprites/human_enby_warrior_l10.png
+    image: 40e5a57724c07d2493e0b71961574834f3d35b67d86da5d001368186dfcff276.png
     name: "a trained human soldier"
     room: apprentice_warriors
     level: 10
@@ -2877,7 +2877,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   human_enby_warrior_l20:
-    image: player_sprites/human_enby_warrior_l20.png
+    image: 2d74747b360b863f33fa014cbb78177f5b493465491fafedd3ecefb1e3a4ab8f.png
     name: "a seasoned human knight"
     room: journeyman_warriors
     level: 20
@@ -2889,7 +2889,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   human_enby_warrior_l30:
-    image: player_sprites/human_enby_warrior_l30.png
+    image: a3ced64c03d7fec15ae1d9af9fb964621a890bb46cd87c582aa43156fceda2a7.png
     name: "a battle-hardened human champion"
     room: expert_warriors
     level: 30
@@ -2901,7 +2901,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   human_enby_warrior_l40:
-    image: player_sprites/human_enby_warrior_l40.png
+    image: 5090cd4eaa8d815e04d964343fc8c33171370ae2e6e224bbb919487504ce562d.png
     name: "a fearsome human warlord"
     room: master_warriors
     level: 40
@@ -2913,7 +2913,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   human_enby_warrior_l50:
-    image: player_sprites/human_enby_warrior_l50.png
+    image: 150220138e404cd9357850ffd6d11dd3cc8155393426af0f0e4d372809b9d24c.png
     name: "a godslaying human warlord"
     room: legend_warriors
     level: 50
@@ -2925,7 +2925,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   human_female_warrior_l1:
-    image: player_sprites/human_female_warrior_l1.png
+    image: 67a6f1ffd249ddc70619ec6cc03fd2d3ce661e6dc229eba9ed559239c00ef2e2.png
     name: "a fledgling human recruit"
     room: novice_warriors
     level: 1
@@ -2937,7 +2937,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   human_female_warrior_l10:
-    image: player_sprites/human_female_warrior_l10.png
+    image: 2333224c1181a482f25be5feb1de1f7af3d0b4635704e1b1591140f1c1fbe071.png
     name: "a trained human soldier"
     room: apprentice_warriors
     level: 10
@@ -2949,7 +2949,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   human_female_warrior_l20:
-    image: player_sprites/human_female_warrior_l20.png
+    image: a9c11a1542392381de2b1dcea7b4fc8a6bf80747a33cb6ffacf255d4492ac42d.png
     name: "a seasoned human knight"
     room: journeyman_warriors
     level: 20
@@ -2961,7 +2961,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   human_female_warrior_l30:
-    image: player_sprites/human_female_warrior_l30.png
+    image: 6cc7490e177b3b9eb81f8186259e100567be1b02ed7250bacc97a36eb8a0bbfe.png
     name: "a battle-hardened human champion"
     room: expert_warriors
     level: 30
@@ -2973,7 +2973,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   human_female_warrior_l40:
-    image: player_sprites/human_female_warrior_l40.png
+    image: f8795f9377dcd9267c465483aa432bf1c4498b02a811c09fef13e592c0a5547f.png
     name: "a fearsome human warlord"
     room: master_warriors
     level: 40
@@ -2985,7 +2985,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   human_female_warrior_l50:
-    image: player_sprites/human_female_warrior_l50.png
+    image: 1e28b780c5e1e7f831c12e339e7517c717fd0fc96a20f23d9033110a459ebf23.png
     name: "a godslaying human warlord"
     room: legend_warriors
     level: 50
@@ -2997,7 +2997,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   human_male_warrior_l1:
-    image: player_sprites/human_male_warrior_l1.png
+    image: 2ab206e97af2c5e919428d688bcc703a66a91bcbb7f5231d068dac139dacc9e9.png
     name: "a fledgling human recruit"
     room: novice_warriors
     level: 1
@@ -3009,7 +3009,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   human_male_warrior_l10:
-    image: player_sprites/human_male_warrior_l10.png
+    image: 8fbab7a838dfc2a3b62cca5270ae295c83b44ab370ed7774889b2f9442722850.png
     name: "a trained human soldier"
     room: apprentice_warriors
     level: 10
@@ -3021,7 +3021,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   human_male_warrior_l20:
-    image: player_sprites/human_male_warrior_l20.png
+    image: d49394eee3195ace6c714afd0aa339b441810f4d70e74eea29f0ebc217765009.png
     name: "a seasoned human knight"
     room: journeyman_warriors
     level: 20
@@ -3033,7 +3033,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   human_male_warrior_l30:
-    image: player_sprites/human_male_warrior_l30.png
+    image: 8a090c03df3c2d36a141369d1fab330d60fad5497ba303f6a168e5582b611cf3.png
     name: "a battle-hardened human champion"
     room: expert_warriors
     level: 30
@@ -3045,7 +3045,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   human_male_warrior_l40:
-    image: player_sprites/human_male_warrior_l40.png
+    image: 6cc16f7f59eff956c91c1f6a646ae363759aec40e8692363faa61efe3f04184e.png
     name: "a fearsome human warlord"
     room: master_warriors
     level: 40
@@ -3057,7 +3057,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   human_male_warrior_l50:
-    image: player_sprites/human_male_warrior_l50.png
+    image: 66bfa862b184756a58eba1439ec0b46b15b6302183f584e4334b818eaac84c2e.png
     name: "a godslaying human warlord"
     room: legend_warriors
     level: 50
@@ -3069,7 +3069,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   elf_enby_warrior_l1:
-    image: player_sprites/elf_enby_warrior_l1.png
+    image: 18bc1c644d8cf340e5e72ce9403d795a2e43bfa67e6ac0fc67b82938ba778054.png
     name: "a fledgling elf recruit"
     room: novice_warriors
     level: 1
@@ -3081,7 +3081,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   elf_enby_warrior_l10:
-    image: player_sprites/elf_enby_warrior_l10.png
+    image: 9e197acb02b4c92b0eba09f233ab31efb41765acd574bbfe2b755fc7e78a7d3c.png
     name: "a trained elf soldier"
     room: apprentice_warriors
     level: 10
@@ -3093,7 +3093,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   elf_enby_warrior_l20:
-    image: player_sprites/elf_enby_warrior_l20.png
+    image: d44d4b9e67ba13d8b80243cdfdfcc5ddbef0f45114b3ab9e451d93fec17f9065.png
     name: "a seasoned elf knight"
     room: journeyman_warriors
     level: 20
@@ -3105,7 +3105,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   elf_enby_warrior_l30:
-    image: player_sprites/elf_enby_warrior_l30.png
+    image: 58bbe83dceafc44060b8302ab5f95839b5b25da0c801cf5bb1f6de6bf3e5c6d2.png
     name: "a battle-hardened elf champion"
     room: expert_warriors
     level: 30
@@ -3117,7 +3117,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   elf_enby_warrior_l40:
-    image: player_sprites/elf_enby_warrior_l40.png
+    image: f09be6c4283feb1017bdb23948a1d61d0cc2986574d903e03bd23486ee83f5cc.png
     name: "a fearsome elf warlord"
     room: master_warriors
     level: 40
@@ -3129,7 +3129,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   elf_enby_warrior_l50:
-    image: player_sprites/elf_enby_warrior_l50.png
+    image: ea3bc8167d6437e24557c1d025f0378402006879074b1e1c17b2a90f17c12026.png
     name: "a godslaying elf warlord"
     room: legend_warriors
     level: 50
@@ -3141,7 +3141,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   elf_female_warrior_l1:
-    image: player_sprites/elf_female_warrior_l1.png
+    image: 2e9f0eefd3ecc8af65fb77a8d4ad691cb11601f702fa9f31b16ccbbb605d5de3.png
     name: "a fledgling elf recruit"
     room: novice_warriors
     level: 1
@@ -3153,7 +3153,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   elf_female_warrior_l10:
-    image: player_sprites/elf_female_warrior_l10.png
+    image: 5fc134517871b8325428378433dd6b713c879d4328c6e5317e1ea04dc81d5fe9.png
     name: "a trained elf soldier"
     room: apprentice_warriors
     level: 10
@@ -3165,7 +3165,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   elf_female_warrior_l20:
-    image: player_sprites/elf_female_warrior_l20.png
+    image: e01651dbbbe2dd738f9ec505dd2343695b5cd9d97872b4fb8503dc0fbb8ee39a.png
     name: "a seasoned elf knight"
     room: journeyman_warriors
     level: 20
@@ -3177,7 +3177,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   elf_female_warrior_l30:
-    image: player_sprites/elf_female_warrior_l30.png
+    image: c21c181af22f98c92be765a770ba8d5c641555f3d76a68939433b917dd79b644.png
     name: "a battle-hardened elf champion"
     room: expert_warriors
     level: 30
@@ -3189,7 +3189,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   elf_female_warrior_l40:
-    image: player_sprites/elf_female_warrior_l40.png
+    image: a708bf47e08320a867718a9afb14049972e7c1c1b0c20129c6f250c08e6ecb9c.png
     name: "a fearsome elf warlord"
     room: master_warriors
     level: 40
@@ -3201,7 +3201,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   elf_female_warrior_l50:
-    image: player_sprites/elf_female_warrior_l50.png
+    image: 881b544e58321e9f70de60f8301cb3e796145d8314a7271012b0576daea59bc7.png
     name: "a godslaying elf warlord"
     room: legend_warriors
     level: 50
@@ -3213,7 +3213,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   elf_male_warrior_l1:
-    image: player_sprites/elf_male_warrior_l1.png
+    image: 9a88f5bfc3db6a075a4d518019e3a0d172f597d387d075914ed39bf179bf27fb.png
     name: "a fledgling elf recruit"
     room: novice_warriors
     level: 1
@@ -3225,7 +3225,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   elf_male_warrior_l10:
-    image: player_sprites/elf_male_warrior_l10.png
+    image: 42174c59a4a911a34614fd814f65603dec74df593f7081d446737e756719e0f8.png
     name: "a trained elf soldier"
     room: apprentice_warriors
     level: 10
@@ -3237,7 +3237,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   elf_male_warrior_l20:
-    image: player_sprites/elf_male_warrior_l20.png
+    image: 64765d33f7cf18fad3e0fb855559b8cefb52b4257eee5e1fef38ee3bdf8cbfb3.png
     name: "a seasoned elf knight"
     room: journeyman_warriors
     level: 20
@@ -3249,7 +3249,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   elf_male_warrior_l30:
-    image: player_sprites/elf_male_warrior_l30.png
+    image: 0e2aa8344a50580daea4eaa48f5b96990a52a6d759ecc173e728fb757afdd205.png
     name: "a battle-hardened elf champion"
     room: expert_warriors
     level: 30
@@ -3261,7 +3261,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   elf_male_warrior_l40:
-    image: player_sprites/elf_male_warrior_l40.png
+    image: 67936090ef588f9fff5d25249bba8eb7ceef03a3970d6b9c79c4254dc45978ce.png
     name: "a fearsome elf warlord"
     room: master_warriors
     level: 40
@@ -3273,7 +3273,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   elf_male_warrior_l50:
-    image: player_sprites/elf_male_warrior_l50.png
+    image: 50842dda488708e2090e5614e7ca0f372e6cba35a89a80ac26eaed8886312f47.png
     name: "a godslaying elf warlord"
     room: legend_warriors
     level: 50
@@ -3285,7 +3285,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   dwarf_enby_warrior_l1:
-    image: player_sprites/dwarf_enby_warrior_l1.png
+    image: b992bccc2772e3a518036e8fd33cca9e7d79718c51d75e792448287e390ac4c0.png
     name: "a fledgling dwarf recruit"
     room: novice_warriors
     level: 1
@@ -3297,7 +3297,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   dwarf_enby_warrior_l10:
-    image: player_sprites/dwarf_enby_warrior_l10.png
+    image: 24c694cb10b758a43acefbc16cdbd5b0f98c27ed14725354614202bd489fe3a2.png
     name: "a trained dwarf soldier"
     room: apprentice_warriors
     level: 10
@@ -3309,7 +3309,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   dwarf_enby_warrior_l20:
-    image: player_sprites/dwarf_enby_warrior_l20.png
+    image: f9b78ec18d53b1650f9d91354f976a6b75b560e4968d2fd847826299f6beb0fd.png
     name: "a seasoned dwarf knight"
     room: journeyman_warriors
     level: 20
@@ -3321,7 +3321,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   dwarf_enby_warrior_l30:
-    image: player_sprites/dwarf_enby_warrior_l30.png
+    image: 445b4adf672173af1f5645f3cd54e8403ba8f403aa929ea7b2ab8f316ef03992.png
     name: "a battle-hardened dwarf champion"
     room: expert_warriors
     level: 30
@@ -3333,7 +3333,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   dwarf_enby_warrior_l40:
-    image: player_sprites/dwarf_enby_warrior_l40.png
+    image: 692d8ba07ff6bdd3613877d9dbdd1e7548cefd531f00cc7d0654dce12c46590d.png
     name: "a fearsome dwarf warlord"
     room: master_warriors
     level: 40
@@ -3345,7 +3345,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   dwarf_enby_warrior_l50:
-    image: player_sprites/dwarf_enby_warrior_l50.png
+    image: f06ecd3eb53f8b16df768628b068e311f8dc18e7db8df532fe2ca59534ca090f.png
     name: "a godslaying dwarf warlord"
     room: legend_warriors
     level: 50
@@ -3357,7 +3357,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   dwarf_female_warrior_l1:
-    image: player_sprites/dwarf_female_warrior_l1.png
+    image: 5a4a2bf79f7fdc9ad617f8ce8cf26d24563cf3a68ff92b2ad776b0847eb87546.png
     name: "a fledgling dwarf recruit"
     room: novice_warriors
     level: 1
@@ -3369,7 +3369,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   dwarf_female_warrior_l10:
-    image: player_sprites/dwarf_female_warrior_l10.png
+    image: 50b7e84b91e501ba8f0345488cacdea2038dfe21e18862ccdd265f696ed37c63.png
     name: "a trained dwarf soldier"
     room: apprentice_warriors
     level: 10
@@ -3381,7 +3381,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   dwarf_female_warrior_l20:
-    image: player_sprites/dwarf_female_warrior_l20.png
+    image: 8cfb09eb2c8f80f9fbefc61af90e2723b6113c9c7fea8c973890071428fcd394.png
     name: "a seasoned dwarf knight"
     room: journeyman_warriors
     level: 20
@@ -3393,7 +3393,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   dwarf_female_warrior_l30:
-    image: player_sprites/dwarf_female_warrior_l30.png
+    image: c30fe52071db2a1cf7544b1ec09a11d2d85bd461ba285d92f1f0a80458c7285b.png
     name: "a battle-hardened dwarf champion"
     room: expert_warriors
     level: 30
@@ -3405,7 +3405,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   dwarf_female_warrior_l40:
-    image: player_sprites/dwarf_female_warrior_l40.png
+    image: 603307771bee00d039790068f43e4ace9b90dcaef92362353f221cd589d919f1.png
     name: "a fearsome dwarf warlord"
     room: master_warriors
     level: 40
@@ -3417,7 +3417,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   dwarf_female_warrior_l50:
-    image: player_sprites/dwarf_female_warrior_l50.png
+    image: efbd38f035ffb4dcd01aea8aed0bf0417ef8b1f836248c004c1a501587143ea2.png
     name: "a godslaying dwarf warlord"
     room: legend_warriors
     level: 50
@@ -3429,7 +3429,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   dwarf_male_warrior_l1:
-    image: player_sprites/dwarf_male_warrior_l1.png
+    image: 486ed539c24467f7061abf88011bbe973f97e3580cbdd6a8b7b54015b8920d9c.png
     name: "a fledgling dwarf recruit"
     room: novice_warriors
     level: 1
@@ -3441,7 +3441,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   dwarf_male_warrior_l10:
-    image: player_sprites/dwarf_male_warrior_l10.png
+    image: 7d9254b5674b9eeaf1b6caa4b53ea5d6a9a0658c156a355a1290468c1c65d823.png
     name: "a trained dwarf soldier"
     room: apprentice_warriors
     level: 10
@@ -3453,7 +3453,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   dwarf_male_warrior_l20:
-    image: player_sprites/dwarf_male_warrior_l20.png
+    image: d394f6ad46da208557281042574c24fcc57f2f653f1fcac6ad19a9c83ad1b6e1.png
     name: "a seasoned dwarf knight"
     room: journeyman_warriors
     level: 20
@@ -3465,7 +3465,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   dwarf_male_warrior_l30:
-    image: player_sprites/dwarf_male_warrior_l30.png
+    image: b0bc22e6802c019a6a7f891a852763a204c52bd54a7b210f53ac6f99394e7b4f.png
     name: "a battle-hardened dwarf champion"
     room: expert_warriors
     level: 30
@@ -3477,7 +3477,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   dwarf_male_warrior_l40:
-    image: player_sprites/dwarf_male_warrior_l40.png
+    image: cc46bd934c90a6e5b717f7d24cb3368d579598f611049327331706179b58cb43.png
     name: "a fearsome dwarf warlord"
     room: master_warriors
     level: 40
@@ -3489,7 +3489,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   dwarf_male_warrior_l50:
-    image: player_sprites/dwarf_male_warrior_l50.png
+    image: 6cfafbd85bdac77a9f89551d112a8a33a52e77883123e82bd3a9949bfde5574e.png
     name: "a godslaying dwarf warlord"
     room: legend_warriors
     level: 50
@@ -3501,7 +3501,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   halfling_enby_warrior_l1:
-    image: player_sprites/halfling_enby_warrior_l1.png
+    image: f4fd016fe8bdd0d9ea73cff12ce4769650a64ebd9598c1b0b0c635a6f740dfc6.png
     name: "a fledgling halfling recruit"
     room: novice_warriors
     level: 1
@@ -3513,7 +3513,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   halfling_enby_warrior_l10:
-    image: player_sprites/halfling_enby_warrior_l10.png
+    image: e4a63038f9960416e8ffa183feb6ecdc2450f7fac25419374515eed9e5947cc9.png
     name: "a trained halfling soldier"
     room: apprentice_warriors
     level: 10
@@ -3525,7 +3525,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   halfling_enby_warrior_l20:
-    image: player_sprites/halfling_enby_warrior_l20.png
+    image: d64d30c1d57b2a6096fc411dbd0170ca9e49e0e0ed061cb8c8a78d456c46b768.png
     name: "a seasoned halfling knight"
     room: journeyman_warriors
     level: 20
@@ -3537,7 +3537,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   halfling_enby_warrior_l30:
-    image: player_sprites/halfling_enby_warrior_l30.png
+    image: cd151ef72ebaedab0034ab5b4c28035ee06cc4cb9bdcec092bb4f4a53122baed.png
     name: "a battle-hardened halfling champion"
     room: expert_warriors
     level: 30
@@ -3549,7 +3549,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   halfling_enby_warrior_l40:
-    image: player_sprites/halfling_enby_warrior_l40.png
+    image: cbfc5841637e8972034001566688a619d83c6e3f54e66cad497c34e0495cf497.png
     name: "a fearsome halfling warlord"
     room: master_warriors
     level: 40
@@ -3561,7 +3561,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   halfling_enby_warrior_l50:
-    image: player_sprites/halfling_enby_warrior_l50.png
+    image: 71e6a5c0ce9190e8db15852c01220cce0463ddf465d2cfa9f386831baefcf0c4.png
     name: "a godslaying halfling warlord"
     room: legend_warriors
     level: 50
@@ -3573,7 +3573,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   halfling_female_warrior_l1:
-    image: player_sprites/halfling_female_warrior_l1.png
+    image: 86a250775c0029c71ec9dfcbbdaa9bb607dee98430dbce7ff96baf522311527f.png
     name: "a fledgling halfling recruit"
     room: novice_warriors
     level: 1
@@ -3585,7 +3585,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   halfling_female_warrior_l10:
-    image: player_sprites/halfling_female_warrior_l10.png
+    image: 3a72435c29f1bdc9e3825f4f5ddfe9fae4519e3b3c1fabb34b5a2054f5345921.png
     name: "a trained halfling soldier"
     room: apprentice_warriors
     level: 10
@@ -3597,7 +3597,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   halfling_female_warrior_l20:
-    image: player_sprites/halfling_female_warrior_l20.png
+    image: f0290e0195a889fcbc8fd2068fc67b5afb933020db723a1b55c6a1dc4be1dad1.png
     name: "a seasoned halfling knight"
     room: journeyman_warriors
     level: 20
@@ -3609,7 +3609,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   halfling_female_warrior_l30:
-    image: player_sprites/halfling_female_warrior_l30.png
+    image: 0104dbcb27a0e58b772b33ef133ce7e876a9d447030de5b11c1116483c59c1ca.png
     name: "a battle-hardened halfling champion"
     room: expert_warriors
     level: 30
@@ -3621,7 +3621,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   halfling_female_warrior_l40:
-    image: player_sprites/halfling_female_warrior_l40.png
+    image: b1a05a0372fca1c41fb3caee7821255ad7bd1698c110c4deab423ea57509fca5.png
     name: "a fearsome halfling warlord"
     room: master_warriors
     level: 40
@@ -3633,7 +3633,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   halfling_female_warrior_l50:
-    image: player_sprites/halfling_female_warrior_l50.png
+    image: e3642dfb265aa98951389212077f72e658270e6100905718fb62380501fa8e98.png
     name: "a godslaying halfling warlord"
     room: legend_warriors
     level: 50
@@ -3645,7 +3645,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   halfling_male_warrior_l1:
-    image: player_sprites/halfling_male_warrior_l1.png
+    image: 2d71b69f1468e9c1fbee1412a600fa9b4779688ffd49d0171ba27cda3147ced7.png
     name: "a fledgling halfling recruit"
     room: novice_warriors
     level: 1
@@ -3657,7 +3657,7 @@ mobs:
     goldMin: 1
     goldMax: 5
   halfling_male_warrior_l10:
-    image: player_sprites/halfling_male_warrior_l10.png
+    image: 6f7a7fec82e35db15fb6086bd4e6742277d4770e885cb4cadcc3826cc184fe96.png
     name: "a trained halfling soldier"
     room: apprentice_warriors
     level: 10
@@ -3669,7 +3669,7 @@ mobs:
     goldMin: 15
     goldMax: 45
   halfling_male_warrior_l20:
-    image: player_sprites/halfling_male_warrior_l20.png
+    image: 17068c774e32ba148a24c3c3e1731619a2714848bac415960d45a12f62dff95e.png
     name: "a seasoned halfling knight"
     room: journeyman_warriors
     level: 20
@@ -3681,7 +3681,7 @@ mobs:
     goldMin: 35
     goldMax: 100
   halfling_male_warrior_l30:
-    image: player_sprites/halfling_male_warrior_l30.png
+    image: 490ad0400ca9c0d3c003a9904d2f6547a62c3fdb632f2e40322264e8aa0190da.png
     name: "a battle-hardened halfling champion"
     room: expert_warriors
     level: 30
@@ -3693,7 +3693,7 @@ mobs:
     goldMin: 70
     goldMax: 200
   halfling_male_warrior_l40:
-    image: player_sprites/halfling_male_warrior_l40.png
+    image: 724d46e53e12eb5d4f2be661fb422a6df597a07e9c07fd5357b4091bc54a4732.png
     name: "a fearsome halfling warlord"
     room: master_warriors
     level: 40
@@ -3705,7 +3705,7 @@ mobs:
     goldMin: 120
     goldMax: 350
   halfling_male_warrior_l50:
-    image: player_sprites/halfling_male_warrior_l50.png
+    image: 782154d2f8fdf099d2cb50d346918627e5117276073f0a6be18087215faa4175.png
     name: "a godslaying halfling warlord"
     room: legend_warriors
     level: 50
@@ -3717,7 +3717,7 @@ mobs:
     goldMin: 200
     goldMax: 500
   human_enby_cleric_l60:
-    image: player_sprites/human_enby_cleric_l60.png
+    image: 088c0dd2fc0444ec936af7ab64e9869bf917cf833282a9b3848bdfa8f62b779c.png
     name: "a transcendent human high oracle"
     room: staff_clerics
     level: 60
@@ -3729,7 +3729,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   human_enby_mage_l60:
-    image: player_sprites/human_enby_mage_l60.png
+    image: 1f621fc0621bf9b01f9c7cec33c100b7c0da99d30894ac4cb506430498d4c8df.png
     name: "a transcendent human archmage"
     room: staff_mages
     level: 60
@@ -3741,7 +3741,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   human_enby_rogue_l60:
-    image: player_sprites/human_enby_rogue_l60.png
+    image: 56d2f87d52bb6d9d3bf8eab936211415da623cc40535bfa3dcdad3f7c3ee3631.png
     name: "a transcendent human phantom lord"
     room: staff_rogues
     level: 60
@@ -3753,7 +3753,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   human_enby_warrior_l60:
-    image: player_sprites/human_enby_warrior_l60.png
+    image: d8cb1ecc458fe08f7ae665d2bed982d42506433957f2a1e1c4408b610017b5fd.png
     name: "a transcendent human god of war"
     room: staff_warriors
     level: 60
@@ -3765,7 +3765,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   human_female_cleric_l60:
-    image: player_sprites/human_female_cleric_l60.png
+    image: c031b8b6616a99ca0bd63f35937f3b149a82aa53089c5f83132cacd7f6679a3d.png
     name: "a transcendent human high priestess"
     room: staff_clerics
     level: 60
@@ -3777,7 +3777,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   human_female_mage_l60:
-    image: player_sprites/human_female_mage_l60.png
+    image: 90324507342b2452a49096c1333db63ec2e533d618dc8351498eb131926b9de0.png
     name: "a transcendent human archsorceress"
     room: staff_mages
     level: 60
@@ -3789,7 +3789,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   human_female_rogue_l60:
-    image: player_sprites/human_female_rogue_l60.png
+    image: 85744f969aa15999288aa0f24f1525b5efcd2708463a79e57a8eee5e9b320d7c.png
     name: "a transcendent human phantom mistress"
     room: staff_rogues
     level: 60
@@ -3801,7 +3801,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   human_female_warrior_l60:
-    image: player_sprites/human_female_warrior_l60.png
+    image: cb5f53854a1de0c180b8806f5e0b10be15c4b65e905057d5ddd4af2e320118f5.png
     name: "a transcendent human goddess of war"
     room: staff_warriors
     level: 60
@@ -3813,7 +3813,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   human_male_cleric_l60:
-    image: player_sprites/human_male_cleric_l60.png
+    image: 18dfb5ea900d7d49c6c2c60c39c23b46e59939577d3b8efaf4cdc72c19cb2eaa.png
     name: "a transcendent human high priest"
     room: staff_clerics
     level: 60
@@ -3825,7 +3825,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   human_male_mage_l60:
-    image: player_sprites/human_male_mage_l60.png
+    image: a70a1efa55208d404e9d00bbcb10612634d11ba9ed238244218fa7f77d19db83.png
     name: "a transcendent human archsorcerer"
     room: staff_mages
     level: 60
@@ -3837,7 +3837,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   human_male_rogue_l60:
-    image: player_sprites/human_male_rogue_l60.png
+    image: 7f7b54a65e8f1d2d6a1a7b56fcc99fcb848aa6e68eb81ce52fb70ea44ff32385.png
     name: "a transcendent human phantom lord"
     room: staff_rogues
     level: 60
@@ -3849,7 +3849,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   human_male_warrior_l60:
-    image: player_sprites/human_male_warrior_l60.png
+    image: 80a55c0df407de04ba9534b84bff0c2990e440301adec532c6f63c0cc293d165.png
     name: "a transcendent human god of war"
     room: staff_warriors
     level: 60
@@ -3861,7 +3861,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   elf_enby_cleric_l60:
-    image: player_sprites/elf_enby_cleric_l60.png
+    image: 6e733efcf6db00fe61fcaa5f926e125f1ea29c6cf052828829af897fd3de6a7b.png
     name: "a transcendent elven high oracle"
     room: staff_clerics
     level: 60
@@ -3873,7 +3873,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   elf_enby_mage_l60:
-    image: player_sprites/elf_enby_mage_l60.png
+    image: 29870ef11757bc9fb4fa422318b4af6833b28ed3686967d47a0a4a0f342c7f18.png
     name: "a transcendent elven archmage"
     room: staff_mages
     level: 60
@@ -3885,7 +3885,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   elf_enby_rogue_l60:
-    image: player_sprites/elf_enby_rogue_l60.png
+    image: e05b995836486111d7ac8a73eab966c82c7e339f7a8773938154c24ba820b3b1.png
     name: "a transcendent elven phantom lord"
     room: staff_rogues
     level: 60
@@ -3897,7 +3897,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   elf_enby_warrior_l60:
-    image: player_sprites/elf_enby_warrior_l60.png
+    image: ea37db5ec34d5eac0b633210e61b97003f0ee8eedd54629fd6bc37bbd7683e78.png
     name: "a transcendent elven god of war"
     room: staff_warriors
     level: 60
@@ -3909,7 +3909,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   elf_female_cleric_l60:
-    image: player_sprites/elf_female_cleric_l60.png
+    image: cfe355002066ed8a1b40d01669d3ec14508e3e3c6d370f2bfb402c5b648c5676.png
     name: "a transcendent elven high priestess"
     room: staff_clerics
     level: 60
@@ -3921,7 +3921,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   elf_female_mage_l60:
-    image: player_sprites/elf_female_mage_l60.png
+    image: c21f2e48aa274722b59ac191e2d1a2ba7f559ab03bd9a81a5cd2cf643caef727.png
     name: "a transcendent elven archsorceress"
     room: staff_mages
     level: 60
@@ -3933,7 +3933,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   elf_female_rogue_l60:
-    image: player_sprites/elf_female_rogue_l60.png
+    image: da051eeff662cc5316a9ec56409db1916118315237fb7ddb700389dcdfdf7147.png
     name: "a transcendent elven phantom mistress"
     room: staff_rogues
     level: 60
@@ -3945,7 +3945,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   elf_female_warrior_l60:
-    image: player_sprites/elf_female_warrior_l60.png
+    image: 85a985f953f59327612aed862d5d2077b9a069a927ccb9977df95c515371af97.png
     name: "a transcendent elven goddess of war"
     room: staff_warriors
     level: 60
@@ -3957,7 +3957,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   elf_male_cleric_l60:
-    image: player_sprites/elf_male_cleric_l60.png
+    image: 085df338f7147fd5fc0ceb36880ce4ed4337e9026379cff62a4bd145ee80f59f.png
     name: "a transcendent elven high priest"
     room: staff_clerics
     level: 60
@@ -3969,7 +3969,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   elf_male_mage_l60:
-    image: player_sprites/elf_male_mage_l60.png
+    image: c80605913e5ff6e1f564b0a3f2d32e214f05f5f1f4788741e7d206fea9e9194b.png
     name: "a transcendent elven archsorcerer"
     room: staff_mages
     level: 60
@@ -3981,7 +3981,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   elf_male_rogue_l60:
-    image: player_sprites/elf_male_rogue_l60.png
+    image: dbac06c0a3145f1737d86be8edf8e513fefb7af8d6e61b33ac4767d4d4de2c44.png
     name: "a transcendent elven phantom lord"
     room: staff_rogues
     level: 60
@@ -3993,7 +3993,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   elf_male_warrior_l60:
-    image: player_sprites/elf_male_warrior_l60.png
+    image: 2f2708284bf20f63bd77f1ecf5a5bb57d5b27919b30a141c8ee0b1fd02600068.png
     name: "a transcendent elven god of war"
     room: staff_warriors
     level: 60
@@ -4005,7 +4005,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   dwarf_enby_cleric_l60:
-    image: player_sprites/dwarf_enby_cleric_l60.png
+    image: 6439ce06528a43b25d8f6173b7bf6129feff4d2ab5ab21571c5607fa12efbb2f.png
     name: "a transcendent dwarven high oracle"
     room: staff_clerics
     level: 60
@@ -4017,7 +4017,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   dwarf_enby_mage_l60:
-    image: player_sprites/dwarf_enby_mage_l60.png
+    image: e6a070c7b444800e0a92767e1217c4d4c525eb45b3bfcab4a057dbd1549c5571.png
     name: "a transcendent dwarven archmage"
     room: staff_mages
     level: 60
@@ -4029,7 +4029,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   dwarf_enby_rogue_l60:
-    image: player_sprites/dwarf_enby_rogue_l60.png
+    image: 2a106451686b109e9dacb65c5e6297570eae59bd7209a219d5d818482756be8b.png
     name: "a transcendent dwarven phantom lord"
     room: staff_rogues
     level: 60
@@ -4041,7 +4041,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   dwarf_enby_warrior_l60:
-    image: player_sprites/dwarf_enby_warrior_l60.png
+    image: 56abfd279b9c90e0145f5f43c86ab2bd43445c41609d53bec2157854f3f37e37.png
     name: "a transcendent dwarven god of war"
     room: staff_warriors
     level: 60
@@ -4053,7 +4053,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   dwarf_female_cleric_l60:
-    image: player_sprites/dwarf_female_cleric_l60.png
+    image: 87c00e0e02a25483869242dd480db46c9d6e07c23f3d54387a9c7de682066875.png
     name: "a transcendent dwarven high priestess"
     room: staff_clerics
     level: 60
@@ -4065,7 +4065,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   dwarf_female_mage_l60:
-    image: player_sprites/dwarf_female_mage_l60.png
+    image: 72f1b985d69cc356a9b369e3396189c3ff0cacbd6b6045ae3d4eb2fdafc65bf2.png
     name: "a transcendent dwarven archsorceress"
     room: staff_mages
     level: 60
@@ -4077,7 +4077,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   dwarf_female_rogue_l60:
-    image: player_sprites/dwarf_female_rogue_l60.png
+    image: 25e105e5fc10cddbdfd256d221b557a6530893bcd02c414713d50a9e03898690.png
     name: "a transcendent dwarven phantom mistress"
     room: staff_rogues
     level: 60
@@ -4089,7 +4089,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   dwarf_female_warrior_l60:
-    image: player_sprites/dwarf_female_warrior_l60.png
+    image: 710890c2ea5918d65a37cd90dd15dfd81f5cf7bf1e50940fe1fc2ee520e3705e.png
     name: "a transcendent dwarven goddess of war"
     room: staff_warriors
     level: 60
@@ -4101,7 +4101,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   dwarf_male_cleric_l60:
-    image: player_sprites/dwarf_male_cleric_l60.png
+    image: 828bb5442acee051240563fecbac56b37d2d72e3547c8b74701032f18e984188.png
     name: "a transcendent dwarven high priest"
     room: staff_clerics
     level: 60
@@ -4113,7 +4113,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   dwarf_male_mage_l60:
-    image: player_sprites/dwarf_male_mage_l60.png
+    image: aca58086316adf43b783e9b29e38aa509612ea8bf8fafca5a4434116726f7699.png
     name: "a transcendent dwarven archsorcerer"
     room: staff_mages
     level: 60
@@ -4125,7 +4125,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   dwarf_male_rogue_l60:
-    image: player_sprites/dwarf_male_rogue_l60.png
+    image: c6727ffb00600572f051ca09c08d70328c473e735f41be43bf57a00e579bd98b.png
     name: "a transcendent dwarven phantom lord"
     room: staff_rogues
     level: 60
@@ -4137,7 +4137,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   dwarf_male_warrior_l60:
-    image: player_sprites/dwarf_male_warrior_l60.png
+    image: caa72cfda4f0f7ac643a8919ebad69d78bbeb08f15e58a3d9f289a632511cdb2.png
     name: "a transcendent dwarven god of war"
     room: staff_warriors
     level: 60
@@ -4149,7 +4149,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   halfling_enby_cleric_l60:
-    image: player_sprites/halfling_enby_cleric_l60.png
+    image: 13ecd6c3e9b19f68d716f7b2594fabf581f3ad0412923ba3a4df6c5b63edc2a0.png
     name: "a transcendent halfling high oracle"
     room: staff_clerics
     level: 60
@@ -4161,7 +4161,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   halfling_enby_mage_l60:
-    image: player_sprites/halfling_enby_mage_l60.png
+    image: 2b07396451d1cd2ec765528b830dfe88fef2b9d366e0643995c5d68c7128b53c.png
     name: "a transcendent halfling archmage"
     room: staff_mages
     level: 60
@@ -4173,7 +4173,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   halfling_enby_rogue_l60:
-    image: player_sprites/halfling_enby_rogue_l60.png
+    image: 893b3160443676463923b775a3880a81687b782c95b22dbc633295ad8fc630dd.png
     name: "a transcendent halfling phantom lord"
     room: staff_rogues
     level: 60
@@ -4185,7 +4185,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   halfling_enby_warrior_l60:
-    image: player_sprites/halfling_enby_warrior_l60.png
+    image: cfca038b27ea477591e90965a3b16de76fca7f27f61e7f1b32c7320ceae79dfb.png
     name: "a transcendent halfling god of war"
     room: staff_warriors
     level: 60
@@ -4197,7 +4197,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   halfling_female_cleric_l60:
-    image: player_sprites/halfling_female_cleric_l60.png
+    image: 84996b30fe22247f5a46f7be7dcef31ede48dec3fc813d3928885bb7d184187c.png
     name: "a transcendent halfling high priestess"
     room: staff_clerics
     level: 60
@@ -4209,7 +4209,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   halfling_female_mage_l60:
-    image: player_sprites/halfling_female_mage_l60.png
+    image: 2440c362bc3cc7d88374539db8c61c2b0ee224b0ab3ea35c3e3d69e60aceea98.png
     name: "a transcendent halfling archsorceress"
     room: staff_mages
     level: 60
@@ -4221,7 +4221,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   halfling_female_rogue_l60:
-    image: player_sprites/halfling_female_rogue_l60.png
+    image: b8492588f824c84de1122fff8067240e0ff32555d884c3d801edb63078a0a479.png
     name: "a transcendent halfling phantom mistress"
     room: staff_rogues
     level: 60
@@ -4233,7 +4233,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   halfling_female_warrior_l60:
-    image: player_sprites/halfling_female_warrior_l60.png
+    image: 24d087c4c4baec1f5837cc638c8ec1ebb6cff6493664124862477a269f3df2dd.png
     name: "a transcendent halfling goddess of war"
     room: staff_warriors
     level: 60
@@ -4245,7 +4245,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   halfling_male_cleric_l60:
-    image: player_sprites/halfling_male_cleric_l60.png
+    image: dc54ac7cce1b89df4cc73f4213c61582fa5edf7759033c5edf935ea9e628845c.png
     name: "a transcendent halfling high priest"
     room: staff_clerics
     level: 60
@@ -4257,7 +4257,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   halfling_male_mage_l60:
-    image: player_sprites/halfling_male_mage_l60.png
+    image: 239b6888bee9e8451087ac6793d1e701b483b98aeb31fa97db604e5cfea69dba.png
     name: "a transcendent halfling archsorcerer"
     room: staff_mages
     level: 60
@@ -4269,7 +4269,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   halfling_male_rogue_l60:
-    image: player_sprites/halfling_male_rogue_l60.png
+    image: fde900f2010ee61efc99f00fb7dc1969b25701093792d88794c485768f312bdd.png
     name: "a transcendent halfling phantom lord"
     room: staff_rogues
     level: 60
@@ -4281,7 +4281,7 @@ mobs:
     goldMin: 300
     goldMax: 750
   halfling_male_warrior_l60:
-    image: player_sprites/halfling_male_warrior_l60.png
+    image: ef9b0c6173e9c9fc8ead5454d153e2302905e392c5964ce80cb5e9c27aea5752.png
     name: "a transcendent halfling god of war"
     room: staff_warriors
     level: 60

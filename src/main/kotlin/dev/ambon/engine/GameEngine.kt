@@ -129,6 +129,7 @@ class GameEngine(
     classRegistryOverride: PlayerClassRegistry? = null,
     raceRegistryOverride: RaceRegistry? = null,
     statRegistryOverride: StatRegistry? = null,
+    imagesBaseUrl: String = "/images/",
 ) {
     // Convenience delegates — expose grouped context fields as flat names so the
     // existing class body compiles without modification.
@@ -409,6 +410,7 @@ class GameEngine(
                 }
             },
             statRegistry = statRegistry,
+            imagesBaseUrl = imagesBaseUrl,
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -541,7 +543,7 @@ class GameEngine(
         )
     private val abilityRegistry =
         AbilityRegistry().also { reg ->
-            AbilityRegistryLoader.load(engineConfig.abilities, reg)
+            AbilityRegistryLoader.load(engineConfig.abilities, reg, imagesBaseUrl)
         }
     private val abilitySystem: AbilitySystem =
         AbilitySystem(

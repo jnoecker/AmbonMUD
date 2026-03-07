@@ -103,6 +103,9 @@ class EngineServer(
             resources = config.world.resources,
             tiers = config.engine.mob.tiers,
             zoneFilter = zoneFilter,
+            imagesBaseUrl = config.images.baseUrl,
+            videosBaseUrl = config.videos.baseUrl,
+            audioBaseUrl = config.audio.baseUrl,
         )
     private val scheduler: Scheduler = Scheduler(clock)
     private val localZones = ServerInfrastructure.resolveLocalZones(config, configuredShardedZones, world)
@@ -205,6 +208,7 @@ class EngineServer(
                         zoneRegistry = zoneRegistry,
                         playerLocationIndex = playerLocationIndex,
                     ),
+                    imagesBaseUrl = config.images.baseUrl,
                 ).run()
             }
 

@@ -16,10 +16,21 @@ object WorldFactory {
         tiers: MobTiersConfig = MobTiersConfig(),
         zoneFilter: Set<String> = emptySet(),
         startRoom: RoomId? = null,
+        imagesBaseUrl: String = "/images/",
+        videosBaseUrl: String = "/videos/",
+        audioBaseUrl: String = "/audio/",
     ): World {
         val paths = resources.ifEmpty { discoverClasspathZones() }
         if (paths.isEmpty()) throw WorldLoadException("No zone files found — classpath 'world/' directory is empty")
-        return WorldLoader.loadFromResources(paths, tiers, zoneFilter, startRoom)
+        return WorldLoader.loadFromResources(
+            paths,
+            tiers,
+            zoneFilter,
+            startRoom,
+            imagesBaseUrl = imagesBaseUrl,
+            videosBaseUrl = videosBaseUrl,
+            audioBaseUrl = audioBaseUrl,
+        )
     }
 
     /**
