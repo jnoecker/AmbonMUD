@@ -114,6 +114,10 @@ data class AppConfig(
         require(engine.regen.mana.minIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.minIntervalMillis must be > 0" }
         require(engine.regen.mana.regenAmount > 0) { "ambonMUD.engine.regen.mana.regenAmount must be > 0" }
 
+        engine.stats.definitions.forEach { (key, def) ->
+            require(def.baseStat >= 0) { "ambonMUD.engine.stats.definitions.$key.baseStat must be >= 0" }
+        }
+
         val statIds = engine.stats.definitions.keys.map { it.uppercase() }.toSet()
         val b = engine.stats.bindings
         listOf(
