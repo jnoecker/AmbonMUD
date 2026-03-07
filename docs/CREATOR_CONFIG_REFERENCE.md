@@ -115,11 +115,11 @@ ambonmud:
         HUMAN:
           displayName: "Human"
           description: "Versatile and adaptable."
-          statMods: { str: 1, dex: 0, con: 0, int: 0, wis: 0, cha: 1 }
+          statMods: { STR: 1, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 1 }
         ELF:
           displayName: "Elf"
           description: "Graceful and ancient."
-          statMods: { str: -1, dex: 2, con: -2, int: 1, wis: 0, cha: 0 }
+          statMods: { STR: -1, DEX: 2, CON: -2, INT: 1, WIS: 0, CHA: 0 }
 ```
 
 ### Race Fields
@@ -128,7 +128,7 @@ ambonmud:
 |-------|---------|-------|
 | `displayName` | (key name) | Shown during character creation. |
 | `description` | `""` | Shown during character creation. |
-| `statMods.str/dex/con/int/wis/cha` | `0` | Added to the character's base stat at creation. Can be negative. |
+| `statMods.STR/DEX/CON/INT/WIS/CHA` | `0` | Added to the character's base stat at creation. Can be negative. Stat keys are uppercase. |
 
 ---
 
