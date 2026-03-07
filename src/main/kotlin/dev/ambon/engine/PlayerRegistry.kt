@@ -1,6 +1,6 @@
 package dev.ambon.engine
 
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
@@ -92,6 +92,7 @@ class PlayerRegistry(
     private val passwordHasher: PasswordHasher = BCryptPasswordHasher,
     private val classRegistry: PlayerClassRegistry? = null,
     private val raceRegistry: RaceRegistry? = null,
+    private val statRegistry: StatRegistry? = null,
 ) {
     val maxLevel: Int get() = progression.maxLevel
 
@@ -171,8 +172,10 @@ class PlayerRegistry(
 
         val now = clock.millis()
         val hash = withContext(hashingContext) { passwordHasher.hash(password) }
-        val baseStat = PlayerState.BASE_STAT
-        val raceMods = raceRegistry?.get(raceId)?.statMods ?: StatBlock.ZERO
+
+        fun base(id: String): Int = statRegistry?.get(id)?.baseStat ?: PlayerState.BASE_STAT
+
+        val raceMods = raceRegistry?.get(raceId)?.statMods ?: StatMap.EMPTY
         val classStartRoom = classStartRooms[classId.uppercase()]
             ?: classRegistry?.get(classId)?.startRoom?.let { RoomId(it) }
         val record =
@@ -186,12 +189,12 @@ class PlayerRegistry(
                         ansiEnabled = defaultAnsiEnabled,
                         race = raceId,
                         playerClass = classId,
-                        strength = baseStat + raceMods.str,
-                        dexterity = baseStat + raceMods.dex,
-                        constitution = baseStat + raceMods.con,
-                        intelligence = baseStat + raceMods.int,
-                        wisdom = baseStat + raceMods.wis,
-                        charisma = baseStat + raceMods.cha,
+                        strength = base("STR") + raceMods["STR"],
+                        dexterity = base("DEX") + raceMods["DEX"],
+                        constitution = base("CON") + raceMods["CON"],
+                        intelligence = base("INT") + raceMods["INT"],
+                        wisdom = base("WIS") + raceMods["WIS"],
+                        charisma = base("CHA") + raceMods["CHA"],
                     ),
                 )
             } catch (_: PersistenceException) {

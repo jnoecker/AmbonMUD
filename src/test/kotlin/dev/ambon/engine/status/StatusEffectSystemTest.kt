@@ -1,6 +1,6 @@
 package dev.ambon.engine.status
 
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.test.MutableClock
@@ -106,7 +106,7 @@ class StatusEffectSystemTest {
                 displayName = "Battle Shout",
                 effectType = EffectType.STAT_BUFF,
                 durationMs = durationMs,
-                statMods = StatBlock(str = str),
+                statMods = StatMap.of("STR" to str),
             ),
         )
     }
@@ -291,8 +291,8 @@ class StatusEffectSystemTest {
         h.system.applyToPlayer(sid, StatusEffectId("battle_shout"))
 
         val mods = h.system.getPlayerStatMods(sid)
-        assertEquals(5, mods.str)
-        assertEquals(0, mods.dex)
+        assertEquals(5, mods["STR"])
+        assertEquals(0, mods["DEX"])
     }
 
     // ── STUN Tests ──
@@ -472,8 +472,8 @@ class StatusEffectSystemTest {
 
         val oldMods = h.system.getPlayerStatMods(sid)
         val newMods = h.system.getPlayerStatMods(newSid)
-        assertEquals(0, oldMods.str)
-        assertEquals(3, newMods.str)
+        assertEquals(0, oldMods["STR"])
+        assertEquals(3, newMods["STR"])
     }
 
     @Test
@@ -488,7 +488,7 @@ class StatusEffectSystemTest {
         h.system.removeAllFromPlayer(sid)
 
         assertFalse(h.system.hasPlayerEffect(sid, EffectType.STUN))
-        assertEquals(0, h.system.getPlayerStatMods(sid).str)
+        assertEquals(0, h.system.getPlayerStatMods(sid)["STR"])
     }
 
     // ── Mob DOT Kill Detection ──
@@ -622,19 +622,4 @@ class StatusEffectSystemTest {
 
             assertFalse(h.system.hasPlayerEffect(sid, EffectType.DOT))
         }
-
-    // ── StatBlock Addition ──
-
-    @Test
-    fun `StatBlock plus operator sums all fields`() {
-        val a = StatBlock(str = 1, dex = 2, con = 3, int = 4, wis = 5, cha = 6)
-        val b = StatBlock(str = 10, dex = 20, con = 30, int = 40, wis = 50, cha = 60)
-        val sum = a + b
-        assertEquals(11, sum.str)
-        assertEquals(22, sum.dex)
-        assertEquals(33, sum.con)
-        assertEquals(44, sum.int)
-        assertEquals(55, sum.wis)
-        assertEquals(66, sum.cha)
-    }
 }

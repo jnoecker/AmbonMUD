@@ -1,6 +1,6 @@
 package dev.ambon.engine
 
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.crafting.CraftingSkill
 import dev.ambon.domain.crafting.CraftingSkillState
@@ -22,12 +22,14 @@ data class PlayerState(
     var baseMaxHp: Int = BASE_MAX_HP,
     var hp: Int = BASE_MAX_HP,
     var maxHp: Int = BASE_MAX_HP,
-    var strength: Int = BASE_STAT,
-    var dexterity: Int = BASE_STAT,
-    var constitution: Int = BASE_STAT,
-    var intelligence: Int = BASE_STAT,
-    var wisdom: Int = BASE_STAT,
-    var charisma: Int = BASE_STAT,
+    var stats: StatMap = StatMap.of(
+        "STR" to BASE_STAT,
+        "DEX" to BASE_STAT,
+        "CON" to BASE_STAT,
+        "INT" to BASE_STAT,
+        "WIS" to BASE_STAT,
+        "CHA" to BASE_STAT,
+    ),
     var gender: String = "ENBY",
     var race: String = "HUMAN",
     var playerClass: String = "WARRIOR",
@@ -77,9 +79,7 @@ data class PlayerState(
 
     override fun toString(): String =
         "PlayerState(sessionId=$sessionId, name=$name, roomId=$roomId, playerId=$playerId, " +
-            "baseMaxHp=$baseMaxHp, hp=$hp, maxHp=$maxHp, " +
-            "strength=$strength, dexterity=$dexterity, constitution=$constitution, " +
-            "intelligence=$intelligence, wisdom=$wisdom, charisma=$charisma, " +
+            "baseMaxHp=$baseMaxHp, hp=$hp, maxHp=$maxHp, stats=$stats, " +
             "race=$race, playerClass=$playerClass, level=$level, xpTotal=$xpTotal, " +
             "ansiEnabled=$ansiEnabled, isStaff=$isStaff, " +
             "mana=$mana, maxMana=$maxMana, baseMana=$baseMana, gold=$gold, " +
@@ -130,12 +130,14 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         roomId = roomId,
         playerId = id,
         hp = hp,
-        strength = strength,
-        dexterity = dexterity,
-        constitution = constitution,
-        intelligence = intelligence,
-        wisdom = wisdom,
-        charisma = charisma,
+        stats = StatMap.of(
+            "STR" to strength,
+            "DEX" to dexterity,
+            "CON" to constitution,
+            "INT" to intelligence,
+            "WIS" to wisdom,
+            "CHA" to charisma,
+        ),
         gender = gender,
         race = race,
         playerClass = playerClass,
@@ -173,12 +175,12 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         id = pid,
         name = name,
         roomId = roomId,
-        strength = strength,
-        dexterity = dexterity,
-        constitution = constitution,
-        intelligence = intelligence,
-        wisdom = wisdom,
-        charisma = charisma,
+        strength = stats["STR"],
+        dexterity = stats["DEX"],
+        constitution = stats["CON"],
+        intelligence = stats["INT"],
+        wisdom = stats["WIS"],
+        charisma = stats["CHA"],
         gender = gender,
         race = race,
         playerClass = playerClass,
@@ -222,16 +224,8 @@ fun MobState.takeDamage(amount: Int) {
 fun resolveEffectiveStats(
     player: PlayerState,
     equip: ItemRegistry.EquipmentBonuses,
-    mods: StatBlock = StatBlock.ZERO,
-): StatBlock =
-    StatBlock(
-        str = player.strength + equip.stats.str + mods.str,
-        dex = player.dexterity + equip.stats.dex + mods.dex,
-        con = player.constitution + equip.stats.con + mods.con,
-        int = player.intelligence + equip.stats.int + mods.int,
-        wis = player.wisdom + equip.stats.wis + mods.wis,
-        cha = player.charisma + equip.stats.cha + mods.cha,
-    )
+    mods: StatMap = StatMap.EMPTY,
+): StatMap = player.stats + equip.stats + mods
 
 /**
  * Convenience overload that gathers equipment bonuses and status-effect mods
@@ -242,8 +236,8 @@ fun resolvePlayerStats(
     player: PlayerState,
     items: ItemRegistry?,
     statusEffects: dev.ambon.engine.status.StatusEffectSystem?,
-): StatBlock {
+): StatMap {
     val equip = items?.equipmentBonuses(player.sessionId) ?: ItemRegistry.EquipmentBonuses()
-    val mods = statusEffects?.getPlayerStatMods(player.sessionId) ?: StatBlock.ZERO
+    val mods = statusEffects?.getPlayerStatMods(player.sessionId) ?: StatMap.EMPTY
     return resolveEffectiveStats(player, equip, mods)
 }

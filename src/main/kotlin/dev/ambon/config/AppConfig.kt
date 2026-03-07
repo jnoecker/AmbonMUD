@@ -90,15 +90,9 @@ data class AppConfig(
         require(!engine.combat.feedback.roomBroadcastEnabled || engine.combat.feedback.enabled) {
             "ambonMUD.engine.combat.feedback.roomBroadcastEnabled requires feedback.enabled=true"
         }
-        require(engine.combat.strDivisor > 0) { "ambonMUD.engine.combat.strDivisor must be > 0" }
-        require(engine.combat.dexDodgePerPoint >= 0) { "ambonMUD.engine.combat.dexDodgePerPoint must be >= 0" }
-        require(engine.combat.maxDodgePercent in 0..100) { "ambonMUD.engine.combat.maxDodgePercent must be in 0..100" }
-        require(engine.combat.intSpellDivisor > 0) { "ambonMUD.engine.combat.intSpellDivisor must be > 0" }
-
         require(engine.regen.maxPlayersPerTick > 0) { "ambonMUD.engine.regen.maxPlayersPerTick must be > 0" }
         require(engine.regen.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.baseIntervalMillis must be > 0" }
         require(engine.regen.minIntervalMillis > 0L) { "ambonMUD.engine.regen.minIntervalMillis must be > 0" }
-        require(engine.regen.msPerConstitution >= 0L) { "ambonMUD.engine.regen.msPerConstitution must be >= 0" }
         require(engine.regen.regenAmount > 0) { "ambonMUD.engine.regen.regenAmount must be > 0" }
 
         require(engine.scheduler.maxActionsPerTick > 0) { "ambonMUD.engine.scheduler.maxActionsPerTick must be > 0" }
@@ -119,7 +113,36 @@ data class AppConfig(
         require(engine.regen.mana.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.baseIntervalMillis must be > 0" }
         require(engine.regen.mana.minIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.minIntervalMillis must be > 0" }
         require(engine.regen.mana.regenAmount > 0) { "ambonMUD.engine.regen.mana.regenAmount must be > 0" }
-        require(engine.regen.mana.msPerWisdom >= 0L) { "ambonMUD.engine.regen.mana.msPerWisdom must be >= 0" }
+
+        engine.stats.definitions.forEach { (key, def) ->
+            require(def.baseStat >= 0) { "ambonMUD.engine.stats.definitions.$key.baseStat must be >= 0" }
+        }
+
+        val statIds = engine.stats.definitions.keys.map { it.uppercase() }.toSet()
+        val b = engine.stats.bindings
+        listOf(
+            b.meleeDamageStat to "meleeDamageStat",
+            b.dodgeStat to "dodgeStat",
+            b.spellDamageStat to "spellDamageStat",
+            b.hpScalingStat to "hpScalingStat",
+            b.manaScalingStat to "manaScalingStat",
+            b.hpRegenStat to "hpRegenStat",
+            b.manaRegenStat to "manaRegenStat",
+            b.xpBonusStat to "xpBonusStat",
+        ).forEach { (statId, bindingName) ->
+            require(statId.uppercase() in statIds) {
+                "ambonMUD.engine.stats.bindings.$bindingName references unknown stat '${statId.uppercase()}'"
+            }
+        }
+        require(b.meleeDamageDivisor > 0) { "ambonMUD.engine.stats.bindings.meleeDamageDivisor must be > 0" }
+        require(b.dodgePerPoint >= 0) { "ambonMUD.engine.stats.bindings.dodgePerPoint must be >= 0" }
+        require(b.maxDodgePercent in 0..100) { "ambonMUD.engine.stats.bindings.maxDodgePercent must be in 0..100" }
+        require(b.spellDamageDivisor > 0) { "ambonMUD.engine.stats.bindings.spellDamageDivisor must be > 0" }
+        require(b.hpScalingDivisor > 0) { "ambonMUD.engine.stats.bindings.hpScalingDivisor must be > 0" }
+        require(b.manaScalingDivisor > 0) { "ambonMUD.engine.stats.bindings.manaScalingDivisor must be > 0" }
+        require(b.hpRegenMsPerPoint >= 0L) { "ambonMUD.engine.stats.bindings.hpRegenMsPerPoint must be >= 0" }
+        require(b.manaRegenMsPerPoint >= 0L) { "ambonMUD.engine.stats.bindings.manaRegenMsPerPoint must be >= 0" }
+        require(b.xpBonusPerPoint >= 0.0) { "ambonMUD.engine.stats.bindings.xpBonusPerPoint must be >= 0" }
 
         engine.abilities.definitions.forEach { (key, def) ->
             require(def.displayName.isNotBlank()) { "ability '$key' displayName must be non-blank" }
@@ -419,6 +442,7 @@ data class EngineConfig(
     val debug: EngineDebugConfig = EngineDebugConfig(),
     val classes: ClassEngineConfig = ClassEngineConfig(),
     val races: RaceEngineConfig = RaceEngineConfig(),
+    val stats: StatsEngineConfig = StatsEngineConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
 )
@@ -511,6 +535,79 @@ data class RaceEngineConfig(
             "HALFLING" to RaceDefinitionConfig(
                 displayName = "Halfling",
                 statMods = RaceStatModsConfig(str = -2, dex = 2, con = -1, wis = 1, cha = 1),
+            ),
+        )
+    }
+}
+
+data class StatDefinitionConfig(
+    val displayName: String = "",
+    val abbreviation: String = "",
+    val description: String = "",
+    val baseStat: Int = 10,
+)
+
+data class StatBindingsConfig(
+    val meleeDamageStat: String = "STR",
+    val meleeDamageDivisor: Int = 3,
+    val dodgeStat: String = "DEX",
+    val dodgePerPoint: Int = 2,
+    val maxDodgePercent: Int = 30,
+    val spellDamageStat: String = "INT",
+    val spellDamageDivisor: Int = 3,
+    val hpScalingStat: String = "CON",
+    val hpScalingDivisor: Int = 5,
+    val manaScalingStat: String = "INT",
+    val manaScalingDivisor: Int = 5,
+    val hpRegenStat: String = "CON",
+    val hpRegenMsPerPoint: Long = 200L,
+    val manaRegenStat: String = "WIS",
+    val manaRegenMsPerPoint: Long = 200L,
+    val xpBonusStat: String = "CHA",
+    val xpBonusPerPoint: Double = 0.005,
+)
+
+data class StatsEngineConfig(
+    val definitions: Map<String, StatDefinitionConfig> = defaultStatDefinitions(),
+    val bindings: StatBindingsConfig = StatBindingsConfig(),
+) {
+    companion object {
+        fun defaultStatDefinitions(): Map<String, StatDefinitionConfig> = linkedMapOf(
+            "STR" to StatDefinitionConfig(
+                displayName = "Strength",
+                abbreviation = "STR",
+                description = "Physical power. Increases melee damage.",
+                baseStat = 10,
+            ),
+            "DEX" to StatDefinitionConfig(
+                displayName = "Dexterity",
+                abbreviation = "DEX",
+                description = "Agility and reflexes. Increases dodge chance.",
+                baseStat = 10,
+            ),
+            "CON" to StatDefinitionConfig(
+                displayName = "Constitution",
+                abbreviation = "CON",
+                description = "Endurance and health. Increases max HP and HP regen.",
+                baseStat = 10,
+            ),
+            "INT" to StatDefinitionConfig(
+                displayName = "Intelligence",
+                abbreviation = "INT",
+                description = "Arcane aptitude. Increases max mana and spell damage.",
+                baseStat = 10,
+            ),
+            "WIS" to StatDefinitionConfig(
+                displayName = "Wisdom",
+                abbreviation = "WIS",
+                description = "Insight and perception. Increases mana regen.",
+                baseStat = 10,
+            ),
+            "CHA" to StatDefinitionConfig(
+                displayName = "Charisma",
+                abbreviation = "CHA",
+                description = "Force of personality. Increases XP gain.",
+                baseStat = 10,
             ),
         )
     }
@@ -631,10 +728,6 @@ data class CombatEngineConfig(
     val minDamage: Int = 1,
     val maxDamage: Int = 4,
     val feedback: CombatFeedbackConfig = CombatFeedbackConfig(),
-    val strDivisor: Int = 3,
-    val dexDodgePerPoint: Int = 2,
-    val maxDodgePercent: Int = 30,
-    val intSpellDivisor: Int = 3,
 )
 
 data class CombatFeedbackConfig(
@@ -646,7 +739,6 @@ data class RegenEngineConfig(
     val maxPlayersPerTick: Int = 50,
     val baseIntervalMillis: Long = 5_000L,
     val minIntervalMillis: Long = 1_000L,
-    val msPerConstitution: Long = 200L,
     val regenAmount: Int = 1,
     val mana: ManaRegenConfig = ManaRegenConfig(),
 )
@@ -655,7 +747,6 @@ data class ManaRegenConfig(
     val baseIntervalMillis: Long = 3_000L,
     val minIntervalMillis: Long = 1_000L,
     val regenAmount: Int = 1,
-    val msPerWisdom: Long = 200L,
 )
 
 data class SchedulerEngineConfig(

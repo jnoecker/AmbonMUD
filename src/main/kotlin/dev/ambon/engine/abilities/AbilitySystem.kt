@@ -1,6 +1,7 @@
 package dev.ambon.engine.abilities
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.CombatSystem
@@ -34,7 +35,7 @@ class AbilitySystem(
     private val clock: Clock,
     private val rng: Random = Random(),
     private val items: ItemRegistry? = null,
-    private val intSpellDivisor: Int = 3,
+    private val bindings: StatBindingsConfig = StatBindingsConfig(),
     private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
     private val statusEffects: StatusEffectSystem? = null,
     private val groupSystem: GroupSystem? = null,
@@ -130,7 +131,7 @@ class AbilitySystem(
 
         val playerStats = resolvePlayerStats(player, items, statusEffects)
 
-        val intBonus = PlayerState.statBonus(playerStats.int, intSpellDivisor)
+        val intBonus = PlayerState.statBonus(playerStats[bindings.spellDamageStat], bindings.spellDamageDivisor)
 
         when (val effect = ability.effect) {
             is AbilityEffect.DirectDamage -> {

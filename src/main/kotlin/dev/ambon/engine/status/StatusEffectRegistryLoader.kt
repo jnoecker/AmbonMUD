@@ -1,7 +1,7 @@
 package dev.ambon.engine.status
 
 import dev.ambon.config.StatusEffectEngineConfig
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 
 object StatusEffectRegistryLoader {
     fun load(
@@ -38,13 +38,15 @@ object StatusEffectRegistryLoader {
                     tickMaxValue = defConfig.tickMaxValue,
                     shieldAmount = defConfig.shieldAmount,
                     statMods =
-                        StatBlock(
-                            str = defConfig.strMod,
-                            dex = defConfig.dexMod,
-                            con = defConfig.conMod,
-                            int = defConfig.intMod,
-                            wis = defConfig.wisMod,
-                            cha = defConfig.chaMod,
+                        StatMap(
+                            buildMap {
+                                if (defConfig.strMod != 0) put("STR", defConfig.strMod)
+                                if (defConfig.dexMod != 0) put("DEX", defConfig.dexMod)
+                                if (defConfig.conMod != 0) put("CON", defConfig.conMod)
+                                if (defConfig.intMod != 0) put("INT", defConfig.intMod)
+                                if (defConfig.wisMod != 0) put("WIS", defConfig.wisMod)
+                                if (defConfig.chaMod != 0) put("CHA", defConfig.chaMod)
+                            },
                         ),
                     stackBehavior = stackBehavior,
                     maxStacks = defConfig.maxStacks.coerceAtLeast(1),

@@ -21,6 +21,7 @@ import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.RaceRegistryLoader
+import dev.ambon.engine.StatRegistry
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.buildTestRouter
@@ -76,6 +77,7 @@ fun buildTestPlayerRegistry(
     classStartRooms: Map<String, RoomId> = emptyMap(),
     classRegistry: PlayerClassRegistry? = null,
     raceRegistry: RaceRegistry? = null,
+    statRegistry: StatRegistry? = null,
 ): PlayerRegistry =
     PlayerRegistry(
         startRoom = startRoom,
@@ -88,6 +90,7 @@ fun buildTestPlayerRegistry(
         passwordHasher = passwordHasher,
         classRegistry = classRegistry,
         raceRegistry = raceRegistry,
+        statRegistry = statRegistry,
     )
 
 suspend fun InMemoryPlayerRepository.createTestPlayer(

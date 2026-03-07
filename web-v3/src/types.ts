@@ -238,19 +238,16 @@ export interface CombatEventData {
   goldGained: number;
 }
 
+export interface StatEntry {
+  id: string;
+  name: string;
+  abbrev: string;
+  base: number;
+  effective: number;
+}
+
 export interface CharStats {
-  strength: number;
-  dexterity: number;
-  constitution: number;
-  intelligence: number;
-  wisdom: number;
-  charisma: number;
-  effectiveStrength: number;
-  effectiveDexterity: number;
-  effectiveConstitution: number;
-  effectiveIntelligence: number;
-  effectiveWisdom: number;
-  effectiveCharisma: number;
+  stats: StatEntry[];
   baseDamageMin: number;
   baseDamageMax: number;
   armor: number;

@@ -128,6 +128,7 @@ class GameEngine(
     private val persistence: PersistenceContext = PersistenceContext(),
     classRegistryOverride: PlayerClassRegistry? = null,
     raceRegistryOverride: RaceRegistry? = null,
+    statRegistryOverride: StatRegistry? = null,
 ) {
     // Convenience delegates — expose grouped context fields as flat names so the
     // existing class body compiles without modification.
@@ -148,6 +149,10 @@ class GameEngine(
     private val raceRegistry = raceRegistryOverride
         ?: RaceRegistry().also { reg ->
             RaceRegistryLoader.load(engineConfig.races, reg)
+        }
+    private val statRegistry = statRegistryOverride
+        ?: StatRegistry().also { reg ->
+            StatRegistryLoader.load(engineConfig.stats, reg)
         }
 
     private val loginFlowHandler by lazy {
@@ -310,6 +315,7 @@ class GameEngine(
             groupSystem = groupSystem,
             combatSystem = combatSystem,
             gmcpEmitter = gmcpEmitter,
+            bindings = engineConfig.stats.bindings,
             metrics = metrics,
         )
     }
@@ -402,6 +408,7 @@ class GameEngine(
                     )
                 }
             },
+            statRegistry = statRegistry,
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -504,12 +511,10 @@ class GameEngine(
                 tickMillis = engineConfig.combat.tickMillis,
                 minDamage = engineConfig.combat.minDamage,
                 maxDamage = engineConfig.combat.maxDamage,
-                strDivisor = engineConfig.combat.strDivisor,
-                dexDodgePerPoint = engineConfig.combat.dexDodgePerPoint,
-                maxDodgePercent = engineConfig.combat.maxDodgePercent,
                 groupXpBonusPerMember = engineConfig.group.xpBonusPerMember,
                 detailedFeedbackEnabled = engineConfig.combat.feedback.enabled,
                 detailedFeedbackRoomBroadcastEnabled = engineConfig.combat.feedback.roomBroadcastEnabled,
+                bindings = engineConfig.stats.bindings,
             ),
             callbacks = CombatSystemCallbacks(
                 onMobRemoved = ::onCombatMobRemoved,
@@ -525,12 +530,11 @@ class GameEngine(
             clock = clock,
             baseIntervalMs = engineConfig.regen.baseIntervalMillis,
             minIntervalMs = engineConfig.regen.minIntervalMillis,
-            msPerConstitution = engineConfig.regen.msPerConstitution,
             regenAmount = engineConfig.regen.regenAmount,
             manaBaseIntervalMs = engineConfig.regen.mana.baseIntervalMillis,
             manaMinIntervalMs = engineConfig.regen.mana.minIntervalMillis,
             manaRegenAmount = engineConfig.regen.mana.regenAmount,
-            msPerWisdom = engineConfig.regen.mana.msPerWisdom,
+            bindings = engineConfig.stats.bindings,
             metrics = metrics,
             dirtyNotifier = dirtyNotifier,
         )
@@ -546,7 +550,7 @@ class GameEngine(
             combat = combatSystem,
             clock = clock,
             items = items,
-            intSpellDivisor = engineConfig.combat.intSpellDivisor,
+            bindings = engineConfig.stats.bindings,
             dirtyNotifier = dirtyNotifier,
             statusEffects = statusEffectSystem,
             groupSystem = groupSystem,
@@ -685,6 +689,7 @@ class GameEngine(
             questSystem = questSystem,
             classRegistry = classRegistry,
             raceRegistry = raceRegistry,
+            statRegistry = statRegistry,
         )
 
         listOf(

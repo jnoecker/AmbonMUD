@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type {
   AchievementData,
   CharStats,
+  StatEntry,
   ChatChannel,
   ChatMessage,
   CharacterInfo,
@@ -626,19 +627,18 @@ export function applyGmcpPackage(
 
     case "Char.Stats": {
       const packet = data as Partial<Record<string, unknown>>;
+      const rawStats = Array.isArray(packet.stats) ? packet.stats : [];
+      const stats: StatEntry[] = rawStats
+        .filter((s): s is Record<string, unknown> => typeof s === "object" && s !== null)
+        .map((s) => ({
+          id: typeof s.id === "string" ? s.id : "",
+          name: typeof s.name === "string" ? s.name : "",
+          abbrev: typeof s.abbrev === "string" ? s.abbrev : "",
+          base: safeNumber(s.base),
+          effective: safeNumber(s.effective),
+        }));
       ctx.setCharStats({
-        strength: safeNumber(packet.strength),
-        dexterity: safeNumber(packet.dexterity),
-        constitution: safeNumber(packet.constitution),
-        intelligence: safeNumber(packet.intelligence),
-        wisdom: safeNumber(packet.wisdom),
-        charisma: safeNumber(packet.charisma),
-        effectiveStrength: safeNumber(packet.effectiveStrength),
-        effectiveDexterity: safeNumber(packet.effectiveDexterity),
-        effectiveConstitution: safeNumber(packet.effectiveConstitution),
-        effectiveIntelligence: safeNumber(packet.effectiveIntelligence),
-        effectiveWisdom: safeNumber(packet.effectiveWisdom),
-        effectiveCharisma: safeNumber(packet.effectiveCharisma),
+        stats,
         baseDamageMin: safeNumber(packet.baseDamageMin),
         baseDamageMax: safeNumber(packet.baseDamageMax),
         armor: safeNumber(packet.armor),

@@ -1,6 +1,8 @@
 package dev.ambon.engine
 
 import dev.ambon.config.EngineConfig
+import dev.ambon.config.StatsEngineConfig
+import dev.ambon.domain.StatDefinition
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.items.ItemRegistry
@@ -53,6 +55,41 @@ class PlayerRegistryFactoryTest {
             val player = registry.get(SessionId(1))
             assertNotNull(player)
             assertEquals(warriorRoom, player!!.roomId)
+        }
+
+    @Test
+    fun `createPlayerRegistry uses statRegistry baseStat for new character stats`() =
+        runTest {
+            val world = dev.ambon.test.TestWorlds.testWorld
+            val repo = InMemoryPlayerRepository()
+            val items = ItemRegistry()
+            val statRegistry =
+                StatRegistry().also { reg ->
+                    listOf("STR", "DEX", "CON", "INT", "WIS", "CHA").forEach { id ->
+                        reg.register(StatDefinition(id = id, displayName = id, abbreviation = id, baseStat = 12))
+                    }
+                }
+            val registry =
+                createPlayerRegistry(
+                    startRoom = world.startRoom,
+                    engineConfig = EngineConfig(stats = StatsEngineConfig()),
+                    repo = repo,
+                    items = items,
+                    clock = Clock.systemUTC(),
+                    progression = PlayerProgression(),
+                    hashingContext = coroutineContext,
+                    statRegistry = statRegistry,
+                )
+
+            registry.create(SessionId(1), "Tester", "password")
+            val player = registry.get(SessionId(1))
+            assertNotNull(player)
+            assertEquals(12, player!!.stats["STR"], "STR should use statRegistry baseStat of 12")
+            assertEquals(12, player.stats["DEX"], "DEX should use statRegistry baseStat of 12")
+            assertEquals(12, player.stats["CON"], "CON should use statRegistry baseStat of 12")
+            assertEquals(12, player.stats["INT"], "INT should use statRegistry baseStat of 12")
+            assertEquals(12, player.stats["WIS"], "WIS should use statRegistry baseStat of 12")
+            assertEquals(12, player.stats["CHA"], "CHA should use statRegistry baseStat of 12")
         }
 
     @Test

@@ -159,6 +159,51 @@ class AppConfigLoaderTest {
     }
 
     @Test
+    fun `validated rejects stat binding referencing undefined stat`() {
+        val invalid =
+            AppConfig(
+                engine =
+                    EngineConfig(
+                        stats =
+                            StatsEngineConfig(
+                                bindings = StatBindingsConfig(meleeDamageStat = "UNKNOWN"),
+                            ),
+                    ),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validated rejects stat binding with zero divisor`() {
+        val invalid =
+            AppConfig(
+                engine =
+                    EngineConfig(
+                        stats =
+                            StatsEngineConfig(
+                                bindings = StatBindingsConfig(meleeDamageDivisor = 0),
+                            ),
+                    ),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validated rejects maxDodgePercent out of range`() {
+        val invalid =
+            AppConfig(
+                engine =
+                    EngineConfig(
+                        stats =
+                            StatsEngineConfig(
+                                bindings = StatBindingsConfig(maxDodgePercent = 101),
+                            ),
+                    ),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
     fun `env-var normalised path overrides persistence backend`() {
         // Regression for #320: AMBONMUD_PERSISTENCE_BACKEND was silently ignored because
         // Hoplite normalises env vars to ambonmud.persistence.backend but the root field

@@ -1,8 +1,9 @@
 package dev.ambon.domain
 
-data class RaceDef(
+data class StatDefinition(
     val id: String,
     val displayName: String,
+    val abbreviation: String,
     val description: String = "",
-    val statMods: StatMap = StatMap.EMPTY,
+    val baseStat: Int = 10,
 )

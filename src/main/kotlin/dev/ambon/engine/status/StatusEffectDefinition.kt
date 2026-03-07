@@ -1,6 +1,6 @@
 package dev.ambon.engine.status
 
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 
 @JvmInline
 value class StatusEffectId(
@@ -37,7 +37,7 @@ data class StatusEffectDefinition(
     val tickMinValue: Int = 0,
     val tickMaxValue: Int = 0,
     val shieldAmount: Int = 0,
-    val statMods: StatBlock = StatBlock.ZERO,
+    val statMods: StatMap = StatMap.EMPTY,
     val stackBehavior: StackBehavior = StackBehavior.REFRESH,
     val maxStacks: Int = 1,
 )
