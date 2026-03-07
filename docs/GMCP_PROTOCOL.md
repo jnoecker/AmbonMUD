@@ -493,6 +493,48 @@ Sent on login and when an achievement is unlocked or its progress changes.
 
 ---
 
+### `Char.Stats`
+
+Sent on login, on level-up, and whenever a status effect that modifies stats is applied or expires (batched per tick).
+
+```json
+{
+  "stats": [
+    { "id": "STR", "name": "Strength",     "abbrev": "STR", "base": 10, "effective": 12 },
+    { "id": "DEX", "name": "Dexterity",    "abbrev": "DEX", "base": 14, "effective": 14 },
+    { "id": "CON", "name": "Constitution", "abbrev": "CON", "base": 12, "effective": 13 },
+    { "id": "INT", "name": "Intelligence", "abbrev": "INT", "base": 16, "effective": 16 },
+    { "id": "WIS", "name": "Wisdom",       "abbrev": "WIS", "base": 11, "effective": 11 },
+    { "id": "CHA", "name": "Charisma",     "abbrev": "CHA", "base": 10, "effective": 10 }
+  ],
+  "baseDamageMin": 1,
+  "baseDamageMax": 4,
+  "armor": 3,
+  "dodgePercent": 8
+}
+```
+
+**`stats` array entry:**
+
+| Field       | Type   | Notes |
+|-------------|--------|-------|
+| `id`        | string | Stat identifier (uppercase, e.g. `"STR"`) |
+| `name`      | string | Full stat name (e.g. `"Strength"`) |
+| `abbrev`    | string | Short label for UI display |
+| `base`      | int    | Base stat value before equipment or status effect modifiers |
+| `effective` | int    | Final stat value after all modifiers |
+
+**Top-level fields:**
+
+| Field           | Type | Notes |
+|-----------------|------|-------|
+| `baseDamageMin` | int  | Minimum unarmed damage before STR scaling |
+| `baseDamageMax` | int  | Maximum unarmed damage before STR scaling |
+| `armor`         | int  | Total armor from equipped items |
+| `dodgePercent`  | int  | Effective dodge chance (capped at `maxDodgePercent` in config) |
+
+---
+
 ### `Room.Info`
 
 Sent on login, every time the player moves to a new room, and in response to the `look` command.
@@ -709,6 +751,7 @@ These packages are coalesced — if the same session is marked dirty multiple ti
 |----------------------|---------------|
 | `Char.Vitals`        | HP/mana/XP/gold/level changes; combat state change |
 | `Char.StatusEffects` | Effect applied, ticked, or expired |
+| `Char.Stats`         | Login / level-up / stat-modifying effect applied or expired |
 | `Room.UpdateMob`     | Mob HP changes (combat, regen) |
 | `Group.Info`         | Group membership or member HP change |
 
@@ -799,25 +842,6 @@ After the WebSocket connection is established, the server automatically sends `C
 ## 7. Planned Future Packages
 
 The following packages are on the roadmap. None are currently sent by the server.
-
----
-
-### `Char.Stats` *(planned)*
-
-Full breakdown of character attributes, including base values, equipment modifiers, and effective totals. Would enable stat sheet UIs without screen-scraping the `score` command.
-
-```json
-{
-  "strength":     { "base": 10, "mod": 2,  "effective": 12 },
-  "dexterity":    { "base": 14, "mod": 0,  "effective": 14 },
-  "constitution": { "base": 12, "mod": 1,  "effective": 13 },
-  "intelligence": { "base": 16, "mod": 3,  "effective": 19 },
-  "wisdom":       { "base": 11, "mod": 0,  "effective": 11 },
-  "charisma":     { "base": 10, "mod": 0,  "effective": 10 }
-}
-```
-
-*Trigger: login, equipment change, status effect apply/expire.*
 
 ---
 
@@ -950,7 +974,7 @@ Notifies the client when the character's active display title changes (set via t
 | `Room.Items`          | → S→C     | Immediate |
 | `Comm.Channel`        | → S→C     | Immediate |
 | `Group.Info`          | → S→C     | Batched per tick + immediate on join/leave |
-| `Char.Stats`          | → S→C     | **Planned** |
+| `Char.Stats`          | → S→C     | Batched per tick |
 | `Quest.List`          | → S→C     | **Planned** |
 | `Combat.Round`        | → S→C     | **Planned** |
 | `World.Map`           | → S→C     | **Planned** |
