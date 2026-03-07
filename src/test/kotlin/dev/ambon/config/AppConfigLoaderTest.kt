@@ -204,6 +204,51 @@ class AppConfigLoaderTest {
     }
 
     @Test
+    fun `validated rejects baseHp less than 1`() {
+        val invalid =
+            AppConfig(
+                progression = ProgressionConfig(rewards = LevelRewardsConfig(baseHp = 0)),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validated rejects negative baseMana`() {
+        val invalid =
+            AppConfig(
+                progression = ProgressionConfig(rewards = LevelRewardsConfig(baseMana = -1)),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validated rejects negative startingGold`() {
+        val invalid =
+            AppConfig(
+                engine = EngineConfig(characterCreation = CharacterCreationConfig(startingGold = -1L)),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
+    fun `validated rejects negative class threatMultiplier`() {
+        val invalid =
+            AppConfig(
+                engine =
+                    EngineConfig(
+                        classes =
+                            ClassEngineConfig(
+                                definitions =
+                                    mapOf(
+                                        "WARRIOR" to ClassDefinitionConfig(threatMultiplier = -0.1),
+                                    ),
+                            ),
+                    ),
+            )
+        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+    }
+
+    @Test
     fun `env-var normalised path overrides persistence backend`() {
         // Regression for #320: AMBONMUD_PERSISTENCE_BACKEND was silently ignored because
         // Hoplite normalises env vars to ambonmud.persistence.backend but the root field

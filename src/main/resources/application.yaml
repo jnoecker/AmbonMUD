@@ -1801,7 +1801,6 @@ ambonmud:
     characterCreation:
       startingGold: 0
 
-
   progression:
     maxLevel: 50
     xp:
