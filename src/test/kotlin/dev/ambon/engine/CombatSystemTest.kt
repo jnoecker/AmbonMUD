@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import dev.ambon.config.ClassEngineConfig
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.XpCurveConfig
@@ -285,6 +286,10 @@ class CombatSystemTest {
             val mob = MobState(MobId("demo:rat"), "a rat", fixture.roomId, hp = 1, maxHp = 1, xpReward = 50L)
             fixture.mobs.upsert(mob)
 
+            val classRegistry =
+                PlayerClassRegistry().also { reg ->
+                    PlayerClassRegistryLoader.load(ClassEngineConfig(), reg)
+                }
             val progression =
                 PlayerProgression(
                     ProgressionConfig(
@@ -305,6 +310,7 @@ class CombatSystemTest {
                                 fullManaOnLevelUp = true,
                             ),
                     ),
+                    classRegistry = classRegistry,
                 )
             val combat =
                 fixture.buildCombat(

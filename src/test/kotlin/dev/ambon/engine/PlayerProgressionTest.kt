@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import dev.ambon.config.ClassEngineConfig
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.XpCurveConfig
@@ -10,6 +11,11 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class PlayerProgressionTest {
+    private fun defaultClassRegistry(): PlayerClassRegistry =
+        PlayerClassRegistry().also { reg ->
+            PlayerClassRegistryLoader.load(ClassEngineConfig(), reg)
+        }
+
     @Test
     fun `xp curve follows predictable monotonic thresholds`() {
         val progression =
@@ -118,6 +124,7 @@ class PlayerProgressionTest {
                     xp = XpCurveConfig(baseXp = 100L, exponent = 2.0, linearXp = 0L),
                     rewards = LevelRewardsConfig(hpPerLevel = 3, manaPerLevel = 5, fullHealOnLevelUp = true),
                 ),
+                classRegistry = defaultClassRegistry(),
             )
 
         val warrior =
@@ -164,6 +171,7 @@ class PlayerProgressionTest {
                             fullManaOnLevelUp = true,
                         ),
                 ),
+                classRegistry = defaultClassRegistry(),
             )
 
         val warrior =

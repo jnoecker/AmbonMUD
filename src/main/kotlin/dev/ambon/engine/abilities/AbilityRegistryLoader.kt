@@ -2,7 +2,6 @@ package dev.ambon.engine.abilities
 
 import dev.ambon.config.AbilityEngineConfig
 import dev.ambon.domain.DamageRange
-import dev.ambon.domain.PlayerClass
 import dev.ambon.engine.status.StatusEffectId
 
 object AbilityRegistryLoader {
@@ -44,12 +43,7 @@ object AbilityRegistryLoader {
                         )
                     else -> continue
                 }
-            val requiredClass =
-                if (defConfig.requiredClass.isNotBlank()) {
-                    PlayerClass.fromString(defConfig.requiredClass)
-                } else {
-                    null
-                }
+            val requiredClass = defConfig.requiredClass.ifBlank { null }
             registry.register(
                 AbilityDefinition(
                     id = AbilityId(key),

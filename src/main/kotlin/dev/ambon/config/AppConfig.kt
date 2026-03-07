@@ -417,6 +417,8 @@ data class EngineConfig(
     val crafting: CraftingConfig = CraftingConfig(),
     val friends: FriendsConfig = FriendsConfig(),
     val debug: EngineDebugConfig = EngineDebugConfig(),
+    val classes: ClassEngineConfig = ClassEngineConfig(),
+    val races: RaceEngineConfig = RaceEngineConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
 )
@@ -424,6 +426,95 @@ data class EngineConfig(
 data class EngineDebugConfig(
     val enableSwarmClass: Boolean = false,
 )
+
+data class ClassDefinitionConfig(
+    val displayName: String = "",
+    val hpPerLevel: Int = 4,
+    val manaPerLevel: Int = 8,
+    val description: String = "",
+    val selectable: Boolean = true,
+    val primaryStat: String = "",
+    val startRoom: String = "",
+)
+
+data class ClassEngineConfig(
+    val definitions: Map<String, ClassDefinitionConfig> = defaultClassDefinitions(),
+) {
+    companion object {
+        fun defaultClassDefinitions(): Map<String, ClassDefinitionConfig> = mapOf(
+            "WARRIOR" to ClassDefinitionConfig(
+                displayName = "Warrior",
+                hpPerLevel = 8,
+                manaPerLevel = 4,
+                primaryStat = "STR",
+            ),
+            "MAGE" to ClassDefinitionConfig(
+                displayName = "Mage",
+                hpPerLevel = 4,
+                manaPerLevel = 16,
+                primaryStat = "INT",
+            ),
+            "CLERIC" to ClassDefinitionConfig(
+                displayName = "Cleric",
+                hpPerLevel = 6,
+                manaPerLevel = 12,
+                primaryStat = "WIS",
+            ),
+            "ROGUE" to ClassDefinitionConfig(
+                displayName = "Rogue",
+                hpPerLevel = 5,
+                manaPerLevel = 8,
+                primaryStat = "DEX",
+            ),
+            "SWARM" to ClassDefinitionConfig(
+                displayName = "Swarm",
+                hpPerLevel = 2,
+                manaPerLevel = 3,
+                selectable = false,
+            ),
+        )
+    }
+}
+
+data class RaceStatModsConfig(
+    val str: Int = 0,
+    val dex: Int = 0,
+    val con: Int = 0,
+    val int: Int = 0,
+    val wis: Int = 0,
+    val cha: Int = 0,
+)
+
+data class RaceDefinitionConfig(
+    val displayName: String = "",
+    val description: String = "",
+    val statMods: RaceStatModsConfig = RaceStatModsConfig(),
+)
+
+data class RaceEngineConfig(
+    val definitions: Map<String, RaceDefinitionConfig> = defaultRaceDefinitions(),
+) {
+    companion object {
+        fun defaultRaceDefinitions(): Map<String, RaceDefinitionConfig> = mapOf(
+            "HUMAN" to RaceDefinitionConfig(
+                displayName = "Human",
+                statMods = RaceStatModsConfig(str = 1, cha = 1),
+            ),
+            "ELF" to RaceDefinitionConfig(
+                displayName = "Elf",
+                statMods = RaceStatModsConfig(str = -1, dex = 2, con = -2, int = 1),
+            ),
+            "DWARF" to RaceDefinitionConfig(
+                displayName = "Dwarf",
+                statMods = RaceStatModsConfig(str = 1, dex = -1, con = 2, wis = 1, cha = -2),
+            ),
+            "HALFLING" to RaceDefinitionConfig(
+                displayName = "Halfling",
+                statMods = RaceStatModsConfig(str = -2, dex = 2, con = -1, wis = 1, cha = 1),
+            ),
+        )
+    }
+}
 
 data class ProgressionConfig(
     val maxLevel: Int = 50,

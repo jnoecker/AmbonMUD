@@ -15,7 +15,11 @@ import dev.ambon.domain.world.WorldFactory
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PersistenceContext
+import dev.ambon.engine.PlayerClassRegistry
+import dev.ambon.engine.PlayerClassRegistryLoader
 import dev.ambon.engine.PlayerProgression
+import dev.ambon.engine.RaceRegistry
+import dev.ambon.engine.RaceRegistryLoader
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.createPlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
@@ -146,7 +150,15 @@ class MudServer(
 
     private val items = ItemRegistry()
     private val mobs = MobRegistry()
-    private val progression = PlayerProgression(config.progression)
+    private val classRegistry =
+        PlayerClassRegistry().also { reg ->
+            PlayerClassRegistryLoader.load(config.engine.classes, reg)
+        }
+    private val raceRegistry =
+        RaceRegistry().also { reg ->
+            RaceRegistryLoader.load(config.engine.races, reg)
+        }
+    private val progression = PlayerProgression(config.progression, classRegistry)
     private val shardingEnabled = config.sharding.enabled
     private val engineId = config.sharding.engineId
     private val configuredShardedZones = ServerInfrastructure.resolveConfiguredZones(config)
@@ -175,6 +187,8 @@ class MudServer(
             clock = clock,
             progression = progression,
             hashingContext = authDispatcher,
+            classRegistry = classRegistry,
+            raceRegistry = raceRegistry,
         )
 
     // --- Sharding infrastructure (null when sharding is disabled) ---
@@ -320,6 +334,8 @@ class MudServer(
                         guildRepo = guildRepo,
                         playerRepo = playerRepo,
                     ),
+                    classRegistryOverride = classRegistry,
+                    raceRegistryOverride = raceRegistry,
                 ).run()
             }
 

@@ -1,7 +1,6 @@
 package dev.ambon.engine.abilities
 
 import dev.ambon.domain.DamageRange
-import dev.ambon.domain.PlayerClass
 import dev.ambon.engine.status.StatusEffectId
 
 @JvmInline
@@ -48,6 +47,6 @@ data class AbilityDefinition(
     val levelRequired: Int,
     val targetType: TargetType,
     val effect: AbilityEffect,
-    val requiredClass: PlayerClass? = null,
+    val requiredClass: String? = null,
     val image: String? = null,
 )

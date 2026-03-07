@@ -1,8 +1,6 @@
 package dev.ambon.engine
 
 import dev.ambon.config.EngineConfig
-import dev.ambon.domain.PlayerClass
-import dev.ambon.domain.Race
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.items.ItemRegistry
@@ -47,8 +45,8 @@ class PlayerRegistryFactoryTest {
                     sessionId = SessionId(1),
                     nameRaw = "WarriorSpawn",
                     passwordRaw = "password",
-                    race = Race.HUMAN,
-                    playerClass = PlayerClass.WARRIOR,
+                    race = "HUMAN",
+                    playerClass = "WARRIOR",
                 )
 
             assertEquals(CreateResult.Ok, result)
@@ -94,8 +92,8 @@ class PlayerRegistryFactoryTest {
                     "Alice",
                     "password",
                     false,
-                    Race.HUMAN,
-                    PlayerClass.WARRIOR,
+                    "HUMAN",
+                    "WARRIOR",
                 )
 
             assertEquals(
@@ -142,8 +140,8 @@ class PlayerRegistryFactoryTest {
                     sessionId = SessionId(1),
                     nameRaw = "Alice",
                     passwordRaw = "password",
-                    race = Race.HUMAN,
-                    playerClass = PlayerClass.WARRIOR,
+                    race = "HUMAN",
+                    playerClass = "WARRIOR",
                 )
 
             assertEquals(

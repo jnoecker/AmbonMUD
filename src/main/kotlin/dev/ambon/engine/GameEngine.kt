@@ -4,7 +4,6 @@ import dev.ambon.bus.InboundBus
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.EngineConfig
 import dev.ambon.config.LoginConfig
-import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -127,6 +126,8 @@ class GameEngine(
     private val achievementRegistry: AchievementRegistry = AchievementRegistry(),
     private val sharding: ShardingContext = ShardingContext(),
     private val persistence: PersistenceContext = PersistenceContext(),
+    classRegistryOverride: PlayerClassRegistry? = null,
+    raceRegistryOverride: RaceRegistry? = null,
 ) {
     // Convenience delegates — expose grouped context fields as flat names so the
     // existing class body compiles without modification.
@@ -139,6 +140,15 @@ class GameEngine(
     private val worldStateRepository get() = persistence.worldStateRepository
     private val guildRepo get() = persistence.guildRepo
     private val playerRepo get() = persistence.playerRepo
+
+    private val classRegistry = classRegistryOverride
+        ?: PlayerClassRegistry().also { reg ->
+            PlayerClassRegistryLoader.load(engineConfig.classes, reg)
+        }
+    private val raceRegistry = raceRegistryOverride
+        ?: RaceRegistry().also { reg ->
+            RaceRegistryLoader.load(engineConfig.races, reg)
+        }
 
     private val loginFlowHandler by lazy {
         dev.ambon.engine.events.LoginFlowHandler(
@@ -158,7 +168,9 @@ class GameEngine(
             handoffManager = handoffManager,
             getEngineScope = { engineScope },
             metrics = metrics,
-            availableClasses = PlayerClass.selectable(engineConfig.debug.enableSwarmClass),
+            classRegistry = classRegistry,
+            raceRegistry = raceRegistry,
+            debugClassesEnabled = engineConfig.debug.enableSwarmClass,
             maxWrongPasswordRetries = loginConfig.maxWrongPasswordRetries,
             maxFailedLoginAttemptsBeforeDisconnect = loginConfig.maxFailedAttemptsBeforeDisconnect,
             maxConcurrentLogins = loginConfig.maxConcurrentLogins,
@@ -451,6 +463,7 @@ class GameEngine(
             maxGroupSize = engineConfig.group.maxSize,
             inviteTimeoutMs = engineConfig.group.inviteTimeoutMs,
             markGroupDirty = ::markGroupDirty,
+            classRegistry = classRegistry,
         )
     private val guildSystem: GuildSystem? =
         if (guildRepo != null) {
@@ -670,6 +683,8 @@ class GameEngine(
             shopRegistry = shopRegistry,
             economyConfig = engineConfig.economy,
             questSystem = questSystem,
+            classRegistry = classRegistry,
+            raceRegistry = raceRegistry,
         )
 
         listOf(

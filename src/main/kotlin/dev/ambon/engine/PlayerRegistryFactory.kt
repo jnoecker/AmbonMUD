@@ -1,16 +1,15 @@
 package dev.ambon.engine
 
 import dev.ambon.config.EngineConfig
-import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PlayerRepository
 import java.time.Clock
 import kotlin.coroutines.CoroutineContext
 
-fun resolveClassStartRooms(engineConfig: EngineConfig): Map<PlayerClass, RoomId> =
+fun resolveClassStartRooms(engineConfig: EngineConfig): Map<String, RoomId> =
     engineConfig.classStartRooms
-        .mapNotNull { (key, value) -> PlayerClass.fromString(key)?.to(RoomId(value)) }
+        .map { (key, value) -> key.uppercase() to RoomId(value) }
         .toMap()
 
 fun createPlayerRegistry(
@@ -21,6 +20,8 @@ fun createPlayerRegistry(
     clock: Clock,
     progression: PlayerProgression,
     hashingContext: CoroutineContext,
+    classRegistry: PlayerClassRegistry? = null,
+    raceRegistry: RaceRegistry? = null,
 ): PlayerRegistry =
     PlayerRegistry(
         startRoom = startRoom,
@@ -30,4 +31,6 @@ fun createPlayerRegistry(
         clock = clock,
         progression = progression,
         hashingContext = hashingContext,
+        classRegistry = classRegistry,
+        raceRegistry = raceRegistry,
     )

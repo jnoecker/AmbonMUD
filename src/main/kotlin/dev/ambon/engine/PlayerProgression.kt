@@ -1,7 +1,6 @@
 package dev.ambon.engine
 
 import dev.ambon.config.ProgressionConfig
-import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.mob.MobState
 import kotlin.math.pow
 import kotlin.math.roundToLong
@@ -15,6 +14,7 @@ data class LevelUpResult(
 
 class PlayerProgression(
     private val config: ProgressionConfig = ProgressionConfig(),
+    private val classRegistry: PlayerClassRegistry? = null,
 ) {
     val maxLevel: Int
         get() = config.maxLevel
@@ -75,10 +75,10 @@ class PlayerProgression(
      * Falls back to the configured defaults if [playerClass] is null or unrecognised.
      */
     fun resolveClassScaling(playerClass: String?): Pair<Int, Int> {
-        val pc = PlayerClass.fromString(playerClass ?: "")
+        val def = playerClass?.let { classRegistry?.get(it) }
         return Pair(
-            pc?.hpPerLevel ?: config.rewards.hpPerLevel,
-            pc?.manaPerLevel ?: config.rewards.manaPerLevel,
+            def?.hpPerLevel ?: config.rewards.hpPerLevel,
+            def?.manaPerLevel ?: config.rewards.manaPerLevel,
         )
     }
 
