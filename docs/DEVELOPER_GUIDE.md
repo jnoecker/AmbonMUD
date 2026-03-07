@@ -74,6 +74,11 @@ cd AmbonMUD
 ./gradlew ktlintCheck
 ```
 
+**CI parity (full suite):**
+```bash
+./gradlew ktlintCheck test integrationTest
+```
+
 **Run with PostgreSQL + Redis (requires Docker Compose):**
 ```bash
 docker compose up -d
@@ -193,8 +198,15 @@ docs/
 ├── WORLD_YAML_SPEC.md           # Zone YAML format specification
 ├── ROADMAP.md                   # Planned features & roadmap
 ├── WEB_CLIENT_V3.md             # Web client v3 architecture & gaps
+├── V4_GAME_CLIENT.md            # V4 PixiJS canvas client design plan
+├── GMCP_PROTOCOL.md             # GMCP protocol reference
 ├── SCALING_STORY.md             # Scaling narrative (interview talk track)
-└── STYLE_GUIDE.md               # UI design system spec
+├── STYLE_GUIDE.md               # Surreal Gentle Magic design system (game client)
+├── ARCANUM_STYLE_GUIDE.md       # Ambon Arcanum design system (creator tool)
+├── CREATOR_PLAN.md              # Creator tool design plan
+├── CREATOR_CONFIG_REFERENCE.md  # All configurable YAML keys for world builders
+├── DATA_DRIVEN_STATS_PLAN.md    # Data-driven stats engineering plan (Phase 1 done)
+└── HARDCODED_CONFIG_PLAN.md     # Redirected — see CREATOR_CONFIG_REFERENCE.md
 
 CLAUDE.md                         # Claude Code orientation (DO NOT MODIFY)
 AGENTS.md                         # Engineering playbook (DO NOT MODIFY)
@@ -463,7 +475,7 @@ XP curve: `totalXpForLevel(L) = baseXp * (L-1)^exponent + linearXp * (L-1)`
 - IDs allocated in `data/players/next_player_id.txt`
 
 **PostgreSQL** (optional, bring up Docker Compose first):
-- Schema managed by Flyway migrations (`src/main/resources/db/migration/`, V1–V12)
+- Schema managed by Flyway migrations (`src/main/resources/db/migration/`, V1–V15)
 - Connection defaults: `localhost:5432/ambonmud`, user `ambon`, password `ambon` (matches docker compose)
 
 ### Persistence Stack
@@ -889,6 +901,7 @@ gh pr create --title "..." --body "..."
 - Read [ARCHITECTURE.md](../docs/ARCHITECTURE.md) for design rationale
 - Read [WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md) to understand zone creation
 - Read [GMCP_PROTOCOL.md](./GMCP_PROTOCOL.md) to understand the structured data channel
+- Read [CREATOR_CONFIG_REFERENCE.md](./CREATOR_CONFIG_REFERENCE.md) to understand all tunable config
 - Read [CLAUDE.md](../CLAUDE.md) for architectural contracts and change playbooks
 - Explore `src/main/kotlin/dev/ambon/engine/` to understand the engine
 - Run the full test suite to build confidence: `./gradlew ktlintCheck test integrationTest`

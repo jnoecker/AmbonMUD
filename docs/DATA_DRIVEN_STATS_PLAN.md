@@ -1,5 +1,7 @@
 # Data-Driven Stats — Engineering Plan
 
+> **All phases complete.** The data-driven stats system is fully shipped across all layers (engine, persistence, GMCP, world YAML, web client). This document is preserved as a historical engineering reference.
+
 ## Goal
 
 Replace the 6 hardcoded stats (STR, DEX, CON, INT, WIS, CHA) with a fully data-driven stat system where stats are defined in YAML config, formula bindings map stats to game mechanics, and the Creator tool can add/remove/modify stats without code changes.
@@ -440,7 +442,7 @@ races:
 
 ## Implementation Phases
 
-### Phase 1: StatMap + StatRegistry (foundation)
+### Phase 1: StatMap + StatRegistry (foundation) ✅ Complete
 
 **Goal:** Introduce `StatMap` and `StatRegistry` alongside `StatBlock`. No behavioral change.
 
@@ -452,7 +454,7 @@ races:
 6. Construct `StatRegistry` in `MudServer` and `GameEngine`
 7. Tests: `StatRegistryTest`, `StatMapTest`
 
-### Phase 2: Migrate consumers to StatMap + bindings
+### Phase 2: Migrate consumers to StatMap + bindings ✅ Complete
 
 **Goal:** Systems read stats from `StatMap` via bindings. `StatBlock` still exists internally as a bridge.
 
@@ -465,7 +467,7 @@ races:
 7. `GmcpEmitter` — array-based `Char.Stats` payload
 8. Tests for each system updated
 
-### Phase 3: Migrate persistence
+### Phase 3: Migrate persistence ✅ Complete
 
 **Goal:** Stats stored as map, not individual columns.
 
@@ -479,7 +481,7 @@ races:
 8. Admin API — map-based stats
 9. Tests: persistence round-trip
 
-### Phase 4: Migrate world YAML
+### Phase 4: Migrate world YAML ✅ Complete
 
 **Goal:** Items use `stats:` map. Backward compat for old format.
 
@@ -489,7 +491,7 @@ races:
 4. `StatusEffectRegistryLoader` — stat mods as map
 5. Re-export zone YAML files with new format (Creator can do this)
 
-### Phase 5: Delete StatBlock, remove backward compat
+### Phase 5: Delete StatBlock, remove backward compat ✅ Complete
 
 **Goal:** Clean up. `StatBlock` is gone, only `StatMap` remains.
 
@@ -500,7 +502,7 @@ races:
 5. Remove `RaceStatModsConfig` (replaced by `Map<String, Int>`)
 6. Update all remaining `StatBlock` references in tests
 
-### Phase 6: Web client
+### Phase 6: Web client ✅ Complete
 
 1. Update `types.ts` — dynamic stat array
 2. Update `applyGmcpPackage.ts` — handle array-based `Char.Stats`
