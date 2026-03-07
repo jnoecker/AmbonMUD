@@ -41,6 +41,7 @@ class NavigationHandler(
         router.on<Command.Move> { sid, cmd -> handleMove(sid, cmd) }
         router.on<Command.Exits> { sid, _ -> handleExits(sid) }
         router.on<Command.LookDir> { sid, cmd -> handleLookDir(sid, cmd) }
+        router.on<Command.LookAt> { sid, cmd -> handleLookAt(sid, cmd) }
         router.on<Command.Recall> { sid, _ -> handleRecall(sid) }
     }
 
@@ -152,6 +153,67 @@ class NavigationHandler(
         withPlayerAndRoom(sessionId, players, world) { _, r ->
             outbound.send(OutboundEvent.SendInfo(sessionId, exitsLine(r)))
         }
+    }
+
+    private suspend fun handleLookAt(
+        sessionId: SessionId,
+        cmd: Command.LookAt,
+    ) {
+        val me = players.get(sessionId) ?: return
+        val roomId = me.roomId
+
+        // Try mob first
+        val mob = ctx.mobs.findInRoomByKeyword(roomId, cmd.target).firstOrNull()
+        if (mob != null) {
+            val desc = mob.description.ifEmpty { "You see nothing special about ${mob.name}." }
+            outbound.send(OutboundEvent.SendText(sessionId, "${mob.name}: $desc"))
+            return
+        }
+
+        // Try room items
+        val roomItems = ctx.items.itemsInRoom(roomId)
+        val roomItem = roomItems.firstOrNull { matchesItemKeyword(it, cmd.target) }
+        if (roomItem != null) {
+            val desc = roomItem.item.description.ifEmpty { "You see nothing special about ${roomItem.item.displayName}." }
+            outbound.send(OutboundEvent.SendText(sessionId, "${roomItem.item.displayName}: $desc"))
+            return
+        }
+
+        // Try inventory items
+        val invItems = ctx.items.inventory(sessionId)
+        val invItem = invItems.firstOrNull { matchesItemKeyword(it, cmd.target) }
+        if (invItem != null) {
+            val desc = invItem.item.description.ifEmpty { "You see nothing special about ${invItem.item.displayName}." }
+            outbound.send(OutboundEvent.SendText(sessionId, "${invItem.item.displayName}: $desc"))
+            return
+        }
+
+        // Try equipment
+        val equipment = ctx.items.equipment(sessionId)
+        val eqItem = equipment.values.firstOrNull { matchesItemKeyword(it, cmd.target) }
+        if (eqItem != null) {
+            val desc = eqItem.item.description.ifEmpty { "You see nothing special about ${eqItem.item.displayName}." }
+            outbound.send(OutboundEvent.SendText(sessionId, "${eqItem.item.displayName}: $desc"))
+            return
+        }
+
+        // Try other players in the room
+        val otherPlayer = players.playersInRoom(roomId)
+            .firstOrNull { it.sessionId != sessionId && it.name.contains(cmd.target, ignoreCase = true) }
+        if (otherPlayer != null) {
+            val p = otherPlayer
+            val playerDesc = "You see ${p.name}, a level ${p.level} ${p.race} ${p.playerClass}."
+            outbound.send(OutboundEvent.SendText(sessionId, playerDesc))
+            return
+        }
+
+        outbound.send(OutboundEvent.SendError(sessionId, "You don't see '${cmd.target}' here."))
+    }
+
+    private fun matchesItemKeyword(item: dev.ambon.domain.items.ItemInstance, input: String): Boolean {
+        val lower = input.lowercase()
+        return item.item.keyword.equals(lower, ignoreCase = true) ||
+            item.item.displayName.contains(lower, ignoreCase = true)
     }
 
     private suspend fun handleLookDir(

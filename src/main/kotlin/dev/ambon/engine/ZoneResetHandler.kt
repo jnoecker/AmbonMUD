@@ -37,6 +37,7 @@ internal fun spawnToMobState(spawn: MobSpawn, world: World): MobState =
     MobState(
         id = spawn.id,
         name = spawn.name,
+        description = spawn.description,
         roomId = spawn.roomId,
         hp = spawn.maxHp,
         maxHp = spawn.maxHp,

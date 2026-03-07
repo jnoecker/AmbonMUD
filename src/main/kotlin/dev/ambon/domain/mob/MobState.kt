@@ -11,6 +11,7 @@ data class MobState(
     override val id: MobId,
     override var name: String,
     override var roomId: RoomId,
+    override val description: String = "",
     var hp: Int = 10,
     override var maxHp: Int = 10,
     override val damage: DamageRange = DamageRange(1, 4),
