@@ -1745,6 +1745,57 @@ ambonmud:
           description: "Quick and charming."
           statMods: { str: -2, dex: 2, con: -1, int: 0, wis: 1, cha: 1 }
 
+    stats:
+      definitions:
+        STR:
+          displayName: "Strength"
+          abbreviation: "STR"
+          description: "Physical power. Increases melee damage."
+          baseStat: 10
+        DEX:
+          displayName: "Dexterity"
+          abbreviation: "DEX"
+          description: "Agility and reflexes. Increases dodge chance."
+          baseStat: 10
+        CON:
+          displayName: "Constitution"
+          abbreviation: "CON"
+          description: "Endurance and health. Increases max HP and HP regen."
+          baseStat: 10
+        INT:
+          displayName: "Intelligence"
+          abbreviation: "INT"
+          description: "Arcane aptitude. Increases max mana and spell damage."
+          baseStat: 10
+        WIS:
+          displayName: "Wisdom"
+          abbreviation: "WIS"
+          description: "Insight and perception. Increases mana regen."
+          baseStat: 10
+        CHA:
+          displayName: "Charisma"
+          abbreviation: "CHA"
+          description: "Force of personality. Increases XP gain."
+          baseStat: 10
+      bindings:
+        meleeDamageStat: STR
+        meleeDamageDivisor: 3
+        dodgeStat: DEX
+        dodgePerPoint: 2
+        maxDodgePercent: 30
+        spellDamageStat: INT
+        spellDamageDivisor: 3
+        hpScalingStat: CON
+        hpScalingDivisor: 5
+        manaScalingStat: INT
+        manaScalingDivisor: 5
+        hpRegenStat: CON
+        hpRegenMsPerPoint: 200
+        manaRegenStat: WIS
+        manaRegenMsPerPoint: 200
+        xpBonusStat: CHA
+        xpBonusPerPoint: 0.005
+
     classStartRooms:
       WARRIOR: tutorial_glade:warrior_barracks
       MAGE: tutorial_glade:mage_study

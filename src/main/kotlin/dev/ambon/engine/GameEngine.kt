@@ -128,6 +128,7 @@ class GameEngine(
     private val persistence: PersistenceContext = PersistenceContext(),
     classRegistryOverride: PlayerClassRegistry? = null,
     raceRegistryOverride: RaceRegistry? = null,
+    statRegistryOverride: StatRegistry? = null,
 ) {
     // Convenience delegates — expose grouped context fields as flat names so the
     // existing class body compiles without modification.
@@ -148,6 +149,10 @@ class GameEngine(
     private val raceRegistry = raceRegistryOverride
         ?: RaceRegistry().also { reg ->
             RaceRegistryLoader.load(engineConfig.races, reg)
+        }
+    private val statRegistry = statRegistryOverride
+        ?: StatRegistry().also { reg ->
+            StatRegistryLoader.load(engineConfig.stats, reg)
         }
 
     private val loginFlowHandler by lazy {

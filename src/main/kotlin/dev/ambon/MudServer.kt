@@ -20,6 +20,8 @@ import dev.ambon.engine.PlayerClassRegistryLoader
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.RaceRegistryLoader
+import dev.ambon.engine.StatRegistry
+import dev.ambon.engine.StatRegistryLoader
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.createPlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
@@ -157,6 +159,10 @@ class MudServer(
     private val raceRegistry =
         RaceRegistry().also { reg ->
             RaceRegistryLoader.load(config.engine.races, reg)
+        }
+    private val statRegistry =
+        StatRegistry().also { reg ->
+            StatRegistryLoader.load(config.engine.stats, reg)
         }
     private val progression = PlayerProgression(config.progression, classRegistry)
     private val shardingEnabled = config.sharding.enabled
@@ -336,6 +342,7 @@ class MudServer(
                     ),
                     classRegistryOverride = classRegistry,
                     raceRegistryOverride = raceRegistry,
+                    statRegistryOverride = statRegistry,
                 ).run()
             }
 
