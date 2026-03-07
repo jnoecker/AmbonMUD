@@ -9,4 +9,5 @@ data class PlayerClassDef(
     val selectable: Boolean = true,
     val primaryStat: String? = null,
     val startRoom: String? = null,
+    val threatMultiplier: Double = 1.0,
 )
