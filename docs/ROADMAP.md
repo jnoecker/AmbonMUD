@@ -20,7 +20,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 ✅ Prometheus/Grafana observability
 ✅ Snowflake session IDs
 ✅ Isolated BCrypt auth thread pool (tunable `authThreads`)
-⏳ Virtual threads for telnet transport (#301)
+✅ Virtual threads for telnet transport (JDK 21 `newVirtualThreadPerTaskExecutor`)
 
 ### Gameplay
 ✅ 4 races, 4 classes + 1 debug class (Swarm), 6 primary attributes
@@ -51,6 +51,13 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 | Status Effects (#1) | ✅ Done | DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD; configurable stacking |
 | Group/Party Combat (#5) | ✅ Done | N:M combat, threat tables, group XP/loot distribution |
 | 102 Abilities (Feb 2026) | ✅ Done | 25+ per class, levels 1–50, config-driven |
+
+### Phase A.5 — Engine Internals
+
+| Project | Status | Highlights |
+|---------|--------|-----------|
+| Data-Driven Stats (Mar 2026) | ✅ Done | Full stat system: `StatMap`, bindings, persistence, GMCP, world YAML, web client; see [DATA_DRIVEN_STATS_PLAN.md](./DATA_DRIVEN_STATS_PLAN.md) |
+| Hardcoded Config Extraction (Mar 2026) | ✅ Done | `baseHp`, `baseMana`, `startingGold`, `threatMultiplier` all data-driven; see [CREATOR_CONFIG_REFERENCE.md](./CREATOR_CONFIG_REFERENCE.md) |
 
 ### Phase B — Living World
 
@@ -235,4 +242,4 @@ See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) for setup instructions and [ARCHI
 
 ---
 
-**Last updated:** March 2, 2026
+**Last updated:** March 7, 2026

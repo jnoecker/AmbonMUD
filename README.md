@@ -186,7 +186,7 @@ See [WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) for full schema documentation 
 
 **Backends** (selectable via `ambonmud.persistence.backend`):
 - **YAML** (default): File-backed, zero dependencies, player files in `data/players/`
-- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V12); requires `ambonmud.database.jdbcUrl`
+- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V15); requires `ambonmud.database.jdbcUrl`
 
 Redis L2 caching is disabled by default. Enable it with `ambonmud.redis.enabled=true` when running alongside the Docker Compose stack.
 
@@ -302,13 +302,23 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full deployment guide (Dock
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Docker build, CDK deploy, topology/tier reference, CI/CD
 - [docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) — Zone YAML format specification
 - [docs/WEB_CLIENT_V3.md](docs/WEB_CLIENT_V3.md) — Web client v3 architecture, wiring, and known gaps
+- [docs/V4_GAME_CLIENT.md](docs/V4_GAME_CLIENT.md) — V4 PixiJS canvas client design plan
 - [docs/GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md) — GMCP protocol reference for client developers
 
 **Developer Resources**
 - [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) — Complete onboarding from zero to productive
 - [docs/ROADMAP.md](docs/ROADMAP.md) — Planned features and future work
+- [docs/SCALING_STORY.md](docs/SCALING_STORY.md) — Scaling architecture narrative and load test results
 - [CLAUDE.md](CLAUDE.md) — Internal development directives for Claude Code
 - [AGENTS.md](AGENTS.md) — Engineering playbook for code changes
+
+**Creator Tool (Ambon Arcanum)**
+- [docs/CREATOR_PLAN.md](docs/CREATOR_PLAN.md) — Creator tool design plan
+- [docs/CREATOR_CONFIG_REFERENCE.md](docs/CREATOR_CONFIG_REFERENCE.md) — All configurable YAML keys for world builders
+
+**Design Systems**
+- [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md) — Surreal Gentle Magic design system (game client)
+- [docs/ARCANUM_STYLE_GUIDE.md](docs/ARCANUM_STYLE_GUIDE.md) — Ambon Arcanum design system (creator tool)
 
 ## Contributing
 
