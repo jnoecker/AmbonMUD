@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.Gender
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
@@ -35,6 +35,7 @@ class GmcpEmitter(
     private val progression: PlayerProgression? = null,
     private val isInCombat: (SessionId) -> Boolean = { false },
     private val getCombatTarget: (SessionId) -> CombatTargetInfo? = { null },
+    private val statRegistry: StatRegistry? = null,
 ) {
     private val json = jacksonObjectMapper()
 
@@ -493,28 +494,29 @@ class GmcpEmitter(
     suspend fun sendCharStats(
         sessionId: SessionId,
         player: PlayerState,
-        effectiveStats: StatBlock,
+        effectiveStats: StatMap,
         baseDamageMin: Int,
         baseDamageMax: Int,
         armor: Int,
         dodgePercent: Int,
     ) {
+        val baseStats = player.asStatMap()
+        val statEntries = statRegistry?.all()?.map { def ->
+            CharStatEntry(
+                id = def.id,
+                name = def.displayName,
+                abbrev = def.abbreviation,
+                base = baseStats[def.id],
+                effective = effectiveStats[def.id],
+            )
+        } ?: effectiveStats.values.map { (id, effective) ->
+            CharStatEntry(id = id, name = id, abbrev = id, base = baseStats[id], effective = effective)
+        }
         emit(
             sessionId,
             "Char.Stats",
             CharStatsPayload(
-                strength = player.strength,
-                dexterity = player.dexterity,
-                constitution = player.constitution,
-                intelligence = player.intelligence,
-                wisdom = player.wisdom,
-                charisma = player.charisma,
-                effectiveStrength = effectiveStats.str,
-                effectiveDexterity = effectiveStats.dex,
-                effectiveConstitution = effectiveStats.con,
-                effectiveIntelligence = effectiveStats.int,
-                effectiveWisdom = effectiveStats.wis,
-                effectiveCharisma = effectiveStats.cha,
+                stats = statEntries,
                 baseDamageMin = baseDamageMin,
                 baseDamageMax = baseDamageMax,
                 armor = armor,
@@ -1053,19 +1055,16 @@ class GmcpEmitter(
 
     // ---------- stats payload ----------
 
+    private data class CharStatEntry(
+        val id: String,
+        val name: String,
+        val abbrev: String,
+        val base: Int,
+        val effective: Int,
+    )
+
     private data class CharStatsPayload(
-        val strength: Int,
-        val dexterity: Int,
-        val constitution: Int,
-        val intelligence: Int,
-        val wisdom: Int,
-        val charisma: Int,
-        val effectiveStrength: Int,
-        val effectiveDexterity: Int,
-        val effectiveConstitution: Int,
-        val effectiveIntelligence: Int,
-        val effectiveWisdom: Int,
-        val effectiveCharisma: Int,
+        val stats: List<CharStatEntry>,
         val baseDamageMin: Int,
         val baseDamageMax: Int,
         val armor: Int,

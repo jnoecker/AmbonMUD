@@ -164,7 +164,7 @@ class MudServer(
         StatRegistry().also { reg ->
             StatRegistryLoader.load(config.engine.stats, reg)
         }
-    private val progression = PlayerProgression(config.progression, classRegistry)
+    private val progression = PlayerProgression(config.progression, classRegistry, config.engine.stats.bindings)
     private val shardingEnabled = config.sharding.enabled
     private val engineId = config.sharding.engineId
     private val configuredShardedZones = ServerInfrastructure.resolveConfiguredZones(config)

@@ -1,6 +1,6 @@
 package dev.ambon.engine
 
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.crafting.CraftingSkill
 import dev.ambon.domain.crafting.CraftingSkillState
@@ -10,6 +10,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mail.MailMessage
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.quest.QuestState
+import dev.ambon.domain.toStatMap
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.PlayerId
 import dev.ambon.persistence.PlayerRecord
@@ -218,19 +219,41 @@ fun MobState.takeDamage(amount: Int) {
     hp = (hp - amount).coerceAtLeast(0)
 }
 
+/**
+ * Returns the base value of the named stat from this player's individual fields.
+ * Bridge method used during the StatBlock → StatMap migration (Phase 2); removed in Phase 3
+ * when [PlayerState] stores stats as a [StatMap] directly.
+ */
+fun PlayerState.getStat(id: String): Int =
+    when (id.uppercase()) {
+        "STR" -> strength
+        "DEX" -> dexterity
+        "CON" -> constitution
+        "INT" -> intelligence
+        "WIS" -> wisdom
+        "CHA" -> charisma
+        else -> PlayerState.BASE_STAT
+    }
+
 /** Combines [player] base stats with [equip] bonuses and optional status-effect [mods]. */
 fun resolveEffectiveStats(
     player: PlayerState,
     equip: ItemRegistry.EquipmentBonuses,
-    mods: StatBlock = StatBlock.ZERO,
-): StatBlock =
-    StatBlock(
-        str = player.strength + equip.stats.str + mods.str,
-        dex = player.dexterity + equip.stats.dex + mods.dex,
-        con = player.constitution + equip.stats.con + mods.con,
-        int = player.intelligence + equip.stats.int + mods.int,
-        wis = player.wisdom + equip.stats.wis + mods.wis,
-        cha = player.charisma + equip.stats.cha + mods.cha,
+    mods: StatMap = StatMap.EMPTY,
+): StatMap {
+    val base = player.asStatMap()
+    return base + equip.stats.toStatMap() + mods
+}
+
+/** Returns the player's base stats as a [StatMap]. Bridge method removed in Phase 3. */
+fun PlayerState.asStatMap(): StatMap =
+    StatMap.of(
+        "STR" to strength,
+        "DEX" to dexterity,
+        "CON" to constitution,
+        "INT" to intelligence,
+        "WIS" to wisdom,
+        "CHA" to charisma,
     )
 
 /**
@@ -242,8 +265,8 @@ fun resolvePlayerStats(
     player: PlayerState,
     items: ItemRegistry?,
     statusEffects: dev.ambon.engine.status.StatusEffectSystem?,
-): StatBlock {
+): StatMap {
     val equip = items?.equipmentBonuses(player.sessionId) ?: ItemRegistry.EquipmentBonuses()
-    val mods = statusEffects?.getPlayerStatMods(player.sessionId) ?: StatBlock.ZERO
+    val mods = statusEffects?.getPlayerStatMods(player.sessionId) ?: StatMap.EMPTY
     return resolveEffectiveStats(player, equip, mods)
 }

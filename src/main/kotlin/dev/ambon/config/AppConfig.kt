@@ -90,15 +90,9 @@ data class AppConfig(
         require(!engine.combat.feedback.roomBroadcastEnabled || engine.combat.feedback.enabled) {
             "ambonMUD.engine.combat.feedback.roomBroadcastEnabled requires feedback.enabled=true"
         }
-        require(engine.combat.strDivisor > 0) { "ambonMUD.engine.combat.strDivisor must be > 0" }
-        require(engine.combat.dexDodgePerPoint >= 0) { "ambonMUD.engine.combat.dexDodgePerPoint must be >= 0" }
-        require(engine.combat.maxDodgePercent in 0..100) { "ambonMUD.engine.combat.maxDodgePercent must be in 0..100" }
-        require(engine.combat.intSpellDivisor > 0) { "ambonMUD.engine.combat.intSpellDivisor must be > 0" }
-
         require(engine.regen.maxPlayersPerTick > 0) { "ambonMUD.engine.regen.maxPlayersPerTick must be > 0" }
         require(engine.regen.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.baseIntervalMillis must be > 0" }
         require(engine.regen.minIntervalMillis > 0L) { "ambonMUD.engine.regen.minIntervalMillis must be > 0" }
-        require(engine.regen.msPerConstitution >= 0L) { "ambonMUD.engine.regen.msPerConstitution must be >= 0" }
         require(engine.regen.regenAmount > 0) { "ambonMUD.engine.regen.regenAmount must be > 0" }
 
         require(engine.scheduler.maxActionsPerTick > 0) { "ambonMUD.engine.scheduler.maxActionsPerTick must be > 0" }
@@ -119,7 +113,6 @@ data class AppConfig(
         require(engine.regen.mana.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.baseIntervalMillis must be > 0" }
         require(engine.regen.mana.minIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.minIntervalMillis must be > 0" }
         require(engine.regen.mana.regenAmount > 0) { "ambonMUD.engine.regen.mana.regenAmount must be > 0" }
-        require(engine.regen.mana.msPerWisdom >= 0L) { "ambonMUD.engine.regen.mana.msPerWisdom must be >= 0" }
 
         val statIds = engine.stats.definitions.keys.map { it.uppercase() }.toSet()
         val b = engine.stats.bindings
@@ -731,10 +724,6 @@ data class CombatEngineConfig(
     val minDamage: Int = 1,
     val maxDamage: Int = 4,
     val feedback: CombatFeedbackConfig = CombatFeedbackConfig(),
-    val strDivisor: Int = 3,
-    val dexDodgePerPoint: Int = 2,
-    val maxDodgePercent: Int = 30,
-    val intSpellDivisor: Int = 3,
 )
 
 data class CombatFeedbackConfig(
@@ -746,7 +735,6 @@ data class RegenEngineConfig(
     val maxPlayersPerTick: Int = 50,
     val baseIntervalMillis: Long = 5_000L,
     val minIntervalMillis: Long = 1_000L,
-    val msPerConstitution: Long = 200L,
     val regenAmount: Int = 1,
     val mana: ManaRegenConfig = ManaRegenConfig(),
 )
@@ -755,7 +743,6 @@ data class ManaRegenConfig(
     val baseIntervalMillis: Long = 3_000L,
     val minIntervalMillis: Long = 1_000L,
     val regenAmount: Int = 1,
-    val msPerWisdom: Long = 200L,
 )
 
 data class SchedulerEngineConfig(

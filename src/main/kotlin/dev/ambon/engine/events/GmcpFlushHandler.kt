@@ -1,5 +1,6 @@
 package dev.ambon.engine.events
 
+import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -9,6 +10,7 @@ import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.resolvePlayerStats
 import dev.ambon.engine.status.StatusEffectSystem
@@ -28,6 +30,7 @@ class GmcpFlushHandler(
     private val groupSystem: GroupSystem,
     private val combatSystem: CombatSystem,
     private val gmcpEmitter: GmcpEmitter,
+    private val bindings: StatBindingsConfig = StatBindingsConfig(),
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     suspend fun flushDirtyVitals() {
@@ -76,7 +79,9 @@ class GmcpFlushHandler(
             val player = players.get(sid) ?: return@drainDirty
             val effectiveStats = resolvePlayerStats(player, items, statusEffectSystem)
             val equipBonuses = items.equipmentBonuses(sid)
-            val dexDodge = (dev.ambon.engine.PlayerState.statBonus(effectiveStats.dex, 1) * 2).coerceIn(0, 30)
+            val dodgeStat = effectiveStats[bindings.dodgeStat]
+            val dodgePct =
+                ((dodgeStat - PlayerState.BASE_STAT) * bindings.dodgePerPoint).coerceIn(0, bindings.maxDodgePercent)
             gmcpEmitter.sendCharStats(
                 sessionId = sid,
                 player = player,
@@ -84,7 +89,7 @@ class GmcpFlushHandler(
                 baseDamageMin = combatSystem.minDamage,
                 baseDamageMax = combatSystem.maxDamage,
                 armor = equipBonuses.armor,
-                dodgePercent = dexDodge,
+                dodgePercent = dodgePct,
             )
         }
     }

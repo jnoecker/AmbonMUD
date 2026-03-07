@@ -1,8 +1,10 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.Gender
+import dev.ambon.domain.StatDefinition
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.domain.toStatMap
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.abilities.AbilitySystem
@@ -12,6 +14,7 @@ import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.getStat
 import dev.ambon.engine.status.StatusEffectSystem
 
 class ProgressionHandler(
@@ -28,6 +31,7 @@ class ProgressionHandler(
     private val gmcpEmitter = ctx.gmcpEmitter
     private val classRegistry = ctx.classRegistry
     private val raceRegistry = ctx.raceRegistry
+    private val statRegistry = ctx.statRegistry
 
     override fun register(router: CommandRouter) {
         router.on<Command.Score> { sid, _ -> handleScore(sid) }
@@ -70,22 +74,26 @@ class ProgressionHandler(
             outbound.send(OutboundEvent.SendInfo(sessionId, "[ ${me.name} — Level ${me.level} $raceName $className ]"))
             outbound.send(OutboundEvent.SendInfo(sessionId, "  HP  : ${me.hp} / ${me.maxHp}      XP : $xpLine"))
             outbound.send(OutboundEvent.SendInfo(sessionId, "  Mana: ${me.mana} / ${me.maxMana}"))
-            outbound.send(
-                OutboundEvent.SendInfo(
-                    sessionId,
-                    "  STR: ${formatStat(me.strength, equipped.values.sumOf { it.item.stats.str })}  " +
-                        "DEX: ${formatStat(me.dexterity, equipped.values.sumOf { it.item.stats.dex })}  " +
-                        "CON: ${formatStat(me.constitution, equipped.values.sumOf { it.item.stats.con })}",
-                ),
+            val statDefs: List<StatDefinition> = statRegistry?.all() ?: listOf(
+                StatDefinition("STR", "Strength", "STR"),
+                StatDefinition("DEX", "Dexterity", "DEX"),
+                StatDefinition("CON", "Constitution", "CON"),
+                StatDefinition("INT", "Intelligence", "INT"),
+                StatDefinition("WIS", "Wisdom", "WIS"),
+                StatDefinition("CHA", "Charisma", "CHA"),
             )
-            outbound.send(
-                OutboundEvent.SendInfo(
-                    sessionId,
-                    "  INT: ${formatStat(me.intelligence, equipped.values.sumOf { it.item.stats.int })}  " +
-                        "WIS: ${formatStat(me.wisdom, equipped.values.sumOf { it.item.stats.wis })}  " +
-                        "CHA: ${formatStat(me.charisma, equipped.values.sumOf { it.item.stats.cha })}",
-                ),
-            )
+            statDefs.chunked(3).forEach { row ->
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "  " + row.joinToString("  ") { def ->
+                            val base = me.getStat(def.id)
+                            val equipBonus = equipped.values.sumOf { it.item.stats.toStatMap()[def.id] }
+                            "${def.abbreviation}: ${formatStat(base, equipBonus)}"
+                        },
+                    ),
+                )
+            }
             outbound.send(OutboundEvent.SendInfo(sessionId, "  Dmg : $dmgMin–$dmgMax          Armor: $armorDetail"))
             val group = groupSystem?.getGroup(sessionId)
             if (group != null) {

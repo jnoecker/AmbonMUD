@@ -1,10 +1,12 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
+import dev.ambon.domain.toStatMap
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -18,15 +20,13 @@ data class CombatSystemConfig(
     val tickMillis: Long = 1_000L,
     val minDamage: Int = 1,
     val maxDamage: Int = 4,
-    val strDivisor: Int = 3,
-    val dexDodgePerPoint: Int = 2,
-    val maxDodgePercent: Int = 30,
     val threatMultiplierWarrior: Double = 1.5,
     val threatMultiplierDefault: Double = 1.0,
     val healingThreatMultiplier: Double = 0.5,
     val groupXpBonusPerMember: Double = 0.10,
     val detailedFeedbackEnabled: Boolean = false,
     val detailedFeedbackRoomBroadcastEnabled: Boolean = false,
+    val bindings: StatBindingsConfig = StatBindingsConfig(),
 )
 
 data class CombatSystemCallbacks(
@@ -325,7 +325,7 @@ class CombatSystem(
             if (!stunned) {
                 val playerStats = resolvePlayerStats(player, items, statusEffects)
                 val playerAttack = playerBonuses.attack
-                val playerStrBonus = PlayerState.statBonus(playerStats.str, config.strDivisor)
+                val playerStrBonus = PlayerState.statBonus(playerStats[config.bindings.meleeDamageStat], config.bindings.meleeDamageDivisor)
                 val playerRoll = rollRange(rng, config.minDamage, config.maxDamage)
                 val rawPlayerDamage = playerRoll + playerAttack + playerStrBonus
                 val preClampPlayerDamage = rawPlayerDamage - mob.armor
@@ -408,7 +408,9 @@ class CombatSystem(
             val target = players.get(targetSid) ?: continue
 
             val targetStats = resolvePlayerStats(target, items, statusEffects)
-            val dodgePct = (PlayerState.statBonus(targetStats.dex, 1) * config.dexDodgePerPoint).coerceIn(0, config.maxDodgePercent)
+            val dodgePct =
+                ((targetStats[config.bindings.dodgeStat] - PlayerState.BASE_STAT) * config.bindings.dodgePerPoint)
+                    .coerceIn(0, config.bindings.maxDodgePercent)
             if (dodgePct > 0 && rng.nextInt(100) < dodgePct) {
                 outbound.send(OutboundEvent.SendText(targetSid, "You dodge ${mob.name}'s attack!"))
                 onCombatEvent(
@@ -699,8 +701,9 @@ class CombatSystem(
 
         for (sid in recipients) {
             val player = players.get(sid) ?: continue
-            val equipCha = items.equipmentBonuses(sid).stats.cha
-            val reward = progression.applyCharismaXpBonus(player.charisma + equipCha, perPlayerXp)
+            val equipStats = items.equipmentBonuses(sid).stats.toStatMap()
+            val totalBonusStat = player.getStat(config.bindings.xpBonusStat) + equipStats[config.bindings.xpBonusStat]
+            val reward = progression.applyCharismaXpBonus(totalBonusStat, perPlayerXp)
 
             val result = players.grantXp(sid, reward, progression) ?: continue
             metrics.onXpAwarded(reward, "kill")
@@ -710,7 +713,12 @@ class CombatSystem(
             if (result.levelsGained > 0) {
                 metrics.onLevelUp()
                 val levelUpMessage =
-                    progression.buildLevelUpMessage(result, player.constitution, player.intelligence, player.playerClass)
+                    progression.buildLevelUpMessage(
+                        result,
+                        player.getStat(config.bindings.hpScalingStat),
+                        player.getStat(config.bindings.manaScalingStat),
+                        player.playerClass,
+                    )
                 outbound.send(OutboundEvent.SendText(sid, levelUpMessage))
                 callbacks.onLevelUp(sid, result.newLevel)
             }

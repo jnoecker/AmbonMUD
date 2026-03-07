@@ -1,6 +1,8 @@
 package dev.ambon.engine
 
+import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.toStatMap
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.metrics.GameMetrics
 import java.time.Clock
@@ -13,12 +15,11 @@ class RegenSystem(
     private val rng: Random = Random(),
     private val baseIntervalMs: Long = 5_000L,
     private val minIntervalMs: Long = 1_000L,
-    private val msPerConstitution: Long = 200L,
     private val regenAmount: Int = 1,
     private val manaBaseIntervalMs: Long = 3_000L,
     private val manaMinIntervalMs: Long = 1_000L,
     private val manaRegenAmount: Int = 1,
-    private val msPerWisdom: Long = 200L,
+    private val bindings: StatBindingsConfig = StatBindingsConfig(),
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
 ) : GameSystem {
@@ -52,7 +53,7 @@ class RegenSystem(
             ran++
 
             val sessionId = player.sessionId
-            val bonuses = items.equipmentBonuses(sessionId)
+            val equipStats = items.equipmentBonuses(sessionId).stats.toStatMap()
 
             applyRegen(
                 now = now,
@@ -60,7 +61,7 @@ class RegenSystem(
                 tracker = lastRegenAtMs,
                 current = player.hp,
                 max = player.maxHp,
-                intervalMs = regenIntervalMs(player, bonuses.stats.con),
+                intervalMs = regenIntervalMs(player, equipStats[bindings.hpRegenStat]),
                 heal = { player.healHp(regenAmount) },
             )
 
@@ -70,7 +71,7 @@ class RegenSystem(
                 tracker = lastManaRegenAtMs,
                 current = player.mana,
                 max = player.maxMana,
-                intervalMs = manaRegenIntervalMs(player, bonuses.stats.wis),
+                intervalMs = manaRegenIntervalMs(player, equipStats[bindings.manaRegenStat]),
                 heal = { player.healMana(manaRegenAmount) },
             )
         }
@@ -98,11 +99,21 @@ class RegenSystem(
         }
     }
 
-    private fun regenIntervalMs(player: PlayerState, equipCon: Int): Long =
-        regenInterval(player.constitution + equipCon, baseIntervalMs, msPerConstitution, minIntervalMs)
+    private fun regenIntervalMs(player: PlayerState, equipBonus: Int): Long =
+        regenInterval(
+            player.getStat(bindings.hpRegenStat) + equipBonus,
+            baseIntervalMs,
+            bindings.hpRegenMsPerPoint,
+            minIntervalMs,
+        )
 
-    private fun manaRegenIntervalMs(player: PlayerState, equipWis: Int): Long =
-        regenInterval(player.wisdom + equipWis, manaBaseIntervalMs, msPerWisdom, manaMinIntervalMs)
+    private fun manaRegenIntervalMs(player: PlayerState, equipBonus: Int): Long =
+        regenInterval(
+            player.getStat(bindings.manaRegenStat) + equipBonus,
+            manaBaseIntervalMs,
+            bindings.manaRegenMsPerPoint,
+            manaMinIntervalMs,
+        )
 
     private fun regenInterval(totalStat: Int, baseMs: Long, msPerPoint: Long, minMs: Long): Long {
         val bonus = (totalStat - PlayerState.BASE_STAT).coerceAtLeast(0).toLong()
