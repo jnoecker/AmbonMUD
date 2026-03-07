@@ -23,9 +23,11 @@ value class StatMap(
     /** Returns a new [StatMap] with all values from [other] added to the corresponding values in this map. */
     operator fun plus(other: StatMap): StatMap {
         if (other.values.isEmpty()) return this
-        if (values.isEmpty()) return other
         val merged = values.toMutableMap()
-        for ((k, v) in other.values) merged[k] = (merged[k] ?: 0) + v
+        for ((k, v) in other.values) {
+            val key = k.uppercase()
+            merged[key] = (merged[key] ?: 0) + v
+        }
         return StatMap(merged)
     }
 

@@ -68,6 +68,17 @@ class StatMapTest {
     }
 
     @Test
+    fun `plus normalizes keys from other map`() {
+        // Direct-constructor StatMap with lowercase keys — plus must normalize them
+        val a = StatMap.of("STR" to 3)
+        val b = StatMap(mapOf("str" to 2))
+        val result = a + b
+        // Should see STR=5, not both STR=3 and str=2
+        assertEquals(5, result["STR"])
+        assertEquals(1, result.values.size)
+    }
+
+    @Test
     fun `StatBlock round-trips through StatMap`() {
         val block = StatBlock(str = 11, dex = 10, con = 12, int = 8, wis = 9, cha = 13)
         val map = block.toStatMap()
