@@ -2,6 +2,7 @@ package dev.ambon.sharding
 
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -110,7 +111,7 @@ class HandoffManagerTest {
                 hp = 15,
                 maxHp = 20,
                 baseMaxHp = 18,
-                stats = dev.ambon.domain.StatMap.of("CON" to 3),
+                stats = StatMap.of("CON" to 3),
                 level = 5,
                 xpTotal = 25_000L,
                 ansiEnabled = true,

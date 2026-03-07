@@ -1,6 +1,7 @@
 package dev.ambon.sharding
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
@@ -235,7 +236,7 @@ class HandoffManager(
                 baseMaxHp = state.baseMaxHp,
                 hp = state.hp,
                 maxHp = state.maxHp,
-                stats = dev.ambon.domain.StatMap.of(
+                stats = StatMap.of(
                     "STR" to state.strength,
                     "DEX" to state.dexterity,
                     "CON" to state.constitution,
