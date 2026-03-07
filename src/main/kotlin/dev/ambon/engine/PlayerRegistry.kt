@@ -1,7 +1,6 @@
 package dev.ambon.engine
 
-import dev.ambon.domain.PlayerClass
-import dev.ambon.domain.Race
+import dev.ambon.domain.StatBlock
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
@@ -81,7 +80,7 @@ internal sealed interface CreateAccountPrep {
 
 class PlayerRegistry(
     private val startRoom: RoomId,
-    private val classStartRooms: Map<PlayerClass, RoomId> = emptyMap(),
+    private val classStartRooms: Map<String, RoomId> = emptyMap(),
     private val repo: PlayerRepository,
     private val items: ItemRegistry,
     private val clock: Clock = Clock.systemUTC(),
@@ -91,6 +90,8 @@ class PlayerRegistry(
     // Defaults to EmptyCoroutineContext so tests run synchronously on the test scheduler.
     private val hashingContext: CoroutineContext = EmptyCoroutineContext,
     private val passwordHasher: PasswordHasher = BCryptPasswordHasher,
+    private val classRegistry: PlayerClassRegistry? = null,
+    private val raceRegistry: RaceRegistry? = null,
 ) {
     val maxLevel: Int get() = progression.maxLevel
 
@@ -159,8 +160,8 @@ class PlayerRegistry(
         nameRaw: String,
         passwordRaw: String,
         defaultAnsiEnabled: Boolean,
-        race: Race,
-        playerClass: PlayerClass,
+        raceId: String,
+        classId: String,
     ): CreateAccountPrep {
         val name = normalizeName(nameRaw)
         val password = normalizePassword(passwordRaw)
@@ -171,23 +172,26 @@ class PlayerRegistry(
         val now = clock.millis()
         val hash = withContext(hashingContext) { passwordHasher.hash(password) }
         val baseStat = PlayerState.BASE_STAT
+        val raceMods = raceRegistry?.get(raceId)?.statMods ?: StatBlock.ZERO
+        val classStartRoom = classStartRooms[classId.uppercase()]
+            ?: classRegistry?.get(classId)?.startRoom?.let { RoomId(it) }
         val record =
             try {
                 repo.create(
                     PlayerCreationRequest(
                         name = name,
-                        startRoomId = classStartRooms[playerClass] ?: startRoom,
+                        startRoomId = classStartRoom ?: startRoom,
                         nowEpochMs = now,
                         passwordHash = hash,
                         ansiEnabled = defaultAnsiEnabled,
-                        race = race.name,
-                        playerClass = playerClass.name,
-                        strength = baseStat + race.statMods.str,
-                        dexterity = baseStat + race.statMods.dex,
-                        constitution = baseStat + race.statMods.con,
-                        intelligence = baseStat + race.statMods.int,
-                        wisdom = baseStat + race.statMods.wis,
-                        charisma = baseStat + race.statMods.cha,
+                        race = raceId,
+                        playerClass = classId,
+                        strength = baseStat + raceMods.str,
+                        dexterity = baseStat + raceMods.dex,
+                        constitution = baseStat + raceMods.con,
+                        intelligence = baseStat + raceMods.int,
+                        wisdom = baseStat + raceMods.wis,
+                        charisma = baseStat + raceMods.cha,
                     ),
                 )
             } catch (_: PersistenceException) {
@@ -243,8 +247,8 @@ class PlayerRegistry(
         nameRaw: String,
         passwordRaw: String,
         defaultAnsiEnabled: Boolean = false,
-        race: Race = Race.HUMAN,
-        playerClass: PlayerClass = PlayerClass.WARRIOR,
+        race: String = "HUMAN",
+        playerClass: String = "WARRIOR",
     ): CreateResult {
         val name = normalizeName(nameRaw)
         if (!isValidName(name)) return CreateResult.InvalidName
@@ -434,7 +438,8 @@ class PlayerRegistry(
     fun recallTarget(sessionId: SessionId): RoomId? {
         val ps = players[sessionId] ?: return null
         return ps.recallRoomId
-            ?: classStartRooms[PlayerClass.fromString(ps.playerClass)]
+            ?: classStartRooms[ps.playerClass.uppercase()]
+            ?: classRegistry?.get(ps.playerClass)?.startRoom?.let { RoomId(it) }
             ?: startRoom
     }
 

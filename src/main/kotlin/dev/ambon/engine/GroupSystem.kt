@@ -1,7 +1,6 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
-import dev.ambon.domain.PlayerClass
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
@@ -28,6 +27,7 @@ class GroupSystem(
     private val maxGroupSize: Int = 5,
     private val inviteTimeoutMs: Long = 60_000L,
     private val markGroupDirty: (SessionId) -> Unit = {},
+    private val classRegistry: PlayerClassRegistry? = null,
 ) : GameSystem {
     private val groupBySession = mutableMapOf<SessionId, Group>()
     private val pendingInvites = mutableMapOf<SessionId, PendingInvite>()
@@ -237,10 +237,7 @@ class GroupSystem(
         for (sid in group.members) {
             val p = players.get(sid) ?: continue
             val leaderTag = if (sid == group.leader) " (leader)" else ""
-            val className =
-                PlayerClass
-                    .fromString(p.playerClass)
-                    ?.displayName ?: p.playerClass
+            val className = classRegistry?.get(p.playerClass)?.displayName ?: p.playerClass
             lines.add("  ${p.name} — Level ${p.level} $className [${p.hp}/${p.maxHp} HP]$leaderTag")
         }
 

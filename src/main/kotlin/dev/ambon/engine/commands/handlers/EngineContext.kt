@@ -6,8 +6,10 @@ import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.QuestSystem
+import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.crafting.GatheringRegistry
@@ -35,4 +37,6 @@ data class EngineContext(
     val shopRegistry: ShopRegistry? = null,
     val economyConfig: EconomyConfig = EconomyConfig(),
     val questSystem: QuestSystem? = null,
+    val classRegistry: PlayerClassRegistry? = null,
+    val raceRegistry: RaceRegistry? = null,
 )
