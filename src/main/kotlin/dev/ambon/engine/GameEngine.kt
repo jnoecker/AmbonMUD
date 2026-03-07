@@ -126,6 +126,8 @@ class GameEngine(
     private val achievementRegistry: AchievementRegistry = AchievementRegistry(),
     private val sharding: ShardingContext = ShardingContext(),
     private val persistence: PersistenceContext = PersistenceContext(),
+    classRegistryOverride: PlayerClassRegistry? = null,
+    raceRegistryOverride: RaceRegistry? = null,
 ) {
     // Convenience delegates — expose grouped context fields as flat names so the
     // existing class body compiles without modification.
@@ -139,12 +141,12 @@ class GameEngine(
     private val guildRepo get() = persistence.guildRepo
     private val playerRepo get() = persistence.playerRepo
 
-    private val classRegistry =
-        PlayerClassRegistry().also { reg ->
+    private val classRegistry = classRegistryOverride
+        ?: PlayerClassRegistry().also { reg ->
             PlayerClassRegistryLoader.load(engineConfig.classes, reg)
         }
-    private val raceRegistry =
-        RaceRegistry().also { reg ->
+    private val raceRegistry = raceRegistryOverride
+        ?: RaceRegistry().also { reg ->
             RaceRegistryLoader.load(engineConfig.races, reg)
         }
 

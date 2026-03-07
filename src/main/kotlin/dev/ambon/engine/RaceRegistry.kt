@@ -3,7 +3,7 @@ package dev.ambon.engine
 import dev.ambon.domain.RaceDef
 
 class RaceRegistry {
-    private val byId = mutableMapOf<String, RaceDef>()
+    private val byId = linkedMapOf<String, RaceDef>()
 
     fun register(def: RaceDef) {
         byId[def.id.uppercase()] = def

@@ -334,6 +334,8 @@ class MudServer(
                         guildRepo = guildRepo,
                         playerRepo = playerRepo,
                     ),
+                    classRegistryOverride = classRegistry,
+                    raceRegistryOverride = raceRegistry,
                 ).run()
             }
 

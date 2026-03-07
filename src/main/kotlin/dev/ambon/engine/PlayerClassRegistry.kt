@@ -3,7 +3,7 @@ package dev.ambon.engine
 import dev.ambon.domain.PlayerClassDef
 
 class PlayerClassRegistry {
-    private val byId = mutableMapOf<String, PlayerClassDef>()
+    private val byId = linkedMapOf<String, PlayerClassDef>()
 
     fun register(def: PlayerClassDef) {
         byId[def.id.uppercase()] = def

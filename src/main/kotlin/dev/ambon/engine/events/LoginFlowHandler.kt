@@ -615,20 +615,21 @@ internal class LoginFlowHandler(
         emitLoginPrompt(sessionId, mapOf("state" to "confirmCreate", "name" to name))
     }
 
+    private fun formatStatMods(s: dev.ambon.domain.StatBlock): String =
+        buildList {
+            if (s.str != 0) add("STR %+d".format(s.str))
+            if (s.dex != 0) add("DEX %+d".format(s.dex))
+            if (s.con != 0) add("CON %+d".format(s.con))
+            if (s.int != 0) add("INT %+d".format(s.int))
+            if (s.wis != 0) add("WIS %+d".format(s.wis))
+            if (s.cha != 0) add("CHA %+d".format(s.cha))
+        }.joinToString(", ")
+
     private suspend fun promptForRaceSelection(sessionId: SessionId) {
         val state = pendingLogins[sessionId] as? LoginState.AwaitingRaceSelection
         outbound.send(OutboundEvent.SendInfo(sessionId, "Choose your race:"))
         for ((index, race) in raceRegistry.all().withIndex()) {
-            val s = race.statMods
-            val mods =
-                buildList {
-                    if (s.str != 0) add("STR %+d".format(s.str))
-                    if (s.dex != 0) add("DEX %+d".format(s.dex))
-                    if (s.con != 0) add("CON %+d".format(s.con))
-                    if (s.int != 0) add("INT %+d".format(s.int))
-                    if (s.wis != 0) add("WIS %+d".format(s.wis))
-                    if (s.cha != 0) add("CHA %+d".format(s.cha))
-                }.joinToString(", ")
+            val mods = formatStatMods(race.statMods)
             val desc = if (mods.isNotEmpty()) " ($mods)" else ""
             outbound.send(OutboundEvent.SendInfo(sessionId, "  ${index + 1}. ${race.displayName}$desc"))
         }
@@ -697,17 +698,7 @@ internal class LoginFlowHandler(
 
     private fun racePayloads(): List<Map<String, String>> =
         raceRegistry.all().map { race ->
-            val s = race.statMods
-            val mods =
-                buildList {
-                    if (s.str != 0) add("STR %+d".format(s.str))
-                    if (s.dex != 0) add("DEX %+d".format(s.dex))
-                    if (s.con != 0) add("CON %+d".format(s.con))
-                    if (s.int != 0) add("INT %+d".format(s.int))
-                    if (s.wis != 0) add("WIS %+d".format(s.wis))
-                    if (s.cha != 0) add("CHA %+d".format(s.cha))
-                }.joinToString(", ")
-            mapOf("id" to race.id, "name" to race.displayName, "stats" to mods)
+            mapOf("id" to race.id, "name" to race.displayName, "stats" to formatStatMods(race.statMods))
         }
 
     private fun classPayloads(): List<Map<String, String>> =
