@@ -2,6 +2,7 @@ package dev.ambon.test
 
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.bus.OutboundBus
+import dev.ambon.config.StatBindingsConfig
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -48,9 +49,7 @@ class CombatTestFixture(
         progression: PlayerProgression = PlayerProgression(),
         metrics: GameMetrics = GameMetrics.noop(),
         onLevelUp: suspend (SessionId, Int) -> Unit = { _, _ -> },
-        strDivisor: Int = 3,
-        dexDodgePerPoint: Int = 2,
-        maxDodgePercent: Int = 30,
+        bindings: StatBindingsConfig = StatBindingsConfig(),
         dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
         statusEffects: StatusEffectSystem? = null,
         onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
@@ -77,15 +76,13 @@ class CombatTestFixture(
                 tickMillis = tickMillis,
                 minDamage = minDamage,
                 maxDamage = maxDamage,
-                strDivisor = strDivisor,
-                dexDodgePerPoint = dexDodgePerPoint,
-                maxDodgePercent = maxDodgePercent,
                 threatMultiplierWarrior = threatMultiplierWarrior,
                 threatMultiplierDefault = threatMultiplierDefault,
                 healingThreatMultiplier = healingThreatMultiplier,
                 groupXpBonusPerMember = groupXpBonusPerMember,
                 detailedFeedbackEnabled = detailedFeedbackEnabled,
                 detailedFeedbackRoomBroadcastEnabled = detailedFeedbackRoomBroadcastEnabled,
+                bindings = bindings,
             ),
             callbacks = CombatSystemCallbacks(
                 onMobRemoved = onMobRemoved,

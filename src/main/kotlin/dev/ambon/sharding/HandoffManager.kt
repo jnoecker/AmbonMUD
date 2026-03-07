@@ -1,6 +1,7 @@
 package dev.ambon.sharding
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
@@ -235,12 +236,14 @@ class HandoffManager(
                 baseMaxHp = state.baseMaxHp,
                 hp = state.hp,
                 maxHp = state.maxHp,
-                strength = state.strength,
-                dexterity = state.dexterity,
-                constitution = state.constitution,
-                intelligence = state.intelligence,
-                wisdom = state.wisdom,
-                charisma = state.charisma,
+                stats = StatMap.of(
+                    "STR" to state.strength,
+                    "DEX" to state.dexterity,
+                    "CON" to state.constitution,
+                    "INT" to state.intelligence,
+                    "WIS" to state.wisdom,
+                    "CHA" to state.charisma,
+                ),
                 race = state.race,
                 playerClass = state.playerClass,
                 level = state.level,
@@ -326,12 +329,12 @@ class HandoffManager(
                 hp = player.hp,
                 maxHp = player.maxHp,
                 baseMaxHp = player.baseMaxHp,
-                strength = player.strength,
-                dexterity = player.dexterity,
-                constitution = player.constitution,
-                intelligence = player.intelligence,
-                wisdom = player.wisdom,
-                charisma = player.charisma,
+                strength = player.stats["STR"],
+                dexterity = player.stats["DEX"],
+                constitution = player.stats["CON"],
+                intelligence = player.stats["INT"],
+                wisdom = player.stats["WIS"],
+                charisma = player.stats["CHA"],
                 race = player.race,
                 playerClass = player.playerClass,
                 level = player.level,

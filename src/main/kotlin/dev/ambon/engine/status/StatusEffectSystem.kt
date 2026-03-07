@@ -1,7 +1,7 @@
 package dev.ambon.engine.status
 
 import dev.ambon.bus.OutboundBus
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.DirtyNotifier
@@ -262,13 +262,13 @@ class StatusEffectSystem(
         effectType: EffectType,
     ): Boolean = mobEffects[mobId]?.any { registry.get(it.definitionId)?.effectType == effectType } == true
 
-    fun getPlayerStatMods(sessionId: SessionId): StatBlock = computeStatMods(playerEffects[sessionId])
+    fun getPlayerStatMods(sessionId: SessionId): StatMap = computeStatMods(playerEffects[sessionId])
 
-    fun getMobStatMods(mobId: MobId): StatBlock = computeStatMods(mobEffects[mobId])
+    fun getMobStatMods(mobId: MobId): StatMap = computeStatMods(mobEffects[mobId])
 
-    private fun computeStatMods(effects: List<ActiveEffect>?): StatBlock {
-        val activeEffects = effects ?: return StatBlock.ZERO
-        var result = StatBlock.ZERO
+    private fun computeStatMods(effects: List<ActiveEffect>?): StatMap {
+        val activeEffects = effects ?: return StatMap.EMPTY
+        var result = StatMap.EMPTY
         for (effect in activeEffects) {
             val def = registry.get(effect.definitionId) ?: continue
             if (def.effectType == EffectType.STAT_BUFF || def.effectType == EffectType.STAT_DEBUFF) {

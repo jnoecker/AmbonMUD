@@ -1,6 +1,6 @@
 package dev.ambon.engine.items
 
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -157,18 +157,18 @@ class ItemRegistry {
     data class EquipmentBonuses(
         val attack: Int = 0,
         val armor: Int = 0,
-        val stats: StatBlock = StatBlock.ZERO,
+        val stats: StatMap = StatMap.EMPTY,
     )
 
     fun equipmentBonuses(sessionId: SessionId): EquipmentBonuses {
         val equipped = equippedItems[sessionId]?.values ?: return EquipmentBonuses()
         var attack = 0
         var armor = 0
-        var stats = StatBlock.ZERO
+        var stats = StatMap.EMPTY
         for (inst in equipped) {
             attack += inst.item.damage
             armor += inst.item.armor
-            stats += inst.item.stats
+            stats = stats + inst.item.stats
         }
         return EquipmentBonuses(attack, armor, stats)
     }

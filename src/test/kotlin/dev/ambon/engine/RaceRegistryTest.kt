@@ -4,7 +4,7 @@ import dev.ambon.config.RaceDefinitionConfig
 import dev.ambon.config.RaceEngineConfig
 import dev.ambon.config.RaceStatModsConfig
 import dev.ambon.domain.RaceDef
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -16,7 +16,7 @@ class RaceRegistryTest {
         val def = RaceDef(
             id = "HUMAN",
             displayName = "Human",
-            statMods = StatBlock(str = 1, cha = 1),
+            statMods = StatMap.of("STR" to 1, "CHA" to 1),
         )
         registry.register(def)
         assertEquals(def, registry.get("HUMAN"))
@@ -55,7 +55,7 @@ class RaceRegistryTest {
         val registry = RaceRegistry()
         RaceRegistryLoader.load(config, registry)
         assertEquals("Human", registry.get("HUMAN")?.displayName)
-        assertEquals(StatBlock(str = 1, cha = 1), registry.get("HUMAN")?.statMods)
-        assertEquals(StatBlock(str = -1, dex = 2, con = -2, int = 1), registry.get("ELF")?.statMods)
+        assertEquals(StatMap.of("STR" to 1, "CHA" to 1), registry.get("HUMAN")?.statMods)
+        assertEquals(StatMap.of("STR" to -1, "DEX" to 2, "CON" to -2, "INT" to 1), registry.get("ELF")?.statMods)
     }
 }

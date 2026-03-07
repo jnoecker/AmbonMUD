@@ -3,9 +3,10 @@ package dev.ambon.engine
 import dev.ambon.config.ClassEngineConfig
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
+import dev.ambon.config.StatBindingsConfig
 import dev.ambon.config.XpCurveConfig
 import dev.ambon.domain.DamageRange
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
@@ -761,7 +762,7 @@ class CombatSystemTest {
                         displayName = "Buff",
                         effectType = EffectType.STAT_BUFF,
                         durationMs = 60000,
-                        statMods = StatBlock(str = 6),
+                        statMods = StatMap.of("STR" to 6),
                     ),
                 )
             val combat =
@@ -770,7 +771,7 @@ class CombatSystemTest {
                     minDamage = 3,
                     maxDamage = 3,
                     statusEffects = statusEffects,
-                    strDivisor = 3,
+                    bindings = StatBindingsConfig(meleeDamageStat = "STR", meleeDamageDivisor = 3),
                 )
 
             val sid = SessionId(32L)

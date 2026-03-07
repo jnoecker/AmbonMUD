@@ -2,7 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.DamageRange
-import dev.ambon.domain.StatBlock
+import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -962,12 +962,20 @@ class GmcpEmitterTest {
         runTest {
             val e = emitter("Char.Stats")
             val p = player()
-            e.sendCharStats(sid, p, StatBlock(str = 16, dex = 14), baseDamageMin = 3, baseDamageMax = 8, armor = 5, dodgePercent = 12)
+            e.sendCharStats(
+                sid,
+                p,
+                StatMap.of("STR" to 16, "DEX" to 14),
+                baseDamageMin = 3,
+                baseDamageMax = 8,
+                armor = 5,
+                dodgePercent = 12,
+            )
             val events = drainGmcp()
             assertEquals(1, events.size)
             assertEquals("Char.Stats", events[0].gmcpPackage)
-            assertTrue(events[0].jsonData.contains("\"effectiveStrength\":16"))
-            assertTrue(events[0].jsonData.contains("\"effectiveDexterity\":14"))
+            assertTrue(events[0].jsonData.contains("\"id\":\"STR\""))
+            assertTrue(events[0].jsonData.contains("\"effective\":16"))
             assertTrue(events[0].jsonData.contains("\"baseDamageMin\":3"))
             assertTrue(events[0].jsonData.contains("\"armor\":5"))
             assertTrue(events[0].jsonData.contains("\"dodgePercent\":12"))
@@ -977,7 +985,7 @@ class GmcpEmitterTest {
     fun `sendCharStats does nothing when not supported`() =
         runTest {
             val e = emitter()
-            e.sendCharStats(sid, player(), StatBlock.ZERO, 0, 0, 0, 0)
+            e.sendCharStats(sid, player(), StatMap.EMPTY, 0, 0, 0, 0)
             assertTrue(drainGmcp().isEmpty())
         }
 
