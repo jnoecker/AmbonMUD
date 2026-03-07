@@ -2,15 +2,17 @@ package dev.ambon.engine.events
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.OutboundBus
-import dev.ambon.domain.PlayerClass
-import dev.ambon.domain.Race
+import dev.ambon.domain.PlayerClassDef
+import dev.ambon.domain.RaceDef
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
 import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.GuildSystem
+import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.SessionLifecycleCoordinator
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.broadcastToRoom
@@ -55,7 +57,7 @@ internal sealed interface LoginState {
     data class AwaitingClassSelection(
         val name: String,
         val password: String,
-        val race: Race,
+        val raceId: String,
     ) : LoginState
 
     /** Name-existence check in-flight; player input is buffered until complete. */
@@ -73,8 +75,8 @@ internal sealed interface LoginState {
     data class AwaitingCreateAuth(
         val name: String,
         val password: String,
-        val race: Race,
-        val playerClass: PlayerClass,
+        val raceId: String,
+        val classId: String,
     ) : LoginState
 }
 
@@ -123,7 +125,9 @@ internal class LoginFlowHandler(
     private val handoffManager: HandoffManager?,
     private val getEngineScope: () -> CoroutineScope,
     private val metrics: GameMetrics,
-    private val availableClasses: List<PlayerClass>,
+    private val classRegistry: PlayerClassRegistry,
+    private val raceRegistry: RaceRegistry,
+    private val debugClassesEnabled: Boolean = false,
     maxWrongPasswordRetries: Int,
     maxFailedLoginAttemptsBeforeDisconnect: Int,
     maxConcurrentLogins: Int,
@@ -139,6 +143,9 @@ internal class LoginFlowHandler(
     // or the session disconnects, so retries don't consume extra slots.
     private val loginSemaphore = Semaphore(maxConcurrentLogins)
     private val sessionsHoldingLoginPermit = mutableSetOf<SessionId>()
+
+    private val availableClasses: List<PlayerClassDef> =
+        if (debugClassesEnabled) classRegistry.all() else classRegistry.selectable()
 
     private val pendingAuthResults = Channel<PendingAuthResult>(Channel.UNLIMITED)
     private val nameCommandRegex = Regex("^name\\s+(.+)$", RegexOption.IGNORE_CASE)
@@ -299,11 +306,11 @@ internal class LoginFlowHandler(
         state: LoginState.AwaitingRaceSelection,
     ) {
         val input = line.trim()
-        val races = Race.entries
-        val race =
+        val races = raceRegistry.all()
+        val race: RaceDef? =
             input.toIntOrNull()?.let { num ->
                 if (num in 1..races.size) races[num - 1] else null
-            } ?: Race.fromString(input)
+            } ?: races.firstOrNull { it.id.equals(input, ignoreCase = true) || it.displayName.equals(input, ignoreCase = true) }
 
         if (race == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Invalid choice. Enter a number or race name."))
@@ -312,7 +319,7 @@ internal class LoginFlowHandler(
             return
         }
 
-        pendingLogins[sessionId] = LoginState.AwaitingClassSelection(state.name, state.password, race)
+        pendingLogins[sessionId] = LoginState.AwaitingClassSelection(state.name, state.password, race.id)
         promptForClassSelection(sessionId)
     }
 
@@ -322,11 +329,12 @@ internal class LoginFlowHandler(
         state: LoginState.AwaitingClassSelection,
     ) {
         val input = line.trim()
-        val classes = availableClasses
-        val playerClass =
+        val playerClass: PlayerClassDef? =
             input.toIntOrNull()?.let { num ->
-                if (num in 1..classes.size) classes[num - 1] else null
-            } ?: classes.firstOrNull { it.name.equals(input, ignoreCase = true) }
+                if (num in 1..availableClasses.size) availableClasses[num - 1] else null
+            } ?: availableClasses.firstOrNull {
+                it.id.equals(input, ignoreCase = true) || it.displayName.equals(input, ignoreCase = true)
+            }
 
         if (playerClass == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Invalid choice. Enter a number or class name."))
@@ -336,9 +344,9 @@ internal class LoginFlowHandler(
         }
 
         val ansiDefault = sessionAnsiDefaults[sessionId] ?: false
-        pendingLogins[sessionId] = LoginState.AwaitingCreateAuth(state.name, state.password, state.race, playerClass)
+        pendingLogins[sessionId] = LoginState.AwaitingCreateAuth(state.name, state.password, state.raceId, playerClass.id)
         getEngineScope().launch {
-            val prep = players.prepareCreateAccount(state.name, state.password, ansiDefault, state.race, playerClass)
+            val prep = players.prepareCreateAccount(state.name, state.password, ansiDefault, state.raceId, playerClass.id)
             pendingAuthResults.send(PendingAuthResult.NewAccountAuth(sessionId, prep))
         }
     }
@@ -610,7 +618,7 @@ internal class LoginFlowHandler(
     private suspend fun promptForRaceSelection(sessionId: SessionId) {
         val state = pendingLogins[sessionId] as? LoginState.AwaitingRaceSelection
         outbound.send(OutboundEvent.SendInfo(sessionId, "Choose your race:"))
-        for ((index, race) in Race.entries.withIndex()) {
+        for ((index, race) in raceRegistry.all().withIndex()) {
             val s = race.statMods
             val mods =
                 buildList {
@@ -648,7 +656,7 @@ internal class LoginFlowHandler(
             mapOf(
                 "state" to "classSelection",
                 "name" to (state?.name ?: ""),
-                "race" to (state?.race?.name ?: ""),
+                "race" to (state?.raceId ?: ""),
                 "classes" to classPayloads(),
             ),
         )
@@ -688,7 +696,7 @@ internal class LoginFlowHandler(
     }
 
     private fun racePayloads(): List<Map<String, String>> =
-        Race.entries.map { race ->
+        raceRegistry.all().map { race ->
             val s = race.statMods
             val mods =
                 buildList {
@@ -699,13 +707,13 @@ internal class LoginFlowHandler(
                     if (s.wis != 0) add("WIS %+d".format(s.wis))
                     if (s.cha != 0) add("CHA %+d".format(s.cha))
                 }.joinToString(", ")
-            mapOf("id" to race.name, "name" to race.displayName, "stats" to mods)
+            mapOf("id" to race.id, "name" to race.displayName, "stats" to mods)
         }
 
     private fun classPayloads(): List<Map<String, String>> =
         availableClasses.map { pc ->
             mapOf(
-                "id" to pc.name,
+                "id" to pc.id,
                 "name" to pc.displayName,
                 "stats" to "+${pc.hpPerLevel} HP/lvl, +${pc.manaPerLevel} Mana/lvl",
             )

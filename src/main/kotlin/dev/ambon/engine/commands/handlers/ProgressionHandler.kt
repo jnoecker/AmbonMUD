@@ -1,8 +1,6 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.Gender
-import dev.ambon.domain.PlayerClass
-import dev.ambon.domain.Race
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.engine.GroupSystem
@@ -28,6 +26,8 @@ class ProgressionHandler(
     private val combat = ctx.combat
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
+    private val classRegistry = ctx.classRegistry
+    private val raceRegistry = ctx.raceRegistry
 
     override fun register(router: CommandRouter) {
         router.on<Command.Score> { sid, _ -> handleScore(sid) }
@@ -64,8 +64,8 @@ class ProgressionHandler(
                     "+0"
                 }
 
-            val raceName = Race.fromString(me.race)?.displayName ?: me.race
-            val className = PlayerClass.fromString(me.playerClass)?.displayName ?: me.playerClass
+            val raceName = raceRegistry?.get(me.race)?.displayName ?: me.race
+            val className = classRegistry?.get(me.playerClass)?.displayName ?: me.playerClass
 
             outbound.send(OutboundEvent.SendInfo(sessionId, "[ ${me.name} — Level ${me.level} $raceName $className ]"))
             outbound.send(OutboundEvent.SendInfo(sessionId, "  HP  : ${me.hp} / ${me.maxHp}      XP : $xpLine"))

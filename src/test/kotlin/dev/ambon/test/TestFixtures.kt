@@ -2,8 +2,9 @@ package dev.ambon.test
 
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.config.ClassEngineConfig
 import dev.ambon.config.EconomyConfig
-import dev.ambon.domain.PlayerClass
+import dev.ambon.config.RaceEngineConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
@@ -14,8 +15,12 @@ import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.MobRemovalCoordinator
 import dev.ambon.engine.PasswordHasher
+import dev.ambon.engine.PlayerClassRegistry
+import dev.ambon.engine.PlayerClassRegistryLoader
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.RaceRegistry
+import dev.ambon.engine.RaceRegistryLoader
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.buildTestRouter
@@ -68,7 +73,9 @@ fun buildTestPlayerRegistry(
     progression: PlayerProgression = PlayerProgression(),
     hashingContext: CoroutineContext = EmptyCoroutineContext,
     passwordHasher: PasswordHasher = TestPasswordHasher,
-    classStartRooms: Map<PlayerClass, RoomId> = emptyMap(),
+    classStartRooms: Map<String, RoomId> = emptyMap(),
+    classRegistry: PlayerClassRegistry? = null,
+    raceRegistry: RaceRegistry? = null,
 ): PlayerRegistry =
     PlayerRegistry(
         startRoom = startRoom,
@@ -79,6 +86,8 @@ fun buildTestPlayerRegistry(
         progression = progression,
         hashingContext = hashingContext,
         passwordHasher = passwordHasher,
+        classRegistry = classRegistry,
+        raceRegistry = raceRegistry,
     )
 
 suspend fun InMemoryPlayerRepository.createTestPlayer(
@@ -196,17 +205,21 @@ class GameEngineHarness private constructor(
 
     /**
      * Drives a fresh player through the engine's full login sequence
-     * (Connected → name → "yes" → password) and drains the resulting output.
+     * (Connected → name → "yes" → password → race → class) and drains the resulting output.
      */
     suspend fun loginNewPlayer(
         sid: SessionId,
         name: String,
         password: String = "password",
+        race: String = "1",
+        playerClass: String = "1",
     ) {
         inbound.send(InboundEvent.Connected(sid))
         inbound.send(InboundEvent.LineReceived(sid, name))
         inbound.send(InboundEvent.LineReceived(sid, "yes"))
         inbound.send(InboundEvent.LineReceived(sid, password))
+        inbound.send(InboundEvent.LineReceived(sid, race))
+        inbound.send(InboundEvent.LineReceived(sid, playerClass))
     }
 
     fun close() {
@@ -228,7 +241,24 @@ class GameEngineHarness private constructor(
             progression: PlayerProgression = PlayerProgression(),
             metrics: GameMetrics = GameMetrics.noop(),
         ): GameEngineHarness {
-            val players = buildTestPlayerRegistry(world.startRoom, repo, items, clock = clock, progression = progression)
+            val classRegistry =
+                PlayerClassRegistry().also { reg ->
+                    PlayerClassRegistryLoader.load(ClassEngineConfig(), reg)
+                }
+            val raceRegistry =
+                RaceRegistry().also { reg ->
+                    RaceRegistryLoader.load(RaceEngineConfig(), reg)
+                }
+            val players =
+                buildTestPlayerRegistry(
+                    world.startRoom,
+                    repo,
+                    items,
+                    clock = clock,
+                    progression = progression,
+                    classRegistry = classRegistry,
+                    raceRegistry = raceRegistry,
+                )
             val mobs = MobRegistry()
             val scheduler = Scheduler(clock)
             val engine =
