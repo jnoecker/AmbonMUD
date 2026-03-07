@@ -3125,13 +3125,15 @@ body {
     width: min(100%, 160px);
   }
 
-  /* Keep banner horizontal but compact — avoids the ~115px stacked height */
+  /* Keep banner horizontal but compact — avoids the ~115px stacked height.
+     margin-bottom: 0 overrides the base 16px value (same as desktop does). */
   .top-banner {
     flex-direction: row;
     align-items: center;
     flex-wrap: wrap;
     padding: 6px 10px;
     gap: var(--space-2);
+    margin-bottom: 0;
   }
 
   .top-banner::before {
@@ -3176,8 +3178,16 @@ body {
     min-height: 0;
   }
 
+  /* Mirror the desktop rule so the canvas card fills panel-play on mobile too */
+  .panel-play .terminal-card {
+    flex: 1;
+    min-height: 0;
+  }
+
   .action-bar {
     flex-wrap: wrap;
+    /* Keep action bar above iPhone home indicator */
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
   }
 
   /* Fill available space instead of a fixed clamped width */
