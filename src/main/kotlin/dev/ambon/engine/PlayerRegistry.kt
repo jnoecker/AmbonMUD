@@ -93,6 +93,7 @@ class PlayerRegistry(
     private val classRegistry: PlayerClassRegistry? = null,
     private val raceRegistry: RaceRegistry? = null,
     private val statRegistry: StatRegistry? = null,
+    private val startingGold: Long = 0L,
 ) {
     val maxLevel: Int get() = progression.maxLevel
 
@@ -195,6 +196,7 @@ class PlayerRegistry(
                         intelligence = base("INT") + raceMods["INT"],
                         wisdom = base("WIS") + raceMods["WIS"],
                         charisma = base("CHA") + raceMods["CHA"],
+                        gold = startingGold,
                     ),
                 )
             } catch (_: PersistenceException) {

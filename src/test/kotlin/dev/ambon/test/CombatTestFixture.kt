@@ -13,6 +13,7 @@ import dev.ambon.engine.CombatSystemConfig
 import dev.ambon.engine.DirtyNotifier
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.items.ItemRegistry
@@ -55,9 +56,8 @@ class CombatTestFixture(
         onMobKilledByPlayer: suspend (SessionId, String) -> Unit = { _, _ -> },
         groupSystem: GroupSystem? = null,
         groupXpBonusPerMember: Double = 0.10,
-        threatMultiplierWarrior: Double = 1.5,
-        threatMultiplierDefault: Double = 1.0,
         healingThreatMultiplier: Double = 0.5,
+        classRegistry: PlayerClassRegistry? = null,
         onRoomItemsChanged: suspend (RoomId) -> Unit = { _ -> },
     ): CombatSystem =
         CombatSystem(
@@ -76,8 +76,6 @@ class CombatTestFixture(
                 tickMillis = tickMillis,
                 minDamage = minDamage,
                 maxDamage = maxDamage,
-                threatMultiplierWarrior = threatMultiplierWarrior,
-                threatMultiplierDefault = threatMultiplierDefault,
                 healingThreatMultiplier = healingThreatMultiplier,
                 groupXpBonusPerMember = groupXpBonusPerMember,
                 detailedFeedbackEnabled = detailedFeedbackEnabled,
@@ -90,6 +88,7 @@ class CombatTestFixture(
                 onMobKilledByPlayer = onMobKilledByPlayer,
                 onRoomItemsChanged = onRoomItemsChanged,
             ),
+            classRegistry = classRegistry,
         )
 
     /**

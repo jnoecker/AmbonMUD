@@ -114,6 +114,16 @@ data class AppConfig(
         require(engine.regen.mana.minIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.minIntervalMillis must be > 0" }
         require(engine.regen.mana.regenAmount > 0) { "ambonMUD.engine.regen.mana.regenAmount must be > 0" }
 
+        require(engine.characterCreation.startingGold >= 0L) {
+            "ambonMUD.engine.characterCreation.startingGold must be >= 0"
+        }
+
+        engine.classes.definitions.forEach { (key, def) ->
+            require(def.threatMultiplier >= 0.0) {
+                "ambonMUD.engine.classes.definitions.$key.threatMultiplier must be >= 0"
+            }
+        }
+
         engine.stats.definitions.forEach { (key, def) ->
             require(def.baseStat >= 0) { "ambonMUD.engine.stats.definitions.$key.baseStat must be >= 0" }
         }
@@ -187,6 +197,8 @@ data class AppConfig(
         require(progression.xp.defaultKillXp >= 0L) { "ambonMUD.progression.xp.defaultKillXp must be >= 0" }
         require(progression.rewards.hpPerLevel >= 0) { "ambonMUD.progression.rewards.hpPerLevel must be >= 0" }
         require(progression.rewards.manaPerLevel >= 0) { "ambonMUD.progression.rewards.manaPerLevel must be >= 0" }
+        require(progression.rewards.baseHp >= 1) { "ambonMUD.progression.rewards.baseHp must be >= 1" }
+        require(progression.rewards.baseMana >= 0) { "ambonMUD.progression.rewards.baseMana must be >= 0" }
 
         require(transport.telnet.maxLineLen > 0) { "ambonMUD.transport.telnet.maxLineLen must be > 0" }
         require(transport.telnet.maxNonPrintablePerLine >= 0) {
@@ -427,6 +439,10 @@ data class MaterialConfigEntry(
     val quantity: Int = 1,
 )
 
+data class CharacterCreationConfig(
+    val startingGold: Long = 0L,
+)
+
 data class EngineConfig(
     val mob: MobEngineConfig = MobEngineConfig(),
     val combat: CombatEngineConfig = CombatEngineConfig(),
@@ -443,6 +459,7 @@ data class EngineConfig(
     val classes: ClassEngineConfig = ClassEngineConfig(),
     val races: RaceEngineConfig = RaceEngineConfig(),
     val stats: StatsEngineConfig = StatsEngineConfig(),
+    val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
 )
@@ -459,6 +476,7 @@ data class ClassDefinitionConfig(
     val selectable: Boolean = true,
     val primaryStat: String = "",
     val startRoom: String = "",
+    val threatMultiplier: Double = 1.0,
 )
 
 data class ClassEngineConfig(
@@ -471,6 +489,7 @@ data class ClassEngineConfig(
                 hpPerLevel = 8,
                 manaPerLevel = 4,
                 primaryStat = "STR",
+                threatMultiplier = 1.5,
             ),
             "MAGE" to ClassDefinitionConfig(
                 displayName = "Mage",
@@ -632,6 +651,8 @@ data class LevelRewardsConfig(
     val manaPerLevel: Int = 5,
     val fullHealOnLevelUp: Boolean = true,
     val fullManaOnLevelUp: Boolean = true,
+    val baseHp: Int = 10,
+    val baseMana: Int = 20,
 )
 
 data class MobTierConfig(

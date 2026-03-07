@@ -19,6 +19,7 @@ object PlayerClassRegistryLoader {
                     selectable = defConfig.selectable,
                     primaryStat = defConfig.primaryStat.ifBlank { null },
                     startRoom = defConfig.startRoom.ifBlank { null },
+                    threatMultiplier = defConfig.threatMultiplier,
                 ),
             )
         }

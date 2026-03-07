@@ -522,6 +522,7 @@ class GameEngine(
                 onMobKilledByPlayer = ::onCombatMobKilledByPlayer,
                 onRoomItemsChanged = ::syncRoomItemsForRoom,
             ),
+            classRegistry = classRegistry,
         )
     private val regenSystem =
         RegenSystem(

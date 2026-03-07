@@ -19,8 +19,6 @@ data class CombatSystemConfig(
     val tickMillis: Long = 1_000L,
     val minDamage: Int = 1,
     val maxDamage: Int = 4,
-    val threatMultiplierWarrior: Double = 1.5,
-    val threatMultiplierDefault: Double = 1.0,
     val healingThreatMultiplier: Double = 0.5,
     val groupXpBonusPerMember: Double = 0.10,
     val detailedFeedbackEnabled: Boolean = false,
@@ -49,6 +47,7 @@ class CombatSystem(
     private val groupSystem: GroupSystem? = null,
     private val config: CombatSystemConfig = CombatSystemConfig(),
     private val callbacks: CombatSystemCallbacks = CombatSystemCallbacks(),
+    private val classRegistry: PlayerClassRegistry? = null,
 ) : GameSystem {
     /** Callback for combat events; wired by GameEngine after construction. */
     var onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> }
@@ -560,11 +559,7 @@ class CombatSystem(
     }
 
     private fun threatMultiplier(player: PlayerState): Double =
-        if (player.playerClass.equals("WARRIOR", ignoreCase = true)) {
-            config.threatMultiplierWarrior
-        } else {
-            config.threatMultiplierDefault
-        }
+        classRegistry?.get(player.playerClass)?.threatMultiplier ?: 1.0
 
     private fun combatFeedbackSuffix(
         roll: Int,
