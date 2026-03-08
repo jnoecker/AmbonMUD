@@ -157,6 +157,7 @@ class GameEngine(
         }
     private val equipmentSlotRegistry = EquipmentSlotRegistry(engineConfig.equipment)
     private val genderRegistry = GenderRegistry(engineConfig.genders)
+    private val craftingSkillRegistry = dev.ambon.engine.crafting.CraftingSkillRegistry(engineConfig.craftingSkills)
 
     private val loginFlowHandler by lazy {
         dev.ambon.engine.events.LoginFlowHandler(
@@ -750,6 +751,7 @@ class GameEngine(
             CraftingHandler(
                 ctx = ctx,
                 craftingSystem = craftingSystem,
+                craftingSkillRegistry = craftingSkillRegistry,
                 markVitalsDirty = ::markVitalsDirty,
             ),
             DialogueQuestHandler(

@@ -8,8 +8,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.config.MobTiersConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.StatMap
-import dev.ambon.domain.crafting.CraftingSkill
-import dev.ambon.domain.crafting.CraftingStationType
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.GatheringYield
 import dev.ambon.domain.crafting.MaterialRequirement
@@ -527,11 +525,6 @@ object WorldLoader {
                     "Gathering node '$nodeId' displayName cannot be blank"
                 }
                 val skill = parseCraftingSkill(nodeFile.skill, "Gathering node '$nodeId'")
-                if (!skill.isGathering) {
-                    throw WorldLoadException(
-                        "Gathering node '$nodeId' must use a gathering skill (MINING or HERBALISM), got '$skill'",
-                    )
-                }
                 if (nodeFile.skillRequired < 1) {
                     throw WorldLoadException("Gathering node '$nodeId' skillRequired must be >= 1")
                 }
@@ -580,11 +573,6 @@ object WorldLoader {
                     "Recipe '$recipeId' displayName cannot be blank"
                 }
                 val skill = parseCraftingSkill(recipeFile.skill, "Recipe '$recipeId'")
-                if (!skill.isCrafting) {
-                    throw WorldLoadException(
-                        "Recipe '$recipeId' must use a crafting skill (SMITHING or ALCHEMY), got '$skill'",
-                    )
-                }
                 if (recipeFile.skillRequired < 1) {
                     throw WorldLoadException("Recipe '$recipeId' skillRequired must be >= 1")
                 }
@@ -1058,26 +1046,20 @@ object WorldLoader {
     private fun parseCraftingSkill(
         raw: String,
         context: String,
-    ): CraftingSkill =
-        try {
-            CraftingSkill.valueOf(raw.trim().uppercase())
-        } catch (_: IllegalArgumentException) {
-            throw WorldLoadException(
-                "$context has unknown crafting skill '$raw' (expected: ${CraftingSkill.entries.joinToString()})",
-            )
-        }
+    ): String {
+        val id = raw.trim().lowercase()
+        if (id.isEmpty()) throw WorldLoadException("$context crafting skill cannot be blank")
+        return id
+    }
 
     private fun parseCraftingStationType(
         raw: String,
         context: String,
-    ): CraftingStationType =
-        try {
-            CraftingStationType.valueOf(raw.trim().uppercase())
-        } catch (_: IllegalArgumentException) {
-            throw WorldLoadException(
-                "$context has unknown station type '$raw' (expected: ${CraftingStationType.entries.joinToString()})",
-            )
-        }
+    ): String {
+        val id = raw.trim().lowercase()
+        if (id.isEmpty()) throw WorldLoadException("$context station type cannot be blank")
+        return id
+    }
 
     private inline fun requireNonBlank(value: String, lazyMessage: () -> String): String {
         val trimmed = value.trim()
