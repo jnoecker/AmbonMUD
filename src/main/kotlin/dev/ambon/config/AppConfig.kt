@@ -658,20 +658,30 @@ data class GuildRanksConfig(
 
 data class EffectTypeConfig(
     val displayName: String = "",
+    /** Whether this effect ticks damage on the target each interval. */
+    val ticksDamage: Boolean = false,
+    /** Whether this effect ticks healing on the target each interval. */
+    val ticksHealing: Boolean = false,
+    /** Whether this effect modifies stat values while active. */
+    val modifiesStats: Boolean = false,
+    /** Whether this effect absorbs incoming damage via a shield pool. */
+    val absorbsDamage: Boolean = false,
 )
 
 data class EffectTypesConfig(
     val types: Map<String, EffectTypeConfig> = defaultEffectTypes(),
 ) {
+    fun get(typeId: String): EffectTypeConfig? = types[typeId]
+
     companion object {
         fun defaultEffectTypes(): Map<String, EffectTypeConfig> = linkedMapOf(
-            "dot" to EffectTypeConfig(displayName = "Damage Over Time"),
-            "hot" to EffectTypeConfig(displayName = "Heal Over Time"),
-            "stat_buff" to EffectTypeConfig(displayName = "Stat Buff"),
-            "stat_debuff" to EffectTypeConfig(displayName = "Stat Debuff"),
+            "dot" to EffectTypeConfig(displayName = "Damage Over Time", ticksDamage = true),
+            "hot" to EffectTypeConfig(displayName = "Heal Over Time", ticksHealing = true),
+            "stat_buff" to EffectTypeConfig(displayName = "Stat Buff", modifiesStats = true),
+            "stat_debuff" to EffectTypeConfig(displayName = "Stat Debuff", modifiesStats = true),
             "stun" to EffectTypeConfig(displayName = "Stun"),
             "root" to EffectTypeConfig(displayName = "Root"),
-            "shield" to EffectTypeConfig(displayName = "Shield"),
+            "shield" to EffectTypeConfig(displayName = "Shield", absorbsDamage = true),
         )
     }
 }
