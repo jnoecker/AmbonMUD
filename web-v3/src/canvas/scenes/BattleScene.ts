@@ -5,7 +5,9 @@ import { CombatAnimator } from "../systems/CombatAnimator";
 import { GainPopupSystem } from "../systems/GainPopup";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 
-const SPRITE_SIZE = 128;
+const BASE_SPRITE_SIZE = 160;
+const MIN_SPRITE_SIZE = 120;
+const MAX_SPRITE_SIZE = 200;
 const SMALL_SPRITE = 80;
 const HP_BAR_WIDTH = 140;
 const HP_BAR_HEIGHT = 10;
@@ -249,6 +251,29 @@ export class BattleScene {
     return { x: w * 0.75, y: h * 0.45 };
   }
 
+  /**
+   * Compute player and enemy sprite sizes based on relative maxHP.
+   * - Mob much stronger (2x+ HP): player shrinks, enemy grows
+   * - Roughly equal (within ~1.5x): both at base size
+   * - Mob much weaker: player grows, enemy shrinks
+   */
+  private computeSpriteScales(playerMaxHp: number, enemyMaxHp: number | null): { playerSize: number; enemySize: number } {
+    if (!enemyMaxHp || enemyMaxHp <= 0 || playerMaxHp <= 0) {
+      return { playerSize: BASE_SPRITE_SIZE, enemySize: BASE_SPRITE_SIZE };
+    }
+    // Ratio > 1 means enemy is stronger, < 1 means weaker
+    const ratio = enemyMaxHp / playerMaxHp;
+    // Convert to a scale factor: log-based so it doesn't explode
+    // clamp the scale difference to ±0.25 of base
+    const scaleDelta = Math.max(-0.25, Math.min(0.25, Math.log2(ratio) * 0.15));
+    const enemyScale = 1 + scaleDelta;
+    const playerScale = 1 - scaleDelta;
+    return {
+      playerSize: Math.round(Math.max(MIN_SPRITE_SIZE, Math.min(MAX_SPRITE_SIZE, BASE_SPRITE_SIZE * playerScale))),
+      enemySize: Math.round(Math.max(MIN_SPRITE_SIZE, Math.min(MAX_SPRITE_SIZE, BASE_SPRITE_SIZE * enemyScale))),
+    };
+  }
+
   private layoutAll(vitals: { hp: number; maxHp: number; mana: number; maxMana: number }, combatTarget: { targetName: string | null; targetHp: number | null; targetMaxHp: number | null } | null) {
     const w = this.width;
     const h = this.height;
@@ -266,6 +291,12 @@ export class BattleScene {
     this.uiGraphics.lineTo(w, groundY);
     this.uiGraphics.stroke({ color: 0x4a4a6a, alpha: 0.4, width: 1 });
 
+    // Compute dynamic sprite sizes based on relative power (maxHP ratio)
+    const { playerSize, enemySize } = this.computeSpriteScales(
+      vitals.maxHp,
+      combatTarget?.targetMaxHp ?? null,
+    );
+
     // Player position (left side) with lunge + shake offsets
     const playerPos = this.getPlayerPosition();
     const playerLunge = this.combatAnimator.getLungeOffset("player");
@@ -275,37 +306,39 @@ export class BattleScene {
     if (this.playerSprite) {
       this.playerSprite.x = playerDrawX;
       this.playerSprite.y = playerDrawY;
+      this.playerSprite.width = playerSize;
+      this.playerSprite.height = playerSize;
     }
 
     this.playerLabel.x = playerDrawX;
-    this.playerLabel.y = playerDrawY + SPRITE_SIZE / 2 + 6;
+    this.playerLabel.y = playerDrawY + playerSize / 2 + 6;
 
     // Player HP bar
     const playerHpPct = percent(vitals.hp, vitals.maxHp);
     this.playerHpBar.clear();
-    this.playerHpBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + SPRITE_SIZE / 2 + 24, HP_BAR_WIDTH, HP_BAR_HEIGHT, 2);
+    this.playerHpBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 24, HP_BAR_WIDTH, HP_BAR_HEIGHT, 2);
     this.playerHpBar.fill(HP_BG_COLOR);
     if (playerHpPct > 0) {
-      this.playerHpBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + SPRITE_SIZE / 2 + 24, HP_BAR_WIDTH * playerHpPct / 100, HP_BAR_HEIGHT, 2);
+      this.playerHpBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 24, HP_BAR_WIDTH * playerHpPct / 100, HP_BAR_HEIGHT, 2);
       this.playerHpBar.fill(HP_COLOR);
     }
 
     this.playerHpText.text = `${vitals.hp}/${vitals.maxHp}`;
     this.playerHpText.x = playerPos.x;
-    this.playerHpText.y = playerPos.y + SPRITE_SIZE / 2 + 34;
+    this.playerHpText.y = playerPos.y + playerSize / 2 + 34;
 
     // Player mana bar
     const manaPct = percent(vitals.mana, vitals.maxMana);
     this.playerManaBar.clear();
-    this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + SPRITE_SIZE / 2 + 46, HP_BAR_WIDTH, MANA_BAR_HEIGHT, 2);
+    this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 46, HP_BAR_WIDTH, MANA_BAR_HEIGHT, 2);
     this.playerManaBar.fill(HP_BG_COLOR);
     if (manaPct > 0) {
-      this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + SPRITE_SIZE / 2 + 46, HP_BAR_WIDTH * manaPct / 100, MANA_BAR_HEIGHT, 2);
+      this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 46, HP_BAR_WIDTH * manaPct / 100, MANA_BAR_HEIGHT, 2);
       this.playerManaBar.fill(MANA_COLOR);
     }
 
     // Status effects above the player
-    this.statusEffects.update(gameStateRef.current.effects, playerDrawX, playerDrawY - SPRITE_SIZE / 2 - 28);
+    this.statusEffects.update(gameStateRef.current.effects, playerDrawX, playerDrawY - playerSize / 2 - 28);
 
     // Enemy position (right side) with lunge + shake offsets
     const enemyPos = this.getEnemyPosition();
@@ -316,10 +349,12 @@ export class BattleScene {
     if (this.enemySprite) {
       this.enemySprite.x = enemyDrawX;
       this.enemySprite.y = enemyDrawY;
+      this.enemySprite.width = enemySize;
+      this.enemySprite.height = enemySize;
     }
 
     this.enemyLabel.x = enemyDrawX;
-    this.enemyLabel.y = enemyDrawY + SPRITE_SIZE / 2 + 6;
+    this.enemyLabel.y = enemyDrawY + enemySize / 2 + 6;
 
     // Enemy HP bar (only when we have a target)
     this.enemyHpBar.clear();
@@ -327,10 +362,10 @@ export class BattleScene {
       const enemyHp = combatTarget.targetHp ?? 0;
       const enemyMaxHp = combatTarget.targetMaxHp ?? 1;
       const enemyHpPct = percent(enemyHp, enemyMaxHp);
-      this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + SPRITE_SIZE / 2 + 24, HP_BAR_WIDTH, HP_BAR_HEIGHT, 2);
+      this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + enemySize / 2 + 24, HP_BAR_WIDTH, HP_BAR_HEIGHT, 2);
       this.enemyHpBar.fill(HP_BG_COLOR);
       if (enemyHpPct > 0) {
-        this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + SPRITE_SIZE / 2 + 24, HP_BAR_WIDTH * enemyHpPct / 100, HP_BAR_HEIGHT, 2);
+        this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + enemySize / 2 + 24, HP_BAR_WIDTH * enemyHpPct / 100, HP_BAR_HEIGHT, 2);
         this.enemyHpBar.fill(0xef5350);
       }
       this.enemyHpText.text = `${enemyHp}/${enemyMaxHp}`;
@@ -338,10 +373,10 @@ export class BattleScene {
       this.enemyHpText.text = "";
     }
     this.enemyHpText.x = enemyPos.x;
-    this.enemyHpText.y = enemyPos.y + SPRITE_SIZE / 2 + 34;
+    this.enemyHpText.y = enemyPos.y + enemySize / 2 + 34;
 
     // Party members (stacked below player on left)
-    const partyStartY = playerPos.y - SPRITE_SIZE / 2 - 20;
+    const partyStartY = playerPos.y - playerSize / 2 - 20;
     for (let i = 0; i < this.partyMembers.length; i++) {
       const member = this.partyMembers[i];
       const memberState = gameStateRef.current.groupInfo.members.filter((m) => m.name !== gameStateRef.current.character.name)[i];
@@ -370,8 +405,8 @@ export class BattleScene {
     // Draw combat effects
     this.combatAnimator.drawGlows(playerDrawX, playerDrawY, enemyDrawX, enemyDrawY);
     this.combatAnimator.drawFlashes(
-      playerDrawX, playerDrawY, SPRITE_SIZE, SPRITE_SIZE,
-      enemyDrawX, enemyDrawY, SPRITE_SIZE, SPRITE_SIZE,
+      playerDrawX, playerDrawY, playerSize, playerSize,
+      enemyDrawX, enemyDrawY, enemySize, enemySize,
     );
     this.combatAnimator.drawSlashes();
     this.combatAnimator.drawParticles();
@@ -438,8 +473,8 @@ export class BattleScene {
     }
 
     const sprite = new Sprite(Texture.WHITE);
-    sprite.width = SPRITE_SIZE;
-    sprite.height = SPRITE_SIZE;
+    sprite.width = BASE_SPRITE_SIZE;
+    sprite.height = BASE_SPRITE_SIZE;
     sprite.anchor.set(0.5);
     sprite.tint = PLAYER_TINT;
     this.container.addChildAt(sprite, 1); // after uiGraphics
@@ -449,6 +484,8 @@ export class BattleScene {
       try {
         const texture = await Assets.load(spritePath);
         sprite.texture = texture;
+        sprite.width = BASE_SPRITE_SIZE;
+        sprite.height = BASE_SPRITE_SIZE;
         sprite.tint = 0xffffff;
       } catch {
         // Keep placeholder
@@ -464,8 +501,8 @@ export class BattleScene {
     }
 
     const sprite = new Sprite(Texture.WHITE);
-    sprite.width = SPRITE_SIZE;
-    sprite.height = SPRITE_SIZE;
+    sprite.width = BASE_SPRITE_SIZE;
+    sprite.height = BASE_SPRITE_SIZE;
     sprite.anchor.set(0.5);
     sprite.tint = ENEMY_TINT;
     this.container.addChildAt(sprite, 1);
@@ -475,6 +512,8 @@ export class BattleScene {
       try {
         const texture = await Assets.load(imagePath);
         sprite.texture = texture;
+        sprite.width = BASE_SPRITE_SIZE;
+        sprite.height = BASE_SPRITE_SIZE;
         sprite.tint = 0xffffff;
       } catch {
         // Keep placeholder
