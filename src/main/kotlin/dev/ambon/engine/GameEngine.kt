@@ -495,6 +495,7 @@ class GameEngine(
                 inviteTimeoutMs = engineConfig.guild.inviteTimeoutMs,
                 markPlayerDirty = { sid -> players.persistPlayer(sid) },
                 gmcpEmitter = gmcpEmitter,
+                rankConfig = engineConfig.guildRanks,
             )
         } else {
             null
