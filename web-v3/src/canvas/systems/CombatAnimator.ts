@@ -75,9 +75,9 @@ interface DeathAnimation {
   };
 }
 
-const DEATH_ANIM_DURATION_MS = 1400;
-const DEATH_FLASH_FRAC = 0.2; // first 20% = white flash
-const DEATH_DISSOLVE_FRAC = 0.7; // 20–70% = dissolve/shrink
+const DEATH_ANIM_DURATION_MS = 2400;
+const DEATH_FLASH_FRAC = 0.15; // first 15% = white flash (~360ms)
+const DEATH_DISSOLVE_FRAC = 0.55; // 15–55% = dissolve/shrink (~960ms)
 
 const EVENT_COLORS: Record<string, string> = {
   meleeHit: "#ff6b6b",
