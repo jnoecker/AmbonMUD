@@ -594,7 +594,47 @@ data class GuildRankConfig(
 
 data class GuildRanksConfig(
     val ranks: Map<String, GuildRankConfig> = defaultGuildRanks(),
+    /** Rank assigned to the guild founder on creation. */
+    val founderRank: String = "leader",
+    /** Rank assigned to new members who accept an invite. */
+    val defaultRank: String = "member",
 ) {
+    /** Returns true if the given rank has the specified permission. */
+    fun hasPermission(rank: String, permission: String): Boolean =
+        ranks[rank]?.permissions?.contains(permission) == true
+
+    /** Returns the display name for a rank, falling back to the raw rank string. */
+    fun displayName(rank: String): String =
+        ranks[rank]?.displayName ?: rank.replaceFirstChar { it.uppercase() }
+
+    /** Returns the rank level (higher = more authority). Used for ordering and outrank checks. */
+    fun rankLevel(rank: String): Int = ranks[rank]?.level ?: 0
+
+    /** Returns true if [actorRank] has strictly higher level than [targetRank]. */
+    fun outranks(actorRank: String, targetRank: String): Boolean =
+        rankLevel(actorRank) > rankLevel(targetRank)
+
+    /** Returns the next rank above the given rank, or null if already at the top. */
+    fun nextRankAbove(rank: String): String? {
+        val currentLevel = rankLevel(rank)
+        return ranks.entries
+            .filter { it.value.level > currentLevel }
+            .minByOrNull { it.value.level }
+            ?.key
+    }
+
+    /** Returns the next rank below the given rank, or null if already at the bottom. */
+    fun nextRankBelow(rank: String): String? {
+        val currentLevel = rankLevel(rank)
+        return ranks.entries
+            .filter { it.value.level < currentLevel }
+            .maxByOrNull { it.value.level }
+            ?.key
+    }
+
+    /** Returns the rank with the highest level (the founder/leader rank). */
+    fun highestRank(): String = ranks.maxByOrNull { it.value.level }?.key ?: founderRank
+
     companion object {
         fun defaultGuildRanks(): Map<String, GuildRankConfig> = linkedMapOf(
             "leader" to GuildRankConfig(
