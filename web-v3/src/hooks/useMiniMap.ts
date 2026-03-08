@@ -216,27 +216,33 @@ export function useMiniMap() {
   const fogImageRef = useRef<HTMLImageElement | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
 
-  // Pre-load the fog-of-war icon and map background.
-  // Re-assign src when Server.Assets GMCP arrives with resolved URLs.
-  const assets = gameStateRef.current.serverAssets;
+  // Pre-load the fog-of-war icon and map background
   if (fogImageRef.current == null) {
     const img = new Image();
-    img.src = assets["minimap_unexplored"] ?? "/images/global_assets/minimap-unexplored.png";
+    img.src = gameStateRef.current.serverAssets["minimap_unexplored"] ?? "/images/global_assets/minimap-unexplored.png";
     fogImageRef.current = img;
-  } else if (assets["minimap_unexplored"] && fogImageRef.current.src !== assets["minimap_unexplored"]) {
-    fogImageRef.current.src = assets["minimap_unexplored"];
   }
   if (bgImageRef.current == null) {
     const img = new Image();
-    img.src = assets["map_background"] ?? "/images/global_assets/map_background.png";
+    img.src = gameStateRef.current.serverAssets["map_background"] ?? "/images/global_assets/map_background.png";
     bgImageRef.current = img;
-  } else if (assets["map_background"] && bgImageRef.current.src !== assets["map_background"]) {
-    bgImageRef.current.src = assets["map_background"];
   }
+  const assetLoadedRef = useRef(false);
 
   const drawMap = useCallback(() => {
     const canvas = mapCanvasRef.current;
     if (!canvas) return;
+
+    // Re-assign image src once Server.Assets GMCP provides resolved URLs
+    if (!assetLoadedRef.current) {
+      const a = gameStateRef.current.serverAssets;
+      if (Object.keys(a).length > 0) {
+        assetLoadedRef.current = true;
+        if (a["minimap_unexplored"] && fogImageRef.current) fogImageRef.current.src = a["minimap_unexplored"];
+        if (a["map_background"] && bgImageRef.current) bgImageRef.current.src = a["map_background"];
+      }
+    }
+
     const fog = fogImageRef.current?.complete ? fogImageRef.current : null;
     const bg = bgImageRef.current?.complete ? bgImageRef.current : null;
     renderMap(
