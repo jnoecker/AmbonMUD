@@ -13,6 +13,7 @@ export class SceneManager {
   private dialogueOverlay: DialogueOverlay;
   private currentScene: SceneName = "world";
   private wasInCombat = false;
+  private pendingWorldTransition = false;
 
   constructor(app: Application) {
     this.app = app;
@@ -41,11 +42,23 @@ export class SceneManager {
 
     // Auto-transition based on combat state
     if (inCombat && !this.wasInCombat) {
+      this.pendingWorldTransition = false;
       this.switchTo("battle");
     } else if (!inCombat && this.wasInCombat) {
-      this.switchTo("world");
+      // Don't switch immediately — let the death animation play out
+      if (this.battleScene.isDeathAnimating) {
+        this.pendingWorldTransition = true;
+      } else {
+        this.switchTo("world");
+      }
     }
     this.wasInCombat = inCombat;
+
+    // Complete deferred transition once death animation finishes
+    if (this.pendingWorldTransition && !this.battleScene.isDeathAnimating) {
+      this.pendingWorldTransition = false;
+      this.switchTo("world");
+    }
 
     if (this.currentScene === "world") {
       this.worldScene.update(deltaMs);
