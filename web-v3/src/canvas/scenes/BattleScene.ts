@@ -374,6 +374,7 @@ export class BattleScene {
       enemyDrawX, enemyDrawY, SPRITE_SIZE, SPRITE_SIZE,
     );
     this.combatAnimator.drawSlashes();
+    this.combatAnimator.drawParticles();
   }
 
   private rebuildParty(members: Array<{ name: string; hp: number; maxHp: number }>) {
