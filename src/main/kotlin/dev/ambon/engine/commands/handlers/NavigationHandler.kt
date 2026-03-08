@@ -10,7 +10,6 @@ import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.status.EffectType
 import dev.ambon.engine.status.StatusEffectSystem
 import java.time.Clock
 
@@ -57,7 +56,7 @@ class NavigationHandler(
             outbound.send(OutboundEvent.SendText(sessionId, "You are in combat. Try 'flee'."))
             return
         }
-        if (statusEffects?.hasPlayerEffect(sessionId, EffectType.ROOT) == true) {
+        if (statusEffects?.hasPlayerEffect(sessionId, "root") == true) {
             outbound.send(OutboundEvent.SendText(sessionId, "You are rooted and cannot move!"))
             return
         }

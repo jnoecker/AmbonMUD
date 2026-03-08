@@ -569,6 +569,58 @@ data class QuestCompletionTypesConfig(
     }
 }
 
+data class EffectTypeConfig(
+    val displayName: String = "",
+)
+
+data class EffectTypesConfig(
+    val types: Map<String, EffectTypeConfig> = defaultEffectTypes(),
+) {
+    companion object {
+        fun defaultEffectTypes(): Map<String, EffectTypeConfig> = linkedMapOf(
+            "dot" to EffectTypeConfig(displayName = "Damage Over Time"),
+            "hot" to EffectTypeConfig(displayName = "Heal Over Time"),
+            "stat_buff" to EffectTypeConfig(displayName = "Stat Buff"),
+            "stat_debuff" to EffectTypeConfig(displayName = "Stat Debuff"),
+            "stun" to EffectTypeConfig(displayName = "Stun"),
+            "root" to EffectTypeConfig(displayName = "Root"),
+            "shield" to EffectTypeConfig(displayName = "Shield"),
+        )
+    }
+}
+
+data class TargetTypeConfig(
+    val displayName: String = "",
+)
+
+data class TargetTypesConfig(
+    val types: Map<String, TargetTypeConfig> = defaultTargetTypes(),
+) {
+    companion object {
+        fun defaultTargetTypes(): Map<String, TargetTypeConfig> = linkedMapOf(
+            "enemy" to TargetTypeConfig(displayName = "Enemy"),
+            "self" to TargetTypeConfig(displayName = "Self"),
+            "ally" to TargetTypeConfig(displayName = "Ally"),
+        )
+    }
+}
+
+data class StackBehaviorConfig(
+    val displayName: String = "",
+)
+
+data class StackBehaviorsConfig(
+    val behaviors: Map<String, StackBehaviorConfig> = defaultStackBehaviors(),
+) {
+    companion object {
+        fun defaultStackBehaviors(): Map<String, StackBehaviorConfig> = linkedMapOf(
+            "refresh" to StackBehaviorConfig(displayName = "Refresh"),
+            "stack" to StackBehaviorConfig(displayName = "Stack"),
+            "none" to StackBehaviorConfig(displayName = "None"),
+        )
+    }
+}
+
 data class EngineConfig(
     val mob: MobEngineConfig = MobEngineConfig(),
     val combat: CombatEngineConfig = CombatEngineConfig(),
@@ -592,6 +644,9 @@ data class EngineConfig(
     val craftingStationTypes: CraftingStationTypesConfig = CraftingStationTypesConfig(),
     val questObjectiveTypes: QuestObjectiveTypesConfig = QuestObjectiveTypesConfig(),
     val questCompletionTypes: QuestCompletionTypesConfig = QuestCompletionTypesConfig(),
+    val effectTypes: EffectTypesConfig = EffectTypesConfig(),
+    val targetTypes: TargetTypesConfig = TargetTypesConfig(),
+    val stackBehaviors: StackBehaviorsConfig = StackBehaviorsConfig(),
     val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
