@@ -37,6 +37,7 @@ import dev.ambon.domain.world.data.ExitValueDeserializer
 import dev.ambon.domain.world.data.FeatureFile
 import dev.ambon.domain.world.data.WorldFile
 import dev.ambon.engine.behavior.BehaviorTemplates
+import dev.ambon.engine.behavior.BehaviorTreeLoader
 import dev.ambon.engine.behavior.BtNode
 import dev.ambon.engine.dialogue.DialogueChoice
 import dev.ambon.engine.dialogue.DialogueNode
@@ -893,13 +894,29 @@ object WorldLoader {
     ): BtNode? {
         if (behaviorFile == null) return null
 
+        // Inline tree definition takes precedence over template
+        if (behaviorFile.tree != null) {
+            return try {
+                BehaviorTreeLoader.load(behaviorFile.tree, zone)
+            } catch (e: IllegalArgumentException) {
+                throw WorldLoadException(
+                    "Mob '${mobId.value}' has invalid inline behavior tree: ${e.message}",
+                )
+            }
+        }
+
+        val templateName = behaviorFile.template
+            ?: throw WorldLoadException(
+                "Mob '${mobId.value}' behavior must specify either 'template' or 'tree'.",
+            )
+
         val tree =
             BehaviorTemplates.resolve(
-                behaviorFile.template,
+                templateName,
                 behaviorFile.params,
                 zone,
             ) ?: throw WorldLoadException(
-                "Mob '${mobId.value}' references unknown behavior template '${behaviorFile.template}'. " +
+                "Mob '${mobId.value}' references unknown behavior template '$templateName'. " +
                     "Known templates: ${BehaviorTemplates.templateNames.sorted().joinToString(", ")}",
             )
 
