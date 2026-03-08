@@ -695,10 +695,31 @@ data class EngineConfig(
     val targetTypes: TargetTypesConfig = TargetTypesConfig(),
     val stackBehaviors: StackBehaviorsConfig = StackBehaviorsConfig(),
     val achievementCriterionTypes: AchievementCriterionTypesConfig = AchievementCriterionTypesConfig(),
+    val navigation: NavigationConfig = NavigationConfig(),
     val guildRanks: GuildRanksConfig = GuildRanksConfig(),
     val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
+)
+
+data class NavigationConfig(
+    val recall: RecallConfig = RecallConfig(),
+)
+
+data class RecallConfig(
+    /** Cooldown between recall uses in milliseconds (default 5 minutes). */
+    val cooldownMs: Long = 300_000L,
+    val messages: RecallMessagesConfig = RecallMessagesConfig(),
+)
+
+data class RecallMessagesConfig(
+    val combatBlocked: String = "You are fighting for your life and cannot recall!",
+    val cooldownRemaining: String = "You need to rest before recalling again. ({seconds} seconds remaining)",
+    val castBegin: String = "You close your eyes and whisper a prayer...",
+    val unreachable: String = "Your recall point is unreachable.",
+    val departNotice: String = "vanishes in a flash of light.",
+    val arriveNotice: String = "appears in a flash of light.",
+    val arrival: String = "You feel a familiar warmth and find yourself back at your recall point.",
 )
 
 data class EngineDebugConfig(

@@ -1,9 +1,9 @@
 package dev.ambon.engine.commands
 
+import dev.ambon.config.RecallConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
-import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.CommandRouterHarness
 import dev.ambon.test.MutableClock
@@ -144,7 +144,7 @@ class RecallCommandTest {
             h.drain()
 
             // Advance past cooldown
-            clock.advance(NavigationHandler.RECALL_COOLDOWN_MS + 1L)
+            clock.advance(RecallConfig().cooldownMs + 1L)
 
             // Second recall — should succeed
             h.router.handle(sid, Command.Recall)
