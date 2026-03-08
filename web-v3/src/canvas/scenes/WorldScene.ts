@@ -218,12 +218,10 @@ export class WorldScene {
     this.shopLabel.y = hs / 2 + 2;
     this.shopLabel.eventMode = "none";
     this.shopBadge.addChild(this.shopLabel);
-    this.loadShopIcon();
-    this.loadDialogueTexture();
-    this.loadAggroTexture();
-    this.loadQuestTextures();
+    // Asset-dependent sprites (compass, shop, dialogue, aggro, quest) are
+    // loaded lazily in update() once Server.Assets GMCP arrives, to avoid
+    // 404s from fallback URLs when assets live on a CDN.
     this.buildCompassRose();
-    this.loadCompassAssets();
 
     this.container.addChild(this.roleGraphics);
     this.container.addChild(this.statusEffects.container);

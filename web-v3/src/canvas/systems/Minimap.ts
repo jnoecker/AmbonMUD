@@ -83,7 +83,7 @@ export class Minimap {
       canvasCallbacks.openMap?.();
     });
 
-    this.loadFogTexture();
+    // Fog texture loaded lazily in updateRoom() once Server.Assets GMCP arrives.
 
     // Inner content group that gets masked
     const inner = new Container();
