@@ -795,6 +795,7 @@ class GameEngine(
             UiHandler(
                 ctx = ctx,
                 onPhase = phaseCallback,
+                commandsConfig = engineConfig.commands,
             ),
         ).forEach { it.register(router) }
 
