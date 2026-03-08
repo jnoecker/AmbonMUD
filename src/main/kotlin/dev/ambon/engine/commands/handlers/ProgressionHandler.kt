@@ -3,7 +3,6 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.domain.Gender
 import dev.ambon.domain.StatDefinition
 import dev.ambon.domain.ids.SessionId
-import dev.ambon.domain.items.ItemSlot
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.abilities.AbilitySystem
@@ -58,9 +57,10 @@ class ProgressionHandler(
             val armorDetail =
                 if (armorTotal > 0) {
                     val parts =
-                        ItemSlot.entries
-                            .filter { slot -> equipped[slot]?.item?.armor?.let { it > 0 } == true }
-                            .joinToString(", ") { slot -> "${slot.label()}: ${equipped[slot]!!.item.displayName}" }
+                        equipped.entries
+                            .filter { (_, inst) -> inst.item.armor > 0 }
+                            .sortedBy { (slot, _) -> slot.name }
+                            .joinToString(", ") { (slot, inst) -> "${slot.label()}: ${inst.item.displayName}" }
                     "+$armorTotal ($parts)"
                 } else {
                     "+0"

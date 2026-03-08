@@ -1,6 +1,7 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.config.EquipmentConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.ItemId
@@ -32,6 +33,8 @@ class GmcpEmitterTest {
 
     private val progression = PlayerProgression()
 
+    private val defaultSlotRegistry = EquipmentSlotRegistry(EquipmentConfig())
+
     private fun emitter(vararg supported: String): GmcpEmitter {
         val packages = supported.toSet()
         return GmcpEmitter(
@@ -40,6 +43,7 @@ class GmcpEmitterTest {
                 packages.any { s -> pkg == s || pkg.startsWith("$s.") }
             },
             progression = progression,
+            equipmentSlotRegistry = defaultSlotRegistry,
         )
     }
 

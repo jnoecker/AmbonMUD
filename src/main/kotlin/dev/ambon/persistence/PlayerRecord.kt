@@ -53,6 +53,11 @@ data class PlayerRecord(
      * Applies legacy migration fixes after deserialization.
      * Old saves stored constitution=0; remap to the base stat value (10).
      */
-    fun migrateDefaults(): PlayerRecord =
-        if (constitution == 0) copy(constitution = 10) else this
+    fun migrateDefaults(): PlayerRecord {
+        var record = this
+        if (record.constitution == 0) record = record.copy(constitution = 10)
+        val normalized = record.equippedItems.mapKeys { (k, _) -> k.trim().lowercase() }
+        if (normalized != record.equippedItems) record = record.copy(equippedItems = normalized)
+        return record
+    }
 }

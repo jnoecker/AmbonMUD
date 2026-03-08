@@ -98,6 +98,13 @@ data class AppConfig(
         require(engine.regen.minIntervalMillis > 0L) { "ambonMUD.engine.regen.minIntervalMillis must be > 0" }
         require(engine.regen.regenAmount > 0) { "ambonMUD.engine.regen.regenAmount must be > 0" }
 
+        require(engine.equipment.slots.isNotEmpty()) { "ambonMUD.engine.equipment.slots must not be empty" }
+        for ((id, _) in engine.equipment.slots) {
+            require(id == id.trim().lowercase()) {
+                "ambonMUD.engine.equipment.slots key '$id' must be lowercase with no surrounding whitespace"
+            }
+        }
+
         require(engine.scheduler.maxActionsPerTick > 0) { "ambonMUD.engine.scheduler.maxActionsPerTick must be > 0" }
 
         require(engine.group.maxSize in 2..20) { "ambonMUD.engine.group.maxSize must be in 2..20" }
@@ -446,6 +453,23 @@ data class CharacterCreationConfig(
     val startingGold: Long = 0L,
 )
 
+data class EquipmentSlotConfig(
+    val displayName: String = "",
+    val order: Int = 0,
+)
+
+data class EquipmentConfig(
+    val slots: Map<String, EquipmentSlotConfig> = defaultEquipmentSlots(),
+) {
+    companion object {
+        fun defaultEquipmentSlots(): Map<String, EquipmentSlotConfig> = linkedMapOf(
+            "head" to EquipmentSlotConfig(displayName = "Head", order = 0),
+            "body" to EquipmentSlotConfig(displayName = "Body", order = 1),
+            "hand" to EquipmentSlotConfig(displayName = "Hand", order = 2),
+        )
+    }
+}
+
 data class EngineConfig(
     val mob: MobEngineConfig = MobEngineConfig(),
     val combat: CombatEngineConfig = CombatEngineConfig(),
@@ -462,6 +486,7 @@ data class EngineConfig(
     val classes: ClassEngineConfig = ClassEngineConfig(),
     val races: RaceEngineConfig = RaceEngineConfig(),
     val stats: StatsEngineConfig = StatsEngineConfig(),
+    val equipment: EquipmentConfig = EquipmentConfig(),
     val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
