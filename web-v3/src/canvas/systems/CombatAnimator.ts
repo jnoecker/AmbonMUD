@@ -60,6 +60,25 @@ interface GlowEffect {
   color: number;
 }
 
+/** Multi-phase death animation for defeated enemies. */
+interface DeathAnimation {
+  elapsed: number;
+  /** Total duration in ms. */
+  duration: number;
+  /** Phase boundaries as fractions of duration. */
+  phases: {
+    /** 0–flashEnd: intense white flash + heavy shake */
+    flashEnd: number;
+    /** flashEnd–dissolveEnd: sprite shrinks, fades, and desaturates */
+    dissolveEnd: number;
+    /** dissolveEnd–1.0: "VICTORY" text holds, scene fades out */
+  };
+}
+
+const DEATH_ANIM_DURATION_MS = 1400;
+const DEATH_FLASH_FRAC = 0.2; // first 20% = white flash
+const DEATH_DISSOLVE_FRAC = 0.7; // 20–70% = dissolve/shrink
+
 const EVENT_COLORS: Record<string, string> = {
   meleeHit: "#ff6b6b",
   abilityHit: "#b9aed8",
@@ -80,6 +99,7 @@ export class CombatAnimator {
   private slashes: SlashEffect[] = [];
   private shakes: ShakeEffect[] = [];
   private glows: GlowEffect[] = [];
+  private deathAnim: DeathAnimation | null = null;
   private flashGraphics = new Graphics();
   private slashGraphics = new Graphics();
   private glowGraphics = new Graphics();
@@ -99,9 +119,23 @@ export class CombatAnimator {
     }
 
     if (type === "kill") {
-      this.spawnFloat("DEFEATED", EVENT_COLORS.kill, enemyX, enemyY - 20);
-      this.addFlash("enemy", 0xff6b6b, 400);
-      this.addShake("enemy");
+      // Start multi-phase death animation instead of a brief flash
+      this.deathAnim = {
+        elapsed: 0,
+        duration: DEATH_ANIM_DURATION_MS,
+        phases: { flashEnd: DEATH_FLASH_FRAC, dissolveEnd: DEATH_DISSOLVE_FRAC },
+      };
+      // Intense white flash at start
+      this.addFlash("enemy", 0xffffff, DEATH_ANIM_DURATION_MS * DEATH_FLASH_FRAC);
+      // Heavy shake during flash phase
+      this.shakes = this.shakes.filter((s) => s.who !== "enemy");
+      this.shakes.push({ who: "enemy", elapsed: 0 });
+      // Spawn "DEFEATED" text
+      this.spawnFloat("DEFEATED", EVENT_COLORS.kill, enemyX, enemyY - 30);
+      // Multiple slashes at the enemy for dramatic finish
+      this.addSlash(enemyX - 8, enemyY - 8);
+      this.addSlash(enemyX + 8, enemyY + 8);
+      // "VICTORY" text spawns slightly later — handled by BattleScene
       return;
     }
 
@@ -255,6 +289,21 @@ export class CombatAnimator {
         this.glows.splice(i, 1);
       }
     }
+
+    // Update death animation
+    if (this.deathAnim) {
+      this.deathAnim.elapsed += deltaMs;
+      // Extend shake duration to match flash phase
+      const flashEndMs = this.deathAnim.duration * this.deathAnim.phases.flashEnd;
+      const enemyShake = this.shakes.find((s) => s.who === "enemy");
+      if (enemyShake && this.deathAnim.elapsed < flashEndMs) {
+        // Keep shake alive during flash phase with extra intensity
+        enemyShake.elapsed = Math.min(enemyShake.elapsed, SHAKE_DURATION_MS * 0.5);
+      }
+      if (this.deathAnim.elapsed >= this.deathAnim.duration) {
+        this.deathAnim = null;
+      }
+    }
   }
 
   /** Get the offset for a sprite due to lunge animation */
@@ -372,6 +421,46 @@ export class CombatAnimator {
     }
   }
 
+  /** Whether a death animation is currently playing. */
+  get isDeathAnimating(): boolean {
+    return this.deathAnim !== null;
+  }
+
+  /**
+   * Returns death animation visual parameters for BattleScene to apply
+   * to the enemy sprite (scale, alpha, tint shift).
+   */
+  getDeathAnimState(): { scale: number; alpha: number; tintLerp: number; sceneAlpha: number } | null {
+    if (!this.deathAnim) return null;
+    const t = this.deathAnim.elapsed / this.deathAnim.duration;
+    const { flashEnd, dissolveEnd } = this.deathAnim.phases;
+
+    if (t <= flashEnd) {
+      // Flash phase: sprite goes white, full size
+      const flashT = t / flashEnd;
+      return { scale: 1, alpha: 1, tintLerp: flashT, sceneAlpha: 1 };
+    } else if (t <= dissolveEnd) {
+      // Dissolve phase: sprite shrinks and fades
+      const dissolveT = (t - flashEnd) / (dissolveEnd - flashEnd);
+      const eased = dissolveT * dissolveT; // ease-in for accelerating shrink
+      return {
+        scale: 1 - eased * 0.6, // shrink to 40%
+        alpha: 1 - eased,
+        tintLerp: 1 - dissolveT * 0.5, // fade white tint back partially
+        sceneAlpha: 1,
+      };
+    } else {
+      // Hold phase: enemy gone, scene fades out
+      const holdT = (t - dissolveEnd) / (1 - dissolveEnd);
+      return {
+        scale: 0.4,
+        alpha: 0,
+        tintLerp: 0,
+        sceneAlpha: 1 - holdT, // fade entire scene
+      };
+    }
+  }
+
   clear() {
     for (const f of this.floats) {
       this.container.removeChild(f.text);
@@ -383,6 +472,7 @@ export class CombatAnimator {
     this.slashes = [];
     this.shakes = [];
     this.glows = [];
+    this.deathAnim = null;
     this.flashGraphics.clear();
     this.slashGraphics.clear();
     this.glowGraphics.clear();

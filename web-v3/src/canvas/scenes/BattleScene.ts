@@ -62,6 +62,10 @@ export class BattleScene {
   private fadeInDuration = 300;
   private fadingIn = true;
 
+  // Victory text shown during death animation
+  private victoryText: Text | null = null;
+  private victoryElapsed = 0;
+
   constructor() {
     this.playerLabel = new Text({
       text: "",
@@ -112,6 +116,11 @@ export class BattleScene {
     }
   }
 
+  /** Whether the death/victory animation is still playing. */
+  get isDeathAnimating(): boolean {
+    return this.combatAnimator.isDeathAnimating;
+  }
+
   /** Called when entering battle scene */
   enter() {
     this.fadingIn = true;
@@ -119,6 +128,7 @@ export class BattleScene {
     this.container.alpha = 0;
     this.combatAnimator.clear();
     this.gainPopups.clear();
+    this.removeVictoryText();
     // Reset tracking so update() re-creates everything
     this.lastRoomImage = "\0";
     this.lastPlayerSpritePath = "\0";
@@ -187,6 +197,41 @@ export class BattleScene {
     // Update animations
     this.combatAnimator.update(deltaMs);
     this.gainPopups.update(deltaMs);
+
+    // Apply death animation effects to enemy sprite
+    const deathState = this.combatAnimator.getDeathAnimState();
+    if (deathState) {
+      if (this.enemySprite) {
+        this.enemySprite.alpha = deathState.alpha;
+        this.enemySprite.scale.set(deathState.scale);
+        // Lerp tint toward white during flash
+        const r = Math.round(0xff + (0xff - 0xff) * deathState.tintLerp);
+        const g = Math.round(0xff * (1 - deathState.tintLerp * 0.3));
+        const b = Math.round(0xff * (1 - deathState.tintLerp * 0.3));
+        this.enemySprite.tint = (r << 16) | (g << 8) | b;
+      }
+      // Hide enemy UI during dissolve/hold
+      if (deathState.alpha < 0.3) {
+        this.enemyLabel.alpha = 0;
+        this.enemyHpBar.alpha = 0;
+        this.enemyHpText.alpha = 0;
+      }
+      // Fade entire scene during hold phase
+      if (!this.fadingIn) {
+        this.container.alpha = deathState.sceneAlpha;
+      }
+      // Show victory text
+      this.updateVictoryText(deltaMs, deathState.alpha <= 0);
+    } else {
+      // Reset enemy sprite if death animation just finished
+      if (this.enemySprite) {
+        this.enemySprite.scale.set(1);
+        this.enemySprite.tint = this.lastEnemyImage ? 0xffffff : ENEMY_TINT;
+      }
+      this.enemyLabel.alpha = 1;
+      this.enemyHpBar.alpha = 1;
+      this.enemyHpText.alpha = 1;
+    }
 
     // Layout everything
     this.layoutAll(vitals, combatTarget);
@@ -433,6 +478,42 @@ export class BattleScene {
       } catch {
         // Keep placeholder
       }
+    }
+  }
+
+  private updateVictoryText(deltaMs: number, enemyGone: boolean) {
+    if (!enemyGone) return;
+    if (!this.victoryText) {
+      this.victoryText = new Text({
+        text: "VICTORY",
+        style: {
+          fontFamily: "JetBrains Mono, Cascadia Mono, monospace",
+          fontSize: 28,
+          fill: "#f0c674",
+          fontWeight: "bold",
+          letterSpacing: 6,
+        },
+      });
+      this.victoryText.anchor.set(0.5);
+      this.victoryText.x = this.width / 2;
+      this.victoryText.y = this.height * 0.4;
+      this.victoryText.alpha = 0;
+      this.victoryElapsed = 0;
+      this.container.addChild(this.victoryText);
+    }
+    this.victoryElapsed += deltaMs;
+    // Fade in over 200ms
+    this.victoryText.alpha = Math.min(1, this.victoryElapsed / 200);
+    // Gentle float upward
+    this.victoryText.y = this.height * 0.4 - this.victoryElapsed * 0.01;
+  }
+
+  private removeVictoryText() {
+    if (this.victoryText) {
+      this.container.removeChild(this.victoryText);
+      this.victoryText.destroy();
+      this.victoryText = null;
+      this.victoryElapsed = 0;
     }
   }
 
