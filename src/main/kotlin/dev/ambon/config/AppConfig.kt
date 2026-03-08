@@ -738,6 +738,7 @@ data class EngineConfig(
     val navigation: NavigationConfig = NavigationConfig(),
     val guildRanks: GuildRanksConfig = GuildRanksConfig(),
     val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
+    val commands: CommandsConfig = CommandsConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
 )
@@ -761,6 +762,149 @@ data class RecallMessagesConfig(
     val arriveNotice: String = "appears in a flash of light.",
     val arrival: String = "You feel a familiar warmth and find yourself back at your recall point.",
 )
+
+data class CommandMetadata(
+    val usage: String = "",
+    val category: String = "general",
+    val staff: Boolean = false,
+)
+
+data class CommandsConfig(
+    val entries: Map<String, CommandMetadata> = defaultCommandEntries(),
+) {
+    fun generateHelp(isStaff: Boolean): String = buildString {
+        val grouped = entries.entries
+            .filter { !it.value.staff }
+            .groupBy { it.value.category }
+
+        val orderedCategories = listOf(
+            "navigation",
+            "communication",
+            "items",
+            "combat",
+            "progression",
+            "shops",
+            "quests",
+            "groups",
+            "guilds",
+            "crafting",
+            "world",
+            "social",
+            "utility",
+        )
+
+        appendLine("Commands:")
+        for (category in orderedCategories) {
+            val cmds = grouped[category] ?: continue
+            for ((_, meta) in cmds) {
+                appendLine("    ${meta.usage}")
+            }
+        }
+
+        if (isStaff) {
+            val staffCmds = entries.entries.filter { it.value.staff }
+            if (staffCmds.isNotEmpty()) {
+                appendLine("Staff commands (requires staff flag):")
+                for ((_, meta) in staffCmds) {
+                    appendLine("    ${meta.usage}")
+                }
+            }
+        }
+    }.trimEnd()
+
+    companion object {
+        @Suppress("LongMethod")
+        fun defaultCommandEntries(): Map<String, CommandMetadata> = linkedMapOf(
+            "help" to CommandMetadata(usage = "help/?", category = "utility"),
+            "look" to CommandMetadata(usage = "look/l (or look <direction>)", category = "navigation"),
+            "move" to CommandMetadata(usage = "n/s/e/w/u/d", category = "navigation"),
+            "exits" to CommandMetadata(usage = "exits/ex", category = "navigation"),
+            "recall" to CommandMetadata(usage = "recall", category = "navigation"),
+            "say" to CommandMetadata(usage = "say <msg> or '<msg>", category = "communication"),
+            "emote" to CommandMetadata(usage = "emote <msg>", category = "communication"),
+            "pose" to CommandMetadata(usage = "pose <msg>", category = "communication"),
+            "who" to CommandMetadata(usage = "who", category = "communication"),
+            "tell" to CommandMetadata(usage = "tell/t <player> <msg>", category = "communication"),
+            "whisper" to CommandMetadata(usage = "whisper/wh <player> <msg>", category = "communication"),
+            "gossip" to CommandMetadata(usage = "gossip/gs <msg>", category = "communication"),
+            "shout" to CommandMetadata(usage = "shout/sh <msg>", category = "communication"),
+            "ooc" to CommandMetadata(usage = "ooc <msg>", category = "communication"),
+            "inventory" to CommandMetadata(usage = "inventory/inv/i", category = "items"),
+            "equipment" to CommandMetadata(usage = "equipment/eq", category = "items"),
+            "wear" to CommandMetadata(usage = "wear/equip <item>", category = "items"),
+            "remove" to CommandMetadata(usage = "remove/unequip <slot>", category = "items"),
+            "get" to CommandMetadata(usage = "get/take/pickup <item>", category = "items"),
+            "drop" to CommandMetadata(usage = "drop <item>", category = "items"),
+            "use" to CommandMetadata(usage = "use <item>", category = "items"),
+            "give" to CommandMetadata(usage = "give <item> <player>", category = "items"),
+            "talk" to CommandMetadata(usage = "talk <npc>", category = "social"),
+            "kill" to CommandMetadata(usage = "kill <mob>", category = "combat"),
+            "flee" to CommandMetadata(usage = "flee", category = "combat"),
+            "cast" to CommandMetadata(usage = "cast/c <spell> [target]", category = "combat"),
+            "spells" to CommandMetadata(usage = "spells/abilities/skills", category = "progression"),
+            "effects" to CommandMetadata(usage = "effects/buffs/debuffs", category = "progression"),
+            "score" to CommandMetadata(usage = "score/sc", category = "progression"),
+            "balance" to CommandMetadata(usage = "gold/balance", category = "shops"),
+            "shop_list" to CommandMetadata(usage = "list/shop", category = "shops"),
+            "buy" to CommandMetadata(usage = "buy <item>", category = "shops"),
+            "sell" to CommandMetadata(usage = "sell <item>", category = "shops"),
+            "quest_log" to CommandMetadata(usage = "quest log/list", category = "quests"),
+            "quest_info" to CommandMetadata(usage = "quest info <name>", category = "quests"),
+            "quest_abandon" to CommandMetadata(usage = "quest abandon <name>", category = "quests"),
+            "accept" to CommandMetadata(usage = "accept <quest>", category = "quests"),
+            "achievements" to CommandMetadata(usage = "achievements/ach", category = "quests"),
+            "group_invite" to CommandMetadata(usage = "group invite <player>", category = "groups"),
+            "group_accept" to CommandMetadata(usage = "group accept", category = "groups"),
+            "group_leave" to CommandMetadata(usage = "group leave", category = "groups"),
+            "group_kick" to CommandMetadata(usage = "group kick <player>", category = "groups"),
+            "group_list" to CommandMetadata(usage = "group list (or just 'group')", category = "groups"),
+            "gtell" to CommandMetadata(usage = "gtell/gt <message>", category = "groups"),
+            "guild_create" to CommandMetadata(usage = "guild create <name> <tag>", category = "guilds"),
+            "guild_disband" to CommandMetadata(usage = "guild disband", category = "guilds"),
+            "guild_invite" to CommandMetadata(usage = "guild invite <player>", category = "guilds"),
+            "guild_accept" to CommandMetadata(usage = "guild accept", category = "guilds"),
+            "guild_leave" to CommandMetadata(usage = "guild leave", category = "guilds"),
+            "guild_kick" to CommandMetadata(usage = "guild kick <player>", category = "guilds"),
+            "guild_promote" to CommandMetadata(usage = "guild promote <player>", category = "guilds"),
+            "guild_demote" to CommandMetadata(usage = "guild demote <player>", category = "guilds"),
+            "guild_motd" to CommandMetadata(usage = "guild motd <message>", category = "guilds"),
+            "guild_roster" to CommandMetadata(usage = "guild roster", category = "guilds"),
+            "guild_info" to CommandMetadata(usage = "guild info (or just 'guild')", category = "guilds"),
+            "gchat" to CommandMetadata(usage = "gchat/g <message>", category = "guilds"),
+            "gather" to CommandMetadata(usage = "gather/harvest/mine <node>", category = "crafting"),
+            "craft" to CommandMetadata(usage = "craft/make <recipe>", category = "crafting"),
+            "recipes" to CommandMetadata(usage = "recipes [filter]", category = "crafting"),
+            "craftskills" to CommandMetadata(usage = "craftskills/professions", category = "crafting"),
+            "open" to CommandMetadata(usage = "open <door|container>", category = "world"),
+            "close" to CommandMetadata(usage = "close <door|container>", category = "world"),
+            "unlock" to CommandMetadata(usage = "unlock <door|container>", category = "world"),
+            "lock" to CommandMetadata(usage = "lock <door|container>", category = "world"),
+            "search" to CommandMetadata(usage = "search <container>", category = "world"),
+            "get_from" to CommandMetadata(usage = "get <item> from <container>", category = "world"),
+            "put_in" to CommandMetadata(usage = "put <item> <container>", category = "world"),
+            "pull" to CommandMetadata(usage = "pull <lever>", category = "world"),
+            "read" to CommandMetadata(usage = "read <sign>", category = "world"),
+            "title" to CommandMetadata(usage = "title <titleName> | title clear", category = "progression"),
+            "gender" to CommandMetadata(usage = "gender <option>", category = "progression"),
+            "friend" to CommandMetadata(usage = "friend list | add <player> | remove <player>", category = "social"),
+            "mail" to CommandMetadata(usage = "mail list | read <n> | send <player> | delete <n>", category = "social"),
+            "ansi" to CommandMetadata(usage = "ansi on/off", category = "utility"),
+            "colors" to CommandMetadata(usage = "colors", category = "utility"),
+            "clear" to CommandMetadata(usage = "clear", category = "utility"),
+            "quit" to CommandMetadata(usage = "quit/exit", category = "utility"),
+            "phase" to CommandMetadata(usage = "phase/layer [instance]", category = "utility"),
+            // Staff commands
+            "goto" to CommandMetadata(usage = "goto <zone:room | room | zone:>", category = "admin", staff = true),
+            "transfer" to CommandMetadata(usage = "transfer <player> <room>", category = "admin", staff = true),
+            "spawn" to CommandMetadata(usage = "spawn <mob-template>", category = "admin", staff = true),
+            "smite" to CommandMetadata(usage = "smite <player|mob>", category = "admin", staff = true),
+            "staff_kick" to CommandMetadata(usage = "kick <player>", category = "admin", staff = true),
+            "dispel" to CommandMetadata(usage = "dispel <player|mob>", category = "admin", staff = true),
+            "setlevel" to CommandMetadata(usage = "setlevel <player> <level>", category = "admin", staff = true),
+            "shutdown" to CommandMetadata(usage = "shutdown", category = "admin", staff = true),
+        )
+    }
+}
 
 data class EngineDebugConfig(
     val enableSwarmClass: Boolean = false,
