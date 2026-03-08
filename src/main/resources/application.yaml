@@ -1681,3 +1681,7 @@ ambonmud:
     quest_complete_indicator: 1c73d6a78405bb4e48456494bfaa87e6cefb505125c3c70eb890f89d6d31fd95.png
     minimap_unexplored: 97875d65ca8d97a0e84229b02f16ba06c23fca3a0a627fa6e5bffe9d6ccccef8.png
     map_background: 1dac3f33448349e9e4d69d02eff5c16b0bf9d17a480693aa61bd8f6351aea37c.jpg
+  videos:
+    baseUrl: https://assets.ambon.dev/
+  audio:
+    baseUrl: https://assets.ambon.dev/
