@@ -5,6 +5,11 @@ import { Minimap } from "../systems/Minimap";
 import { EntityPopout } from "../systems/EntityPopout";
 import type { MobInfo } from "../../types";
 
+/** Resolves a global asset key to its server-provided URL, with a hardcoded fallback. */
+function assetUrl(key: string, fallbackFilename: string): string {
+  return gameStateRef.current.serverAssets[key] ?? `/images/global_assets/${fallbackFilename}`;
+}
+
 const SHOP_BADGE_SIZE = 72;
 const QUEST_ICON_SIZE = 28;
 
@@ -668,7 +673,7 @@ export class WorldScene {
 
   private async loadCompassAssets() {
     try {
-      const texture = await Assets.load("/images/global_assets/compass_rose.png");
+      const texture = await Assets.load(assetUrl("compass_rose", "compass_rose.png"));
       const sprite = new Sprite(texture);
       sprite.width = COMPASS_SIZE;
       sprite.height = COMPASS_SIZE;
@@ -681,7 +686,7 @@ export class WorldScene {
     } catch { /* fallback: no compass image */ }
 
     try {
-      const markerTex = await Assets.load("/images/global_assets/direction_marker.png");
+      const markerTex = await Assets.load(assetUrl("direction_marker", "direction_marker.png"));
       const markerSize = 22;
       const r = COMPASS_SIZE / 2;
       const angles: Record<string, number> = { north: -Math.PI / 2, east: 0, south: Math.PI / 2, west: Math.PI };
@@ -702,7 +707,7 @@ export class WorldScene {
     } catch { /* fallback: no direction marker image */ }
 
     try {
-      const tex = await Assets.load("/images/global_assets/stairs_up.png");
+      const tex = await Assets.load(assetUrl("stairs_up", "stairs_up.png"));
       const sprite = new Sprite(tex);
       sprite.width = STAIR_ICON_SIZE;
       sprite.height = STAIR_ICON_SIZE;
@@ -724,7 +729,7 @@ export class WorldScene {
     } catch { /* no stairs up icon */ }
 
     try {
-      const tex = await Assets.load("/images/global_assets/stairs_down.png");
+      const tex = await Assets.load(assetUrl("stairs_down", "stairs_down.png"));
       const sprite = new Sprite(tex);
       sprite.width = STAIR_ICON_SIZE;
       sprite.height = STAIR_ICON_SIZE;
@@ -1061,7 +1066,7 @@ export class WorldScene {
     sprite.eventMode = "static";
     sprite.cursor = "pointer";
 
-    Assets.load("/images/global_assets/video_available_indicator.png").then((tex) => {
+    Assets.load(assetUrl("video_available_indicator", "video_available_indicator.png")).then((tex) => {
       sprite.texture = tex;
       sprite.tint = 0xffffff;
     }).catch(() => { /* keep placeholder */ });
@@ -1128,7 +1133,7 @@ export class WorldScene {
 
   private async loadShopIcon() {
     try {
-      const texture = await Assets.load("/images/global_assets/shop_kiosk.png");
+      const texture = await Assets.load(assetUrl("shop_kiosk", "shop_kiosk.png"));
       const sprite = new Sprite(texture);
       sprite.width = SHOP_BADGE_SIZE;
       sprite.height = SHOP_BADGE_SIZE;
@@ -1144,7 +1149,7 @@ export class WorldScene {
 
   private async loadDialogueTexture() {
     try {
-      this.dialogueTexture = await Assets.load("/images/global_assets/dialog_indicator.png");
+      this.dialogueTexture = await Assets.load(assetUrl("dialog_indicator", "dialog_indicator.png"));
     } catch {
       // Fallback: no dialogue sprites
     }
@@ -1152,7 +1157,7 @@ export class WorldScene {
 
   private async loadAggroTexture() {
     try {
-      this.aggroTexture = await Assets.load("/images/global_assets/aggro_indicator.png");
+      this.aggroTexture = await Assets.load(assetUrl("aggro_indicator", "aggro_indicator.png"));
     } catch {
       // Fallback: no aggro sprites
     }
@@ -1192,10 +1197,10 @@ export class WorldScene {
 
   private async loadQuestTextures() {
     try {
-      this.questAvailableTexture = await Assets.load("/images/global_assets/quest_available_indicator.png");
+      this.questAvailableTexture = await Assets.load(assetUrl("quest_available_indicator", "quest_available_indicator.png"));
     } catch { /* no sprite */ }
     try {
-      this.questCompleteTexture = await Assets.load("/images/global_assets/quest_complete_indicator.png");
+      this.questCompleteTexture = await Assets.load(assetUrl("quest_complete_indicator", "quest_complete_indicator.png"));
     } catch { /* no sprite */ }
   }
 
