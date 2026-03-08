@@ -157,10 +157,10 @@ class HandoffManagerTest {
         assertEquals("coin", serialized.inventoryItems[0].item.keyword)
 
         assertEquals(2, serialized.equippedItems.size)
-        assertEquals(ItemId("forest:sword"), serialized.equippedItems["HAND"]?.id)
-        assertEquals(5, serialized.equippedItems["HAND"]?.item?.damage)
-        assertEquals(ItemId("forest:shield"), serialized.equippedItems["BODY"]?.id)
-        assertEquals(2, serialized.equippedItems["BODY"]?.item?.armor)
+        assertEquals(ItemId("forest:sword"), serialized.equippedItems["hand"]?.id)
+        assertEquals(5, serialized.equippedItems["hand"]?.item?.damage)
+        assertEquals(ItemId("forest:shield"), serialized.equippedItems["body"]?.id)
+        assertEquals(2, serialized.equippedItems["body"]?.item?.armor)
     }
 
     @Test
@@ -208,7 +208,7 @@ class HandoffManagerTest {
             )
 
         assertEquals(original, serialized.inventoryItems[0])
-        assertEquals(original, serialized.equippedItems["HAND"])
+        assertEquals(original, serialized.equippedItems["hand"])
     }
 
     @Test

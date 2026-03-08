@@ -488,16 +488,14 @@ class ItemRegistry {
             }
 
             if (equipped != null) {
-                val slot =
-                    ItemSlot.entries.firstOrNull { candidateSlot ->
-                        val equippedItem = equipped[candidateSlot] ?: return@firstOrNull false
-                        mode.matches(equippedItem.item, keyword)
-                    }
-                if (slot != null) {
+                val entry = equipped.entries.firstOrNull { (_, equippedItem) ->
+                    mode.matches(equippedItem.item, keyword)
+                }
+                if (entry != null) {
                     return MatchedOwnedItem(
-                        item = equipped.getValue(slot),
+                        item = entry.value,
                         location = HeldItemLocation.EQUIPPED,
-                        slot = slot,
+                        slot = entry.key,
                     )
                 }
             }

@@ -155,6 +155,7 @@ class GameEngine(
         ?: StatRegistry().also { reg ->
             StatRegistryLoader.load(engineConfig.stats, reg)
         }
+    private val equipmentSlotRegistry = EquipmentSlotRegistry(engineConfig.equipment)
 
     private val loginFlowHandler by lazy {
         dev.ambon.engine.events.LoginFlowHandler(
@@ -410,6 +411,7 @@ class GameEngine(
                 }
             },
             statRegistry = statRegistry,
+            equipmentSlotRegistry = equipmentSlotRegistry,
             imagesBaseUrl = imagesBaseUrl,
         )
 
@@ -693,6 +695,7 @@ class GameEngine(
             classRegistry = classRegistry,
             raceRegistry = raceRegistry,
             statRegistry = statRegistry,
+            equipmentSlotRegistry = equipmentSlotRegistry,
         )
 
         listOf(

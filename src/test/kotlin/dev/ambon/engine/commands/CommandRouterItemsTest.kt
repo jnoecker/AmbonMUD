@@ -181,7 +181,7 @@ class CommandRouterItemsTest {
             h.router.handle(sid, Command.Wear("cap"))
             h.drain()
 
-            h.router.handle(sid, Command.Remove(ItemSlot.HEAD))
+            h.router.handle(sid, Command.Remove("head"))
 
             assertEquals(1, h.items.inventory(sid).size)
             assertTrue(h.items.equipment(sid).isEmpty())
