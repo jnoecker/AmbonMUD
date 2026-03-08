@@ -79,6 +79,24 @@ const DEATH_ANIM_DURATION_MS = 2400;
 const DEATH_FLASH_FRAC = 0.15; // first 15% = white flash (~360ms)
 const DEATH_DISSOLVE_FRAC = 0.55; // 15–55% = dissolve/shrink (~960ms)
 
+// Firework / sparkle particles
+const PARTICLE_LIFETIME_MS = 900;
+const PARTICLE_GRAVITY = 80; // pixels/s²
+const PARTICLE_COLORS = [0xf0c674, 0xffd700, 0xff6b6b, 0xb9aed8, 0x81c784, 0x64b5f6, 0xff9e44, 0xffffff];
+const BURST_COUNT = 16; // particles per burst
+const SPARKLE_TRAIL_COUNT = 3; // trail dots per particle
+
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  color: number;
+  elapsed: number;
+  lifetime: number;
+  size: number;
+}
+
 const EVENT_COLORS: Record<string, string> = {
   meleeHit: "#ff6b6b",
   abilityHit: "#b9aed8",
@@ -100,14 +118,19 @@ export class CombatAnimator {
   private shakes: ShakeEffect[] = [];
   private glows: GlowEffect[] = [];
   private deathAnim: DeathAnimation | null = null;
+  private deathEnemyPos: { x: number; y: number } | null = null;
+  private particles: Particle[] = [];
+  private deathBurstsFired = 0;
   private flashGraphics = new Graphics();
   private slashGraphics = new Graphics();
   private glowGraphics = new Graphics();
+  private particleGraphics = new Graphics();
 
   constructor() {
     this.container.addChild(this.glowGraphics);
     this.container.addChild(this.flashGraphics);
     this.container.addChild(this.slashGraphics);
+    this.container.addChild(this.particleGraphics);
   }
 
   processEvent(event: CombatEventData, playerX: number, playerY: number, enemyX: number, enemyY: number) {
@@ -125,6 +148,8 @@ export class CombatAnimator {
         duration: DEATH_ANIM_DURATION_MS,
         phases: { flashEnd: DEATH_FLASH_FRAC, dissolveEnd: DEATH_DISSOLVE_FRAC },
       };
+      // Remember enemy position for staggered bursts
+      this.deathEnemyPos = { x: enemyX, y: enemyY };
       // Intense white flash at start
       this.addFlash("enemy", 0xffffff, DEATH_ANIM_DURATION_MS * DEATH_FLASH_FRAC);
       // Heavy shake during flash phase
@@ -135,6 +160,9 @@ export class CombatAnimator {
       // Multiple slashes at the enemy for dramatic finish
       this.addSlash(enemyX - 8, enemyY - 8);
       this.addSlash(enemyX + 8, enemyY + 8);
+      // Initial firework burst from enemy position
+      this.spawnBurst(enemyX, enemyY, BURST_COUNT);
+      this.deathBurstsFired = 1;
       // "VICTORY" text spawns slightly later — handled by BattleScene
       return;
     }
@@ -228,6 +256,24 @@ export class CombatAnimator {
     this.glows.push({ who, elapsed: 0, color });
   }
 
+  /** Spawn a radial burst of sparkle particles. */
+  private spawnBurst(cx: number, cy: number, count: number) {
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+      const speed = 60 + Math.random() * 120;
+      this.particles.push({
+        x: cx + (Math.random() - 0.5) * 16,
+        y: cy + (Math.random() - 0.5) * 16,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 40, // slight upward bias
+        color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)],
+        elapsed: 0,
+        lifetime: PARTICLE_LIFETIME_MS * (0.7 + Math.random() * 0.6),
+        size: 2 + Math.random() * 2.5,
+      });
+    }
+  }
+
   update(deltaMs: number) {
     // Update floating numbers
     for (let i = this.floats.length - 1; i >= 0; i--) {
@@ -290,6 +336,21 @@ export class CombatAnimator {
       }
     }
 
+    // Update particles
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.elapsed += deltaMs;
+      const dt = deltaMs / 1000;
+      p.vy += PARTICLE_GRAVITY * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      // Dampen horizontal velocity
+      p.vx *= 0.995;
+      if (p.elapsed >= p.lifetime) {
+        this.particles.splice(i, 1);
+      }
+    }
+
     // Update death animation
     if (this.deathAnim) {
       this.deathAnim.elapsed += deltaMs;
@@ -299,6 +360,23 @@ export class CombatAnimator {
       if (enemyShake && this.deathAnim.elapsed < flashEndMs) {
         // Keep shake alive during flash phase with extra intensity
         enemyShake.elapsed = Math.min(enemyShake.elapsed, SHAKE_DURATION_MS * 0.5);
+      }
+      // Fire additional bursts during dissolve phase (up to 3 total)
+      const t = this.deathAnim.elapsed / this.deathAnim.duration;
+      if (t > DEATH_FLASH_FRAC && this.deathBurstsFired < 3) {
+        const dissolveProgress = (t - DEATH_FLASH_FRAC) / (DEATH_DISSOLVE_FRAC - DEATH_FLASH_FRAC);
+        const burstThreshold = this.deathBurstsFired === 1 ? 0.3 : 0.7;
+        if (dissolveProgress >= burstThreshold) {
+          // Use the last known enemy position stored from processEvent
+          const lastEnemy = this.deathEnemyPos;
+          if (lastEnemy) {
+            // Offset each burst slightly for variety
+            const ox = (Math.random() - 0.5) * 40;
+            const oy = (Math.random() - 0.5) * 30;
+            this.spawnBurst(lastEnemy.x + ox, lastEnemy.y + oy, Math.floor(BURST_COUNT * 0.7));
+          }
+          this.deathBurstsFired++;
+        }
       }
       if (this.deathAnim.elapsed >= this.deathAnim.duration) {
         this.deathAnim = null;
@@ -421,6 +499,37 @@ export class CombatAnimator {
     }
   }
 
+  /** Draw sparkle/firework particles. */
+  drawParticles() {
+    this.particleGraphics.clear();
+    for (const p of this.particles) {
+      const life = p.elapsed / p.lifetime;
+      const alpha = life < 0.2 ? life / 0.2 : 1 - (life - 0.2) / 0.8; // fade in then out
+      const size = p.size * (1 - life * 0.4); // shrink slightly over time
+
+      // Main sparkle dot
+      this.particleGraphics.circle(p.x, p.y, size);
+      this.particleGraphics.fill({ color: p.color, alpha: alpha * 0.9 });
+
+      // Bright white core
+      this.particleGraphics.circle(p.x, p.y, size * 0.4);
+      this.particleGraphics.fill({ color: 0xffffff, alpha: alpha * 0.6 });
+
+      // Short trail behind the particle
+      if (life < 0.7) {
+        const dt = 1 / 60; // approximate frame
+        for (let t = 1; t <= SPARKLE_TRAIL_COUNT; t++) {
+          const trailX = p.x - p.vx * dt * t * 0.6;
+          const trailY = p.y - p.vy * dt * t * 0.6;
+          const trailAlpha = alpha * (1 - t / (SPARKLE_TRAIL_COUNT + 1)) * 0.4;
+          const trailSize = size * (1 - t * 0.2);
+          this.particleGraphics.circle(trailX, trailY, Math.max(0.5, trailSize));
+          this.particleGraphics.fill({ color: p.color, alpha: trailAlpha });
+        }
+      }
+    }
+  }
+
   /** Whether a death animation is currently playing. */
   get isDeathAnimating(): boolean {
     return this.deathAnim !== null;
@@ -472,9 +581,13 @@ export class CombatAnimator {
     this.slashes = [];
     this.shakes = [];
     this.glows = [];
+    this.particles = [];
     this.deathAnim = null;
+    this.deathEnemyPos = null;
+    this.deathBurstsFired = 0;
     this.flashGraphics.clear();
     this.slashGraphics.clear();
     this.glowGraphics.clear();
+    this.particleGraphics.clear();
   }
 }
