@@ -16,6 +16,10 @@ object RaceRegistryLoader {
                     id = key.uppercase(),
                     displayName = defConfig.displayName.ifEmpty { key },
                     description = defConfig.description,
+                    backstory = defConfig.backstory,
+                    traits = defConfig.traits,
+                    abilities = defConfig.abilities,
+                    image = defConfig.image,
                     statMods = defConfig.statMods.toStatMap(),
                 ),
             )

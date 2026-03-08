@@ -983,6 +983,10 @@ data class RaceStatModsConfig(
 data class RaceDefinitionConfig(
     val displayName: String = "",
     val description: String = "",
+    val backstory: String = "",
+    val traits: List<String> = emptyList(),
+    val abilities: List<String> = emptyList(),
+    val image: String = "",
     val statMods: RaceStatModsConfig = RaceStatModsConfig(),
 )
 

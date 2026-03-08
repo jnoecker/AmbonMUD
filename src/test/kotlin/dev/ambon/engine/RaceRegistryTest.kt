@@ -58,4 +58,44 @@ class RaceRegistryTest {
         assertEquals(StatMap.of("STR" to 1, "CHA" to 1), registry.get("HUMAN")?.statMods)
         assertEquals(StatMap.of("STR" to -1, "DEX" to 2, "CON" to -2, "INT" to 1), registry.get("ELF")?.statMods)
     }
+
+    @Test
+    fun `loader maps backstory traits abilities and image`() {
+        val config = RaceEngineConfig(
+            definitions = mapOf(
+                "HUMAN" to RaceDefinitionConfig(
+                    displayName = "Human",
+                    description = "Versatile.",
+                    backstory = "Humans are widespread.",
+                    traits = listOf("Adaptable", "Ambitious"),
+                    abilities = listOf("second_wind"),
+                    image = "race_human.png",
+                    statMods = RaceStatModsConfig(str = 1, cha = 1),
+                ),
+            ),
+        )
+        val registry = RaceRegistry()
+        RaceRegistryLoader.load(config, registry)
+        val human = registry.get("HUMAN")!!
+        assertEquals("Humans are widespread.", human.backstory)
+        assertEquals(listOf("Adaptable", "Ambitious"), human.traits)
+        assertEquals(listOf("second_wind"), human.abilities)
+        assertEquals("race_human.png", human.image)
+    }
+
+    @Test
+    fun `new fields default to empty when not specified`() {
+        val config = RaceEngineConfig(
+            definitions = mapOf(
+                "ELF" to RaceDefinitionConfig(displayName = "Elf"),
+            ),
+        )
+        val registry = RaceRegistry()
+        RaceRegistryLoader.load(config, registry)
+        val elf = registry.get("ELF")!!
+        assertEquals("", elf.backstory)
+        assertEquals(emptyList<String>(), elf.traits)
+        assertEquals(emptyList<String>(), elf.abilities)
+        assertEquals("", elf.image)
+    }
 }
