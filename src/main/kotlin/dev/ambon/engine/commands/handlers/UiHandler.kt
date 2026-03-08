@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands.handlers
 
+import dev.ambon.config.CommandsConfig
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
@@ -11,6 +12,7 @@ import dev.ambon.engine.events.OutboundEvent
 class UiHandler(
     ctx: EngineContext,
     private val onPhase: (suspend (SessionId, String?) -> PhaseResult)? = null,
+    private val commandsConfig: CommandsConfig = CommandsConfig(),
 ) : CommandHandler {
     private val players = ctx.players
     private val outbound = ctx.outbound
@@ -43,83 +45,9 @@ class UiHandler(
     }
 
     private suspend fun handleHelp(sessionId: SessionId) {
+        val isStaff = players.get(sessionId)?.isStaff == true
         outbound.send(
-            OutboundEvent.SendInfo(
-                sessionId,
-                """
-                Commands:
-                    help/?
-                    look/l (or look <direction>)
-                    n/s/e/w/u/d
-                    exits/ex
-                    say <msg> or '<msg>
-                    emote <msg>
-                    pose <msg>
-                    who
-                    tell/t <player> <msg>
-                    whisper/wh <player> <msg>
-                    gossip/gs <msg>
-                    shout/sh <msg>
-                    ooc <msg>
-                    inventory/inv/i
-                    equipment/eq
-                    wear/equip <item>
-                    remove/unequip <slot>
-                    get/take/pickup <item>
-                    drop <item>
-                    use <item>
-                    give <item> <player>
-                    talk <npc>
-                    kill <mob>
-                    flee
-                    cast/c <spell> [target]
-                    spells/abilities/skills
-                    effects/buffs/debuffs
-                    score/sc
-                    gold/balance
-                    list/shop
-                    buy <item>
-                    sell <item>
-                    quest log/list
-                    quest info <name>
-                    quest abandon <name>
-                    accept <quest>
-                    achievements/ach
-                    group invite <player>
-                    group accept
-                    group leave
-                    group kick <player>
-                    group list (or just 'group')
-                    gtell/gt <message>
-                    guild create <name> <tag>
-                    guild disband
-                    guild invite <player>
-                    guild accept
-                    guild leave
-                    guild kick <player>
-                    guild promote <player>
-                    guild demote <player>
-                    guild motd <message>
-                    guild roster
-                    guild info (or just 'guild')
-                    gchat/g <message>
-                    title <titleName>
-                    title clear
-                    gender <option>
-                    ansi on/off
-                    colors
-                    clear
-                    quit/exit
-                Staff commands (requires staff flag):
-                    goto <zone:room | room | zone:>
-                    transfer <player> <room>
-                    spawn <mob-template>
-                    smite <player|mob>
-                    kick <player>
-                    dispel <player|mob>
-                    shutdown
-                """.trimIndent(),
-            ),
+            OutboundEvent.SendInfo(sessionId, commandsConfig.generateHelp(isStaff)),
         )
     }
 
