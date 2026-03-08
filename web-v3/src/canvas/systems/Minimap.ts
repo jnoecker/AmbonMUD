@@ -1,5 +1,5 @@
 import { Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
-import { canvasCallbacks } from "../GameStateBridge";
+import { canvasCallbacks, gameStateRef } from "../GameStateBridge";
 
 const MAP_OFFSETS: Record<string, { dx: number; dy: number }> = {
   north: { dx: 0, dy: -1 },
@@ -340,7 +340,9 @@ export class Minimap {
 
   private async loadFogTexture() {
     try {
-      this.fogTexture = await Assets.load("/images/global_assets/minimap-unexplored.png");
+      this.fogTexture = await Assets.load(
+        gameStateRef.current.serverAssets["minimap_unexplored"] ?? "/images/global_assets/minimap-unexplored.png",
+      );
     } catch { /* no fog texture */ }
   }
 
