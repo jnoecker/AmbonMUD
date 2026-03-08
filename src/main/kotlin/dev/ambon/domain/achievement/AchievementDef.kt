@@ -6,7 +6,7 @@ data class AchievementDef(
     val id: String,
     val displayName: String,
     val description: String,
-    val category: AchievementCategory,
+    val category: String,
     val criteria: List<AchievementCriterion>,
     val rewards: AchievementRewards = AchievementRewards(),
     val hidden: Boolean = false,
@@ -27,7 +27,5 @@ data class AchievementRewards(
     /** Title string made available to the player on unlock. Null means no title reward. */
     val title: String? = null,
 ) : Rewards
-
-enum class AchievementCategory { COMBAT, EXPLORATION, SOCIAL, CRAFTING, CLASS }
 
 enum class CriterionType { KILL, REACH_LEVEL, QUEST_COMPLETE }

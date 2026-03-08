@@ -598,15 +598,18 @@ class GameEngine(
             clock = clock,
         )
 
+    private val achievementCategoryRegistry = AchievementCategoryRegistry(engineConfig.achievementCategories)
+
     private val achievementSystem =
         AchievementSystem(
             registry =
                 achievementRegistry.also { reg ->
-                    AchievementLoader.loadFromResource("world/achievements.yaml", reg)
+                    AchievementLoader.loadFromResource("world/achievements.yaml", reg, achievementCategoryRegistry)
                 },
             players = players,
             outbound = outbound,
             gmcpEmitter = gmcpEmitter,
+            categoryRegistry = achievementCategoryRegistry,
         )
 
     init {

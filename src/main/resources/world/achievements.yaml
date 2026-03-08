@@ -2,7 +2,7 @@ achievements:
   combat/first_blood:
     displayName: "First Blood"
     description: "Kill your first enemy."
-    category: COMBAT
+    category: combat
     hidden: false
     criteria:
       - type: KILL
@@ -15,7 +15,7 @@ achievements:
   combat/beetle_exterminator:
     displayName: "Beetle Exterminator"
     description: "Defeat 5 beetle swarms."
-    category: COMBAT
+    category: combat
     hidden: false
     criteria:
       - type: KILL
@@ -30,7 +30,7 @@ achievements:
   combat/spider_hunter:
     displayName: "Spider Hunter"
     description: "Defeat 5 cave spiders."
-    category: COMBAT
+    category: combat
     hidden: false
     criteria:
       - type: KILL
@@ -45,7 +45,7 @@ achievements:
   milestone/level_5:
     displayName: "Seasoned Adventurer"
     description: "Reach level 5."
-    category: CLASS
+    category: class
     hidden: false
     criteria:
       - type: REACH_LEVEL
@@ -58,7 +58,7 @@ achievements:
   milestone/level_10:
     displayName: "Veteran"
     description: "Reach level 10."
-    category: CLASS
+    category: class
     hidden: false
     criteria:
       - type: REACH_LEVEL
@@ -71,7 +71,7 @@ achievements:
   quests/ruins_helper:
     displayName: "Ruins Helper"
     description: "Complete the beetle culling quest."
-    category: SOCIAL
+    category: social
     hidden: false
     criteria:
       - type: QUEST_COMPLETE
@@ -85,7 +85,7 @@ achievements:
   combat/secret_slayer:
     displayName: "?????"
     description: "You have uncovered a secret."
-    category: COMBAT
+    category: combat
     hidden: true
     criteria:
       - type: KILL
