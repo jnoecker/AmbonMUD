@@ -10,6 +10,8 @@ import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.domain.quest.QuestState
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.engine.quest.CompletionHandlerRegistry
+import dev.ambon.engine.quest.ObjectiveHandlerRegistry
 import java.time.Clock
 
 class QuestSystem(
@@ -18,6 +20,8 @@ class QuestSystem(
     private val items: ItemRegistry,
     private val outbound: OutboundBus,
     private val clock: Clock = Clock.systemUTC(),
+    private val objectiveHandlers: ObjectiveHandlerRegistry = ObjectiveHandlerRegistry.withDefaults(),
+    private val completionHandlers: CompletionHandlerRegistry = CompletionHandlerRegistry.withDefaults(),
 ) {
     /** Invoked after a quest is successfully completed; used by AchievementSystem. */
     var onQuestCompleted: (suspend (SessionId, String) -> Unit)? = null
@@ -56,7 +60,8 @@ class QuestSystem(
         val ps = players.get(sessionId) ?: return emptySet()
         return mobIds.filterTo(mutableSetOf()) { mobId ->
             registry.questsForMob(mobId).any { quest ->
-                quest.completionType == "npc_turn_in" &&
+                val handler = completionHandlers.get(quest.completionType)
+                handler?.requiresNpcTurnIn == true &&
                     ps.activeQuests[quest.id]?.objectives?.all { it.isComplete } == true
             }
         }
@@ -116,9 +121,8 @@ class QuestSystem(
         templateKey: String,
     ) {
         advanceObjectives(sessionId) { objDef, prog ->
-            if (objDef.type != "kill") return@advanceObjectives null
-            if (objDef.targetId != templateKey) return@advanceObjectives null
-            prog.copy(current = prog.current + 1)
+            val handler = objectiveHandlers.killHandler(objDef.type) ?: return@advanceObjectives null
+            handler.advance(objDef, prog, templateKey)
         }
     }
 
@@ -130,14 +134,10 @@ class QuestSystem(
         item: ItemInstance,
     ) {
         advanceObjectives(sessionId) { objDef, prog ->
-            if (objDef.type != "collect") return@advanceObjectives null
-            val targetIdRaw = objDef.targetId
+            val handler = objectiveHandlers.collectHandler(objDef.type) ?: return@advanceObjectives null
             val itemId = item.id.value
-            if (itemId != targetIdRaw && !itemId.endsWith(":${targetIdRaw.substringAfterLast(':')}")) return@advanceObjectives null
             val currentCount = items.inventory(sessionId).count { inv -> inv.id.value == itemId }
-            val newCurrent = currentCount.coerceAtMost(prog.required)
-            if (newCurrent <= prog.current) return@advanceObjectives null
-            prog.copy(current = newCurrent)
+            handler.advance(objDef, prog, itemId, currentCount)
         }
     }
 
@@ -237,7 +237,8 @@ class QuestSystem(
     ) {
         for ((questId, state) in activeQuests) {
             val quest = registry.get(questId) ?: continue
-            if (quest.completionType != "auto") continue
+            val handler = completionHandlers.get(quest.completionType) ?: continue
+            if (!handler.autoCompletes) continue
             if (state.objectives.all { it.isComplete }) {
                 completeQuest(sessionId, questId, quest.rewards)
             }
