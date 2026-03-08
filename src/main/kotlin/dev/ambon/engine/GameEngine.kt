@@ -473,6 +473,7 @@ class GameEngine(
             outbound = outbound,
             clock = clock,
             dirtyNotifier = dirtyNotifier,
+            effectTypes = engineConfig.effectTypes,
         )
     private val groupSystem =
         GroupSystem(
