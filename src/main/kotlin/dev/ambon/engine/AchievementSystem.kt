@@ -5,7 +5,6 @@ import dev.ambon.domain.achievement.AchievementCriterion
 import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.achievement.CriterionProgress
-import dev.ambon.domain.achievement.CriterionType
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 
@@ -32,7 +31,7 @@ class AchievementSystem(
         updateAchievementProgress(
             sessionId,
             criterionAdvancer(
-                type = CriterionType.KILL,
+                type = "kill",
                 matches = { it.targetId.isBlank() || it.targetId == templateKey },
                 newValue = { _, prog -> prog.current + 1 },
             ),
@@ -49,7 +48,7 @@ class AchievementSystem(
         updateAchievementProgress(
             sessionId,
             criterionAdvancer(
-                type = CriterionType.REACH_LEVEL,
+                type = "reach_level",
                 // Update current level whether or not the target is met (for progress display)
                 newValue = { criterion, prog ->
                     if (newLevel >= criterion.count || newLevel > prog.current) newLevel else null
@@ -68,7 +67,7 @@ class AchievementSystem(
         updateAchievementProgress(
             sessionId,
             criterionAdvancer(
-                type = CriterionType.QUEST_COMPLETE,
+                type = "quest_complete",
                 matches = { it.targetId.isBlank() || it.targetId == questId },
                 newValue = { _, _ -> 1 },
             ),
@@ -81,7 +80,7 @@ class AchievementSystem(
      * updated. [newValue] may return `null` to skip a criterion without modifying it.
      */
     private fun criterionAdvancer(
-        type: CriterionType,
+        type: String,
         matches: (AchievementCriterion) -> Boolean = { true },
         newValue: (AchievementCriterion, CriterionProgress) -> Int?,
     ): (AchievementDef, MutableList<CriterionProgress>) -> Boolean = { def, newProgressList ->
@@ -249,8 +248,8 @@ class AchievementSystem(
                 val current = prog?.current ?: 0
                 val required = criterion.count
                 when (criterion.type) {
-                    CriterionType.KILL, CriterionType.QUEST_COMPLETE -> "$current/$required"
-                    CriterionType.REACH_LEVEL -> "level $current/$required"
+                    "reach_level" -> "level $current/$required"
+                    else -> "$current/$required"
                 }
             }.joinToString(", ")
     }

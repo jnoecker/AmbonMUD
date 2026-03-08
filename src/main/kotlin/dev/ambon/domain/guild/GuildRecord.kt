@@ -8,6 +8,6 @@ data class GuildRecord(
     val tag: String,
     val leaderId: PlayerId,
     val motd: String? = null,
-    val members: Map<PlayerId, GuildRank> = emptyMap(),
+    val members: Map<PlayerId, String> = emptyMap(),
     val createdAtEpochMs: Long,
 )

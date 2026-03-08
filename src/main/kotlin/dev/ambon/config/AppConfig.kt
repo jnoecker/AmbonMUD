@@ -569,6 +569,53 @@ data class QuestCompletionTypesConfig(
     }
 }
 
+data class AchievementCriterionTypeConfig(
+    val displayName: String = "",
+    val progressFormat: String = "{current}/{required}",
+)
+
+data class AchievementCriterionTypesConfig(
+    val types: Map<String, AchievementCriterionTypeConfig> = defaultCriterionTypes(),
+) {
+    companion object {
+        fun defaultCriterionTypes(): Map<String, AchievementCriterionTypeConfig> = linkedMapOf(
+            "kill" to AchievementCriterionTypeConfig(displayName = "Kill", progressFormat = "{current}/{required}"),
+            "reach_level" to AchievementCriterionTypeConfig(displayName = "Reach Level", progressFormat = "level {current}/{required}"),
+            "quest_complete" to AchievementCriterionTypeConfig(displayName = "Quest Complete", progressFormat = "{current}/{required}"),
+        )
+    }
+}
+
+data class GuildRankConfig(
+    val displayName: String = "",
+    val level: Int = 0,
+    val permissions: List<String> = emptyList(),
+)
+
+data class GuildRanksConfig(
+    val ranks: Map<String, GuildRankConfig> = defaultGuildRanks(),
+) {
+    companion object {
+        fun defaultGuildRanks(): Map<String, GuildRankConfig> = linkedMapOf(
+            "leader" to GuildRankConfig(
+                displayName = "Leader",
+                level = 100,
+                permissions = listOf("invite", "kick", "promote", "demote", "disband", "set_motd"),
+            ),
+            "officer" to GuildRankConfig(
+                displayName = "Officer",
+                level = 50,
+                permissions = listOf("invite", "kick"),
+            ),
+            "member" to GuildRankConfig(
+                displayName = "Member",
+                level = 0,
+                permissions = emptyList(),
+            ),
+        )
+    }
+}
+
 data class EffectTypeConfig(
     val displayName: String = "",
 )
@@ -647,6 +694,8 @@ data class EngineConfig(
     val effectTypes: EffectTypesConfig = EffectTypesConfig(),
     val targetTypes: TargetTypesConfig = TargetTypesConfig(),
     val stackBehaviors: StackBehaviorsConfig = StackBehaviorsConfig(),
+    val achievementCriterionTypes: AchievementCriterionTypesConfig = AchievementCriterionTypesConfig(),
+    val guildRanks: GuildRanksConfig = GuildRanksConfig(),
     val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),

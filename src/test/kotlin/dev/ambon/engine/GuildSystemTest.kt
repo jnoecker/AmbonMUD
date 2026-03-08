@@ -1,7 +1,6 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.LocalOutboundBus
-import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -64,7 +63,7 @@ class GuildSystemTest {
 
             val ps = h.players.get(sid)!!
             assertEquals("shadowblade", ps.guildId)
-            assertEquals(GuildRank.LEADER, ps.guildRank)
+            assertEquals("leader", ps.guildRank)
             assertEquals("SB", ps.guildTag)
 
             val record = h.guildRepo.findById("shadowblade")
@@ -151,7 +150,7 @@ class GuildSystemTest {
 
             val bobPs = h.players.get(sid2)!!
             assertEquals("shadowblade", bobPs.guildId)
-            assertEquals(GuildRank.MEMBER, bobPs.guildRank)
+            assertEquals("member", bobPs.guildRank)
             assertEquals("SB", bobPs.guildTag)
         }
 
@@ -276,7 +275,7 @@ class GuildSystemTest {
             assertNull(promoteErr)
 
             val bobPs = h.players.get(sid2)!!
-            assertEquals(GuildRank.OFFICER, bobPs.guildRank)
+            assertEquals("officer", bobPs.guildRank)
         }
 
     @Test
@@ -297,7 +296,7 @@ class GuildSystemTest {
             assertNull(demoteErr)
 
             val bobPs = h.players.get(sid2)!!
-            assertEquals(GuildRank.MEMBER, bobPs.guildRank)
+            assertEquals("member", bobPs.guildRank)
         }
 
     @Test
@@ -377,7 +376,7 @@ class GuildSystemTest {
 
             h.guild.onPlayerLogin(sid2)
 
-            assertEquals(GuildRank.MEMBER, bobPs.guildRank)
+            assertEquals("member", bobPs.guildRank)
             assertEquals("SB", bobPs.guildTag)
         }
 }

@@ -3,7 +3,6 @@ package dev.ambon.engine
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.crafting.CraftingSkillState
-import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mail.MailMessage
@@ -52,7 +51,7 @@ data class PlayerState(
     /** Non-null while the player is composing an outgoing mail message. */
     var mailCompose: MailComposeState? = null,
     var guildId: String? = null,
-    var guildRank: GuildRank? = null,
+    var guildRank: String? = null,
     var guildTag: String? = null,
     var recallRoomId: RoomId? = null,
     var friendsList: MutableSet<String> = mutableSetOf(),

@@ -5,7 +5,7 @@ achievements:
     category: combat
     hidden: false
     criteria:
-      - type: KILL
+      - type: kill
         targetId: ""
         count: 1
         description: "Kill any mob"
@@ -18,7 +18,7 @@ achievements:
     category: combat
     hidden: false
     criteria:
-      - type: KILL
+      - type: kill
         targetId: "demo_ruins:beetle_swarm"
         count: 5
         description: "Kill 5 beetle swarms"
@@ -33,7 +33,7 @@ achievements:
     category: combat
     hidden: false
     criteria:
-      - type: KILL
+      - type: kill
         targetId: "demo_ruins:cave_spider"
         count: 5
         description: "Kill 5 cave spiders"
@@ -48,7 +48,7 @@ achievements:
     category: class
     hidden: false
     criteria:
-      - type: REACH_LEVEL
+      - type: reach_level
         count: 5
         description: "Reach level 5"
     rewards:
@@ -61,7 +61,7 @@ achievements:
     category: class
     hidden: false
     criteria:
-      - type: REACH_LEVEL
+      - type: reach_level
         count: 10
         description: "Reach level 10"
     rewards:
@@ -74,7 +74,7 @@ achievements:
     category: social
     hidden: false
     criteria:
-      - type: QUEST_COMPLETE
+      - type: quest_complete
         targetId: "demo_ruins:cull_the_beetles"
         count: 1
         description: "Complete Cull the Beetles"
@@ -88,7 +88,7 @@ achievements:
     category: combat
     hidden: true
     criteria:
-      - type: KILL
+      - type: kill
         targetId: "demo_ruins:ancient_golem"
         count: 1
         description: "Defeat the ancient golem"
