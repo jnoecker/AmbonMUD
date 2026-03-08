@@ -38,9 +38,14 @@ class GmcpEmitter(
     private val equipmentSlotRegistry: EquipmentSlotRegistry? = null,
     private val genderRegistry: GenderRegistry? = null,
     imagesBaseUrl: String = "/images/",
+    spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
+    private val staffSpriteTier: Int = 60,
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
+
+    /** Sorted descending so the first match is the highest tier the player qualifies for. */
+    private val sortedTiers = spriteLevelTiers.sortedDescending().toIntArray()
 
     suspend fun sendCharVitals(
         sessionId: SessionId,
@@ -1177,9 +1182,6 @@ class GmcpEmitter(
             xpReward < 800L -> 7
             else -> ((xpReward / 100) + 5).toInt().coerceIn(1, 50)
         }
-
-        private val SPRITE_LEVEL_TIERS = intArrayOf(50, 40, 30, 20, 10, 1)
-        private const val STAFF_SPRITE_TIER = 60
     }
 
     private fun resolveSprite(player: PlayerState): String {
@@ -1188,7 +1190,7 @@ class GmcpEmitter(
             ?: player.gender.lowercase()
         val race = player.race.lowercase()
         val cls = player.playerClass.lowercase()
-        val tier = if (player.isStaff) STAFF_SPRITE_TIER else SPRITE_LEVEL_TIERS.firstOrNull { player.level >= it } ?: 1
+        val tier = if (player.isStaff) staffSpriteTier else sortedTiers.firstOrNull { player.level >= it } ?: 1
         return "${imagesBase}player_sprites/${race}_${spriteCode}_${cls}_l$tier.png"
     }
 }

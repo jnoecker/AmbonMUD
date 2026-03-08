@@ -348,6 +348,8 @@ class MudServer(
                     raceRegistryOverride = raceRegistry,
                     statRegistryOverride = statRegistry,
                     imagesBaseUrl = config.images.baseUrl,
+                    spriteLevelTiers = config.images.spriteLevelTiers,
+                    staffSpriteTier = config.images.staffSpriteTier,
                 ).run()
             }
 

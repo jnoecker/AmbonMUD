@@ -129,6 +129,8 @@ class GameEngine(
     raceRegistryOverride: RaceRegistry? = null,
     statRegistryOverride: StatRegistry? = null,
     imagesBaseUrl: String = "/images/",
+    spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
+    staffSpriteTier: Int = 60,
 ) {
     // Convenience delegates — expose grouped context fields as flat names so the
     // existing class body compiles without modification.
@@ -415,6 +417,8 @@ class GameEngine(
             equipmentSlotRegistry = equipmentSlotRegistry,
             genderRegistry = genderRegistry,
             imagesBaseUrl = imagesBaseUrl,
+            spriteLevelTiers = spriteLevelTiers,
+            staffSpriteTier = staffSpriteTier,
         )
 
     fun markVitalsDirty(sessionId: SessionId) {

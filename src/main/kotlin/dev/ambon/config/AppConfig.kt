@@ -1271,6 +1271,10 @@ data class ShardingConfig(
 
 data class ImagesConfig(
     val baseUrl: String = "/images/",
+    /** Level thresholds for player sprite tiers, checked highest-first. */
+    val spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
+    /** Sprite tier used for staff players regardless of level. */
+    val staffSpriteTier: Int = 60,
 )
 
 data class VideosConfig(
