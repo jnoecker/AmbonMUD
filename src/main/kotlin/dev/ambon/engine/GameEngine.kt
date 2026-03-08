@@ -716,6 +716,7 @@ class GameEngine(
                 statusEffects = statusEffectSystem,
                 dialogueSystem = dialogueSystem,
                 onCrossZoneMove = crossZoneMove,
+                recallConfig = engineConfig.navigation.recall,
             ),
             CommunicationHandler(
                 ctx = ctx,

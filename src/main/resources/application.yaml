@@ -126,6 +126,9 @@ ambonmud:
     authThreads: 8
 
   engine:
+    navigation:
+      recall:
+        cooldownMs: 300000
     mob:
       minActionDelayMillis: 8000
       maxActionDelayMillis: 20000
