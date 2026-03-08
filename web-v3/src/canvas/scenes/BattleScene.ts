@@ -5,7 +5,9 @@ import { CombatAnimator } from "../systems/CombatAnimator";
 import { GainPopupSystem } from "../systems/GainPopup";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 
-const SPRITE_SIZE = 128;
+const BASE_SPRITE_SIZE = 160;
+const MIN_SPRITE_SIZE = 120;
+const MAX_SPRITE_SIZE = 200;
 const SMALL_SPRITE = 80;
 const HP_BAR_WIDTH = 140;
 const HP_BAR_HEIGHT = 10;
@@ -62,6 +64,10 @@ export class BattleScene {
   private fadeInDuration = 300;
   private fadingIn = true;
 
+  // Victory text shown during death animation
+  private victoryText: Text | null = null;
+  private victoryElapsed = 0;
+
   constructor() {
     this.playerLabel = new Text({
       text: "",
@@ -112,6 +118,11 @@ export class BattleScene {
     }
   }
 
+  /** Whether the death/victory animation is still playing. */
+  get isDeathAnimating(): boolean {
+    return this.combatAnimator.isDeathAnimating;
+  }
+
   /** Called when entering battle scene */
   enter() {
     this.fadingIn = true;
@@ -119,6 +130,7 @@ export class BattleScene {
     this.container.alpha = 0;
     this.combatAnimator.clear();
     this.gainPopups.clear();
+    this.removeVictoryText();
     // Reset tracking so update() re-creates everything
     this.lastRoomImage = "\0";
     this.lastPlayerSpritePath = "\0";
@@ -188,6 +200,41 @@ export class BattleScene {
     this.combatAnimator.update(deltaMs);
     this.gainPopups.update(deltaMs);
 
+    // Apply death animation effects to enemy sprite
+    const deathState = this.combatAnimator.getDeathAnimState();
+    if (deathState) {
+      if (this.enemySprite) {
+        this.enemySprite.alpha = deathState.alpha;
+        this.enemySprite.scale.set(deathState.scale);
+        // Lerp tint toward white during flash
+        const r = Math.round(0xff + (0xff - 0xff) * deathState.tintLerp);
+        const g = Math.round(0xff * (1 - deathState.tintLerp * 0.3));
+        const b = Math.round(0xff * (1 - deathState.tintLerp * 0.3));
+        this.enemySprite.tint = (r << 16) | (g << 8) | b;
+      }
+      // Hide enemy UI during dissolve/hold
+      if (deathState.alpha < 0.3) {
+        this.enemyLabel.alpha = 0;
+        this.enemyHpBar.alpha = 0;
+        this.enemyHpText.alpha = 0;
+      }
+      // Fade entire scene during hold phase
+      if (!this.fadingIn) {
+        this.container.alpha = deathState.sceneAlpha;
+      }
+      // Show victory text
+      this.updateVictoryText(deltaMs, deathState.alpha <= 0);
+    } else {
+      // Reset enemy sprite if death animation just finished
+      if (this.enemySprite) {
+        this.enemySprite.scale.set(1);
+        this.enemySprite.tint = this.lastEnemyImage ? 0xffffff : ENEMY_TINT;
+      }
+      this.enemyLabel.alpha = 1;
+      this.enemyHpBar.alpha = 1;
+      this.enemyHpText.alpha = 1;
+    }
+
     // Layout everything
     this.layoutAll(vitals, combatTarget);
   }
@@ -202,6 +249,29 @@ export class BattleScene {
     const w = this.width;
     const h = this.height;
     return { x: w * 0.75, y: h * 0.45 };
+  }
+
+  /**
+   * Compute player and enemy sprite sizes based on relative maxHP.
+   * - Mob much stronger (2x+ HP): player shrinks, enemy grows
+   * - Roughly equal (within ~1.5x): both at base size
+   * - Mob much weaker: player grows, enemy shrinks
+   */
+  private computeSpriteScales(playerMaxHp: number, enemyMaxHp: number | null): { playerSize: number; enemySize: number } {
+    if (!enemyMaxHp || enemyMaxHp <= 0 || playerMaxHp <= 0) {
+      return { playerSize: BASE_SPRITE_SIZE, enemySize: BASE_SPRITE_SIZE };
+    }
+    // Ratio > 1 means enemy is stronger, < 1 means weaker
+    const ratio = enemyMaxHp / playerMaxHp;
+    // Convert to a scale factor: log-based so it doesn't explode
+    // clamp the scale difference to ±0.25 of base
+    const scaleDelta = Math.max(-0.25, Math.min(0.25, Math.log2(ratio) * 0.15));
+    const enemyScale = 1 + scaleDelta;
+    const playerScale = 1 - scaleDelta;
+    return {
+      playerSize: Math.round(Math.max(MIN_SPRITE_SIZE, Math.min(MAX_SPRITE_SIZE, BASE_SPRITE_SIZE * playerScale))),
+      enemySize: Math.round(Math.max(MIN_SPRITE_SIZE, Math.min(MAX_SPRITE_SIZE, BASE_SPRITE_SIZE * enemyScale))),
+    };
   }
 
   private layoutAll(vitals: { hp: number; maxHp: number; mana: number; maxMana: number }, combatTarget: { targetName: string | null; targetHp: number | null; targetMaxHp: number | null } | null) {
@@ -221,6 +291,12 @@ export class BattleScene {
     this.uiGraphics.lineTo(w, groundY);
     this.uiGraphics.stroke({ color: 0x4a4a6a, alpha: 0.4, width: 1 });
 
+    // Compute dynamic sprite sizes based on relative power (maxHP ratio)
+    const { playerSize, enemySize } = this.computeSpriteScales(
+      vitals.maxHp,
+      combatTarget?.targetMaxHp ?? null,
+    );
+
     // Player position (left side) with lunge + shake offsets
     const playerPos = this.getPlayerPosition();
     const playerLunge = this.combatAnimator.getLungeOffset("player");
@@ -230,37 +306,39 @@ export class BattleScene {
     if (this.playerSprite) {
       this.playerSprite.x = playerDrawX;
       this.playerSprite.y = playerDrawY;
+      this.playerSprite.width = playerSize;
+      this.playerSprite.height = playerSize;
     }
 
     this.playerLabel.x = playerDrawX;
-    this.playerLabel.y = playerDrawY + SPRITE_SIZE / 2 + 6;
+    this.playerLabel.y = playerDrawY + playerSize / 2 + 6;
 
     // Player HP bar
     const playerHpPct = percent(vitals.hp, vitals.maxHp);
     this.playerHpBar.clear();
-    this.playerHpBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + SPRITE_SIZE / 2 + 24, HP_BAR_WIDTH, HP_BAR_HEIGHT, 2);
+    this.playerHpBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 24, HP_BAR_WIDTH, HP_BAR_HEIGHT, 2);
     this.playerHpBar.fill(HP_BG_COLOR);
     if (playerHpPct > 0) {
-      this.playerHpBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + SPRITE_SIZE / 2 + 24, HP_BAR_WIDTH * playerHpPct / 100, HP_BAR_HEIGHT, 2);
+      this.playerHpBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 24, HP_BAR_WIDTH * playerHpPct / 100, HP_BAR_HEIGHT, 2);
       this.playerHpBar.fill(HP_COLOR);
     }
 
     this.playerHpText.text = `${vitals.hp}/${vitals.maxHp}`;
     this.playerHpText.x = playerPos.x;
-    this.playerHpText.y = playerPos.y + SPRITE_SIZE / 2 + 34;
+    this.playerHpText.y = playerPos.y + playerSize / 2 + 34;
 
     // Player mana bar
     const manaPct = percent(vitals.mana, vitals.maxMana);
     this.playerManaBar.clear();
-    this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + SPRITE_SIZE / 2 + 46, HP_BAR_WIDTH, MANA_BAR_HEIGHT, 2);
+    this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 46, HP_BAR_WIDTH, MANA_BAR_HEIGHT, 2);
     this.playerManaBar.fill(HP_BG_COLOR);
     if (manaPct > 0) {
-      this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + SPRITE_SIZE / 2 + 46, HP_BAR_WIDTH * manaPct / 100, MANA_BAR_HEIGHT, 2);
+      this.playerManaBar.roundRect(playerPos.x - HP_BAR_WIDTH / 2, playerPos.y + playerSize / 2 + 46, HP_BAR_WIDTH * manaPct / 100, MANA_BAR_HEIGHT, 2);
       this.playerManaBar.fill(MANA_COLOR);
     }
 
     // Status effects above the player
-    this.statusEffects.update(gameStateRef.current.effects, playerDrawX, playerDrawY - SPRITE_SIZE / 2 - 28);
+    this.statusEffects.update(gameStateRef.current.effects, playerDrawX, playerDrawY - playerSize / 2 - 28);
 
     // Enemy position (right side) with lunge + shake offsets
     const enemyPos = this.getEnemyPosition();
@@ -271,10 +349,12 @@ export class BattleScene {
     if (this.enemySprite) {
       this.enemySprite.x = enemyDrawX;
       this.enemySprite.y = enemyDrawY;
+      this.enemySprite.width = enemySize;
+      this.enemySprite.height = enemySize;
     }
 
     this.enemyLabel.x = enemyDrawX;
-    this.enemyLabel.y = enemyDrawY + SPRITE_SIZE / 2 + 6;
+    this.enemyLabel.y = enemyDrawY + enemySize / 2 + 6;
 
     // Enemy HP bar (only when we have a target)
     this.enemyHpBar.clear();
@@ -282,10 +362,10 @@ export class BattleScene {
       const enemyHp = combatTarget.targetHp ?? 0;
       const enemyMaxHp = combatTarget.targetMaxHp ?? 1;
       const enemyHpPct = percent(enemyHp, enemyMaxHp);
-      this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + SPRITE_SIZE / 2 + 24, HP_BAR_WIDTH, HP_BAR_HEIGHT, 2);
+      this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + enemySize / 2 + 24, HP_BAR_WIDTH, HP_BAR_HEIGHT, 2);
       this.enemyHpBar.fill(HP_BG_COLOR);
       if (enemyHpPct > 0) {
-        this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + SPRITE_SIZE / 2 + 24, HP_BAR_WIDTH * enemyHpPct / 100, HP_BAR_HEIGHT, 2);
+        this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + enemySize / 2 + 24, HP_BAR_WIDTH * enemyHpPct / 100, HP_BAR_HEIGHT, 2);
         this.enemyHpBar.fill(0xef5350);
       }
       this.enemyHpText.text = `${enemyHp}/${enemyMaxHp}`;
@@ -293,10 +373,10 @@ export class BattleScene {
       this.enemyHpText.text = "";
     }
     this.enemyHpText.x = enemyPos.x;
-    this.enemyHpText.y = enemyPos.y + SPRITE_SIZE / 2 + 34;
+    this.enemyHpText.y = enemyPos.y + enemySize / 2 + 34;
 
     // Party members (stacked below player on left)
-    const partyStartY = playerPos.y - SPRITE_SIZE / 2 - 20;
+    const partyStartY = playerPos.y - playerSize / 2 - 20;
     for (let i = 0; i < this.partyMembers.length; i++) {
       const member = this.partyMembers[i];
       const memberState = gameStateRef.current.groupInfo.members.filter((m) => m.name !== gameStateRef.current.character.name)[i];
@@ -325,10 +405,11 @@ export class BattleScene {
     // Draw combat effects
     this.combatAnimator.drawGlows(playerDrawX, playerDrawY, enemyDrawX, enemyDrawY);
     this.combatAnimator.drawFlashes(
-      playerDrawX, playerDrawY, SPRITE_SIZE, SPRITE_SIZE,
-      enemyDrawX, enemyDrawY, SPRITE_SIZE, SPRITE_SIZE,
+      playerDrawX, playerDrawY, playerSize, playerSize,
+      enemyDrawX, enemyDrawY, enemySize, enemySize,
     );
     this.combatAnimator.drawSlashes();
+    this.combatAnimator.drawParticles();
   }
 
   private rebuildParty(members: Array<{ name: string; hp: number; maxHp: number }>) {
@@ -392,8 +473,8 @@ export class BattleScene {
     }
 
     const sprite = new Sprite(Texture.WHITE);
-    sprite.width = SPRITE_SIZE;
-    sprite.height = SPRITE_SIZE;
+    sprite.width = BASE_SPRITE_SIZE;
+    sprite.height = BASE_SPRITE_SIZE;
     sprite.anchor.set(0.5);
     sprite.tint = PLAYER_TINT;
     this.container.addChildAt(sprite, 1); // after uiGraphics
@@ -403,6 +484,8 @@ export class BattleScene {
       try {
         const texture = await Assets.load(spritePath);
         sprite.texture = texture;
+        sprite.width = BASE_SPRITE_SIZE;
+        sprite.height = BASE_SPRITE_SIZE;
         sprite.tint = 0xffffff;
       } catch {
         // Keep placeholder
@@ -418,8 +501,8 @@ export class BattleScene {
     }
 
     const sprite = new Sprite(Texture.WHITE);
-    sprite.width = SPRITE_SIZE;
-    sprite.height = SPRITE_SIZE;
+    sprite.width = BASE_SPRITE_SIZE;
+    sprite.height = BASE_SPRITE_SIZE;
     sprite.anchor.set(0.5);
     sprite.tint = ENEMY_TINT;
     this.container.addChildAt(sprite, 1);
@@ -429,10 +512,48 @@ export class BattleScene {
       try {
         const texture = await Assets.load(imagePath);
         sprite.texture = texture;
+        sprite.width = BASE_SPRITE_SIZE;
+        sprite.height = BASE_SPRITE_SIZE;
         sprite.tint = 0xffffff;
       } catch {
         // Keep placeholder
       }
+    }
+  }
+
+  private updateVictoryText(deltaMs: number, enemyGone: boolean) {
+    if (!enemyGone) return;
+    if (!this.victoryText) {
+      this.victoryText = new Text({
+        text: "VICTORY",
+        style: {
+          fontFamily: "JetBrains Mono, Cascadia Mono, monospace",
+          fontSize: 28,
+          fill: "#f0c674",
+          fontWeight: "bold",
+          letterSpacing: 6,
+        },
+      });
+      this.victoryText.anchor.set(0.5);
+      this.victoryText.x = this.width / 2;
+      this.victoryText.y = this.height * 0.4;
+      this.victoryText.alpha = 0;
+      this.victoryElapsed = 0;
+      this.container.addChild(this.victoryText);
+    }
+    this.victoryElapsed += deltaMs;
+    // Fade in over 200ms
+    this.victoryText.alpha = Math.min(1, this.victoryElapsed / 200);
+    // Gentle float upward
+    this.victoryText.y = this.height * 0.4 - this.victoryElapsed * 0.01;
+  }
+
+  private removeVictoryText() {
+    if (this.victoryText) {
+      this.container.removeChild(this.victoryText);
+      this.victoryText.destroy();
+      this.victoryText = null;
+      this.victoryElapsed = 0;
     }
   }
 
