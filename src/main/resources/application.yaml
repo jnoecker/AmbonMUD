@@ -1469,42 +1469,87 @@ ambonmud:
       definitions:
         HUMAN:
           displayName: Human
-          description: Versatile and adaptable.
+          description: Versatile and ambitious, humans thrive in every corner of the world.
+          backstory: |
+            Humans are the most widespread race in Ambon, found in every climate
+            and culture. What they lack in longevity they make up for with
+            relentless ambition and an uncanny ability to adapt. Human kingdoms
+            rise and fall within a single elven lifetime, yet their monuments
+            endure. They are merchants, soldiers, scholars, and rogues in equal
+            measure — never content, always reaching for something more.
+          traits:
+            - "Adaptable: No terrain or climate penalties"
+            - "Ambitious: Slight bonus to experience gain"
+            - "Versatile: Balanced stat spread suits any class"
+          image: race_human.png
           statMods:
             str: 1
-            dex: 0
-            con: 0
-            int: 0
-            wis: 0
             cha: 1
         ELF:
           displayName: Elf
-          description: Graceful and magically attuned.
+          description: Graceful and magically attuned, elves see the world in centuries.
+          backstory: |
+            The elves of Ambon are an ancient people whose memories stretch back
+            to the founding of the world. They dwell in forests so old the trees
+            themselves remember the first sunrise. Elven society prizes art,
+            magic, and patience — virtues that come naturally to a race that
+            measures its life in millennia. Yet beneath their serenity lies a
+            fierce pride and a willingness to defend their groves with lethal
+            precision.
+          traits:
+            - "Darkvision: See clearly in dim light"
+            - "Fey Ancestry: Resistant to charm and sleep effects"
+            - "Keen Senses: Enhanced awareness of surroundings"
+            - "Trance: Rest fully in 4 hours instead of 8"
+          image: race_elf.png
           statMods:
             str: -1
             dex: 2
             con: -2
             int: 1
-            wis: 0
-            cha: 0
         DWARF:
           displayName: Dwarf
-          description: Tough and resilient.
+          description: Tough and resilient, dwarves are born of stone and fire.
+          backstory: |
+            Deep beneath the mountains of Ambon, the dwarven holds have
+            endured since before written history. Dwarves are master craftsmen
+            and miners, carving wonders from raw stone with a patience rivalled
+            only by the elves. Their clans are fiercely loyal and slow to
+            forgive a grudge — some feuds have lasted longer than human empires.
+            A dwarf's word is iron, and their ale is stronger still.
+          traits:
+            - "Darkvision: See clearly in total darkness"
+            - "Stonecunning: Intuition for stonework and underground passages"
+            - "Dwarven Resilience: Resistant to poison"
+            - "Relentless Endurance: Harder to knock down in combat"
+          image: race_dwarf.png
           statMods:
             str: 1
             dex: -1
             con: 2
-            int: 0
             wis: 1
             cha: -2
         HALFLING:
           displayName: Halfling
-          description: Quick and charming.
+          description: Quick and charming, halflings turn luck into an art form.
+          backstory: |
+            Halflings are a small, cheerful folk who prize comfort, good food,
+            and better stories. They live in cozy burrow-villages on the rolling
+            hills of Ambon, far from the grand conflicts of larger races — or so
+            they claim. In truth, halfling curiosity is boundless, and many find
+            themselves drawn to adventure despite their better judgement. Their
+            small stature belies a remarkable courage and an almost supernatural
+            talent for being in the right place at the right time.
+          traits:
+            - "Lucky: Reroll natural 1s on attack and ability checks"
+            - "Brave: Advantage against fear effects"
+            - "Nimble: Can move through spaces of larger creatures"
+            - "Naturally Stealthy: Can hide behind creatures larger than you"
+          image: race_halfling.png
           statMods:
             str: -2
             dex: 2
             con: -1
-            int: 0
             wis: 1
             cha: 1
 
