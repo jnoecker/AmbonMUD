@@ -345,6 +345,8 @@ ambonmud:
           effectType: STAT_DEBUFF
           durationMs: 5000
           stackBehavior: NONE
+      effectTypes: {}
+      stackBehaviors: {}
     economy:
       buyMultiplier: 1.0
       sellMultiplier: 0.5
@@ -1412,6 +1414,7 @@ ambonmud:
             type: DIRECT_DAMAGE
           description: The ultimate rogue ability—become the shadow itself.
           image: 5da18c4bb24ad009372c1feacb9b9a24bb7df1f45af581c3db9fe519060f575b.png
+      targetTypes: {}
 
     crafting:
       maxSkillLevel: 100
@@ -1419,6 +1422,8 @@ ambonmud:
       xpExponent: 1.5
       gatherCooldownMs: 3000
       stationBonusQuantity: 1
+      skills: {}
+      stationTypes: {}
 
     debug:
       enableSwarmClass: false
@@ -1583,6 +1588,13 @@ ambonmud:
         feet:
           displayName: FEET
           order: 6
+    genders: {}
+    achievementCategories: {}
+    achievementCriterionTypes: {}
+    questObjectiveTypes: {}
+    questCompletionTypes: {}
+    guild:
+      ranks: {}
 
   progression:
     maxLevel: 50
@@ -1648,3 +1660,24 @@ ambonmud:
       sharedSecret: "CHANGE_ME"
   images:
     baseUrl: https://assets.ambon.dev/
+    spriteLevelTiers:
+      - 50
+      - 40
+      - 30
+      - 20
+      - 10
+      - 1
+    staffSpriteTier: 60
+  globalAssets:
+    compass_rose: e201e29796fd12881e521ea892c6d97e56d362d6bd443cdd5b494029314814d4.png
+    direction_marker: 829a44129781d086ef03b8c317ec1db699add28e68cc83363b47ee760d73d58a.png
+    stairs_up: fdf08dd03ad1beef0e0a083430254f390ae90320210f4b340045e0f9e0ec63b0.png
+    stairs_down: e0871cab0b4cf27d28542d443790a3868d728d3bba94cc753bea5daca40fe921.png
+    video_available_indicator: 9679b3d4f5e7f4acf9f10a0b1f2bd9760a363eed58bd73e200b9a3ae74f34ee4.png
+    shop_kiosk: 6f2404b50d546821d3acc69316668647c708032b832e3d273f5e7c2fc1cbe445.png
+    dialog_indicator: cb42c6d4daaddd09aa1c91adcc98d4cf6b7d9cd5a5b0f6d7a9e90a4285c669ed.png
+    aggro_indicator: 5b699ff717c60f9ac9ec6f2b93b71e5665a5d7612e945ed542f993120fb530df.png
+    quest_available_indicator: 42d6ac55e4f174ac0bb56178ea876837aa54ea0121f2db670ff60a757465cc4f.png
+    quest_complete_indicator: 1c73d6a78405bb4e48456494bfaa87e6cefb505125c3c70eb890f89d6d31fd95.png
+    minimap_unexplored: 97875d65ca8d97a0e84229b02f16ba06c23fca3a0a627fa6e5bffe9d6ccccef8.png
+    map_background: 1dac3f33448349e9e4d69d02eff5c16b0bf9d17a480693aa61bd8f6351aea37c.jpg
