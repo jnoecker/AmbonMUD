@@ -539,6 +539,36 @@ data class AchievementCategoriesConfig(
     }
 }
 
+data class QuestObjectiveTypeConfig(
+    val displayName: String = "",
+)
+
+data class QuestObjectiveTypesConfig(
+    val types: Map<String, QuestObjectiveTypeConfig> = defaultObjectiveTypes(),
+) {
+    companion object {
+        fun defaultObjectiveTypes(): Map<String, QuestObjectiveTypeConfig> = linkedMapOf(
+            "kill" to QuestObjectiveTypeConfig(displayName = "Kill"),
+            "collect" to QuestObjectiveTypeConfig(displayName = "Collect"),
+        )
+    }
+}
+
+data class QuestCompletionTypeConfig(
+    val displayName: String = "",
+)
+
+data class QuestCompletionTypesConfig(
+    val types: Map<String, QuestCompletionTypeConfig> = defaultCompletionTypes(),
+) {
+    companion object {
+        fun defaultCompletionTypes(): Map<String, QuestCompletionTypeConfig> = linkedMapOf(
+            "auto" to QuestCompletionTypeConfig(displayName = "Automatic"),
+            "npc_turn_in" to QuestCompletionTypeConfig(displayName = "NPC Turn-In"),
+        )
+    }
+}
+
 data class EngineConfig(
     val mob: MobEngineConfig = MobEngineConfig(),
     val combat: CombatEngineConfig = CombatEngineConfig(),
@@ -560,6 +590,8 @@ data class EngineConfig(
     val achievementCategories: AchievementCategoriesConfig = AchievementCategoriesConfig(),
     val craftingSkills: CraftingSkillsConfig = CraftingSkillsConfig(),
     val craftingStationTypes: CraftingStationTypesConfig = CraftingStationTypesConfig(),
+    val questObjectiveTypes: QuestObjectiveTypesConfig = QuestObjectiveTypesConfig(),
+    val questCompletionTypes: QuestCompletionTypesConfig = QuestCompletionTypesConfig(),
     val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),

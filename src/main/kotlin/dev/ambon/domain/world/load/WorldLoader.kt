@@ -19,8 +19,6 @@ import dev.ambon.domain.ids.qualifyId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
-import dev.ambon.domain.quest.CompletionType
-import dev.ambon.domain.quest.ObjectiveType
 import dev.ambon.domain.quest.QuestDef
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
@@ -468,27 +466,18 @@ object WorldLoader {
                 val giver = requireNonBlank(questFile.giver) {
                     "Quest '$questId' giver cannot be blank"
                 }
-                val completionType =
-                    when (questFile.completionType.uppercase()) {
-                        "AUTO" -> CompletionType.AUTO
-                        "NPC_TURN_IN" -> CompletionType.NPC_TURN_IN
-                        else -> throw WorldLoadException(
-                            "Quest '$questId' has unknown completionType '${questFile.completionType}'",
-                        )
-                    }
+                val completionType = questFile.completionType.trim().lowercase().ifEmpty { "auto" }
                 if (questFile.objectives.isEmpty()) {
                     throw WorldLoadException("Quest '$questId' must have at least one objective")
                 }
                 val objectives =
                     questFile.objectives.mapIndexed { index, obj ->
-                        val objectiveType =
-                            when (obj.type.uppercase()) {
-                                "KILL" -> ObjectiveType.KILL
-                                "COLLECT" -> ObjectiveType.COLLECT
-                                else -> throw WorldLoadException(
-                                    "Quest '$questId' objective #${index + 1} has unknown type '${obj.type}'",
-                                )
-                            }
+                        val objectiveType = obj.type.trim().lowercase()
+                        if (objectiveType.isEmpty()) {
+                            throw WorldLoadException(
+                                "Quest '$questId' objective #${index + 1} type cannot be blank",
+                            )
+                        }
                         val targetKeyRaw = requireNonBlank(obj.targetKey) {
                             "Quest '$questId' objective #${index + 1} targetKey cannot be blank"
                         }
@@ -502,7 +491,7 @@ object WorldLoader {
                             type = objectiveType,
                             targetId = targetId,
                             count = obj.count,
-                            description = obj.description.ifBlank { "${objectiveType.name.lowercase()} $targetKeyRaw x${obj.count}" },
+                            description = obj.description.ifBlank { "$objectiveType $targetKeyRaw x${obj.count}" },
                         )
                     }
                 mergedQuests.add(

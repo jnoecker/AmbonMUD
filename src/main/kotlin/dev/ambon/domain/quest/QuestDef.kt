@@ -9,11 +9,11 @@ data class QuestDef(
     val giverMobId: String,
     val objectives: List<QuestObjectiveDef>,
     val rewards: QuestRewards,
-    val completionType: CompletionType = CompletionType.AUTO,
+    val completionType: String = "auto",
 )
 
 data class QuestObjectiveDef(
-    val type: ObjectiveType,
+    val type: String,
     val targetId: String,
     val count: Int,
     val description: String,
@@ -23,7 +23,3 @@ data class QuestRewards(
     override val xp: Long = 0L,
     override val gold: Long = 0L,
 ) : Rewards
-
-enum class ObjectiveType { KILL, COLLECT }
-
-enum class CompletionType { AUTO, NPC_TURN_IN }
