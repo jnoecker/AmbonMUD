@@ -216,31 +216,22 @@ export function useMiniMap() {
   const fogImageRef = useRef<HTMLImageElement | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
 
-  // Pre-load the fog-of-war icon and map background
-  if (fogImageRef.current == null) {
-    const img = new Image();
-    img.src = gameStateRef.current.serverAssets["minimap_unexplored"] ?? "/images/global_assets/minimap-unexplored.png";
-    fogImageRef.current = img;
-  }
-  if (bgImageRef.current == null) {
-    const img = new Image();
-    img.src = gameStateRef.current.serverAssets["map_background"] ?? "/images/global_assets/map_background.png";
-    bgImageRef.current = img;
-  }
-  const assetLoadedRef = useRef(false);
-
   const drawMap = useCallback(() => {
     const canvas = mapCanvasRef.current;
     if (!canvas) return;
 
-    // Re-assign image src once Server.Assets GMCP provides resolved URLs
-    if (!assetLoadedRef.current) {
-      const a = gameStateRef.current.serverAssets;
-      if (Object.keys(a).length > 0) {
-        assetLoadedRef.current = true;
-        if (a["minimap_unexplored"] && fogImageRef.current) fogImageRef.current.src = a["minimap_unexplored"];
-        if (a["map_background"] && bgImageRef.current) bgImageRef.current.src = a["map_background"];
-      }
+    // Lazily create fog/bg images once Server.Assets GMCP provides resolved URLs.
+    // This avoids 404s from fallback paths when assets are on a CDN.
+    const a = gameStateRef.current.serverAssets;
+    if (fogImageRef.current == null && a["minimap_unexplored"]) {
+      const img = new Image();
+      img.src = a["minimap_unexplored"];
+      fogImageRef.current = img;
+    }
+    if (bgImageRef.current == null && a["map_background"]) {
+      const img = new Image();
+      img.src = a["map_background"];
+      bgImageRef.current = img;
     }
 
     const fog = fogImageRef.current?.complete ? fogImageRef.current : null;
