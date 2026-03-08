@@ -128,6 +128,7 @@ export class WorldScene {
   private lastItemsKey = "";
   private lastPlayersKey = "";
   private lastMobInfoKey = "";
+  private assetsLoaded = false;
   private width = 0;
   private height = 0;
 
@@ -254,6 +255,16 @@ export class WorldScene {
   update(deltaMs: number) {
     const state = gameStateRef.current;
     const { room, character, mobs, roomItems, players, mobInfo } = state;
+
+    // Reload asset-dependent sprites once Server.Assets GMCP arrives
+    if (!this.assetsLoaded && Object.keys(state.serverAssets).length > 0) {
+      this.assetsLoaded = true;
+      this.loadCompassAssets();
+      this.loadShopIcon();
+      this.loadDialogueTexture();
+      this.loadAggroTexture();
+      this.loadQuestTextures();
+    }
 
     // Animate compass direction indicators + sparkles
     if (this.compassActiveExits.length > 0) {
