@@ -1,9 +1,7 @@
 package dev.ambon.engine.crafting
 
 import dev.ambon.config.CraftingConfig
-import dev.ambon.domain.crafting.CraftingSkill
 import dev.ambon.domain.crafting.CraftingSkillState
-import dev.ambon.domain.crafting.CraftingStationType
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.GatheringYield
 import dev.ambon.domain.crafting.MaterialRequirement
@@ -52,7 +50,7 @@ class CraftingSystemTest {
     private val copperSwordId = ItemId("test:copper_sword")
 
     private fun makePlayer(
-        skills: Map<CraftingSkill, CraftingSkillState> = emptyMap(),
+        skills: Map<String, CraftingSkillState> = emptyMap(),
         level: Int = 1,
     ): PlayerState {
         val p = PlayerState(
@@ -105,7 +103,7 @@ class CraftingSystemTest {
             id = "test:copper_vein",
             displayName = "a copper ore vein",
             keyword = "copper",
-            skill = CraftingSkill.MINING,
+            skill = "mining",
             skillRequired = 1,
             yields = listOf(GatheringYield(itemId = copperOreId, minQuantity = 1, maxQuantity = 1)),
             respawnSeconds = 60,
@@ -121,7 +119,7 @@ class CraftingSystemTest {
         @Test
         fun `gather succeeds with sufficient skill`() {
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.MINING to CraftingSkillState(level = 1, xp = 0L)),
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
             )
             val result = system.gather(player, "copper", roomId, items)
             assertTrue(result is Either.Right)
@@ -139,7 +137,7 @@ class CraftingSystemTest {
             gatheringRegistry.register(listOf(highNode))
 
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.MINING to CraftingSkillState(level = 1, xp = 0L)),
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
             )
             val result = system.gather(player, "copper", roomId, items)
             assertTrue(result is Either.Left)
@@ -151,7 +149,7 @@ class CraftingSystemTest {
         @Test
         fun `gather fails when node is depleted`() {
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.MINING to CraftingSkillState(level = 1, xp = 0L)),
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
             )
             // First gather succeeds
             val first = system.gather(player, "copper", roomId, items)
@@ -169,7 +167,7 @@ class CraftingSystemTest {
         @Test
         fun `gather fails on cooldown`() {
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.MINING to CraftingSkillState(level = 1, xp = 0L)),
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
             )
             system.gather(player, "copper", roomId, items)
 
@@ -190,7 +188,7 @@ class CraftingSystemTest {
         @Test
         fun `node respawns after timer`() {
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.MINING to CraftingSkillState(level = 1, xp = 0L)),
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
             )
             system.gather(player, "copper", roomId, items)
 
@@ -205,7 +203,7 @@ class CraftingSystemTest {
         @Test
         fun `gathering awards XP and can level up`() {
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.MINING to CraftingSkillState(level = 1, xp = 0L)),
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
             )
             // XP for level 1 = 50 * 1^1.5 = 50
             // We need 50 XP, each gather gives 10, so 5 gathers to level up
@@ -214,7 +212,7 @@ class CraftingSystemTest {
                 clock.advance(61_000L) // past cooldown + respawn
                 system.tickNodeRespawns()
             }
-            assertEquals(1, player.craftingSkills[CraftingSkill.MINING]?.level)
+            assertEquals(1, player.craftingSkills["mining"]?.level)
 
             // 5th gather should level up
             val result = system.gather(player, "copper", roomId, items)
@@ -222,7 +220,7 @@ class CraftingSystemTest {
             val r = (result as Either.Right).value
             assertTrue(r.leveledUp)
             assertEquals(2, r.newLevel)
-            assertEquals(2, player.craftingSkills[CraftingSkill.MINING]?.level)
+            assertEquals(2, player.craftingSkills["mining"]?.level)
         }
     }
 
@@ -231,13 +229,13 @@ class CraftingSystemTest {
         private val recipe = RecipeDef(
             id = "test:copper_sword",
             displayName = "Copper Sword",
-            skill = CraftingSkill.SMITHING,
+            skill = "smithing",
             skillRequired = 1,
             levelRequired = 1,
             materials = listOf(MaterialRequirement(itemId = copperOreId, quantity = 3)),
             outputItemId = copperSwordId,
             outputQuantity = 1,
-            stationType = CraftingStationType.FORGE,
+            stationType = "forge",
             stationBonus = 0,
             xpReward = 25,
         )
@@ -257,7 +255,7 @@ class CraftingSystemTest {
         @Test
         fun `craft succeeds with sufficient materials and skill`() {
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.SMITHING to CraftingSkillState(level = 1, xp = 0L)),
+                skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
             )
             giveCopper(3)
 
@@ -277,7 +275,7 @@ class CraftingSystemTest {
         @Test
         fun `craft fails with missing materials`() {
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.SMITHING to CraftingSkillState(level = 1, xp = 0L)),
+                skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
             )
             giveCopper(1) // need 3
 
@@ -294,7 +292,7 @@ class CraftingSystemTest {
         @Test
         fun `craft fails with insufficient skill`() {
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.SMITHING to CraftingSkillState(level = 1, xp = 0L)),
+                skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
             )
             giveCopper(3)
 
@@ -310,7 +308,7 @@ class CraftingSystemTest {
         @Test
         fun `craft fails with insufficient player level`() {
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.SMITHING to CraftingSkillState(level = 1, xp = 0L)),
+                skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
                 level = 1,
             )
             giveCopper(3)
@@ -327,13 +325,13 @@ class CraftingSystemTest {
         @Test
         fun `craft with station bonus gives extra output`() {
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.SMITHING to CraftingSkillState(level = 1, xp = 0L)),
+                skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
             )
             giveCopper(3)
 
             // config.stationBonusQuantity = 1, recipe.stationBonus = 0
             // So bonus should be config default (1) since recipe has 0
-            val result = system.craft(player, "copper sword", roomId, items, CraftingStationType.FORGE)
+            val result = system.craft(player, "copper sword", roomId, items, "forge")
             assertTrue(result is Either.Right)
             val r = (result as Either.Right).value
             assertTrue(r.stationBonusApplied)
@@ -344,11 +342,11 @@ class CraftingSystemTest {
         @Test
         fun `craft with wrong station type gives no bonus`() {
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.SMITHING to CraftingSkillState(level = 1, xp = 0L)),
+                skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
             )
             giveCopper(3)
 
-            val result = system.craft(player, "copper sword", roomId, items, CraftingStationType.ALCHEMY_TABLE)
+            val result = system.craft(player, "copper sword", roomId, items, "alchemy_table")
             assertTrue(result is Either.Right)
             val r = (result as Either.Right).value
             assertFalse(r.stationBonusApplied)
@@ -379,13 +377,13 @@ class CraftingSystemTest {
         @Test
         fun `skill level does not exceed maxSkillLevel`() {
             val player = makePlayer(
-                skills = mapOf(CraftingSkill.MINING to CraftingSkillState(level = 100, xp = 0L)),
+                skills = mapOf("mining" to CraftingSkillState(level = 100, xp = 0L)),
             )
             val node = GatheringNodeDef(
                 id = "test:copper_vein",
                 displayName = "a copper ore vein",
                 keyword = "copper",
-                skill = CraftingSkill.MINING,
+                skill = "mining",
                 skillRequired = 1,
                 yields = listOf(GatheringYield(itemId = copperOreId, minQuantity = 1, maxQuantity = 1)),
                 respawnSeconds = 60,
@@ -398,7 +396,7 @@ class CraftingSystemTest {
             assertTrue(result is Either.Right)
             val r = (result as Either.Right).value
             assertFalse(r.leveledUp) // Already at max
-            assertEquals(100, player.craftingSkills[CraftingSkill.MINING]?.level)
+            assertEquals(100, player.craftingSkills["mining"]?.level)
         }
     }
 
@@ -410,7 +408,7 @@ class CraftingSystemTest {
                 id = "test:copper_vein",
                 displayName = "a copper ore vein",
                 keyword = "copper",
-                skill = CraftingSkill.MINING,
+                skill = "mining",
                 skillRequired = 1,
                 yields = listOf(GatheringYield(itemId = copperOreId)),
                 roomId = roomId,
@@ -419,7 +417,7 @@ class CraftingSystemTest {
                 id = "test:iron_vein",
                 displayName = "an iron ore vein",
                 keyword = "iron",
-                skill = CraftingSkill.MINING,
+                skill = "mining",
                 skillRequired = 15,
                 yields = listOf(GatheringYield(itemId = ironOreId)),
                 roomId = roomId,
@@ -435,7 +433,7 @@ class CraftingSystemTest {
             val recipe = RecipeDef(
                 id = "test:copper_sword",
                 displayName = "Copper Sword",
-                skill = CraftingSkill.SMITHING,
+                skill = "smithing",
                 skillRequired = 1,
                 materials = listOf(MaterialRequirement(itemId = copperOreId, quantity = 3)),
                 outputItemId = copperSwordId,
@@ -452,7 +450,7 @@ class CraftingSystemTest {
             val smithRecipe = RecipeDef(
                 id = "test:copper_sword",
                 displayName = "Copper Sword",
-                skill = CraftingSkill.SMITHING,
+                skill = "smithing",
                 skillRequired = 1,
                 materials = listOf(MaterialRequirement(itemId = copperOreId, quantity = 3)),
                 outputItemId = copperSwordId,
@@ -460,16 +458,16 @@ class CraftingSystemTest {
             val alchRecipe = RecipeDef(
                 id = "test:potion",
                 displayName = "Potion",
-                skill = CraftingSkill.ALCHEMY,
+                skill = "alchemy",
                 skillRequired = 1,
                 materials = listOf(MaterialRequirement(itemId = copperOreId, quantity = 1)),
                 outputItemId = copperSwordId,
             )
             craftingRegistry.register(listOf(smithRecipe, alchRecipe))
 
-            assertEquals(1, craftingRegistry.recipesForSkill(CraftingSkill.SMITHING).size)
-            assertEquals(1, craftingRegistry.recipesForSkill(CraftingSkill.ALCHEMY).size)
-            assertEquals(0, craftingRegistry.recipesForSkill(CraftingSkill.MINING).size)
+            assertEquals(1, craftingRegistry.recipesForSkill("smithing").size)
+            assertEquals(1, craftingRegistry.recipesForSkill("alchemy").size)
+            assertEquals(0, craftingRegistry.recipesForSkill("mining").size)
         }
     }
 }

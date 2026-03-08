@@ -133,7 +133,7 @@ rooms:
     image: 7d86cd9f2f34a541a20a95a6a2b1c41204c6851f85a72f140dca78100389bbe4.jpg
     title: "The Forge"
     description: "A sweltering room dominated by a roaring forge. An anvil stands beside it, scarred with a thousand hammer marks. Racks of tongs and hammers hang within easy reach."
-    station: FORGE
+    station: forge
     exits:
       e: entrance
       n: alchemy_lab
@@ -142,7 +142,7 @@ rooms:
     image: bfe7d348c898c2b06a0290af91053ea971bbc070e2eeefa779141992676b176a.jpg
     title: "Alchemy Laboratory"
     description: "Glass vials and copper tubing cover every surface. A large alchemy table sits in the center, stained with colorful residues. Shelves hold jars of dried ingredients."
-    station: ALCHEMY_TABLE
+    station: alchemy_table
     exits:
       s: forge_room
 
@@ -157,7 +157,7 @@ gatheringNodes:
   copper_vein:
     displayName: "a copper ore vein"
     keyword: copper
-    skill: MINING
+    skill: mining
     skillRequired: 1
     yields:
       - itemId: copper_ore
@@ -169,7 +169,7 @@ gatheringNodes:
   iron_vein:
     displayName: "an iron ore vein"
     keyword: iron
-    skill: MINING
+    skill: mining
     skillRequired: 15
     yields:
       - itemId: iron_ore
@@ -181,7 +181,7 @@ gatheringNodes:
   wildflower_patch:
     displayName: "a wildflower patch"
     keyword: wildflower
-    skill: HERBALISM
+    skill: herbalism
     skillRequired: 1
     yields:
       - itemId: wildflower
@@ -193,7 +193,7 @@ gatheringNodes:
   healing_herbs:
     displayName: "a cluster of healing herbs"
     keyword: herb
-    skill: HERBALISM
+    skill: herbalism
     skillRequired: 15
     yields:
       - itemId: healing_herb
@@ -207,31 +207,31 @@ recipes:
   copper_sword:
     image: 3e23363fec440fda0b05cc2aa83cf2385fbf223e3ef3ddc78e89c0679057512b.png
     displayName: "Copper Sword"
-    skill: SMITHING
+    skill: smithing
     skillRequired: 1
     materials:
       - itemId: copper_ore
         quantity: 3
     outputItemId: copper_sword
-    station: FORGE
+    station: forge
     stationBonus: 0
     xpReward: 20
   copper_helm:
     image: 14e56d5b475012bd0bd781a27e0a614423bcb97f404cfaf17bdc81231921861a.png
     displayName: "Copper Helm"
-    skill: SMITHING
+    skill: smithing
     skillRequired: 5
     materials:
       - itemId: copper_ore
         quantity: 4
     outputItemId: copper_helm
-    station: FORGE
+    station: forge
     stationBonus: 0
     xpReward: 25
   iron_sword:
     image: 9bb81defa25c6f23b773d88c2c67926cb7fdfff0d32db92a3be0752fd5069dcc.png
     displayName: "Iron Sword"
-    skill: SMITHING
+    skill: smithing
     skillRequired: 20
     materials:
       - itemId: iron_ore
@@ -239,25 +239,25 @@ recipes:
       - itemId: copper_ore
         quantity: 1
     outputItemId: iron_sword
-    station: FORGE
+    station: forge
     stationBonus: 0
     xpReward: 50
   minor_healing_potion:
     image: 33d66c92a14b769e99dab845de705064555a3d2a83b3ed833e17170f3cd07ac8.png
     displayName: "Minor Healing Potion"
-    skill: ALCHEMY
+    skill: alchemy
     skillRequired: 1
     materials:
       - itemId: wildflower
         quantity: 2
     outputItemId: minor_healing_potion
-    station: ALCHEMY_TABLE
+    station: alchemy_table
     stationBonus: 1
     xpReward: 15
   strength_elixir:
     image: ee1bac0f90f24a721c7efc5b1d18232bbc6bc0048357eddd408e83677a60fbd9.png
     displayName: "Strength Elixir"
-    skill: ALCHEMY
+    skill: alchemy
     skillRequired: 20
     materials:
       - itemId: healing_herb
@@ -265,7 +265,7 @@ recipes:
       - itemId: wildflower
         quantity: 1
     outputItemId: strength_elixir
-    station: ALCHEMY_TABLE
+    station: alchemy_table
     stationBonus: 1
     xpReward: 45
 audio:

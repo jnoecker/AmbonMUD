@@ -1560,6 +1560,29 @@ ambonmud:
 
     characterCreation:
       startingGold: 0
+    equipment:
+      slots:
+        head:
+          displayName: HEAD
+          order: 0
+        neck:
+          displayName: NECK
+          order: 1
+        body:
+          displayName: BODY
+          order: 2
+        hands:
+          displayName: HANDS
+          order: 3
+        weapon:
+          displayName: WEAPON
+          order: 4
+        offhand:
+          displayName: OFFHAND
+          order: 5
+        feet:
+          displayName: FEET
+          order: 6
 
   progression:
     maxLevel: 50

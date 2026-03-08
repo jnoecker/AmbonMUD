@@ -449,6 +449,40 @@ data class MaterialConfigEntry(
     val quantity: Int = 1,
 )
 
+data class CraftingSkillConfig(
+    val displayName: String = "",
+    val type: String = "crafting",
+)
+
+data class CraftingSkillsConfig(
+    val skills: Map<String, CraftingSkillConfig> = defaultCraftingSkills(),
+) {
+    companion object {
+        fun defaultCraftingSkills(): Map<String, CraftingSkillConfig> = linkedMapOf(
+            "mining" to CraftingSkillConfig(displayName = "Mining", type = "gathering"),
+            "herbalism" to CraftingSkillConfig(displayName = "Herbalism", type = "gathering"),
+            "smithing" to CraftingSkillConfig(displayName = "Smithing", type = "crafting"),
+            "alchemy" to CraftingSkillConfig(displayName = "Alchemy", type = "crafting"),
+        )
+    }
+}
+
+data class CraftingStationTypeConfig(
+    val displayName: String = "",
+)
+
+data class CraftingStationTypesConfig(
+    val stationTypes: Map<String, CraftingStationTypeConfig> = defaultStationTypes(),
+) {
+    companion object {
+        fun defaultStationTypes(): Map<String, CraftingStationTypeConfig> = linkedMapOf(
+            "forge" to CraftingStationTypeConfig(displayName = "Forge"),
+            "alchemy_table" to CraftingStationTypeConfig(displayName = "Alchemy Table"),
+            "workbench" to CraftingStationTypeConfig(displayName = "Workbench"),
+        )
+    }
+}
+
 data class CharacterCreationConfig(
     val startingGold: Long = 0L,
 )
@@ -524,6 +558,8 @@ data class EngineConfig(
     val equipment: EquipmentConfig = EquipmentConfig(),
     val genders: GendersConfig = GendersConfig(),
     val achievementCategories: AchievementCategoriesConfig = AchievementCategoriesConfig(),
+    val craftingSkills: CraftingSkillsConfig = CraftingSkillsConfig(),
+    val craftingStationTypes: CraftingStationTypesConfig = CraftingStationTypesConfig(),
     val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),

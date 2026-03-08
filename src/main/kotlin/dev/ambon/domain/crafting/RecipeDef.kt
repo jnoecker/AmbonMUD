@@ -10,13 +10,13 @@ data class MaterialRequirement(
 data class RecipeDef(
     val id: String,
     val displayName: String,
-    val skill: CraftingSkill,
+    val skill: String,
     val skillRequired: Int = 1,
     val levelRequired: Int = 1,
     val materials: List<MaterialRequirement>,
     val outputItemId: ItemId,
     val outputQuantity: Int = 1,
-    val stationType: CraftingStationType? = null,
+    val stationType: String? = null,
     val stationBonus: Int = 0,
     val xpReward: Int = 25,
 )

@@ -1,6 +1,5 @@
 package dev.ambon.engine.crafting
 
-import dev.ambon.domain.crafting.CraftingSkill
 import dev.ambon.domain.crafting.RecipeDef
 import io.github.oshai.kotlinlogging.KotlinLogging
 
@@ -30,7 +29,7 @@ class CraftingRegistry {
 
     fun allRecipes(): Collection<RecipeDef> = recipesById.values
 
-    fun recipesForSkill(skill: CraftingSkill): List<RecipeDef> =
+    fun recipesForSkill(skill: String): List<RecipeDef> =
         recipesById.values.filter { it.skill == skill }
 
     fun clear() {
