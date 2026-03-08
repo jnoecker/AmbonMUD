@@ -1254,4 +1254,37 @@ class GmcpEmitterTest {
             val data = drainGmcp()[0]
             assertTrue(data.jsonData.contains("\"basePrice\":75"), "Expected basePrice in Char.Items.List. got=${data.jsonData}")
         }
+
+    @Test
+    fun `sendServerAssets emits resolved asset URLs`() =
+        runTest {
+            val e =
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, pkg -> pkg.startsWith("Server") },
+                    imagesBaseUrl = "https://cdn.example.com/img/",
+                    globalAssets = mapOf("compass_rose" to "global_assets/compass_rose.png"),
+                )
+            e.sendServerAssets(sid)
+            val data = drainGmcp()
+            assertEquals(1, data.size)
+            assertEquals("Server.Assets", data[0].gmcpPackage)
+            assertTrue(
+                data[0].jsonData.contains("https://cdn.example.com/img/global_assets/compass_rose.png"),
+                "Expected resolved URL. got=${data[0].jsonData}",
+            )
+        }
+
+    @Test
+    fun `sendServerAssets skips when no assets configured`() =
+        runTest {
+            val e =
+                GmcpEmitter(
+                    outbound = outbound,
+                    supportsPackage = { _, _ -> true },
+                    globalAssets = emptyMap(),
+                )
+            e.sendServerAssets(sid)
+            assertTrue(drainGmcp().isEmpty())
+        }
 }
