@@ -1,5 +1,6 @@
 import { useCallback, useRef } from "react";
 import { MAP_OFFSETS } from "../constants";
+import { gameStateRef } from "../canvas/GameStateBridge";
 import type { MapRoom } from "../types";
 
 const BG_COLOR = "#141828";
@@ -218,12 +219,12 @@ export function useMiniMap() {
   // Pre-load the fog-of-war icon and map background
   if (fogImageRef.current == null) {
     const img = new Image();
-    img.src = "/images/global_assets/minimap-unexplored.png";
+    img.src = gameStateRef.current.serverAssets["minimap_unexplored"] ?? "/images/global_assets/minimap-unexplored.png";
     fogImageRef.current = img;
   }
   if (bgImageRef.current == null) {
     const img = new Image();
-    img.src = "/images/global_assets/map_background.png";
+    img.src = gameStateRef.current.serverAssets["map_background"] ?? "/images/global_assets/map_background.png";
     bgImageRef.current = img;
   }
 

@@ -1271,7 +1271,25 @@ data class ShardingConfig(
 
 data class ImagesConfig(
     val baseUrl: String = "/images/",
-)
+    val globalAssets: Map<String, String> = DEFAULT_GLOBAL_ASSETS,
+) {
+    companion object {
+        val DEFAULT_GLOBAL_ASSETS: Map<String, String> = linkedMapOf(
+            "compass_rose" to "global_assets/compass_rose.png",
+            "direction_marker" to "global_assets/direction_marker.png",
+            "stairs_up" to "global_assets/stairs_up.png",
+            "stairs_down" to "global_assets/stairs_down.png",
+            "video_available_indicator" to "global_assets/video_available_indicator.png",
+            "shop_kiosk" to "global_assets/shop_kiosk.png",
+            "dialog_indicator" to "global_assets/dialog_indicator.png",
+            "aggro_indicator" to "global_assets/aggro_indicator.png",
+            "quest_available_indicator" to "global_assets/quest_available_indicator.png",
+            "quest_complete_indicator" to "global_assets/quest_complete_indicator.png",
+            "minimap_unexplored" to "global_assets/minimap-unexplored.png",
+            "map_background" to "global_assets/map_background.png",
+        )
+    }
+}
 
 data class VideosConfig(
     val baseUrl: String = "/videos/",

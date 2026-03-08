@@ -129,6 +129,7 @@ class GameEngine(
     raceRegistryOverride: RaceRegistry? = null,
     statRegistryOverride: StatRegistry? = null,
     imagesBaseUrl: String = "/images/",
+    globalAssets: Map<String, String> = emptyMap(),
 ) {
     // Convenience delegates — expose grouped context fields as flat names so the
     // existing class body compiles without modification.
@@ -415,6 +416,7 @@ class GameEngine(
             equipmentSlotRegistry = equipmentSlotRegistry,
             genderRegistry = genderRegistry,
             imagesBaseUrl = imagesBaseUrl,
+            globalAssets = globalAssets,
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
