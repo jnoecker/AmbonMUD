@@ -108,7 +108,7 @@ class PersistenceFieldCoverageTest {
                     ItemInstance(ItemId("test:potion"), Item(keyword = "potion", displayName = "a healing potion")),
                 ),
                 equippedItems = mapOf(
-                    "HAND" to ItemInstance(
+                    "hand" to ItemInstance(
                         ItemId("test:sword"),
                         Item(keyword = "sword", displayName = "a short sword", slot = ItemSlot.HAND),
                     ),
