@@ -9,7 +9,6 @@ import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
-import dev.ambon.engine.status.EffectType
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 import java.time.Clock
@@ -319,7 +318,7 @@ class CombatSystem(
             }
 
             // STUN check
-            val stunned = statusEffects?.hasPlayerEffect(sessionId, EffectType.STUN) == true
+            val stunned = statusEffects?.hasPlayerEffect(sessionId, "stun") == true
             if (!stunned) {
                 val playerStats = resolvePlayerStats(player, items, statusEffects)
                 val playerAttack = playerBonuses.attack

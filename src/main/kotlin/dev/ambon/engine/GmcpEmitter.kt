@@ -240,7 +240,7 @@ class GmcpEmitter(
                     cooldownMs = a.cooldownMs,
                     cooldownRemainingMs = cooldownRemainingMs(a.id).coerceAtLeast(0L),
                     levelRequired = a.levelRequired,
-                    targetType = a.targetType.name,
+                    targetType = a.targetType,
                     classRestriction = a.requiredClass,
                     image = a.image,
                 )

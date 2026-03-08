@@ -10,8 +10,6 @@ import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
-import dev.ambon.engine.status.EffectType
-import dev.ambon.engine.status.StackBehavior
 import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectId
 import dev.ambon.engine.status.StatusEffectRegistry
@@ -50,7 +48,7 @@ class AbilitySystemTest {
                 manaCost = 8,
                 cooldownMs = 0,
                 levelRequired = 1,
-                targetType = TargetType.ENEMY,
+                targetType = "enemy",
                 effect = AbilityEffect.DirectDamage(damage = DamageRange(5, 5)),
             ),
         )
@@ -62,7 +60,7 @@ class AbilitySystemTest {
                 manaCost = 10,
                 cooldownMs = 5000,
                 levelRequired = 1,
-                targetType = TargetType.SELF,
+                targetType = "self",
                 effect = AbilityEffect.DirectHeal(minHeal = 5, maxHeal = 5),
             ),
         )
@@ -74,7 +72,7 @@ class AbilitySystemTest {
                 manaCost = 15,
                 cooldownMs = 3000,
                 levelRequired = 5,
-                targetType = TargetType.ENEMY,
+                targetType = "enemy",
                 effect = AbilityEffect.DirectDamage(damage = DamageRange(10, 10)),
             ),
         )
@@ -331,7 +329,7 @@ class AbilitySystemTest {
 
             assertTrue(player.mana < 30, "Mana should be deducted")
             assertTrue(
-                h.statusEffects.hasMobEffect(mob.id, EffectType.DOT),
+                h.statusEffects.hasMobEffect(mob.id, "dot"),
                 "DOT should be applied to mob",
             )
         }
@@ -351,7 +349,7 @@ class AbilitySystemTest {
 
             assertTrue(player.mana < 30, "Mana should be deducted")
             assertTrue(
-                h.statusEffects.hasPlayerEffect(sid, EffectType.SHIELD),
+                h.statusEffects.hasPlayerEffect(sid, "shield"),
                 "SHIELD should be applied to player",
             )
         }
@@ -410,7 +408,7 @@ class AbilitySystemTest {
                 manaCost = 25,
                 cooldownMs = 0,
                 levelRequired = 5,
-                targetType = TargetType.ENEMY,
+                targetType = "enemy",
                 effect = AbilityEffect.AreaDamage(damage = DamageRange(3, 7)),
             ),
         )
@@ -422,7 +420,7 @@ class AbilitySystemTest {
                 manaCost = 5,
                 cooldownMs = 0,
                 levelRequired = 1,
-                targetType = TargetType.ENEMY,
+                targetType = "enemy",
                 effect = AbilityEffect.Taunt(flatThreat = 50.0, margin = 10.0),
             ),
         )
@@ -449,7 +447,7 @@ class AbilitySystemTest {
             StatusEffectDefinition(
                 id = StatusEffectId("ignite"),
                 displayName = "Ignite",
-                effectType = EffectType.DOT,
+                effectType = "dot",
                 durationMs = 6000,
                 tickIntervalMs = 2000,
                 tickMinValue = 5,
@@ -460,10 +458,10 @@ class AbilitySystemTest {
             StatusEffectDefinition(
                 id = StatusEffectId("shield"),
                 displayName = "Shield",
-                effectType = EffectType.SHIELD,
+                effectType = "shield",
                 durationMs = 30000,
                 shieldAmount = 20,
-                stackBehavior = StackBehavior.NONE,
+                stackBehavior = "none",
             ),
         )
         val statusEffects =
@@ -485,7 +483,7 @@ class AbilitySystemTest {
                 manaCost = 12,
                 cooldownMs = 0,
                 levelRequired = 1,
-                targetType = TargetType.ENEMY,
+                targetType = "enemy",
                 effect = AbilityEffect.ApplyStatus(StatusEffectId("ignite")),
             ),
         )
@@ -497,7 +495,7 @@ class AbilitySystemTest {
                 manaCost = 15,
                 cooldownMs = 0,
                 levelRequired = 1,
-                targetType = TargetType.SELF,
+                targetType = "self",
                 effect = AbilityEffect.ApplyStatus(StatusEffectId("shield")),
             ),
         )

@@ -52,7 +52,6 @@ import dev.ambon.engine.events.PhaseEventHandler
 import dev.ambon.engine.events.SessionEventHandler
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
-import dev.ambon.engine.status.EffectType
 import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.engine.status.StatusEffectRegistryLoader
 import dev.ambon.engine.status.StatusEffectSystem
@@ -643,7 +642,7 @@ class GameEngine(
             outbound = outbound,
             clock = clock,
             isMobInCombat = { mobId -> combatSystem.isMobInCombat(mobId) },
-            isMobRooted = { mobId -> statusEffectSystem.hasMobEffect(mobId, EffectType.ROOT) },
+            isMobRooted = { mobId -> statusEffectSystem.hasMobEffect(mobId, "root") },
             startMobCombat = { mobId, sessionId -> combatSystem.startMobCombat(mobId, sessionId) },
             fleeMob = { mobId -> combatSystem.fleeMob(mobId) },
             gmcpEmitter = gmcpEmitter,

@@ -65,7 +65,7 @@ class StatusEffectSystem(
     ): Boolean {
         val existing = list.filter { it.definitionId == def.id }
         when (def.stackBehavior) {
-            StackBehavior.REFRESH -> {
+            "refresh" -> {
                 val active = existing.firstOrNull()
                 if (active != null) {
                     active.expiresAtMs = now + def.durationMs
@@ -73,7 +73,7 @@ class StatusEffectSystem(
                     return true
                 }
             }
-            StackBehavior.STACK -> {
+            "stack" -> {
                 if (existing.size >= def.maxStacks) {
                     // Refresh the oldest stack's duration instead of adding a new one
                     val oldest = existing.minByOrNull { it.appliedAtMs }
@@ -81,7 +81,7 @@ class StatusEffectSystem(
                     return true
                 }
             }
-            StackBehavior.NONE -> {
+            "none" -> {
                 if (existing.isNotEmpty()) return false
             }
         }
@@ -155,7 +155,7 @@ class StatusEffectSystem(
             },
             onActive = { sessionId, player, effect, def ->
                 // Depleted shields — remove immediately
-                if (def.effectType == EffectType.SHIELD && effect.shieldRemaining <= 0) {
+                if (def.effectType == "shield" && effect.shieldRemaining <= 0) {
                     outbound.send(OutboundEvent.SendText(sessionId, "${def.displayName} shatters!"))
                     dirtyNotifier.playerStatusDirty(sessionId)
                     return@tickEffects true
@@ -165,7 +165,7 @@ class StatusEffectSystem(
                     effect.lastTickAtMs = nowMs
                     val value = rollRange(rng, def.tickMinValue, def.tickMaxValue)
                     when (def.effectType) {
-                        EffectType.DOT -> {
+                        "dot" -> {
                             player.takeDamage(value)
                             dirtyNotifier.playerVitalsDirty(sessionId)
                             outbound.send(
@@ -184,7 +184,7 @@ class StatusEffectSystem(
                                 ),
                             )
                         }
-                        EffectType.HOT -> {
+                        "hot" -> {
                             val healed = applyHeal(sessionId, player, value, dirtyNotifier)
                             if (healed > 0) {
                                 outbound.send(
@@ -218,7 +218,7 @@ class StatusEffectSystem(
             resolve = { mobs.get(it) },
             onExpired = { _, _ -> },
             onActive = { mobId, mob, effect, def ->
-                if (def.effectType == EffectType.DOT &&
+                if (def.effectType == "dot" &&
                     def.tickIntervalMs > 0 &&
                     nowMs - effect.lastTickAtMs >= def.tickIntervalMs
                 ) {
@@ -254,12 +254,12 @@ class StatusEffectSystem(
 
     fun hasPlayerEffect(
         sessionId: SessionId,
-        effectType: EffectType,
+        effectType: String,
     ): Boolean = playerEffects[sessionId]?.any { registry.get(it.definitionId)?.effectType == effectType } == true
 
     fun hasMobEffect(
         mobId: MobId,
-        effectType: EffectType,
+        effectType: String,
     ): Boolean = mobEffects[mobId]?.any { registry.get(it.definitionId)?.effectType == effectType } == true
 
     fun getPlayerStatMods(sessionId: SessionId): StatMap = computeStatMods(playerEffects[sessionId])
@@ -271,7 +271,7 @@ class StatusEffectSystem(
         var result = StatMap.EMPTY
         for (effect in activeEffects) {
             val def = registry.get(effect.definitionId) ?: continue
-            if (def.effectType == EffectType.STAT_BUFF || def.effectType == EffectType.STAT_DEBUFF) {
+            if (def.effectType == "stat_buff" || def.effectType == "stat_debuff") {
                 result = result + def.statMods
             }
         }
@@ -291,7 +291,7 @@ class StatusEffectSystem(
         for (effect in effects) {
             if (remaining <= 0) break
             val def = registry.get(effect.definitionId) ?: continue
-            if (def.effectType != EffectType.SHIELD) continue
+            if (def.effectType != "shield") continue
             val absorbed = remaining.coerceAtMost(effect.shieldRemaining)
             effect.shieldRemaining -= absorbed
             remaining -= absorbed
@@ -315,7 +315,7 @@ class StatusEffectSystem(
                 ActiveEffectSnapshot(
                     id = def.id.value,
                     name = def.displayName,
-                    type = def.effectType.name,
+                    type = def.effectType,
                     remainingMs = (effect.expiresAtMs - now).coerceAtLeast(0),
                     stacks = countStacks(list, def.id),
                 )

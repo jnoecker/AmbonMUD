@@ -89,18 +89,11 @@ class AbilitySystem(
         }
 
         // 4. Resolve target and apply
-        when (ability.targetType) {
-            TargetType.ENEMY -> {
-                return handleEnemyCast(sessionId, player, ability, targetKeyword, now)
-            }
-
-            TargetType.SELF -> {
-                return handleSelfCast(sessionId, player, ability, now)
-            }
-
-            TargetType.ALLY -> {
-                return handleAllyCast(sessionId, player, ability, targetKeyword, now)
-            }
+        return when (ability.targetType) {
+            "enemy" -> handleEnemyCast(sessionId, player, ability, targetKeyword, now)
+            "self" -> handleSelfCast(sessionId, player, ability, now)
+            "ally" -> handleAllyCast(sessionId, player, ability, targetKeyword, now)
+            else -> "Unknown target type '${ability.targetType}'."
         }
     }
 
