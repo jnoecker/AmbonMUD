@@ -50,6 +50,7 @@ export class Minimap {
   private thumbMasks = new Map<string, Graphics>();
   private loadingImages = new Set<string>();
   private fogTexture: Texture | null = null;
+  private fogAssetLoaded = false;
 
   // Click navigation
   private clickAreas: Array<{ roomId: string; area: Graphics }> = [];
@@ -102,6 +103,12 @@ export class Minimap {
 
   updateRoom(roomId: string | null, exits: Record<string, string>, title: string, image: string | null) {
     if (!roomId) return;
+
+    // Reload fog texture once Server.Assets GMCP arrives
+    if (!this.fogAssetLoaded && Object.keys(gameStateRef.current.serverAssets).length > 0) {
+      this.fogAssetLoaded = true;
+      this.loadFogTexture();
+    }
 
     const key = `${roomId}:${JSON.stringify(exits)}:${image ?? ""}`;
     if (key === this.lastKey) return;
