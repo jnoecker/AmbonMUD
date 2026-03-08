@@ -1,6 +1,5 @@
 package dev.ambon.engine.commands
 
-import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.Direction
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -80,14 +79,14 @@ class CommandParserTest {
         assertEquals(Command.Equipment, CommandParser.parse("eq"))
         assertEquals(Command.Wear("sword"), CommandParser.parse("wear sword"))
         assertEquals(Command.Wear("sword"), CommandParser.parse("equip sword"))
-        assertEquals(Command.Remove(ItemSlot.HEAD), CommandParser.parse("remove head"))
-        assertEquals(Command.Remove(ItemSlot.BODY), CommandParser.parse("unequip body"))
+        assertEquals(Command.Remove("head"), CommandParser.parse("remove head"))
+        assertEquals(Command.Remove("body"), CommandParser.parse("unequip body"))
     }
 
     @Test
     fun `remove validates slot names`() {
         assertTrue(CommandParser.parse("remove") is Command.Invalid)
-        assertTrue(CommandParser.parse("remove feet") is Command.Invalid)
+        assertEquals(Command.Remove("feet"), CommandParser.parse("remove feet"))
     }
 
     @Test

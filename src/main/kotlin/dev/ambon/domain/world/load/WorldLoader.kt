@@ -886,7 +886,7 @@ object WorldLoader {
     ): ItemSlot =
         ItemSlot.parse(raw)
             ?: throw WorldLoadException(
-                "Item '${itemId.value}' has invalid slot '$raw' (expected: head, body, hand)",
+                "Item '${itemId.value}' has invalid slot '$raw' (slot must be non-empty)",
             )
 
     private fun parseDirectionOrNull(s: String): Direction? =

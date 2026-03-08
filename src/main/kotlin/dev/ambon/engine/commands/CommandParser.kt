@@ -1,6 +1,5 @@
 package dev.ambon.engine.commands
 
-import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.Direction
 
 sealed interface Command {
@@ -82,7 +81,7 @@ sealed interface Command {
     ) : Command
 
     data class Remove(
-        val slot: ItemSlot,
+        val slot: String,
     ) : Command
 
     data class Kill(
@@ -430,14 +429,7 @@ object CommandParser {
         requiredArg(line, listOf("wear", "equip"), "wear <item>", { Command.Wear(it) })?.let { return it }
 
         // remove/unequip
-        matchPrefix(line, listOf("remove", "unequip")) { rest ->
-            val token = rest.trim()
-            if (token.isEmpty()) {
-                return@matchPrefix Command.Invalid(line, "remove <head|body|hand>")
-            }
-            val slot = ItemSlot.parse(token)
-            if (slot == null) Command.Invalid(line, "remove <head|body|hand>") else Command.Remove(slot)
-        }?.let { return it }
+        requiredArg(line, listOf("remove", "unequip"), "remove <slot>", { Command.Remove(it.trim().lowercase()) })?.let { return it }
 
         // get/take — supports "get <item>" and "get <item> from <container>"
         matchPrefix(line, listOf("get", "take", "pickup", "pick up", "pick")) { rest ->
