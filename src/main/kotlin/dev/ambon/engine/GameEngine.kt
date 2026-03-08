@@ -130,6 +130,8 @@ class GameEngine(
     statRegistryOverride: StatRegistry? = null,
     imagesBaseUrl: String = "/images/",
     globalAssets: Map<String, String> = emptyMap(),
+    spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
+    staffSpriteTier: Int = 60,
 ) {
     // Convenience delegates — expose grouped context fields as flat names so the
     // existing class body compiles without modification.
@@ -417,6 +419,8 @@ class GameEngine(
             genderRegistry = genderRegistry,
             imagesBaseUrl = imagesBaseUrl,
             globalAssets = globalAssets,
+            spriteLevelTiers = spriteLevelTiers,
+            staffSpriteTier = staffSpriteTier,
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
