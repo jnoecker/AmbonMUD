@@ -405,7 +405,7 @@ class YamlPlayerRepositoryTest {
 
             val updated = r.copy(
                 inventoryItems = listOf(potion),
-                equippedItems = mapOf("HAND" to sword),
+                equippedItems = mapOf("hand" to sword),
             )
             repo.save(updated)
 
@@ -414,7 +414,7 @@ class YamlPlayerRepositoryTest {
             assertEquals("potion", loaded.inventoryItems[0].item.keyword)
             assertEquals(ItemId("test:potion"), loaded.inventoryItems[0].id)
             assertEquals(1, loaded.equippedItems.size)
-            assertEquals("sword", loaded.equippedItems["HAND"]?.item?.keyword)
-            assertEquals(ItemId("test:sword"), loaded.equippedItems["HAND"]?.id)
+            assertEquals("sword", loaded.equippedItems["hand"]?.item?.keyword)
+            assertEquals(ItemId("test:sword"), loaded.equippedItems["hand"]?.id)
         }
 }

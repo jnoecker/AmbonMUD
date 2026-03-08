@@ -3,6 +3,7 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
+import dev.ambon.engine.EquipmentSlotRegistry
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.abilities.AbilitySystem
@@ -29,6 +30,7 @@ class ItemHandler(
     private val combat = ctx.combat
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
+    private val equipSlots: EquipmentSlotRegistry? = ctx.equipmentSlotRegistry
 
     override fun register(router: CommandRouter) {
         router.on<Command.Inventory> { sid, _ -> handleInventory(sid) }
@@ -59,11 +61,11 @@ class ItemHandler(
             if (equipped.isEmpty()) {
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You are wearing: nothing"))
             } else {
+                val slots = equipSlots?.allSlots() ?: equipped.keys.toList()
                 val line =
-                    ItemSlot.entries.joinToString(", ") { slot ->
-                        val name = slot.label()
+                    slots.joinToString(", ") { slot ->
                         val item = equipped[slot]?.item?.displayName ?: "none"
-                        "$name: $item"
+                        "${slot.label()}: $item"
                     }
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You are wearing: $line"))
             }
@@ -104,8 +106,14 @@ class ItemHandler(
         sessionId: SessionId,
         cmd: Command.Remove,
     ) {
+        val slot = ItemSlot.parse(cmd.slot)
+        if (slot == null || (equipSlots != null && !equipSlots.isValid(slot))) {
+            val validSlots = equipSlots?.slotNames()?.joinToString("|") ?: "head|body|hand"
+            outbound.send(OutboundEvent.SendError(sessionId, "remove <$validSlots>"))
+            return
+        }
         players.withPlayer(sessionId) { me ->
-            when (val result = items.unequip(me.sessionId, cmd.slot)) {
+            when (val result = items.unequip(me.sessionId, slot)) {
                 is ItemRegistry.UnequipResult.Unequipped -> {
                     outbound.send(
                         OutboundEvent.SendInfo(

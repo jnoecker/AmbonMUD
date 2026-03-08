@@ -36,6 +36,7 @@ class GmcpEmitter(
     private val isInCombat: (SessionId) -> Boolean = { false },
     private val getCombatTarget: (SessionId) -> CombatTargetInfo? = { null },
     private val statRegistry: StatRegistry? = null,
+    private val equipmentSlotRegistry: EquipmentSlotRegistry? = null,
     imagesBaseUrl: String = "/images/",
 ) {
     private val json = jacksonObjectMapper()
@@ -113,7 +114,7 @@ class GmcpEmitter(
             "Char.Items.List",
             CharItemsListPayload(
                 inventory = inventory.map { toItemPayload(it) },
-                equipment = ItemSlot.entries.associate { slot -> slot.label() to equipment[slot]?.let { toItemPayload(it) } },
+                equipment = equipmentSlotMap(equipment),
             ),
         )
     }
@@ -802,6 +803,11 @@ class GmcpEmitter(
     }
 
     // ---------- private helpers ----------
+
+    private fun equipmentSlotMap(equipment: Map<ItemSlot, ItemInstance>): Map<String, ItemPayload?> {
+        val slots = equipmentSlotRegistry?.allSlots() ?: equipment.keys.toList()
+        return slots.associate { slot -> slot.label() to equipment[slot]?.let { toItemPayload(it) } }
+    }
 
     private fun toItemPayload(item: ItemInstance) =
         ItemPayload(
