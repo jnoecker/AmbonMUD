@@ -5,8 +5,6 @@ import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
-import dev.ambon.domain.quest.CompletionType
-import dev.ambon.domain.quest.ObjectiveType
 import dev.ambon.domain.quest.QuestDef
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
@@ -40,14 +38,14 @@ class QuestSystemTest {
             objectives =
                 listOf(
                     QuestObjectiveDef(
-                        type = ObjectiveType.KILL,
+                        type = "kill",
                         targetId = mobTemplateKey,
                         count = 3,
                         description = "Kill 3 target mobs",
                     ),
                 ),
             rewards = QuestRewards(xp = 100L, gold = 20L),
-            completionType = CompletionType.AUTO,
+            completionType = "auto",
         )
 
     private fun setup(): Triple<QuestSystem, PlayerRegistry, LocalOutboundBus> {
@@ -249,14 +247,14 @@ class QuestSystemTest {
                     objectives =
                         listOf(
                             QuestObjectiveDef(
-                                type = ObjectiveType.COLLECT,
+                                type = "collect",
                                 targetId = collectItemId,
                                 count = 2,
                                 description = "Collect 2 shiny rocks",
                             ),
                         ),
                     rewards = QuestRewards(xp = 50L, gold = 10L),
-                    completionType = CompletionType.AUTO,
+                    completionType = "auto",
                 )
             registry.register(collectQuest)
             val qs =
@@ -299,14 +297,14 @@ class QuestSystemTest {
                     objectives =
                         listOf(
                             QuestObjectiveDef(
-                                type = ObjectiveType.KILL,
+                                type = "kill",
                                 targetId = mobTemplateKey,
                                 count = 1,
                                 description = "Kill 1 target mob",
                             ),
                         ),
                     rewards = QuestRewards(xp = 50L),
-                    completionType = CompletionType.AUTO,
+                    completionType = "auto",
                 )
             registry.register(secondQuest)
             val items = ItemRegistry()

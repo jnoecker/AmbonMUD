@@ -3,9 +3,7 @@ package dev.ambon.engine
 import dev.ambon.bus.OutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
-import dev.ambon.domain.quest.CompletionType
 import dev.ambon.domain.quest.ObjectiveProgress
-import dev.ambon.domain.quest.ObjectiveType
 import dev.ambon.domain.quest.QuestDef
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
@@ -58,7 +56,7 @@ class QuestSystem(
         val ps = players.get(sessionId) ?: return emptySet()
         return mobIds.filterTo(mutableSetOf()) { mobId ->
             registry.questsForMob(mobId).any { quest ->
-                quest.completionType == CompletionType.NPC_TURN_IN &&
+                quest.completionType == "npc_turn_in" &&
                     ps.activeQuests[quest.id]?.objectives?.all { it.isComplete } == true
             }
         }
@@ -118,7 +116,7 @@ class QuestSystem(
         templateKey: String,
     ) {
         advanceObjectives(sessionId) { objDef, prog ->
-            if (objDef.type != ObjectiveType.KILL) return@advanceObjectives null
+            if (objDef.type != "kill") return@advanceObjectives null
             if (objDef.targetId != templateKey) return@advanceObjectives null
             prog.copy(current = prog.current + 1)
         }
@@ -132,7 +130,7 @@ class QuestSystem(
         item: ItemInstance,
     ) {
         advanceObjectives(sessionId) { objDef, prog ->
-            if (objDef.type != ObjectiveType.COLLECT) return@advanceObjectives null
+            if (objDef.type != "collect") return@advanceObjectives null
             val targetIdRaw = objDef.targetId
             val itemId = item.id.value
             if (itemId != targetIdRaw && !itemId.endsWith(":${targetIdRaw.substringAfterLast(':')}")) return@advanceObjectives null
@@ -239,7 +237,7 @@ class QuestSystem(
     ) {
         for ((questId, state) in activeQuests) {
             val quest = registry.get(questId) ?: continue
-            if (quest.completionType != CompletionType.AUTO) continue
+            if (quest.completionType != "auto") continue
             if (state.objectives.all { it.isComplete }) {
                 completeQuest(sessionId, questId, quest.rewards)
             }
