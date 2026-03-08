@@ -1,6 +1,7 @@
 package dev.ambon.engine.status
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.config.EffectTypesConfig
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.SessionId
@@ -25,6 +26,7 @@ class StatusEffectSystem(
     private val clock: Clock,
     private val rng: Random = Random(),
     private val dirtyNotifier: DirtyNotifier = DirtyNotifier.NO_OP,
+    private val effectTypes: EffectTypesConfig = EffectTypesConfig(),
 ) : GameSystem {
     /** Callback for combat events (DOT/HOT ticks); wired by GameEngine after construction. */
     var onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> }
@@ -154,8 +156,9 @@ class StatusEffectSystem(
                 dirtyNotifier.playerStatusDirty(sessionId)
             },
             onActive = { sessionId, player, effect, def ->
+                val typeConfig = effectTypes.get(def.effectType)
                 // Depleted shields — remove immediately
-                if (def.effectType == "shield" && effect.shieldRemaining <= 0) {
+                if (typeConfig?.absorbsDamage == true && effect.shieldRemaining <= 0) {
                     outbound.send(OutboundEvent.SendText(sessionId, "${def.displayName} shatters!"))
                     dirtyNotifier.playerStatusDirty(sessionId)
                     return@tickEffects true
@@ -164,46 +167,42 @@ class StatusEffectSystem(
                 if (def.tickIntervalMs > 0 && nowMs - effect.lastTickAtMs >= def.tickIntervalMs) {
                     effect.lastTickAtMs = nowMs
                     val value = rollRange(rng, def.tickMinValue, def.tickMaxValue)
-                    when (def.effectType) {
-                        "dot" -> {
-                            player.takeDamage(value)
-                            dirtyNotifier.playerVitalsDirty(sessionId)
+                    if (typeConfig?.ticksDamage == true) {
+                        player.takeDamage(value)
+                        dirtyNotifier.playerVitalsDirty(sessionId)
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                sessionId,
+                                "${def.displayName} burns you for $value damage.",
+                            ),
+                        )
+                        onCombatEvent(
+                            sessionId,
+                            CombatEvent.DotTick(
+                                effectName = def.displayName,
+                                targetName = player.name,
+                                targetId = null,
+                                damage = value,
+                            ),
+                        )
+                    } else if (typeConfig?.ticksHealing == true) {
+                        val healed = applyHeal(sessionId, player, value, dirtyNotifier)
+                        if (healed > 0) {
                             outbound.send(
                                 OutboundEvent.SendText(
                                     sessionId,
-                                    "${def.displayName} burns you for $value damage.",
+                                    "${def.displayName} heals you for $healed HP.",
                                 ),
                             )
                             onCombatEvent(
                                 sessionId,
-                                CombatEvent.DotTick(
+                                CombatEvent.HotTick(
                                     effectName = def.displayName,
                                     targetName = player.name,
-                                    targetId = null,
-                                    damage = value,
+                                    amount = healed,
                                 ),
                             )
                         }
-                        "hot" -> {
-                            val healed = applyHeal(sessionId, player, value, dirtyNotifier)
-                            if (healed > 0) {
-                                outbound.send(
-                                    OutboundEvent.SendText(
-                                        sessionId,
-                                        "${def.displayName} heals you for $healed HP.",
-                                    ),
-                                )
-                                onCombatEvent(
-                                    sessionId,
-                                    CombatEvent.HotTick(
-                                        effectName = def.displayName,
-                                        targetName = player.name,
-                                        amount = healed,
-                                    ),
-                                )
-                            }
-                        }
-                        else -> {}
                     }
                 }
                 false // keep the effect
@@ -218,7 +217,8 @@ class StatusEffectSystem(
             resolve = { mobs.get(it) },
             onExpired = { _, _ -> },
             onActive = { mobId, mob, effect, def ->
-                if (def.effectType == "dot" &&
+                val typeConfig = effectTypes.get(def.effectType)
+                if (typeConfig?.ticksDamage == true &&
                     def.tickIntervalMs > 0 &&
                     nowMs - effect.lastTickAtMs >= def.tickIntervalMs
                 ) {
@@ -271,7 +271,7 @@ class StatusEffectSystem(
         var result = StatMap.EMPTY
         for (effect in activeEffects) {
             val def = registry.get(effect.definitionId) ?: continue
-            if (def.effectType == "stat_buff" || def.effectType == "stat_debuff") {
+            if (effectTypes.get(def.effectType)?.modifiesStats == true) {
                 result = result + def.statMods
             }
         }
@@ -291,7 +291,7 @@ class StatusEffectSystem(
         for (effect in effects) {
             if (remaining <= 0) break
             val def = registry.get(effect.definitionId) ?: continue
-            if (def.effectType != "shield") continue
+            if (effectTypes.get(def.effectType)?.absorbsDamage != true) continue
             val absorbed = remaining.coerceAtMost(effect.shieldRemaining)
             effect.shieldRemaining -= absorbed
             remaining -= absorbed
