@@ -449,6 +449,40 @@ data class MaterialConfigEntry(
     val quantity: Int = 1,
 )
 
+data class CraftingSkillConfig(
+    val displayName: String = "",
+    val type: String = "crafting",
+)
+
+data class CraftingSkillsConfig(
+    val skills: Map<String, CraftingSkillConfig> = defaultCraftingSkills(),
+) {
+    companion object {
+        fun defaultCraftingSkills(): Map<String, CraftingSkillConfig> = linkedMapOf(
+            "mining" to CraftingSkillConfig(displayName = "Mining", type = "gathering"),
+            "herbalism" to CraftingSkillConfig(displayName = "Herbalism", type = "gathering"),
+            "smithing" to CraftingSkillConfig(displayName = "Smithing", type = "crafting"),
+            "alchemy" to CraftingSkillConfig(displayName = "Alchemy", type = "crafting"),
+        )
+    }
+}
+
+data class CraftingStationTypeConfig(
+    val displayName: String = "",
+)
+
+data class CraftingStationTypesConfig(
+    val stationTypes: Map<String, CraftingStationTypeConfig> = defaultStationTypes(),
+) {
+    companion object {
+        fun defaultStationTypes(): Map<String, CraftingStationTypeConfig> = linkedMapOf(
+            "forge" to CraftingStationTypeConfig(displayName = "Forge"),
+            "alchemy_table" to CraftingStationTypeConfig(displayName = "Alchemy Table"),
+            "workbench" to CraftingStationTypeConfig(displayName = "Workbench"),
+        )
+    }
+}
+
 data class CharacterCreationConfig(
     val startingGold: Long = 0L,
 )
@@ -470,6 +504,170 @@ data class EquipmentConfig(
     }
 }
 
+data class GenderConfig(
+    val displayName: String = "",
+    val spriteCode: String = "",
+)
+
+data class GendersConfig(
+    val genders: Map<String, GenderConfig> = defaultGenders(),
+) {
+    companion object {
+        fun defaultGenders(): Map<String, GenderConfig> = linkedMapOf(
+            "male" to GenderConfig(displayName = "Male", spriteCode = "male"),
+            "female" to GenderConfig(displayName = "Female", spriteCode = "female"),
+            "enby" to GenderConfig(displayName = "Enby", spriteCode = "enby"),
+        )
+    }
+}
+
+data class AchievementCategoryConfig(
+    val displayName: String = "",
+)
+
+data class AchievementCategoriesConfig(
+    val categories: Map<String, AchievementCategoryConfig> = defaultAchievementCategories(),
+) {
+    companion object {
+        fun defaultAchievementCategories(): Map<String, AchievementCategoryConfig> = linkedMapOf(
+            "combat" to AchievementCategoryConfig(displayName = "Combat"),
+            "exploration" to AchievementCategoryConfig(displayName = "Exploration"),
+            "social" to AchievementCategoryConfig(displayName = "Social"),
+            "crafting" to AchievementCategoryConfig(displayName = "Crafting"),
+            "class" to AchievementCategoryConfig(displayName = "Class"),
+        )
+    }
+}
+
+data class QuestObjectiveTypeConfig(
+    val displayName: String = "",
+)
+
+data class QuestObjectiveTypesConfig(
+    val types: Map<String, QuestObjectiveTypeConfig> = defaultObjectiveTypes(),
+) {
+    companion object {
+        fun defaultObjectiveTypes(): Map<String, QuestObjectiveTypeConfig> = linkedMapOf(
+            "kill" to QuestObjectiveTypeConfig(displayName = "Kill"),
+            "collect" to QuestObjectiveTypeConfig(displayName = "Collect"),
+        )
+    }
+}
+
+data class QuestCompletionTypeConfig(
+    val displayName: String = "",
+)
+
+data class QuestCompletionTypesConfig(
+    val types: Map<String, QuestCompletionTypeConfig> = defaultCompletionTypes(),
+) {
+    companion object {
+        fun defaultCompletionTypes(): Map<String, QuestCompletionTypeConfig> = linkedMapOf(
+            "auto" to QuestCompletionTypeConfig(displayName = "Automatic"),
+            "npc_turn_in" to QuestCompletionTypeConfig(displayName = "NPC Turn-In"),
+        )
+    }
+}
+
+data class AchievementCriterionTypeConfig(
+    val displayName: String = "",
+    val progressFormat: String = "{current}/{required}",
+)
+
+data class AchievementCriterionTypesConfig(
+    val types: Map<String, AchievementCriterionTypeConfig> = defaultCriterionTypes(),
+) {
+    companion object {
+        fun defaultCriterionTypes(): Map<String, AchievementCriterionTypeConfig> = linkedMapOf(
+            "kill" to AchievementCriterionTypeConfig(displayName = "Kill", progressFormat = "{current}/{required}"),
+            "reach_level" to AchievementCriterionTypeConfig(displayName = "Reach Level", progressFormat = "level {current}/{required}"),
+            "quest_complete" to AchievementCriterionTypeConfig(displayName = "Quest Complete", progressFormat = "{current}/{required}"),
+        )
+    }
+}
+
+data class GuildRankConfig(
+    val displayName: String = "",
+    val level: Int = 0,
+    val permissions: List<String> = emptyList(),
+)
+
+data class GuildRanksConfig(
+    val ranks: Map<String, GuildRankConfig> = defaultGuildRanks(),
+) {
+    companion object {
+        fun defaultGuildRanks(): Map<String, GuildRankConfig> = linkedMapOf(
+            "leader" to GuildRankConfig(
+                displayName = "Leader",
+                level = 100,
+                permissions = listOf("invite", "kick", "promote", "demote", "disband", "set_motd"),
+            ),
+            "officer" to GuildRankConfig(
+                displayName = "Officer",
+                level = 50,
+                permissions = listOf("invite", "kick"),
+            ),
+            "member" to GuildRankConfig(
+                displayName = "Member",
+                level = 0,
+                permissions = emptyList(),
+            ),
+        )
+    }
+}
+
+data class EffectTypeConfig(
+    val displayName: String = "",
+)
+
+data class EffectTypesConfig(
+    val types: Map<String, EffectTypeConfig> = defaultEffectTypes(),
+) {
+    companion object {
+        fun defaultEffectTypes(): Map<String, EffectTypeConfig> = linkedMapOf(
+            "dot" to EffectTypeConfig(displayName = "Damage Over Time"),
+            "hot" to EffectTypeConfig(displayName = "Heal Over Time"),
+            "stat_buff" to EffectTypeConfig(displayName = "Stat Buff"),
+            "stat_debuff" to EffectTypeConfig(displayName = "Stat Debuff"),
+            "stun" to EffectTypeConfig(displayName = "Stun"),
+            "root" to EffectTypeConfig(displayName = "Root"),
+            "shield" to EffectTypeConfig(displayName = "Shield"),
+        )
+    }
+}
+
+data class TargetTypeConfig(
+    val displayName: String = "",
+)
+
+data class TargetTypesConfig(
+    val types: Map<String, TargetTypeConfig> = defaultTargetTypes(),
+) {
+    companion object {
+        fun defaultTargetTypes(): Map<String, TargetTypeConfig> = linkedMapOf(
+            "enemy" to TargetTypeConfig(displayName = "Enemy"),
+            "self" to TargetTypeConfig(displayName = "Self"),
+            "ally" to TargetTypeConfig(displayName = "Ally"),
+        )
+    }
+}
+
+data class StackBehaviorConfig(
+    val displayName: String = "",
+)
+
+data class StackBehaviorsConfig(
+    val behaviors: Map<String, StackBehaviorConfig> = defaultStackBehaviors(),
+) {
+    companion object {
+        fun defaultStackBehaviors(): Map<String, StackBehaviorConfig> = linkedMapOf(
+            "refresh" to StackBehaviorConfig(displayName = "Refresh"),
+            "stack" to StackBehaviorConfig(displayName = "Stack"),
+            "none" to StackBehaviorConfig(displayName = "None"),
+        )
+    }
+}
+
 data class EngineConfig(
     val mob: MobEngineConfig = MobEngineConfig(),
     val combat: CombatEngineConfig = CombatEngineConfig(),
@@ -487,6 +685,17 @@ data class EngineConfig(
     val races: RaceEngineConfig = RaceEngineConfig(),
     val stats: StatsEngineConfig = StatsEngineConfig(),
     val equipment: EquipmentConfig = EquipmentConfig(),
+    val genders: GendersConfig = GendersConfig(),
+    val achievementCategories: AchievementCategoriesConfig = AchievementCategoriesConfig(),
+    val craftingSkills: CraftingSkillsConfig = CraftingSkillsConfig(),
+    val craftingStationTypes: CraftingStationTypesConfig = CraftingStationTypesConfig(),
+    val questObjectiveTypes: QuestObjectiveTypesConfig = QuestObjectiveTypesConfig(),
+    val questCompletionTypes: QuestCompletionTypesConfig = QuestCompletionTypesConfig(),
+    val effectTypes: EffectTypesConfig = EffectTypesConfig(),
+    val targetTypes: TargetTypesConfig = TargetTypesConfig(),
+    val stackBehaviors: StackBehaviorsConfig = StackBehaviorsConfig(),
+    val achievementCriterionTypes: AchievementCriterionTypesConfig = AchievementCriterionTypesConfig(),
+    val guildRanks: GuildRanksConfig = GuildRanksConfig(),
     val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),

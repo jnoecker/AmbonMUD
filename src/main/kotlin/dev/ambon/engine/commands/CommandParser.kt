@@ -736,8 +736,8 @@ object CommandParser {
             }
         }?.let { return it }
 
-        // gender <male/female/enby>
-        requiredArg(line, listOf("gender"), "gender <male|female|enby>", { Command.SetGender(it) })?.let { return it }
+        // gender <option>
+        requiredArg(line, listOf("gender"), "gender <option>", { Command.SetGender(it) })?.let { return it }
 
         // Crafting & Gathering
         requiredArg(line, listOf("gather", "harvest", "mine"), "gather <node>") { Command.Gather(it) }

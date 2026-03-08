@@ -1,11 +1,9 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.LocalOutboundBus
-import dev.ambon.domain.achievement.AchievementCategory
 import dev.ambon.domain.achievement.AchievementCriterion
 import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.achievement.AchievementRewards
-import dev.ambon.domain.achievement.CriterionType
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -74,11 +72,11 @@ class AchievementSystemTest {
                     id = "combat/slayer",
                     displayName = "Slayer",
                     description = "Kill 3 rats.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:rat",
                                 count = 3,
                                 description = "Kill 3 rats",
@@ -105,11 +103,11 @@ class AchievementSystemTest {
                     id = "combat/slayer",
                     displayName = "Slayer",
                     description = "Kill 3 rats.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:rat",
                                 count = 3,
                                 description = "Kill 3 rats",
@@ -140,11 +138,11 @@ class AchievementSystemTest {
                     id = "combat/first_blood",
                     displayName = "First Blood",
                     description = "Kill anything.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "",
                                 count = 1,
                                 description = "Kill any mob",
@@ -169,11 +167,11 @@ class AchievementSystemTest {
                     id = "combat/first_blood",
                     displayName = "First Blood",
                     description = "Kill anything.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "",
                                 count = 1,
                             ),
@@ -199,11 +197,11 @@ class AchievementSystemTest {
                     id = "combat/wolf_hunter",
                     displayName = "Wolf Hunter",
                     description = "Kill wolves.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:wolf",
                                 count = 1,
                             ),
@@ -230,11 +228,11 @@ class AchievementSystemTest {
                     id = "milestone/level_5",
                     displayName = "Level 5",
                     description = "Reach level 5.",
-                    category = AchievementCategory.CLASS,
+                    category = "class",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.REACH_LEVEL,
+                                type = "reach_level",
                                 count = 5,
                                 description = "Reach level 5",
                             ),
@@ -262,11 +260,11 @@ class AchievementSystemTest {
                     id = "milestone/level_10",
                     displayName = "Level 10",
                     description = "Reach level 10.",
-                    category = AchievementCategory.CLASS,
+                    category = "class",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.REACH_LEVEL,
+                                type = "reach_level",
                                 count = 10,
                             ),
                         ),
@@ -291,11 +289,11 @@ class AchievementSystemTest {
                     id = "quests/first_quest",
                     displayName = "First Quest",
                     description = "Complete any quest.",
-                    category = AchievementCategory.SOCIAL,
+                    category = "social",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.QUEST_COMPLETE,
+                                type = "quest_complete",
                                 targetId = "zone:tutorial",
                                 count = 1,
                             ),
@@ -319,11 +317,11 @@ class AchievementSystemTest {
                     id = "quests/any",
                     displayName = "Quester",
                     description = "Complete a quest.",
-                    category = AchievementCategory.SOCIAL,
+                    category = "social",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.QUEST_COMPLETE,
+                                type = "quest_complete",
                                 targetId = "",
                                 count = 1,
                             ),
@@ -349,11 +347,11 @@ class AchievementSystemTest {
                     id = "combat/slayer",
                     displayName = "Slayer",
                     description = "Kill anything.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "",
                                 count = 1,
                             ),
@@ -365,11 +363,11 @@ class AchievementSystemTest {
                     id = "combat/runner",
                     displayName = "Runner",
                     description = "Kill 10 things.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "",
                                 count = 10,
                             ),
@@ -395,11 +393,11 @@ class AchievementSystemTest {
                     id = "secret/hidden",
                     displayName = "Secret",
                     description = "A secret.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:boss",
                                 count = 1,
                             ),
@@ -428,11 +426,11 @@ class AchievementSystemTest {
                     id = "combat/first_blood",
                     displayName = "First Blood",
                     description = "Kill anything.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "",
                                 count = 1,
                             ),
@@ -444,11 +442,11 @@ class AchievementSystemTest {
                     id = "combat/rat_slayer",
                     displayName = "Rat Slayer",
                     description = "Kill a rat.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:rat",
                                 count = 1,
                             ),
@@ -475,17 +473,17 @@ class AchievementSystemTest {
                     id = "elite/veteran",
                     displayName = "Veteran",
                     description = "Kill 3 rats and reach level 5.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:rat",
                                 count = 3,
                                 description = "Kill 3 rats",
                             ),
                             AchievementCriterion(
-                                type = CriterionType.REACH_LEVEL,
+                                type = "reach_level",
                                 count = 5,
                                 description = "Reach level 5",
                             ),
@@ -529,11 +527,11 @@ class AchievementSystemTest {
                     id = "combat/slayer",
                     displayName = "Slayer",
                     description = "Kill 3 rats.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:rat",
                                 count = 3,
                                 description = "Kill 3 rats",
@@ -561,11 +559,11 @@ class AchievementSystemTest {
                     id = "combat/quick",
                     displayName = "Quick Kill",
                     description = "Kill 1 rat.",
-                    category = AchievementCategory.COMBAT,
+                    category = "combat",
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:rat",
                                 count = 1,
                                 description = "Kill a rat",

@@ -52,7 +52,6 @@ import dev.ambon.engine.events.PhaseEventHandler
 import dev.ambon.engine.events.SessionEventHandler
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
-import dev.ambon.engine.status.EffectType
 import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.engine.status.StatusEffectRegistryLoader
 import dev.ambon.engine.status.StatusEffectSystem
@@ -156,6 +155,8 @@ class GameEngine(
             StatRegistryLoader.load(engineConfig.stats, reg)
         }
     private val equipmentSlotRegistry = EquipmentSlotRegistry(engineConfig.equipment)
+    private val genderRegistry = GenderRegistry(engineConfig.genders)
+    private val craftingSkillRegistry = dev.ambon.engine.crafting.CraftingSkillRegistry(engineConfig.craftingSkills)
 
     private val loginFlowHandler by lazy {
         dev.ambon.engine.events.LoginFlowHandler(
@@ -412,6 +413,7 @@ class GameEngine(
             },
             statRegistry = statRegistry,
             equipmentSlotRegistry = equipmentSlotRegistry,
+            genderRegistry = genderRegistry,
             imagesBaseUrl = imagesBaseUrl,
         )
 
@@ -598,15 +600,18 @@ class GameEngine(
             clock = clock,
         )
 
+    private val achievementCategoryRegistry = AchievementCategoryRegistry(engineConfig.achievementCategories)
+
     private val achievementSystem =
         AchievementSystem(
             registry =
                 achievementRegistry.also { reg ->
-                    AchievementLoader.loadFromResource("world/achievements.yaml", reg)
+                    AchievementLoader.loadFromResource("world/achievements.yaml", reg, achievementCategoryRegistry)
                 },
             players = players,
             outbound = outbound,
             gmcpEmitter = gmcpEmitter,
+            categoryRegistry = achievementCategoryRegistry,
         )
 
     init {
@@ -637,7 +642,7 @@ class GameEngine(
             outbound = outbound,
             clock = clock,
             isMobInCombat = { mobId -> combatSystem.isMobInCombat(mobId) },
-            isMobRooted = { mobId -> statusEffectSystem.hasMobEffect(mobId, EffectType.ROOT) },
+            isMobRooted = { mobId -> statusEffectSystem.hasMobEffect(mobId, "root") },
             startMobCombat = { mobId, sessionId -> combatSystem.startMobCombat(mobId, sessionId) },
             fleeMob = { mobId -> combatSystem.fleeMob(mobId) },
             gmcpEmitter = gmcpEmitter,
@@ -696,6 +701,7 @@ class GameEngine(
             raceRegistry = raceRegistry,
             statRegistry = statRegistry,
             equipmentSlotRegistry = equipmentSlotRegistry,
+            genderRegistry = genderRegistry,
         )
 
         listOf(
@@ -744,6 +750,7 @@ class GameEngine(
             CraftingHandler(
                 ctx = ctx,
                 craftingSystem = craftingSystem,
+                craftingSkillRegistry = craftingSkillRegistry,
                 markVitalsDirty = ::markVitalsDirty,
             ),
             DialogueQuestHandler(

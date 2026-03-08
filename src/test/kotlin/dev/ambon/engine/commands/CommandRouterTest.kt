@@ -1,7 +1,5 @@
 package dev.ambon.engine.commands
 
-import dev.ambon.domain.crafting.CraftingSkill
-import dev.ambon.domain.crafting.CraftingStationType
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.GatheringYield
 import dev.ambon.domain.ids.ItemId
@@ -406,7 +404,7 @@ class CommandRouterTest {
                         id = "zone:copper_vein",
                         displayName = "a copper ore vein",
                         keyword = "copper",
-                        skill = CraftingSkill.MINING,
+                        skill = "mining",
                         yields = listOf(GatheringYield(ItemId("zone:copper_ore"))),
                         roomId = startRoom,
                     ),
@@ -414,7 +412,7 @@ class CommandRouterTest {
                         id = "zone:iron_vein",
                         displayName = "an iron ore vein",
                         keyword = "iron",
-                        skill = CraftingSkill.MINING,
+                        skill = "mining",
                         skillRequired = 15,
                         yields = listOf(GatheringYield(ItemId("zone:iron_ore"))),
                         roomId = startRoom,
@@ -453,7 +451,7 @@ class CommandRouterTest {
                         title = "The Forge",
                         description = "A sweltering room.",
                         exits = emptyMap(),
-                        station = CraftingStationType.FORGE,
+                        station = "forge",
                     ),
                 ),
                 startRoom = startRoom,
@@ -499,7 +497,7 @@ class CommandRouterTest {
                         title = "Alchemy Lab",
                         description = "Glass vials everywhere.",
                         exits = emptyMap(),
-                        station = CraftingStationType.ALCHEMY_TABLE,
+                        station = "alchemy_table",
                     ),
                 ),
                 startRoom = startRoom,

@@ -13,7 +13,7 @@ data class GatheringNodeDef(
     val id: String,
     val displayName: String,
     val keyword: String,
-    val skill: CraftingSkill,
+    val skill: String,
     val skillRequired: Int = 1,
     val yields: List<GatheringYield>,
     val respawnSeconds: Int = 60,

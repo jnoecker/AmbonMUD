@@ -1,7 +1,6 @@
 package dev.ambon.persistence
 
 import com.fasterxml.jackson.core.type.TypeReference
-import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.guild.GuildRecord
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
@@ -71,7 +70,7 @@ class PostgresGuildRepository(
             it[leaderId] = record.leaderId.value
             it[motd] = record.motd
             it[members] = mapper.writeValueAsString(
-                record.members.mapKeys { e -> e.key.value }.mapValues { e -> e.value.name },
+                record.members.mapKeys { e -> e.key.value }.mapValues { e -> e.value },
             )
             it[createdAtEpochMs] = record.createdAtEpochMs
         }
@@ -90,7 +89,7 @@ class PostgresGuildRepository(
             tag = this[GuildsTable.tag],
             leaderId = PlayerId(this[GuildsTable.leaderId]),
             motd = this[GuildsTable.motd],
-            members = rawMembers.mapKeys { PlayerId(it.key) }.mapValues { GuildRank.valueOf(it.value) },
+            members = rawMembers.mapKeys { PlayerId(it.key) }.mapValues { it.value.lowercase() },
             createdAtEpochMs = this[GuildsTable.createdAtEpochMs],
         )
     }

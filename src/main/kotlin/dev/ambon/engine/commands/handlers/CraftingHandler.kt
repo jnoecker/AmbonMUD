@@ -1,6 +1,5 @@
 package dev.ambon.engine.commands.handlers
 
-import dev.ambon.domain.crafting.CraftingSkill
 import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.commands.Command
@@ -8,6 +7,7 @@ import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.crafting.CraftError
+import dev.ambon.engine.crafting.CraftingSkillRegistry
 import dev.ambon.engine.crafting.CraftingSystem
 import dev.ambon.engine.crafting.Either
 import dev.ambon.engine.crafting.GatherError
@@ -16,6 +16,7 @@ import dev.ambon.engine.events.OutboundEvent
 class CraftingHandler(
     ctx: EngineContext,
     private val craftingSystem: CraftingSystem? = null,
+    private val craftingSkillRegistry: CraftingSkillRegistry? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
 ) : CommandHandler {
     private val players = ctx.players
@@ -125,9 +126,9 @@ class CraftingHandler(
         players.withPlayer(sessionId) { me ->
             val allRecipes = if (cmd.filter != null) {
                 val filterLower = cmd.filter.lowercase()
-                val bySkill = CraftingSkill.entries.firstOrNull { it.name.lowercase() == filterLower }
-                if (bySkill != null) {
-                    cs.recipesForSkill(bySkill)
+                val isSkill = craftingSkillRegistry?.isValid(filterLower) == true
+                if (isSkill) {
+                    cs.recipesForSkill(filterLower)
                 } else {
                     cs.allRecipes().filter {
                         it.displayName.lowercase().contains(filterLower) ||
@@ -155,7 +156,7 @@ class CraftingHandler(
                         sessionId,
                         " $marker%-25s %-12s %5d %5d".format(
                             recipe.displayName,
-                            recipe.skill.name,
+                            craftingSkillRegistry?.get(recipe.skill)?.displayName ?: recipe.skill,
                             recipe.skillRequired,
                             recipe.levelRequired,
                         ),
@@ -170,19 +171,20 @@ class CraftingHandler(
         players.withPlayer(sessionId) { me ->
             outbound.send(OutboundEvent.SendInfo(sessionId, "[ Crafting Professions ]"))
             val maxLevel = craftingSystem?.maxSkillLevel() ?: 100
-            for (skill in CraftingSkill.entries) {
-                val state = me.craftingSkills.getOrDefault(skill, CraftingSkillState())
+            val skillDefs = craftingSkillRegistry?.allDefinitions() ?: emptyList()
+            for (skillDef in skillDefs) {
+                val state = me.craftingSkills.getOrDefault(skillDef.id, CraftingSkillState())
                 val xpNeeded = craftingSystem?.xpForLevel(state.level) ?: 0L
                 val bar = if (state.level >= maxLevel) {
                     "MAX"
                 } else {
                     "${state.xp}/$xpNeeded XP"
                 }
-                val label = if (skill.isGathering) "(Gathering)" else "(Crafting)"
+                val label = if (skillDef.isGathering) "(Gathering)" else "(Crafting)"
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sessionId,
-                        "  %-12s %3d/%d  %s  %s".format(skill.name, state.level, maxLevel, bar, label),
+                        "  %-12s %3d/%d  %s  %s".format(skillDef.displayName, state.level, maxLevel, bar, label),
                     ),
                 )
             }
@@ -195,15 +197,16 @@ class CraftingHandler(
 
     private suspend fun sendCraftingXp(
         sessionId: SessionId,
-        skill: CraftingSkill,
+        skill: String,
         xpAwarded: Int,
         leveledUp: Boolean,
         newLevel: Int,
     ) {
-        outbound.send(OutboundEvent.SendInfo(sessionId, "[${skill.name} +$xpAwarded XP]"))
+        val skillName = craftingSkillRegistry?.get(skill)?.displayName ?: skill
+        outbound.send(OutboundEvent.SendInfo(sessionId, "[$skillName +$xpAwarded XP]"))
         if (leveledUp) {
             outbound.send(
-                OutboundEvent.SendInfo(sessionId, "** Your ${skill.name} skill has increased to $newLevel! **"),
+                OutboundEvent.SendInfo(sessionId, "** Your $skillName skill has increased to $newLevel! **"),
             )
         }
         markVitalsDirty(sessionId)

@@ -5,6 +5,7 @@ import dev.ambon.config.EconomyConfig
 import dev.ambon.domain.world.World
 import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.EquipmentSlotRegistry
+import dev.ambon.engine.GenderRegistry
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerClassRegistry
@@ -43,4 +44,5 @@ data class EngineContext(
     val raceRegistry: RaceRegistry? = null,
     val statRegistry: StatRegistry? = null,
     val equipmentSlotRegistry: EquipmentSlotRegistry? = null,
+    val genderRegistry: GenderRegistry? = null,
 )

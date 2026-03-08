@@ -1,11 +1,9 @@
 package dev.ambon.engine
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import dev.ambon.domain.achievement.AchievementCategory
 import dev.ambon.domain.achievement.AchievementCriterion
 import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.achievement.AchievementRewards
-import dev.ambon.domain.achievement.CriterionType
 import dev.ambon.persistence.yamlMapper
 
 /** Flat DTO for YAML deserialization of achievements.yaml. */
@@ -43,6 +41,7 @@ object AchievementLoader {
     fun loadFromResource(
         resourcePath: String,
         registry: AchievementRegistry,
+        categoryRegistry: AchievementCategoryRegistry? = null,
     ) {
         val stream =
             AchievementLoader::class.java.classLoader.getResourceAsStream(resourcePath)
@@ -55,23 +54,20 @@ object AchievementLoader {
             require(entry.displayName.isNotBlank()) { "Achievement '$id' displayName cannot be blank" }
             require(entry.criteria.isNotEmpty()) { "Achievement '$id' must have at least one criterion" }
 
-            val category =
-                runCatching { AchievementCategory.valueOf(entry.category.uppercase()) }
-                    .getOrElse {
-                        throw IllegalArgumentException(
-                            "Achievement '$id' has unknown category '${entry.category}'",
-                        )
-                    }
+            val category = entry.category.trim().lowercase()
+            require(category.isNotEmpty()) { "Achievement '$id' category cannot be blank" }
+            if (categoryRegistry != null) {
+                require(categoryRegistry.isValid(category)) {
+                    "Achievement '$id' has unknown category '$category'"
+                }
+            }
 
             val criteria =
                 entry.criteria.mapIndexed { index, cf ->
-                    val type =
-                        runCatching { CriterionType.valueOf(cf.type.uppercase()) }
-                            .getOrElse {
-                                throw IllegalArgumentException(
-                                    "Achievement '$id' criterion #${index + 1} has unknown type '${cf.type}'",
-                                )
-                            }
+                    val type = cf.type.trim().lowercase()
+                    require(type.isNotEmpty()) {
+                        "Achievement '$id' criterion #${index + 1} type cannot be blank"
+                    }
                     require(cf.count >= 1) {
                         "Achievement '$id' criterion #${index + 1} count must be >= 1"
                     }

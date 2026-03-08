@@ -63,7 +63,7 @@ class PersistenceFieldCoverageTest {
                 intelligence = 18,
                 wisdom = 16,
                 charisma = 12,
-                gender = "MALE",
+                gender = "male",
                 race = "ELF",
                 playerClass = "MAGE",
                 level = 7,

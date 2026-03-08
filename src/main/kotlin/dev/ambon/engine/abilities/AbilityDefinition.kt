@@ -8,12 +8,6 @@ value class AbilityId(
     val value: String,
 )
 
-enum class TargetType {
-    ENEMY,
-    SELF,
-    ALLY,
-}
-
 sealed interface AbilityEffect {
     data class DirectDamage(
         val damage: DamageRange,
@@ -45,7 +39,7 @@ data class AbilityDefinition(
     val manaCost: Int,
     val cooldownMs: Long,
     val levelRequired: Int,
-    val targetType: TargetType,
+    val targetType: String,
     val effect: AbilityEffect,
     val requiredClass: String? = null,
     val image: String? = null,

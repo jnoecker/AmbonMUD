@@ -8,8 +8,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.config.MobTiersConfig
 import dev.ambon.domain.DamageRange
 import dev.ambon.domain.StatMap
-import dev.ambon.domain.crafting.CraftingSkill
-import dev.ambon.domain.crafting.CraftingStationType
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.GatheringYield
 import dev.ambon.domain.crafting.MaterialRequirement
@@ -21,8 +19,6 @@ import dev.ambon.domain.ids.qualifyId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
-import dev.ambon.domain.quest.CompletionType
-import dev.ambon.domain.quest.ObjectiveType
 import dev.ambon.domain.quest.QuestDef
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
@@ -470,27 +466,18 @@ object WorldLoader {
                 val giver = requireNonBlank(questFile.giver) {
                     "Quest '$questId' giver cannot be blank"
                 }
-                val completionType =
-                    when (questFile.completionType.uppercase()) {
-                        "AUTO" -> CompletionType.AUTO
-                        "NPC_TURN_IN" -> CompletionType.NPC_TURN_IN
-                        else -> throw WorldLoadException(
-                            "Quest '$questId' has unknown completionType '${questFile.completionType}'",
-                        )
-                    }
+                val completionType = questFile.completionType.trim().lowercase().ifEmpty { "auto" }
                 if (questFile.objectives.isEmpty()) {
                     throw WorldLoadException("Quest '$questId' must have at least one objective")
                 }
                 val objectives =
                     questFile.objectives.mapIndexed { index, obj ->
-                        val objectiveType =
-                            when (obj.type.uppercase()) {
-                                "KILL" -> ObjectiveType.KILL
-                                "COLLECT" -> ObjectiveType.COLLECT
-                                else -> throw WorldLoadException(
-                                    "Quest '$questId' objective #${index + 1} has unknown type '${obj.type}'",
-                                )
-                            }
+                        val objectiveType = obj.type.trim().lowercase()
+                        if (objectiveType.isEmpty()) {
+                            throw WorldLoadException(
+                                "Quest '$questId' objective #${index + 1} type cannot be blank",
+                            )
+                        }
                         val targetKeyRaw = requireNonBlank(obj.targetKey) {
                             "Quest '$questId' objective #${index + 1} targetKey cannot be blank"
                         }
@@ -504,7 +491,7 @@ object WorldLoader {
                             type = objectiveType,
                             targetId = targetId,
                             count = obj.count,
-                            description = obj.description.ifBlank { "${objectiveType.name.lowercase()} $targetKeyRaw x${obj.count}" },
+                            description = obj.description.ifBlank { "$objectiveType $targetKeyRaw x${obj.count}" },
                         )
                     }
                 mergedQuests.add(
@@ -527,11 +514,6 @@ object WorldLoader {
                     "Gathering node '$nodeId' displayName cannot be blank"
                 }
                 val skill = parseCraftingSkill(nodeFile.skill, "Gathering node '$nodeId'")
-                if (!skill.isGathering) {
-                    throw WorldLoadException(
-                        "Gathering node '$nodeId' must use a gathering skill (MINING or HERBALISM), got '$skill'",
-                    )
-                }
                 if (nodeFile.skillRequired < 1) {
                     throw WorldLoadException("Gathering node '$nodeId' skillRequired must be >= 1")
                 }
@@ -580,11 +562,6 @@ object WorldLoader {
                     "Recipe '$recipeId' displayName cannot be blank"
                 }
                 val skill = parseCraftingSkill(recipeFile.skill, "Recipe '$recipeId'")
-                if (!skill.isCrafting) {
-                    throw WorldLoadException(
-                        "Recipe '$recipeId' must use a crafting skill (SMITHING or ALCHEMY), got '$skill'",
-                    )
-                }
                 if (recipeFile.skillRequired < 1) {
                     throw WorldLoadException("Recipe '$recipeId' skillRequired must be >= 1")
                 }
@@ -1058,26 +1035,20 @@ object WorldLoader {
     private fun parseCraftingSkill(
         raw: String,
         context: String,
-    ): CraftingSkill =
-        try {
-            CraftingSkill.valueOf(raw.trim().uppercase())
-        } catch (_: IllegalArgumentException) {
-            throw WorldLoadException(
-                "$context has unknown crafting skill '$raw' (expected: ${CraftingSkill.entries.joinToString()})",
-            )
-        }
+    ): String {
+        val id = raw.trim().lowercase()
+        if (id.isEmpty()) throw WorldLoadException("$context crafting skill cannot be blank")
+        return id
+    }
 
     private fun parseCraftingStationType(
         raw: String,
         context: String,
-    ): CraftingStationType =
-        try {
-            CraftingStationType.valueOf(raw.trim().uppercase())
-        } catch (_: IllegalArgumentException) {
-            throw WorldLoadException(
-                "$context has unknown station type '$raw' (expected: ${CraftingStationType.entries.joinToString()})",
-            )
-        }
+    ): String {
+        val id = raw.trim().lowercase()
+        if (id.isEmpty()) throw WorldLoadException("$context station type cannot be blank")
+        return id
+    }
 
     private inline fun requireNonBlank(value: String, lazyMessage: () -> String): String {
         val trimmed = value.trim()

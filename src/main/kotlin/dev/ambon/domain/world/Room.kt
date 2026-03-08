@@ -1,6 +1,5 @@
 package dev.ambon.domain.world
 
-import dev.ambon.domain.crafting.CraftingStationType
 import dev.ambon.domain.ids.RoomId
 
 data class Room(
@@ -13,7 +12,7 @@ data class Room(
     /** Stateful features in this room: doors, containers, levers, signs. */
     val features: List<RoomFeature> = emptyList(),
     /** Crafting station available in this room, if any. */
-    val station: CraftingStationType? = null,
+    val station: String? = null,
     /** URL to an image representing this room. */
     val image: String? = null,
     /** URL to a video cinematic for this room. */
