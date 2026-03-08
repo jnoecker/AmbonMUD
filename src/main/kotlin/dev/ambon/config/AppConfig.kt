@@ -470,6 +470,24 @@ data class EquipmentConfig(
     }
 }
 
+data class AchievementCategoryConfig(
+    val displayName: String = "",
+)
+
+data class AchievementCategoriesConfig(
+    val categories: Map<String, AchievementCategoryConfig> = defaultAchievementCategories(),
+) {
+    companion object {
+        fun defaultAchievementCategories(): Map<String, AchievementCategoryConfig> = linkedMapOf(
+            "combat" to AchievementCategoryConfig(displayName = "Combat"),
+            "exploration" to AchievementCategoryConfig(displayName = "Exploration"),
+            "social" to AchievementCategoryConfig(displayName = "Social"),
+            "crafting" to AchievementCategoryConfig(displayName = "Crafting"),
+            "class" to AchievementCategoryConfig(displayName = "Class"),
+        )
+    }
+}
+
 data class EngineConfig(
     val mob: MobEngineConfig = MobEngineConfig(),
     val combat: CombatEngineConfig = CombatEngineConfig(),
@@ -487,6 +505,7 @@ data class EngineConfig(
     val races: RaceEngineConfig = RaceEngineConfig(),
     val stats: StatsEngineConfig = StatsEngineConfig(),
     val equipment: EquipmentConfig = EquipmentConfig(),
+    val achievementCategories: AchievementCategoriesConfig = AchievementCategoriesConfig(),
     val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),

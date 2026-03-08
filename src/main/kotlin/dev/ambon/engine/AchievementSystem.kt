@@ -1,7 +1,6 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
-import dev.ambon.domain.achievement.AchievementCategory
 import dev.ambon.domain.achievement.AchievementCriterion
 import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.achievement.AchievementState
@@ -20,6 +19,7 @@ class AchievementSystem(
     private val players: PlayerRegistry,
     private val outbound: OutboundBus,
     private val gmcpEmitter: GmcpEmitter? = null,
+    private val categoryRegistry: AchievementCategoryRegistry? = null,
 ) {
     /**
      * Called when a player kills a mob. Increments KILL criteria matching [templateKey]
@@ -159,10 +159,14 @@ class AchievementSystem(
         if (all.isEmpty()) return "No achievements are defined."
 
         return buildString {
-            for (category in AchievementCategory.entries) {
-                val inCategory = all.filter { it.category == category }.sortedBy { it.displayName }
+            val categoryIds = categoryRegistry?.allCategoryIds()
+                ?: all.map { it.category }.distinct().sorted()
+            for (categoryId in categoryIds) {
+                val inCategory = all.filter { it.category == categoryId }.sortedBy { it.displayName }
                 if (inCategory.isEmpty()) continue
-                appendLine("[ ${category.name} ]")
+                val displayName = categoryRegistry?.displayName(categoryId)
+                    ?: categoryId.replaceFirstChar { it.uppercase() }
+                appendLine("[ $displayName ]")
                 for (def in inCategory) {
                     when {
                         ps.unlockedAchievementIds.contains(def.id) -> {
