@@ -17,7 +17,6 @@ import dev.ambon.domain.world.Room
 import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.abilities.AbilityEffect
 import dev.ambon.engine.abilities.AbilityId
-import dev.ambon.engine.abilities.TargetType
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.TEST_SESSION_ID
@@ -115,7 +114,7 @@ class GmcpEmitterTest {
         manaCost = manaCost,
         cooldownMs = cooldownMs,
         levelRequired = 1,
-        targetType = TargetType.ENEMY,
+        targetType = "enemy",
         effect = AbilityEffect.DirectDamage(damage = DamageRange(5, 10)),
     )
 
@@ -330,7 +329,7 @@ class GmcpEmitterTest {
             assertTrue(data.jsonData.contains("\"cooldownMs\":5000"))
             assertTrue(data.jsonData.contains("\"cooldownRemainingMs\":2300"))
             assertTrue(data.jsonData.contains("\"levelRequired\":1"))
-            assertTrue(data.jsonData.contains("\"targetType\":\"ENEMY\""))
+            assertTrue(data.jsonData.contains("\"targetType\":\"enemy\""))
             assertTrue(data.jsonData.contains("\"classRestriction\":null"))
         }
 

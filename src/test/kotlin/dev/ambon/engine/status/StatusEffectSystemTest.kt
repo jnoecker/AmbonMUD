@@ -40,14 +40,14 @@ class StatusEffectSystemTest {
         tickIntervalMs: Long = 2000,
         minVal: Int = 5,
         maxVal: Int = 5,
-        stackBehavior: StackBehavior = StackBehavior.REFRESH,
+        stackBehavior: String = "refresh",
         maxStacks: Int = 1,
     ) {
         registry.register(
             StatusEffectDefinition(
                 id = StatusEffectId(id),
                 displayName = "Ignite",
-                effectType = EffectType.DOT,
+                effectType = "dot",
                 durationMs = durationMs,
                 tickIntervalMs = tickIntervalMs,
                 tickMinValue = minVal,
@@ -69,7 +69,7 @@ class StatusEffectSystemTest {
             StatusEffectDefinition(
                 id = StatusEffectId(id),
                 displayName = "Rejuvenation",
-                effectType = EffectType.HOT,
+                effectType = "hot",
                 durationMs = durationMs,
                 tickIntervalMs = tickIntervalMs,
                 tickMinValue = minVal,
@@ -87,10 +87,10 @@ class StatusEffectSystemTest {
             StatusEffectDefinition(
                 id = StatusEffectId(id),
                 displayName = "Shield of Faith",
-                effectType = EffectType.SHIELD,
+                effectType = "shield",
                 durationMs = durationMs,
                 shieldAmount = shieldAmount,
-                stackBehavior = StackBehavior.NONE,
+                stackBehavior = "none",
             ),
         )
     }
@@ -104,7 +104,7 @@ class StatusEffectSystemTest {
             StatusEffectDefinition(
                 id = StatusEffectId(id),
                 displayName = "Battle Shout",
-                effectType = EffectType.STAT_BUFF,
+                effectType = "stat_buff",
                 durationMs = durationMs,
                 statMods = StatMap.of("STR" to str),
             ),
@@ -119,9 +119,9 @@ class StatusEffectSystemTest {
             StatusEffectDefinition(
                 id = StatusEffectId(id),
                 displayName = "Concuss",
-                effectType = EffectType.STUN,
+                effectType = "stun",
                 durationMs = durationMs,
-                stackBehavior = StackBehavior.NONE,
+                stackBehavior = "none",
             ),
         )
     }
@@ -134,9 +134,9 @@ class StatusEffectSystemTest {
             StatusEffectDefinition(
                 id = StatusEffectId(id),
                 displayName = "Frost Grip",
-                effectType = EffectType.ROOT,
+                effectType = "root",
                 durationMs = durationMs,
-                stackBehavior = StackBehavior.NONE,
+                stackBehavior = "none",
             ),
         )
     }
@@ -277,7 +277,7 @@ class StatusEffectSystemTest {
             h.clock.advance(100)
             h.system.tick(h.clock.millis())
 
-            assertFalse(h.system.hasPlayerEffect(sid, EffectType.SHIELD))
+            assertFalse(h.system.hasPlayerEffect(sid, "shield"))
         }
 
     // ── STAT_BUFF Tests ──
@@ -305,7 +305,7 @@ class StatusEffectSystemTest {
 
         h.system.applyToPlayer(sid, StatusEffectId("concuss"))
 
-        assertTrue(h.system.hasPlayerEffect(sid, EffectType.STUN))
+        assertTrue(h.system.hasPlayerEffect(sid, "stun"))
     }
 
     @Test
@@ -319,7 +319,7 @@ class StatusEffectSystemTest {
             h.clock.advance(2100)
             h.system.tick(h.clock.millis())
 
-            assertFalse(h.system.hasPlayerEffect(sid, EffectType.STUN))
+            assertFalse(h.system.hasPlayerEffect(sid, "stun"))
         }
 
     // ── ROOT Tests ──
@@ -332,7 +332,7 @@ class StatusEffectSystemTest {
 
         h.system.applyToMob(mobId, StatusEffectId("frost_grip"))
 
-        assertTrue(h.system.hasMobEffect(mobId, EffectType.ROOT))
+        assertTrue(h.system.hasMobEffect(mobId, "root"))
     }
 
     @Test
@@ -343,7 +343,7 @@ class StatusEffectSystemTest {
 
         h.system.applyToPlayer(sid, StatusEffectId("frost_grip"))
 
-        assertTrue(h.system.hasPlayerEffect(sid, EffectType.ROOT))
+        assertTrue(h.system.hasPlayerEffect(sid, "root"))
     }
 
     // ── Stacking Behavior Tests ──
@@ -358,7 +358,7 @@ class StatusEffectSystemTest {
                 tickIntervalMs = 2000,
                 minVal = 5,
                 maxVal = 5,
-                stackBehavior = StackBehavior.REFRESH,
+                stackBehavior = "refresh",
             )
 
             h.system.applyToPlayer(sid, StatusEffectId("ignite"))
@@ -384,7 +384,7 @@ class StatusEffectSystemTest {
             tickIntervalMs = 2000,
             minVal = 2,
             maxVal = 2,
-            stackBehavior = StackBehavior.STACK,
+            stackBehavior = "stack",
             maxStacks = 3,
         )
 
@@ -408,7 +408,7 @@ class StatusEffectSystemTest {
             tickIntervalMs = 2000,
             minVal = 2,
             maxVal = 2,
-            stackBehavior = StackBehavior.STACK,
+            stackBehavior = "stack",
             maxStacks = 2,
         )
 
@@ -445,7 +445,7 @@ class StatusEffectSystemTest {
 
         h.system.onPlayerDisconnected(sid)
 
-        assertFalse(h.system.hasPlayerEffect(sid, EffectType.STUN))
+        assertFalse(h.system.hasPlayerEffect(sid, "stun"))
     }
 
     @Test
@@ -457,7 +457,7 @@ class StatusEffectSystemTest {
 
         h.system.onMobRemoved(mobId)
 
-        assertFalse(h.system.hasMobEffect(mobId, EffectType.ROOT))
+        assertFalse(h.system.hasMobEffect(mobId, "root"))
     }
 
     @Test
@@ -487,7 +487,7 @@ class StatusEffectSystemTest {
 
         h.system.removeAllFromPlayer(sid)
 
-        assertFalse(h.system.hasPlayerEffect(sid, EffectType.STUN))
+        assertFalse(h.system.hasPlayerEffect(sid, "stun"))
         assertEquals(0, h.system.getPlayerStatMods(sid)["STR"])
     }
 
@@ -524,7 +524,7 @@ class StatusEffectSystemTest {
         assertEquals(1, effects.size)
         assertEquals("battle_shout", effects[0].id)
         assertEquals("Battle Shout", effects[0].name)
-        assertEquals("STAT_BUFF", effects[0].type)
+        assertEquals("stat_buff", effects[0].type)
     }
 
     @Test
@@ -537,7 +537,7 @@ class StatusEffectSystemTest {
         val effects = h.system.activeMobEffects(mobId)
         assertEquals(1, effects.size)
         assertEquals("frost_grip", effects[0].id)
-        assertEquals("ROOT", effects[0].type)
+        assertEquals("root", effects[0].type)
     }
 
     // ── Shield Edge Cases ──
@@ -580,7 +580,7 @@ class StatusEffectSystemTest {
                 tickIntervalMs = 2000,
                 minVal = 5,
                 maxVal = 5,
-                stackBehavior = StackBehavior.REFRESH,
+                stackBehavior = "refresh",
             )
             val player = h.players.get(sid)!!
             val initialHp = player.hp
@@ -620,6 +620,6 @@ class StatusEffectSystemTest {
             h.clock.advance(2000)
             h.system.tick(h.clock.millis())
 
-            assertFalse(h.system.hasPlayerEffect(sid, EffectType.DOT))
+            assertFalse(h.system.hasPlayerEffect(sid, "dot"))
         }
 }

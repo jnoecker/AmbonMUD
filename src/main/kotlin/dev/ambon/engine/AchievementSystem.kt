@@ -1,12 +1,10 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
-import dev.ambon.domain.achievement.AchievementCategory
 import dev.ambon.domain.achievement.AchievementCriterion
 import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.achievement.CriterionProgress
-import dev.ambon.domain.achievement.CriterionType
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 
@@ -20,6 +18,7 @@ class AchievementSystem(
     private val players: PlayerRegistry,
     private val outbound: OutboundBus,
     private val gmcpEmitter: GmcpEmitter? = null,
+    private val categoryRegistry: AchievementCategoryRegistry? = null,
 ) {
     /**
      * Called when a player kills a mob. Increments KILL criteria matching [templateKey]
@@ -32,7 +31,7 @@ class AchievementSystem(
         updateAchievementProgress(
             sessionId,
             criterionAdvancer(
-                type = CriterionType.KILL,
+                type = "kill",
                 matches = { it.targetId.isBlank() || it.targetId == templateKey },
                 newValue = { _, prog -> prog.current + 1 },
             ),
@@ -49,7 +48,7 @@ class AchievementSystem(
         updateAchievementProgress(
             sessionId,
             criterionAdvancer(
-                type = CriterionType.REACH_LEVEL,
+                type = "reach_level",
                 // Update current level whether or not the target is met (for progress display)
                 newValue = { criterion, prog ->
                     if (newLevel >= criterion.count || newLevel > prog.current) newLevel else null
@@ -68,7 +67,7 @@ class AchievementSystem(
         updateAchievementProgress(
             sessionId,
             criterionAdvancer(
-                type = CriterionType.QUEST_COMPLETE,
+                type = "quest_complete",
                 matches = { it.targetId.isBlank() || it.targetId == questId },
                 newValue = { _, _ -> 1 },
             ),
@@ -81,7 +80,7 @@ class AchievementSystem(
      * updated. [newValue] may return `null` to skip a criterion without modifying it.
      */
     private fun criterionAdvancer(
-        type: CriterionType,
+        type: String,
         matches: (AchievementCriterion) -> Boolean = { true },
         newValue: (AchievementCriterion, CriterionProgress) -> Int?,
     ): (AchievementDef, MutableList<CriterionProgress>) -> Boolean = { def, newProgressList ->
@@ -159,10 +158,14 @@ class AchievementSystem(
         if (all.isEmpty()) return "No achievements are defined."
 
         return buildString {
-            for (category in AchievementCategory.entries) {
-                val inCategory = all.filter { it.category == category }.sortedBy { it.displayName }
+            val categoryIds = categoryRegistry?.allCategoryIds()
+                ?: all.map { it.category }.distinct().sorted()
+            for (categoryId in categoryIds) {
+                val inCategory = all.filter { it.category == categoryId }.sortedBy { it.displayName }
                 if (inCategory.isEmpty()) continue
-                appendLine("[ ${category.name} ]")
+                val displayName = categoryRegistry?.displayName(categoryId)
+                    ?: categoryId.replaceFirstChar { it.uppercase() }
+                appendLine("[ $displayName ]")
                 for (def in inCategory) {
                     when {
                         ps.unlockedAchievementIds.contains(def.id) -> {
@@ -245,8 +248,8 @@ class AchievementSystem(
                 val current = prog?.current ?: 0
                 val required = criterion.count
                 when (criterion.type) {
-                    CriterionType.KILL, CriterionType.QUEST_COMPLETE -> "$current/$required"
-                    CriterionType.REACH_LEVEL -> "level $current/$required"
+                    "reach_level" -> "level $current/$required"
+                    else -> "$current/$required"
                 }
             }.joinToString(", ")
     }

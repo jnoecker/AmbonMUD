@@ -2,7 +2,6 @@ package dev.ambon.persistence
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.guild.GuildRecord
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.sql.Database
@@ -96,7 +95,7 @@ class PostgresGuildRepositoryTest {
             val record = repo.create(makeRecord())
             val updated =
                 record.copy(
-                    members = mapOf(leaderId to GuildRank.LEADER, member to GuildRank.MEMBER),
+                    members = mapOf(leaderId to "leader", member to "member"),
                     motd = "Welcome!",
                 )
 
@@ -104,8 +103,8 @@ class PostgresGuildRepositoryTest {
 
             val loaded = repo.findById("shadowblade")!!
             assertEquals(2, loaded.members.size)
-            assertEquals(GuildRank.LEADER, loaded.members[leaderId])
-            assertEquals(GuildRank.MEMBER, loaded.members[member])
+            assertEquals("leader", loaded.members[leaderId])
+            assertEquals("member", loaded.members[member])
             assertEquals("Welcome!", loaded.motd)
         }
 

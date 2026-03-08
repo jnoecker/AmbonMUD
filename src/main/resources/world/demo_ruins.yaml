@@ -267,7 +267,7 @@ quests:
     description: "The orchard keeper needs the beetle population thinned out to save the mirror orchard."
     giver: orchard_keeper
     objectives:
-      - type: KILL
+      - type: kill
         targetKey: beetle_swarm
         count: 3
         description: "Kill 3 beetle swarms"

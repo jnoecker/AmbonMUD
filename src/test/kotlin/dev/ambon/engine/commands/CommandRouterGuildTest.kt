@@ -1,7 +1,6 @@
 package dev.ambon.engine.commands
 
 import dev.ambon.bus.LocalOutboundBus
-import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.CombatSystem
@@ -111,7 +110,7 @@ class CommandRouterGuildTest {
 
             val ps = h.players.get(sid)!!
             assertEquals("shadowblade", ps.guildId)
-            assertEquals(GuildRank.LEADER, ps.guildRank)
+            assertEquals("leader", ps.guildRank)
 
             val events = h.outbound.drainAll()
             assertTrue(
@@ -153,7 +152,7 @@ class CommandRouterGuildTest {
 
             val bobPs = h.players.get(sid2)!!
             assertEquals("shadowblade", bobPs.guildId)
-            assertEquals(GuildRank.MEMBER, bobPs.guildRank)
+            assertEquals("member", bobPs.guildRank)
         }
 
     @Test
@@ -206,10 +205,10 @@ class CommandRouterGuildTest {
             h.outbound.drainAll()
 
             h.router.handle(sid1, Command.Guild.Promote("Bob"))
-            assertEquals(GuildRank.OFFICER, h.players.get(sid2)!!.guildRank)
+            assertEquals("officer", h.players.get(sid2)!!.guildRank)
 
             h.router.handle(sid1, Command.Guild.Demote("Bob"))
-            assertEquals(GuildRank.MEMBER, h.players.get(sid2)!!.guildRank)
+            assertEquals("member", h.players.get(sid2)!!.guildRank)
         }
 
     @Test

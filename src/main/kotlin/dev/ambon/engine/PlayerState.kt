@@ -2,9 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.achievement.AchievementState
-import dev.ambon.domain.crafting.CraftingSkill
 import dev.ambon.domain.crafting.CraftingSkillState
-import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mail.MailMessage
@@ -30,7 +28,7 @@ data class PlayerState(
         "WIS" to BASE_STAT,
         "CHA" to BASE_STAT,
     ),
-    var gender: String = "ENBY",
+    var gender: String = "enby",
     var race: String = "HUMAN",
     var playerClass: String = "WARRIOR",
     var level: Int = 1,
@@ -53,13 +51,13 @@ data class PlayerState(
     /** Non-null while the player is composing an outgoing mail message. */
     var mailCompose: MailComposeState? = null,
     var guildId: String? = null,
-    var guildRank: GuildRank? = null,
+    var guildRank: String? = null,
     var guildTag: String? = null,
     var recallRoomId: RoomId? = null,
     var friendsList: MutableSet<String> = mutableSetOf(),
     /** Epoch-ms timestamp after which recall is available again. Runtime-only; not persisted. */
     var recallCooldownUntilMs: Long = 0L,
-    var craftingSkills: MutableMap<CraftingSkill, CraftingSkillState> = mutableMapOf(),
+    var craftingSkills: MutableMap<String, CraftingSkillState> = mutableMapOf(),
     /** Epoch-ms timestamp after which gathering is available again. Runtime-only; not persisted. */
     var gatherCooldownUntilMs: Long = 0L,
 ) {
@@ -138,7 +136,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
             "WIS" to wisdom,
             "CHA" to charisma,
         ),
-        gender = gender,
+        gender = gender.lowercase(),
         race = race,
         playerClass = playerClass,
         level = level,
@@ -158,12 +156,8 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         inbox = inbox.toMutableList(),
         guildId = guildId,
         recallRoomId = recallRoomId,
-        craftingSkills = craftingSkills.mapNotNull { (key, state) ->
-            try {
-                CraftingSkill.valueOf(key) to state
-            } catch (_: IllegalArgumentException) {
-                null
-            }
+        craftingSkills = craftingSkills.map { (key, state) ->
+            key.lowercase() to state
         }.toMap().toMutableMap(),
         friendsList = friendsList.toMutableSet(),
     )
@@ -203,7 +197,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         inbox = inbox.toList(),
         guildId = guildId,
         recallRoomId = recallRoomId,
-        craftingSkills = craftingSkills.map { (k, v) -> k.name to v }.toMap(),
+        craftingSkills = craftingSkills.toMap(),
         friendsList = friendsList.toSet(),
     )
 }

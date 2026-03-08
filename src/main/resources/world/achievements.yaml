@@ -2,10 +2,10 @@ achievements:
   combat/first_blood:
     displayName: "First Blood"
     description: "Kill your first enemy."
-    category: COMBAT
+    category: combat
     hidden: false
     criteria:
-      - type: KILL
+      - type: kill
         targetId: ""
         count: 1
         description: "Kill any mob"
@@ -15,10 +15,10 @@ achievements:
   combat/beetle_exterminator:
     displayName: "Beetle Exterminator"
     description: "Defeat 5 beetle swarms."
-    category: COMBAT
+    category: combat
     hidden: false
     criteria:
-      - type: KILL
+      - type: kill
         targetId: "demo_ruins:beetle_swarm"
         count: 5
         description: "Kill 5 beetle swarms"
@@ -30,10 +30,10 @@ achievements:
   combat/spider_hunter:
     displayName: "Spider Hunter"
     description: "Defeat 5 cave spiders."
-    category: COMBAT
+    category: combat
     hidden: false
     criteria:
-      - type: KILL
+      - type: kill
         targetId: "demo_ruins:cave_spider"
         count: 5
         description: "Kill 5 cave spiders"
@@ -45,10 +45,10 @@ achievements:
   milestone/level_5:
     displayName: "Seasoned Adventurer"
     description: "Reach level 5."
-    category: CLASS
+    category: class
     hidden: false
     criteria:
-      - type: REACH_LEVEL
+      - type: reach_level
         count: 5
         description: "Reach level 5"
     rewards:
@@ -58,10 +58,10 @@ achievements:
   milestone/level_10:
     displayName: "Veteran"
     description: "Reach level 10."
-    category: CLASS
+    category: class
     hidden: false
     criteria:
-      - type: REACH_LEVEL
+      - type: reach_level
         count: 10
         description: "Reach level 10"
     rewards:
@@ -71,10 +71,10 @@ achievements:
   quests/ruins_helper:
     displayName: "Ruins Helper"
     description: "Complete the beetle culling quest."
-    category: SOCIAL
+    category: social
     hidden: false
     criteria:
-      - type: QUEST_COMPLETE
+      - type: quest_complete
         targetId: "demo_ruins:cull_the_beetles"
         count: 1
         description: "Complete Cull the Beetles"
@@ -85,10 +85,10 @@ achievements:
   combat/secret_slayer:
     displayName: "?????"
     description: "You have uncovered a secret."
-    category: COMBAT
+    category: combat
     hidden: true
     criteria:
-      - type: KILL
+      - type: kill
         targetId: "demo_ruins:ancient_golem"
         count: 1
         description: "Defeat the ancient golem"

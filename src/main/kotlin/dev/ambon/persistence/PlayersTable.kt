@@ -36,7 +36,7 @@ object PlayersTable : Table("players") {
     val intelligence = integer("intelligence").default(10)
     val wisdom = integer("wisdom").default(10)
     val charisma = integer("charisma").default(10)
-    val gender = varchar("gender", 16).default("ENBY")
+    val gender = varchar("gender", 16).default("enby")
     val race = varchar("race", 32).default("HUMAN")
     val playerClass = varchar("player_class", 32).default("WARRIOR")
     val level = integer("level").default(1)

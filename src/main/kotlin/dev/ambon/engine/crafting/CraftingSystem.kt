@@ -1,9 +1,7 @@
 package dev.ambon.engine.crafting
 
 import dev.ambon.config.CraftingConfig
-import dev.ambon.domain.crafting.CraftingSkill
 import dev.ambon.domain.crafting.CraftingSkillState
-import dev.ambon.domain.crafting.CraftingStationType
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.RecipeDef
 import dev.ambon.domain.ids.ItemId
@@ -153,7 +151,7 @@ class CraftingSystem(
         recipeKeyword: String,
         roomId: RoomId,
         items: ItemRegistry,
-        roomStation: CraftingStationType?,
+        roomStation: String?,
     ): Either<CraftError, CraftResult> {
         // Find recipe
         val recipe = craftingRegistry.findRecipe(recipeKeyword)
@@ -237,7 +235,7 @@ class CraftingSystem(
         (config.baseXpPerLevel * level.toDouble().pow(config.xpExponent)).toLong()
 
     /** Adds XP to a skill. Returns true if the player leveled up. */
-    private fun addSkillXp(player: PlayerState, skill: CraftingSkill, xp: Long): Boolean {
+    private fun addSkillXp(player: PlayerState, skill: String, xp: Long): Boolean {
         val state = player.craftingSkills.getOrPut(skill) { CraftingSkillState() }
         if (state.level >= config.maxSkillLevel) return false
 
@@ -254,17 +252,17 @@ class CraftingSystem(
         }
     }
 
-    fun getSkillLevel(player: PlayerState, skill: CraftingSkill): Int =
+    fun getSkillLevel(player: PlayerState, skill: String): Int =
         player.craftingSkills.getOrDefault(skill, CraftingSkillState()).level
 
-    fun getSkillState(player: PlayerState, skill: CraftingSkill): CraftingSkillState =
+    fun getSkillState(player: PlayerState, skill: String): CraftingSkillState =
         player.craftingSkills.getOrDefault(skill, CraftingSkillState())
 
     fun maxSkillLevel(): Int = config.maxSkillLevel
 
     fun allRecipes(): Collection<RecipeDef> = craftingRegistry.allRecipes()
 
-    fun recipesForSkill(skill: CraftingSkill): List<RecipeDef> = craftingRegistry.recipesForSkill(skill)
+    fun recipesForSkill(skill: String): List<RecipeDef> = craftingRegistry.recipesForSkill(skill)
 
     fun nodesInRoom(roomId: RoomId): List<GatheringNodeDef> = gatheringRegistry.nodesInRoom(roomId)
 

@@ -17,8 +17,6 @@ import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.ItemSpawn
 import dev.ambon.domain.world.MobDrop
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.status.EffectType
-import dev.ambon.engine.status.StackBehavior
 import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectId
 import dev.ambon.test.CombatTestFixture
@@ -676,9 +674,9 @@ class CombatSystemTest {
                     StatusEffectDefinition(
                         id = StatusEffectId("stun"),
                         displayName = "Stun",
-                        effectType = EffectType.STUN,
+                        effectType = "stun",
                         durationMs = 5000,
-                        stackBehavior = StackBehavior.NONE,
+                        stackBehavior = "none",
                     ),
                 )
             val combat =
@@ -718,10 +716,10 @@ class CombatSystemTest {
                     StatusEffectDefinition(
                         id = StatusEffectId("shield"),
                         displayName = "Shield",
-                        effectType = EffectType.SHIELD,
+                        effectType = "shield",
                         durationMs = 30000,
                         shieldAmount = 20,
-                        stackBehavior = StackBehavior.NONE,
+                        stackBehavior = "none",
                     ),
                 )
             val combat =
@@ -760,7 +758,7 @@ class CombatSystemTest {
                     StatusEffectDefinition(
                         id = StatusEffectId("buff"),
                         displayName = "Buff",
-                        effectType = EffectType.STAT_BUFF,
+                        effectType = "stat_buff",
                         durationMs = 60000,
                         statMods = StatMap.of("STR" to 6),
                     ),

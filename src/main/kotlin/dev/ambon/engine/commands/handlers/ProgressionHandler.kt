@@ -1,6 +1,5 @@
 package dev.ambon.engine.commands.handlers
 
-import dev.ambon.domain.Gender
 import dev.ambon.domain.StatDefinition
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GroupSystem
@@ -29,6 +28,7 @@ class ProgressionHandler(
     private val classRegistry = ctx.classRegistry
     private val raceRegistry = ctx.raceRegistry
     private val statRegistry = ctx.statRegistry
+    private val genderRegistry = ctx.genderRegistry
 
     override fun register(router: CommandRouter) {
         router.on<Command.Score> { sid, _ -> handleScore(sid) }
@@ -168,14 +168,15 @@ class ProgressionHandler(
     }
 
     private suspend fun handleSetGender(sessionId: SessionId, cmd: Command.SetGender) {
-        val gender = Gender.fromString(cmd.gender)
+        val genderId = cmd.gender.lowercase()
+        val gender = genderRegistry?.get(genderId)
         if (gender == null) {
-            val options = Gender.entries.joinToString(", ") { it.name.lowercase() }
+            val options = genderRegistry?.allIds()?.joinToString(", ") ?: "male, female, enby"
             outbound.send(OutboundEvent.SendError(sessionId, "Unknown gender '${cmd.gender}'. Options: $options"))
             return
         }
         players.withPlayer(sessionId) { me ->
-            me.gender = gender.name
+            me.gender = gender.id
             outbound.send(OutboundEvent.SendInfo(sessionId, "Gender set to ${gender.displayName}."))
             gmcpEmitter?.sendCharName(sessionId, me)
         }

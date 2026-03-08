@@ -1,7 +1,6 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.bus.OutboundBus
-import dev.ambon.domain.crafting.CraftingStationType
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -241,13 +240,9 @@ internal suspend fun sendLook(
     gmcpEmitter?.sendRoomItems(sessionId, here)
 }
 
-/** Returns a human-readable display name for a [CraftingStationType]. */
-private fun stationDisplayName(station: CraftingStationType): String =
-    when (station) {
-        CraftingStationType.FORGE -> "Forge"
-        CraftingStationType.ALCHEMY_TABLE -> "Alchemy Table"
-        CraftingStationType.WORKBENCH -> "Workbench"
-    }
+/** Returns a human-readable display name for a crafting station type ID. */
+private fun stationDisplayName(station: String): String =
+    station.split('_').joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
 
 /** Broadcasts [message] to every player in [roomId] except [excludeSessionId]. Delegates to [dev.ambon.engine.broadcastToRoom]. */
 internal suspend fun broadcastToRoomExcept(

@@ -1,6 +1,5 @@
 package dev.ambon.persistence
 
-import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.guild.GuildRecord
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -51,7 +50,7 @@ class YamlGuildRepositoryTest {
             val record = repo.create(makeRecord())
             val updated =
                 record.copy(
-                    members = mapOf(leaderId to GuildRank.LEADER, member to GuildRank.MEMBER),
+                    members = mapOf(leaderId to "leader", member to "member"),
                     motd = "Hello guild!",
                 )
 
@@ -59,8 +58,8 @@ class YamlGuildRepositoryTest {
 
             val loaded = repo.findById("shadowblade")!!
             assertEquals(2, loaded.members.size)
-            assertEquals(GuildRank.LEADER, loaded.members[leaderId])
-            assertEquals(GuildRank.MEMBER, loaded.members[member])
+            assertEquals("leader", loaded.members[leaderId])
+            assertEquals("member", loaded.members[member])
             assertEquals("Hello guild!", loaded.motd)
         }
 

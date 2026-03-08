@@ -9,24 +9,8 @@ object StatusEffectRegistryLoader {
         registry: StatusEffectRegistry,
     ) {
         for ((key, defConfig) in config.definitions) {
-            val effectType =
-                when (defConfig.effectType.uppercase()) {
-                    "DOT" -> EffectType.DOT
-                    "HOT" -> EffectType.HOT
-                    "STAT_BUFF" -> EffectType.STAT_BUFF
-                    "STAT_DEBUFF" -> EffectType.STAT_DEBUFF
-                    "STUN" -> EffectType.STUN
-                    "ROOT" -> EffectType.ROOT
-                    "SHIELD" -> EffectType.SHIELD
-                    else -> continue
-                }
-            val stackBehavior =
-                when (defConfig.stackBehavior.uppercase()) {
-                    "REFRESH" -> StackBehavior.REFRESH
-                    "STACK" -> StackBehavior.STACK
-                    "NONE" -> StackBehavior.NONE
-                    else -> StackBehavior.REFRESH
-                }
+            val effectType = defConfig.effectType.trim().lowercase()
+            val stackBehavior = defConfig.stackBehavior.trim().lowercase().ifEmpty { "refresh" }
             registry.register(
                 StatusEffectDefinition(
                     id = StatusEffectId(key),

@@ -12,13 +12,7 @@ object AbilityRegistryLoader {
     ) {
         val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
         for ((key, defConfig) in config.definitions) {
-            val targetType =
-                when (defConfig.targetType.uppercase()) {
-                    "ENEMY" -> TargetType.ENEMY
-                    "SELF" -> TargetType.SELF
-                    "ALLY" -> TargetType.ALLY
-                    else -> continue
-                }
+            val targetType = defConfig.targetType.trim().lowercase()
             val effect =
                 when (defConfig.effect.type.uppercase()) {
                     "DIRECT_DAMAGE" ->
