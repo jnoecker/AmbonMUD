@@ -3,7 +3,6 @@ package dev.ambon.engine
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.OutboundBus
-import dev.ambon.domain.Gender
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -37,6 +36,7 @@ class GmcpEmitter(
     private val getCombatTarget: (SessionId) -> CombatTargetInfo? = { null },
     private val statRegistry: StatRegistry? = null,
     private val equipmentSlotRegistry: EquipmentSlotRegistry? = null,
+    private val genderRegistry: GenderRegistry? = null,
     imagesBaseUrl: String = "/images/",
 ) {
     private val json = jacksonObjectMapper()
@@ -1183,11 +1183,13 @@ class GmcpEmitter(
     }
 
     private fun resolveSprite(player: PlayerState): String {
-        val gender = Gender.fromString(player.gender) ?: Gender.ENBY
+        val spriteCode = genderRegistry?.get(player.gender)?.spriteCode
+            ?: genderRegistry?.defaultSpriteCode()
+            ?: player.gender.lowercase()
         val race = player.race.lowercase()
         val cls = player.playerClass.lowercase()
         val tier = if (player.isStaff) STAFF_SPRITE_TIER else SPRITE_LEVEL_TIERS.firstOrNull { player.level >= it } ?: 1
-        return "${imagesBase}player_sprites/${race}_${gender.spriteCode}_${cls}_l$tier.png"
+        return "${imagesBase}player_sprites/${race}_${spriteCode}_${cls}_l$tier.png"
     }
 }
 

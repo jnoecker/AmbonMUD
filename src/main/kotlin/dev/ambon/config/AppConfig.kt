@@ -470,6 +470,23 @@ data class EquipmentConfig(
     }
 }
 
+data class GenderConfig(
+    val displayName: String = "",
+    val spriteCode: String = "",
+)
+
+data class GendersConfig(
+    val genders: Map<String, GenderConfig> = defaultGenders(),
+) {
+    companion object {
+        fun defaultGenders(): Map<String, GenderConfig> = linkedMapOf(
+            "male" to GenderConfig(displayName = "Male", spriteCode = "male"),
+            "female" to GenderConfig(displayName = "Female", spriteCode = "female"),
+            "enby" to GenderConfig(displayName = "Enby", spriteCode = "enby"),
+        )
+    }
+}
+
 data class AchievementCategoryConfig(
     val displayName: String = "",
 )
@@ -505,6 +522,7 @@ data class EngineConfig(
     val races: RaceEngineConfig = RaceEngineConfig(),
     val stats: StatsEngineConfig = StatsEngineConfig(),
     val equipment: EquipmentConfig = EquipmentConfig(),
+    val genders: GendersConfig = GendersConfig(),
     val achievementCategories: AchievementCategoriesConfig = AchievementCategoriesConfig(),
     val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */

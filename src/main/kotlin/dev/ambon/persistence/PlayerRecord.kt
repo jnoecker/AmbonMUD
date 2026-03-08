@@ -22,7 +22,7 @@ data class PlayerRecord(
     val intelligence: Int = 10,
     val wisdom: Int = 10,
     val charisma: Int = 10,
-    val gender: String = "ENBY",
+    val gender: String = "enby",
     val race: String = "HUMAN",
     val playerClass: String = "WARRIOR",
     val level: Int = 1,
