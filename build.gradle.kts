@@ -46,7 +46,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     // Connection pool
-    implementation("com.zaxxer:HikariCP:6.2.1")
+    implementation("com.zaxxer:HikariCP:7.0.2")
     // JDBC driver
     implementation("org.postgresql:postgresql:42.7.5")
     // Schema migration
