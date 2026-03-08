@@ -27,6 +27,7 @@ export interface GameStateSnapshot {
   groupInfo: GroupInfo;
   dialogue: DialogueState | null;
   shop: ShopState | null;
+  serverAssets: Record<string, string>;
 }
 
 export interface PendingCast {
@@ -72,5 +73,6 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     groupInfo: { leader: null, members: [] },
     dialogue: null,
     shop: null,
+    serverAssets: {},
   },
 };
