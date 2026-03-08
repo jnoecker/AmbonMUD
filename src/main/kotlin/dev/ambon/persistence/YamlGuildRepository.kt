@@ -1,7 +1,6 @@
 package dev.ambon.persistence
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.guild.GuildRecord
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -104,7 +103,7 @@ internal data class GuildDto(
             tag = tag,
             leaderId = PlayerId(leaderId),
             motd = motd,
-            members = members.mapKeys { PlayerId(it.key) }.mapValues { GuildRank.valueOf(it.value) },
+            members = members.mapKeys { PlayerId(it.key) }.mapValues { it.value.lowercase() },
             createdAtEpochMs = createdAtEpochMs,
         )
 
@@ -117,7 +116,7 @@ internal data class GuildDto(
                 tag = record.tag,
                 leaderId = record.leaderId.value,
                 motd = record.motd,
-                members = record.members.mapKeys { it.key.value }.mapValues { it.value.name },
+                members = record.members.mapKeys { it.key.value }.mapValues { it.value },
                 createdAtEpochMs = record.createdAtEpochMs,
             )
     }

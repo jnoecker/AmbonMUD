@@ -1,7 +1,6 @@
 package dev.ambon.engine
 
 import dev.ambon.bus.OutboundBus
-import dev.ambon.domain.guild.GuildRank
 import dev.ambon.domain.guild.GuildRecord
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
@@ -95,7 +94,7 @@ class GuildSystem(
                 name = trimName,
                 tag = trimTag,
                 leaderId = pid,
-                members = mapOf(pid to GuildRank.LEADER),
+                members = mapOf(pid to "leader"),
                 createdAtEpochMs = clock.millis(),
             )
 
@@ -103,7 +102,7 @@ class GuildSystem(
         guildsById[guildId] = record
 
         ps.guildId = guildId
-        ps.guildRank = GuildRank.LEADER
+        ps.guildRank = "leader"
         ps.guildTag = trimTag
         markPlayerDirty(sessionId)
 
@@ -113,7 +112,7 @@ class GuildSystem(
     }
 
     suspend fun disband(sessionId: SessionId): String? = withMembership(sessionId) { ps, guild ->
-        if (ps.guildRank != GuildRank.LEADER) return@withMembership "Only the guild leader can disband the guild."
+        if (ps.guildRank != "leader") return@withMembership "Only the guild leader can disband the guild."
 
         // Collect online session IDs before clearing guild state
         val onlineMemberSids = guild.members.keys.mapNotNull { players.findSessionByPlayerId(it) }
@@ -154,7 +153,7 @@ class GuildSystem(
         pruneExpiredInvites()
         return withMembership(sessionId) { ps, guild ->
             val rank = ps.guildRank ?: return@withMembership "You are not in a guild."
-            if (rank == GuildRank.MEMBER) return@withMembership "Only officers and the leader can send guild invites."
+            if (rank == "member") return@withMembership "Only officers and the leader can send guild invites."
             if (guild.members.size >= maxSize) return@withMembership "Your guild is full (max $maxSize members)."
 
             val targetSid = players.findSessionByName(targetName)
@@ -195,11 +194,11 @@ class GuildSystem(
         val guild = guildsById[invite.guildId] ?: return "That guild no longer exists."
         if (guild.members.size >= maxSize) return "That guild is now full."
 
-        val updated = guild.copy(members = guild.members + (pid to GuildRank.MEMBER))
+        val updated = guild.copy(members = guild.members + (pid to "member"))
         persistGuild(updated)
 
         ps.guildId = guild.id
-        ps.guildRank = GuildRank.MEMBER
+        ps.guildRank = "member"
         ps.guildTag = guild.tag
         markPlayerDirty(sessionId)
 
@@ -211,7 +210,7 @@ class GuildSystem(
 
     suspend fun leave(sessionId: SessionId): String? = withMembership(sessionId) { ps, guild ->
         val pid = ps.playerId ?: return@withMembership ERR_NOT_CONNECTED
-        if (ps.guildRank == GuildRank.LEADER) {
+        if (ps.guildRank == "leader") {
             return@withMembership "You are the guild leader. Disband the guild with 'guild disband', " +
                 "or promote another member to leader first."
         }
@@ -235,13 +234,13 @@ class GuildSystem(
         targetName: String,
     ): String? = withMembership(sessionId) { ps, guild ->
         val rank = ps.guildRank ?: return@withMembership "You are not in a guild."
-        if (rank == GuildRank.MEMBER) return@withMembership "Only officers and the leader can kick guild members."
+        if (rank == "member") return@withMembership "Only officers and the leader can kick guild members."
 
         val (targetPlayerId, targetRank) = findMemberByName(guild, targetName)
             ?: return@withMembership "Player '$targetName' is not a member of your guild."
 
-        if (targetRank == GuildRank.LEADER) return@withMembership "You cannot kick the guild leader."
-        if (rank == GuildRank.OFFICER && targetRank == GuildRank.OFFICER) {
+        if (targetRank == "leader") return@withMembership "You cannot kick the guild leader."
+        if (rank == "officer" && targetRank == "officer") {
             return@withMembership "Officers cannot kick other officers."
         }
 
@@ -273,21 +272,21 @@ class GuildSystem(
         sessionId: SessionId,
         targetName: String,
     ): String? = withMembership(sessionId) { ps, guild ->
-        if (ps.guildRank != GuildRank.LEADER) return@withMembership "Only the guild leader can promote members."
+        if (ps.guildRank != "leader") return@withMembership "Only the guild leader can promote members."
 
         val (targetPlayerId, targetRank) = findMemberByName(guild, targetName)
             ?: return@withMembership "Player '$targetName' is not a member of your guild."
 
-        if (targetRank == GuildRank.LEADER) return@withMembership "$targetName is already the leader."
-        if (targetRank == GuildRank.OFFICER) return@withMembership "$targetName is already an officer."
+        if (targetRank == "leader") return@withMembership "$targetName is already the leader."
+        if (targetRank == "officer") return@withMembership "$targetName is already an officer."
 
-        val updated = guild.copy(members = guild.members + (targetPlayerId to GuildRank.OFFICER))
+        val updated = guild.copy(members = guild.members + (targetPlayerId to "officer"))
         persistGuild(updated)
 
         val targetSid = players.findSessionByPlayerId(targetPlayerId)
         if (targetSid != null) {
             val targetPs = players.get(targetSid)
-            targetPs?.guildRank = GuildRank.OFFICER
+            targetPs?.guildRank = "officer"
             outbound.send(OutboundEvent.SendInfo(targetSid, "You have been promoted to Officer in guild '${guild.name}'."))
         }
 
@@ -300,21 +299,21 @@ class GuildSystem(
         sessionId: SessionId,
         targetName: String,
     ): String? = withMembership(sessionId) { ps, guild ->
-        if (ps.guildRank != GuildRank.LEADER) return@withMembership "Only the guild leader can demote members."
+        if (ps.guildRank != "leader") return@withMembership "Only the guild leader can demote members."
 
         val (targetPlayerId, targetRank) = findMemberByName(guild, targetName)
             ?: return@withMembership "Player '$targetName' is not a member of your guild."
 
-        if (targetRank == GuildRank.LEADER) return@withMembership "You cannot demote the guild leader."
-        if (targetRank == GuildRank.MEMBER) return@withMembership "$targetName is already a Member."
+        if (targetRank == "leader") return@withMembership "You cannot demote the guild leader."
+        if (targetRank == "member") return@withMembership "$targetName is already a Member."
 
-        val updated = guild.copy(members = guild.members + (targetPlayerId to GuildRank.MEMBER))
+        val updated = guild.copy(members = guild.members + (targetPlayerId to "member"))
         persistGuild(updated)
 
         val targetSid = players.findSessionByPlayerId(targetPlayerId)
         if (targetSid != null) {
             val targetPs = players.get(targetSid)
-            targetPs?.guildRank = GuildRank.MEMBER
+            targetPs?.guildRank = "member"
             outbound.send(OutboundEvent.SendInfo(targetSid, "You have been demoted to Member in guild '${guild.name}'."))
         }
 
@@ -328,7 +327,7 @@ class GuildSystem(
         motd: String,
     ): String? = withMembership(sessionId) { ps, guild ->
         val rank = ps.guildRank ?: return@withMembership "You are not in a guild."
-        if (rank == GuildRank.MEMBER) return@withMembership "Only officers and the leader can set the guild MOTD."
+        if (rank == "member") return@withMembership "Only officers and the leader can set the guild MOTD."
 
         val updated = guild.copy(motd = motd.trim().ifEmpty { null })
         persistGuild(updated)
@@ -342,12 +341,12 @@ class GuildSystem(
         val lines = buildString {
             appendLine("=== ${guild.name} [${guild.tag}] ===")
             appendLine("Members (${guild.members.size}/$maxSize):")
-            for ((memberId, rank) in guild.members.entries.sortedBy { it.value.ordinal }) {
+            for ((memberId, rank) in guild.members.entries.sortedBy { rankOrdinal(it.value) }) {
                 val sid = players.findSessionByPlayerId(memberId)
                 val onlineName = if (sid != null) players.get(sid)?.name else null
                 val nameStr = onlineName ?: "(offline #${memberId.value})"
                 val onlineMarker = if (onlineName != null) " *" else ""
-                append("  [${rank.name.padEnd(7)}] $nameStr$onlineMarker")
+                append("  [${rank.padEnd(7)}] $nameStr$onlineMarker")
                 if (memberId == guild.leaderId) append(" (Leader)")
                 appendLine()
             }
@@ -406,7 +405,7 @@ class GuildSystem(
             sessionId,
             name = guild.name,
             tag = guild.tag,
-            rank = ps.guildRank?.name,
+            rank = ps.guildRank,
             motd = guild.motd,
             memberCount = guild.members.size,
             maxSize = maxSize,
@@ -424,7 +423,7 @@ class GuildSystem(
                 sid,
                 name = guild.name,
                 tag = guild.tag,
-                rank = rank.name,
+                rank = rank,
                 motd = guild.motd,
                 memberCount = guild.members.size,
                 maxSize = maxSize,
@@ -439,7 +438,7 @@ class GuildSystem(
             val online = sid != null
             val ps = if (sid != null) players.get(sid) else null
             val name = ps?.name ?: players.findOfflinePlayerName(memberId) ?: "(unknown)"
-            GuildMemberInfo(name = name, rank = rank.name, online = online, level = ps?.level)
+            GuildMemberInfo(name = name, rank = rank, online = online, level = ps?.level)
         }
 
     // -------- helpers --------
@@ -457,7 +456,7 @@ class GuildSystem(
     private suspend fun findMemberByName(
         guild: GuildRecord,
         targetName: String,
-    ): Pair<PlayerId, GuildRank>? =
+    ): Pair<PlayerId, String>? =
         guild.members.entries.find { (playerId, _) ->
             resolveGuildMemberName(playerId)?.equals(targetName, ignoreCase = true) == true
         }?.let { it.key to it.value }
@@ -486,6 +485,12 @@ class GuildSystem(
 
     private fun pruneExpiredInvites() {
         pendingInvites.removeExpired(clock.millis()) { it.expiresAtMs }
+    }
+
+    private fun rankOrdinal(rank: String): Int = when (rank) {
+        "leader" -> 0
+        "officer" -> 1
+        else -> 2
     }
 }
 

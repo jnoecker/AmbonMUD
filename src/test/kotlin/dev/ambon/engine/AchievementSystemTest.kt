@@ -4,7 +4,6 @@ import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.achievement.AchievementCriterion
 import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.achievement.AchievementRewards
-import dev.ambon.domain.achievement.CriterionType
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -77,7 +76,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:rat",
                                 count = 3,
                                 description = "Kill 3 rats",
@@ -108,7 +107,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:rat",
                                 count = 3,
                                 description = "Kill 3 rats",
@@ -143,7 +142,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "",
                                 count = 1,
                                 description = "Kill any mob",
@@ -172,7 +171,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "",
                                 count = 1,
                             ),
@@ -202,7 +201,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:wolf",
                                 count = 1,
                             ),
@@ -233,7 +232,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.REACH_LEVEL,
+                                type = "reach_level",
                                 count = 5,
                                 description = "Reach level 5",
                             ),
@@ -265,7 +264,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.REACH_LEVEL,
+                                type = "reach_level",
                                 count = 10,
                             ),
                         ),
@@ -294,7 +293,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.QUEST_COMPLETE,
+                                type = "quest_complete",
                                 targetId = "zone:tutorial",
                                 count = 1,
                             ),
@@ -322,7 +321,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.QUEST_COMPLETE,
+                                type = "quest_complete",
                                 targetId = "",
                                 count = 1,
                             ),
@@ -352,7 +351,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "",
                                 count = 1,
                             ),
@@ -368,7 +367,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "",
                                 count = 10,
                             ),
@@ -398,7 +397,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:boss",
                                 count = 1,
                             ),
@@ -431,7 +430,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "",
                                 count = 1,
                             ),
@@ -447,7 +446,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:rat",
                                 count = 1,
                             ),
@@ -478,13 +477,13 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:rat",
                                 count = 3,
                                 description = "Kill 3 rats",
                             ),
                             AchievementCriterion(
-                                type = CriterionType.REACH_LEVEL,
+                                type = "reach_level",
                                 count = 5,
                                 description = "Reach level 5",
                             ),
@@ -532,7 +531,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:rat",
                                 count = 3,
                                 description = "Kill 3 rats",
@@ -564,7 +563,7 @@ class AchievementSystemTest {
                     criteria =
                         listOf(
                             AchievementCriterion(
-                                type = CriterionType.KILL,
+                                type = "kill",
                                 targetId = "zone:rat",
                                 count = 1,
                                 description = "Kill a rat",

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.domain.achievement.AchievementCriterion
 import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.achievement.AchievementRewards
-import dev.ambon.domain.achievement.CriterionType
 import dev.ambon.persistence.yamlMapper
 
 /** Flat DTO for YAML deserialization of achievements.yaml. */
@@ -65,13 +64,10 @@ object AchievementLoader {
 
             val criteria =
                 entry.criteria.mapIndexed { index, cf ->
-                    val type =
-                        runCatching { CriterionType.valueOf(cf.type.uppercase()) }
-                            .getOrElse {
-                                throw IllegalArgumentException(
-                                    "Achievement '$id' criterion #${index + 1} has unknown type '${cf.type}'",
-                                )
-                            }
+                    val type = cf.type.trim().lowercase()
+                    require(type.isNotEmpty()) {
+                        "Achievement '$id' criterion #${index + 1} type cannot be blank"
+                    }
                     require(cf.count >= 1) {
                         "Achievement '$id' criterion #${index + 1} count must be >= 1"
                     }

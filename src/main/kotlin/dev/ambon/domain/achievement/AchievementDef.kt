@@ -13,10 +13,10 @@ data class AchievementDef(
 )
 
 data class AchievementCriterion(
-    val type: CriterionType,
-    /** Mob templateKey for KILL, questId for QUEST_COMPLETE, empty for REACH_LEVEL. */
+    val type: String,
+    /** Mob templateKey for kill, questId for quest_complete, empty for reach_level. */
     val targetId: String = "",
-    /** Kill count, target level, or 1 for QUEST_COMPLETE. */
+    /** Kill count, target level, or 1 for quest_complete. */
     val count: Int = 1,
     val description: String = "",
 )
@@ -27,5 +27,3 @@ data class AchievementRewards(
     /** Title string made available to the player on unlock. Null means no title reward. */
     val title: String? = null,
 ) : Rewards
-
-enum class CriterionType { KILL, REACH_LEVEL, QUEST_COMPLETE }
