@@ -41,12 +41,15 @@ import dev.ambon.engine.behavior.BtNode
 import dev.ambon.engine.dialogue.DialogueChoice
 import dev.ambon.engine.dialogue.DialogueNode
 import dev.ambon.engine.dialogue.DialogueTree
+import org.slf4j.LoggerFactory
 
 class WorldLoadException(
     message: String,
 ) : RuntimeException(message)
 
 object WorldLoader {
+    private val logger = LoggerFactory.getLogger(WorldLoader::class.java)
+
     private val mapper =
         ObjectMapper(YAMLFactory())
             .registerModule(KotlinModule.Builder().build())
@@ -602,31 +605,37 @@ object WorldLoader {
             }
         }
 
-        // Now validate that all exit targets exist in the merged room set.
-        // When a zone filter is active, exits pointing to rooms in non-loaded zones
-        // are kept but not validated (they are cross-zone stubs).
+        // Validate exit targets. Missing targets are logged as warnings and treated
+        // as remote/unreachable exits (players see "the way shimmers" instead of crashing).
         val loadedZones = mergedRooms.keys.mapTo(mutableSetOf()) { it.zone }
         val filteredLoad = zoneFilter.isNotEmpty()
+        val brokenExits = mutableSetOf<Pair<RoomId, Direction>>()
         for ((fromId, exits) in allExits) {
             for ((dir, targetId) in exits) {
                 if (filteredLoad && targetId.zone !in loadedZones) continue
                 if (!mergedRooms.containsKey(targetId)) {
-                    throw WorldLoadException(
-                        "Room '${fromId.value}' exit '$dir' points to missing room '${targetId.value}'",
+                    logger.warn(
+                        "Room '${fromId.value}' exit '$dir' points to missing room '${targetId.value}' — " +
+                            "exit will shimmer as unreachable",
                     )
+                    brokenExits.add(fromId to dir)
                 }
             }
         }
 
-        // Apply exits + features by copying rooms (immutable style)
+        // Apply exits + features by copying rooms (immutable style).
+        // Exits that point to unloaded zones or broken targets are marked as remote
+        // so navigation shows the shimmer message instead of crashing.
         for ((fromId, exits) in allExits) {
             val room = mergedRooms.getValue(fromId)
-            val remoteExits =
+            val remoteExits = buildSet {
                 if (filteredLoad) {
-                    exits.filterValues { it.zone !in loadedZones }.keys.toSet()
-                } else {
-                    emptySet()
+                    addAll(exits.filterValues { it.zone !in loadedZones }.keys)
                 }
+                for ((dir, _) in exits) {
+                    if ((fromId to dir) in brokenExits) add(dir)
+                }
+            }
             mergedRooms[fromId] = room.copy(
                 exits = exits,
                 remoteExits = remoteExits,

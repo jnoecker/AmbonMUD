@@ -148,12 +148,11 @@ class WorldLoaderTest {
     }
 
     @Test
-    fun `fails when an exit points to a missing room`() {
-        val ex =
-            assertThrows(WorldLoadException::class.java) {
-                WorldLoader.loadFromResource("world/bad_exit_missing_room.yaml")
-            }
-        assertTrue(ex.message!!.contains("points to missing room", ignoreCase = true), "Got: ${ex.message}")
+    fun `exit to missing room loads but is marked remote`() {
+        val world = WorldLoader.loadFromResource("world/bad_exit_missing_room.yaml")
+        val roomA = world.rooms.getValue(RoomId("bad_exit_missing_room:a"))
+        assertTrue(roomA.exits.containsKey(Direction.NORTH), "Exit should still exist")
+        assertTrue(roomA.remoteExits.contains(Direction.NORTH), "Exit to missing room should be marked remote")
     }
 
     @Test
@@ -447,12 +446,11 @@ class WorldLoaderTest {
         }
 
         @Test
-        fun `fails if an exit targets a missing room across all zones`() {
-            val ex =
-                assertThrows(WorldLoadException::class.java) {
-                    WorldLoader.loadFromResources(listOf("world/mz_bad_missing_target.yaml"))
-                }
-            assertTrue(ex.message!!.contains("points to missing room"))
+        fun `exit to missing room across zones loads but is marked remote`() {
+            val world = WorldLoader.loadFromResources(listOf("world/mz_bad_missing_target.yaml"))
+            val mossyPath = world.rooms.getValue(RoomId("enchanted_forest:mossy_path"))
+            assertTrue(mossyPath.exits.containsKey(Direction.EAST), "Exit should still exist")
+            assertTrue(mossyPath.remoteExits.contains(Direction.EAST), "Exit to missing room should be marked remote")
         }
     }
 

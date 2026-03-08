@@ -70,6 +70,7 @@ interface GmcpContext {
   setMobInfo: Dispatch<SetStateAction<MobInfo[]>>;
   setLoginPrompt: Dispatch<SetStateAction<LoginPromptState | null>>;
   setLoginError: Dispatch<SetStateAction<LoginErrorState | null>>;
+  setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -789,6 +790,12 @@ export function applyGmcpPackage(
 
     case "Shop.Close": {
       ctx.setShop(null);
+      break;
+    }
+
+    case "Server.Assets": {
+      const packet = data as Record<string, string>;
+      ctx.setServerAssets(packet);
       break;
     }
 

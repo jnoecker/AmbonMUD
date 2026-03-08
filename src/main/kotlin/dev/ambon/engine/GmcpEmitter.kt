@@ -38,11 +38,16 @@ class GmcpEmitter(
     private val equipmentSlotRegistry: EquipmentSlotRegistry? = null,
     private val genderRegistry: GenderRegistry? = null,
     imagesBaseUrl: String = "/images/",
+    private val globalAssets: Map<String, String> = emptyMap(),
     spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
     private val staffSpriteTier: Int = 60,
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
+
+    /** Resolved asset URLs: each value from [globalAssets] is prefixed with [imagesBase]. */
+    private val resolvedAssets: Map<String, String> =
+        globalAssets.mapValues { (_, path) -> "$imagesBase$path" }
 
     /** Sorted descending so the first match is the highest tier the player qualifies for. */
     private val sortedTiers = spriteLevelTiers.sortedDescending().toIntArray()
@@ -330,6 +335,12 @@ class GmcpEmitter(
         emitRaw(sessionId, "Core.Ping", CORE_PING_JSON)
     }
 
+    /** Sends resolved global asset URLs as `Server.Assets`. */
+    suspend fun sendServerAssets(sessionId: SessionId) {
+        if (resolvedAssets.isEmpty()) return
+        emit(sessionId, "Server.Assets", resolvedAssets)
+    }
+
     /**
      * Sends the full character GMCP state: status vars, vitals, name, items,
      * skills, status effects, achievements, and group info. Called on login
@@ -346,6 +357,7 @@ class GmcpEmitter(
         players: PlayerRegistry,
         guildSystem: GuildSystem? = null,
     ) {
+        sendServerAssets(sessionId)
         sendCharStatusVars(sessionId)
         sendCharVitals(sessionId, player)
         sendCharName(sessionId, player)

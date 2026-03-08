@@ -159,6 +159,7 @@ function App() {
   const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
   const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
   const [loginError, setLoginError] = useState<LoginErrorState | null>(null);
+  const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -302,6 +303,7 @@ function App() {
           setMobInfo,
           setLoginPrompt,
           setLoginError,
+          setServerAssets,
         },
       );
     },
@@ -480,6 +482,7 @@ function App() {
       groupInfo,
       dialogue,
       shop,
+      serverAssets,
     };
   });
 
