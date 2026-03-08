@@ -227,10 +227,22 @@ export function useMiniMap() {
     img.src = gameStateRef.current.serverAssets["map_background"] ?? "/images/global_assets/map_background.png";
     bgImageRef.current = img;
   }
+  const assetLoadedRef = useRef(false);
 
   const drawMap = useCallback(() => {
     const canvas = mapCanvasRef.current;
     if (!canvas) return;
+
+    // Re-assign image src once Server.Assets GMCP provides resolved URLs
+    if (!assetLoadedRef.current) {
+      const a = gameStateRef.current.serverAssets;
+      if (Object.keys(a).length > 0) {
+        assetLoadedRef.current = true;
+        if (a["minimap_unexplored"] && fogImageRef.current) fogImageRef.current.src = a["minimap_unexplored"];
+        if (a["map_background"] && bgImageRef.current) bgImageRef.current.src = a["map_background"];
+      }
+    }
+
     const fog = fogImageRef.current?.complete ? fogImageRef.current : null;
     const bg = bgImageRef.current?.complete ? bgImageRef.current : null;
     renderMap(
