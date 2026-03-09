@@ -23,6 +23,12 @@ export interface Ec2StackProps extends StackProps {
    * Ports 80 and 443 are always opened in the security group for HTTP → HTTPS redirects.
    */
   readonly hostname?: string;
+  /**
+   * Optional URL to a lore config overlay (application-local.yaml).
+   * If provided, the systemd service curls it on every (re)start and
+   * bind-mounts it into the container where AppConfigLoader picks it up.
+   */
+  readonly loreConfigUrl?: string;
 }
 
 /**
@@ -55,7 +61,7 @@ export class Ec2Stack extends Stack {
   constructor(scope: Construct, id: string, props: Ec2StackProps) {
     super(scope, id, props);
 
-    const { imageTag, ecrRepoName, domain, hostname } = props;
+    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl } = props;
     const ecrUri = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${ecrRepoName}`;
 
     // -------------------------------------------------------------------------
@@ -149,15 +155,16 @@ export class Ec2Stack extends Stack {
       `ExecStartPre=/bin/bash -c 'aws ecr get-login-password --region ${this.region} | docker login --username AWS --password-stdin ${ecrUri}'`,
       `ExecStartPre=/usr/bin/docker pull ${ecrUri}:${imageTag}`,
       'ExecStartPre=-/usr/bin/docker rm -f ambonmud',
-      // Fetch the lore config overlay from the assets bucket. The file is
-      // bind-mounted into the container's /app working directory where
-      // AppConfigLoader checks the filesystem before falling back to classpath.
-      'ExecStartPre=/usr/bin/curl -fsSL -o /app/data/application-local.yaml https://assets.ambon.dev/config/application-local.yaml',
+      // Fetch the lore config overlay (custom races, backstories, images, etc.)
+      // and bind-mount it into the container where AppConfigLoader reads it.
+      ...(loreConfigUrl
+        ? [`ExecStartPre=/usr/bin/curl -fsSL -o /app/data/application-local.yaml ${loreConfigUrl}`]
+        : []),
       // JAVA_TOOL_OPTIONS is read directly by the JVM (not Hoplite), making it
       // a reliable way to set JVM system properties in the container.
       // -Dambon.profile=demo loads application-demo.yaml from the classpath,
       // which overrides classStartRooms to start players in noecker_resume.
-      `ExecStart=/usr/bin/docker run --name ambonmud -p 4000:4000 -p 8080:8080 -v /app/data:/app/data -v /app/data/application-local.yaml:/app/application-local.yaml:ro -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false -e JAVA_TOOL_OPTIONS=-Dambon.profile=demo ${ecrUri}:${imageTag}`,
+      `ExecStart=/usr/bin/docker run --name ambonmud -p 4000:4000 -p 8080:8080 -v /app/data:/app/data ${loreConfigUrl ? '-v /app/data/application-local.yaml:/app/application-local.yaml:ro ' : ''}-e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false -e JAVA_TOOL_OPTIONS=-Dambon.profile=demo ${ecrUri}:${imageTag}`,
       'ExecStop=/usr/bin/docker stop ambonmud',
       '',
       '[Install]',
