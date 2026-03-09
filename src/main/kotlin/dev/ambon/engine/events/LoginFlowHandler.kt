@@ -712,12 +712,15 @@ internal class LoginFlowHandler(
             }
         }
 
-    private fun classPayloads(): List<Map<String, String>> =
+    private fun classPayloads(): List<Map<String, Any>> =
         availableClasses.map { pc ->
-            mapOf(
-                "id" to pc.id,
-                "name" to pc.displayName,
-                "stats" to "+${pc.hpPerLevel} HP/lvl, +${pc.manaPerLevel} Mana/lvl",
-            )
+            buildMap {
+                put("id", pc.id)
+                put("name", pc.displayName)
+                put("stats", "+${pc.hpPerLevel} HP/lvl, +${pc.manaPerLevel} Mana/lvl")
+                if (pc.description.isNotEmpty()) put("description", pc.description)
+                if (pc.backstory.isNotEmpty()) put("backstory", pc.backstory)
+                if (pc.image.isNotEmpty()) put("image", "$imagesBase${pc.image}")
+            }
         }
 }
