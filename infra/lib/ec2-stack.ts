@@ -149,11 +149,15 @@ export class Ec2Stack extends Stack {
       `ExecStartPre=/bin/bash -c 'aws ecr get-login-password --region ${this.region} | docker login --username AWS --password-stdin ${ecrUri}'`,
       `ExecStartPre=/usr/bin/docker pull ${ecrUri}:${imageTag}`,
       'ExecStartPre=-/usr/bin/docker rm -f ambonmud',
+      // Fetch the lore config overlay from the assets bucket. The file is
+      // bind-mounted into the container's /app working directory where
+      // AppConfigLoader checks the filesystem before falling back to classpath.
+      'ExecStartPre=/usr/bin/curl -fsSL -o /app/data/application-local.yaml https://assets.ambon.dev/config/application-local.yaml',
       // JAVA_TOOL_OPTIONS is read directly by the JVM (not Hoplite), making it
       // a reliable way to set JVM system properties in the container.
       // -Dambon.profile=demo loads application-demo.yaml from the classpath,
       // which overrides classStartRooms to start players in noecker_resume.
-      `ExecStart=/usr/bin/docker run --name ambonmud -p 4000:4000 -p 8080:8080 -v /app/data:/app/data -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false -e JAVA_TOOL_OPTIONS=-Dambon.profile=demo ${ecrUri}:${imageTag}`,
+      `ExecStart=/usr/bin/docker run --name ambonmud -p 4000:4000 -p 8080:8080 -v /app/data:/app/data -v /app/data/application-local.yaml:/app/application-local.yaml:ro -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false -e JAVA_TOOL_OPTIONS=-Dambon.profile=demo ${ecrUri}:${imageTag}`,
       'ExecStop=/usr/bin/docker stop ambonmud',
       '',
       '[Install]',
