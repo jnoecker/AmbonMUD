@@ -1487,7 +1487,7 @@ ambonmud:
           traits:
             - Adaptable - No terrain or climate penalties
             - Ambitious - Slight bonus to experience gain
-          image: 99b06a140d75bbc83f44a57ff096b8036849af4eea439788014208a5d91948bc.png
+          image: c13191cf6f004ab59ededea5772696073d08018b064b63fcf7acf37810fea4f3.png
         MYCORAE:
           displayName: Mycoraae
           description: A fungal people grown from living mycelial networks.
@@ -1501,7 +1501,7 @@ ambonmud:
           traits:
             - Mycelial Fast Travel
             - Telepathy
-          image: dc86ed58cdc58b4cdec1bbc7484754fa46e1ba7ce34b247b896e2ddf9896f184.png
+          image: 9fa4bc2c9804ed5e8f761946bca4da6314ec11d9355b1498a9fe6864ff6fc65c.png
         AETHERAE:
           displayName: Aetherae
           description: Ethereal Beings of Living Shadow
@@ -1515,7 +1515,7 @@ ambonmud:
           traits:
             - Shapeshifting
             - Telekinesis
-          image: ad391366c4918c80fcfe384c113c42f244bcf3a8b02ab00fb75aaa63058a3243.png
+          image: 64b5bc816dcd813915a98695ed2ad169e6c5f4ec5002e92fb3c8744b3fcb5cde.png
         ALORAE:
           displayName: Alorae
           description: "Radiant beings of prismatic light. "
@@ -1529,7 +1529,7 @@ ambonmud:
           traits:
             - Astral Projection
             - Healing Touch
-          image: 66af652f31f8bf81b18a7a344f7b2bf9e1e86742d9a622b9632bb0584d45ff3f.png
+          image: 2fbb8ed7ae6f71c6b524765d14dde20ca07a8585bdb6d1cea54e6d4590b8b65c.png
         LUSTRIAE:
           displayName: Lustriae
           description: Fae Time Sprites, the first children of Aineroia
@@ -1542,7 +1542,7 @@ ambonmud:
           traits:
             - Chronomancy
             - Sizeshifting
-          image: 37de3640ac0a55912aa690ede0c7378248224714ee53325990efb1e5cf6d5633.png
+          image: 41793f2e70ccc8e17a9df114f1201232ce9ac6cbf380d214564878e373c86f21.png
         LITHAE:
           displayName: Lithae
           description: "Living Gemstones "
@@ -1553,7 +1553,7 @@ ambonmud:
           traits:
             - Immovable
             - Absorb Magic
-          image: 06e37782c937050020586f3c2b6d6187541e6e94c88e4c24e01838bce4d10fe1.png
+          image: b7a4c99ff81944c9b168aa5907df1e07a4f66dda748d83f840ca1ca0c44a7438.png
         PYRAE:
           displayName: Pyrae
           description: Human-Phoenix hybrids with dominion over fire
@@ -1565,7 +1565,7 @@ ambonmud:
           traits:
             - Reincarnation
             - Pyromancy
-          image: 71819c2cdfaa568cd28e57361aa61854756d7c084793380c0f8271a024f5abe5.png
+          image: c3d0b79b05a3fca2e67ec94a447df333d80a19432d64b06f953e308348ee8806.png
         ANIMAE:
           displayName: Animae
           description: Undead Clockwork Automatons
@@ -1578,7 +1578,7 @@ ambonmud:
           traits:
             - Tireless
             - Ironskin
-          image: 69a68ef3c182f7555940cfb2362c5b3e13757b8e39661efd9e1511b2dd26e3bd.png
+          image: d978d4a59867400227d75943514682d9374b136353893335e49d3ac4505263bc.png
         MEDUSAE:
           displayName: Medusae
           description: Underwater Jellykin who build civilization through coral grovesong
@@ -1590,7 +1590,7 @@ ambonmud:
           traits:
             - Coral Grovesong
             - Bioluminescence
-          image: f83245904a326d88eb2574de70a3b8a128d6a1169d977a70830000f17cce387f.png
+          image: 95bedc4032f7e1b36961281e543edafb4c0994e1fbed9449b22135c9e57cc037.png
         KITSARAE:
           displayName: Kitsarae
           description: Mischievous Fox Spirits
@@ -1601,7 +1601,7 @@ ambonmud:
             arises. "
           traits:
             - Lucky
-          image: 758957fcd91420b538c8da6cd83eca9c6ce8132bb559cb93cb66a598cf3d2efd.png
+          image: e415af05be92a22742aa0da5c6c10a1d3b76152f9a568d3548decb332927431a.png
         SYLFLORAE:
           displayName: Sylflorae
           description: Living Blooms that change with the seasons
@@ -1609,7 +1609,7 @@ ambonmud:
             Sylflorae bodies are formed of petals, vines, and fragrant blooms
             that shift with the seasons. They are deeply tied to forests and
             wild places, nurturing life wherever they wander.
-          image: f0050364ed858075d01581e1aec7dcb3a3e889c016536e33605d7dbefd253f01.png
+          image: 119fc3fa9e0499071173cf5ed4dbfc641a67151535f754d8e99c795410088338.png
         ORPHIRAE:
           displayName: Ophirae
           description: Abyssal Underwater Dragons
@@ -1617,7 +1617,7 @@ ambonmud:
             resemble sleek, draconic humanoids adapted to the crushing pressures
             of the abyss. Fierce and territorial, they are among the most
             powerful creatures beneath the waves. "
-          image: 2f0d7000130e649773f311e35d0d05809365063637f2674417a1a51672117450.png
+          image: c3af7241ad798a127adebc375de14a08a5ff575514fa53bb2164db982b92712b.png
 
     stats:
       definitions:
