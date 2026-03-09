@@ -181,6 +181,7 @@ class GameEngine(
             metrics = metrics,
             classRegistry = classRegistry,
             raceRegistry = raceRegistry,
+            imagesBaseUrl = imagesBaseUrl,
             debugClassesEnabled = engineConfig.debug.enableSwarmClass,
             maxWrongPasswordRetries = loginConfig.maxWrongPasswordRetries,
             maxFailedLoginAttemptsBeforeDisconnect = loginConfig.maxFailedAttemptsBeforeDisconnect,
