@@ -119,6 +119,34 @@ class WriteCoalescingPlayerRepository(
 
     fun cachedCount(): Int = lock.withLock { cache.size }
 
+    /**
+     * Flush any pending dirty write for [id], then evict from the
+     * in-memory cache so the next lookup reads fresh from the delegate
+     * (e.g. YAML on disk).  This lets external edits to player files
+     * take effect on the next login.
+     */
+    override suspend fun evict(id: PlayerId) {
+        val pending = lock.withLock {
+            val version = dirtyVersions[id] ?: return@withLock null
+            val record = cache[id] ?: return@withLock null
+            PendingSave(id = id, version = version, record = record)
+        }
+        if (pending != null) {
+            delegate.save(pending.record)
+            lock.withLock {
+                if (dirtyVersions[id] == pending.version) {
+                    dirtyVersions.remove(id)
+                }
+            }
+        }
+        lock.withLock {
+            if (dirtyVersions.containsKey(id)) return
+            val removed = cache.remove(id) ?: return
+            nameIndex.remove(removed.name.lowercase())
+            versions.remove(id)
+        }
+    }
+
     private fun snapshotDirty(): List<PendingSave> =
         lock.withLock {
             dirtyVersions.mapNotNull { (id, version) ->
