@@ -58,7 +58,8 @@ items:
     description: "A massive warhammer of skyforged iron etched with divine runes that glow faintly blue. Each strike resonates with a note too low for mortal ears, felt in the chest rather than heard."
     slot: hand
     damage: 35
-    constitution: 5
+    stats:
+      CON: 5
     basePrice: 1
 
   void_dagger:
@@ -77,7 +78,8 @@ items:
     description: "A tall staff of polished azure crystal capped with a perpetually orbiting sphere of white light. Lightning answers to it — or something that looks like lightning."
     slot: hand
     damage: 32
-    constitution: 8
+    stats:
+      CON: 8
     basePrice: 1
 
   celestial_spear:
@@ -97,7 +99,8 @@ items:
     description: "A circlet of braided celestial gold set with seven stones, each the compressed soul of a constellation. It sits upon the head with unsettling weightlessness."
     slot: head
     armor: 30
-    constitution: 10
+    stats:
+      CON: 10
     basePrice: 1
 
   celestial_helm:
@@ -126,7 +129,8 @@ items:
     description: "Robes woven from compressed starlight and the memory of distant moons. They shift between white and deep violet depending on the light, and are softer than anything has a right to be."
     slot: body
     armor: 25
-    constitution: 15
+    stats:
+      CON: 15
     basePrice: 1
 
   # ── Hand Armor / Shields ─────────────────────────────────────────────────────
@@ -146,7 +150,8 @@ items:
     description: "Articulated gauntlets of skyforged alloy, etched inside the cuffs with the names of every being they have protected. The list is very long and in very small script."
     slot: hand
     armor: 22
-    constitution: 8
+    stats:
+      CON: 8
     basePrice: 1
 
   ring_of_eternity:
@@ -155,7 +160,8 @@ items:
     keyword: "ring"
     description: "A plain band of unknown metal that has resisted every attempt at classification. It neither heats nor cools, scratches nor tarnishes. Wearing it, you feel less temporary."
     slot: hand
-    constitution: 25
+    stats:
+      CON: 25
     basePrice: 1
 
 shops:

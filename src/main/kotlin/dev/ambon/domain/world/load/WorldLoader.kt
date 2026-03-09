@@ -354,9 +354,10 @@ object WorldLoader {
                     throw WorldLoadException("Item '${itemId.value}' armor cannot be negative")
                 }
 
-                val constitution = itemFile.constitution
-                if (constitution < 0) {
-                    throw WorldLoadException("Item '${itemId.value}' constitution cannot be negative")
+                for ((statKey, statVal) in itemFile.stats) {
+                    if (statVal < 0) {
+                        throw WorldLoadException("Item '${itemId.value}' stat '$statKey' cannot be negative")
+                    }
                 }
 
                 val charges = itemFile.charges
@@ -414,17 +415,7 @@ object WorldLoader {
                                         slot = slot,
                                         damage = damage,
                                         armor = armor,
-                                        stats =
-                                            StatMap(
-                                                buildMap {
-                                                    if (itemFile.strength != 0) put("STR", itemFile.strength)
-                                                    if (itemFile.dexterity != 0) put("DEX", itemFile.dexterity)
-                                                    if (constitution != 0) put("CON", constitution)
-                                                    if (itemFile.intelligence != 0) put("INT", itemFile.intelligence)
-                                                    if (itemFile.wisdom != 0) put("WIS", itemFile.wisdom)
-                                                    if (itemFile.charisma != 0) put("CHA", itemFile.charisma)
-                                                },
-                                            ),
+                                        stats = StatMap(itemFile.stats.mapKeys { (k, _) -> k.uppercase() }),
                                         consumable = itemFile.consumable,
                                         charges = charges,
                                         onUse = onUse,

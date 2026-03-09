@@ -1483,8 +1483,8 @@ ambonmud:
             - "Versatile: Balanced stat spread suits any class"
           image: race_human.png
           statMods:
-            str: 1
-            cha: 1
+            STR: 1
+            CHA: 1
         ELF:
           displayName: Elf
           description: Graceful and magically attuned, elves see the world in centuries.
@@ -1503,10 +1503,10 @@ ambonmud:
             - "Trance: Rest fully in 4 hours instead of 8"
           image: race_elf.png
           statMods:
-            str: -1
-            dex: 2
-            con: -2
-            int: 1
+            STR: -1
+            DEX: 2
+            CON: -2
+            INT: 1
         DWARF:
           displayName: Dwarf
           description: Tough and resilient, dwarves are born of stone and fire.
@@ -1524,11 +1524,11 @@ ambonmud:
             - "Relentless Endurance: Harder to knock down in combat"
           image: race_dwarf.png
           statMods:
-            str: 1
-            dex: -1
-            con: 2
-            wis: 1
-            cha: -2
+            STR: 1
+            DEX: -1
+            CON: 2
+            WIS: 1
+            CHA: -2
         HALFLING:
           displayName: Halfling
           description: Quick and charming, halflings turn luck into an art form.
@@ -1547,11 +1547,11 @@ ambonmud:
             - "Naturally Stealthy: Can hide behind creatures larger than you"
           image: race_halfling.png
           statMods:
-            str: -2
-            dex: 2
-            con: -1
-            wis: 1
-            cha: 1
+            STR: -2
+            DEX: 2
+            CON: -1
+            WIS: 1
+            CHA: 1
 
     stats:
       definitions:
