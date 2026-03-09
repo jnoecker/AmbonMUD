@@ -128,12 +128,15 @@ internal class LoginFlowHandler(
     private val metrics: GameMetrics,
     private val classRegistry: PlayerClassRegistry,
     private val raceRegistry: RaceRegistry,
+    imagesBaseUrl: String = "/images/",
     private val debugClassesEnabled: Boolean = false,
     maxWrongPasswordRetries: Int,
     maxFailedLoginAttemptsBeforeDisconnect: Int,
     maxConcurrentLogins: Int,
     private val onAfterLogin: suspend (SessionId) -> Unit = {},
 ) {
+    private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
+
     // State exposed by reference so SessionEventHandler can clear it on disconnect.
     internal val pendingLogins = mutableMapOf<SessionId, LoginState>()
     internal val failedLoginAttempts = mutableMapOf<SessionId, Int>()
@@ -705,7 +708,7 @@ internal class LoginFlowHandler(
                 if (race.backstory.isNotEmpty()) put("backstory", race.backstory)
                 if (race.traits.isNotEmpty()) put("traits", race.traits)
                 if (race.abilities.isNotEmpty()) put("abilities", race.abilities)
-                if (race.image.isNotEmpty()) put("image", "/images/${race.image}")
+                if (race.image.isNotEmpty()) put("image", "$imagesBase${race.image}")
             }
         }
 
