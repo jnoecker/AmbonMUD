@@ -29,6 +29,14 @@ export interface Ec2StackProps extends StackProps {
    * bind-mounts it into the container where AppConfigLoader picks it up.
    */
   readonly loreConfigUrl?: string;
+  /**
+   * Optional URL to a tarball (.tar.gz) of world zone YAML files.
+   * If provided, the systemd service downloads and extracts it into
+   * /app/data/world/ on every (re)start. The entrypoint places /app/data
+   * on the classpath before the fat JAR, so these zones shadow the
+   * built-in placeholder zones.
+   */
+  readonly worldZonesUrl?: string;
 }
 
 /**
@@ -61,7 +69,7 @@ export class Ec2Stack extends Stack {
   constructor(scope: Construct, id: string, props: Ec2StackProps) {
     super(scope, id, props);
 
-    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl } = props;
+    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesUrl } = props;
     const ecrUri = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${ecrRepoName}`;
 
     // -------------------------------------------------------------------------
@@ -159,6 +167,15 @@ export class Ec2Stack extends Stack {
       // and bind-mount it into the container where AppConfigLoader reads it.
       ...(loreConfigUrl
         ? [`ExecStartPre=/usr/bin/curl -fsSL -o /app/data/application-local.yaml ${loreConfigUrl}`]
+        : []),
+      // Fetch world zone YAML files (tarball extracts to world/*.yaml inside /app/data).
+      // The entrypoint places /app/data on the classpath before the fat JAR, so
+      // these zones shadow the built-in placeholder zones.
+      ...(worldZonesUrl
+        ? [
+            'ExecStartPre=/bin/bash -c \'mkdir -p /app/data/world && rm -rf /app/data/world/*.yaml\'',
+            `ExecStartPre=/bin/bash -c 'curl -fsSL ${worldZonesUrl} | tar xz -C /app/data'`,
+          ]
         : []),
       // JAVA_TOOL_OPTIONS is read directly by the JVM (not Hoplite), making it
       // a reliable way to set JVM system properties in the container.
