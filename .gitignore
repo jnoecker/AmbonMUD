@@ -57,6 +57,8 @@ Thumbs.db
 /task_plan.md
 
 # Local config overlay (lore, credentials, deployment-specific values)
+# May live on classpath (dev) or in the working directory (deployed server)
+application-local.yaml
 src/main/resources/application-local.yaml
 
 # Gradle user home cache (local tooling artifact)

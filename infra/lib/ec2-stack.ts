@@ -23,6 +23,20 @@ export interface Ec2StackProps extends StackProps {
    * Ports 80 and 443 are always opened in the security group for HTTP → HTTPS redirects.
    */
   readonly hostname?: string;
+  /**
+   * Optional URL to a lore config overlay (application-local.yaml).
+   * If provided, the systemd service curls it on every (re)start and
+   * bind-mounts it into the container where AppConfigLoader picks it up.
+   */
+  readonly loreConfigUrl?: string;
+  /**
+   * Optional base URL for world zone YAML files (e.g. "https://assets.ambon.dev/world").
+   * If provided (along with loreConfigUrl), the systemd service parses zone filenames
+   * from the lore config's ambonmud.world.resources list and curls each one from
+   * ${worldZonesBaseUrl}/<filename>. The entrypoint places /app/data on the classpath
+   * before the fat JAR, so these zones shadow the built-in placeholder zones.
+   */
+  readonly worldZonesBaseUrl?: string;
 }
 
 /**
@@ -55,7 +69,7 @@ export class Ec2Stack extends Stack {
   constructor(scope: Construct, id: string, props: Ec2StackProps) {
     super(scope, id, props);
 
-    const { imageTag, ecrRepoName, domain, hostname } = props;
+    const { imageTag, ecrRepoName, domain, hostname, loreConfigUrl, worldZonesBaseUrl } = props;
     const ecrUri = `${this.account}.dkr.ecr.${this.region}.amazonaws.com/${ecrRepoName}`;
 
     // -------------------------------------------------------------------------
@@ -136,6 +150,36 @@ export class Ec2Stack extends Stack {
       'SCRIPT_END',
       'chmod +x /usr/local/bin/update-ambonmud',
       '',
+      // ---- fetch-world-zones helper script -----------------------------------
+      // Reads zone filenames from application-local.yaml's ambonmud.world.resources
+      // list and curls each from the configured base URL.
+      // Called by ExecStartPre on every service (re)start.
+      // ----------------------------------------------------------------------
+      ...(worldZonesBaseUrl
+        ? [
+            `cat > /usr/local/bin/fetch-world-zones << 'SCRIPT_END'`,
+            '#!/bin/bash',
+            'set -euo pipefail',
+            'CONFIG=/app/data/application-local.yaml',
+            'if [ ! -f "$CONFIG" ]; then',
+            '  echo "No config overlay found at $CONFIG — skipping zone fetch"',
+            '  exit 0',
+            'fi',
+            'mkdir -p /app/data/world',
+            'rm -f /app/data/world/*.yaml',
+            `BASE_URL="${worldZonesBaseUrl}"`,
+            '# Parse "- world/<name>.yaml" entries from the resources list',
+            'grep -E "^\\s*-\\s*world/" "$CONFIG" | sed "s/.*- *//" | while read -r entry; do',
+            '  filename="${entry#world/}"',
+            '  echo "Fetching zone: $filename"',
+            '  curl -fsSL -o "/app/data/world/$filename" "$BASE_URL/$filename"',
+            'done',
+            'echo "World zones fetched to /app/data/world/"',
+            'SCRIPT_END',
+            'chmod +x /usr/local/bin/fetch-world-zones',
+          ]
+        : []),
+      '',
       // ---- systemd service --------------------------------------------------
       `cat > /etc/systemd/system/ambonmud.service << 'SERVICE_END'`,
       '[Unit]',
@@ -149,11 +193,23 @@ export class Ec2Stack extends Stack {
       `ExecStartPre=/bin/bash -c 'aws ecr get-login-password --region ${this.region} | docker login --username AWS --password-stdin ${ecrUri}'`,
       `ExecStartPre=/usr/bin/docker pull ${ecrUri}:${imageTag}`,
       'ExecStartPre=-/usr/bin/docker rm -f ambonmud',
+      // Fetch the lore config overlay (custom races, backstories, images, etc.)
+      // and bind-mount it into the container where AppConfigLoader reads it.
+      ...(loreConfigUrl
+        ? [`ExecStartPre=/usr/bin/curl -fsSL -o /app/data/application-local.yaml ${loreConfigUrl}`]
+        : []),
+      // Fetch world zone YAML files listed in the lore config's ambonmud.world.resources.
+      // The helper script parses filenames from the config overlay, then curls each
+      // from the base URL. The entrypoint places /app/data on the classpath before
+      // the fat JAR, so these zones shadow the built-in placeholder zones.
+      ...(worldZonesBaseUrl
+        ? [`ExecStartPre=/usr/local/bin/fetch-world-zones`]
+        : []),
       // JAVA_TOOL_OPTIONS is read directly by the JVM (not Hoplite), making it
       // a reliable way to set JVM system properties in the container.
       // -Dambon.profile=demo loads application-demo.yaml from the classpath,
       // which overrides classStartRooms to start players in noecker_resume.
-      `ExecStart=/usr/bin/docker run --name ambonmud -p 4000:4000 -p 8080:8080 -v /app/data:/app/data -e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false -e JAVA_TOOL_OPTIONS=-Dambon.profile=demo ${ecrUri}:${imageTag}`,
+      `ExecStart=/usr/bin/docker run --name ambonmud -p 4000:4000 -p 8080:8080 -v /app/data:/app/data ${loreConfigUrl ? '-v /app/data/application-local.yaml:/app/application-local.yaml:ro ' : ''}-e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false -e JAVA_TOOL_OPTIONS=-Dambon.profile=demo ${ecrUri}:${imageTag}`,
       'ExecStop=/usr/bin/docker stop ambonmud',
       '',
       '[Install]',
