@@ -95,7 +95,8 @@ items:
     description: "A helm fashioned from shed antlers and woven bark. The tines curve protectively."
     slot: head
     armor: 1
-    constitution: 1
+    stats:
+      CON: 1
 
   crystal_shard:
     image: 1aee52ea4e289fdc9240fb8546afe4fc534968e733250ca320c37cc795913191.png
@@ -122,7 +123,8 @@ items:
     description: "A large fang strung on a braided cord. It pulses with a feral warmth."
     slot: hand
     damage: 2
-    constitution: 1
+    stats:
+      CON: 1
 
   woven_bark_armor:
     image: 9ccfa4cc92706f0058984fabc4fbf0a0e2a0aa30a4c9ec443691c91ebb9f126d.png
@@ -131,7 +133,8 @@ items:
     description: "Strips of living bark woven into a flexible chest piece. Sap still beads on its surface."
     slot: body
     armor: 1
-    constitution: 1
+    stats:
+      CON: 1
     room: den_stash
 
   old_journal_page:

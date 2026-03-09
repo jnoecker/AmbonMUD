@@ -517,7 +517,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: lightning_spire
 
   gear_21:
@@ -527,7 +528,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
     slot: head
     armor: 3
-    constitution: 1
+    stats:
+      CON: 1
     room: windharrow
 
   gear_22:
@@ -546,7 +548,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
     slot: body
     armor: 3
-    constitution: 1
+    stats:
+      CON: 1
     room: raincatch_basin
 
   gear_24:
@@ -556,7 +559,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
     slot: head
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: coldfire_camp
 
   gear_25:
@@ -575,7 +579,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: snowmelt_pass
 
   gear_27:
@@ -585,7 +590,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-3 circuit in this zone."
     slot: head
     armor: 3
-    constitution: 1
+    stats:
+      CON: 1
     room: cragwatch
 
   gear_28:
@@ -604,7 +610,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: thunderhead_path
 
   gear_30:
@@ -614,7 +621,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
     slot: head
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
     room: high_cairn
 
   gear_31:
@@ -633,7 +641,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
     slot: body
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
     room: raven_lift
 
   gear_33:
@@ -643,7 +652,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
     slot: head
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: hailgate
 
   gear_34:
@@ -662,7 +672,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: needle_shelf
 
   gear_36:
@@ -672,7 +683,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-4 circuit in this zone."
     slot: head
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
     room: white_echo
 
   gear_37:
@@ -691,7 +703,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-5 circuit in this zone."
     slot: body
     armor: 6
-    constitution: 2
+    stats:
+      CON: 2
     room: stormbell_span
 
   gear_39:
@@ -701,7 +714,8 @@ items:
     description: "Mountain-tested equipment traded among ridge wardens and pathfinders. Issued for the depth-5 circuit in this zone."
     slot: head
     armor: 5
-    constitution: 2
+    stats:
+      CON: 2
     room: skycut_notch
 
   gear_40:
@@ -800,7 +814,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_03:
     image: 9cc3b99bf852c040c4ecd0f5d429db86492edc445c1996f08912dc00c6d5490b.png
@@ -809,7 +824,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: head
     armor: 3
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_04:
     image: bff04c12b5ca40cc06774268a1c6162b25975775f05fca9f74a98b4a6725c7a2.png
@@ -826,7 +842,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_06:
     image: fa93960d93cd2f4543438a22ae8854b797f972f6333940fb23c6b9e7934bc111.png
@@ -835,7 +852,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: head
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_07:
     image: d0cf9ef62aae3afbaa0145857261999fc37dd591f86183cae55920acc14e90e6.png
@@ -852,7 +870,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: body
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_09:
     image: d13d625d31998737a783de863bfe83bfd6bb5d3bf11737bf5e47dc72a9a0a3ad.png
@@ -861,7 +880,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: head
     armor: 5
-    constitution: 2
+    stats:
+      CON: 2
 
   trophy_10:
     image: eda17dcd7b64063232d274284a9b10d03fae4b44cffb3e41950bf9ef87c7a74c.png
@@ -878,7 +898,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: body
     armor: 5
-    constitution: 2
+    stats:
+      CON: 2
 
   trophy_12:
     image: 80e8e749219d4d5db6e87fc1ad4c1e87383cad64a2dc0e42fc6cc26d80f9da7d.png
@@ -887,7 +908,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: head
     armor: 6
-    constitution: 2
+    stats:
+      CON: 2
 
 rooms:
   switchback_foot:

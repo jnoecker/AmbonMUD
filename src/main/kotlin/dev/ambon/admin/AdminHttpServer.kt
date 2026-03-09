@@ -103,12 +103,7 @@ private data class PlayerDetailDto(
     val maxMana: Int,
     val xpTotal: Long,
     val gold: Long,
-    val strength: Int,
-    val dexterity: Int,
-    val constitution: Int,
-    val intelligence: Int,
-    val wisdom: Int,
-    val charisma: Int,
+    val stats: Map<String, Int>,
     val activeTitle: String?,
     val activeQuestIds: List<String>,
     val completedQuestIds: List<String>,
@@ -175,12 +170,7 @@ private fun PlayerState.toDetailDto() =
         maxMana = maxMana,
         xpTotal = xpTotal,
         gold = gold,
-        strength = stats["STR"],
-        dexterity = stats["DEX"],
-        constitution = stats["CON"],
-        intelligence = stats["INT"],
-        wisdom = stats["WIS"],
-        charisma = stats["CHA"],
+        stats = stats.values,
         activeTitle = activeTitle,
         activeQuestIds = activeQuests.keys.sorted(),
         completedQuestIds = completedQuestIds.sorted(),
@@ -202,12 +192,7 @@ private fun PlayerRecord.toDetailDto() =
         maxMana = maxMana,
         xpTotal = xpTotal,
         gold = gold,
-        strength = strength,
-        dexterity = dexterity,
-        constitution = constitution,
-        intelligence = intelligence,
-        wisdom = wisdom,
-        charisma = charisma,
+        stats = stats,
         activeTitle = activeTitle,
         activeQuestIds = activeQuests.keys.sorted(),
         completedQuestIds = completedQuestIds.sorted(),
@@ -228,12 +213,7 @@ private fun toDetailDto(
     maxMana: Int,
     xpTotal: Long,
     gold: Long,
-    strength: Int,
-    dexterity: Int,
-    constitution: Int,
-    intelligence: Int,
-    wisdom: Int,
-    charisma: Int,
+    stats: Map<String, Int>,
     activeTitle: String?,
     activeQuestIds: List<String>,
     completedQuestIds: List<String>,
@@ -255,12 +235,7 @@ private fun toDetailDto(
     maxMana = maxMana,
     xpTotal = xpTotal,
     gold = gold,
-    strength = strength,
-    dexterity = dexterity,
-    constitution = constitution,
-    intelligence = intelligence,
-    wisdom = wisdom,
-    charisma = charisma,
+    stats = stats,
     activeTitle = activeTitle,
     activeQuestIds = activeQuestIds,
     completedQuestIds = completedQuestIds,
@@ -478,12 +453,9 @@ internal fun Application.adminModule(
                         appendDlRow("HP", "${dto.hp}/${dto.maxHp}")
                         appendDlRow("Mana", "${dto.mana}/${dto.maxMana}")
                     }
-                    appendDlRow("Strength", dto.strength.toString())
-                    appendDlRow("Dexterity", dto.dexterity.toString())
-                    appendDlRow("Constitution", dto.constitution.toString())
-                    appendDlRow("Intelligence", dto.intelligence.toString())
-                    appendDlRow("Wisdom", dto.wisdom.toString())
-                    appendDlRow("Charisma", dto.charisma.toString())
+                    for ((stat, value) in dto.stats) {
+                        appendDlRow(stat, value.toString())
+                    }
                     append("</div></div>")
                     if (dto.activeQuestIds.isNotEmpty() || dto.completedQuestIds.isNotEmpty()) {
                         append("<div class=\"section\">")
