@@ -1446,60 +1446,61 @@ ambonmud:
           hpPerLevel: 8
           manaPerLevel: 4
           description: A stalwart melee fighter.
-          backstory: "Warriors are the backbone of any adventuring party, standing at the
+          backstory: Warriors are the backbone of any adventuring party, standing at the
             front line where steel meets claw. Trained in the art of war from a
-            young age, they channel raw physical prowess into devastating attacks
-            and unbreakable defenses. A warrior's presence on the battlefield
-            draws the fury of enemies, shielding their allies behind a wall of
-            iron and fury."
-          image: 4b8e2a7f3c1d5e9a6b0f8c2d4e7a1b3c5f9d0e2a4b6c8d1e3f5a7b9c0d2e4f6a.png
+            young age, they channel raw physical prowess into devastating
+            attacks and unbreakable defenses. A warrior's presence on the
+            battlefield draws the fury of enemies, shielding their allies behind
+            a wall of iron and fury.
           primaryStat: STR
           threatMultiplier: 1.5
+          image: ebaab845a6a18207f86d7577fb3071ccd6ae9a7cb312c2b9a5d761ef3ba03ed9.png
         MAGE:
           displayName: Mage
           hpPerLevel: 4
           manaPerLevel: 16
           description: A master of the arcane arts.
-          backstory: "Mages devote their lives to unraveling the mysteries of the arcane,
+          backstory: Mages devote their lives to unraveling the mysteries of the arcane,
             bending the raw fabric of reality through study and willpower. Their
             bodies are fragile, but their minds are weapons — capable of
             unleashing torrents of fire, ice, and lightning that can devastate
             entire groups of enemies. The path of the mage is one of relentless
-            study and dangerous experimentation."
-          image: 7a1b3c5f9d0e2a4b6c8d1e3f5a7b9c0d2e4f6a8b0c2d4e6f8a1b3c5d7e9f0a2b.png
+            study and dangerous experimentation.
           primaryStat: INT
+          image: 8ba98003d76a0cd554ffda85fdeffe38215382a0ef993b0d185c7ecbd6c5e0f6.png
         CLERIC:
           displayName: Cleric
           hpPerLevel: 6
           manaPerLevel: 12
           description: A divine healer and protector.
-          backstory: "Clerics serve as the conduit between mortal beings and the divine
+          backstory: Clerics serve as the conduit between mortal beings and the divine
             powers that shape the world. Through prayer, devotion, and sacred
             rituals, they channel healing light that can mend grievous wounds
             and even call the fallen back from death's threshold. In battle,
             clerics stand as both shield and sanctuary, their blessings turning
-            the tide when all seems lost."
-          image: 3c5f9d0e2a4b6c8d1e3f5a7b9c0d2e4f6a8b0c2d4e6f8a1b3c5d7e9f0a2b4c6d.png
+            the tide when all seems lost.
           primaryStat: WIS
+          image: b8c101fe6db2390a2204bf6318960917ae1e6b40d01ed0fe68f986af1ee8526f.png
         ROGUE:
           displayName: Rogue
           hpPerLevel: 5
           manaPerLevel: 8
           description: A cunning striker from the shadows.
-          backstory: "Rogues live by their wits and reflexes, striking from the shadows
+          backstory: Rogues live by their wits and reflexes, striking from the shadows
             with lethal precision. Masters of stealth, poison, and misdirection,
-            they exploit every weakness and opening their enemies expose. A rogue
-            may not endure a prolonged fight, but few battles last long when a
-            blade finds its mark between the ribs. Their guild teaches that the
-            best fight is the one your enemy never sees coming."
-          image: 9d0e2a4b6c8d1e3f5a7b9c0d2e4f6a8b0c2d4e6f8a1b3c5d7e9f0a2b4c6d8e0f.png
+            they exploit every weakness and opening their enemies expose. A
+            rogue may not endure a prolonged fight, but few battles last long
+            when a blade finds its mark between the ribs. Their guild teaches
+            that the best fight is the one your enemy never sees coming.
           primaryStat: DEX
+          image: 63ecfccf76fda545693522fa5c1c207cd9b0340d7ebd5fb4c5a054962d9cb41e.png
         SWARM:
           displayName: Swarm
           hpPerLevel: 2
           manaPerLevel: 3
           description: A debug class for load testing.
           selectable: false
+          image: 73253fe294c7617953d627b6da458dfdd8ab833293164ce1247c9136b0fa9b1d.png
 
     races:
       definitions:
