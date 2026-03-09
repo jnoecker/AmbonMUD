@@ -695,9 +695,18 @@ internal class LoginFlowHandler(
         )
     }
 
-    private fun racePayloads(): List<Map<String, String>> =
+    private fun racePayloads(): List<Map<String, Any>> =
         raceRegistry.all().map { race ->
-            mapOf("id" to race.id, "name" to race.displayName, "stats" to formatStatMods(race.statMods))
+            buildMap {
+                put("id", race.id)
+                put("name", race.displayName)
+                put("stats", formatStatMods(race.statMods))
+                if (race.description.isNotEmpty()) put("description", race.description)
+                if (race.backstory.isNotEmpty()) put("backstory", race.backstory)
+                if (race.traits.isNotEmpty()) put("traits", race.traits)
+                if (race.abilities.isNotEmpty()) put("abilities", race.abilities)
+                if (race.image.isNotEmpty()) put("image", "/images/${race.image}")
+            }
         }
 
     private fun classPayloads(): List<Map<String, String>> =

@@ -5071,6 +5071,198 @@ body {
   text-align: center;
 }
 
+/* ── Race selection carousel ─────────────────────── */
+
+.login-modal--wide {
+  width: min(560px, 94vw);
+}
+
+.race-carousel {
+  align-items: center;
+}
+
+.race-carousel-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.race-carousel-arrow {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--line-soft);
+  background: rgb(62 74 108 / 40%);
+  color: var(--text-primary);
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.race-carousel-arrow:hover {
+  background: rgb(88 72 132 / 50%);
+  border-color: var(--color-primary-lavender);
+}
+
+.race-carousel-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line-soft);
+  background:
+    linear-gradient(160deg, rgb(54 63 90 / 80%), rgb(40 48 72 / 70%));
+  animation: race-card-enter 0.25s ease-out;
+}
+
+@keyframes race-card-enter {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.race-carousel-portrait {
+  width: 140px;
+  height: 140px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid rgb(232 239 255 / 16%);
+  background: rgb(30 36 56 / 60%);
+  box-shadow: 0 4px 16px rgb(8 10 18 / 40%);
+}
+
+.race-carousel-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.race-carousel-name {
+  margin: 0;
+  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-primary-lavender);
+  letter-spacing: 0.02em;
+}
+
+.race-carousel-stats {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-moss-green);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.race-carousel-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.45;
+}
+
+.race-carousel-traits {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.race-carousel-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+.race-carousel-trait-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.race-carousel-trait {
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.race-carousel-trait-name {
+  color: var(--color-soft-gold);
+  font-weight: 600;
+}
+
+.race-carousel-trait-detail {
+  color: var(--text-secondary);
+  margin-left: 2px;
+}
+
+.race-carousel-trait-detail::before {
+  content: " \2014  ";
+  color: var(--text-tertiary);
+}
+
+.race-carousel-backstory {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+.race-carousel-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.race-carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--line-soft);
+  background: rgb(62 74 108 / 50%);
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.race-carousel-dot:hover {
+  border-color: var(--color-primary-lavender);
+}
+
+.race-carousel-dot.active {
+  background: var(--color-primary-lavender);
+  border-color: var(--color-primary-lavender);
+  transform: scale(1.2);
+}
+
+.race-carousel-select {
+  align-self: center;
+  padding: 10px 32px;
+  font-size: 0.95rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes race-card-enter {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
 /* ── Video cinematic modal ────────────────────────── */
 
 .video-modal-overlay {
