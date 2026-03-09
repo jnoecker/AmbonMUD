@@ -57,12 +57,14 @@ class PersistenceFieldCoverageTest {
                 id = PlayerId(42L),
                 name = "TestHero",
                 roomId = RoomId("zone:room"),
-                strength = 15,
-                dexterity = 14,
-                constitution = 13,
-                intelligence = 18,
-                wisdom = 16,
-                charisma = 12,
+                stats = mapOf(
+                    "STR" to 15,
+                    "DEX" to 14,
+                    "CON" to 13,
+                    "INT" to 18,
+                    "WIS" to 16,
+                    "CHA" to 12,
+                ),
                 gender = "male",
                 race = "ELF",
                 playerClass = "MAGE",
@@ -156,8 +158,9 @@ class PersistenceFieldCoverageTest {
         // Known mapping differences:
         //   PlayersTable.nameLower  → derived, no PlayerRecord field
         //   PlayersTable.mailInbox  → maps to PlayerRecord.inbox
+        //   PlayersTable.statsJson  → maps to PlayerRecord.stats
         val expectedExtra = setOf("name_lower")
-        val nameMapping = mapOf("mail_inbox" to "inbox")
+        val nameMapping = mapOf("mail_inbox" to "inbox", "stats_json" to "stats")
 
         val normalised =
             tableColumns
@@ -209,12 +212,7 @@ class PersistenceFieldCoverageTest {
                         ansiEnabled = FULLY_POPULATED.ansiEnabled,
                         race = FULLY_POPULATED.race,
                         playerClass = FULLY_POPULATED.playerClass,
-                        strength = FULLY_POPULATED.strength,
-                        dexterity = FULLY_POPULATED.dexterity,
-                        constitution = FULLY_POPULATED.constitution,
-                        intelligence = FULLY_POPULATED.intelligence,
-                        wisdom = FULLY_POPULATED.wisdom,
-                        charisma = FULLY_POPULATED.charisma,
+                        stats = FULLY_POPULATED.stats,
                     ),
                 )
             val expected = FULLY_POPULATED.copy(id = seed.id)
