@@ -56,6 +56,9 @@ Thumbs.db
 /progress.md
 /task_plan.md
 
+# Local config overlay (lore, credentials, deployment-specific values)
+src/main/resources/application-local.yaml
+
 # Gradle user home cache (local tooling artifact)
 .gradle-user/
 
