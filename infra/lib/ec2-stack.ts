@@ -128,8 +128,9 @@ export class Ec2Stack extends Stack {
     const userData = ec2.UserData.forLinux();
     userData.addCommands(
       'set -euo pipefail',
-      'dnf install -y docker',
+      'dnf install -y docker amazon-ssm-agent',
       'systemctl enable --now docker',
+      'systemctl enable --now amazon-ssm-agent',
       // UID 1001 matches the pinned ambonmud user inside the container (Dockerfile).
       'mkdir -p /app/data && chown 1001:1001 /app/data',
       '',
