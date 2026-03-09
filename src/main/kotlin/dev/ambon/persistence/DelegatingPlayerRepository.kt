@@ -38,4 +38,8 @@ abstract class DelegatingPlayerRepository(
         persistSave(record)
         storeOnSave(record)
     }
+
+    override suspend fun evict(id: PlayerId) {
+        delegate.evict(id)
+    }
 }

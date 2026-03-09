@@ -304,6 +304,10 @@ class PlayerRegistry(
         // Persist last seen + room for claimed players
         persistIfClaimed(ps)
 
+        // Evict from the repository cache so the next login reads fresh
+        // from disk, picking up any manual edits made while offline.
+        ps.playerId?.let { repo.evict(it) }
+
         roomMembers.removeFromSet(ps.roomId, sessionId)
         sessionByLowerName.remove(ps.name.lowercase())
         items.removePlayer(sessionId)

@@ -45,4 +45,13 @@ interface PlayerRepository {
     suspend fun create(request: PlayerCreationRequest): PlayerRecord
 
     suspend fun save(record: PlayerRecord)
+
+    /**
+     * Hint that the given player is no longer active and any cached state
+     * may be discarded.  Implementations should flush any pending writes
+     * for [id] before evicting.  The next [findById]/[findByName] will
+     * read from the backing store, picking up any external edits made
+     * while the player was offline.  Default implementation is a no-op.
+     */
+    suspend fun evict(id: PlayerId) {}
 }
