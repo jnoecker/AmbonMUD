@@ -5,10 +5,12 @@ import com.sksamuel.hoplite.ExperimentalHoplite
 import com.sksamuel.hoplite.PropertySource
 import com.sksamuel.hoplite.addEnvironmentSource
 import com.sksamuel.hoplite.addResourceSource
+import java.io.File
 
 object AppConfigLoader {
     private const val DEFAULT_RESOURCE_PATH = "/application.yaml"
-    private const val LOCAL_OVERRIDE_PATH = "/application-local.yaml"
+    private const val LOCAL_OVERRIDE_FILENAME = "application-local.yaml"
+    private const val LOCAL_OVERRIDE_CLASSPATH = "/$LOCAL_OVERRIDE_FILENAME"
 
     // Environment variable naming convention for container deployments:
     //   AMBONMUD_MODE              → ambonmud.mode
@@ -27,8 +29,12 @@ object AppConfigLoader {
     //   1. Environment variables
     //   2. Extra sources (programmatic)
     //   3. Profile overlay  (-Dambon.profile=<name>)
-    //   4. Local overlay    (application-local.yaml — git-ignored, world/lore overrides)
+    //   4. Local overlay    (application-local.yaml — filesystem then classpath)
     //   5. Base defaults    (application.yaml — checked in, generic/tech defaults)
+    //
+    // The local overlay is checked in two locations:
+    //   a. Filesystem working directory (for deployed servers that curl the file at startup)
+    //   b. Classpath resource (for local dev with the file in src/main/resources/)
     @OptIn(ExperimentalHoplite::class)
     fun load(
         resourcePath: String = DEFAULT_RESOURCE_PATH,
@@ -52,8 +58,14 @@ object AppConfigLoader {
 
         // Local override file (git-ignored) — holds world/lore customisations that
         // shouldn't live in the open-source repo (custom races, backstories, images, etc.).
-        // Falls back gracefully when not present.
-        builder = builder.addResourceSource(LOCAL_OVERRIDE_PATH, optional = true)
+        // Check the filesystem working directory first (for deployed servers that curl
+        // the file at startup), then fall back to classpath (for local dev).
+        val localFile = File(LOCAL_OVERRIDE_FILENAME)
+        if (localFile.isFile) {
+            builder = builder.addSource(PropertySource.file(localFile, optional = true))
+        } else {
+            builder = builder.addResourceSource(LOCAL_OVERRIDE_CLASSPATH, optional = true)
+        }
 
         builder = builder.addResourceSource(resourcePath, optional = false)
 
