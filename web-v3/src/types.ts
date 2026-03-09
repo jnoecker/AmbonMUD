@@ -299,6 +299,11 @@ export interface LoginRaceOption {
   id: string;
   name: string;
   stats: string;
+  description?: string;
+  backstory?: string;
+  traits?: string[];
+  abilities?: string[];
+  image?: string;
 }
 
 export interface LoginClassOption {
