@@ -76,6 +76,7 @@ ambonmud:
     # Multi-engine mode: when engines list is non-empty, the gateway connects
     # to all listed engines and uses SessionRouter for session-to-engine routing.
     # Leave empty for single-engine mode (uses grpc.client config instead).
+    startZone: ""
     engines: []
     #engines:
     #  - id: engine-1
@@ -97,9 +98,7 @@ ambonmud:
 
   world:
     startRoom: "ambon_hub:hall_of_portals"
-    # resources: omitted — all zone files under classpath world/ are auto-discovered.
-    # Provide an explicit list here to restrict which zones are loaded (useful for
-    # lightweight deploys or ENGINE-mode zone partitioning).
+    resources: []
 
   persistence:
     backend: YAML
@@ -356,8 +355,6 @@ ambonmud:
           effectType: STAT_DEBUFF
           durationMs: 5000
           stackBehavior: NONE
-      effectTypes: {}
-      stackBehaviors: {}
     economy:
       buyMultiplier: 1.0
       sellMultiplier: 0.5
@@ -1425,7 +1422,6 @@ ambonmud:
             type: DIRECT_DAMAGE
           description: The ultimate rogue ability—become the shadow itself.
           image: 5da18c4bb24ad009372c1feacb9b9a24bb7df1f45af581c3db9fe519060f575b.png
-      targetTypes: {}
 
     crafting:
       maxSkillLevel: 100
@@ -1433,8 +1429,7 @@ ambonmud:
       xpExponent: 1.5
       gatherCooldownMs: 3000
       stationBonusQuantity: 1
-      skills: {}
-      stationTypes: {}
+      recipes: {}
 
     debug:
       enableSwarmClass: false
@@ -1614,7 +1609,7 @@ ambonmud:
           backstory: Bioluminescent beings of the deep ocean. Their translucent forms glow
             with shifting colors that pulse like living lanterns beneath the
             waves. Medusae are graceful swimmers and masters of the mysterious
-            ecosystems of Ambon’s seas. They live in complex cities grown from
+            ecosystems of Ambon's seas. They live in complex cities grown from
             living coral, manipulated through their magic song.
           traits:
             - Coral Grovesong
@@ -1739,14 +1734,413 @@ ambonmud:
         displayName: MALE
       female:
         displayName: FEMALE
-    achievementCategories: {}
-    achievementCriterionTypes: {}
-    questObjectiveTypes: {}
-    questCompletionTypes: {}
+    achievementCategories:
+      categories:
+        combat:
+          displayName: Combat
+        exploration:
+          displayName: Exploration
+        social:
+          displayName: Social
+        crafting:
+          displayName: Crafting
+        class:
+          displayName: Class
+    achievementCriterionTypes:
+      types:
+        kill:
+          displayName: Kill
+          progressFormat: "{current}/{required}"
+        reach_level:
+          displayName: Reach Level
+          progressFormat: "level {current}/{required}"
+        quest_complete:
+          displayName: Quest Complete
+          progressFormat: "{current}/{required}"
+    questObjectiveTypes:
+      types:
+        kill:
+          displayName: Kill
+        collect:
+          displayName: Collect
+    questCompletionTypes:
+      types:
+        auto:
+          displayName: Automatic
+        npc_turn_in:
+          displayName: NPC Turn-In
     guild:
-      ranks: {}
+      maxSize: 50
+      inviteTimeoutMs: 60000
+    guildRanks:
       founderRank: leader
       defaultRank: member
+      ranks:
+        leader:
+          displayName: Leader
+          level: 100
+          permissions: [invite, kick, promote, demote, disband, set_motd]
+        officer:
+          displayName: Officer
+          level: 50
+          permissions: [invite, kick]
+        member:
+          displayName: Member
+          level: 0
+          permissions: []
+    friends:
+      maxFriends: 50
+    commands:
+      entries:
+        help:
+          usage: "help/?"
+          category: utility
+        look:
+          usage: "look/l (or look <direction>)"
+          category: navigation
+        move:
+          usage: "n/s/e/w/u/d"
+          category: navigation
+        exits:
+          usage: "exits/ex"
+          category: navigation
+        recall:
+          usage: "recall"
+          category: navigation
+        say:
+          usage: "say <msg> or '<msg>"
+          category: communication
+        emote:
+          usage: "emote <msg>"
+          category: communication
+        pose:
+          usage: "pose <msg>"
+          category: communication
+        who:
+          usage: "who"
+          category: communication
+        tell:
+          usage: "tell/t <player> <msg>"
+          category: communication
+        whisper:
+          usage: "whisper/wh <player> <msg>"
+          category: communication
+        gossip:
+          usage: "gossip/gs <msg>"
+          category: communication
+        shout:
+          usage: "shout/sh <msg>"
+          category: communication
+        ooc:
+          usage: "ooc <msg>"
+          category: communication
+        inventory:
+          usage: "inventory/inv/i"
+          category: items
+        equipment:
+          usage: "equipment/eq"
+          category: items
+        wear:
+          usage: "wear/equip <item>"
+          category: items
+        remove:
+          usage: "remove/unequip <slot>"
+          category: items
+        get:
+          usage: "get/take/pickup <item>"
+          category: items
+        drop:
+          usage: "drop <item>"
+          category: items
+        use:
+          usage: "use <item>"
+          category: items
+        give:
+          usage: "give <item> <player>"
+          category: items
+        talk:
+          usage: "talk <npc>"
+          category: social
+        kill:
+          usage: "kill <mob>"
+          category: combat
+        flee:
+          usage: "flee"
+          category: combat
+        cast:
+          usage: "cast/c <spell> [target]"
+          category: combat
+        spells:
+          usage: "spells/abilities/skills"
+          category: progression
+        effects:
+          usage: "effects/buffs/debuffs"
+          category: progression
+        score:
+          usage: "score/sc"
+          category: progression
+        balance:
+          usage: "gold/balance"
+          category: shops
+        shop_list:
+          usage: "list/shop"
+          category: shops
+        buy:
+          usage: "buy <item>"
+          category: shops
+        sell:
+          usage: "sell <item>"
+          category: shops
+        quest_log:
+          usage: "quest log/list"
+          category: quests
+        quest_info:
+          usage: "quest info <name>"
+          category: quests
+        quest_abandon:
+          usage: "quest abandon <name>"
+          category: quests
+        accept:
+          usage: "accept <quest>"
+          category: quests
+        achievements:
+          usage: "achievements/ach"
+          category: quests
+        group_invite:
+          usage: "group invite <player>"
+          category: groups
+        group_accept:
+          usage: "group accept"
+          category: groups
+        group_leave:
+          usage: "group leave"
+          category: groups
+        group_kick:
+          usage: "group kick <player>"
+          category: groups
+        group_list:
+          usage: "group list (or just 'group')"
+          category: groups
+        gtell:
+          usage: "gtell/gt <message>"
+          category: groups
+        guild_create:
+          usage: "guild create <name> <tag>"
+          category: guilds
+        guild_disband:
+          usage: "guild disband"
+          category: guilds
+        guild_invite:
+          usage: "guild invite <player>"
+          category: guilds
+        guild_accept:
+          usage: "guild accept"
+          category: guilds
+        guild_leave:
+          usage: "guild leave"
+          category: guilds
+        guild_kick:
+          usage: "guild kick <player>"
+          category: guilds
+        guild_promote:
+          usage: "guild promote <player>"
+          category: guilds
+        guild_demote:
+          usage: "guild demote <player>"
+          category: guilds
+        guild_motd:
+          usage: "guild motd <message>"
+          category: guilds
+        guild_roster:
+          usage: "guild roster"
+          category: guilds
+        guild_info:
+          usage: "guild info (or just 'guild')"
+          category: guilds
+        gchat:
+          usage: "gchat/g <message>"
+          category: guilds
+        gather:
+          usage: "gather/harvest/mine <node>"
+          category: crafting
+        craft:
+          usage: "craft/make <recipe>"
+          category: crafting
+        recipes:
+          usage: "recipes [filter]"
+          category: crafting
+        craftskills:
+          usage: "craftskills/professions"
+          category: crafting
+        open:
+          usage: "open <door|container>"
+          category: world
+        close:
+          usage: "close <door|container>"
+          category: world
+        unlock:
+          usage: "unlock <door|container>"
+          category: world
+        lock:
+          usage: "lock <door|container>"
+          category: world
+        search:
+          usage: "search <container>"
+          category: world
+        get_from:
+          usage: "get <item> from <container>"
+          category: world
+        put_in:
+          usage: "put <item> <container>"
+          category: world
+        pull:
+          usage: "pull <lever>"
+          category: world
+        read:
+          usage: "read <sign>"
+          category: world
+        title:
+          usage: "title <titleName> | title clear"
+          category: progression
+        gender:
+          usage: "gender <option>"
+          category: progression
+        friend:
+          usage: "friend list | add <player> | remove <player>"
+          category: social
+        mail:
+          usage: "mail list | read <n> | send <player> | delete <n>"
+          category: social
+        ansi:
+          usage: "ansi on/off"
+          category: utility
+        colors:
+          usage: "colors"
+          category: utility
+        clear:
+          usage: "clear"
+          category: utility
+        quit:
+          usage: "quit/exit"
+          category: utility
+        phase:
+          usage: "phase/layer [instance]"
+          category: utility
+        # Staff commands
+        goto:
+          usage: "goto <zone:room | room | zone:>"
+          category: admin
+          staff: true
+        transfer:
+          usage: "transfer <player> <room>"
+          category: admin
+          staff: true
+        spawn:
+          usage: "spawn <mob-template>"
+          category: admin
+          staff: true
+        smite:
+          usage: "smite <player|mob>"
+          category: admin
+          staff: true
+        staff_kick:
+          usage: "kick <player>"
+          category: admin
+          staff: true
+        dispel:
+          usage: "dispel <player|mob>"
+          category: admin
+          staff: true
+        setlevel:
+          usage: "setlevel <player> <level>"
+          category: admin
+          staff: true
+        shutdown:
+          usage: "shutdown"
+          category: admin
+          staff: true
+    craftingSkills:
+      skills:
+        mining:
+          displayName: Mining
+          type: gathering
+        herbalism:
+          displayName: Herbalism
+          type: gathering
+        smithing:
+          displayName: Smithing
+          type: crafting
+        alchemy:
+          displayName: Alchemy
+          type: crafting
+    craftingStationTypes:
+      stationTypes:
+        forge:
+          displayName: Forge
+        alchemy_table:
+          displayName: Alchemy Table
+        workbench:
+          displayName: Workbench
+    effectTypes:
+      types:
+        dot:
+          displayName: Damage Over Time
+          ticksDamage: true
+          ticksHealing: false
+          modifiesStats: false
+          absorbsDamage: false
+        hot:
+          displayName: Heal Over Time
+          ticksDamage: false
+          ticksHealing: true
+          modifiesStats: false
+          absorbsDamage: false
+        stat_buff:
+          displayName: Stat Buff
+          ticksDamage: false
+          ticksHealing: false
+          modifiesStats: true
+          absorbsDamage: false
+        stat_debuff:
+          displayName: Stat Debuff
+          ticksDamage: false
+          ticksHealing: false
+          modifiesStats: true
+          absorbsDamage: false
+        stun:
+          displayName: Stun
+          ticksDamage: false
+          ticksHealing: false
+          modifiesStats: false
+          absorbsDamage: false
+        root:
+          displayName: Root
+          ticksDamage: false
+          ticksHealing: false
+          modifiesStats: false
+          absorbsDamage: false
+        shield:
+          displayName: Shield
+          ticksDamage: false
+          ticksHealing: false
+          modifiesStats: false
+          absorbsDamage: true
+    targetTypes:
+      types:
+        enemy:
+          displayName: Enemy
+        self:
+          displayName: Self
+        ally:
+          displayName: Ally
+    stackBehaviors:
+      behaviors:
+        refresh:
+          displayName: Refresh
+        stack:
+          displayName: Stack
+        none:
+          displayName: None
 
   progression:
     maxLevel: 50
@@ -1779,6 +2173,7 @@ ambonmud:
   demo:
     autoLaunchBrowser: false
     webClientHost: localhost
+    webClientUrl: ~
 
   observability:
     metricsEnabled: true
