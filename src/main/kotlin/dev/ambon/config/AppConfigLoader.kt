@@ -8,6 +8,7 @@ import com.sksamuel.hoplite.addResourceSource
 
 object AppConfigLoader {
     private const val DEFAULT_RESOURCE_PATH = "/application.yaml"
+    private const val LOCAL_OVERRIDE_PATH = "/application-local.yaml"
 
     // Environment variable naming convention for container deployments:
     //   AMBONMUD_MODE              → ambonmud.mode
@@ -21,6 +22,13 @@ object AppConfigLoader {
     // Hoplite lowercases all keys and replaces _ with . for path segments.
     // NOTE: The root YAML key and AmbonMUDRootConfig field are both `ambonmud`
     // (all-lowercase) so that Hoplite's env-var normalisation resolves correctly.
+    //
+    // Config source priority (highest → lowest):
+    //   1. Environment variables
+    //   2. Extra sources (programmatic)
+    //   3. Profile overlay  (-Dambon.profile=<name>)
+    //   4. Local overlay    (application-local.yaml — git-ignored, world/lore overrides)
+    //   5. Base defaults    (application.yaml — checked in, generic/tech defaults)
     @OptIn(ExperimentalHoplite::class)
     fun load(
         resourcePath: String = DEFAULT_RESOURCE_PATH,
@@ -41,6 +49,11 @@ object AppConfigLoader {
         if (profileName != null) {
             builder = builder.addSource(PropertySource.resource("/application-$profileName.yaml", optional = true))
         }
+
+        // Local override file (git-ignored) — holds world/lore customisations that
+        // shouldn't live in the open-source repo (custom races, backstories, images, etc.).
+        // Falls back gracefully when not present.
+        builder = builder.addResourceSource(LOCAL_OVERRIDE_PATH, optional = true)
 
         builder = builder.addResourceSource(resourcePath, optional = false)
 

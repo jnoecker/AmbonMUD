@@ -2477,151 +2477,66 @@ ambonmud:
           selectable: false
           image: 73253fe294c7617953d627b6da458dfdd8ab833293164ce1247c9136b0fa9b1d.png
 
+    # Default placeholder races. Override in application-local.yaml with your
+    # own world lore (custom races, backstories, traits, images, stat mods).
     races:
       definitions:
-        ARCHAE:
-          displayName: Archae
-          description: Proud First Children of the Creator
-          backstory: "The first children of the Creator and the oldest sentient race of
-            Ambon. Archae are adaptable and ambitious, capable of thriving in
-            nearly any environment or profession. Their long history has
-            produced countless cultures and kingdoms across the world. They are
-            merchants, soldiers, scholars, and rogues in equal measure — never
-            content, always reaching for something more. "
-          traits:
-            - Adaptable - No terrain or climate penalties
-            - Ambitious - Slight bonus to experience gain
-          image: c13191cf6f004ab59ededea5772696073d08018b064b63fcf7acf37810fea4f3.png
-        MYCORAE:
-          displayName: Mycoraae
-          description: A fungal people grown from living mycelial networks.
-          backstory: A fungal people grown from living mycelial networks. Mycorae
-            cultivate vast gardens and craft organic tools and structures
-            through biological engineering. Calm and communal by nature, they
-            share knowledge and travel through the mycelium. Their bodies are
-            temporary homes, frail and short-lived, but their minds can persist
-            for hundreds of years inside the mycelium. They communicate
-            telepathically through spores.
-          traits:
-            - Mycelial Fast Travel
-            - Telepathy
-          image: 9fa4bc2c9804ed5e8f761946bca4da6314ec11d9355b1498a9fe6864ff6fc65c.png
-        AETHERAE:
-          displayName: Aetherae
-          description: Ethereal Beings of Living Shadow
-          backstory: "Beings of shadow, mist, and shifting form. Aetherae are not bound to
-            a single physical shape and often appear as silhouettes of billowing
-            black fog. They wear ornate layered cloaks to hide their true nature
-            from outsiders, generally appearing only as glowing blue eyes inside
-            a hooded cape. They possess an innate magical ability that allows
-            them to interact with the world around them despite having no
-            physical form. "
-          traits:
-            - Shapeshifting
-            - Telekinesis
-          image: 64b5bc816dcd813915a98695ed2ad169e6c5f4ec5002e92fb3c8744b3fcb5cde.png
-        ALORAE:
-          displayName: Alorae
-          description: "Radiant beings of prismatic light. "
-          backstory: The Alorae seem almost celestial, their forms refracting color like
-            living auroras. They are drawn to knowledge, magic, and cosmic
-            mysteries, and many believe they carry echoes of the stars
-            themselves. They believe themselves to be The Creator's first
-            creation, cosmic beings who have existed since the beginning of
-            time, but they arrived in Ambon much later, traveling across
-            dimensions through the astral plane.
-          traits:
-            - Astral Projection
-            - Healing Touch
-          image: 2fbb8ed7ae6f71c6b524765d14dde20ca07a8585bdb6d1cea54e6d4590b8b65c.png
-        LUSTRIAE:
-          displayName: Lustriae
-          description: Fae Time Sprites, the first children of Aineroia
-          backstory: Lustriae experience reality differently from other races, sensing the
-            flow of time as a living current. Curious and playful, they often
-            appear unpredictable to mortal minds. They have large, diaphanous
-            wings that open behind them like stained glass. They appear as
-            eternally young Archae, though they are significantly shorter and
-            more petite.
-          traits:
-            - Chronomancy
-            - Sizeshifting
-          image: 41793f2e70ccc8e17a9df114f1201232ce9ac6cbf380d214564878e373c86f21.png
-        LITHAE:
-          displayName: Lithae
-          description: "Living Gemstones "
-          backstory: "Living beings of crystal and stone. Their bodies resemble faceted
-            gemstones or polished mineral structures that slowly grow and shift
-            with age. Lithae are patient and enduring, valuing stability and the
-            slow accumulation of knowledge. "
-          traits:
-            - Immovable
-            - Absorb Magic
-          image: b7a4c99ff81944c9b168aa5907df1e07a4f66dda748d83f840ca1ca0c44a7438.png
-        PYRAE:
-          displayName: Pyrae
-          description: Human-Phoenix hybrids with dominion over fire
-          backstory: Humanoid embodiments of living flame. Pyrae burn with inner fire that
-            never fully fades, radiating warmth and volatile energy. Upon mortal
-            injury, Pyrae explode into a fiery phoenix form, incinerating their
-            bodies and raging through their enemies to be reborn nearby from the
-            ashes.
-          traits:
-            - Reincarnation
-            - Pyromancy
-          image: c3d0b79b05a3fca2e67ec94a447df333d80a19432d64b06f953e308348ee8806.png
-        ANIMAE:
-          displayName: Animae
-          description: Undead Clockwork Automatons
-          backstory: Once mortal Archae, the Animae were transformed through the
-            experiments of the Aethiryn, blending magic, machinery, and
-            necromancy. They resemble clockwork automatons, engineering and
-            magic bound to their very flesh to preserve their life. Cursed to
-            wander as undead wights, their construction gives them unusual
-            strength and durability.
-          traits:
-            - Tireless
-            - Ironskin
-          image: d978d4a59867400227d75943514682d9374b136353893335e49d3ac4505263bc.png
-        MEDUSAE:
-          displayName: Medusae
-          description: Underwater Jellykin who build civilization through coral grovesong
-          backstory: Bioluminescent beings of the deep ocean. Their translucent forms glow
-            with shifting colors that pulse like living lanterns beneath the
-            waves. Medusae are graceful swimmers and masters of the mysterious
-            ecosystems of Ambon's seas. They live in complex cities grown from
-            living coral, manipulated through their magic song.
-          traits:
-            - Coral Grovesong
-            - Bioluminescence
-          image: 95bedc4032f7e1b36961281e543edafb4c0994e1fbed9449b22135c9e57cc037.png
-        KITSARAE:
-          displayName: Kitsarae
-          description: Mischievous Fox Spirits
-          backstory: "Fox-spirits who walk between animal and humanoid form. Clever,
-            mischievous, and perceptive, the Kitsarae are masters of deception,
-            storytelling, and subtle magic. They resemble Archae but have long,
-            fuzzy ears and fluffy tails, both of which they can hide if the need
-            arises. "
-          traits:
-            - Lucky
-          image: e415af05be92a22742aa0da5c6c10a1d3b76152f9a568d3548decb332927431a.png
-        SYLFLORAE:
-          displayName: Sylflorae
-          description: Living Blooms that change with the seasons
-          backstory: Ancient spirits of the flowers, bundles of living blooms and vines.
-            Sylflorae bodies are formed of petals, vines, and fragrant blooms
-            that shift with the seasons. They are deeply tied to forests and
-            wild places, nurturing life wherever they wander.
-          image: 119fc3fa9e0499071173cf5ed4dbfc641a67151535f754d8e99c795410088338.png
-        ORPHIRAE:
-          displayName: Ophirae
-          description: Abyssal Underwater Dragons
-          backstory: "Serpentine water spirits that rule the deepest oceans. Ophirae
-            resemble sleek, draconic humanoids adapted to the crushing pressures
-            of the abyss. Fierce and territorial, they are among the most
-            powerful creatures beneath the waves. "
-          image: c3af7241ad798a127adebc375de14a08a5ff575514fa53bb2164db982b92712b.png
+        HUMAN:
+          displayName: Human
+          description: Versatile and adaptable.
+          backstory: ""
+          traits: []
+          abilities: []
+          image: ""
+          statMods:
+            STR: 1
+            DEX: 0
+            CON: 0
+            INT: 0
+            WIS: 0
+            CHA: 1
+        ELF:
+          displayName: Elf
+          description: Graceful and magically attuned.
+          backstory: ""
+          traits: []
+          abilities: []
+          image: ""
+          statMods:
+            STR: -1
+            DEX: 2
+            CON: -2
+            INT: 1
+            WIS: 0
+            CHA: 0
+        DWARF:
+          displayName: Dwarf
+          description: Tough and resilient.
+          backstory: ""
+          traits: []
+          abilities: []
+          image: ""
+          statMods:
+            STR: 1
+            DEX: -1
+            CON: 2
+            INT: 0
+            WIS: 1
+            CHA: -2
+        HALFLING:
+          displayName: Halfling
+          description: Quick and charming.
+          backstory: ""
+          traits: []
+          abilities: []
+          image: ""
+          statMods:
+            STR: -2
+            DEX: 2
+            CON: -1
+            INT: 0
+            WIS: 1
+            CHA: 1
 
     stats:
       definitions:
