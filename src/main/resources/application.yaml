@@ -1605,8 +1605,10 @@ ambonmud:
         SYLFLORAE:
           displayName: Sylflorae
           description: Living Blooms that change with the seasons
-          backstory: "leshy covered in  flowers and vines and brambles forming a humanoid
-            "
+          backstory: Ancient spirits of the flowers, bundles of living blooms and vines.
+            Sylflorae bodies are formed of petals, vines, and fragrant blooms
+            that shift with the seasons. They are deeply tied to forests and
+            wild places, nurturing life wherever they wander.
           image: f0050364ed858075d01581e1aec7dcb3a3e889c016536e33605d7dbefd253f01.png
         ORPHIRAE:
           displayName: Ophirae
