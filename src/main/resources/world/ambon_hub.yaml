@@ -46,30 +46,16 @@ mobs:
             next: advice
           - text: "Goodbye."
       about_portals:
-        text: "Each archway leads to a different realm. The northern passage opens into the fae wood — home of Aineroia, Lady of the Fae Wood. The southern arch leads to the Kingdom of PBrae — a castle in the mountains. East leads to a scholar's retreat. West, through the gallery, is the Kingdom of Wesleyalis — a treehouse in a prehistoric rainforest. And below — through the trapdoor in the floor — lies the Kingdom of Trailey: a spy compound disguised as a very boring suburb. There's more through the gallery, too — the Wanderer's Inn has a back door to old ruins, and a trapdoor to a labyrinth. And the gallery itself has a southern archway into a peaceful forest glade."
+        text: "Each archway leads to a different realm. East leads to a scholar's retreat. West, through the gallery, you'll find the Wanderer's Inn — with a back door to old ruins and a trapdoor to a labyrinth. The gallery itself has a southern archway into a peaceful forest glade. And beyond the gallery, the training grounds await — marshlands, highlands, mines, and barrens for adventurers of all ranks."
         choices:
-          - text: "Tell me about the western passage."
-            next: western
-          - text: "What's down there?"
-            next: trailey_info
           - text: "What about the ruins and the labyrinth?"
             next: ruins_and_labyrinth
           - text: "Tell me about the forest glade."
             next: tutorial_glade
-          - text: "Thank you."
-      western:
-        text: "Head west through the Wayfinder Gallery and the Blank Arches. The western arch there opens into the Kingdom of Wesleyalis — a massive treehouse in a prehistoric rainforest, ruled by King Wesley the Artist and Princess Aurora. Ancient bees the size of horses. Dinosaurs in the deep jungle. Paintings that come to life. Proceed with respect for art."
-        choices:
-          - text: "I'll explore it. Thanks!"
-          - text: "Tell me more about the training grounds."
+          - text: "Tell me about the training grounds."
             next: training
             minLevel: 3
-      trailey_info:
-        text: "The Kingdom of Trailey lies below — a HOA cul-de-sac where every house looks exactly the same and all of them conceal a high-tech spy compound inside. Ruled by King Trevor and Queen Hailey. Trevor maintains a mechanical shooting range and a roughhousing pit with a very large, very enthusiastic opponent. Hailey's zone is a competition gymnasium inside a human-scale dollhouse, with the finest perfume vault in any known dimension. Upstairs, Humpty Dumpty refuses to stay fallen. Approach all three with appropriate readiness."
-        choices:
-          - text: "Sounds like my kind of neighborhood."
-          - text: "Tell me about the other portals."
-            next: about_portals
+          - text: "Thank you."
       ruins_and_labyrinth:
         text: "Head west to the gallery, then north to the Wanderer's Inn. Through the inn's back door you'll find the Demo Ruins — a caravan camp at the edge of crumbling stonework, with traders, creatures, and old treasure. Below the inn, an iron trapdoor leads into the Labyrinth — an endless maze of repeating corridors. Adventurers enter to test their sense of direction. Some are still looking for the exit."
         choices:
@@ -87,7 +73,7 @@ mobs:
         choices:
           - text: "Sounds dangerous. I'll be careful."
       advice:
-        text: "The south arch leads to the Kingdom of PBrae — the mountain pass and gravel road are gentle enough for new adventurers. Pick up equipment as you find it, and don't be afraid to flee from fights you can't win. Leveling up makes you stronger — check your 'score' often."
+        text: "Head south through the gallery to the Tutorial Glade — it's gentle enough for new adventurers. Pick up equipment as you find it, and don't be afraid to flee from fights you can't win. Leveling up makes you stronger — check your 'score' often."
         choices:
           - text: "Thanks for the advice!"
           - text: "Tell me about the portals."
@@ -97,26 +83,22 @@ rooms:
   hall_of_portals:
     image: 4789f1a1e68c123f14630a57aafdb891172312e7a79df19d7a606c98c843dcd0.jpg
     title: "Hall of Portals"
-    description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.' Northern light filters green through fae leaves. Eastern light smells of old books. Southern light carries mountain air and the faint crunch of gravel. Western light is warm, tropical, and faintly buzzes. In the center of the floor, a trapdoor — sealed with a welcome mat that reads 'HOME' — descends to an entirely different kind of neighborhood."
+    description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.' Eastern light smells of old books. Western light spills warmly from the gallery beyond. A spiral staircase leads up to a crafting workshop."
     exits:
       e: noecker_resume:lobby
-      n: aineroia_cottage:before_gate
-      s: pbrae:gravel_road
       w: wayfinder_gallery
-      d: trailey:cul_de_sac
       u: crafting_workshop:entrance
 
   blank_arches:
     image: c5c24327e550e1493fb096e726644a4b183ca640c02ad33f8dad294bfc7af44d.jpg
     title: "Blank Arches"
-    description: "Unkeyed archways stand here like paused sentences. New chalkwork marks several passages for low-rank adventurers, each arch pulsing with a different color of mist. To the west, an archway framed with painted vines and tropical flowers hums with warm, buzzing energy — beyond it, distant birdcall and the smell of rainforest and something ancient and sweet."
+    description: "Unkeyed archways stand here like paused sentences. New chalkwork marks several passages for low-rank adventurers, each arch pulsing with a different color of mist."
     exits:
       e: wayfinder_gallery
       n: low_training_marsh:reedwalk_landing
       s: low_training_highlands:switchback_foot
       u: low_training_mines:orelift_station
       d: low_training_barrens:windcut_gate
-      w: wesleyalis:gravel_road_2
 
   wayfinder_gallery:
     image: 8b602d97e2dee51662c87ff1a2eded40006aafa6ea8706e47905d8e7ff9861ea.jpg
