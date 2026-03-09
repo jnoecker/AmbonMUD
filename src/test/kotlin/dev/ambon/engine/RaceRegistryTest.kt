@@ -2,7 +2,6 @@ package dev.ambon.engine
 
 import dev.ambon.config.RaceDefinitionConfig
 import dev.ambon.config.RaceEngineConfig
-import dev.ambon.config.RaceStatModsConfig
 import dev.ambon.domain.RaceDef
 import dev.ambon.domain.StatMap
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -44,11 +43,11 @@ class RaceRegistryTest {
                 "HUMAN" to RaceDefinitionConfig(
                     displayName = "Human",
                     description = "Versatile.",
-                    statMods = RaceStatModsConfig(str = 1, cha = 1),
+                    statMods = mapOf("STR" to 1, "CHA" to 1),
                 ),
                 "ELF" to RaceDefinitionConfig(
                     displayName = "Elf",
-                    statMods = RaceStatModsConfig(str = -1, dex = 2, con = -2, int = 1),
+                    statMods = mapOf("STR" to -1, "DEX" to 2, "CON" to -2, "INT" to 1),
                 ),
             ),
         )
@@ -70,7 +69,7 @@ class RaceRegistryTest {
                     traits = listOf("Adaptable", "Ambitious"),
                     abilities = listOf("second_wind"),
                     image = "race_human.png",
-                    statMods = RaceStatModsConfig(str = 1, cha = 1),
+                    statMods = mapOf("STR" to 1, "CHA" to 1),
                 ),
             ),
         )

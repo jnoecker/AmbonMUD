@@ -108,7 +108,8 @@ items:
     keyword: "cloak"
     description: "A sturdy cloak patched at the hem. It still repels drizzle."
     slot: body
-    constitution: 1
+    stats:
+      CON: 1
     basePrice: 15
 
   iron_pot:
@@ -133,7 +134,8 @@ items:
     displayName: "a braided river charm"
     keyword: "charm"
     description: "A reed braid wrapped around a smooth river stone, cool to the touch."
-    constitution: 1
+    stats:
+      CON: 1
     room: river_ford
     basePrice: 8
 
@@ -206,7 +208,8 @@ items:
     keyword: "ring"
     description: "A band set with a cloudy pearl. It gleams faintly when wet."
     slot: hand
-    constitution: 2
+    stats:
+      CON: 2
     basePrice: 35
 
   vault_mace:

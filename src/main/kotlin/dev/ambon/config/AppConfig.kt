@@ -971,15 +971,6 @@ data class ClassEngineConfig(
     }
 }
 
-data class RaceStatModsConfig(
-    val str: Int = 0,
-    val dex: Int = 0,
-    val con: Int = 0,
-    val int: Int = 0,
-    val wis: Int = 0,
-    val cha: Int = 0,
-)
-
 data class RaceDefinitionConfig(
     val displayName: String = "",
     val description: String = "",
@@ -987,7 +978,7 @@ data class RaceDefinitionConfig(
     val traits: List<String> = emptyList(),
     val abilities: List<String> = emptyList(),
     val image: String = "",
-    val statMods: RaceStatModsConfig = RaceStatModsConfig(),
+    val statMods: Map<String, Int> = emptyMap(),
 )
 
 data class RaceEngineConfig(
@@ -997,19 +988,19 @@ data class RaceEngineConfig(
         fun defaultRaceDefinitions(): Map<String, RaceDefinitionConfig> = mapOf(
             "HUMAN" to RaceDefinitionConfig(
                 displayName = "Human",
-                statMods = RaceStatModsConfig(str = 1, cha = 1),
+                statMods = mapOf("STR" to 1, "CHA" to 1),
             ),
             "ELF" to RaceDefinitionConfig(
                 displayName = "Elf",
-                statMods = RaceStatModsConfig(str = -1, dex = 2, con = -2, int = 1),
+                statMods = mapOf("STR" to -1, "DEX" to 2, "CON" to -2, "INT" to 1),
             ),
             "DWARF" to RaceDefinitionConfig(
                 displayName = "Dwarf",
-                statMods = RaceStatModsConfig(str = 1, dex = -1, con = 2, wis = 1, cha = -2),
+                statMods = mapOf("STR" to 1, "DEX" to -1, "CON" to 2, "WIS" to 1, "CHA" to -2),
             ),
             "HALFLING" to RaceDefinitionConfig(
                 displayName = "Halfling",
-                statMods = RaceStatModsConfig(str = -2, dex = 2, con = -1, wis = 1, cha = 1),
+                statMods = mapOf("STR" to -2, "DEX" to 2, "CON" to -1, "WIS" to 1, "CHA" to 1),
             ),
         )
     }
