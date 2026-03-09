@@ -80,7 +80,8 @@ jobs:
             --context topology=${{ inputs.topology || 'ec2' }} \
             --context tier=${{ inputs.tier || 'hobby' }} \
             --context imageTag=${{ inputs.image-tag }} \
-            --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }}
+            --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }} \
+            ${{ vars.LORE_CONFIG_URL && format('--context loreConfigUrl={0}', vars.LORE_CONFIG_URL) || '' }}
 
   deploy-production:
     name: Deploy to production
