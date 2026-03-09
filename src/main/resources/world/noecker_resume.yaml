@@ -287,7 +287,8 @@ items:
     description: "Stamped: 'Solutions Architect – Associate, Aug 2023'. It hums softly when you start drawing box-and-arrow diagrams."
     slot: head
     armor: 2
-    constitution: 1
+    stats:
+      CON: 1
     basePrice: 25
     room: cloud_platform
 
@@ -297,7 +298,8 @@ items:
     description: "Summa cum laude. Valedictorian in Computer Science, Mathematics, and Liberal Arts at Duquesne University. Bright enough to briefly silence your inner critic."
     slot: head
     armor: 1
-    constitution: 1
+    stats:
+      CON: 1
     basePrice: 20
     room: education_wing
 

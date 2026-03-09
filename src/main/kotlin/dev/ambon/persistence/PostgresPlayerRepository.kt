@@ -49,12 +49,7 @@ class PostgresPlayerRepository(
                         it[PlayersTable.ansiEnabled] = request.ansiEnabled
                         it[PlayersTable.race] = request.race
                         it[PlayersTable.playerClass] = request.playerClass
-                        it[PlayersTable.strength] = request.strength
-                        it[PlayersTable.dexterity] = request.dexterity
-                        it[PlayersTable.constitution] = request.constitution
-                        it[PlayersTable.intelligence] = request.intelligence
-                        it[PlayersTable.wisdom] = request.wisdom
-                        it[PlayersTable.charisma] = request.charisma
+                        it[PlayersTable.statsJson] = jsonMapper.writeValueAsString(request.stats)
                     }
 
                 request.toNewPlayerRecord(PlayerId(result[PlayersTable.id]))

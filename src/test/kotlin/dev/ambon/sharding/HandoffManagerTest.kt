@@ -147,7 +147,7 @@ class HandoffManagerTest {
         assertEquals(15, serialized.hp)
         assertEquals(20, serialized.maxHp)
         assertEquals(18, serialized.baseMaxHp)
-        assertEquals(3, serialized.constitution)
+        assertEquals(3, serialized.stats["CON"])
         assertEquals(5, serialized.level)
         assertEquals(25_000L, serialized.xpTotal)
         assertTrue(serialized.ansiEnabled)
@@ -351,7 +351,7 @@ class HandoffManagerTest {
                             hp = 18,
                             maxHp = 25,
                             baseMaxHp = 22,
-                            constitution = 4,
+                            stats = mapOf("CON" to 4),
                             level = 7,
                             xpTotal = 40_000L,
                             ansiEnabled = true,
@@ -431,7 +431,7 @@ class HandoffManagerTest {
                             hp = 20,
                             maxHp = 20,
                             baseMaxHp = 20,
-                            constitution = 0,
+                            stats = emptyMap(),
                             level = 1,
                             xpTotal = 0L,
                             ansiEnabled = false,

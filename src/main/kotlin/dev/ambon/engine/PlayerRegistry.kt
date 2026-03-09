@@ -177,6 +177,8 @@ class PlayerRegistry(
         fun base(id: String): Int = statRegistry?.get(id)?.baseStat ?: PlayerState.BASE_STAT
 
         val raceMods = raceRegistry?.get(raceId)?.statMods ?: StatMap.EMPTY
+        val statKeys = statRegistry?.all()?.map { it.id } ?: listOf("STR", "DEX", "CON", "INT", "WIS", "CHA")
+        val resolvedStats = statKeys.associateWith { id -> base(id) + raceMods[id] }
         val classStartRoom = classStartRooms[classId.uppercase()]
             ?: classRegistry?.get(classId)?.startRoom?.let { RoomId(it) }
         val record =
@@ -190,12 +192,7 @@ class PlayerRegistry(
                         ansiEnabled = defaultAnsiEnabled,
                         race = raceId,
                         playerClass = classId,
-                        strength = base("STR") + raceMods["STR"],
-                        dexterity = base("DEX") + raceMods["DEX"],
-                        constitution = base("CON") + raceMods["CON"],
-                        intelligence = base("INT") + raceMods["INT"],
-                        wisdom = base("WIS") + raceMods["WIS"],
-                        charisma = base("CHA") + raceMods["CHA"],
+                        stats = resolvedStats,
                         gold = startingGold,
                     ),
                 )

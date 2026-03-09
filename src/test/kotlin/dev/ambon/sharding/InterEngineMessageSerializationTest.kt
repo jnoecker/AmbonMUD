@@ -60,7 +60,7 @@ class InterEngineMessageSerializationTest {
                 hp = 20,
                 maxHp = 30,
                 baseMaxHp = 28,
-                constitution = 5,
+                stats = mapOf("CON" to 5),
                 level = 10,
                 xpTotal = 50000L,
                 ansiEnabled = true,

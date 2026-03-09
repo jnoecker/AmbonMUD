@@ -46,7 +46,8 @@ items:
     description: "A sturdy iron sword, well-balanced and sharp."
     slot: hand
     damage: 8
-    strength: 1
+    stats:
+      STR: 1
     basePrice: 80
   copper_helm:
     image: 14e56d5b475012bd0bd781a27e0a614423bcb97f404cfaf17bdc81231921861a.png

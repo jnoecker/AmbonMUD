@@ -517,7 +517,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: ironlung_pass
 
   gear_21:
@@ -527,7 +528,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
     slot: head
     armor: 3
-    constitution: 1
+    stats:
+      CON: 1
     room: chainway
 
   gear_22:
@@ -546,7 +548,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
     slot: body
     armor: 3
-    constitution: 1
+    stats:
+      CON: 1
     room: deep_core
 
   gear_24:
@@ -556,7 +559,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
     slot: head
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: stonecoil
 
   gear_25:
@@ -575,7 +579,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: molting_chamber
 
   gear_27:
@@ -585,7 +590,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-3 circuit in this zone."
     slot: head
     armor: 3
-    constitution: 1
+    stats:
+      CON: 1
     room: molten_rake
 
   gear_28:
@@ -604,7 +610,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: underforge
 
   gear_30:
@@ -614,7 +621,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
     slot: head
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
     room: abyssal_spike
 
   gear_31:
@@ -633,7 +641,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
     slot: body
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
     room: boiler_groove
 
   gear_33:
@@ -643,7 +652,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
     slot: head
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: iron_drift
 
   gear_34:
@@ -662,7 +672,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: red_quarry
 
   gear_36:
@@ -672,7 +683,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-4 circuit in this zone."
     slot: head
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
     room: hammerloop
 
   gear_37:
@@ -691,7 +703,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-5 circuit in this zone."
     slot: body
     armor: 6
-    constitution: 2
+    stats:
+      CON: 2
     room: copper_lungs
 
   gear_39:
@@ -701,7 +714,8 @@ items:
     description: "Orehouse equipment reinforced for heat, dust, and falling stone. Issued for the depth-5 circuit in this zone."
     slot: head
     armor: 5
-    constitution: 2
+    stats:
+      CON: 2
     room: crusher_bay
 
   gear_40:
@@ -800,7 +814,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_03:
     image: 4bd3585ea42bca70e469647fc908b687cbe155ce57053a7e3d59c80ef7bc47b5.png
@@ -809,7 +824,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: head
     armor: 3
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_04:
     image: 5284b6cf114f79625d1f776290ca513df63be29281f9a2b88267c1ac5c749927.png
@@ -826,7 +842,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_06:
     image: 2dc9405be79780a5cb036f583f12ef4dda4a2ad1e6bc222d5470acbe23e2c476.png
@@ -835,7 +852,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: head
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_07:
     image: a711b4ca2bc9d625a1744655c95c966e469405aa8c9b8e90ebbb36f46229707f.png
@@ -852,7 +870,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: body
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_09:
     image: bc09bf25d582791ba09e9bf8bed0a972451d65cfb563a43a1f1f4f67231703ec.png
@@ -861,7 +880,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: head
     armor: 5
-    constitution: 2
+    stats:
+      CON: 2
 
   trophy_10:
     image: 1218bf59a2f15067dc03549065c92b3b3e8d65dbc7ee75fe2fc544426f823015.png
@@ -878,7 +898,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: body
     armor: 5
-    constitution: 2
+    stats:
+      CON: 2
 
   trophy_12:
     image: 8c9db95201311f9d1a692745d0ee681397fba5f21814f2c7a92c85dd6f9fb3ea.png
@@ -887,7 +908,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: head
     armor: 6
-    constitution: 2
+    stats:
+      CON: 2
 
 rooms:
   orelift_station:

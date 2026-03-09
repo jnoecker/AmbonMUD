@@ -517,7 +517,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: dustbowl_hollow
 
   gear_21:
@@ -527,7 +528,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
     slot: head
     armor: 3
-    constitution: 1
+    stats:
+      CON: 1
     room: cairn_turn
 
   gear_22:
@@ -546,7 +548,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
     slot: body
     armor: 3
-    constitution: 1
+    stats:
+      CON: 1
     room: ridge_marker
 
   gear_24:
@@ -556,7 +559,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
     slot: head
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: deadfall_gully
 
   gear_25:
@@ -575,7 +579,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: brittle_ravine
 
   gear_27:
@@ -585,7 +590,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-3 circuit in this zone."
     slot: head
     armor: 3
-    constitution: 1
+    stats:
+      CON: 1
     room: long_scree
 
   gear_28:
@@ -604,7 +610,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: vulture_climb
 
   gear_30:
@@ -614,7 +621,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
     slot: head
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
     room: red_mesa_edge
 
   gear_31:
@@ -633,7 +641,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
     slot: body
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
     room: char_pillar
 
   gear_33:
@@ -643,7 +652,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
     slot: head
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: sandspine_run
 
   gear_34:
@@ -662,7 +672,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
     room: dunehook_cross
 
   gear_36:
@@ -672,7 +683,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-4 circuit in this zone."
     slot: head
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
     room: kestrel_pit
 
   gear_37:
@@ -691,7 +703,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-5 circuit in this zone."
     slot: body
     armor: 6
-    constitution: 2
+    stats:
+      CON: 2
     room: dead_heliograph
 
   gear_39:
@@ -701,7 +714,8 @@ items:
     description: "Sun-baked field gear favored by scouts who train in the barrens. Issued for the depth-5 circuit in this zone."
     slot: head
     armor: 5
-    constitution: 2
+    stats:
+      CON: 2
     room: glasswind_walk
 
   gear_40:
@@ -800,7 +814,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_03:
     image: c104b437fcbf29860a5ad07701b2ebac0d645cbb352aa8177459aec6653c3729.png
@@ -809,7 +824,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: head
     armor: 3
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_04:
     image: 2f513c9a7af7d9f5bf6f4c8c0ab12ee6b2c47993c53e85f33de3549a203e0449.png
@@ -826,7 +842,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: body
     armor: 4
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_06:
     image: b7aaff37824bca60a40d29d8d56ae5aa6e5618a0dd1cb042e30c679e339ea023.png
@@ -835,7 +852,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: head
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_07:
     image: 43cc6f52ac8e4155c48f23c884f522555d1a71def613ac744a2e66cc4998076a.png
@@ -852,7 +870,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: body
     armor: 5
-    constitution: 1
+    stats:
+      CON: 1
 
   trophy_09:
     image: 926ded759bd6908858e41b7dc5fd0c56d46e9dcd7c68f12757c212c2548077fa.png
@@ -861,7 +880,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: head
     armor: 5
-    constitution: 2
+    stats:
+      CON: 2
 
   trophy_10:
     image: c1d68f0c1628870182119159677d518d6680bfc4167d6204c9c2731c51f07978.png
@@ -878,7 +898,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: body
     armor: 5
-    constitution: 2
+    stats:
+      CON: 2
 
   trophy_12:
     image: fb753f8e2c5330e1f3fb7f4e913ec265c383d15dfeb0447615142eed3fc6df62.png
@@ -887,7 +908,8 @@ items:
     description: "Advanced drop gear awarded to crews that clear deep routes consistently."
     slot: head
     armor: 6
-    constitution: 2
+    stats:
+      CON: 2
 
 rooms:
   windcut_gate:
