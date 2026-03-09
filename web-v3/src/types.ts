@@ -310,6 +310,9 @@ export interface LoginClassOption {
   id: string;
   name: string;
   stats: string;
+  description?: string;
+  backstory?: string;
+  image?: string;
 }
 
 export type LoginPromptState =

@@ -925,6 +925,8 @@ data class ClassDefinitionConfig(
     val hpPerLevel: Int = 4,
     val manaPerLevel: Int = 8,
     val description: String = "",
+    val backstory: String = "",
+    val image: String = "",
     val selectable: Boolean = true,
     val primaryStat: String = "",
     val startRoom: String = "",
