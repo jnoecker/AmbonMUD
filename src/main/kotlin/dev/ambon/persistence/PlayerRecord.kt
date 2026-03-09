@@ -12,16 +12,24 @@ value class PlayerId(
     val value: Long,
 )
 
+/** Default base stat value for new characters. */
+private const val DEFAULT_STAT = 10
+
+/** The canonical set of stat keys used by the game. */
+val DEFAULT_STATS: Map<String, Int> = mapOf(
+    "STR" to DEFAULT_STAT,
+    "DEX" to DEFAULT_STAT,
+    "CON" to DEFAULT_STAT,
+    "INT" to DEFAULT_STAT,
+    "WIS" to DEFAULT_STAT,
+    "CHA" to DEFAULT_STAT,
+)
+
 data class PlayerRecord(
     val id: PlayerId,
     val name: String,
     val roomId: RoomId,
-    val strength: Int = 10,
-    val dexterity: Int = 10,
-    val constitution: Int = 10,
-    val intelligence: Int = 10,
-    val wisdom: Int = 10,
-    val charisma: Int = 10,
+    val stats: Map<String, Int> = DEFAULT_STATS,
     val gender: String = "enby",
     val race: String = "HUMAN",
     val playerClass: String = "WARRIOR",
@@ -51,11 +59,16 @@ data class PlayerRecord(
 ) {
     /**
      * Applies legacy migration fixes after deserialization.
-     * Old saves stored constitution=0; remap to the base stat value (10).
+     * Old saves may have individual stat fields (strength, dexterity, etc.) instead of the
+     * consolidated stats map. Jackson's FAIL_ON_UNKNOWN_PROPERTIES=false ignores those;
+     * the defaults in [DEFAULT_STATS] apply. Legacy saves with constitution=0 are handled
+     * by ensuring all stat values are at least 1.
      */
     fun migrateDefaults(): PlayerRecord {
         var record = this
-        if (record.constitution == 0) record = record.copy(constitution = 10)
+        // Fix any zero-valued stats from legacy saves
+        val fixedStats = record.stats.mapValues { (_, v) -> if (v == 0) DEFAULT_STAT else v }
+        if (fixedStats != record.stats) record = record.copy(stats = fixedStats)
         val normalized = record.equippedItems.mapKeys { (k, _) -> k.trim().lowercase() }
         if (normalized != record.equippedItems) record = record.copy(equippedItems = normalized)
         return record

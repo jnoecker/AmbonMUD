@@ -180,7 +180,7 @@ class RedisCachingPlayerRepositoryTest {
                 )
             val staffRecord =
                 created.copy(
-                    constitution = 10,
+                    stats = DEFAULT_STATS,
                     level = 50,
                     xpTotal = 999_999L,
                     lastSeenEpochMs = 8000L,
@@ -194,7 +194,7 @@ class RedisCachingPlayerRepositoryTest {
             assertEquals(staffRecord.id, found!!.id)
             assertEquals("Sauron", found.name)
             assertEquals(RoomId("demo:mordor"), found.roomId)
-            assertEquals(10, found.constitution)
+            assertEquals(10, found.stats["CON"])
             assertEquals(50, found.level)
             assertEquals(999_999L, found.xpTotal)
             assertEquals(7000L, found.createdAtEpochMs)

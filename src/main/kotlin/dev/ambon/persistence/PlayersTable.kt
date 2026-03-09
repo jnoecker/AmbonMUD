@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
 
+private val statsType = object : TypeReference<Map<String, Int>>() {}
 private val activeQuestsType = object : TypeReference<Map<String, QuestState>>() {}
 private val completedQuestIdsType = object : TypeReference<Set<String>>() {}
 private val unlockedAchievementIdsType = object : TypeReference<Set<String>>() {}
@@ -30,12 +31,7 @@ object PlayersTable : Table("players") {
     val name = varchar("name", 16)
     val nameLower = varchar("name_lower", 16)
     val roomId = varchar("room_id", 128)
-    val strength = integer("strength").default(10)
-    val dexterity = integer("dexterity").default(10)
-    val constitution = integer("constitution").default(10)
-    val intelligence = integer("intelligence").default(10)
-    val wisdom = integer("wisdom").default(10)
-    val charisma = integer("charisma").default(10)
+    val statsJson = text("stats_json").default("{}")
     val gender = varchar("gender", 16).default("enby")
     val race = varchar("race", 32).default("HUMAN")
     val playerClass = varchar("player_class", 32).default("WARRIOR")
@@ -71,12 +67,7 @@ object PlayersTable : Table("players") {
             id = PlayerId(row[id]),
             name = row[name],
             roomId = RoomId(row[roomId]),
-            strength = row[strength],
-            dexterity = row[dexterity],
-            constitution = row[constitution],
-            intelligence = row[intelligence],
-            wisdom = row[wisdom],
-            charisma = row[charisma],
+            stats = safeReadJson(row[statsJson], statsType, DEFAULT_STATS),
             gender = row[gender],
             race = row[race],
             playerClass = row[playerClass],
@@ -111,12 +102,7 @@ object PlayersTable : Table("players") {
         statement[name] = record.name
         statement[nameLower] = record.name.lowercase()
         statement[roomId] = record.roomId.value
-        statement[strength] = record.strength
-        statement[dexterity] = record.dexterity
-        statement[constitution] = record.constitution
-        statement[intelligence] = record.intelligence
-        statement[wisdom] = record.wisdom
-        statement[charisma] = record.charisma
+        statement[statsJson] = jsonMapper.writeValueAsString(record.stats)
         statement[gender] = record.gender
         statement[race] = record.race
         statement[playerClass] = record.playerClass
