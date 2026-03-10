@@ -75,14 +75,13 @@ jobs:
       - name: CDK deploy (staging)
         working-directory: infra
         env:
-          ECR_REPO: ${{ secrets.ECR_REPO_NAME }}
           LORE_URL: ${{ secrets.LORE_CONFIG_URL }}
           ZONES_URL: ${{ secrets.WORLD_ZONES_BASE_URL }}
         run: |
           ARGS="--context topology=${{ inputs.topology || 'ec2' }}"
           ARGS="$ARGS --context tier=${{ inputs.tier || 'hobby' }}"
           ARGS="$ARGS --context imageTag=${{ inputs.image-tag }}"
-          ARGS="$ARGS --context ecrRepo=${ECR_REPO:-ambonmud/app}"
+          ARGS="$ARGS --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }}"
           [ -n "$LORE_URL" ]           && ARGS="$ARGS --context loreConfigUrl=$LORE_URL"
           [ -n "$ZONES_URL" ]          && ARGS="$ARGS --context worldZonesBaseUrl=$ZONES_URL"
           [ -n "${{ vars.HOSTNAME }}" ] && ARGS="$ARGS --context hostname=${{ vars.HOSTNAME }}"
@@ -130,14 +129,12 @@ jobs:
         run: npm ci
 
       - name: CDK deploy (production)
-        env:
-          ECR_REPO: ${{ secrets.ECR_REPO_NAME }}
         run: |
           npx cdk deploy --all --require-approval never \
             --context topology=split \
             --context tier=${{ inputs.tier || 'production' }} \
             --context imageTag=${{ inputs.image-tag }} \
-            --context ecrRepo=${ECR_REPO:-ambonmud/app} \
+            --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }} \
             --context domain=${{ vars.DOMAIN }} \
             --context alertEmail=${{ vars.ALERT_EMAIL }}
         working-directory: infra
