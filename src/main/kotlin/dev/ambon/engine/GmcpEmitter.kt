@@ -1196,8 +1196,9 @@ class GmcpEmitter(
 
     private fun resolveSprite(player: PlayerState): String {
         val race = player.race.lowercase()
+        if (player.isStaff) return "${imagesBase}player_sprites/${race}_base_tstaff.png"
         val cls = player.playerClass.lowercase()
-        val tierSuffix = if (player.isStaff) "tstaff" else "t${sortedTiers.firstOrNull { player.level >= it } ?: 1}"
+        val tierSuffix = "t${sortedTiers.firstOrNull { player.level >= it } ?: 1}"
         return "${imagesBase}player_sprites/${race}_${cls}_$tierSuffix.png"
     }
 }
