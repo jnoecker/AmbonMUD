@@ -44,13 +44,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: staging
     steps:
-      - name: Check required variables
+      - name: Check required secrets
+        env:
+          ROLE_ARN: ${{ secrets.AWS_CDK_DEPLOY_ROLE_ARN }}
         run: |
-          missing=""
-          [ -z "${{ vars.AWS_CDK_DEPLOY_ROLE_ARN }}" ] && missing="$missing AWS_CDK_DEPLOY_ROLE_ARN"
-          [ -z "${{ vars.AWS_REGION }}" ]              && missing="$missing AWS_REGION"
-          if [ -n "$missing" ]; then
-            echo "::error::Missing required GitHub Actions repository variables:$missing"
+          if [ -z "$ROLE_ARN" ]; then
+            echo "::error::Missing required secret: AWS_CDK_DEPLOY_ROLE_ARN"
             echo "::error::See docs/DEPLOYMENT.md §3 (One-Time AWS Bootstrap) for setup instructions."
             exit 1
           fi
@@ -60,7 +59,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_CDK_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_CDK_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
       - uses: actions/setup-node@v4
@@ -75,16 +74,20 @@ jobs:
 
       - name: CDK deploy (staging)
         working-directory: infra
+        env:
+          ECR_REPO: ${{ secrets.ECR_REPO_NAME }}
+          LORE_URL: ${{ secrets.LORE_CONFIG_URL }}
+          ZONES_URL: ${{ secrets.WORLD_ZONES_BASE_URL }}
         run: |
-          npx cdk deploy --all --require-approval never \
-            --context topology=${{ inputs.topology || 'ec2' }} \
-            --context tier=${{ inputs.tier || 'hobby' }} \
-            --context imageTag=${{ inputs.image-tag }} \
-            --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }} \
-            ${{ vars.LORE_CONFIG_URL && format('--context loreConfigUrl={0}', vars.LORE_CONFIG_URL) || '' }} \
-            ${{ vars.WORLD_ZONES_BASE_URL && format('--context worldZonesBaseUrl={0}', vars.WORLD_ZONES_BASE_URL) || '' }} \
-            ${{ vars.HOSTNAME && format('--context hostname={0}', vars.HOSTNAME) || '' }} \
-            ${{ vars.DOMAIN && format('--context domain={0}', vars.DOMAIN) || '' }}
+          ARGS="--context topology=${{ inputs.topology || 'ec2' }}"
+          ARGS="$ARGS --context tier=${{ inputs.tier || 'hobby' }}"
+          ARGS="$ARGS --context imageTag=${{ inputs.image-tag }}"
+          ARGS="$ARGS --context ecrRepo=${ECR_REPO:-ambonmud/app}"
+          [ -n "$LORE_URL" ]           && ARGS="$ARGS --context loreConfigUrl=$LORE_URL"
+          [ -n "$ZONES_URL" ]          && ARGS="$ARGS --context worldZonesBaseUrl=$ZONES_URL"
+          [ -n "${{ vars.HOSTNAME }}" ] && ARGS="$ARGS --context hostname=${{ vars.HOSTNAME }}"
+          [ -n "${{ vars.DOMAIN }}" ]   && ARGS="$ARGS --context domain=${{ vars.DOMAIN }}"
+          npx cdk deploy --all --require-approval never $ARGS
 
   deploy-production:
     name: Deploy to production
@@ -95,14 +98,15 @@ jobs:
       github.event_name == 'workflow_dispatch' &&
       inputs.environment == 'production'
     steps:
-      - name: Check required variables
+      - name: Check required secrets
+        env:
+          ROLE_ARN: ${{ secrets.AWS_CDK_DEPLOY_ROLE_ARN_PROD }}
         run: |
           missing=""
-          [ -z "${{ vars.AWS_CDK_DEPLOY_ROLE_ARN_PROD }}" ] && missing="$missing AWS_CDK_DEPLOY_ROLE_ARN_PROD"
-          [ -z "${{ vars.AWS_REGION }}" ]                   && missing="$missing AWS_REGION"
-          [ -z "${{ vars.DOMAIN }}" ]                       && missing="$missing DOMAIN"
+          [ -z "$ROLE_ARN" ]              && missing="$missing AWS_CDK_DEPLOY_ROLE_ARN_PROD"
+          [ -z "${{ vars.DOMAIN }}" ]     && missing="$missing DOMAIN"
           if [ -n "$missing" ]; then
-            echo "::error::Missing required GitHub Actions repository variables:$missing"
+            echo "::error::Missing required config:$missing"
             echo "::error::See docs/DEPLOYMENT.md §3 (One-Time AWS Bootstrap) for setup instructions."
             exit 1
           fi
@@ -112,7 +116,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_CDK_DEPLOY_ROLE_ARN_PROD }}
+          role-to-assume: ${{ secrets.AWS_CDK_DEPLOY_ROLE_ARN_PROD }}
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
       - uses: actions/setup-node@v4
@@ -126,12 +130,14 @@ jobs:
         run: npm ci
 
       - name: CDK deploy (production)
-        working-directory: infra
+        env:
+          ECR_REPO: ${{ secrets.ECR_REPO_NAME }}
         run: |
           npx cdk deploy --all --require-approval never \
             --context topology=split \
             --context tier=${{ inputs.tier || 'production' }} \
             --context imageTag=${{ inputs.image-tag }} \
-            --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }} \
+            --context ecrRepo=${ECR_REPO:-ambonmud/app} \
             --context domain=${{ vars.DOMAIN }} \
             --context alertEmail=${{ vars.ALERT_EMAIL }}
+        working-directory: infra

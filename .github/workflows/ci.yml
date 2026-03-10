@@ -54,7 +54,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_ECR_PUSH_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
       - name: Log in to Amazon ECR
@@ -63,10 +63,12 @@ jobs:
 
       - name: Set image metadata
         id: meta
+        env:
+          ECR_REPO: ${{ secrets.ECR_REPO_NAME }}
         run: |
           echo "tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
           echo "registry=${{ steps.login-ecr.outputs.registry }}" >> "$GITHUB_OUTPUT"
-          echo "repo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }}" >> "$GITHUB_OUTPUT"
+          echo "repo=${ECR_REPO:-ambonmud/app}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push Docker image
         run: |
