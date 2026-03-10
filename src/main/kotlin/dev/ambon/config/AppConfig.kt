@@ -1485,8 +1485,6 @@ data class ImagesConfig(
     val globalAssets: Map<String, String> = DEFAULT_GLOBAL_ASSETS,
     /** Level thresholds for player sprite tiers, checked highest-first. */
     val spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
-    /** Sprite tier used for staff players regardless of level. */
-    val staffSpriteTier: Int = 60,
 ) {
     companion object {
         val DEFAULT_GLOBAL_ASSETS: Map<String, String> = linkedMapOf(
