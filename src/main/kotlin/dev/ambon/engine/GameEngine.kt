@@ -417,7 +417,6 @@ class GameEngine(
             },
             statRegistry = statRegistry,
             equipmentSlotRegistry = equipmentSlotRegistry,
-            genderRegistry = genderRegistry,
             imagesBaseUrl = imagesBaseUrl,
             globalAssets = globalAssets,
             spriteLevelTiers = spriteLevelTiers,
