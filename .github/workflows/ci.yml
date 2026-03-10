@@ -63,12 +63,10 @@ jobs:
 
       - name: Set image metadata
         id: meta
-        env:
-          ECR_REPO: ${{ secrets.ECR_REPO_NAME }}
         run: |
           echo "tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
           echo "registry=${{ steps.login-ecr.outputs.registry }}" >> "$GITHUB_OUTPUT"
-          echo "repo=${ECR_REPO:-ambonmud/app}" >> "$GITHUB_OUTPUT"
+          echo "repo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push Docker image
         run: |
