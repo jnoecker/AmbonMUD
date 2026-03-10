@@ -90,24 +90,19 @@ ambonmud:
     genders:
       male:
         displayName: Male
-        spriteCode: male
       female:
         displayName: Female
-        spriteCode: female
       enby:
         displayName: Enby
-        spriteCode: enby
       # — add custom genders —
       agender:
         displayName: Agender
-        spriteCode: enby
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `<key>` | string | yes | Gender ID (lowercase). Stored on player record. |
 | `displayName` | string | no | Shown in score, `gender` command output. Defaults to capitalized key. |
-| `spriteCode` | string | no | Sprite sheet variant code. Defaults to key. |
 
 **Telnet commands:**
 - `gender <id>` — sets gender; lists valid options on invalid input

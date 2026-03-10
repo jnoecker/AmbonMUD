@@ -350,7 +350,6 @@ class MudServer(
                     imagesBaseUrl = config.images.baseUrl,
                     globalAssets = config.images.globalAssets,
                     spriteLevelTiers = config.images.spriteLevelTiers,
-                    staffSpriteTier = config.images.staffSpriteTier,
                 ).run()
             }
 

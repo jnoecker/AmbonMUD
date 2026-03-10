@@ -2624,7 +2624,6 @@ ambonmud:
     genders:
       none:
         displayName: NONE
-        spriteCode: ENBY
       male:
         displayName: MALE
       female:
@@ -3109,7 +3108,6 @@ ambonmud:
       - 20
       - 10
       - 1
-    staffSpriteTier: 60
   globalAssets:
     compass_rose: e201e29796fd12881e521ea892c6d97e56d362d6bd443cdd5b494029314814d4.png
     direction_marker: 829a44129781d086ef03b8c317ec1db699add28e68cc83363b47ee760d73d58a.png

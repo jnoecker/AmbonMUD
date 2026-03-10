@@ -36,11 +36,9 @@ class GmcpEmitter(
     private val getCombatTarget: (SessionId) -> CombatTargetInfo? = { null },
     private val statRegistry: StatRegistry? = null,
     private val equipmentSlotRegistry: EquipmentSlotRegistry? = null,
-    private val genderRegistry: GenderRegistry? = null,
     imagesBaseUrl: String = "/images/",
     private val globalAssets: Map<String, String> = emptyMap(),
     spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
-    private val staffSpriteTier: Int = 60,
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -1197,13 +1195,10 @@ class GmcpEmitter(
     }
 
     private fun resolveSprite(player: PlayerState): String {
-        val spriteCode = genderRegistry?.get(player.gender)?.spriteCode
-            ?: genderRegistry?.defaultSpriteCode()
-            ?: player.gender.lowercase()
         val race = player.race.lowercase()
         val cls = player.playerClass.lowercase()
-        val tier = if (player.isStaff) staffSpriteTier else sortedTiers.firstOrNull { player.level >= it } ?: 1
-        return "${imagesBase}player_sprites/${race}_${spriteCode}_${cls}_l$tier.png"
+        val tierSuffix = if (player.isStaff) "tstaff" else "t${sortedTiers.firstOrNull { player.level >= it } ?: 1}"
+        return "${imagesBase}player_sprites/${race}_${cls}_$tierSuffix.png"
     }
 }
 
