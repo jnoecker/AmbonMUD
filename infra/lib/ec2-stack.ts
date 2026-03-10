@@ -325,7 +325,6 @@ export class Ec2Stack extends Stack {
     // -------------------------------------------------------------------------
     const instance = new ec2.Instance(this, 'Instance', {
       vpc,
-      userDataCausesReplacement: true,
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.NANO),
       machineImage: ec2.MachineImage.latestAmazonLinux2023({
