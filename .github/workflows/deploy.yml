@@ -82,7 +82,9 @@ jobs:
             --context imageTag=${{ inputs.image-tag }} \
             --context ecrRepo=${{ vars.ECR_REPO_NAME || 'ambonmud/app' }} \
             ${{ vars.LORE_CONFIG_URL && format('--context loreConfigUrl={0}', vars.LORE_CONFIG_URL) || '' }} \
-            ${{ vars.WORLD_ZONES_BASE_URL && format('--context worldZonesBaseUrl={0}', vars.WORLD_ZONES_BASE_URL) || '' }}
+            ${{ vars.WORLD_ZONES_BASE_URL && format('--context worldZonesBaseUrl={0}', vars.WORLD_ZONES_BASE_URL) || '' }} \
+            ${{ vars.HOSTNAME && format('--context hostname={0}', vars.HOSTNAME) || '' }} \
+            ${{ vars.DOMAIN && format('--context domain={0}', vars.DOMAIN) || '' }}
 
   deploy-production:
     name: Deploy to production
