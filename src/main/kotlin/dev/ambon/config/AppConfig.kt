@@ -506,7 +506,6 @@ data class EquipmentConfig(
 
 data class GenderConfig(
     val displayName: String = "",
-    val spriteCode: String = "",
 )
 
 data class GendersConfig(
@@ -514,9 +513,9 @@ data class GendersConfig(
 ) {
     companion object {
         fun defaultGenders(): Map<String, GenderConfig> = linkedMapOf(
-            "male" to GenderConfig(displayName = "Male", spriteCode = "male"),
-            "female" to GenderConfig(displayName = "Female", spriteCode = "female"),
-            "enby" to GenderConfig(displayName = "Enby", spriteCode = "enby"),
+            "male" to GenderConfig(displayName = "Male"),
+            "female" to GenderConfig(displayName = "Female"),
+            "enby" to GenderConfig(displayName = "Enby"),
         )
     }
 }
