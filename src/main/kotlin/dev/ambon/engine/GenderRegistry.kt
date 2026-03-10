@@ -5,7 +5,6 @@ import dev.ambon.config.GendersConfig
 data class GenderDefinition(
     val id: String,
     val displayName: String,
-    val spriteCode: String,
 )
 
 class GenderRegistry(
@@ -17,7 +16,6 @@ class GenderRegistry(
             id to GenderDefinition(
                 id = id,
                 displayName = cfg.displayName.ifBlank { id.replaceFirstChar { it.uppercase() } },
-                spriteCode = cfg.spriteCode.ifBlank { id },
             )
         }.toMap()
 
@@ -28,6 +26,4 @@ class GenderRegistry(
     fun allIds(): List<String> = genders.keys.toList()
 
     fun allDefinitions(): Collection<GenderDefinition> = genders.values
-
-    fun defaultSpriteCode(): String = genders.values.lastOrNull()?.spriteCode ?: "enby"
 }

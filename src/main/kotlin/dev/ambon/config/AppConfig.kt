@@ -506,7 +506,6 @@ data class EquipmentConfig(
 
 data class GenderConfig(
     val displayName: String = "",
-    val spriteCode: String = "",
 )
 
 data class GendersConfig(
@@ -514,9 +513,9 @@ data class GendersConfig(
 ) {
     companion object {
         fun defaultGenders(): Map<String, GenderConfig> = linkedMapOf(
-            "male" to GenderConfig(displayName = "Male", spriteCode = "male"),
-            "female" to GenderConfig(displayName = "Female", spriteCode = "female"),
-            "enby" to GenderConfig(displayName = "Enby", spriteCode = "enby"),
+            "male" to GenderConfig(displayName = "Male"),
+            "female" to GenderConfig(displayName = "Female"),
+            "enby" to GenderConfig(displayName = "Enby"),
         )
     }
 }
@@ -1486,8 +1485,6 @@ data class ImagesConfig(
     val globalAssets: Map<String, String> = DEFAULT_GLOBAL_ASSETS,
     /** Level thresholds for player sprite tiers, checked highest-first. */
     val spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
-    /** Sprite tier used for staff players regardless of level. */
-    val staffSpriteTier: Int = 60,
 ) {
     companion object {
         val DEFAULT_GLOBAL_ASSETS: Map<String, String> = linkedMapOf(
