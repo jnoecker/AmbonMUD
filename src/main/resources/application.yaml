@@ -2624,7 +2624,6 @@ ambonmud:
     genders:
       none:
         displayName: NONE
-        spriteCode: ENBY
       male:
         displayName: MALE
       female:
