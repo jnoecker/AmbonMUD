@@ -1,30 +1,33 @@
 AmbonMUD
 ========
 
-**AmbonMUD** is a production-grade **Kotlin MUD server** with a tick-based event loop, dual transports (telnet + WebSocket), YAML-defined multi-zone worlds, class-based character progression, 102 class-specific spells/abilities, dynamic status effects, real-time combat with NPCs, shops/economy, and three deployment modes (STANDALONE, ENGINE, GATEWAY) for horizontal scaling.
+**AmbonMUD** is a production-grade **Kotlin MUD server** with a tick-based event loop, dual transports (telnet + WebSocket), YAML-defined multi-zone worlds, class-based character progression, 56 class-specific spells/abilities, dynamic status effects, real-time combat with NPCs, shops/economy, and three deployment modes (STANDALONE, ENGINE, GATEWAY) for horizontal scaling.
 
 **Live demo:** [https://mud.ambon.dev](https://mud.ambon.dev) — or `telnet mud.ambon.dev 4000`
 
 **Key Features**
-- 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **25+ unique abilities** per class, distributed across 50 levels
-- 🌍 **10 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
+- 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **56 abilities** across all classes, distributed across 50 levels
+- 🌍 **13 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
 - ⚔️ **Real-time combat system** with attribute-based damage, dodge mechanics, and tactical status effects (DoT, HoT, STUN, ROOT, SHIELD, buffs/debuffs)
 - 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands
 - 🔌 **Dual transports**: telnet (NAWS/TTYPE/GMCP negotiation) + browser WebSocket with GMCP-aware UI panels
-- 📊 **Structured data** (GMCP) — 21 packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
+- 📊 **Structured data** (GMCP) — 25 packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
 - 💾 **Flexible persistence**: YAML files by default (zero-dependency), PostgreSQL with optional Redis L2 caching available
 - 🌐 **Three deployment modes**: STANDALONE (single-process), ENGINE (game logic + gRPC), GATEWAY (transports + gRPC) for horizontal scaling
 - 🗺️ **Zone-based sharding** with inter-engine messaging, player handoff, and O(1) cross-engine `tell` routing
 - 🧵 **JVM virtual threads** for telnet I/O (JDK 21) — eliminates carrier-thread pinning under load
 - 📈 **Prometheus metrics** for monitoring and load testing integration
-- ✅ **~78 test files** covering all systems; CI validates against Java 21 with ktlint
+- ✅ **~110 test files** covering all systems; CI validates against Java 21 with ktlint
 
 **Current State** (Mar 2026)
 - ✅ All 6 scalability phases complete (bus abstraction, async persistence, Redis, gRPC gateway, zone sharding, production AWS infrastructure)
-- ✅ 102 abilities across 4 classes (25+ per class, levels 1–50)
-- ✅ GMCP support with 21 outbound packages (telnet + WebSocket); see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
+- ✅ 56 abilities across 4 classes (levels 1–50)
+- ✅ GMCP support with 25 outbound packages (telnet + WebSocket); see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
 - ✅ Quest system (basic implementation; see [roadmap](docs/ROADMAP.md))
 - ✅ Achievement system, group/party system, dialogue trees, NPC behavior trees
+- ✅ Guild system with hierarchy, guild chat, MOTD
+- ✅ Friends list and in-game mail system
+- ✅ Crafting and gathering system
 - ✅ Full production test coverage and CI/CD
 - ✅ Docker image + AWS CDK infrastructure: EC2 demo (~$4-5/mo) and ECS Fargate (topology × tier) options
 - ✅ Live demo at [mud.ambon.dev](https://mud.ambon.dev) — auto-deploys on every push to `main`
@@ -35,7 +38,7 @@ Current web client (v3):
 
 ![AmbonMUD web client v3](docs/screenshots/v3-web-client.jpg)
 
-See [docs/WEB_CLIENT_V3.md](docs/WEB_CLIENT_V3.md#visual-progression) for the full progression from telnet proof-of-concept to the current UI.
+See [docs/WEB_CLIENT.md](docs/WEB_CLIENT.md#visual-progression) for the full progression from telnet proof-of-concept to the current UI.
 
 ## Quick Start
 
@@ -93,7 +96,7 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for architectural details and [DEVEL
 - Name: 2-16 chars (alnum/underscore, cannot start with digit)
 - Password: 1-72 chars (bcrypt hashed)
 - Race: Human, Elf, Dwarf, Halfling (each has attribute modifiers)
-- Class: Warrior, Mage, Cleric, Rogue (each with 25+ class-specific abilities)
+- Class: Warrior, Mage, Cleric, Rogue (56 abilities across all classes, levels 1–50)
 
 **Core Commands**
 - **Movement:** `n`/`s`/`e`/`w`/`u`/`d`, `look`, `exits`
@@ -103,12 +106,16 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for architectural details and [DEVEL
 - **Character:** `score`, `gold`, `help`, `who`, `quit`
 - **Economy:** `buy`, `sell`, `list` (in shops)
 - **Zones:** `phase` (switch zone instances)
+- **Guilds:** `guild create/disband/invite/accept/leave/kick/promote/demote/motd/roster/info`, `gchat`
+- **Friends:** `friend list/add/remove`
+- **Mail:** `mail list/read/send/delete`
+- **Crafting:** `gather`, `craft`, `recipes`
 - **Admin:** `goto`, `transfer`, `spawn`, `smite`, `kick`, `shutdown` (requires staff flag)
 
 See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full command list and details.
 
 **Abilities & Combat**
-- **102 total abilities** distributed across 4 classes (25+ per class, levels 1–50)
+- **56 total abilities** distributed across 4 classes (levels 1–50)
 - **Status effects:** DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD with configurable stacking
 - **Attributes:** STR (melee damage), DEX (dodge), CON (HP regen), INT (spell damage), WIS (mana regen), CHA
 - **Real-time combat** with attribute-based damage scaling, dodge mechanics, and tactical depth
@@ -117,19 +124,21 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 
 **World files** live in `src/main/resources/world/` and are loaded by `WorldLoader`. Each YAML file describes one zone; multiple zones are merged into a single world.
 
-**Current Zones (14 regions):**
+**Current Zones (12 zones):**
 | Zone | Description |
 |------|-------------|
-| `tutorial_glade` | Starting area for new players |
 | `ambon_hub` | Central hub connecting all zones |
-| `noecker_resume` | Resume showcase zone |
+| `tutorial_glade` | Starting area for new players |
 | `demo_ruins` | Ancient ruins with varied content |
+| `noecker_resume` | Resume showcase zone |
 | `low_training_marsh` | Low-level training zone (marsh) |
 | `low_training_highlands` | Low-level training zone (highlands) |
 | `low_training_mines` | Low-level training zone (mines) |
 | `low_training_barrens` | Low-level training zone (barrens) |
 | `labyrinth` | High-level maze zone; home of the SWARM load-test class |
 | `achievements` | Achievement trigger zone |
+| `celestial_sanctum` | High-level zone |
+| `crafting_workshop` | Crafting and gathering zone |
 
 **Zone YAML Format**
 ```yaml
@@ -182,7 +191,7 @@ See [WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) for full schema documentation 
 
 **Backends** (selectable via `ambonmud.persistence.backend`):
 - **YAML** (default): File-backed, zero dependencies, player files in `data/players/`
-- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V15); requires `ambonmud.database.jdbcUrl`
+- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V18); requires `ambonmud.database.jdbcUrl`
 
 Redis L2 caching is disabled by default. Enable it with `ambonmud.redis.enabled=true` when running alongside the Docker Compose stack.
 
@@ -297,8 +306,7 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full deployment guide (Dock
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) — Architectural principles and design decisions
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Docker build, CDK deploy, topology/tier reference, CI/CD
 - [docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) — Zone YAML format specification
-- [docs/WEB_CLIENT_V3.md](docs/WEB_CLIENT_V3.md) — Web client v3 architecture, wiring, and known gaps
-- [docs/V4_GAME_CLIENT.md](docs/V4_GAME_CLIENT.md) — V4 PixiJS canvas client design plan
+- [docs/WEB_CLIENT.md](docs/WEB_CLIENT.md) — Web client architecture (React + PixiJS canvas)
 - [docs/GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md) — GMCP protocol reference for client developers
 
 **Developer Resources**

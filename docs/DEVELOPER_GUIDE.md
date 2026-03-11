@@ -97,13 +97,14 @@ src/main/kotlin/dev/ambon/
 ├── config/                      # Configuration schema (AppConfig.kt)
 ├── engine/                      # Game logic (GameEngine.kt, CommandRouter, systems)
 │   ├── commands/                # CommandParser.kt, CommandRouter.kt, CommandHandler.kt
-│   │   └── handlers/            # NavigationHandler, CombatHandler, ItemHandler, etc.
+│   │   └── handlers/            # NavigationHandler, CombatHandler, ItemHandler, GuildHandler, CraftingHandler, FriendsHandler, MailHandler, etc.
 │   ├── abilities/               # AbilitySystem, spell definitions
 │   ├── status/                  # StatusEffectSystem, status effect definitions
 │   ├── events/                  # InboundEvent, OutboundEvent (sealed types)
 │   ├── items/                   # ItemRegistry
 │   ├── behavior/                # NPC behavior trees
 │   ├── dialogue/                # NPC dialogue system
+│   ├── crafting/                # Crafting & gathering system
 │   ├── scheduler/               # Delayed/recurring callbacks
 │   ├── CombatSystem.kt          # Combat logic
 │   ├── MobSystem.kt             # NPC movement/AI
@@ -114,6 +115,9 @@ src/main/kotlin/dev/ambon/
 │   ├── GroupSystem.kt           # Party/group logic
 │   ├── QuestSystem.kt           # Quest tracking
 │   ├── AchievementSystem.kt     # Achievements
+│   ├── GuildSystem.kt           # Guild management
+│   ├── CraftingSystem.kt        # Crafting & gathering
+│   ├── FriendsSystem.kt         # Friends list
 │   └── ShopRegistry.kt          # Shops & economy
 ├── transport/                   # Network I/O
 │   ├── BlockingSocketTransport.kt  # Telnet server
@@ -127,7 +131,11 @@ src/main/kotlin/dev/ambon/
 │   ├── PostgresPlayerRepository.kt  # PostgreSQL backend
 │   ├── RedisCachingPlayerRepository.kt  # L2 cache
 │   ├── WriteCoalescingPlayerRepository.kt  # Write-behind
-│   └── PersistenceWorker.kt     # Background flush
+│   ├── PersistenceWorker.kt     # Background flush
+│   ├── GuildRepository.kt       # Guild persistence interface
+│   ├── YamlGuildRepository.kt   # YAML guild backend
+│   ├── PostgresGuildRepository.kt  # PostgreSQL guild backend
+│   └── GuildsTable.kt           # Exposed table definition for guilds
 ├── bus/                         # Event bus (phase 1)
 │   ├── InboundBus.kt            # Interface
 │   ├── OutboundBus.kt           # Interface
@@ -163,12 +171,12 @@ src/main/resources/
 ├── world/                       # Zone YAML files
 │   ├── tutorial_glade.yaml
 │   ├── ambon_hub.yaml
-│   └── ... (14 zones total)
+│   └── ... (13 YAML files: 12 zones + player sprites data)
 ├── web/                         # Legacy static web client
 └── web-v3/                      # Current static web client bundle
 
 src/test/kotlin/
-├── dev/ambon/engine/            # ~50 engine & command tests
+├── dev/ambon/engine/            # ~80 engine & command tests
 ├── dev/ambon/persistence/       # YAML, PostgreSQL, Redis tests
 ├── dev/ambon/transport/         # Telnet, WebSocket tests
 ├── dev/ambon/bus/               # Event bus tests
@@ -306,6 +314,10 @@ Pure function `parse(line: String): Command` that returns a sealed `Command` var
 | Character | `Score`, `Balance` (gold) |
 | Progression | `Spells`, `Effects`, `QuestLog` |
 | Economy | `Buy`, `Sell`, `ShopList` |
+| Guilds | `Guild(Create,Disband,Invite,Accept,Leave,Kick,Promote,Demote,Motd,Roster,Info)`, `Gchat` |
+| Friends | `Friend(List,Add,Remove)` |
+| Mail | `Mail(List,Read,Delete,Send,Abort)` |
+| Crafting | `Gather`, `Craft`, `Recipes` |
 | Admin | `Goto`, `Transfer`, `Spawn`, `Smite`, `Kick`, `Shutdown` (staff only) |
 
 ### CommandRouter
@@ -323,6 +335,10 @@ Thin dispatch layer (~62 lines) that routes each `Command` variant to the approp
 - `GroupHandler` — party invite/accept/leave/kick
 - `ProgressionHandler` — score, spells, effects, achievements
 - `WorldFeaturesHandler` — zone-specific interactions
+- `GuildHandler` — guild management, guild chat
+- `CraftingHandler` — gather, craft, recipes
+- `FriendsHandler` — friends list management
+- `MailHandler` — in-game mail send/read/delete
 - `AdminHandler` — goto, transfer, spawn, smite, kick, shutdown (staff only)
 - `UiHandler` — help, clear, colors, ansi, phase
 
@@ -453,6 +469,34 @@ Key operations: `takeFromRoom`, `dropToRoom`, `equipFromInventory`, `unequip`, `
 - Buy price = `basePrice * buyMultiplier`
 - Sell price = `basePrice * sellMultiplier`
 
+### GuildSystem
+
+**File:** `src/main/kotlin/dev/ambon/engine/GuildSystem.kt`
+
+- Persistent guilds with leader/officer/member ranks
+- Guild create, disband, invite, accept, leave, kick, promote, demote
+- Guild MOTD, roster, info display
+- Guild chat (`gchat`) broadcasts to all online guild members
+- On login, restores guild state to `PlayerState` (`guildId`, `guildRank`, `guildTag`)
+- Persisted via `GuildRepository` (YAML or PostgreSQL backend)
+
+### CraftingSystem
+
+**File:** `src/main/kotlin/dev/ambon/engine/CraftingSystem.kt`
+
+- Gathering resources from rooms and crafting items from recipes
+- `gather` command collects materials; `craft <recipe>` produces items
+- `recipes` lists available recipes for the player's class/level
+- Crafting definitions loaded from world YAML
+
+### FriendsSystem
+
+**File:** `src/main/kotlin/dev/ambon/engine/FriendsSystem.kt`
+
+- Per-player friends list with add/remove
+- Online status tracking for friends
+- `friend list`, `friend add <name>`, `friend remove <name>`
+
 ### PlayerProgression
 
 **File:** `src/main/kotlin/dev/ambon/engine/PlayerProgression.kt`
@@ -475,7 +519,7 @@ XP curve: `totalXpForLevel(L) = baseXp * (L-1)^exponent + linearXp * (L-1)`
 - IDs allocated in `data/players/next_player_id.txt`
 
 **PostgreSQL** (optional, bring up Docker Compose first):
-- Schema managed by Flyway migrations (`src/main/resources/db/migration/`, V1–V15)
+- Schema managed by Flyway migrations (`src/main/resources/db/migration/`, V1–V18)
 - Connection defaults: `localhost:5432/ambonmud`, user `ambon`, password `ambon` (matches docker compose)
 
 ### Persistence Stack
@@ -489,6 +533,8 @@ RedisCachingPlayerRepository       (default L2 cache; disable with redis.enabled
     ↓
 YamlPlayerRepository  OR  PostgresPlayerRepository
 ```
+
+**Guild persistence** follows a similar pattern: `GuildRepository` interface with `YamlGuildRepository` (one file per guild under `data/guilds/`) and `PostgresGuildRepository` (Exposed + JSON members column) backends.
 
 ### Adding a Field to PlayerRecord
 
@@ -619,10 +665,10 @@ Dedicated transport process:
 
 ### Test Structure
 
-- **Engine tests:** `GameEngineIntegrationTest`, `GameEngineLoginFlowTest`, `CommandParserTest`, `CommandRouterTest` (~40 test files)
-- **Persistence tests:** `YamlPlayerRepositoryTest`, `PostgresPlayerRepositoryTest`, `RedisCachingPlayerRepositoryTest`
+- **Engine tests:** `GameEngineIntegrationTest`, `GameEngineLoginFlowTest`, `CommandParserTest`, `CommandRouterTest` (~60 test files)
+- **Persistence tests:** `YamlPlayerRepositoryTest`, `PostgresPlayerRepositoryTest`, `RedisCachingPlayerRepositoryTest`, `YamlGuildRepositoryTest`, `PostgresGuildRepositoryTest`
 - **Transport tests:** `OutboundRouterTest`, `AnsiRendererTest`, `TelnetLineDecoderTest`
-- **System tests:** `CombatSystemTest`, `AbilitySystemTest`, `StatusEffectSystemTest`, `MobSystemTest`, etc.
+- **System tests:** `CombatSystemTest`, `AbilitySystemTest`, `StatusEffectSystemTest`, `MobSystemTest`, `GuildSystemTest`, `CraftingSystemTest`, `FriendsSystemTest`, etc.
 
 ### Test Utilities
 
@@ -687,6 +733,14 @@ router.on<Command.LookItem> { sid, cmd ->
     ctx.outbound.send(SendPrompt(sid))
 }
 ```
+
+### Add a Guild Feature
+
+1. Add new `Command.Guild.*` variant in `CommandParser.kt` if needed
+2. Implement logic in `GuildSystem.kt` (runtime) and `GuildHandler.kt` (command dispatch)
+3. If the feature requires new persistent data, update `GuildRecord` and both `YamlGuildRepository` / `PostgresGuildRepository`
+4. For Postgres schema changes, add a Flyway migration
+5. Add tests in `GuildSystemTest` and `CommandRouterTest`
 
 ### Add a New Ability
 
