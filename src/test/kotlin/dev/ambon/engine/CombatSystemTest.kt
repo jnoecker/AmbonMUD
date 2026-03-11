@@ -1,6 +1,5 @@
 package dev.ambon.engine
 
-import dev.ambon.config.ClassEngineConfig
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
 import dev.ambon.config.StatBindingsConfig
@@ -287,7 +286,7 @@ class CombatSystemTest {
 
             val classRegistry =
                 PlayerClassRegistry().also { reg ->
-                    PlayerClassRegistryLoader.load(ClassEngineConfig(), reg)
+                    PlayerClassRegistryLoader.load(dev.ambon.test.testClassEngineConfig(), reg)
                 }
             val progression =
                 PlayerProgression(
