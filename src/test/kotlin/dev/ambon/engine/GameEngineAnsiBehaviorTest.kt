@@ -9,6 +9,8 @@ import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.drainAll
+import dev.ambon.test.testClassEngineConfig
+import dev.ambon.test.testRaceEngineConfig
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -32,11 +34,21 @@ class GameEngineAnsiBehaviorTest {
 
             val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
+            val classRegistry =
+                PlayerClassRegistry().also { reg ->
+                    PlayerClassRegistryLoader.load(testClassEngineConfig(), reg)
+                }
+            val raceRegistry =
+                RaceRegistry().also { reg ->
+                    RaceRegistryLoader.load(testRaceEngineConfig(), reg)
+                }
             val players =
                 dev.ambon.test.buildTestPlayerRegistry(
                     world.startRoom,
                     repo,
                     ItemRegistry(),
+                    classRegistry = classRegistry,
+                    raceRegistry = raceRegistry,
                 )
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
@@ -55,6 +67,8 @@ class GameEngineAnsiBehaviorTest {
                     scheduler = scheduler,
                     mobs = mobs,
                     items = items,
+                    classRegistryOverride = classRegistry,
+                    raceRegistryOverride = raceRegistry,
                 )
 
             val job: Job = launch { engine.run() }
@@ -120,7 +134,22 @@ class GameEngineAnsiBehaviorTest {
 
             val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, ItemRegistry())
+            val classRegistry =
+                PlayerClassRegistry().also { reg ->
+                    PlayerClassRegistryLoader.load(testClassEngineConfig(), reg)
+                }
+            val raceRegistry =
+                RaceRegistry().also { reg ->
+                    RaceRegistryLoader.load(testRaceEngineConfig(), reg)
+                }
+            val players =
+                dev.ambon.test.buildTestPlayerRegistry(
+                    world.startRoom,
+                    repo,
+                    ItemRegistry(),
+                    classRegistry = classRegistry,
+                    raceRegistry = raceRegistry,
+                )
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
@@ -138,6 +167,8 @@ class GameEngineAnsiBehaviorTest {
                     scheduler = scheduler,
                     mobs = mobs,
                     items = items,
+                    classRegistryOverride = classRegistry,
+                    raceRegistryOverride = raceRegistry,
                 )
 
             val job: Job = launch { engine.run() }
