@@ -5038,8 +5038,6 @@ body {
   overflow-y: auto;
 }
 
-/* ── Portrait card grid (race / class picker) ────── */
-
 .char-picker {
   align-items: center;
 }
