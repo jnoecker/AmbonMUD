@@ -16,6 +16,8 @@ import dev.ambon.test.TestWorlds
 import dev.ambon.test.buildTestPlayerRegistry
 import dev.ambon.test.createTestPlayer
 import dev.ambon.test.drainAll
+import dev.ambon.test.testClassEngineConfig
+import dev.ambon.test.testRaceEngineConfig
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
@@ -344,7 +346,22 @@ class GameEngineLoginFlowTest {
             val world = dev.ambon.test.TestWorlds.testWorld
             val repo = InMemoryPlayerRepository()
             val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items)
+            val classRegistry =
+                PlayerClassRegistry().also { reg ->
+                    PlayerClassRegistryLoader.load(testClassEngineConfig(), reg)
+                }
+            val raceRegistry =
+                RaceRegistry().also { reg ->
+                    RaceRegistryLoader.load(testRaceEngineConfig(), reg)
+                }
+            val players =
+                dev.ambon.test.buildTestPlayerRegistry(
+                    world.startRoom,
+                    repo,
+                    items,
+                    classRegistry = classRegistry,
+                    raceRegistry = raceRegistry,
+                )
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
             val mobs = MobRegistry()
@@ -362,6 +379,8 @@ class GameEngineLoginFlowTest {
                     mobs = mobs,
                     items = items,
                     engineConfig = EngineConfig(debug = EngineDebugConfig(enableSwarmClass = false)),
+                    classRegistryOverride = classRegistry,
+                    raceRegistryOverride = raceRegistry,
                 )
             val engineJob = launch { engine.run() }
 
@@ -476,6 +495,14 @@ class GameEngineLoginFlowTest {
             val repo = InMemoryPlayerRepository()
             val items = ItemRegistry()
             val swarmRoom = RoomId("test_zone:outpost")
+            val classRegistry =
+                PlayerClassRegistry().also { reg ->
+                    PlayerClassRegistryLoader.load(testClassEngineConfig(), reg)
+                }
+            val raceRegistry =
+                RaceRegistry().also { reg ->
+                    RaceRegistryLoader.load(testRaceEngineConfig(), reg)
+                }
             val players =
                 dev.ambon.test.buildTestPlayerRegistry(
                     world.startRoom,
@@ -485,6 +512,8 @@ class GameEngineLoginFlowTest {
                         mapOf(
                             "SWARM" to swarmRoom,
                         ),
+                    classRegistry = classRegistry,
+                    raceRegistry = raceRegistry,
                 )
 
             val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
@@ -503,6 +532,8 @@ class GameEngineLoginFlowTest {
                     mobs = mobs,
                     items = items,
                     engineConfig = EngineConfig(debug = EngineDebugConfig(enableSwarmClass = true)),
+                    classRegistryOverride = classRegistry,
+                    raceRegistryOverride = raceRegistry,
                 )
             val engineJob = launch { engine.run() }
 
