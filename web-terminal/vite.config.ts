@@ -10,6 +10,7 @@ export default defineConfig({
     alias: {
       "@v3": resolve(__dirname, "../web-v3/src"),
     },
+    dedupe: ["react", "react-dom"],
   },
   build: {
     outDir: resolve(__dirname, "../src/main/resources/web-terminal"),
