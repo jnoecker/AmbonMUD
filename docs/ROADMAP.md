@@ -36,6 +36,9 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 ✅ Zone resets
 ✅ Quest system (Phase 1: basic tracking)
 ✅ Achievement system + titles
+✅ Guilds with ranks, guild chat, roster management
+✅ Friends list + offline mail
+✅ Crafting & gathering (recipes, crafting skills, workshop zone)
 ✅ Web-based admin dashboard
 
 **Test coverage:** 78 test files covering all systems.
@@ -68,6 +71,18 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 | Economy & Shops (#4) | ✅ Done (core) | Gold persistence, mob drops, buy/sell/list commands |
 | Achievements & Titles (#11) | ✅ Done | Categories, hidden achievements, cosmetic titles |
 
+### Phase C — Endgame & Replayability (Partial)
+
+| Project | Status | Highlights |
+|---------|--------|-----------|
+| Crafting & Gathering (#7) | ✅ Done (Phase 1) | `gather`/`craft`/`recipes` commands, crafting skills, dedicated crafting_workshop zone, Flyway V13 |
+
+### Phase D — Community & Polish (Partial)
+
+| Project | Status | Highlights |
+|---------|--------|-----------|
+| Social Systems (#13) | ✅ Done | Guilds (create/disband/invite/accept/leave/kick/promote/demote/motd/roster/info), guild chat (`gchat`), friends (add/remove/list), offline mail (send/read/delete). Flyway V9 (mail), V11 (guilds), V16 (friends) |
+
 ---
 
 ## Planned Projects
@@ -77,7 +92,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 | # | Project | Effort | Status | Key Features |
 |---|---------|--------|--------|--------------|
 | **6** | Procedural Dungeons | Very large | ⏳ Pending | Randomized layouts, difficulty scaling, boss encounters, replayable content |
-| **7** | Crafting & Gathering | Medium-large | ⏳ Pending | Material nodes, recipes, skill levels, quality tiers, economic depth |
+| **7** | Crafting & Gathering | Medium-large | ✅ Done (Phase 1) | Gathering nodes, recipes, crafting skills, dedicated workshop zone |
 
 **Unlocks:** Infinite replayable content, non-combat progression, economic loops.
 
@@ -88,7 +103,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 | # | Project | Effort | Status | Key Features |
 |---|---------|--------|--------|--------------|
 | **10** | Auto-Map & Enhanced Web Client | Medium | 🟡 In Progress | Spatial map rendering, ability/skills actions, chat panels, mobile layout |
-| **13** | Social Systems (Guilds/Friends/Mail) | Large | ⏳ Pending | Guild hierarchy, friends list, offline mail with attachments |
+| **13** | Social Systems (Guilds/Friends/Mail) | Large | ✅ Done | Guilds (create/disband/invite/promote/demote/gchat), friends list, offline mail |
 | **12** | Player Housing | Medium-large | ⏳ Pending | Personal rooms, furniture, access control, persistent storage |
 
 **Unlocks:** Player retention, community engagement, modern UX.
@@ -139,6 +154,14 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 - Achievement tiers (bronze/silver/gold)
 - Community events triggered by achievement milestones
 
+### Social Systems
+- ~~Guild chat~~ — implemented as `gchat` command
+- ~~Offline mail~~ — implemented with send/read/delete/list commands
+- ~~Friends list~~ — implemented with add/remove/list commands
+- Guild bank / shared storage
+- Mail attachments (items, gold)
+- Friend online/offline notifications via GMCP
+
 ### Admin Dashboard
 - Live metrics visualization (Grafana integration or custom charts)
 - Advanced world inspector (zone tree, player positions on map)
@@ -155,18 +178,16 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 ### Start Here (High Impact, Medium Effort)
 
 1. **Auto-Map & Enhanced Web Client (#10)** — Highest player-visible impact. Core implementation is live in v3; continue iterating on group/achievement surfaces and polish.
-2. **Crafting & Gathering (#7)** — Economic depth, non-combat progression. Medium effort, self-contained.
-3. **Persistent World State (#9)** — Enables dynamic content (doors, levers, seasonal events). Foundation for later projects.
+2. **Persistent World State (#9)** — Enables dynamic content (doors, levers, seasonal events). Foundation for later projects.
 
 ### Build Community (Medium Effort, High Retention)
 
-4. **Social Systems (#13)** — Guilds, friends, mail. Enables player-to-player interaction and offline messaging.
-5. **Player Housing (#12)** — Personal investment, long-term retention. Builds on economy and persistent state.
+3. **Player Housing (#12)** — Personal investment, long-term retention. Builds on economy and persistent state.
 
 ### Enable Creators (High Effort, Enables Everything Else)
 
-6. **OLC / World Builder (#8)** — Very large effort, but unlocks rapid content iteration. Builder community can exponentially expand world.
-7. **Procedural Dungeons (#6)** — Infinite replayable content. Builds on group combat and status effects.
+4. **OLC / World Builder (#8)** — Very large effort, but unlocks rapid content iteration. Builder community can exponentially expand world.
+5. **Procedural Dungeons (#6)** — Infinite replayable content. Builds on group combat and status effects.
 
 ---
 
@@ -179,9 +200,9 @@ Status Effects (#1) [DONE] ──→ Procedural Dungeons (#6) (boss mechanics)
 NPC Dialogue (#2) [DONE] ──→ Quest System (#3) [DONE] (quest givers)
                             ──→ Economy (#4) [DONE] (vendor NPCs)
 
-Economy (#4) [DONE] ──→ Crafting (#7) (sell crafted items)
+Economy (#4) [DONE] ──→ Crafting (#7) [DONE] (sell crafted items)
                      ──→ Player Housing (#12) (purchase houses)
-                     ──→ Guilds (#13) (guild bank)
+                     ──→ Guilds (#13) [DONE] (guild bank)
 
 Quest System (#3) [DONE] ──→ Achievements (#11) [DONE] (quest achievements)
 
@@ -203,13 +224,13 @@ Everything else is independent and can start in any order.
 
 **Current throughput ceilings (tunable):**
 - Login funnel: `authThreads: 8` + cost-10 BCrypt ≈ 30–80 new logins/sec. Configurable via `login.authThreads` and `login.maxConcurrentLogins`.
-- Telnet sessions: `Dispatchers.IO` platform threads become measurable overhead above ~200 concurrent connections. Virtual threads (#301) are the planned remedy.
+- Telnet sessions: now uses JDK 21 virtual threads (PR #313), eliminating platform-thread overhead for concurrent connections.
 
 **Known scaling limiters:**
-- Telnet transport thread model: virtual threads (#301) needed for 500+ concurrent telnet sessions
+- ~~Telnet transport thread model~~: resolved — virtual threads (PR #313) now handle telnet I/O
 - Single-zone performance: Procedural dungeons (#6) with instancing mitigates
 - Builder tooling: OLC (#8) is a prerequisite for content velocity
-- Player retention: Housing (#12), guilds (#13), crafting (#7) essential for long-term engagement
+- Player retention: Housing (#12) remains the main gap; guilds (#13) and crafting (#7) are now implemented
 
 ---
 
@@ -242,4 +263,4 @@ See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) for setup instructions and [ARCHI
 
 ---
 
-**Last updated:** March 7, 2026
+**Last updated:** March 11, 2026

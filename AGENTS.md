@@ -26,7 +26,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 ## Project Map
 - Bootstrap/runtime wiring: `src/main/kotlin/dev/ambon/Main.kt`, `src/main/kotlin/dev/ambon/MudServer.kt`
 - Configuration: `src/main/kotlin/dev/ambon/config`, `src/main/resources/application.yaml`
-- Engine and gameplay: `src/main/kotlin/dev/ambon/engine` (includes `GmcpEmitter`, `AbilitySystem`)
+- Engine and gameplay: `src/main/kotlin/dev/ambon/engine` (includes `GmcpEmitter`, `AbilitySystem`, `GuildSystem`, `CraftingSystem`, `FriendsSystem`)
 - Zone-based engine sharding: `src/main/kotlin/dev/ambon/sharding` (ZoneRegistry, InterEngineBus, HandoffManager, InstanceSelector)
 - Transport and protocol: `src/main/kotlin/dev/ambon/transport`
 - Event bus interfaces + impls: `src/main/kotlin/dev/ambon/bus` (`InboundBus`, `OutboundBus`, `Local*Bus`, `Redis*Bus`, `Grpc*Bus`)
@@ -36,11 +36,11 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Web client v3 (static, current): `src/main/resources/web-v3` (built from `web-v3/` with `bun run build`); legacy assets remain in `src/main/resources/web` but are no longer served
 - Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
-- World content: `src/main/resources/world` (10 zones: ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth)
+- World content: `src/main/resources/world` (13 zones: ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth, celestial_sanctum, crafting_workshop)
 - World format contract: `docs/WORLD_YAML_SPEC.md`
 - Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence` (`PlayerRepository`, `YamlPlayerRepository`, `PostgresPlayerRepository`, `DatabaseManager`, `PlayersTable`)
-- Flyway schema migrations: `src/main/resources/db/migration` (V1–V12: players table through player HP field)
-- Tests: `src/test/kotlin` (~78 test files), fixtures in `src/test/resources/world`
+- Flyway schema migrations: `src/main/resources/db/migration` (V1–V18: players table through latest schema additions)
+- Tests: `src/test/kotlin` (~110 test files), fixtures in `src/test/resources/world`
 - Runtime player data (git-ignored): `data/players`
 
 ## Architecture Contracts (Do Not Break)
@@ -88,7 +88,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 ### Commands
 1. Update parse behavior in `src/main/kotlin/dev/ambon/engine/commands/CommandParser.kt`.
 2. Add/adjust command variant in `src/main/kotlin/dev/ambon/engine/commands/CommandParser.kt` (`Command` sealed interface).
-3. Implement behavior in the appropriate handler file under `src/main/kotlin/dev/ambon/engine/commands/handlers/` (e.g. `NavigationHandler`, `CombatHandler`, `ItemHandler`, etc.).
+3. Implement behavior in the appropriate handler file under `src/main/kotlin/dev/ambon/engine/commands/handlers/` (e.g. `NavigationHandler`, `CombatHandler`, `ItemHandler`, `GuildHandler`, `CraftingHandler`, `FriendsHandler`, `MailHandler`, etc.).
 4. Preserve prompt behavior for success/failure paths.
 5. Add/adjust parser tests and router/integration tests under `src/test/kotlin/dev/ambon/engine`.
 
@@ -134,6 +134,23 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Gold is stored on `PlayerRecord.gold` (a `Long`); it flows through all persistence layers automatically.
 - `buy`/`sell`/`list`/`gold` commands are in `CommandParser` and `CommandRouter` — adjust there for economy rule changes.
 
+### Guilds
+- `GuildSystem.kt` manages guild lifecycle, membership, and chat; `GuildHandler.kt` routes `Command.Guild.*` and `Command.Gchat`.
+- Persistence: `GuildRepository` interface with `YamlGuildRepository` (one file per guild) and `PostgresGuildRepository` (Exposed + JSON members).
+- `PlayerState` has `guildId`, `guildRank`, `guildTag`; `PlayerRecord` has `guildId`.
+- Commands: Guild Create/Disband/Invite/Accept/Leave/Kick/Promote/Demote/Motd/Roster/Info, Gchat.
+- When modifying guild logic, update tests in the corresponding guild test files.
+
+### Crafting
+- `CraftingSystem.kt` handles gathering and crafting; `CraftingHandler.kt` routes `Command.Gather` and `Command.Craft`/`Command.Recipes`.
+- Recipe definitions live in config; crafting zone content is in `src/main/resources/world/crafting_workshop.yaml`.
+- When adding new recipes or gathering nodes, update the world YAML and/or config definitions.
+
+### Friends and mail
+- `FriendsSystem.kt` manages friend lists; `FriendsHandler.kt` routes `Command.Friend` (List/Add/Remove).
+- `MailHandler.kt` routes `Command.Mail` (List/Read/Delete/Send/Abort).
+- Both systems persist through the player record persistence chain.
+
 ### Sharding / zone instancing
 - Zone-based sharding code lives in `src/main/kotlin/dev/ambon/sharding/`.
 - `ZoneRegistry` (Static or Redis) maps zones to engines; `InterEngineBus` (Local or Redis) handles cross-engine messaging.
@@ -142,7 +159,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - When adding new `InterEngineMessage` variants, update serialization in `InterEngineMessage.kt` and add tests.
 
 ### GMCP
-- `GmcpEmitter.kt` sends structured JSON data via GMCP subnegotiation (13 packages: Char.Vitals, Char.Name, Room.Info, etc.).
+- `GmcpEmitter.kt` sends structured JSON data via GMCP subnegotiation (25 packages: Char.Vitals, Char.Name, Char.Stats, Char.Skills, Char.Combat, Char.Combat.Event, Char.Cooldown, Char.Gain, Char.Items.Add, Char.Items.Remove, Char.Achievements, Room.Info, Room.AddMob, Room.AddPlayer, Room.RemoveMob, Room.RemovePlayer, Room.UpdateMob, Room.MobInfo, etc.).
 - Telnet GMCP negotiation is handled in `NetworkSession.kt` (WILL GMCP) and `TelnetLineDecoder.kt` (subnegotiation parsing).
 - WebSocket sessions auto-opt into all GMCP packages via `KtorWebSocketTransport.kt`.
 - When adding new GMCP packages, update `GmcpEmitter` and the v3 client's GMCP handler at `web-v3/src/gmcp/applyGmcpPackage.ts`.
