@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import type { SkillSummary } from "../types";
 
-type TargetTab = "ALL" | "ENEMY" | "SELF" | "ALLY";
+type TargetTab = "ALL" | "ENEMY" | "SELF" | "ALLY" | "ALL_ENEMIES";
 const TARGET_TABS: { key: TargetTab; label: string }[] = [
   { key: "ALL", label: "All" },
   { key: "ENEMY", label: "Enemy" },
+  { key: "ALL_ENEMIES", label: "AoE" },
   { key: "SELF", label: "Self" },
   { key: "ALLY", label: "Ally" },
 ];
