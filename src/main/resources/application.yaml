@@ -2414,129 +2414,16 @@ ambonmud:
     debug:
       enableSwarmClass: false
 
+    # Class and race definitions. Define your game's classes and races here
+    # (or in application-local.yaml). Hoplite deep-merges maps across YAML
+    # sources, so if you override in a local file, include ALL definitions
+    # there — entries from this file will NOT be replaced, only augmented.
+    # To avoid merge surprises, keep definitions in a single source.
     classes:
-      definitions:
-        WARRIOR:
-          displayName: Warrior
-          hpPerLevel: 8
-          manaPerLevel: 4
-          description: A stalwart melee fighter.
-          backstory: Warriors are the backbone of any adventuring party, standing at the
-            front line where steel meets claw. Trained in the art of war from a
-            young age, they channel raw physical prowess into devastating
-            attacks and unbreakable defenses. A warrior's presence on the
-            battlefield draws the fury of enemies, shielding their allies behind
-            a wall of iron and fury.
-          primaryStat: STR
-          threatMultiplier: 1.5
-          image: ebaab845a6a18207f86d7577fb3071ccd6ae9a7cb312c2b9a5d761ef3ba03ed9.png
-        MAGE:
-          displayName: Mage
-          hpPerLevel: 4
-          manaPerLevel: 16
-          description: A master of the arcane arts.
-          backstory: Mages devote their lives to unraveling the mysteries of the arcane,
-            bending the raw fabric of reality through study and willpower. Their
-            bodies are fragile, but their minds are weapons — capable of
-            unleashing torrents of fire, ice, and lightning that can devastate
-            entire groups of enemies. The path of the mage is one of relentless
-            study and dangerous experimentation.
-          primaryStat: INT
-          image: 8ba98003d76a0cd554ffda85fdeffe38215382a0ef993b0d185c7ecbd6c5e0f6.png
-        CLERIC:
-          displayName: Cleric
-          hpPerLevel: 6
-          manaPerLevel: 12
-          description: A divine healer and protector.
-          backstory: Clerics serve as the conduit between mortal beings and the divine
-            powers that shape the world. Through prayer, devotion, and sacred
-            rituals, they channel healing light that can mend grievous wounds
-            and even call the fallen back from death's threshold. In battle,
-            clerics stand as both shield and sanctuary, their blessings turning
-            the tide when all seems lost.
-          primaryStat: WIS
-          image: b8c101fe6db2390a2204bf6318960917ae1e6b40d01ed0fe68f986af1ee8526f.png
-        ROGUE:
-          displayName: Rogue
-          hpPerLevel: 5
-          manaPerLevel: 8
-          description: A cunning striker from the shadows.
-          backstory: Rogues live by their wits and reflexes, striking from the shadows
-            with lethal precision. Masters of stealth, poison, and misdirection,
-            they exploit every weakness and opening their enemies expose. A
-            rogue may not endure a prolonged fight, but few battles last long
-            when a blade finds its mark between the ribs. Their guild teaches
-            that the best fight is the one your enemy never sees coming.
-          primaryStat: DEX
-          image: 63ecfccf76fda545693522fa5c1c207cd9b0340d7ebd5fb4c5a054962d9cb41e.png
-        SWARM:
-          displayName: Swarm
-          hpPerLevel: 2
-          manaPerLevel: 3
-          description: A debug class for load testing.
-          selectable: false
-          image: 73253fe294c7617953d627b6da458dfdd8ab833293164ce1247c9136b0fa9b1d.png
+      definitions: {}
 
-    # Default placeholder races. Override in application-local.yaml with your
-    # own world lore (custom races, backstories, traits, images, stat mods).
     races:
-      definitions:
-        HUMAN:
-          displayName: Human
-          description: Versatile and adaptable.
-          backstory: ""
-          traits: []
-          abilities: []
-          image: ""
-          statMods:
-            STR: 1
-            DEX: 0
-            CON: 0
-            INT: 0
-            WIS: 0
-            CHA: 1
-        ELF:
-          displayName: Elf
-          description: Graceful and magically attuned.
-          backstory: ""
-          traits: []
-          abilities: []
-          image: ""
-          statMods:
-            STR: -1
-            DEX: 2
-            CON: -2
-            INT: 1
-            WIS: 0
-            CHA: 0
-        DWARF:
-          displayName: Dwarf
-          description: Tough and resilient.
-          backstory: ""
-          traits: []
-          abilities: []
-          image: ""
-          statMods:
-            STR: 1
-            DEX: -1
-            CON: 2
-            INT: 0
-            WIS: 1
-            CHA: -2
-        HALFLING:
-          displayName: Halfling
-          description: Quick and charming.
-          backstory: ""
-          traits: []
-          abilities: []
-          image: ""
-          statMods:
-            STR: -2
-            DEX: 2
-            CON: -1
-            INT: 0
-            WIS: 1
-            CHA: 1
+      definitions: {}
 
     stats:
       definitions:

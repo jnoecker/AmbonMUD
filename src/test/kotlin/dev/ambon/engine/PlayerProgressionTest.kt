@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import dev.ambon.config.ClassDefinitionConfig
 import dev.ambon.config.ClassEngineConfig
 import dev.ambon.config.LevelRewardsConfig
 import dev.ambon.config.ProgressionConfig
@@ -13,7 +14,26 @@ import org.junit.jupiter.api.Test
 class PlayerProgressionTest {
     private fun defaultClassRegistry(): PlayerClassRegistry =
         PlayerClassRegistry().also { reg ->
-            PlayerClassRegistryLoader.load(ClassEngineConfig(), reg)
+            PlayerClassRegistryLoader.load(
+                ClassEngineConfig(
+                    definitions = mapOf(
+                        "WARRIOR" to ClassDefinitionConfig(
+                            displayName = "Warrior",
+                            hpPerLevel = 8,
+                            manaPerLevel = 4,
+                            primaryStat = "STR",
+                            threatMultiplier = 1.5,
+                        ),
+                        "MAGE" to ClassDefinitionConfig(
+                            displayName = "Mage",
+                            hpPerLevel = 4,
+                            manaPerLevel = 16,
+                            primaryStat = "INT",
+                        ),
+                    ),
+                ),
+                reg,
+            )
         }
 
     @Test
