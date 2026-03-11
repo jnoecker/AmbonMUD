@@ -94,6 +94,7 @@ class AbilitySystem(
             "self" -> handleSelfCast(sessionId, player, ability, now)
             "ally" -> handleAllyCast(sessionId, player, ability, targetKeyword, now)
             "all_enemies" -> handleAllEnemiesCast(sessionId, player, ability, now)
+            "all_allies" -> handleAllAlliesCast(sessionId, player, ability, now)
             else -> "Unknown target type '${ability.targetType}'."
         }
     }
@@ -419,6 +420,103 @@ class AbilitySystem(
                 )
             }
             else -> return "Spell misconfigured (unexpected effect for all_enemies target)."
+        }
+        broadcastToRoom(
+            players,
+            outbound,
+            player.roomId,
+            "${player.name} casts ${ability.displayName}!",
+            exclude = sessionId,
+        )
+        return null
+    }
+
+    @Suppress("CyclomaticComplexity", "LongMethod")
+    private suspend fun handleAllAlliesCast(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        now: Long,
+    ): String? {
+        val groupMembers =
+            groupSystem?.membersInRoom(sessionId, player.roomId)
+                ?: listOf(sessionId)
+
+        when (val effect = ability.effect) {
+            is AbilityEffect.DirectHeal -> {
+                deductManaAndCooldown(sessionId, player, ability, now)
+                for (targetSid in groupMembers) {
+                    val target = players.get(targetSid) ?: continue
+                    val healAmount = rollRange(rng, effect.minHeal, effect.maxHeal)
+                    val healed = applyHeal(targetSid, target, healAmount, dirtyNotifier)
+                    if (healed > 0) {
+                        combat.addHealingThreat(sessionId, healed)
+                        onCombatEvent(
+                            sessionId,
+                            CombatEvent.Heal(
+                                abilityName = ability.displayName,
+                                targetName = target.name,
+                                amount = healed,
+                                sourceIsPlayer = true,
+                            ),
+                        )
+                    }
+                    if (targetSid == sessionId) {
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                sessionId,
+                                "Your ${ability.displayName} heals you for $healed HP.",
+                            ),
+                        )
+                    } else {
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                sessionId,
+                                "Your ${ability.displayName} heals ${target.name} for $healed HP.",
+                            ),
+                        )
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                targetSid,
+                                "${player.name}'s ${ability.displayName} heals you for $healed HP.",
+                            ),
+                        )
+                    }
+                }
+            }
+            is AbilityEffect.ApplyStatus -> {
+                val sys =
+                    statusEffects
+                        ?: return "Status effects are not available."
+                deductManaAndCooldown(sessionId, player, ability, now)
+                for (targetSid in groupMembers) {
+                    sys.applyToPlayer(targetSid, effect.statusEffectId, sessionId)
+                    dirtyNotifier.playerStatusDirty(targetSid)
+                    if (targetSid == sessionId) {
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                sessionId,
+                                "You are empowered by ${ability.displayName}!",
+                            ),
+                        )
+                    } else {
+                        val target = players.get(targetSid) ?: continue
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                sessionId,
+                                "Your ${ability.displayName} empowers ${target.name}!",
+                            ),
+                        )
+                        outbound.send(
+                            OutboundEvent.SendText(
+                                targetSid,
+                                "${player.name}'s ${ability.displayName} empowers you!",
+                            ),
+                        )
+                    }
+                }
+            }
+            else -> return "Spell misconfigured (unexpected effect for all_allies target)."
         }
         broadcastToRoom(
             players,
