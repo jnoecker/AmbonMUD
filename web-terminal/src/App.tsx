@@ -274,6 +274,9 @@ function App() {
           pushGainEvent,
           pushQuestNotification,
           setMobInfo,
+          setLoginPrompt: () => {},
+          setLoginError: () => {},
+          setServerAssets: () => {},
         },
       );
     },
