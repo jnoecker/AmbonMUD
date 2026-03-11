@@ -8,7 +8,11 @@ import dev.ambon.config.GatewayReconnectConfig
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
+import dev.ambon.engine.PlayerClassRegistry
+import dev.ambon.engine.PlayerClassRegistryLoader
 import dev.ambon.engine.PlayerProgression
+import dev.ambon.engine.RaceRegistry
+import dev.ambon.engine.RaceRegistryLoader
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -18,6 +22,8 @@ import dev.ambon.grpc.proto.InboundEventProto
 import dev.ambon.grpc.proto.OutboundEventProto
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.InMemoryPlayerRepository
+import dev.ambon.test.testClassEngineConfig
+import dev.ambon.test.testRaceEngineConfig
 import io.grpc.Server
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
@@ -105,6 +111,14 @@ class GatewayEngineIntegrationTest {
         val clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
         val items = ItemRegistry()
         val progression = PlayerProgression()
+        val classRegistry =
+            PlayerClassRegistry().also { reg ->
+                PlayerClassRegistryLoader.load(testClassEngineConfig(), reg)
+            }
+        val raceRegistry =
+            RaceRegistry().also { reg ->
+                RaceRegistryLoader.load(testRaceEngineConfig(), reg)
+            }
         val players =
             dev.ambon.test.buildTestPlayerRegistry(
                 startRoom = world.startRoom,
@@ -112,6 +126,8 @@ class GatewayEngineIntegrationTest {
                 items = items,
                 clock = clock,
                 progression = progression,
+                classRegistry = classRegistry,
+                raceRegistry = raceRegistry,
             )
         val engine =
             GameEngine(
@@ -125,6 +141,8 @@ class GatewayEngineIntegrationTest {
                 tickMillis = 10L,
                 scheduler = Scheduler(clock),
                 metrics = GameMetrics.noop(),
+                classRegistryOverride = classRegistry,
+                raceRegistryOverride = raceRegistry,
             )
         scope.launch(engineDispatcher) { engine.run() }
     }
