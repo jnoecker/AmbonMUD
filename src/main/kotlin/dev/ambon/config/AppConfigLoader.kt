@@ -56,18 +56,22 @@ object AppConfigLoader {
             builder = builder.addSource(PropertySource.resource("/application-$profileName.yaml", optional = true))
         }
 
-        // Local override file (git-ignored) — holds world/lore customisations that
-        // shouldn't live in the open-source repo (custom races, backstories, images, etc.).
-        // Check the filesystem working directory first (for deployed servers that curl
-        // the file at startup), then fall back to classpath (for local dev).
+        // Local config file (git-ignored) — a complete standalone config produced
+        // by the deployment pipeline.  When present it REPLACES the base
+        // application.yaml entirely (no deep-merge), so every field must be
+        // defined there.  When absent the checked-in application.yaml provides
+        // sensible defaults for local development.
         val localFile = File(LOCAL_OVERRIDE_FILENAME)
-        if (localFile.isFile) {
-            builder = builder.addSource(PropertySource.file(localFile, optional = true))
-        } else {
-            builder = builder.addResourceSource(LOCAL_OVERRIDE_CLASSPATH, optional = true)
-        }
+        val localOnClasspath =
+            AppConfigLoader::class.java.getResource(LOCAL_OVERRIDE_CLASSPATH) != null
 
-        builder = builder.addResourceSource(resourcePath, optional = false)
+        if (localFile.isFile) {
+            builder = builder.addSource(PropertySource.file(localFile, optional = false))
+        } else if (localOnClasspath) {
+            builder = builder.addResourceSource(LOCAL_OVERRIDE_CLASSPATH, optional = false)
+        } else {
+            builder = builder.addResourceSource(resourcePath, optional = false)
+        }
 
         return builder
             .build()
