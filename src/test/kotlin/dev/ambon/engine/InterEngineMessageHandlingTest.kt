@@ -15,6 +15,8 @@ import dev.ambon.sharding.LocalInterEngineBus
 import dev.ambon.sharding.PlayerSummary
 import dev.ambon.test.MutableClock
 import dev.ambon.test.drainAll
+import dev.ambon.test.testClassEngineConfig
+import dev.ambon.test.testRaceEngineConfig
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -75,7 +77,23 @@ class InterEngineMessageHandlingTest {
         val world = dev.ambon.test.TestWorlds.testWorld
         val items = ItemRegistry()
         val repo = InMemoryPlayerRepository()
-        val players = dev.ambon.test.buildTestPlayerRegistry(world.startRoom, repo, items, clock = clock)
+        val classRegistry =
+            PlayerClassRegistry().also { reg ->
+                PlayerClassRegistryLoader.load(testClassEngineConfig(), reg)
+            }
+        val raceRegistry =
+            RaceRegistry().also { reg ->
+                RaceRegistryLoader.load(testRaceEngineConfig(), reg)
+            }
+        val players =
+            dev.ambon.test.buildTestPlayerRegistry(
+                world.startRoom,
+                repo,
+                items,
+                clock = clock,
+                classRegistry = classRegistry,
+                raceRegistry = raceRegistry,
+            )
         val mobs = MobRegistry()
         val inbound = LocalInboundBus()
         val outbound = LocalOutboundBus()
@@ -97,6 +115,8 @@ class InterEngineMessageHandlingTest {
                     engineId = engineId,
                     interEngineBus = bus,
                 ),
+                classRegistryOverride = classRegistry,
+                raceRegistryOverride = raceRegistry,
             )
 
         return EngineTestHarness(engine, inbound, outbound, bus, players, clock)
