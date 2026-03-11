@@ -387,7 +387,7 @@ data class WorldConfig(
 )
 
 data class PersistenceConfig(
-    val backend: PersistenceBackend = PersistenceBackend.POSTGRES,
+    val backend: PersistenceBackend = PersistenceBackend.YAML,
     val rootDir: String = "data/players",
     val worker: PersistenceWorkerConfig = PersistenceWorkerConfig(),
 )
