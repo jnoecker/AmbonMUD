@@ -5043,10 +5043,14 @@ body {
 }
 
 .char-card-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(5, 110px);
   gap: 10px;
   justify-content: center;
+}
+
+.char-card-grid--cols6 {
+  grid-template-columns: repeat(6, 110px);
 }
 
 .char-card {
