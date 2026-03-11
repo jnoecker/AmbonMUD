@@ -5030,131 +5030,115 @@ body {
   justify-content: center;
 }
 
-.login-card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.login-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 14px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--line-soft);
-  background:
-    linear-gradient(140deg, rgb(62 74 108 / 60%), rgb(50 60 88 / 50%));
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
-}
-
-.login-card:hover {
-  background:
-    linear-gradient(140deg, rgb(78 88 126 / 70%), rgb(62 74 108 / 60%));
-  border-color: var(--color-primary-lavender);
-  transform: translateY(-1px);
-}
-
-.login-card-name {
-  font-family: "Cormorant Garamond", "Georgia", serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--color-primary-lavender);
-}
-
-.login-card-stats {
-  font-size: 0.76rem;
-  color: var(--text-secondary);
-  text-align: center;
-}
-
-/* ── Race selection carousel ─────────────────────── */
+/* ── Portrait card grid (race / class picker) ────── */
 
 .login-modal--wide {
-  width: min(560px, 94vw);
+  width: min(860px, 96vw);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
-.race-carousel {
+.char-picker {
   align-items: center;
 }
 
-.race-carousel-nav {
+.char-card-grid {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.race-carousel-arrow {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 1px solid var(--line-soft);
-  background: rgb(62 74 108 / 40%);
-  color: var(--text-primary);
-  font-size: 1.4rem;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.race-carousel-arrow:hover {
-  background: rgb(88 72 132 / 50%);
-  border-color: var(--color-primary-lavender);
-}
-
-.race-carousel-card {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
-  padding: 18px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--line-soft);
-  background:
-    linear-gradient(160deg, rgb(54 63 90 / 80%), rgb(40 48 72 / 70%));
-  animation: race-card-enter 0.25s ease-out;
+  justify-content: center;
 }
 
-@keyframes race-card-enter {
-  from { opacity: 0; transform: scale(0.97); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-.race-carousel-portrait {
-  width: 140px;
-  height: 140px;
+.char-card {
+  position: relative;
+  width: 110px;
+  aspect-ratio: 3 / 4;
   border-radius: 12px;
-  overflow: hidden;
-  border: 2px solid rgb(232 239 255 / 16%);
+  border: 2px solid var(--line-faint);
   background: rgb(30 36 56 / 60%);
-  box-shadow: 0 4px 16px rgb(8 10 18 / 40%);
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.15s, box-shadow 0.2s, transform 0.15s;
 }
 
-.race-carousel-img {
+.char-card:hover {
+  border-color: rgb(168 151 210 / 50%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgb(8 10 18 / 40%);
+}
+
+.char-card.selected {
+  border-color: var(--color-primary-lavender);
+  box-shadow:
+    0 0 0 1px var(--color-primary-lavender),
+    0 0 18px rgb(168 151 210 / 35%),
+    0 6px 20px rgb(8 10 18 / 40%);
+  transform: translateY(-2px);
+}
+
+.char-card-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.race-carousel-name {
+.char-card-placeholder {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(160deg, rgb(54 63 90 / 80%), rgb(40 48 72 / 70%));
+}
+
+.char-card-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 18px 4px 6px;
+  background: linear-gradient(to top, rgb(16 20 32 / 88%) 0%, transparent 100%);
+  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+/* ── Detail panel below card grid ────────────────── */
+
+.char-detail {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line-soft);
+  background:
+    linear-gradient(160deg, rgb(54 63 90 / 80%), rgb(40 48 72 / 70%));
+  animation: char-detail-enter 0.2s ease-out;
+}
+
+@keyframes char-detail-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.char-detail-name {
   margin: 0;
   font-family: "Cormorant Garamond", "Georgia", serif;
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: var(--color-primary-lavender);
   letter-spacing: 0.02em;
 }
 
-.race-carousel-stats {
+.char-detail-stats {
   margin: 0;
   font-size: 0.82rem;
   color: var(--color-moss-green);
@@ -5162,7 +5146,7 @@ body {
   letter-spacing: 0.03em;
 }
 
-.race-carousel-desc {
+.char-detail-desc {
   margin: 0;
   font-size: 0.88rem;
   color: var(--text-primary);
@@ -5170,14 +5154,14 @@ body {
   line-height: 1.45;
 }
 
-.race-carousel-traits {
+.char-detail-traits {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.race-carousel-section-label {
+.char-detail-section-label {
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -5185,7 +5169,7 @@ body {
   color: var(--text-secondary);
 }
 
-.race-carousel-trait-list {
+.char-detail-trait-list {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -5194,27 +5178,27 @@ body {
   gap: 3px;
 }
 
-.race-carousel-trait {
+.char-detail-trait {
   font-size: 0.82rem;
   line-height: 1.35;
 }
 
-.race-carousel-trait-name {
+.char-detail-trait-name {
   color: var(--color-soft-gold);
   font-weight: 600;
 }
 
-.race-carousel-trait-detail {
+.char-detail-trait-detail {
   color: var(--text-secondary);
   margin-left: 2px;
 }
 
-.race-carousel-trait-detail::before {
+.char-detail-trait-detail::before {
   content: " \2014  ";
   color: var(--text-tertiary);
 }
 
-.race-carousel-backstory {
+.char-detail-backstory {
   margin: 0;
   font-size: 0.8rem;
   color: var(--text-secondary);
@@ -5223,41 +5207,14 @@ body {
   font-style: italic;
 }
 
-.race-carousel-dots {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.race-carousel-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 1px solid var(--line-soft);
-  background: rgb(62 74 108 / 50%);
-  padding: 0;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.15s;
-}
-
-.race-carousel-dot:hover {
-  border-color: var(--color-primary-lavender);
-}
-
-.race-carousel-dot.active {
-  background: var(--color-primary-lavender);
-  border-color: var(--color-primary-lavender);
-  transform: scale(1.2);
-}
-
-.race-carousel-select {
+.char-picker-select {
   align-self: center;
   padding: 10px 32px;
   font-size: 0.95rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  @keyframes race-card-enter {
+  @keyframes char-detail-enter {
     from { opacity: 1; transform: none; }
     to   { opacity: 1; transform: none; }
   }

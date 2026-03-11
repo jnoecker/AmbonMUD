@@ -2,8 +2,10 @@ package dev.ambon.test
 
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.config.ClassDefinitionConfig
 import dev.ambon.config.ClassEngineConfig
 import dev.ambon.config.EconomyConfig
+import dev.ambon.config.RaceDefinitionConfig
 import dev.ambon.config.RaceEngineConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -65,6 +67,67 @@ object TestPasswordHasher : PasswordHasher {
         passwordHash: String,
     ): Boolean = passwordHash == hash(password)
 }
+
+/** Standard class definitions used across tests. Matches the old hardcoded defaults. */
+fun testClassEngineConfig(): ClassEngineConfig =
+    ClassEngineConfig(
+        definitions = mapOf(
+            "WARRIOR" to ClassDefinitionConfig(
+                displayName = "Warrior",
+                hpPerLevel = 8,
+                manaPerLevel = 4,
+                primaryStat = "STR",
+                threatMultiplier = 1.5,
+            ),
+            "MAGE" to ClassDefinitionConfig(
+                displayName = "Mage",
+                hpPerLevel = 4,
+                manaPerLevel = 16,
+                primaryStat = "INT",
+            ),
+            "CLERIC" to ClassDefinitionConfig(
+                displayName = "Cleric",
+                hpPerLevel = 6,
+                manaPerLevel = 12,
+                primaryStat = "WIS",
+            ),
+            "ROGUE" to ClassDefinitionConfig(
+                displayName = "Rogue",
+                hpPerLevel = 5,
+                manaPerLevel = 8,
+                primaryStat = "DEX",
+            ),
+            "SWARM" to ClassDefinitionConfig(
+                displayName = "Swarm",
+                hpPerLevel = 2,
+                manaPerLevel = 3,
+                selectable = false,
+            ),
+        ),
+    )
+
+/** Standard race definitions used across tests. Matches the old hardcoded defaults. */
+fun testRaceEngineConfig(): RaceEngineConfig =
+    RaceEngineConfig(
+        definitions = mapOf(
+            "HUMAN" to RaceDefinitionConfig(
+                displayName = "Human",
+                statMods = mapOf("STR" to 1, "CHA" to 1),
+            ),
+            "ELF" to RaceDefinitionConfig(
+                displayName = "Elf",
+                statMods = mapOf("STR" to -1, "DEX" to 2, "CON" to -2, "INT" to 1),
+            ),
+            "DWARF" to RaceDefinitionConfig(
+                displayName = "Dwarf",
+                statMods = mapOf("STR" to 1, "DEX" to -1, "CON" to 2, "WIS" to 1, "CHA" to -2),
+            ),
+            "HALFLING" to RaceDefinitionConfig(
+                displayName = "Halfling",
+                statMods = mapOf("STR" to -2, "DEX" to 2, "CON" to -1, "WIS" to 1, "CHA" to 1),
+            ),
+        ),
+    )
 
 fun buildTestPlayerRegistry(
     startRoom: RoomId,
@@ -248,11 +311,11 @@ class GameEngineHarness private constructor(
         ): GameEngineHarness {
             val classRegistry =
                 PlayerClassRegistry().also { reg ->
-                    PlayerClassRegistryLoader.load(ClassEngineConfig(), reg)
+                    PlayerClassRegistryLoader.load(testClassEngineConfig(), reg)
                 }
             val raceRegistry =
                 RaceRegistry().also { reg ->
-                    RaceRegistryLoader.load(RaceEngineConfig(), reg)
+                    RaceRegistryLoader.load(testRaceEngineConfig(), reg)
                 }
             val players =
                 buildTestPlayerRegistry(
@@ -278,6 +341,8 @@ class GameEngineHarness private constructor(
                     mobs = mobs,
                     items = items,
                     metrics = metrics,
+                    classRegistryOverride = classRegistry,
+                    raceRegistryOverride = raceRegistry,
                 )
             val engineJob = scope.launch { engine.run() }
             return GameEngineHarness(world, repo, inbound, outbound, items, players, mobs, clock, scheduler, tickMillis, engine, engineJob)
