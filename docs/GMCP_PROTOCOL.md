@@ -1,6 +1,6 @@
 # AmbonMUD GMCP Protocol Reference
 
-**Date:** 2026-02-27
+**Date:** 2026-03-11
 
 GMCP (Generic MUD Communication Protocol) is a telnet subnegotiation extension (option 201 / `0xC9`) that lets the server send structured JSON data alongside the plain text MUD stream. AmbonMUD extends this to WebSocket clients via a thin JSON envelope.
 
@@ -225,23 +225,29 @@ Response to a client `Core.Ping`.
 
 ### `Char.Name`
 
-Sent once on login. Static for the duration of the session.
+Sent once on login. Static for the duration of the session (except `level` updates on level-up).
 
 ```json
 {
   "name": "Ambuoroko",
+  "gender": "neutral",
   "race": "ELF",
   "class": "MAGE",
-  "level": 7
+  "level": 7,
+  "sprite": "/images/player_sprites/elf_mage_t1.png",
+  "isStaff": false
 }
 ```
 
-| Field   | Type   | Notes |
-|---------|--------|-------|
-| `name`  | string | Character name |
-| `race`  | string | Race enum name: `HUMAN`, `ELF`, `DWARF`, `HALFLING` |
-| `class` | string | Class enum name: `WARRIOR`, `MAGE`, `CLERIC`, `ROGUE` |
-| `level` | int    | Current level |
+| Field    | Type    | Notes |
+|----------|---------|-------|
+| `name`   | string  | Character name |
+| `gender` | string  | Character gender |
+| `race`   | string  | Race enum name: `HUMAN`, `ELF`, `DWARF`, `HALFLING` |
+| `class`  | string  | Class enum name: `WARRIOR`, `MAGE`, `CLERIC`, `ROGUE` |
+| `level`  | int     | Current level |
+| `sprite` | string  | URL path to the player's current sprite image |
+| `isStaff`| boolean | `true` for staff/admin characters |
 
 ---
 
@@ -334,13 +340,17 @@ Full snapshot of inventory and equipped items. Sent on login and after any inven
 
 **Item object:**
 
-| Field    | Type         | Notes |
-|----------|--------------|-------|
-| `id`     | string       | Unique instance ID — format `zone:item_id#instance` |
-| `name`   | string       | Display name |
-| `slot`   | string\|null | Equipment slot if wearable; `null` for non-equipment |
-| `damage` | int          | Weapon damage (0 for non-weapons) |
-| `armor`  | int          | Armor value (0 for non-armor) |
+| Field       | Type         | Notes |
+|-------------|--------------|-------|
+| `id`        | string       | Unique instance ID — format `zone:item_id#instance` |
+| `name`      | string       | Display name |
+| `keyword`   | string       | Keyword for commands (e.g., `sword`, `potion`) |
+| `slot`      | string\|null | Equipment slot if wearable; `null` for non-equipment |
+| `damage`    | int          | Weapon damage (0 for non-weapons) |
+| `armor`     | int          | Armor value (0 for non-armor) |
+| `basePrice` | int          | Base gold value (0 if not sellable) |
+| `image`     | string\|null | Item sprite image URL |
+| `video`     | string\|null | Item video URL |
 
 **Equipment slot keys:** `HEAD`, `NECK`, `CHEST`, `HANDS`, `WAIST`, `LEGS`, `FEET`, `MAIN_HAND`, `OFF_HAND`.
 Each slot is present in the map; value is `null` if empty.
@@ -398,7 +408,8 @@ Full ability list. Sent on login, when a new ability is learned (level-up), and 
     "cooldownRemainingMs": 0,
     "levelRequired": 5,
     "targetType": "ENEMY",
-    "classRestriction": "MAGE"
+    "classRestriction": "MAGE",
+    "image": "/images/abilities/fireball.png"
   }
 ]
 ```
@@ -412,8 +423,9 @@ Full ability list. Sent on login, when a new ability is learned (level-up), and 
 | `cooldownMs`           | long         | Full cooldown duration in milliseconds |
 | `cooldownRemainingMs`  | long         | Milliseconds until the ability is ready (0 = ready) |
 | `levelRequired`        | int          | Minimum character level to use |
-| `targetType`           | string       | `SELF`, `ENEMY`, `ALLY`, `AREA` |
+| `targetType`           | string       | `SELF`, `ENEMY`, `ALLY`, `ALL_ENEMIES`, `ALL_ALLIES` |
 | `classRestriction`     | string\|null | Required class, or `null` if any class can use it |
+| `image`                | string\|null | URL path to the ability's sprite image |
 
 ---
 
@@ -548,7 +560,10 @@ Sent on login, every time the player moves to a new room, and in response to the
   "exits": {
     "north": "tutorial_glade:forest_path",
     "east":  "tutorial_glade:stream_bank"
-  }
+  },
+  "image": "/images/rooms/clearing.png",
+  "music": "forest_theme",
+  "ambient": "birds_chirping"
 }
 ```
 
@@ -559,6 +574,10 @@ Sent on login, every time the player moves to a new room, and in response to the
 | `description` | string              | Long room description |
 | `zone`        | string              | Zone identifier |
 | `exits`       | object              | Map of direction → destination room ID |
+| `image`       | string\|null        | Room background image URL |
+| `video`       | string\|null        | Room background video URL |
+| `music`       | string\|null        | Background music identifier |
+| `ambient`     | string\|null        | Ambient sound identifier |
 
 **Exit direction keys:** `north`, `south`, `east`, `west`, `up`, `down`, `northeast`, `northwest`, `southeast`, `southwest` (lowercase, only present if the exit exists).
 
@@ -612,31 +631,38 @@ Full snapshot of mobs currently in the room. Sent on login and after any mob ent
   {
     "id": "tutorial_glade:wolf#2",
     "name": "Grey Wolf",
+    "description": "A lean grey wolf with watchful eyes.",
     "hp": 28,
-    "maxHp": 40
+    "maxHp": 40,
+    "image": "/images/mobs/wolf.png"
   }
 ]
 ```
 
-| Field    | Type   | Notes |
-|----------|--------|-------|
-| `id`     | string | Mob instance ID — format `zone:mob_id#instance` |
-| `name`   | string | Display name |
-| `hp`     | int    | Current hit points |
-| `maxHp`  | int    | Maximum hit points |
+| Field         | Type         | Notes |
+|---------------|--------------|-------|
+| `id`          | string       | Mob instance ID — format `zone:mob_id#instance` |
+| `name`        | string       | Display name |
+| `description` | string       | Mob description (may be empty) |
+| `hp`          | int          | Current hit points |
+| `maxHp`       | int          | Maximum hit points |
+| `image`       | string\|null | Mob sprite image URL |
+| `video`       | string\|null | Mob video URL |
 
 ---
 
 ### `Room.AddMob`
 
-Sent immediately to all players in a room when a mob spawns or wanders in.
+Sent immediately to all players in a room when a mob spawns or wanders in. Same field set as `Room.Mobs` entries.
 
 ```json
 {
   "id": "tutorial_glade:wolf#2",
   "name": "Grey Wolf",
+  "description": "A lean grey wolf with watchful eyes.",
   "hp": 40,
-  "maxHp": 40
+  "maxHp": 40,
+  "image": "/images/mobs/wolf.png"
 }
 ```
 
@@ -644,14 +670,16 @@ Sent immediately to all players in a room when a mob spawns or wanders in.
 
 ### `Room.UpdateMob`
 
-Sent once per tick to all players in a room when a mob's HP changes (combat damage, regen, etc.).
+Sent once per tick to all players in a room when a mob's HP changes (combat damage, regen, etc.). Same field set as `Room.Mobs` entries.
 
 ```json
 {
   "id": "tutorial_glade:wolf#2",
   "name": "Grey Wolf",
+  "description": "A lean grey wolf with watchful eyes.",
   "hp": 12,
-  "maxHp": 40
+  "maxHp": 40,
+  "image": "/images/mobs/wolf.png"
 }
 ```
 
@@ -673,9 +701,22 @@ Full snapshot of items on the room floor. Sent after an item is dropped, picked 
 
 ```json
 [
-  { "id": "tutorial_glade:iron_key#5", "name": "Iron Key" }
+  {
+    "id": "tutorial_glade:iron_key#5",
+    "name": "Iron Key",
+    "description": "A heavy iron key.",
+    "image": "/images/items/iron_key.png"
+  }
 ]
 ```
+
+| Field         | Type         | Notes |
+|---------------|--------------|-------|
+| `id`          | string       | Item instance ID |
+| `name`        | string       | Display name |
+| `description` | string       | Item description (may be empty) |
+| `image`       | string\|null | Item sprite image URL |
+| `video`       | string\|null | Item video URL |
 
 ---
 
@@ -741,6 +782,372 @@ When `leader` is `null`, `members` is an empty array.
 
 ---
 
+### `Char.Combat`
+
+Sent when the player enters or exits combat, and once per tick while in combat. Provides the current combat target's info.
+
+```json
+{
+  "targetId": "tutorial_glade:wolf#2",
+  "targetName": "Grey Wolf",
+  "targetHp": 22,
+  "targetMaxHp": 40,
+  "targetImage": "/images/mobs/wolf.png"
+}
+```
+
+| Field         | Type         | Notes |
+|---------------|--------------|-------|
+| `targetId`    | string\|null | Mob instance ID of the current target; `null` if not in combat |
+| `targetName`  | string\|null | Target display name |
+| `targetHp`    | int\|null    | Target's current HP |
+| `targetMaxHp` | int\|null    | Target's max HP |
+| `targetImage` | string\|null | Target's sprite image URL |
+
+---
+
+### `Char.Combat.Event`
+
+Sent immediately for each combat event (hit, dodge, heal, DoT tick, kill, death, shield absorb). Drives combat animations and damage numbers on the canvas.
+
+```json
+{
+  "type": "meleeHit",
+  "targetName": "Grey Wolf",
+  "targetId": "tutorial_glade:wolf#2",
+  "damage": 14,
+  "sourceIsPlayer": true
+}
+```
+
+**Event types and their fields:**
+
+| `type` | Description | Key fields |
+|--------|-------------|------------|
+| `meleeHit` | Auto-attack hit | `targetName`, `targetId`, `damage`, `sourceIsPlayer` |
+| `abilityHit` | Spell/ability damage | `abilityId`, `abilityName`, `targetName`, `targetId`, `damage`, `sourceIsPlayer` |
+| `heal` | Heal from ability | `abilityName`, `targetName`, `amount`, `sourceIsPlayer` |
+| `dodge` | Attack dodged | `targetName`, `targetId`, `sourceIsPlayer` |
+| `dotTick` | Damage-over-time tick | `effectName`, `targetName`, `targetId`, `damage` |
+| `hotTick` | Heal-over-time tick | `effectName`, `targetName`, `amount` |
+| `kill` | Target killed | `targetName`, `targetId`, `xpGained`, `goldGained` |
+| `death` | Player died | `killerName`, `killerIsPlayer` |
+| `shieldAbsorb` | Shield absorbed damage | `attackerName`, `absorbed`, `remaining` |
+
+All fields are nullable except `type`. Only fields relevant to the event type are populated.
+
+---
+
+### `Char.Cooldown`
+
+Sent immediately when an ability's cooldown starts.
+
+```json
+{
+  "abilityId": "fireball",
+  "cooldownMs": 6000
+}
+```
+
+| Field        | Type   | Notes |
+|--------------|--------|-------|
+| `abilityId`  | string | Ability identifier |
+| `cooldownMs` | long   | Full cooldown duration in milliseconds |
+
+---
+
+### `Char.Gain`
+
+Sent immediately when the player gains XP, gold, or levels up. Drives floating popup numbers on the canvas.
+
+```json
+{
+  "type": "xp",
+  "amount": 150,
+  "source": "Grey Wolf"
+}
+```
+
+| Field      | Type         | Notes |
+|------------|--------------|-------|
+| `type`     | string       | `"xp"`, `"gold"`, or `"levelUp"` |
+| `amount`   | long         | Amount gained |
+| `source`   | string\|null | Source of the gain (mob name, etc.) |
+| `newLevel` | int\|null    | New level (only present for `levelUp`) |
+| `hpGained` | int\|null    | HP increase from leveling (only for `levelUp`) |
+| `manaGained`| int\|null   | Mana increase from leveling (only for `levelUp`) |
+
+---
+
+### `Room.MobInfo`
+
+Metadata about mobs in the room — level, tier, and interaction markers (quest, shop, dialogue). Sent on room entry and when mob state changes.
+
+```json
+[
+  {
+    "id": "tutorial_glade:merchant#1",
+    "level": 10,
+    "tier": "normal",
+    "questGiver": true,
+    "shopKeeper": true,
+    "dialogue": true
+  }
+]
+```
+
+| Field        | Type    | Notes |
+|--------------|---------|-------|
+| `id`         | string  | Mob instance ID |
+| `level`      | int     | Estimated mob level |
+| `tier`       | string  | Mob tier (e.g., `"normal"`, `"elite"`, `"boss"`) |
+| `questGiver` | boolean | `true` if mob offers a quest |
+| `shopKeeper` | boolean | `true` if mob runs a shop |
+| `dialogue`   | boolean | `true` if mob has a dialogue tree |
+
+---
+
+### `Quest.List`
+
+Full quest log snapshot. Sent on login and after quest accepted/updated/completed/abandoned.
+
+```json
+[
+  {
+    "id": "find_the_relic",
+    "name": "Find the Relic",
+    "description": "Recover the lost relic from the ruins.",
+    "objectives": [
+      { "description": "Enter the ruins", "current": 1, "required": 1 },
+      { "description": "Find the relic", "current": 0, "required": 1 }
+    ]
+  }
+]
+```
+
+| Field                       | Type   | Notes |
+|-----------------------------|--------|-------|
+| `id`                        | string | Quest identifier |
+| `name`                      | string | Quest display name |
+| `description`               | string | Quest description |
+| `objectives[].description`  | string | Objective text |
+| `objectives[].current`      | int    | Current progress |
+| `objectives[].required`     | int    | Required to complete |
+
+---
+
+### `Quest.Update`
+
+Sent immediately when a single quest objective progresses.
+
+```json
+{
+  "questId": "find_the_relic",
+  "objectiveIndex": 1,
+  "current": 1,
+  "required": 1
+}
+```
+
+---
+
+### `Quest.Complete`
+
+Sent immediately when a quest is completed.
+
+```json
+{
+  "questId": "find_the_relic",
+  "questName": "Find the Relic"
+}
+```
+
+---
+
+### `Dialogue.Node`
+
+Sent when an NPC dialogue node is presented to the player.
+
+```json
+{
+  "mobName": "Archivist Maren",
+  "text": "Welcome, traveler. Are you here to help?",
+  "choices": [
+    { "index": 1, "text": "Yes, what do you need?" },
+    { "index": 2, "text": "Not right now." }
+  ]
+}
+```
+
+---
+
+### `Dialogue.End`
+
+Sent when a dialogue conversation ends.
+
+```json
+{
+  "mobName": "Archivist Maren",
+  "reason": "farewell"
+}
+```
+
+---
+
+### `Guild.Info`
+
+Sent on login and when guild state changes (join, leave, promote, MOTD update).
+
+```json
+{
+  "name": "Silver Guard",
+  "tag": "SG",
+  "rank": "OFFICER",
+  "motd": "Raid tonight at 8pm!",
+  "memberCount": 12,
+  "maxSize": 50
+}
+```
+
+| Field         | Type         | Notes |
+|---------------|--------------|-------|
+| `name`        | string\|null | Guild name; `null` if not in a guild |
+| `tag`         | string\|null | Guild tag (short label) |
+| `rank`        | string\|null | Player's rank: `LEADER`, `OFFICER`, `MEMBER` |
+| `motd`        | string\|null | Message of the day |
+| `memberCount` | int          | Current member count |
+| `maxSize`     | int          | Maximum guild size |
+
+---
+
+### `Guild.Members`
+
+Sent on request. Full roster of guild members.
+
+```json
+[
+  { "name": "Thornveil", "rank": "LEADER", "online": true, "level": 15 },
+  { "name": "Ambuoroko", "rank": "OFFICER", "online": true, "level": 7 },
+  { "name": "Silkwind", "rank": "MEMBER", "online": false, "level": 12 }
+]
+```
+
+---
+
+### `Guild.Chat`
+
+Sent immediately when a guild chat message is received.
+
+```json
+{
+  "sender": "Thornveil",
+  "message": "Ready for the raid?"
+}
+```
+
+---
+
+### `Friends.List`
+
+Full friends list snapshot. Sent on login and on `friend list`.
+
+```json
+[
+  { "name": "Thornveil", "online": true, "level": 15, "zone": "tutorial_glade" },
+  { "name": "Silkwind", "online": false, "level": null, "zone": null }
+]
+```
+
+| Field   | Type         | Notes |
+|---------|--------------|-------|
+| `name`  | string       | Friend's character name |
+| `online`| boolean      | Whether currently logged in |
+| `level` | int\|null    | Level (null if offline) |
+| `zone`  | string\|null | Current zone (null if offline) |
+
+---
+
+### `Friends.Online`
+
+Sent immediately when a friend logs in.
+
+```json
+{ "name": "Thornveil", "level": 15 }
+```
+
+---
+
+### `Friends.Offline`
+
+Sent immediately when a friend logs out.
+
+```json
+{ "name": "Thornveil" }
+```
+
+---
+
+### `Shop.List`
+
+Sent when a player enters a shop or uses the `list` command at a shop.
+
+```json
+{
+  "name": "General Store",
+  "sellMultiplier": 0.5,
+  "items": [
+    {
+      "id": "tutorial_glade:health_potion",
+      "name": "Health Potion",
+      "keyword": "potion",
+      "description": "Restores 20 HP.",
+      "slot": null,
+      "damage": 0,
+      "armor": 0,
+      "buyPrice": 25,
+      "basePrice": 20,
+      "consumable": true,
+      "image": "/images/items/health_potion.png"
+    }
+  ]
+}
+```
+
+| Field            | Type         | Notes |
+|------------------|--------------|-------|
+| `name`           | string       | Shop name |
+| `sellMultiplier` | double       | Multiplier applied to base price when selling |
+| `items[].id`     | string       | Item template ID |
+| `items[].name`   | string       | Display name |
+| `items[].keyword`| string       | Command keyword |
+| `items[].description` | string  | Item description |
+| `items[].slot`   | string\|null | Equipment slot (null for non-equipment) |
+| `items[].damage` | int          | Weapon damage |
+| `items[].armor`  | int          | Armor value |
+| `items[].buyPrice` | int        | Price to buy (base × buy multiplier) |
+| `items[].basePrice` | int       | Base price |
+| `items[].consumable` | boolean  | Whether item is consumable |
+| `items[].image`  | string\|null | Item image URL |
+| `items[].video`  | string\|null | Item video URL |
+
+---
+
+### `Shop.Close`
+
+Sent when the player leaves a shop context.
+
+```json
+{}
+```
+
+---
+
+### `Server.Assets`
+
+Sent on login. Contains resolved URLs for global asset files (sprites, images). Payload is a map of asset keys to URL paths.
+
+---
+
 ## 5. Send Triggers & Timing
 
 ### Batched (once per 100 ms tick)
@@ -750,6 +1157,7 @@ These packages are coalesced — if the same session is marked dirty multiple ti
 | Package              | Dirty trigger |
 |----------------------|---------------|
 | `Char.Vitals`        | HP/mana/XP/gold/level changes; combat state change |
+| `Char.Combat`        | Combat target changes, combat start/end |
 | `Char.StatusEffects` | Effect applied, ticked, or expired |
 | `Char.Stats`         | Login / level-up / stat-modifying effect applied or expired |
 | `Room.UpdateMob`     | Mob HP changes (combat, regen) |
@@ -764,10 +1172,14 @@ These packages are coalesced — if the same session is marked dirty multiple ti
 | `Char.Items.List`    | Login / `Core.Supports.Set` |
 | `Char.Skills`        | Login / level-up (new ability) / cooldown change |
 | `Char.Achievements`  | Login / achievement progress or unlock |
+| `Char.Combat.Event`  | Each combat event (hit, dodge, heal, kill, death) |
+| `Char.Cooldown`      | Ability cooldown started |
+| `Char.Gain`          | XP/gold gained or level-up |
 | `Room.Info`          | Login / movement / `look` command |
 | `Room.Players`       | Login / `Core.Supports.Set` |
 | `Room.Mobs`          | Login / `Core.Supports.Set` / mob enters or dies |
 | `Room.Items`         | Login / item dropped or picked up from floor |
+| `Room.MobInfo`       | Room entry / mob state change |
 | `Room.AddPlayer`     | Player enters room |
 | `Room.RemovePlayer`  | Player leaves room |
 | `Room.AddMob`        | Mob enters or spawns in room |
@@ -777,6 +1189,20 @@ These packages are coalesced — if the same session is marked dirty multiple ti
 | `Comm.Channel`       | Chat message received |
 | `Core.Ping`          | In response to client `Core.Ping` |
 | `Group.Info`         | Also sent immediately on join/leave events |
+| `Quest.List`         | Login / quest accepted, updated, completed, abandoned |
+| `Quest.Update`       | Quest objective progressed |
+| `Quest.Complete`     | Quest completed |
+| `Dialogue.Node`      | NPC dialogue presented |
+| `Dialogue.End`       | Dialogue conversation ended |
+| `Guild.Info`         | Login / guild state change |
+| `Guild.Members`      | Guild roster requested |
+| `Guild.Chat`         | Guild chat message received |
+| `Friends.List`       | Login / `friend list` command |
+| `Friends.Online`     | Friend logged in |
+| `Friends.Offline`    | Friend logged out |
+| `Shop.List`          | Player enters shop / `list` command |
+| `Shop.Close`         | Player leaves shop context |
+| `Server.Assets`      | Login |
 
 ---
 
@@ -845,56 +1271,6 @@ The following packages are on the roadmap. None are currently sent by the server
 
 ---
 
-### `Quest.List` *(planned)*
-
-Structured quest log. Would replace screen-scraping the `questlog` command for rich quest tracker UIs.
-
-```json
-{
-  "active": [
-    {
-      "id": "find_the_relic",
-      "title": "Find the Relic",
-      "description": "Recover the lost relic from the ruins to the east.",
-      "objectives": [
-        { "text": "Enter the ruins", "completed": true },
-        { "text": "Find the relic", "completed": false }
-      ],
-      "giver": "Archivist Maren"
-    }
-  ],
-  "completed": [
-    { "id": "first_steps", "title": "First Steps" }
-  ]
-}
-```
-
-*Trigger: login, quest accepted/updated/completed/abandoned.*
-
----
-
-### `Combat.Round` *(planned)*
-
-Structured combat event for each round. Allows clients to display damage numbers, combat logs, and visual effects without parsing plain text.
-
-```json
-{
-  "attacker":   "Ambuoroko",
-  "target":     "tutorial_glade:wolf#1",
-  "targetName": "Grey Wolf",
-  "damage":     14,
-  "damageType": "SPELL",
-  "abilityId":  "frostbolt",
-  "miss":       false,
-  "dodge":      false,
-  "killing":    false
-}
-```
-
-*Trigger: each combat round resolution.*
-
----
-
 ### `World.Map` *(planned)*
 
 Zone topology as a graph of rooms and connections. Enables clients to render a proper server-authoritative map rather than building one heuristically from observed movement.
@@ -957,12 +1333,17 @@ Notifies the client when the character's active display title changes (set via t
 | `Char.Name`           | → S→C     | Login only |
 | `Char.Vitals`         | → S→C     | Batched per tick |
 | `Char.StatusVars`     | → S→C     | Login only (static labels) |
+| `Char.Combat`         | → S→C     | Batched per tick |
+| `Char.Combat.Event`   | → S→C     | Immediate (per combat event) |
 | `Char.Items.List`     | → S→C     | Full snapshot |
 | `Char.Items.Add`      | → S→C     | Immediate |
 | `Char.Items.Remove`   | → S→C     | Immediate |
 | `Char.Skills`         | → S→C     | Full snapshot |
 | `Char.StatusEffects`  | → S→C     | Batched per tick |
 | `Char.Achievements`   | → S→C     | Full snapshot |
+| `Char.Stats`          | → S→C     | Batched per tick |
+| `Char.Cooldown`       | → S→C     | Immediate |
+| `Char.Gain`           | → S→C     | Immediate |
 | `Room.Info`           | → S→C     | On login/move/look |
 | `Room.Players`        | → S→C     | Full snapshot |
 | `Room.AddPlayer`      | → S→C     | Immediate |
@@ -972,11 +1353,23 @@ Notifies the client when the character's active display title changes (set via t
 | `Room.UpdateMob`      | → S→C     | Batched per tick |
 | `Room.RemoveMob`      | → S→C     | Immediate |
 | `Room.Items`          | → S→C     | Immediate |
+| `Room.MobInfo`        | → S→C     | Immediate |
 | `Comm.Channel`        | → S→C     | Immediate |
 | `Group.Info`          | → S→C     | Batched per tick + immediate on join/leave |
-| `Char.Stats`          | → S→C     | Batched per tick |
-| `Quest.List`          | → S→C     | **Planned** |
-| `Combat.Round`        | → S→C     | **Planned** |
+| `Quest.List`          | → S→C     | Full snapshot |
+| `Quest.Update`        | → S→C     | Immediate |
+| `Quest.Complete`      | → S→C     | Immediate |
+| `Dialogue.Node`       | → S→C     | Immediate |
+| `Dialogue.End`        | → S→C     | Immediate |
+| `Guild.Info`          | → S→C     | On login / guild state change |
+| `Guild.Members`       | → S→C     | On request |
+| `Guild.Chat`          | → S→C     | Immediate |
+| `Friends.List`        | → S→C     | On login / request |
+| `Friends.Online`      | → S→C     | Immediate |
+| `Friends.Offline`     | → S→C     | Immediate |
+| `Shop.List`           | → S→C     | Immediate |
+| `Shop.Close`          | → S→C     | Immediate |
+| `Server.Assets`       | → S→C     | Login only |
 | `World.Map`           | → S→C     | **Planned** |
 | `Admin.Status`        | → S→C     | **Planned** (staff only) |
 | `Char.Title`          | → S→C     | **Planned** |
