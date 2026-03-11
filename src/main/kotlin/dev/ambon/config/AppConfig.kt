@@ -169,8 +169,10 @@ data class AppConfig(
             require(def.manaCost >= 0) { "ability '$key' manaCost must be >= 0" }
             require(def.cooldownMs >= 0L) { "ability '$key' cooldownMs must be >= 0" }
             require(def.levelRequired >= 1) { "ability '$key' levelRequired must be >= 1" }
-            require(def.targetType.uppercase() in listOf("ENEMY", "SELF", "ALLY", "ALL_ENEMIES")) {
-                "ability '$key' targetType must be ENEMY, SELF, ALLY, or ALL_ENEMIES, got '${def.targetType}'"
+            require(
+                def.targetType.uppercase() in listOf("ENEMY", "SELF", "ALLY", "ALL_ENEMIES", "ALL_ALLIES"),
+            ) {
+                "ability '$key' targetType must be ENEMY, SELF, ALLY, ALL_ENEMIES, or ALL_ALLIES, got '${def.targetType}'"
             }
             val validEffectTypes = listOf("DIRECT_DAMAGE", "DIRECT_HEAL", "APPLY_STATUS", "AREA_DAMAGE", "TAUNT")
             require(def.effect.type.uppercase() in validEffectTypes) {
