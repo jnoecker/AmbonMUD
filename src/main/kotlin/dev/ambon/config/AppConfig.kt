@@ -933,44 +933,8 @@ data class ClassDefinitionConfig(
 )
 
 data class ClassEngineConfig(
-    val definitions: Map<String, ClassDefinitionConfig> = defaultClassDefinitions(),
-) {
-    companion object {
-        fun defaultClassDefinitions(): Map<String, ClassDefinitionConfig> = mapOf(
-            "WARRIOR" to ClassDefinitionConfig(
-                displayName = "Warrior",
-                hpPerLevel = 8,
-                manaPerLevel = 4,
-                primaryStat = "STR",
-                threatMultiplier = 1.5,
-            ),
-            "MAGE" to ClassDefinitionConfig(
-                displayName = "Mage",
-                hpPerLevel = 4,
-                manaPerLevel = 16,
-                primaryStat = "INT",
-            ),
-            "CLERIC" to ClassDefinitionConfig(
-                displayName = "Cleric",
-                hpPerLevel = 6,
-                manaPerLevel = 12,
-                primaryStat = "WIS",
-            ),
-            "ROGUE" to ClassDefinitionConfig(
-                displayName = "Rogue",
-                hpPerLevel = 5,
-                manaPerLevel = 8,
-                primaryStat = "DEX",
-            ),
-            "SWARM" to ClassDefinitionConfig(
-                displayName = "Swarm",
-                hpPerLevel = 2,
-                manaPerLevel = 3,
-                selectable = false,
-            ),
-        )
-    }
-}
+    val definitions: Map<String, ClassDefinitionConfig> = emptyMap(),
+)
 
 data class RaceDefinitionConfig(
     val displayName: String = "",
@@ -983,29 +947,8 @@ data class RaceDefinitionConfig(
 )
 
 data class RaceEngineConfig(
-    val definitions: Map<String, RaceDefinitionConfig> = defaultRaceDefinitions(),
-) {
-    companion object {
-        fun defaultRaceDefinitions(): Map<String, RaceDefinitionConfig> = mapOf(
-            "HUMAN" to RaceDefinitionConfig(
-                displayName = "Human",
-                statMods = mapOf("STR" to 1, "CHA" to 1),
-            ),
-            "ELF" to RaceDefinitionConfig(
-                displayName = "Elf",
-                statMods = mapOf("STR" to -1, "DEX" to 2, "CON" to -2, "INT" to 1),
-            ),
-            "DWARF" to RaceDefinitionConfig(
-                displayName = "Dwarf",
-                statMods = mapOf("STR" to 1, "DEX" to -1, "CON" to 2, "WIS" to 1, "CHA" to -2),
-            ),
-            "HALFLING" to RaceDefinitionConfig(
-                displayName = "Halfling",
-                statMods = mapOf("STR" to -2, "DEX" to 2, "CON" to -1, "WIS" to 1, "CHA" to 1),
-            ),
-        )
-    }
-}
+    val definitions: Map<String, RaceDefinitionConfig> = emptyMap(),
+)
 
 data class StatDefinitionConfig(
     val displayName: String = "",
