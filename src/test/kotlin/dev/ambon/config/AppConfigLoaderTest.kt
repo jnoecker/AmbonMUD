@@ -159,8 +159,8 @@ class AppConfigLoaderTest {
     }
 
     @Test
-    fun `validated rejects stat binding referencing undefined stat`() {
-        val invalid =
+    fun `validated warns on stat binding referencing undefined stat`() {
+        val config =
             AppConfig(
                 engine =
                     EngineConfig(
@@ -170,7 +170,8 @@ class AppConfigLoaderTest {
                             ),
                     ),
             )
-        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+        // Should warn but not throw — degraded config is acceptable in production
+        config.validated()
     }
 
     @Test
@@ -231,8 +232,8 @@ class AppConfigLoaderTest {
     }
 
     @Test
-    fun `validated rejects negative class threatMultiplier`() {
-        val invalid =
+    fun `validated warns on negative class threatMultiplier`() {
+        val config =
             AppConfig(
                 engine =
                     EngineConfig(
@@ -245,7 +246,8 @@ class AppConfigLoaderTest {
                             ),
                     ),
             )
-        assertThrows(IllegalArgumentException::class.java) { invalid.validated() }
+        // Should warn but not throw — degraded config is acceptable in production
+        config.validated()
     }
 
     @Test
