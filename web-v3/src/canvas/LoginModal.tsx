@@ -133,7 +133,7 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
         )}
 
         {loginPrompt.state === "raceSelection" && (
-          <RaceCarousel
+          <RaceCardGrid
             races={loginPrompt.races}
             error={errorForState}
             onSelect={(index) => handleChoice(String(index + 1))}
@@ -141,7 +141,7 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
         )}
 
         {loginPrompt.state === "classSelection" && (
-          <ClassCarousel
+          <ClassCardGrid
             classes={loginPrompt.classes}
             error={errorForState}
             onSelect={(index) => handleChoice(String(index + 1))}
@@ -152,122 +152,74 @@ export function LoginModal({ loginPrompt, loginError, onSubmit }: LoginModalProp
   );
 }
 
-/* ── Race carousel ─────────────────────────────────── */
+/* ── Race card grid ───────────────────────────────── */
 
-interface RaceCarouselProps {
+interface RaceCardGridProps {
   races: LoginRaceOption[];
   error: string | null | undefined;
   onSelect: (index: number) => void;
 }
 
-function RaceCarousel({ races, error, onSelect }: RaceCarouselProps) {
-  const [current, setCurrent] = useState(0);
-  const race = races[current];
-
-  const prev = useCallback(() => {
-    setCurrent((i) => (i - 1 + races.length) % races.length);
-  }, [races.length]);
-
-  const next = useCallback(() => {
-    setCurrent((i) => (i + 1) % races.length);
-  }, [races.length]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") { prev(); e.preventDefault(); }
-      if (e.key === "ArrowRight") { next(); e.preventDefault(); }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [prev, next]);
+function RaceCardGrid({ races, error, onSelect }: RaceCardGridProps) {
+  const [selected, setSelected] = useState(0);
+  const race = races[selected];
 
   if (!race) return null;
 
   return (
-    <div className="login-step race-carousel">
+    <div className="login-step char-picker">
       <p className="login-step-label">Choose your race</p>
       {error && <p className="login-error">{error}</p>}
 
-      <div className="race-carousel-nav">
-        <button
-          type="button"
-          className="race-carousel-arrow"
-          onClick={prev}
-          aria-label="Previous race"
-        >
-          &#8249;
-        </button>
-
-        <div className="race-carousel-card" key={race.id}>
-          {race.image && (
-            <div className="race-carousel-portrait">
-              <img
-                src={race.image}
-                alt={race.name}
-                className="race-carousel-img"
-                draggable={false}
-              />
-            </div>
-          )}
-
-          <h3 className="race-carousel-name">{race.name}</h3>
-
-          {race.stats && (
-            <p className="race-carousel-stats">{race.stats}</p>
-          )}
-
-          {race.description && (
-            <p className="race-carousel-desc">{race.description}</p>
-          )}
-
-          {race.traits && race.traits.length > 0 && (
-            <div className="race-carousel-traits">
-              <span className="race-carousel-section-label">Traits</span>
-              <ul className="race-carousel-trait-list">
-                {race.traits.map((t) => {
-                  const [label, detail] = t.includes(":") ? t.split(":", 2) : [t, ""];
-                  return (
-                    <li key={t} className="race-carousel-trait">
-                      <span className="race-carousel-trait-name">{label}</span>
-                      {detail && <span className="race-carousel-trait-detail">{detail.trim()}</span>}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-
-          {race.backstory && (
-            <p className="race-carousel-backstory">{race.backstory}</p>
-          )}
-        </div>
-
-        <button
-          type="button"
-          className="race-carousel-arrow"
-          onClick={next}
-          aria-label="Next race"
-        >
-          &#8250;
-        </button>
-      </div>
-
-      <div className="race-carousel-dots">
+      <div className="char-card-grid">
         {races.map((r, i) => (
           <button
             key={r.id}
             type="button"
-            className={`race-carousel-dot${i === current ? " active" : ""}`}
-            onClick={() => setCurrent(i)}
+            className={`char-card${i === selected ? " selected" : ""}`}
+            onClick={() => setSelected(i)}
+            onDoubleClick={() => onSelect(i)}
             aria-label={r.name}
-          />
+          >
+            {r.image ? (
+              <img src={r.image} alt={r.name} className="char-card-img" draggable={false} />
+            ) : (
+              <div className="char-card-placeholder" />
+            )}
+            <span className="char-card-label">{r.name}</span>
+          </button>
         ))}
+      </div>
+
+      <div className="char-detail" key={race.id}>
+        <h3 className="char-detail-name">{race.name}</h3>
+        {race.stats && <p className="char-detail-stats">{race.stats}</p>}
+        {race.description && <p className="char-detail-desc">{race.description}</p>}
+
+        {race.traits && race.traits.length > 0 && (
+          <div className="char-detail-traits">
+            <span className="char-detail-section-label">Traits</span>
+            <ul className="char-detail-trait-list">
+              {race.traits.map((t) => {
+                const [label, detail] = t.includes(":") ? t.split(":", 2) : [t, ""];
+                return (
+                  <li key={t} className="char-detail-trait">
+                    <span className="char-detail-trait-name">{label}</span>
+                    {detail && <span className="char-detail-trait-detail">{detail.trim()}</span>}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {race.backstory && <p className="char-detail-backstory">{race.backstory}</p>}
       </div>
 
       <button
         type="button"
-        className="login-button race-carousel-select"
-        onClick={() => onSelect(current)}
+        className="login-button char-picker-select"
+        onClick={() => onSelect(selected)}
       >
         Choose {race.name}
       </button>
@@ -275,105 +227,56 @@ function RaceCarousel({ races, error, onSelect }: RaceCarouselProps) {
   );
 }
 
-/* ── Class carousel ────────────────────────────────── */
+/* ── Class card grid ──────────────────────────────── */
 
-interface ClassCarouselProps {
+interface ClassCardGridProps {
   classes: LoginClassOption[];
   error: string | null | undefined;
   onSelect: (index: number) => void;
 }
 
-function ClassCarousel({ classes, error, onSelect }: ClassCarouselProps) {
-  const [current, setCurrent] = useState(0);
-  const cls = classes[current];
-
-  const prev = useCallback(() => {
-    setCurrent((i) => (i - 1 + classes.length) % classes.length);
-  }, [classes.length]);
-
-  const next = useCallback(() => {
-    setCurrent((i) => (i + 1) % classes.length);
-  }, [classes.length]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") { prev(); e.preventDefault(); }
-      if (e.key === "ArrowRight") { next(); e.preventDefault(); }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [prev, next]);
+function ClassCardGrid({ classes, error, onSelect }: ClassCardGridProps) {
+  const [selected, setSelected] = useState(0);
+  const cls = classes[selected];
 
   if (!cls) return null;
 
   return (
-    <div className="login-step race-carousel">
+    <div className="login-step char-picker">
       <p className="login-step-label">Choose your class</p>
       {error && <p className="login-error">{error}</p>}
 
-      <div className="race-carousel-nav">
-        <button
-          type="button"
-          className="race-carousel-arrow"
-          onClick={prev}
-          aria-label="Previous class"
-        >
-          &#8249;
-        </button>
-
-        <div className="race-carousel-card" key={cls.id}>
-          {cls.image && (
-            <div className="race-carousel-portrait">
-              <img
-                src={cls.image}
-                alt={cls.name}
-                className="race-carousel-img"
-                draggable={false}
-              />
-            </div>
-          )}
-
-          <h3 className="race-carousel-name">{cls.name}</h3>
-
-          {cls.stats && (
-            <p className="race-carousel-stats">{cls.stats}</p>
-          )}
-
-          {cls.description && (
-            <p className="race-carousel-desc">{cls.description}</p>
-          )}
-
-          {cls.backstory && (
-            <p className="race-carousel-backstory">{cls.backstory}</p>
-          )}
-        </div>
-
-        <button
-          type="button"
-          className="race-carousel-arrow"
-          onClick={next}
-          aria-label="Next class"
-        >
-          &#8250;
-        </button>
-      </div>
-
-      <div className="race-carousel-dots">
+      <div className="char-card-grid">
         {classes.map((c, i) => (
           <button
             key={c.id}
             type="button"
-            className={`race-carousel-dot${i === current ? " active" : ""}`}
-            onClick={() => setCurrent(i)}
+            className={`char-card${i === selected ? " selected" : ""}`}
+            onClick={() => setSelected(i)}
+            onDoubleClick={() => onSelect(i)}
             aria-label={c.name}
-          />
+          >
+            {c.image ? (
+              <img src={c.image} alt={c.name} className="char-card-img" draggable={false} />
+            ) : (
+              <div className="char-card-placeholder" />
+            )}
+            <span className="char-card-label">{c.name}</span>
+          </button>
         ))}
+      </div>
+
+      <div className="char-detail" key={cls.id}>
+        <h3 className="char-detail-name">{cls.name}</h3>
+        {cls.stats && <p className="char-detail-stats">{cls.stats}</p>}
+        {cls.description && <p className="char-detail-desc">{cls.description}</p>}
+        {cls.backstory && <p className="char-detail-backstory">{cls.backstory}</p>}
       </div>
 
       <button
         type="button"
-        className="login-button race-carousel-select"
-        onClick={() => onSelect(current)}
+        className="login-button char-picker-select"
+        onClick={() => onSelect(selected)}
       >
         Choose {cls.name}
       </button>
