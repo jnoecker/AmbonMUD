@@ -1,5 +1,9 @@
 package dev.ambon.config
 
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val logger = KotlinLogging.logger {}
+
 /** Selects the player persistence backend. */
 enum class PersistenceBackend { YAML, POSTGRES }
 
@@ -41,6 +45,10 @@ data class AppConfig(
     val videos: VideosConfig = VideosConfig(),
     val audio: AudioConfig = AudioConfig(),
 ) {
+    private fun warnConfig(message: String) {
+        logger.warn { "CONFIG WARNING: $message" }
+    }
+
     fun validated(): AppConfig {
         server.telnetPort.requireValidPort("ambonMUD.server.telnetPort")
         server.webPort.requireValidPort("ambonMUD.server.webPort")
@@ -129,13 +137,13 @@ data class AppConfig(
         }
 
         engine.classes.definitions.forEach { (key, def) ->
-            require(def.threatMultiplier >= 0.0) {
-                "ambonMUD.engine.classes.definitions.$key.threatMultiplier must be >= 0"
+            if (def.threatMultiplier < 0.0) {
+                warnConfig("engine.classes.definitions.$key.threatMultiplier is ${def.threatMultiplier}, expected >= 0")
             }
         }
 
         engine.stats.definitions.forEach { (key, def) ->
-            require(def.baseStat >= 0) { "ambonMUD.engine.stats.definitions.$key.baseStat must be >= 0" }
+            if (def.baseStat < 0) warnConfig("engine.stats.definitions.$key.baseStat is ${def.baseStat}, expected >= 0")
         }
 
         val statIds = engine.stats.definitions.keys.map { it.uppercase() }.toSet()
@@ -150,8 +158,8 @@ data class AppConfig(
             b.manaRegenStat to "manaRegenStat",
             b.xpBonusStat to "xpBonusStat",
         ).forEach { (statId, bindingName) ->
-            require(statId.uppercase() in statIds) {
-                "ambonMUD.engine.stats.bindings.$bindingName references unknown stat '${statId.uppercase()}'"
+            if (statId.uppercase() !in statIds) {
+                warnConfig("engine.stats.bindings.$bindingName references unknown stat '${statId.uppercase()}'")
             }
         }
         require(b.meleeDamageDivisor > 0) { "ambonMUD.engine.stats.bindings.meleeDamageDivisor must be > 0" }
@@ -165,40 +173,27 @@ data class AppConfig(
         require(b.xpBonusPerPoint >= 0.0) { "ambonMUD.engine.stats.bindings.xpBonusPerPoint must be >= 0" }
 
         engine.abilities.definitions.forEach { (key, def) ->
-            require(def.displayName.isNotBlank()) { "ability '$key' displayName must be non-blank" }
-            require(def.manaCost >= 0) { "ability '$key' manaCost must be >= 0" }
-            require(def.cooldownMs >= 0L) { "ability '$key' cooldownMs must be >= 0" }
-            require(def.levelRequired >= 1) { "ability '$key' levelRequired must be >= 1" }
-            require(
-                def.targetType.uppercase() in listOf("ENEMY", "SELF", "ALLY", "ALL_ENEMIES", "ALL_ALLIES"),
-            ) {
-                "ability '$key' targetType must be ENEMY, SELF, ALLY, ALL_ENEMIES, or ALL_ALLIES, got '${def.targetType}'"
-            }
-            val validEffectTypes = listOf("DIRECT_DAMAGE", "DIRECT_HEAL", "APPLY_STATUS", "AREA_DAMAGE", "TAUNT")
-            require(def.effect.type.uppercase() in validEffectTypes) {
-                "ability '$key' effect.type must be one of $validEffectTypes, got '${def.effect.type}'"
-            }
+            if (def.displayName.isBlank()) warnConfig("ability '$key' displayName is blank")
+            if (def.manaCost < 0) warnConfig("ability '$key' manaCost is ${def.manaCost}, expected >= 0")
+            if (def.cooldownMs < 0L) warnConfig("ability '$key' cooldownMs is ${def.cooldownMs}, expected >= 0")
+            if (def.levelRequired < 1) warnConfig("ability '$key' levelRequired is ${def.levelRequired}, expected >= 1")
+            if (def.targetType.isBlank()) warnConfig("ability '$key' targetType is blank")
+            if (def.effect.type.isBlank()) warnConfig("ability '$key' effect.type is blank")
             if (def.effect.type.uppercase() == "APPLY_STATUS") {
-                require(def.effect.statusEffectId.isNotBlank()) {
-                    "ability '$key' effect.statusEffectId must be non-blank for APPLY_STATUS"
-                }
-                require(engine.statusEffects.definitions.containsKey(def.effect.statusEffectId)) {
-                    "ability '$key' references unknown statusEffectId '${def.effect.statusEffectId}'"
+                if (def.effect.statusEffectId.isBlank()) {
+                    warnConfig("ability '$key' effect.statusEffectId is blank for APPLY_STATUS")
+                } else if (!engine.statusEffects.definitions.containsKey(def.effect.statusEffectId)) {
+                    warnConfig("ability '$key' references unknown statusEffectId '${def.effect.statusEffectId}'")
                 }
             }
         }
 
         engine.statusEffects.definitions.forEach { (key, def) ->
-            require(def.displayName.isNotBlank()) { "statusEffect '$key' displayName must be non-blank" }
-            require(
-                def.effectType.uppercase() in
-                    listOf("DOT", "HOT", "STAT_BUFF", "STAT_DEBUFF", "STUN", "ROOT", "SHIELD"),
-            ) {
-                "statusEffect '$key' effectType must be DOT, HOT, STAT_BUFF, STAT_DEBUFF, STUN, ROOT, or SHIELD"
-            }
-            require(def.durationMs > 0L) { "statusEffect '$key' durationMs must be > 0" }
-            require(def.tickIntervalMs >= 0L) { "statusEffect '$key' tickIntervalMs must be >= 0" }
-            require(def.maxStacks >= 1) { "statusEffect '$key' maxStacks must be >= 1" }
+            if (def.displayName.isBlank()) warnConfig("statusEffect '$key' displayName is blank")
+            if (def.effectType.isBlank()) warnConfig("statusEffect '$key' effectType is blank")
+            if (def.durationMs <= 0L) warnConfig("statusEffect '$key' durationMs is ${def.durationMs}, expected > 0")
+            if (def.tickIntervalMs < 0L) warnConfig("statusEffect '$key' tickIntervalMs is ${def.tickIntervalMs}, expected >= 0")
+            if (def.maxStacks < 1) warnConfig("statusEffect '$key' maxStacks is ${def.maxStacks}, expected >= 1")
         }
 
         require(progression.maxLevel > 0) { "ambonMUD.progression.maxLevel must be > 0" }
