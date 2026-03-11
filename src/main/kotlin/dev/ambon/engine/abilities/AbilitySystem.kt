@@ -93,6 +93,7 @@ class AbilitySystem(
             "enemy" -> handleEnemyCast(sessionId, player, ability, targetKeyword, now)
             "self" -> handleSelfCast(sessionId, player, ability, now)
             "ally" -> handleAllyCast(sessionId, player, ability, targetKeyword, now)
+            "all_enemies" -> handleAllEnemiesCast(sessionId, player, ability, now)
             else -> "Unknown target type '${ability.targetType}'."
         }
     }
@@ -357,6 +358,73 @@ class AbilitySystem(
             outbound,
             player.roomId,
             "${player.name} casts ${ability.displayName}.",
+            exclude = sessionId,
+        )
+        return null
+    }
+
+    @Suppress("CyclomaticComplexity", "LongMethod")
+    private suspend fun handleAllEnemiesCast(
+        sessionId: SessionId,
+        player: PlayerState,
+        ability: AbilityDefinition,
+        now: Long,
+    ): String? {
+        val mobRegistry = mobs ?: return "Area damage is not available."
+        val groupMembers =
+            groupSystem?.membersInRoom(sessionId, player.roomId)
+                ?: listOf(sessionId)
+
+        val targetMobs =
+            mobRegistry.mobsInRoom(player.roomId).filter { m ->
+                combat.isMobInCombat(m.id) &&
+                    groupMembers.any { sid -> combat.threatTable.hasThreat(m.id, sid) }
+            }
+
+        if (targetMobs.isEmpty()) {
+            return "No enemies in combat to hit."
+        }
+
+        val playerStats = resolvePlayerStats(player, items, statusEffects)
+        val intBonus = PlayerState.statBonus(playerStats[bindings.spellDamageStat], bindings.spellDamageDivisor)
+
+        when (val effect = ability.effect) {
+            is AbilityEffect.DirectDamage -> {
+                deductManaAndCooldown(sessionId, player, ability, now)
+                for (m in targetMobs) {
+                    val baseDamage = rollRange(rng, effect.damage.min, effect.damage.max)
+                    applySpellDamage(sessionId, m, ability, baseDamage, intBonus)
+                }
+            }
+            is AbilityEffect.AreaDamage -> {
+                deductManaAndCooldown(sessionId, player, ability, now)
+                for (m in targetMobs) {
+                    val baseDamage = rollRange(rng, effect.damage.min, effect.damage.max)
+                    applySpellDamage(sessionId, m, ability, baseDamage, intBonus)
+                }
+            }
+            is AbilityEffect.ApplyStatus -> {
+                val sys =
+                    statusEffects
+                        ?: return "Status effects are not available."
+                deductManaAndCooldown(sessionId, player, ability, now)
+                for (m in targetMobs) {
+                    sys.applyToMob(m.id, effect.statusEffectId, sessionId)
+                }
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "Your ${ability.displayName} afflicts all enemies!",
+                    ),
+                )
+            }
+            else -> return "Spell misconfigured (unexpected effect for all_enemies target)."
+        }
+        broadcastToRoom(
+            players,
+            outbound,
+            player.roomId,
+            "${player.name} casts ${ability.displayName}!",
             exclude = sessionId,
         )
         return null
