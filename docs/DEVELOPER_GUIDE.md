@@ -205,9 +205,10 @@ docs/
 ├── DEPLOYMENT.md                # Docker + AWS CDK deployment guide
 ├── WORLD_YAML_SPEC.md           # Zone YAML format specification
 ├── ROADMAP.md                   # Planned features & roadmap
-├── WEB_CLIENT_V3.md             # Web client v3 architecture & gaps
-├── V4_GAME_CLIENT.md            # V4 PixiJS canvas client design plan
+├── WEB_CLIENT.md                # Web client architecture (React + PixiJS canvas)
 ├── GMCP_PROTOCOL.md             # GMCP protocol reference
+├── CRAFTING.md                  # Crafting & gathering system reference
+├── FRIENDS_MAIL.md              # Friends list and in-game mail
 ├── SCALING_STORY.md             # Scaling narrative (interview talk track)
 ├── STYLE_GUIDE.md               # Surreal Gentle Magic design system (game client)
 ├── ARCANUM_STYLE_GUIDE.md       # Ambon Arcanum design system (creator tool)
@@ -955,6 +956,8 @@ gh pr create --title "..." --body "..."
 - Read [ARCHITECTURE.md](../docs/ARCHITECTURE.md) for design rationale
 - Read [WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md) to understand zone creation
 - Read [GMCP_PROTOCOL.md](./GMCP_PROTOCOL.md) to understand the structured data channel
+- Read [CRAFTING.md](./CRAFTING.md) for the crafting & gathering system
+- Read [FRIENDS_MAIL.md](./FRIENDS_MAIL.md) for friends and mail systems
 - Read [CREATOR_CONFIG_REFERENCE.md](./CREATOR_CONFIG_REFERENCE.md) to understand all tunable config
 - Read [CLAUDE.md](../CLAUDE.md) for architectural contracts and change playbooks
 - Explore `src/main/kotlin/dev/ambon/engine/` to understand the engine

@@ -309,6 +309,10 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full deployment guide (Dock
 - [docs/WEB_CLIENT.md](docs/WEB_CLIENT.md) — Web client architecture (React + PixiJS canvas)
 - [docs/GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md) — GMCP protocol reference for client developers
 
+**Gameplay Systems**
+- [docs/CRAFTING.md](docs/CRAFTING.md) — Crafting & gathering system reference
+- [docs/FRIENDS_MAIL.md](docs/FRIENDS_MAIL.md) — Friends list and in-game mail
+
 **Developer Resources**
 - [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) — Complete onboarding from zero to productive
 - [docs/ROADMAP.md](docs/ROADMAP.md) — Planned features and future work
