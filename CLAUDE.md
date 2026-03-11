@@ -75,7 +75,8 @@ InboundBus / OutboundBus  (interface layer; Local* impls in single-process mode)
 GameEngine  (single-threaded coroutine dispatcher, 100ms tick)
     │  CommandRouter, CombatSystem, AbilitySystem, StatusEffectSystem,
     │  MobSystem, BehaviorTreeSystem, RegenSystem, DialogueSystem,
-    │  QuestSystem, AchievementSystem, GroupSystem, Scheduler,
+    │  QuestSystem, AchievementSystem, GroupSystem, GuildSystem,
+    │  CraftingSystem, FriendsSystem, Scheduler,
     │  PlayerProgression, GmcpEmitter, Registries
     ▼
 OutboundRouter  (per-session queues, backpressure, prompt coalescing)
@@ -121,6 +122,10 @@ Sessions
 - **Progression:** Score, Spells, Effects, Balance, QuestLog, QuestInfo, QuestAccept, QuestAbandon, AchievementList, TitleSet, TitleClear
 - **NPCs:** Talk, DialogueChoice, ShopList, Buy, Sell
 - **Groups:** GroupCmd (Invite, Accept, Leave, Kick, List)
+- **Guilds:** Guild (Create, Disband, Invite, Accept, Leave, Kick, Promote, Demote, Motd, Roster, Info), Gchat
+- **Friends:** Friend (List, Add, Remove)
+- **Mail:** Mail (List, Read, Delete, Send, Abort)
+- **Crafting:** Gather, Craft, Recipes
 - **Sharding:** Phase (instance switching)
 - **Staff:** Goto, Transfer, Spawn, Smite, Kick, Shutdown
 - **Utility:** Help, Clear, Colors, Who, AnsiOn, AnsiOff
@@ -128,11 +133,13 @@ Sessions
 
 ### Persistence Model
 
-`PlayerRecord` (in `persistence/PlayerRecord.kt`) is the persistence DTO. Key fields: `id` (PlayerId), `name`, `roomId`, `level`, `xpTotal`, `hp`/`maxHp`, `mana`/`maxMana`, `strength`/`dexterity`/`constitution`/`intelligence`/`wisdom`/`charisma`, `race`, `playerClass`, `gold`, `isStaff`, `activeQuests`, `completedQuestIds`, `unlockedAchievementIds`, `achievementProgress`, `activeTitle`, `passwordHash`, `ansiEnabled`.
+`PlayerRecord` (in `persistence/PlayerRecord.kt`) is the persistence DTO. Key fields: `id` (PlayerId), `name`, `roomId`, `level`, `xpTotal`, `hp`/`maxHp`, `mana`/`maxMana`, `strength`/`dexterity`/`constitution`/`intelligence`/`wisdom`/`charisma`, `race`, `playerClass`, `gold`, `isStaff`, `activeQuests`, `completedQuestIds`, `unlockedAchievementIds`, `achievementProgress`, `activeTitle`, `passwordHash`, `ansiEnabled`, `guildId`, `recallRoom`, `friends`, `craftingSkills`, `mail`, `gender`, `stats` (JSON map).
 
 `PlayerState` (in `engine/PlayerState.kt`) is the runtime in-memory version, maintained by the engine and periodically flushed back to `PlayerRecord` via the repository chain.
 
 `PlayerRepository` interface: `findByName(name)`, `findById(id)`, `create(request)`, `save(record)`. All lookups are case-insensitive.
+
+`GuildRepository` interface (`persistence/GuildRepository.kt`): guild CRUD with `YamlGuildRepository` and `PostgresGuildRepository` implementations. `GuildsTable.kt` for Exposed schema.
 
 ### Wiring / Dependency Injection
 
@@ -140,14 +147,14 @@ Sessions
 
 ## Project Map
 
-### Source Files (~197 Kotlin files in main, ~86 test files)
+### Source Files (~266 Kotlin files in main, ~110 test files)
 
 | Package | Purpose | Key Files |
 |---------|---------|-----------|
 | `dev.ambon` | Entry point, wiring | `Main.kt` (bootstrap), `MudServer.kt` (25K, composition root), `CoroutineExtensions.kt` |
 | `dev.ambon.config` | Configuration | `AppConfig.kt` (33K, full schema + `validated()`), `AppConfigLoader.kt` |
-| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (38K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (25K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (15K), `GroupSystem.kt` (12K), `QuestSystem.kt` (11K), `AchievementSystem.kt` (10K), `ThreatTable.kt`, `ShopRegistry.kt`, `EngineUtil.kt` |
-| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (17K, sealed Command hierarchy), `CommandRouter.kt` (dispatch infrastructure only); handlers in `handlers/` subpackage: `NavigationHandler`, `CommunicationHandler`, `CombatHandler`, `ItemHandler`, `WorldFeaturesHandler`, `ProgressionHandler`, `DialogueQuestHandler`, `ShopHandler`, `GroupHandler`, `UiHandler`, `AdminHandler`, `HandlerHelpers` |
+| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (38K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (25K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (15K), `GroupSystem.kt` (12K), `QuestSystem.kt` (11K), `AchievementSystem.kt` (10K), `GuildSystem.kt`, `CraftingSystem.kt`, `FriendsSystem.kt`, `ThreatTable.kt`, `ShopRegistry.kt`, `EngineUtil.kt` |
+| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (17K, sealed Command hierarchy), `CommandRouter.kt` (dispatch infrastructure only); handlers in `handlers/` subpackage: `NavigationHandler`, `CommunicationHandler`, `CombatHandler`, `ItemHandler`, `WorldFeaturesHandler`, `ProgressionHandler`, `DialogueQuestHandler`, `ShopHandler`, `GroupHandler`, `GuildHandler`, `CraftingHandler`, `FriendsHandler`, `MailHandler`, `UiHandler`, `AdminHandler`, `HandlerHelpers` |
 | `dev.ambon.engine.abilities` | Ability/spell system | `AbilitySystem.kt` (16K), `AbilityRegistry.kt`, `AbilityRegistryLoader.kt`, `AbilityDefinition.kt` |
 | `dev.ambon.engine.status` | Status effects | `StatusEffectSystem.kt` (13K), `StatusEffectRegistry.kt`, `StatusEffectRegistryLoader.kt`, `StatusEffectDefinition.kt`, `ActiveEffect.kt` |
 | `dev.ambon.engine.behavior` | Mob behavior trees | `BehaviorTreeSystem.kt`, `BtNode.kt`, `BtResult.kt`, `BtContext.kt`, `BehaviorTemplates.kt`, `MobBehaviorMemory.kt`; nodes/conditions/actions subdirs |
@@ -160,7 +167,7 @@ Sessions
 | `dev.ambon.domain.world` | World model | `Room.kt`, `Direction.kt`, `World.kt`, `WorldFactory.kt`, `ShopDefinition.kt`, `MobSpawn.kt`, `ItemSpawn.kt`, `MobDrop.kt` |
 | `dev.ambon.domain.world.data` | YAML DTOs | `WorldFile.kt`, `RoomFile.kt`, `MobFile.kt`, `ItemFile.kt`, `ShopFile.kt`, `MobDropFile.kt`, `BehaviorFile.kt`, `DialogueNodeFile.kt`, `QuestFile.kt` |
 | `dev.ambon.domain.world.load` | World loading | `WorldLoader.kt` (30K, YAML parsing + validation) |
-| `dev.ambon.persistence` | Player persistence | `PlayerRepository.kt` (interface), `PlayerRecord.kt`, `PlayerCreationRequest.kt`; `WriteCoalescingPlayerRepository.kt`, `RedisCachingPlayerRepository.kt`, `YamlPlayerRepository.kt`, `PostgresPlayerRepository.kt`, `PlayersTable.kt`, `DatabaseManager.kt`, `PersistenceWorker.kt`, `StringCache.kt` |
+| `dev.ambon.persistence` | Player + guild persistence | `PlayerRepository.kt` (interface), `PlayerRecord.kt`, `PlayerCreationRequest.kt`; `WriteCoalescingPlayerRepository.kt`, `RedisCachingPlayerRepository.kt`, `YamlPlayerRepository.kt`, `PostgresPlayerRepository.kt`, `PlayersTable.kt`, `DatabaseManager.kt`, `PersistenceWorker.kt`, `StringCache.kt`; `GuildRepository.kt` (interface), `YamlGuildRepository.kt`, `PostgresGuildRepository.kt`, `GuildsTable.kt` |
 | `dev.ambon.transport` | Network I/O | `Transport.kt`, `BlockingSocketTransport.kt` (telnet), `KtorWebSocketTransport.kt` (13K, WebSocket), `NetworkSession.kt` (12K), `OutboundRouter.kt` (9K), `AnsiRenderer.kt`, `PlainRenderer.kt`, `TelnetLineDecoder.kt` (6K) |
 | `dev.ambon.grpc` | gRPC engine/gateway | `EngineGrpcServer.kt`, `EngineServer.kt` (21K), `EngineServiceImpl.kt`, `GrpcOutboundDispatcher.kt`, `ProtoMapper.kt` (8.6K), `OutboundEventPlane.kt` |
 | `dev.ambon.gateway` | Gateway-mode root | `GatewayServer.kt` (23K), `SessionRouter.kt` |
@@ -177,9 +184,9 @@ Sessions
 |------|-------|
 | Default config | `src/main/resources/application.yaml` |
 | Multi-instance profiles | `src/main/resources/application-{engine1,engine2,gw1,gw2}.yaml` |
-| World zones (12 YAML files) | `src/main/resources/world/` (ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth, celestial_sanctum, crafting_workshop) |
+| World zones (13 YAML files) | `src/main/resources/world/` (ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth, celestial_sanctum, crafting_workshop, player_sprites) |
 | Login banner + styles | `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml` |
-| Flyway migrations | `src/main/resources/db/migration/` (V1–V7: players table through achievements) |
+| Flyway migrations | `src/main/resources/db/migration/` (V1–V18: players table through guilds, crafting, friends, mail, and more) |
 | Proto definitions | `src/main/proto/ambonmud/v1/engine_service.proto`, `events.proto` |
 | Web demo client (static) | `src/main/resources/web/` |
 | V4 canvas client (React + PixiJS) | `web-v3/` (built to `src/main/resources/web-v3/`) |
@@ -188,7 +195,7 @@ Sessions
 | World YAML format spec | `docs/WORLD_YAML_SPEC.md` |
 | Runtime player saves | `data/players/` (git-ignored, do not commit) |
 
-### Tests (~78 test files)
+### Tests (~110 test files)
 
 | Area | Files | Key Tests |
 |------|-------|-----------|
@@ -199,6 +206,9 @@ Sessions
 | Behavior trees | `BehaviorTreeSystemTest` (18K), `BehaviorYamlParsingTest` | Mob AI, YAML-driven behaviors |
 | Dialogue/quests/achievements | `DialogueSystemTest` (14K), `QuestSystemTest` (13K), `AchievementSystemTest` (20K) | NPC conversations, quest tracking |
 | Groups | `GroupSystemTest` (15K) | Party invite/leave/kick, XP sharing |
+| Guilds | `GuildSystemTest` | Guild create/disband/invite/promote/demote, MOTD, roster |
+| Crafting | `CraftingSystemTest` | Gather, craft, recipe validation |
+| Friends/Mail | `FriendsSystemTest`, `MailHandlerTest` | Friend list management, mail send/read/delete |
 | Persistence | `YamlPlayerRepositoryTest`, `PostgresPlayerRepositoryTest`, `RedisCachingPlayerRepositoryTest`, `WriteCoalescingPlayerRepositoryTest`, `PersistenceWorkerTest` | Atomic writes, H2 Postgres mode, cache layers |
 | Bus | `LocalInboundBusTest`, `LocalOutboundBusTest`, `RedisInboundBusTest`, `RedisOutboundBusTest`, `GrpcInboundBusTest`, `GrpcOutboundBusTest` | All bus variants |
 | Transport | `OutboundRouterTest` (11K), `OutboundRouterAnsiControlsTest`, `OutboundRouterPromptCoalescingTest`, `AnsiRendererTest`, `PlainRendererTest`, `TelnetLineDecoderTest`, `KtorWebSocketTransportTest` | Backpressure, ANSI, protocol |
@@ -221,7 +231,7 @@ Sessions
 | What | Where |
 |------|-------|
 | Docker Compose | `docker-compose.yml` (Prometheus, Grafana, Redis, Postgres) |
-| CI workflow | `.github/workflows/ci.yml` (Java 21, `ktlintCheck test`) |
+| CI workflow | `.github/workflows/ci.yml` (Java 21, `ktlintCheck test integrationTest`) |
 | CodeQL analysis | `.github/workflows/codeql.yml` (weekly + on main) |
 
 ## Build Configuration
@@ -280,6 +290,12 @@ Update `GmcpEmitter.kt` and the v3 web client's GMCP handler at `web-v3/src/gmcp
 
 ### Ability/spell image
 Add `image` field to `AbilityDefinitionConfig` (AppConfig.kt), `AbilityDefinition`, `AbilityRegistryLoader`, and `GmcpEmitter.CharSkillPayload`. Client reads it from `Char.Skills` GMCP into `SkillSummary.image`.
+
+### Guild system changes
+Edit `GuildSystem.kt` for logic, `GuildHandler.kt` for commands. Guild persistence: `GuildRepository` interface with `YamlGuildRepository` and `PostgresGuildRepository` impls. `GuildsTable.kt` for Exposed schema. `PlayerRecord.guildId` links player to guild. `PlayerState` has `guildId`, `guildRank`, `guildTag`. Test in `GuildSystemTest`.
+
+### Crafting system changes
+Edit `CraftingSystem.kt` for logic, `CraftingHandler.kt` for commands (Gather, Craft, Recipes). `PlayerRecord.craftingSkills` stores per-player skill levels. Recipe definitions live in `application.yaml` under the crafting config section. Test in `CraftingSystemTest`.
 
 ## Kotlin Style (ktlint)
 
@@ -362,7 +378,7 @@ When running in Claude Code cloud sessions (claude.ai/code), be aware of these c
 
 - **JVM Toolchain version:** The `jvmToolchain()` in `build.gradle.kts` must match the JDK installed in the build environment. Cloud sessions provide JDK 21; the toolchain is currently set to `jvmToolchain(21)`. If it ever drifts, update it in `build.gradle.kts` — the Foojay resolver cannot auto-provision through the cloud egress proxy.
 - **Egress proxy:** All outbound HTTP/HTTPS traffic goes through a proxy injected via `JAVA_TOOL_OPTIONS`. Gradle dependency resolution works through this proxy. Do not add `mavenLocal()` or assume direct internet access.
-- **GitHub CLI (`gh`) is not available:** The `gh` command is not installed in cloud sessions. Use `git` commands directly for all repository operations (push, fetch, branch). Git remotes are wired through a local proxy that handles authentication automatically.
+- **GitHub CLI (`gh`) is available** in cloud/remote mode (verified Feb 2026). Use it normally for creating PRs, viewing issues, and other GitHub operations.
 - **No hardcoded timing in tests:** Cloud environments have variable CPU scheduling latency. Never use short `delay()` calls (e.g. `delay(50)`) to synchronize with async coroutines launched on `Dispatchers.Default`. Instead, use polling loops with `withTimeout` and a generous timeout (e.g. 2 seconds), or use proper coroutine synchronization primitives (channels, `CompletableDeferred`). For negative tests (asserting nothing arrives), use at least `delay(200)`.
 - **First build is slow:** The Gradle wrapper downloads the distribution and all dependencies on first run. Subsequent builds use the cached daemon.
 - **Test timeout:** Individual tests timeout after 30 seconds (`junit-platform.properties`). Entire suite times out after 5 minutes (Gradle backstop).

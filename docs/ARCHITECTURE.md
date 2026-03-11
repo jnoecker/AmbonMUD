@@ -142,8 +142,8 @@ Pass `InboundBus` / `OutboundBus` to the engine; **never raw `Channel<T>` refere
 **STANDALONE** (default, single-process):
 - All app components run in one JVM process
 - `LocalInboundBus` / `LocalOutboundBus` (wrapped channels)
-- Default local workflow uses PostgreSQL + Redis on `localhost`
-- YAML persistence remains available as a fallback profile
+- YAML persistence by default (zero external dependencies)
+- PostgreSQL + Redis available via Docker Compose
 
 **ENGINE** (multi-process, game logic only):
 - Runs `GameEngine` + persistence + gRPC server
@@ -353,15 +353,15 @@ Current web serving note:
 
 ---
 
-### 12. Redis as Default Local Cache Layer
+### 12. Redis as Optional Cache Layer
 
-**Decision:** Redis is on by default for the local production-style runtime, but can still be disabled via config when using the YAML fallback path.
+**Decision:** Redis is off by default for zero-dependency local development. Enable via `redis.enabled=true` when running with the Docker Compose stack or in production.
 
 **Why:**
-- Better alignment between local defaults and the production-style persistence path
+- Zero-dependency quick start: `./gradlew run` works with no external services
 - Bus and cache layers degrade gracefully: Redis failure logs warning, falls back to local impl
 - Incremental adoption: cache only, or both, or neither
-- Fast tests: Redis integration uses Testcontainers
+- Production deployments enable Redis for L2 caching and cross-process pub/sub
 
 **Tradeoff:** Dual-path code (enabled/disabled), but intentional and visible.
 
