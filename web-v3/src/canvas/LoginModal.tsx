@@ -171,7 +171,7 @@ function RaceCardGrid({ races, error, onSelect }: RaceCardGridProps) {
       <p className="login-step-label">Choose your race</p>
       {error && <p className="login-error">{error}</p>}
 
-      <div className="char-card-grid">
+      <div className="char-card-grid char-card-grid--cols6">
         {races.map((r, i) => (
           <button
             key={r.id}
