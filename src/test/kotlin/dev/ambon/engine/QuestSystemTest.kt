@@ -9,10 +9,7 @@ import dev.ambon.domain.quest.QuestDef
 import dev.ambon.domain.quest.QuestObjectiveDef
 import dev.ambon.domain.quest.QuestRewards
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
-import dev.ambon.persistence.InMemoryPlayerRepository
-import dev.ambon.test.MutableClock
-import dev.ambon.test.TEST_ROOM_ID
+import dev.ambon.test.SystemTestComponents
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,7 +23,6 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class QuestSystemTest {
-    private val roomId = TEST_ROOM_ID
     private val questId = "zone:kill_quest"
     private val mobTemplateKey = "zone:target_mob"
     private val killQuest =
@@ -49,21 +45,18 @@ class QuestSystemTest {
         )
 
     private fun setup(): Triple<QuestSystem, PlayerRegistry, LocalOutboundBus> {
-        val items = ItemRegistry()
-        val players = dev.ambon.test.buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-        val outbound = LocalOutboundBus()
-        val clock = MutableClock(1_000L)
+        val c = SystemTestComponents(clockInitialMs = 1_000L)
         val registry = QuestRegistry()
         registry.register(killQuest)
         val questSystem =
             QuestSystem(
                 registry = registry,
-                players = players,
-                items = items,
-                outbound = outbound,
-                clock = clock,
+                players = c.players,
+                items = c.items,
+                outbound = c.outbound,
+                clock = c.clock,
             )
-        return Triple(questSystem, players, outbound)
+        return Triple(questSystem, c.players, c.outbound)
     }
 
     @Test
@@ -232,9 +225,7 @@ class QuestSystemTest {
     @Test
     fun `onItemCollected increments collect objective`() =
         runTest {
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
+            val c = SystemTestComponents(clockInitialMs = 1_000L)
             val registry = QuestRegistry()
             val collectItemId = "zone:shiny_rock"
             val collectQuestId = "zone:collect_quest"
@@ -260,21 +251,21 @@ class QuestSystemTest {
             val qs =
                 QuestSystem(
                     registry = registry,
-                    players = players,
-                    items = items,
-                    outbound = outbound,
-                    clock = MutableClock(1_000L),
+                    players = c.players,
+                    items = c.items,
+                    outbound = c.outbound,
+                    clock = c.clock,
                 )
 
             val sid = SessionId(2L)
-            players.loginOrFail(sid, "Gatherer")
+            c.players.loginOrFail(sid, "Gatherer")
             qs.acceptQuest(sid, collectQuestId)
 
             val rock = ItemInstance(id = ItemId(collectItemId), item = Item(keyword = "rock", displayName = "a shiny rock"))
-            items.addToInventory(sid, rock)
+            c.items.addToInventory(sid, rock)
             qs.onItemCollected(sid, rock)
 
-            val ps = players.get(sid)!!
+            val ps = c.players.get(sid)!!
             assertEquals(1, ps.activeQuests[collectQuestId]!!.objectives[0].current, "Collecting one item should advance progress to 1")
         }
 
@@ -307,20 +298,18 @@ class QuestSystemTest {
                     completionType = "auto",
                 )
             registry.register(secondQuest)
-            val items = ItemRegistry()
-            val players2 = dev.ambon.test.buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val outbound2 = LocalOutboundBus()
+            val c2 = SystemTestComponents(clockInitialMs = 1_000L)
             val qs2 =
                 QuestSystem(
                     registry = registry,
-                    players = players2,
-                    items = items,
-                    outbound = outbound2,
-                    clock = MutableClock(1_000L),
+                    players = c2.players,
+                    items = c2.items,
+                    outbound = c2.outbound,
+                    clock = c2.clock,
                 )
 
             val sid2 = SessionId(3L)
-            players2.loginOrFail(sid2, "Hero2")
+            c2.players.loginOrFail(sid2, "Hero2")
             qs2.acceptQuest(sid2, questId)
             qs2.acceptQuest(sid2, secondQuestId)
 

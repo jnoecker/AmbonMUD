@@ -1,14 +1,10 @@
 package dev.ambon.engine
 
-import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
-import dev.ambon.persistence.InMemoryPlayerRepository
-import dev.ambon.test.MutableClock
+import dev.ambon.test.SystemTestComponents
 import dev.ambon.test.TEST_ROOM_ID
-import dev.ambon.test.buildTestPlayerRegistry
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.test.runTest
@@ -24,28 +20,26 @@ class GroupSystemTest {
     private val room2 = RoomId("zone:room2")
 
     private fun setup(): TestHarness {
-        val items = ItemRegistry()
-        val players = buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-        val outbound = LocalOutboundBus()
-        val clock = MutableClock(0L)
+        val c = SystemTestComponents()
         val group =
             GroupSystem(
-                players = players,
-                outbound = outbound,
-                clock = clock,
+                players = c.players,
+                outbound = c.outbound,
+                clock = c.clock,
                 maxGroupSize = 5,
                 inviteTimeoutMs = 60_000L,
             )
-        return TestHarness(players, outbound, clock, group, items)
+        return TestHarness(c, group)
     }
 
     private data class TestHarness(
-        val players: PlayerRegistry,
-        val outbound: LocalOutboundBus,
-        val clock: MutableClock,
+        private val c: SystemTestComponents,
         val group: GroupSystem,
-        val items: ItemRegistry,
-    )
+    ) {
+        val players get() = c.players
+        val outbound get() = c.outbound
+        val clock get() = c.clock
+    }
 
     @Test
     fun `invite and accept creates group`() =
@@ -306,15 +300,12 @@ class GroupSystemTest {
     @Test
     fun `max group size enforced`() =
         runTest {
-            val items = ItemRegistry()
-            val players = buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-            val outbound = LocalOutboundBus()
-            val clock = MutableClock(0L)
+            val c = SystemTestComponents()
             val group =
                 GroupSystem(
-                    players = players,
-                    outbound = outbound,
-                    clock = clock,
+                    players = c.players,
+                    outbound = c.outbound,
+                    clock = c.clock,
                     maxGroupSize = 2,
                     inviteTimeoutMs = 60_000L,
                 )
@@ -322,9 +313,9 @@ class GroupSystemTest {
             val sid1 = SessionId(1L)
             val sid2 = SessionId(2L)
             val sid3 = SessionId(3L)
-            players.loginOrFail(sid1, "Alice")
-            players.loginOrFail(sid2, "Bob")
-            players.loginOrFail(sid3, "Charlie")
+            c.players.loginOrFail(sid1, "Alice")
+            c.players.loginOrFail(sid2, "Bob")
+            c.players.loginOrFail(sid3, "Charlie")
 
             group.invite(sid1, "Bob")
             group.accept(sid2)

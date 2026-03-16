@@ -1,10 +1,8 @@
 package dev.ambon.persistence
 
 import com.fasterxml.jackson.core.type.TypeReference
-import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.upsert
 
 private val wsMapper = jsonMapper
@@ -16,7 +14,7 @@ class PostgresWorldStateRepository(
     private val database: Database,
 ) : WorldStateRepository {
     override suspend fun load(): WorldStateSnapshot? =
-        newSuspendedTransaction(Dispatchers.IO, database) {
+        database.dbQuery {
             WorldStateTable
                 .selectAll()
                 .where { WorldStateTable.id eq "singleton" }
@@ -44,7 +42,7 @@ class PostgresWorldStateRepository(
         }
 
     override suspend fun save(snapshot: WorldStateSnapshot) {
-        newSuspendedTransaction(Dispatchers.IO, database) {
+        database.dbQuery {
             WorldStateTable.upsert(WorldStateTable.id) {
                 it[id] = "singleton"
                 it[doorStates] = wsMapper.writeValueAsString(snapshot.doorStates)
