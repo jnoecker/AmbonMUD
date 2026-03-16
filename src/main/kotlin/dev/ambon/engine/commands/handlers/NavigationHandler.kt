@@ -11,6 +11,7 @@ import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.matchesKeyword
 import dev.ambon.engine.status.StatusEffectSystem
 import java.time.Clock
 
@@ -80,14 +81,10 @@ class NavigationHandler(
             }
 
             if (room.remoteExits.contains(cmd.dir) || !world.rooms.containsKey(to)) {
-                if (onCrossZoneMove != null) {
-                    router.suppressAutoPrompt()
-                    onCrossZoneMove.invoke(sessionId, to)
-                    return
-                } else {
+                if (!attemptCrossZoneMove(sessionId, to, onCrossZoneMove, router::suppressAutoPrompt)) {
                     outbound.send(OutboundEvent.SendText(sessionId, "The way shimmers but does not yield."))
-                    return
                 }
+                return
             }
 
             movePlayerWithNotify(
@@ -122,12 +119,9 @@ class NavigationHandler(
         me.recallCooldownUntilMs = now + recallConfig.cooldownMs
         outbound.send(OutboundEvent.SendText(sessionId, msgs.castBegin))
         if (!world.rooms.containsKey(target)) {
-            if (onCrossZoneMove != null) {
-                router.suppressAutoPrompt()
-                onCrossZoneMove.invoke(sessionId, target)
-                return
+            if (!attemptCrossZoneMove(sessionId, target, onCrossZoneMove, router::suppressAutoPrompt)) {
+                outbound.send(OutboundEvent.SendError(sessionId, msgs.unreachable))
             }
-            outbound.send(OutboundEvent.SendError(sessionId, msgs.unreachable))
             return
         }
         val from = me.roomId
@@ -169,7 +163,7 @@ class NavigationHandler(
 
         // Try room items
         val roomItems = ctx.items.itemsInRoom(roomId)
-        val roomItem = roomItems.firstOrNull { matchesItemKeyword(it, cmd.target) }
+        val roomItem = roomItems.firstOrNull { it.matchesKeyword(cmd.target) }
         if (roomItem != null) {
             val desc = roomItem.item.description.ifEmpty { "You see nothing special about ${roomItem.item.displayName}." }
             outbound.send(OutboundEvent.SendText(sessionId, "${roomItem.item.displayName}: $desc"))
@@ -178,7 +172,7 @@ class NavigationHandler(
 
         // Try inventory items
         val invItems = ctx.items.inventory(sessionId)
-        val invItem = invItems.firstOrNull { matchesItemKeyword(it, cmd.target) }
+        val invItem = invItems.firstOrNull { it.matchesKeyword(cmd.target) }
         if (invItem != null) {
             val desc = invItem.item.description.ifEmpty { "You see nothing special about ${invItem.item.displayName}." }
             outbound.send(OutboundEvent.SendText(sessionId, "${invItem.item.displayName}: $desc"))
@@ -187,7 +181,7 @@ class NavigationHandler(
 
         // Try equipment
         val equipment = ctx.items.equipment(sessionId)
-        val eqItem = equipment.values.firstOrNull { matchesItemKeyword(it, cmd.target) }
+        val eqItem = equipment.values.firstOrNull { it.matchesKeyword(cmd.target) }
         if (eqItem != null) {
             val desc = eqItem.item.description.ifEmpty { "You see nothing special about ${eqItem.item.displayName}." }
             outbound.send(OutboundEvent.SendText(sessionId, "${eqItem.item.displayName}: $desc"))
@@ -205,12 +199,6 @@ class NavigationHandler(
         }
 
         outbound.send(OutboundEvent.SendError(sessionId, "You don't see '${cmd.target}' here."))
-    }
-
-    private fun matchesItemKeyword(item: dev.ambon.domain.items.ItemInstance, input: String): Boolean {
-        val lower = input.lowercase()
-        return item.item.keyword.equals(lower, ignoreCase = true) ||
-            item.item.displayName.contains(lower, ignoreCase = true)
     }
 
     private suspend fun handleLookDir(

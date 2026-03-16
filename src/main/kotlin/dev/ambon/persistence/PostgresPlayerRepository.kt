@@ -1,11 +1,9 @@
 package dev.ambon.persistence
 
 import dev.ambon.metrics.GameMetrics
-import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.upsert
 
 class PostgresPlayerRepository(
@@ -14,7 +12,7 @@ class PostgresPlayerRepository(
 ) : PlayerRepository {
     override suspend fun findByName(name: String): PlayerRecord? =
         metrics.timedLoad {
-            newSuspendedTransaction(Dispatchers.IO, database) {
+            database.dbQuery {
                 PlayersTable
                     .selectAll()
                     .where { PlayersTable.nameLower eq name.trim().lowercase() }
@@ -25,7 +23,7 @@ class PostgresPlayerRepository(
 
     override suspend fun findById(id: PlayerId): PlayerRecord? =
         metrics.timedLoad {
-            newSuspendedTransaction(Dispatchers.IO, database) {
+            database.dbQuery {
                 PlayersTable
                     .selectAll()
                     .where { PlayersTable.id eq id.value }
@@ -37,7 +35,7 @@ class PostgresPlayerRepository(
     override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
         val trimmed = request.name.trim()
         try {
-            return newSuspendedTransaction(Dispatchers.IO, database) {
+            return database.dbQuery {
                 val result =
                     PlayersTable.insert {
                         it[PlayersTable.name] = trimmed
@@ -65,7 +63,7 @@ class PostgresPlayerRepository(
 
     override suspend fun save(record: PlayerRecord) {
         metrics.timedSave {
-            newSuspendedTransaction(Dispatchers.IO, database) {
+            database.dbQuery {
                 PlayersTable.upsert(PlayersTable.id) {
                     PlayersTable.writeRecord(it, record)
                 }

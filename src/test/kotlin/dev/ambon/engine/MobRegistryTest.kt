@@ -49,9 +49,12 @@ class MobRegistryTest {
         registry.upsert(bat)
         registry.upsert(wolf)
 
-        // keyword "at" matches "a rat" and "a bat", sorted alphabetically
-        val matches = registry.findInRoomByKeyword(room, "at")
-        assertEquals(listOf(bat, rat), matches)
+        // keyword must be at least 3 chars for substring matching
+        assertTrue(registry.findInRoomByKeyword(room, "at").isEmpty(), "2-char substring should not match")
+
+        // 3+ char keywords match by substring in name or mob ID
+        assertEquals(listOf(rat), registry.findInRoomByKeyword(room, "rat"))
+        assertEquals(listOf(bat), registry.findInRoomByKeyword(room, "bat"))
 
         // case-insensitive
         assertEquals(listOf(wolf), registry.findInRoomByKeyword(room, "WOLF"))
