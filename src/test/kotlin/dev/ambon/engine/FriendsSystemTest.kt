@@ -1,12 +1,8 @@
 package dev.ambon.engine
 
-import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
-import dev.ambon.persistence.InMemoryPlayerRepository
-import dev.ambon.test.TEST_ROOM_ID
-import dev.ambon.test.buildTestPlayerRegistry
+import dev.ambon.test.SystemTestComponents
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.test.runTest
@@ -16,28 +12,23 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class FriendsSystemTest {
-    private val roomId = TEST_ROOM_ID
-
     private fun setup(maxFriends: Int = 50): TestHarness {
-        val items = ItemRegistry()
-        val playerRepo = InMemoryPlayerRepository()
-        val players = buildTestPlayerRegistry(roomId, playerRepo, items)
-        val outbound = LocalOutboundBus()
+        val c = SystemTestComponents()
         val friends = FriendsSystem(
-            players = players,
-            outbound = outbound,
+            players = c.players,
+            outbound = c.outbound,
             maxFriends = maxFriends,
         )
-        return TestHarness(players, playerRepo, outbound, friends, items)
+        return TestHarness(c, friends)
     }
 
     private data class TestHarness(
-        val players: PlayerRegistry,
-        val playerRepo: InMemoryPlayerRepository,
-        val outbound: LocalOutboundBus,
+        private val c: SystemTestComponents,
         val friends: FriendsSystem,
-        val items: ItemRegistry,
-    )
+    ) {
+        val players get() = c.players
+        val outbound get() = c.outbound
+    }
 
     @Test
     fun `add friend success`() = runTest {

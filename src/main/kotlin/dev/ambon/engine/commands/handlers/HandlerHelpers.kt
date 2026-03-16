@@ -516,6 +516,25 @@ internal fun resolveLockable(
         else -> null
     }
 
+/**
+ * Attempts a cross-zone move to [targetRoomId]. If [onCrossZoneMove] is available,
+ * suppresses auto-prompt, invokes the callback, and returns true.
+ * Otherwise returns false (caller should send a fallback error).
+ */
+internal suspend fun attemptCrossZoneMove(
+    sessionId: SessionId,
+    targetRoomId: RoomId,
+    onCrossZoneMove: (suspend (SessionId, RoomId) -> Unit)?,
+    suppressAutoPrompt: () -> Unit,
+): Boolean {
+    if (onCrossZoneMove != null) {
+        suppressAutoPrompt()
+        onCrossZoneMove.invoke(sessionId, targetRoomId)
+        return true
+    }
+    return false
+}
+
 /** Resolves a goto/transfer argument to a [RoomId], handling "zone:room", "room", "zone:". */
 internal fun resolveGotoArg(
     arg: String,
