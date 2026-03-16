@@ -1,5 +1,6 @@
 package dev.ambon.engine
 
+import dev.ambon.bus.LocalOutboundBus
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
@@ -43,7 +44,7 @@ class QuestSystemTest {
             completionType = "auto",
         )
 
-    private fun setup(): Triple<QuestSystem, PlayerRegistry, dev.ambon.bus.LocalOutboundBus> {
+    private fun setup(): Triple<QuestSystem, PlayerRegistry, LocalOutboundBus> {
         val c = SystemTestComponents(clockInitialMs = 1_000L)
         val registry = QuestRegistry()
         registry.register(killQuest)
