@@ -4,6 +4,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import kotlinx.coroutines.Dispatchers
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 /** Shared YAML ObjectMapper for persistence layer. Lenient on unknown properties for schema evolution. */
 val yamlMapper: ObjectMapper =
@@ -26,3 +30,7 @@ class PersistenceException(
     message: String,
     cause: Throwable? = null,
 ) : RuntimeException(message, cause)
+
+/** Runs [statement] in a suspended Exposed transaction on [Dispatchers.IO]. */
+suspend fun <T> Database.dbQuery(statement: suspend Transaction.() -> T): T =
+    newSuspendedTransaction(Dispatchers.IO, this, statement = statement)

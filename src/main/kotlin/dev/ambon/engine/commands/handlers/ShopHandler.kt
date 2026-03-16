@@ -10,6 +10,7 @@ import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.matchesKeyword
 import kotlin.math.roundToInt
 
 class ShopHandler(
@@ -58,7 +59,7 @@ class ShopHandler(
                     ),
                 )
             }
-            emitShopGmcp(sessionId, me)
+            ctx.emitShopGmcp(sessionId)
         }
     }
 
@@ -68,15 +69,11 @@ class ShopHandler(
     ) {
         players.withPlayer(sessionId) { me ->
             val shop = findShop(sessionId, me) ?: return
-            val keyword = cmd.keyword.lowercase()
             val shopItems = shopRegistry!!.shopItems(shop)
             val match =
-                shopItems.firstOrNull { (_, item) ->
-                    item.keyword.lowercase() == keyword ||
-                        item.displayName.lowercase().contains(keyword)
-                }
+                shopItems.firstOrNull { (_, item) -> item.matchesKeyword(cmd.keyword) }
             if (match == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "The shop doesn't sell '$keyword'."))
+                outbound.send(OutboundEvent.SendText(sessionId, "The shop doesn't sell '${cmd.keyword}'."))
                 return
             }
             val (itemId, item) = match
@@ -95,7 +92,7 @@ class ShopHandler(
             markVitalsDirty(sessionId)
             outbound.send(OutboundEvent.SendText(sessionId, "You buy ${item.displayName} for $buyPrice gold."))
             syncItemsGmcp(sessionId, items, gmcpEmitter)
-            emitShopGmcp(sessionId, me)
+            ctx.emitShopGmcp(sessionId)
         }
     }
 
@@ -107,12 +104,7 @@ class ShopHandler(
             val shop = findShop(sessionId, me) ?: return
             val keyword = cmd.keyword
             val inv = items.inventory(sessionId)
-            val lowerKeyword = keyword.lowercase()
-            val invItem =
-                inv.firstOrNull { instance ->
-                    val nameMatch = instance.item.displayName.contains(lowerKeyword, ignoreCase = true)
-                    instance.item.keyword.equals(keyword, ignoreCase = true) || nameMatch
-                }
+            val invItem = inv.firstOrNull { it.matchesKeyword(keyword) }
             if (invItem == null) {
                 outbound.send(OutboundEvent.SendText(sessionId, "You don't have '$keyword'."))
                 return
@@ -131,21 +123,7 @@ class ShopHandler(
             markVitalsDirty(sessionId)
             outbound.send(OutboundEvent.SendText(sessionId, "You sell ${removed.item.displayName} for $sellPrice gold."))
             syncItemsGmcp(sessionId, items, gmcpEmitter)
-            emitShopGmcp(sessionId, me)
+            ctx.emitShopGmcp(sessionId)
         }
-    }
-
-    private suspend fun emitShopGmcp(sessionId: SessionId, me: dev.ambon.engine.PlayerState) {
-        val emitter = gmcpEmitter ?: return
-        val registry = shopRegistry ?: return
-        val shop = registry.shopInRoom(me.roomId) ?: return
-        val shopItems = registry.shopItems(shop)
-        emitter.sendShopList(
-            sessionId,
-            shop.name,
-            shopItems,
-            buyMultiplier = economyConfig.buyMultiplier,
-            sellMultiplier = economyConfig.sellMultiplier,
-        )
     }
 }

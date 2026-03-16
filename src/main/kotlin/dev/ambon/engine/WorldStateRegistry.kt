@@ -8,6 +8,7 @@ import dev.ambon.domain.world.LeverState
 import dev.ambon.domain.world.LockableState
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.World
+import dev.ambon.engine.items.matchesKeyword
 import dev.ambon.persistence.WorldStateSnapshot
 import io.github.oshai.kotlinlogging.KotlinLogging
 
@@ -109,7 +110,7 @@ class WorldStateRegistry(
         keyword: String,
     ): ItemInstance? {
         val contents = containerContents[featureId] ?: return null
-        val idx = contents.indexOfFirst { matchesKeyword(it, keyword) }
+        val idx = contents.indexOfFirst { it.matchesKeyword(keyword) }
         if (idx < 0) return null
         isDirty = true
         return contents.removeAt(idx)
@@ -251,16 +252,5 @@ class WorldStateRegistry(
             containerContents[featureId] = instances.toMutableList()
         }
         isDirty = false
-    }
-
-    // ---- Private helpers ----
-
-    private fun matchesKeyword(
-        item: ItemInstance,
-        keyword: String,
-    ): Boolean {
-        val lower = keyword.lowercase()
-        return item.item.keyword.lowercase() == lower ||
-            (lower.length >= 3 && item.item.displayName.lowercase().contains(lower))
     }
 }

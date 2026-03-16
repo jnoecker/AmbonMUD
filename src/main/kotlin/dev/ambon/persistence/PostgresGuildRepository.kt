@@ -3,13 +3,11 @@ package dev.ambon.persistence
 import com.fasterxml.jackson.core.type.TypeReference
 import dev.ambon.domain.guild.GuildRecord
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.upsert
 
 private val log = KotlinLogging.logger {}
@@ -21,7 +19,7 @@ class PostgresGuildRepository(
     private val mapper = jsonMapper
 
     override suspend fun findById(id: String): GuildRecord? =
-        newSuspendedTransaction(Dispatchers.IO, database) {
+        database.dbQuery {
             GuildsTable
                 .selectAll()
                 .where { GuildsTable.id eq id }
@@ -30,7 +28,7 @@ class PostgresGuildRepository(
         }
 
     override suspend fun findByName(name: String): GuildRecord? =
-        newSuspendedTransaction(Dispatchers.IO, database) {
+        database.dbQuery {
             GuildsTable
                 .selectAll()
                 .where { GuildsTable.nameLower eq name.trim().lowercase() }
@@ -39,22 +37,22 @@ class PostgresGuildRepository(
         }
 
     override suspend fun create(record: GuildRecord): GuildRecord {
-        newSuspendedTransaction(Dispatchers.IO, database) { upsertRow(record) }
+        database.dbQuery { upsertRow(record) }
         return record
     }
 
     override suspend fun save(record: GuildRecord) {
-        newSuspendedTransaction(Dispatchers.IO, database) { upsertRow(record) }
+        database.dbQuery { upsertRow(record) }
     }
 
     override suspend fun delete(id: String) {
-        newSuspendedTransaction(Dispatchers.IO, database) {
+        database.dbQuery {
             GuildsTable.deleteWhere { GuildsTable.id eq id }
         }
     }
 
     override suspend fun findAll(): List<GuildRecord> =
-        newSuspendedTransaction(Dispatchers.IO, database) {
+        database.dbQuery {
             GuildsTable.selectAll().map { it.toGuildRecord() }
         }
 
