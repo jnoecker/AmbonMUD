@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.mob.MobState
+import dev.ambon.engine.items.matchesKeyword
 
 class MobRegistry {
     private val mobs = mutableMapOf<MobId, MobState>()
@@ -33,18 +34,16 @@ class MobRegistry {
     fun mobsInRoom(roomId: RoomId): List<MobState> = roomMembers[roomId]?.mapNotNull { mobs[it] } ?: emptyList()
 
     /**
-     * Returns mobs in [roomId] whose name contains [keyword] (case-insensitive),
-     * sorted alphabetically by name.
+     * Returns mobs in [roomId] matching [keyword] via [MobState.matchesKeyword]
+     * (exact name, then substring name/ID for inputs ≥3 chars), sorted by name.
      */
     fun findInRoomByKeyword(
         roomId: RoomId,
         keyword: String,
-    ): List<MobState> {
-        val lower = keyword.lowercase()
-        return mobsInRoom(roomId)
-            .filter { it.name.lowercase().contains(lower) }
+    ): List<MobState> =
+        mobsInRoom(roomId)
+            .filter { it.matchesKeyword(keyword) }
             .sortedBy { it.name }
-    }
 
     fun moveTo(
         mobId: MobId,
