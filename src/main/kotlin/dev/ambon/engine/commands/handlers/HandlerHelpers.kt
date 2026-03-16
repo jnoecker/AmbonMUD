@@ -328,20 +328,6 @@ internal suspend fun movePlayerWithNotify(
     }
 }
 
-/** Checks if [sessionId] has staff privileges; sends an error and returns false if not. */
-internal suspend fun requireStaff(
-    sessionId: SessionId,
-    players: PlayerRegistry,
-    outbound: OutboundBus,
-): Boolean {
-    val me = players.get(sessionId) ?: return false
-    if (!me.isStaff) {
-        outbound.send(OutboundEvent.SendError(sessionId, "You are not staff."))
-        return false
-    }
-    return true
-}
-
 /** Returns the single-letter direction abbreviation (n/s/e/w/u/d). */
 internal fun dirAbbrev(dir: Direction): String =
     when (dir) {

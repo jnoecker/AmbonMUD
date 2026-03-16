@@ -4,6 +4,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.test.SystemTestComponents
+import dev.ambon.test.TEST_ROOM_ID
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.test.runTest
@@ -15,7 +16,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class GroupSystemTest {
-    private val roomId = dev.ambon.test.TEST_ROOM_ID
+    private val roomId = TEST_ROOM_ID
     private val room2 = RoomId("zone:room2")
 
     private fun setup(): TestHarness {
