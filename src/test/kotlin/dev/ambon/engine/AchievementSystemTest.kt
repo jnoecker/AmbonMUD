@@ -6,9 +6,7 @@ import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.achievement.AchievementRewards
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.OutboundEvent
-import dev.ambon.engine.items.ItemRegistry
-import dev.ambon.persistence.InMemoryPlayerRepository
-import dev.ambon.test.TEST_ROOM_ID
+import dev.ambon.test.SystemTestComponents
 import dev.ambon.test.drainAll
 import dev.ambon.test.loginOrFail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,8 +19,6 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AchievementSystemTest {
-    private val roomId = TEST_ROOM_ID
-
     private fun setup(vararg achievements: AchievementDef): Triple<AchievementSystem, PlayerRegistry, LocalOutboundBus> =
         setupWithGmcp(*achievements).let { Triple(it.system, it.players, it.outbound) }
 
@@ -37,15 +33,13 @@ class AchievementSystemTest {
         vararg achievements: AchievementDef,
         enableGmcp: Boolean = false,
     ): TestHarness {
-        val items = ItemRegistry()
-        val players = dev.ambon.test.buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
-        val outbound = LocalOutboundBus()
+        val c = SystemTestComponents()
         val registry = AchievementRegistry()
         achievements.forEach { registry.register(it) }
         val gmcpEmitter =
             if (enableGmcp) {
                 GmcpEmitter(
-                    outbound = outbound,
+                    outbound = c.outbound,
                     supportsPackage = { _, _ -> true },
                     progression = PlayerProgression(),
                 )
@@ -55,11 +49,11 @@ class AchievementSystemTest {
         val system =
             AchievementSystem(
                 registry = registry,
-                players = players,
-                outbound = outbound,
+                players = c.players,
+                outbound = c.outbound,
                 gmcpEmitter = gmcpEmitter,
             )
-        return TestHarness(system, players, outbound, gmcpEmitter)
+        return TestHarness(system, c.players, c.outbound, gmcpEmitter)
     }
 
     // ── KILL criteria ─────────────────────────────────────────────────────────
@@ -505,16 +499,15 @@ class AchievementSystemTest {
     @Test
     fun `setDisplayTitle updates player active title`() =
         runTest {
-            val items = ItemRegistry()
-            val players = dev.ambon.test.buildTestPlayerRegistry(roomId, InMemoryPlayerRepository(), items)
+            val c = SystemTestComponents()
             val sid = SessionId(1L)
-            players.loginOrFail(sid, "Hero")
+            c.players.loginOrFail(sid, "Hero")
 
-            players.setDisplayTitle(sid, "Warrior")
-            assertEquals("Warrior", players.get(sid)?.activeTitle)
+            c.players.setDisplayTitle(sid, "Warrior")
+            assertEquals("Warrior", c.players.get(sid)?.activeTitle)
 
-            players.setDisplayTitle(sid, null)
-            assertNull(players.get(sid)?.activeTitle)
+            c.players.setDisplayTitle(sid, null)
+            assertNull(c.players.get(sid)?.activeTitle)
         }
 
     // ── GMCP achievement progress updates ───────────────────────────────────

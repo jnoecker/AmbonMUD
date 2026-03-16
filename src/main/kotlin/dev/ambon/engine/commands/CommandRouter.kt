@@ -49,6 +49,7 @@ class CommandRouter(
     private val players: PlayerRegistry,
 ) {
     private val registry = mutableMapOf<KClass<out Command>, suspend (SessionId, Command) -> Unit>()
+    private val staffCommands = mutableSetOf<KClass<out Command>>()
 
     // Mutable per-invocation flag; safe because the engine runs on a single thread.
     private var autoPromptSuppressed = false
@@ -59,6 +60,11 @@ class CommandRouter(
         handler: suspend (SessionId, T) -> Unit,
     ) {
         registry[type] = handler as suspend (SessionId, Command) -> Unit
+    }
+
+    /** Marks [type] as requiring staff privileges. Checked automatically in [handle]. */
+    fun registerStaff(type: KClass<out Command>) {
+        staffCommands += type
     }
 
     /**
@@ -74,7 +80,17 @@ class CommandRouter(
         cmd: Command,
     ) {
         autoPromptSuppressed = false
-        registry[cmd::class]?.invoke(sessionId, cmd)
+        val blocked = if (cmd::class in staffCommands) {
+            val me = players.get(sessionId)
+            me == null || !me.isStaff
+        } else {
+            false
+        }
+        if (blocked) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You are not staff."))
+        } else {
+            registry[cmd::class]?.invoke(sessionId, cmd)
+        }
         if (!autoPromptSuppressed && players.get(sessionId) != null) {
             outbound.send(OutboundEvent.SendPrompt(sessionId))
         }
@@ -83,5 +99,11 @@ class CommandRouter(
 
 /** Inline convenience for registering a handler with a reified command type. */
 inline fun <reified T : Command> CommandRouter.on(noinline handler: suspend (SessionId, T) -> Unit) {
+    on(T::class, handler)
+}
+
+/** Registers a handler that requires staff privileges. The router enforces the check before dispatching. */
+inline fun <reified T : Command> CommandRouter.onStaff(noinline handler: suspend (SessionId, T) -> Unit) {
+    registerStaff(T::class)
     on(T::class, handler)
 }

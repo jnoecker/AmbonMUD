@@ -9,7 +9,7 @@ import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
-import dev.ambon.engine.commands.on
+import dev.ambon.engine.commands.onStaff
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
@@ -41,21 +41,20 @@ class AdminHandler(
 
     override fun register(router: CommandRouter) {
         this.router = router
-        router.on<Command.Goto> { sid, cmd -> handleGoto(sid, cmd) }
-        router.on<Command.Transfer> { sid, cmd -> handleTransfer(sid, cmd) }
-        router.on<Command.Spawn> { sid, cmd -> handleSpawn(sid, cmd) }
-        router.on<Command.Shutdown> { sid, _ -> handleShutdown(sid) }
-        router.on<Command.Smite> { sid, cmd -> handleSmite(sid, cmd) }
-        router.on<Command.Kick> { sid, cmd -> handleKick(sid, cmd) }
-        router.on<Command.SetLevel> { sid, cmd -> handleSetLevel(sid, cmd) }
-        router.on<Command.Dispel> { sid, cmd -> handleDispel(sid, cmd) }
+        router.onStaff<Command.Goto> { sid, cmd -> handleGoto(sid, cmd) }
+        router.onStaff<Command.Transfer> { sid, cmd -> handleTransfer(sid, cmd) }
+        router.onStaff<Command.Spawn> { sid, cmd -> handleSpawn(sid, cmd) }
+        router.onStaff<Command.Shutdown> { sid, _ -> handleShutdown(sid) }
+        router.onStaff<Command.Smite> { sid, cmd -> handleSmite(sid, cmd) }
+        router.onStaff<Command.Kick> { sid, cmd -> handleKick(sid, cmd) }
+        router.onStaff<Command.SetLevel> { sid, cmd -> handleSetLevel(sid, cmd) }
+        router.onStaff<Command.Dispel> { sid, cmd -> handleDispel(sid, cmd) }
     }
 
     private suspend fun handleGoto(
         sessionId: SessionId,
         cmd: Command.Goto,
     ) {
-        if (!requireStaff(sessionId, players, outbound)) return
         players.withPlayer(sessionId) { me ->
             val targetRoomId = resolveGotoArg(cmd.arg, me.roomId.zone, world)
             if (targetRoomId == null) {
@@ -63,12 +62,9 @@ class AdminHandler(
                 return
             }
             if (!world.rooms.containsKey(targetRoomId)) {
-                if (onCrossZoneMove != null) {
-                    router.suppressAutoPrompt()
-                    onCrossZoneMove.invoke(sessionId, targetRoomId)
-                    return
+                if (!attemptCrossZoneMove(sessionId, targetRoomId, onCrossZoneMove, router::suppressAutoPrompt)) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "No such room: ${cmd.arg}"))
                 }
-                outbound.send(OutboundEvent.SendError(sessionId, "No such room: ${cmd.arg}"))
                 return
             }
             players.moveTo(sessionId, targetRoomId)
@@ -80,7 +76,6 @@ class AdminHandler(
         sessionId: SessionId,
         cmd: Command.Transfer,
     ) {
-        if (!requireStaff(sessionId, players, outbound)) return
         players.withPlayer(sessionId) { me ->
             val targetSid = players.findSessionByName(cmd.playerName)
             if (targetSid == null) {
@@ -117,7 +112,6 @@ class AdminHandler(
         sessionId: SessionId,
         cmd: Command.Spawn,
     ) {
-        if (!requireStaff(sessionId, players, outbound)) return
         players.withPlayer(sessionId) { me ->
             val template = findMobTemplate(cmd.templateArg)
             if (template == null) {
@@ -149,7 +143,6 @@ class AdminHandler(
     }
 
     private suspend fun handleShutdown(sessionId: SessionId) {
-        if (!requireStaff(sessionId, players, outbound)) return
         players.withPlayer(sessionId) { me ->
             for (p in players.allPlayers()) {
                 outbound.send(
@@ -172,7 +165,6 @@ class AdminHandler(
         sessionId: SessionId,
         cmd: Command.Smite,
     ) {
-        if (!requireStaff(sessionId, players, outbound)) return
         players.withPlayer(sessionId) { me ->
             val targetSid = players.findSessionByName(cmd.target)
             if (targetSid != null && targetSid != sessionId) {
@@ -206,7 +198,6 @@ class AdminHandler(
         sessionId: SessionId,
         cmd: Command.Kick,
     ) {
-        if (!requireStaff(sessionId, players, outbound)) return
         val targetSid = players.findSessionByName(cmd.playerName)
         if (targetSid == null) {
             if (interEngineBus != null) {
@@ -229,7 +220,6 @@ class AdminHandler(
         sessionId: SessionId,
         cmd: Command.SetLevel,
     ) {
-        if (!requireStaff(sessionId, players, outbound)) return
         val targetSid = requirePlayerOnline(sessionId, cmd.playerName, players, outbound) ?: return
         val maxLevel = players.maxLevel
         if (cmd.level !in 1..maxLevel) {
@@ -249,7 +239,6 @@ class AdminHandler(
         sessionId: SessionId,
         cmd: Command.Dispel,
     ) {
-        if (!requireStaff(sessionId, players, outbound)) return
         if (statusEffects == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "Status effects are not available."))
             return

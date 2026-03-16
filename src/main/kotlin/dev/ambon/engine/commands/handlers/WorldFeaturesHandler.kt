@@ -32,12 +32,22 @@ class WorldFeaturesHandler(
         router.on<Command.ReadSign> { sid, cmd -> handleReadSign(sid, cmd.keyword) }
     }
 
+    /** Resolves the player, room, feature, and lockable; calls [block] if all are found. */
+    private suspend inline fun withLockable(
+        sessionId: SessionId,
+        keyword: String,
+        verb: String,
+        block: (PlayerState, Lockable) -> Unit,
+    ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
+        val feature = requireFeature(sessionId, room, keyword, verb, outbound) ?: return
+        val lockable = requireLockable(sessionId, feature, worldState, verb, outbound) ?: return
+        block(me, lockable)
+    }
+
     private suspend fun handleOpenFeature(
         sessionId: SessionId,
         keyword: String,
-    ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
-        val feature = requireFeature(sessionId, room, keyword, "open", outbound) ?: return
-        val lockable = requireLockable(sessionId, feature, worldState, "open", outbound) ?: return
+    ): Unit = withLockable(sessionId, keyword, "open") { me, lockable ->
         when (lockable.state) {
             LockableState.LOCKED -> outbound.send(OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is locked."))
             LockableState.OPEN -> outbound.send(OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is already open."))
@@ -52,9 +62,7 @@ class WorldFeaturesHandler(
     private suspend fun handleCloseFeature(
         sessionId: SessionId,
         keyword: String,
-    ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
-        val feature = requireFeature(sessionId, room, keyword, "close", outbound) ?: return
-        val lockable = requireLockable(sessionId, feature, worldState, "close", outbound) ?: return
+    ): Unit = withLockable(sessionId, keyword, "close") { me, lockable ->
         when (lockable.state) {
             LockableState.OPEN -> {
                 lockable.applyState(LockableState.CLOSED)
@@ -73,9 +81,7 @@ class WorldFeaturesHandler(
     private suspend fun handleUnlockFeature(
         sessionId: SessionId,
         keyword: String,
-    ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
-        val feature = requireFeature(sessionId, room, keyword, "unlock", outbound) ?: return
-        val lockable = requireLockable(sessionId, feature, worldState, "unlock", outbound) ?: return
+    ): Unit = withLockable(sessionId, keyword, "unlock") { me, lockable ->
         when {
             lockable.state != LockableState.LOCKED ->
                 outbound.send(OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is not locked."))
@@ -88,9 +94,7 @@ class WorldFeaturesHandler(
     private suspend fun handleLockFeature(
         sessionId: SessionId,
         keyword: String,
-    ): Unit = withPlayerAndRoom(sessionId, players, world) { me, room ->
-        val feature = requireFeature(sessionId, room, keyword, "lock", outbound) ?: return
-        val lockable = requireLockable(sessionId, feature, worldState, "lock", outbound) ?: return
+    ): Unit = withLockable(sessionId, keyword, "lock") { me, lockable ->
         when {
             lockable.state == LockableState.LOCKED ->
                 outbound.send(OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is already locked."))
