@@ -18,7 +18,7 @@ repositories {
 val ktorVersion = "3.4.1"
 val hopliteVersion = "2.9.0"
 val micrometerVersion = "1.16.4"
-val grpcVersion = "1.79.0"
+val grpcVersion = "1.80.0"
 val grpcKotlinVersion = "1.5.0"
 val protobufVersion = "4.34.0"
 val exposedVersion = "0.58.0"
