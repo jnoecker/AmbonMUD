@@ -3,8 +3,9 @@
 AmbonMUD is a text-based multiplayer game (a "MUD") built in Kotlin — a
 modern take on the classic genre with ANSI color, WebSocket support, NPC
 behavior trees, quests, crafting, and sprawling YAML-driven worlds. Among
-those worlds are two zones very close to my heart: **PBrae** and
-**Wesleyalis**, kingdoms inspired by my four niblings.
+those worlds are three zones very close to my heart: **PBrae**,
+**Wesleyalis**, and **Trailey**, kingdoms and hideouts inspired by my
+niblings and their family.
 
 ---
 
@@ -67,15 +68,81 @@ PREHISTORIC APIARY, MISC. DINOSAURS."
 
 ---
 
+## The Trailey Spy House — HOA Suburbia Meets Secret Agent HQ
+
+The Trailey zone takes a very different approach. Instead of a fantasy
+kingdom, it drops you into a suffocating HOA-regulated cul-de-sac where
+every house is Approved Beige (Pantone 7527 C), every lawn is precisely
+3.25 inches tall, and every mailbox faces the same direction at the same
+height. An **HOA Inspector** materializes from behind approved shrubs to
+issue violations for unauthorized personality. An aggressive **Robotic Lawn
+Mower** patrols a perfect spiral path with zero tolerance for non-compliant
+ankles.
+
+But the house at the end of the driveway is not what it seems.
+
+Step through the front door and the beige paint literally retracts into the
+walls as burnished titanium panels emerge. The **Spy House** is a
+full-blown covert operations center disguised as suburban normalcy: a
+garage concealing brushed-steel equipment bays, a kitchen island hiding a
+touchscreen command interface beneath a cutting board, a refrigerator with
+biometric access for "the good stuff," and a central corridor with
+obsidian-tile floors and scrolling status readouts. **Surveillance drones**
+and **laser sentinels** guard the interior. A supply depot — disguised as a
+coat closet — stocks spy gadget pens (grappling hook in the cap, sedative
+dart in the body, USB drive in the clip — also writes) and classified
+smartwatches with seventeen listed functions and fourteen unlisted ones.
+
+Upstairs, things get surreal. At the end of the hallway sits an
+eight-foot ornamental wall, and perched at the top: **Humpty Dumpty, the
+Uncracked Sovereign** — a Level 12 boss with 1,500 HP whose fracture keeps
+spreading and sealing in an endless loop. He has heard the ending of his
+own story and believes he will be the exception. He is incorrect. Defeating
+him scatters **reassembling shell fragments** that skitter across the floor
+with alarming purpose.
+
+The basement splits into two distinct domains:
+
+**Hailey's Gymnastics Dollhouse** — entered through a miniature door that
+is somehow full human scale inside. A silver-damask entry hall leads to the
+**Glamour Parlour** (cosmetics organized by undertone, an animated
+mannequin guarding the good stuff), a **Dressing Room and Perfume Vault**
+(hundreds of bottles, a sentient perfume cloud of "Midnight Blossoms"),
+and a full-scale **Competition Gymnasium** with spring floor, uneven bars,
+vault runway, and the **Balance Beam Automaton** — a Level 7 elite robotic
+gymnast that sticks a perfect landing and pivots to face you with the form
+and dignity of a Level 10 athlete.
+
+**Trevor's Zone** — where marble ends and industrial rubber begins.
+A **Mechanical Shooting Range** runs robot deer and duck targets on
+programmable tracks, with Trevor's tactical paintball marker (glows in the
+dark, stains for six weeks) at the ready. The back room **Armory and
+Workshop** houses the **Alpha Wolf-Bot Mark VII** — a Level 8 elite with
+500 HP, steel teeth, and the hydraulic force of eight hundred pounds per
+square inch. And in the **Roughhousing Pit**, padded eight layers deep in
+crash mats, sits **Big Biff the Roughhousing Inflate-O-Goon** — who
+absorbs every blow, inflates further, and is honestly excited to see you.
+
+Outside, the back yard holds a well-loved trampoline (safety net with two
+repaired sections and one small hole everyone agreed was fine), a swimming
+pool with a suspicious hatch at the bottom of the deep end, and a deck
+with fold-out equipment compartments in the table legs.
+
+---
+
 ## Why Build This?
 
 These zones aren't just game content — they're portraits. Every room, item,
-and NPC captures something real about these four kids: Peanut's obsession with
-Rocket League, Braelynn's penguin collection, Wesley's art, Aurora's stuffed
-unicorn with the flat ear. Building them into a living, explorable world felt
-like the best kind of gift — one where you can wander through someone's
-imagination and find a Sacred Royal Egg in a chicken coop, or fight Godzilla
-in an art studio, or sit on a throne made of penguins.
+and NPC captures something real about these kids and their family: Peanut's
+obsession with Rocket League, Braelynn's penguin collection, Wesley's art,
+Aurora's stuffed unicorn with the flat ear, Hailey's gymnastics and
+perfume collection, Trevor's mechanical workshop and roughhousing energy,
+and the whole family's cheerful defiance of HOA-mandated beige-ness.
+Building them into a living, explorable world felt like the best kind of
+gift — one where you can wander through someone's imagination and find a
+Sacred Royal Egg in a chicken coop, fight Godzilla in an art studio, sit
+on a throne made of penguins, or discover that the coat closet is actually
+a spy supply depot.
 
 The zones were part of AmbonMUD's development and are available as optional
 content outside the base release.
