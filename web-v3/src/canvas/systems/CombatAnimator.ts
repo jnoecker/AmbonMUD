@@ -570,6 +570,13 @@ export class CombatAnimator {
     }
   }
 
+  /** Cancel only the death animation (target changed mid-fight). */
+  clearDeathAnimation() {
+    this.deathAnim = null;
+    this.deathEnemyPos = null;
+    this.deathBurstsFired = 0;
+  }
+
   clear() {
     for (const f of this.floats) {
       this.container.removeChild(f.text);
