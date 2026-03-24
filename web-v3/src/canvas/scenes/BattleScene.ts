@@ -55,6 +55,7 @@ export class BattleScene {
 
   private lastPlayerSpritePath: string | null = null;
   private lastEnemyImage: string | null = null;
+  private lastTargetId: string | null = null;
   private lastPartyKey = "";
   private width = 0;
   private height = 0;
@@ -135,6 +136,7 @@ export class BattleScene {
     this.lastRoomImage = "\0";
     this.lastPlayerSpritePath = "\0";
     this.lastEnemyImage = "\0";
+    this.lastTargetId = "\0";
     this.lastPartyKey = "\0";
   }
 
@@ -151,6 +153,7 @@ export class BattleScene {
 
     const state = gameStateRef.current;
     const { vitals, character, combatTarget, groupInfo, room } = state;
+    const stillInCombat = state.inCombat;
 
     // Update room background
     if (room.image !== this.lastRoomImage) {
@@ -169,9 +172,28 @@ export class BattleScene {
 
     // Update enemy sprite
     const enemyImage = combatTarget?.targetImage ?? null;
+    const targetId = combatTarget?.targetId ?? null;
     if (enemyImage !== this.lastEnemyImage) {
       this.lastEnemyImage = enemyImage;
       this.loadEnemySprite(enemyImage);
+    }
+
+    // If the combat target changed to a different mob, cancel any in-progress
+    // death animation so the dissolve/fade effects don't apply to the new target.
+    if (targetId !== this.lastTargetId) {
+      this.lastTargetId = targetId;
+      if (this.combatAnimator.isDeathAnimating) {
+        this.combatAnimator.clearDeathAnimation();
+        this.removeVictoryText();
+        if (this.enemySprite) {
+          this.enemySprite.alpha = 1;
+          this.enemySprite.scale.set(1);
+          this.enemySprite.tint = this.lastEnemyImage ? 0xffffff : ENEMY_TINT;
+        }
+        if (!this.fadingIn) {
+          this.container.alpha = 1;
+        }
+      }
     }
 
     this.enemyLabel.text = combatTarget?.targetName ?? "";
@@ -218,21 +240,30 @@ export class BattleScene {
         this.enemyHpBar.alpha = 0;
         this.enemyHpText.alpha = 0;
       }
-      // Fade entire scene during hold phase
-      if (!this.fadingIn) {
+      // Fade entire scene during hold phase — but only when combat is truly
+      // over.  If the player is still fighting other mobs the scene must
+      // stay visible so the next target renders correctly.
+      if (!this.fadingIn && !stillInCombat) {
         this.container.alpha = deathState.sceneAlpha;
       }
-      // Show victory text
-      this.updateVictoryText(deltaMs, deathState.alpha <= 0);
+      // Show victory text only when combat is over — not mid-fight
+      if (!stillInCombat) {
+        this.updateVictoryText(deltaMs, deathState.alpha <= 0);
+      }
     } else {
       // Reset enemy sprite if death animation just finished
       if (this.enemySprite) {
+        this.enemySprite.alpha = 1;
         this.enemySprite.scale.set(1);
         this.enemySprite.tint = this.lastEnemyImage ? 0xffffff : ENEMY_TINT;
       }
       this.enemyLabel.alpha = 1;
       this.enemyHpBar.alpha = 1;
       this.enemyHpText.alpha = 1;
+      // Restore container opacity in case the death animation faded it out
+      if (!this.fadingIn) {
+        this.container.alpha = 1;
+      }
     }
 
     // Layout everything
