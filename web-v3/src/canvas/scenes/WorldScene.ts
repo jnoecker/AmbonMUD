@@ -318,7 +318,7 @@ export class WorldScene {
     }
 
     // Update minimap
-    this.minimap.updateRoom(room.id, room.exits, room.title !== "-" ? room.title : "", room.image ?? null);
+    this.minimap.updateRoom(room.id, room.exits, room.title !== "-" ? room.title : "", room.image ?? null, room.mapX, room.mapY);
 
     if (room.image !== this.lastRoomImage) {
       this.lastRoomImage = room.image;

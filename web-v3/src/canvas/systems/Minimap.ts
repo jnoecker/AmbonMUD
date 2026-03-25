@@ -1,14 +1,6 @@
 import { Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
 import { canvasCallbacks, gameStateRef } from "../GameStateBridge";
-
-const MAP_OFFSETS: Record<string, { dx: number; dy: number }> = {
-  north: { dx: 0, dy: -1 },
-  south: { dx: 0, dy: 1 },
-  east: { dx: 1, dy: 0 },
-  west: { dx: -1, dy: 0 },
-  up: { dx: 1, dy: -1 },
-  down: { dx: -1, dy: 1 },
-};
+import { MAP_OFFSETS } from "../../constants";
 
 interface MapNode {
   x: number;
@@ -101,7 +93,7 @@ export class Minimap {
     return MAP_DIAMETER;
   }
 
-  updateRoom(roomId: string | null, exits: Record<string, string>, title: string, image: string | null) {
+  updateRoom(roomId: string | null, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number) {
     if (!roomId) return;
 
     // Reload fog texture once Server.Assets GMCP arrives
@@ -110,44 +102,30 @@ export class Minimap {
       this.loadFogTexture();
     }
 
-    const key = `${roomId}:${JSON.stringify(exits)}:${image ?? ""}`;
+    const key = `${roomId}:${mapX},${mapY}:${JSON.stringify(exits)}:${image ?? ""}`;
     if (key === this.lastKey) return;
     this.lastKey = key;
 
     this.currentRoomId = roomId;
 
     if (!this.visited.has(roomId)) {
-      let placed = false;
-      for (const [dir, neighborId] of Object.entries(exits)) {
-        const neighbor = this.visited.get(neighborId);
-        const offset = MAP_OFFSETS[dir];
-        if (!neighbor || !offset) continue;
-        this.visited.set(roomId, { x: neighbor.x - offset.dx, y: neighbor.y - offset.dy, exits, title, image });
-        placed = true;
-        break;
-      }
-      if (!placed) {
-        if (this.visited.size === 0) {
-          this.visited.set(roomId, { x: 0, y: 0, exits, title, image });
-        } else {
-          const previous = Array.from(this.visited.values()).at(-1);
-          this.visited.set(roomId, { x: (previous?.x ?? 0) + 1, y: previous?.y ?? 0, exits, title, image });
-        }
-      }
+      // Use server-provided coordinates directly
+      this.visited.set(roomId, { x: mapX, y: mapY, exits, title, image });
     } else {
       const node = this.visited.get(roomId)!;
       node.exits = exits;
       node.title = title;
       node.image = image;
+      node.x = mapX;
+      node.y = mapY;
     }
 
-    // Place unknown neighbors
+    // Pre-place unvisited neighbors using directional offsets from server coordinates
     for (const [dir, targetId] of Object.entries(exits)) {
       if (this.visited.has(targetId)) continue;
-      const source = this.visited.get(roomId);
       const offset = MAP_OFFSETS[dir];
-      if (!source || !offset) continue;
-      this.visited.set(targetId, { x: source.x + offset.dx, y: source.y + offset.dy, exits: {}, title: "", image: null });
+      if (!offset) continue;
+      this.visited.set(targetId, { x: mapX + offset.dx, y: mapY + offset.dy, exits: {}, title: "", image: null });
     }
 
     this.redraw();

@@ -104,6 +104,8 @@ class GmcpEmitter(
                 video = room.video,
                 music = room.music,
                 ambient = room.ambient,
+                mapX = room.mapX,
+                mapY = room.mapY,
             ),
         )
     }
@@ -881,6 +883,8 @@ class GmcpEmitter(
         val video: String? = null,
         val music: String? = null,
         val ambient: String? = null,
+        val mapX: Int = 0,
+        val mapY: Int = 0,
     )
 
     private data class ItemPayload(

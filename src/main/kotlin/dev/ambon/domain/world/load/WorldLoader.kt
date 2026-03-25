@@ -112,12 +112,16 @@ object WorldLoader {
         val mergedGatheringNodes = mutableListOf<GatheringNodeDef>()
         val mergedRecipes = mutableListOf<RecipeDef>()
         val zoneLifespansMinutes = LinkedHashMap<String, Long?>()
+        val zoneStartRooms = LinkedHashMap<String, RoomId>()
 
         // startRoomOverride wins; otherwise fall back to first file’s declared startRoom.
         val worldStart = startRoomOverride ?: normalizeId(files.first().zone, files.first().startRoom)
 
         for (file in files) {
             val zone = requireNonBlank(file.zone) { "World zone cannot be blank" }
+            if (!zoneStartRooms.containsKey(zone)) {
+                zoneStartRooms[zone] = normalizeId(zone, file.startRoom)
+            }
             val declaredLifespanMinutes = file.lifespan
             if (!zoneLifespansMinutes.containsKey(zone)) {
                 zoneLifespansMinutes[zone] = declaredLifespanMinutes
@@ -753,8 +757,11 @@ object WorldLoader {
             }
         }
 
+        // Assign minimap coordinates via per-zone BFS
+        val coordRooms = assignMapCoordinates(mergedRooms, zoneStartRooms)
+
         return World(
-            rooms = mergedRooms.toMutableMap(),
+            rooms = coordRooms.toMutableMap(),
             startRoom = worldStart,
             mobSpawns = mergedMobs.values.sortedBy { it.id.value },
             itemSpawns = mergedItems.values.sortedBy { it.instance.id.value },
@@ -1071,5 +1078,132 @@ object WorldLoader {
         val trimmed = value.trim()
         if (trimmed.isEmpty()) throw WorldLoadException(lazyMessage())
         return trimmed
+    }
+
+    /**
+     * Direction → grid offset for minimap coordinate assignment.
+     * Must match the client-side MAP_OFFSETS in constants.ts.
+     */
+    private val DIRECTION_OFFSETS: Map<Direction, Pair<Int, Int>> = mapOf(
+        Direction.NORTH to (0 to -1),
+        Direction.SOUTH to (0 to 1),
+        Direction.EAST to (1 to 0),
+        Direction.WEST to (-1 to 0),
+        Direction.UP to (1 to -1),
+        Direction.DOWN to (-1 to 1),
+    )
+
+    /**
+     * Assigns 2D minimap coordinates to every room via per-zone BFS.
+     *
+     * Each zone is laid out independently, starting from the zone's declared start room at (0,0).
+     * When two rooms would occupy the same grid cell (non-euclidean exit topology), the later
+     * arrival is placed at the nearest unoccupied cell via a spiral search.
+     */
+    private fun assignMapCoordinates(
+        rooms: Map<RoomId, Room>,
+        zoneStartRooms: Map<String, RoomId>,
+    ): Map<RoomId, Room> {
+        // Group rooms by zone
+        val roomsByZone = rooms.keys.groupBy { it.zone }
+        val coords = HashMap<RoomId, Pair<Int, Int>>(rooms.size)
+
+        data class Pending(
+            val roomId: RoomId,
+            val x: Int,
+            val y: Int,
+        )
+
+        // Process cardinal exits (N/S/E/W) before diagonal (U/D) for better
+        // grid fidelity in zones that use up/down as non-euclidean shortcuts.
+        val cardinalDirs = setOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+
+        for ((zone, roomIds) in roomsByZone) {
+            val zoneRoomSet = roomIds.toHashSet()
+            val occupied = HashMap<Pair<Int, Int>, RoomId>()
+            val startId = zoneStartRooms[zone] ?: roomIds.first()
+
+            val queue = ArrayDeque<Pending>()
+            queue.addLast(Pending(startId, 0, 0))
+
+            while (queue.isNotEmpty()) {
+                val (roomId, desiredX, desiredY) = queue.removeFirst()
+                if (coords.containsKey(roomId)) continue
+
+                val pos = findFreePosition(desiredX, desiredY, occupied)
+                coords[roomId] = pos
+                occupied[pos] = roomId
+
+                val room = rooms[roomId] ?: continue
+                val exits = room.exits.entries.sortedBy { if (it.key in cardinalDirs) 0 else 1 }
+                for ((dir, targetId) in exits) {
+                    if (coords.containsKey(targetId)) continue
+                    if (targetId !in zoneRoomSet) continue
+                    val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
+                    queue.addLast(Pending(targetId, pos.first + dx, pos.second + dy))
+                }
+            }
+
+            // Place any rooms not reachable from the start room (e.g., class-start rooms
+            // that are dead-ends with only outgoing exits, never linked as an exit target).
+            for (unreachedId in roomIds) {
+                if (coords.containsKey(unreachedId)) continue
+                val room = rooms[unreachedId] ?: continue
+                // Try to place relative to a neighbor this room exits to
+                var placed = false
+                for ((dir, neighborId) in room.exits) {
+                    val neighborPos = coords[neighborId] ?: continue
+                    val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
+                    // This room is the reverse: if room exits north to neighbor, room is south of neighbor
+                    val desiredPos = findFreePosition(neighborPos.first - dx, neighborPos.second - dy, occupied)
+                    coords[unreachedId] = desiredPos
+                    occupied[desiredPos] = unreachedId
+                    placed = true
+                    break
+                }
+                if (!placed) {
+                    val pos = findFreePosition(0, 0, occupied)
+                    coords[unreachedId] = pos
+                    occupied[pos] = unreachedId
+                }
+            }
+        }
+
+        return rooms.mapValues { (id, room) ->
+            val (x, y) = coords[id] ?: (0 to 0)
+            room.copy(mapX = x, mapY = y)
+        }
+    }
+
+    /**
+     * If the desired (x, y) is free, returns it.
+     * Otherwise spirals outward to find the nearest unoccupied cell.
+     */
+    private fun findFreePosition(
+        x: Int,
+        y: Int,
+        occupied: Map<Pair<Int, Int>, RoomId>,
+    ): Pair<Int, Int> {
+        val pos = x to y
+        if (!occupied.containsKey(pos)) return pos
+
+        // Walk the perimeter of expanding squares
+        for (radius in 1..500) {
+            // Top and bottom edges
+            for (dx in -radius..radius) {
+                val top = (x + dx) to (y - radius)
+                if (!occupied.containsKey(top)) return top
+                val bottom = (x + dx) to (y + radius)
+                if (!occupied.containsKey(bottom)) return bottom
+            }
+            // Left and right edges (excluding corners already checked)
+            for (dy in -radius + 1..<radius) {
+                val left = (x - radius) to (y + dy)
+                if (!occupied.containsKey(left)) return left
+                val right = (x + radius) to (y + dy)
+                if (!occupied.containsKey(right)) return right
+            }
+        }
+        return pos
     }
 }

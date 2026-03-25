@@ -256,44 +256,29 @@ export function useMiniMap() {
   }, []);
 
   const updateMap = useCallback(
-    (roomId: string, exits: Record<string, string>, title: string, image: string | null) => {
+    (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number) => {
       currentRoomIdRef.current = roomId;
       const rooms = visitedRef.current;
 
       if (!rooms.has(roomId)) {
-        let placed = false;
-        for (const [dir, neighborId] of Object.entries(exits)) {
-          const neighbor = rooms.get(neighborId);
-          const offset = MAP_OFFSETS[dir];
-          if (!neighbor || !offset) continue;
-          rooms.set(roomId, { x: neighbor.x - offset.dx, y: neighbor.y - offset.dy, exits, title, image });
-          placed = true;
-          break;
-        }
-
-        if (!placed) {
-          if (rooms.size === 0) {
-            rooms.set(roomId, { x: 0, y: 0, exits, title, image });
-          } else {
-            const previous = Array.from(rooms.values()).at(-1);
-            rooms.set(roomId, { x: (previous?.x ?? 0) + 1, y: previous?.y ?? 0, exits, title, image });
-          }
-        }
+        // Use server-provided coordinates directly
+        rooms.set(roomId, { x: mapX, y: mapY, exits, title, image });
       } else {
-        const node = rooms.get(roomId);
-        if (node) {
-          node.exits = exits;
-          node.title = title;
-          node.image = image;
-        }
+        const node = rooms.get(roomId)!;
+        node.exits = exits;
+        node.title = title;
+        node.image = image;
+        // Update coordinates in case they were speculative from a neighbor pre-placement
+        node.x = mapX;
+        node.y = mapY;
       }
 
+      // Pre-place unvisited neighbors using directional offsets from server coordinates
       for (const [dir, targetId] of Object.entries(exits)) {
         if (rooms.has(targetId)) continue;
-        const source = rooms.get(roomId);
         const offset = MAP_OFFSETS[dir];
-        if (!source || !offset) continue;
-        rooms.set(targetId, { x: source.x + offset.dx, y: source.y + offset.dy, exits: {}, title: "", image: null });
+        if (!offset) continue;
+        rooms.set(targetId, { x: mapX + offset.dx, y: mapY + offset.dy, exits: {}, title: "", image: null });
       }
 
       drawMap();
