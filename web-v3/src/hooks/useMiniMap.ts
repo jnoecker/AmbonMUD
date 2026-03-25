@@ -99,7 +99,8 @@ function renderMap(
   for (const node of visited.values()) {
     const sx = centerX + (node.x - current.x) * CELL;
     const sy = centerY + (node.y - current.y) * CELL;
-    for (const targetId of Object.values(node.exits)) {
+    for (const [dir, targetId] of Object.entries(node.exits)) {
+      if (dir === "up" || dir === "down") continue;
       const target = visited.get(targetId);
       if (!target) continue;
       const tx = centerX + (target.x - current.x) * CELL;
