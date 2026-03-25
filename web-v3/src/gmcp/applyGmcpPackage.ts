@@ -34,6 +34,7 @@ import type {
   SkillSummary,
   StatusEffect,
   StatusVarLabels,
+  UiFeedback,
   Vitals,
 } from "../types";
 import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
@@ -71,6 +72,7 @@ interface GmcpContext {
   setLoginPrompt: Dispatch<SetStateAction<LoginPromptState | null>>;
   setLoginError: Dispatch<SetStateAction<LoginErrorState | null>>;
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
+  pushUiFeedback: (feedback: UiFeedback) => void;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -814,6 +816,12 @@ export function applyGmcpPackage(
     case "Login.Error": {
       const packet = data as LoginErrorState;
       ctx.setLoginError(packet);
+      break;
+    }
+
+    case "UI.Feedback": {
+      const packet = data as UiFeedback;
+      ctx.pushUiFeedback(packet);
       break;
     }
 
