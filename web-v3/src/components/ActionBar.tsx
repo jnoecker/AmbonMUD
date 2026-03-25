@@ -71,7 +71,10 @@ function SkillSlot({
   }, [skill.cooldownRemainingMs, skill.receivedAt]);
 
   const elapsed = now - skill.receivedAt;
-  const remaining = Math.max(0, skill.cooldownRemainingMs - elapsed);
+  // When cooldownRemainingMs is 0, remaining is always 0 regardless of stale `now`
+  const remaining = skill.cooldownRemainingMs > 0
+    ? Math.max(0, skill.cooldownRemainingMs - elapsed)
+    : 0;
   const onCooldown = remaining > 0;
   const cooldownFraction = onCooldown && skill.cooldownMs > 0
     ? remaining / skill.cooldownMs
