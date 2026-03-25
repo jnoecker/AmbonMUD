@@ -4,6 +4,7 @@ import { canvasEvents } from "../CanvasEventBus";
 import { CombatAnimator } from "../systems/CombatAnimator";
 import { GainPopupSystem } from "../systems/GainPopup";
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
+import { SpellProjectileSystem } from "../systems/SpellProjectile";
 
 const BASE_SPRITE_SIZE = 160;
 const MIN_SPRITE_SIZE = 120;
@@ -47,6 +48,7 @@ export class BattleScene {
 
   private combatAnimator: CombatAnimator;
   private gainPopups: GainPopupSystem;
+  private spellProjectiles = new SpellProjectileSystem();
   private statusEffects = new StatusEffectDisplay();
   private uiGraphics = new Graphics();
 
@@ -107,6 +109,7 @@ export class BattleScene {
     this.container.addChild(this.enemyHpText);
     this.container.addChild(this.statusEffects.container);
     this.container.addChild(this.combatAnimator.container);
+    this.container.addChild(this.spellProjectiles.graphics);
     this.container.addChild(this.gainPopups.container);
   }
 
@@ -130,6 +133,7 @@ export class BattleScene {
     this.fadeElapsed = 0;
     this.container.alpha = 0;
     this.combatAnimator.clear();
+    this.spellProjectiles.clear();
     this.gainPopups.clear();
     this.removeVictoryText();
     // Reset tracking so update() re-creates everything
@@ -211,6 +215,8 @@ export class BattleScene {
     const enemyPos = this.getEnemyPosition();
 
     for (const event of combat) {
+      // Try to spawn a spell projectile — abilities get a visible arcing projectile
+      this.spellProjectiles.trySpawn(event, playerPos.x, playerPos.y, enemyPos.x, enemyPos.y);
       this.combatAnimator.processEvent(event, playerPos.x, playerPos.y, enemyPos.x, enemyPos.y);
     }
 
@@ -220,6 +226,7 @@ export class BattleScene {
 
     // Update animations
     this.combatAnimator.update(deltaMs);
+    this.spellProjectiles.update(deltaMs);
     this.gainPopups.update(deltaMs);
 
     // Apply death animation effects to enemy sprite
@@ -590,6 +597,7 @@ export class BattleScene {
 
   destroy() {
     this.combatAnimator.clear();
+    this.spellProjectiles.clear();
     this.gainPopups.clear();
     this.container.destroy({ children: true });
   }
