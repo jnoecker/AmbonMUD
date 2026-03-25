@@ -330,3 +330,15 @@ export interface LoginErrorState {
   message: string;
 }
 
+export interface UiFeedback {
+  type: "error" | "info" | "success";
+  message: string;
+}
+
+export interface CombatLogMessage {
+  id: number;
+  text: string;
+  style: "damage" | "heal" | "info" | "error" | "kill" | "dodge" | "xp";
+  receivedAt: number;
+}
+

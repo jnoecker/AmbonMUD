@@ -5014,6 +5014,83 @@ body {
   pointer-events: none;
 }
 
+/* Combat log — floating messages over the canvas */
+.combat-log {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: min(360px, 50%);
+  max-height: 40%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: none;
+  scrollbar-width: none;
+}
+
+.combat-log::-webkit-scrollbar {
+  display: none;
+}
+
+.combat-log-msg {
+  padding: 3px 10px;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  font-family: var(--font-mono, monospace);
+  background: rgb(18 22 34 / 65%);
+  backdrop-filter: blur(4px);
+  color: var(--color-text, #e0e0e0);
+  transition: opacity 0.3s ease-out;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 60%);
+}
+
+.combat-log-msg-damage {
+  color: var(--color-damage, #ff6b6b);
+  border-left: 2px solid var(--color-damage, #ff6b6b);
+}
+
+.combat-log-msg-heal {
+  color: var(--color-heal, #6bff8a);
+  border-left: 2px solid var(--color-heal, #6bff8a);
+}
+
+.combat-log-msg-error {
+  color: var(--color-error, #ff8a65);
+  border-left: 2px solid var(--color-error, #ff8a65);
+}
+
+.combat-log-msg-info {
+  color: var(--color-info, #90caf9);
+  border-left: 2px solid var(--color-info, #90caf9);
+}
+
+.combat-log-msg-kill {
+  color: var(--color-xp, #ffd54f);
+  border-left: 2px solid var(--color-xp, #ffd54f);
+  font-weight: 600;
+}
+
+.combat-log-msg-dodge {
+  color: var(--color-dodge, #fff176);
+  border-left: 2px solid var(--color-dodge, #fff176);
+  font-style: italic;
+}
+
+.combat-log-msg-xp {
+  color: var(--color-xp, #ffd54f);
+  border-left: 2px solid var(--color-xp, #ffd54f);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combat-log-msg {
+    transition: none;
+  }
+}
+
 /* Terminal overlay — appears over canvas when command input is focused */
 .terminal-overlay {
   position: absolute;
