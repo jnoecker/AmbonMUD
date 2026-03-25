@@ -239,6 +239,7 @@ export class Minimap {
     for (const r of rooms) {
       this.visited.set(r.id, { x: r.x, y: r.y, exits: r.exits, title: "", image: null });
     }
+    this.redraw();
   }
 
   reset() {
