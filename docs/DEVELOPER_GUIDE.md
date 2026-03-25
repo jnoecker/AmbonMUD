@@ -215,7 +215,7 @@ docs/
 ├── CREATOR_PLAN.md              # Creator tool design plan
 ├── CREATOR_CONFIG_REFERENCE.md  # All configurable YAML keys for world builders
 ├── DATA_DRIVEN_STATS_PLAN.md    # Data-driven stats engineering plan (Phase 1 done)
-└── HARDCODED_CONFIG_PLAN.md     # Redirected — see CREATOR_CONFIG_REFERENCE.md
+└── DATA_DRIVEN_YAML_CONTRACT.md # YAML contract spec for data-driven mechanics
 
 CLAUDE.md                         # Claude Code orientation (DO NOT MODIFY)
 AGENTS.md                         # Engineering playbook (DO NOT MODIFY)

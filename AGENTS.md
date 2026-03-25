@@ -178,6 +178,18 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - `RedisConnectionManager` degrades gracefully when Redis is unavailable — never let a Redis failure crash the engine.
 - `InterEngineBus` (in `sharding/`) is the cross-engine messaging layer (separate from InboundBus/OutboundBus). When adding new `InterEngineMessage` variants, update both the Redis and Local implementations.
 
+### Web client design / styling
+- All design tokens and component styles live in `web-v3/src/styles.css` (single file, ~5K lines). This is the source of truth.
+- Design context, brand personality, and 5 design principles: `.impeccable.md` (project root).
+- Full design system reference (colors, typography, motion, component states): `docs/STYLE_GUIDE.md`.
+- Canvas rendering (PixiJS scenes, particle effects): `web-v3/src/canvas/`.
+- Never hardcode colors — always use CSS variables defined in `:root`.
+- Dark-first theme. Light mode is planned but not yet implemented.
+- WCAG AA contrast minimum for all text; respect `prefers-reduced-motion`.
+- Build: `bun run build` from `web-v3/` writes assets to `src/main/resources/web-v3/`.
+- Lint: `bun run lint` from `web-v3/`.
+- Visual verification: `./gradlew demo` opens a browser.
+
 ## Testing Expectations
 - Minimum verification for any meaningful change: `ktlintCheck` and `test`.
 - Run `integrationTest` when touching integration-tagged areas (HTTP/gRPC/database/production-resource wiring) and before finalizing broad cross-cutting changes.
