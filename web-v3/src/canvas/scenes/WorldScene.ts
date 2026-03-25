@@ -3,6 +3,8 @@ import { gameStateRef, canvasCallbacks, pendingCastRef } from "../GameStateBridg
 import { StatusEffectDisplay } from "../systems/StatusEffectDisplay";
 import { Minimap } from "../systems/Minimap";
 import { EntityPopout } from "../systems/EntityPopout";
+import { AmbientMotes } from "../systems/AmbientMotes";
+import { RoomTransition } from "../systems/RoomTransition";
 import type { MobInfo } from "../../types";
 
 /** Resolves a global asset key to its server-provided URL, with a hardcoded fallback. */
@@ -35,8 +37,6 @@ const MAX_ITEM_SIZE = 96;
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 const ROLE_ICON_SIZE = 12;
 const ROLE_ICON_GAP = 4;
-const TRANSITION_DURATION_MS = 300;
-
 // Role indicator colors
 const ROLE_SHOP_COLOR = 0x81a2be;
 const DIALOGUE_ICON_SIZE = 28;
@@ -77,6 +77,8 @@ export class WorldScene {
   private statusEffects = new StatusEffectDisplay();
   private minimap = new Minimap();
   private entityPopout = new EntityPopout();
+  private ambientMotes = new AmbientMotes();
+  private roomTransition = new RoomTransition();
 
   private dialogueTexture: Texture | null = null;
   private dialogueIcons: Map<string, Sprite> = new Map();
@@ -132,11 +134,7 @@ export class WorldScene {
   private width = 0;
   private height = 0;
 
-  // Room transition state
-  private transitioning = false;
-  private transitionPhase: "fadeOut" | "fadeIn" = "fadeOut";
-  private transitionProgress = 0;
-  private transitionElapsed = 0;
+  // Room transition handled by RoomTransition system
 
   // Click-away to dismiss popout
   private backdropHit = new Graphics();
@@ -223,6 +221,7 @@ export class WorldScene {
     // 404s from fallback URLs when assets live on a CDN.
     this.buildCompassRose();
 
+    this.container.addChild(this.ambientMotes.graphics);
     this.container.addChild(this.roleGraphics);
     this.container.addChild(this.statusEffects.container);
     this.container.addChild(this.titleText);
@@ -235,12 +234,15 @@ export class WorldScene {
     this.container.addChild(this.compassContainer);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
+    this.container.addChild(this.roomTransition.graphics);
   }
 
   resize(width: number, height: number) {
     this.width = width;
     this.height = height;
     this.entityPopout.resize(width, height);
+    this.ambientMotes.resize(width, height);
+    this.roomTransition.resize(width, height);
 
     // Update backdrop size
     this.backdropHit.clear();
@@ -281,41 +283,30 @@ export class WorldScene {
       this.videoBtn.scale.set(breathe);
     }
 
-    // Handle room transition animation
-    if (this.transitioning) {
-      this.transitionElapsed += deltaMs;
-      this.transitionProgress = Math.min(1, this.transitionElapsed / TRANSITION_DURATION_MS);
-      if (this.transitionPhase === "fadeOut") {
-        this.container.alpha = 1 - this.transitionProgress;
-        if (this.transitionProgress >= 1) {
-          this.transitionPhase = "fadeIn";
-          this.transitionElapsed = 0;
-          this.transitionProgress = 0;
-        }
-      } else {
-        this.container.alpha = this.transitionProgress;
-        if (this.transitionProgress >= 1) {
-          this.transitioning = false;
-          this.container.alpha = 1;
-        }
-      }
+    // Handle room transition animation (magical particle dissolve)
+    if (this.roomTransition.isActive) {
+      this.roomTransition.update(deltaMs);
+      this.container.alpha = this.roomTransition.sceneAlpha;
+    } else {
+      this.container.alpha = 1;
     }
 
     const roomChanged = room.id !== this.lastRoomId;
     if (roomChanged) {
       if (this.lastRoomId !== null) {
-        this.transitioning = true;
-        this.transitionPhase = "fadeOut";
-        this.transitionProgress = 0;
-        this.transitionElapsed = 0;
+        this.roomTransition.start();
       }
       this.lastRoomId = room.id;
       this.titleText.text = room.title !== "-" ? room.title : "";
       this.descText.text = room.description || "";
+      if (room.id) this.ambientMotes.setRoom(room.id);
       // Dismiss popout on room change
       this.entityPopout.hide();
       this.backdropHit.visible = false;
     }
+
+    // Update ambient motes (zone-themed floating particles)
+    this.ambientMotes.update(deltaMs);
 
     // Update minimap
     this.minimap.updateRoom(room.id, room.exits, room.title !== "-" ? room.title : "", room.image ?? null, room.mapX, room.mapY);
