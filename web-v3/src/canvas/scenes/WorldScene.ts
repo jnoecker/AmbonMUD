@@ -22,9 +22,9 @@ const ITEM_LABEL_COLOR = "#8abeb7";
 const PLAYER_LABEL_FONT_SIZE = 15;
 const MOB_LABEL_FONT_SIZE = 14;
 const ITEM_LABEL_FONT_SIZE = 13;
-const COMPASS_SIZE = 120;
-const COMPASS_MARGIN = 16;
-const STAIR_ICON_SIZE = 56;
+const MINIMAP_DESKTOP = 140;
+const MINIMAP_MOBILE = 100;
+const MINIMAP_MARGIN = 16;
 const BASE_SPRITE_SIZE = 128;
 const BASE_ITEM_SPRITE_SIZE = 64;
 const REF_WIDTH = 1200;
@@ -93,24 +93,6 @@ export class WorldScene {
 
   private roomExpandBtn = new Graphics();
   private currentMobSize = BASE_SPRITE_SIZE;
-
-  // Compass rose navigation
-  private compassContainer = new Container();
-  private compassHighlightGraphics = new Graphics();
-  private compassOverlayGraphics = new Graphics();
-  private compassHitAreas: Array<{ dir: string; area: Graphics }> = [];
-  private compassAnimTime = 0;
-  private compassActiveExits: string[] = [];
-  private compassSparkles: Array<{
-    x: number; y: number; vx: number; vy: number;
-    life: number; maxLife: number; size: number; drift: number;
-  }> = [];
-  private directionMarkers: Map<string, Sprite> = new Map();
-  private stairsUpSprite: Sprite | null = null;
-  private stairsDownSprite: Sprite | null = null;
-  private stairsUpHit: Graphics | null = null;
-  private stairsDownHit: Graphics | null = null;
-  private lastExitDirs: string[] = [];
 
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
@@ -220,10 +202,9 @@ export class WorldScene {
     this.shopLabel.y = hs / 2 + 2;
     this.shopLabel.eventMode = "none";
     this.shopBadge.addChild(this.shopLabel);
-    // Asset-dependent sprites (compass, shop, dialogue, aggro, quest) are
-    // loaded lazily in update() once Server.Assets GMCP arrives, to avoid
-    // 404s from fallback URLs when assets live on a CDN.
-    this.buildCompassRose();
+    // Asset-dependent sprites (shop, dialogue, aggro, quest) are loaded
+    // lazily in update() once Server.Assets GMCP arrives, to avoid 404s
+    // from fallback URLs when assets live on a CDN.
 
     this.container.addChild(this.ambientMotes.graphics);
     this.container.addChild(this.roleGraphics);
@@ -235,7 +216,6 @@ export class WorldScene {
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
-    this.container.addChild(this.compassContainer);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
     // Transition graphics live in the overlay so they stay visible while
@@ -265,18 +245,10 @@ export class WorldScene {
     // Reload asset-dependent sprites once Server.Assets GMCP arrives
     if (!this.assetsLoaded && Object.keys(state.serverAssets).length > 0) {
       this.assetsLoaded = true;
-      this.loadCompassAssets();
       this.loadShopIcon();
       this.loadDialogueTexture();
       this.loadAggroTexture();
       this.loadQuestTextures();
-    }
-
-    // Animate compass direction indicators + sparkles
-    if (this.compassActiveExits.length > 0) {
-      this.compassAnimTime += deltaMs / 1000;
-      this.updateCompassSparkles(deltaMs / 1000);
-      this.drawCompassOverlay();
     }
 
     // Animate video indicator: glow pulse + breathing scale
@@ -384,14 +356,14 @@ export class WorldScene {
     this.titleText.style.fontSize = Math.round(26 * textScale);
     this.descText.style.fontSize = Math.round(18 * textScale);
 
-    // Minimap in top-right
-    const mapDiam = this.minimap.diameter;
-    const mapMargin = 12;
-    this.minimap.layout(w - mapDiam - mapMargin, mapMargin);
+    // Minimap in bottom-right — smaller on mobile
+    const mapDiam = w < 500 ? MINIMAP_MOBILE : MINIMAP_DESKTOP;
+    this.minimap.setDiameter(mapDiam);
+    this.minimap.layout(w - mapDiam - MINIMAP_MARGIN, h - mapDiam - MINIMAP_MARGIN);
 
-    // Room title and description in top-left, constrained to not overlap minimap
+    // Room title and description in top-left (full width now that minimap moved)
     const textLeft = 16;
-    const textMaxWidth = Math.max(200, w - mapDiam - mapMargin * 2 - textLeft - 20);
+    const textMaxWidth = Math.max(200, w - textLeft - 40);
     this.titleText.x = textLeft;
     this.titleText.y = 14;
     this.descText.x = textLeft + 10;
@@ -519,45 +491,10 @@ export class WorldScene {
       }
     }
 
-    // Shop badge position — below minimap on the right
+    // Shop badge position — top-right corner
     if (this.shopBadge.visible) {
-      this.shopBadge.x = w - mapDiam / 2 - mapMargin;
-      this.shopBadge.y = mapMargin + mapDiam + 40;
-    }
-
-    // Compass rose in bottom-right — scale down on small canvases
-    const state = gameStateRef.current;
-    const exits = state.room.exits;
-    const exitDirs = Object.keys(exits).map((d) => d.toLowerCase());
-    const compassScale = Math.max(0.5, Math.min(1.0, Math.min(w, h) / 380));
-    this.compassContainer.scale.set(compassScale);
-    const scaledCompassHalf = (COMPASS_SIZE / 2) * compassScale;
-    this.compassContainer.x = w - scaledCompassHalf - COMPASS_MARGIN;
-    this.compassContainer.y = h - scaledCompassHalf - COMPASS_MARGIN;
-    this.updateCompassHighlights(exitDirs);
-
-    // Stairs icons next to compass
-    const hasUp = exitDirs.includes("up");
-    const hasDown = exitDirs.includes("down");
-    if (this.stairsUpSprite) {
-      this.stairsUpSprite.visible = hasUp;
-      this.stairsUpSprite.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE / 2 - 8;
-      this.stairsUpSprite.y = -STAIR_ICON_SIZE / 2 - 4;
-    }
-    if (this.stairsUpHit) {
-      this.stairsUpHit.visible = hasUp;
-      this.stairsUpHit.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE - 8;
-      this.stairsUpHit.y = -STAIR_ICON_SIZE / 2 - 4;
-    }
-    if (this.stairsDownSprite) {
-      this.stairsDownSprite.visible = hasDown;
-      this.stairsDownSprite.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE / 2 - 8;
-      this.stairsDownSprite.y = STAIR_ICON_SIZE / 2 + 4;
-    }
-    if (this.stairsDownHit) {
-      this.stairsDownHit.visible = hasDown;
-      this.stairsDownHit.x = -COMPASS_SIZE / 2 - STAIR_ICON_SIZE - 8;
-      this.stairsDownHit.y = 4;
+      this.shopBadge.x = w - 60;
+      this.shopBadge.y = 80;
     }
 
     // Video button: bottom-center
@@ -570,6 +507,7 @@ export class WorldScene {
     this.roleGraphics.clear();
 
     // Draw NPC role indicators
+    const state = gameStateRef.current;
     const mobInfo = state.mobInfo;
     const activeDialogueMobs = new Set<string>();
     const activeAggroMobs = new Set<string>();
@@ -678,224 +616,6 @@ export class WorldScene {
           hitArea.cursor = "pointer";
         }
       }
-    }
-  }
-
-  private buildCompassRose() {
-    const s = COMPASS_SIZE;
-    const r = s / 2;
-
-    // Highlight layer drawn behind the sprite
-    this.compassContainer.addChild(this.compassHighlightGraphics);
-    // Overlay layer drawn on top of the sprite (glow lines + orbs)
-    this.compassContainer.addChild(this.compassOverlayGraphics);
-
-    // Clickable hit area wedges for each cardinal direction
-    const directions: Array<{ dir: string; points: number[] }> = [
-      { dir: "north", points: [0, -r, -r * 0.4, -r * 0.15, r * 0.4, -r * 0.15] },
-      { dir: "south", points: [0, r, -r * 0.4, r * 0.15, r * 0.4, r * 0.15] },
-      { dir: "east", points: [r, 0, r * 0.15, -r * 0.4, r * 0.15, r * 0.4] },
-      { dir: "west", points: [-r, 0, -r * 0.15, -r * 0.4, -r * 0.15, r * 0.4] },
-    ];
-
-    for (const { dir, points } of directions) {
-      const area = new Graphics();
-      area.poly(points);
-      area.fill({ color: 0x000000, alpha: 0.001 });
-      area.eventMode = "static";
-      area.cursor = "pointer";
-      area.on("pointerdown", () => {
-        canvasCallbacks.sendCommand?.(dir);
-      });
-      this.compassContainer.addChild(area);
-      this.compassHitAreas.push({ dir, area });
-    }
-  }
-
-  private async loadCompassAssets() {
-    try {
-      const texture = await Assets.load(assetUrl("compass_rose", "compass_rose.png"));
-      const sprite = new Sprite(texture);
-      sprite.width = COMPASS_SIZE;
-      sprite.height = COMPASS_SIZE;
-      sprite.anchor.set(0.5);
-      sprite.eventMode = "none";
-      // Insert after highlight graphics but before overlay
-      this.compassContainer.addChildAt(sprite, 1);
-      // Move overlay to be on top of sprite
-      this.compassContainer.setChildIndex(this.compassOverlayGraphics, this.compassContainer.children.indexOf(sprite) + 1);
-    } catch { /* fallback: no compass image */ }
-
-    try {
-      const markerTex = await Assets.load(assetUrl("direction_marker", "direction_marker.png"));
-      const markerSize = 22;
-      const r = COMPASS_SIZE / 2;
-      const angles: Record<string, number> = { north: -Math.PI / 2, east: 0, south: Math.PI / 2, west: Math.PI };
-      for (const dir of ["north", "south", "east", "west"]) {
-        const marker = new Sprite(markerTex);
-        marker.width = markerSize;
-        marker.height = markerSize;
-        marker.anchor.set(0.5);
-        marker.eventMode = "none";
-        marker.visible = false;
-        marker.position.set(
-          Math.cos(angles[dir]) * (r + 4),
-          Math.sin(angles[dir]) * (r + 4),
-        );
-        this.directionMarkers.set(dir, marker);
-        this.compassContainer.addChild(marker);
-      }
-    } catch { /* fallback: no direction marker image */ }
-
-    try {
-      const tex = await Assets.load(assetUrl("stairs_up", "stairs_up.png"));
-      const sprite = new Sprite(tex);
-      sprite.width = STAIR_ICON_SIZE;
-      sprite.height = STAIR_ICON_SIZE;
-      sprite.anchor.set(0.5);
-      sprite.eventMode = "none";
-      sprite.visible = false;
-      this.stairsUpSprite = sprite;
-      this.compassContainer.addChild(sprite);
-
-      const hit = new Graphics();
-      hit.rect(0, 0, STAIR_ICON_SIZE, STAIR_ICON_SIZE);
-      hit.fill({ color: 0x000000, alpha: 0.001 });
-      hit.eventMode = "static";
-      hit.cursor = "pointer";
-      hit.visible = false;
-      hit.on("pointerdown", () => { canvasCallbacks.sendCommand?.("up"); });
-      this.stairsUpHit = hit;
-      this.compassContainer.addChild(hit);
-    } catch { /* no stairs up icon */ }
-
-    try {
-      const tex = await Assets.load(assetUrl("stairs_down", "stairs_down.png"));
-      const sprite = new Sprite(tex);
-      sprite.width = STAIR_ICON_SIZE;
-      sprite.height = STAIR_ICON_SIZE;
-      sprite.anchor.set(0.5);
-      sprite.eventMode = "none";
-      sprite.visible = false;
-      this.stairsDownSprite = sprite;
-      this.compassContainer.addChild(sprite);
-
-      const hit = new Graphics();
-      hit.rect(0, 0, STAIR_ICON_SIZE, STAIR_ICON_SIZE);
-      hit.fill({ color: 0x000000, alpha: 0.001 });
-      hit.eventMode = "static";
-      hit.cursor = "pointer";
-      hit.visible = false;
-      hit.on("pointerdown", () => { canvasCallbacks.sendCommand?.("down"); });
-      this.stairsDownHit = hit;
-      this.compassContainer.addChild(hit);
-    } catch { /* no stairs down icon */ }
-  }
-
-  private updateCompassHighlights(exitDirs: string[]) {
-    const key = exitDirs.sort().join(",");
-    const lastKey = this.lastExitDirs.sort().join(",");
-    if (key === lastKey) return;
-    this.lastExitDirs = [...exitDirs];
-    this.compassActiveExits = exitDirs.filter((d) => ["north", "south", "east", "west"].includes(d));
-    this.compassSparkles.length = 0;
-
-    this.compassHighlightGraphics.clear();
-
-    // Show/hide direction marker sprites
-    for (const [dir, marker] of this.directionMarkers) {
-      marker.visible = this.compassActiveExits.includes(dir);
-    }
-
-    // Update hit area cursors
-    for (const { dir, area } of this.compassHitAreas) {
-      const available = exitDirs.includes(dir);
-      area.cursor = available ? "pointer" : "default";
-      area.alpha = available ? 1 : 0.3;
-    }
-
-    // Force an immediate overlay redraw
-    this.drawCompassOverlay();
-  }
-
-  private updateCompassSparkles(dt: number) {
-    const angles: Record<string, number> = { north: -Math.PI / 2, east: 0, south: Math.PI / 2, west: Math.PI };
-    const r = COMPASS_SIZE / 2;
-
-    // Spawn new sparkles — ~8 per direction per second
-    for (const dir of this.compassActiveExits) {
-      const angle = angles[dir];
-      if (angle === undefined) continue;
-      const spawnCount = Math.floor(8 * dt + (Math.random() < (8 * dt) % 1 ? 1 : 0));
-      for (let i = 0; i < spawnCount; i++) {
-        const speed = 28 + Math.random() * 22;
-        const perpSpread = (Math.random() - 0.5) * 0.5;
-        const a = angle + perpSpread;
-        const life = 0.5 + Math.random() * 0.5;
-        this.compassSparkles.push({
-          x: Math.cos(angle) * 4,
-          y: Math.sin(angle) * 4,
-          vx: Math.cos(a) * speed,
-          vy: Math.sin(a) * speed,
-          life,
-          maxLife: life,
-          size: 1.2 + Math.random() * 1.8,
-          drift: (Math.random() - 0.5) * 30,
-        });
-      }
-    }
-
-    // Age and cull
-    for (let i = this.compassSparkles.length - 1; i >= 0; i--) {
-      const s = this.compassSparkles[i];
-      s.life -= dt;
-      if (s.life <= 0 || Math.hypot(s.x, s.y) > r + 4) {
-        this.compassSparkles.splice(i, 1);
-        continue;
-      }
-      // Flutter: perpendicular sinusoidal drift
-      const perpX = -s.vy;
-      const perpY = s.vx;
-      const perpLen = Math.hypot(perpX, perpY) || 1;
-      s.x += (s.vx + (perpX / perpLen) * s.drift * Math.sin(s.life * 12)) * dt;
-      s.y += (s.vy + (perpY / perpLen) * s.drift * Math.sin(s.life * 12)) * dt;
-    }
-  }
-
-  private drawCompassOverlay() {
-    const g = this.compassOverlayGraphics;
-    g.clear();
-
-    const r = COMPASS_SIZE / 2;
-    const angles: Record<string, number> = { north: -Math.PI / 2, east: 0, south: Math.PI / 2, west: Math.PI };
-    // Animate direction marker sprites: bob outward + gentle pulse
-    const bob = 2 * Math.sin(this.compassAnimTime * 3);
-    const pulse = 0.85 + 0.15 * Math.sin(this.compassAnimTime * 2.8);
-
-    for (const dir of this.compassActiveExits) {
-      const marker = this.directionMarkers.get(dir);
-      const angle = angles[dir];
-      if (!marker || angle === undefined) continue;
-      marker.position.set(
-        Math.cos(angle) * (r + 4 + bob),
-        Math.sin(angle) * (r + 4 + bob),
-      );
-      marker.alpha = pulse;
-    }
-
-    // Draw sparkles
-    for (const s of this.compassSparkles) {
-      const t = s.life / s.maxLife;
-      const fadeAlpha = t < 0.3 ? t / 0.3 : 1;
-      // Outer soft glow
-      g.circle(s.x, s.y, s.size * 1.8);
-      g.fill({ color: 0xd46a8a, alpha: 0.15 * fadeAlpha });
-      // Core
-      g.circle(s.x, s.y, s.size);
-      g.fill({ color: 0xf0a0b8, alpha: 0.7 * fadeAlpha });
-      // Hot center
-      g.circle(s.x, s.y, s.size * 0.4);
-      g.fill({ color: 0xffd0e0, alpha: 0.9 * fadeAlpha });
     }
   }
 
@@ -1289,7 +1009,6 @@ export class WorldScene {
   }
 
   destroy() {
-    this.compassContainer.destroy({ children: true });
     this.minimap.destroy();
     this.entityPopout.destroy();
     this.container.destroy({ children: true });
