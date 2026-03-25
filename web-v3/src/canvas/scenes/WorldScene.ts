@@ -603,9 +603,6 @@ export class WorldScene {
     this.pruneIcons(this.aggroIcons, activeAggroMobs);
     this.pruneIcons(this.questAvailableIcons, activeQuestAvail);
     this.pruneIcons(this.questCompleteIcons, activeQuestComplete);
-
-    // Targeting mode overlay (visual-only, positioned here but animated in update())
-    this.updateTargetingOverlay(0);
   }
 
   private updateTargetingOverlay(deltaMs: number) {
@@ -646,19 +643,23 @@ export class WorldScene {
       // Pulse targetable entities
       const isEnemy = pending.targetType === "ENEMY";
       const isAlly = pending.targetType === "ALLY";
-      for (const { sprite, hitArea } of this.mobSprites.values()) {
-        if (isEnemy) {
-          sprite.alpha = pulse;
-          hitArea.cursor = "crosshair";
+      if (!this.targetingActive) {
+        // Set cursor once on targeting start
+        for (const { hitArea } of this.mobSprites.values()) {
+          if (isEnemy) hitArea.cursor = "crosshair";
         }
-      }
-      for (const { sprite, hitArea } of this.playerSprites.values()) {
-        if (isAlly) {
-          sprite.alpha = pulse;
-          hitArea.cursor = "crosshair";
+        for (const { hitArea } of this.playerSprites.values()) {
+          if (isAlly) hitArea.cursor = "crosshair";
         }
+        this.targetingActive = true;
       }
-      this.targetingActive = true;
+      // Animate alpha every frame
+      for (const { sprite } of this.mobSprites.values()) {
+        if (isEnemy) sprite.alpha = pulse;
+      }
+      for (const { sprite } of this.playerSprites.values()) {
+        if (isAlly) sprite.alpha = pulse;
+      }
     } else {
       if (this.targetingText) {
         this.targetingText.visible = false;
