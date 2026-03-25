@@ -174,36 +174,38 @@ export function ChatPanel({
 
   return (
     <section className="panel panel-chat" aria-label="Social channels">
-      <nav className="social-tabs" aria-label="Social sections">
+      <div className="social-tabs" role="tablist" aria-label="Social sections">
         {SOCIAL_TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
+            role="tab"
             className={`social-tab ${activeSocialTab === tab.id ? "social-tab-active" : ""}`}
             onClick={() => handleSocialTabChange(tab.id)}
-            aria-pressed={activeSocialTab === tab.id}
+            aria-selected={activeSocialTab === tab.id}
           >
             {tab.label}
           </button>
         ))}
-      </nav>
+      </div>
 
       <div className="chat-shell">
         {activeSocialTab === "chat" && (
           <>
-            <nav className="chat-channel-tabs" aria-label="Chat channels">
+            <div className="chat-channel-tabs" role="tablist" aria-label="Chat channels">
               {CHAT_CHANNELS.map((channel) => (
                 <button
                   key={channel.id}
                   type="button"
+                  role="tab"
                   className={`chat-channel-tab ${activeChannel === channel.id ? "chat-channel-tab-active" : ""}`}
                   onClick={() => onChannelChange(channel.id)}
-                  aria-pressed={activeChannel === channel.id}
+                  aria-selected={activeChannel === channel.id}
                 >
                   {channel.label}
                 </button>
               ))}
-            </nav>
+            </div>
 
             <div ref={feedRef} className="chat-feed" role="log" aria-live="polite" aria-label={`${activeMeta.label} messages`}>
               <section key={activeChannel} className="chat-feed-panel chat-feed-panel-flip" aria-label={`${activeMeta.label} subwindow`}>
@@ -212,8 +214,8 @@ export function ChatPanel({
                     {canChat
                       ? `No ${activeMeta.label.toLowerCase()} messages yet.`
                       : connected
-                        ? "Log in through the terminal to unlock chat."
-                        : "Reconnect to resume channel chat."}
+                        ? "Log in to unlock chat."
+                        : "Reconnect to resume chat."}
                   </p>
                 ) : (
                   <ul className="chat-message-list">
@@ -282,7 +284,7 @@ export function ChatPanel({
               <section className="chat-feed-panel chat-feed-panel-flip" aria-label="Friends subwindow">
                 {!canChat ? (
                   <p className="empty-note">
-                    {connected ? "Log in through the terminal to unlock social features." : "Reconnect to load social data."}
+                    {connected ? "Log in to unlock social features." : "Reconnect to load social data."}
                   </p>
                 ) : sortedFriends.length === 0 && recentNotifications.length === 0 ? (
                   <p className="empty-note">No friends yet. Use `friend add &lt;name&gt;` to add someone.</p>
@@ -342,7 +344,7 @@ export function ChatPanel({
               <div className="chat-feed" role="region" aria-label="Guild info">
                 <section className="chat-feed-panel" aria-label="Guild subwindow">
                   <p className="empty-note">
-                    {connected ? "Log in through the terminal to unlock social features." : "Reconnect to load social data."}
+                    {connected ? "Log in to unlock social features." : "Reconnect to load social data."}
                   </p>
                 </section>
               </div>
@@ -449,7 +451,7 @@ export function ChatPanel({
               <div className="chat-feed" role="region" aria-label="Group members">
                 <section className="chat-feed-panel" aria-label="Group subwindow">
                   <p className="empty-note">
-                    {connected ? "Log in through the terminal to unlock social features." : "Reconnect to load social data."}
+                    {connected ? "Log in to unlock social features." : "Reconnect to load social data."}
                   </p>
                 </section>
               </div>
@@ -549,10 +551,10 @@ export function ChatPanel({
               <section className="chat-feed-panel chat-feed-panel-flip" aria-label="Who subwindow">
                 {!canChat ? (
                   <p className="empty-note">
-                    {connected ? "Log in through the terminal to unlock social features." : "Reconnect to load social data."}
+                    {connected ? "Log in to unlock social features." : "Reconnect to load social data."}
                   </p>
                 ) : whoPlayers.length === 0 ? (
-                  <p className="empty-note">No player list yet. Switch to this tab again or use refresh to request `who`.</p>
+                  <p className="empty-note">Press Refresh below to see who is online.</p>
                 ) : (
                   <ul className="who-player-list">
                     {whoPlayers.map((entry, index) => {

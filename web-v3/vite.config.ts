@@ -10,5 +10,13 @@ export default defineConfig({
   build: {
     outDir: resolve(__dirname, "../src/main/resources/web-v3"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          pixi: ["pixi.js"],
+          xterm: ["@xterm/xterm", "@xterm/addon-fit"],
+        },
+      },
+    },
   },
 });
