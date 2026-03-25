@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react";
 import { MAP_OFFSETS } from "../constants";
-import { gameStateRef } from "../canvas/GameStateBridge";
+import { canvasCallbacks, gameStateRef } from "../canvas/GameStateBridge";
 import type { MapRoom } from "../types";
 
 const BG_COLOR = "#141828";
@@ -289,6 +289,28 @@ export function useMiniMap() {
     [drawMap],
   );
 
+  /** Pre-populate the map with all rooms in a zone as fog nodes. */
+  const loadZoneMap = useCallback(
+    (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => {
+      const map = visitedRef.current;
+      // Clear previous zone data
+      map.clear();
+      imageCache.current.clear();
+      loadingImages.current.clear();
+      currentRoomIdRef.current = null;
+
+      // Pre-place all rooms as unvisited fog nodes
+      for (const r of rooms) {
+        map.set(r.id, { x: r.x, y: r.y, exits: r.exits, title: "", image: null });
+      }
+      drawMap();
+
+      // Also push to the PixiJS compact minimap
+      canvasCallbacks.loadZoneMap?.(zone, rooms);
+    },
+    [drawMap],
+  );
+
   const resetMap = useCallback(() => {
     visitedRef.current.clear();
     currentRoomIdRef.current = null;
@@ -301,6 +323,7 @@ export function useMiniMap() {
     mapCanvasRef,
     drawMap,
     updateMap,
+    loadZoneMap,
     resetMap,
   };
 }

@@ -242,7 +242,7 @@ function App() {
     });
   }, []);
 
-  const { mapCanvasRef, drawMap, updateMap, resetMap } = useMiniMap();
+  const { mapCanvasRef, drawMap, updateMap, loadZoneMap, resetMap } = useMiniMap();
   const {
     pushHistory,
     applyComposerHistoryUp,
@@ -357,6 +357,7 @@ function App() {
           pushFriendNotification,
           setChatByChannel,
           updateMap,
+          loadZoneMap,
           pushCombatEvent,
           setCharStats,
           setQuests,
@@ -370,7 +371,7 @@ function App() {
         },
       );
     },
-    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, updateMap],
+    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, updateMap, loadZoneMap],
   );
 
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine } = useMudSocket({
