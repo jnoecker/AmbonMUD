@@ -14,11 +14,7 @@ interface MapNode {
   image: string | null;
 }
 
-const MAP_DIAMETER = 280;
-const MAP_RADIUS = MAP_DIAMETER / 2;
-const CELL = 56;
-const NODE_RADIUS = 16;
-const CURRENT_RADIUS = 20;
+const DEFAULT_DIAMETER = 140;
 const BG_COLOR = 0x141828;
 const BG_ALPHA = 0.88;
 const BORDER_COLOR = 0x3a4060;
@@ -37,9 +33,17 @@ export class Minimap {
   private mapGraphics = new Graphics();
   private nodeContainer = new Container();
   private expandButton = new Graphics();
+  private inner = new Container();
   private visited = new Map<string, MapNode>();
   private currentRoomId: string | null = null;
   private lastKey = "";
+
+  // Current sizing — updated via setDiameter()
+  private _diameter = DEFAULT_DIAMETER;
+  private _radius = DEFAULT_DIAMETER / 2;
+  private _cell = 44;
+  private _nodeRadius = 12;
+  private _currentRadius = 16;
 
   // Sprite cache for room thumbnails
   private thumbSprites = new Map<string, Sprite>();
@@ -52,12 +56,55 @@ export class Minimap {
   private clickAreas: Array<{ roomId: string; area: Graphics }> = [];
 
   constructor() {
-    // Circular clip mask — everything inside the map is clipped to this
-    this.clipMask.circle(MAP_RADIUS, MAP_RADIUS, MAP_RADIUS - 2);
-    this.clipMask.fill(0xffffff);
+    this.rebuildExpandButton();
 
-    // Expand button at bottom-center of the circle
+    // Inner content group that gets masked
+    this.inner.addChild(this.mapGraphics);
+    this.inner.addChild(this.nodeContainer);
+
+    this.container.addChild(this.bg);
+    this.container.addChild(this.clipMask);
+    this.container.addChild(this.inner);
+    this.container.addChild(this.expandButton);
+
+    this.applyDiameter();
+  }
+
+  get diameter(): number {
+    return this._diameter;
+  }
+
+  /** Resize the minimap. Recalculates proportional node/cell sizes. */
+  setDiameter(d: number) {
+    if (d === this._diameter) return;
+    this._diameter = d;
+    this._radius = d / 2;
+    // Scale cell/node sizes proportionally
+    this._cell = Math.round(d * 0.31);
+    this._nodeRadius = Math.round(d * 0.085);
+    this._currentRadius = Math.round(d * 0.11);
+    this.applyDiameter();
+    this.lastKey = ""; // force redraw
+  }
+
+  private applyDiameter() {
+    const r = this._radius;
+    const d = this._diameter;
+
+    // Rebuild clip mask for new size
+    this.clipMask.clear();
+    this.clipMask.circle(r, r, r - 2);
+    this.clipMask.fill(0xffffff);
+    this.inner.mask = this.clipMask;
+
+    // Reposition expand button
+    this.expandButton.x = r - 11;
+    this.expandButton.y = d - 28;
+  }
+
+  private rebuildExpandButton() {
     const btn = this.expandButton;
+    btn.clear();
     btn.roundRect(0, 0, 22, 22, 4);
     btn.fill({ color: BG_COLOR, alpha: 0.95 });
     btn.roundRect(0, 0, 22, 22, 4);
@@ -71,30 +118,11 @@ export class Minimap {
     btn.stroke({ color: ic, width: 1.5 });
     btn.moveTo(8, 17); btn.lineTo(5, 17); btn.lineTo(5, 14);
     btn.stroke({ color: ic, width: 1.5 });
-    btn.x = MAP_RADIUS - 11;
-    btn.y = MAP_DIAMETER - 30;
     btn.eventMode = "static";
     btn.cursor = "pointer";
     btn.on("pointerdown", () => {
       canvasCallbacks.openMap?.();
     });
-
-    // Fog texture loaded lazily in updateRoom() once Server.Assets GMCP arrives.
-
-    // Inner content group that gets masked
-    const inner = new Container();
-    inner.addChild(this.mapGraphics);
-    inner.addChild(this.nodeContainer);
-    inner.mask = this.clipMask;
-
-    this.container.addChild(this.bg);
-    this.container.addChild(this.clipMask);
-    this.container.addChild(inner);
-    this.container.addChild(this.expandButton);
-  }
-
-  get diameter(): number {
-    return MAP_DIAMETER;
   }
 
   updateRoom(roomId: string | null, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number) {
@@ -151,6 +179,12 @@ export class Minimap {
   }
 
   private redraw() {
+    const R = this._radius;
+    const D = this._diameter;
+    const CELL = this._cell;
+    const NODE_R = this._nodeRadius;
+    const CUR_R = this._currentRadius;
+
     // Clear click areas
     for (const { area } of this.clickAreas) {
       this.container.removeChild(area);
@@ -160,14 +194,11 @@ export class Minimap {
 
     // Draw circular background with decorative border
     this.bg.clear();
-    // Outer glow ring
-    this.bg.circle(MAP_RADIUS, MAP_RADIUS, MAP_RADIUS);
+    this.bg.circle(R, R, R);
     this.bg.stroke({ color: OUTER_GLOW_COLOR, width: 2, alpha: 0.4 });
-    // Main fill
-    this.bg.circle(MAP_RADIUS, MAP_RADIUS, MAP_RADIUS - 1);
+    this.bg.circle(R, R, R - 1);
     this.bg.fill({ color: BG_COLOR, alpha: BG_ALPHA });
-    // Inner accent ring
-    this.bg.circle(MAP_RADIUS, MAP_RADIUS, MAP_RADIUS - 3);
+    this.bg.circle(R, R, R - 3);
     this.bg.stroke({ color: BORDER_COLOR, width: 1, alpha: 0.6 });
 
     this.mapGraphics.clear();
@@ -181,8 +212,8 @@ export class Minimap {
     const current = this.visited.get(this.currentRoomId);
     if (!current) return;
 
-    const cx = MAP_RADIUS;
-    const cy = MAP_RADIUS;
+    const cx = R;
+    const cy = R;
 
     // Draw connecting lines
     for (const node of this.visited.values()) {
@@ -211,11 +242,10 @@ export class Minimap {
       if (!this.inBounds(nx, ny)) continue;
 
       const isCurrent = id === this.currentRoomId;
-      const radius = isCurrent ? CURRENT_RADIUS : NODE_RADIUS;
+      const radius = isCurrent ? CUR_R : NODE_R;
       const visited = node.title !== "";
 
       if (isCurrent) {
-        // Glow ring
         this.mapGraphics.circle(nx, ny, radius + 4);
         this.mapGraphics.stroke({ color: CURRENT_GLOW, width: 2, alpha: 0.5 });
       }
@@ -230,7 +260,6 @@ export class Minimap {
         this.mapGraphics.fill({ color: FOG_COLOR, alpha: 0.5 });
         this.mapGraphics.circle(nx, ny, radius);
         this.mapGraphics.stroke({ color: 0x3a4060, width: 1, alpha: 0.35 });
-        // Show fog-of-war texture for unexplored rooms
         if (this.fogTexture) {
           this.ensureThumb(`__fog__${id}`, null, nx, ny, radius, 0.7, this.fogTexture);
         }
@@ -244,32 +273,30 @@ export class Minimap {
       if (isCurrent) {
         const hasUp = "up" in node.exits;
         const hasDown = "down" in node.exits;
+        const chev = Math.max(4, Math.round(D * 0.035));
         if (hasUp) {
-          this.mapGraphics.moveTo(nx - 5, ny - radius - 6);
-          this.mapGraphics.lineTo(nx, ny - radius - 11);
-          this.mapGraphics.lineTo(nx + 5, ny - radius - 6);
+          this.mapGraphics.moveTo(nx - chev, ny - radius - chev);
+          this.mapGraphics.lineTo(nx, ny - radius - chev * 2);
+          this.mapGraphics.lineTo(nx + chev, ny - radius - chev);
           this.mapGraphics.stroke({ color: CURRENT_GLOW, width: 2, alpha: 0.7 });
         }
         if (hasDown) {
-          this.mapGraphics.moveTo(nx - 5, ny + radius + 6);
-          this.mapGraphics.lineTo(nx, ny + radius + 11);
-          this.mapGraphics.lineTo(nx + 5, ny + radius + 6);
+          this.mapGraphics.moveTo(nx - chev, ny + radius + chev);
+          this.mapGraphics.lineTo(nx, ny + radius + chev * 2);
+          this.mapGraphics.lineTo(nx + chev, ny + radius + chev);
           this.mapGraphics.stroke({ color: CURRENT_GLOW, width: 2, alpha: 0.7 });
         }
       }
     }
 
     // Click areas for navigation — separate pass so they're always on top.
-    // Includes both cardinal and up/down exits from the current room.
     if (current) {
       for (const [dir, targetId] of Object.entries(current.exits)) {
-        // For up/down exits, create a clickable area over the chevron indicator
-        // near the current room. These don't need a target node in the visited map.
         if (!HORIZONTAL_DIRS.has(dir)) {
           const offset = MAP_OFFSETS[dir];
           if (!offset) continue;
-          const indX = cx + offset.dx * (CURRENT_RADIUS + 14);
-          const indY = cy + offset.dy * (CURRENT_RADIUS + 14);
+          const indX = cx + offset.dx * (CUR_R + 14);
+          const indY = cy + offset.dy * (CUR_R + 14);
           const area = new Graphics();
           area.circle(indX, indY, 12);
           area.fill({ color: 0x000000, alpha: 0.001 });
@@ -281,7 +308,6 @@ export class Minimap {
           continue;
         }
 
-        // Cardinal exits — place click area over the target node circle.
         const targetNode = this.visited.get(targetId);
         if (!targetNode) continue;
         const tnx = cx + (targetNode.x - current.x) * CELL;
@@ -289,7 +315,7 @@ export class Minimap {
         if (!this.inBounds(tnx, tny)) continue;
 
         const area = new Graphics();
-        area.circle(tnx, tny, NODE_RADIUS + 3);
+        area.circle(tnx, tny, NODE_R + 3);
         area.fill({ color: 0x000000, alpha: 0.001 });
         area.eventMode = "static";
         area.cursor = "pointer";
@@ -377,10 +403,9 @@ export class Minimap {
   }
 
   private inBounds(x: number, y: number): boolean {
-    // Circle-based bounds check — only show nodes within the map circle
-    const dx = x - MAP_RADIUS;
-    const dy = y - MAP_RADIUS;
-    const maxR = MAP_RADIUS - CURRENT_RADIUS - 6;
+    const dx = x - this._radius;
+    const dy = y - this._radius;
+    const maxR = this._radius - this._currentRadius - 6;
     return dx * dx + dy * dy <= maxR * maxR;
   }
 
