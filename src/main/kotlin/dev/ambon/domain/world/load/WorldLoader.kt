@@ -1122,6 +1122,10 @@ object WorldLoader {
             val queue = ArrayDeque<Pending>()
             queue.addLast(Pending(startId, 0, 0))
 
+            // Process cardinal exits (N/S/E/W) before diagonal (U/D) for better
+            // grid fidelity in zones that use up/down as non-euclidean shortcuts.
+            val cardinalDirs = setOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+
             while (queue.isNotEmpty()) {
                 val (roomId, desiredX, desiredY) = queue.removeFirst()
                 if (coords.containsKey(roomId)) continue
@@ -1131,11 +1135,36 @@ object WorldLoader {
                 occupied[pos] = roomId
 
                 val room = rooms[roomId] ?: continue
-                for ((dir, targetId) in room.exits) {
+                val exits = room.exits.entries.sortedBy { if (it.key in cardinalDirs) 0 else 1 }
+                for ((dir, targetId) in exits) {
                     if (coords.containsKey(targetId)) continue
                     if (targetId !in zoneRoomSet) continue
                     val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
                     queue.addLast(Pending(targetId, pos.first + dx, pos.second + dy))
+                }
+            }
+
+            // Place any rooms not reachable from the start room (e.g., class-start rooms
+            // that are dead-ends with only outgoing exits, never linked as an exit target).
+            for (unreachedId in roomIds) {
+                if (coords.containsKey(unreachedId)) continue
+                val room = rooms[unreachedId] ?: continue
+                // Try to place relative to a neighbor this room exits to
+                var placed = false
+                for ((dir, neighborId) in room.exits) {
+                    val neighborPos = coords[neighborId] ?: continue
+                    val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
+                    // This room is the reverse: if room exits north to neighbor, room is south of neighbor
+                    val desiredPos = findFreePosition(neighborPos.first - dx, neighborPos.second - dy, occupied)
+                    coords[unreachedId] = desiredPos
+                    occupied[desiredPos] = unreachedId
+                    placed = true
+                    break
+                }
+                if (!placed) {
+                    val pos = findFreePosition(0, 0, occupied)
+                    coords[unreachedId] = pos
+                    occupied[pos] = unreachedId
                 }
             }
         }
@@ -1158,13 +1187,21 @@ object WorldLoader {
         val pos = x to y
         if (!occupied.containsKey(pos)) return pos
 
-        for (radius in 1..50) {
+        // Walk the perimeter of expanding squares
+        for (radius in 1..500) {
+            // Top and bottom edges
             for (dx in -radius..radius) {
-                for (dy in -radius..radius) {
-                    if (kotlin.math.abs(dx) != radius && kotlin.math.abs(dy) != radius) continue
-                    val candidate = (x + dx) to (y + dy)
-                    if (!occupied.containsKey(candidate)) return candidate
-                }
+                val top = (x + dx) to (y - radius)
+                if (!occupied.containsKey(top)) return top
+                val bottom = (x + dx) to (y + radius)
+                if (!occupied.containsKey(bottom)) return bottom
+            }
+            // Left and right edges (excluding corners already checked)
+            for (dy in -radius + 1..<radius) {
+                val left = (x - radius) to (y + dy)
+                if (!occupied.containsKey(left)) return left
+                val right = (x + radius) to (y + dy)
+                if (!occupied.containsKey(right)) return right
             }
         }
         return pos
