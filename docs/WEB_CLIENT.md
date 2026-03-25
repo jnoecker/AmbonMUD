@@ -1,6 +1,6 @@
 # Web Client
 
-*Consolidates: WEB_CLIENT_V3.md, V4_GAME_CLIENT.md, WEB_V3_CURRENT_STATE.md, WEB_V3_FRONTEND_STRUCTURE.md, WEB_V3_GAPS_NEXT_STEPS.md*
+*Consolidated from earlier separate web client documents.*
 
 The web client is a modular React + Vite + TypeScript single-page application served by the Ktor backend. It combines a PixiJS 2D canvas (primary game view) with React side panels, connected to the server over WebSocket using a GMCP-over-JSON protocol alongside plain MUD text.
 

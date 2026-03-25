@@ -383,6 +383,29 @@ When running in Claude Code cloud sessions (claude.ai/code), be aware of these c
 - **First build is slow:** The Gradle wrapper downloads the distribution and all dependencies on first run. Subsequent builds use the cached daemon.
 - **Test timeout:** Individual tests timeout after 30 seconds (`junit-platform.properties`). Entire suite times out after 5 minutes (Gradle backstop).
 
+## Design System
+
+AmbonMUD's visual identity is **Surreal Gentle Magic** — cozy fantasy with glass-morphism depth, jewel-toned colors, and ambient magical details. Brand personality: *surreal, magical, adventure*.
+
+- **Design context & principles:** [`.impeccable.md`](.impeccable.md) — users, brand personality, aesthetic direction, 5 design principles
+- **Full design system:** [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) — color tokens, typography, motion, component states, validation checklist
+- **Design tokens (source of truth):** `web-v3/src/styles.css` — all CSS custom properties live here
+- **Creator tool style:** [`docs/ARCANUM_STYLE_GUIDE.md`](docs/ARCANUM_STYLE_GUIDE.md) — separate aesthetic for the Ambon Arcanum
+
+### Web client style changes
+- Edit design tokens in `web-v3/src/styles.css` (single file, ~5K lines)
+- Component styles are in the same file, organized by component class name
+- Canvas rendering (PixiJS scenes, particle effects) is in `web-v3/src/canvas/`
+- Run `bun run build` from `web-v3/` to write assets to `src/main/resources/web-v3/`
+- Validate with `bun run lint` and visual inspection via `./gradlew demo`
+
+### Key design rules
+- Never hardcode colors — always use CSS variables
+- Dark-first (light mode planned but not yet implemented)
+- WCAG AA contrast minimum for all text
+- Respect `prefers-reduced-motion` for all animations
+- Cozy over cool: rounded corners, soft shadows, gentle gradients
+
 ## Known Quirks
 
 - **Compiler warnings in tests:** Several test files produce "No cast needed" warnings (e.g. `InterEngineMessageHandlingTest.kt`, `CrossEngineCommandsTest.kt`). These are harmless and do not affect test results.

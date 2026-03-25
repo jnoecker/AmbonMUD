@@ -1,17 +1,18 @@
 AmbonMUD
 ========
 
-**AmbonMUD** is a production-grade **Kotlin MUD server** with a tick-based event loop, dual transports (telnet + WebSocket), YAML-defined multi-zone worlds, class-based character progression, 56 class-specific spells/abilities, dynamic status effects, real-time combat with NPCs, shops/economy, and three deployment modes (STANDALONE, ENGINE, GATEWAY) for horizontal scaling.
+**AmbonMUD** is a cozy, magical MUD (Multi-User Dungeon) server built in Kotlin — a personal bucket-list project, portfolio showcase, and a game for family. It features a tick-based event loop, dual transports (telnet + WebSocket with a PixiJS canvas client), YAML-defined multi-zone worlds, class-based character progression with 102 abilities, real-time combat, and three deployment modes for horizontal scaling.
 
 **Live demo:** [https://mud.ambon.dev](https://mud.ambon.dev) — or `telnet mud.ambon.dev 4000`
 
 **Key Features**
-- 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **56 abilities** across all classes, distributed across 50 levels
+- 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **102 abilities** across all classes, distributed across 50 levels
 - 🌍 **13 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
 - ⚔️ **Real-time combat system** with attribute-based damage, dodge mechanics, and tactical status effects (DoT, HoT, STUN, ROOT, SHIELD, buffs/debuffs)
+- 🎨 **PixiJS canvas client** with JRPG-style world/battle scenes, spell targeting, customizable quickbar, and a cozy glass-morphism UI
 - 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands
 - 🔌 **Dual transports**: telnet (NAWS/TTYPE/GMCP negotiation) + browser WebSocket with GMCP-aware UI panels
-- 📊 **Structured data** (GMCP) — 25 packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
+- 📊 **Structured data** (GMCP) — 25+ packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
 - 💾 **Flexible persistence**: YAML files by default (zero-dependency), PostgreSQL with optional Redis L2 caching available
 - 🌐 **Three deployment modes**: STANDALONE (single-process), ENGINE (game logic + gRPC), GATEWAY (transports + gRPC) for horizontal scaling
 - 🗺️ **Zone-based sharding** with inter-engine messaging, player handoff, and O(1) cross-engine `tell` routing
@@ -21,10 +22,10 @@ AmbonMUD
 
 **Current State** (Mar 2026)
 - ✅ All 6 scalability phases complete (bus abstraction, async persistence, Redis, gRPC gateway, zone sharding, production AWS infrastructure)
-- ✅ 56 abilities across 4 classes (levels 1–50)
-- ✅ GMCP support with 25 outbound packages (telnet + WebSocket); see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
-- ✅ Quest system (basic implementation; see [roadmap](docs/ROADMAP.md))
-- ✅ Achievement system, group/party system, dialogue trees, NPC behavior trees
+- ✅ 102 abilities across 4 classes (levels 1–50)
+- ✅ PixiJS canvas game client with JRPG-style world/battle scenes
+- ✅ GMCP support with 25+ outbound packages (telnet + WebSocket); see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
+- ✅ Quest system, achievement system, group/party system, dialogue trees, NPC behavior trees
 - ✅ Guild system with hierarchy, guild chat, MOTD
 - ✅ Friends list and in-game mail system
 - ✅ Crafting and gathering system
@@ -34,7 +35,7 @@ AmbonMUD
 
 Screenshots
 -----------
-Current web client (v3):
+Current web client (v4 — PixiJS canvas):
 
 ![AmbonMUD web client v3](docs/screenshots/v3-web-client.jpg)
 
@@ -68,7 +69,7 @@ docker compose up -d
 ./gradlew run -Pconfig.ambonmud.persistence.backend=POSTGRES -Pconfig.ambonmud.redis.enabled=true
 ```
 
-> **Note:** Web client loads xterm.js from CDN. For offline use, prefer telnet.
+> **Note:** The web client is a PixiJS canvas app with React panels. For offline or minimal use, connect via telnet.
 
 ## Configuration & Deployment
 
@@ -115,7 +116,7 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for architectural details and [DEVEL
 See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full command list and details.
 
 **Abilities & Combat**
-- **56 total abilities** distributed across 4 classes (levels 1–50)
+- **102 total abilities** distributed across 4 classes (levels 1–50)
 - **Status effects:** DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD with configurable stacking
 - **Attributes:** STR (melee damage), DEX (dodge), CON (HP regen), INT (spell damage), WIS (mana regen), CHA
 - **Real-time combat** with attribute-based damage scaling, dodge mechanics, and tactical depth
@@ -124,7 +125,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 
 **World files** live in `src/main/resources/world/` and are loaded by `WorldLoader`. Each YAML file describes one zone; multiple zones are merged into a single world.
 
-**Current Zones (12 zones):**
+**Current Zones (13 zones):**
 | Zone | Description |
 |------|-------------|
 | `ambon_hub` | Central hub connecting all zones |
@@ -139,6 +140,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 | `achievements` | Achievement trigger zone |
 | `celestial_sanctum` | High-level zone |
 | `crafting_workshop` | Crafting and gathering zone |
+| `player_sprites` | Player sprite data for the canvas client |
 
 **Zone YAML Format**
 ```yaml
@@ -292,6 +294,14 @@ npx cdk deploy --all --context topology=split --context tier=production \
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full deployment guide (Docker, CDK, CI/CD, operational notes).
 
+## Design
+
+AmbonMUD's visual identity is **Surreal Gentle Magic** — a cozy fantasy aesthetic with glass-morphism depth, jewel-toned colors, and ambient magical details. The brand personality is *surreal, magical, adventure* — evoking the warmth of Stardew Valley with an ever-present magical undertone.
+
+- [`.impeccable.md`](.impeccable.md) — Design context: users, brand personality, aesthetic direction, design principles
+- [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) — Full design system: color tokens, typography, motion, component states
+- [`docs/ARCANUM_STYLE_GUIDE.md`](docs/ARCANUM_STYLE_GUIDE.md) — Ambon Arcanum (creator tool) design system
+
 ## Architecture & Development
 
 **Scalability** has 6 complete phases:
@@ -325,6 +335,7 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full deployment guide (Dock
 - [docs/CREATOR_CONFIG_REFERENCE.md](docs/CREATOR_CONFIG_REFERENCE.md) — All configurable YAML keys for world builders
 
 **Design Systems**
+- [.impeccable.md](.impeccable.md) — Design context, brand personality, design principles
 - [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md) — Surreal Gentle Magic design system (game client)
 - [docs/ARCANUM_STYLE_GUIDE.md](docs/ARCANUM_STYLE_GUIDE.md) — Ambon Arcanum design system (creator tool)
 

@@ -1,9 +1,10 @@
 # AmbonMUD Design System: Surreal Gentle Magic
 
 **Version:** surreal_softmagic_v1
-**Last Updated:** February 26, 2026
+**Last Updated:** March 25, 2026
 **Scope:** Unified aesthetic for UI components, world rendering, and interactive experiences
-**Implementation:** Dark-mode theme implemented in `web-v3/src/styles.css` (design tokens + component styles). Canvas/SVG decorative elements and world rendering are planned (Phase 5 of the roadmap).
+**Implementation:** Dark-mode theme implemented in `web-v3/src/styles.css` (design tokens + component styles). PixiJS canvas scenes (world, battle, particles) are live. Light mode is planned.
+**Design Context:** See [`.impeccable.md`](../.impeccable.md) for brand personality, user audiences, and high-level design principles.
 
 ---
 
@@ -24,11 +25,24 @@
 
 ## 🌿 Core Philosophy
 
+**Brand Personality:** Surreal. Magical. Adventure.
+
+**Emotional goals:** Evoke the feeling of Stardew Valley or Disney Dreamlight Valley — cozy comfort with an ever-present magical undertone. Players should feel safe to explore, curious about what's around the next corner, and delighted by small details.
+
 This style is:
 - ✨ **Enchanted, not explosive** — Magic feels ambient and inevitable, never aggressive
 - 🌫 **Dreamlike, not chaotic** — Softness enables focus and contemplation
 - 🌸 **Softly luminous, never harsh** — Light is a character, not a weapon
 - 🌙 **Otherworldly, but emotionally safe** — Players feel welcomed, not threatened
+
+**Design Principles:**
+1. **Cozy first, cool second.** Rounded corners, soft shadows, gentle gradients. If it feels harsh or intimidating, soften it.
+2. **Magic in the details.** Subtle sparkles, gentle pulses, smooth transitions — ambient, not flashy.
+3. **Readable above all.** WCAG AA contrast minimum for all text; AAA where practical.
+4. **Layered depth, not clutter.** Glass-morphism with breathing room. Let the magical background show through.
+5. **Accessible by nature.** Support `prefers-reduced-motion`, color-blind-safe palettes, keyboard navigation everywhere.
+
+**Anti-references:** Hardcore dark MMO UIs (sharp edges, aggressive reds). Generic Bootstrap/Material admin dashboards. Anything cold, clinical, or intimidating.
 
 **Key Principle:** Nothing feels industrial. Nothing feels sharp unless narratively intentional.
 
@@ -370,71 +384,85 @@ Primary button class: `.soft-button`.
 
 ### Folder Structure
 
-The v3 client is a React + TypeScript + Vite application built with Bun. All design tokens and component styles live in a single CSS file.
+The client is a React + TypeScript + Vite application built with Bun. All design tokens and component styles live in a single CSS file. The PixiJS canvas provides the primary game view.
 
 ```
 web-v3/
 ├── src/
-│   ├── styles.css               # All design tokens + component styles
+│   ├── styles.css               # All design tokens + component styles (~5K lines)
 │   ├── App.tsx                  # Composition root; owns all app state
 │   ├── main.tsx                 # Vite entry point
+│   ├── canvas/                  # PixiJS code
+│   │   ├── GameStateBridge.ts   # Shared ref for React → PixiJS state
+│   │   ├── CanvasEventBus.ts    # Push events (combat hits, gains)
+│   │   ├── PixiCanvas.tsx       # React component wrapping PixiJS Application
+│   │   ├── LoginModal.tsx       # Modal login form
+│   │   ├── SceneManager.ts      # Scene state machine (world ↔ battle)
+│   │   ├── scenes/
+│   │   │   ├── WorldScene.ts    # Room view, player/NPC sprites, exits
+│   │   │   └── BattleScene.ts   # JRPG battle view
+│   │   └── systems/
+│   │       ├── CombatAnimator.ts     # Combat event → sprite animations
+│   │       ├── GainPopup.ts          # Floating XP/gold/level-up numbers
+│   │       ├── StatusEffectDisplay.ts # Buff/debuff icons
+│   │       ├── Minimap.ts            # Canvas-based minimap
+│   │       ├── DialogueOverlay.ts    # NPC dialogue on canvas
+│   │       └── EntityPopout.ts       # Click-to-interact on sprites
 │   ├── components/
 │   │   ├── panels/
-│   │   │   ├── PlayPanel.tsx    # Terminal + input bar
+│   │   │   ├── PlayPanel.tsx    # Canvas + input bar
 │   │   │   ├── WorldPanel.tsx   # Room info, mobs, skills combat panel
 │   │   │   ├── ChatPanel.tsx    # Social channels, who list
 │   │   │   └── CharacterPanel.tsx # Stats, inventory, equipment
 │   │   ├── PopoutLayer.tsx      # Floating overlay panels
-│   │   ├── MobileTabBar.tsx     # Mobile tab navigation
-│   │   ├── Icons.tsx            # Shared SVG icons
-│   │   └── isDirection.ts       # Direction type helper
+│   │   ├── SpellbookPanel.tsx   # Ability grid with target type filtering
+│   │   └── ...
 │   ├── hooks/
 │   │   ├── useMudSocket.ts      # WebSocket lifecycle
 │   │   ├── useCommandHistory.ts # Command history & tab completion
-│   │   └── useMiniMap.ts        # Visited-room graph & canvas rendering
+│   │   ├── useMiniMap.ts        # Visited-room graph
+│   │   └── useQuickbar.ts       # 9-slot quickbar (localStorage persisted)
 │   └── gmcp/
 │       └── applyGmcpPackage.ts  # GMCP package handler map
 └── bun.lock                     # Dependency lockfile (Bun)
 ```
 
-Canvas-based decorative elements (particle effects, glow auras, light threads, world renderer) are planned for Phase 5.
-
 ### Component Checklist
 
-**Phase 1: Foundations (CSS Design System)**
-- [ ] Design tokens CSS file
-- [ ] Reset/normalization
-- [ ] Typography hierarchy
-- [ ] Spacing scale
-- [ ] Animations & easing
+**Phase 1: Foundations (CSS Design System)** ✅
+- [x] Design tokens CSS file
+- [x] Reset/normalization
+- [x] Typography hierarchy
+- [x] Spacing scale
+- [x] Animations & easing
 
-**Phase 2: Core Components**
-- [ ] Button (all states)
-- [ ] Text input
-- [ ] Select dropdown
-- [ ] Checkbox / toggle
-- [ ] Panel / card
+**Phase 2: Core Components** ✅
+- [x] Button (all states — `.soft-button`, `.chip-button`, `.panel-action-button`, `.action-bar-btn`)
+- [x] Text input (command input, chat input, login form)
+- [x] Select dropdown (race/class pickers in login)
+- [x] Checkbox / toggle
+- [x] Panel / card (`.panel` base class with header/body structure)
 
-**Phase 3: Layout Components**
-- [ ] Sidebar
-- [ ] Modal
-- [ ] Tabs
+**Phase 3: Layout Components** ✅
+- [x] Sidebar (WorldPanel, ChatPanel, CharacterPanel)
+- [x] Modal (LoginModal, popout panels)
+- [x] Tabs (chat channel tabs, character detail tabs, social tabs)
 - [ ] Breadcrumb
-- [ ] Status bar
+- [x] Status bar (action bar with HP/MP/XP vitals)
 
-**Phase 4: Indicators & Feedback**
-- [ ] Badge
-- [ ] Progress bar
-- [ ] Spinner/loader
-- [ ] Toast notification
+**Phase 4: Indicators & Feedback** ✅
+- [x] Badge (quest markers, shop icons on NPC sprites)
+- [x] Progress bar (HP, Mana, XP, ability cooldowns)
+- [x] Spinner/loader (reconnect pulse)
+- [x] Toast notification (4s lifecycle animation)
 - [ ] Tooltip
 
-**Phase 5: Decorative & Canvas**
-- [ ] Particle effect system (floating motes)
-- [ ] Glow aura halos
+**Phase 5: Decorative & Canvas** ✅ (Largely complete)
+- [x] Particle effect system (compass sparkles, gain popups)
+- [x] Glow aura halos (ability sprites, compass markers)
 - [ ] Light thread connections
-- [ ] Ambient animation layer
-- [ ] World renderer integration
+- [x] Ambient animation layer (background orbs, rune pulses)
+- [x] World renderer integration (PixiJS WorldScene + BattleScene)
 
 ---
 
@@ -490,59 +518,43 @@ Canvas-based decorative elements (particle effects, glow auras, light threads, w
 
 ## 🗺 Implementation Roadmap
 
-### Phase 1: Design System Foundation ✅ Complete
-**Goal:** Establish CSS tokens and component library structure
-
+### Phase 1: Design System Foundation ✅
 - [x] Design tokens, spacing, shadows, easing — all in `web-v3/src/styles.css`
-- [x] Easing functions and @keyframes (`drift` animation) in `styles.css`
-- [x] Component folder structure set up under `web-v3/src/`
-- [x] Documented in `STYLE_GUIDE.md` (this file)
+- [x] Easing functions and @keyframes in `styles.css`
+- [x] Component folder structure under `web-v3/src/`
+- [x] Documented in `STYLE_GUIDE.md` (this file) and `.impeccable.md`
 - [ ] Visual regression test templates
 
-**Deliverable:** Usable CSS foundation ✅
-
 ### Phase 2: Admin Console Redesign
-**Goal:** Retrofit admin dashboard to Surreal Gentle Magic aesthetic
+- [ ] Audit current admin UI (served by `AdminHttpServer.kt`)
+- [ ] Redesign using design tokens
+- [ ] Add hover/active/focus states
+- [ ] Integrate ambient animations
 
-- [ ] Audit current admin UI components (served by `AdminHttpServer.kt`)
-- [ ] Redesign panels, buttons, inputs using design tokens
-- [ ] Add hover/active/focus states to all interactive elements
-- [ ] Integrate ambient animations (background particle drift)
-- [ ] Test on desktop (1920x1080, 1440x900)
+### Phase 3: Web Client ✅
+- [x] All React panels built (Play, World, Chat, Character, Admin)
+- [x] Ambient orbs and background radial gradients
+- [x] Dark-mode Surreal Gentle Magic theme throughout
+- [x] Responsive layout (desktop + mobile)
+- [x] Spellbook panel with ability sprites and target filtering
+- [x] Customizable 9-slot quickbar with drag-and-drop
 
-**Deliverable:** Functional admin console with full style compliance
+### Phase 4: PixiJS Canvas Game View ✅
+- [x] WorldScene with room rendering, player/NPC sprites, exit indicators
+- [x] BattleScene with JRPG-style combat animations
+- [x] Combat event animation queue (damage numbers, spell effects)
+- [x] Compass direction indicators with sparkle particles
+- [x] Minimap with server-side coordinate system
+- [x] Click-to-interact on sprites (EntityPopout)
+- [x] Spell targeting system (auto-target, targeting mode, Escape cancel)
+- [x] Login modal with race/class selection
 
-### Phase 3: Web Client ✅ Largely Complete
-**Goal:** Player-facing web client with immersive aesthetic
-
-- [x] Chat, inventory, spell bar, character sheet panels built
-- [x] Ambient orbs and background radial gradients implemented
-- [x] Dark-mode Surreal Gentle Magic theme applied throughout
-- [x] Tested on desktop + mobile (responsive layout)
-- [ ] Canvas-based world-space rendering (ambient motes, glows) — see Phase 5
-- [ ] Decorative elements (light threads, halos) — see Phase 5
-
-**Deliverable:** Full player-facing client ✅ (canvas decorative elements planned)
-
-### Phase 4: World Rendering Integration (Weeks 9–10)
-**Goal:** Apply style to in-game room/mob/item visuals
-
-- [ ] Extend world-space canvas renderer
-- [ ] Integrate ambient particle system
-- [ ] Apply lighting rules to mob/NPC renders
-- [ ] Test room descriptions with Canvas backdrop
-
-**Deliverable:** Cohesive world rendering experience
-
-### Phase 5: Iteration & Polish (Week 11+)
-**Goal:** Refine based on user feedback
-
-- [ ] Collect player feedback on new aesthetic
+### Phase 5: Light Mode & Polish
+- [ ] Light mode theme (preserve magical warmth — don't just invert)
+- [ ] Collect player feedback on aesthetic
 - [ ] Refine easing/animation timings
 - [ ] Create style variants (e.g., `surreal_softmagic_night_v1`)
-- [ ] Performance optimization
-
-**Deliverable:** Production-ready design system
+- [ ] Performance optimization (lazy-loading, bundle splitting)
 
 ---
 
@@ -633,5 +645,5 @@ When creating new variants, document the differences from v1 and update this sec
 
 ---
 
-**Last Updated:** February 26, 2026
-**Next Review:** April 30, 2026
+**Last Updated:** March 25, 2026
+**Next Review:** June 30, 2026
