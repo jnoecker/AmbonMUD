@@ -33,6 +33,7 @@ export interface GameStateSnapshot {
 export interface PendingCast {
   skillId: string;
   skillName: string;
+  cooldownMs: number;
   targetType: string;
 }
 
