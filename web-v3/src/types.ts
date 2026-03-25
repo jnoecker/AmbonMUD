@@ -222,6 +222,7 @@ export interface SkillSummary {
   cooldownRemainingMs: number;
   levelRequired: number;
   targetType: string;
+  effectType: string;
   classRestriction: string | null;
   image: string | null;
   receivedAt: number;

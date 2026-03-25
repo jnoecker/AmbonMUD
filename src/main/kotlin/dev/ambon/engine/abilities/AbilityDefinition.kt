@@ -32,6 +32,14 @@ sealed interface AbilityEffect {
     ) : AbilityEffect
 }
 
+fun AbilityEffect.toEffectType(): String = when (this) {
+    is AbilityEffect.DirectDamage -> "DIRECT_DAMAGE"
+    is AbilityEffect.DirectHeal -> "DIRECT_HEAL"
+    is AbilityEffect.ApplyStatus -> "APPLY_STATUS"
+    is AbilityEffect.AreaDamage -> "AREA_DAMAGE"
+    is AbilityEffect.Taunt -> "TAUNT"
+}
+
 data class AbilityDefinition(
     val id: AbilityId,
     val displayName: String,

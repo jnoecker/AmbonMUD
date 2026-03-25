@@ -4183,8 +4183,14 @@ body {
 
 .action-bar-skill:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgb(168 151 210 / 25%);
 }
+
+.action-bar-skill:hover:not(:disabled).skill-attack { box-shadow: 0 2px 10px rgb(192 64 80 / 40%); }
+.action-bar-skill:hover:not(:disabled).skill-aoe { box-shadow: 0 2px 10px rgb(192 112 48 / 40%); }
+.action-bar-skill:hover:not(:disabled).skill-debuff { box-shadow: 0 2px 10px rgb(152 96 192 / 40%); }
+.action-bar-skill:hover:not(:disabled).skill-heal { box-shadow: 0 2px 10px rgb(64 160 96 / 40%); }
+.action-bar-skill:hover:not(:disabled).skill-buff { box-shadow: 0 2px 10px rgb(48 144 160 / 40%); }
+.action-bar-skill:hover:not(:disabled).skill-self { box-shadow: 0 2px 10px rgb(80 112 192 / 40%); }
 
 .action-bar-skill:active:not(:disabled) {
   transform: scale(0.96);
@@ -4200,6 +4206,38 @@ body {
 .action-bar-skill.drag-over {
   box-shadow: 0 0 8px 2px rgb(212 106 138 / 50%);
   border-color: rgb(212 106 138 / 60%);
+}
+
+/* ── Skill category border glows ─────────────────────────────── */
+
+.skill-attack {
+  border-color: rgb(192 64 80 / 60%);
+  box-shadow: inset 0 0 6px rgb(192 64 80 / 25%), 0 0 4px rgb(192 64 80 / 20%);
+}
+
+.skill-aoe {
+  border-color: rgb(192 112 48 / 60%);
+  box-shadow: inset 0 0 6px rgb(192 112 48 / 25%), 0 0 4px rgb(192 112 48 / 20%);
+}
+
+.skill-debuff {
+  border-color: rgb(152 96 192 / 60%);
+  box-shadow: inset 0 0 6px rgb(152 96 192 / 25%), 0 0 4px rgb(152 96 192 / 20%);
+}
+
+.skill-heal {
+  border-color: rgb(64 160 96 / 60%);
+  box-shadow: inset 0 0 6px rgb(64 160 96 / 25%), 0 0 4px rgb(64 160 96 / 20%);
+}
+
+.skill-buff {
+  border-color: rgb(48 144 160 / 60%);
+  box-shadow: inset 0 0 6px rgb(48 144 160 / 25%), 0 0 4px rgb(48 144 160 / 20%);
+}
+
+.skill-self {
+  border-color: rgb(80 112 192 / 60%);
+  box-shadow: inset 0 0 6px rgb(80 112 192 / 25%), 0 0 4px rgb(80 112 192 / 20%);
 }
 
 .action-bar-skill-cooldown {
