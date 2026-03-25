@@ -359,7 +359,7 @@ export class WorldScene {
     // Minimap in bottom-right — smaller on mobile
     const mapDiam = w < 500 ? MINIMAP_MOBILE : MINIMAP_DESKTOP;
     this.minimap.setDiameter(mapDiam);
-    this.minimap.layout(w - mapDiam - MINIMAP_MARGIN, h - mapDiam - MINIMAP_MARGIN);
+    this.minimap.layout(w - mapDiam - MINIMAP_MARGIN, h - this.minimap.totalHeight - MINIMAP_MARGIN);
 
     // Room title and description in top-left (full width now that minimap moved)
     const textLeft = 16;
