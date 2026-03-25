@@ -120,6 +120,8 @@ export class WorldScene {
 
   private targetingText: Text | null = null;
   private targetingBg = new Graphics();
+  private targetingAnimTime = 0;
+  private targetingActive = false;
 
   private videoBtn: Sprite | null = null;
   private videoAnimTime = 0;
@@ -364,6 +366,7 @@ export class WorldScene {
     }
 
     this.layoutAll();
+    this.updateTargetingOverlay(deltaMs);
   }
 
   private layoutAll() {
@@ -601,13 +604,16 @@ export class WorldScene {
     this.pruneIcons(this.questAvailableIcons, activeQuestAvail);
     this.pruneIcons(this.questCompleteIcons, activeQuestComplete);
 
-    // Targeting mode overlay
-    this.updateTargetingOverlay();
+    // Targeting mode overlay (visual-only, positioned here but animated in update())
+    this.updateTargetingOverlay(0);
   }
 
-  private updateTargetingOverlay() {
+  private updateTargetingOverlay(deltaMs: number) {
     const pending = pendingCastRef.current;
     if (pending) {
+      this.targetingAnimTime += deltaMs / 1000;
+      const pulse = 0.6 + 0.4 * Math.sin(this.targetingAnimTime * 4.0);
+
       if (!this.targetingText) {
         this.targetingText = new Text({
           text: "",
@@ -636,10 +642,40 @@ export class WorldScene {
       this.targetingBg.stroke({ color: 0xd46a8a, width: 1, alpha: 0.6 });
       this.targetingBg.visible = true;
       this.targetingText.visible = true;
+
+      // Pulse targetable entities
+      const isEnemy = pending.targetType === "ENEMY";
+      const isAlly = pending.targetType === "ALLY";
+      for (const { sprite, hitArea } of this.mobSprites.values()) {
+        if (isEnemy) {
+          sprite.alpha = pulse;
+          hitArea.cursor = "crosshair";
+        }
+      }
+      for (const { sprite, hitArea } of this.playerSprites.values()) {
+        if (isAlly) {
+          sprite.alpha = pulse;
+          hitArea.cursor = "crosshair";
+        }
+      }
+      this.targetingActive = true;
     } else {
       if (this.targetingText) {
         this.targetingText.visible = false;
         this.targetingBg.visible = false;
+      }
+      // Restore entity visuals when targeting ends
+      if (this.targetingActive) {
+        this.targetingActive = false;
+        this.targetingAnimTime = 0;
+        for (const { sprite, hitArea } of this.mobSprites.values()) {
+          sprite.alpha = 1;
+          hitArea.cursor = "pointer";
+        }
+        for (const { sprite, hitArea } of this.playerSprites.values()) {
+          sprite.alpha = 1;
+          hitArea.cursor = "pointer";
+        }
       }
     }
   }
