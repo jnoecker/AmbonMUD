@@ -13,6 +13,7 @@ import dev.ambon.domain.world.Room
 import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.abilities.AbilityId
 import dev.ambon.engine.abilities.AbilitySystem
+import dev.ambon.engine.abilities.toEffectType
 import dev.ambon.engine.events.CombatEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -251,6 +252,7 @@ class GmcpEmitter(
                     cooldownRemainingMs = cooldownRemainingMs(a.id).coerceAtLeast(0L),
                     levelRequired = a.levelRequired,
                     targetType = a.targetType,
+                    effectType = a.effect.toEffectType(),
                     classRestriction = a.requiredClass,
                     image = a.image,
                 )
@@ -960,6 +962,7 @@ class GmcpEmitter(
         val cooldownRemainingMs: Long,
         val levelRequired: Int,
         val targetType: String,
+        val effectType: String,
         val classRestriction: String?,
         val image: String? = null,
     )
