@@ -63,6 +63,8 @@ function drawRoleIcons(g: Graphics, cx: number, cy: number, info: MobInfo, sprit
 
 export class WorldScene {
   readonly container = new Container();
+  /** Overlay container for effects that must stay visible while container.alpha is modified (e.g. room transitions). */
+  readonly overlayContainer = new Container();
 
   private background: Sprite | null = null;
   private titleText: Text;
@@ -234,7 +236,9 @@ export class WorldScene {
     this.container.addChild(this.compassContainer);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
-    this.container.addChild(this.roomTransition.graphics);
+    // Transition graphics live in the overlay so they stay visible while
+    // container.alpha fades to 0 during the dissolve phase.
+    this.overlayContainer.addChild(this.roomTransition.graphics);
   }
 
   resize(width: number, height: number) {
@@ -1252,5 +1256,6 @@ export class WorldScene {
     this.minimap.destroy();
     this.entityPopout.destroy();
     this.container.destroy({ children: true });
+    this.overlayContainer.destroy({ children: true });
   }
 }

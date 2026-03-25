@@ -104,9 +104,6 @@ export class SpellProjectileSystem {
     const style = STYLES[event.type];
     if (!style) return false;
 
-    // Only spawn for ability events, not melee
-    if (event.type === "meleeHit") return false;
-
     let sx: number;
     let sy: number;
     let ex: number;

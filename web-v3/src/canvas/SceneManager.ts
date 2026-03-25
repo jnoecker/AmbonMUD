@@ -22,6 +22,7 @@ export class SceneManager {
     this.dialogueOverlay = new DialogueOverlay();
 
     this.app.stage.addChild(this.worldScene.container);
+    this.app.stage.addChild(this.worldScene.overlayContainer);
     this.battleScene.container.visible = false;
     this.app.stage.addChild(this.battleScene.container);
     // Dialogue overlay renders on top of both scenes
@@ -75,11 +76,13 @@ export class SceneManager {
 
     if (scene === "battle") {
       this.worldScene.container.visible = false;
+      this.worldScene.overlayContainer.visible = false;
       this.battleScene.container.visible = true;
       this.battleScene.enter();
     } else {
       this.battleScene.container.visible = false;
       this.worldScene.container.visible = true;
+      this.worldScene.overlayContainer.visible = true;
     }
 
     this.currentScene = scene;

@@ -106,7 +106,8 @@ export class RoomTransition {
       if (this.elapsed < DISSOLVE_DURATION_MS) {
         this._sceneAlpha = 1 - this.elapsed / DISSOLVE_DURATION_MS;
       } else {
-        this._sceneAlpha = (this.elapsed - DISSOLVE_DURATION_MS) / REFORM_DURATION_MS;
+        const rt = Math.min(1, (this.elapsed - DISSOLVE_DURATION_MS) / REFORM_DURATION_MS);
+        this._sceneAlpha = rt;
       }
       if (this.elapsed >= TOTAL_DURATION_MS) {
         this.active = false;
@@ -123,7 +124,7 @@ export class RoomTransition {
     }
     // Reform phase: scene fades back in, motes dissolve
     else {
-      const rt = (this.elapsed - DISSOLVE_DURATION_MS) / REFORM_DURATION_MS;
+      const rt = Math.min(1, (this.elapsed - DISSOLVE_DURATION_MS) / REFORM_DURATION_MS);
       // Smooth ease-out
       const eased = 1 - (1 - rt) * (1 - rt);
       this._sceneAlpha = eased;
