@@ -36,6 +36,7 @@ export class Minimap {
   private inner = new Container();
   private visited = new Map<string, MapNode>();
   private currentRoomId: string | null = null;
+  private currentZone: string | null = null;
   private lastKey = "";
 
   // Current sizing — updated via setDiameter()
@@ -190,6 +191,14 @@ export class Minimap {
     if (key === this.lastKey) return;
     this.lastKey = key;
 
+    // Reset visited map when entering a new zone — each zone has its own
+    // coordinate system, so cross-zone data would render at wrong positions.
+    const zone = roomId.split(":")[0];
+    if (this.currentZone && zone !== this.currentZone) {
+      this.visited.clear();
+      this.clearThumbs();
+    }
+    this.currentZone = zone;
     this.currentRoomId = roomId;
 
     if (!this.visited.has(roomId)) {
@@ -220,6 +229,7 @@ export class Minimap {
   reset() {
     this.visited.clear();
     this.currentRoomId = null;
+    this.currentZone = null;
     this.lastKey = "";
     this.clearThumbs();
     this.redraw();
@@ -266,18 +276,23 @@ export class Minimap {
     const cx = R;
     const cy = R;
 
-    // Draw connecting lines — only from rooms the current room connects to
-    // (and their immediate neighbors) to avoid showing misleading connections
-    // from unrelated rooms that happen to be nearby on the coordinate grid.
-    const connectedIds = new Set<string>(Object.values(current.exits));
+    // Draw connecting lines — only horizontal neighbors (and their neighbors)
+    // to avoid showing misleading connections from unrelated rooms or up/down
+    // rooms that would create zigzag patterns on the 2D map.
+    const connectedIds = new Set<string>();
     connectedIds.add(this.currentRoomId!);
-    // Also include one hop out from direct neighbors so the local graph is visible
-    for (const neighborId of Object.values(current.exits)) {
+    for (const [dir, targetId] of Object.entries(current.exits)) {
+      if (!HORIZONTAL_DIRS.has(dir)) continue;
+      connectedIds.add(targetId);
+    }
+    // One more hop out so the local graph is visible
+    for (const [dir, neighborId] of Object.entries(current.exits)) {
+      if (!HORIZONTAL_DIRS.has(dir)) continue;
       const neighbor = this.visited.get(neighborId);
-      if (neighbor) {
-        for (const nextId of Object.values(neighbor.exits)) {
-          connectedIds.add(nextId);
-        }
+      if (!neighbor) continue;
+      for (const [ndir, nextId] of Object.entries(neighbor.exits)) {
+        if (!HORIZONTAL_DIRS.has(ndir)) continue;
+        connectedIds.add(nextId);
       }
     }
 
