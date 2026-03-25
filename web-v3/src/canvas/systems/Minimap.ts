@@ -292,52 +292,69 @@ export class Minimap {
     const cx = R;
     const cy = R;
 
-    // Draw connecting lines — only horizontal neighbors (and their neighbors)
-    // to avoid showing misleading connections from unrelated rooms or up/down
-    // rooms that would create zigzag patterns on the 2D map.
-    const connectedIds = new Set<string>();
-    connectedIds.add(this.currentRoomId!);
+    // Build a local position map using exit directions so neighbors always
+    // appear at cardinal offsets regardless of BFS-computed absolute coords.
+    // This prevents collision-displaced rooms from showing at diagonal positions.
+    const localPos = new Map<string, { lx: number; ly: number }>();
+    localPos.set(this.currentRoomId!, { lx: 0, ly: 0 });
+
+    // First hop: immediate neighbors at cardinal offsets
     for (const [dir, targetId] of Object.entries(current.exits)) {
       if (!HORIZONTAL_DIRS.has(dir)) continue;
-      connectedIds.add(targetId);
+      const off = MAP_OFFSETS[dir];
+      if (!off) continue;
+      localPos.set(targetId, { lx: off.dx, ly: off.dy });
     }
-    // One more hop out so the local graph is visible
+    // Second hop: neighbors of neighbors
     for (const [dir, neighborId] of Object.entries(current.exits)) {
       if (!HORIZONTAL_DIRS.has(dir)) continue;
       const neighbor = this.visited.get(neighborId);
       if (!neighbor) continue;
+      const nPos = localPos.get(neighborId)!;
       for (const [ndir, nextId] of Object.entries(neighbor.exits)) {
         if (!HORIZONTAL_DIRS.has(ndir)) continue;
-        connectedIds.add(nextId);
+        if (localPos.has(nextId)) continue;
+        const nOff = MAP_OFFSETS[ndir];
+        if (!nOff) continue;
+        localPos.set(nextId, { lx: nPos.lx + nOff.dx, ly: nPos.ly + nOff.dy });
       }
     }
 
-    for (const [id, node] of this.visited.entries()) {
-      if (!connectedIds.has(id)) continue;
-      const sx = cx + (node.x - current.x) * CELL;
-      const sy = cy + (node.y - current.y) * CELL;
+    // Helper to get pixel position for a room
+    const posOf = (id: string): { px: number; py: number } | null => {
+      const lp = localPos.get(id);
+      if (!lp) return null;
+      return { px: cx + lp.lx * CELL, py: cy + lp.ly * CELL };
+    };
+
+    // Draw connecting lines
+    for (const [id] of localPos) {
+      const node = this.visited.get(id);
+      if (!node) continue;
+      const sp = posOf(id);
+      if (!sp) continue;
 
       for (const [dir, targetId] of Object.entries(node.exits)) {
         if (!HORIZONTAL_DIRS.has(dir)) continue;
-        if (!connectedIds.has(targetId)) continue;
-        const target = this.visited.get(targetId);
-        if (!target) continue;
-        const tx = cx + (target.x - current.x) * CELL;
-        const ty = cy + (target.y - current.y) * CELL;
+        const tp = posOf(targetId);
+        if (!tp) continue;
 
-        if (this.inBounds(sx, sy) || this.inBounds(tx, ty)) {
-          this.mapGraphics.moveTo(sx, sy);
-          this.mapGraphics.lineTo(tx, ty);
+        if (this.inBounds(sp.px, sp.py) || this.inBounds(tp.px, tp.py)) {
+          this.mapGraphics.moveTo(sp.px, sp.py);
+          this.mapGraphics.lineTo(tp.px, tp.py);
           this.mapGraphics.stroke({ color: LINE_COLOR, width: 2, alpha: 0.65 });
         }
       }
     }
 
-    // Draw nodes — only rooms reachable within the local neighborhood
-    for (const [id, node] of this.visited.entries()) {
-      if (!connectedIds.has(id)) continue;
-      const nx = cx + (node.x - current.x) * CELL;
-      const ny = cy + (node.y - current.y) * CELL;
+    // Draw nodes — only rooms in the local neighborhood
+    for (const [id] of localPos) {
+      const node = this.visited.get(id);
+      if (!node) continue;
+      const p = posOf(id);
+      if (!p) continue;
+      const nx = p.px;
+      const ny = p.py;
 
       if (!this.inBounds(nx, ny)) continue;
 
@@ -380,10 +397,10 @@ export class Minimap {
         // Up/down handled by the floor buttons outside the circle
         if (!HORIZONTAL_DIRS.has(dir)) continue;
 
-        const targetNode = this.visited.get(targetId);
-        if (!targetNode) continue;
-        const tnx = cx + (targetNode.x - current.x) * CELL;
-        const tny = cy + (targetNode.y - current.y) * CELL;
+        const tp = posOf(targetId);
+        if (!tp) continue;
+        const tnx = tp.px;
+        const tny = tp.py;
         if (!this.inBounds(tnx, tny)) continue;
 
         const area = new Graphics();
