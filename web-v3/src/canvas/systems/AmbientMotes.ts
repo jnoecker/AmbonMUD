@@ -209,6 +209,7 @@ export class AmbientMotes {
 
   clear() {
     this.motes.length = 0;
+    this.spawnAccum = 0;
     this.graphics.clear();
   }
 }
