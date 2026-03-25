@@ -732,7 +732,7 @@ function App() {
       }
       // If it needs a target but we don't have one, enter targeting mode
       if (needsTarget) {
-        pendingCastRef.current = { skillId, skillName: skill.name, targetType: skill.targetType };
+        pendingCastRef.current = { skillId, skillName: skill.name, cooldownMs, targetType: skill.targetType };
         setToast(`Select a target for ${skill.name}`);
         return;
       }
@@ -747,7 +747,7 @@ function App() {
       const pending = pendingCastRef.current;
       if (!pending) return;
       setToast(null);
-      completeCast(pending.skillId, 0, targetName);
+      completeCast(pending.skillId, pending.cooldownMs, targetName);
     };
     return () => { canvasCallbacks.onTargetSelected = null; };
   }, [completeCast]);
