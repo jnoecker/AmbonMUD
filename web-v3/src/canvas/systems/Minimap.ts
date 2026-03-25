@@ -102,7 +102,7 @@ export class Minimap {
       this.loadFogTexture();
     }
 
-    const key = `${roomId}:${JSON.stringify(exits)}:${image ?? ""}`;
+    const key = `${roomId}:${mapX},${mapY}:${JSON.stringify(exits)}:${image ?? ""}`;
     if (key === this.lastKey) return;
     this.lastKey = key;
 
