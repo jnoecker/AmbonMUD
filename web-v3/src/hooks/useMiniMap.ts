@@ -71,9 +71,6 @@ function renderMap(
   const current = visited.get(currentId);
   if (!current) return;
 
-  const centerX = width / 2;
-  const centerY = height / 2;
-
   // Scroll parchment bounds — nodes must stay within these
   const scrollLeft = width * SCROLL_INSET_LEFT;
   const scrollRight = width * (1 - SCROLL_INSET_RIGHT);
@@ -82,6 +79,30 @@ function renderMap(
 
   // Pad inward by the largest node radius so nodes don't overlap the scroll edge
   const nodePad = CURRENT_RADIUS + 6;
+
+  // Compute bounding box of all rooms in the zone to auto-fit
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const node of visited.values()) {
+    if (node.x < minX) minX = node.x;
+    if (node.x > maxX) maxX = node.x;
+    if (node.y < minY) minY = node.y;
+    if (node.y > maxY) maxY = node.y;
+  }
+  const spanX = maxX - minX;
+  const spanY = maxY - minY;
+  const availW = (scrollRight - scrollLeft) - nodePad * 2;
+  const availH = (scrollBottom - scrollTop) - nodePad * 2;
+  // Scale to fit the entire zone, but don't exceed the default CELL size
+  const cell = Math.min(CELL, spanX > 0 ? availW / spanX : CELL, spanY > 0 ? availH / spanY : CELL);
+  // Center the zone bounding-box midpoint in the scroll area
+  const zoneMidX = (minX + maxX) / 2;
+  const zoneMidY = (minY + maxY) / 2;
+  const originX = (scrollLeft + scrollRight) / 2;
+  const originY = (scrollTop + scrollBottom) / 2;
+
+  function nodeX(n: MapRoom): number { return originX + (n.x - zoneMidX) * cell; }
+  function nodeY(n: MapRoom): number { return originY + (n.y - zoneMidY) * cell; }
+
   function inScrollBounds(px: number, py: number): boolean {
     return px >= scrollLeft + nodePad && px <= scrollRight - nodePad &&
            py >= scrollTop + nodePad && py <= scrollBottom - nodePad;
@@ -97,14 +118,14 @@ function renderMap(
   ctx.strokeStyle = LINE_STROKE;
   ctx.lineWidth = 2;
   for (const node of visited.values()) {
-    const sx = centerX + (node.x - current.x) * CELL;
-    const sy = centerY + (node.y - current.y) * CELL;
+    const sx = nodeX(node);
+    const sy = nodeY(node);
     for (const [dir, targetId] of Object.entries(node.exits)) {
       if (dir === "up" || dir === "down") continue;
       const target = visited.get(targetId);
       if (!target) continue;
-      const tx = centerX + (target.x - current.x) * CELL;
-      const ty = centerY + (target.y - current.y) * CELL;
+      const tx = nodeX(target);
+      const ty = nodeY(target);
       if (inScrollBounds(sx, sy) || inScrollBounds(tx, ty)) {
         ctx.beginPath();
         ctx.moveTo(sx, sy);
@@ -116,8 +137,8 @@ function renderMap(
 
   // Nodes
   for (const [id, node] of visited.entries()) {
-    const x = centerX + (node.x - current.x) * CELL;
-    const y = centerY + (node.y - current.y) * CELL;
+    const x = nodeX(node);
+    const y = nodeY(node);
     if (!inScrollBounds(x, y)) continue;
 
     const isCurrent = id === currentId;
