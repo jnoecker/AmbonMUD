@@ -63,6 +63,7 @@ interface GmcpContext {
   setShop: Dispatch<SetStateAction<ShopState | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
   updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number) => void;
+  loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void;
   pushCombatEvent: (event: CombatEventData) => void;
   setCharStats: Dispatch<SetStateAction<CharStats | null>>;
   setQuests: Dispatch<SetStateAction<QuestEntry[]>>;
@@ -176,6 +177,25 @@ export function applyGmcpPackage(
         const title = typeof packet.title === "string" && packet.title.length > 0 ? packet.title : "";
         const image = typeof packet.image === "string" ? packet.image : null;
         ctx.updateMap(id, exits, title, image, mapX, mapY);
+      }
+      break;
+    }
+
+    case "Zone.Map": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const zone = typeof packet.zone === "string" ? packet.zone : "";
+      const rooms = Array.isArray(packet.rooms)
+        ? packet.rooms
+            .filter((r): r is Record<string, unknown> => typeof r === "object" && r !== null)
+            .map((r) => ({
+              id: typeof r.id === "string" ? r.id : "",
+              x: typeof r.x === "number" ? r.x : 0,
+              y: typeof r.y === "number" ? r.y : 0,
+              exits: r.exits && typeof r.exits === "object" ? (r.exits as Record<string, string>) : {},
+            }))
+        : [];
+      if (zone && rooms.length > 0) {
+        ctx.loadZoneMap(zone, rooms);
       }
       break;
     }
