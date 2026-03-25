@@ -55,8 +55,13 @@ export class Minimap {
   // Click navigation
   private clickAreas: Array<{ roomId: string; area: Graphics }> = [];
 
+  // Up/down floor buttons (drawn outside the circle)
+  private upButton = new Graphics();
+  private downButton = new Graphics();
+
   constructor() {
     this.rebuildExpandButton();
+    this.buildFloorButtons();
 
     // Inner content group that gets masked
     this.inner.addChild(this.mapGraphics);
@@ -66,12 +71,19 @@ export class Minimap {
     this.container.addChild(this.clipMask);
     this.container.addChild(this.inner);
     this.container.addChild(this.expandButton);
+    this.container.addChild(this.upButton);
+    this.container.addChild(this.downButton);
 
     this.applyDiameter();
   }
 
   get diameter(): number {
     return this._diameter;
+  }
+
+  /** Total height including the expand button below the circle. */
+  get totalHeight(): number {
+    return this._diameter + 26;
   }
 
   /** Resize the minimap. Recalculates proportional node/cell sizes. */
@@ -97,9 +109,16 @@ export class Minimap {
     this.clipMask.fill(0xffffff);
     this.inner.mask = this.clipMask;
 
-    // Reposition expand button
+    // Expand button centered below the circle
     this.expandButton.x = r - 11;
-    this.expandButton.y = d - 28;
+    this.expandButton.y = d + 4;
+
+    // Up/down buttons — diagonal offset outside the circle, to the left
+    const btnR = 14;
+    this.upButton.x = r - r * 0.85 - btnR - 4;
+    this.upButton.y = r - r * 0.5 - btnR;
+    this.downButton.x = r - r * 0.85 - btnR - 4;
+    this.downButton.y = r + r * 0.5 - btnR;
   }
 
   private rebuildExpandButton() {
@@ -123,6 +142,39 @@ export class Minimap {
     btn.on("pointerdown", () => {
       canvasCallbacks.openMap?.();
     });
+  }
+
+  private buildFloorButtons() {
+    const btnR = 14;
+    for (const [btn, dir, arrowUp] of [
+      [this.upButton, "up", true],
+      [this.downButton, "down", false],
+    ] as const) {
+      btn.clear();
+      btn.circle(btnR, btnR, btnR);
+      btn.fill({ color: BG_COLOR, alpha: 0.9 });
+      btn.circle(btnR, btnR, btnR);
+      btn.stroke({ color: BORDER_COLOR, width: 1 });
+      const cy = btnR;
+      const cx = btnR;
+      if (arrowUp) {
+        btn.moveTo(cx, cy - 5);
+        btn.lineTo(cx - 5, cy + 3);
+        btn.moveTo(cx, cy - 5);
+        btn.lineTo(cx + 5, cy + 3);
+        btn.stroke({ color: CURRENT_GLOW, width: 2 });
+      } else {
+        btn.moveTo(cx, cy + 5);
+        btn.lineTo(cx - 5, cy - 3);
+        btn.moveTo(cx, cy + 5);
+        btn.lineTo(cx + 5, cy - 3);
+        btn.stroke({ color: CURRENT_GLOW, width: 2 });
+      }
+      btn.eventMode = "static";
+      btn.cursor = "pointer";
+      btn.visible = false;
+      btn.on("pointerdown", () => { canvasCallbacks.sendCommand?.(dir); });
+    }
   }
 
   updateRoom(roomId: string | null, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number) {
@@ -180,7 +232,6 @@ export class Minimap {
 
   private redraw() {
     const R = this._radius;
-    const D = this._diameter;
     const CELL = this._cell;
     const NODE_R = this._nodeRadius;
     const CUR_R = this._currentRadius;
@@ -215,12 +266,28 @@ export class Minimap {
     const cx = R;
     const cy = R;
 
-    // Draw connecting lines
-    for (const node of this.visited.values()) {
+    // Draw connecting lines — only from rooms the current room connects to
+    // (and their immediate neighbors) to avoid showing misleading connections
+    // from unrelated rooms that happen to be nearby on the coordinate grid.
+    const connectedIds = new Set<string>(Object.values(current.exits));
+    connectedIds.add(this.currentRoomId!);
+    // Also include one hop out from direct neighbors so the local graph is visible
+    for (const neighborId of Object.values(current.exits)) {
+      const neighbor = this.visited.get(neighborId);
+      if (neighbor) {
+        for (const nextId of Object.values(neighbor.exits)) {
+          connectedIds.add(nextId);
+        }
+      }
+    }
+
+    for (const [id, node] of this.visited.entries()) {
+      if (!connectedIds.has(id)) continue;
       const sx = cx + (node.x - current.x) * CELL;
       const sy = cy + (node.y - current.y) * CELL;
 
       for (const targetId of Object.values(node.exits)) {
+        if (!connectedIds.has(targetId)) continue;
         const target = this.visited.get(targetId);
         if (!target) continue;
         const tx = cx + (target.x - current.x) * CELL;
@@ -234,8 +301,9 @@ export class Minimap {
       }
     }
 
-    // Draw nodes
+    // Draw nodes — only rooms reachable within the local neighborhood
     for (const [id, node] of this.visited.entries()) {
+      if (!connectedIds.has(id)) continue;
       const nx = cx + (node.x - current.x) * CELL;
       const ny = cy + (node.y - current.y) * CELL;
 
@@ -268,45 +336,17 @@ export class Minimap {
       if (node.image) {
         this.ensureThumb(id, node.image, nx, ny, radius, isCurrent ? 1 : 0.8, null);
       }
-
-      // Up/down indicators on the current room
-      if (isCurrent) {
-        const hasUp = "up" in node.exits;
-        const hasDown = "down" in node.exits;
-        const chev = Math.max(4, Math.round(D * 0.035));
-        if (hasUp) {
-          this.mapGraphics.moveTo(nx - chev, ny - radius - chev);
-          this.mapGraphics.lineTo(nx, ny - radius - chev * 2);
-          this.mapGraphics.lineTo(nx + chev, ny - radius - chev);
-          this.mapGraphics.stroke({ color: CURRENT_GLOW, width: 2, alpha: 0.7 });
-        }
-        if (hasDown) {
-          this.mapGraphics.moveTo(nx - chev, ny + radius + chev);
-          this.mapGraphics.lineTo(nx, ny + radius + chev * 2);
-          this.mapGraphics.lineTo(nx + chev, ny + radius + chev);
-          this.mapGraphics.stroke({ color: CURRENT_GLOW, width: 2, alpha: 0.7 });
-        }
-      }
     }
 
-    // Click areas for navigation — separate pass so they're always on top.
+    // Show/hide floor buttons based on current room exits
+    this.upButton.visible = current ? "up" in current.exits : false;
+    this.downButton.visible = current ? "down" in current.exits : false;
+
+    // Click areas for cardinal navigation — separate pass so they're on top.
     if (current) {
       for (const [dir, targetId] of Object.entries(current.exits)) {
-        if (!HORIZONTAL_DIRS.has(dir)) {
-          const offset = MAP_OFFSETS[dir];
-          if (!offset) continue;
-          const indX = cx + offset.dx * (CUR_R + 14);
-          const indY = cy + offset.dy * (CUR_R + 14);
-          const area = new Graphics();
-          area.circle(indX, indY, 12);
-          area.fill({ color: 0x000000, alpha: 0.001 });
-          area.eventMode = "static";
-          area.cursor = "pointer";
-          area.on("pointerdown", () => { canvasCallbacks.sendCommand?.(dir); });
-          this.container.addChild(area);
-          this.clickAreas.push({ roomId: targetId, area });
-          continue;
-        }
+        // Up/down handled by the floor buttons outside the circle
+        if (!HORIZONTAL_DIRS.has(dir)) continue;
 
         const targetNode = this.visited.get(targetId);
         if (!targetNode) continue;
