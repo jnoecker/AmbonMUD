@@ -15,9 +15,19 @@ export function CombatLog({ messages }: CombatLogProps) {
 
   useEffect(() => {
     if (messages.length === 0) return;
+    // Auto-stop polling once the latest message has fully faded
+    const latest = messages[messages.length - 1];
+    const ttl = Math.max(0, latest.receivedAt + MESSAGE_LIFETIME_MS + FADE_DURATION_MS - Date.now() + 200);
     const interval = window.setInterval(() => setNow(Date.now()), 200);
-    return () => window.clearInterval(interval);
-  }, [messages.length]);
+    const timeout = window.setTimeout(() => {
+      window.clearInterval(interval);
+      setNow(Date.now());
+    }, ttl);
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
+  }, [messages]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
