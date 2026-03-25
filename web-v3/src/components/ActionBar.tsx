@@ -199,117 +199,121 @@ export function ActionBar({
 
   return (
     <nav className="action-bar" aria-label="Action bar">
-      <div className="action-bar-panels">
-        {panels.map((btn) => {
-          const disabled = btn.requiresProfile && !loggedIn;
-          const active = activePopout === btn.panel;
-          return (
-            <button
-              key={btn.panel}
-              type="button"
-              className={`action-bar-btn${active ? " action-bar-btn-active" : ""}${disabled ? " action-bar-btn-disabled" : ""}`}
-              title={btn.label}
-              aria-label={btn.label}
-              disabled={disabled}
-              onClick={() => onOpenPopout(active ? null : btn.panel)}
-            >
-              {btn.icon}
-            </button>
-          );
-        })}
-        {shopActive && (
-          <button
-            type="button"
-            className={`action-bar-btn action-bar-btn-shop${activePopout === "shop" ? " action-bar-btn-active" : ""}`}
-            title={shop.name}
-            aria-label={`Open ${shop.name}`}
-            onClick={() => onOpenPopout(activePopout === "shop" ? null : "shop")}
-          >
-            <ShopIcon className="action-bar-btn-icon" />
-          </button>
-        )}
-      </div>
-
       {loggedIn && (
-        <div className="action-bar-vitals">
-          <div className="action-bar-vital" title={`HP: ${vitals.hp} / ${vitals.maxHp}`}>
-            <span className="action-bar-vital-label">HP</span>
-            <div className="action-bar-vital-track">
-              <span className="action-bar-vital-fill action-bar-vital-fill-hp" style={{ width: `${percent(vitals.hp, vitals.maxHp)}%` }} />
-            </div>
-            <span className="action-bar-vital-text">{vitals.hp}/{vitals.maxHp}</span>
-          </div>
-          <div className="action-bar-vital" title={`Mana: ${vitals.mana} / ${vitals.maxMana}`}>
-            <span className="action-bar-vital-label">MP</span>
-            <div className="action-bar-vital-track">
-              <span className="action-bar-vital-fill action-bar-vital-fill-mana" style={{ width: `${percent(vitals.mana, vitals.maxMana)}%` }} />
-            </div>
-            <span className="action-bar-vital-text">{vitals.mana}/{vitals.maxMana}</span>
-          </div>
-          {vitals.xpToNextLevel !== null && (
-            <div className="action-bar-vital" title={`XP: ${vitals.xpIntoLevel} / ${vitals.xpToNextLevel}`}>
-              <span className="action-bar-vital-label">XP</span>
+        <div className="action-bar-hud">
+          <div className="action-bar-vitals">
+            <div className="action-bar-vital" title={`HP: ${vitals.hp} / ${vitals.maxHp}`}>
+              <span className="action-bar-vital-label">HP</span>
               <div className="action-bar-vital-track">
-                <span className="action-bar-vital-fill action-bar-vital-fill-xp" style={{ width: `${percent(vitals.xpIntoLevel, vitals.xpToNextLevel)}%` }} />
+                <span className="action-bar-vital-fill action-bar-vital-fill-hp" style={{ width: `${percent(vitals.hp, vitals.maxHp)}%` }} />
               </div>
-              <span className="action-bar-vital-text">{vitals.xpIntoLevel}/{vitals.xpToNextLevel}</span>
+              <span className="action-bar-vital-text">{vitals.hp}/{vitals.maxHp}</span>
+            </div>
+            <div className="action-bar-vital" title={`Mana: ${vitals.mana} / ${vitals.maxMana}`}>
+              <span className="action-bar-vital-label">MP</span>
+              <div className="action-bar-vital-track">
+                <span className="action-bar-vital-fill action-bar-vital-fill-mana" style={{ width: `${percent(vitals.mana, vitals.maxMana)}%` }} />
+              </div>
+              <span className="action-bar-vital-text">{vitals.mana}/{vitals.maxMana}</span>
+            </div>
+            {vitals.xpToNextLevel !== null && (
+              <div className="action-bar-vital" title={`XP: ${vitals.xpIntoLevel} / ${vitals.xpToNextLevel}`}>
+                <span className="action-bar-vital-label">XP</span>
+                <div className="action-bar-vital-track">
+                  <span className="action-bar-vital-fill action-bar-vital-fill-xp" style={{ width: `${percent(vitals.xpIntoLevel, vitals.xpToNextLevel)}%` }} />
+                </div>
+                <span className="action-bar-vital-text">{vitals.xpIntoLevel}/{vitals.xpToNextLevel}</span>
+              </div>
+            )}
+            <div className="action-bar-gold" title={`Gold: ${vitals.gold}`}>
+              <span className="action-bar-gold-coin" />
+              <span className="action-bar-gold-text">{vitals.gold.toLocaleString()}</span>
+            </div>
+          </div>
+
+          {hasAnySlot && (
+            <div className="action-bar-skills">
+              {quickbarSlots.map((skill, i) =>
+                skill ? (
+                  <SkillSlot
+                    key={`slot-${i}`}
+                    skill={skill}
+                    index={i}
+                    onCast={onCastSkill}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClear={onQuickbarClear}
+                  />
+                ) : (
+                  <EmptySlot
+                    key={`slot-${i}`}
+                    index={i}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  />
+                ),
+              )}
             </div>
           )}
-          <div className="action-bar-gold" title={`Gold: ${vitals.gold}`}>
-            <span className="action-bar-gold-coin" />
-            <span className="action-bar-gold-text">{vitals.gold.toLocaleString()}</span>
-          </div>
         </div>
       )}
 
-      {loggedIn && hasAnySlot && (
-        <div className="action-bar-skills">
-          {quickbarSlots.map((skill, i) =>
-            skill ? (
-              <SkillSlot
-                key={`slot-${i}`}
-                skill={skill}
-                index={i}
-                onCast={onCastSkill}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClear={onQuickbarClear}
-              />
-            ) : (
-              <EmptySlot
-                key={`slot-${i}`}
-                index={i}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              />
-            ),
+      <div className="action-bar-controls">
+        <div className="action-bar-panels">
+          {panels.map((btn) => {
+            const disabled = btn.requiresProfile && !loggedIn;
+            const active = activePopout === btn.panel;
+            return (
+              <button
+                key={btn.panel}
+                type="button"
+                className={`action-bar-btn${active ? " action-bar-btn-active" : ""}${disabled ? " action-bar-btn-disabled" : ""}`}
+                title={btn.label}
+                aria-label={btn.label}
+                disabled={disabled}
+                onClick={() => onOpenPopout(active ? null : btn.panel)}
+              >
+                {btn.icon}
+              </button>
+            );
+          })}
+          {shopActive && (
+            <button
+              type="button"
+              className={`action-bar-btn action-bar-btn-shop${activePopout === "shop" ? " action-bar-btn-active" : ""}`}
+              title={shop.name}
+              aria-label={`Open ${shop.name}`}
+              onClick={() => onOpenPopout(activePopout === "shop" ? null : "shop")}
+            >
+              <ShopIcon className="action-bar-btn-icon" />
+            </button>
           )}
         </div>
-      )}
 
-      <form className="action-bar-command" onSubmit={onSubmitComposer}>
-        <label htmlFor="command-input" className="sr-only">Command input</label>
-        <input
-          ref={composerInputRef}
-          id="command-input"
-          className="command-input"
-          type="text"
-          value={composerValue}
-          onChange={(event) => onComposerChange(event.target.value)}
-          onKeyDown={onComposerKeyDown}
-          onFocus={onComposerFocus}
-          onBlur={onComposerBlur}
-          placeholder={commandPlaceholder}
-          autoComplete="off"
-          spellCheck={false}
-        />
-        <button type="submit" className="soft-button action-bar-send" disabled={!connected}>
-          <SendIcon className="action-bar-send-icon" />
-        </button>
-      </form>
+        <form className="action-bar-command" onSubmit={onSubmitComposer}>
+          <label htmlFor="command-input" className="sr-only">Command input</label>
+          <input
+            ref={composerInputRef}
+            id="command-input"
+            className="command-input"
+            type="text"
+            value={composerValue}
+            onChange={(event) => onComposerChange(event.target.value)}
+            onKeyDown={onComposerKeyDown}
+            onFocus={onComposerFocus}
+            onBlur={onComposerBlur}
+            placeholder={commandPlaceholder}
+            autoComplete="off"
+            spellCheck={false}
+          />
+          <button type="submit" className="soft-button action-bar-send" disabled={!connected}>
+            <SendIcon className="action-bar-send-icon" />
+          </button>
+        </form>
+      </div>
     </nav>
   );
 }

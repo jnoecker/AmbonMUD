@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { AudioEngine } from "../hooks/useAudioEngine";
 import { VolumeOnIcon, VolumeOffIcon, MusicNoteIcon, WavesIcon } from "./Icons";
 
@@ -8,13 +8,35 @@ interface AudioControlsProps {
 
 export function AudioControls({ audio }: AudioControlsProps) {
   const [expanded, setExpanded] = useState(false);
+  const controlsRef = useRef<HTMLDivElement | null>(null);
 
   const toggleExpanded = useCallback(() => {
     setExpanded((prev) => !prev);
   }, []);
 
+  // Close on Escape or click outside
+  useEffect(() => {
+    if (!expanded) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(false);
+    };
+    const onPointerDown = (e: PointerEvent) => {
+      if (controlsRef.current && !controlsRef.current.contains(e.target as Node)) {
+        setExpanded(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [expanded]);
+
   return (
-    <div className="audio-controls">
+    <div className="audio-controls" ref={controlsRef}>
       <button
         type="button"
         className={`soft-button audio-toggle-btn${audio.enabled ? " audio-enabled" : ""}`}
@@ -42,7 +64,7 @@ export function AudioControls({ audio }: AudioControlsProps) {
       )}
 
       {audio.enabled && expanded && (
-        <div className="audio-sliders">
+        <div className="audio-sliders" role="group" aria-label="Volume controls">
           <div className="audio-slider-row">
             <MusicNoteIcon className="audio-slider-icon" />
             <input

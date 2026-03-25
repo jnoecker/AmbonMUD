@@ -556,7 +556,7 @@ function App() {
   const canOpenEquipment = hasCharacterProfile;
   const commandPlaceholder = connected
     ? preLogin
-      ? "Login through the terminal to begin your journey"
+      ? "Log in to begin your adventure"
       : "Type a command"
     : "Reconnect to start playing";
   const popoutTitle =
@@ -758,7 +758,13 @@ function App() {
           >
             {connected ? "Connected" : "Disconnected"}
           </span>
-          <button type="button" className="soft-button" onClick={reconnect}>Reconnect</button>
+          <button
+            type="button"
+            className={`soft-button reconnect-btn${connected ? "" : " reconnect-btn-needed"}`}
+            onClick={reconnect}
+          >
+            Reconnect
+          </button>
         </div>
       </header>
 
@@ -930,19 +936,35 @@ function App() {
       {videoUrl && (
         <div
           className={`video-modal-overlay ${videoClosing ? "video-fade-out" : "video-fade-in"}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Video cinematic"
           onClick={() => {
             setVideoClosing(true);
             setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setVideoClosing(true);
+              setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
+            }
           }}
           onAnimationEnd={(e) => {
             if (e.animationName === "videoFadeOut") { setVideoUrl(null); setVideoClosing(false); }
           }}
         >
           <div className="video-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="video-modal-close" onClick={() => {
-              setVideoClosing(true);
-              setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
-            }}>✕</button>
+            <button
+              className="video-modal-close"
+              aria-label="Close video"
+              autoFocus
+              onClick={() => {
+                setVideoClosing(true);
+                setTimeout(() => { setVideoUrl(null); setVideoClosing(false); }, 600);
+              }}
+            >
+              ✕
+            </button>
             <video
               ref={(el) => { if (el) el.playbackRate = 0.5; }}
               src={videoUrl}

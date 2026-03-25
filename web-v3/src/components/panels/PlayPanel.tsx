@@ -19,8 +19,8 @@ export function PlayPanel({ preLogin, terminalOverlayRef, terminalVisible, termi
     <section className="panel panel-play" aria-label="Gameplay console">
       {preLogin && (
         <section className="prelogin-banner" aria-label="Login guidance">
-          <p className="prelogin-banner-title">Welcome back. Your session is connected.</p>
-          <p className="prelogin-banner-text">Log in through the modal to begin your journey. World and character panels are accessible from the action bar below.</p>
+          <p className="prelogin-banner-title">Log in to begin your adventure.</p>
+          <p className="prelogin-banner-text">Enter your character name in the login prompt to get started.</p>
         </section>
       )}
       <div className="terminal-card">
