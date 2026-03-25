@@ -56,7 +56,7 @@ export const pendingCastRef: { current: PendingCast | null } = { current: null }
 
 export const gameStateRef: { current: GameStateSnapshot } = {
   current: {
-    room: { id: null, title: "-", description: "", exits: {} },
+    room: { id: null, title: "-", description: "", exits: {}, mapX: 0, mapY: 0 },
     vitals: {
       hp: 0, maxHp: 0, mana: 0, maxMana: 0,
       level: null, xp: 0, xpIntoLevel: 0, xpToNextLevel: null,

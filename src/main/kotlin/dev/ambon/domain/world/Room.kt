@@ -21,4 +21,8 @@ data class Room(
     val music: String? = null,
     /** Ambient sound loop URL for this room. */
     val ambient: String? = null,
+    /** Precomputed minimap X coordinate (assigned by WorldLoader BFS). */
+    val mapX: Int = 0,
+    /** Precomputed minimap Y coordinate (assigned by WorldLoader BFS). */
+    val mapY: Int = 0,
 )
