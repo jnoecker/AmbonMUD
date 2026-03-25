@@ -1097,6 +1097,11 @@ object WorldLoader {
      * Assigns 2D minimap coordinates to every room via per-zone BFS.
      *
      * Each zone is laid out independently, starting from the zone's declared start room at (0,0).
+     * Only horizontal exits (N/S/E/W) are traversed during BFS — up/down exits are treated as
+     * portals rather than spatial moves, so they don't scatter rooms diagonally or cause grid
+     * collisions with unrelated branches. Rooms reachable only via up/down are placed in a
+     * second pass relative to their horizontal neighbors.
+     *
      * When two rooms would occupy the same grid cell (non-euclidean exit topology), the later
      * arrival is placed at the nearest unoccupied cell via a spiral search.
      */
@@ -1114,15 +1119,14 @@ object WorldLoader {
             val y: Int,
         )
 
-        // Process cardinal exits (N/S/E/W) before diagonal (U/D) for better
-        // grid fidelity in zones that use up/down as non-euclidean shortcuts.
-        val cardinalDirs = setOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+        val horizontalDirs = setOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
 
         for ((zone, roomIds) in roomsByZone) {
             val zoneRoomSet = roomIds.toHashSet()
             val occupied = HashMap<Pair<Int, Int>, RoomId>()
             val startId = zoneStartRooms[zone] ?: roomIds.first()
 
+            // Phase 1: BFS using only horizontal exits (N/S/E/W).
             val queue = ArrayDeque<Pending>()
             queue.addLast(Pending(startId, 0, 0))
 
@@ -1135,8 +1139,8 @@ object WorldLoader {
                 occupied[pos] = roomId
 
                 val room = rooms[roomId] ?: continue
-                val exits = room.exits.entries.sortedBy { if (it.key in cardinalDirs) 0 else 1 }
-                for ((dir, targetId) in exits) {
+                for ((dir, targetId) in room.exits) {
+                    if (dir !in horizontalDirs) continue
                     if (coords.containsKey(targetId)) continue
                     if (targetId !in zoneRoomSet) continue
                     val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
@@ -1144,22 +1148,35 @@ object WorldLoader {
                 }
             }
 
-            // Place any rooms not reachable from the start room (e.g., class-start rooms
-            // that are dead-ends with only outgoing exits, never linked as an exit target).
+            // Phase 2: Place rooms not reached by horizontal BFS (reachable only via up/down,
+            // or completely unreachable dead-ends). Try to position relative to an already-placed
+            // horizontal neighbor; fall back to placing near any connected neighbor.
             for (unreachedId in roomIds) {
                 if (coords.containsKey(unreachedId)) continue
                 val room = rooms[unreachedId] ?: continue
-                // Try to place relative to a neighbor this room exits to
                 var placed = false
+                // Prefer horizontal neighbors for placement (they have reliable offsets)
                 for ((dir, neighborId) in room.exits) {
                     val neighborPos = coords[neighborId] ?: continue
-                    val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
-                    // This room is the reverse: if room exits north to neighbor, room is south of neighbor
-                    val desiredPos = findFreePosition(neighborPos.first - dx, neighborPos.second - dy, occupied)
-                    coords[unreachedId] = desiredPos
-                    occupied[desiredPos] = unreachedId
-                    placed = true
-                    break
+                    if (dir in horizontalDirs) {
+                        val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
+                        val desiredPos = findFreePosition(neighborPos.first - dx, neighborPos.second - dy, occupied)
+                        coords[unreachedId] = desiredPos
+                        occupied[desiredPos] = unreachedId
+                        placed = true
+                        break
+                    }
+                }
+                // Fall back to placing near any connected neighbor
+                if (!placed) {
+                    for ((_, neighborId) in room.exits) {
+                        val neighborPos = coords[neighborId] ?: continue
+                        val desiredPos = findFreePosition(neighborPos.first, neighborPos.second, occupied)
+                        coords[unreachedId] = desiredPos
+                        occupied[desiredPos] = unreachedId
+                        placed = true
+                        break
+                    }
                 }
                 if (!placed) {
                     val pos = findFreePosition(0, 0, occupied)
