@@ -61,7 +61,7 @@ interface GmcpContext {
   setCombatTarget: Dispatch<SetStateAction<CombatTarget | null>>;
   setShop: Dispatch<SetStateAction<ShopState | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
-  updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null) => void;
+  updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number) => void;
   pushCombatEvent: (event: CombatEventData) => void;
   setCharStats: Dispatch<SetStateAction<CharStats | null>>;
   setQuests: Dispatch<SetStateAction<QuestEntry[]>>;
@@ -154,6 +154,9 @@ export function applyGmcpPackage(
       const exits = packet.exits && typeof packet.exits === "object" ? (packet.exits as Record<string, string>) : {};
       const id = typeof packet.id === "string" ? packet.id : null;
 
+      const mapX = typeof packet.mapX === "number" ? packet.mapX : 0;
+      const mapY = typeof packet.mapY === "number" ? packet.mapY : 0;
+
       ctx.setRoom({
         id,
         title: typeof packet.title === "string" && packet.title.length > 0 ? packet.title : "-",
@@ -163,12 +166,14 @@ export function applyGmcpPackage(
         video: typeof packet.video === "string" ? packet.video : null,
         music: typeof packet.music === "string" ? packet.music : null,
         ambient: typeof packet.ambient === "string" ? packet.ambient : null,
+        mapX,
+        mapY,
       });
 
       if (id) {
         const title = typeof packet.title === "string" && packet.title.length > 0 ? packet.title : "";
         const image = typeof packet.image === "string" ? packet.image : null;
-        ctx.updateMap(id, exits, title, image);
+        ctx.updateMap(id, exits, title, image, mapX, mapY);
       }
       break;
     }

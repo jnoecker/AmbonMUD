@@ -37,6 +37,43 @@ class WorldLoaderTest {
     }
 
     @Test
+    fun `assigns minimap coordinates via BFS from start room`() {
+        val world = dev.ambon.test.TestWorlds.okSmall
+
+        val a = world.rooms.getValue(RoomId("ok_small:a"))
+        val b = world.rooms.getValue(RoomId("ok_small:b"))
+
+        // Start room "a" should be at origin
+        assertEquals(0, a.mapX, "start room mapX")
+        assertEquals(0, a.mapY, "start room mapY")
+
+        // "b" is north of "a", so mapY should be -1
+        assertEquals(0, b.mapX, "north room mapX")
+        assertEquals(-1, b.mapY, "north room mapY")
+    }
+
+    @Test
+    fun `assigns minimap coordinates for multi-room zone`() {
+        val world = dev.ambon.test.TestWorlds.testWorld
+        val rooms = world.rooms
+
+        // The test_world has a hub with rooms in multiple directions.
+        // Verify no two rooms in the same zone share coordinates.
+        val coordsByZone = rooms.values.groupBy { it.id.zone }
+        for ((zone, zoneRooms) in coordsByZone) {
+            val seen = mutableSetOf<Pair<Int, Int>>()
+            for (room in zoneRooms) {
+                val coord = room.mapX to room.mapY
+                assertTrue(
+                    seen.add(coord),
+                    "Zone '$zone' has coordinate collision at (${ room.mapX }, ${ room.mapY }) " +
+                        "for room '${room.id.value}' — another room already occupies this position",
+                )
+            }
+        }
+    }
+
+    @Test
     fun `loads mobs from a zone file`() {
         val world = dev.ambon.test.TestWorlds.okSmall
 
@@ -494,6 +531,25 @@ class WorldLoaderTest {
                 world.rooms.containsKey(RoomId("ambon_hub:blank_arches")),
                 "Expected ambon_hub:blank_arches to be loaded",
             )
+        }
+
+        @Test
+        fun `production world has no coordinate collisions within any zone`() {
+            val world = WorldFactory.demoWorld(resources = productionZones)
+            val coordsByZone = world.rooms.values.groupBy { it.id.zone }
+            for ((zone, zoneRooms) in coordsByZone) {
+                val seen = mutableMapOf<Pair<Int, Int>, String>()
+                for (room in zoneRooms) {
+                    val coord = room.mapX to room.mapY
+                    val existing = seen.put(coord, room.id.value)
+                    assertNull(
+                        existing,
+                    ) {
+                        "Zone '$zone' coordinate collision at (${room.mapX}, ${room.mapY}): " +
+                            "'${room.id.value}' collides with '$existing'"
+                    }
+                }
+            }
         }
 
         @Test
