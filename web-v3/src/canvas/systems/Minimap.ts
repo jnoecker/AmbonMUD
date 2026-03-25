@@ -296,7 +296,7 @@ export class Minimap {
         if (this.inBounds(sx, sy) || this.inBounds(tx, ty)) {
           this.mapGraphics.moveTo(sx, sy);
           this.mapGraphics.lineTo(tx, ty);
-          this.mapGraphics.stroke({ color: LINE_COLOR, width: 2, alpha: 0.5 });
+          this.mapGraphics.stroke({ color: LINE_COLOR, width: 2, alpha: 0.65 });
         }
       }
     }
@@ -325,9 +325,9 @@ export class Minimap {
         this.mapGraphics.stroke({ color: isCurrent ? CURRENT_GLOW : 0x5a6a90, width: 1, alpha: isCurrent ? 0.8 : 0.5 });
       } else {
         this.mapGraphics.circle(nx, ny, radius);
-        this.mapGraphics.fill({ color: FOG_COLOR, alpha: 0.5 });
+        this.mapGraphics.fill({ color: FOG_COLOR, alpha: 0.75 });
         this.mapGraphics.circle(nx, ny, radius);
-        this.mapGraphics.stroke({ color: 0x3a4060, width: 1, alpha: 0.35 });
+        this.mapGraphics.stroke({ color: 0x5a6a90, width: 1.5, alpha: 0.6 });
         if (this.fogTexture) {
           this.ensureThumb(`__fog__${id}`, null, nx, ny, radius, 0.7, this.fogTexture);
         }
