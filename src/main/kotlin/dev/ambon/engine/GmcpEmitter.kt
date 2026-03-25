@@ -797,6 +797,17 @@ class GmcpEmitter(
         emitRaw(sessionId, "Shop.Close", "{}", supportCheck = "Shop")
     }
 
+    // ---------- UI feedback ----------
+
+    suspend fun sendUiFeedback(sessionId: SessionId, type: String, message: String) {
+        emit(sessionId, "UI.Feedback", UiFeedbackPayload(type = type, message = message), supportCheck = "UI.Feedback")
+    }
+
+    private data class UiFeedbackPayload(
+        val type: String,
+        val message: String,
+    )
+
     // ---------- emit helpers ----------
 
     private suspend fun <T : Any> emit(

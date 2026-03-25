@@ -19,6 +19,7 @@ class CombatHandler(
     private val mobs = ctx.mobs
     private val combat = ctx.combat
     private val outbound = ctx.outbound
+    private val gmcpEmitter = ctx.gmcpEmitter
 
     override fun register(router: CommandRouter) {
         router.on<Command.Kill> { sid, cmd -> handleKill(sid, cmd) }
@@ -31,11 +32,15 @@ class CombatHandler(
         cmd: Command.Kill,
     ) {
         dialogueSystem?.endConversation(sessionId)
-        outbound.sendIfError(sessionId, combat.startCombat(sessionId, cmd.target))
+        val error = combat.startCombat(sessionId, cmd.target)
+        outbound.sendIfError(sessionId, error)
+        if (error != null) gmcpEmitter?.sendUiFeedback(sessionId, "error", error)
     }
 
     private suspend fun handleFlee(sessionId: SessionId) {
-        outbound.sendIfError(sessionId, combat.flee(sessionId))
+        val error = combat.flee(sessionId)
+        outbound.sendIfError(sessionId, error)
+        if (error != null) gmcpEmitter?.sendUiFeedback(sessionId, "error", error)
     }
 
     private suspend fun handleCast(
@@ -43,6 +48,8 @@ class CombatHandler(
         cmd: Command.Cast,
     ) {
         val abilities = requireSystemOrNull(sessionId, abilitySystem, "Abilities", outbound) ?: return
-        outbound.sendIfError(sessionId, abilities.cast(sessionId, cmd.spellName, cmd.target))
+        val error = abilities.cast(sessionId, cmd.spellName, cmd.target)
+        outbound.sendIfError(sessionId, error)
+        if (error != null) gmcpEmitter?.sendUiFeedback(sessionId, "error", error)
     }
 }
