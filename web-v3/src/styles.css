@@ -36,6 +36,11 @@
   --color-status-ready: #cde6bf;
   --color-cooldown: #d9c8a1;
   --color-error: #e8a0a0;
+  --color-damage: #ff6b6b;
+  --color-heal: #6bff8a;
+  --color-info: #90caf9;
+  --color-dodge: #fff176;
+  --color-xp: #ffd54f;
 
   /* ── Surfaces ─────────────────────────────────────────── */
   --line-soft: rgb(151 166 204 / 36%);

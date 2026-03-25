@@ -220,7 +220,7 @@ function App() {
   }, [pushCombatLogMessage]);
 
   const pushUiFeedback = useCallback((feedback: UiFeedback) => {
-    const style = feedback.type === "error" ? "error" : feedback.type === "success" ? "kill" : "info";
+    const style = feedback.type === "error" ? "error" : feedback.type === "success" ? "heal" : "info";
     pushCombatLogMessage({
       id: ++combatLogIdCounter,
       text: feedback.message,
