@@ -35,6 +35,7 @@ import type {
   ChatMessage,
   CharacterInfo,
   CombatEventData,
+  CombatLogMessage,
   CombatTarget,
   DialogueState,
   FriendEntry,
@@ -58,6 +59,7 @@ import type {
   SkillSummary,
   StatusEffect,
   StatusVarLabels,
+  UiFeedback,
   Vitals,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
@@ -112,6 +114,43 @@ function parseWhoEntries(messageChunk: string): string[] | null {
   return null;
 }
 
+let combatLogIdCounter = 0;
+
+function combatEventToLogMessage(event: CombatEventData): CombatLogMessage | null {
+  const now = Date.now();
+  const id = ++combatLogIdCounter;
+
+  switch (event.type) {
+    case "meleeHit":
+      return event.sourceIsPlayer
+        ? { id, text: `You hit ${event.targetName} for ${event.damage} damage.`, style: "damage", receivedAt: now }
+        : { id, text: `${event.targetName} hits you for ${event.damage} damage!`, style: "damage", receivedAt: now };
+    case "abilityHit":
+      return event.sourceIsPlayer
+        ? { id, text: `Your ${event.abilityName} hits ${event.targetName} for ${event.damage} damage.`, style: "damage", receivedAt: now }
+        : { id, text: `${event.targetName}'s ${event.abilityName} hits you for ${event.damage}!`, style: "damage", receivedAt: now };
+    case "heal":
+      return { id, text: `${event.abilityName} heals for ${event.healing} HP.`, style: "heal", receivedAt: now };
+    case "hotTick":
+      return { id, text: `${event.abilityName} restores ${event.healing} HP.`, style: "heal", receivedAt: now };
+    case "dotTick":
+    case "coldDot":
+      return { id, text: `${event.abilityName} deals ${event.damage} damage.`, style: "damage", receivedAt: now };
+    case "dodge":
+      return event.sourceIsPlayer
+        ? { id, text: `${event.targetName} dodges your attack!`, style: "dodge", receivedAt: now }
+        : { id, text: "You dodge the attack!", style: "dodge", receivedAt: now };
+    case "shieldAbsorb":
+      return { id, text: `Shield absorbs ${event.absorbed} damage. (${event.shieldRemaining} remaining)`, style: "info", receivedAt: now };
+    case "kill":
+      return { id, text: `${event.targetName} has been slain!${event.xpGained > 0 ? ` +${event.xpGained} XP` : ""}${event.goldGained > 0 ? ` +${event.goldGained} gold` : ""}`, style: "kill", receivedAt: now };
+    case "death":
+      return { id, text: "You have been slain!", style: "error", receivedAt: now };
+    default:
+      return null;
+  }
+}
+
 function App() {
   const terminalHiddenRef = useRef<HTMLDivElement | null>(null);
   const terminalOverlayRef = useRef<HTMLDivElement | null>(null);
@@ -163,10 +202,32 @@ function App() {
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
+  const [combatLogMessages, setCombatLogMessages] = useState<CombatLogMessage[]>([]);
+  const MAX_COMBAT_LOG = 20;
+
+  const pushCombatLogMessage = useCallback((msg: CombatLogMessage) => {
+    setCombatLogMessages((prev) => {
+      const next = [...prev, msg];
+      return next.length > MAX_COMBAT_LOG ? next.slice(-MAX_COMBAT_LOG) : next;
+    });
+  }, []);
+
   const pushCombatEvent = useCallback((event: CombatEventData) => {
     combatEventsRef.current = [...combatEventsRef.current.slice(-99), event];
     canvasEvents.push(event);
-  }, []);
+    const logMsg = combatEventToLogMessage(event);
+    if (logMsg) pushCombatLogMessage(logMsg);
+  }, [pushCombatLogMessage]);
+
+  const pushUiFeedback = useCallback((feedback: UiFeedback) => {
+    const style = feedback.type === "error" ? "error" : feedback.type === "success" ? "kill" : "info";
+    pushCombatLogMessage({
+      id: ++combatLogIdCounter,
+      text: feedback.message,
+      style,
+      receivedAt: Date.now(),
+    });
+  }, [pushCombatLogMessage]);
 
   const pushGainEvent = useCallback((event: GainEvent) => {
     gainEventsRef.current = [...gainEventsRef.current.slice(-49), event];
@@ -255,6 +316,7 @@ function App() {
     setLoginError(null);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
+    setCombatLogMessages([]);
     setActiveChatChannel("say");
     setShowAdminPanel(false);
     resetMap();
@@ -304,10 +366,11 @@ function App() {
           setLoginPrompt,
           setLoginError,
           setServerAssets,
+          pushUiFeedback,
         },
       );
     },
-    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, updateMap],
+    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, updateMap],
   );
 
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine } = useMudSocket({
@@ -651,11 +714,10 @@ function App() {
         )),
       );
       const cmd = targetName ? `cast ${skillId} ${targetName}` : `cast ${skillId}`;
-      sendCommand(cmd, true);
+      sendCommand(cmd, false);
       pendingCastRef.current = null;
-      focusComposer();
     },
-    [focusComposer, sendCommand],
+    [sendCommand],
   );
 
   const handleCastSkill = useCallback(
@@ -774,6 +836,7 @@ function App() {
           terminalOverlayRef={terminalOverlayRef}
           terminalVisible={terminalVisible}
           terminalOpaque={terminalOpaque}
+          combatLogMessages={combatLogMessages}
         />
 
         <ActionBar
