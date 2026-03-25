@@ -301,7 +301,8 @@ export class Minimap {
       const sx = cx + (node.x - current.x) * CELL;
       const sy = cy + (node.y - current.y) * CELL;
 
-      for (const targetId of Object.values(node.exits)) {
+      for (const [dir, targetId] of Object.entries(node.exits)) {
+        if (!HORIZONTAL_DIRS.has(dir)) continue;
         if (!connectedIds.has(targetId)) continue;
         const target = this.visited.get(targetId);
         if (!target) continue;
