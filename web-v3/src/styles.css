@@ -484,9 +484,6 @@ body {
 
 .panel-header h2 {
   margin: 0;
-}
-
-.panel-header h2 {
   font-family: var(--font-display);
   font-size: 1.3rem;
   color: var(--text-heading);
@@ -5297,7 +5294,7 @@ body {
 .char-detail-stats {
   margin: 0;
   font-size: 0.82rem;
-  color: var(--color-moss-green);
+  color: var(--color-primary-moss-green);
   font-weight: 600;
   letter-spacing: 0.03em;
 }
@@ -5340,7 +5337,7 @@ body {
 }
 
 .char-detail-trait-name {
-  color: var(--color-soft-gold);
+  color: var(--color-primary-soft-gold);
   font-weight: 600;
 }
 
