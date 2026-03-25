@@ -13,6 +13,23 @@ import {
   SendIcon,
 } from "./Icons";
 
+/** Derive a visual category from targetType + effectType for border glow. */
+function skillCategory(skill: SkillSummary): string {
+  const t = skill.targetType.toUpperCase();
+  const e = skill.effectType.toUpperCase();
+  if (t === "SELF") return "skill-self";
+  if (t === "ALL_ENEMIES" || e === "AREA_DAMAGE") return "skill-aoe";
+  if (t === "ENEMY") {
+    if (e === "APPLY_STATUS") return "skill-debuff";
+    return "skill-attack";
+  }
+  if (t === "ALLY" || t === "ALL_ALLIES") {
+    if (e === "DIRECT_HEAL") return "skill-heal";
+    return "skill-buff";
+  }
+  return "skill-attack";
+}
+
 interface ActionBarProps {
   connected: boolean;
   hasCharacterProfile: boolean;
@@ -83,7 +100,7 @@ function SkillSlot({
   return (
     <button
       type="button"
-      className={`action-bar-skill${onCooldown ? " action-bar-skill-cooldown" : ""}`}
+      className={`action-bar-skill ${skillCategory(skill)}${onCooldown ? " action-bar-skill-cooldown" : ""}`}
       title={`${skill.name} (${skill.manaCost} mana) — key ${index + 1}\nRight-click to remove`}
       disabled={onCooldown}
       draggable
