@@ -2,6 +2,10 @@ import { Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
 import { canvasCallbacks, gameStateRef } from "../GameStateBridge";
 import { MAP_OFFSETS } from "../../constants";
 
+/** Directions that represent the same horizontal plane. Up/down exits are shown
+ *  as indicators on the current room but don't place nodes on the minimap. */
+const HORIZONTAL_DIRS = new Set(["north", "south", "east", "west"]);
+
 interface MapNode {
   x: number;
   y: number;
@@ -120,8 +124,10 @@ export class Minimap {
       node.y = mapY;
     }
 
-    // Pre-place unvisited neighbors using directional offsets from server coordinates
+    // Pre-place unvisited horizontal neighbors (N/S/E/W only).
+    // Up/down exits are shown as indicators on the current room, not as separate nodes.
     for (const [dir, targetId] of Object.entries(exits)) {
+      if (!HORIZONTAL_DIRS.has(dir)) continue;
       if (this.visited.has(targetId)) continue;
       const offset = MAP_OFFSETS[dir];
       if (!offset) continue;
@@ -234,23 +240,63 @@ export class Minimap {
         this.ensureThumb(id, node.image, nx, ny, radius, isCurrent ? 1 : 0.8, null);
       }
 
-      // Clickable navigation for adjacent rooms
-      if (!isCurrent && this.isAdjacentToCurrent(id)) {
+      // Up/down indicators on the current room
+      if (isCurrent) {
+        const hasUp = "up" in node.exits;
+        const hasDown = "down" in node.exits;
+        if (hasUp) {
+          this.mapGraphics.moveTo(nx - 5, ny - radius - 6);
+          this.mapGraphics.lineTo(nx, ny - radius - 11);
+          this.mapGraphics.lineTo(nx + 5, ny - radius - 6);
+          this.mapGraphics.stroke({ color: CURRENT_GLOW, width: 2, alpha: 0.7 });
+        }
+        if (hasDown) {
+          this.mapGraphics.moveTo(nx - 5, ny + radius + 6);
+          this.mapGraphics.lineTo(nx, ny + radius + 11);
+          this.mapGraphics.lineTo(nx + 5, ny + radius + 6);
+          this.mapGraphics.stroke({ color: CURRENT_GLOW, width: 2, alpha: 0.7 });
+        }
+      }
+    }
+
+    // Click areas for navigation — separate pass so they're always on top.
+    // Includes both cardinal and up/down exits from the current room.
+    if (current) {
+      for (const [dir, targetId] of Object.entries(current.exits)) {
+        const targetNode = this.visited.get(targetId);
+        if (!targetNode) continue;
+
+        const tnx = cx + (targetNode.x - current.x) * CELL;
+        const tny = cy + (targetNode.y - current.y) * CELL;
+
+        // For up/down exits that aren't pre-placed as nodes, create a small
+        // clickable indicator near the current room instead.
+        if (!HORIZONTAL_DIRS.has(dir)) {
+          const offset = MAP_OFFSETS[dir];
+          if (!offset) continue;
+          const indX = cx + offset.dx * (CURRENT_RADIUS + 14);
+          const indY = cy + offset.dy * (CURRENT_RADIUS + 14);
+          const area = new Graphics();
+          area.circle(indX, indY, 12);
+          area.fill({ color: 0x000000, alpha: 0.001 });
+          area.eventMode = "static";
+          area.cursor = "pointer";
+          area.on("pointerdown", () => { canvasCallbacks.sendCommand?.(dir); });
+          this.container.addChild(area);
+          this.clickAreas.push({ roomId: targetId, area });
+          continue;
+        }
+
+        if (!this.inBounds(tnx, tny)) continue;
+
         const area = new Graphics();
-        area.circle(nx, ny, radius + 3);
+        area.circle(tnx, tny, NODE_RADIUS + 3);
         area.fill({ color: 0x000000, alpha: 0.001 });
         area.eventMode = "static";
         area.cursor = "pointer";
-
-        const dir = this.getDirectionTo(id);
-        if (dir) {
-          area.on("pointerdown", () => {
-            canvasCallbacks.sendCommand?.(dir);
-          });
-        }
-
+        area.on("pointerdown", () => { canvasCallbacks.sendCommand?.(dir); });
         this.container.addChild(area);
-        this.clickAreas.push({ roomId: id, area });
+        this.clickAreas.push({ roomId: targetId, area });
       }
     }
   }
@@ -337,23 +383,6 @@ export class Minimap {
     const dy = y - MAP_RADIUS;
     const maxR = MAP_RADIUS - CURRENT_RADIUS - 6;
     return dx * dx + dy * dy <= maxR * maxR;
-  }
-
-  private isAdjacentToCurrent(targetId: string): boolean {
-    if (!this.currentRoomId) return false;
-    const current = this.visited.get(this.currentRoomId);
-    if (!current) return false;
-    return Object.values(current.exits).includes(targetId);
-  }
-
-  private getDirectionTo(targetId: string): string | null {
-    if (!this.currentRoomId) return null;
-    const current = this.visited.get(this.currentRoomId);
-    if (!current) return null;
-    for (const [dir, id] of Object.entries(current.exits)) {
-      if (id === targetId) return dir;
-    }
-    return null;
   }
 
   destroy() {
