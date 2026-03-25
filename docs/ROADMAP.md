@@ -41,7 +41,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 ✅ Crafting & gathering (recipes, crafting skills, workshop zone)
 ✅ Web-based admin dashboard
 
-**Test coverage:** 78 test files covering all systems.
+**Test coverage:** ~110 test files covering all systems.
 
 ---
 
