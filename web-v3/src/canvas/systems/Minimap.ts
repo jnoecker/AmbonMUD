@@ -263,14 +263,8 @@ export class Minimap {
     // Includes both cardinal and up/down exits from the current room.
     if (current) {
       for (const [dir, targetId] of Object.entries(current.exits)) {
-        const targetNode = this.visited.get(targetId);
-        if (!targetNode) continue;
-
-        const tnx = cx + (targetNode.x - current.x) * CELL;
-        const tny = cy + (targetNode.y - current.y) * CELL;
-
-        // For up/down exits that aren't pre-placed as nodes, create a small
-        // clickable indicator near the current room instead.
+        // For up/down exits, create a clickable area over the chevron indicator
+        // near the current room. These don't need a target node in the visited map.
         if (!HORIZONTAL_DIRS.has(dir)) {
           const offset = MAP_OFFSETS[dir];
           if (!offset) continue;
@@ -287,6 +281,11 @@ export class Minimap {
           continue;
         }
 
+        // Cardinal exits — place click area over the target node circle.
+        const targetNode = this.visited.get(targetId);
+        if (!targetNode) continue;
+        const tnx = cx + (targetNode.x - current.x) * CELL;
+        const tny = cy + (targetNode.y - current.y) * CELL;
         if (!this.inBounds(tnx, tny)) continue;
 
         const area = new Graphics();
