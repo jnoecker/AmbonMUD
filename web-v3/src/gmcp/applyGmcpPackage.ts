@@ -406,6 +406,7 @@ export function applyGmcpPackage(
             cooldownRemainingMs: Math.max(0, safeNumber(entry.cooldownRemainingMs)),
             levelRequired: Math.max(1, safeNumber(entry.levelRequired, 1)),
             targetType: typeof entry.targetType === "string" ? entry.targetType : "ENEMY",
+            effectType: typeof entry.effectType === "string" ? entry.effectType : "DIRECT_DAMAGE",
             classRestriction: typeof entry.classRestriction === "string" ? entry.classRestriction : null,
             image: typeof entry.image === "string" ? entry.image : null,
             receivedAt: now,
