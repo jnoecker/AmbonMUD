@@ -113,7 +113,7 @@ export function ShopPopout({ shop, inventory, gold, onBuyItem, onSellItem }: Sho
                       {sellPrice > 0 ? (
                         <span className="shop-popout-card-price">{sellPrice.toLocaleString()}g</span>
                       ) : (
-                        <span className="shop-popout-card-price-cant">Worthless</span>
+                        <span className="shop-popout-card-price-cant">Cannot sell</span>
                       )}
                       <button
                         type="button"

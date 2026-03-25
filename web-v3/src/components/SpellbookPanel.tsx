@@ -85,12 +85,19 @@ function SkillCard({
         {slotNumber !== null ? slotNumber : "+"}
       </button>
       {showSlotPicker && (
-        <div className="spellbook-slot-picker">
+        <div
+          className="spellbook-slot-picker"
+          role="menu"
+          aria-label="Assign to quickbar slot"
+          onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setShowSlotPicker(false); } }}
+        >
           {Array.from({ length: SLOT_COUNT }, (_, i) => (
             <button
               key={i}
               type="button"
+              role="menuitem"
               className="spellbook-slot-pick"
+              autoFocus={i === 0}
               onClick={() => {
                 onAssignSlot(i, skill.id);
                 setShowSlotPicker(false);
@@ -150,6 +157,7 @@ export function SpellbookPanel({
         <span className="spellbook-class">{playerClass} Spellbook</span>
         <span className="spellbook-level">Level {playerLevel}</span>
       </div>
+      <p className="spellbook-hint">Click a spell for info. Press + to assign to quickbar (keys 1-9).</p>
       {availableTabs.length > 2 && (
         <div className="spellbook-tabs" role="tablist">
           {availableTabs.map((tab) => (
