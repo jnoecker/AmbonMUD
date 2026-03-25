@@ -90,6 +90,8 @@ export interface RoomState {
   video?: string | null;
   music?: string | null;
   ambient?: string | null;
+  mapX: number;
+  mapY: number;
 }
 
 export interface ItemSummary {

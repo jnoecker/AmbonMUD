@@ -112,12 +112,16 @@ object WorldLoader {
         val mergedGatheringNodes = mutableListOf<GatheringNodeDef>()
         val mergedRecipes = mutableListOf<RecipeDef>()
         val zoneLifespansMinutes = LinkedHashMap<String, Long?>()
+        val zoneStartRooms = LinkedHashMap<String, RoomId>()
 
         // startRoomOverride wins; otherwise fall back to first file’s declared startRoom.
         val worldStart = startRoomOverride ?: normalizeId(files.first().zone, files.first().startRoom)
 
         for (file in files) {
             val zone = requireNonBlank(file.zone) { "World zone cannot be blank" }
+            if (!zoneStartRooms.containsKey(zone)) {
+                zoneStartRooms[zone] = normalizeId(zone, file.startRoom)
+            }
             val declaredLifespanMinutes = file.lifespan
             if (!zoneLifespansMinutes.containsKey(zone)) {
                 zoneLifespansMinutes[zone] = declaredLifespanMinutes
@@ -753,8 +757,11 @@ object WorldLoader {
             }
         }
 
+        // Assign minimap coordinates via per-zone BFS
+        val coordRooms = assignMapCoordinates(mergedRooms, zoneStartRooms)
+
         return World(
-            rooms = mergedRooms.toMutableMap(),
+            rooms = coordRooms.toMutableMap(),
             startRoom = worldStart,
             mobSpawns = mergedMobs.values.sortedBy { it.id.value },
             itemSpawns = mergedItems.values.sortedBy { it.instance.id.value },
@@ -1071,5 +1078,95 @@ object WorldLoader {
         val trimmed = value.trim()
         if (trimmed.isEmpty()) throw WorldLoadException(lazyMessage())
         return trimmed
+    }
+
+    /**
+     * Direction → grid offset for minimap coordinate assignment.
+     * Must match the client-side MAP_OFFSETS in constants.ts.
+     */
+    private val DIRECTION_OFFSETS: Map<Direction, Pair<Int, Int>> = mapOf(
+        Direction.NORTH to (0 to -1),
+        Direction.SOUTH to (0 to 1),
+        Direction.EAST to (1 to 0),
+        Direction.WEST to (-1 to 0),
+        Direction.UP to (1 to -1),
+        Direction.DOWN to (-1 to 1),
+    )
+
+    /**
+     * Assigns 2D minimap coordinates to every room via per-zone BFS.
+     *
+     * Each zone is laid out independently, starting from the zone's declared start room at (0,0).
+     * When two rooms would occupy the same grid cell (non-euclidean exit topology), the later
+     * arrival is placed at the nearest unoccupied cell via a spiral search.
+     */
+    private fun assignMapCoordinates(
+        rooms: Map<RoomId, Room>,
+        zoneStartRooms: Map<String, RoomId>,
+    ): Map<RoomId, Room> {
+        // Group rooms by zone
+        val roomsByZone = rooms.keys.groupBy { it.zone }
+        val coords = HashMap<RoomId, Pair<Int, Int>>(rooms.size)
+
+        for ((zone, roomIds) in roomsByZone) {
+            val zoneRoomSet = roomIds.toHashSet()
+            val occupied = HashMap<Pair<Int, Int>, RoomId>()
+            val startId = zoneStartRooms[zone] ?: roomIds.first()
+
+            data class Pending(
+                val roomId: RoomId,
+                val x: Int,
+                val y: Int,
+            )
+
+            val queue = ArrayDeque<Pending>()
+            queue.addLast(Pending(startId, 0, 0))
+
+            while (queue.isNotEmpty()) {
+                val (roomId, desiredX, desiredY) = queue.removeFirst()
+                if (coords.containsKey(roomId)) continue
+
+                val pos = findFreePosition(desiredX, desiredY, occupied)
+                coords[roomId] = pos
+                occupied[pos] = roomId
+
+                val room = rooms[roomId] ?: continue
+                for ((dir, targetId) in room.exits) {
+                    if (coords.containsKey(targetId)) continue
+                    if (targetId !in zoneRoomSet) continue
+                    val (dx, dy) = DIRECTION_OFFSETS[dir] ?: continue
+                    queue.addLast(Pending(targetId, pos.first + dx, pos.second + dy))
+                }
+            }
+        }
+
+        return rooms.mapValues { (id, room) ->
+            val (x, y) = coords[id] ?: (0 to 0)
+            room.copy(mapX = x, mapY = y)
+        }
+    }
+
+    /**
+     * If the desired (x, y) is free, returns it.
+     * Otherwise spirals outward to find the nearest unoccupied cell.
+     */
+    private fun findFreePosition(
+        x: Int,
+        y: Int,
+        occupied: Map<Pair<Int, Int>, RoomId>,
+    ): Pair<Int, Int> {
+        val pos = x to y
+        if (!occupied.containsKey(pos)) return pos
+
+        for (radius in 1..50) {
+            for (dx in -radius..radius) {
+                for (dy in -radius..radius) {
+                    if (kotlin.math.abs(dx) != radius && kotlin.math.abs(dy) != radius) continue
+                    val candidate = (x + dx) to (y + dy)
+                    if (!occupied.containsKey(candidate)) return candidate
+                }
+            }
+        }
+        return pos
     }
 }

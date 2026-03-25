@@ -75,8 +75,8 @@ export const MAP_OFFSETS: Record<string, { dx: number; dy: number }> = {
   south: { dx: 0, dy: 1 },
   east: { dx: 1, dy: 0 },
   west: { dx: -1, dy: 0 },
-  up: { dx: 0.5, dy: -0.5 },
-  down: { dx: -0.5, dy: 0.5 },
+  up: { dx: 1, dy: -1 },
+  down: { dx: -1, dy: 1 },
 };
 
 export const EMPTY_VITALS: Vitals = {
@@ -102,5 +102,5 @@ export const DEFAULT_STATUS_VAR_LABELS: StatusVarLabels = {
 };
 
 export const EMPTY_CHAR: CharacterInfo = { name: "-", gender: "", race: "", className: "", level: null, sprite: null, isStaff: false };
-export const EMPTY_ROOM: RoomState = { id: null, title: "-", description: "", exits: {} };
+export const EMPTY_ROOM: RoomState = { id: null, title: "-", description: "", exits: {}, mapX: 0, mapY: 0 };
 
