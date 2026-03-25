@@ -1108,23 +1108,23 @@ object WorldLoader {
         val roomsByZone = rooms.keys.groupBy { it.zone }
         val coords = HashMap<RoomId, Pair<Int, Int>>(rooms.size)
 
+        data class Pending(
+            val roomId: RoomId,
+            val x: Int,
+            val y: Int,
+        )
+
+        // Process cardinal exits (N/S/E/W) before diagonal (U/D) for better
+        // grid fidelity in zones that use up/down as non-euclidean shortcuts.
+        val cardinalDirs = setOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+
         for ((zone, roomIds) in roomsByZone) {
             val zoneRoomSet = roomIds.toHashSet()
             val occupied = HashMap<Pair<Int, Int>, RoomId>()
             val startId = zoneStartRooms[zone] ?: roomIds.first()
 
-            data class Pending(
-                val roomId: RoomId,
-                val x: Int,
-                val y: Int,
-            )
-
             val queue = ArrayDeque<Pending>()
             queue.addLast(Pending(startId, 0, 0))
-
-            // Process cardinal exits (N/S/E/W) before diagonal (U/D) for better
-            // grid fidelity in zones that use up/down as non-euclidean shortcuts.
-            val cardinalDirs = setOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
 
             while (queue.isNotEmpty()) {
                 val (roomId, desiredX, desiredY) = queue.removeFirst()

@@ -544,9 +544,10 @@ class WorldLoaderTest {
                     val existing = seen.put(coord, room.id.value)
                     assertNull(
                         existing,
+                    ) {
                         "Zone '$zone' coordinate collision at (${room.mapX}, ${room.mapY}): " +
-                            "'${room.id.value}' and '$existing'",
-                    )
+                            "'${room.id.value}' collides with '$existing'"
+                    }
                 }
             }
         }
