@@ -273,8 +273,10 @@ export function useMiniMap() {
         node.y = mapY;
       }
 
-      // Pre-place unvisited neighbors using directional offsets from server coordinates
+      // Pre-place unvisited horizontal neighbors (N/S/E/W only).
+      // Up/down exits are vertical transitions and don't belong on the 2D minimap grid.
       for (const [dir, targetId] of Object.entries(exits)) {
+        if (dir === "up" || dir === "down") continue;
         if (rooms.has(targetId)) continue;
         const offset = MAP_OFFSETS[dir];
         if (!offset) continue;
