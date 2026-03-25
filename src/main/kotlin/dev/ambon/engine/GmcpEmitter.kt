@@ -9,6 +9,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
+import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.Room
 import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.abilities.AbilityId
@@ -43,6 +44,13 @@ class GmcpEmitter(
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
+    private val lastZoneBySession = mutableMapOf<SessionId, String>()
+
+    /** Returns true if the zone changed (or is first seen) for this session. */
+    fun trackZoneChange(sessionId: SessionId, zone: String): Boolean {
+        val prev = lastZoneBySession.put(sessionId, zone)
+        return prev == null || prev != zone
+    }
 
     /** Resolved asset URLs: each value from [globalAssets] is prefixed with [imagesBase]. */
     private val resolvedAssets: Map<String, String> =
@@ -108,6 +116,37 @@ class GmcpEmitter(
                 mapX = room.mapX,
                 mapY = room.mapY,
             ),
+        )
+    }
+
+    /**
+     * Send the full room layout for a zone so the client can render a fog-of-war
+     * map with cloud-reveal as the player explores. Only horizontal exits (N/S/E/W)
+     * are included — vertical transitions are handled by floor buttons.
+     */
+    suspend fun sendZoneMap(
+        sessionId: SessionId,
+        zone: String,
+        rooms: Collection<Room>,
+    ) {
+        val horizontalDirs = setOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+        emit(
+            sessionId,
+            "Zone.Map",
+            ZoneMapPayload(
+                zone = zone,
+                rooms = rooms.map { r ->
+                    ZoneMapRoom(
+                        id = r.id.value,
+                        x = r.mapX,
+                        y = r.mapY,
+                        exits = r.exits.entries
+                            .filter { (dir, target) -> dir in horizontalDirs && target.zone == zone }
+                            .associate { (dir, target) -> dir.name.lowercase() to target.value },
+                    )
+                },
+            ),
+            supportCheck = "Room",
         )
     }
 
@@ -884,6 +923,18 @@ class GmcpEmitter(
         val targetHp: Int?,
         val targetMaxHp: Int?,
         val targetImage: String?,
+    )
+
+    private data class ZoneMapPayload(
+        val zone: String,
+        val rooms: List<ZoneMapRoom>,
+    )
+
+    private data class ZoneMapRoom(
+        val id: String,
+        val x: Int,
+        val y: Int,
+        val exits: Map<String, String>,
     )
 
     private data class RoomInfoPayload(
