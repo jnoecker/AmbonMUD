@@ -1,6 +1,7 @@
 package dev.ambon.engine.events
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.SessionLifecycleCoordinator
@@ -18,6 +19,7 @@ class SessionEventHandler(
     private val gmcpDirtyStatusEffects: MutableSet<SessionId>,
     private val gmcpDirtyGroup: MutableSet<SessionId>,
     private val gmcpDirtyCombat: MutableSet<SessionId>,
+    private val gmcpEmitter: GmcpEmitter?,
     private val handoffManager: HandoffManager?,
     private val removePendingWhoRequestsFor: (SessionId) -> Unit,
     private val sessionLifecycle: SessionLifecycleCoordinator,
@@ -54,6 +56,7 @@ class SessionEventHandler(
         gmcpDirtyStatusEffects.remove(sessionId)
         gmcpDirtyGroup.remove(sessionId)
         gmcpDirtyCombat.remove(sessionId)
+        gmcpEmitter?.forgetSession(sessionId)
 
         if (me != null) {
             onPlayerLoggedOut(me, sessionId)

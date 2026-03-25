@@ -52,6 +52,11 @@ class GmcpEmitter(
         return prev == null || prev != zone
     }
 
+    /** Remove tracked zone state for a disconnected session. */
+    fun forgetSession(sessionId: SessionId) {
+        lastZoneBySession.remove(sessionId)
+    }
+
     /** Resolved asset URLs: each value from [globalAssets] is prefixed with [imagesBase]. */
     private val resolvedAssets: Map<String, String> =
         globalAssets.mapValues { (_, path) -> "$imagesBase$path" }
