@@ -209,6 +209,7 @@ class GameEngine(
             gmcpDirtyStatusEffects = gmcpDirtyStatusEffects,
             gmcpDirtyGroup = gmcpDirtyGroup,
             gmcpDirtyCombat = gmcpDirtyCombat,
+            gmcpEmitter = gmcpEmitter,
             handoffManager = handoffManager,
             removePendingWhoRequestsFor = interEngineEventHandler::removePendingWhoRequestsFor,
             sessionLifecycle = sessionLifecycleCoordinator,

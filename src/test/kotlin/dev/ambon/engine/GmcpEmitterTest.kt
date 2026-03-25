@@ -1287,4 +1287,77 @@ class GmcpEmitterTest {
             e.sendServerAssets(sid)
             assertTrue(drainGmcp().isEmpty())
         }
+
+    // ── Zone.Map ──
+
+    private fun zoneRoom(
+        id: String,
+        exits: Map<Direction, RoomId> = emptyMap(),
+        mapX: Int = 0,
+        mapY: Int = 0,
+    ) = Room(
+        id = RoomId(id),
+        title = "Room",
+        description = "",
+        exits = exits,
+        mapX = mapX,
+        mapY = mapY,
+    )
+
+    @Test
+    fun `sendZoneMap emits rooms with horizontal exits only`() =
+        runTest {
+            val e = emitter("Room")
+            val rooms = listOf(
+                zoneRoom(
+                    "z:a",
+                    exits = mapOf(
+                        Direction.NORTH to RoomId("z:b"),
+                        Direction.UP to RoomId("z:c"),
+                        Direction.EAST to RoomId("other:x"),
+                    ),
+                    mapX = 0,
+                    mapY = 0,
+                ),
+                zoneRoom("z:b", mapX = 0, mapY = -1),
+            )
+            e.sendZoneMap(sid, "z", rooms)
+            val data = drainGmcp()
+            assertEquals(1, data.size)
+            assertEquals("Zone.Map", data[0].gmcpPackage)
+            val json = data[0].jsonData
+            // North exit to same zone should be present
+            assertTrue(json.contains("\"north\":\"z:b\""), "Expected north exit. got=$json")
+            // Up exit should be filtered out
+            assertTrue(!json.contains("\"up\""), "Up exit should be excluded. got=$json")
+            // Cross-zone exit should be filtered out
+            assertTrue(!json.contains("other:x"), "Cross-zone exit should be excluded. got=$json")
+            // Coordinates should be present
+            assertTrue(json.contains("\"x\":0"), "Expected x coordinate. got=$json")
+            assertTrue(json.contains("\"y\":-1"), "Expected y=-1 coordinate. got=$json")
+        }
+
+    @Test
+    fun `sendZoneMap skipped when Room not supported`() =
+        runTest {
+            val e = emitter("Char")
+            e.sendZoneMap(sid, "z", listOf(zoneRoom("z:a")))
+            assertTrue(drainGmcp().isEmpty())
+        }
+
+    @Test
+    fun `trackZoneChange returns true for first zone and zone changes`() {
+        val e = emitter("Room")
+        assertTrue(e.trackZoneChange(sid, "forest"), "First zone should return true")
+        assertTrue(!e.trackZoneChange(sid, "forest"), "Same zone should return false")
+        assertTrue(e.trackZoneChange(sid, "desert"), "New zone should return true")
+    }
+
+    @Test
+    fun `forgetSession clears tracked zone`() {
+        val e = emitter("Room")
+        e.trackZoneChange(sid, "forest")
+        e.forgetSession(sid)
+        assertTrue(e.trackZoneChange(sid, "forest"), "After forget, same zone should return true again")
+    }
 }

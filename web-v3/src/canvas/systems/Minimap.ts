@@ -76,6 +76,9 @@ export class Minimap {
     this.container.addChild(this.downButton);
 
     this.applyDiameter();
+
+    // Register for zone map data from the React layer
+    canvasCallbacks.loadZoneMap = (zone, rooms) => this.loadZoneMap(zone, rooms);
   }
 
   get diameter(): number {
@@ -223,6 +226,19 @@ export class Minimap {
       this.visited.set(targetId, { x: mapX + offset.dx, y: mapY + offset.dy, exits: {}, title: "", image: null });
     }
 
+    this.redraw();
+  }
+
+  /** Pre-populate all rooms in a zone as fog nodes. */
+  loadZoneMap(zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) {
+    this.visited.clear();
+    this.clearThumbs();
+    this.currentZone = zone;
+    this.currentRoomId = null;
+    this.lastKey = "";
+    for (const r of rooms) {
+      this.visited.set(r.id, { x: r.x, y: r.y, exits: r.exits, title: "", image: null });
+    }
     this.redraw();
   }
 

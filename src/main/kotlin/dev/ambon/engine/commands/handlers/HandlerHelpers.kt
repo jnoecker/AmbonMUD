@@ -223,6 +223,13 @@ internal suspend fun sendLook(
         ),
     )
 
+    // Send zone map when entering a new zone (or on first look)
+    val zone = room.id.zone
+    if (gmcpEmitter != null && gmcpEmitter.trackZoneChange(sessionId, zone)) {
+        val zoneRooms = world.rooms.values.filter { it.id.zone == zone }
+        gmcpEmitter.sendZoneMap(sessionId, zone, zoneRooms)
+    }
+
     gmcpEmitter?.sendRoomInfo(sessionId, room)
     gmcpEmitter?.sendRoomPlayers(sessionId, rawRoomPlayers)
     gmcpEmitter?.sendRoomMobs(sessionId, rawRoomMobs)

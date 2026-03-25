@@ -44,6 +44,7 @@ export const canvasCallbacks: {
   openRoom: (() => void) | null;
   onTargetSelected: ((targetName: string) => void) | null;
   openVideo: ((videoUrl: string) => void) | null;
+  loadZoneMap: ((zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void) | null;
 } = {
   sendCommand: null,
   openShop: null,
@@ -51,6 +52,7 @@ export const canvasCallbacks: {
   openRoom: null,
   onTargetSelected: null,
   openVideo: null,
+  loadZoneMap: null,
 };
 
 export const pendingCastRef: { current: PendingCast | null } = { current: null };
