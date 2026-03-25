@@ -67,6 +67,8 @@ export function PixiCanvas() {
     <div
       ref={containerRef}
       className="pixi-canvas-host"
+      role="img"
+      aria-label="Game world canvas — room visuals, mobs, and combat rendered here. Use the terminal for accessible text output."
       style={{ width: "100%", height: "100%", minHeight: 200 }}
     />
   );

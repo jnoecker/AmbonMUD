@@ -127,10 +127,10 @@ export function CharacterPanel({
             </>
           ) : (
             <div className="prelogin-card">
-              <p className="prelogin-card-title">{connected ? "Character profile pending" : "No active character"}</p>
+              <p className="prelogin-card-title">{connected ? "Awaiting login" : "No active character"}</p>
               <p className="room-description">
                 {connected
-                  ? "After login, your name, class, race, and level will appear here."
+                  ? "Your name, class, race, and level will appear here after login."
                   : "Reconnect and log in to load your character profile."}
               </p>
             </div>
@@ -220,7 +220,7 @@ export function CharacterPanel({
                 role="tabpanel"
                 aria-label="Effects"
               >
-                {effects.length === 0 ? <p className="empty-note">{hasCharacterProfile ? "No active effects." : "Effects will appear here during gameplay."}</p> : (
+                {effects.length === 0 ? <p className="empty-note">{hasCharacterProfile ? "No active effects. Cast a spell or use a potion to gain buffs." : "Effects will appear here during gameplay."}</p> : (
                   <>
                     <ul className="effects-list">
                       {visibleEffects.map((effect, index) => {
@@ -249,7 +249,7 @@ export function CharacterPanel({
                 aria-label="Achievements"
               >
                 {totalAchievements === 0 ? (
-                  <p className="empty-note">{hasCharacterProfile ? "No achievements yet." : "Achievements will appear here during gameplay."}</p>
+                  <p className="empty-note">{hasCharacterProfile ? "No achievements yet. Explore the world and complete challenges to earn them." : "Achievements will appear here during gameplay."}</p>
                 ) : (
                   <ul className="achievements-list">
                     {achievements.completed.map((a) => (
@@ -309,7 +309,7 @@ export function CharacterPanel({
                   </div>
                 )}
                 {quests.length === 0 ? (
-                  <p className="empty-note">{hasCharacterProfile ? "No active quests." : "Quests will appear here during gameplay."}</p>
+                  <p className="empty-note">{hasCharacterProfile ? "No active quests. Talk to NPCs to discover available quests." : "Quests will appear here during gameplay."}</p>
                 ) : (
                   <ul className="quest-list">
                     {quests.map((quest) => {
