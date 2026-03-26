@@ -37,7 +37,9 @@ export class DialogueOverlay {
   private endingText: Text | null = null;
   private questElements: Container[] = [];
 
+  private dismissHint: Text | null = null;
   private lastDialogueKey: string | null = null;
+  private isDismissable = false;
   private width = 0;
   private height = 0;
 
@@ -52,6 +54,13 @@ export class DialogueOverlay {
       style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 12, fill: TEXT_COLOR, wordWrap: true, wordWrapWidth: 300 },
     });
 
+    this.bg.eventMode = "static";
+    this.bg.cursor = "default";
+    this.bg.on("pointerdown", () => {
+      if (this.isDismissable) {
+        canvasCallbacks.dismissDialogue?.();
+      }
+    });
     this.container.addChild(this.bg);
     this.container.addChild(this.npcNameText);
     this.container.addChild(this.bodyText);
@@ -99,6 +108,12 @@ export class DialogueOverlay {
       this.container.removeChild(this.endingText);
       this.endingText.destroy();
       this.endingText = null;
+    }
+
+    if (this.dismissHint) {
+      this.container.removeChild(this.dismissHint);
+      this.dismissHint.destroy();
+      this.dismissHint = null;
     }
 
     // Clear old quest elements
@@ -168,6 +183,21 @@ export class DialogueOverlay {
       contentHeight -= QUEST_CARD_GAP;
     }
 
+    // Dismissable when no active dialogue choices remain
+    const hasActiveChoices = dialogue !== null && dialogue.choices.length > 0;
+    this.isDismissable = !hasActiveChoices;
+    this.bg.cursor = this.isDismissable ? "pointer" : "default";
+
+    if (this.isDismissable) {
+      this.dismissHint = new Text({
+        text: "Click to close",
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 10, fill: ENDING_COLOR },
+      });
+      this.dismissHint.anchor.set(0.5, 0);
+      this.container.addChild(this.dismissHint);
+      contentHeight += 16;
+    }
+
     contentHeight += BOX_PADDING;
 
     // Position the box at dead center
@@ -211,6 +241,12 @@ export class DialogueOverlay {
         questCard.y = y;
         y += questCard.height + QUEST_CARD_GAP;
       }
+    }
+
+    // Position dismiss hint centered at bottom of box
+    if (this.dismissHint) {
+      this.dismissHint.x = boxX + boxWidth / 2;
+      this.dismissHint.y = y + 2;
     }
   }
 

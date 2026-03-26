@@ -572,7 +572,8 @@ function App() {
     canvasCallbacks.openMap = () => setActivePopout("map");
     canvasCallbacks.openRoom = () => setActivePopout("room");
     canvasCallbacks.openQuests = () => setActivePopout("quests");
-    return () => { canvasCallbacks.openMap = null; canvasCallbacks.openRoom = null; canvasCallbacks.openQuests = null; };
+    canvasCallbacks.dismissDialogue = () => { setDialogue(null); setQuestsAvailable([]); };
+    return () => { canvasCallbacks.openMap = null; canvasCallbacks.openRoom = null; canvasCallbacks.openQuests = null; canvasCallbacks.dismissDialogue = null; };
   }, []);
 
   // Wire canvas video cinematic callback
