@@ -25,31 +25,32 @@ class WorldStateRegistry(
     world: World,
 ) {
     /** All feature definitions indexed by ID. */
-    val featuresById: Map<String, RoomFeature>
+    var featuresById: Map<String, RoomFeature>
+        private set
 
     /** All feature definitions indexed by room. */
-    val featuresByRoom: Map<RoomId, List<RoomFeature>>
+    var featuresByRoom: Map<RoomId, List<RoomFeature>>
+        private set
 
     /** Doors indexed by (roomId, direction) for fast movement-blocking lookup. */
-    private val doorsByRoomAndDir: Map<Pair<RoomId, Direction>, RoomFeature.Door>
+    private var doorsByRoomAndDir: Map<Pair<RoomId, Direction>, RoomFeature.Door>
 
     init {
-        val byId = mutableMapOf<String, RoomFeature>()
-        val byRoom = mutableMapOf<RoomId, MutableList<RoomFeature>>()
-        val byDir = mutableMapOf<Pair<RoomId, Direction>, RoomFeature.Door>()
-
-        for (room in world.rooms.values) {
-            for (feature in room.features) {
-                byId[feature.id] = feature
-                byRoom.getOrPut(room.id) { mutableListOf() }.add(feature)
-                if (feature is RoomFeature.Door) {
-                    byDir[room.id to feature.direction] = feature
-                }
-            }
-        }
-
+        val (byId, byRoom, byDir) = buildFeatureMaps(world)
         featuresById = byId
-        featuresByRoom = byRoom.mapValues { (_, list) -> list.toList() }
+        featuresByRoom = byRoom
+        doorsByRoomAndDir = byDir
+    }
+
+    /**
+     * Rebuilds feature lookup maps from the current world state.
+     * Call after a hot reload so that new/changed room features are discoverable.
+     * Must be called on the engine dispatcher thread.
+     */
+    fun rebuild(world: World) {
+        val (byId, byRoom, byDir) = buildFeatureMaps(world)
+        featuresById = byId
+        featuresByRoom = byRoom
         doorsByRoomAndDir = byDir
     }
 
@@ -253,4 +254,32 @@ class WorldStateRegistry(
         }
         isDirty = false
     }
+}
+
+private data class FeatureMaps(
+    val byId: Map<String, RoomFeature>,
+    val byRoom: Map<RoomId, List<RoomFeature>>,
+    val byDir: Map<Pair<RoomId, Direction>, RoomFeature.Door>,
+)
+
+private fun buildFeatureMaps(world: World): FeatureMaps {
+    val byId = mutableMapOf<String, RoomFeature>()
+    val byRoom = mutableMapOf<RoomId, MutableList<RoomFeature>>()
+    val byDir = mutableMapOf<Pair<RoomId, Direction>, RoomFeature.Door>()
+
+    for (room in world.rooms.values) {
+        for (feature in room.features) {
+            byId[feature.id] = feature
+            byRoom.getOrPut(room.id) { mutableListOf() }.add(feature)
+            if (feature is RoomFeature.Door) {
+                byDir[room.id to feature.direction] = feature
+            }
+        }
+    }
+
+    return FeatureMaps(
+        byId = byId,
+        byRoom = byRoom.mapValues { (_, list) -> list.toList() },
+        byDir = byDir,
+    )
 }

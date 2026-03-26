@@ -127,6 +127,7 @@ class HotReloadManager(
                             "The world shifts around you... you find yourself elsewhere.",
                         ),
                     )
+                    outbound.send(OutboundEvent.SendPrompt(player.sessionId))
                     playersRelocated++
                 }
             }
@@ -166,8 +167,13 @@ class HotReloadManager(
             }
         }
 
+        // Rebuild feature lookup maps so new/changed doors, containers, etc. are discoverable.
+        worldState.rebuild(world)
+
         // Refresh GMCP for all connected players so room data is current.
         for (player in players.allPlayers()) {
+            val room = world.rooms[player.roomId] ?: continue
+            gmcpEmitter.sendRoomInfo(player.sessionId, room)
             gmcpEmitter.sendRoomMobs(player.sessionId, mobs.mobsInRoom(player.roomId))
             gmcpEmitter.sendRoomItems(player.sessionId, items.itemsInRoom(player.roomId))
         }
