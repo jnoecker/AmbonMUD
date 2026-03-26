@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.config.AdminConfig
 import dev.ambon.domain.achievement.AchievementDef
+import dev.ambon.domain.ids.MobId
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.quest.QuestDef
 import dev.ambon.domain.world.World
 import dev.ambon.engine.AchievementRegistry
@@ -13,8 +15,10 @@ import dev.ambon.engine.PlayerState
 import dev.ambon.engine.QuestRegistry
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.abilities.AbilityDefinition
+import dev.ambon.engine.abilities.AbilityId
 import dev.ambon.engine.abilities.AbilityRegistry
 import dev.ambon.engine.status.StatusEffectDefinition
+import dev.ambon.engine.status.StatusEffectId
 import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
@@ -696,15 +700,15 @@ internal fun Application.adminModule(
         // ── Hot Reload API ─────────────────────────────────────────────────
         post("/api/reload") {
             if (onReload == null) {
-                call.respond(HttpStatusCode.NotImplemented, """{"error":"Hot reload not configured"}""")
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Hot reload not configured")
                 return@post
             }
             val target = call.request.queryParameters["target"] // world, abilities, effects, all
             val validTargets = setOf("world", "abilities", "effects", "all")
             if (target != null && target !in validTargets) {
-                call.respond(
+                call.respondJsonError(
                     HttpStatusCode.BadRequest,
-                    """{"error":"Invalid target. Use: ${validTargets.joinToString(", ")}"}""",
+                    "Invalid target. Use: ${validTargets.joinToString(", ")}",
                 )
                 return@post
             }
@@ -716,9 +720,10 @@ internal fun Application.adminModule(
                 )
             } catch (e: Exception) {
                 log.error(e) { "Hot reload API failed" }
-                call.respond(
-                    HttpStatusCode.InternalServerError,
+                call.respondText(
                     json.writeValueAsString(mapOf("status" to "error", "message" to (e.message ?: "unknown"))),
+                    ContentType.Application.Json,
+                    HttpStatusCode.InternalServerError,
                 )
             }
         }
@@ -764,10 +769,7 @@ internal fun Application.adminModule(
         get("/api/players/search") {
             val query = call.request.queryParameters["q"]?.trim()
             if (query.isNullOrBlank()) {
-                call.respond(
-                    HttpStatusCode.BadRequest,
-                    """{"error":"Query parameter 'q' is required"}""",
-                )
+                call.respondJsonError(HttpStatusCode.BadRequest, "Query parameter 'q' is required")
                 return@get
             }
             // Check online first
@@ -796,7 +798,7 @@ internal fun Application.adminModule(
         get("/api/world/zones/{zone}/rooms/{room}") {
             val zone = call.parameters["zone"] ?: return@get call.respond(HttpStatusCode.BadRequest)
             val roomLocal = call.parameters["room"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val roomId = dev.ambon.domain.ids.RoomId("$zone:$roomLocal")
+            val roomId = RoomId("$zone:$roomLocal")
             val room = world.rooms[roomId]
             if (room == null) {
                 call.respond(HttpStatusCode.NotFound)
@@ -848,7 +850,7 @@ internal fun Application.adminModule(
 
         get("/api/mobs/{id}") {
             val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val mob = mobs.get(dev.ambon.domain.ids.MobId(id))
+            val mob = mobs.get(MobId(id))
             if (mob == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
@@ -859,7 +861,7 @@ internal fun Application.adminModule(
         // ── Abilities ───────────────────────────────────────────────────────
         get("/api/abilities") {
             if (abilityRegistry == null) {
-                call.respond(HttpStatusCode.NotImplemented, """{"error":"Ability registry not configured"}""")
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Ability registry not configured")
                 return@get
             }
             val dtos = abilityRegistry.all().sortedBy { it.displayName }.map { it.toAbilityDto() }
@@ -868,11 +870,11 @@ internal fun Application.adminModule(
 
         get("/api/abilities/{id}") {
             if (abilityRegistry == null) {
-                call.respond(HttpStatusCode.NotImplemented, """{"error":"Ability registry not configured"}""")
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Ability registry not configured")
                 return@get
             }
             val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val ability = abilityRegistry.get(dev.ambon.engine.abilities.AbilityId(id))
+            val ability = abilityRegistry.get(AbilityId(id))
             if (ability == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
@@ -883,7 +885,7 @@ internal fun Application.adminModule(
         // ── Status Effects ──────────────────────────────────────────────────
         get("/api/effects") {
             if (statusEffectRegistry == null) {
-                call.respond(HttpStatusCode.NotImplemented, """{"error":"Status effect registry not configured"}""")
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Status effect registry not configured")
                 return@get
             }
             val dtos = statusEffectRegistry.all().sortedBy { it.displayName }.map { it.toEffectDto() }
@@ -892,11 +894,11 @@ internal fun Application.adminModule(
 
         get("/api/effects/{id}") {
             if (statusEffectRegistry == null) {
-                call.respond(HttpStatusCode.NotImplemented, """{"error":"Status effect registry not configured"}""")
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Status effect registry not configured")
                 return@get
             }
             val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            val effect = statusEffectRegistry.get(dev.ambon.engine.status.StatusEffectId(id))
+            val effect = statusEffectRegistry.get(StatusEffectId(id))
             if (effect == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
@@ -907,7 +909,7 @@ internal fun Application.adminModule(
         // ── Quests ──────────────────────────────────────────────────────────
         get("/api/quests") {
             if (questRegistry == null) {
-                call.respond(HttpStatusCode.NotImplemented, """{"error":"Quest registry not configured"}""")
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Quest registry not configured")
                 return@get
             }
             val dtos = questRegistry.all().sortedBy { it.id }.map { it.toQuestDto() }
@@ -916,7 +918,7 @@ internal fun Application.adminModule(
 
         get("/api/quests/{id}") {
             if (questRegistry == null) {
-                call.respond(HttpStatusCode.NotImplemented, """{"error":"Quest registry not configured"}""")
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Quest registry not configured")
                 return@get
             }
             val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
@@ -931,7 +933,7 @@ internal fun Application.adminModule(
         // ── Achievements ────────────────────────────────────────────────────
         get("/api/achievements") {
             if (achievementRegistry == null) {
-                call.respond(HttpStatusCode.NotImplemented, """{"error":"Achievement registry not configured"}""")
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Achievement registry not configured")
                 return@get
             }
             val dtos = achievementRegistry.all().sortedBy { it.id }.map { it.toAchievementDto() }
@@ -940,7 +942,7 @@ internal fun Application.adminModule(
 
         get("/api/achievements/{id}") {
             if (achievementRegistry == null) {
-                call.respond(HttpStatusCode.NotImplemented, """{"error":"Achievement registry not configured"}""")
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Achievement registry not configured")
                 return@get
             }
             val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
@@ -975,29 +977,31 @@ internal fun Application.adminModule(
 
         // ── Items (templates) ───────────────────────────────────────────────
         get("/api/items") {
-            val items = world.itemSpawns.map { spawn ->
-                val item = spawn.instance.item
-                mapOf(
-                    "id" to spawn.instance.id.value,
-                    "displayName" to item.displayName,
-                    "description" to item.description,
-                    "slot" to item.slot?.name?.lowercase(),
-                    "damage" to item.damage,
-                    "armor" to item.armor,
-                    "stats" to item.stats.values,
-                    "consumable" to item.consumable,
-                    "basePrice" to item.basePrice,
-                    "image" to item.image,
-                    "spawnRoom" to spawn.roomId?.value,
-                )
-            }.sortedBy { it["displayName"] as? String }
+            val items = world.itemSpawns
+                .sortedBy { it.instance.item.displayName }
+                .map { spawn ->
+                    val item = spawn.instance.item
+                    mapOf(
+                        "id" to spawn.instance.id.value,
+                        "displayName" to item.displayName,
+                        "description" to item.description,
+                        "slot" to item.slot?.name?.lowercase(),
+                        "damage" to item.damage,
+                        "armor" to item.armor,
+                        "stats" to item.stats.values,
+                        "consumable" to item.consumable,
+                        "basePrice" to item.basePrice,
+                        "image" to item.image,
+                        "spawnRoom" to spawn.roomId?.value,
+                    )
+                }
             call.respondText(json.writeValueAsString(items), ContentType.Application.Json)
         }
 
         // ── Broadcast ───────────────────────────────────────────────────────
         post("/api/broadcast") {
             if (onBroadcast == null) {
-                call.respond(HttpStatusCode.NotImplemented, """{"error":"Broadcast not configured"}""")
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Broadcast not configured")
                 return@post
             }
             val body = call.receiveText().trim()
@@ -1008,10 +1012,7 @@ internal fun Application.adminModule(
                 null
             }
             if (message.isNullOrBlank()) {
-                call.respond(
-                    HttpStatusCode.BadRequest,
-                    """{"error":"Request body must be JSON with a 'message' field"}""",
-                )
+                call.respondJsonError(HttpStatusCode.BadRequest, "Request body must be JSON with a 'message' field")
                 return@post
             }
             val count = onBroadcast.invoke(message)
@@ -1171,6 +1172,15 @@ private fun String.esc(): String =
         .replace("<", "&lt;")
         .replace(">", "&gt;")
         .replace("\"", "&quot;")
+
+// --- JSON error helper ---
+
+private suspend fun ApplicationCall.respondJsonError(
+    status: HttpStatusCode,
+    error: String,
+) {
+    respondText("""{"error":"$error"}""", ContentType.Application.Json, status)
+}
 
 // --- CORS helper ---
 
