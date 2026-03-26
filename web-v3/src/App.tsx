@@ -347,15 +347,7 @@ function App() {
           setGroupInfo,
           setGuildInfo,
           setGuildMembers,
-          setDialogue: (value) => {
-            setDialogue(value);
-            // Clear available quests when dialogue ends
-            if (typeof value === "function") {
-              // functional update — can't easily check, leave alone
-            } else if (value === null) {
-              setQuestsAvailable([]);
-            }
-          },
+          setDialogue,
           setCombatTarget,
           setShop: (value) => {
             setShop(value);

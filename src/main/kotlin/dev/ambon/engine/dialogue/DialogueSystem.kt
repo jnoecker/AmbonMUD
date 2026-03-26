@@ -153,9 +153,17 @@ class DialogueSystem(
         outbound.send(OutboundEvent.SendText(sessionId, "$mobName says: ${node.text}"))
 
         val visibleChoices = filterChoices(node.choices, playerLevel, playerClass)
+
+        // Always send Dialogue.Node so the canvas overlay can display NPC text and quest cards
+        gmcpEmitter?.sendDialogueNode(
+            sessionId,
+            mobName,
+            node.text,
+            visibleChoices.mapIndexed { index, choice -> (index + 1) to choice.text },
+        )
+
         if (visibleChoices.isEmpty()) {
             conversations.remove(sessionId)
-            gmcpEmitter?.sendDialogueEnd(sessionId, mobName, "ended")
             return
         }
 
@@ -164,13 +172,6 @@ class DialogueSystem(
                 OutboundEvent.SendInfo(sessionId, "  ${index + 1}. ${choice.text}"),
             )
         }
-
-        gmcpEmitter?.sendDialogueNode(
-            sessionId,
-            mobName,
-            node.text,
-            visibleChoices.mapIndexed { index, choice -> (index + 1) to choice.text },
-        )
     }
 
     private fun filterChoices(
