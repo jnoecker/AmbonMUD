@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | null;
+export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
@@ -284,6 +284,25 @@ export interface QuestNotification {
   questName: string;
   event: "complete" | "update";
   receivedAt: number;
+}
+
+export interface QuestAvailableObjective {
+  description: string;
+  count: number;
+}
+
+export interface QuestAvailableRewards {
+  xp: number;
+  gold: number;
+}
+
+export interface QuestAvailable {
+  id: string;
+  name: string;
+  description: string;
+  giverMobId: string;
+  objectives: QuestAvailableObjective[];
+  rewards: QuestAvailableRewards;
 }
 
 export interface MobInfo {
