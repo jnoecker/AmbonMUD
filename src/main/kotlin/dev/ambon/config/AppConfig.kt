@@ -1267,6 +1267,8 @@ data class AdminConfig(
     val token: String = "",
     /** Optional Grafana dashboard URL shown as a link on the overview page. */
     val grafanaUrl: String = "",
+    /** Allowed CORS origins for external tools (e.g. Arcanum). Empty list disables CORS. */
+    val corsOrigins: List<String> = emptyList(),
 )
 
 data class LoggingConfig(
