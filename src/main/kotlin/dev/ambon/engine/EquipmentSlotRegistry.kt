@@ -7,6 +7,8 @@ data class EquipmentSlotDefinition(
     val slot: ItemSlot,
     val displayName: String,
     val order: Int,
+    val x: Double = 50.0,
+    val y: Double = 50.0,
 )
 
 class EquipmentSlotRegistry(
@@ -22,6 +24,8 @@ class EquipmentSlotRegistry(
                 slot = ItemSlot(key),
                 displayName = cfg.displayName.ifEmpty { key.replaceFirstChar { it.uppercase() } },
                 order = cfg.order,
+                x = cfg.x,
+                y = cfg.y,
             )
         }.toMap()
         orderedSlots = slotMap.values.sortedBy { it.order }

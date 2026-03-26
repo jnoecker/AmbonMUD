@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "equipment" | "wearing" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
@@ -102,6 +102,14 @@ export interface ItemSummary {
   basePrice?: number;
   image?: string | null;
   video?: string | null;
+}
+
+export interface EquipmentSlotDef {
+  id: string;
+  displayName: string;
+  order: number;
+  x: number;
+  y: number;
 }
 
 export interface ShopItem {

@@ -10,6 +10,8 @@ import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { SpellbookPanel } from "./components/SpellbookPanel";
 import { QuestPanel } from "./components/panels/QuestPanel";
+import { InventoryPanel } from "./components/panels/InventoryPanel";
+import { EquipmentPanel } from "./components/panels/EquipmentPanel";
 import { PlayPanel } from "./components/panels/PlayPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
@@ -22,7 +24,6 @@ import {
   EMPTY_ROOM,
   EMPTY_VITALS,
   MAX_VISIBLE_EFFECTS,
-  SLOT_ORDER,
 } from "./constants";
 import { useCommandHistory } from "./hooks/useCommandHistory";
 import { useMiniMap } from "./hooks/useMiniMap";
@@ -39,6 +40,7 @@ import type {
   CombatLogMessage,
   CombatTarget,
   DialogueState,
+  EquipmentSlotDef,
   FriendEntry,
   FriendNotification,
   GainEvent,
@@ -183,6 +185,7 @@ function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [inventory, setInventory] = useState<ItemSummary[]>([]);
   const [equipment, setEquipment] = useState<Record<string, ItemSummary>>({});
+  const [equipmentSlotDefs, setEquipmentSlotDefs] = useState<EquipmentSlotDef[]>([]);
   const [achievements, setAchievements] = useState<AchievementData>({ completed: [], inProgress: [] });
   const [groupInfo, setGroupInfo] = useState<GroupInfo>({ leader: null, members: [] });
   const [guildInfo, setGuildInfo] = useState<GuildInfo>({ name: null, tag: null, rank: null, motd: null, memberCount: 0, maxSize: 50 });
@@ -339,6 +342,7 @@ function App() {
           setRoomItems,
           setInventory,
           setEquipment,
+          setEquipmentSlotDefs,
           setPlayers,
           setMobs,
           setEffects,
@@ -599,17 +603,6 @@ function App() {
 
   const exits = useMemo(() => sortExits(room.exits), [room.exits]);
 
-  const equipmentSlots = useMemo(() => {
-    const slots = Object.keys(equipment);
-    return slots.sort((left, right) => {
-      const li = SLOT_ORDER.indexOf(left);
-      const ri = SLOT_ORDER.indexOf(right);
-      if (li === -1 && ri === -1) return left.localeCompare(right);
-      if (li === -1) return 1;
-      if (ri === -1) return -1;
-      return li - ri;
-    });
-  }, [equipment]);
 
   const xpText =
     vitals.xpToNextLevel === null
@@ -635,6 +628,8 @@ function App() {
       ? "Mini-map"
       : activePopout === "room"
         ? "Room Details"
+      : activePopout === "inventory"
+        ? "Inventory"
       : activePopout === "equipment"
         ? "Equipment"
       : activePopout === "help"
@@ -649,7 +644,7 @@ function App() {
         ? "Spellbook"
       : activePopout === "quests"
         ? "Quests"
-        : "Currently Wearing";
+        : "";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -887,29 +882,8 @@ function App() {
         popoutTitle={popoutTitle}
         room={room}
         exits={exits}
-        inventory={inventory}
-        equipment={equipment}
-        equipmentSlots={equipmentSlots}
         mapCanvasRef={mapCanvasRef}
-        canManageItems={connected && hasCharacterProfile}
-        players={players}
         isStaff={character.isStaff}
-        onWearItem={(itemName) => {
-          sendCommand(`wear ${itemName}`, true);
-          focusComposer();
-        }}
-        onDropItem={(itemName) => {
-          sendCommand(`drop ${itemName}`, true);
-          focusComposer();
-        }}
-        onRemoveItem={(slot) => {
-          sendCommand(`remove ${slot}`, true);
-          focusComposer();
-        }}
-        onGiveItem={(itemKeyword, playerName) => {
-          sendCommand(`give ${itemKeyword} ${playerName}`, true);
-          focusComposer();
-        }}
         onClose={() => setActivePopout(null)}
       >
         {activePopout === "character" && (
@@ -938,8 +912,45 @@ function App() {
               sendCommand(`quest abandon ${questName}`, true);
               focusComposer();
             }}
+            onOpenInventory={() => setActivePopout("inventory")}
             onOpenEquipment={() => setActivePopout("equipment")}
-            onOpenWearing={() => setActivePopout("wearing")}
+          />
+        )}
+
+        {activePopout === "inventory" && (
+          <InventoryPanel
+            connected={connected}
+            hasCharacterProfile={hasCharacterProfile}
+            inventory={inventory}
+            players={players}
+            canManageItems={connected && hasCharacterProfile}
+            onWearItem={(itemName) => {
+              sendCommand(`wear ${itemName}`, true);
+              focusComposer();
+            }}
+            onDropItem={(itemName) => {
+              sendCommand(`drop ${itemName}`, true);
+              focusComposer();
+            }}
+            onGiveItem={(itemKeyword, playerName) => {
+              sendCommand(`give ${itemKeyword} ${playerName}`, true);
+              focusComposer();
+            }}
+          />
+        )}
+
+        {activePopout === "equipment" && (
+          <EquipmentPanel
+            connected={connected}
+            hasCharacterProfile={hasCharacterProfile}
+            character={character}
+            equipment={equipment}
+            slotDefs={equipmentSlotDefs}
+            canManageItems={connected && hasCharacterProfile}
+            onRemoveItem={(slot) => {
+              sendCommand(`remove ${slot}`, true);
+              focusComposer();
+            }}
           />
         )}
 

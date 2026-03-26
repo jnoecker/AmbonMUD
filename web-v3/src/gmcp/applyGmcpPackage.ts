@@ -11,6 +11,7 @@ import type {
   CompletedAchievement,
   DialogueChoice,
   DialogueState,
+  EquipmentSlotDef,
   FriendEntry,
   FriendNotification,
   GainEvent,
@@ -49,6 +50,7 @@ interface GmcpContext {
   setRoomItems: Dispatch<SetStateAction<RoomItem[]>>;
   setInventory: Dispatch<SetStateAction<ItemSummary[]>>;
   setEquipment: Dispatch<SetStateAction<Record<string, ItemSummary>>>;
+  setEquipmentSlotDefs: Dispatch<SetStateAction<EquipmentSlotDef[]>>;
   setPlayers: Dispatch<SetStateAction<RoomPlayer[]>>;
   setMobs: Dispatch<SetStateAction<RoomMob[]>>;
   setEffects: Dispatch<SetStateAction<StatusEffect[]>>;
@@ -201,6 +203,23 @@ export function applyGmcpPackage(
       if (zone && rooms.length > 0) {
         ctx.loadZoneMap(zone, rooms);
       }
+      break;
+    }
+
+    case "Char.Equipment.Slots": {
+      if (!Array.isArray(data)) break;
+      ctx.setEquipmentSlotDefs(
+        data
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => ({
+            id: typeof e.id === "string" ? e.id : "",
+            displayName: typeof e.displayName === "string" ? e.displayName : "",
+            order: typeof e.order === "number" ? e.order : 0,
+            x: typeof e.x === "number" ? e.x : 50,
+            y: typeof e.y === "number" ? e.y : 50,
+          }))
+          .sort((a, b) => a.order - b.order),
+      );
       break;
     }
 
