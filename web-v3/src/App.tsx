@@ -303,6 +303,7 @@ function App() {
     setSkills([]);
     setInventory([]);
     setEquipment({});
+    setEquipmentSlotDefs([]);
     setAchievements({ completed: [], inProgress: [] });
     setGroupInfo({ leader: null, members: [] });
     setGuildInfo({ name: null, tag: null, rank: null, motd: null, memberCount: 0, maxSize: 50 });
