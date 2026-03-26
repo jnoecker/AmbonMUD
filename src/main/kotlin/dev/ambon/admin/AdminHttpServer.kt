@@ -3,15 +3,25 @@ package dev.ambon.admin
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.config.AdminConfig
+import dev.ambon.domain.achievement.AchievementDef
+import dev.ambon.domain.quest.QuestDef
 import dev.ambon.domain.world.World
+import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
+import dev.ambon.engine.QuestRegistry
+import dev.ambon.engine.ShopRegistry
+import dev.ambon.engine.abilities.AbilityDefinition
+import dev.ambon.engine.abilities.AbilityRegistry
+import dev.ambon.engine.status.StatusEffectDefinition
+import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
@@ -22,10 +32,12 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
 import io.ktor.server.request.receiveParameters
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.options
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import java.util.Base64
@@ -40,6 +52,13 @@ class AdminHttpServer(
     private val world: World,
     private val metricsUrl: String = "",
     private val onReload: (suspend (String?) -> String)? = null,
+    private val onBroadcast: (suspend (String) -> Int)? = null,
+    private val abilityRegistry: AbilityRegistry? = null,
+    private val statusEffectRegistry: StatusEffectRegistry? = null,
+    private val questRegistry: QuestRegistry? = null,
+    private val achievementRegistry: AchievementRegistry? = null,
+    private val shopRegistry: ShopRegistry? = null,
+    private val startTime: Long = System.currentTimeMillis(),
 ) {
     private var engine: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
     private val json: ObjectMapper = jacksonObjectMapper()
@@ -57,6 +76,14 @@ class AdminHttpServer(
                     metricsUrl = metricsUrl,
                     json = json,
                     onReload = onReload,
+                    onBroadcast = onBroadcast,
+                    abilityRegistry = abilityRegistry,
+                    statusEffectRegistry = statusEffectRegistry,
+                    questRegistry = questRegistry,
+                    achievementRegistry = achievementRegistry,
+                    shopRegistry = shopRegistry,
+                    corsOrigins = config.corsOrigins,
+                    startTime = startTime,
                 )
             }.start(wait = false)
         log.info { "Admin HTTP server started on port ${config.port}" }
@@ -294,11 +321,34 @@ internal fun Application.adminModule(
     metricsUrl: String = "",
     json: ObjectMapper,
     onReload: (suspend (String?) -> String)? = null,
+    onBroadcast: (suspend (String) -> Int)? = null,
+    abilityRegistry: AbilityRegistry? = null,
+    statusEffectRegistry: StatusEffectRegistry? = null,
+    questRegistry: QuestRegistry? = null,
+    achievementRegistry: AchievementRegistry? = null,
+    shopRegistry: ShopRegistry? = null,
+    corsOrigins: List<String> = emptyList(),
+    startTime: Long = System.currentTimeMillis(),
 ) {
     routing {
         intercept(ApplicationCallPipeline.Plugins) {
+            // CORS preflight requests skip auth
+            if (call.request.local.method == HttpMethod.Options) {
+                if (corsOrigins.isNotEmpty()) {
+                    call.applyCorsHeaders(corsOrigins)
+                    call.respond(HttpStatusCode.NoContent)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
+                finish()
+                return@intercept
+            }
             if (!call.requireBasicAuth(token)) {
                 finish()
+                return@intercept
+            }
+            if (corsOrigins.isNotEmpty()) {
+                call.applyCorsHeaders(corsOrigins)
             }
         }
 
@@ -672,6 +722,311 @@ internal fun Application.adminModule(
                 )
             }
         }
+
+        // ── Health ──────────────────────────────────────────────────────────
+        get("/api/health") {
+            val uptimeMs = System.currentTimeMillis() - startTime
+            call.respondText(
+                json.writeValueAsString(
+                    mapOf(
+                        "status" to "ok",
+                        "uptimeMs" to uptimeMs,
+                        "playersOnline" to players.allPlayers().size,
+                    ),
+                ),
+                ContentType.Application.Json,
+            )
+        }
+
+        // ── Staff toggle (JSON) ─────────────────────────────────────────────
+        post("/api/players/{name}/staff") {
+            val name = call.parameters["name"] ?: return@post call.respond(HttpStatusCode.BadRequest)
+            val record = playerRepo.findByName(name)
+            if (record == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@post
+            }
+            val newValue = !record.isStaff
+            playerRepo.save(record.copy(isStaff = newValue))
+            players
+                .allPlayers()
+                .firstOrNull { it.name.equals(name, ignoreCase = true) }
+                ?.let { it.isStaff = newValue }
+            call.respondText(
+                json.writeValueAsString(
+                    mapOf("name" to record.name, "isStaff" to newValue),
+                ),
+                ContentType.Application.Json,
+            )
+        }
+
+        // ── Player search (online + offline) ────────────────────────────────
+        get("/api/players/search") {
+            val query = call.request.queryParameters["q"]?.trim()
+            if (query.isNullOrBlank()) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    """{"error":"Query parameter 'q' is required"}""",
+                )
+                return@get
+            }
+            // Check online first
+            val onlineMatch = players.allPlayers()
+                .firstOrNull { it.name.equals(query, ignoreCase = true) }
+            if (onlineMatch != null) {
+                call.respondText(
+                    json.writeValueAsString(onlineMatch.toDetailDto()),
+                    ContentType.Application.Json,
+                )
+                return@get
+            }
+            // Fall back to persistence
+            val record = playerRepo.findByName(query)
+            if (record != null) {
+                call.respondText(
+                    json.writeValueAsString(record.toDetailDto()),
+                    ContentType.Application.Json,
+                )
+                return@get
+            }
+            call.respond(HttpStatusCode.NotFound)
+        }
+
+        // ── Room detail ─────────────────────────────────────────────────────
+        get("/api/world/zones/{zone}/rooms/{room}") {
+            val zone = call.parameters["zone"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val roomLocal = call.parameters["room"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val roomId = dev.ambon.domain.ids.RoomId("$zone:$roomLocal")
+            val room = world.rooms[roomId]
+            if (room == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+            val roomPlayers = players.playersInRoom(roomId).map { it.name }.sorted()
+            val roomMobs = mobs.mobsInRoom(roomId).map { mob ->
+                mapOf(
+                    "id" to mob.id.value,
+                    "name" to mob.name,
+                    "hp" to mob.hp,
+                    "maxHp" to mob.maxHp,
+                    "templateKey" to mob.templateKey,
+                )
+            }
+            val dto = mapOf(
+                "id" to roomId.value,
+                "title" to room.title,
+                "description" to room.description,
+                "exits" to room.exits.map { (dir, target) ->
+                    mapOf("direction" to dir.name.lowercase(), "target" to target.value)
+                },
+                "players" to roomPlayers,
+                "mobs" to roomMobs,
+                "features" to room.features.map { it.toString() },
+                "station" to room.station,
+                "image" to room.image,
+                "video" to room.video,
+                "music" to room.music,
+                "ambient" to room.ambient,
+                "mapX" to room.mapX,
+                "mapY" to room.mapY,
+            )
+            call.respondText(json.writeValueAsString(dto), ContentType.Application.Json)
+        }
+
+        // ── Mobs ────────────────────────────────────────────────────────────
+        get("/api/mobs") {
+            val zone = call.request.queryParameters["zone"]
+            val allMobs = mobs.all()
+            val filtered = if (zone != null) {
+                allMobs.filter { it.roomId.zone == zone }
+            } else {
+                allMobs
+            }
+            val dtos = filtered.sortedBy { it.name }.map { it.toMobDto() }
+            call.respondText(json.writeValueAsString(dtos), ContentType.Application.Json)
+        }
+
+        get("/api/mobs/{id}") {
+            val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val mob = mobs.get(dev.ambon.domain.ids.MobId(id))
+            if (mob == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+            call.respondText(json.writeValueAsString(mob.toMobDto()), ContentType.Application.Json)
+        }
+
+        // ── Abilities ───────────────────────────────────────────────────────
+        get("/api/abilities") {
+            if (abilityRegistry == null) {
+                call.respond(HttpStatusCode.NotImplemented, """{"error":"Ability registry not configured"}""")
+                return@get
+            }
+            val dtos = abilityRegistry.all().sortedBy { it.displayName }.map { it.toAbilityDto() }
+            call.respondText(json.writeValueAsString(dtos), ContentType.Application.Json)
+        }
+
+        get("/api/abilities/{id}") {
+            if (abilityRegistry == null) {
+                call.respond(HttpStatusCode.NotImplemented, """{"error":"Ability registry not configured"}""")
+                return@get
+            }
+            val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val ability = abilityRegistry.get(dev.ambon.engine.abilities.AbilityId(id))
+            if (ability == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+            call.respondText(json.writeValueAsString(ability.toAbilityDto()), ContentType.Application.Json)
+        }
+
+        // ── Status Effects ──────────────────────────────────────────────────
+        get("/api/effects") {
+            if (statusEffectRegistry == null) {
+                call.respond(HttpStatusCode.NotImplemented, """{"error":"Status effect registry not configured"}""")
+                return@get
+            }
+            val dtos = statusEffectRegistry.all().sortedBy { it.displayName }.map { it.toEffectDto() }
+            call.respondText(json.writeValueAsString(dtos), ContentType.Application.Json)
+        }
+
+        get("/api/effects/{id}") {
+            if (statusEffectRegistry == null) {
+                call.respond(HttpStatusCode.NotImplemented, """{"error":"Status effect registry not configured"}""")
+                return@get
+            }
+            val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val effect = statusEffectRegistry.get(dev.ambon.engine.status.StatusEffectId(id))
+            if (effect == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+            call.respondText(json.writeValueAsString(effect.toEffectDto()), ContentType.Application.Json)
+        }
+
+        // ── Quests ──────────────────────────────────────────────────────────
+        get("/api/quests") {
+            if (questRegistry == null) {
+                call.respond(HttpStatusCode.NotImplemented, """{"error":"Quest registry not configured"}""")
+                return@get
+            }
+            val dtos = questRegistry.all().sortedBy { it.id }.map { it.toQuestDto() }
+            call.respondText(json.writeValueAsString(dtos), ContentType.Application.Json)
+        }
+
+        get("/api/quests/{id}") {
+            if (questRegistry == null) {
+                call.respond(HttpStatusCode.NotImplemented, """{"error":"Quest registry not configured"}""")
+                return@get
+            }
+            val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val quest = questRegistry.get(id)
+            if (quest == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+            call.respondText(json.writeValueAsString(quest.toQuestDto()), ContentType.Application.Json)
+        }
+
+        // ── Achievements ────────────────────────────────────────────────────
+        get("/api/achievements") {
+            if (achievementRegistry == null) {
+                call.respond(HttpStatusCode.NotImplemented, """{"error":"Achievement registry not configured"}""")
+                return@get
+            }
+            val dtos = achievementRegistry.all().sortedBy { it.id }.map { it.toAchievementDto() }
+            call.respondText(json.writeValueAsString(dtos), ContentType.Application.Json)
+        }
+
+        get("/api/achievements/{id}") {
+            if (achievementRegistry == null) {
+                call.respond(HttpStatusCode.NotImplemented, """{"error":"Achievement registry not configured"}""")
+                return@get
+            }
+            val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val ach = achievementRegistry.get(id)
+            if (ach == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+            call.respondText(json.writeValueAsString(ach.toAchievementDto()), ContentType.Application.Json)
+        }
+
+        // ── Shops ───────────────────────────────────────────────────────────
+        get("/api/shops") {
+            val shops = world.shopDefinitions.sortedBy { it.id }.map { shop ->
+                val items = shopRegistry?.shopItems(shop) ?: emptyList()
+                mapOf(
+                    "id" to shop.id,
+                    "name" to shop.name,
+                    "roomId" to shop.roomId.value,
+                    "items" to items.map { (itemId, item) ->
+                        mapOf(
+                            "id" to itemId.value,
+                            "displayName" to item.displayName,
+                            "basePrice" to item.basePrice,
+                            "slot" to item.slot?.name?.lowercase(),
+                        )
+                    },
+                )
+            }
+            call.respondText(json.writeValueAsString(shops), ContentType.Application.Json)
+        }
+
+        // ── Items (templates) ───────────────────────────────────────────────
+        get("/api/items") {
+            val items = world.itemSpawns.map { spawn ->
+                val item = spawn.instance.item
+                mapOf(
+                    "id" to spawn.instance.id.value,
+                    "displayName" to item.displayName,
+                    "description" to item.description,
+                    "slot" to item.slot?.name?.lowercase(),
+                    "damage" to item.damage,
+                    "armor" to item.armor,
+                    "stats" to item.stats.values,
+                    "consumable" to item.consumable,
+                    "basePrice" to item.basePrice,
+                    "image" to item.image,
+                    "spawnRoom" to spawn.roomId?.value,
+                )
+            }.sortedBy { it["displayName"] as? String }
+            call.respondText(json.writeValueAsString(items), ContentType.Application.Json)
+        }
+
+        // ── Broadcast ───────────────────────────────────────────────────────
+        post("/api/broadcast") {
+            if (onBroadcast == null) {
+                call.respond(HttpStatusCode.NotImplemented, """{"error":"Broadcast not configured"}""")
+                return@post
+            }
+            val body = call.receiveText().trim()
+            val message = try {
+                val node = json.readTree(body)
+                node["message"]?.asText()
+            } catch (_: Exception) {
+                null
+            }
+            if (message.isNullOrBlank()) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    """{"error":"Request body must be JSON with a 'message' field"}""",
+                )
+                return@post
+            }
+            val count = onBroadcast.invoke(message)
+            call.respondText(
+                json.writeValueAsString(mapOf("status" to "ok", "recipients" to count)),
+                ContentType.Application.Json,
+            )
+        }
+
+        // ── CORS preflight catch-all ────────────────────────────────────────
+        options("{...}") {
+            // Handled by the intercept above; this route just ensures Ktor
+            // doesn't return 405 Method Not Allowed for OPTIONS requests.
+            call.respond(HttpStatusCode.NoContent)
+        }
     }
 }
 
@@ -816,3 +1171,105 @@ private fun String.esc(): String =
         .replace("<", "&lt;")
         .replace(">", "&gt;")
         .replace("\"", "&quot;")
+
+// --- CORS helper ---
+
+private fun ApplicationCall.applyCorsHeaders(origins: List<String>) {
+    val requestOrigin = request.headers[HttpHeaders.Origin] ?: return
+    val allowed = origins.any { it == "*" || it.equals(requestOrigin, ignoreCase = true) }
+    if (!allowed) return
+    response.headers.append(HttpHeaders.AccessControlAllowOrigin, requestOrigin)
+    response.headers.append(HttpHeaders.AccessControlAllowHeaders, "Authorization, Content-Type")
+    response.headers.append(HttpHeaders.AccessControlAllowMethods, "GET, POST, OPTIONS")
+    response.headers.append(HttpHeaders.AccessControlMaxAge, "3600")
+}
+
+// --- Content DTO helpers ---
+
+private fun dev.ambon.domain.mob.MobState.toMobDto(): Map<String, Any?> =
+    mapOf(
+        "id" to id.value,
+        "name" to name,
+        "roomId" to roomId.value,
+        "hp" to hp,
+        "maxHp" to maxHp,
+        "templateKey" to templateKey,
+        "aggressive" to aggressive,
+        "xpReward" to xpReward,
+        "armor" to armor,
+        "image" to image,
+        "questIds" to questIds,
+        "spawnRoomId" to spawnRoomId?.value,
+    )
+
+private fun AbilityDefinition.toAbilityDto(): Map<String, Any?> =
+    mapOf(
+        "id" to id.value,
+        "displayName" to displayName,
+        "description" to description,
+        "manaCost" to manaCost,
+        "cooldownMs" to cooldownMs,
+        "levelRequired" to levelRequired,
+        "targetType" to targetType,
+        "requiredClass" to requiredClass,
+        "image" to image,
+        "effectType" to effect::class.simpleName,
+    )
+
+private fun StatusEffectDefinition.toEffectDto(): Map<String, Any?> =
+    mapOf(
+        "id" to id.value,
+        "displayName" to displayName,
+        "effectType" to effectType,
+        "durationMs" to durationMs,
+        "tickIntervalMs" to tickIntervalMs,
+        "tickMinValue" to tickMinValue,
+        "tickMaxValue" to tickMaxValue,
+        "shieldAmount" to shieldAmount,
+        "statMods" to statMods.values,
+        "stackBehavior" to stackBehavior,
+        "maxStacks" to maxStacks,
+    )
+
+private fun QuestDef.toQuestDto(): Map<String, Any?> =
+    mapOf(
+        "id" to id,
+        "name" to name,
+        "description" to description,
+        "giverMobId" to giverMobId,
+        "completionType" to completionType,
+        "objectives" to objectives.map { obj ->
+            mapOf(
+                "type" to obj.type,
+                "targetId" to obj.targetId,
+                "count" to obj.count,
+                "description" to obj.description,
+            )
+        },
+        "rewards" to mapOf(
+            "xp" to rewards.xp,
+            "gold" to rewards.gold,
+        ),
+    )
+
+private fun AchievementDef.toAchievementDto(): Map<String, Any?> =
+    mapOf(
+        "id" to id,
+        "displayName" to displayName,
+        "description" to description,
+        "category" to category,
+        "hidden" to hidden,
+        "criteria" to criteria.map { c ->
+            mapOf(
+                "type" to c.type,
+                "targetId" to c.targetId,
+                "count" to c.count,
+                "description" to c.description,
+            )
+        },
+        "rewards" to mapOf(
+            "xp" to rewards.xp,
+            "gold" to rewards.gold,
+            "title" to rewards.title,
+        ),
+    )
