@@ -288,6 +288,8 @@ When adding new `InterEngineMessage` variants, update serialization in `InterEng
 ### GMCP
 Update `GmcpEmitter.kt` and the v3 web client's GMCP handler at `web-v3/src/gmcp/applyGmcpPackage.ts`. Telnet negotiation is in `NetworkSession.kt` (WILL GMCP) and `TelnetLineDecoder.kt`.
 
+**When adding a new GMCP package family** (e.g. `Quest`, `Guild`), you must also register it in the WebSocket auto-opt-in list at `KtorWebSocketTransport.kt` line ~208 (`Core.Supports.Set`). The `GmcpEmitter.emit()` method checks `supportsPackage(sessionId, supportCheck)` before sending — if the package isn't in the client's supported set, the GMCP is silently dropped. Prefix matching applies: registering `"Quest 1"` covers `Quest.List`, `Quest.Update`, `Quest.Available`, etc.
+
 ### Ability/spell image
 Add `image` field to `AbilityDefinitionConfig` (AppConfig.kt), `AbilityDefinition`, `AbilityRegistryLoader`, and `GmcpEmitter.CharSkillPayload`. Client reads it from `Char.Skills` GMCP into `SkillSummary.image`.
 

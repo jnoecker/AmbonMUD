@@ -66,8 +66,9 @@ export class DialogueOverlay {
   update() {
     const state = gameStateRef.current;
     const dialogue = state.dialogue;
+    const hasQuestOffers = state.questsAvailable.length > 0;
 
-    if (!dialogue) {
+    if (!dialogue && !hasQuestOffers) {
       this.container.visible = false;
       this.lastDialogueKey = null;
       return;
@@ -76,14 +77,17 @@ export class DialogueOverlay {
     this.container.visible = true;
 
     const questIds = state.questsAvailable.map((q) => q.id).join(",");
-    const key = `${dialogue.mobName}:${dialogue.text}:${dialogue.choices.map((c) => c.text).join("|")}:q=${questIds}`;
+    const dialogueKey = dialogue
+      ? `${dialogue.mobName}:${dialogue.text}:${dialogue.choices.map((c) => c.text).join("|")}`
+      : "no-dialogue";
+    const key = `${dialogueKey}:q=${questIds}`;
     if (key === this.lastDialogueKey) return;
     this.lastDialogueKey = key;
 
     this.rebuild(dialogue, state.questsAvailable);
   }
 
-  private rebuild(dialogue: DialogueState, questsAvailable: QuestAvailable[]) {
+  private rebuild(dialogue: DialogueState | null, questsAvailable: QuestAvailable[]) {
     // Clear old choices
     for (const choice of this.choiceTexts) {
       this.container.removeChild(choice);
@@ -109,13 +113,16 @@ export class DialogueOverlay {
     const innerWidth = boxWidth - BOX_PADDING * 2;
     this.bodyText.style.wordWrapWidth = innerWidth;
 
-    this.npcNameText.text = dialogue.mobName;
-    this.bodyText.text = dialogue.text;
+    this.npcNameText.text = dialogue?.mobName ?? "";
+    this.bodyText.text = dialogue?.text ?? "";
 
     // Calculate content height
-    let contentHeight = BOX_PADDING + this.npcNameText.height + 8 + this.bodyText.height + 12;
+    let contentHeight = BOX_PADDING;
+    if (dialogue) {
+      contentHeight += this.npcNameText.height + 8 + this.bodyText.height + 12;
+    }
 
-    if (dialogue.choices.length > 0) {
+    if (dialogue && dialogue.choices.length > 0) {
       for (const choice of dialogue.choices) {
         const choiceText = new Text({
           text: `${choice.index}. ${choice.text}`,
@@ -135,13 +142,14 @@ export class DialogueOverlay {
         this.container.addChild(choiceText);
         contentHeight += CHOICE_HEIGHT;
       }
-    } else {
+    } else if (dialogue) {
+      // Show ending text only when dialogue existed but had no choices
       this.endingText = new Text({
-        text: "The conversation has ended.",
+        text: questsAvailable.length > 0 ? "" : "The conversation has ended.",
         style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: ENDING_COLOR, fontStyle: "italic" },
       });
       this.container.addChild(this.endingText);
-      contentHeight += 20;
+      if (!questsAvailable.length) contentHeight += 20;
     }
 
     // Build quest offer cards
@@ -173,13 +181,15 @@ export class DialogueOverlay {
     this.bg.stroke({ color: BOX_BORDER, alpha: 0.6, width: 1 });
 
     let y = boxY + BOX_PADDING;
-    this.npcNameText.x = boxX + BOX_PADDING;
-    this.npcNameText.y = y;
-    y += this.npcNameText.height + 8;
+    if (dialogue) {
+      this.npcNameText.x = boxX + BOX_PADDING;
+      this.npcNameText.y = y;
+      y += this.npcNameText.height + 8;
 
-    this.bodyText.x = boxX + BOX_PADDING;
-    this.bodyText.y = y;
-    y += this.bodyText.height + 12;
+      this.bodyText.x = boxX + BOX_PADDING;
+      this.bodyText.y = y;
+      y += this.bodyText.height + 12;
+    }
 
     for (const choiceText of this.choiceTexts) {
       choiceText.x = boxX + BOX_PADDING + 8;
