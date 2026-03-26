@@ -1,27 +1,16 @@
-import { useState } from "react";
 import type { ReactNode, RefObject } from "react";
-import type { ItemSummary, PopoutPanel, RoomPlayer, RoomState } from "../types";
+import type { PopoutPanel, RoomState } from "../types";
 import { HelpContent } from "./HelpContent";
-import { DropItemIcon, GiveItemIcon, RemoveItemIcon, WearItemIcon } from "./Icons";
 
-const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop", "spellbook", "quests"]);
+const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop", "spellbook", "quests", "inventory", "equipment"]);
 
 interface PopoutLayerProps {
   activePopout: PopoutPanel;
   popoutTitle: string;
   room: RoomState;
   exits: Array<[string, string]>;
-  inventory: ItemSummary[];
-  equipment: Record<string, ItemSummary>;
-  equipmentSlots: string[];
   mapCanvasRef: RefObject<HTMLCanvasElement | null>;
-  canManageItems: boolean;
-  players: RoomPlayer[];
   isStaff: boolean;
-  onWearItem: (itemName: string) => void;
-  onDropItem: (itemName: string) => void;
-  onRemoveItem: (slot: string) => void;
-  onGiveItem: (itemKeyword: string, playerName: string) => void;
   onClose: () => void;
   children?: ReactNode;
 }
@@ -31,21 +20,11 @@ export function PopoutLayer({
   popoutTitle,
   room,
   exits,
-  inventory,
-  equipment,
-  equipmentSlots,
   mapCanvasRef,
-  canManageItems,
-  players,
   isStaff,
-  onWearItem,
-  onDropItem,
-  onRemoveItem,
-  onGiveItem,
   onClose,
   children,
 }: PopoutLayerProps) {
-  const [givePickerItemId, setGivePickerItemId] = useState<string | null>(null);
   if (!activePopout) return null;
 
   const isPanelPopout = PANEL_POPOUTS.has(activePopout);
@@ -103,115 +82,6 @@ export function PopoutLayer({
                   : `Available exits: ${exits.map(([direction]) => direction).join(", ")}`}
               </p>
             </article>
-          </div>
-        )}
-
-        {activePopout === "equipment" && (
-          <div className="popout-content">
-            {inventory.length === 0 ? (
-              <p className="empty-note">No equipment in bags right now.</p>
-            ) : (
-              <ul className="item-list">
-                {inventory.map((item) => (
-                  <li key={item.id} className="item-list-entry">
-                    <div className="item-list-row">
-                      <span className="entity-name-with-thumb">
-                        {item.image && <img src={item.image} alt="" className="entity-thumb" />}
-                        {item.name}
-                      </span>
-                      <span className="item-popout-actions">
-                        {item.slot && (
-                          <button
-                            type="button"
-                            className="mob-command-button"
-                            title={`Wear ${item.name}`}
-                            aria-label={`Wear ${item.name}`}
-                            disabled={!canManageItems}
-                            onClick={() => onWearItem(item.name)}
-                          >
-                            <WearItemIcon className="mob-command-icon" />
-                          </button>
-                        )}
-                        {players.length > 0 && (
-                          <button
-                            type="button"
-                            className={`mob-command-button ${givePickerItemId === item.id ? "mob-command-button-active" : ""}`}
-                            title={`Give ${item.name}`}
-                            aria-label={`Give ${item.name}`}
-                            aria-expanded={givePickerItemId === item.id}
-                            disabled={!canManageItems}
-                            onClick={() => setGivePickerItemId(givePickerItemId === item.id ? null : item.id)}
-                          >
-                            <GiveItemIcon className="mob-command-icon" />
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="mob-command-button"
-                          title={`Drop ${item.name}`}
-                          aria-label={`Drop ${item.name}`}
-                          disabled={!canManageItems}
-                          onClick={() => onDropItem(item.name)}
-                        >
-                          <DropItemIcon className="mob-command-icon" />
-                        </button>
-                      </span>
-                    </div>
-                    {givePickerItemId === item.id && (
-                      <div className="give-player-picker" role="listbox" aria-label={`Give ${item.name} to`}>
-                        <span className="give-picker-label">Give to:</span>
-                        {players.map((player) => (
-                          <button
-                            key={player.name}
-                            type="button"
-                            role="option"
-                            className="give-player-option"
-                            onClick={() => {
-                              onGiveItem(item.keyword, player.name);
-                              setGivePickerItemId(null);
-                            }}
-                          >
-                            {player.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {activePopout === "wearing" && (
-          <div className="popout-content">
-            {equipmentSlots.length === 0 ? (
-              <p className="empty-note">Nothing currently worn.</p>
-            ) : (
-                <ul className="equipment-list">
-                  {equipmentSlots.map((slot) => (
-                    <li key={slot}>
-                      <span className="equipment-slot">{slot}</span>
-                      <span className="equipment-popout-row">
-                        <span className="entity-name-with-thumb">
-                          {equipment[slot]?.image && <img src={equipment[slot].image!} alt="" className="entity-thumb" />}
-                          {equipment[slot]?.name ?? "Unknown"}
-                        </span>
-                        <button
-                          type="button"
-                          className="mob-command-button"
-                          title={`Remove ${slot}`}
-                          aria-label={`Remove ${slot}`}
-                          disabled={!canManageItems}
-                          onClick={() => onRemoveItem(slot)}
-                        >
-                          <RemoveItemIcon className="mob-command-icon" />
-                        </button>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-            )}
           </div>
         )}
 

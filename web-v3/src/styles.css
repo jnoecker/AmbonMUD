@@ -3052,6 +3052,390 @@ body {
   }
 }
 
+/* ────────── Inventory Panel ────────── */
+
+.inventory-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.inventory-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.inventory-section-title {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  margin: 0;
+  padding: 0 var(--space-1);
+  letter-spacing: 0.02em;
+}
+
+.inventory-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.inventory-item {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(140deg, rgb(70 83 117 / 80%), rgb(60 76 111 / 76%));
+  border: 1px solid var(--line-faint);
+  transition: border-color 150ms var(--ease-out-soft);
+}
+
+.inventory-item:hover {
+  border-color: rgb(168 151 210 / 30%);
+}
+
+.inventory-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 8px;
+}
+
+.inventory-item-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.inventory-item-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--line-faint);
+}
+
+.inventory-item-name {
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inventory-item-slot {
+  font-size: 0.66rem;
+  color: var(--text-disabled);
+  background: rgb(255 255 255 / 6%);
+  padding: 1px 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.inventory-item-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.inventory-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background 140ms var(--ease-out-soft),
+    color 140ms var(--ease-out-soft),
+    border-color 140ms var(--ease-out-soft);
+}
+
+.inventory-action-btn:hover:not(:disabled) {
+  background: rgb(255 255 255 / 8%);
+  color: var(--text-primary);
+  border-color: var(--line-faint);
+}
+
+.inventory-action-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.inventory-action-btn-active {
+  background: rgb(168 151 210 / 20%);
+  border-color: rgb(168 151 210 / 40%);
+}
+
+.inventory-action-equip {
+  color: var(--color-primary-moss-green);
+}
+
+.inventory-action-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.inventory-give-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 4px 8px 6px;
+  flex-wrap: wrap;
+}
+
+.inventory-give-label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.inventory-give-option {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line-faint);
+  background: rgb(255 255 255 / 6%);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 120ms var(--ease-out-soft);
+}
+
+.inventory-give-option:hover {
+  background: rgb(168 151 210 / 24%);
+}
+
+.inventory-empty-state {
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+/* ────────── Equipment Panel (Paper Doll) ────────── */
+
+.equipment-panel-v2 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.paperdoll-container {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2) 0;
+}
+
+.paperdoll-sprite-wrap {
+  position: relative;
+  width: 180px;
+  height: 180px;
+}
+
+.paperdoll-sprite {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-lg);
+  filter: drop-shadow(0 4px 12px rgb(8 10 18 / 50%));
+}
+
+.paperdoll-sprite-placeholder {
+  background: linear-gradient(140deg, rgb(50 60 88 / 80%), rgb(40 50 75 / 70%));
+  border: 2px dashed var(--line-faint);
+}
+
+/* Slot markers positioned absolutely via percentage */
+.paperdoll-slot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgb(168 151 210 / 50%);
+  background: rgb(34 41 60 / 90%);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 170ms var(--ease-out-soft),
+    box-shadow 170ms var(--ease-out-soft),
+    transform 160ms var(--ease-out-soft);
+}
+
+.paperdoll-slot:hover {
+  border-color: var(--color-primary-lavender);
+  box-shadow: 0 0 10px rgb(168 151 210 / 40%);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.paperdoll-slot-selected {
+  border-color: var(--color-primary-lavender);
+  box-shadow: 0 0 14px rgb(168 151 210 / 50%);
+}
+
+.paperdoll-slot-empty {
+  animation: slotPulse 3s var(--ease-in-out-smooth) infinite;
+}
+
+.paperdoll-slot-filled {
+  border-color: rgb(141 169 123 / 60%);
+}
+
+.paperdoll-slot-filled:hover {
+  border-color: var(--color-primary-moss-green);
+  box-shadow: 0 0 10px rgb(141 169 123 / 40%);
+}
+
+.paperdoll-slot-img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.paperdoll-slot-letter {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-disabled);
+}
+
+@keyframes slotPulse {
+  0%, 100% { opacity: 0.7; box-shadow: 0 0 6px rgb(168 151 210 / 20%); }
+  50% { opacity: 1; box-shadow: 0 0 12px rgb(168 151 210 / 40%); }
+}
+
+/* Selected slot detail card */
+.paperdoll-detail {
+  background: linear-gradient(140deg, rgb(70 83 117 / 88%), rgb(60 76 111 / 84%));
+  border: 1px solid rgb(168 151 210 / 24%);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  animation: questDetailsSlide 200ms var(--ease-out-soft);
+}
+
+.paperdoll-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.paperdoll-detail-slot {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.paperdoll-detail-name {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.paperdoll-detail-empty {
+  font-size: 0.78rem;
+  color: var(--text-disabled);
+  font-style: italic;
+}
+
+.paperdoll-detail-actions {
+  margin-top: var(--space-2);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.paperdoll-remove-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgb(184 143 170 / 40%);
+  border-radius: var(--radius-sm);
+  background: rgb(184 143 170 / 14%);
+  color: var(--color-primary-dusty-rose);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition:
+    background 150ms var(--ease-out-soft),
+    border-color 150ms var(--ease-out-soft);
+}
+
+.paperdoll-remove-btn:hover {
+  background: rgb(184 143 170 / 24%);
+  border-color: rgb(184 143 170 / 56%);
+}
+
+.paperdoll-remove-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Slot list summary */
+.paperdoll-slot-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.paperdoll-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 120ms var(--ease-out-soft);
+}
+
+.paperdoll-list-item:hover {
+  background: rgb(255 255 255 / 4%);
+}
+
+.paperdoll-list-item-selected {
+  background: rgb(168 151 210 / 12%);
+}
+
+.paperdoll-list-slot {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.paperdoll-list-name {
+  font-size: 0.78rem;
+  color: var(--text-primary);
+}
+
+.paperdoll-list-name-empty {
+  color: var(--text-disabled);
+  font-style: italic;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paperdoll-slot-empty {
+    animation: none;
+  }
+}
+
 .character-detail-panel-flip {
   animation: detailFlipIn 220ms var(--ease-out-soft);
   transform-origin: top center;
