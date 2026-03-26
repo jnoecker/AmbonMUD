@@ -12,21 +12,27 @@ import dev.ambon.bus.redisBusSubscriberSetup
 import dev.ambon.config.AppConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PersistenceContext
 import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerClassRegistryLoader
 import dev.ambon.engine.PlayerProgression
+import dev.ambon.engine.QuestRegistry
 import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.RaceRegistryLoader
 import dev.ambon.engine.ReloadRequest
+import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.StatRegistry
 import dev.ambon.engine.StatRegistryLoader
 import dev.ambon.engine.WorldStateRegistry
+import dev.ambon.engine.abilities.AbilityRegistry
 import dev.ambon.engine.createPlayerRegistry
+import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
+import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.GuildRepositoryFactory
 import dev.ambon.persistence.PersistenceWorker
@@ -153,6 +159,11 @@ class MudServer(
 
     private val items = ItemRegistry()
     private val mobs = MobRegistry()
+    private val abilityRegistry = AbilityRegistry()
+    private val statusEffectRegistry = StatusEffectRegistry()
+    private val shopRegistry = ShopRegistry(items)
+    private val questRegistry = QuestRegistry()
+    private val achievementRegistry = AchievementRegistry()
     private val classRegistry =
         PlayerClassRegistry().also { reg ->
             PlayerClassRegistryLoader.load(config.engine.classes, reg)
@@ -251,6 +262,19 @@ class MudServer(
                     reloadChannel.send(ReloadRequest(target, deferred))
                     deferred.await()
                 },
+                onBroadcast = { message ->
+                    val online = players.allPlayers()
+                    for (p in online) {
+                        outbound.send(OutboundEvent.SendText(p.sessionId, message))
+                        outbound.send(OutboundEvent.SendPrompt(p.sessionId))
+                    }
+                    online.size
+                },
+                abilityRegistry = abilityRegistry,
+                statusEffectRegistry = statusEffectRegistry,
+                questRegistry = questRegistry,
+                achievementRegistry = achievementRegistry,
+                shopRegistry = shopRegistry,
             )
         } else {
             null
@@ -342,6 +366,11 @@ class MudServer(
                     metrics = gameMetrics,
                     onShutdown = { shutdownSignal.complete(Unit) },
                     worldState = worldState,
+                    questRegistry = questRegistry,
+                    achievementRegistry = achievementRegistry,
+                    abilityRegistry = abilityRegistry,
+                    statusEffectRegistry = statusEffectRegistry,
+                    shopRegistry = shopRegistry,
                     sharding = ServerInfrastructure.buildShardingContext(
                         config = config,
                         handoffManager = handoffManager,

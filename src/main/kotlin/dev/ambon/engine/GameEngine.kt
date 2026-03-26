@@ -125,6 +125,9 @@ class GameEngine(
     private val achievementRegistry: AchievementRegistry = AchievementRegistry(),
     private val sharding: ShardingContext = ShardingContext(),
     private val persistence: PersistenceContext = PersistenceContext(),
+    private val abilityRegistry: AbilityRegistry = AbilityRegistry(),
+    private val statusEffectRegistry: StatusEffectRegistry = StatusEffectRegistry(),
+    private val shopRegistry: ShopRegistry = ShopRegistry(items),
     classRegistryOverride: PlayerClassRegistry? = null,
     raceRegistryOverride: RaceRegistry? = null,
     statRegistryOverride: StatRegistry? = null,
@@ -462,10 +465,11 @@ class GameEngine(
     }
 
     private val mobSystem = MobSystem()
-    private val statusEffectRegistry =
-        StatusEffectRegistry().also { reg ->
-            StatusEffectRegistryLoader.load(engineConfig.statusEffects, reg)
-        }
+
+    init {
+        StatusEffectRegistryLoader.load(engineConfig.statusEffects, statusEffectRegistry)
+    }
+
     private val statusEffectSystem =
         StatusEffectSystem(
             registry = statusEffectRegistry,
@@ -554,10 +558,11 @@ class GameEngine(
             metrics = metrics,
             dirtyNotifier = dirtyNotifier,
         )
-    private val abilityRegistry =
-        AbilityRegistry().also { reg ->
-            AbilityRegistryLoader.load(engineConfig.abilities, reg, imagesBaseUrl)
-        }
+
+    init {
+        AbilityRegistryLoader.load(engineConfig.abilities, abilityRegistry, imagesBaseUrl)
+    }
+
     private val abilitySystem: AbilitySystem =
         AbilitySystem(
             players = players,
@@ -577,8 +582,6 @@ class GameEngine(
                 gmcpEmitter.sendCharCooldown(sid, abilityId, cooldownMs)
             }
         }
-
-    private val shopRegistry = ShopRegistry(items)
 
     private val gatheringRegistry = GatheringRegistry()
     private val craftingRegistry = CraftingRegistry()

@@ -3085,6 +3085,8 @@ ambonmud:
     token: ""
     # Optional Grafana URL shown as a link on the overview page
     grafanaUrl: ""
+    # Allowed CORS origins for external tools (e.g. Arcanum). Empty list disables CORS.
+    corsOrigins: []
 
   logging:
     level: INFO
