@@ -1269,6 +1269,8 @@ data class AdminConfig(
     val grafanaUrl: String = "",
     /** Allowed CORS origins for external tools (e.g. Arcanum). Empty list disables CORS. */
     val corsOrigins: List<String> = emptyList(),
+    /** Base path for HTML links when served behind a reverse proxy (e.g. "/admin/"). Must end with "/". */
+    val basePath: String = "/",
 )
 
 data class LoggingConfig(

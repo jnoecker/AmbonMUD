@@ -88,6 +88,7 @@ class AdminHttpServer(
                     shopRegistry = shopRegistry,
                     corsOrigins = config.corsOrigins,
                     startTime = startTime,
+                    basePath = config.basePath,
                 )
             }.start(wait = false)
         log.info { "Admin HTTP server started on port ${config.port}" }
@@ -333,6 +334,7 @@ internal fun Application.adminModule(
     shopRegistry: ShopRegistry? = null,
     corsOrigins: List<String> = emptyList(),
     startTime: Long = System.currentTimeMillis(),
+    basePath: String = "/",
 ) {
     routing {
         intercept(ApplicationCallPipeline.Plugins) {
@@ -387,7 +389,7 @@ internal fun Application.adminModule(
                         append("<table><tr><th>Name</th><th>Level</th><th>Class</th><th>Room</th><th>HP</th></tr>")
                         for (p in online.sortedBy { it.name }) {
                             append("<tr>")
-                            append("<td><a href=\"/players/${p.name.esc()}\">${p.name.esc()}</a>")
+                            append("<td><a href=\"players/${p.name.esc()}\">${p.name.esc()}</a>")
                             if (p.isStaff) append(" <span class=\"badge badge-staff\">staff</span>")
                             append("</td>")
                             append("<td>${p.level}</td>")
@@ -403,7 +405,7 @@ internal fun Application.adminModule(
                     append("<table><tr><th>Zone</th><th>Players</th><th>Mobs</th><th>Rooms</th></tr>")
                     for (zone in zoneSummaries) {
                         append("<tr>")
-                        append("<td><a href=\"/world/${zone.name.esc()}\">${zone.name.esc()}</a></td>")
+                        append("<td><a href=\"world/${zone.name.esc()}\">${zone.name.esc()}</a></td>")
                         append("<td>${zone.playersOnline}</td>")
                         append("<td>${zone.mobsAlive}</td>")
                         append("<td>${zone.roomCount}</td>")
@@ -412,7 +414,7 @@ internal fun Application.adminModule(
                     append("</table>")
                     append("</div>")
                 }
-            call.respondText(htmlPage("Overview", body), ContentType.Text.Html)
+            call.respondText(htmlPage("Overview", body, basePath), ContentType.Text.Html)
         }
 
         // ── Players list ──────────────────────────────────────────────────────
@@ -437,7 +439,7 @@ internal fun Application.adminModule(
             val body =
                 buildString {
                     append("<h1>Players</h1>")
-                    append("<form method=\"get\" action=\"/players\" class=\"search-row\">")
+                    append("<form method=\"get\" action=\"players\" class=\"search-row\">")
                     append("<input type=\"text\" name=\"q\" placeholder=\"Search by name\" value=\"${query.esc()}\">")
                     append(
                         "<label><input type=\"checkbox\" name=\"online\" value=\"1\"${if (onlineOnly) " checked" else ""}> Online only</label>",
@@ -473,7 +475,7 @@ internal fun Application.adminModule(
                         append(playerRowsHtml(items))
                     }
                 }
-            call.respondText(htmlPage("Players", body), ContentType.Text.Html)
+            call.respondText(htmlPage("Players", body, basePath), ContentType.Text.Html)
         }
 
         // ── Player detail ─────────────────────────────────────────────────────
@@ -488,7 +490,7 @@ internal fun Application.adminModule(
             }
             val body =
                 buildString {
-                    append("<p><a href=\"/players\">← Players</a></p>")
+                    append("<p><a href=\"players\">← Players</a></p>")
                     append("<h1>${dto.name.esc()}")
                     if (dto.isOnline) append(" <span class=\"badge badge-online\">online</span>")
                     if (dto.isStaff) append(" <span class=\"badge badge-staff\">staff</span>")
@@ -536,7 +538,7 @@ internal fun Application.adminModule(
                     append("<h2>Admin Actions</h2>")
                     val staffLabel = if (dto.isStaff) "Revoke Staff" else "Grant Staff"
                     val staffClass = if (dto.isStaff) "danger" else ""
-                    append("<form method=\"post\" action=\"/players/${dto.name.esc()}/staff\" class=\"inline\">")
+                    append("<form method=\"post\" action=\"players/${dto.name.esc()}/staff\" class=\"inline\">")
                     append("<button class=\"$staffClass\" type=\"submit\">$staffLabel</button>")
                     append("</form>")
                     if (!dto.isOnline) {
@@ -544,7 +546,7 @@ internal fun Application.adminModule(
                     }
                     append("</div>")
                 }
-            call.respondText(htmlPage(dto.name, body), ContentType.Text.Html)
+            call.respondText(htmlPage(dto.name, body, basePath), ContentType.Text.Html)
         }
 
         // ── Toggle staff ───────────────────────────────────────────────────────
@@ -563,7 +565,7 @@ internal fun Application.adminModule(
                 .allPlayers()
                 .firstOrNull { it.name.equals(name, ignoreCase = true) }
                 ?.let { it.isStaff = !it.isStaff }
-            call.respondRedirect("/players/${record.name}")
+            call.respondRedirect("${basePath}players/${record.name}")
         }
 
         // ── World inspector ───────────────────────────────────────────────────
@@ -574,7 +576,7 @@ internal fun Application.adminModule(
             val body =
                 buildString {
                     append("<h1>World</h1>")
-                    append("<form method=\"get\" action=\"/world\" class=\"search-row\">")
+                    append("<form method=\"get\" action=\"world\" class=\"search-row\">")
                     append("<input type=\"text\" name=\"q\" placeholder=\"Filter zones\" value=\"${query.esc()}\">")
                     append("<button type=\"submit\">Filter</button>")
                     append("</form>")
@@ -582,7 +584,7 @@ internal fun Application.adminModule(
                     append("<tr><th>Zone</th><th>Rooms</th><th>Players Online</th><th>Mobs Alive</th></tr>")
                     for (zone in filtered) {
                         append("<tr>")
-                        append("<td><a href=\"/world/${zone.name.esc()}\">${zone.name.esc()}</a></td>")
+                        append("<td><a href=\"world/${zone.name.esc()}\">${zone.name.esc()}</a></td>")
                         append("<td>${zone.roomCount}</td>")
                         append("<td>${zone.playersOnline}</td>")
                         append("<td>${zone.mobsAlive}</td>")
@@ -593,7 +595,7 @@ internal fun Application.adminModule(
                     }
                     append("</table>")
                 }
-            call.respondText(htmlPage("World", body), ContentType.Text.Html)
+            call.respondText(htmlPage("World", body, basePath), ContentType.Text.Html)
         }
 
         // ── Zone detail ───────────────────────────────────────────────────────
@@ -606,7 +608,7 @@ internal fun Application.adminModule(
             }
             val body =
                 buildString {
-                    append("<p><a href=\"/world\">← World</a></p>")
+                    append("<p><a href=\"world\">← World</a></p>")
                     append("<h1>Zone: ${zone.esc()}</h1>")
                     append("<table>")
                     append("<tr><th>Room</th><th>Title</th><th>Exits</th><th>Players</th><th>Mobs</th></tr>")
@@ -623,7 +625,7 @@ internal fun Application.adminModule(
                     }
                     append("</table>")
                 }
-            call.respondText(htmlPage("Zone: $zone", body), ContentType.Text.Html)
+            call.respondText(htmlPage("Zone: $zone", body, basePath), ContentType.Text.Html)
         }
 
         // ── JSON API ──────────────────────────────────────────────────────────
@@ -1056,6 +1058,7 @@ private suspend fun ApplicationCall.requireBasicAuth(token: String): Boolean {
 private fun htmlPage(
     title: String,
     body: String,
+    basePath: String = "/",
 ): String =
     """
     <!DOCTYPE html>
@@ -1063,6 +1066,7 @@ private fun htmlPage(
     <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <base href="${basePath.esc()}">
     <title>AmbonMUD Admin — ${title.esc()}</title>
     <style>
     :root{--lavender:#D8C5E8;--pale-blue:#B8D8E8;--dusty-rose:#E8C5D8;--moss-green:#C5D8A8;--soft-gold:#E8D8A8;--deep-mist:#6B6B7B;--soft-fog:#A8A8B8;--cloud:#E8E8F0;--bg-primary:#E8E8F0;--bg-secondary:#F8F8FC;--text-primary:#6B6B7B;--text-secondary:#A8A8B8;--text-disabled:#C8C8D0;--error:#C5A8A8}
@@ -1113,9 +1117,9 @@ private fun htmlPage(
     <body>
     <nav>
       <span class="brand">AmbonMUD</span>
-      <a href="/">Overview</a>
-      <a href="/players">Players</a>
-      <a href="/world">World</a>
+      <a href="./">Overview</a>
+      <a href="players">Players</a>
+      <a href="world">World</a>
     </nav>
     <main>
     $body
@@ -1145,7 +1149,7 @@ private fun playerRowsHtml(items: List<PlayerListItemDto>): String =
         append("<tr><th>Name</th><th>Level</th><th>Class</th><th>Race</th><th>Room</th><th>HP</th></tr>")
         for (p in items) {
             append("<tr>")
-            append("<td><a href=\"/players/${p.name.esc()}\">${p.name.esc()}</a>")
+            append("<td><a href=\"players/${p.name.esc()}\">${p.name.esc()}</a>")
             if (p.isOnline) append(" <span class=\"badge badge-online\">online</span>")
             if (p.isStaff) append(" <span class=\"badge badge-staff\">staff</span>")
             append("</td>")
