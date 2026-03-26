@@ -20,7 +20,7 @@ The `gh` CLI is available in cloud/remote mode (verified Feb 2026). Use it norma
 ./gradlew run            # Start server (telnet :4000, web :8080)
 ./gradlew demo           # Start server + auto-launch browser demo
 ./gradlew ktlintCheck    # Lint (Kotlin official style) — run before every PR
-./gradlew test           # Full test suite (CI only — avoid running locally)
+./gradlew test           # Full test suite — run before committing
 ```
 
 Run a single test class:
@@ -288,6 +288,8 @@ When adding new `InterEngineMessage` variants, update serialization in `InterEng
 ### GMCP
 Update `GmcpEmitter.kt` and the v3 web client's GMCP handler at `web-v3/src/gmcp/applyGmcpPackage.ts`. Telnet negotiation is in `NetworkSession.kt` (WILL GMCP) and `TelnetLineDecoder.kt`.
 
+**When adding a new GMCP package family** (e.g. `Quest`, `Guild`), you must also register it in the WebSocket auto-opt-in list at `KtorWebSocketTransport.kt` line ~208 (`Core.Supports.Set`). The `GmcpEmitter.emit()` method checks `supportsPackage(sessionId, supportCheck)` before sending — if the package isn't in the client's supported set, the GMCP is silently dropped. Prefix matching applies: registering `"Quest 1"` covers `Quest.List`, `Quest.Update`, `Quest.Available`, etc.
+
 ### Ability/spell image
 Add `image` field to `AbilityDefinitionConfig` (AppConfig.kt), `AbilityDefinition`, `AbilityRegistryLoader`, and `GmcpEmitter.CharSkillPayload`. Client reads it from `Char.Skills` GMCP into `SkillSummary.image`.
 
@@ -339,7 +341,7 @@ All other standard rules remain enforced. The most important ones to know:
 
 ### General
 - Run `ktlintCheck` before opening a PR or finalizing any change. The pre-commit hook enforces this automatically.
-- **Do not run the full test suite locally** — tests run on GitHub CI. Only run tests you've directly touched or that you expect your change to break.
+- **Run the full test suite before committing** (`./gradlew ktlintCheck test integrationTest`). Catching failures locally is faster than waiting for CI.
 - Add tests for every behavioral change; this codebase treats tests as design constraints.
 - If CI tests fail after pushing, fix the failures promptly.
 
