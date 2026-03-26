@@ -44,7 +44,7 @@ export interface Ec2StackProps extends StackProps {
  *
  * Provisions:
  *   - VPC with a single public subnet (no NAT gateway)
- *   - Security group: TCP 4000 (telnet) + 80/443 (HTTP/HTTPS) + 8080 (direct web) open to 0.0.0.0/0
+ *   - Security group: TCP 4000 (telnet) + 80/443 (HTTP/HTTPS) + 8080 (direct web) + 9091 (admin API) open to 0.0.0.0/0
  *   - IAM role: ECR pull + SSM Session Manager (no SSH key needed)
  *   - t4g.nano (ARM64) running Amazon Linux 2023
  *   - Docker + systemd service that pulls and runs the AmbonMUD container
@@ -105,6 +105,8 @@ export class Ec2Stack extends Stack {
     sg.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(443), 'HTTPS IPv6');
     sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(8080), 'Web direct (bypass nginx)');
     sg.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(8080), 'Web direct IPv6');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(9091), 'Admin API');
+    sg.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(9091), 'Admin API IPv6');
 
     // -------------------------------------------------------------------------
     // IAM role: ECR pull + SSM for browser-based shell access.
@@ -216,7 +218,7 @@ export class Ec2Stack extends Stack {
       // a reliable way to set JVM system properties in the container.
       // -Dambon.profile=demo loads application-demo.yaml from the classpath,
       // which overrides classStartRooms to start players in noecker_resume.
-      `ExecStart=/usr/bin/docker run --name ambonmud -p 4000:4000 -p 8080:8080 -v /app/data:/app/data ${loreConfigUrl ? '-v /app/data/application-local.yaml:/app/application-local.yaml:ro ' : ''}-e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false -e JAVA_TOOL_OPTIONS=-Dambon.profile=demo ${ecrUri}:${imageTag}`,
+      `ExecStart=/usr/bin/docker run --name ambonmud -p 4000:4000 -p 8080:8080 -p 9091:9091 -v /app/data:/app/data ${loreConfigUrl ? '-v /app/data/application-local.yaml:/app/application-local.yaml:ro ' : ''}-e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false -e JAVA_TOOL_OPTIONS=-Dambon.profile=demo ${ecrUri}:${imageTag}`,
       'ExecStop=/usr/bin/docker stop ambonmud',
       '',
       '[Install]',
