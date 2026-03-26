@@ -79,7 +79,7 @@ internal sealed interface CreateAccountPrep {
 }
 
 class PlayerRegistry(
-    private val startRoom: RoomId,
+    startRoom: RoomId,
     private val classStartRooms: Map<String, RoomId> = emptyMap(),
     private val repo: PlayerRepository,
     private val items: ItemRegistry,
@@ -96,6 +96,10 @@ class PlayerRegistry(
     private val startingGold: Long = 0L,
 ) {
     val maxLevel: Int get() = progression.maxLevel
+
+    /** Default start room for new characters / recall fallback. Updatable via hot reload. */
+    var startRoom: RoomId = startRoom
+        internal set
 
     private val players = mutableMapOf<SessionId, PlayerState>()
     private val roomMembers = mutableMapOf<RoomId, MutableSet<SessionId>>()
