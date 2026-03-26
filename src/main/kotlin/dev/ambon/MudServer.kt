@@ -153,6 +153,11 @@ class MudServer(
 
     private val items = ItemRegistry()
     private val mobs = MobRegistry()
+    private val abilityRegistry = dev.ambon.engine.abilities.AbilityRegistry()
+    private val statusEffectRegistry = dev.ambon.engine.status.StatusEffectRegistry()
+    private val shopRegistry = dev.ambon.engine.ShopRegistry(items)
+    private val questRegistry = dev.ambon.engine.QuestRegistry()
+    private val achievementRegistry = dev.ambon.engine.AchievementRegistry()
     private val classRegistry =
         PlayerClassRegistry().also { reg ->
             PlayerClassRegistryLoader.load(config.engine.classes, reg)
@@ -251,6 +256,23 @@ class MudServer(
                     reloadChannel.send(ReloadRequest(target, deferred))
                     deferred.await()
                 },
+                onBroadcast = { message ->
+                    val online = players.allPlayers()
+                    for (p in online) {
+                        outbound.send(
+                            dev.ambon.engine.events.OutboundEvent.SendText(p.sessionId, message),
+                        )
+                        outbound.send(
+                            dev.ambon.engine.events.OutboundEvent.SendPrompt(p.sessionId),
+                        )
+                    }
+                    online.size
+                },
+                abilityRegistry = abilityRegistry,
+                statusEffectRegistry = statusEffectRegistry,
+                questRegistry = questRegistry,
+                achievementRegistry = achievementRegistry,
+                shopRegistry = shopRegistry,
             )
         } else {
             null
@@ -342,6 +364,11 @@ class MudServer(
                     metrics = gameMetrics,
                     onShutdown = { shutdownSignal.complete(Unit) },
                     worldState = worldState,
+                    questRegistry = questRegistry,
+                    achievementRegistry = achievementRegistry,
+                    abilityRegistry = abilityRegistry,
+                    statusEffectRegistry = statusEffectRegistry,
+                    shopRegistry = shopRegistry,
                     sharding = ServerInfrastructure.buildShardingContext(
                         config = config,
                         handoffManager = handoffManager,
