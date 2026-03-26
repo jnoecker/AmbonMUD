@@ -180,6 +180,9 @@ export function applyGmcpPackage(
         const image = typeof packet.image === "string" ? packet.image : null;
         ctx.updateMap(id, exits, title, image, mapX, mapY);
       }
+      // Room change ends any active dialogue/quest offers
+      ctx.setDialogue(null);
+      ctx.setQuestsAvailable([]);
       break;
     }
 
