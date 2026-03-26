@@ -58,27 +58,25 @@ class DialogueQuestHandler(
                     outbound.send(OutboundEvent.SendText(sessionId, "[Quest] ${quest.name} — ${quest.description}"))
                     outbound.send(OutboundEvent.SendText(sessionId, "  Type 'accept ${quest.name}' to accept."))
                 }
-                if (available.isNotEmpty()) {
-                    gmcpEmitter?.sendQuestAvailable(
-                        sessionId,
-                        available.map { quest ->
-                            QuestAvailableEntry(
-                                id = quest.id,
-                                name = quest.name,
-                                description = quest.description,
-                                giverMobId = quest.giverMobId,
-                                objectives = quest.objectives.map { obj ->
-                                    QuestAvailableObjectiveSummary(
-                                        description = obj.description,
-                                        count = obj.count,
-                                    )
-                                },
-                                rewardXp = quest.rewards.xp,
-                                rewardGold = quest.rewards.gold,
-                            )
-                        },
-                    )
-                }
+                gmcpEmitter?.sendQuestAvailable(
+                    sessionId,
+                    available.map { quest ->
+                        QuestAvailableEntry(
+                            id = quest.id,
+                            name = quest.name,
+                            description = quest.description,
+                            giverMobId = quest.giverMobId,
+                            objectives = quest.objectives.map { obj ->
+                                QuestAvailableObjectiveSummary(
+                                    description = obj.description,
+                                    count = obj.count,
+                                )
+                            },
+                            rewardXp = quest.rewards.xp,
+                            rewardGold = quest.rewards.gold,
+                        )
+                    },
+                )
             }
         }
     }
