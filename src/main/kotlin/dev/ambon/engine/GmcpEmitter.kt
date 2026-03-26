@@ -640,14 +640,13 @@ class GmcpEmitter(
     }
 
     /**
-     * Sends available (offerable) quests when the player talks to a quest-giver NPC.
-     * The client can render accept buttons from this structured data.
+     * Sends available (offerable) quests when the player talks to an NPC.
+     * An empty list clears any previous offers on the client.
      */
     suspend fun sendQuestAvailable(
         sessionId: SessionId,
         quests: List<QuestAvailableEntry>,
     ) {
-        if (quests.isEmpty()) return
         val payload = quests.map { q ->
             QuestAvailablePayload(
                 id = q.id,
