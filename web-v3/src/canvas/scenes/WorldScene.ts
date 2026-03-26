@@ -12,7 +12,7 @@ function assetUrl(key: string, fallbackFilename: string): string {
   return gameStateRef.current.serverAssets[key] ?? `/images/global_assets/${fallbackFilename}`;
 }
 
-const SHOP_BADGE_SIZE = 72;
+const SHOP_BADGE_SIZE = 96;
 const QUEST_ICON_SIZE = 28;
 
 const PLAYER_LABEL_COLOR = "#d8dcef";
@@ -104,6 +104,15 @@ export class WorldScene {
   private targetingBg = new Graphics();
   private targetingAnimTime = 0;
   private targetingActive = false;
+
+  // Contextual action buttons (flee, recall, smite)
+  private fleeBtn: Container;
+  private recallBtn: Container;
+  private smiteBtn: Container;
+  private smiteFlashGraphics = new Graphics();
+  private smiteFlashAlpha = 0;
+  private lastInCombat = false;
+  private lastIsStaff = false;
 
   private videoBtn: Sprite | null = null;
   private videoAnimTime = 0;
@@ -206,6 +215,24 @@ export class WorldScene {
     // lazily in update() once Server.Assets GMCP arrives, to avoid 404s
     // from fallback URLs when assets live on a CDN.
 
+    // Contextual action buttons
+    this.fleeBtn = this.buildActionButton("Flee", 0xef5350, 0x4a1a1a, () => {
+      canvasCallbacks.sendCommand?.("flee");
+    });
+    this.fleeBtn.visible = false;
+    this.recallBtn = this.buildActionButton("Recall", 0xb9aed8, 0x2a2845, () => {
+      canvasCallbacks.sendCommand?.("recall");
+    });
+    this.recallBtn.visible = false;
+    this.smiteBtn = this.buildActionButton("Smite", 0xffd54f, 0x3a3020, () => {
+      const target = gameStateRef.current.combatTarget?.targetName;
+      if (target) {
+        canvasCallbacks.sendCommand?.(`smite ${target}`);
+        this.playSmiteFlash();
+      }
+    });
+    this.smiteBtn.visible = false;
+
     this.container.addChild(this.ambientMotes.graphics);
     this.container.addChild(this.roleGraphics);
     this.container.addChild(this.statusEffects.container);
@@ -216,6 +243,10 @@ export class WorldScene {
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
+    this.container.addChild(this.fleeBtn);
+    this.container.addChild(this.recallBtn);
+    this.container.addChild(this.smiteBtn);
+    this.container.addChild(this.smiteFlashGraphics);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
     // Transition graphics live in the overlay so they stay visible while
@@ -335,6 +366,31 @@ export class WorldScene {
     if (hasShop !== this.shopVisible) {
       this.shopVisible = hasShop;
       this.shopBadge.visible = hasShop;
+    }
+
+    // Action button visibility
+    const inCombat = state.vitals.inCombat;
+    const isStaff = state.character.isStaff;
+    const loggedIn = state.character.name !== "-";
+    if (inCombat !== this.lastInCombat || isStaff !== this.lastIsStaff) {
+      this.lastInCombat = inCombat;
+      this.lastIsStaff = isStaff;
+      this.fleeBtn.visible = loggedIn && inCombat;
+      this.recallBtn.visible = loggedIn && !inCombat;
+      this.smiteBtn.visible = loggedIn && inCombat && isStaff;
+    }
+
+    // Smite flash animation
+    if (this.smiteFlashAlpha > 0) {
+      this.smiteFlashAlpha -= deltaMs / 400;
+      if (this.smiteFlashAlpha <= 0) {
+        this.smiteFlashAlpha = 0;
+        this.smiteFlashGraphics.clear();
+      } else {
+        this.smiteFlashGraphics.clear();
+        this.smiteFlashGraphics.rect(0, 0, this.width, this.height);
+        this.smiteFlashGraphics.fill({ color: 0xffd54f, alpha: this.smiteFlashAlpha * 0.7 });
+      }
     }
 
     this.layoutAll();
@@ -491,10 +547,26 @@ export class WorldScene {
       }
     }
 
-    // Shop badge position — top-right corner
+    // Shop badge position — right side, below description area
     if (this.shopBadge.visible) {
-      this.shopBadge.x = w - 60;
-      this.shopBadge.y = 80;
+      this.shopBadge.x = w - 70;
+      this.shopBadge.y = h * 0.35;
+    }
+
+    // Action buttons — bottom-left, stacked above player sprite
+    const btnX = 16 + 40;
+    const btnBaseY = h - 24;
+    if (this.fleeBtn.visible) {
+      this.fleeBtn.x = btnX;
+      this.fleeBtn.y = btnBaseY;
+    }
+    if (this.smiteBtn.visible) {
+      this.smiteBtn.x = btnX;
+      this.smiteBtn.y = btnBaseY - 40;
+    }
+    if (this.recallBtn.visible) {
+      this.recallBtn.x = btnX;
+      this.recallBtn.y = btnBaseY;
     }
 
     // Video button: bottom-center
@@ -999,6 +1071,52 @@ export class WorldScene {
         map.delete(id);
       }
     }
+  }
+
+  private buildActionButton(label: string, color: number, bgColor: number, onClick: () => void): Container {
+    const btn = new Container();
+    btn.eventMode = "static";
+    btn.cursor = "pointer";
+
+    const btnW = 80;
+    const btnH = 32;
+    const bg = new Graphics();
+    bg.roundRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+    bg.fill({ color: bgColor, alpha: 0.9 });
+    bg.roundRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+    bg.stroke({ color, alpha: 0.6, width: 1.5 });
+
+    const text = new Text({
+      text: label,
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 12, fill: `#${color.toString(16).padStart(6, "0")}`, fontWeight: "bold" },
+    });
+    text.anchor.set(0.5, 0.5);
+    text.eventMode = "none";
+
+    btn.addChild(bg);
+    btn.addChild(text);
+
+    btn.on("pointerover", () => {
+      bg.clear();
+      bg.roundRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      bg.fill({ color: bgColor, alpha: 1 });
+      bg.roundRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      bg.stroke({ color, alpha: 0.9, width: 2 });
+    });
+    btn.on("pointerout", () => {
+      bg.clear();
+      bg.roundRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      bg.fill({ color: bgColor, alpha: 0.9 });
+      bg.roundRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      bg.stroke({ color, alpha: 0.6, width: 1.5 });
+    });
+    btn.on("pointerdown", onClick);
+
+    return btn;
+  }
+
+  private playSmiteFlash() {
+    this.smiteFlashAlpha = 1;
   }
 
   private showPopout() {

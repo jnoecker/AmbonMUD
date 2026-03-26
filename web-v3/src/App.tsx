@@ -359,9 +359,8 @@ function App() {
           setCombatTarget,
           setShop: (value) => {
             setShop(value);
-            if (value) {
-              setActivePopout("shop");
-            } else {
+            // Close shop popout when shop data is cleared (player left shop area)
+            if (!value) {
               setActivePopout((prev) => prev === "shop" ? null : prev);
             }
           },
