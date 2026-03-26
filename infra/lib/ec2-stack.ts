@@ -44,7 +44,7 @@ export interface Ec2StackProps extends StackProps {
  *
  * Provisions:
  *   - VPC with a single public subnet (no NAT gateway)
- *   - Security group: TCP 4000 (telnet) + 80/443 (HTTP/HTTPS) + 8080 (direct web) + 9091 (admin API) open to 0.0.0.0/0
+ *   - Security group: TCP 4000 (telnet) + 80/443 (HTTP/HTTPS) + 8080 (web) + 9091 (admin) + 3000 (Grafana)
  *   - IAM role: ECR pull + SSM Session Manager (no SSH key needed)
  *   - t4g.nano (ARM64) running Amazon Linux 2023
  *   - Docker + systemd service that pulls and runs the AmbonMUD container
@@ -107,6 +107,8 @@ export class Ec2Stack extends Stack {
     sg.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(8080), 'Web direct IPv6');
     sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(9091), 'Admin API');
     sg.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(9091), 'Admin API IPv6');
+    sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(3000), 'Grafana');
+    sg.addIngressRule(ec2.Peer.anyIpv6(), ec2.Port.tcp(3000), 'Grafana IPv6');
 
     // -------------------------------------------------------------------------
     // IAM role: ECR pull + SSM for browser-based shell access.
@@ -135,6 +137,121 @@ export class Ec2Stack extends Stack {
       'systemctl enable --now amazon-ssm-agent',
       // UID 1001 matches the pinned ambonmud user inside the container (Dockerfile).
       'mkdir -p /app/data && chown 1001:1001 /app/data',
+      '',
+      // ---- Docker network for inter-container communication -------------------
+      'docker network create ambonmud-net || true',
+      '',
+      // ---- Prometheus config --------------------------------------------------
+      'mkdir -p /app/prometheus',
+      `cat > /app/prometheus/prometheus.yml << 'PROM_END'`,
+      'global:',
+      '  scrape_interval: 15s',
+      '',
+      'rule_files:',
+      '  - /etc/prometheus/prometheus-alerts.yml',
+      '',
+      'scrape_configs:',
+      '  - job_name: ambonmud',
+      '    static_configs:',
+      '      - targets: [ambonmud:8080]',
+      '    metrics_path: /metrics',
+      'PROM_END',
+      '',
+      `cat > /app/prometheus/prometheus-alerts.yml << 'ALERTS_END'`,
+      'groups:',
+      '  - name: ambonmud-core-alerts',
+      '    rules:',
+      '      - alert: AmbonEngineTickOverrunHigh',
+      '        expr: rate(engine_tick_overrun_total[5m]) > 0.1',
+      '        for: 10m',
+      '        labels:',
+      '          severity: warning',
+      '        annotations:',
+      '          summary: Engine tick overruns are sustained',
+      '      - alert: AmbonPlayerSaveFailures',
+      '        expr: increase(player_save_failures_total[10m]) > 0',
+      '        for: 0m',
+      '        labels:',
+      '          severity: critical',
+      '        annotations:',
+      '          summary: Player save failures detected',
+      '      - alert: AmbonMetricsEndpointDown',
+      '        expr: up{job="ambonmud"} == 0',
+      '        for: 2m',
+      '        labels:',
+      '          severity: critical',
+      '        annotations:',
+      '          summary: AmbonMUD metrics endpoint is down',
+      'ALERTS_END',
+      '',
+      // ---- Grafana provisioning -----------------------------------------------
+      'mkdir -p /app/grafana/provisioning/datasources /app/grafana/provisioning/dashboards',
+      '',
+      `cat > /app/grafana/provisioning/datasources/prometheus.yml << 'DS_END'`,
+      'apiVersion: 1',
+      'datasources:',
+      '  - name: Prometheus',
+      '    type: prometheus',
+      '    access: proxy',
+      '    url: http://prometheus:9090',
+      '    isDefault: true',
+      '    editable: false',
+      'DS_END',
+      '',
+      `cat > /app/grafana/provisioning/dashboards/dashboard.yml << 'DASH_END'`,
+      'apiVersion: 1',
+      'providers:',
+      '  - name: AmbonMUD',
+      '    orgId: 1',
+      '    type: file',
+      '    disableDeletion: false',
+      '    updateIntervalSeconds: 30',
+      '    options:',
+      '      path: /etc/grafana/provisioning/dashboards',
+      'DASH_END',
+      '',
+      // Grafana dashboards are fetched from the repo at first boot.
+      // The update-ambonmud helper refreshes them on each deploy.
+      `DASH_BASE="https://raw.githubusercontent.com/jnoecker/AmbonMUD/main/infra/grafana/provisioning/dashboards"`,
+      'for dash in ambon_overview ambon_engine ambon_engine_health ambon_gameplay ambon_jvm ambon_persistence ambon_scheduler ambon_transport; do',
+      '  curl -fsSL -o "/app/grafana/provisioning/dashboards/${dash}.json" "${DASH_BASE}/${dash}.json" || echo "Warning: failed to fetch ${dash}.json"',
+      'done',
+      '',
+      // ---- Prometheus systemd service -----------------------------------------
+      `cat > /etc/systemd/system/prometheus.service << 'PROM_SVC_END'`,
+      '[Unit]',
+      'Description=Prometheus',
+      'After=docker.service',
+      'Requires=docker.service',
+      '',
+      '[Service]',
+      'Restart=always',
+      'RestartSec=10',
+      'ExecStartPre=-/usr/bin/docker rm -f prometheus',
+      'ExecStart=/usr/bin/docker run --name prometheus --network ambonmud-net -p 9090:9090 -v /app/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro -v /app/prometheus/prometheus-alerts.yml:/etc/prometheus/prometheus-alerts.yml:ro prom/prometheus:v2.51.2',
+      'ExecStop=/usr/bin/docker stop prometheus',
+      '',
+      '[Install]',
+      'WantedBy=multi-user.target',
+      'PROM_SVC_END',
+      '',
+      // ---- Grafana systemd service --------------------------------------------
+      `cat > /etc/systemd/system/grafana.service << 'GRAF_SVC_END'`,
+      '[Unit]',
+      'Description=Grafana',
+      'After=docker.service prometheus.service',
+      'Requires=docker.service',
+      '',
+      '[Service]',
+      'Restart=always',
+      'RestartSec=10',
+      'ExecStartPre=-/usr/bin/docker rm -f grafana',
+      'ExecStart=/usr/bin/docker run --name grafana --network ambonmud-net -p 3000:3000 -e GF_SECURITY_ADMIN_PASSWORD=admin -v /app/grafana/provisioning:/etc/grafana/provisioning:ro grafana/grafana:10.4.2',
+      'ExecStop=/usr/bin/docker stop grafana',
+      '',
+      '[Install]',
+      'WantedBy=multi-user.target',
+      'GRAF_SVC_END',
       '',
       // ---- update-ambonmud helper script ------------------------------------
       // Pulls a new image tag, patches the service file, and restarts.
@@ -218,7 +335,7 @@ export class Ec2Stack extends Stack {
       // a reliable way to set JVM system properties in the container.
       // -Dambon.profile=demo loads application-demo.yaml from the classpath,
       // which overrides classStartRooms to start players in noecker_resume.
-      `ExecStart=/usr/bin/docker run --name ambonmud -p 4000:4000 -p 8080:8080 -p 9091:9091 -v /app/data:/app/data ${loreConfigUrl ? '-v /app/data/application-local.yaml:/app/application-local.yaml:ro ' : ''}-e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false -e JAVA_TOOL_OPTIONS=-Dambon.profile=demo ${ecrUri}:${imageTag}`,
+      `ExecStart=/usr/bin/docker run --name ambonmud --network ambonmud-net -p 4000:4000 -p 8080:8080 -p 9091:9091 -v /app/data:/app/data ${loreConfigUrl ? '-v /app/data/application-local.yaml:/app/application-local.yaml:ro ' : ''}-e AMBONMUD_PERSISTENCE_BACKEND=YAML -e AMBONMUD_REDIS_ENABLED=false -e JAVA_TOOL_OPTIONS=-Dambon.profile=demo ${ecrUri}:${imageTag}`,
       'ExecStop=/usr/bin/docker stop ambonmud',
       '',
       '[Install]',
@@ -226,8 +343,8 @@ export class Ec2Stack extends Stack {
       'SERVICE_END',
       '',
       'systemctl daemon-reload',
-      'systemctl enable ambonmud',
-      'systemctl start ambonmud',
+      'systemctl enable ambonmud prometheus grafana',
+      'systemctl start ambonmud prometheus grafana',
     );
 
     // -------------------------------------------------------------------------
