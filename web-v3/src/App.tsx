@@ -9,6 +9,7 @@ import { ShopPopout } from "./components/ShopPopout";
 import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { SpellbookPanel } from "./components/SpellbookPanel";
+import { QuestPanel } from "./components/panels/QuestPanel";
 import { PlayPanel } from "./components/panels/PlayPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
@@ -49,6 +50,7 @@ import type {
   LoginPromptState,
   MobInfo,
   PopoutPanel,
+  QuestAvailable,
   QuestEntry,
   QuestNotification,
   RoomMob,
@@ -193,6 +195,7 @@ function App() {
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
   const [, setCharStats] = useState<CharStats | null>(null);
   const [quests, setQuests] = useState<QuestEntry[]>([]);
+  const [questsAvailable, setQuestsAvailable] = useState<QuestAvailable[]>([]);
   const [mobInfo, setMobInfo] = useState<MobInfo[]>([]);
   const [shop, setShop] = useState<ShopState | null>(null);
   const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
@@ -309,6 +312,7 @@ function App() {
     setCombatTarget(null);
     setCharStats(null);
     setQuests([]);
+    setQuestsAvailable([]);
     setMobInfo([]);
     setShop(null);
     setQuestNotifications([]);
@@ -343,7 +347,15 @@ function App() {
           setGroupInfo,
           setGuildInfo,
           setGuildMembers,
-          setDialogue,
+          setDialogue: (value) => {
+            setDialogue(value);
+            // Clear available quests when dialogue ends
+            if (typeof value === "function") {
+              // functional update — can't easily check, leave alone
+            } else if (value === null) {
+              setQuestsAvailable([]);
+            }
+          },
           setCombatTarget,
           setShop: (value) => {
             setShop(value);
@@ -361,6 +373,7 @@ function App() {
           pushCombatEvent,
           setCharStats,
           setQuests,
+          setQuestsAvailable,
           pushGainEvent,
           pushQuestNotification,
           setMobInfo,
@@ -545,6 +558,7 @@ function App() {
       mobInfo,
       groupInfo,
       dialogue,
+      questsAvailable,
       shop,
       serverAssets,
     };
@@ -562,11 +576,12 @@ function App() {
     return () => { canvasCallbacks.openShop = null; };
   }, []);
 
-  // Wire canvas minimap expand and room expand buttons
+  // Wire canvas minimap expand, room expand, and quest panel buttons
   useEffect(() => {
     canvasCallbacks.openMap = () => setActivePopout("map");
     canvasCallbacks.openRoom = () => setActivePopout("room");
-    return () => { canvasCallbacks.openMap = null; canvasCallbacks.openRoom = null; };
+    canvasCallbacks.openQuests = () => setActivePopout("quests");
+    return () => { canvasCallbacks.openMap = null; canvasCallbacks.openRoom = null; canvasCallbacks.openQuests = null; };
   }, []);
 
   // Wire canvas video cinematic callback
@@ -640,6 +655,8 @@ function App() {
         ? (shop?.name ?? "Shop")
       : activePopout === "spellbook"
         ? "Spellbook"
+      : activePopout === "quests"
+        ? "Quests"
         : "Currently Wearing";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
@@ -846,6 +863,7 @@ function App() {
           vitals={vitals}
           quickbarSlots={quickbar.slots}
           shop={shop}
+          questCount={quests.length}
           activePopout={activePopout}
           onOpenPopout={setActivePopout}
           onCastSkill={handleCastSkill}
@@ -982,6 +1000,27 @@ function App() {
               setToast(`${skill.name} — ${skill.manaCost} MP, ${cd}, ${skill.targetType.toLowerCase()} target`);
             }}
             onAssignSlot={quickbar.assign}
+          />
+        )}
+
+        {activePopout === "quests" && (
+          <QuestPanel
+            connected={connected}
+            hasCharacterProfile={hasCharacterProfile}
+            quests={quests}
+            questsAvailable={questsAvailable}
+            questNotifications={questNotifications}
+            onDismissQuestNotification={(id) => {
+              setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
+            }}
+            onAbandonQuest={(questName) => {
+              sendCommand(`quest abandon ${questName}`, true);
+              focusComposer();
+            }}
+            onAcceptQuest={(questName) => {
+              sendCommand(`accept ${questName}`, true);
+              focusComposer();
+            }}
           />
         )}
       </PopoutLayer>
