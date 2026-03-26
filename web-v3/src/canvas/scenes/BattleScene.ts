@@ -136,6 +136,9 @@ export class BattleScene {
     this.spellProjectiles.clear();
     this.gainPopups.clear();
     this.removeVictoryText();
+    // Discard any stale combat/gain events queued while the scene was inactive
+    // (e.g. a "kill" event from the previous fight that wasn't drained)
+    canvasEvents.drain();
     // Reset tracking so update() re-creates everything
     this.lastRoomImage = "\0";
     this.lastPlayerSpritePath = "\0";
