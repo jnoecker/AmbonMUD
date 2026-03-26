@@ -105,14 +105,9 @@ export class WorldScene {
   private targetingAnimTime = 0;
   private targetingActive = false;
 
-  // Contextual action buttons (flee, recall, smite)
-  private fleeBtn: Container;
+  // Recall button (visible when logged in and not in combat)
   private recallBtn: Container;
-  private smiteBtn: Container;
-  private smiteFlashGraphics = new Graphics();
-  private smiteFlashAlpha = 0;
-  private lastInCombat = false;
-  private lastIsStaff = false;
+  private lastLoggedIn = false;
 
   private videoBtn: Sprite | null = null;
   private videoAnimTime = 0;
@@ -215,23 +210,11 @@ export class WorldScene {
     // lazily in update() once Server.Assets GMCP arrives, to avoid 404s
     // from fallback URLs when assets live on a CDN.
 
-    // Contextual action buttons
-    this.fleeBtn = this.buildActionButton("Flee", 0xef5350, 0x4a1a1a, () => {
-      canvasCallbacks.sendCommand?.("flee");
-    });
-    this.fleeBtn.visible = false;
+    // Recall button
     this.recallBtn = this.buildActionButton("Recall", 0xb9aed8, 0x2a2845, () => {
       canvasCallbacks.sendCommand?.("recall");
     });
     this.recallBtn.visible = false;
-    this.smiteBtn = this.buildActionButton("Smite", 0xffd54f, 0x3a3020, () => {
-      const target = gameStateRef.current.combatTarget?.targetName;
-      if (target) {
-        canvasCallbacks.sendCommand?.(`smite ${target}`);
-        this.playSmiteFlash();
-      }
-    });
-    this.smiteBtn.visible = false;
 
     this.container.addChild(this.ambientMotes.graphics);
     this.container.addChild(this.roleGraphics);
@@ -243,10 +226,7 @@ export class WorldScene {
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
-    this.container.addChild(this.fleeBtn);
     this.container.addChild(this.recallBtn);
-    this.container.addChild(this.smiteBtn);
-    this.container.addChild(this.smiteFlashGraphics);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
     // Transition graphics live in the overlay so they stay visible while
@@ -368,29 +348,12 @@ export class WorldScene {
       this.shopBadge.visible = hasShop;
     }
 
-    // Action button visibility
-    const inCombat = state.vitals.inCombat;
-    const isStaff = state.character.isStaff;
+    // Recall button visibility — show when logged in and not in combat
     const loggedIn = state.character.name !== "-";
-    if (inCombat !== this.lastInCombat || isStaff !== this.lastIsStaff) {
-      this.lastInCombat = inCombat;
-      this.lastIsStaff = isStaff;
-      this.fleeBtn.visible = loggedIn && inCombat;
-      this.recallBtn.visible = loggedIn && !inCombat;
-      this.smiteBtn.visible = loggedIn && inCombat && isStaff;
-    }
-
-    // Smite flash animation
-    if (this.smiteFlashAlpha > 0) {
-      this.smiteFlashAlpha -= deltaMs / 400;
-      if (this.smiteFlashAlpha <= 0) {
-        this.smiteFlashAlpha = 0;
-        this.smiteFlashGraphics.clear();
-      } else {
-        this.smiteFlashGraphics.clear();
-        this.smiteFlashGraphics.rect(0, 0, this.width, this.height);
-        this.smiteFlashGraphics.fill({ color: 0xffd54f, alpha: this.smiteFlashAlpha * 0.7 });
-      }
+    const showRecall = loggedIn && !state.vitals.inCombat;
+    if (showRecall !== this.lastLoggedIn) {
+      this.lastLoggedIn = showRecall;
+      this.recallBtn.visible = showRecall;
     }
 
     this.layoutAll();
@@ -553,20 +516,10 @@ export class WorldScene {
       this.shopBadge.y = h * 0.35;
     }
 
-    // Action buttons — bottom-left, stacked above player sprite
-    const btnX = 16 + 40;
-    const btnBaseY = h - 24;
-    if (this.fleeBtn.visible) {
-      this.fleeBtn.x = btnX;
-      this.fleeBtn.y = btnBaseY;
-    }
-    if (this.smiteBtn.visible) {
-      this.smiteBtn.x = btnX;
-      this.smiteBtn.y = btnBaseY - 40;
-    }
+    // Recall button — bottom-left
     if (this.recallBtn.visible) {
-      this.recallBtn.x = btnX;
-      this.recallBtn.y = btnBaseY;
+      this.recallBtn.x = 16 + 40;
+      this.recallBtn.y = h - 24;
     }
 
     // Video button: bottom-center
@@ -1113,10 +1066,6 @@ export class WorldScene {
     btn.on("pointerdown", onClick);
 
     return btn;
-  }
-
-  private playSmiteFlash() {
-    this.smiteFlashAlpha = 1;
   }
 
   private showPopout() {
