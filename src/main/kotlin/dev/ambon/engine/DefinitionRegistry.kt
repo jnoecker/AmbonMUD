@@ -13,5 +13,9 @@ open class DefinitionRegistry<Id, Def>(
 
     fun all(): Collection<Def> = map.values
 
+    fun clear() {
+        map.clear()
+    }
+
     protected fun entries(): Map<Id, Def> = map
 }

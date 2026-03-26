@@ -2947,6 +2947,11 @@ ambonmud:
           usage: "setlevel <player> <level>"
           category: admin
           staff: true
+        reload:
+          usage: "reload [world|abilities|effects|all]"
+          description: "Hot reload data definitions without restarting"
+          category: admin
+          staff: true
         shutdown:
           usage: "shutdown"
           category: admin

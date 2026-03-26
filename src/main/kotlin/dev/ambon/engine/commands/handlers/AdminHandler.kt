@@ -26,6 +26,7 @@ class AdminHandler(
     private val interEngineBus: InterEngineBus? = null,
     private val engineId: String = "",
     private val metrics: GameMetrics = GameMetrics.noop(),
+    private val onReload: (suspend (String?) -> String)? = null,
 ) : CommandHandler {
     private val ctx = ctx
     private val world = ctx.world
@@ -49,6 +50,7 @@ class AdminHandler(
         router.onStaff<Command.Kick> { sid, cmd -> handleKick(sid, cmd) }
         router.onStaff<Command.SetLevel> { sid, cmd -> handleSetLevel(sid, cmd) }
         router.onStaff<Command.Dispel> { sid, cmd -> handleDispel(sid, cmd) }
+        router.onStaff<Command.Reload> { sid, cmd -> handleReload(sid, cmd) }
     }
 
     private suspend fun handleGoto(
@@ -260,6 +262,30 @@ class AdminHandler(
             }
             outbound.send(OutboundEvent.SendError(sessionId, "No player or mob named '${cmd.target}'."))
         }
+    }
+
+    private suspend fun handleReload(
+        sessionId: SessionId,
+        cmd: Command.Reload,
+    ) {
+        if (onReload == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Hot reload is not configured."))
+            return
+        }
+        val target = cmd.target?.lowercase()
+        val validTargets = setOf("world", "abilities", "effects", "all")
+        if (target != null && target !in validTargets) {
+            outbound.send(
+                OutboundEvent.SendError(
+                    sessionId,
+                    "Usage: reload [${validTargets.joinToString("|")}]  (default: all)",
+                ),
+            )
+            return
+        }
+        outbound.send(OutboundEvent.SendInfo(sessionId, "Reloading ${target ?: "all"}..."))
+        val summary = onReload.invoke(target)
+        outbound.send(OutboundEvent.SendInfo(sessionId, summary))
     }
 
     private fun findMobTemplate(arg: String): dev.ambon.domain.world.MobSpawn? {
