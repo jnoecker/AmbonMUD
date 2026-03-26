@@ -23,6 +23,7 @@ import type {
   LoginErrorState,
   LoginPromptState,
   MobInfo,
+  QuestAvailable,
   QuestEntry,
   QuestNotification,
   RoomMob,
@@ -67,6 +68,7 @@ interface GmcpContext {
   pushCombatEvent: (event: CombatEventData) => void;
   setCharStats: Dispatch<SetStateAction<CharStats | null>>;
   setQuests: Dispatch<SetStateAction<QuestEntry[]>>;
+  setQuestsAvailable: Dispatch<SetStateAction<QuestAvailable[]>>;
   pushGainEvent: (event: GainEvent) => void;
   pushQuestNotification: (notification: QuestNotification) => void;
   setMobInfo: Dispatch<SetStateAction<MobInfo[]>>;
@@ -738,6 +740,42 @@ export function applyGmcpPackage(
         event: "complete",
         receivedAt: Date.now(),
       });
+      break;
+    }
+
+    case "Quest.Available": {
+      if (!Array.isArray(data)) {
+        ctx.setQuestsAvailable([]);
+        break;
+      }
+      ctx.setQuestsAvailable(
+        data
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => {
+            const objectives = Array.isArray(e.objectives)
+              ? e.objectives
+                  .filter((o): o is Record<string, unknown> => typeof o === "object" && o !== null)
+                  .map((o) => ({
+                    description: typeof o.description === "string" ? o.description : "",
+                    count: safeNumber(o.count),
+                  }))
+              : [];
+            const rewards = typeof e.rewards === "object" && e.rewards !== null
+              ? e.rewards as Record<string, unknown>
+              : {};
+            return {
+              id: typeof e.id === "string" ? e.id : "",
+              name: typeof e.name === "string" ? e.name : "",
+              description: typeof e.description === "string" ? e.description : "",
+              giverMobId: typeof e.giverMobId === "string" ? e.giverMobId : "",
+              objectives,
+              rewards: {
+                xp: safeNumber(rewards.xp),
+                gold: safeNumber(rewards.gold),
+              },
+            };
+          }),
+      );
       break;
     }
 

@@ -3,6 +3,8 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.AchievementSystem
+import dev.ambon.engine.QuestAvailableEntry
+import dev.ambon.engine.QuestAvailableObjectiveSummary
 import dev.ambon.engine.QuestRegistry
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.commands.Command
@@ -24,6 +26,7 @@ class DialogueQuestHandler(
     private val players = ctx.players
     private val mobs = ctx.mobs
     private val outbound = ctx.outbound
+    private val gmcpEmitter = ctx.gmcpEmitter
 
     override fun register(router: CommandRouter) {
         router.on<Command.Talk> { sid, cmd -> handleTalk(sid, cmd) }
@@ -54,6 +57,27 @@ class DialogueQuestHandler(
                 for (quest in available) {
                     outbound.send(OutboundEvent.SendText(sessionId, "[Quest] ${quest.name} — ${quest.description}"))
                     outbound.send(OutboundEvent.SendText(sessionId, "  Type 'accept ${quest.name}' to accept."))
+                }
+                if (available.isNotEmpty()) {
+                    gmcpEmitter?.sendQuestAvailable(
+                        sessionId,
+                        available.map { quest ->
+                            QuestAvailableEntry(
+                                id = quest.id,
+                                name = quest.name,
+                                description = quest.description,
+                                giverMobId = quest.giverMobId,
+                                objectives = quest.objectives.map { obj ->
+                                    QuestAvailableObjectiveSummary(
+                                        description = obj.description,
+                                        count = obj.count,
+                                    )
+                                },
+                                rewardXp = quest.rewards.xp,
+                                rewardGold = quest.rewards.gold,
+                            )
+                        },
+                    )
                 }
             }
         }
