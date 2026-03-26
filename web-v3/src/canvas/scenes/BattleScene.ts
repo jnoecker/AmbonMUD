@@ -1,5 +1,5 @@
 import { Container, Graphics, Sprite, Text, Texture, Assets } from "pixi.js";
-import { gameStateRef } from "../GameStateBridge";
+import { gameStateRef, canvasCallbacks } from "../GameStateBridge";
 import { canvasEvents } from "../CanvasEventBus";
 import { CombatAnimator } from "../systems/CombatAnimator";
 import { GainPopupSystem } from "../systems/GainPopup";
@@ -71,6 +71,12 @@ export class BattleScene {
   private victoryText: Text | null = null;
   private victoryElapsed = 0;
 
+  // Combat action buttons
+  private fleeBtn: Container;
+  private smiteBtn: Container;
+  private smiteFlashGraphics = new Graphics();
+  private smiteFlashAlpha = 0;
+
   constructor() {
     this.playerLabel = new Text({
       text: "",
@@ -111,6 +117,21 @@ export class BattleScene {
     this.container.addChild(this.combatAnimator.container);
     this.container.addChild(this.spellProjectiles.graphics);
     this.container.addChild(this.gainPopups.container);
+
+    this.fleeBtn = this.buildActionButton("Flee", 0xef5350, 0x4a1a1a, () => {
+      canvasCallbacks.sendCommand?.("flee");
+    });
+    this.smiteBtn = this.buildActionButton("Smite", 0xffd54f, 0x3a3020, () => {
+      const target = gameStateRef.current.combatTarget?.targetName;
+      if (target) {
+        canvasCallbacks.sendCommand?.(`smite ${target}`);
+        this.smiteFlashAlpha = 1;
+      }
+    });
+    this.smiteBtn.visible = false;
+    this.container.addChild(this.smiteFlashGraphics);
+    this.container.addChild(this.fleeBtn);
+    this.container.addChild(this.smiteBtn);
   }
 
   resize(width: number, height: number) {
@@ -273,6 +294,22 @@ export class BattleScene {
       // Restore container opacity in case the death animation faded it out
       if (!this.fadingIn) {
         this.container.alpha = 1;
+      }
+    }
+
+    // Smite button visible only for staff
+    this.smiteBtn.visible = character.isStaff;
+
+    // Smite flash animation
+    if (this.smiteFlashAlpha > 0) {
+      this.smiteFlashAlpha -= deltaMs / 400;
+      if (this.smiteFlashAlpha <= 0) {
+        this.smiteFlashAlpha = 0;
+        this.smiteFlashGraphics.clear();
+      } else {
+        this.smiteFlashGraphics.clear();
+        this.smiteFlashGraphics.rect(0, 0, this.width, this.height);
+        this.smiteFlashGraphics.fill({ color: 0xffd54f, alpha: this.smiteFlashAlpha * 0.7 });
       }
     }
 
@@ -451,6 +488,52 @@ export class BattleScene {
     );
     this.combatAnimator.drawSlashes();
     this.combatAnimator.drawParticles();
+
+    // Position action buttons — bottom-right
+    const btnX = w - 60;
+    this.fleeBtn.x = btnX;
+    this.fleeBtn.y = h - 24;
+    if (this.smiteBtn.visible) {
+      this.smiteBtn.x = btnX;
+      this.smiteBtn.y = h - 64;
+    }
+  }
+
+  private buildActionButton(label: string, color: number, bgColor: number, onClick: () => void): Container {
+    const btn = new Container();
+    btn.eventMode = "static";
+    btn.cursor = "pointer";
+    const btnW = 80;
+    const btnH = 32;
+    const bg = new Graphics();
+    bg.roundRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+    bg.fill({ color: bgColor, alpha: 0.9 });
+    bg.roundRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+    bg.stroke({ color, alpha: 0.6, width: 1.5 });
+    const text = new Text({
+      text: label,
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 12, fill: `#${color.toString(16).padStart(6, "0")}`, fontWeight: "bold" },
+    });
+    text.anchor.set(0.5, 0.5);
+    text.eventMode = "none";
+    btn.addChild(bg);
+    btn.addChild(text);
+    btn.on("pointerover", () => {
+      bg.clear();
+      bg.roundRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      bg.fill({ color: bgColor, alpha: 1 });
+      bg.roundRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      bg.stroke({ color, alpha: 0.9, width: 2 });
+    });
+    btn.on("pointerout", () => {
+      bg.clear();
+      bg.roundRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      bg.fill({ color: bgColor, alpha: 0.9 });
+      bg.roundRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      bg.stroke({ color, alpha: 0.6, width: 1.5 });
+    });
+    btn.on("pointerdown", onClick);
+    return btn;
   }
 
   private rebuildParty(members: Array<{ name: string; hp: number; maxHp: number }>) {
