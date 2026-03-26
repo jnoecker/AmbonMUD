@@ -138,6 +138,13 @@ export class Ec2Stack extends Stack {
       // UID 1001 matches the pinned ambonmud user inside the container (Dockerfile).
       'mkdir -p /app/data && chown 1001:1001 /app/data',
       '',
+      // ---- Swap file: 512 MB safety net against OOM on t4g.micro ---------------
+      'dd if=/dev/zero of=/swapfile bs=1M count=512',
+      'chmod 600 /swapfile',
+      'mkswap /swapfile',
+      'swapon /swapfile',
+      "echo '/swapfile swap swap defaults 0 0' >> /etc/fstab",
+      '',
       // ---- Docker network for inter-container communication -------------------
       'docker network create ambonmud-net || true',
       '',
