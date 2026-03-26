@@ -5,6 +5,7 @@ import { percent } from "../utils";
 import {
   CharacterAvatarIcon,
   EquipmentIcon,
+  WearingIcon,
   ChatBubbleIcon,
   ShopIcon,
   HelpIcon,
@@ -178,7 +179,8 @@ export function ActionBar({
 
   const panels: PanelButton[] = [
     { panel: "character", label: "Character", icon: <CharacterAvatarIcon className="action-bar-btn-icon" />, requiresProfile: true },
-    { panel: "equipment", label: "Equipment", icon: <EquipmentIcon className="action-bar-btn-icon" />, requiresProfile: true },
+    { panel: "inventory", label: "Inventory", icon: <EquipmentIcon className="action-bar-btn-icon" />, requiresProfile: true },
+    { panel: "equipment", label: "Equipment", icon: <WearingIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "spellbook", label: "Spellbook", icon: <SpellbookIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "quests", label: "Quests", icon: <QuestsTabIcon className="action-bar-btn-icon" />, requiresProfile: true, badge: questCount > 0 ? questCount : undefined },
     { panel: "chat", label: "Social", icon: <ChatBubbleIcon className="action-bar-btn-icon" />, requiresProfile: true },
