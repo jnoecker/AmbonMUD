@@ -266,6 +266,8 @@ export class Ec2Stack extends Stack {
       '  -e GF_SECURITY_ADMIN_PASSWORD=admin \\',
       `  -e GF_SERVER_ROOT_URL=https://${hostname || 'localhost'}/grafana/ \\`,
       '  -e GF_SERVER_SERVE_FROM_SUB_PATH=true \\',
+      '  -e GF_AUTH_ANONYMOUS_ENABLED=true \\',
+      '  -e GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer \\',
       '  -v /app/grafana/provisioning:/etc/grafana/provisioning:ro \\',
       '  grafana/grafana:10.4.2',
       'ExecStop=/usr/bin/docker stop grafana',
@@ -327,6 +329,30 @@ export class Ec2Stack extends Stack {
           ]
         : []),
       '',
+      // ---- generate-htpasswd helper script ------------------------------------
+      // Extracts the admin token from application-local.yaml and writes an
+      // htpasswd file for nginx basic auth on /grafana/, /prometheus/, /admin/.
+      // Called by ExecStartPre after the lore config is fetched.
+      // ----------------------------------------------------------------------
+      `cat > /usr/local/bin/generate-htpasswd << 'SCRIPT_END'`,
+      '#!/bin/bash',
+      'set -euo pipefail',
+      'CONFIG=/app/data/application-local.yaml',
+      'HTPASSWD=/etc/nginx/.htpasswd',
+      'if [ ! -f "$CONFIG" ]; then',
+      '  echo "No config overlay — skipping htpasswd generation"',
+      '  exit 0',
+      'fi',
+      'TOKEN=$(grep -E "^\\s*token:" "$CONFIG" | head -1 | sed "s/.*token:\\s*//" | tr -d \'"\\'\')',
+      'if [ -z "$TOKEN" ]; then',
+      '  echo "No admin token found in config — skipping htpasswd generation"',
+      '  exit 0',
+      'fi',
+      'htpasswd -bc "$HTPASSWD" admin "$TOKEN"',
+      'echo "htpasswd written to $HTPASSWD"',
+      'SCRIPT_END',
+      'chmod +x /usr/local/bin/generate-htpasswd',
+      '',
       // ---- systemd service --------------------------------------------------
       `cat > /etc/systemd/system/ambonmud.service << 'SERVICE_END'`,
       '[Unit]',
@@ -352,6 +378,8 @@ export class Ec2Stack extends Stack {
       ...(worldZonesBaseUrl
         ? [`ExecStartPre=/usr/local/bin/fetch-world-zones`]
         : []),
+      // Generate htpasswd for nginx basic auth on /grafana/, /prometheus/, /admin/.
+      'ExecStartPre=/usr/local/bin/generate-htpasswd',
       // JAVA_TOOL_OPTIONS is read directly by the JVM (not Hoplite), making it
       // a reliable way to set JVM system properties in the container.
       // -Dambon.profile=demo loads application-demo.yaml from the classpath,
@@ -382,7 +410,7 @@ export class Ec2Stack extends Stack {
     if (hostname) {
       userData.addCommands(
         '',
-        'dnf install -y nginx certbot python3-certbot-nginx',
+        'dnf install -y nginx certbot python3-certbot-nginx httpd-tools',
         'systemctl enable nginx',
         '',
         // nginx reverse-proxy config: HTTP + WebSocket → localhost:8080
@@ -411,6 +439,8 @@ export class Ec2Stack extends Stack {
         '    }',
         '',
         '    location /grafana/ {',
+        '        auth_basic "AmbonMUD Admin";',
+        '        auth_basic_user_file /etc/nginx/.htpasswd;',
         '        proxy_pass http://localhost:3000/grafana/;',
         '        proxy_set_header Host $host;',
         '        proxy_set_header X-Real-IP $remote_addr;',
@@ -419,6 +449,8 @@ export class Ec2Stack extends Stack {
         '    }',
         '',
         '    location /prometheus/ {',
+        '        auth_basic "AmbonMUD Admin";',
+        '        auth_basic_user_file /etc/nginx/.htpasswd;',
         '        proxy_pass http://localhost:9090/prometheus/;',
         '        proxy_set_header Host $host;',
         '        proxy_set_header X-Real-IP $remote_addr;',
@@ -427,6 +459,8 @@ export class Ec2Stack extends Stack {
         '    }',
         '',
         '    location /admin/ {',
+        '        auth_basic "AmbonMUD Admin";',
+        '        auth_basic_user_file /etc/nginx/.htpasswd;',
         '        proxy_pass http://localhost:9091/;',
         '        proxy_set_header Host $host;',
         '        proxy_set_header X-Real-IP $remote_addr;',
