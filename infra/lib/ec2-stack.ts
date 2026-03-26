@@ -481,14 +481,14 @@ export class Ec2Stack extends Stack {
     }
 
     // -------------------------------------------------------------------------
-    // EC2 instance: t4g.nano — ARM64, 2 vCPU (burstable) / 512 MB RAM.
-    // Load testing showed AmbonMUD uses ~40 MB heap at 150 players; 512 MB is
-    // ample headroom. JVM ergonomics caps heap at ~128 MB on 512 MB system.
+    // EC2 instance: t4g.micro — ARM64, 2 vCPU (burstable) / 1 GB RAM.
+    // Upgraded from t4g.nano to accommodate Prometheus + Grafana containers
+    // alongside the main AmbonMUD container.
     // -------------------------------------------------------------------------
     const instance = new ec2.Instance(this, 'Instance', {
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.NANO),
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T4G, ec2.InstanceSize.MICRO),
       machineImage: ec2.MachineImage.latestAmazonLinux2023({
         cpuType: ec2.AmazonLinuxCpuType.ARM_64,
       }),
