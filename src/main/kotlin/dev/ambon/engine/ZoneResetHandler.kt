@@ -80,6 +80,49 @@ internal class ZoneResetHandler(
             .filterValues { it > 0L }
             .mapValuesTo(mutableMapOf()) { (_, minutes) -> clock.millis() + minutesToMillis(minutes) }
 
+    /** Tracks the lifespan values that produced the current timers, so [refreshSchedule] can detect changes. */
+    private val previousLifespanMinutes: MutableMap<String, Long> =
+        world.zoneLifespansMinutes
+            .filterValues { it > 0L }
+            .toMutableMap()
+
+    /** Returns the set of zones that currently have active reset timers. Visible for testing. */
+    internal fun scheduledZones(): Set<String> = zoneResetDueAtMillis.keys.toSet()
+
+    /** Returns the due-at millis for [zone], or null if not scheduled. Visible for testing. */
+    internal fun dueAtMillis(zone: String): Long? = zoneResetDueAtMillis[zone]
+
+    /**
+     * Syncs [zoneResetDueAtMillis] with the current [world.zoneLifespansMinutes].
+     * - New zones get a timer starting at now + lifespan.
+     * - Removed/disabled zones (lifespan absent or ≤ 0) have their timer dropped.
+     * - Changed lifespans reset the timer to now + new lifespan.
+     * - Unchanged lifespans keep the existing timer undisturbed.
+     *
+     * Call after a hot reload replaces world data.
+     */
+    fun refreshSchedule() {
+        val now = clock.millis()
+        val fresh = world.zoneLifespansMinutes.filterValues { it > 0L }
+
+        // Remove zones that no longer have a lifespan.
+        val staleZones = zoneResetDueAtMillis.keys - fresh.keys
+        for (zone in staleZones) {
+            zoneResetDueAtMillis.remove(zone)
+        }
+
+        // Add or update zones.
+        for ((zone, minutes) in fresh) {
+            val oldMinutes = previousLifespanMinutes[zone]
+            if (zone !in zoneResetDueAtMillis || oldMinutes != minutes) {
+                zoneResetDueAtMillis[zone] = now + minutesToMillis(minutes)
+            }
+        }
+
+        previousLifespanMinutes.clear()
+        previousLifespanMinutes.putAll(fresh)
+    }
+
     /** Called once per tick; resets any zones whose lifespan has elapsed. */
     suspend fun tick() {
         if (zoneResetDueAtMillis.isEmpty()) return

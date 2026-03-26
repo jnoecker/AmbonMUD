@@ -20,6 +20,7 @@ import dev.ambon.engine.PlayerClassRegistryLoader
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.RaceRegistryLoader
+import dev.ambon.engine.ReloadRequest
 import dev.ambon.engine.StatRegistry
 import dev.ambon.engine.StatRegistryLoader
 import dev.ambon.engine.WorldStateRegistry
@@ -227,6 +228,10 @@ class MudServer(
             instanceSelector = instanceSelector,
         )
 
+    private val reloadChannel = kotlinx.coroutines.channels.Channel<ReloadRequest>(
+        kotlinx.coroutines.channels.Channel.BUFFERED,
+    )
+
     private val adminServer: AdminHttpServer? =
         if (config.admin.enabled) {
             AdminHttpServer(
@@ -241,6 +246,11 @@ class MudServer(
                     } else {
                         ""
                     },
+                onReload = { target ->
+                    val deferred = kotlinx.coroutines.CompletableDeferred<String>()
+                    reloadChannel.send(ReloadRequest(target, deferred))
+                    deferred.await()
+                },
             )
         } else {
             null
@@ -350,6 +360,18 @@ class MudServer(
                     imagesBaseUrl = config.images.baseUrl,
                     globalAssets = config.images.globalAssets,
                     spriteLevelTiers = config.images.spriteLevelTiers,
+                    worldLoader = {
+                        WorldFactory.demoWorld(
+                            resources = config.world.resources,
+                            tiers = config.engine.mob.tiers,
+                            zoneFilter = zoneFilter,
+                            startRoom = config.world.startRoom?.let { RoomId(it) },
+                            imagesBaseUrl = config.images.baseUrl,
+                            videosBaseUrl = config.videos.baseUrl,
+                            audioBaseUrl = config.audio.baseUrl,
+                        )
+                    },
+                    reloadChannel = reloadChannel,
                 ).run()
             }
 

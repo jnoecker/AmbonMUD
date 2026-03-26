@@ -203,6 +203,16 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses reload with and without target`() {
+        assertEquals(Command.Reload(null), CommandParser.parse("reload"))
+        assertEquals(Command.Reload("world"), CommandParser.parse("reload world"))
+        assertEquals(Command.Reload("abilities"), CommandParser.parse("reload abilities"))
+        assertEquals(Command.Reload("effects"), CommandParser.parse("reload effects"))
+        assertEquals(Command.Reload("all"), CommandParser.parse("reload all"))
+        assertEquals(Command.Reload("world"), CommandParser.parse("  reload   world  "))
+    }
+
+    @Test
     fun `parses smite with target`() {
         assertEquals(Command.Smite("Alice"), CommandParser.parse("smite Alice"))
         assertEquals(Command.Smite("gate_scout"), CommandParser.parse("smite gate_scout"))

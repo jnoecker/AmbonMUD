@@ -109,6 +109,10 @@ sealed interface Command {
 
     data object Shutdown : Command
 
+    data class Reload(
+        val target: String?,
+    ) : Command
+
     data class Smite(
         val target: String,
     ) : Command
@@ -746,6 +750,11 @@ object CommandParser {
             ?.let { return it }
         matchPrefix(line, listOf("recipes", "recipe")) { rest ->
             Command.Recipes(rest.takeIf { it.isNotBlank() })
+        }?.let { return it }
+
+        // reload [world|abilities|effects|all]
+        matchPrefix(line, listOf("reload")) { rest ->
+            Command.Reload(rest.trim().takeIf { it.isNotBlank() })
         }?.let { return it }
 
         // Bare number → dialogue choice (CommandRouter decides if applicable)
