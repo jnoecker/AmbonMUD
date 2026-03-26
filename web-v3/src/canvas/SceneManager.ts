@@ -1,5 +1,6 @@
 import type { Application } from "pixi.js";
 import { gameStateRef } from "./GameStateBridge";
+import { canvasEvents } from "./CanvasEventBus";
 import { WorldScene } from "./scenes/WorldScene";
 import { BattleScene } from "./scenes/BattleScene";
 import { DialogueOverlay } from "./systems/DialogueOverlay";
@@ -83,6 +84,9 @@ export class SceneManager {
       this.battleScene.container.visible = false;
       this.worldScene.container.visible = true;
       this.worldScene.overlayContainer.visible = true;
+      // Discard any combat/gain events still queued from the fight that just
+      // ended, so they don't replay when the next battle starts.
+      canvasEvents.drain();
     }
 
     this.currentScene = scene;

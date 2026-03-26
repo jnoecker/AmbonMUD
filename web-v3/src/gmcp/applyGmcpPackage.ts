@@ -162,27 +162,26 @@ export function applyGmcpPackage(
       const mapX = typeof packet.mapX === "number" ? packet.mapX : 0;
       const mapY = typeof packet.mapY === "number" ? packet.mapY : 0;
 
-      ctx.setRoom({
-        id,
-        title: typeof packet.title === "string" && packet.title.length > 0 ? packet.title : "-",
-        description: typeof packet.description === "string" ? packet.description : "",
-        exits,
-        image: typeof packet.image === "string" ? packet.image : null,
-        video: typeof packet.video === "string" ? packet.video : null,
-        music: typeof packet.music === "string" ? packet.music : null,
-        ambient: typeof packet.ambient === "string" ? packet.ambient : null,
-        mapX,
-        mapY,
+      const title = typeof packet.title === "string" && packet.title.length > 0 ? packet.title : "-";
+      const description = typeof packet.description === "string" ? packet.description : "";
+      const image = typeof packet.image === "string" ? packet.image : null;
+      const video = typeof packet.video === "string" ? packet.video : null;
+      const music = typeof packet.music === "string" ? packet.music : null;
+      const ambient = typeof packet.ambient === "string" ? packet.ambient : null;
+
+      // Detect actual room change (not just a look/refresh of the same room)
+      ctx.setRoom((prev) => {
+        if (prev.id !== id && prev.id !== null) {
+          // Moved to a different room — clear dialogue/quest offers
+          ctx.setDialogue(null);
+          ctx.setQuestsAvailable([]);
+        }
+        return { id, title, description, exits, image, video, music, ambient, mapX, mapY };
       });
 
       if (id) {
-        const title = typeof packet.title === "string" && packet.title.length > 0 ? packet.title : "";
-        const image = typeof packet.image === "string" ? packet.image : null;
-        ctx.updateMap(id, exits, title, image, mapX, mapY);
+        ctx.updateMap(id, exits, title === "-" ? "" : title, image, mapX, mapY);
       }
-      // Room change ends any active dialogue/quest offers
-      ctx.setDialogue(null);
-      ctx.setQuestsAvailable([]);
       break;
     }
 
