@@ -517,7 +517,7 @@ class DialogueSystemTest {
         }
 
     @Test
-    fun `auto-end node emits Dialogue End GMCP`() =
+    fun `auto-end node emits Dialogue Node with empty choices`() =
         runTest {
             val autoEndDialogue = DialogueTree(
                 rootNodeId = "root",
@@ -535,8 +535,11 @@ class DialogueSystemTest {
             env.system.startConversation(sid, "sage")
 
             val gmcp = env.outbound.drainAll().gmcpPackages()
+            val node = gmcp.find { it.gmcpPackage == "Dialogue.Node" }
+            assertTrue(node != null, "Expected Dialogue.Node for auto-end node. got=$gmcp")
+            assertTrue(node!!.jsonData.contains("\"text\":\"The gate closes behind you.\""))
+            assertTrue(node.jsonData.contains("\"choices\":[]"))
             val end = gmcp.find { it.gmcpPackage == "Dialogue.End" }
-            assertTrue(end != null, "Expected Dialogue.End for auto-end node. got=$gmcp")
-            assertTrue(end!!.jsonData.contains("\"reason\":\"ended\""))
+            assertTrue(end == null, "Should not emit Dialogue.End for auto-end node. got=$gmcp")
         }
 }
