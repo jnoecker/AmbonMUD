@@ -131,6 +131,8 @@ class GameEngine(
     imagesBaseUrl: String = "/images/",
     globalAssets: Map<String, String> = emptyMap(),
     spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
+    private val worldLoader: (() -> World)? = null,
+    private val reloadChannel: kotlinx.coroutines.channels.Channel<ReloadRequest>? = null,
 ) {
     // Convenience delegates — expose grouped context fields as flat names so the
     // existing class body compiles without modification.
@@ -679,6 +681,33 @@ class GameEngine(
         statusEffectSystem = statusEffectSystem,
     )
 
+    private val hotReloadManager: HotReloadManager? =
+        if (worldLoader != null) {
+            HotReloadManager(
+                world = world,
+                mobs = mobs,
+                items = items,
+                players = players,
+                outbound = outbound,
+                shopRegistry = shopRegistry,
+                gatheringRegistry = gatheringRegistry,
+                craftingRegistry = craftingRegistry,
+                questRegistry = questRegistry,
+                abilityRegistry = abilityRegistry,
+                statusEffectRegistry = statusEffectRegistry,
+                mobSystem = mobSystem,
+                behaviorTreeSystem = behaviorTreeSystem,
+                gmcpEmitter = gmcpEmitter,
+                worldState = worldState,
+                engineConfig = engineConfig,
+                imagesBaseUrl = imagesBaseUrl,
+                worldLoader = worldLoader,
+                onZoneScheduleRefresh = { zoneResetHandler.refreshSchedule() },
+            )
+        } else {
+            null
+        }
+
     private val router = CommandRouter(outbound = outbound, players = players)
     private val mailHandler: MailHandler
 
@@ -791,6 +820,9 @@ class GameEngine(
                 interEngineBus = interEngineBus,
                 engineId = engineId,
                 metrics = metrics,
+                onReload = hotReloadManager?.let { mgr ->
+                    { target -> handleReloadCommand(mgr, target) }
+                },
             ),
             UiHandler(
                 ctx = ctx,
@@ -890,6 +922,15 @@ class GameEngine(
                         }
                     }
                     interEngineEventHandler.flushDueWhoResponses()
+
+                    // Drain any pending hot reload requests (from admin API).
+                    if (reloadChannel != null && hotReloadManager != null) {
+                        while (true) {
+                            val req = reloadChannel.tryReceive().getOrNull() ?: break
+                            val summary = handleReloadCommand(hotReloadManager, req.target)
+                            req.result.complete(summary)
+                        }
+                    }
                     metrics.recordTickPhase("inbound_drain", inboundPhaseSample)
 
                     // Phase 2: Simulation — mob movement, behavior, combat, status effects, regen.
@@ -1085,6 +1126,19 @@ class GameEngine(
             )
         }
         gmcpEmitter.sendQuestList(sessionId, entries)
+    }
+
+    private suspend fun handleReloadCommand(
+        mgr: HotReloadManager,
+        target: String?,
+    ): String {
+        val result = when (target) {
+            "world" -> mgr.reloadWorld()
+            "abilities" -> mgr.reloadAbilities()
+            "effects" -> mgr.reloadStatusEffects()
+            else -> mgr.reloadAll()
+        }
+        return result.summary()
     }
 
     private suspend fun onCombatMobRemoved(

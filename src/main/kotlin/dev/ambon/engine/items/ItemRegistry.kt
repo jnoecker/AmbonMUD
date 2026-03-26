@@ -549,6 +549,28 @@ class ItemRegistry {
         }
     }
 
+    /**
+     * Updates item templates from [spawns] and places items for genuinely new template IDs only.
+     * Existing room/inventory/equipped items are untouched.
+     * Returns the list of spawns that were newly added (template ID didn't exist before).
+     */
+    fun updateTemplates(spawns: List<ItemSpawn>): List<ItemSpawn> {
+        val newSpawns = mutableListOf<ItemSpawn>()
+        for (spawn in spawns) {
+            val instance = spawn.instance
+            val existed = itemTemplates.containsKey(instance.id)
+            itemTemplates[instance.id] = instance
+            if (!existed) {
+                newSpawns.add(spawn)
+                when {
+                    spawn.roomId != null -> addRoomItem(spawn.roomId, instance)
+                    else -> addUnplacedItem(instance.id, instance)
+                }
+            }
+        }
+        return newSpawns
+    }
+
     private fun placeSpawns(spawns: List<ItemSpawn>) {
         for (spawn in spawns) {
             val instance = spawn.instance

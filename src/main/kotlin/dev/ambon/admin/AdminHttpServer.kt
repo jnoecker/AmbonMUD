@@ -39,6 +39,7 @@ class AdminHttpServer(
     private val mobs: MobRegistry,
     private val world: World,
     private val metricsUrl: String = "",
+    private val onReload: (suspend (String?) -> String)? = null,
 ) {
     private var engine: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
     private val json: ObjectMapper = jacksonObjectMapper()
@@ -55,6 +56,7 @@ class AdminHttpServer(
                     grafanaUrl = config.grafanaUrl,
                     metricsUrl = metricsUrl,
                     json = json,
+                    onReload = onReload,
                 )
             }.start(wait = false)
         log.info { "Admin HTTP server started on port ${config.port}" }
@@ -291,6 +293,7 @@ internal fun Application.adminModule(
     grafanaUrl: String = "",
     metricsUrl: String = "",
     json: ObjectMapper,
+    onReload: (suspend (String?) -> String)? = null,
 ) {
     routing {
         intercept(ApplicationCallPipeline.Plugins) {
@@ -638,6 +641,36 @@ internal fun Application.adminModule(
                         },
                 )
             call.respondText(json.writeValueAsString(detail), ContentType.Application.Json)
+        }
+
+        // ── Hot Reload API ─────────────────────────────────────────────────
+        post("/api/reload") {
+            if (onReload == null) {
+                call.respond(HttpStatusCode.NotImplemented, """{"error":"Hot reload not configured"}""")
+                return@post
+            }
+            val target = call.request.queryParameters["target"] // world, abilities, effects, all
+            val validTargets = setOf("world", "abilities", "effects", "all")
+            if (target != null && target !in validTargets) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    """{"error":"Invalid target. Use: ${validTargets.joinToString(", ")}"}""",
+                )
+                return@post
+            }
+            try {
+                val summary = onReload.invoke(target)
+                call.respondText(
+                    json.writeValueAsString(mapOf("status" to "ok", "summary" to summary)),
+                    ContentType.Application.Json,
+                )
+            } catch (e: Exception) {
+                log.error(e) { "Hot reload API failed" }
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    json.writeValueAsString(mapOf("status" to "error", "message" to (e.message ?: "unknown"))),
+                )
+            }
         }
     }
 }
