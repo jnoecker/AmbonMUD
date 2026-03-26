@@ -3,6 +3,7 @@ import type {
   CombatTarget,
   DialogueState,
   GroupInfo,
+  QuestAvailable,
   RoomMob,
   RoomPlayer,
   RoomItem,
@@ -26,6 +27,7 @@ export interface GameStateSnapshot {
   mobInfo: MobInfo[];
   groupInfo: GroupInfo;
   dialogue: DialogueState | null;
+  questsAvailable: QuestAvailable[];
   shop: ShopState | null;
   serverAssets: Record<string, string>;
 }
@@ -42,6 +44,7 @@ export const canvasCallbacks: {
   openShop: (() => void) | null;
   openMap: (() => void) | null;
   openRoom: (() => void) | null;
+  openQuests: (() => void) | null;
   onTargetSelected: ((targetName: string) => void) | null;
   openVideo: ((videoUrl: string) => void) | null;
   loadZoneMap: ((zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void) | null;
@@ -50,6 +53,7 @@ export const canvasCallbacks: {
   openShop: null,
   openMap: null,
   openRoom: null,
+  openQuests: null,
   onTargetSelected: null,
   openVideo: null,
   loadZoneMap: null,
@@ -75,6 +79,7 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     mobInfo: [],
     groupInfo: { leader: null, members: [] },
     dialogue: null,
+    questsAvailable: [],
     shop: null,
     serverAssets: {},
   },
