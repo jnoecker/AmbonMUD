@@ -2744,6 +2744,314 @@ body {
   }
 }
 
+/* ────────── Quest Panel (dedicated popout) ────────── */
+
+.quest-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+/* Tab bar — Active / Available switcher */
+.quest-tab-bar {
+  display: flex;
+  gap: var(--space-1);
+  padding: 0 var(--space-1);
+  border-bottom: 1px solid var(--line-faint);
+}
+
+.quest-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 170ms var(--ease-out-soft),
+    border-color 170ms var(--ease-out-soft);
+}
+
+.quest-tab:hover {
+  color: var(--text-primary);
+}
+
+.quest-tab-active {
+  color: var(--text-bright);
+  border-bottom-color: var(--color-primary-lavender);
+}
+
+.quest-tab-badge-available {
+  background: linear-gradient(140deg, rgb(141 169 123 / 90%), rgb(110 148 90 / 85%));
+}
+
+/* Panel section — shared wrapper */
+.quest-panel-section {
+  animation: questDetailsSlide 200ms var(--ease-out-soft);
+}
+
+/* Empty state */
+.quest-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.quest-empty-icon {
+  font-size: 2rem;
+  opacity: 0.3;
+  animation: questEmptyDrift 4s var(--ease-in-out-smooth) infinite alternate;
+}
+
+@keyframes questEmptyDrift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-4px); }
+}
+
+/* Quest item — icon in header */
+.quest-item-icon {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--color-primary-lavender);
+  margin-right: 2px;
+}
+
+.quest-item-complete .quest-item-icon {
+  color: var(--color-primary-moss-green);
+}
+
+.quest-item-complete .quest-item-header {
+  color: var(--text-secondary);
+}
+
+/* Mini progress bar (visible when collapsed) */
+.quest-item-mini-progress {
+  padding: 0 10px 8px;
+}
+
+.quest-mini-track {
+  height: 3px;
+}
+
+.meter-fill-quest-done {
+  background: linear-gradient(90deg, var(--color-primary-moss-green), rgb(141 180 110 / 90%));
+  box-shadow: 0 0 6px rgb(141 169 123 / 50%);
+}
+
+/* ── Available quest cards ── */
+.quest-available-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.quest-available-card {
+  border-radius: var(--radius-md);
+  background: linear-gradient(145deg, rgb(60 78 100 / 90%), rgb(50 68 95 / 86%));
+  border: 1px solid rgb(141 169 123 / 22%);
+  padding: var(--space-3) var(--space-3) var(--space-3);
+  box-shadow: inset 0 1px 0 rgb(232 239 255 / 10%);
+  transition:
+    border-color 170ms var(--ease-out-soft),
+    box-shadow 170ms var(--ease-out-soft);
+  animation: questCardAppear 280ms var(--ease-out-soft);
+}
+
+.quest-available-card:hover {
+  border-color: rgb(141 169 123 / 40%);
+  box-shadow:
+    inset 0 1px 0 rgb(232 239 255 / 10%),
+    0 0 12px rgb(141 169 123 / 14%);
+}
+
+@keyframes questCardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quest-available-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.quest-available-icon {
+  color: var(--color-primary-moss-green);
+  font-size: 0.82rem;
+}
+
+.quest-available-name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  letter-spacing: 0.01em;
+}
+
+.quest-available-description {
+  margin: 0 0 var(--space-2);
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.quest-available-objectives {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quest-available-objective {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: var(--text-tertiary);
+}
+
+.quest-available-obj-icon {
+  flex-shrink: 0;
+  font-size: 0.6rem;
+  opacity: 0.6;
+}
+
+.quest-available-obj-count {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  color: var(--text-disabled);
+}
+
+/* Rewards row */
+.quest-available-rewards {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: 0.74rem;
+}
+
+.quest-available-rewards-label {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.quest-reward-xp {
+  color: var(--color-xp-dark);
+  font-weight: 700;
+}
+
+.quest-reward-gold {
+  color: var(--color-primary-soft-gold);
+  font-weight: 700;
+}
+
+/* Accept Quest button — distinctive mossy-gold glow */
+.quest-accept-button {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  border: 1px solid rgb(141 169 123 / 44%);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(140deg, rgb(90 120 80 / 50%), rgb(80 110 68 / 40%));
+  color: var(--color-hp-light);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 180ms var(--ease-out-soft),
+    border-color 180ms var(--ease-out-soft),
+    box-shadow 180ms var(--ease-out-soft),
+    transform 160ms var(--ease-out-soft);
+}
+
+.quest-accept-button:hover {
+  background: linear-gradient(140deg, rgb(110 145 95 / 60%), rgb(95 130 78 / 50%));
+  border-color: rgb(141 169 123 / 64%);
+  box-shadow: 0 0 14px rgb(141 169 123 / 28%);
+  transform: translateY(-1px);
+}
+
+.quest-accept-button:active {
+  transform: scale(0.97);
+}
+
+/* Quest notification icon */
+.quest-notification-icon {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+}
+
+.quest-notification-complete .quest-notification-icon {
+  color: var(--color-primary-moss-green);
+}
+
+.quest-notification-update .quest-notification-icon {
+  color: var(--color-primary-pale-blue);
+}
+
+/* ── Action bar quest badge ── */
+.action-bar-btn-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  background: linear-gradient(140deg, var(--color-primary-lavender), var(--color-primary-pale-blue));
+  box-shadow: 0 1px 4px rgb(8 10 18 / 40%);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quest-empty-icon {
+    animation: none;
+  }
+
+  .quest-available-card {
+    animation: none;
+  }
+
+  .quest-panel-section {
+    animation: none;
+  }
+}
+
 .character-detail-panel-flip {
   animation: detailFlipIn 220ms var(--ease-out-soft);
   transform-origin: top center;

@@ -9,6 +9,7 @@ import {
   ShopIcon,
   HelpIcon,
   SpellbookIcon,
+  QuestsTabIcon,
   SkillCastIcon,
   SendIcon,
 } from "./Icons";
@@ -36,6 +37,7 @@ interface ActionBarProps {
   vitals: Vitals;
   quickbarSlots: (SkillSummary | null)[];
   shop: ShopState | null;
+  questCount: number;
   activePopout: PopoutPanel;
   onOpenPopout: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
@@ -156,6 +158,7 @@ export function ActionBar({
   vitals,
   quickbarSlots,
   shop,
+  questCount,
   activePopout,
   onOpenPopout,
   onCastSkill,
@@ -177,6 +180,7 @@ export function ActionBar({
     { panel: "character", label: "Character", icon: <CharacterAvatarIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "equipment", label: "Equipment", icon: <EquipmentIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "spellbook", label: "Spellbook", icon: <SpellbookIcon className="action-bar-btn-icon" />, requiresProfile: true },
+    { panel: "quests", label: "Quests", icon: <QuestsTabIcon className="action-bar-btn-icon" />, requiresProfile: true, badge: questCount > 0 ? questCount : undefined },
     { panel: "chat", label: "Social", icon: <ChatBubbleIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "help", label: "Help", icon: <HelpIcon className="action-bar-btn-icon" />, requiresProfile: false },
   ];
@@ -297,6 +301,9 @@ export function ActionBar({
                 onClick={() => onOpenPopout(active ? null : btn.panel)}
               >
                 {btn.icon}
+                {btn.badge != null && btn.badge > 0 && (
+                  <span className="action-bar-btn-badge">{btn.badge}</span>
+                )}
               </button>
             );
           })}

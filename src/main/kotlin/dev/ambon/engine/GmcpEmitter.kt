@@ -639,6 +639,30 @@ class GmcpEmitter(
         )
     }
 
+    /**
+     * Sends available (offerable) quests when the player talks to a quest-giver NPC.
+     * The client can render accept buttons from this structured data.
+     */
+    suspend fun sendQuestAvailable(
+        sessionId: SessionId,
+        quests: List<QuestAvailableEntry>,
+    ) {
+        if (quests.isEmpty()) return
+        val payload = quests.map { q ->
+            QuestAvailablePayload(
+                id = q.id,
+                name = q.name,
+                description = q.description,
+                giverMobId = q.giverMobId,
+                objectives = q.objectives.map { o ->
+                    QuestAvailableObjectivePayload(description = o.description, count = o.count)
+                },
+                rewards = QuestAvailableRewardsPayload(xp = q.rewardXp, gold = q.rewardGold),
+            )
+        }
+        emit(sessionId, "Quest.Available", payload, supportCheck = "Quest")
+    }
+
     // ---------- cooldowns ----------
 
     suspend fun sendCharCooldown(
@@ -1199,6 +1223,25 @@ class GmcpEmitter(
         val questName: String,
     )
 
+    private data class QuestAvailablePayload(
+        val id: String,
+        val name: String,
+        val description: String,
+        val giverMobId: String,
+        val objectives: List<QuestAvailableObjectivePayload>,
+        val rewards: QuestAvailableRewardsPayload,
+    )
+
+    private data class QuestAvailableObjectivePayload(
+        val description: String,
+        val count: Int,
+    )
+
+    private data class QuestAvailableRewardsPayload(
+        val xp: Long,
+        val gold: Long,
+    )
+
     // ---------- cooldown payload ----------
 
     private data class CharCooldownPayload(
@@ -1290,6 +1333,21 @@ data class QuestObjectiveEntry(
     val description: String,
     val current: Int,
     val required: Int,
+)
+
+data class QuestAvailableEntry(
+    val id: String,
+    val name: String,
+    val description: String,
+    val giverMobId: String,
+    val objectives: List<QuestAvailableObjectiveSummary>,
+    val rewardXp: Long,
+    val rewardGold: Long,
+)
+
+data class QuestAvailableObjectiveSummary(
+    val description: String,
+    val count: Int,
 )
 
 data class MobInfoEntry(

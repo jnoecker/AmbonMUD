@@ -4,7 +4,7 @@ import type { ItemSummary, PopoutPanel, RoomPlayer, RoomState } from "../types";
 import { HelpContent } from "./HelpContent";
 import { DropItemIcon, GiveItemIcon, RemoveItemIcon, WearItemIcon } from "./Icons";
 
-const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop", "spellbook"]);
+const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop", "spellbook", "quests"]);
 
 interface PopoutLayerProps {
   activePopout: PopoutPanel;
