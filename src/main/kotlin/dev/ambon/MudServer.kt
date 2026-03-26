@@ -12,21 +12,27 @@ import dev.ambon.bus.redisBusSubscriberSetup
 import dev.ambon.config.AppConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.world.WorldFactory
+import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PersistenceContext
 import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerClassRegistryLoader
 import dev.ambon.engine.PlayerProgression
+import dev.ambon.engine.QuestRegistry
 import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.RaceRegistryLoader
 import dev.ambon.engine.ReloadRequest
+import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.StatRegistry
 import dev.ambon.engine.StatRegistryLoader
 import dev.ambon.engine.WorldStateRegistry
+import dev.ambon.engine.abilities.AbilityRegistry
 import dev.ambon.engine.createPlayerRegistry
+import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.scheduler.Scheduler
+import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.GuildRepositoryFactory
 import dev.ambon.persistence.PersistenceWorker
@@ -153,11 +159,11 @@ class MudServer(
 
     private val items = ItemRegistry()
     private val mobs = MobRegistry()
-    private val abilityRegistry = dev.ambon.engine.abilities.AbilityRegistry()
-    private val statusEffectRegistry = dev.ambon.engine.status.StatusEffectRegistry()
-    private val shopRegistry = dev.ambon.engine.ShopRegistry(items)
-    private val questRegistry = dev.ambon.engine.QuestRegistry()
-    private val achievementRegistry = dev.ambon.engine.AchievementRegistry()
+    private val abilityRegistry = AbilityRegistry()
+    private val statusEffectRegistry = StatusEffectRegistry()
+    private val shopRegistry = ShopRegistry(items)
+    private val questRegistry = QuestRegistry()
+    private val achievementRegistry = AchievementRegistry()
     private val classRegistry =
         PlayerClassRegistry().also { reg ->
             PlayerClassRegistryLoader.load(config.engine.classes, reg)
@@ -259,12 +265,8 @@ class MudServer(
                 onBroadcast = { message ->
                     val online = players.allPlayers()
                     for (p in online) {
-                        outbound.send(
-                            dev.ambon.engine.events.OutboundEvent.SendText(p.sessionId, message),
-                        )
-                        outbound.send(
-                            dev.ambon.engine.events.OutboundEvent.SendPrompt(p.sessionId),
-                        )
+                        outbound.send(OutboundEvent.SendText(p.sessionId, message))
+                        outbound.send(OutboundEvent.SendPrompt(p.sessionId))
                     }
                     online.size
                 },
