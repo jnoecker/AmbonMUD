@@ -687,24 +687,29 @@ export function applyGmcpPackage(
         ctx.setQuests([]);
         break;
       }
-      ctx.setQuests(
-        data
-          .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
-          .map((entry) => ({
-            id: typeof entry.id === "string" ? entry.id : "",
-            name: typeof entry.name === "string" ? entry.name : "Unknown Quest",
-            description: typeof entry.description === "string" ? entry.description : "",
-            objectives: Array.isArray(entry.objectives)
-              ? entry.objectives
-                  .filter((o): o is Record<string, unknown> => typeof o === "object" && o !== null)
-                  .map((o) => ({
-                    description: typeof o.description === "string" ? o.description : "",
-                    current: safeNumber(o.current),
-                    required: safeNumber(o.required, 1),
-                  }))
-              : [],
-          })),
-      );
+      const parsedQuests = data
+        .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null)
+        .map((entry) => ({
+          id: typeof entry.id === "string" ? entry.id : "",
+          name: typeof entry.name === "string" ? entry.name : "Unknown Quest",
+          description: typeof entry.description === "string" ? entry.description : "",
+          objectives: Array.isArray(entry.objectives)
+            ? entry.objectives
+                .filter((o): o is Record<string, unknown> => typeof o === "object" && o !== null)
+                .map((o) => ({
+                  description: typeof o.description === "string" ? o.description : "",
+                  current: safeNumber(o.current),
+                  required: safeNumber(o.required, 1),
+                }))
+            : [],
+        }));
+      ctx.setQuests(parsedQuests);
+      // Remove newly-active quests from available offers so accept buttons disappear
+      const activeIds = new Set(parsedQuests.map((q) => q.id));
+      ctx.setQuestsAvailable((prev) => {
+        const filtered = prev.filter((q) => !activeIds.has(q.id));
+        return filtered.length === prev.length ? prev : filtered;
+      });
       break;
     }
 

@@ -68,9 +68,13 @@ export class EntityPopout {
       { label: "Look", command: `look ${name}`, color: 0x64b5f6 },
       { label: "Attack", command: `kill ${name}`, color: 0xef5350 },
     ];
-    if (info?.dialogue) actions.push({ label: "Talk", command: `talk ${name}`, color: 0xb9aed8 });
-    if (info?.questAvailable) actions.push({ label: "Accept Quest", command: `talk ${name}`, color: 0x5a8a6a });
-    if (info?.questComplete) actions.push({ label: "Turn In Quest", command: `talk ${name}`, color: 0xf0c674 });
+    if (info?.questComplete) {
+      actions.push({ label: "Turn In Quest", command: `talk ${name}`, color: 0xf0c674 });
+    } else if (info?.questAvailable) {
+      actions.push({ label: "Accept Quest", command: `talk ${name}`, color: 0x5a8a6a });
+    } else if (info?.dialogue) {
+      actions.push({ label: "Talk", command: `talk ${name}`, color: 0xb9aed8 });
+    }
     if (info?.shopKeeper) actions.push({ label: "Shop", command: `list`, color: 0x81a2be });
     if (video) actions.push({ label: "\u25B6 Cinematic", command: `__video__:${video}`, color: 0xce93d8 });
 

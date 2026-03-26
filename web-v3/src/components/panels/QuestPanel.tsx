@@ -55,7 +55,7 @@ export function QuestPanel({
                 onClick={() => onDismissQuestNotification(n.id)}
                 aria-label="Dismiss notification"
               >
-                \u00D7
+                {"\u00D7"}
               </button>
             </div>
           ))}
