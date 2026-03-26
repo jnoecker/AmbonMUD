@@ -487,6 +487,10 @@ data class CharacterCreationConfig(
 data class EquipmentSlotConfig(
     val displayName: String = "",
     val order: Int = 0,
+    /** Paper-doll X position as a percentage (0–100) of the sprite width. */
+    val x: Double = 50.0,
+    /** Paper-doll Y position as a percentage (0–100) of the sprite height. */
+    val y: Double = 50.0,
 )
 
 data class EquipmentConfig(
@@ -494,9 +498,9 @@ data class EquipmentConfig(
 ) {
     companion object {
         fun defaultEquipmentSlots(): Map<String, EquipmentSlotConfig> = linkedMapOf(
-            "head" to EquipmentSlotConfig(displayName = "Head", order = 0),
-            "body" to EquipmentSlotConfig(displayName = "Body", order = 1),
-            "hand" to EquipmentSlotConfig(displayName = "Hand", order = 2),
+            "head" to EquipmentSlotConfig(displayName = "Head", order = 0, x = 50.0, y = 8.0),
+            "body" to EquipmentSlotConfig(displayName = "Body", order = 1, x = 50.0, y = 40.0),
+            "hand" to EquipmentSlotConfig(displayName = "Hand", order = 2, x = 20.0, y = 52.0),
         )
     }
 }
