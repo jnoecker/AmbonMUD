@@ -702,6 +702,7 @@ class GameEngine(
                 engineConfig = engineConfig,
                 imagesBaseUrl = imagesBaseUrl,
                 worldLoader = worldLoader,
+                onZoneScheduleRefresh = { zoneResetHandler.refreshSchedule() },
             )
         } else {
             null

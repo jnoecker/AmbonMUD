@@ -87,6 +87,7 @@ class HotReloadManager(
     private val engineConfig: EngineConfig,
     private val imagesBaseUrl: String,
     private val worldLoader: () -> World,
+    private val onZoneScheduleRefresh: () -> Unit = {},
 ) {
     /**
      * Reloads world YAML: rooms, mob spawns, item templates, shops, quests,
@@ -108,6 +109,9 @@ class HotReloadManager(
         val newRoomIds = freshWorld.rooms.keys.toSet()
         val removedRooms = world.replaceAll(freshWorld)
         val addedRoomIds = newRoomIds - oldRoomIds
+
+        // Propagate start room change so new accounts / recall use the updated room.
+        players.startRoom = world.startRoom
 
         log.info {
             "Hot reload: world replaced. Zones=${freshWorld.zones().size}, " +
@@ -169,6 +173,9 @@ class HotReloadManager(
 
         // Rebuild feature lookup maps so new/changed doors, containers, etc. are discoverable.
         worldState.rebuild(world)
+
+        // Sync zone-reset timers with the (possibly changed) lifespan config.
+        onZoneScheduleRefresh()
 
         // Refresh GMCP for all connected players so room data is current.
         for (player in players.allPlayers()) {
