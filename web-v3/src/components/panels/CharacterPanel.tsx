@@ -24,8 +24,8 @@ interface CharacterPanelProps {
   questNotifications: QuestNotification[];
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
+  onOpenInventory: () => void;
   onOpenEquipment: () => void;
-  onOpenWearing: () => void;
 }
 
 export function CharacterPanel({
@@ -48,8 +48,8 @@ export function CharacterPanel({
   questNotifications,
   onDismissQuestNotification,
   onAbandonQuest,
+  onOpenInventory,
   onOpenEquipment,
-  onOpenWearing,
 }: CharacterPanelProps) {
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("vitals");
   const [expandedQuestId, setExpandedQuestId] = useState<string | null>(null);
@@ -78,24 +78,24 @@ export function CharacterPanel({
           <button
             type="button"
             className="panel-action-button panel-action-button-icon"
+            onClick={onOpenInventory}
+            disabled={!canOpenEquipment}
+            title={canOpenEquipment ? "Inventory" : "Inventory unavailable before login"}
+            aria-label={canOpenEquipment ? "Open inventory" : "Inventory unavailable before login"}
+          >
+            <EquipmentIcon className="panel-action-icon" />
+            <span className="sr-only">Inventory</span>
+          </button>
+          <button
+            type="button"
+            className="panel-action-button panel-action-button-icon"
             onClick={onOpenEquipment}
             disabled={!canOpenEquipment}
             title={canOpenEquipment ? "Equipment" : "Equipment unavailable before login"}
             aria-label={canOpenEquipment ? "Open equipment" : "Equipment unavailable before login"}
           >
-            <EquipmentIcon className="panel-action-icon" />
-            <span className="sr-only">Equipment</span>
-          </button>
-          <button
-            type="button"
-            className="panel-action-button panel-action-button-icon"
-            onClick={onOpenWearing}
-            disabled={!canOpenEquipment}
-            title={canOpenEquipment ? "Currently Wearing" : "Currently wearing unavailable before login"}
-            aria-label={canOpenEquipment ? "Open currently wearing" : "Currently wearing unavailable before login"}
-          >
             <WearingIcon className="panel-action-icon" />
-            <span className="sr-only">Currently Wearing</span>
+            <span className="sr-only">Equipment</span>
           </button>
         </div>
       </header>

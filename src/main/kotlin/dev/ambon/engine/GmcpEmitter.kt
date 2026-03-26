@@ -174,6 +174,24 @@ class GmcpEmitter(
         )
     }
 
+    /**
+     * Sends equipment slot definitions (id, displayName, order, x/y positions)
+     * so the client can render a paper-doll equipment panel.
+     */
+    suspend fun sendEquipmentSlots(sessionId: SessionId) {
+        val registry = equipmentSlotRegistry ?: return
+        val payload = registry.all().map { def ->
+            EquipmentSlotPayload(
+                id = def.slot.name,
+                displayName = def.displayName,
+                order = def.order,
+                x = def.x,
+                y = def.y,
+            )
+        }
+        emit(sessionId, "Char.Equipment.Slots", payload)
+    }
+
     suspend fun sendCharItemsAdd(
         sessionId: SessionId,
         item: ItemInstance,
@@ -407,6 +425,7 @@ class GmcpEmitter(
         sendCharStatusVars(sessionId)
         sendCharVitals(sessionId, player)
         sendCharName(sessionId, player)
+        sendEquipmentSlots(sessionId)
         sendCharItemsList(sessionId, items.inventory(sessionId), items.equipment(sessionId))
         sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->
             abilitySystem.cooldownRemainingMs(sessionId, abilityId)
@@ -989,6 +1008,14 @@ class GmcpEmitter(
         val basePrice: Int = 0,
         val image: String? = null,
         val video: String? = null,
+    )
+
+    private data class EquipmentSlotPayload(
+        val id: String,
+        val displayName: String,
+        val order: Int,
+        val x: Double,
+        val y: Double,
     )
 
     private data class CharItemsListPayload(
