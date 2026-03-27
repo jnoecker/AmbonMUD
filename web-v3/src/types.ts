@@ -165,6 +165,7 @@ export interface RoomMob {
   maxHp: number;
   image?: string | null;
   video?: string | null;
+  effects?: StatusEffect[];
 }
 
 export interface StatusEffect {

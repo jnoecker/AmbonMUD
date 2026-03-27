@@ -112,6 +112,19 @@ function isChatChannel(value: string): value is ChatChannel {
   return CHAT_CHANNEL_SET.has(value as ChatChannel);
 }
 
+function parseMobEffects(raw: unknown): StatusEffect[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const effects = raw
+    .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+    .map((e) => ({
+      name: String(e.name ?? ""),
+      type: String(e.type ?? ""),
+      remainingMs: safeNumber(e.remainingMs),
+      stacks: safeNumber(e.stacks, 1),
+    }));
+  return effects.length > 0 ? effects : undefined;
+}
+
 export function applyGmcpPackage(
   pkg: string,
   data: unknown,
@@ -397,6 +410,7 @@ export function applyGmcpPackage(
             maxHp: Math.max(1, safeNumber(entry.maxHp, 1)),
             image: typeof entry.image === "string" ? entry.image : null,
             video: typeof entry.video === "string" ? entry.video : null,
+            effects: parseMobEffects(entry.effects),
           })),
       );
       break;
@@ -416,6 +430,7 @@ export function applyGmcpPackage(
           maxHp: Math.max(1, safeNumber(packet.maxHp, 1)),
           image: typeof packet.image === "string" ? packet.image : null,
           video: typeof packet.video === "string" ? packet.video : null,
+          effects: parseMobEffects(packet.effects),
         },
       ]);
       break;
@@ -429,6 +444,7 @@ export function applyGmcpPackage(
       ctx.setMobs((prev) =>
         prev.map((mob) => {
           if (mob.id !== packet.id) return mob;
+          const effects = parseMobEffects(packet.effects);
           return {
             ...mob,
             hp: safeNumber(packet.hp, mob.hp),
@@ -436,6 +452,7 @@ export function applyGmcpPackage(
             description: typeof packet.description === "string" ? packet.description : mob.description,
             image: typeof packet.image === "string" ? packet.image : mob.image,
             video: typeof packet.video === "string" ? packet.video : mob.video,
+            effects: effects !== undefined ? effects : mob.effects,
           };
         }),
       );
