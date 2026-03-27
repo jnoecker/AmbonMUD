@@ -32,6 +32,7 @@ import type {
   RoomPlayer,
   RoomState,
   ShopItem,
+  StaffWorldZone,
   ShopState,
   SkillSummary,
   StatusEffect,
@@ -78,6 +79,7 @@ interface GmcpContext {
   setLoginError: Dispatch<SetStateAction<LoginErrorState | null>>;
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
   pushUiFeedback: (feedback: UiFeedback) => void;
+  setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -907,6 +909,26 @@ export function applyGmcpPackage(
     case "UI.Feedback": {
       const packet = data as UiFeedback;
       ctx.pushUiFeedback(packet);
+      break;
+    }
+
+    case "Staff.WorldInfo": {
+      if (!Array.isArray(data)) break;
+      ctx.setStaffWorldInfo(
+        data
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => ({
+            zone: typeof e.zone === "string" ? e.zone : "",
+            rooms: Array.isArray(e.rooms)
+              ? e.rooms
+                  .filter((r): r is Record<string, unknown> => typeof r === "object" && r !== null)
+                  .map((r) => ({
+                    id: typeof r.id === "string" ? r.id : "",
+                    title: typeof r.title === "string" ? r.title : "",
+                  }))
+              : [],
+          })),
+      );
       break;
     }
 
