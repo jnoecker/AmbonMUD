@@ -1,5 +1,5 @@
 import type { ReactNode, RefObject } from "react";
-import type { ContainerContents, PopoutPanel, RoomFeature, RoomState } from "../types";
+import type { CommandEntry, ContainerContents, PopoutPanel, RoomFeature, RoomState } from "../types";
 import { HelpContent } from "./HelpContent";
 
 const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop", "spellbook", "quests", "inventory", "equipment", "mail", "crafting"]);
@@ -13,6 +13,7 @@ interface PopoutLayerProps {
   containerContents: ContainerContents | null;
   mapCanvasRef: RefObject<HTMLCanvasElement | null>;
   isStaff: boolean;
+  serverCommands: CommandEntry[];
   onClose: () => void;
   onFeatureAction: (command: string) => void;
   children?: ReactNode;
@@ -27,6 +28,7 @@ export function PopoutLayer({
   containerContents,
   mapCanvasRef,
   isStaff,
+  serverCommands,
   onClose,
   onFeatureAction,
   children,
@@ -148,7 +150,7 @@ export function PopoutLayer({
 
         {activePopout === "help" && (
           <div className="popout-content">
-            <HelpContent isStaff={isStaff} />
+            <HelpContent isStaff={isStaff} serverCommands={serverCommands} />
           </div>
         )}
 

@@ -473,6 +473,7 @@ export interface LoginErrorState {
 export interface CommandEntry {
   name: string;
   usage: string;
+  description: string;
   category: string;
   staff: boolean;
 }
