@@ -696,6 +696,62 @@ class GmcpEmitter(
         )
     }
 
+    // ---------- mail ----------
+
+    suspend fun sendMailList(
+        sessionId: SessionId,
+        inbox: List<dev.ambon.domain.mail.MailMessage>,
+    ) {
+        emit(
+            sessionId,
+            "Mail.List",
+            inbox.mapIndexed { index, msg ->
+                MailListEntry(
+                    index = index + 1,
+                    id = msg.id,
+                    from = msg.fromName,
+                    date = msg.sentAtEpochMs,
+                    read = msg.read,
+                    preview = msg.body.lineSequence().firstOrNull()?.take(80) ?: "",
+                )
+            },
+            supportCheck = "Mail",
+        )
+    }
+
+    suspend fun sendMailMessage(
+        sessionId: SessionId,
+        index: Int,
+        msg: dev.ambon.domain.mail.MailMessage,
+    ) {
+        emit(
+            sessionId,
+            "Mail.Message",
+            MailMessagePayload(
+                index = index,
+                id = msg.id,
+                from = msg.fromName,
+                body = msg.body,
+                date = msg.sentAtEpochMs,
+                read = msg.read,
+            ),
+            supportCheck = "Mail",
+        )
+    }
+
+    suspend fun sendMailNotification(
+        sessionId: SessionId,
+        from: String,
+        unreadCount: Int,
+    ) {
+        emit(
+            sessionId,
+            "Mail.Notification",
+            MailNotificationPayload(from = from, unreadCount = unreadCount),
+            supportCheck = "Mail",
+        )
+    }
+
     // ---------- gain events ----------
 
     suspend fun sendCharGain(
@@ -1303,6 +1359,31 @@ class GmcpEmitter(
     private data class CharCooldownPayload(
         val abilityId: String,
         val cooldownMs: Long,
+    )
+
+    // ---------- mail payloads ----------
+
+    private data class MailListEntry(
+        val index: Int,
+        val id: String,
+        val from: String,
+        val date: Long,
+        val read: Boolean,
+        val preview: String,
+    )
+
+    private data class MailMessagePayload(
+        val index: Int,
+        val id: String,
+        val from: String,
+        val body: String,
+        val date: Long,
+        val read: Boolean,
+    )
+
+    private data class MailNotificationPayload(
+        val from: String,
+        val unreadCount: Int,
     )
 
     // ---------- gain payload ----------

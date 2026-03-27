@@ -7,6 +7,7 @@ import {
   EquipmentIcon,
   WearingIcon,
   ChatBubbleIcon,
+  MailIcon,
   ShopIcon,
   HelpIcon,
   SpellbookIcon,
@@ -39,6 +40,7 @@ interface ActionBarProps {
   quickbarSlots: (SkillSummary | null)[];
   shop: ShopState | null;
   questCount: number;
+  mailUnreadCount: number;
   activePopout: PopoutPanel;
   onOpenPopout: (panel: PopoutPanel) => void;
   onCastSkill: (skillId: string, cooldownMs: number) => void;
@@ -160,6 +162,7 @@ export function ActionBar({
   quickbarSlots,
   shop,
   questCount,
+  mailUnreadCount,
   activePopout,
   onOpenPopout,
   onCastSkill,
@@ -183,6 +186,7 @@ export function ActionBar({
     { panel: "inventory", label: "Inventory", icon: <EquipmentIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "spellbook", label: "Spellbook", icon: <SpellbookIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "quests", label: "Quests", icon: <QuestsTabIcon className="action-bar-btn-icon" />, requiresProfile: true, badge: questCount > 0 ? questCount : undefined },
+    { panel: "mail", label: "Mail", icon: <MailIcon className="action-bar-btn-icon" />, requiresProfile: true, badge: mailUnreadCount > 0 ? mailUnreadCount : undefined },
     { panel: "chat", label: "Social", icon: <ChatBubbleIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "help", label: "Help", icon: <HelpIcon className="action-bar-btn-icon" />, requiresProfile: false },
   ];

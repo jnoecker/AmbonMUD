@@ -538,6 +538,7 @@ internal class LoginFlowHandler(
         }
         router.handle(sessionId, Command.Look)
 
+        gmcpEmitter.sendMailList(sessionId, me.inbox)
         val unread = me.inbox.count { !it.read }
         if (unread > 0) {
             outbound.send(
