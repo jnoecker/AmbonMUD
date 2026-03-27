@@ -87,7 +87,7 @@ interface GmcpContext {
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
   pushUiFeedback: (feedback: UiFeedback) => void;
   setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
-  setMailInbox: Dispatch<SetStateAction<MailEntry[]>>;
+  setMailInbox: Dispatch<SetStateAction<MailEntry[] | null>>;
   setMailMessage: Dispatch<SetStateAction<MailMessage | null>>;
   pushMailNotification: (notification?: MailNotification) => void;
   sendGmcp: (pkg: string, payload: unknown) => void;
