@@ -245,6 +245,24 @@ internal suspend fun sendLook(
         ),
     )
     gmcpEmitter?.sendRoomItems(sessionId, here)
+
+    // Send gathering nodes in this room
+    val roomNodes = gatheringRegistry?.nodesInRoom(roomId) ?: emptyList()
+    if (roomNodes.isNotEmpty()) {
+        gmcpEmitter?.sendCraftingNodes(
+            sessionId,
+            roomNodes.map { node ->
+                GmcpEmitter.CraftingNodePayload(
+                    id = node.id,
+                    name = node.displayName,
+                    skill = node.skill,
+                    skillRequired = node.skillRequired,
+                )
+            },
+        )
+    } else {
+        gmcpEmitter?.sendCraftingNodes(sessionId, emptyList())
+    }
 }
 
 /** Returns a human-readable display name for a crafting station type ID. */

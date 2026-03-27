@@ -2746,6 +2746,213 @@ body {
 
 /* ────────── Quest Panel (dedicated popout) ────────── */
 
+/* ── Crafting panel ── */
+
+.crafting-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+.crafting-tab-bar {
+  display: flex;
+  gap: var(--space-1);
+  padding: 0 var(--space-1);
+  border-bottom: 1px solid var(--line-faint);
+}
+
+.crafting-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 170ms var(--ease-out-soft), border-color 170ms var(--ease-out-soft);
+}
+
+.crafting-tab:hover { color: var(--text-primary); }
+.crafting-tab-active { color: var(--text-bright); border-bottom-color: var(--color-primary-lavender); }
+
+.crafting-tab-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(140deg, rgb(141 169 123 / 90%), rgb(110 148 90 / 85%));
+  color: var(--text-bright);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.crafting-section {
+  padding: 0 var(--space-2);
+}
+
+.crafting-skill-list,
+.crafting-recipe-list,
+.crafting-node-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.crafting-skill-item {
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+
+.crafting-skill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.crafting-skill-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.crafting-skill-type {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.crafting-skill-level {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 4px 0;
+}
+
+.crafting-xp-bar-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-inset);
+  overflow: hidden;
+}
+
+.crafting-xp-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--color-primary-lavender), rgb(180 160 220));
+  transition: width 300ms var(--ease-out-soft);
+}
+
+.crafting-xp-label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.crafting-recipe-item {
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+
+.crafting-recipe-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.crafting-recipe-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.crafting-craft-button,
+.crafting-gather-button {
+  padding: 3px 10px;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+
+.crafting-craft-button:hover,
+.crafting-gather-button:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-bright);
+}
+
+.crafting-recipe-meta {
+  display: flex;
+  gap: var(--space-2);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.crafting-recipe-materials {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.crafting-material {
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  font-size: 0.72rem;
+}
+
+.crafting-recipe-arrow {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.crafting-recipe-output {
+  color: var(--color-primary-lavender);
+  font-weight: 600;
+}
+
+.crafting-node-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+
+.crafting-node-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.crafting-node-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.crafting-node-skill {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
 /* ── Mail panel ── */
 
 .mail-panel {
