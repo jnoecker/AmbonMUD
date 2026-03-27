@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
@@ -291,6 +291,29 @@ export interface GainEvent {
   newLevel: number | null;
   hpGained: number | null;
   manaGained: number | null;
+}
+
+export interface MailEntry {
+  index: number;
+  id: string;
+  from: string;
+  date: number;
+  read: boolean;
+  preview: string;
+}
+
+export interface MailMessage {
+  index: number;
+  id: string;
+  from: string;
+  body: string;
+  date: number;
+  read: boolean;
+}
+
+export interface MailNotification {
+  from: string;
+  unreadCount: number;
 }
 
 export interface QuestNotification {

@@ -23,6 +23,9 @@ import type {
   ItemSummary,
   LoginErrorState,
   LoginPromptState,
+  MailEntry,
+  MailMessage,
+  MailNotification,
   MobInfo,
   QuestAvailable,
   QuestEntry,
@@ -80,6 +83,9 @@ interface GmcpContext {
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
   pushUiFeedback: (feedback: UiFeedback) => void;
   setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
+  setMailInbox: Dispatch<SetStateAction<MailEntry[]>>;
+  setMailMessage: Dispatch<SetStateAction<MailMessage | null>>;
+  pushMailNotification: (notification?: MailNotification) => void;
   sendGmcp: (pkg: string, payload: unknown) => void;
 }
 
@@ -920,6 +926,48 @@ export function applyGmcpPackage(
     case "UI.Feedback": {
       const packet = data as UiFeedback;
       ctx.pushUiFeedback(packet);
+      break;
+    }
+
+    case "Mail.List": {
+      if (!Array.isArray(data)) {
+        ctx.setMailInbox([]);
+        break;
+      }
+      ctx.setMailInbox(
+        data
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => ({
+            index: safeNumber(e.index, 0),
+            id: typeof e.id === "string" ? e.id : "",
+            from: typeof e.from === "string" ? e.from : "",
+            date: safeNumber(e.date, 0),
+            read: e.read === true,
+            preview: typeof e.preview === "string" ? e.preview : "",
+          })),
+      );
+      break;
+    }
+
+    case "Mail.Message": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setMailMessage({
+        index: safeNumber(packet.index, 0),
+        id: typeof packet.id === "string" ? packet.id : "",
+        from: typeof packet.from === "string" ? packet.from : "",
+        body: typeof packet.body === "string" ? packet.body : "",
+        date: safeNumber(packet.date, 0),
+        read: packet.read === true,
+      });
+      break;
+    }
+
+    case "Mail.Notification": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.pushMailNotification({
+        from: typeof packet.from === "string" ? packet.from : "",
+        unreadCount: safeNumber(packet.unreadCount, 0),
+      });
       break;
     }
 
