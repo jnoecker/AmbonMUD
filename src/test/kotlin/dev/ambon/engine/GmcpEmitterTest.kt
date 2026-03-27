@@ -1408,4 +1408,40 @@ class GmcpEmitterTest {
         e.sendServerWho(sid, listOf())
         assertTrue(drainGmcp().isEmpty())
     }
+
+    // ---------- Zone.Instances ----------
+
+    @Test
+    fun `sendZoneInstances emits instance list`() = runTest {
+        val e = emitter("Zone.Instances")
+        e.sendZoneInstances(
+            sid,
+            zone = "forest",
+            currentEngineId = "e1",
+            instances = listOf(
+                ZoneInstanceEntry(engineId = "e1", playerCount = 10, capacity = 200),
+                ZoneInstanceEntry(engineId = "e2", playerCount = 25, capacity = 200),
+            ),
+        )
+
+        val gmcp = drainGmcp()
+        assertEquals(1, gmcp.size)
+        assertEquals("Zone.Instances", gmcp[0].gmcpPackage)
+
+        val json = gmcp[0].jsonData
+        assertTrue(json.contains("\"forest\""), "Should contain zone name")
+        assertTrue(json.contains("\"e1\""), "Should contain engine ID e1")
+        assertTrue(json.contains("\"e2\""), "Should contain engine ID e2")
+        assertTrue(json.contains("\"isCurrent\":true"), "e1 should be current")
+    }
+
+    @Test
+    fun `clearZoneInstances emits empty list`() = runTest {
+        val e = emitter("Zone.Instances")
+        e.clearZoneInstances(sid)
+
+        val gmcp = drainGmcp()
+        assertEquals(1, gmcp.size)
+        assertTrue(gmcp[0].jsonData.contains("\"instances\":[]"), "Should have empty instances")
+    }
 }

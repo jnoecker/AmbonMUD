@@ -49,6 +49,8 @@ import type {
   UiFeedback,
   Vitals,
   WhoPlayer,
+  ZoneInstances,
+  ZoneInstanceItem,
 } from "../types";
 import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
@@ -100,6 +102,7 @@ interface GmcpContext {
   setMailMessage: Dispatch<SetStateAction<MailMessage | null>>;
   pushMailNotification: (notification?: MailNotification) => void;
   setWhoPlayers: Dispatch<SetStateAction<WhoPlayer[]>>;
+  setZoneInstances: Dispatch<SetStateAction<ZoneInstances>>;
   sendGmcp: (pkg: string, payload: unknown) => void;
 }
 
@@ -226,6 +229,24 @@ export function applyGmcpPackage(
       if (zone && rooms.length > 0) {
         ctx.loadZoneMap(zone, rooms);
       }
+      break;
+    }
+
+    case "Zone.Instances": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const zone = typeof packet.zone === "string" ? packet.zone : null;
+      const currentEngineId = typeof packet.currentEngineId === "string" ? packet.currentEngineId : null;
+      const instances: ZoneInstanceItem[] = Array.isArray(packet.instances)
+        ? packet.instances
+          .filter((i): i is Record<string, unknown> => typeof i === "object" && i !== null)
+          .map((i) => ({
+            engineId: String(i.engineId ?? ""),
+            playerCount: safeNumber(i.playerCount),
+            capacity: safeNumber(i.capacity, 200),
+            isCurrent: i.isCurrent === true,
+          }))
+        : [];
+      ctx.setZoneInstances({ zone, currentEngineId, instances });
       break;
     }
 
