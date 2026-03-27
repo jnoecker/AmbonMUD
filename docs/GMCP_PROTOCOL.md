@@ -185,6 +185,7 @@ On telnet the payload is sent as the raw JSON array (no outer envelope). Upon re
 - `Char.Skills` (if subscribed)
 - `Char.StatusEffects` (if subscribed)
 - `Char.Achievements` (if subscribed)
+- `Char.Sprites` (if subscribed)
 - `Group.Info` (if subscribed and player is in a group)
 
 ---
@@ -225,7 +226,7 @@ Response to a client `Core.Ping`.
 
 ### `Char.Name`
 
-Sent once on login. Static for the duration of the session (except `level` updates on level-up).
+Sent on login and whenever the player's sprite, level, or name changes (e.g. level-up, sprite selection).
 
 ```json
 {
@@ -234,7 +235,7 @@ Sent once on login. Static for the duration of the session (except `level` updat
   "race": "ELF",
   "class": "MAGE",
   "level": 7,
-  "sprite": "/images/player_sprites/elf_mage_t1.png",
+  "sprite": "https://assets.ambon.dev/player_sprites/elf_mage_t1.png",
   "isStaff": false
 }
 ```
@@ -246,8 +247,54 @@ Sent once on login. Static for the duration of the session (except `level` updat
 | `race`   | string  | Race enum name: `HUMAN`, `ELF`, `DWARF`, `HALFLING` |
 | `class`  | string  | Class enum name: `WARRIOR`, `MAGE`, `CLERIC`, `ROGUE` |
 | `level`  | int     | Current level |
-| `sprite` | string  | URL path to the player's current sprite image |
+| `sprite` | string  | URL to the player's active sprite image. Reflects the player's selection or auto-resolved best tier match. |
 | `isStaff`| boolean | `true` for staff/admin characters |
+
+---
+
+### `Char.Sprites`
+
+Sent on login, level-up, achievement unlock, and after the player changes their sprite selection. Lists all sprites the player has unlocked and can use.
+
+```json
+{
+  "active": "elf_mage_t1",
+  "sprites": [
+    {
+      "imageId": "elf_mage_t1",
+      "displayName": "Novice (Elf Mage)",
+      "category": "tier",
+      "imagePath": "https://assets.ambon.dev/player_sprites/elf_mage_t1.png"
+    },
+    {
+      "imageId": "t1",
+      "displayName": "Novice",
+      "category": "tier",
+      "imagePath": "https://assets.ambon.dev/player_sprites/t1.png"
+    },
+    {
+      "imageId": "beetle_slayer",
+      "displayName": "Beetle Slayer",
+      "category": "achievement",
+      "imagePath": "https://assets.ambon.dev/player_sprites/beetle_slayer.png"
+    }
+  ]
+}
+```
+
+| Field               | Type     | Notes |
+|---------------------|----------|-------|
+| `active`            | string?  | `imageId` of the currently active sprite, or the auto-resolved best match if no explicit selection. `null` if no sprites available. |
+| `sprites`           | array    | All sprites the player can choose from (unlocked + matching their race/class/gender). |
+| `sprites[].imageId` | string   | Unique variant identifier. Used in the `sprite set <id>` command. |
+| `sprites[].displayName` | string | Human-readable label for this variant. |
+| `sprites[].category` | string  | One of `tier`, `achievement`, `staff`. |
+| `sprites[].imagePath` | string | Full URL to the sprite image. |
+
+**Sprite categories:**
+- **tier** — Unlocked by reaching a level threshold (1, 10, 20, 30, 40, 50). One variant per race/class combo.
+- **achievement** — Unlocked by earning a specific achievement. May have race/class-specific variants.
+- **staff** — Available only to staff members. One variant per race.
 
 ---
 
@@ -1172,6 +1219,7 @@ These packages are coalesced — if the same session is marked dirty multiple ti
 | `Char.Items.List`    | Login / `Core.Supports.Set` |
 | `Char.Skills`        | Login / level-up (new ability) / cooldown change |
 | `Char.Achievements`  | Login / achievement progress or unlock |
+| `Char.Sprites`       | Login / level-up / achievement unlock / sprite set/clear |
 | `Char.Combat.Event`  | Each combat event (hit, dodge, heal, kill, death) |
 | `Char.Cooldown`      | Ability cooldown started |
 | `Char.Gain`          | XP/gold gained or level-up |
@@ -1254,6 +1302,7 @@ After the WebSocket connection is established, the server automatically sends `C
 ← {"gmcp":"Char.Skills","data":[...]}
 ← {"gmcp":"Char.StatusEffects","data":[]}
 ← {"gmcp":"Char.Achievements","data":{"completed":[],"inProgress":[]}}
+← {"gmcp":"Char.Sprites","data":{"active":"elf_mage_t1","sprites":[{"imageId":"elf_mage_t1","displayName":"Novice (Elf Mage)","category":"tier","imagePath":"https://assets.ambon.dev/player_sprites/elf_mage_t1.png"}]}}
 ```
 
 ### WebSocket combat tick
@@ -1341,6 +1390,7 @@ Notifies the client when the character's active display title changes (set via t
 | `Char.Skills`         | → S→C     | Full snapshot |
 | `Char.StatusEffects`  | → S→C     | Batched per tick |
 | `Char.Achievements`   | → S→C     | Full snapshot |
+| `Char.Sprites`        | → S→C     | Full snapshot |
 | `Char.Stats`          | → S→C     | Batched per tick |
 | `Char.Cooldown`       | → S→C     | Immediate |
 | `Char.Gain`           | → S→C     | Immediate |
