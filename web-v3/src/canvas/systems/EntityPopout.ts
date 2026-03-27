@@ -102,7 +102,11 @@ export class EntityPopout {
   showPlayer(name: string, level: number) {
     const actions: PopoutAction[] = [
       { label: "Look", command: `look ${name}`, color: 0x64b5f6 },
+      { label: "Tell", command: `__prefill__:tell ${name} `, color: 0xb5bd68 },
+      { label: "Whisper", command: `__prefill__:whisper ${name} `, color: 0xa8a8a8 },
+      { label: "Give", command: `__prefill__:give `, color: 0xf0c674 },
       { label: "Group Invite", command: `group invite ${name}`, color: 0x81a2be },
+      { label: "Friend Add", command: `friend add ${name}`, color: 0xb294bb },
     ];
     this.show(name, `Level ${level}`, null, 0x81a2be, actions);
   }
@@ -238,6 +242,8 @@ export class EntityPopout {
       btnContainer.on("pointerdown", () => {
         if (cmd.startsWith("__video__:")) {
           canvasCallbacks.openVideo?.(cmd.slice("__video__:".length));
+        } else if (cmd.startsWith("__prefill__:")) {
+          canvasCallbacks.prefillCommand?.(cmd.slice("__prefill__:".length));
         } else {
           canvasCallbacks.sendCommand?.(cmd);
         }
