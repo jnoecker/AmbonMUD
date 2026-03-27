@@ -969,6 +969,8 @@ function App() {
             inventory={inventory}
             players={players}
             canManageItems={connected && hasCharacterProfile}
+            roomFeatures={roomFeatures}
+            containerContents={containerContents}
             onWearItem={(itemName) => {
               sendCommand(`wear ${itemName}`, true);
               focusComposer();
@@ -981,6 +983,7 @@ function App() {
               sendCommand(`give ${itemKeyword} ${playerName}`, true);
               focusComposer();
             }}
+            onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
 
