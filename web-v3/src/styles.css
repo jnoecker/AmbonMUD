@@ -1804,7 +1804,7 @@ body {
 
 .chat-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: var(--space-2);
   border: 1px solid rgb(131 147 186 / 24%);
   border-radius: var(--radius-lg);
@@ -1813,7 +1813,100 @@ body {
 }
 
 .chat-form-targeted {
-  grid-template-columns: minmax(110px, 0.45fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(110px, 0.45fr) minmax(0, 1fr) auto auto;
+}
+
+/* ---------- Emote picker ---------- */
+
+.emote-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: color 120ms ease, background 120ms ease;
+  flex-shrink: 0;
+}
+
+.emote-toggle-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: rgb(70 83 117 / 40%);
+}
+
+.emote-toggle-btn-active {
+  color: var(--text-primary);
+  background: rgb(70 83 117 / 50%);
+}
+
+.emote-toggle-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.emote-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 6px 8px;
+  border-top: 1px solid rgb(106 96 136 / 18%);
+  animation: emote-picker-in 150ms var(--ease-out-soft);
+}
+
+@keyframes emote-picker-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.emote-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.emote-preset-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgb(106 96 136 / 18%);
+  background: rgb(50 58 82 / 50%);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+}
+
+.emote-preset-btn:hover {
+  background: rgb(70 83 117 / 60%);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.emote-preset-btn:active {
+  transform: scale(0.96);
+}
+
+.emote-preset-emoji {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.emote-preset-label {
+  font-weight: 500;
+}
+
+.emote-custom-form {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
 }
 
 
