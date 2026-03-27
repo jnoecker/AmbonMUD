@@ -45,6 +45,8 @@ import type {
   StaffWorldZone,
   ShopState,
   SkillSummary,
+  SpriteEntry,
+  SpriteList,
   StatusEffect,
   StatusVarLabels,
   UiFeedback,
@@ -105,6 +107,7 @@ interface GmcpContext {
   pushMailNotification: (notification?: MailNotification) => void;
   setWhoPlayers: Dispatch<SetStateAction<WhoPlayer[]>>;
   setZoneInstances: Dispatch<SetStateAction<ZoneInstances>>;
+  setSpriteList: Dispatch<SetStateAction<SpriteList>>;
   sendGmcp: (pkg: string, payload: unknown) => void;
 }
 
@@ -194,6 +197,23 @@ export function applyGmcpPackage(
       // Login complete — dismiss modal
       ctx.setLoginPrompt(null);
       ctx.setLoginError(null);
+      break;
+    }
+
+    case "Char.Sprites": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const active = typeof packet.active === "string" ? packet.active : null;
+      const rawSprites = Array.isArray(packet.sprites) ? packet.sprites : [];
+      const sprites: SpriteEntry[] = rawSprites
+        .filter((s): s is Record<string, unknown> => s !== null && typeof s === "object")
+        .map((s) => ({
+          imageId: typeof s.imageId === "string" ? s.imageId : "",
+          displayName: typeof s.displayName === "string" ? s.displayName : "",
+          category: typeof s.category === "string" ? s.category : "",
+          imagePath: typeof s.imagePath === "string" ? s.imagePath : "",
+        }))
+        .filter((s) => s.imageId.length > 0);
+      ctx.setSpriteList({ active, sprites });
       break;
     }
 

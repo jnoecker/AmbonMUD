@@ -499,3 +499,15 @@ export interface CombatLogMessage {
   receivedAt: number;
 }
 
+export interface SpriteEntry {
+  imageId: string;
+  displayName: string;
+  category: string;
+  imagePath: string;
+}
+
+export interface SpriteList {
+  active: string | null;
+  sprites: SpriteEntry[];
+}
+

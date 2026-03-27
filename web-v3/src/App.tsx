@@ -73,6 +73,7 @@ import type {
   RoomState,
   ShopState,
   SkillSummary,
+  SpriteList,
   StaffWorldZone,
   StatusEffect,
   StatusVarLabels,
@@ -194,6 +195,7 @@ function App() {
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
   const [serverCommands, setServerCommands] = useState<CommandEntry[]>([]);
   const [staffWorldInfo, setStaffWorldInfo] = useState<StaffWorldZone[]>([]);
+  const [spriteList, setSpriteList] = useState<SpriteList>({ active: null, sprites: [] });
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -413,6 +415,7 @@ function App() {
           pushMailNotification,
           setWhoPlayers,
           setZoneInstances,
+          setSpriteList,
           sendGmcp: (pkg: string, payload: unknown) => sendGmcpRef.current(pkg, payload),
         },
       );
@@ -956,6 +959,7 @@ function App() {
             guildInfo={guildInfo}
             groupInfo={groupInfo}
             activeTitle={whoPlayers.find((p) => p.name === character.name)?.title ?? null}
+            spriteList={spriteList}
             onDismissQuestNotification={(id) => {
               setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
             }}

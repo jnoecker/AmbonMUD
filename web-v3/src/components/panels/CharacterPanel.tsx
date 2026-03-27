@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { AchievementData, CharacterInfo, CharStats, GroupInfo, GuildInfo, QuestEntry, QuestNotification, StatusEffect, StatusVarLabels, Vitals } from "../../types";
+import type { AchievementData, CharacterInfo, CharStats, GroupInfo, GuildInfo, QuestEntry, QuestNotification, SpriteEntry, SpriteList, StatusEffect, StatusVarLabels, Vitals } from "../../types";
 import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
 type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score";
@@ -26,6 +26,7 @@ interface CharacterPanelProps {
   guildInfo: GuildInfo;
   groupInfo: GroupInfo;
   activeTitle: string | null;
+  spriteList: SpriteList;
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
@@ -55,6 +56,7 @@ export function CharacterPanel({
   guildInfo,
   groupInfo,
   activeTitle,
+  spriteList,
   onDismissQuestNotification,
   onAbandonQuest,
   onOpenInventory,
@@ -63,12 +65,26 @@ export function CharacterPanel({
 }: CharacterPanelProps) {
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("vitals");
   const [expandedQuestId, setExpandedQuestId] = useState<string | null>(null);
+  const [showSpriteSelector, setShowSpriteSelector] = useState(false);
 
   const totalAchievements = achievements.completed.length + achievements.inProgress.length;
   const unlockedTitles = useMemo(
     () => achievements.completed.filter((a) => a.title !== null).map((a) => a.title as string),
     [achievements.completed],
   );
+
+  const CATEGORY_LABELS: Record<string, string> = { tier: "Tier Sprites", achievement: "Achievement Sprites", staff: "Staff Sprites" };
+  const CATEGORY_ORDER = ["tier", "achievement", "staff"];
+  const spritesByCategory = useMemo(() => {
+    const grouped = new Map<string, SpriteEntry[]>();
+    for (const sprite of spriteList.sprites) {
+      const cat = sprite.category || "other";
+      const list = grouped.get(cat);
+      if (list) list.push(sprite);
+      else grouped.set(cat, [sprite]);
+    }
+    return grouped;
+  }, [spriteList.sprites]);
 
   // Auto-dismiss quest notifications after 6 seconds
   useEffect(() => {
@@ -120,11 +136,19 @@ export function CharacterPanel({
             <>
               <div className="identity-row">
                 {character.sprite && (
-                  <img
-                    src={character.sprite}
-                    alt={`${character.name} sprite`}
-                    className="character-sprite-img"
-                  />
+                  <button
+                    type="button"
+                    className={`character-sprite-button ${showSpriteSelector ? "character-sprite-button-active" : ""}`}
+                    onClick={() => setShowSpriteSelector((prev) => !prev)}
+                    title={spriteList.sprites.length > 0 ? "Change sprite" : character.name}
+                    disabled={spriteList.sprites.length === 0}
+                  >
+                    <img
+                      src={character.sprite}
+                      alt={`${character.name} sprite`}
+                      className="character-sprite-img"
+                    />
+                  </button>
                 )}
                 <div className="identity-text">
                   <p className="identity-name">{character.name}</p>
@@ -133,6 +157,52 @@ export function CharacterPanel({
                   </p>
                 </div>
               </div>
+              {showSpriteSelector && spriteList.sprites.length > 0 && (
+                <div className="sprite-selector">
+                  <div className="sprite-selector-header">
+                    <span className="sprite-selector-title">Choose Sprite</span>
+                    <button
+                      type="button"
+                      className="sprite-selector-close"
+                      onClick={() => setShowSpriteSelector(false)}
+                      aria-label="Close sprite selector"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className={`sprite-option sprite-option-default ${spriteList.active === null ? "sprite-option-active" : ""}`}
+                    onClick={() => { onCommand("sprite default"); setShowSpriteSelector(false); }}
+                  >
+                    <span className="sprite-option-auto-label">Auto</span>
+                    <span className="sprite-option-name">Default (Auto)</span>
+                  </button>
+                  {CATEGORY_ORDER.filter((cat) => spritesByCategory.has(cat)).map((cat) => (
+                    <div key={cat} className="sprite-category">
+                      <p className="sprite-category-label">{CATEGORY_LABELS[cat] ?? cat}</p>
+                      <div className="sprite-grid">
+                        {spritesByCategory.get(cat)!.map((sprite) => (
+                          <button
+                            key={sprite.imageId}
+                            type="button"
+                            className={`sprite-option ${spriteList.active === sprite.imageId ? "sprite-option-active" : ""}`}
+                            onClick={() => { onCommand(`sprite set ${sprite.imageId}`); setShowSpriteSelector(false); }}
+                            title={sprite.displayName}
+                          >
+                            <img
+                              src={sprite.imagePath}
+                              alt={sprite.displayName}
+                              className="sprite-option-img"
+                            />
+                            <span className="sprite-option-name">{sprite.displayName}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="identity-controls">
                 <label className="identity-select-group">
                   <span className="identity-select-label">Title</span>
