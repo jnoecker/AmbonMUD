@@ -9,7 +9,7 @@ interface AdminPanelProps {
   whoPlayers: WhoPlayer[];
 }
 
-type AdminAction = "goto" | "transfer" | "spawn" | "smite" | "kick" | "shutdown";
+type AdminAction = "goto" | "transfer" | "spawn" | "smite" | "kick" | "setlevel" | "dispel" | "reload" | "shutdown";
 
 const ACTIONS: Array<{ id: AdminAction; label: string; description: string }> = [
   { id: "goto", label: "Goto", description: "Teleport to a room or player" },
@@ -17,6 +17,9 @@ const ACTIONS: Array<{ id: AdminAction; label: string; description: string }> = 
   { id: "spawn", label: "Spawn", description: "Spawn a mob" },
   { id: "smite", label: "Smite", description: "Kill a target" },
   { id: "kick", label: "Kick", description: "Disconnect a player" },
+  { id: "setlevel", label: "Set Level", description: "Set a player's level" },
+  { id: "dispel", label: "Dispel", description: "Remove all effects from a target" },
+  { id: "reload", label: "Reload", description: "Reload world data" },
   { id: "shutdown", label: "Shutdown", description: "Shut down the server" },
 ];
 
@@ -198,6 +201,27 @@ export function AdminPanel({ onCommand, onClose, worldInfo, whoPlayers }: AdminP
         resetForm();
         break;
       }
+      case "setlevel": {
+        const player = inputA.trim();
+        const level = inputB.trim();
+        if (!player || !level) return;
+        onCommand(`setlevel ${player} ${level}`);
+        resetForm();
+        break;
+      }
+      case "dispel": {
+        const target = inputA.trim();
+        if (!target) return;
+        onCommand(`dispel ${target}`);
+        resetForm();
+        break;
+      }
+      case "reload": {
+        const scope = inputA.trim();
+        onCommand(scope ? `reload ${scope}` : "reload");
+        resetForm();
+        break;
+      }
       case "shutdown": {
         if (!showShutdownConfirm) {
           setShowShutdownConfirm(true);
@@ -345,6 +369,62 @@ export function AdminPanel({ onCommand, onClose, worldInfo, whoPlayers }: AdminP
                     type="text"
                     className="admin-input"
                     placeholder="Player name"
+                    value={inputA}
+                    onChange={(e) => setInputA(e.target.value)}
+                    autoFocus
+                  />
+                </label>
+              )}
+
+              {activeAction === "setlevel" && (
+                <>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Player</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="Player name"
+                      value={inputA}
+                      onChange={(e) => setInputA(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Level</span>
+                    <input
+                      type="number"
+                      className="admin-input"
+                      placeholder="1-100"
+                      min={1}
+                      max={100}
+                      value={inputB}
+                      onChange={(e) => setInputB(e.target.value)}
+                    />
+                  </label>
+                </>
+              )}
+
+              {activeAction === "dispel" && (
+                <label className="admin-field">
+                  <span className="admin-field-label">Target</span>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    placeholder="Player or mob name"
+                    value={inputA}
+                    onChange={(e) => setInputA(e.target.value)}
+                    autoFocus
+                  />
+                </label>
+              )}
+
+              {activeAction === "reload" && (
+                <label className="admin-field">
+                  <span className="admin-field-label">Scope (optional)</span>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    placeholder="world, abilities, effects, or blank for all"
                     value={inputA}
                     onChange={(e) => setInputA(e.target.value)}
                     autoFocus
