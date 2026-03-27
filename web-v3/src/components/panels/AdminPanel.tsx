@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import type { StaffWorldZone } from "../../types";
+import type { StaffWorldZone, WhoPlayer } from "../../types";
 
 interface AdminPanelProps {
   onCommand: (command: string) => void;
   onClose: () => void;
   worldInfo: StaffWorldZone[];
-  whoPlayers: string[];
+  whoPlayers: WhoPlayer[];
 }
 
 type AdminAction = "goto" | "transfer" | "spawn" | "smite" | "kick" | "shutdown";
@@ -29,7 +29,7 @@ function TeleportBrowser({
   label,
 }: {
   worldInfo: StaffWorldZone[];
-  whoPlayers: string[];
+  whoPlayers: WhoPlayer[];
   filter: string;
   onSetFilter: (v: string) => void;
   onSelect: (target: string) => void;
@@ -39,7 +39,7 @@ function TeleportBrowser({
   const lowerFilter = filter.toLowerCase();
 
   const filteredPlayers = useMemo(
-    () => whoPlayers.filter((p) => p.toLowerCase().includes(lowerFilter)),
+    () => whoPlayers.filter((p) => p.name.toLowerCase().includes(lowerFilter)),
     [whoPlayers, lowerFilter],
   );
 
@@ -73,13 +73,13 @@ function TeleportBrowser({
         <div className="teleport-section">
           <h4 className="teleport-section-title">Online Players</h4>
           <ul className="teleport-list">
-            {filteredPlayers.map((name) => (
-              <li key={name} className="teleport-item teleport-item-player">
-                <span className="teleport-item-name">{name}</span>
+            {filteredPlayers.map((p) => (
+              <li key={p.name} className="teleport-item teleport-item-player">
+                <span className="teleport-item-name">{p.name}</span>
                 <button
                   type="button"
                   className="teleport-go-btn"
-                  onClick={() => onSelect(name)}
+                  onClick={() => onSelect(p.name)}
                 >
                   {label}
                 </button>

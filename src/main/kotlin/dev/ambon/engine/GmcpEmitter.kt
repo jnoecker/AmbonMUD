@@ -31,6 +31,18 @@ data class CombatTargetInfo(
     val image: String? = null,
 )
 
+/** Input DTO for building a Server.Who GMCP payload. */
+data class WhoEntry(
+    val name: String,
+    val level: Int,
+    val race: String,
+    val playerClass: String,
+    val title: String?,
+    val guild: String?,
+    val groupSize: Int,
+    val idleSeconds: Long,
+)
+
 class GmcpEmitter(
     private val outbound: OutboundBus,
     private val supportsPackage: (SessionId, String) -> Boolean,
@@ -404,6 +416,25 @@ class GmcpEmitter(
     suspend fun sendServerAssets(sessionId: SessionId) {
         if (resolvedAssets.isEmpty()) return
         emit(sessionId, "Server.Assets", resolvedAssets)
+    }
+
+    /** Sends the structured who list as `Server.Who`. */
+    suspend fun sendServerWho(sessionId: SessionId, entries: List<WhoEntry>) {
+        val payload = ServerWhoPayload(
+            players = entries.map { e ->
+                WhoPlayerPayload(
+                    name = e.name,
+                    level = e.level,
+                    race = e.race,
+                    playerClass = e.playerClass,
+                    title = e.title,
+                    guild = e.guild,
+                    groupSize = e.groupSize,
+                    idle = e.idleSeconds,
+                )
+            },
+        )
+        emit(sessionId, "Server.Who", payload, supportCheck = "Server.Who")
     }
 
     /**
@@ -1539,6 +1570,23 @@ class GmcpEmitter(
         val newLevel: Int? = null,
         val hpGained: Int? = null,
         val manaGained: Int? = null,
+    )
+
+    // ---------- who payload ----------
+
+    private data class ServerWhoPayload(
+        val players: List<WhoPlayerPayload>,
+    )
+
+    private data class WhoPlayerPayload(
+        val name: String,
+        val level: Int,
+        val race: String,
+        @get:JsonProperty("class") val playerClass: String,
+        val title: String?,
+        val guild: String?,
+        val groupSize: Int,
+        val idle: Long,
     )
 
     // ---------- room mob info payload ----------

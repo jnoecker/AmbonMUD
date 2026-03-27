@@ -2,6 +2,7 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GroupSystem
+import dev.ambon.engine.WhoEntry
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
@@ -11,6 +12,7 @@ import dev.ambon.sharding.BroadcastType
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.InterEngineMessage
 import dev.ambon.sharding.PlayerLocationIndex
+import java.time.Clock
 
 class CommunicationHandler(
     ctx: EngineContext,
@@ -19,6 +21,7 @@ class CommunicationHandler(
     private val playerLocationIndex: PlayerLocationIndex? = null,
     private val engineId: String = "",
     private val onRemoteWho: (suspend (SessionId) -> Unit)? = null,
+    private val clock: Clock = Clock.systemUTC(),
 ) : CommandHandler {
     private val players = ctx.players
     private val outbound = ctx.outbound
@@ -209,25 +212,44 @@ class CommunicationHandler(
     }
 
     private suspend fun handleWho(sessionId: SessionId) {
-        val list =
-            players
-                .allPlayers()
-                .sortedBy { it.name }
-                .joinToString(separator = ", ") { p ->
-                    val t = p.activeTitle
-                    val grouped = groupSystem?.isGrouped(p.sessionId) == true
-                    val guildTag = p.guildTag
-                    val prefix = buildString {
-                        if (guildTag != null) append("[$guildTag] ")
-                        if (t != null) append("[$t] ")
-                        if (grouped) append("[G] ")
-                    }
-                    "$prefix${p.name}"
-                }
+        val now = clock.millis()
+        val sorted = players.allPlayers().sortedBy { it.name }
+
+        val list = sorted.joinToString(separator = ", ") { p ->
+            val t = p.activeTitle
+            val grouped = groupSystem?.isGrouped(p.sessionId) == true
+            val guildTag = p.guildTag
+            val prefix = buildString {
+                if (guildTag != null) append("[$guildTag] ")
+                if (t != null) append("[$t] ")
+                if (grouped) append("[G] ")
+            }
+            "$prefix${p.name}"
+        }
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "Online: $list"))
+
+        gmcpEmitter?.sendServerWho(sessionId, buildWhoEntries(sorted, now))
+
         if (onRemoteWho != null) {
             onRemoteWho.invoke(sessionId)
         }
+    }
+
+    internal fun buildWhoEntries(
+        sortedPlayers: List<dev.ambon.engine.PlayerState>,
+        nowMs: Long,
+    ): List<WhoEntry> = sortedPlayers.map { p ->
+        val group = groupSystem?.getGroup(p.sessionId)
+        WhoEntry(
+            name = p.name,
+            level = p.level,
+            race = p.race,
+            playerClass = p.playerClass,
+            title = p.activeTitle,
+            guild = p.guildTag,
+            groupSize = group?.members?.size ?: 0,
+            idleSeconds = if (p.lastActivityEpochMs > 0) (nowMs - p.lastActivityEpochMs) / 1000 else 0,
+        )
     }
 }
