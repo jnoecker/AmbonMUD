@@ -263,6 +263,64 @@ internal suspend fun sendLook(
     } else {
         gmcpEmitter?.sendCraftingNodes(sessionId, emptyList())
     }
+
+    // Send interactive room features (doors, containers, levers, signs)
+    if (room.features.isNotEmpty() && gmcpEmitter != null) {
+        gmcpEmitter.sendRoomFeatures(
+            sessionId,
+            room.features.map { feature ->
+                buildFeaturePayload(feature, worldState)
+            },
+        )
+    }
+}
+
+internal fun buildFeaturePayload(
+    feature: RoomFeature,
+    worldState: WorldStateRegistry?,
+): GmcpEmitter.RoomFeaturePayload = when (feature) {
+    is RoomFeature.Door -> {
+        val state = worldState?.getDoorState(feature.id) ?: feature.initialState
+        GmcpEmitter.RoomFeaturePayload(
+            id = feature.id,
+            name = feature.displayName,
+            keyword = feature.keyword,
+            type = "door",
+            state = state.name.lowercase(),
+            direction = feature.direction.name.lowercase(),
+            locked = state == LockableState.LOCKED,
+            keyRequired = feature.keyItemId != null,
+        )
+    }
+    is RoomFeature.Container -> {
+        val state = worldState?.getContainerState(feature.id) ?: feature.initialState
+        GmcpEmitter.RoomFeaturePayload(
+            id = feature.id,
+            name = feature.displayName,
+            keyword = feature.keyword,
+            type = "container",
+            state = state.name.lowercase(),
+            locked = state == LockableState.LOCKED,
+            keyRequired = feature.keyItemId != null,
+        )
+    }
+    is RoomFeature.Lever -> {
+        val state = worldState?.getLeverState(feature.id) ?: feature.initialState
+        GmcpEmitter.RoomFeaturePayload(
+            id = feature.id,
+            name = feature.displayName,
+            keyword = feature.keyword,
+            type = "lever",
+            state = state.name.lowercase(),
+        )
+    }
+    is RoomFeature.Sign -> GmcpEmitter.RoomFeaturePayload(
+        id = feature.id,
+        name = feature.displayName,
+        keyword = feature.keyword,
+        type = "sign",
+        text = feature.text,
+    )
 }
 
 /** Returns a human-readable display name for a crafting station type ID. */

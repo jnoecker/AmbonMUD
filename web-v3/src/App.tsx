@@ -57,8 +57,11 @@ import type {
   LoginPromptState,
   MailEntry,
   MailMessage,
+  ContainerContents,
+  MailNotification,
   MobInfo,
   PopoutPanel,
+  RoomFeature,
   QuestAvailable,
   QuestEntry,
   QuestNotification,
@@ -208,12 +211,14 @@ function App() {
   const [quests, setQuests] = useState<QuestEntry[]>([]);
   const [questsAvailable, setQuestsAvailable] = useState<QuestAvailable[]>([]);
   const [mobInfo, setMobInfo] = useState<MobInfo[]>([]);
+  const [roomFeatures, setRoomFeatures] = useState<RoomFeature[]>([]);
+  const [containerContents, setContainerContents] = useState<ContainerContents | null>(null);
   const [shop, setShop] = useState<ShopState | null>(null);
   const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
   const [craftingSkills, setCraftingSkills] = useState<CraftingSkill[]>([]);
   const [craftingRecipes, setCraftingRecipes] = useState<CraftingRecipe[]>([]);
   const [craftingNodes, setCraftingNodes] = useState<CraftingNode[]>([]);
-  const [mailInbox, setMailInbox] = useState<MailEntry[]>([]);
+  const [mailInbox, setMailInbox] = useState<MailEntry[] | null>(null);
   const [mailMessage, setMailMessage] = useState<MailMessage | null>(null);
   const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
   const [loginError, setLoginError] = useState<LoginErrorState | null>(null);
@@ -288,9 +293,13 @@ function App() {
     // Crafting.Skills GMCP refreshes skill state; result is informational.
   }, []);
 
-  const pushMailNotification = useCallback(() => {
-    // Mail.List GMCP already updates the inbox; notification is informational.
-  }, []);
+  const pushMailNotification = useCallback((notification?: MailNotification) => {
+    if (!notification) return;
+    pushUiFeedback({
+      type: "info",
+      message: `New mail from ${notification.from}`,
+    });
+  }, [pushUiFeedback]);
 
   const focusComposer = useCallback(() => {
     window.requestAnimationFrame(() => composerInputRef.current?.focus());
@@ -340,12 +349,14 @@ function App() {
     setQuests([]);
     setQuestsAvailable([]);
     setMobInfo([]);
+    setRoomFeatures([]);
+    setContainerContents(null);
     setShop(null);
     setQuestNotifications([]);
     setCraftingSkills([]);
     setCraftingRecipes([]);
     setCraftingNodes([]);
-    setMailInbox([]);
+    setMailInbox(null);
     setMailMessage(null);
     setLoginPrompt(null);
     setLoginError(null);
@@ -403,6 +414,8 @@ function App() {
           pushGainEvent,
           pushQuestNotification,
           setMobInfo,
+          setRoomFeatures,
+          setContainerContents,
           setLoginPrompt,
           setLoginError,
           setServerAssets,
@@ -893,7 +906,7 @@ function App() {
           quickbarSlots={quickbar.slots}
           shop={shop}
           questCount={quests.length}
-          mailUnreadCount={mailInbox.filter((m) => !m.read).length}
+          mailUnreadCount={(mailInbox ?? []).filter((m) => !m.read).length}
           activePopout={activePopout}
           onOpenPopout={setActivePopout}
           onCastSkill={handleCastSkill}
@@ -925,9 +938,12 @@ function App() {
         popoutTitle={popoutTitle}
         room={room}
         exits={exits}
+        roomFeatures={roomFeatures}
+        containerContents={containerContents}
         mapCanvasRef={mapCanvasRef}
         isStaff={character.isStaff}
         onClose={() => setActivePopout(null)}
+        onFeatureAction={(cmd) => sendCommand(cmd, true)}
       >
         {activePopout === "character" && (
           <CharacterPanel

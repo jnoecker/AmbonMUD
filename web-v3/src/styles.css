@@ -424,7 +424,13 @@ body {
 .chat-channel-tab:focus-visible,
 .character-detail-tab:focus-visible,
 .chat-input:focus-visible,
-.chat-target-input:focus-visible {
+.chat-target-input:focus-visible,
+.mail-compose-button:focus-visible,
+.mail-back-button:focus-visible,
+.mail-compose-send:focus-visible,
+.mail-delete-button:focus-visible,
+.mail-inbox-row:focus-visible,
+.mail-compose-input:focus-visible {
   outline: none;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
@@ -2962,6 +2968,26 @@ body {
   padding: var(--space-2) 0;
 }
 
+.mail-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.mail-empty-icon {
+  font-size: 2rem;
+  opacity: 0.3;
+  animation: mailEmptyDrift 4s var(--ease-in-out-smooth) infinite alternate;
+}
+
+@keyframes mailEmptyDrift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-4px); }
+}
+
 .mail-toolbar {
   display: flex;
   align-items: center;
@@ -2977,8 +3003,8 @@ body {
 
 .mail-unread-badge {
   display: inline-block;
-  margin-left: 6px;
-  padding: 1px 7px;
+  margin-left: var(--space-2);
+  padding: 2px var(--space-2);
   border-radius: var(--radius-full);
   background: linear-gradient(140deg, rgb(141 123 169 / 90%), rgb(110 90 148 / 85%));
   color: var(--text-bright);
@@ -2987,19 +3013,29 @@ body {
 }
 
 .mail-compose-button {
-  padding: 4px 12px;
+  padding: var(--space-2) var(--space-3);
+  min-height: 44px;
   border: 1px solid var(--line-faint);
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
   color: var(--text-secondary);
+  font-family: var(--font-body);
   font-size: 0.78rem;
   cursor: pointer;
-  transition: background 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
+  transition:
+    background 150ms var(--ease-out-soft),
+    color 150ms var(--ease-out-soft),
+    transform 150ms var(--ease-out-soft);
 }
 
 .mail-compose-button:hover {
   background: var(--bg-surface-hover);
   color: var(--text-bright);
+  transform: translateY(-1px);
+}
+
+.mail-compose-button:active {
+  transform: scale(0.97);
 }
 
 .mail-inbox-list {
@@ -3018,14 +3054,15 @@ body {
 
 .mail-inbox-item.mail-unread {
   background: rgb(141 123 169 / 8%);
+  transition: background 300ms var(--ease-out-soft);
 }
 
 .mail-inbox-row {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px var(--space-2);
+  gap: var(--space-2);
+  padding: var(--space-2);
   border: none;
   background: none;
   color: var(--text-secondary);
@@ -3033,11 +3070,20 @@ body {
   font-size: 0.8rem;
   cursor: pointer;
   text-align: left;
-  transition: color 120ms;
+  transition:
+    color 120ms,
+    transform 120ms var(--ease-out-soft),
+    box-shadow 200ms var(--ease-out-soft);
 }
 
 .mail-inbox-row:hover {
   color: var(--text-bright);
+  transform: translateY(-1px);
+  box-shadow: inset 0 0 12px rgb(141 123 169 / 6%);
+}
+
+.mail-inbox-row:active {
+  transform: scale(0.98);
 }
 
 .mail-inbox-marker {
@@ -3045,6 +3091,15 @@ body {
   color: var(--color-primary-lavender);
   font-size: 1rem;
   flex-shrink: 0;
+}
+
+.mail-unread .mail-inbox-marker {
+  animation: mailMarkerPulse 3s var(--ease-in-out-smooth) infinite;
+}
+
+@keyframes mailMarkerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .mail-inbox-from {
@@ -3069,7 +3124,12 @@ body {
 }
 
 .mail-delete-button {
-  padding: 4px 8px;
+  padding: var(--space-2) var(--space-3);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: none;
   color: var(--text-secondary);
@@ -3084,11 +3144,17 @@ body {
   color: var(--color-error);
 }
 
+.mail-delete-confirm {
+  opacity: 1;
+  color: var(--color-error);
+}
+
 .mail-message-view {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   padding: 0 var(--space-2);
+  animation: mailComposeEnter 200ms var(--ease-out-soft);
 }
 
 .mail-message-header {
@@ -3098,38 +3164,43 @@ body {
 }
 
 .mail-back-button {
-  padding: 4px 10px;
+  padding: var(--space-2) var(--space-3);
+  min-height: 44px;
   border: 1px solid var(--line-faint);
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
   color: var(--text-secondary);
+  font-family: var(--font-body);
   font-size: 0.78rem;
   cursor: pointer;
-  transition: background 150ms, color 150ms;
+  transition:
+    background 150ms var(--ease-out-soft),
+    color 150ms var(--ease-out-soft),
+    transform 150ms var(--ease-out-soft);
 }
 
 .mail-back-button:hover {
   background: var(--bg-surface-hover);
   color: var(--text-bright);
+  transform: translateY(-1px);
+}
+
+.mail-back-button:active {
+  transform: scale(0.97);
 }
 
 .mail-message-title {
+  flex: 1;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.mail-message-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.78rem;
+.mail-message-header .mail-message-date {
+  flex-shrink: 0;
+  font-size: 0.72rem;
   color: var(--text-secondary);
-  padding-bottom: var(--space-1);
-  border-bottom: 1px solid var(--line-faint);
-}
-
-.mail-message-from strong {
-  color: var(--text-primary);
+  opacity: 0.7;
 }
 
 .mail-message-body {
@@ -3146,6 +3217,12 @@ body {
   flex-direction: column;
   gap: var(--space-2);
   padding: 0 var(--space-2);
+  animation: mailComposeEnter 200ms var(--ease-out-soft);
+}
+
+@keyframes mailComposeEnter {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .mail-compose-form {
@@ -3155,7 +3232,7 @@ body {
 }
 
 .mail-compose-input {
-  padding: 6px 10px;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--line-faint);
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
@@ -3164,31 +3241,42 @@ body {
   font-size: 0.82rem;
 }
 
-.mail-compose-input:focus {
-  outline: none;
-  border-color: var(--color-primary-lavender);
+.mail-compose-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .mail-compose-send {
   align-self: flex-start;
-  padding: 6px 16px;
+  padding: var(--space-2) var(--space-4);
+  min-height: 44px;
   border: none;
   border-radius: var(--radius-sm);
   background: var(--color-primary-lavender);
   color: var(--text-bright);
+  font-family: var(--font-body);
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 150ms;
+  transition:
+    filter 150ms var(--ease-out-soft),
+    transform 150ms var(--ease-out-soft);
 }
 
 .mail-compose-send:disabled {
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: default;
+  pointer-events: none;
 }
 
 .mail-compose-send:not(:disabled):hover {
-  opacity: 0.85;
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.mail-compose-send:not(:disabled):active {
+  transform: scale(0.97);
 }
 
 .mail-compose-hint {
@@ -3200,8 +3288,8 @@ body {
 
 .mail-compose-hint code {
   background: var(--bg-surface);
-  padding: 1px 4px;
-  border-radius: 3px;
+  padding: 1px var(--space-1);
+  border-radius: var(--radius-sm);
 }
 
 /* ── Quest panel ── */
@@ -4761,6 +4849,128 @@ body {
   color: var(--text-secondary);
   font-weight: 700;
   font-size: 0.9rem;
+}
+
+/* Room features section */
+
+.room-features-section {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--line-faint);
+}
+
+.room-features-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-2);
+}
+
+.room-features-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.room-feature-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  transition: background 150ms var(--ease-out-soft);
+}
+
+.room-feature-item:hover {
+  background: var(--bg-surface-hover);
+}
+
+.room-feature-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+}
+
+.room-feature-state {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.room-feature-actions {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-1);
+}
+
+.room-feature-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
+}
+
+.room-feature-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-bright);
+}
+
+.room-feature-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgb(184 216 232 / 58%),
+    0 0 0 4px rgb(216 197 232 / 30%);
+}
+
+.container-contents-section {
+  margin-top: var(--space-2);
+}
+
+.container-contents-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.container-contents-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.82rem;
+  color: var(--text-primary);
+}
+
+.room-sign-text {
+  margin: var(--space-1) 0 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  font-size: 0.82rem;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-feature-item,
+  .room-feature-btn {
+    transition: none;
+  }
 }
 
 .mini-map-popout {
