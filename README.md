@@ -37,7 +37,7 @@ Screenshots
 -----------
 Current web client (v4 — PixiJS canvas):
 
-![AmbonMUD web client v3](docs/screenshots/v3-web-client.jpg)
+![AmbonMUD web client v4](docs/screenshots/webclient-v4.jpeg)
 
 See [docs/WEB_CLIENT.md](docs/WEB_CLIENT.md#visual-progression) for the full progression from telnet proof-of-concept to the current UI.
 

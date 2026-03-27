@@ -38,6 +38,8 @@ Full redesign: dark glassmorphism panels, banner artwork, tabbed Play/Character/
 ### v4 — PixiJS Canvas (Current)
 PixiJS canvas replaces the xterm terminal as the primary game view. Terminal moved to popout (available on command input focus). JRPG-style world and battle scenes with sprite-based rendering. Side panels preserved.
 
+![v4 web client](screenshots/webclient-v4.jpeg)
+
 ---
 
 ## Architecture
