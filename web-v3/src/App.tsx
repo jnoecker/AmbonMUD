@@ -77,6 +77,7 @@ import type {
   StatusVarLabels,
   UiFeedback,
   Vitals,
+  WhoPlayer,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "@xterm/xterm/css/xterm.css";
@@ -92,42 +93,6 @@ function createEmptyChatByChannel(): Record<ChatChannel, ChatMessage[]> {
     gtell: [],
     gchat: [],
   };
-}
-
-function isAsciiLetter(code: number): boolean {
-  return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
-}
-
-function stripAnsiSequences(input: string): string {
-  let output = "";
-  let i = 0;
-  while (i < input.length) {
-    if (input.charCodeAt(i) === 0x1b && input[i + 1] === "[") {
-      i += 2;
-      while (i < input.length && !isAsciiLetter(input.charCodeAt(i))) {
-        i += 1;
-      }
-      if (i < input.length) i += 1;
-      continue;
-    }
-
-    output += input[i];
-    i += 1;
-  }
-  return output;
-}
-
-function parseWhoEntries(messageChunk: string): string[] | null {
-  const clean = stripAnsiSequences(messageChunk);
-  const lines = clean.replace(/\r/g, "\n").split("\n");
-  for (const line of lines) {
-    const markerIndex = line.indexOf("Online:");
-    if (markerIndex === -1) continue;
-    const payload = line.slice(markerIndex + "Online:".length).trim();
-    if (payload.length === 0) return [];
-    return payload.split(",").map((entry) => entry.trim()).filter((entry) => entry.length > 0);
-  }
-  return null;
 }
 
 let combatLogIdCounter = 0;
@@ -206,7 +171,7 @@ function App() {
   const [friendNotifications, setFriendNotifications] = useState<FriendNotification[]>([]);
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
   const [dialogue, setDialogue] = useState<DialogueState | null>(null);
-  const [whoPlayers, setWhoPlayers] = useState<string[]>([]);
+  const [whoPlayers, setWhoPlayers] = useState<WhoPlayer[]>([]);
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
   const [, setCharStats] = useState<CharStats | null>(null);
   const [quests, setQuests] = useState<QuestEntry[]>([]);
@@ -439,6 +404,7 @@ function App() {
           setMailInbox,
           setMailMessage,
           pushMailNotification,
+          setWhoPlayers,
           sendGmcp: (pkg: string, payload: unknown) => sendGmcpRef.current(pkg, payload),
         },
       );
@@ -452,8 +418,6 @@ function App() {
     },
     onTextMessage: (text) => {
       terminalRef.current?.write(text);
-      const who = parseWhoEntries(text);
-      if (who) setWhoPlayers(who);
     },
     onGmcpMessage: handleGmcp,
     onClose: () => {

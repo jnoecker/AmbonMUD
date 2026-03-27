@@ -60,6 +60,8 @@ data class PlayerState(
     var craftingSkills: MutableMap<String, CraftingSkillState> = mutableMapOf(),
     /** Epoch-ms timestamp after which gathering is available again. Runtime-only; not persisted. */
     var gatherCooldownUntilMs: Long = 0L,
+    /** Epoch-ms of last command input. Runtime-only; used for idle calculation. */
+    var lastActivityEpochMs: Long = 0L,
 ) {
     data class MailComposeState(
         val recipientName: String,
