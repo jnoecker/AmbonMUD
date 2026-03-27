@@ -1,240 +1,201 @@
-# Web Client Feature Parity Report (Consolidated)
+# Web Client Feature Parity Report
 
-**Date:** 2026-03-27
-**Source:** Three independent parity studies merged and deduplicated.
-**Scope:** All MUD text commands/features vs web-v3 client UI and GMCP coverage.
-
----
+*Generated 2026-03-27*
 
 ## Executive Summary
 
-The web client covers the core gameplay loop well — navigation, combat, inventory/equipment, spells, quests, dialogue, shops, and chat. However, several full feature systems have **no web UI or GMCP support** (mail, crafting, world features), many others have **partial UI requiring text-command fallback** for management actions (guilds, groups, friends, titles), and a handful of **GMCP protocol issues** prevent data from reaching the client correctly.
+The web client (web-v3) is **remarkably comprehensive**. It handles 40+ GMCP packages, provides rich UI panels for nearly every game system, and includes canvas-rendered combat animations, minimap, and dialogue overlays. The remaining gaps are relatively minor — mostly small UI conveniences and a few help-text omissions rather than missing systems.
+
+**Overall parity: ~92%** — all major systems are present; the gaps below represent polish opportunities.
 
 ---
 
-## 1. GMCP Protocol Fixes
+## 1. Command Coverage
 
-These are server/client protocol bugs or mismatches — high impact, low risk.
+### Fully Supported (Text + Rich UI)
 
-### 1.1 Zone.Map support-check handshake broken for WebSocket
+These commands work via text input AND have dedicated UI interactions:
 
-`GmcpEmitter.sendZoneMap()` uses `supportCheck = "Room"`, but WebSocket auto-support advertises `"Room.Info 1"` (not root `"Room 1"`). With prefix-match semantics, `"Room"` doesn't match `"Room.Info"` — so `Zone.Map` is silently dropped for web sessions.
+| Category | Commands | Web UI |
+|----------|----------|--------|
+| Navigation | move, look, exits, recall | Minimap click-to-move, exit list, Recall button on canvas |
+| Combat | kill, flee, cast | Target picker, Flee button, quickbar/spellbook ability grid |
+| Items | get, drop, wear, remove, use, give, inventory, equipment | InventoryPanel with wear/drop/give/use buttons, EquipmentPanel paperdoll |
+| Shops | shop/list, buy, sell | ShopPopout with buy/sell tabs |
+| Dialogue | talk, dialogue choices, accept | DialogueOverlay with clickable choices + quest accept cards |
+| Quests | quest log/list/info/abandon, accept | QuestPanel with active/available tabs, accept/abandon buttons |
+| Achievements | achievements | CharacterPanel achievements section |
+| Groups | group invite/accept/leave/kick/list, gtell | ChatPanel Group tab |
+| Guilds | guild create/disband/invite/accept/leave/kick/promote/demote/motd/roster/info, gchat | ChatPanel Guild tab |
+| Friends | friend list/add/remove | ChatPanel Friends tab |
+| Mail | mail list/read/send/delete/abort | MailPanel with inbox, read, compose |
+| Crafting | gather, craft, recipes, craftskills | CraftingPanel with professions, recipes, nodes |
+| Sprites | sprite list/set/default | CharacterPanel sprite selector |
+| Communication | say, tell, gossip, shout, ooc, emote, who | ChatPanel with channel tabs + Who tab |
+| World features | open, close, lock, unlock, pull, read, search | Room features panel with context-sensitive buttons |
+| Admin | goto, transfer, spawn, smite, kick, shutdown | AdminPanel with zone browser, player tools |
+| Character | score, gender, title | CharacterPanel with stats, gender/title selectors |
+| Progression | spells/abilities, effects, balance | SpellbookPanel, status effects display, gold in vitals |
+| Sharding | phase | Zone instances UI with phase-switch callback |
 
-**Fix:** Either advertise `"Room 1"` in WebSocket `Core.Supports.Set`, or change the support check to `"Room.Info"`.
+### Text-Only (No UI Shortcut)
 
-### 1.2 Room.MobInfo missing fields
+These commands work via the text input but lack a clickable UI element:
 
-`MobInfoEntry` has `questAvailable`, `questComplete`, `aggressive`, but `RoomMobInfoPayload` omits them — only sends `id`, `level`, `tier`, `questGiver`, `shopKeeper`, `dialogue`. Web client defaults these when missing.
-
-**Fix:** Include the three missing fields in the emitted payload.
-
-### 1.3 Char.Combat.Event field-name mismatch
-
-Server payload uses `amount` and `remaining`; web client reads `healing` and `shieldRemaining`. Healing/shield visuals and combat-log details can be incomplete.
-
-**Fix:** Standardize on one naming convention across server and web client.
-
-### 1.4 Core.Ping not handled by web client
-
-`GmcpEmitter` emits `Core.Ping` but `applyGmcpPackage.ts` has no case for it.
-
-**Fix:** Add `Core.Ping` handler; opportunity for connection-health/latency indicator.
-
-### 1.5 Char.Gain fields underutilized
-
-Server emits optional `newLevel`, `hpGained`, `manaGained` fields. Web client only reads `type`, `amount`, `source`.
-
-**Fix:** Consume the additional fields for richer level-up and resource-gain feedback.
-
----
-
-## 2. Discoverability Gaps
-
-### 2.1 Command autocomplete incomplete
-
-`web-v3/src/constants.ts` command completion list is narrower than the full parser surface. Missing families: mail, crafting, world features, guild/group management, friends, phase, title, gender.
-
-### 2.2 In-app Help underrepresents command families
-
-`HelpContent` doesn't cover mail, crafting, world-feature/container verbs, and several other supported families.
+| Command | Notes | Suggestion |
+|---------|-------|------------|
+| `look <target>` | EntityPopout has a "Look" action for mobs/players, but examining **items on the ground** or **items in inventory** has no look/examine button | Add "Examine" button to inventory items and ground items |
+| `look <direction>` | No UI to peek in a direction without moving | Could add direction-peek on minimap hover or long-press exit arrows |
+| `whisper <player> <msg>` | Handled as a Comm.Channel message, but no dedicated whisper UI in ChatPanel — user must type the command | Add whisper option to player context menus or room player list |
+| `pose <msg>` | Documented in help, but no quick-action button | Low priority — niche RP command |
+| `dispel <target>` | Staff command, no admin UI button | Add to AdminPanel actions |
+| `setlevel <player> <level>` | Staff command, no admin UI | Add to AdminPanel player actions |
+| `reload [world|abilities|effects|all]` | Staff command, no admin UI button | Add to AdminPanel server section |
+| `lock <door/container>` | Room features panel has open/close/unlock but **no lock button** | Add Lock button when state is "open" or "unlocked" and key is available |
+| `put <item> in <container>` | Help documents it, InventoryPanel shows containers, but no "put" button for items | Add "Put in..." button on inventory items when containers are open |
 
 ---
 
-## 3. Full Feature Gaps (No GMCP + No Web UI)
+## 2. GMCP Coverage
 
-These systems work via text commands but are invisible to the web client.
+### Fully Utilized Packages
 
-### 3.1 Mail System
+All 51 server GMCP packages are handled by the client's `applyGmcpPackage.ts`. No server-emitted packages are ignored. This is **100% GMCP reception coverage**.
 
-**Commands:** `mail list/read/delete/send/abort`
-**GMCP needed:** `Mail.List`, `Mail.Message`, `Mail.Notification` (and compose-state feedback).
-**Web UI needed:** Mail panel with inbox, message viewer, compose form, delete action.
-**Note:** Multi-step compose (`mail send`, line capture, `.` to finish) is especially poor UX via generic command entry.
+### Potential GMCP Enhancements (Server-Side Additions)
 
-### 3.2 Crafting & Gathering System
+These are opportunities where new GMCP packages could improve the web client experience:
 
-**Commands:** `gather`, `craft`, `recipes`, `craftskills`/`professions`
-**GMCP needed:** `Crafting.Skills`, `Crafting.Recipes`, `Crafting.Nodes`, `Crafting.Result`.
-**Web UI needed:** Crafting panel with recipe browser, gather button on room nodes, skill progression display.
-
-### 3.3 World Features (Doors, Containers, Levers, Signs)
-
-**Commands:** `open`, `close`, `unlock`, `lock`, `pull`, `read`, `search`, `get <item> from <container>`, `put <item> in <container>`
-**GMCP needed:** `Room.Features` (interactive feature state, lock/key requirements, container contents, sign text).
-**Web UI needed:** Contextual action buttons on room features — click door to open/close, click sign to read, click container to search/open.
-
-### 3.4 Structured Who List
-
-**Commands:** `who`
-**GMCP needed:** `Server.Who` with structured player data (name, level, race, class, title, guild, idle).
-**Web UI needed:** Currently parses raw terminal text in Who tab — a GMCP package enables proper sorting, filtering, and click-to-tell.
+| Proposed Package | Purpose | Benefit |
+|------------------|---------|---------|
+| `Char.Score` | Full character sheet data (all stats, bonuses, resistances) as structured GMCP | Currently `score` output is text-only; a GMCP version would let the CharacterPanel render a richer, always-up-to-date character sheet without parsing text |
+| `Room.LookTarget` | Structured result of `look <target>` | Would enable rich inspect popovers for items, mobs, players with images/stats instead of plain text |
+| `Char.Items.Update` | Update a single inventory item's state (e.g., charges remaining) | Currently the full list must be re-sent; a delta update would be more efficient |
+| `Server.Help` | Structured help text for individual commands | Would allow the web client to show contextual help tooltips rather than a static help page |
+| `Char.Titles` | List of all earned titles | CharacterPanel title selector currently relies on achievement data; a dedicated package would be cleaner |
+| `Char.Recall` | Recall room info (name, zone) | Would let the UI show where Recall will take you |
 
 ---
 
-## 4. UI-Only Gaps (GMCP Exists, Management UI Missing)
+## 3. Help Content Gaps
 
-### 4.1 Guild Management
+The `HelpContent.tsx` static help is missing these documented commands:
 
-**GMCP available:** `Guild.Info`, `Guild.Members`, `Guild.Chat` — all handled.
-**Displayed:** Guild name/tag/rank/MOTD, member list with online status.
-**Missing actions:** Create, invite, accept invite, kick, promote, demote, set MOTD, leave, disband.
-
-### 4.2 Group Management
-
-**GMCP available:** `Group.Info` — shows member HP/Mana bars.
-**Displayed:** Group tab with leader + members + vitals.
-**Missing actions:** Invite, accept/decline invite, leave, kick, list.
-
-### 4.3 Friends Management
-
-**GMCP available:** `Friends.List`, `Friends.Online`, `Friends.Offline` — all handled.
-**Displayed:** Friends tab with online/offline status, level, zone.
-**Missing actions:** Add friend, remove friend, click-to-tell.
-
-### 4.4 Character Profile Controls (Title & Gender)
-
-**Title:** Achievement titles are sent via `Char.Achievements`, but no UI to set/clear active title.
-**Gender:** `gender <option>` command only — no selector in Character panel.
-
-### 4.5 Phase/Instance Selector
-
-**Commands:** `phase`/`layer` supported.
-**Missing:** No instance selector UI, no current-instance display, no occupancy information.
-**GMCP opportunity:** Instance list + current + occupancy + switch ack/error.
-
-### 4.6 Character Stats Tab
-
-**GMCP available:** `Char.Stats` sends full stat breakdown (STR/DEX/CON/INT/WIS/CHA base+effective, damage range, armor, dodge%).
-**State:** Stored in client (`charStats`) but no panel renders it.
-**Missing:** Stats tab in CharacterPanel showing attribute table with base vs effective values, derived combat stats.
-
-### 4.7 Score View
-
-**Commands:** `score`/`sc` shows comprehensive character summary.
-**Note:** All constituent data is already received via `Char.Vitals`, `Char.Name`, `Char.Stats` — can be composed from existing GMCP without new server changes.
+| Missing from Help | Category |
+|-------------------|----------|
+| `sprite / sprite list / sprites` | Should be in Character or a new "Cosmetics" category |
+| `sprite set <imageId>` | Cosmetics |
+| `sprite default / clear / auto` | Cosmetics |
+| `look <target>` (examine items/mobs/players) | Already partially documented as "look around" but could call out target examination |
 
 ---
 
-## 5. UX Enhancement Gaps
+## 4. UI Polish Opportunities
 
-### 5.1 Flee Button
+### 4.1 Inventory Item Inspection
 
-Must type `flee` — needs an action bar button visible when `inCombat` is true.
+**Gap:** No way to examine/inspect an individual inventory item from the UI. Players must type `look <itemname>`.
 
-### 5.2 Recall Button
+**Suggestion:** Add an info/inspect button (or click handler) on each inventory item row that sends `look <keyword>` and displays the result. Ideally backed by a new `Room.LookTarget` or `Char.Items.Inspect` GMCP package for structured data.
 
-Must type `recall` — needs a navigation button with cooldown indicator.
+### 4.2 Ground Item Interaction
 
-### 5.3 Inventory Context Actions
+**Gap:** Room items are displayed via `Room.Items` GMCP but the only interaction is `get`. No way to examine ground items from the UI.
 
-**Missing:** `Use` button for consumable items, `Put` for containers, `Search` for containers.
+**Suggestion:** Add an "Examine" action alongside the existing "Get" action for ground items in the room popout or a dedicated items panel.
 
-### 5.4 Emote/Pose Picker
+### 4.3 Player Context Actions
 
-Must type `emote <action>` or `pose <text>` — could have quick-access emote buttons in chat panel.
+**Gap:** Other players in the room are listed (via `Room.Players`) but interaction options are limited. No quick buttons for `whisper`, `give`, `tell`, `look`, or `group invite`.
 
-### 5.5 Combat Target Selector
+**Suggestion:** Add a player context menu (click on player name) with actions: Look, Tell, Whisper, Give, Group Invite, Friend Add.
 
-When multiple mobs present, no tab-targeting or mob-list picker — only click-on-canvas targeting.
+### 4.4 Mob Context Actions on Canvas
 
-### 5.6 Mob Status Effects
+**Gap:** The EntityPopout on the canvas shows Look/Kill/Talk for mobs, which is good. But it doesn't show quest indicators or shop access in the popout actions.
 
-`Char.StatusEffects` only shows player's own effects. No way to see enemy buffs/debuffs in battle scene.
-**GMCP opportunity:** `Room.MobEffects` or extend `Room.UpdateMob` with active effects.
+**Suggestion:** Use `Room.MobInfo` metadata (questGiver, shopKeeper, dialogue flags) to add context-appropriate actions: "Shop" for shopkeepers, "Talk" with a quest icon for quest givers.
 
-### 5.7 Contextual Entity Action Enrichment
+### 4.5 Lock Button for Doors/Containers
 
-EntityPopout exists but could be richer based on `Room.MobInfo` flags — e.g., quest-giver shows "View Quests", shop-keeper shows "Browse Shop", hostile mob shows "Attack".
+**Gap:** The room features panel has Open, Close, Unlock, Pull, Read, and Search buttons but is missing **Lock**. Players who have a key and want to lock a door behind them must type the command.
 
----
+**Suggestion:** Add a Lock button when the feature state is "open" or "closed" (unlocked) and the door/container supports locking.
 
-## 6. Infrastructure / Regression Prevention
+### 4.6 Container "Put" Action
 
-### 6.1 Command-Parity CI Check
+**Gap:** When a container is open, players can take items from it (via the container contents UI) but there's no UI to put items *into* a container from inventory.
 
-Script/test that diffs parser command families vs web command palette/autocomplete/action maps. Prevents future drift.
+**Suggestion:** When a container is open, show a "Put in [container]" action on inventory items, or enable drag-drop from inventory to the container contents list.
 
-### 6.2 GMCP Contract Tests
+### 4.7 Direction Peeking
 
-Test that compares `GmcpEmitter` package strings and field schemas against `applyGmcpPackage.ts` cases. Catches field-name mismatches and missing handlers.
+**Gap:** `look <direction>` lets text players peek into adjacent rooms. The web client has no equivalent.
 
-### 6.3 Server.Commands Metadata Package
-
-A `Server.Commands` GMCP package providing command manifest (syntax, help, category, privilege) to power dynamic in-client command palette and context-aware UI.
+**Suggestion:** Minimap hover tooltips showing the room name/description for adjacent rooms, or a peek action on exit direction labels.
 
 ---
 
-## 7. Features with Full Coverage (No Gaps)
+## 5. Admin Panel Gaps
 
-| Feature | GMCP Packages | Web UI |
-|---------|--------------|--------|
-| Navigation & Movement | `Room.Info`, `Zone.Map` | Canvas world scene, minimap, exit buttons |
-| Room contents | `Room.Mobs`, `Room.Items`, `Room.Players`, `Room.MobInfo` | Canvas entities with labels, HP bars, role badges |
-| Combat | `Char.Combat`, `Char.Combat.Event`, `Char.Vitals` | Battle scene, combat log, HP/Mana bars, target card |
-| Spells & Abilities | `Char.Skills`, `Char.Cooldown` | Spellbook panel, quickbar with cooldown sweeps |
-| Status Effects | `Char.StatusEffects` | Character panel effects tab, battle scene indicators |
-| Inventory | `Char.Items.List/Add/Remove` | Inventory panel with wear/give/drop actions |
-| Equipment | `Char.Equipment.Slots` | Paperdoll equipment panel with remove action |
-| Quests | `Quest.List/Update/Complete/Available` | Quest panel with accept/abandon, progress tracking |
-| Dialogue | `Dialogue.Node/End` | Canvas dialogue overlay with clickable choices |
-| Shops | `Shop.List/Close` | Shop popout with buy/sell tabs |
-| Chat (all channels) | `Comm.Channel` | Chat panel with say/tell/gossip/shout/ooc/gtell/gchat |
-| Achievements | `Char.Achievements` | Character panel achievements tab with progress bars |
-| XP/Gold gains | `Char.Gain` | Floating gain notifications |
-| Login flow | `Login.Prompt/Error` | Login modal with race/class/gender selection |
-| Admin/Staff tools | `Staff.WorldInfo` | Admin panel with zone/room browser, teleport |
+The AdminPanel supports goto, transfer, spawn, kick, and shutdown. Missing staff commands:
+
+| Command | Status | Suggestion |
+|---------|--------|------------|
+| `smite <target>` | Has text command but no UI button | Add to mob/player context actions in admin mode |
+| `setlevel <player> <level>` | No UI | Add to AdminPanel player actions with level input |
+| `dispel <target>` | No UI | Add to AdminPanel player/mob actions |
+| `reload [scope]` | No UI | Add "Reload" button to AdminPanel with scope selector (world/abilities/effects/all) |
 
 ---
 
-## 8. Summary Matrix
+## 6. Priority Recommendations
 
-| # | Feature | Has Text Cmd | Has GMCP | Has Web UI | Gap Type | Issue |
-|---|---------|:---:|:---:|:---:|----------|-------|
-| 1 | Zone.Map handshake | — | Broken | Ready | Protocol fix | #667 |
-| 2 | Room.MobInfo fields | — | Partial | Ready | Protocol fix | #668 |
-| 3 | Combat.Event names | — | Mismatched | Mismatched | Protocol fix | #669 |
-| 4 | Core.Ping | — | Emitted | Missing | Protocol fix | #670 |
-| 5 | Char.Gain fields | — | Emitted | Partial | Protocol fix | #671 |
-| 6 | Command autocomplete | Y | N/A | Partial | Discoverability | #672 |
-| 7 | Help coverage | Y | N/A | Partial | Discoverability | #673 |
-| 8 | Mail | Y | **N** | **N** | Full gap | #674 |
-| 9 | Crafting/Gathering | Y | **N** | **N** | Full gap | #675 |
-| 10 | World features | Y | **N** | **N** | Full gap | #676 |
-| 11 | Who (structured) | Y | **N** | Partial | Full gap | #677 |
-| 12 | Guild management | Y | Partial | **N** | UI gap | #678 |
-| 13 | Group management | Y | Y | **N** | UI gap | #679 |
-| 14 | Friends management | Y | Y | **N** | UI gap | #680 |
-| 15 | Title/gender controls | Y | Partial | **N** | UI gap | #681 |
-| 16 | Phase/instance selector | Y | **N** | **N** | UI gap | #682 |
-| 17 | Character stats tab | Y | Y | **N** | UI gap | #683 |
-| 18 | Score view | Y | Composable | **N** | UI gap | #684 |
-| 19 | Flee button | Y | N/A | **N** | UX gap | #685 |
-| 20 | Recall button | Y | N/A | **N** | UX gap | #686 |
-| 21 | Inventory use/put/search | Y | N/A | **N** | UX gap | #687 |
-| 22 | Emote picker | Y | N/A | **N** | UX gap | #688 |
-| 23 | Combat target selector | Y | N/A | **N** | UX gap | #689 |
-| 24 | Mob status effects | — | **N** | **N** | UX gap | #690 |
-| 25 | Entity action enrichment | — | Partial | Partial | UX gap | #691 |
-| 26 | Command-parity CI | — | — | — | Infra | #692 |
-| 27 | GMCP contract tests | — | — | — | Infra | #693 |
-| 28 | Server.Commands package | — | **N** | **N** | Infra | #694 |
+### High Priority (Improves core gameplay)
+
+1. **Item inspection UI** — Add examine/inspect action for inventory items, equipment, and ground items. This is the most common missing interaction.
+2. **Player context menu** — Quick actions (Tell, Whisper, Give, Group Invite, Look) when clicking player names.
+3. **Help content: add Sprite commands** — The sprite system is fully implemented in the UI but undocumented in the help panel.
+
+### Medium Priority (Quality of life)
+
+4. **Container "Put" action** — Let players put items into open containers from the inventory panel.
+5. **Lock button** — Add to room features panel for doors/containers.
+6. **Mob context enrichment** — Use MobInfo metadata to show shop/quest/dialogue actions in EntityPopout.
+7. **Admin panel completeness** — Add setlevel, dispel, reload, smite buttons.
+
+### Low Priority (Nice to have)
+
+8. **Direction peeking** — Minimap hover or exit tooltips.
+9. **Whisper UI** — Dedicated whisper channel or button in ChatPanel.
+10. **`Char.Score` GMCP** — Structured character sheet data for richer CharacterPanel.
+11. **`Room.LookTarget` GMCP** — Structured examine results for popovers.
+12. **Pose quick-action** — Emote preset for `/pose`.
+
+---
+
+## 7. Summary Table
+
+| Area | Server Commands | Web UI Coverage | Gap Count |
+|------|----------------|-----------------|-----------|
+| Navigation | 6 | 6/6 (100%) | 0 |
+| Communication | 8 | 7/8 (88%) | Whisper UI |
+| Items | 8 | 6/8 (75%) | Examine, Put |
+| Combat | 3 | 3/3 (100%) | 0 |
+| Progression | 5 | 5/5 (100%) | 0 |
+| Quests & Dialogue | 6 | 6/6 (100%) | 0 |
+| Achievements & Titles | 4 | 3/4 (75%) | Pose UI |
+| Shops | 3 | 3/3 (100%) | 0 |
+| World Features | 7 | 6/7 (86%) | Lock |
+| Groups | 5 | 5/5 (100%) | 0 |
+| Guilds | 11 | 11/11 (100%) | 0 |
+| Crafting | 4 | 4/4 (100%) | 0 |
+| Friends | 3 | 3/3 (100%) | 0 |
+| Mail | 5 | 5/5 (100%) | 0 |
+| Sprites | 3 | 3/3 (100%) | Help docs |
+| Sharding | 1 | 1/1 (100%) | 0 |
+| Staff | 9 | 5/9 (56%) | 4 admin cmds |
+| Utility | 7 | 7/7 (100%) | 0 |
+| **GMCP Packages** | **51 emitted** | **51/51 handled** | **0** |
+
+**All commands remain accessible via text input** — the gaps above are only about missing *clickable UI shortcuts*. The text-based feature set is at 100% parity by definition since the web client includes a full terminal.
