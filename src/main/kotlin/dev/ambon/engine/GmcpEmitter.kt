@@ -410,6 +410,18 @@ class GmcpEmitter(
         )
     }
 
+    suspend fun sendGroupInvite(
+        sessionId: SessionId,
+        inviterName: String,
+    ) {
+        emit(
+            sessionId,
+            "Group.Invite",
+            GroupInvitePayload(inviterName = inviterName),
+            supportCheck = "Group.Info",
+        )
+    }
+
     suspend fun sendCorePing(sessionId: SessionId) {
         emitRaw(sessionId, "Core.Ping", CORE_PING_JSON)
     }
@@ -1079,6 +1091,24 @@ class GmcpEmitter(
         emit(sessionId, "Guild.Chat", GuildChatGmcpPayload(sender = sender, message = message), supportCheck = "Guild.Info")
     }
 
+    suspend fun sendGuildInvite(
+        sessionId: SessionId,
+        inviterName: String,
+        guildName: String,
+        guildTag: String,
+    ) {
+        emit(
+            sessionId,
+            "Guild.Invite",
+            GuildInvitePayload(
+                inviterName = inviterName,
+                guildName = guildName,
+                guildTag = guildTag,
+            ),
+            supportCheck = "Guild.Info",
+        )
+    }
+
     // ---------- shop ----------
 
     suspend fun sendShopList(
@@ -1387,6 +1417,16 @@ class GmcpEmitter(
     private data class GroupInfoPayload(
         val leader: String?,
         val members: List<GroupMemberPayload>,
+    )
+
+    private data class GroupInvitePayload(
+        val inviterName: String,
+    )
+
+    private data class GuildInvitePayload(
+        val inviterName: String,
+        val guildName: String,
+        val guildTag: String,
     )
 
     private data class CompletedAchievementPayload(

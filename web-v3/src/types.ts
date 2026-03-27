@@ -28,6 +28,18 @@ export interface GroupInfo {
   members: GroupMember[];
 }
 
+export interface PendingGroupInvite {
+  inviterName: string;
+  receivedAt: number;
+}
+
+export interface PendingGuildInvite {
+  inviterName: string;
+  guildName: string;
+  guildTag: string;
+  receivedAt: number;
+}
+
 export interface FriendEntry {
   name: string;
   online: boolean;

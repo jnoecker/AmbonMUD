@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { CHAT_CHANNELS } from "../../constants";
 import { RefreshIcon, TellIcon } from "../Icons";
-import type { ChatChannel, ChatMessage, EmotePreset, FriendEntry, FriendNotification, GroupInfo, GuildInfo, GuildMemberEntry, SocialTab, WhoPlayer } from "../../types";
+import type { ChatChannel, ChatMessage, EmotePreset, FriendEntry, FriendNotification, GroupInfo, GuildInfo, GuildMemberEntry, PendingGroupInvite, PendingGuildInvite, SocialTab, WhoPlayer } from "../../types";
 
 type WhoSortField = "name" | "level" | "race" | "class" | "idle";
 type SortDir = "asc" | "desc";
@@ -16,7 +16,9 @@ interface ChatPanelProps {
   emotePresets: EmotePreset[];
   whoPlayers: WhoPlayer[];
   groupInfo: GroupInfo;
+  pendingGroupInvite: PendingGroupInvite | null;
   guildInfo: GuildInfo;
+  pendingGuildInvite: PendingGuildInvite | null;
   guildMembers: GuildMemberEntry[];
   friends: FriendEntry[];
   friendNotifications: FriendNotification[];
@@ -67,7 +69,9 @@ export function ChatPanel({
   emotePresets,
   whoPlayers,
   groupInfo,
+  pendingGroupInvite,
   guildInfo,
+  pendingGuildInvite,
   guildMembers,
   friends,
   friendNotifications,
@@ -480,12 +484,22 @@ export function ChatPanel({
                 <section className="chat-feed-panel" aria-label="Guild subwindow">
                   <div className="social-empty-action">
                     <p className="empty-note">You are not in a guild.</p>
+                    {pendingGuildInvite ? (
+                      <div className="invite-card">
+                        <p className="invite-card-text"><strong>{pendingGuildInvite.inviterName}</strong> invites you to join <strong>{pendingGuildInvite.guildName}</strong> [{pendingGuildInvite.guildTag}].</p>
+                        <div className="invite-card-actions">
+                          <button type="button" className="social-action-btn social-accept-btn" onClick={() => { onCommand("guild accept"); }}>Accept</button>
+                          <button type="button" className="social-action-btn social-decline-btn" onClick={() => onCommand("guild decline")}>Decline</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button type="button" className="social-action-btn social-accept-btn" onClick={() => onCommand("guild accept")}>Accept Invite</button>
+                    )}
                     <form className="guild-create-form" onSubmit={(e) => { e.preventDefault(); const n = guildCreateName.trim(); const t = guildCreateTag.trim(); if (n && t) { onCommand(`guild create ${n} ${t}`); setGuildCreateName(""); setGuildCreateTag(""); } }}>
                       <input type="text" className="social-action-input" placeholder="Guild name" value={guildCreateName} onChange={(e) => setGuildCreateName(e.target.value)} aria-label="Guild name" />
                       <input type="text" className="social-action-input guild-tag-input" placeholder="Tag" value={guildCreateTag} onChange={(e) => setGuildCreateTag(e.target.value)} aria-label="Guild tag" maxLength={5} />
                       <button type="submit" className="social-action-btn" disabled={!guildCreateName.trim() || !guildCreateTag.trim()}>Create</button>
                     </form>
-                    <button type="button" className="social-action-btn social-accept-btn" onClick={() => onCommand("guild accept")}>Accept Invite</button>
                   </div>
                 </section>
               </div>
@@ -649,11 +663,21 @@ export function ChatPanel({
                 <section className="chat-feed-panel" aria-label="Group subwindow">
                   <div className="social-empty-action">
                     <p className="empty-note">You are not in a group.</p>
+                    {pendingGroupInvite ? (
+                      <div className="invite-card">
+                        <p className="invite-card-text"><strong>{pendingGroupInvite.inviterName}</strong> invites you to join their group.</p>
+                        <div className="invite-card-actions">
+                          <button type="button" className="social-action-btn social-accept-btn" onClick={() => { onCommand("group accept"); }}>Accept</button>
+                          <button type="button" className="social-action-btn social-decline-btn" onClick={() => onCommand("group decline")}>Decline</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button type="button" className="social-action-btn social-accept-btn" onClick={() => onCommand("group accept")}>Accept Invite</button>
+                    )}
                     <form className="social-action-bar" onSubmit={(e) => { e.preventDefault(); const t = groupInviteTarget.trim(); if (t) { onCommand(`group invite ${t}`); setGroupInviteTarget(""); } }}>
                       <input type="text" className="social-action-input" placeholder="Invite player\u2026" value={groupInviteTarget} onChange={(e) => setGroupInviteTarget(e.target.value)} aria-label="Player to invite" />
                       <button type="submit" className="social-action-btn" disabled={!groupInviteTarget.trim()}>Invite</button>
                     </form>
-                    <button type="button" className="social-action-btn social-accept-btn" onClick={() => onCommand("group accept")}>Accept Invite</button>
                   </div>
                 </section>
               </div>

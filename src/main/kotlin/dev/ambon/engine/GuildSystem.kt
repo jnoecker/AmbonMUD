@@ -182,6 +182,7 @@ class GuildSystem(
                     "${ps.name} has invited you to join guild '${guild.name}' [${guild.tag}]. Type 'guild accept' to join.",
                 ),
             )
+            gmcpEmitter?.sendGuildInvite(targetSid, ps.name, guild.name, guild.tag)
             outbound.send(OutboundEvent.SendInfo(sessionId, "Invite sent to ${targetPs.name}."))
             null
         }

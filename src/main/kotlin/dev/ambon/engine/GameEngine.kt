@@ -487,7 +487,7 @@ class GameEngine(
             dirtyNotifier = dirtyNotifier,
             effectTypes = engineConfig.effectTypes,
         )
-    private val groupSystem =
+    private val groupSystem: GroupSystem =
         GroupSystem(
             players = players,
             outbound = outbound,
@@ -496,6 +496,7 @@ class GameEngine(
             inviteTimeoutMs = engineConfig.group.inviteTimeoutMs,
             markGroupDirty = ::markGroupDirty,
             classRegistry = classRegistry,
+            gmcpEmitter = gmcpEmitter,
         )
     private val guildSystem: GuildSystem? =
         if (guildRepo != null) {

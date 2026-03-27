@@ -28,6 +28,7 @@ class GroupSystem(
     private val inviteTimeoutMs: Long = 60_000L,
     private val markGroupDirty: (SessionId) -> Unit = {},
     private val classRegistry: PlayerClassRegistry? = null,
+    private val gmcpEmitter: GmcpEmitter? = null,
 ) : GameSystem {
     private val groupBySession = mutableMapOf<SessionId, Group>()
     private val pendingInvites = mutableMapOf<SessionId, PendingInvite>()
@@ -107,6 +108,7 @@ class GroupSystem(
                 "${inviter.name} invites you to join their group. Type 'group accept' to accept.",
             ),
         )
+        gmcpEmitter?.sendGroupInvite(targetSid, inviter.name)
         outbound.send(OutboundEvent.SendPrompt(targetSid))
         return null
     }
