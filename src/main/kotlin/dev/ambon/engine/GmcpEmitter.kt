@@ -1932,7 +1932,7 @@ class GmcpEmitter(
         val race = player.race.lowercase()
         if (player.isStaff) return "${imagesBase}player_sprites/${race}_base_tstaff.png"
         val cls = player.playerClass.lowercase()
-        return "${imagesBase}player_sprites/${race}_${cls}_t1.png"
+        return "${imagesBase}player_sprites/${race}_${cls}_t0.png"
     }
 
     /** Sends the `Char.Sprites` GMCP package listing available sprites. */
