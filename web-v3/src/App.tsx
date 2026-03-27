@@ -610,6 +610,15 @@ function App() {
     return () => { canvasCallbacks.sendCommand = null; };
   }, [sendCommand]);
 
+  // Wire prefillCommand callback for context-menu actions that need user input
+  useEffect(() => {
+    canvasCallbacks.prefillCommand = (text: string) => {
+      setComposerValue(text);
+      focusComposer();
+    };
+    return () => { canvasCallbacks.prefillCommand = null; };
+  }, [focusComposer]);
+
   // Wire canvas shop badge to open shop popout
   useEffect(() => {
     canvasCallbacks.openShop = () => setActivePopout("shop");
