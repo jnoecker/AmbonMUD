@@ -696,6 +696,29 @@ class GmcpEmitter(
         )
     }
 
+    // ---------- room features ----------
+
+    suspend fun sendRoomFeatures(
+        sessionId: SessionId,
+        features: List<RoomFeaturePayload>,
+    ) {
+        emit(sessionId, "Room.Features", features, supportCheck = "Room.Info")
+    }
+
+    suspend fun sendContainerContents(
+        sessionId: SessionId,
+        featureId: String,
+        name: String,
+        items: List<ContainerItemPayload>,
+    ) {
+        emit(
+            sessionId,
+            "Room.ContainerContents",
+            ContainerContentsPayload(featureId = featureId, name = name, items = items),
+            supportCheck = "Room.Info",
+        )
+    }
+
     // ---------- mail ----------
 
     suspend fun sendMailList(
@@ -1359,6 +1382,31 @@ class GmcpEmitter(
     private data class CharCooldownPayload(
         val abilityId: String,
         val cooldownMs: Long,
+    )
+
+    // ---------- room feature payloads ----------
+
+    data class RoomFeaturePayload(
+        val id: String,
+        val name: String,
+        val keyword: String,
+        val type: String,
+        val state: String? = null,
+        val direction: String? = null,
+        val locked: Boolean? = null,
+        val keyRequired: Boolean? = null,
+        val text: String? = null,
+    )
+
+    data class ContainerItemPayload(
+        val name: String,
+        val keyword: String,
+    )
+
+    private data class ContainerContentsPayload(
+        val featureId: String,
+        val name: String,
+        val items: List<ContainerItemPayload>,
     )
 
     // ---------- mail payloads ----------
