@@ -27,6 +27,8 @@ export function EquipmentPanel({
     return <p className="empty-note">Log in to view equipment.</p>;
   }
 
+  const selectedItem = selectedSlot ? equipment[selectedSlot] : null;
+
   return (
     <div className="equipment-panel-v2">
       <div className="paperdoll-layout">
@@ -108,6 +110,18 @@ export function EquipmentPanel({
               );
             })}
           </ul>
+
+          {/* Item image preview when a filled slot is selected */}
+          {selectedSlot && selectedItem?.image && (
+            <div className="paperdoll-preview" key={selectedSlot}>
+              <img
+                src={selectedItem.image}
+                alt={selectedItem.name}
+                className="paperdoll-preview-img"
+              />
+              <span className="paperdoll-preview-name">{selectedItem.name}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
