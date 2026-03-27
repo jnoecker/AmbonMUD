@@ -3222,6 +3222,7 @@ body {
 /* ────────── Equipment Panel (Paper Doll) ────────── */
 
 .equipment-panel-v2 {
+  position: relative;
   padding: var(--space-2) 0;
 }
 
@@ -3413,38 +3414,82 @@ body {
   height: 14px;
 }
 
-/* Item image preview */
-.paperdoll-preview {
+/* Floating item preview overlay */
+.paperdoll-preview-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(8 10 18 / 50%);
+  border-radius: var(--radius-md);
+  z-index: 10;
+  cursor: pointer;
+  animation: previewOverlayIn 180ms var(--ease-out-soft);
+}
+
+.paperdoll-preview-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-3) 0;
-  animation: previewFadeIn 250ms var(--ease-out-soft);
+  padding: var(--space-5);
+  background: var(--surface-panel-a);
+  border: 1px solid rgb(168 151 210 / 30%);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 40px rgb(168 151 210 / 20%);
+  cursor: default;
+  animation: previewCardIn 250ms var(--ease-out-soft);
 }
 
 .paperdoll-preview-img {
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
   border-radius: var(--radius-md);
   border: 2px solid rgb(168 151 210 / 40%);
   box-shadow:
-    0 0 16px rgb(168 151 210 / 35%),
-    0 0 32px rgb(140 174 201 / 20%);
+    0 0 20px rgb(168 151 210 / 40%),
+    0 0 40px rgb(140 174 201 / 22%);
 }
 
 .paperdoll-preview-name {
   font-family: var(--font-display);
-  font-size: 0.88rem;
+  font-size: 1.05rem;
+  font-weight: 600;
   color: var(--text-heading);
   text-align: center;
 }
 
-@keyframes previewFadeIn {
+.paperdoll-preview-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+}
+
+.paperdoll-preview-close:hover {
+  color: var(--text-primary);
+}
+
+@keyframes previewOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes previewCardIn {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.85);
   }
 
   to {
