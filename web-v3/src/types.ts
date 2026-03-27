@@ -247,6 +247,10 @@ export interface CombatEventData {
   absorbed: number;
   shieldRemaining: number;
   sourceIsPlayer: boolean;
+  effectName: string | null;
+  killerName: string | null;
+  killerIsPlayer: boolean;
+  attackerName: string | null;
   xpGained: number;
   goldGained: number;
 }
@@ -284,6 +288,9 @@ export interface GainEvent {
   type: string;
   amount: number;
   source: string | null;
+  newLevel: number | null;
+  hpGained: number | null;
+  manaGained: number | null;
 }
 
 export interface QuestNotification {

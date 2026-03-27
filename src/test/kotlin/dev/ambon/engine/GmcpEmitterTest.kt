@@ -1307,7 +1307,7 @@ class GmcpEmitterTest {
     @Test
     fun `sendZoneMap emits rooms with horizontal exits only`() =
         runTest {
-            val e = emitter("Room")
+            val e = emitter("Zone.Map")
             val rooms = listOf(
                 zoneRoom(
                     "z:a",
@@ -1338,7 +1338,7 @@ class GmcpEmitterTest {
         }
 
     @Test
-    fun `sendZoneMap skipped when Room not supported`() =
+    fun `sendZoneMap skipped when Zone Map not supported`() =
         runTest {
             val e = emitter("Char")
             e.sendZoneMap(sid, "z", listOf(zoneRoom("z:a")))

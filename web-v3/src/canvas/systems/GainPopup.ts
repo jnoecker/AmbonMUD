@@ -13,6 +13,7 @@ const GAIN_COLORS: Record<string, string> = {
   xp: "#b9aed8",
   gold: "#f0c674",
   level: "#81d4fa",
+  levelUp: "#81d4fa",
 };
 
 export class GainPopupSystem {
@@ -23,8 +24,12 @@ export class GainPopupSystem {
     const color = GAIN_COLORS[event.type] ?? "#d8dcef";
     let display: string;
 
-    if (event.type === "level") {
-      display = "Level Up!";
+    if (event.type === "level" || event.type === "levelUp") {
+      const parts = ["Level Up!"];
+      if (event.newLevel != null) parts[0] = `Level ${event.newLevel}!`;
+      if (event.hpGained) parts.push(`+${event.hpGained} HP`);
+      if (event.manaGained) parts.push(`+${event.manaGained} Mana`);
+      display = parts.join(" ");
     } else {
       const label = event.type === "xp" ? "XP" : event.type === "gold" ? "Gold" : event.type;
       display = `+${event.amount} ${label}`;
