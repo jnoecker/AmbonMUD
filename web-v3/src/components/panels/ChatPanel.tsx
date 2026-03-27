@@ -49,6 +49,21 @@ function formatIdleTime(seconds: number): string {
   return `${Math.floor(seconds / 3600)}h${Math.floor((seconds % 3600) / 60)}m`;
 }
 
+const EMOTE_PRESETS: Array<{ label: string; emoji: string; action: string }> = [
+  { label: "Wave", emoji: "\uD83D\uDC4B", action: "waves." },
+  { label: "Nod", emoji: "\uD83D\uDE42", action: "nods." },
+  { label: "Laugh", emoji: "\uD83D\uDE02", action: "laughs." },
+  { label: "Bow", emoji: "\uD83D\uDE4F", action: "bows respectfully." },
+  { label: "Cheer", emoji: "\uD83C\uDF89", action: "cheers!" },
+  { label: "Shrug", emoji: "\uD83E\uDD37", action: "shrugs." },
+  { label: "Clap", emoji: "\uD83D\uDC4F", action: "claps." },
+  { label: "Dance", emoji: "\uD83D\uDC83", action: "dances." },
+  { label: "Think", emoji: "\uD83E\uDD14", action: "thinks carefully." },
+  { label: "Facepalm", emoji: "\uD83E\uDD26", action: "facepalms." },
+  { label: "Salute", emoji: "\uD83E\uDEE1", action: "salutes." },
+  { label: "Cry", emoji: "\uD83D\uDE22", action: "cries." },
+];
+
 const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [
   { id: "chat", label: "Chat" },
   { id: "friends", label: "Friends" },
@@ -97,6 +112,9 @@ export function ChatPanel({
   const [groupInviteTarget, setGroupInviteTarget] = useState("");
   // Friends action state
   const [friendAddTarget, setFriendAddTarget] = useState("");
+  // Emote picker state
+  const [emotePickerOpen, setEmotePickerOpen] = useState(false);
+  const [customEmote, setCustomEmote] = useState("");
   const [friendConfirmRemove, setFriendConfirmRemove] = useState<string | null>(null);
 
   const messages = chatByChannel[activeChannel];
@@ -290,6 +308,36 @@ export function ChatPanel({
               </section>
             </div>
 
+            {emotePickerOpen && canChat && (
+              <div className="emote-picker">
+                <div className="emote-presets">
+                  {EMOTE_PRESETS.map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      className="emote-preset-btn"
+                      title={`${playerName} ${preset.action}`}
+                      onClick={() => { onCommand(`emote ${preset.action}`); }}
+                    >
+                      <span className="emote-preset-emoji">{preset.emoji}</span>
+                      <span className="emote-preset-label">{preset.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <form className="emote-custom-form" onSubmit={(e) => { e.preventDefault(); const msg = customEmote.trim(); if (msg) { onCommand(`emote ${msg}`); setCustomEmote(""); } }}>
+                  <input
+                    type="text"
+                    className="social-action-input"
+                    placeholder={`${playerName} does what\u2026`}
+                    value={customEmote}
+                    onChange={(e) => setCustomEmote(e.target.value)}
+                    aria-label="Custom emote"
+                  />
+                  <button type="submit" className="social-action-btn" disabled={!customEmote.trim()}>Emote</button>
+                </form>
+              </div>
+            )}
+
             <form
               className={`chat-form ${isTargetedChannel ? "chat-form-targeted" : ""}`}
               onSubmit={submitMessage}
@@ -323,6 +371,17 @@ export function ChatPanel({
                 disabled={!canChat}
               />
               <button type="submit" className="soft-button" disabled={!canChat}>Send</button>
+              <button
+                type="button"
+                className={`emote-toggle-btn${emotePickerOpen ? " emote-toggle-btn-active" : ""}`}
+                title="Emotes"
+                aria-label="Toggle emote picker"
+                aria-expanded={emotePickerOpen}
+                onClick={() => setEmotePickerOpen((v) => !v)}
+                disabled={!canChat}
+              >
+                &#9786;
+              </button>
             </form>
           </>
         )}
