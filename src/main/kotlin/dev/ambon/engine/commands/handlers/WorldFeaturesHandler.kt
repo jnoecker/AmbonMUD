@@ -3,7 +3,9 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.LeverState
 import dev.ambon.domain.world.LockableState
+import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.RoomFeature
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.PlayerState
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
@@ -19,6 +21,7 @@ class WorldFeaturesHandler(
     private val items = ctx.items
     private val outbound = ctx.outbound
     private val worldState = ctx.worldState
+    private val gmcpEmitter = ctx.gmcpEmitter
 
     override fun register(router: CommandRouter) {
         router.on<Command.OpenFeature> { sid, cmd -> handleOpenFeature(sid, cmd.keyword) }
@@ -55,6 +58,7 @@ class WorldFeaturesHandler(
                 lockable.applyState(LockableState.OPEN)
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You open the ${lockable.displayName}."))
                 broadcastToRoomExcept(me.roomId, sessionId, "${me.name} opens the ${lockable.displayName}.", players, outbound)
+                world.rooms[me.roomId]?.let { emitRoomFeatures(it) }
             }
         }
     }
@@ -68,6 +72,7 @@ class WorldFeaturesHandler(
                 lockable.applyState(LockableState.CLOSED)
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You close the ${lockable.displayName}."))
                 broadcastToRoomExcept(me.roomId, sessionId, "${me.name} closes the ${lockable.displayName}.", players, outbound)
+                world.rooms[me.roomId]?.let { emitRoomFeatures(it) }
             }
             LockableState.CLOSED -> outbound.send(
                 OutboundEvent.SendError(sessionId, "The ${lockable.displayName} is already closed."),
@@ -118,6 +123,7 @@ class WorldFeaturesHandler(
             val list = contents.map { it.item.displayName }.sorted().joinToString(", ")
             outbound.send(OutboundEvent.SendInfo(sessionId, "In the ${feature.displayName}: $list"))
         }
+        emitContainerContents(sessionId, feature)
     }
 
     private suspend fun handleGetFrom(
@@ -139,6 +145,8 @@ class WorldFeaturesHandler(
                 players,
                 outbound,
             )
+            emitContainerContents(sessionId, feature)
+            syncItemsGmcp(sessionId, items, gmcpEmitter)
         }
     }
 
@@ -161,6 +169,8 @@ class WorldFeaturesHandler(
                 players,
                 outbound,
             )
+            emitContainerContents(sessionId, feature)
+            syncItemsGmcp(sessionId, items, gmcpEmitter)
         }
     }
 
@@ -178,6 +188,7 @@ class WorldFeaturesHandler(
         worldState?.setLeverState(feature.id, newState)
         outbound.send(OutboundEvent.SendInfo(sessionId, "You pull the ${feature.displayName}. It moves ${newState.name.lowercase()}."))
         broadcastToRoomExcept(me.roomId, sessionId, "${me.name} pulls the ${feature.displayName}.", players, outbound)
+        emitRoomFeatures(room)
     }
 
     private suspend fun handleReadSign(
@@ -214,6 +225,30 @@ class WorldFeaturesHandler(
                 players,
                 outbound,
             )
+            world.rooms[me.roomId]?.let { emitRoomFeatures(it) }
         }
+    }
+
+    private suspend fun emitRoomFeatures(room: Room) {
+        val emitter = gmcpEmitter ?: return
+        val payloads = room.features.map { feature -> buildFeaturePayload(feature, worldState) }
+        for (p in players.playersInRoom(room.id)) {
+            emitter.sendRoomFeatures(p.sessionId, payloads)
+        }
+    }
+
+    private suspend fun emitContainerContents(
+        sessionId: SessionId,
+        feature: RoomFeature.Container,
+    ) {
+        val emitter = gmcpEmitter ?: return
+        val contents = worldState?.getContainerContents(feature.id) ?: emptyList()
+        emitter.sendContainerContents(
+            sessionId,
+            feature.id,
+            feature.displayName,
+            feature.keyword,
+            contents.map { GmcpEmitter.ContainerItemPayload(name = it.item.displayName, keyword = it.item.keyword) },
+        )
     }
 }

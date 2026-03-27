@@ -293,6 +293,25 @@ export interface GainEvent {
   manaGained: number | null;
 }
 
+export interface RoomFeature {
+  id: string;
+  name: string;
+  keyword: string;
+  type: "door" | "container" | "lever" | "sign";
+  state: string | null;
+  direction: string | null;
+  locked: boolean | null;
+  keyRequired: boolean | null;
+  text: string | null;
+}
+
+export interface ContainerContents {
+  featureId: string;
+  name: string;
+  keyword: string;
+  items: Array<{ name: string; keyword: string }>;
+}
+
 export interface MailEntry {
   index: number;
   id: string;
