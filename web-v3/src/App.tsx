@@ -79,6 +79,7 @@ import type {
   ShopState,
   SkillSummary,
   SpriteList,
+  StaffMobZone,
   StaffWorldZone,
   StatusEffect,
   StatusVarLabels,
@@ -204,6 +205,7 @@ function App() {
   const [serverCommands, setServerCommands] = useState<CommandEntry[]>([]);
   const [emotePresets, setEmotePresets] = useState<EmotePreset[]>([]);
   const [staffWorldInfo, setStaffWorldInfo] = useState<StaffWorldZone[]>([]);
+  const [staffMobTemplates, setStaffMobTemplates] = useState<StaffMobZone[]>([]);
   const [lookTarget, setLookTarget] = useState<LookTargetInfo | null>(null);
   const [spriteList, setSpriteList] = useState<SpriteList>({ active: null, sprites: [] });
   const combatEventsRef = useRef<CombatEventData[]>([]);
@@ -361,6 +363,7 @@ function App() {
     setActiveChatChannel("say");
     setShowAdminPanel(false);
     setStaffWorldInfo([]);
+    setStaffMobTemplates([]);
     setServerCommands([]);
     setEmotePresets([]);
     resetMap();
@@ -422,6 +425,7 @@ function App() {
           setEmotePresets,
           pushUiFeedback,
           setStaffWorldInfo,
+          setStaffMobTemplates,
           setLookTarget,
           setCraftingSkills,
           setCraftingRecipes,
@@ -1237,6 +1241,7 @@ function App() {
           }}
           onClose={() => setShowAdminPanel(false)}
           worldInfo={staffWorldInfo}
+          mobTemplates={staffMobTemplates}
           whoPlayers={whoPlayers}
         />
       )}

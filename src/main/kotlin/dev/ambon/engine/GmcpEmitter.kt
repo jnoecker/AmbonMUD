@@ -1212,6 +1212,25 @@ class GmcpEmitter(
         emit(sessionId, "Staff.WorldInfo", zones, supportCheck = "Staff")
     }
 
+    /**
+     * Sends mob template listing to staff players for the spawn browser.
+     */
+    suspend fun sendStaffMobTemplates(sessionId: SessionId, world: World) {
+        val grouped = world.mobSpawns.groupBy { it.id.value.substringBefore(':') }
+        val zones = grouped.entries.sortedBy { it.key }.map { (zone, mobs) ->
+            StaffMobZonePayload(
+                zone = zone,
+                mobs = mobs.sortedBy { it.id.value }.map { mob ->
+                    StaffMobTemplatePayload(
+                        id = mob.id.value,
+                        name = mob.name,
+                    )
+                },
+            )
+        }
+        emit(sessionId, "Staff.MobTemplates", zones, supportCheck = "Staff")
+    }
+
     @Suppress("unused") // Jackson serializes all fields
     private data class UiFeedbackPayload(
         val type: String,
@@ -1229,6 +1248,16 @@ class GmcpEmitter(
     private data class StaffRoomPayload(
         val id: String,
         val title: String,
+    )
+
+    private data class StaffMobZonePayload(
+        val zone: String,
+        val mobs: List<StaffMobTemplatePayload>,
+    )
+
+    private data class StaffMobTemplatePayload(
+        val id: String,
+        val name: String,
     )
 
     // ---------- emit helpers ----------

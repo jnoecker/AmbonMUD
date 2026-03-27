@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import type { StaffWorldZone, WhoPlayer } from "../../types";
+import type { StaffMobZone, StaffWorldZone, WhoPlayer } from "../../types";
 
 interface AdminPanelProps {
   onCommand: (command: string) => void;
   onClose: () => void;
   worldInfo: StaffWorldZone[];
+  mobTemplates: StaffMobZone[];
   whoPlayers: WhoPlayer[];
 }
 
@@ -139,12 +140,92 @@ function TeleportBrowser({
   );
 }
 
-export function AdminPanel({ onCommand, onClose, worldInfo, whoPlayers }: AdminPanelProps) {
+function MobTemplateBrowser({
+  mobTemplates,
+  filter,
+  onSetFilter,
+  onSelect,
+}: {
+  mobTemplates: StaffMobZone[];
+  filter: string;
+  onSetFilter: (v: string) => void;
+  onSelect: (templateId: string) => void;
+}) {
+  const [expandedZone, setExpandedZone] = useState<string | null>(null);
+  const lowerFilter = filter.toLowerCase();
+
+  const filteredZones = useMemo(() => {
+    if (!lowerFilter) return mobTemplates;
+    return mobTemplates
+      .map((z) => ({
+        ...z,
+        mobs: z.mobs.filter(
+          (m) =>
+            m.id.toLowerCase().includes(lowerFilter) ||
+            m.name.toLowerCase().includes(lowerFilter),
+        ),
+      }))
+      .filter((z) => z.zone.toLowerCase().includes(lowerFilter) || z.mobs.length > 0);
+  }, [mobTemplates, lowerFilter]);
+
+  return (
+    <div className="teleport-browser">
+      <input
+        type="text"
+        className="admin-input teleport-filter"
+        placeholder="Filter mob templates..."
+        value={filter}
+        onChange={(e) => onSetFilter(e.target.value)}
+      />
+      {filteredZones.map((z) => {
+        const isExpanded = expandedZone === z.zone || lowerFilter.length > 0;
+        return (
+          <div key={z.zone} className="teleport-section">
+            <button
+              type="button"
+              className={`teleport-zone-header ${isExpanded ? "teleport-zone-header-expanded" : ""}`}
+              onClick={() => setExpandedZone(expandedZone === z.zone ? null : z.zone)}
+            >
+              <span className="teleport-zone-arrow">{isExpanded ? "\u25BE" : "\u25B8"}</span>
+              <span className="teleport-zone-name">{z.zone}</span>
+              <span className="teleport-zone-count">{z.mobs.length} mobs</span>
+            </button>
+            {isExpanded && (
+              <ul className="teleport-list">
+                {z.mobs.map((mob) => (
+                  <li key={mob.id} className="teleport-item">
+                    <span className="teleport-item-room">
+                      <span className="teleport-item-id">{mob.id}</span>
+                      <span className="teleport-item-title">{mob.name}</span>
+                    </span>
+                    <button
+                      type="button"
+                      className="teleport-go-btn"
+                      onClick={() => onSelect(mob.id)}
+                    >
+                      Spawn
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+      {filteredZones.length === 0 && (
+        <p className="empty-note">No mob templates match &ldquo;{filter}&rdquo;</p>
+      )}
+    </div>
+  );
+}
+
+export function AdminPanel({ onCommand, onClose, worldInfo, mobTemplates, whoPlayers }: AdminPanelProps) {
   const [activeAction, setActiveAction] = useState<AdminAction | null>(null);
   const [inputA, setInputA] = useState("");
   const [inputB, setInputB] = useState("");
   const [filter, setFilter] = useState("");
   const [transferFilter, setTransferFilter] = useState("");
+  const [spawnFilter, setSpawnFilter] = useState("");
   const [showShutdownConfirm, setShowShutdownConfirm] = useState(false);
 
   const resetForm = () => {
@@ -152,6 +233,7 @@ export function AdminPanel({ onCommand, onClose, worldInfo, whoPlayers }: AdminP
     setInputB("");
     setFilter("");
     setTransferFilter("");
+    setSpawnFilter("");
     setShowShutdownConfirm(false);
   };
 
@@ -335,17 +417,30 @@ export function AdminPanel({ onCommand, onClose, worldInfo, whoPlayers }: AdminP
               )}
 
               {activeAction === "spawn" && (
-                <label className="admin-field">
-                  <span className="admin-field-label">Mob template</span>
-                  <input
-                    type="text"
-                    className="admin-input"
-                    placeholder="mob-template-id"
-                    value={inputA}
-                    onChange={(e) => setInputA(e.target.value)}
-                    autoFocus
-                  />
-                </label>
+                <>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Mob template</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="mob-template-id"
+                      value={inputA}
+                      onChange={(e) => setInputA(e.target.value)}
+                      autoFocus
+                    />
+                  </label>
+                  {mobTemplates.length > 0 && (
+                    <MobTemplateBrowser
+                      mobTemplates={mobTemplates}
+                      filter={spawnFilter}
+                      onSetFilter={setSpawnFilter}
+                      onSelect={(templateId) => {
+                        onCommand(`spawn ${templateId}`);
+                        resetForm();
+                      }}
+                    />
+                  )}
+                </>
               )}
 
               {activeAction === "smite" && (

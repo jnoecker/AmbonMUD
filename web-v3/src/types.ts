@@ -507,6 +507,16 @@ export interface StaffWorldZone {
   rooms: StaffWorldRoom[];
 }
 
+export interface StaffMobTemplate {
+  id: string;
+  name: string;
+}
+
+export interface StaffMobZone {
+  zone: string;
+  mobs: StaffMobTemplate[];
+}
+
 export interface UiFeedback {
   type: "error" | "info" | "success";
   message: string;

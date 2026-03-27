@@ -535,6 +535,7 @@ internal class LoginFlowHandler(
         )
         if (me.isStaff) {
             gmcpEmitter.sendStaffWorldInfo(sessionId, world)
+            gmcpEmitter.sendStaffMobTemplates(sessionId, world)
         }
         router.handle(sessionId, Command.Look)
 
