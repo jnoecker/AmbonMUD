@@ -171,12 +171,12 @@ src/main/resources/
 ├── world/                       # Zone YAML files
 │   ├── tutorial_glade.yaml
 │   ├── ambon_hub.yaml
-│   └── ... (13 YAML files: 12 zones + player sprites data)
+│   └── ... (14 YAML files: 12 zones + player sprites + sprites data)
 ├── web/                         # Legacy static web client
 └── web-v3/                      # Current static web client bundle
 
 src/test/kotlin/
-├── dev/ambon/engine/            # ~80 engine & command tests
+├── dev/ambon/engine/            # ~90 engine & command tests
 ├── dev/ambon/persistence/       # YAML, PostgreSQL, Redis tests
 ├── dev/ambon/transport/         # Telnet, WebSocket tests
 ├── dev/ambon/bus/               # Event bus tests
@@ -214,8 +214,12 @@ docs/
 ├── ARCANUM_STYLE_GUIDE.md       # Ambon Arcanum design system (creator tool)
 ├── CREATOR_PLAN.md              # Creator tool design plan
 ├── CREATOR_CONFIG_REFERENCE.md  # All configurable YAML keys for world builders
-├── DATA_DRIVEN_STATS_PLAN.md    # Data-driven stats engineering plan (Phase 1 done)
-└── DATA_DRIVEN_YAML_CONTRACT.md # YAML contract spec for data-driven mechanics
+├── DATA_DRIVEN_STATS_PLAN.md    # Data-driven stats plan (completed, historical reference)
+├── DATA_DRIVEN_YAML_CONTRACT.md # YAML contract spec for data-driven mechanics
+├── DATA_DRIVEN_GAP_AUDIT.md     # Remaining code-level constraints for data-driven migration
+├── ADMIN_API_REFERENCE.md       # Admin HTTP server JSON API reference
+├── WEB_CLIENT_PARITY_REPORT.md  # Web client feature parity analysis
+└── ARCANUM_SPRITE_INSTRUCTIONS.md # Sprite image naming conventions
 
 CLAUDE.md                         # Claude Code orientation (DO NOT MODIFY)
 AGENTS.md                         # Engineering playbook (DO NOT MODIFY)
@@ -319,6 +323,7 @@ Pure function `parse(line: String): Command` that returns a sealed `Command` var
 | Friends | `Friend(List,Add,Remove)` |
 | Mail | `Mail(List,Read,Delete,Send,Abort)` |
 | Crafting | `Gather`, `Craft`, `Recipes` |
+| Sprites | `SpriteList`, `SpriteSet`, `SpriteDefault` |
 | Admin | `Goto`, `Transfer`, `Spawn`, `Smite`, `Kick`, `Shutdown` (staff only) |
 
 ### CommandRouter
@@ -340,6 +345,7 @@ Thin dispatch layer (~62 lines) that routes each `Command` variant to the approp
 - `CraftingHandler` — gather, craft, recipes
 - `FriendsHandler` — friends list management
 - `MailHandler` — in-game mail send/read/delete
+- `SpriteHandler` — sprite list, set, default
 - `AdminHandler` — goto, transfer, spawn, smite, kick, shutdown (staff only)
 - `UiHandler` — help, clear, colors, ansi, phase
 
@@ -520,7 +526,7 @@ XP curve: `totalXpForLevel(L) = baseXp * (L-1)^exponent + linearXp * (L-1)`
 - IDs allocated in `data/players/next_player_id.txt`
 
 **PostgreSQL** (optional, bring up Docker Compose first):
-- Schema managed by Flyway migrations (`src/main/resources/db/migration/`, V1–V18)
+- Schema managed by Flyway migrations (`src/main/resources/db/migration/`, V1–V19)
 - Connection defaults: `localhost:5432/ambonmud`, user `ambon`, password `ambon` (matches docker compose)
 
 ### Persistence Stack
@@ -953,7 +959,7 @@ gh pr create --title "..." --body "..."
 
 ## Next Steps
 
-- Read [ARCHITECTURE.md](../docs/ARCHITECTURE.md) for design rationale
+- Read [ARCHITECTURE.md](./ARCHITECTURE.md) for design rationale
 - Read [WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md) to understand zone creation
 - Read [GMCP_PROTOCOL.md](./GMCP_PROTOCOL.md) to understand the structured data channel
 - Read [CRAFTING.md](./CRAFTING.md) for the crafting & gathering system
