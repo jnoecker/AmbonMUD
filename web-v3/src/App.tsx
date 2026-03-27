@@ -915,6 +915,9 @@ function App() {
           onSubmitComposer={submitComposer}
           zoneInstances={zoneInstances}
           onPhaseSwitch={(engineId) => { sendCommand(`phase ${engineId}`, true); focusComposer(); }}
+          mobs={mobs}
+          combatTarget={combatTarget}
+          onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
         />
       </div>
 

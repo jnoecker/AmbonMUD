@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { DragEvent, FormEvent, KeyboardEvent, RefObject } from "react";
-import type { PopoutPanel, ShopState, SkillSummary, Vitals, ZoneInstances } from "../types";
+import type { CombatTarget, PopoutPanel, RoomMob, ShopState, SkillSummary, Vitals, ZoneInstances } from "../types";
 import { percent } from "../utils";
 import {
   CharacterAvatarIcon,
@@ -58,6 +58,9 @@ interface ActionBarProps {
   onSubmitComposer: (event: FormEvent<HTMLFormElement>) => void;
   zoneInstances: ZoneInstances;
   onPhaseSwitch: (engineId: string) => void;
+  mobs: RoomMob[];
+  combatTarget: CombatTarget | null;
+  onCommand: (command: string) => void;
 }
 
 interface PanelButton {
@@ -182,9 +185,13 @@ export function ActionBar({
   onSubmitComposer,
   zoneInstances,
   onPhaseSwitch,
+  mobs,
+  combatTarget,
+  onCommand,
 }: ActionBarProps) {
   const loggedIn = connected && hasCharacterProfile;
   const hasInstances = zoneInstances.instances.length > 1;
+  const hasMobs = mobs.length > 0;
 
   const panels: PanelButton[] = [
     { panel: "character", label: "Character", icon: <CharacterAvatarIcon className="action-bar-btn-icon" />, requiresProfile: true },
@@ -285,6 +292,32 @@ export function ActionBar({
                     <span className="instance-pop">{inst.playerCount}</span>
                   </button>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {hasMobs && (
+            <div className="action-bar-targets">
+              <span className="target-label">Target</span>
+              <div className="target-list">
+                {mobs.map((mob) => {
+                  const isCurrent = combatTarget?.targetId === mob.id;
+                  const hpPct = mob.maxHp > 0 ? Math.min(100, (mob.hp / mob.maxHp) * 100) : 0;
+                  return (
+                    <button
+                      key={mob.id}
+                      type="button"
+                      className={`target-btn${isCurrent ? " target-btn-current" : ""}`}
+                      title={`${mob.name} — ${mob.hp}/${mob.maxHp} HP`}
+                      onClick={() => onCommand(`kill ${mob.name}`)}
+                    >
+                      <span className="target-name">{mob.name}</span>
+                      <span className="target-hp-track">
+                        <span className="target-hp-fill" style={{ width: `${hpPct}%` }} />
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
