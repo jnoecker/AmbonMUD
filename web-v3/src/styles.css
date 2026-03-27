@@ -2883,6 +2883,250 @@ body {
   background: linear-gradient(140deg, rgb(168 151 210 / 90%), rgb(140 174 201 / 85%));
 }
 
+/* ---------- Stats tab (#683) ---------- */
+
+.character-detail-panel.character-stats {
+  overflow: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(210 196 232 / 84%) transparent;
+}
+
+.stats-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.stats-attribute-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.stats-th {
+  text-align: left;
+  padding: 4px 6px;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border-bottom: 1px solid rgb(106 96 136 / 22%);
+}
+
+.stats-th-num {
+  text-align: center;
+  width: 3.5em;
+}
+
+.stats-row {
+  border-bottom: 1px solid rgb(106 96 136 / 8%);
+}
+
+.stats-td {
+  padding: 4px 6px;
+}
+
+.stats-td-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stats-td-num {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.stats-buff {
+  color: var(--color-primary-moss-green);
+}
+
+.stats-debuff {
+  color: var(--color-accent-faded-crimson);
+}
+
+.stats-diff {
+  margin-left: 3px;
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+
+.stats-derived {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgb(106 96 136 / 16%);
+  background: rgb(50 58 82 / 40%);
+}
+
+.stats-derived-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.stats-derived-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stats-derived-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* ---------- Score tab (#684) ---------- */
+
+.character-detail-panel.character-score {
+  overflow: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(210 196 232 / 84%) transparent;
+}
+
+.score-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.score-identity {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.score-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.score-title {
+  font-size: 0.78rem;
+  color: var(--color-primary-pale-blue);
+  font-style: italic;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 8px;
+  font-size: 0.82rem;
+}
+
+.score-grid > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  border-bottom: 1px solid rgb(106 96 136 / 8%);
+}
+
+.score-grid dt {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.score-grid dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.score-grid-combat {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.score-vitals {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgb(106 96 136 / 16%);
+  background: rgb(50 58 82 / 40%);
+}
+
+.score-vital-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+.score-vital-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.score-vital-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.score-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.score-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgb(106 96 136 / 16%);
+  background: rgb(50 58 82 / 50%);
+  font-size: 0.75rem;
+}
+
+.score-stat-abbrev {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.score-stat-val {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.score-social {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.score-social-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+.score-social-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.score-social-value {
+  color: var(--text-primary);
+}
+
 .quest-notifications {
   display: flex;
   flex-direction: column;
