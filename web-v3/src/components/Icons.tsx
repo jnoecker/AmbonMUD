@@ -402,6 +402,25 @@ export function QuestsTabIcon({ className }: { className?: string }) {
   );
 }
 
+export function StatsTabIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M4.8 19.2V12h3.6v7.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.2 19.2V8.4h3.6v10.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.82" />
+      <path d="M15.6 19.2V4.8h3.6v14.4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function ScoreTabIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <rect x="4.8" y="3.6" width="14.4" height="16.8" rx="2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8.4 8.4h7.2M8.4 12h5.4M8.4 15.6h6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.78" />
+    </svg>
+  );
+}
+
 export function HelpIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">

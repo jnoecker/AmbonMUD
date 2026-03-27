@@ -173,7 +173,7 @@ function App() {
   const [dialogue, setDialogue] = useState<DialogueState | null>(null);
   const [whoPlayers, setWhoPlayers] = useState<WhoPlayer[]>([]);
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
-  const [, setCharStats] = useState<CharStats | null>(null);
+  const [charStats, setCharStats] = useState<CharStats | null>(null);
   const [quests, setQuests] = useState<QuestEntry[]>([]);
   const [questsAvailable, setQuestsAvailable] = useState<QuestAvailable[]>([]);
   const [mobInfo, setMobInfo] = useState<MobInfo[]>([]);
@@ -939,6 +939,10 @@ function App() {
             achievements={achievements}
             quests={quests}
             questNotifications={questNotifications}
+            charStats={charStats}
+            guildInfo={guildInfo}
+            groupInfo={groupInfo}
+            activeTitle={whoPlayers.find((p) => p.name === character.name)?.title ?? null}
             onDismissQuestNotification={(id) => {
               setQuestNotifications((prev) => prev.filter((n) => n.id !== id));
             }}
