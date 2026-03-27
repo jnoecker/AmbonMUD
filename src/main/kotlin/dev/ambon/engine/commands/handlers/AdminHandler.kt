@@ -58,14 +58,25 @@ class AdminHandler(
         cmd: Command.Goto,
     ) {
         players.withPlayer(sessionId) { me ->
+            // Try player name first — goto <player> teleports to that player's room
+            val targetPlayerSid = players.findSessionByName(cmd.arg.trim())
+            if (targetPlayerSid != null && targetPlayerSid != sessionId) {
+                val targetPlayer = players.get(targetPlayerSid)
+                if (targetPlayer != null) {
+                    players.moveTo(sessionId, targetPlayer.roomId)
+                    ctx.sendLook(sessionId)
+                    return
+                }
+            }
+
             val targetRoomId = resolveGotoArg(cmd.arg, me.roomId.zone, world)
             if (targetRoomId == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "No such room: ${cmd.arg}"))
+                outbound.send(OutboundEvent.SendError(sessionId, "No such room or player: ${cmd.arg}"))
                 return
             }
             if (!world.rooms.containsKey(targetRoomId)) {
                 if (!attemptCrossZoneMove(sessionId, targetRoomId, onCrossZoneMove, router::suppressAutoPrompt)) {
-                    outbound.send(OutboundEvent.SendError(sessionId, "No such room: ${cmd.arg}"))
+                    outbound.send(OutboundEvent.SendError(sessionId, "No such room or player: ${cmd.arg}"))
                 }
                 return
             }
