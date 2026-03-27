@@ -152,7 +152,7 @@ class GmcpEmitter(
                     )
                 },
             ),
-            supportCheck = "Room",
+            supportCheck = "Zone.Map",
         )
     }
 
@@ -532,7 +532,7 @@ class GmcpEmitter(
                 type = "heal",
                 abilityName = event.abilityName,
                 targetName = event.targetName,
-                amount = event.amount,
+                healing = event.amount,
                 sourceIsPlayer = event.sourceIsPlayer,
             )
             is CombatEvent.Dodge -> CombatEventPayload(
@@ -552,7 +552,7 @@ class GmcpEmitter(
                 type = "hotTick",
                 effectName = event.effectName,
                 targetName = event.targetName,
-                amount = event.amount,
+                healing = event.amount,
             )
             is CombatEvent.Kill -> CombatEventPayload(
                 type = "kill",
@@ -570,7 +570,7 @@ class GmcpEmitter(
                 type = "shieldAbsorb",
                 attackerName = event.attackerName,
                 absorbed = event.absorbed,
-                remaining = event.remaining,
+                shieldRemaining = event.remaining,
             )
         }
         emit(sessionId, "Char.Combat.Event", payload, supportCheck = "Char.Combat.Event")
@@ -736,8 +736,11 @@ class GmcpEmitter(
                     level = m.level,
                     tier = m.tier,
                     questGiver = m.questGiver,
+                    questAvailable = m.questAvailable,
+                    questComplete = m.questComplete,
                     shopKeeper = m.shopKeeper,
                     dialogue = m.dialogue,
+                    aggressive = m.aggressive,
                 )
             },
         )
@@ -1217,7 +1220,7 @@ class GmcpEmitter(
         val targetName: String? = null,
         val targetId: String? = null,
         val damage: Int? = null,
-        val amount: Int? = null,
+        val healing: Int? = null,
         val sourceIsPlayer: Boolean? = null,
         val abilityId: String? = null,
         val abilityName: String? = null,
@@ -1228,7 +1231,7 @@ class GmcpEmitter(
         val killerIsPlayer: Boolean? = null,
         val attackerName: String? = null,
         val absorbed: Int? = null,
-        val remaining: Int? = null,
+        val shieldRemaining: Int? = null,
     )
 
     // ---------- stats payload ----------
@@ -1320,8 +1323,11 @@ class GmcpEmitter(
         val level: Int,
         val tier: String,
         val questGiver: Boolean,
+        val questAvailable: Boolean,
+        val questComplete: Boolean,
         val shopKeeper: Boolean,
         val dialogue: Boolean,
+        val aggressive: Boolean,
     )
 
     // ---------- shop payloads ----------

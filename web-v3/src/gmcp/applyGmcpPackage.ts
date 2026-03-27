@@ -80,6 +80,7 @@ interface GmcpContext {
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
   pushUiFeedback: (feedback: UiFeedback) => void;
   setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
+  sendGmcp: (pkg: string, payload: unknown) => void;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -677,6 +678,10 @@ export function applyGmcpPackage(
         absorbed: safeNumber(packet.absorbed),
         shieldRemaining: safeNumber(packet.shieldRemaining),
         sourceIsPlayer: packet.sourceIsPlayer === true,
+        effectName: typeof packet.effectName === "string" ? packet.effectName : null,
+        killerName: typeof packet.killerName === "string" ? packet.killerName : null,
+        killerIsPlayer: packet.killerIsPlayer === true,
+        attackerName: typeof packet.attackerName === "string" ? packet.attackerName : null,
         xpGained: safeNumber(packet.xpGained),
         goldGained: safeNumber(packet.goldGained),
       });
@@ -825,10 +830,16 @@ export function applyGmcpPackage(
 
     case "Char.Gain": {
       const packet = data as Partial<Record<string, unknown>>;
+      const nl = typeof packet.newLevel === "number" ? packet.newLevel : null;
+      const hpG = typeof packet.hpGained === "number" ? packet.hpGained : null;
+      const manaG = typeof packet.manaGained === "number" ? packet.manaGained : null;
       ctx.pushGainEvent({
         type: typeof packet.type === "string" ? packet.type : "unknown",
         amount: safeNumber(packet.amount),
         source: typeof packet.source === "string" ? packet.source : null,
+        newLevel: nl,
+        hpGained: hpG,
+        manaGained: manaG,
       });
       break;
     }
@@ -909,6 +920,11 @@ export function applyGmcpPackage(
     case "UI.Feedback": {
       const packet = data as UiFeedback;
       ctx.pushUiFeedback(packet);
+      break;
+    }
+
+    case "Core.Ping": {
+      ctx.sendGmcp("Core.Ping", {});
       break;
     }
 
