@@ -61,6 +61,7 @@ import type {
   RoomState,
   ShopState,
   SkillSummary,
+  StaffWorldZone,
   StatusEffect,
   StatusVarLabels,
   UiFeedback,
@@ -205,6 +206,7 @@ function App() {
   const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
   const [loginError, setLoginError] = useState<LoginErrorState | null>(null);
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
+  const [staffWorldInfo, setStaffWorldInfo] = useState<StaffWorldZone[]>([]);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -327,6 +329,7 @@ function App() {
     setCombatLogMessages([]);
     setActiveChatChannel("say");
     setShowAdminPanel(false);
+    setStaffWorldInfo([]);
     resetMap();
   }, [resetMap]);
 
@@ -377,6 +380,7 @@ function App() {
           setLoginError,
           setServerAssets,
           pushUiFeedback,
+          setStaffWorldInfo,
         },
       );
     },
@@ -1091,6 +1095,8 @@ function App() {
             focusComposer();
           }}
           onClose={() => setShowAdminPanel(false)}
+          worldInfo={staffWorldInfo}
+          whoPlayers={whoPlayers}
         />
       )}
 

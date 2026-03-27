@@ -184,6 +184,10 @@ class HotReloadManager(
             gmcpEmitter.sendRoomInfo(player.sessionId, room)
             gmcpEmitter.sendRoomMobs(player.sessionId, mobs.mobsInRoom(player.roomId))
             gmcpEmitter.sendRoomItems(player.sessionId, items.itemsInRoom(player.roomId))
+            // Refresh staff world browser with updated zones/rooms
+            if (player.isStaff) {
+                gmcpEmitter.sendStaffWorldInfo(player.sessionId, world)
+            }
         }
 
         val result = HotReloadResult(

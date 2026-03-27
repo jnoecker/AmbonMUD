@@ -1,31 +1,154 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
+import type { StaffWorldZone } from "../../types";
 
 interface AdminPanelProps {
   onCommand: (command: string) => void;
   onClose: () => void;
+  worldInfo: StaffWorldZone[];
+  whoPlayers: string[];
 }
 
 type AdminAction = "goto" | "transfer" | "spawn" | "smite" | "kick" | "shutdown";
 
 const ACTIONS: Array<{ id: AdminAction; label: string; description: string }> = [
-  { id: "goto", label: "Goto", description: "Teleport to a room" },
-  { id: "transfer", label: "Transfer", description: "Move a player to your location" },
+  { id: "goto", label: "Goto", description: "Teleport to a room or player" },
+  { id: "transfer", label: "Transfer", description: "Move a player to a room" },
   { id: "spawn", label: "Spawn", description: "Spawn a mob" },
   { id: "smite", label: "Smite", description: "Kill a target" },
   { id: "kick", label: "Kick", description: "Disconnect a player" },
   { id: "shutdown", label: "Shutdown", description: "Shut down the server" },
 ];
 
-export function AdminPanel({ onCommand, onClose }: AdminPanelProps) {
+function TeleportBrowser({
+  worldInfo,
+  whoPlayers,
+  filter,
+  onSetFilter,
+  onSelect,
+  label,
+}: {
+  worldInfo: StaffWorldZone[];
+  whoPlayers: string[];
+  filter: string;
+  onSetFilter: (v: string) => void;
+  onSelect: (target: string) => void;
+  label: string;
+}) {
+  const [expandedZone, setExpandedZone] = useState<string | null>(null);
+  const lowerFilter = filter.toLowerCase();
+
+  const filteredPlayers = useMemo(
+    () => whoPlayers.filter((p) => p.toLowerCase().includes(lowerFilter)),
+    [whoPlayers, lowerFilter],
+  );
+
+  const filteredZones = useMemo(() => {
+    if (!lowerFilter) return worldInfo;
+    return worldInfo
+      .map((z) => ({
+        ...z,
+        rooms: z.rooms.filter(
+          (r) =>
+            r.id.toLowerCase().includes(lowerFilter) ||
+            r.title.toLowerCase().includes(lowerFilter),
+        ),
+      }))
+      .filter((z) => z.zone.toLowerCase().includes(lowerFilter) || z.rooms.length > 0);
+  }, [worldInfo, lowerFilter]);
+
+  return (
+    <div className="teleport-browser">
+      <input
+        type="text"
+        className="admin-input teleport-filter"
+        placeholder="Filter zones, rooms, players..."
+        value={filter}
+        onChange={(e) => onSetFilter(e.target.value)}
+        autoFocus
+      />
+
+      {/* Online players */}
+      {filteredPlayers.length > 0 && (
+        <div className="teleport-section">
+          <h4 className="teleport-section-title">Online Players</h4>
+          <ul className="teleport-list">
+            {filteredPlayers.map((name) => (
+              <li key={name} className="teleport-item teleport-item-player">
+                <span className="teleport-item-name">{name}</span>
+                <button
+                  type="button"
+                  className="teleport-go-btn"
+                  onClick={() => onSelect(name)}
+                >
+                  {label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Zones and rooms */}
+      {filteredZones.map((z) => {
+        const isExpanded = expandedZone === z.zone || lowerFilter.length > 0;
+        const roomCount = z.rooms.length;
+        return (
+          <div key={z.zone} className="teleport-section">
+            <button
+              type="button"
+              className={`teleport-zone-header ${isExpanded ? "teleport-zone-header-expanded" : ""}`}
+              onClick={() => setExpandedZone(expandedZone === z.zone ? null : z.zone)}
+            >
+              <span className="teleport-zone-arrow">{isExpanded ? "\u25BE" : "\u25B8"}</span>
+              <span className="teleport-zone-name">{z.zone}</span>
+              <span className="teleport-zone-count">{roomCount} rooms</span>
+            </button>
+            {isExpanded && (
+              <ul className="teleport-list">
+                {z.rooms.map((room) => (
+                  <li key={room.id} className="teleport-item">
+                    <span className="teleport-item-room">
+                      <span className="teleport-item-id">{room.id}</span>
+                      {room.title && (
+                        <span className="teleport-item-title">{room.title}</span>
+                      )}
+                    </span>
+                    <button
+                      type="button"
+                      className="teleport-go-btn"
+                      onClick={() => onSelect(room.id)}
+                    >
+                      {label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+
+      {filteredZones.length === 0 && filteredPlayers.length === 0 && (
+        <p className="empty-note">No matches for "{filter}"</p>
+      )}
+    </div>
+  );
+}
+
+export function AdminPanel({ onCommand, onClose, worldInfo, whoPlayers }: AdminPanelProps) {
   const [activeAction, setActiveAction] = useState<AdminAction | null>(null);
   const [inputA, setInputA] = useState("");
   const [inputB, setInputB] = useState("");
+  const [filter, setFilter] = useState("");
+  const [transferFilter, setTransferFilter] = useState("");
   const [showShutdownConfirm, setShowShutdownConfirm] = useState(false);
 
   const resetForm = () => {
     setInputA("");
     setInputB("");
+    setFilter("");
+    setTransferFilter("");
     setShowShutdownConfirm(false);
   };
 
@@ -122,17 +245,31 @@ export function AdminPanel({ onCommand, onClose }: AdminPanelProps) {
           {activeAction && (
             <form className="admin-form" onSubmit={submit}>
               {activeAction === "goto" && (
-                <label className="admin-field">
-                  <span className="admin-field-label">Room ID</span>
-                  <input
-                    type="text"
-                    className="admin-input"
-                    placeholder="zone:room"
-                    value={inputA}
-                    onChange={(e) => setInputA(e.target.value)}
-                    autoFocus
-                  />
-                </label>
+                <>
+                  <label className="admin-field">
+                    <span className="admin-field-label">Room ID or Player</span>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      placeholder="zone:room or player name"
+                      value={inputA}
+                      onChange={(e) => setInputA(e.target.value)}
+                    />
+                  </label>
+                  {worldInfo.length > 0 && (
+                    <TeleportBrowser
+                      worldInfo={worldInfo}
+                      whoPlayers={whoPlayers}
+                      filter={filter}
+                      onSetFilter={setFilter}
+                      onSelect={(target) => {
+                        onCommand(`goto ${target}`);
+                        resetForm();
+                      }}
+                      label="Go"
+                    />
+                  )}
+                </>
               )}
 
               {activeAction === "transfer" && (
@@ -149,7 +286,7 @@ export function AdminPanel({ onCommand, onClose }: AdminPanelProps) {
                     />
                   </label>
                   <label className="admin-field">
-                    <span className="admin-field-label">Room ID</span>
+                    <span className="admin-field-label">Destination</span>
                     <input
                       type="text"
                       className="admin-input"
@@ -158,6 +295,18 @@ export function AdminPanel({ onCommand, onClose }: AdminPanelProps) {
                       onChange={(e) => setInputB(e.target.value)}
                     />
                   </label>
+                  {worldInfo.length > 0 && (
+                    <TeleportBrowser
+                      worldInfo={worldInfo}
+                      whoPlayers={[]}
+                      filter={transferFilter}
+                      onSetFilter={setTransferFilter}
+                      onSelect={(target) => {
+                        setInputB(target);
+                      }}
+                      label="Select"
+                    />
+                  )}
                 </>
               )}
 

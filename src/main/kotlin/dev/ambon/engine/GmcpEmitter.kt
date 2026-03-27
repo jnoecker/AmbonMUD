@@ -11,6 +11,7 @@ import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.mob.MobState
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.Room
+import dev.ambon.domain.world.World
 import dev.ambon.engine.abilities.AbilityDefinition
 import dev.ambon.engine.abilities.AbilityId
 import dev.ambon.engine.abilities.AbilitySystem
@@ -891,9 +892,35 @@ class GmcpEmitter(
         emit(sessionId, "UI.Feedback", UiFeedbackPayload(type = type, message = message), supportCheck = "UI.Feedback")
     }
 
+    // ---------- staff world info ----------
+
+    /**
+     * Sends full world zone/room listing to staff players for the teleport browser.
+     */
+    suspend fun sendStaffWorldInfo(sessionId: SessionId, world: World) {
+        val zones = world.zones().sorted().map { zone ->
+            val rooms = world.rooms.values
+                .filter { it.id.zone == zone }
+                .sortedBy { it.id.value }
+                .map { StaffRoomPayload(id = it.id.value, title = it.title) }
+            StaffZonePayload(zone = zone, rooms = rooms)
+        }
+        emit(sessionId, "Staff.WorldInfo", zones, supportCheck = "Staff")
+    }
+
     private data class UiFeedbackPayload(
         val type: String,
         val message: String,
+    )
+
+    private data class StaffZonePayload(
+        val zone: String,
+        val rooms: List<StaffRoomPayload>,
+    )
+
+    private data class StaffRoomPayload(
+        val id: String,
+        val title: String,
     )
 
     // ---------- emit helpers ----------
