@@ -55,6 +55,8 @@ import type {
   GroupInfo,
   GuildInfo,
   GuildMemberEntry,
+  PendingGroupInvite,
+  PendingGuildInvite,
   ItemSummary,
   LoginErrorState,
   LoginPromptState,
@@ -169,7 +171,9 @@ function App() {
   const [equipmentSlotDefs, setEquipmentSlotDefs] = useState<EquipmentSlotDef[]>([]);
   const [achievements, setAchievements] = useState<AchievementData>({ completed: [], inProgress: [] });
   const [groupInfo, setGroupInfo] = useState<GroupInfo>({ leader: null, members: [] });
+  const [pendingGroupInvite, setPendingGroupInvite] = useState<PendingGroupInvite | null>(null);
   const [guildInfo, setGuildInfo] = useState<GuildInfo>({ name: null, tag: null, rank: null, motd: null, memberCount: 0, maxSize: 50 });
+  const [pendingGuildInvite, setPendingGuildInvite] = useState<PendingGuildInvite | null>(null);
   const [guildMembers, setGuildMembers] = useState<GuildMemberEntry[]>([]);
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [friendNotifications, setFriendNotifications] = useState<FriendNotification[]>([]);
@@ -321,7 +325,9 @@ function App() {
     setEquipmentSlotDefs([]);
     setAchievements({ completed: [], inProgress: [] });
     setGroupInfo({ leader: null, members: [] });
+    setPendingGroupInvite(null);
     setGuildInfo({ name: null, tag: null, rank: null, motd: null, memberCount: 0, maxSize: 50 });
+    setPendingGuildInvite(null);
     setGuildMembers([]);
     setFriends([]);
     setFriendNotifications([]);
@@ -378,7 +384,9 @@ function App() {
           setSkills,
           setAchievements,
           setGroupInfo,
+          setPendingGroupInvite,
           setGuildInfo,
+          setPendingGuildInvite,
           setGuildMembers,
           setDialogue,
           setCombatTarget,
@@ -1037,7 +1045,9 @@ function App() {
             emotePresets={emotePresets}
             whoPlayers={whoPlayers}
             groupInfo={groupInfo}
+            pendingGroupInvite={pendingGroupInvite}
             guildInfo={guildInfo}
+            pendingGuildInvite={pendingGuildInvite}
             guildMembers={guildMembers}
             friends={friends}
             friendNotifications={friendNotifications}

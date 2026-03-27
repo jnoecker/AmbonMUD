@@ -26,6 +26,8 @@ import type {
   GroupMember,
   GuildInfo,
   GuildMemberEntry,
+  PendingGroupInvite,
+  PendingGuildInvite,
   InProgressAchievement,
   ItemSummary,
   LoginErrorState,
@@ -74,7 +76,9 @@ interface GmcpContext {
   setSkills: Dispatch<SetStateAction<SkillSummary[]>>;
   setAchievements: Dispatch<SetStateAction<AchievementData>>;
   setGroupInfo: Dispatch<SetStateAction<GroupInfo>>;
+  setPendingGroupInvite: Dispatch<SetStateAction<PendingGroupInvite | null>>;
   setGuildInfo: Dispatch<SetStateAction<GuildInfo>>;
+  setPendingGuildInvite: Dispatch<SetStateAction<PendingGuildInvite | null>>;
   setGuildMembers: Dispatch<SetStateAction<GuildMemberEntry[]>>;
   setFriends: Dispatch<SetStateAction<FriendEntry[]>>;
   pushFriendNotification: (notification: FriendNotification) => void;
@@ -585,19 +589,40 @@ export function applyGmcpPackage(
             }))
         : [];
       ctx.setGroupInfo({ leader, members });
+      // Clear pending invite when group info arrives (player joined a group)
+      if (leader) ctx.setPendingGroupInvite(null);
+      break;
+    }
+
+    case "Group.Invite": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const inviterName = typeof packet.inviterName === "string" ? packet.inviterName : "Unknown";
+      ctx.setPendingGroupInvite({ inviterName, receivedAt: Date.now() });
       break;
     }
 
     case "Guild.Info": {
       const packet = data as Partial<Record<string, unknown>>;
+      const guildName = typeof packet.name === "string" ? packet.name : null;
       ctx.setGuildInfo({
-        name: typeof packet.name === "string" ? packet.name : null,
+        name: guildName,
         tag: typeof packet.tag === "string" ? packet.tag : null,
         rank: typeof packet.rank === "string" ? packet.rank : null,
         motd: typeof packet.motd === "string" ? packet.motd : null,
         memberCount: safeNumber(packet.memberCount),
         maxSize: safeNumber(packet.maxSize, 50),
       });
+      // Clear pending invite when guild info arrives (player joined a guild)
+      if (guildName) ctx.setPendingGuildInvite(null);
+      break;
+    }
+
+    case "Guild.Invite": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const inviterName = typeof packet.inviterName === "string" ? packet.inviterName : "Unknown";
+      const guildName = typeof packet.guildName === "string" ? packet.guildName : "Unknown";
+      const guildTag = typeof packet.guildTag === "string" ? packet.guildTag : "";
+      ctx.setPendingGuildInvite({ inviterName, guildName, guildTag, receivedAt: Date.now() });
       break;
     }
 

@@ -1609,6 +1609,38 @@ body {
   background: linear-gradient(140deg, rgb(70 105 80 / 92%), rgb(58 92 68 / 88%));
 }
 
+.social-decline-btn {
+  background: transparent;
+  border-color: rgb(150 100 100 / 30%);
+  color: var(--text-secondary);
+}
+
+.social-decline-btn:hover:not(:disabled) {
+  border-color: rgb(180 120 120 / 50%);
+  color: var(--text-primary);
+}
+
+.invite-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid rgb(80 120 90 / 30%);
+  border-radius: var(--radius-md);
+  background: rgb(60 90 70 / 12%);
+}
+
+.invite-card-text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+}
+
+.invite-card-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
 .social-danger-btn {
   background: linear-gradient(140deg, rgb(100 60 60 / 92%), rgb(90 50 50 / 88%));
   border-color: rgb(140 80 80 / 30%);
