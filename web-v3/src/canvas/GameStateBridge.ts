@@ -41,6 +41,7 @@ export interface PendingCast {
 
 export const canvasCallbacks: {
   sendCommand: ((command: string) => void) | null;
+  prefillCommand: ((text: string) => void) | null;
   openShop: (() => void) | null;
   openMap: (() => void) | null;
   openRoom: (() => void) | null;
@@ -51,6 +52,7 @@ export const canvasCallbacks: {
   loadZoneMap: ((zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void) | null;
 } = {
   sendCommand: null,
+  prefillCommand: null,
   openShop: null,
   openMap: null,
   openRoom: null,
