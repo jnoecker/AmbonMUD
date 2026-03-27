@@ -1288,6 +1288,64 @@ class GmcpEmitterTest {
             assertTrue(drainGmcp().isEmpty())
         }
 
+    // ── Server.Commands ──
+
+    @Test
+    fun `sendServerCommands emits filtered command manifest for non-staff`() =
+        runTest {
+            val entries = linkedMapOf(
+                "look" to dev.ambon.config.CommandMetadata(usage = "look/l", category = "navigation"),
+                "goto" to dev.ambon.config.CommandMetadata(usage = "goto <room>", category = "admin", staff = true),
+                "kill" to dev.ambon.config.CommandMetadata(usage = "kill <mob>", category = "combat"),
+            )
+            val e = GmcpEmitter(
+                outbound = outbound,
+                supportsPackage = { _, _ -> true },
+                commandEntries = entries,
+            )
+            e.sendServerCommands(sid, isStaff = false)
+            val data = drainGmcp()
+            assertEquals(1, data.size)
+            assertEquals("Server.Commands", data[0].gmcpPackage)
+            val json = data[0].jsonData
+            assertTrue(json.contains("\"look\""), "should contain look")
+            assertTrue(json.contains("\"kill\""), "should contain kill")
+            assertTrue(!json.contains("\"goto\""), "should not contain staff command goto")
+        }
+
+    @Test
+    fun `sendServerCommands includes staff commands for staff players`() =
+        runTest {
+            val entries = linkedMapOf(
+                "look" to dev.ambon.config.CommandMetadata(usage = "look/l", category = "navigation"),
+                "goto" to dev.ambon.config.CommandMetadata(usage = "goto <room>", category = "admin", staff = true),
+            )
+            val e = GmcpEmitter(
+                outbound = outbound,
+                supportsPackage = { _, _ -> true },
+                commandEntries = entries,
+            )
+            e.sendServerCommands(sid, isStaff = true)
+            val data = drainGmcp()
+            assertEquals(1, data.size)
+            val json = data[0].jsonData
+            assertTrue(json.contains("\"look\""), "should contain look")
+            assertTrue(json.contains("\"goto\""), "should contain staff command goto for staff player")
+            assertTrue(json.contains("\"staff\":true"), "goto entry should have staff=true")
+        }
+
+    @Test
+    fun `sendServerCommands skips when no entries configured`() =
+        runTest {
+            val e = GmcpEmitter(
+                outbound = outbound,
+                supportsPackage = { _, _ -> true },
+                commandEntries = emptyMap(),
+            )
+            e.sendServerCommands(sid, isStaff = false)
+            assertTrue(drainGmcp().isEmpty())
+        }
+
     // ── Zone.Map ──
 
     private fun zoneRoom(
