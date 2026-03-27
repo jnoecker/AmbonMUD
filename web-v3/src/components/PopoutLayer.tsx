@@ -90,28 +90,24 @@ export function PopoutLayer({
               {roomFeatures.length > 0 && (
                 <div className="room-features-section">
                   <h4 className="room-features-title">Interactive Features</h4>
-                  <ul className="room-features-list">
+                  <ul className="room-features-list" role="list">
                     {roomFeatures.map((f) => (
                       <li key={f.id} className="room-feature-item">
                         <span className="room-feature-name">{f.name}</span>
                         {f.state && <span className="room-feature-state">({f.state})</span>}
                         <span className="room-feature-actions">
-                          {f.type === "door" && f.state === "closed" && (
+                          {(f.type === "door" || f.type === "container") && f.state === "closed" && (
                             <button className="room-feature-btn" onClick={() => onFeatureAction(`open ${f.keyword}`)}>Open</button>
                           )}
-                          {f.type === "door" && f.state === "open" && (
-                            <button className="room-feature-btn" onClick={() => onFeatureAction(`close ${f.keyword}`)}>Close</button>
-                          )}
-                          {f.type === "door" && f.state === "locked" && (
-                            <button className="room-feature-btn" onClick={() => onFeatureAction(`unlock ${f.keyword}`)}>Unlock</button>
-                          )}
-                          {f.type === "container" && f.state === "closed" && (
-                            <button className="room-feature-btn" onClick={() => onFeatureAction(`open ${f.keyword}`)}>Open</button>
+                          {(f.type === "door" || f.type === "container") && f.state === "open" && (
+                            <button className="room-feature-btn" onClick={() => onFeatureAction(f.type === "container" ? `search ${f.keyword}` : `close ${f.keyword}`)}>
+                              {f.type === "container" ? "Search" : "Close"}
+                            </button>
                           )}
                           {f.type === "container" && f.state === "open" && (
-                            <button className="room-feature-btn" onClick={() => onFeatureAction(`search ${f.keyword}`)}>Search</button>
+                            <button className="room-feature-btn" onClick={() => onFeatureAction(`close ${f.keyword}`)}>Close</button>
                           )}
-                          {f.type === "container" && f.state === "locked" && (
+                          {(f.type === "door" || f.type === "container") && f.state === "locked" && (
                             <button className="room-feature-btn" onClick={() => onFeatureAction(`unlock ${f.keyword}`)}>Unlock</button>
                           )}
                           {f.type === "lever" && (
@@ -121,6 +117,9 @@ export function PopoutLayer({
                             <button className="room-feature-btn" onClick={() => onFeatureAction(`read ${f.keyword}`)}>Read</button>
                           )}
                         </span>
+                        {f.type === "sign" && f.text && (
+                          <p className="room-sign-text">{f.text}</p>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -130,11 +129,11 @@ export function PopoutLayer({
                       {containerContents.items.length === 0 ? (
                         <p className="empty-note">Empty.</p>
                       ) : (
-                        <ul className="container-contents-list">
-                          {containerContents.items.map((item, i) => (
-                            <li key={i} className="container-contents-item">
+                        <ul className="container-contents-list" role="list">
+                          {containerContents.items.map((item) => (
+                            <li key={item.keyword} className="container-contents-item">
                               <span>{item.name}</span>
-                              <button className="room-feature-btn" onClick={() => onFeatureAction(`get ${item.keyword} from ${containerContents.name}`)}>Take</button>
+                              <button className="room-feature-btn" onClick={() => onFeatureAction(`get ${item.keyword} from ${containerContents.keyword}`)}>Take</button>
                             </li>
                           ))}
                         </ul>

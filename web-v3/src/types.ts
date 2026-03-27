@@ -308,6 +308,7 @@ export interface RoomFeature {
 export interface ContainerContents {
   featureId: string;
   name: string;
+  keyword: string;
   items: Array<{ name: string; keyword: string }>;
 }
 

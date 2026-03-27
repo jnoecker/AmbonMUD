@@ -709,12 +709,13 @@ class GmcpEmitter(
         sessionId: SessionId,
         featureId: String,
         name: String,
+        keyword: String,
         items: List<ContainerItemPayload>,
     ) {
         emit(
             sessionId,
             "Room.ContainerContents",
-            ContainerContentsPayload(featureId = featureId, name = name, items = items),
+            ContainerContentsPayload(featureId = featureId, name = name, keyword = keyword, items = items),
             supportCheck = "Room.Info",
         )
     }
@@ -1406,6 +1407,7 @@ class GmcpEmitter(
     private data class ContainerContentsPayload(
         val featureId: String,
         val name: String,
+        val keyword: String,
         val items: List<ContainerItemPayload>,
     )
 
