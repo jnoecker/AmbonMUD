@@ -958,6 +958,7 @@ function App() {
             }}
             onOpenInventory={() => setActivePopout("inventory")}
             onOpenEquipment={() => setActivePopout("equipment")}
+            onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
 

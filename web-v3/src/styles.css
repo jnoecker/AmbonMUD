@@ -5122,6 +5122,47 @@ body {
   line-height: 1.2;
 }
 
+/* ---------- Title/Gender selectors ---------- */
+
+.identity-controls {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.identity-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.identity-select-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.identity-select {
+  font-size: 0.78rem;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgb(106 96 136 / 24%);
+  background: rgb(40 46 68 / 70%);
+  color: var(--text-primary);
+  cursor: pointer;
+  min-width: 0;
+}
+
+.identity-select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgb(184 216 232 / 30%);
+}
+
 .identity-stat-grid {
   margin-top: var(--space-4);
   gap: 6px;

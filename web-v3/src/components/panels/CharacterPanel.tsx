@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { AchievementData, CharacterInfo, CharStats, GroupInfo, GuildInfo, QuestEntry, QuestNotification, StatusEffect, StatusVarLabels, Vitals } from "../../types";
 import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
@@ -30,6 +30,7 @@ interface CharacterPanelProps {
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
   onOpenEquipment: () => void;
+  onCommand: (command: string) => void;
 }
 
 export function CharacterPanel({
@@ -58,11 +59,16 @@ export function CharacterPanel({
   onAbandonQuest,
   onOpenInventory,
   onOpenEquipment,
+  onCommand,
 }: CharacterPanelProps) {
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("vitals");
   const [expandedQuestId, setExpandedQuestId] = useState<string | null>(null);
 
   const totalAchievements = achievements.completed.length + achievements.inProgress.length;
+  const unlockedTitles = useMemo(
+    () => achievements.completed.filter((a) => a.title !== null).map((a) => a.title as string),
+    [achievements.completed],
+  );
 
   // Auto-dismiss quest notifications after 6 seconds
   useEffect(() => {
@@ -126,6 +132,36 @@ export function CharacterPanel({
                     {[displayRace, displayClassName].filter((part) => part.length > 0).join(" ") || "-"}
                   </p>
                 </div>
+              </div>
+              <div className="identity-controls">
+                <label className="identity-select-group">
+                  <span className="identity-select-label">Title</span>
+                  <select
+                    className="identity-select"
+                    value={activeTitle ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      onCommand(val ? `title ${val}` : "title clear");
+                    }}
+                  >
+                    <option value="">None</option>
+                    {unlockedTitles.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="identity-select-group">
+                  <span className="identity-select-label">Gender</span>
+                  <select
+                    className="identity-select"
+                    value={character.gender}
+                    onChange={(e) => onCommand(`gender ${e.target.value}`)}
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="enby">Enby</option>
+                  </select>
+                </label>
               </div>
               <dl className="stat-grid identity-stat-grid">
                 <div><dt>Level</dt><dd>{vitals.level ?? character.level ?? "-"}</dd></div>
