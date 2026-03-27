@@ -430,6 +430,7 @@ class GameEngine(
             globalAssets = globalAssets,
             spriteRegistry = spriteRegistry,
             getMobEffects = { mobId -> statusEffectSystem.activeMobEffects(mobId) },
+            commandEntries = engineConfig.commands.entries,
         )
 
     fun markVitalsDirty(sessionId: SessionId) {

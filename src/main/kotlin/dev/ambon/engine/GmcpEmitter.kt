@@ -3,6 +3,7 @@ package dev.ambon.engine
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.OutboundBus
+import dev.ambon.config.CommandMetadata
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -55,6 +56,7 @@ class GmcpEmitter(
     private val globalAssets: Map<String, String> = emptyMap(),
     private val spriteRegistry: SpriteRegistry? = null,
     private val getMobEffects: (dev.ambon.domain.ids.MobId) -> List<ActiveEffectSnapshot> = { emptyList() },
+    private val commandEntries: Map<String, CommandMetadata> = emptyMap(),
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -416,6 +418,25 @@ class GmcpEmitter(
         emit(sessionId, "Server.Assets", resolvedAssets)
     }
 
+    /**
+     * Sends the command manifest as `Server.Commands`.
+     * Staff players receive all commands; non-staff players receive only non-staff commands.
+     */
+    suspend fun sendServerCommands(sessionId: SessionId, isStaff: Boolean) {
+        if (commandEntries.isEmpty()) return
+        val commands = commandEntries
+            .filter { (_, meta) -> isStaff || !meta.staff }
+            .map { (name, meta) ->
+                ServerCommandPayload(
+                    name = name,
+                    usage = meta.usage,
+                    category = meta.category,
+                    staff = meta.staff,
+                )
+            }
+        emit(sessionId, "Server.Commands", ServerCommandsPayload(commands = commands))
+    }
+
     /** Sends the structured who list as `Server.Who`. */
     suspend fun sendServerWho(sessionId: SessionId, entries: List<WhoEntry>) {
         val payload = ServerWhoPayload(
@@ -488,6 +509,7 @@ class GmcpEmitter(
         guildSystem: GuildSystem? = null,
     ) {
         sendServerAssets(sessionId)
+        sendServerCommands(sessionId, player.isStaff)
         sendCharStatusVars(sessionId)
         sendCharVitals(sessionId, player)
         sendCharName(sessionId, player)
@@ -1639,6 +1661,19 @@ class GmcpEmitter(
         val guild: String?,
         val groupSize: Int,
         val idle: Long,
+    )
+
+    // ---------- server commands payload ----------
+
+    private data class ServerCommandsPayload(
+        val commands: List<ServerCommandPayload>,
+    )
+
+    private data class ServerCommandPayload(
+        val name: String,
+        val usage: String,
+        val category: String,
+        val staff: Boolean,
     )
 
     // ---------- zone instances payload ----------

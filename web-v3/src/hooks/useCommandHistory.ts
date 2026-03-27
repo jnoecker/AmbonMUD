@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { COMMANDS, EMPTY_TAB, HISTORY_KEY, MAX_HISTORY } from "../constants";
-import type { TabCycle } from "../types";
+import type { CommandEntry, TabCycle } from "../types";
 
 function readHistory(): string[] {
   try {
@@ -14,7 +14,7 @@ function readHistory(): string[] {
   }
 }
 
-function nextCompletion(value: string, cycle: TabCycle): { value: string; cycle: TabCycle } | null {
+function nextCompletion(value: string, cycle: TabCycle, commandWords: string[]): { value: string; cycle: TabCycle } | null {
   if (value.trimStart().length === 0) return null;
   const parts = value.split(" ");
   const first = parts[0].toLowerCase();
@@ -31,7 +31,7 @@ function nextCompletion(value: string, cycle: TabCycle): { value: string; cycle:
   if (advance) {
     nextIndex = (cycle.index + 1) % cycle.matches.length;
   } else {
-    const matches = COMMANDS.filter((cmd) => cmd.startsWith(first) && cmd !== first);
+    const matches = commandWords.filter((cmd) => cmd.startsWith(first) && cmd !== first);
     if (matches.length === 0) return null;
     next = { matches, index: 0, originalPrefix: first, args: parts.slice(1).join(" ") };
   }
@@ -41,7 +41,22 @@ function nextCompletion(value: string, cycle: TabCycle): { value: string; cycle:
   return { value: nextValue, cycle: { ...next, index: nextIndex } };
 }
 
-export function useCommandHistory() {
+/**
+ * Derives unique autocomplete words from server command metadata.
+ * Falls back to the static COMMANDS array when no server data is available.
+ */
+function deriveCommandWords(serverCommands: CommandEntry[]): string[] {
+  if (serverCommands.length === 0) return COMMANDS;
+  const words = new Set<string>();
+  for (const entry of serverCommands) {
+    words.add(entry.name.split("_")[0]);
+  }
+  return [...words].sort();
+}
+
+export function useCommandHistory(serverCommands: CommandEntry[] = []) {
+  const commandWords = useMemo(() => deriveCommandWords(serverCommands), [serverCommands]);
+
   const historyRef = useRef<string[]>([]);
   const termHistoryIndexRef = useRef(-1);
   const termSavedInputRef = useRef("");
@@ -127,13 +142,13 @@ export function useCommandHistory() {
 
   const applyTerminalCompletion = useCallback(
     (currentInput: string, replaceInput: (value: string) => void): boolean => {
-      const completion = nextCompletion(currentInput, termTabCycleRef.current);
+      const completion = nextCompletion(currentInput, termTabCycleRef.current, commandWords);
       if (!completion) return false;
       replaceInput(completion.value);
       termTabCycleRef.current = completion.cycle;
       return true;
     },
-    [],
+    [commandWords],
   );
 
   const applyComposerHistoryUp = useCallback(
@@ -168,13 +183,13 @@ export function useCommandHistory() {
 
   const applyComposerCompletion = useCallback(
     (composerValue: string, setComposerValue: (value: string) => void): boolean => {
-      const completion = nextCompletion(composerValue, composerTabCycleRef.current);
+      const completion = nextCompletion(composerValue, composerTabCycleRef.current, commandWords);
       if (!completion) return false;
       setComposerValue(completion.value);
       composerTabCycleRef.current = completion.cycle;
       return true;
     },
-    [],
+    [commandWords],
   );
 
   return {
@@ -189,6 +204,6 @@ export function useCommandHistory() {
     resetComposerTraversal,
     resetTerminalCompletion,
     resetComposerCompletion,
+    serverCommands,
   };
 }
-
