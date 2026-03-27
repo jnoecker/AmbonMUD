@@ -2596,6 +2596,47 @@ ambonmud:
 
     characterCreation:
       startingGold: 0
+      defaultRace: HUMAN
+      defaultClass: WARRIOR
+      defaultGender: enby
+    emotePresets:
+      presets:
+        - label: Wave
+          emoji: "\uD83D\uDC4B"
+          action: "waves."
+        - label: Nod
+          emoji: "\uD83D\uDE42"
+          action: "nods."
+        - label: Laugh
+          emoji: "\uD83D\uDE02"
+          action: "laughs."
+        - label: Bow
+          emoji: "\uD83D\uDE4F"
+          action: "bows respectfully."
+        - label: Cheer
+          emoji: "\uD83C\uDF89"
+          action: "cheers!"
+        - label: Shrug
+          emoji: "\uD83E\uDD37"
+          action: "shrugs."
+        - label: Clap
+          emoji: "\uD83D\uDC4F"
+          action: "claps."
+        - label: Dance
+          emoji: "\uD83D\uDC83"
+          action: "dances."
+        - label: Think
+          emoji: "\uD83E\uDD14"
+          action: "thinks carefully."
+        - label: Facepalm
+          emoji: "\uD83E\uDD26"
+          action: "facepalms."
+        - label: Salute
+          emoji: "\uD83E\uDEE1"
+          action: "salutes."
+        - label: Cry
+          emoji: "\uD83D\uDE22"
+          action: "cries."
     equipment:
       slots:
         head:
@@ -2626,6 +2667,8 @@ ambonmud:
         displayName: MALE
       female:
         displayName: FEMALE
+      enby:
+        displayName: ENBY
     achievementCategories:
       categories:
         combat:

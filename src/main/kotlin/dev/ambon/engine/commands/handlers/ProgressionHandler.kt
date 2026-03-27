@@ -171,7 +171,7 @@ class ProgressionHandler(
         val genderId = cmd.gender.lowercase()
         val gender = genderRegistry?.get(genderId)
         if (gender == null) {
-            val options = genderRegistry?.allIds()?.joinToString(", ") ?: "male, female, enby"
+            val options = genderRegistry?.allIds()?.joinToString(", ") ?: "unknown"
             outbound.send(OutboundEvent.SendError(sessionId, "Unknown gender '${cmd.gender}'. Options: $options"))
             return
         }

@@ -14,6 +14,7 @@ data class PlayerCreationRequest(
     val ansiEnabled: Boolean,
     val race: String = "HUMAN",
     val playerClass: String = "WARRIOR",
+    val gender: String = "enby",
     val stats: Map<String, Int> = DEFAULT_STATS,
     val gold: Long = 0L,
 )
@@ -33,6 +34,7 @@ fun PlayerCreationRequest.toNewPlayerRecord(id: PlayerId): PlayerRecord =
         ansiEnabled = ansiEnabled,
         race = race,
         playerClass = playerClass,
+        gender = gender,
         stats = stats,
         gold = gold,
     )
