@@ -94,6 +94,7 @@ class PlayerRegistry(
     private val raceRegistry: RaceRegistry? = null,
     private val statRegistry: StatRegistry? = null,
     private val startingGold: Long = 0L,
+    private val defaultGender: String = "enby",
 ) {
     val maxLevel: Int get() = progression.maxLevel
 
@@ -196,6 +197,7 @@ class PlayerRegistry(
                         ansiEnabled = defaultAnsiEnabled,
                         race = raceId,
                         playerClass = classId,
+                        gender = defaultGender,
                         stats = resolvedStats,
                         gold = startingGold,
                     ),
