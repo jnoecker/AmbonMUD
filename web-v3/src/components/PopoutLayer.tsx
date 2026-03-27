@@ -84,11 +84,32 @@ export function PopoutLayer({
                 />
               )}
               <p className="room-popout-text">{room.description || "No room description available yet."}</p>
-              <p className="room-popout-exits">
+              <div className="room-popout-exits">
                 {exits.length === 0
-                  ? "No exits listed."
-                  : `Available exits: ${exits.map(([direction]) => direction).join(", ")}`}
-              </p>
+                  ? <span>No exits listed.</span>
+                  : <>
+                      <span className="room-popout-exits-label">Exits:</span>
+                      <span className="room-popout-exits-buttons">
+                        {exits.map(([direction]) => (
+                          <button
+                            key={direction}
+                            type="button"
+                            className="room-exit-btn"
+                            title="Click to move, Shift+Click to peek"
+                            onClick={(e) => {
+                              if (e.shiftKey) {
+                                onFeatureAction(`look ${direction}`);
+                              } else {
+                                onFeatureAction(direction);
+                              }
+                            }}
+                          >
+                            {direction}
+                          </button>
+                        ))}
+                      </span>
+                    </>}
+              </div>
               {roomFeatures.length > 0 && (
                 <div className="room-features-section">
                   <h4 className="room-features-title">Interactive Features</h4>
