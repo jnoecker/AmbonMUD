@@ -1007,6 +1007,7 @@ function App() {
               focusComposer();
             }}
             onSendMessage={sendChatMessage}
+            onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
 
