@@ -78,6 +78,7 @@ import type {
   UiFeedback,
   Vitals,
   WhoPlayer,
+  ZoneInstances,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "@xterm/xterm/css/xterm.css";
@@ -172,6 +173,7 @@ function App() {
   const [chatByChannel, setChatByChannel] = useState<Record<ChatChannel, ChatMessage[]>>(createEmptyChatByChannel);
   const [dialogue, setDialogue] = useState<DialogueState | null>(null);
   const [whoPlayers, setWhoPlayers] = useState<WhoPlayer[]>([]);
+  const [zoneInstances, setZoneInstances] = useState<ZoneInstances>({ zone: null, currentEngineId: null, instances: [] });
   const [combatTarget, setCombatTarget] = useState<CombatTarget | null>(null);
   const [charStats, setCharStats] = useState<CharStats | null>(null);
   const [quests, setQuests] = useState<QuestEntry[]>([]);
@@ -320,6 +322,7 @@ function App() {
     setChatByChannel(createEmptyChatByChannel());
     setDialogue(null);
     setWhoPlayers([]);
+    setZoneInstances({ zone: null, currentEngineId: null, instances: [] });
     setCombatTarget(null);
     setCharStats(null);
     setQuests([]);
@@ -405,6 +408,7 @@ function App() {
           setMailMessage,
           pushMailNotification,
           setWhoPlayers,
+          setZoneInstances,
           sendGmcp: (pkg: string, payload: unknown) => sendGmcpRef.current(pkg, payload),
         },
       );
@@ -905,6 +909,8 @@ function App() {
             setTerminalOpaque(false);
           }}
           onSubmitComposer={submitComposer}
+          zoneInstances={zoneInstances}
+          onPhaseSwitch={(engineId) => { sendCommand(`phase ${engineId}`, true); focusComposer(); }}
         />
       </div>
 

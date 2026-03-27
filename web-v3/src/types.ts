@@ -411,6 +411,19 @@ export interface QuestAvailable {
   rewards: QuestAvailableRewards;
 }
 
+export interface ZoneInstanceItem {
+  engineId: string;
+  playerCount: number;
+  capacity: number;
+  isCurrent: boolean;
+}
+
+export interface ZoneInstances {
+  zone: string | null;
+  currentEngineId: string | null;
+  instances: ZoneInstanceItem[];
+}
+
 export interface MobInfo {
   id: string;
   level: number;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { DragEvent, FormEvent, KeyboardEvent, RefObject } from "react";
-import type { PopoutPanel, ShopState, SkillSummary, Vitals } from "../types";
+import type { PopoutPanel, ShopState, SkillSummary, Vitals, ZoneInstances } from "../types";
 import { percent } from "../utils";
 import {
   CharacterAvatarIcon,
@@ -56,6 +56,8 @@ interface ActionBarProps {
   onComposerFocus: () => void;
   onComposerBlur: () => void;
   onSubmitComposer: (event: FormEvent<HTMLFormElement>) => void;
+  zoneInstances: ZoneInstances;
+  onPhaseSwitch: (engineId: string) => void;
 }
 
 interface PanelButton {
@@ -178,8 +180,11 @@ export function ActionBar({
   onComposerFocus,
   onComposerBlur,
   onSubmitComposer,
+  zoneInstances,
+  onPhaseSwitch,
 }: ActionBarProps) {
   const loggedIn = connected && hasCharacterProfile;
+  const hasInstances = zoneInstances.instances.length > 1;
 
   const panels: PanelButton[] = [
     { panel: "character", label: "Character", icon: <CharacterAvatarIcon className="action-bar-btn-icon" />, requiresProfile: true },
@@ -262,6 +267,27 @@ export function ActionBar({
               <span className="action-bar-gold-text">{vitals.gold.toLocaleString()}</span>
             </div>
           </div>
+
+          {hasInstances && (
+            <div className="action-bar-instances" title={`Zone: ${zoneInstances.zone ?? ""}`}>
+              <span className="instance-label">Layer</span>
+              <div className="instance-selector">
+                {zoneInstances.instances.map((inst, idx) => (
+                  <button
+                    key={inst.engineId}
+                    type="button"
+                    className={`instance-btn${inst.isCurrent ? " instance-btn-current" : ""}`}
+                    title={`${inst.engineId} — ${inst.playerCount}/${inst.capacity} players`}
+                    disabled={inst.isCurrent}
+                    onClick={() => onPhaseSwitch(inst.engineId)}
+                  >
+                    <span className="instance-num">{idx + 1}</span>
+                    <span className="instance-pop">{inst.playerCount}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {hasAnySlot && (
             <div className="action-bar-skills">
