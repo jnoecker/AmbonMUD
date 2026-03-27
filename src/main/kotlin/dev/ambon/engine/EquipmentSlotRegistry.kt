@@ -14,21 +14,35 @@ data class EquipmentSlotDefinition(
 class EquipmentSlotRegistry(
     config: EquipmentConfig,
 ) {
-    private val slotMap: Map<String, EquipmentSlotDefinition>
-    private val orderedSlots: List<EquipmentSlotDefinition>
+    private var slotMap: Map<String, EquipmentSlotDefinition>
+    private var orderedSlots: List<EquipmentSlotDefinition>
 
     init {
-        slotMap = config.slots.map { (id, cfg) ->
-            val key = id.trim().lowercase()
-            key to EquipmentSlotDefinition(
-                slot = ItemSlot(key),
-                displayName = cfg.displayName.ifEmpty { key.replaceFirstChar { it.uppercase() } },
-                order = cfg.order,
-                x = cfg.x,
-                y = cfg.y,
-            )
-        }.toMap()
-        orderedSlots = slotMap.values.sortedBy { it.order }
+        val (map, ordered) = buildSlots(config)
+        slotMap = map
+        orderedSlots = ordered
+    }
+
+    fun reload(config: EquipmentConfig) {
+        val (map, ordered) = buildSlots(config)
+        slotMap = map
+        orderedSlots = ordered
+    }
+
+    private companion object {
+        fun buildSlots(config: EquipmentConfig): Pair<Map<String, EquipmentSlotDefinition>, List<EquipmentSlotDefinition>> {
+            val map = config.slots.map { (id, cfg) ->
+                val key = id.trim().lowercase()
+                key to EquipmentSlotDefinition(
+                    slot = ItemSlot(key),
+                    displayName = cfg.displayName.ifEmpty { key.replaceFirstChar { it.uppercase() } },
+                    order = cfg.order,
+                    x = cfg.x,
+                    y = cfg.y,
+                )
+            }.toMap()
+            return map to map.values.sortedBy { it.order }
+        }
     }
 
     fun isValid(slot: ItemSlot): Boolean = slotMap.containsKey(slot.name)

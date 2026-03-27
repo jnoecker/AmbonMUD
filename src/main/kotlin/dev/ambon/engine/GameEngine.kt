@@ -698,6 +698,7 @@ class GameEngine(
                 questRegistry = questRegistry,
                 abilityRegistry = abilityRegistry,
                 statusEffectRegistry = statusEffectRegistry,
+                equipmentSlotRegistry = equipmentSlotRegistry,
                 mobSystem = mobSystem,
                 behaviorTreeSystem = behaviorTreeSystem,
                 gmcpEmitter = gmcpEmitter,
