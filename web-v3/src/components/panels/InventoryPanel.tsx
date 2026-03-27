@@ -1,5 +1,5 @@
-import { useState } from "react";
-import type { ItemSummary, RoomPlayer } from "../../types";
+import { useMemo, useState } from "react";
+import type { ContainerContents, ItemSummary, RoomFeature, RoomPlayer } from "../../types";
 import { DropItemIcon, GiveItemIcon, WearItemIcon } from "../Icons";
 
 interface InventoryPanelProps {
@@ -8,9 +8,12 @@ interface InventoryPanelProps {
   inventory: ItemSummary[];
   players: RoomPlayer[];
   canManageItems: boolean;
+  roomFeatures: RoomFeature[];
+  containerContents: ContainerContents | null;
   onWearItem: (itemName: string) => void;
   onDropItem: (itemName: string) => void;
   onGiveItem: (itemKeyword: string, playerName: string) => void;
+  onCommand: (command: string) => void;
 }
 
 function categorize(items: ItemSummary[]): { wearable: ItemSummary[]; other: ItemSummary[] } {
@@ -32,11 +35,19 @@ export function InventoryPanel({
   inventory,
   players,
   canManageItems,
+  roomFeatures,
+  containerContents,
   onWearItem,
   onDropItem,
   onGiveItem,
+  onCommand,
 }: InventoryPanelProps) {
   const [givePickerItemId, setGivePickerItemId] = useState<string | null>(null);
+  const [putPickerItemId, setPutPickerItemId] = useState<string | null>(null);
+  const containers = useMemo(
+    () => roomFeatures.filter((f) => f.type === "container"),
+    [roomFeatures],
+  );
 
   if (!connected || !hasCharacterProfile) {
     return <p className="empty-note">Log in to view inventory.</p>;
@@ -61,6 +72,17 @@ export function InventoryPanel({
           {item.slot && <span className="inventory-item-slot">{item.slot}</span>}
         </span>
         <span className="inventory-item-actions">
+          {!item.slot && (
+            <button
+              type="button"
+              className="inventory-action-btn inventory-action-use"
+              title={`Use ${item.name}`}
+              disabled={!canManageItems}
+              onClick={() => onCommand(`use ${item.keyword}`)}
+            >
+              Use
+            </button>
+          )}
           {item.slot && (
             <button
               type="button"
@@ -72,13 +94,24 @@ export function InventoryPanel({
               <WearItemIcon className="inventory-action-icon" />
             </button>
           )}
+          {containers.length > 0 && (
+            <button
+              type="button"
+              className={`inventory-action-btn inventory-action-put ${putPickerItemId === item.id ? "inventory-action-btn-active" : ""}`}
+              title={`Put ${item.name} in container`}
+              disabled={!canManageItems}
+              onClick={() => setPutPickerItemId(putPickerItemId === item.id ? null : item.id)}
+            >
+              Put
+            </button>
+          )}
           {players.length > 0 && (
             <button
               type="button"
               className={`inventory-action-btn ${givePickerItemId === item.id ? "inventory-action-btn-active" : ""}`}
               title={`Give ${item.name}`}
               disabled={!canManageItems}
-              onClick={() => setGivePickerItemId(givePickerItemId === item.id ? null : item.id)}
+              onClick={() => { setGivePickerItemId(givePickerItemId === item.id ? null : item.id); setPutPickerItemId(null); }}
             >
               <GiveItemIcon className="inventory-action-icon" />
             </button>
@@ -113,6 +146,25 @@ export function InventoryPanel({
           ))}
         </div>
       )}
+      {putPickerItemId === item.id && (
+        <div className="inventory-give-picker" role="listbox" aria-label={`Put ${item.name} in`}>
+          <span className="inventory-give-label">Put in:</span>
+          {containers.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              role="option"
+              className="inventory-give-option"
+              onClick={() => {
+                onCommand(`put ${item.keyword} in ${c.keyword}`);
+                setPutPickerItemId(null);
+              }}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
     </li>
   );
 
@@ -128,6 +180,47 @@ export function InventoryPanel({
         <section className="inventory-section">
           <h3 className="inventory-section-title">Items</h3>
           <ul className="inventory-list">{other.map(renderItem)}</ul>
+        </section>
+      )}
+      {containers.length > 0 && (
+        <section className="inventory-section">
+          <h3 className="inventory-section-title">Containers</h3>
+          <div className="container-list">
+            {containers.map((c) => (
+              <div key={c.id} className="container-entry">
+                <div className="container-entry-header">
+                  <span className="container-entry-name">{c.name}</span>
+                  <button
+                    type="button"
+                    className="inventory-action-btn inventory-action-use"
+                    title={`Search ${c.name}`}
+                    disabled={!canManageItems}
+                    onClick={() => onCommand(`search ${c.keyword}`)}
+                  >
+                    Search
+                  </button>
+                </div>
+                {containerContents && containerContents.keyword === c.keyword && containerContents.items.length > 0 && (
+                  <ul className="container-items">
+                    {containerContents.items.map((ci, idx) => (
+                      <li key={`${ci.keyword}-${idx}`} className="container-item">
+                        <span className="container-item-name">{ci.name}</span>
+                        <button
+                          type="button"
+                          className="inventory-action-btn inventory-action-use"
+                          title={`Take ${ci.name}`}
+                          disabled={!canManageItems}
+                          onClick={() => onCommand(`get ${ci.keyword} from ${c.keyword}`)}
+                        >
+                          Take
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
         </section>
       )}
     </div>
