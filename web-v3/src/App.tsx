@@ -15,6 +15,7 @@ import { EquipmentPanel } from "./components/panels/EquipmentPanel";
 import { PlayPanel } from "./components/panels/PlayPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { MailPanel } from "./components/panels/MailPanel";
+import { CraftingPanel } from "./components/panels/CraftingPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
 import { canvasEvents } from "./canvas/CanvasEventBus";
@@ -40,6 +41,10 @@ import type {
   CombatEventData,
   CombatLogMessage,
   CombatTarget,
+  CraftingNode,
+  CraftingRecipe,
+  CraftingResult,
+  CraftingSkill,
   DialogueState,
   EquipmentSlotDef,
   FriendEntry,
@@ -211,6 +216,9 @@ function App() {
   const [containerContents, setContainerContents] = useState<ContainerContents | null>(null);
   const [shop, setShop] = useState<ShopState | null>(null);
   const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
+  const [craftingSkills, setCraftingSkills] = useState<CraftingSkill[]>([]);
+  const [craftingRecipes, setCraftingRecipes] = useState<CraftingRecipe[]>([]);
+  const [craftingNodes, setCraftingNodes] = useState<CraftingNode[]>([]);
   const [mailInbox, setMailInbox] = useState<MailEntry[] | null>(null);
   const [mailMessage, setMailMessage] = useState<MailMessage | null>(null);
   const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
@@ -282,6 +290,20 @@ function App() {
     });
   }, []);
 
+  const pushCraftingResult = useCallback((result?: CraftingResult) => {
+    if (!result) return;
+    const verb = result.type === "gather" ? "Gathered" : "Crafted";
+    const item = result.itemName ? ` ${result.itemName}${result.quantity && result.quantity > 1 ? ` x${result.quantity}` : ""}` : "";
+    const xp = result.xpAwarded > 0 ? ` (+${result.xpAwarded} ${result.skill} XP)` : "";
+    const levelUp = result.leveledUp ? ` \u2014 Level up! ${result.skill} \u2192 Lv ${result.newLevel}` : "";
+    pushCombatLogMessage({
+      id: ++combatLogIdCounter,
+      text: `${verb}${item}${xp}${levelUp}`,
+      style: result.leveledUp ? "xp" : "heal",
+      receivedAt: Date.now(),
+    });
+  }, [pushCombatLogMessage]);
+
   const pushMailNotification = useCallback((notification?: MailNotification) => {
     if (!notification) return;
     pushUiFeedback({
@@ -342,6 +364,9 @@ function App() {
     setContainerContents(null);
     setShop(null);
     setQuestNotifications([]);
+    setCraftingSkills([]);
+    setCraftingRecipes([]);
+    setCraftingNodes([]);
     setMailInbox(null);
     setMailMessage(null);
     setLoginPrompt(null);
@@ -407,6 +432,10 @@ function App() {
           setServerAssets,
           pushUiFeedback,
           setStaffWorldInfo,
+          setCraftingSkills,
+          setCraftingRecipes,
+          setCraftingNodes,
+          pushCraftingResult,
           setMailInbox,
           setMailMessage,
           pushMailNotification,
@@ -414,7 +443,7 @@ function App() {
         },
       );
     },
-    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, pushMailNotification, updateMap, loadZoneMap],
+    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, updateMap, loadZoneMap],
   );
 
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine, sendGmcp } = useMudSocket({
@@ -1063,6 +1092,19 @@ function App() {
               sendCommand(`mail send ${recipient}`, true);
             }}
             onClearMessage={() => setMailMessage(null)}
+          />
+        )}
+
+        {activePopout === "crafting" && (
+          <CraftingPanel
+            connected={connected}
+            hasCharacterProfile={hasCharacterProfile}
+            skills={craftingSkills}
+            recipes={craftingRecipes}
+            nodes={craftingNodes}
+            onGather={(keyword) => sendCommand(`gather ${keyword}`, true)}
+            onCraft={(recipeKeyword) => sendCommand(`craft ${recipeKeyword}`, true)}
+            onRequestRecipes={() => sendCommand("recipes", true)}
           />
         )}
 

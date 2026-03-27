@@ -1,7 +1,10 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.crafting.CraftingSkillState
+import dev.ambon.domain.crafting.RecipeDef
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.GmcpEmitter
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
@@ -11,12 +14,14 @@ import dev.ambon.engine.crafting.CraftingSkillRegistry
 import dev.ambon.engine.crafting.CraftingSystem
 import dev.ambon.engine.crafting.Either
 import dev.ambon.engine.crafting.GatherError
+import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.OutboundEvent
 
 class CraftingHandler(
     ctx: EngineContext,
     private val craftingSystem: CraftingSystem? = null,
     private val craftingSkillRegistry: CraftingSkillRegistry? = null,
+    private val gatheringRegistry: GatheringRegistry? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
 ) : CommandHandler {
     private val players = ctx.players
@@ -68,6 +73,17 @@ class CraftingHandler(
                         ),
                     )
                     sendCraftingXp(sessionId, r.node.skill, r.xpAwarded, r.leveledUp, r.newLevel)
+                    gmcpEmitter?.sendCraftingResult(
+                        sessionId,
+                        "gather",
+                        r.node.skill,
+                        r.xpAwarded,
+                        r.leveledUp,
+                        r.newLevel,
+                        itemName = itemNames,
+                        quantity = r.itemsGathered.values.sum(),
+                    )
+                    emitCraftingSkills(sessionId, me)
                 }
             }
         }
@@ -116,6 +132,17 @@ class CraftingHandler(
                         )
                     }
                     sendCraftingXp(sessionId, r.recipe.skill, r.xpAwarded, r.leveledUp, r.newLevel)
+                    gmcpEmitter?.sendCraftingResult(
+                        sessionId,
+                        "craft",
+                        r.recipe.skill,
+                        r.xpAwarded,
+                        r.leveledUp,
+                        r.newLevel,
+                        itemName = outputName,
+                        quantity = r.quantityProduced,
+                    )
+                    emitCraftingSkills(sessionId, me)
                 }
             }
         }
@@ -164,6 +191,7 @@ class CraftingHandler(
                 )
             }
             outbound.send(OutboundEvent.SendInfo(sessionId, "  (* = requirements not met)"))
+            emitRecipes(sessionId, allRecipes)
         }
     }
 
@@ -188,7 +216,51 @@ class CraftingHandler(
                     ),
                 )
             }
+            emitCraftingSkills(sessionId, me)
         }
+    }
+
+    private suspend fun emitCraftingSkills(sessionId: SessionId, me: dev.ambon.engine.PlayerState) {
+        val maxLevel = craftingSystem?.maxSkillLevel() ?: 100
+        val skillDefs = craftingSkillRegistry?.allDefinitions() ?: emptyList()
+        gmcpEmitter?.sendCraftingSkills(
+            sessionId,
+            skillDefs.map { skillDef ->
+                val state = me.craftingSkills.getOrDefault(skillDef.id, CraftingSkillState())
+                GmcpEmitter.CraftingSkillPayload(
+                    id = skillDef.id,
+                    name = skillDef.displayName,
+                    level = state.level,
+                    xp = state.xp,
+                    xpToNext = craftingSystem?.xpForLevel(state.level) ?: 0L,
+                    maxLevel = maxLevel,
+                    type = if (skillDef.isGathering) "gathering" else "crafting",
+                )
+            },
+        )
+    }
+
+    private suspend fun emitRecipes(sessionId: SessionId, recipes: Collection<RecipeDef>) {
+        gmcpEmitter?.sendCraftingRecipes(
+            sessionId,
+            recipes.map { recipe ->
+                GmcpEmitter.CraftingRecipePayload(
+                    id = recipe.id,
+                    name = recipe.displayName,
+                    skill = craftingSkillRegistry?.get(recipe.skill)?.displayName ?: recipe.skill,
+                    skillRequired = recipe.skillRequired,
+                    levelRequired = recipe.levelRequired,
+                    materials = recipe.materials.map { mat ->
+                        GmcpEmitter.CraftingMaterialPayload(
+                            name = items.getTemplate(mat.itemId)?.displayName ?: mat.itemId.value,
+                            quantity = mat.quantity,
+                        )
+                    },
+                    outputName = items.getTemplate(recipe.outputItemId)?.displayName ?: recipe.outputItemId.value,
+                    outputQuantity = recipe.outputQuantity,
+                )
+            },
+        )
     }
 
     private suspend fun sendSkillTooLow(sessionId: SessionId, required: Int, current: Int) {

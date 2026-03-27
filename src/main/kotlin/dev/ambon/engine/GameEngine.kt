@@ -792,6 +792,7 @@ class GameEngine(
                 ctx = ctx,
                 craftingSystem = craftingSystem,
                 craftingSkillRegistry = craftingSkillRegistry,
+                gatheringRegistry = gatheringRegistry,
                 markVitalsDirty = ::markVitalsDirty,
             ),
             DialogueQuestHandler(

@@ -10,6 +10,10 @@ import type {
   CombatTarget,
   CompletedAchievement,
   ContainerContents,
+  CraftingNode,
+  CraftingRecipe,
+  CraftingResult,
+  CraftingSkill,
   DialogueChoice,
   DialogueState,
   EquipmentSlotDef,
@@ -87,6 +91,10 @@ interface GmcpContext {
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
   pushUiFeedback: (feedback: UiFeedback) => void;
   setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
+  setCraftingSkills: Dispatch<SetStateAction<CraftingSkill[]>>;
+  setCraftingRecipes: Dispatch<SetStateAction<CraftingRecipe[]>>;
+  setCraftingNodes: Dispatch<SetStateAction<CraftingNode[]>>;
+  pushCraftingResult: (result?: CraftingResult) => void;
   setMailInbox: Dispatch<SetStateAction<MailEntry[] | null>>;
   setMailMessage: Dispatch<SetStateAction<MailMessage | null>>;
   pushMailNotification: (notification?: MailNotification) => void;
@@ -970,6 +978,79 @@ export function applyGmcpPackage(
     case "UI.Feedback": {
       const packet = data as UiFeedback;
       ctx.pushUiFeedback(packet);
+      break;
+    }
+
+    case "Crafting.Skills": {
+      if (!Array.isArray(data)) break;
+      ctx.setCraftingSkills(
+        data
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => ({
+            id: typeof e.id === "string" ? e.id : "",
+            name: typeof e.name === "string" ? e.name : "",
+            level: safeNumber(e.level, 1),
+            xp: safeNumber(e.xp, 0),
+            xpToNext: safeNumber(e.xpToNext, 0),
+            maxLevel: safeNumber(e.maxLevel, 100),
+            type: e.type === "gathering" ? "gathering" as const : "crafting" as const,
+          })),
+      );
+      break;
+    }
+
+    case "Crafting.Recipes": {
+      if (!Array.isArray(data)) break;
+      ctx.setCraftingRecipes(
+        data
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => ({
+            id: typeof e.id === "string" ? e.id : "",
+            name: typeof e.name === "string" ? e.name : "",
+            skill: typeof e.skill === "string" ? e.skill : "",
+            skillRequired: safeNumber(e.skillRequired, 1),
+            levelRequired: safeNumber(e.levelRequired, 1),
+            materials: Array.isArray(e.materials)
+              ? e.materials
+                  .filter((m): m is Record<string, unknown> => typeof m === "object" && m !== null)
+                  .map((m) => ({ name: typeof m.name === "string" ? m.name : "", quantity: safeNumber(m.quantity, 1) }))
+              : [],
+            outputName: typeof e.outputName === "string" ? e.outputName : "",
+            outputQuantity: safeNumber(e.outputQuantity, 1),
+          })),
+      );
+      break;
+    }
+
+    case "Crafting.Nodes": {
+      if (!Array.isArray(data)) {
+        ctx.setCraftingNodes([]);
+        break;
+      }
+      ctx.setCraftingNodes(
+        data
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => ({
+            id: typeof e.id === "string" ? e.id : "",
+            name: typeof e.name === "string" ? e.name : "",
+            skill: typeof e.skill === "string" ? e.skill : "",
+            skillRequired: safeNumber(e.skillRequired, 1),
+          })),
+      );
+      break;
+    }
+
+    case "Crafting.Result": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.pushCraftingResult({
+        type: packet.type === "gather" ? "gather" : "craft",
+        skill: typeof packet.skill === "string" ? packet.skill : "",
+        xpAwarded: safeNumber(packet.xpAwarded, 0),
+        leveledUp: packet.leveledUp === true,
+        newLevel: safeNumber(packet.newLevel, 0),
+        itemName: typeof packet.itemName === "string" ? packet.itemName : null,
+        quantity: typeof packet.quantity === "number" ? packet.quantity : null,
+      });
       break;
     }
 
