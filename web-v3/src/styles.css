@@ -5797,6 +5797,158 @@ body {
   border-color: rgb(200 100 100 / 66%);
 }
 
+/* ────────── Teleport Browser ────────── */
+
+.teleport-browser {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  background: rgb(30 38 56 / 60%);
+}
+
+.teleport-filter {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.teleport-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.teleport-section-title {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-primary-pale-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 var(--space-1);
+  padding: 0 var(--space-1);
+}
+
+.teleport-zone-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 5px 6px;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 120ms var(--ease-out-soft);
+}
+
+.teleport-zone-header:hover {
+  background: rgb(255 255 255 / 5%);
+}
+
+.teleport-zone-header-expanded {
+  color: var(--text-bright);
+}
+
+.teleport-zone-arrow {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  width: 10px;
+}
+
+.teleport-zone-name {
+  flex: 1;
+}
+
+.teleport-zone-count {
+  font-size: 0.68rem;
+  color: var(--text-disabled);
+}
+
+.teleport-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.teleport-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 3px 6px 3px 20px;
+  border-radius: var(--radius-sm);
+  transition: background 100ms var(--ease-out-soft);
+}
+
+.teleport-item:hover {
+  background: rgb(255 255 255 / 4%);
+}
+
+.teleport-item-player {
+  padding-left: 6px;
+}
+
+.teleport-item-name {
+  font-size: 0.78rem;
+  color: var(--color-primary-pale-blue);
+  font-weight: 600;
+}
+
+.teleport-item-room {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.teleport-item-id {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teleport-item-title {
+  font-size: 0.7rem;
+  color: var(--text-disabled);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teleport-go-btn {
+  flex-shrink: 0;
+  padding: 2px 10px;
+  border: 1px solid rgb(141 169 123 / 40%);
+  border-radius: var(--radius-sm);
+  background: rgb(141 169 123 / 14%);
+  color: var(--color-primary-moss-green);
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 140ms var(--ease-out-soft),
+    border-color 140ms var(--ease-out-soft);
+}
+
+.teleport-go-btn:hover {
+  background: rgb(141 169 123 / 26%);
+  border-color: rgb(141 169 123 / 60%);
+}
+
 /* PixiJS canvas */
 .pixi-canvas-host {
   border-radius: 9px;
