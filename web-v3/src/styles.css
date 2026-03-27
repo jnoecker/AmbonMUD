@@ -430,7 +430,10 @@ body {
 .mail-compose-send:focus-visible,
 .mail-delete-button:focus-visible,
 .mail-inbox-row:focus-visible,
-.mail-compose-input:focus-visible {
+.mail-compose-input:focus-visible,
+.crafting-tab:focus-visible,
+.crafting-craft-button:focus-visible,
+.crafting-gather-button:focus-visible {
   outline: none;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
@@ -2757,7 +2760,7 @@ body {
 .crafting-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
   padding: var(--space-2) 0;
 }
 
@@ -2781,24 +2784,59 @@ body {
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: color 170ms var(--ease-out-soft), border-color 170ms var(--ease-out-soft);
+  transition:
+    color 170ms var(--ease-out-soft),
+    border-color 170ms var(--ease-out-soft);
 }
 
 .crafting-tab:hover { color: var(--text-primary); }
 .crafting-tab-active { color: var(--text-bright); border-bottom-color: var(--color-primary-lavender); }
 
 .crafting-tab-badge {
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 5px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
   background: linear-gradient(140deg, rgb(141 169 123 / 90%), rgb(110 148 90 / 85%));
-  color: var(--text-bright);
-  font-size: 0.7rem;
-  font-weight: 700;
 }
 
 .crafting-section {
   padding: 0 var(--space-2);
+  animation: craftingSectionSlide 200ms var(--ease-out-soft);
+}
+
+@keyframes craftingSectionSlide {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Empty state */
+.crafting-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.crafting-empty-icon {
+  font-size: 1.6rem;
+  opacity: 0.5;
+  animation: craftingEmptyPulse 3s var(--ease-in-out-smooth) infinite;
+}
+
+@keyframes craftingEmptyPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.06); }
 }
 
 .crafting-skill-list,
@@ -2813,9 +2851,15 @@ body {
 }
 
 .crafting-skill-item {
-  padding: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  background: var(--bg-surface);
+  background: linear-gradient(140deg, rgb(70 83 117 / 80%), rgb(60 76 111 / 76%));
+  border: 1px solid var(--line-faint);
+  transition: border-color 150ms var(--ease-out-soft);
+}
+
+.crafting-skill-item:hover {
+  border-color: rgb(168 151 210 / 30%);
 }
 
 .crafting-skill-header {
@@ -2828,9 +2872,14 @@ body {
   font-weight: 600;
   color: var(--text-primary);
   font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .crafting-skill-type {
+  flex-shrink: 0;
   font-size: 0.72rem;
   color: var(--text-secondary);
   opacity: 0.7;
@@ -2845,14 +2894,14 @@ body {
 .crafting-xp-bar-track {
   height: 6px;
   border-radius: 3px;
-  background: var(--bg-inset);
+  background: var(--bg-secondary);
   overflow: hidden;
 }
 
 .crafting-xp-bar-fill {
   height: 100%;
   border-radius: 3px;
-  background: linear-gradient(90deg, var(--color-primary-lavender), rgb(180 160 220));
+  background: linear-gradient(90deg, var(--color-primary-lavender), var(--color-primary-pale-blue));
   transition: width 300ms var(--ease-out-soft);
 }
 
@@ -2863,9 +2912,15 @@ body {
 }
 
 .crafting-recipe-item {
-  padding: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  background: var(--bg-surface);
+  background: linear-gradient(140deg, rgb(70 83 117 / 80%), rgb(60 76 111 / 76%));
+  border: 1px solid var(--line-faint);
+  transition: border-color 150ms var(--ease-out-soft);
+}
+
+.crafting-recipe-item:hover {
+  border-color: rgb(168 151 210 / 30%);
 }
 
 .crafting-recipe-header {
@@ -2879,24 +2934,52 @@ body {
   font-weight: 600;
   color: var(--text-primary);
   font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .crafting-craft-button,
 .crafting-gather-button {
-  padding: 3px 10px;
-  border: 1px solid var(--line-faint);
+  flex-shrink: 0;
+  padding: 6px 14px;
+  min-height: 32px;
+  border: 1px solid rgb(141 169 123 / 44%);
   border-radius: var(--radius-sm);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
+  background: linear-gradient(140deg, rgb(90 120 80 / 40%), rgb(80 110 68 / 30%));
+  color: var(--color-hp-light);
+  font-family: var(--font-body);
   font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 150ms, color 150ms;
+  transition:
+    background 180ms var(--ease-out-soft),
+    border-color 180ms var(--ease-out-soft),
+    color 180ms var(--ease-out-soft),
+    transform 120ms var(--ease-out-soft),
+    box-shadow 180ms var(--ease-out-soft);
 }
 
 .crafting-craft-button:hover,
 .crafting-gather-button:hover {
-  background: var(--bg-surface-hover);
+  background: linear-gradient(140deg, rgb(110 145 95 / 50%), rgb(95 130 78 / 40%));
+  border-color: rgb(141 169 123 / 64%);
+  box-shadow: 0 0 10px rgb(141 169 123 / 20%);
   color: var(--text-bright);
+  transform: translateY(-1px);
+}
+
+.crafting-craft-button:active,
+.crafting-gather-button:active {
+  transform: scale(0.97);
+}
+
+.crafting-craft-button:disabled,
+.crafting-gather-button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .crafting-recipe-meta {
@@ -2905,6 +2988,10 @@ body {
   font-size: 0.75rem;
   color: var(--text-secondary);
   margin-bottom: 6px;
+}
+
+.crafting-req-unmet {
+  color: var(--color-primary-dusty-rose);
 }
 
 .crafting-recipe-materials {
@@ -2917,9 +3004,9 @@ body {
 }
 
 .crafting-material {
-  padding: 1px 6px;
+  padding: 2px 8px;
   border-radius: var(--radius-sm);
-  background: var(--bg-inset);
+  background: var(--surface-chip);
   font-size: 0.72rem;
 }
 
@@ -2937,26 +3024,59 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  background: var(--bg-surface);
+  background: linear-gradient(140deg, rgb(70 83 117 / 80%), rgb(60 76 111 / 76%));
+  border: 1px solid var(--line-faint);
+  transition: border-color 150ms var(--ease-out-soft);
+}
+
+.crafting-node-item:hover {
+  border-color: rgb(168 151 210 / 30%);
 }
 
 .crafting-node-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .crafting-node-name {
   font-weight: 600;
   color: var(--text-primary);
   font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .crafting-node-skill {
   font-size: 0.75rem;
   color: var(--text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crafting-section {
+    animation: none;
+  }
+
+  .crafting-empty-icon {
+    animation: none;
+  }
+
+  .crafting-xp-bar-fill {
+    transition: none;
+  }
+
+  .crafting-craft-button,
+  .crafting-gather-button,
+  .crafting-tab,
+  .crafting-skill-item,
+  .crafting-recipe-item,
+  .crafting-node-item {
+    transition: none;
+  }
 }
 
 /* ── Mail panel ── */

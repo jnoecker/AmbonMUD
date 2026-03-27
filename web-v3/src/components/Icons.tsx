@@ -436,8 +436,10 @@ export function ChatBubbleIcon({ className }: { className?: string }) {
 export function CraftingIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M15 4l3 3-9 9H6v-3l9-9z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 20h16" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.6" />
+      <path d="M7 4v6l3 2 4-4-2-3H7z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 12l-5 5 2 2 5-5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15 8l4.5 4.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.6" />
+      <path d="M5 20h14" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" opacity="0.5" />
     </svg>
   );
 }

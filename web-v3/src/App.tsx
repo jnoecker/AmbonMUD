@@ -43,6 +43,7 @@ import type {
   CombatTarget,
   CraftingNode,
   CraftingRecipe,
+  CraftingResult,
   CraftingSkill,
   DialogueState,
   EquipmentSlotDef,
@@ -289,9 +290,19 @@ function App() {
     });
   }, []);
 
-  const pushCraftingResult = useCallback(() => {
-    // Crafting.Skills GMCP refreshes skill state; result is informational.
-  }, []);
+  const pushCraftingResult = useCallback((result?: CraftingResult) => {
+    if (!result) return;
+    const verb = result.type === "gather" ? "Gathered" : "Crafted";
+    const item = result.itemName ? ` ${result.itemName}${result.quantity && result.quantity > 1 ? ` x${result.quantity}` : ""}` : "";
+    const xp = result.xpAwarded > 0 ? ` (+${result.xpAwarded} ${result.skill} XP)` : "";
+    const levelUp = result.leveledUp ? ` \u2014 Level up! ${result.skill} \u2192 Lv ${result.newLevel}` : "";
+    pushCombatLogMessage({
+      id: ++combatLogIdCounter,
+      text: `${verb}${item}${xp}${levelUp}`,
+      style: result.leveledUp ? "xp" : "heal",
+      receivedAt: Date.now(),
+    });
+  }, [pushCombatLogMessage]);
 
   const pushMailNotification = useCallback((notification?: MailNotification) => {
     if (!notification) return;
