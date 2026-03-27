@@ -80,6 +80,13 @@ export function useMudSocket(options: UseMudSocketOptions) {
     return true;
   }, []);
 
+  const sendGmcp = useCallback((pkg: string, payload: unknown): boolean => {
+    const ws = socketRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+    ws.send(JSON.stringify({ gmcp: pkg, data: payload }));
+    return true;
+  }, []);
+
   return {
     connected,
     liveMessage,
@@ -87,6 +94,7 @@ export function useMudSocket(options: UseMudSocketOptions) {
     disconnect,
     reconnect,
     sendLine,
+    sendGmcp,
   };
 }
 
