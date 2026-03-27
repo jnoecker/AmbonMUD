@@ -46,6 +46,7 @@ import type {
   RoomPlayer,
   RoomState,
   ShopItem,
+  StaffMobZone,
   StaffWorldZone,
   ShopState,
   SkillSummary,
@@ -105,6 +106,7 @@ interface GmcpContext {
   setEmotePresets: Dispatch<SetStateAction<EmotePreset[]>>;
   pushUiFeedback: (feedback: UiFeedback) => void;
   setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
+  setStaffMobTemplates: Dispatch<SetStateAction<StaffMobZone[]>>;
   setLookTarget: Dispatch<SetStateAction<LookTargetInfo | null>>;
   setCraftingSkills: Dispatch<SetStateAction<CraftingSkill[]>>;
   setCraftingRecipes: Dispatch<SetStateAction<CraftingRecipe[]>>;
@@ -1275,6 +1277,26 @@ export function applyGmcpPackage(
                   .map((r) => ({
                     id: typeof r.id === "string" ? r.id : "",
                     title: typeof r.title === "string" ? r.title : "",
+                  }))
+              : [],
+          })),
+      );
+      break;
+    }
+
+    case "Staff.MobTemplates": {
+      if (!Array.isArray(data)) break;
+      ctx.setStaffMobTemplates(
+        data
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => ({
+            zone: typeof e.zone === "string" ? e.zone : "",
+            mobs: Array.isArray(e.mobs)
+              ? e.mobs
+                  .filter((m): m is Record<string, unknown> => typeof m === "object" && m !== null)
+                  .map((m) => ({
+                    id: typeof m.id === "string" ? m.id : "",
+                    name: typeof m.name === "string" ? m.name : "",
                   }))
               : [],
           })),

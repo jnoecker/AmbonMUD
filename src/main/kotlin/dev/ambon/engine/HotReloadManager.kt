@@ -187,6 +187,7 @@ class HotReloadManager(
             // Refresh staff world browser with updated zones/rooms
             if (player.isStaff) {
                 gmcpEmitter.sendStaffWorldInfo(player.sessionId, world)
+                gmcpEmitter.sendStaffMobTemplates(player.sessionId, world)
             }
         }
 
