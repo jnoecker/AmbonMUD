@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import type { AchievementData, CharacterInfo, QuestEntry, QuestNotification, StatusEffect, StatusVarLabels, Vitals } from "../../types";
-import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, QuestsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
+import type { AchievementData, CharacterInfo, CharStats, GroupInfo, GuildInfo, QuestEntry, QuestNotification, StatusEffect, StatusVarLabels, Vitals } from "../../types";
+import { AchievementsTabIcon, Bar, CharacterAvatarIcon, EffectsTabIcon, EquipmentIcon, QuestsTabIcon, ScoreTabIcon, StatsTabIcon, VitalsTabIcon, WearingIcon } from "../Icons";
 
-type DetailTab = "vitals" | "effects" | "achievements" | "quests";
+type DetailTab = "vitals" | "effects" | "achievements" | "quests" | "stats" | "score";
 
 interface CharacterPanelProps {
   connected: boolean;
@@ -22,6 +22,10 @@ interface CharacterPanelProps {
   achievements: AchievementData;
   quests: QuestEntry[];
   questNotifications: QuestNotification[];
+  charStats: CharStats | null;
+  guildInfo: GuildInfo;
+  groupInfo: GroupInfo;
+  activeTitle: string | null;
   onDismissQuestNotification: (id: string) => void;
   onAbandonQuest: (questName: string) => void;
   onOpenInventory: () => void;
@@ -46,6 +50,10 @@ export function CharacterPanel({
   achievements,
   quests,
   questNotifications,
+  charStats,
+  guildInfo,
+  groupInfo,
+  activeTitle,
   onDismissQuestNotification,
   onAbandonQuest,
   onOpenInventory,
@@ -183,6 +191,28 @@ export function CharacterPanel({
             >
               <QuestsTabIcon className="detail-tab-icon" />
               {quests.length > 0 && <span className="quest-tab-badge">{quests.length}</span>}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeDetailTab === "stats"}
+              aria-label="Stats"
+              title="Stats"
+              className={`character-detail-tab ${activeDetailTab === "stats" ? "character-detail-tab-active" : ""}`}
+              onClick={() => setActiveDetailTab("stats")}
+            >
+              <StatsTabIcon className="detail-tab-icon" />
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeDetailTab === "score"}
+              aria-label="Score"
+              title="Score"
+              className={`character-detail-tab ${activeDetailTab === "score" ? "character-detail-tab-active" : ""}`}
+              onClick={() => setActiveDetailTab("score")}
+            >
+              <ScoreTabIcon className="detail-tab-icon" />
             </button>
           </div>
 
@@ -369,6 +399,133 @@ export function CharacterPanel({
                       );
                     })}
                   </ul>
+                )}
+              </section>
+            )}
+
+            {activeDetailTab === "stats" && (
+              <section
+                key="stats"
+                className="character-detail-panel character-detail-panel-flip character-stats"
+                role="tabpanel"
+                aria-label="Stats"
+              >
+                {!hasCharacterProfile ? (
+                  <p className="empty-note">Stats will appear here after login.</p>
+                ) : !charStats ? (
+                  <p className="empty-note">Awaiting stat data from server.</p>
+                ) : (
+                  <div className="stats-content">
+                    <table className="stats-attribute-table">
+                      <thead>
+                        <tr>
+                          <th className="stats-th">Attribute</th>
+                          <th className="stats-th stats-th-num">Base</th>
+                          <th className="stats-th stats-th-num">Eff.</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {charStats.stats.map((stat) => {
+                          const diff = stat.effective - stat.base;
+                          return (
+                            <tr key={stat.id} className="stats-row">
+                              <td className="stats-td stats-td-name" title={stat.name}>{stat.abbrev}</td>
+                              <td className="stats-td stats-td-num">{stat.base}</td>
+                              <td className={`stats-td stats-td-num ${diff > 0 ? "stats-buff" : diff < 0 ? "stats-debuff" : ""}`}>
+                                {stat.effective}
+                                {diff !== 0 && <span className="stats-diff">({diff > 0 ? "+" : ""}{diff})</span>}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                    <div className="stats-derived">
+                      <div className="stats-derived-row">
+                        <span className="stats-derived-label">Damage</span>
+                        <span className="stats-derived-value">{charStats.baseDamageMin}&ndash;{charStats.baseDamageMax}</span>
+                      </div>
+                      <div className="stats-derived-row">
+                        <span className="stats-derived-label">Armor</span>
+                        <span className="stats-derived-value">{charStats.armor}</span>
+                      </div>
+                      <div className="stats-derived-row">
+                        <span className="stats-derived-label">Dodge</span>
+                        <span className="stats-derived-value">{charStats.dodgePercent}%</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {activeDetailTab === "score" && (
+              <section
+                key="score"
+                className="character-detail-panel character-detail-panel-flip character-score"
+                role="tabpanel"
+                aria-label="Score"
+              >
+                {!hasCharacterProfile ? (
+                  <p className="empty-note">Character summary will appear here after login.</p>
+                ) : (
+                  <div className="score-content">
+                    <div className="score-identity">
+                      <span className="score-name">{character.name}</span>
+                      {activeTitle && <span className="score-title">{activeTitle}</span>}
+                    </div>
+                    <dl className="score-grid">
+                      <div><dt>Race</dt><dd>{displayRace}</dd></div>
+                      <div><dt>Class</dt><dd>{displayClassName}</dd></div>
+                      <div><dt>Level</dt><dd>{vitals.level ?? character.level ?? "-"}</dd></div>
+                      <div><dt>Gold</dt><dd>{vitals.gold.toLocaleString()}</dd></div>
+                    </dl>
+                    <div className="score-vitals">
+                      <div className="score-vital-row">
+                        <span className="score-vital-label">{statusVarLabels.hp}</span>
+                        <span className="score-vital-value">{vitals.hp} / {vitals.maxHp}</span>
+                      </div>
+                      <div className="score-vital-row">
+                        <span className="score-vital-label">{statusVarLabels.mana}</span>
+                        <span className="score-vital-value">{vitals.mana} / {vitals.maxMana}</span>
+                      </div>
+                      <div className="score-vital-row">
+                        <span className="score-vital-label">{statusVarLabels.xp}</span>
+                        <span className="score-vital-value">{xpText}</span>
+                      </div>
+                    </div>
+                    {charStats && charStats.stats.length > 0 && (
+                      <div className="score-stats-row">
+                        {charStats.stats.map((stat) => (
+                          <span key={stat.id} className="score-stat-chip" title={stat.name}>
+                            <span className="score-stat-abbrev">{stat.abbrev}</span>
+                            <span className="score-stat-val">{stat.effective}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {charStats && (
+                      <dl className="score-grid score-grid-combat">
+                        <div><dt>Damage</dt><dd>{charStats.baseDamageMin}&ndash;{charStats.baseDamageMax}</dd></div>
+                        <div><dt>Armor</dt><dd>{charStats.armor}</dd></div>
+                        <div><dt>Dodge</dt><dd>{charStats.dodgePercent}%</dd></div>
+                      </dl>
+                    )}
+                    <div className="score-social">
+                      {guildInfo.name && (
+                        <div className="score-social-row">
+                          <span className="score-social-label">Guild</span>
+                          <span className="score-social-value">{guildInfo.name}{guildInfo.tag ? ` [${guildInfo.tag}]` : ""}</span>
+                        </div>
+                      )}
+                      {groupInfo.members.length > 0 && (
+                        <div className="score-social-row">
+                          <span className="score-social-label">Group</span>
+                          <span className="score-social-value">{groupInfo.members.length} member{groupInfo.members.length !== 1 ? "s" : ""}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </section>
             )}
