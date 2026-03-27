@@ -43,7 +43,6 @@ export function InventoryPanel({
   onCommand,
 }: InventoryPanelProps) {
   const [givePickerItemId, setGivePickerItemId] = useState<string | null>(null);
-  const [putPickerItemId, setPutPickerItemId] = useState<string | null>(null);
   const containers = useMemo(
     () => roomFeatures.filter((f) => f.type === "container"),
     [roomFeatures],
@@ -102,15 +101,15 @@ export function InventoryPanel({
               <WearItemIcon className="inventory-action-icon" />
             </button>
           )}
-          {containers.length > 0 && (
+          {containerContents && (
             <button
               type="button"
-              className={`inventory-action-btn inventory-action-put ${putPickerItemId === item.id ? "inventory-action-btn-active" : ""}`}
-              title={`Put ${item.name} in container`}
+              className="inventory-action-btn inventory-action-put"
+              title={`Put ${item.name} in ${containerContents.name}`}
               disabled={!canManageItems}
-              onClick={() => setPutPickerItemId(putPickerItemId === item.id ? null : item.id)}
+              onClick={() => onCommand(`put ${item.keyword} in ${containerContents.keyword}`)}
             >
-              Put
+              Put in {containerContents.name}
             </button>
           )}
           {players.length > 0 && (
@@ -119,7 +118,7 @@ export function InventoryPanel({
               className={`inventory-action-btn ${givePickerItemId === item.id ? "inventory-action-btn-active" : ""}`}
               title={`Give ${item.name}`}
               disabled={!canManageItems}
-              onClick={() => { setGivePickerItemId(givePickerItemId === item.id ? null : item.id); setPutPickerItemId(null); }}
+              onClick={() => setGivePickerItemId(givePickerItemId === item.id ? null : item.id)}
             >
               <GiveItemIcon className="inventory-action-icon" />
             </button>
@@ -150,25 +149,6 @@ export function InventoryPanel({
               }}
             >
               {player.name}
-            </button>
-          ))}
-        </div>
-      )}
-      {putPickerItemId === item.id && (
-        <div className="inventory-give-picker" role="listbox" aria-label={`Put ${item.name} in`}>
-          <span className="inventory-give-label">Put in:</span>
-          {containers.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              role="option"
-              className="inventory-give-option"
-              onClick={() => {
-                onCommand(`put ${item.keyword} in ${c.keyword}`);
-                setPutPickerItemId(null);
-              }}
-            >
-              {c.name}
             </button>
           ))}
         </div>
