@@ -470,6 +470,13 @@ export interface LoginErrorState {
   message: string;
 }
 
+export interface CommandEntry {
+  name: string;
+  usage: string;
+  category: string;
+  staff: boolean;
+}
+
 export interface StaffWorldRoom {
   id: string;
   title: string;

@@ -8,6 +8,7 @@ import type {
   CharacterInfo,
   CombatEventData,
   CombatTarget,
+  CommandEntry,
   CompletedAchievement,
   ContainerContents,
   CraftingNode,
@@ -92,6 +93,7 @@ interface GmcpContext {
   setLoginPrompt: Dispatch<SetStateAction<LoginPromptState | null>>;
   setLoginError: Dispatch<SetStateAction<LoginErrorState | null>>;
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
+  setServerCommands: Dispatch<SetStateAction<CommandEntry[]>>;
   pushUiFeedback: (feedback: UiFeedback) => void;
   setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
   setCraftingSkills: Dispatch<SetStateAction<CraftingSkill[]>>;
@@ -999,6 +1001,20 @@ export function applyGmcpPackage(
     case "Server.Assets": {
       const packet = data as Record<string, string>;
       ctx.setServerAssets(packet);
+      break;
+    }
+
+    case "Server.Commands": {
+      const packet = data as { commands?: unknown[] };
+      const commands: CommandEntry[] = (packet.commands ?? [])
+        .filter((c): c is Record<string, unknown> => typeof c === "object" && c !== null)
+        .map((c) => ({
+          name: String(c.name ?? ""),
+          usage: String(c.usage ?? ""),
+          category: String(c.category ?? ""),
+          staff: c.staff === true,
+        }));
+      ctx.setServerCommands(commands);
       break;
     }
 
