@@ -50,6 +50,7 @@ export class BattleScene {
   private gainPopups: GainPopupSystem;
   private spellProjectiles = new SpellProjectileSystem();
   private statusEffects = new StatusEffectDisplay();
+  private enemyStatusEffects = new StatusEffectDisplay();
   private uiGraphics = new Graphics();
 
   private background: Sprite | null = null;
@@ -114,6 +115,7 @@ export class BattleScene {
     this.container.addChild(this.enemyLabel);
     this.container.addChild(this.enemyHpText);
     this.container.addChild(this.statusEffects.container);
+    this.container.addChild(this.enemyStatusEffects.container);
     this.container.addChild(this.combatAnimator.container);
     this.container.addChild(this.spellProjectiles.graphics);
     this.container.addChild(this.gainPopups.container);
@@ -449,6 +451,13 @@ export class BattleScene {
     }
     this.enemyHpText.x = enemyPos.x;
     this.enemyHpText.y = enemyPos.y + enemySize / 2 + 34;
+
+    // Enemy status effects above the enemy
+    const fullTarget = gameStateRef.current.combatTarget;
+    const targetMob = fullTarget?.targetId
+      ? gameStateRef.current.mobs.find((m) => m.id === fullTarget.targetId)
+      : null;
+    this.enemyStatusEffects.update(targetMob?.effects ?? [], enemyDrawX, enemyDrawY - enemySize / 2 - 28);
 
     // Party members (stacked below player on left)
     const partyStartY = playerPos.y - playerSize / 2 - 20;

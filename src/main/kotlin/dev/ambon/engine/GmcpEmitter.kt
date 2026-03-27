@@ -54,6 +54,7 @@ class GmcpEmitter(
     imagesBaseUrl: String = "/images/",
     private val globalAssets: Map<String, String> = emptyMap(),
     private val spriteRegistry: SpriteRegistry? = null,
+    private val getMobEffects: (dev.ambon.domain.ids.MobId) -> List<ActiveEffectSnapshot> = { emptyList() },
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -1162,8 +1163,9 @@ class GmcpEmitter(
             video = item.item.video,
         )
 
-    private fun toRoomMobPayload(mob: MobState) =
-        RoomMobPayload(
+    private fun toRoomMobPayload(mob: MobState): RoomMobPayload {
+        val effects = getMobEffects(mob.id)
+        return RoomMobPayload(
             id = mob.id.value,
             name = mob.name,
             description = mob.description,
@@ -1171,7 +1173,15 @@ class GmcpEmitter(
             maxHp = mob.maxHp,
             image = mob.image,
             video = mob.video,
+            effects = if (effects.isEmpty()) {
+                null
+            } else {
+                effects.map { e ->
+                    MobEffectPayload(name = e.name, type = e.type, remainingMs = e.remainingMs, stacks = e.stacks)
+                }
+            },
         )
+    }
 
     // ---------- payload types ----------
 
@@ -1269,6 +1279,14 @@ class GmcpEmitter(
         val maxHp: Int,
         val image: String? = null,
         val video: String? = null,
+        val effects: List<MobEffectPayload>? = null,
+    )
+
+    private data class MobEffectPayload(
+        val name: String,
+        val type: String,
+        val remainingMs: Long,
+        val stacks: Int,
     )
 
     private data class RoomRemoveMobPayload(

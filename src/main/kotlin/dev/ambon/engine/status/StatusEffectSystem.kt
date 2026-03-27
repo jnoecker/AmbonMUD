@@ -45,7 +45,11 @@ class StatusEffectSystem(
         mobId: MobId,
         effectId: StatusEffectId,
         sourceSessionId: SessionId? = null,
-    ): Boolean = applyTo(mobEffects, mobId, effectId, sourceSessionId)
+    ): Boolean {
+        val applied = applyTo(mobEffects, mobId, effectId, sourceSessionId)
+        if (applied) dirtyNotifier.mobHpDirty(mobId)
+        return applied
+    }
 
     private fun <K> applyTo(
         map: MutableMap<K, MutableList<ActiveEffect>>,
@@ -215,7 +219,7 @@ class StatusEffectSystem(
             map = mobEffects,
             nowMs = nowMs,
             resolve = { mobs.get(it) },
-            onExpired = { _, _ -> },
+            onExpired = { mobId, _ -> dirtyNotifier.mobHpDirty(mobId) },
             onActive = { mobId, mob, effect, def ->
                 val typeConfig = effectTypes.get(def.effectType)
                 if (typeConfig?.ticksDamage == true &&
@@ -343,7 +347,9 @@ class StatusEffectSystem(
     }
 
     fun removeAllFromMob(mobId: MobId) {
-        mobEffects.remove(mobId)
+        if (mobEffects.remove(mobId) != null) {
+            dirtyNotifier.mobHpDirty(mobId)
+        }
     }
 
     override fun remapSession(
