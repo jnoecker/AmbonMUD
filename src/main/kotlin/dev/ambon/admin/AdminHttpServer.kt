@@ -745,6 +745,31 @@ internal fun Application.adminModule(
             )
         }
 
+        // ── Logs (ring buffer) ─────────────────────────────────────────────
+        get("/api/logs") {
+            val ringBuffer = LogRingBuffer.instance
+            if (ringBuffer == null) {
+                call.respondJsonError(HttpStatusCode.ServiceUnavailable, "Log ring buffer not available")
+                return@get
+            }
+            val minLevel = call.request.queryParameters["level"]?.let {
+                ch.qos.logback.classic.Level.toLevel(it, null)
+            }
+            val sinceMs = call.request.queryParameters["since"]?.toLongOrNull()
+            val loggerPrefix = call.request.queryParameters["logger"]?.takeIf { it.isNotBlank() }
+            val limit = call.request.queryParameters["limit"]?.toIntOrNull()?.coerceIn(1, 5000) ?: 500
+            val entries = ringBuffer.entries(
+                minLevel = minLevel,
+                sinceEpochMs = sinceMs,
+                loggerPrefix = loggerPrefix,
+                limit = limit,
+            )
+            call.respondText(
+                json.writeValueAsString(entries),
+                ContentType.Application.Json,
+            )
+        }
+
         // ── Staff toggle (JSON) ─────────────────────────────────────────────
         post("/api/players/{name}/staff") {
             val name = call.parameters["name"] ?: return@post call.respond(HttpStatusCode.BadRequest)
