@@ -41,7 +41,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 ✅ Crafting & gathering (recipes, crafting skills, workshop zone)
 ✅ Web-based admin dashboard
 
-**Test coverage:** ~110 test files covering all systems.
+**Test coverage:** ~118 test files covering all systems.
 
 ---
 
@@ -61,6 +61,8 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 |---------|--------|-----------|
 | Data-Driven Stats (Mar 2026) | ✅ Done | Full stat system: `StatMap`, bindings, persistence, GMCP, world YAML, web client; see [DATA_DRIVEN_STATS_PLAN.md](./DATA_DRIVEN_STATS_PLAN.md) |
 | Hardcoded Config Extraction (Mar 2026) | ✅ Done | `baseHp`, `baseMana`, `startingGold`, `threatMultiplier` all data-driven; see [CREATOR_CONFIG_REFERENCE.md](./CREATOR_CONFIG_REFERENCE.md) |
+| Player Sprites (Mar 2026) | ✅ Done | Tier/staff/achievement sprites, `SpriteRegistry`, GMCP `Char.Sprites`, player sprite selection commands; Flyway V19 |
+| Admin API (Mar 2026) | ✅ Done | Admin HTTP server with JSON API and HTML dashboard; see [ADMIN_API_REFERENCE.md](./ADMIN_API_REFERENCE.md) |
 
 ### Phase B — Living World
 
@@ -263,4 +265,4 @@ See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) for setup instructions and [ARCHI
 
 ---
 
-**Last updated:** March 11, 2026
+**Last updated:** March 27, 2026

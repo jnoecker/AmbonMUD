@@ -7,7 +7,7 @@ AmbonMUD
 
 **Key Features**
 - 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **102 abilities** across all classes, distributed across 50 levels
-- 🌍 **13 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
+- 🌍 **14 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
 - ⚔️ **Real-time combat system** with attribute-based damage, dodge mechanics, and tactical status effects (DoT, HoT, STUN, ROOT, SHIELD, buffs/debuffs)
 - 🎨 **PixiJS canvas client** with JRPG-style world/battle scenes, spell targeting, customizable quickbar, and a cozy glass-morphism UI
 - 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands
@@ -18,7 +18,7 @@ AmbonMUD
 - 🗺️ **Zone-based sharding** with inter-engine messaging, player handoff, and O(1) cross-engine `tell` routing
 - 🧵 **JVM virtual threads** for telnet I/O (JDK 21) — eliminates carrier-thread pinning under load
 - 📈 **Prometheus metrics** for monitoring and load testing integration
-- ✅ **~110 test files** covering all systems; CI validates against Java 21 with ktlint
+- ✅ **~118 test files** covering all systems; CI validates against Java 21 with ktlint
 
 **Current State** (Mar 2026)
 - ✅ All 6 scalability phases complete (bus abstraction, async persistence, Redis, gRPC gateway, zone sharding, production AWS infrastructure)
@@ -97,7 +97,7 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for architectural details and [DEVEL
 - Name: 2-16 chars (alnum/underscore, cannot start with digit)
 - Password: 1-72 chars (bcrypt hashed)
 - Race: Human, Elf, Dwarf, Halfling (each has attribute modifiers)
-- Class: Warrior, Mage, Cleric, Rogue (56 abilities across all classes, levels 1–50)
+- Class: Warrior, Mage, Cleric, Rogue (102 abilities across all classes, levels 1–50)
 
 **Core Commands**
 - **Movement:** `n`/`s`/`e`/`w`/`u`/`d`, `look`, `exits`
@@ -125,7 +125,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 
 **World files** live in `src/main/resources/world/` and are loaded by `WorldLoader`. Each YAML file describes one zone; multiple zones are merged into a single world.
 
-**Current Zones (13 zones):**
+**Current Zones (14 zone files):**
 | Zone | Description |
 |------|-------------|
 | `ambon_hub` | Central hub connecting all zones |
@@ -141,6 +141,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 | `celestial_sanctum` | High-level zone |
 | `crafting_workshop` | Crafting and gathering zone |
 | `player_sprites` | Player sprite data for the canvas client |
+| `sprites` | Achievement sprite definitions |
 
 **Zone YAML Format**
 ```yaml
@@ -193,7 +194,7 @@ See [WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) for full schema documentation 
 
 **Backends** (selectable via `ambonmud.persistence.backend`):
 - **YAML** (default): File-backed, zero dependencies, player files in `data/players/`
-- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V18); requires `ambonmud.database.jdbcUrl`
+- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V19); requires `ambonmud.database.jdbcUrl`
 
 Redis L2 caching is disabled by default. Enable it with `ambonmud.redis.enabled=true` when running alongside the Docker Compose stack.
 
@@ -317,6 +318,7 @@ AmbonMUD's visual identity is **Surreal Gentle Magic** — a cozy fantasy aesthe
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Docker build, CDK deploy, topology/tier reference, CI/CD
 - [docs/WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) — Zone YAML format specification
 - [docs/WEB_CLIENT.md](docs/WEB_CLIENT.md) — Web client architecture (React + PixiJS canvas)
+- [docs/WEB_CLIENT_PARITY_REPORT.md](docs/WEB_CLIENT_PARITY_REPORT.md) — Web client feature parity analysis and gaps
 - [docs/GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md) — GMCP protocol reference for client developers
 
 **Gameplay Systems**
@@ -333,6 +335,13 @@ AmbonMUD's visual identity is **Surreal Gentle Magic** — a cozy fantasy aesthe
 **Creator Tool (Ambon Arcanum)**
 - [docs/CREATOR_PLAN.md](docs/CREATOR_PLAN.md) — Creator tool design plan
 - [docs/CREATOR_CONFIG_REFERENCE.md](docs/CREATOR_CONFIG_REFERENCE.md) — All configurable YAML keys for world builders
+- [docs/ADMIN_API_REFERENCE.md](docs/ADMIN_API_REFERENCE.md) — Admin HTTP server JSON API reference
+
+**Data-Driven Systems**
+- [docs/DATA_DRIVEN_YAML_CONTRACT.md](docs/DATA_DRIVEN_YAML_CONTRACT.md) — YAML contract spec for all data-driven game mechanics
+- [docs/DATA_DRIVEN_STATS_PLAN.md](docs/DATA_DRIVEN_STATS_PLAN.md) — Data-driven stats engineering plan (completed, historical reference)
+- [docs/DATA_DRIVEN_GAP_AUDIT.md](docs/DATA_DRIVEN_GAP_AUDIT.md) — Remaining code-level constraints for future data-driven migration
+- [docs/ARCANUM_SPRITE_INSTRUCTIONS.md](docs/ARCANUM_SPRITE_INSTRUCTIONS.md) — Sprite image naming conventions and guidelines
 
 **Design Systems**
 - [.impeccable.md](.impeccable.md) — Design context, brand personality, design principles
