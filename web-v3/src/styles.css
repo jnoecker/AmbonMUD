@@ -4577,16 +4577,22 @@ body {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .room-feature-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px var(--space-2);
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2);
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
+  transition: background 150ms var(--ease-out-soft);
+}
+
+.room-feature-item:hover {
+  background: var(--bg-surface-hover);
 }
 
 .room-feature-name {
@@ -4604,23 +4610,31 @@ body {
 .room-feature-actions {
   margin-left: auto;
   display: flex;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .room-feature-btn {
-  padding: 2px 10px;
+  padding: 6px 12px;
   border: 1px solid var(--line-faint);
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
   color: var(--text-secondary);
+  font-family: var(--font-body);
   font-size: 0.75rem;
   cursor: pointer;
-  transition: background 150ms, color 150ms;
+  transition: background 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
 }
 
 .room-feature-btn:hover {
   background: var(--bg-surface-hover);
   color: var(--text-bright);
+}
+
+.room-feature-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgb(184 216 232 / 58%),
+    0 0 0 4px rgb(216 197 232 / 30%);
 }
 
 .container-contents-section {
@@ -4633,16 +4647,35 @@ body {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .container-contents-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px var(--space-2);
+  padding: var(--space-1) var(--space-2);
   font-size: 0.82rem;
   color: var(--text-primary);
+}
+
+.room-sign-text {
+  margin: var(--space-1) 0 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  font-size: 0.82rem;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-feature-item,
+  .room-feature-btn {
+    transition: none;
+  }
 }
 
 .mini-map-popout {

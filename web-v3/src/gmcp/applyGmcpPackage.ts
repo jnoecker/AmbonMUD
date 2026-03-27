@@ -878,6 +878,7 @@ export function applyGmcpPackage(
     }
 
     case "Room.Features": {
+      ctx.setContainerContents(null);
       if (!Array.isArray(data)) {
         ctx.setRoomFeatures([]);
         break;
@@ -906,6 +907,7 @@ export function applyGmcpPackage(
       ctx.setContainerContents({
         featureId: typeof packet.featureId === "string" ? packet.featureId : "",
         name: typeof packet.name === "string" ? packet.name : "",
+        keyword: typeof packet.keyword === "string" ? packet.keyword : "",
         items: Array.isArray(packet.items)
           ? packet.items
               .filter((i): i is Record<string, unknown> => typeof i === "object" && i !== null)

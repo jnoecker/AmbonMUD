@@ -247,6 +247,7 @@ class WorldFeaturesHandler(
             sessionId,
             feature.id,
             feature.displayName,
+            feature.keyword,
             contents.map { GmcpEmitter.ContainerItemPayload(name = it.item.displayName, keyword = it.item.keyword) },
         )
     }
