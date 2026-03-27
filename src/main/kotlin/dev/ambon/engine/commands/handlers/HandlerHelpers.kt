@@ -246,6 +246,24 @@ internal suspend fun sendLook(
     )
     gmcpEmitter?.sendRoomItems(sessionId, here)
 
+    // Send gathering nodes in this room
+    val roomNodes = gatheringRegistry?.nodesInRoom(roomId) ?: emptyList()
+    if (roomNodes.isNotEmpty()) {
+        gmcpEmitter?.sendCraftingNodes(
+            sessionId,
+            roomNodes.map { node ->
+                GmcpEmitter.CraftingNodePayload(
+                    id = node.id,
+                    name = node.displayName,
+                    skill = node.skill,
+                    skillRequired = node.skillRequired,
+                )
+            },
+        )
+    } else {
+        gmcpEmitter?.sendCraftingNodes(sessionId, emptyList())
+    }
+
     // Send interactive room features (doors, containers, levers, signs)
     if (room.features.isNotEmpty() && gmcpEmitter != null) {
         gmcpEmitter.sendRoomFeatures(

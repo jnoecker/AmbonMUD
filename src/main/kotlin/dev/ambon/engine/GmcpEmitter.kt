@@ -696,6 +696,55 @@ class GmcpEmitter(
         )
     }
 
+    // ---------- crafting ----------
+
+    suspend fun sendCraftingSkills(
+        sessionId: SessionId,
+        skills: List<CraftingSkillPayload>,
+    ) {
+        emit(sessionId, "Crafting.Skills", skills, supportCheck = "Crafting")
+    }
+
+    suspend fun sendCraftingRecipes(
+        sessionId: SessionId,
+        recipes: List<CraftingRecipePayload>,
+    ) {
+        emit(sessionId, "Crafting.Recipes", recipes, supportCheck = "Crafting")
+    }
+
+    suspend fun sendCraftingNodes(
+        sessionId: SessionId,
+        nodes: List<CraftingNodePayload>,
+    ) {
+        emit(sessionId, "Crafting.Nodes", nodes, supportCheck = "Crafting")
+    }
+
+    suspend fun sendCraftingResult(
+        sessionId: SessionId,
+        type: String,
+        skill: String,
+        xpAwarded: Int,
+        leveledUp: Boolean,
+        newLevel: Int,
+        itemName: String? = null,
+        quantity: Int? = null,
+    ) {
+        emit(
+            sessionId,
+            "Crafting.Result",
+            CraftingResultPayload(
+                type = type,
+                skill = skill,
+                xpAwarded = xpAwarded,
+                leveledUp = leveledUp,
+                newLevel = newLevel,
+                itemName = itemName,
+                quantity = quantity,
+            ),
+            supportCheck = "Crafting",
+        )
+    }
+
     // ---------- room features ----------
 
     suspend fun sendRoomFeatures(
@@ -1383,6 +1432,51 @@ class GmcpEmitter(
     private data class CharCooldownPayload(
         val abilityId: String,
         val cooldownMs: Long,
+    )
+
+    // ---------- crafting payloads ----------
+
+    data class CraftingSkillPayload(
+        val id: String,
+        val name: String,
+        val level: Int,
+        val xp: Long,
+        val xpToNext: Long,
+        val maxLevel: Int,
+        val type: String,
+    )
+
+    data class CraftingRecipePayload(
+        val id: String,
+        val name: String,
+        val skill: String,
+        val skillRequired: Int,
+        val levelRequired: Int,
+        val materials: List<CraftingMaterialPayload>,
+        val outputName: String,
+        val outputQuantity: Int,
+    )
+
+    data class CraftingMaterialPayload(
+        val name: String,
+        val quantity: Int,
+    )
+
+    data class CraftingNodePayload(
+        val id: String,
+        val name: String,
+        val skill: String,
+        val skillRequired: Int,
+    )
+
+    private data class CraftingResultPayload(
+        val type: String,
+        val skill: String,
+        val xpAwarded: Int,
+        val leveledUp: Boolean,
+        val newLevel: Int,
+        val itemName: String?,
+        val quantity: Int?,
     )
 
     // ---------- room feature payloads ----------
