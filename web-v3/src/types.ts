@@ -488,6 +488,7 @@ export interface CommandEntry {
   description: string;
   category: string;
   staff: boolean;
+  requiresTarget: boolean;
 }
 
 export interface EmotePreset {
