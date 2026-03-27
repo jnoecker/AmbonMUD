@@ -509,6 +509,12 @@ export interface StaffWorldZone {
 export interface UiFeedback {
   type: "error" | "info" | "success";
   message: string;
+  /** Stable machine-readable code, e.g. "INSUFFICIENT_GOLD", "TARGET_NOT_FOUND" */
+  code?: string;
+  /** Which system generated the feedback, e.g. "combat", "shop", "crafting" */
+  scope?: string;
+  /** The command that triggered the feedback, e.g. "buy", "cast" */
+  command?: string;
 }
 
 export interface LookTargetInfo {

@@ -1129,7 +1129,14 @@ export function applyGmcpPackage(
     }
 
     case "UI.Feedback": {
-      const packet = data as UiFeedback;
+      const raw = data as Record<string, unknown>;
+      const packet: UiFeedback = {
+        type: (raw.type as UiFeedback["type"]) ?? "info",
+        message: typeof raw.message === "string" ? raw.message : "",
+        code: typeof raw.code === "string" ? raw.code : undefined,
+        scope: typeof raw.scope === "string" ? raw.scope : undefined,
+        command: typeof raw.command === "string" ? raw.command : undefined,
+      };
       ctx.pushUiFeedback(packet);
       break;
     }
