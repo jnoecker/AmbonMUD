@@ -287,6 +287,16 @@ sealed interface Command {
 
     data object CraftSkills : Command
 
+    // ---- Sprite commands ----
+
+    data object SpriteList : Command
+
+    data class SpriteSet(
+        val imageId: String,
+    ) : Command
+
+    data object SpriteDefault : Command
+
     // ---- World feature commands ----
 
     data class OpenFeature(
@@ -742,6 +752,21 @@ object CommandParser {
 
         // gender <option>
         requiredArg(line, listOf("gender"), "gender <option>", { Command.SetGender(it) })?.let { return it }
+
+        // sprite: "sprite", "sprite list", "sprite set <id>", "sprite default", "sprite clear", "sprites"
+        matchPrefix(line, listOf("sprite", "sprites")) { rest ->
+            if (rest.isEmpty()) return@matchPrefix Command.SpriteList
+            val parts = rest.split(Regex("\\s+"), limit = 2)
+            when (parts[0].lowercase()) {
+                "list" -> Command.SpriteList
+                "set" -> {
+                    val id = parts.getOrNull(1)?.trim() ?: ""
+                    if (id.isEmpty()) Command.Invalid(line, "sprite set <imageId>") else Command.SpriteSet(id)
+                }
+                "default", "clear", "auto" -> Command.SpriteDefault
+                else -> Command.SpriteSet(rest.trim())
+            }
+        }?.let { return it }
 
         // Crafting & Gathering
         requiredArg(line, listOf("gather", "harvest", "mine"), "gather <node>") { Command.Gather(it) }

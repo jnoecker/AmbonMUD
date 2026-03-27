@@ -896,6 +896,7 @@ data class CommandsConfig(
             "read" to CommandMetadata(usage = "read <sign>", category = "world"),
             "title" to CommandMetadata(usage = "title <titleName> | title clear", category = "progression"),
             "gender" to CommandMetadata(usage = "gender <option>", category = "progression"),
+            "sprite" to CommandMetadata(usage = "sprite list | set <id> | default", category = "progression"),
             "friend" to CommandMetadata(usage = "friend list | add <player> | remove <player>", category = "social"),
             "mail" to CommandMetadata(usage = "mail list | read <n> | send <player> | delete <n>", category = "social"),
             "ansi" to CommandMetadata(usage = "ansi on/off", category = "utility"),
@@ -1433,8 +1434,18 @@ data class ImagesConfig(
     val globalAssets: Map<String, String> = DEFAULT_GLOBAL_ASSETS,
     /** Level thresholds for player sprite tiers, checked highest-first. */
     val spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
+    /** Human-readable names for each sprite tier, keyed by level threshold. */
+    val spriteTierNames: Map<Int, String> = DEFAULT_SPRITE_TIER_NAMES,
 ) {
     companion object {
+        val DEFAULT_SPRITE_TIER_NAMES: Map<Int, String> = linkedMapOf(
+            1 to "Novice",
+            10 to "Apprentice",
+            20 to "Journeyman",
+            30 to "Expert",
+            40 to "Master",
+            50 to "Legend",
+        )
         val DEFAULT_GLOBAL_ASSETS: Map<String, String> = linkedMapOf(
             "compass_rose" to "global_assets/compass_rose.png",
             "direction_marker" to "global_assets/direction_marker.png",

@@ -56,6 +56,7 @@ data class PlayerRecord(
     val friendsList: Set<String> = emptySet(),
     val inventoryItems: List<ItemInstance> = emptyList(),
     val equippedItems: Map<String, ItemInstance> = emptyMap(),
+    val activeSprite: String? = null,
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

@@ -62,6 +62,8 @@ data class PlayerState(
     var gatherCooldownUntilMs: Long = 0L,
     /** Epoch-ms of last command input. Runtime-only; used for idle calculation. */
     var lastActivityEpochMs: Long = 0L,
+    /** Chosen sprite variant imageId, or null for auto (highest unlocked tier). */
+    var activeSprite: String? = null,
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -155,6 +157,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
             key.lowercase() to state
         }.toMap().toMutableMap(),
         friendsList = friendsList.toMutableSet(),
+        activeSprite = activeSprite,
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -189,6 +192,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         recallRoomId = recallRoomId,
         craftingSkills = craftingSkills.toMap(),
         friendsList = friendsList.toSet(),
+        activeSprite = activeSprite,
     )
 }
 
