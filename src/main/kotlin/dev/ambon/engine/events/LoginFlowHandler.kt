@@ -533,6 +533,9 @@ internal class LoginFlowHandler(
             players,
             guildSystem,
         )
+        if (me.isStaff) {
+            gmcpEmitter.sendStaffWorldInfo(sessionId, world)
+        }
         router.handle(sessionId, Command.Look)
 
         val unread = me.inbox.count { !it.read }

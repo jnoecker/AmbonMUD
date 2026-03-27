@@ -358,6 +358,16 @@ export interface LoginErrorState {
   message: string;
 }
 
+export interface StaffWorldRoom {
+  id: string;
+  title: string;
+}
+
+export interface StaffWorldZone {
+  zone: string;
+  rooms: StaffWorldRoom[];
+}
+
 export interface UiFeedback {
   type: "error" | "info" | "success";
   message: string;
