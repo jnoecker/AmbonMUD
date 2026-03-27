@@ -2,6 +2,7 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.config.CommandsConfig
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.ZoneInstanceEntry
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
@@ -17,6 +18,7 @@ class UiHandler(
     private val players = ctx.players
     private val outbound = ctx.outbound
     private val combat = ctx.combat
+    private val gmcpEmitter = ctx.gmcpEmitter
 
     override fun register(router: CommandRouter) {
         router.on<Command.Noop> { _, _ -> }
@@ -78,6 +80,7 @@ class UiHandler(
         when (val result = onPhase.invoke(sessionId, cmd.targetHint)) {
             is PhaseResult.NotEnabled -> {
                 outbound.send(OutboundEvent.SendError(sessionId, "Layering is not enabled on this server."))
+                gmcpEmitter?.clearZoneInstances(sessionId)
             }
             is PhaseResult.InstanceList -> {
                 val lines =
@@ -92,6 +95,18 @@ class UiHandler(
                         append("Use 'phase <instance>' to switch.")
                     }
                 outbound.send(OutboundEvent.SendText(sessionId, lines))
+                gmcpEmitter?.sendZoneInstances(
+                    sessionId,
+                    zone = result.instances.firstOrNull()?.zone ?: "",
+                    currentEngineId = result.currentEngineId,
+                    instances = result.instances.map { i ->
+                        ZoneInstanceEntry(
+                            engineId = i.engineId,
+                            playerCount = i.playerCount,
+                            capacity = i.capacity,
+                        )
+                    },
+                )
             }
             is PhaseResult.Initiated -> {
                 // Handoff message already sent by HandoffManager
