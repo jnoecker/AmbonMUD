@@ -42,7 +42,10 @@ export function MailPanel({
   if (inbox === null) {
     return (
       <div className="mail-panel" aria-label="Mail">
-        <p className="empty-note">Loading mail&hellip;</p>
+        <div className="mail-empty-state">
+          <span className="mail-empty-icon" aria-hidden="true">{"\u2709"}</span>
+          <p className="empty-note">Checking your mailbox&hellip;</p>
+        </div>
       </div>
     );
   }
@@ -58,10 +61,7 @@ export function MailPanel({
             <button className="mail-back-button" aria-label="Back to inbox" onClick={onClearMessage}>
               &larr; Back
             </button>
-            <span className="mail-message-title">From {openMessage.from}</span>
-          </div>
-          <div className="mail-message-meta">
-            <span className="mail-message-from">From: <strong>{openMessage.from}</strong></span>
+            <span className="mail-message-title">{openMessage.from}</span>
             <span className="mail-message-date">{formatDate(openMessage.date)}</span>
           </div>
           <pre className="mail-message-body">{openMessage.body}</pre>
@@ -114,7 +114,7 @@ export function MailPanel({
               Begin Compose
             </button>
             <p className="mail-compose-hint">
-              This will start a compose session in the terminal. Type your message line by line, then type <code>.</code> alone to send.
+              You&rsquo;ll write your letter in the terminal below. Type each line, then send with <code>.</code> on its own line.
             </p>
           </div>
         </div>
@@ -134,7 +134,10 @@ export function MailPanel({
         </button>
       </div>
       {inbox.length === 0 ? (
-        <p className="empty-note">Your inbox is empty.</p>
+        <div className="mail-empty-state">
+          <span className="mail-empty-icon" aria-hidden="true">{"\u2709"}</span>
+          <p className="empty-note">No messages yet. Your friends can send you mail!</p>
+        </div>
       ) : (
         <ul className="mail-inbox-list" role="list">
           {inbox.map((entry) => (
