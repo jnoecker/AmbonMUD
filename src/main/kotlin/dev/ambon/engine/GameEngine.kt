@@ -429,6 +429,7 @@ class GameEngine(
             imagesBaseUrl = imagesBaseUrl,
             globalAssets = globalAssets,
             spriteRegistry = spriteRegistry,
+            getMobEffects = { mobId -> statusEffectSystem.activeMobEffects(mobId) },
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
