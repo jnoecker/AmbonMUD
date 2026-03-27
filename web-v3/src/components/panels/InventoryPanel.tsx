@@ -72,6 +72,14 @@ export function InventoryPanel({
           {item.slot && <span className="inventory-item-slot">{item.slot}</span>}
         </span>
         <span className="inventory-item-actions">
+          <button
+            type="button"
+            className="inventory-action-btn inventory-action-examine"
+            title={`Examine ${item.name}`}
+            onClick={() => onCommand(`look ${item.keyword}`)}
+          >
+            Examine
+          </button>
           {!item.slot && (
             <button
               type="button"
@@ -205,6 +213,14 @@ export function InventoryPanel({
                     {containerContents.items.map((ci, idx) => (
                       <li key={`${ci.keyword}-${idx}`} className="container-item">
                         <span className="container-item-name">{ci.name}</span>
+                        <button
+                          type="button"
+                          className="inventory-action-btn inventory-action-examine"
+                          title={`Examine ${ci.name}`}
+                          onClick={() => onCommand(`look ${ci.keyword}`)}
+                        >
+                          Examine
+                        </button>
                         <button
                           type="button"
                           className="inventory-action-btn inventory-action-use"
