@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
@@ -291,6 +291,44 @@ export interface GainEvent {
   newLevel: number | null;
   hpGained: number | null;
   manaGained: number | null;
+}
+
+export interface CraftingSkill {
+  id: string;
+  name: string;
+  level: number;
+  xp: number;
+  xpToNext: number;
+  maxLevel: number;
+  type: "gathering" | "crafting";
+}
+
+export interface CraftingRecipe {
+  id: string;
+  name: string;
+  skill: string;
+  skillRequired: number;
+  levelRequired: number;
+  materials: Array<{ name: string; quantity: number }>;
+  outputName: string;
+  outputQuantity: number;
+}
+
+export interface CraftingNode {
+  id: string;
+  name: string;
+  skill: string;
+  skillRequired: number;
+}
+
+export interface CraftingResult {
+  type: "gather" | "craft";
+  skill: string;
+  xpAwarded: number;
+  leveledUp: boolean;
+  newLevel: number;
+  itemName: string | null;
+  quantity: number | null;
 }
 
 export interface MailEntry {

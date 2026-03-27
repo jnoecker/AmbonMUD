@@ -15,6 +15,7 @@ import { EquipmentPanel } from "./components/panels/EquipmentPanel";
 import { PlayPanel } from "./components/panels/PlayPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { MailPanel } from "./components/panels/MailPanel";
+import { CraftingPanel } from "./components/panels/CraftingPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
 import { canvasEvents } from "./canvas/CanvasEventBus";
@@ -40,6 +41,9 @@ import type {
   CombatEventData,
   CombatLogMessage,
   CombatTarget,
+  CraftingNode,
+  CraftingRecipe,
+  CraftingSkill,
   DialogueState,
   EquipmentSlotDef,
   FriendEntry,
@@ -206,6 +210,9 @@ function App() {
   const [mobInfo, setMobInfo] = useState<MobInfo[]>([]);
   const [shop, setShop] = useState<ShopState | null>(null);
   const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
+  const [craftingSkills, setCraftingSkills] = useState<CraftingSkill[]>([]);
+  const [craftingRecipes, setCraftingRecipes] = useState<CraftingRecipe[]>([]);
+  const [craftingNodes, setCraftingNodes] = useState<CraftingNode[]>([]);
   const [mailInbox, setMailInbox] = useState<MailEntry[]>([]);
   const [mailMessage, setMailMessage] = useState<MailMessage | null>(null);
   const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
@@ -277,6 +284,10 @@ function App() {
     });
   }, []);
 
+  const pushCraftingResult = useCallback(() => {
+    // Crafting.Skills GMCP refreshes skill state; result is informational.
+  }, []);
+
   const pushMailNotification = useCallback(() => {
     // Mail.List GMCP already updates the inbox; notification is informational.
   }, []);
@@ -331,6 +342,9 @@ function App() {
     setMobInfo([]);
     setShop(null);
     setQuestNotifications([]);
+    setCraftingSkills([]);
+    setCraftingRecipes([]);
+    setCraftingNodes([]);
     setMailInbox([]);
     setMailMessage(null);
     setLoginPrompt(null);
@@ -394,6 +408,10 @@ function App() {
           setServerAssets,
           pushUiFeedback,
           setStaffWorldInfo,
+          setCraftingSkills,
+          setCraftingRecipes,
+          setCraftingNodes,
+          pushCraftingResult,
           setMailInbox,
           setMailMessage,
           pushMailNotification,
@@ -401,7 +419,7 @@ function App() {
         },
       );
     },
-    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, pushMailNotification, updateMap, loadZoneMap],
+    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, pushCraftingResult, pushMailNotification, updateMap, loadZoneMap],
   );
 
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine, sendGmcp } = useMudSocket({
@@ -1047,6 +1065,19 @@ function App() {
               sendCommand(`mail send ${recipient}`, true);
             }}
             onClearMessage={() => setMailMessage(null)}
+          />
+        )}
+
+        {activePopout === "crafting" && (
+          <CraftingPanel
+            connected={connected}
+            hasCharacterProfile={hasCharacterProfile}
+            skills={craftingSkills}
+            recipes={craftingRecipes}
+            nodes={craftingNodes}
+            onGather={(keyword) => sendCommand(`gather ${keyword}`, true)}
+            onCraft={(recipeKeyword) => sendCommand(`craft ${recipeKeyword}`, true)}
+            onRequestRecipes={() => sendCommand("recipes", true)}
           />
         )}
 
