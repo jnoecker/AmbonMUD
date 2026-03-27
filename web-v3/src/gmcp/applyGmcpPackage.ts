@@ -30,6 +30,7 @@ import type {
   PendingGuildInvite,
   InProgressAchievement,
   ItemSummary,
+  LookTargetInfo,
   LoginErrorState,
   LoginPromptState,
   MailEntry,
@@ -104,6 +105,7 @@ interface GmcpContext {
   setEmotePresets: Dispatch<SetStateAction<EmotePreset[]>>;
   pushUiFeedback: (feedback: UiFeedback) => void;
   setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
+  setLookTarget: Dispatch<SetStateAction<LookTargetInfo | null>>;
   setCraftingSkills: Dispatch<SetStateAction<CraftingSkill[]>>;
   setCraftingRecipes: Dispatch<SetStateAction<CraftingRecipe[]>>;
   setCraftingNodes: Dispatch<SetStateAction<CraftingNode[]>>;
@@ -385,6 +387,22 @@ export function applyGmcpPackage(
             video: typeof entry.video === "string" ? entry.video : null,
           })),
       );
+      break;
+    }
+
+    case "Room.LookTarget": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const targetType = typeof packet.type === "string" ? packet.type : "item";
+      ctx.setLookTarget({
+        type: targetType as LookTargetInfo["type"],
+        name: typeof packet.name === "string" ? packet.name : "Unknown",
+        description: typeof packet.description === "string" ? packet.description : "",
+        image: typeof packet.image === "string" ? packet.image : null,
+        level: typeof packet.level === "number" ? packet.level : null,
+        race: typeof packet.race === "string" ? packet.race : null,
+        playerClass: typeof packet.class === "string" ? (packet.class as string) : null,
+        receivedAt: Date.now(),
+      });
       break;
     }
 

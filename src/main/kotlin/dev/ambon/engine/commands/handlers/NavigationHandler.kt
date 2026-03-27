@@ -158,6 +158,7 @@ class NavigationHandler(
         if (mob != null) {
             val desc = mob.description.ifEmpty { "You see nothing special about ${mob.name}." }
             outbound.send(OutboundEvent.SendText(sessionId, "${mob.name}: $desc"))
+            gmcpEmitter?.sendLookTarget(sessionId, "mob", mob.name, desc)
             return
         }
 
@@ -167,6 +168,7 @@ class NavigationHandler(
         if (roomItem != null) {
             val desc = roomItem.item.description.ifEmpty { "You see nothing special about ${roomItem.item.displayName}." }
             outbound.send(OutboundEvent.SendText(sessionId, "${roomItem.item.displayName}: $desc"))
+            gmcpEmitter?.sendLookTarget(sessionId, "item", roomItem.item.displayName, desc, image = roomItem.item.image)
             return
         }
 
@@ -176,6 +178,7 @@ class NavigationHandler(
         if (invItem != null) {
             val desc = invItem.item.description.ifEmpty { "You see nothing special about ${invItem.item.displayName}." }
             outbound.send(OutboundEvent.SendText(sessionId, "${invItem.item.displayName}: $desc"))
+            gmcpEmitter?.sendLookTarget(sessionId, "item", invItem.item.displayName, desc, image = invItem.item.image)
             return
         }
 
@@ -185,6 +188,7 @@ class NavigationHandler(
         if (eqItem != null) {
             val desc = eqItem.item.description.ifEmpty { "You see nothing special about ${eqItem.item.displayName}." }
             outbound.send(OutboundEvent.SendText(sessionId, "${eqItem.item.displayName}: $desc"))
+            gmcpEmitter?.sendLookTarget(sessionId, "item", eqItem.item.displayName, desc, image = eqItem.item.image)
             return
         }
 
@@ -195,6 +199,15 @@ class NavigationHandler(
             val p = otherPlayer
             val playerDesc = "You see ${p.name}, a level ${p.level} ${p.race} ${p.playerClass}."
             outbound.send(OutboundEvent.SendText(sessionId, playerDesc))
+            gmcpEmitter?.sendLookTarget(
+                sessionId,
+                "player",
+                p.name,
+                playerDesc,
+                level = p.level,
+                race = p.race.toString(),
+                playerClass = p.playerClass.toString(),
+            )
             return
         }
 
