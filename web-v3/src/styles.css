@@ -3222,22 +3222,24 @@ body {
 /* ────────── Equipment Panel (Paper Doll) ────────── */
 
 .equipment-panel-v2 {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
   padding: var(--space-2) 0;
 }
 
-.paperdoll-container {
+/* Side-by-side: sprite left, slot list right */
+.paperdoll-layout {
   display: flex;
-  justify-content: center;
-  padding: var(--space-2) 0;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.paperdoll-sprite-col {
+  flex-shrink: 0;
 }
 
 .paperdoll-sprite-wrap {
   position: relative;
-  width: 180px;
-  height: 180px;
+  width: 220px;
+  height: 220px;
 }
 
 .paperdoll-sprite {
@@ -3251,14 +3253,15 @@ body {
 .paperdoll-sprite-placeholder {
   background: linear-gradient(140deg, rgb(50 60 88 / 80%), rgb(40 50 75 / 70%));
   border: 2px dashed var(--line-faint);
+  border-radius: var(--radius-lg);
 }
 
 /* Slot markers positioned absolutely via percentage */
 .paperdoll-slot {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: 2px solid rgb(168 151 210 / 50%);
   background: rgb(34 41 60 / 90%);
@@ -3297,15 +3300,15 @@ body {
 }
 
 .paperdoll-slot-img {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .paperdoll-slot-letter {
   font-family: var(--font-body);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: var(--text-disabled);
 }
@@ -3315,46 +3318,72 @@ body {
   50% { opacity: 1; box-shadow: 0 0 12px rgb(168 151 210 / 40%); }
 }
 
-/* Selected slot detail card */
-.paperdoll-detail {
-  background: linear-gradient(140deg, rgb(70 83 117 / 88%), rgb(60 76 111 / 84%));
-  border: 1px solid rgb(168 151 210 / 24%);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-  animation: questDetailsSlide 200ms var(--ease-out-soft);
+/* Right column: slot list */
+.paperdoll-slots-col {
+  flex: 1;
+  min-width: 0;
 }
 
-.paperdoll-detail-header {
+.paperdoll-slot-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.paperdoll-list-item {
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 120ms var(--ease-out-soft);
+}
+
+.paperdoll-list-item:hover {
+  background: rgb(255 255 255 / 4%);
+}
+
+.paperdoll-list-item-selected {
+  background: rgb(168 151 210 / 12%);
+}
+
+.paperdoll-list-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: var(--space-2);
 }
 
-.paperdoll-detail-slot {
+.paperdoll-list-slot {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 
-.paperdoll-detail-name {
-  font-size: 0.82rem;
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.paperdoll-detail-empty {
+.paperdoll-list-name {
   font-size: 0.78rem;
+  color: var(--text-primary);
+  text-align: right;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paperdoll-list-name-empty {
   color: var(--text-disabled);
   font-style: italic;
 }
 
-.paperdoll-detail-actions {
-  margin-top: var(--space-2);
+.paperdoll-list-actions {
+  margin-top: 4px;
   display: flex;
   justify-content: flex-end;
+  animation: questDetailsSlide 160ms var(--ease-out-soft);
 }
 
 .paperdoll-remove-btn {
@@ -3382,52 +3411,6 @@ body {
 .paperdoll-remove-icon {
   width: 14px;
   height: 14px;
-}
-
-/* Slot list summary */
-.paperdoll-slot-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.paperdoll-list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px 8px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background 120ms var(--ease-out-soft);
-}
-
-.paperdoll-list-item:hover {
-  background: rgb(255 255 255 / 4%);
-}
-
-.paperdoll-list-item-selected {
-  background: rgb(168 151 210 / 12%);
-}
-
-.paperdoll-list-slot {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.paperdoll-list-name {
-  font-size: 0.78rem;
-  color: var(--text-primary);
-}
-
-.paperdoll-list-name-empty {
-  color: var(--text-disabled);
-  font-style: italic;
 }
 
 @media (prefers-reduced-motion: reduce) {
