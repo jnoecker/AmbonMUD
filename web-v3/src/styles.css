@@ -2780,7 +2780,8 @@ body {
 }
 
 .mail-compose-button {
-  padding: 4px 12px;
+  padding: 6px 14px;
+  min-height: 44px;
   border: 1px solid var(--line-faint);
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
@@ -2811,6 +2812,7 @@ body {
 
 .mail-inbox-item.mail-unread {
   background: rgb(141 123 169 / 8%);
+  transition: background 300ms var(--ease-out-soft);
 }
 
 .mail-inbox-row {
@@ -2862,7 +2864,12 @@ body {
 }
 
 .mail-delete-button {
-  padding: 4px 8px;
+  padding: 8px 10px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: none;
   color: var(--text-secondary);
@@ -2873,6 +2880,11 @@ body {
 }
 
 .mail-delete-button:hover {
+  opacity: 1;
+  color: var(--color-error);
+}
+
+.mail-delete-confirm {
   opacity: 1;
   color: var(--color-error);
 }
@@ -2957,9 +2969,17 @@ body {
   font-size: 0.82rem;
 }
 
-.mail-compose-input:focus {
+.mail-compose-input:focus-visible {
   outline: none;
-  border-color: var(--color-primary-lavender);
+  box-shadow:
+    0 0 0 2px rgb(184 216 232 / 58%),
+    0 0 0 4px rgb(216 197 232 / 30%);
+}
+
+.mail-compose-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .mail-compose-send {

@@ -53,6 +53,7 @@ import type {
   LoginPromptState,
   MailEntry,
   MailMessage,
+  MailNotification,
   MobInfo,
   PopoutPanel,
   QuestAvailable,
@@ -206,7 +207,7 @@ function App() {
   const [mobInfo, setMobInfo] = useState<MobInfo[]>([]);
   const [shop, setShop] = useState<ShopState | null>(null);
   const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
-  const [mailInbox, setMailInbox] = useState<MailEntry[]>([]);
+  const [mailInbox, setMailInbox] = useState<MailEntry[] | null>(null);
   const [mailMessage, setMailMessage] = useState<MailMessage | null>(null);
   const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
   const [loginError, setLoginError] = useState<LoginErrorState | null>(null);
@@ -277,9 +278,13 @@ function App() {
     });
   }, []);
 
-  const pushMailNotification = useCallback(() => {
-    // Mail.List GMCP already updates the inbox; notification is informational.
-  }, []);
+  const pushMailNotification = useCallback((notification?: MailNotification) => {
+    if (!notification) return;
+    pushUiFeedback({
+      type: "info",
+      message: `New mail from ${notification.from}`,
+    });
+  }, [pushUiFeedback]);
 
   const focusComposer = useCallback(() => {
     window.requestAnimationFrame(() => composerInputRef.current?.focus());
@@ -331,7 +336,7 @@ function App() {
     setMobInfo([]);
     setShop(null);
     setQuestNotifications([]);
-    setMailInbox([]);
+    setMailInbox(null);
     setMailMessage(null);
     setLoginPrompt(null);
     setLoginError(null);
@@ -875,7 +880,7 @@ function App() {
           quickbarSlots={quickbar.slots}
           shop={shop}
           questCount={quests.length}
-          mailUnreadCount={mailInbox.filter((m) => !m.read).length}
+          mailUnreadCount={(mailInbox ?? []).filter((m) => !m.read).length}
           activePopout={activePopout}
           onOpenPopout={setActivePopout}
           onCastSkill={handleCastSkill}
