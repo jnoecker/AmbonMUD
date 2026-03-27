@@ -1079,6 +1079,7 @@ export function applyGmcpPackage(
           description: String(c.description ?? ""),
           category: String(c.category ?? ""),
           staff: c.staff === true,
+          requiresTarget: c.requiresTarget === true,
         }));
       ctx.setServerCommands(commands);
       break;
