@@ -9,6 +9,7 @@ import type {
   CombatEventData,
   CombatTarget,
   CompletedAchievement,
+  ContainerContents,
   DialogueChoice,
   DialogueState,
   EquipmentSlotDef,
@@ -27,6 +28,7 @@ import type {
   MailMessage,
   MailNotification,
   MobInfo,
+  RoomFeature,
   QuestAvailable,
   QuestEntry,
   QuestNotification,
@@ -78,6 +80,8 @@ interface GmcpContext {
   pushGainEvent: (event: GainEvent) => void;
   pushQuestNotification: (notification: QuestNotification) => void;
   setMobInfo: Dispatch<SetStateAction<MobInfo[]>>;
+  setRoomFeatures: Dispatch<SetStateAction<RoomFeature[]>>;
+  setContainerContents: Dispatch<SetStateAction<ContainerContents | null>>;
   setLoginPrompt: Dispatch<SetStateAction<LoginPromptState | null>>;
   setLoginError: Dispatch<SetStateAction<LoginErrorState | null>>;
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
@@ -870,6 +874,44 @@ export function applyGmcpPackage(
             aggressive: entry.aggressive === true,
           })),
       );
+      break;
+    }
+
+    case "Room.Features": {
+      if (!Array.isArray(data)) {
+        ctx.setRoomFeatures([]);
+        break;
+      }
+      ctx.setRoomFeatures(
+        data
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => ({
+            id: typeof e.id === "string" ? e.id : "",
+            name: typeof e.name === "string" ? e.name : "",
+            keyword: typeof e.keyword === "string" ? e.keyword : "",
+            type: (e.type === "door" || e.type === "container" || e.type === "lever" || e.type === "sign")
+              ? e.type : "sign" as const,
+            state: typeof e.state === "string" ? e.state : null,
+            direction: typeof e.direction === "string" ? e.direction : null,
+            locked: typeof e.locked === "boolean" ? e.locked : null,
+            keyRequired: typeof e.keyRequired === "boolean" ? e.keyRequired : null,
+            text: typeof e.text === "string" ? e.text : null,
+          })),
+      );
+      break;
+    }
+
+    case "Room.ContainerContents": {
+      const packet = data as Partial<Record<string, unknown>>;
+      ctx.setContainerContents({
+        featureId: typeof packet.featureId === "string" ? packet.featureId : "",
+        name: typeof packet.name === "string" ? packet.name : "",
+        items: Array.isArray(packet.items)
+          ? packet.items
+              .filter((i): i is Record<string, unknown> => typeof i === "object" && i !== null)
+              .map((i) => ({ name: typeof i.name === "string" ? i.name : "", keyword: typeof i.keyword === "string" ? i.keyword : "" }))
+          : [],
+      });
       break;
     }
 

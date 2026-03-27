@@ -1,17 +1,20 @@
 import type { ReactNode, RefObject } from "react";
-import type { PopoutPanel, RoomState } from "../types";
+import type { ContainerContents, PopoutPanel, RoomFeature, RoomState } from "../types";
 import { HelpContent } from "./HelpContent";
 
-const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop", "spellbook", "quests", "inventory", "equipment"]);
+const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop", "spellbook", "quests", "inventory", "equipment", "mail", "crafting"]);
 
 interface PopoutLayerProps {
   activePopout: PopoutPanel;
   popoutTitle: string;
   room: RoomState;
   exits: Array<[string, string]>;
+  roomFeatures: RoomFeature[];
+  containerContents: ContainerContents | null;
   mapCanvasRef: RefObject<HTMLCanvasElement | null>;
   isStaff: boolean;
   onClose: () => void;
+  onFeatureAction: (command: string) => void;
   children?: ReactNode;
 }
 
@@ -20,9 +23,12 @@ export function PopoutLayer({
   popoutTitle,
   room,
   exits,
+  roomFeatures,
+  containerContents,
   mapCanvasRef,
   isStaff,
   onClose,
+  onFeatureAction,
   children,
 }: PopoutLayerProps) {
   if (!activePopout) return null;
@@ -81,6 +87,62 @@ export function PopoutLayer({
                   ? "No exits listed."
                   : `Available exits: ${exits.map(([direction]) => direction).join(", ")}`}
               </p>
+              {roomFeatures.length > 0 && (
+                <div className="room-features-section">
+                  <h4 className="room-features-title">Interactive Features</h4>
+                  <ul className="room-features-list">
+                    {roomFeatures.map((f) => (
+                      <li key={f.id} className="room-feature-item">
+                        <span className="room-feature-name">{f.name}</span>
+                        {f.state && <span className="room-feature-state">({f.state})</span>}
+                        <span className="room-feature-actions">
+                          {f.type === "door" && f.state === "closed" && (
+                            <button className="room-feature-btn" onClick={() => onFeatureAction(`open ${f.keyword}`)}>Open</button>
+                          )}
+                          {f.type === "door" && f.state === "open" && (
+                            <button className="room-feature-btn" onClick={() => onFeatureAction(`close ${f.keyword}`)}>Close</button>
+                          )}
+                          {f.type === "door" && f.state === "locked" && (
+                            <button className="room-feature-btn" onClick={() => onFeatureAction(`unlock ${f.keyword}`)}>Unlock</button>
+                          )}
+                          {f.type === "container" && f.state === "closed" && (
+                            <button className="room-feature-btn" onClick={() => onFeatureAction(`open ${f.keyword}`)}>Open</button>
+                          )}
+                          {f.type === "container" && f.state === "open" && (
+                            <button className="room-feature-btn" onClick={() => onFeatureAction(`search ${f.keyword}`)}>Search</button>
+                          )}
+                          {f.type === "container" && f.state === "locked" && (
+                            <button className="room-feature-btn" onClick={() => onFeatureAction(`unlock ${f.keyword}`)}>Unlock</button>
+                          )}
+                          {f.type === "lever" && (
+                            <button className="room-feature-btn" onClick={() => onFeatureAction(`pull ${f.keyword}`)}>Pull</button>
+                          )}
+                          {f.type === "sign" && (
+                            <button className="room-feature-btn" onClick={() => onFeatureAction(`read ${f.keyword}`)}>Read</button>
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  {containerContents && (
+                    <div className="container-contents-section">
+                      <h4 className="room-features-title">In the {containerContents.name}</h4>
+                      {containerContents.items.length === 0 ? (
+                        <p className="empty-note">Empty.</p>
+                      ) : (
+                        <ul className="container-contents-list">
+                          {containerContents.items.map((item, i) => (
+                            <li key={i} className="container-contents-item">
+                              <span>{item.name}</span>
+                              <button className="room-feature-btn" onClick={() => onFeatureAction(`get ${item.keyword} from ${containerContents.name}`)}>Take</button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </article>
           </div>
         )}

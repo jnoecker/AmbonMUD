@@ -53,8 +53,10 @@ import type {
   LoginPromptState,
   MailEntry,
   MailMessage,
+  ContainerContents,
   MobInfo,
   PopoutPanel,
+  RoomFeature,
   QuestAvailable,
   QuestEntry,
   QuestNotification,
@@ -204,6 +206,8 @@ function App() {
   const [quests, setQuests] = useState<QuestEntry[]>([]);
   const [questsAvailable, setQuestsAvailable] = useState<QuestAvailable[]>([]);
   const [mobInfo, setMobInfo] = useState<MobInfo[]>([]);
+  const [roomFeatures, setRoomFeatures] = useState<RoomFeature[]>([]);
+  const [containerContents, setContainerContents] = useState<ContainerContents | null>(null);
   const [shop, setShop] = useState<ShopState | null>(null);
   const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
   const [mailInbox, setMailInbox] = useState<MailEntry[]>([]);
@@ -329,6 +333,8 @@ function App() {
     setQuests([]);
     setQuestsAvailable([]);
     setMobInfo([]);
+    setRoomFeatures([]);
+    setContainerContents(null);
     setShop(null);
     setQuestNotifications([]);
     setMailInbox([]);
@@ -389,6 +395,8 @@ function App() {
           pushGainEvent,
           pushQuestNotification,
           setMobInfo,
+          setRoomFeatures,
+          setContainerContents,
           setLoginPrompt,
           setLoginError,
           setServerAssets,
@@ -907,9 +915,12 @@ function App() {
         popoutTitle={popoutTitle}
         room={room}
         exits={exits}
+        roomFeatures={roomFeatures}
+        containerContents={containerContents}
         mapCanvasRef={mapCanvasRef}
         isStaff={character.isStaff}
         onClose={() => setActivePopout(null)}
+        onFeatureAction={(cmd) => sendCommand(cmd, true)}
       >
         {activePopout === "character" && (
           <CharacterPanel
