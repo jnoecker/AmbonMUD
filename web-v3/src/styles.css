@@ -1542,6 +1542,266 @@ body {
 }
 
 
+/* ---------- Shared social action styles ---------- */
+
+.social-action-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 8px;
+  border-bottom: 1px solid rgb(106 96 136 / 18%);
+}
+
+.social-action-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgb(106 96 136 / 24%);
+  background: rgb(40 46 68 / 70%);
+  color: var(--text-primary);
+}
+
+.social-action-input::placeholder {
+  color: var(--text-muted);
+}
+
+.social-action-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgb(184 216 232 / 30%);
+}
+
+.social-action-btn {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgb(106 96 136 / 24%);
+  background: linear-gradient(140deg, rgb(70 83 117 / 92%), rgb(60 76 111 / 88%));
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 120ms ease, transform 80ms ease;
+}
+
+.social-action-btn:hover:not(:disabled) {
+  background: linear-gradient(140deg, rgb(85 100 140 / 92%), rgb(72 90 130 / 88%));
+}
+
+.social-action-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.social-action-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.social-accept-btn {
+  background: linear-gradient(140deg, rgb(60 90 70 / 92%), rgb(50 80 60 / 88%));
+  border-color: rgb(80 120 90 / 30%);
+}
+
+.social-accept-btn:hover:not(:disabled) {
+  background: linear-gradient(140deg, rgb(70 105 80 / 92%), rgb(58 92 68 / 88%));
+}
+
+.social-danger-btn {
+  background: linear-gradient(140deg, rgb(100 60 60 / 92%), rgb(90 50 50 / 88%));
+  border-color: rgb(140 80 80 / 30%);
+}
+
+.social-danger-btn:hover:not(:disabled) {
+  background: linear-gradient(140deg, rgb(120 70 70 / 92%), rgb(105 58 58 / 88%));
+}
+
+.social-cancel-btn {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+.social-cancel-btn:hover:not(:disabled) {
+  color: var(--text-secondary);
+  background: rgb(70 83 117 / 40%);
+}
+
+.social-edit-btn {
+  all: unset;
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  transition: color 120ms ease;
+}
+
+.social-edit-btn:hover {
+  color: var(--text-primary);
+}
+
+.social-empty-action {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  align-items: center;
+}
+
+.social-empty-action .social-action-bar {
+  border: none;
+  padding: 0;
+  width: 100%;
+  max-width: 320px;
+}
+
+.social-inline-btn {
+  all: unset;
+  cursor: pointer;
+  font-size: 0.72rem;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.social-inline-btn:hover {
+  color: var(--text-primary);
+  background: rgb(70 83 117 / 60%);
+}
+
+.social-inline-btn-danger:hover {
+  color: var(--color-accent-faded-crimson);
+  background: rgb(100 50 50 / 40%);
+}
+
+.social-remove-btn {
+  all: unset;
+  cursor: pointer;
+  font-size: 0.9rem;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-disabled);
+  transition: color 120ms ease;
+}
+
+.social-remove-btn:hover {
+  color: var(--color-accent-faded-crimson);
+}
+
+.social-confirm-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.social-confirm-yes {
+  all: unset;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: rgb(100 50 50 / 60%);
+  color: var(--color-accent-faded-crimson);
+  transition: background 120ms ease;
+}
+
+.social-confirm-yes:hover {
+  background: rgb(120 60 60 / 70%);
+}
+
+.social-confirm-no {
+  all: unset;
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: color 120ms ease;
+}
+
+.social-confirm-no:hover {
+  color: var(--text-primary);
+}
+
+/* ---------- Guild-specific layout ---------- */
+
+.guild-create-form {
+  display: flex;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 320px;
+}
+
+.guild-tag-input {
+  max-width: 60px;
+  text-align: center;
+}
+
+.guild-invite-bar {
+  border-top: none;
+  padding-top: 0;
+}
+
+.guild-motd-edit {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.guild-motd-edit .social-action-input {
+  flex: 1;
+}
+
+.guild-motd-display {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.guild-motd-display .guild-motd-text {
+  flex: 1;
+}
+
+.guild-member-actions {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 4px;
+}
+
+.guild-footer-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding: 6px 8px;
+  border-top: 1px solid rgb(106 96 136 / 18%);
+  justify-content: flex-end;
+}
+
+/* ---------- Group-specific layout ---------- */
+
+.group-invite-bar {
+  border-bottom: 1px solid rgb(106 96 136 / 18%);
+}
+
+.group-footer-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding: 6px 8px;
+  border-top: 1px solid rgb(106 96 136 / 18%);
+  justify-content: flex-end;
+}
+
 .chat-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
