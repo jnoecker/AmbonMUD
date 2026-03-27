@@ -432,6 +432,7 @@ class GmcpEmitter(
                 ServerCommandPayload(
                     name = name,
                     usage = meta.usage,
+                    description = meta.description,
                     category = meta.category,
                     staff = meta.staff,
                 )
@@ -1684,6 +1685,7 @@ class GmcpEmitter(
     private data class ServerCommandPayload(
         val name: String,
         val usage: String,
+        val description: String,
         val category: String,
         val staff: Boolean,
     )

@@ -937,6 +937,7 @@ function App() {
         containerContents={containerContents}
         mapCanvasRef={mapCanvasRef}
         isStaff={character.isStaff}
+        serverCommands={serverCommands}
         onClose={() => setActivePopout(null)}
         onFeatureAction={(cmd) => sendCommand(cmd, true)}
       >
