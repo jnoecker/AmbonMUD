@@ -211,7 +211,9 @@ class NavigationHandler(
             return
         }
 
-        outbound.send(OutboundEvent.SendError(sessionId, "You don't see '${cmd.target}' here."))
+        val msg = "You don't see '${cmd.target}' here."
+        outbound.send(OutboundEvent.SendError(sessionId, msg))
+        gmcpEmitter?.sendUiFeedback(sessionId, "error", msg, code = "TARGET_NOT_FOUND", scope = "navigation", command = "look")
     }
 
     private suspend fun handleLookDir(

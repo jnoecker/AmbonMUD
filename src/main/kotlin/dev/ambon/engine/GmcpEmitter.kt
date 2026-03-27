@@ -1179,8 +1179,20 @@ class GmcpEmitter(
 
     // ---------- UI feedback ----------
 
-    suspend fun sendUiFeedback(sessionId: SessionId, type: String, message: String) {
-        emit(sessionId, "UI.Feedback", UiFeedbackPayload(type = type, message = message), supportCheck = "UI.Feedback")
+    suspend fun sendUiFeedback(
+        sessionId: SessionId,
+        type: String,
+        message: String,
+        code: String? = null,
+        scope: String? = null,
+        command: String? = null,
+    ) {
+        emit(
+            sessionId,
+            "UI.Feedback",
+            UiFeedbackPayload(type = type, message = message, code = code, scope = scope, command = command),
+            supportCheck = "UI.Feedback",
+        )
     }
 
     // ---------- staff world info ----------
@@ -1199,9 +1211,13 @@ class GmcpEmitter(
         emit(sessionId, "Staff.WorldInfo", zones, supportCheck = "Staff")
     }
 
+    @Suppress("unused") // Jackson serializes all fields
     private data class UiFeedbackPayload(
         val type: String,
         val message: String,
+        val code: String? = null,
+        val scope: String? = null,
+        val command: String? = null,
     )
 
     private data class StaffZonePayload(
