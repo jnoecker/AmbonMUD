@@ -6316,6 +6316,68 @@ body {
   flex-shrink: 0;
 }
 
+/* ---------- Instance selector ---------- */
+
+.action-bar-instances {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px;
+  border-left: 1px solid rgb(106 96 136 / 18%);
+}
+
+.instance-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.instance-selector {
+  display: flex;
+  gap: 3px;
+}
+
+.instance-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgb(106 96 136 / 20%);
+  background: rgb(50 58 82 / 60%);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.65rem;
+  line-height: 1;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.instance-btn:hover:not(:disabled) {
+  background: rgb(70 83 117 / 70%);
+  border-color: var(--accent-primary);
+}
+
+.instance-btn-current {
+  background: linear-gradient(140deg, rgb(70 100 80 / 60%), rgb(60 90 70 / 50%));
+  border-color: rgb(100 150 110 / 40%);
+  color: var(--text-primary);
+  cursor: default;
+}
+
+.instance-num {
+  font-weight: 700;
+  font-size: 0.68rem;
+}
+
+.instance-pop {
+  font-size: 0.58rem;
+  color: var(--text-muted);
+}
+
 /* ── Action bar skills ─────────────────────────────────────────── */
 
 .action-bar-skills {

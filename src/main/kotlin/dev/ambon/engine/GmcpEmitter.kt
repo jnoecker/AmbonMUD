@@ -437,6 +437,42 @@ class GmcpEmitter(
         emit(sessionId, "Server.Who", payload, supportCheck = "Server.Who")
     }
 
+    /** Sends zone instance list as `Zone.Instances`. Pass null to clear. */
+    suspend fun sendZoneInstances(
+        sessionId: SessionId,
+        zone: String,
+        currentEngineId: String,
+        instances: List<ZoneInstanceEntry>,
+    ) {
+        emit(
+            sessionId,
+            "Zone.Instances",
+            ZoneInstancesPayload(
+                zone = zone,
+                currentEngineId = currentEngineId,
+                instances = instances.map { i ->
+                    ZoneInstanceItemPayload(
+                        engineId = i.engineId,
+                        playerCount = i.playerCount,
+                        capacity = i.capacity,
+                        isCurrent = i.engineId == currentEngineId,
+                    )
+                },
+            ),
+            supportCheck = "Zone.Instances",
+        )
+    }
+
+    /** Clears zone instance data (single-instance zone or instancing disabled). */
+    suspend fun clearZoneInstances(sessionId: SessionId) {
+        emit(
+            sessionId,
+            "Zone.Instances",
+            ZoneInstancesPayload(zone = null, currentEngineId = null, instances = emptyList()),
+            supportCheck = "Zone.Instances",
+        )
+    }
+
     /**
      * Sends the full character GMCP state: status vars, vitals, name, items,
      * skills, status effects, achievements, and group info. Called on login
@@ -1589,6 +1625,21 @@ class GmcpEmitter(
         val idle: Long,
     )
 
+    // ---------- zone instances payload ----------
+
+    private data class ZoneInstancesPayload(
+        val zone: String?,
+        val currentEngineId: String?,
+        val instances: List<ZoneInstanceItemPayload>,
+    )
+
+    private data class ZoneInstanceItemPayload(
+        val engineId: String,
+        val playerCount: Int,
+        val capacity: Int,
+        val isCurrent: Boolean,
+    )
+
     // ---------- room mob info payload ----------
 
     private data class RoomMobInfoPayload(
@@ -1692,4 +1743,11 @@ data class MobInfoEntry(
     val shopKeeper: Boolean,
     val dialogue: Boolean,
     val aggressive: Boolean,
+)
+
+/** Input DTO for building a Zone.Instances GMCP payload. */
+data class ZoneInstanceEntry(
+    val engineId: String,
+    val playerCount: Int,
+    val capacity: Int,
 )
