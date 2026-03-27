@@ -1033,6 +1033,7 @@ export function applyGmcpPackage(
         .map((c) => ({
           name: String(c.name ?? ""),
           usage: String(c.usage ?? ""),
+          description: String(c.description ?? ""),
           category: String(c.category ?? ""),
           staff: c.staff === true,
         }));
