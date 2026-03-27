@@ -41,6 +41,7 @@ import type {
   CombatEventData,
   CombatLogMessage,
   CombatTarget,
+  CommandEntry,
   CraftingNode,
   CraftingRecipe,
   CraftingResult,
@@ -191,6 +192,7 @@ function App() {
   const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
   const [loginError, setLoginError] = useState<LoginErrorState | null>(null);
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
+  const [serverCommands, setServerCommands] = useState<CommandEntry[]>([]);
   const [staffWorldInfo, setStaffWorldInfo] = useState<StaffWorldZone[]>([]);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
@@ -243,7 +245,7 @@ function App() {
     applyComposerCompletion,
     resetComposerTraversal,
     resetComposerCompletion,
-  } = useCommandHistory();
+  } = useCommandHistory(serverCommands);
 
   const writeSystem = useCallback((message: string) => {
     terminalRef.current?.write(`\r\n\x1b[2m${message}\x1b[0m\r\n`);
@@ -345,6 +347,7 @@ function App() {
     setActiveChatChannel("say");
     setShowAdminPanel(false);
     setStaffWorldInfo([]);
+    setServerCommands([]);
     resetMap();
   }, [resetMap]);
 
@@ -398,6 +401,7 @@ function App() {
           setLoginPrompt,
           setLoginError,
           setServerAssets,
+          setServerCommands,
           pushUiFeedback,
           setStaffWorldInfo,
           setCraftingSkills,
