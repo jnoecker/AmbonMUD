@@ -1093,8 +1093,12 @@ function App() {
             onDeleteMessage={(index) => {
               sendCommand(`mail delete ${index}`, true);
             }}
-            onCompose={(recipient) => {
-              sendCommand(`mail send ${recipient}`, true);
+            onCompose={(recipient, body) => {
+              sendCommand(`mail send ${recipient}`, false);
+              for (const line of body.split("\n")) {
+                sendCommand(line, false);
+              }
+              sendCommand(".", false);
             }}
             onClearMessage={() => setMailMessage(null)}
           />

@@ -8,7 +8,7 @@ interface MailPanelProps {
   openMessage: MailMessage | null;
   onReadMessage: (index: number) => void;
   onDeleteMessage: (index: number) => void;
-  onCompose: (recipient: string) => void;
+  onCompose: (recipient: string, body: string) => void;
   onClearMessage: () => void;
 }
 
@@ -29,6 +29,7 @@ export function MailPanel({
   onClearMessage,
 }: MailPanelProps) {
   const [composeTarget, setComposeTarget] = useState("");
+  const [composeBody, setComposeBody] = useState("");
   const [showCompose, setShowCompose] = useState(false);
   const [confirmDeleteIndex, setConfirmDeleteIndex] = useState<number | null>(null);
 
@@ -72,10 +73,13 @@ export function MailPanel({
 
   // Compose form
   if (showCompose) {
-    const handleSubmitCompose = () => {
-      if (composeTarget.trim().length === 0) return;
-      onCompose(composeTarget.trim());
+    const canSend = composeTarget.trim().length > 0 && composeBody.trim().length > 0;
+
+    const handleSend = () => {
+      if (!canSend) return;
+      onCompose(composeTarget.trim(), composeBody);
       setComposeTarget("");
+      setComposeBody("");
       setShowCompose(false);
     };
 
@@ -86,14 +90,14 @@ export function MailPanel({
             <button
               className="mail-back-button"
               aria-label="Back to inbox"
-              onClick={() => { setShowCompose(false); setComposeTarget(""); }}
+              onClick={() => { setShowCompose(false); setComposeTarget(""); setComposeBody(""); }}
             >
               &larr; Back
             </button>
             <span className="mail-message-title">New Message</span>
           </div>
           <div className="mail-compose-form">
-            <label className="mail-compose-label" htmlFor="mail-compose-recipient">Recipient</label>
+            <label className="mail-compose-label" htmlFor="mail-compose-recipient">To</label>
             <input
               id="mail-compose-recipient"
               type="text"
@@ -101,21 +105,32 @@ export function MailPanel({
               placeholder="Recipient name"
               value={composeTarget}
               onChange={(e) => setComposeTarget(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSubmitCompose();
-              }}
               autoFocus
             />
-            <button
-              className="mail-compose-send"
-              disabled={composeTarget.trim().length === 0}
-              onClick={handleSubmitCompose}
-            >
-              Begin Compose
-            </button>
-            <p className="mail-compose-hint">
-              You&rsquo;ll write your letter in the terminal below. Type each line, then send with <code>.</code> on its own line.
-            </p>
+            <label className="mail-compose-label" htmlFor="mail-compose-body">Message</label>
+            <textarea
+              id="mail-compose-body"
+              className="mail-compose-textarea"
+              placeholder="Write your message..."
+              rows={6}
+              value={composeBody}
+              onChange={(e) => setComposeBody(e.target.value)}
+            />
+            <div className="mail-compose-actions">
+              <button
+                className="mail-compose-send"
+                disabled={!canSend}
+                onClick={handleSend}
+              >
+                Send
+              </button>
+              <button
+                className="mail-compose-abort"
+                onClick={() => { setShowCompose(false); setComposeTarget(""); setComposeBody(""); }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       </div>
