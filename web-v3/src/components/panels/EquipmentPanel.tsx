@@ -132,6 +132,18 @@ export function EquipmentPanel({
             <span className="paperdoll-preview-name">{selectedItem.name}</span>
             <button
               type="button"
+              className="paperdoll-remove-btn"
+              disabled={!canManageItems}
+              onClick={() => {
+                onRemoveItem(selectedSlot);
+                setSelectedSlot(null);
+              }}
+            >
+              <RemoveItemIcon className="paperdoll-remove-icon" />
+              <span>Remove</span>
+            </button>
+            <button
+              type="button"
               className="paperdoll-preview-close"
               onClick={() => setSelectedSlot(null)}
               aria-label="Close preview"
