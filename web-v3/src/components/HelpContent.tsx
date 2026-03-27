@@ -17,6 +17,7 @@ const HELP_CATEGORIES: HelpCategory[] = [
       { syntax: "look / l", description: "Look around the room (or look <direction>)" },
       { syntax: "n / s / e / w / u / d", description: "Move in a direction" },
       { syntax: "exits / ex", description: "List available exits" },
+      { syntax: "recall", description: "Return to your recall point" },
     ],
   },
   {
@@ -44,6 +45,20 @@ const HELP_CATEGORIES: HelpCategory[] = [
       { syntax: "drop <item>", description: "Drop an item" },
       { syntax: "use <item>", description: "Use a consumable item" },
       { syntax: "give <item> <player>", description: "Give an item to a player" },
+      { syntax: "put <item> in <container>", description: "Place an item in a container" },
+      { syntax: "get <item> from <container>", description: "Take an item from a container" },
+    ],
+  },
+  {
+    name: "World Interaction",
+    commands: [
+      { syntax: "open <door|container>", description: "Open a door or container" },
+      { syntax: "close <door|container>", description: "Close a door or container" },
+      { syntax: "lock <door|container>", description: "Lock with a key" },
+      { syntax: "unlock <door|container>", description: "Unlock with a key" },
+      { syntax: "search", description: "Search the area for hidden items" },
+      { syntax: "pull <object>", description: "Pull a lever or object" },
+      { syntax: "read <object>", description: "Read a sign or inscription" },
     ],
   },
   {
@@ -113,11 +128,39 @@ const HELP_CATEGORIES: HelpCategory[] = [
     ],
   },
   {
+    name: "Friends",
+    commands: [
+      { syntax: "friend list", description: "View your friends list" },
+      { syntax: "friend add <player>", description: "Add a friend" },
+      { syntax: "friend remove <player>", description: "Remove a friend" },
+    ],
+  },
+  {
+    name: "Mail",
+    commands: [
+      { syntax: "mail list", description: "View your inbox" },
+      { syntax: "mail read <number>", description: "Read a message" },
+      { syntax: "mail send <player>", description: "Compose a message" },
+      { syntax: "mail delete <number>", description: "Delete a message" },
+      { syntax: "mail abort", description: "Cancel composing a message" },
+    ],
+  },
+  {
+    name: "Crafting",
+    commands: [
+      { syntax: "gather <node>", description: "Gather from a resource node" },
+      { syntax: "craft <recipe>", description: "Craft an item from a recipe" },
+      { syntax: "recipes [filter]", description: "Browse available recipes" },
+      { syntax: "craftskills / professions", description: "View crafting skill levels" },
+    ],
+  },
+  {
     name: "Utility",
     commands: [
       { syntax: "help / ?", description: "Show this help" },
       { syntax: "ansi on / off", description: "Toggle color output" },
       { syntax: "colors", description: "Preview ANSI color palette" },
+      { syntax: "phase / layer", description: "Switch zone instance" },
       { syntax: "clear", description: "Clear the terminal" },
       { syntax: "quit / exit", description: "Disconnect" },
     ],
@@ -130,7 +173,9 @@ const HELP_CATEGORIES: HelpCategory[] = [
       { syntax: "spawn <mob-template>", description: "Spawn a mob" },
       { syntax: "smite <player|mob>", description: "Instantly kill a target" },
       { syntax: "kick <player>", description: "Disconnect a player" },
+      { syntax: "setlevel <player> <level>", description: "Set a player's level" },
       { syntax: "dispel <player|mob>", description: "Remove all effects" },
+      { syntax: "reload", description: "Reload world data" },
       { syntax: "shutdown", description: "Shut down the server" },
     ],
   },
