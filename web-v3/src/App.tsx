@@ -333,6 +333,8 @@ function App() {
     resetMap();
   }, [resetMap]);
 
+  const sendGmcpRef = useRef<(pkg: string, payload: unknown) => void>(() => {});
+
   const handleGmcp = useCallback(
     (pkg: string, data: unknown) => {
       applyGmcpPackage(
@@ -381,13 +383,14 @@ function App() {
           setServerAssets,
           pushUiFeedback,
           setStaffWorldInfo,
+          sendGmcp: (pkg: string, payload: unknown) => sendGmcpRef.current(pkg, payload),
         },
       );
     },
     [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, updateMap, loadZoneMap],
   );
 
-  const { connected, liveMessage, connect, disconnect, reconnect, sendLine } = useMudSocket({
+  const { connected, liveMessage, connect, disconnect, reconnect, sendLine, sendGmcp } = useMudSocket({
     onOpen: () => {
       focusComposer();
     },
@@ -408,6 +411,8 @@ function App() {
       writeSystem("Connection error.");
     },
   });
+
+  sendGmcpRef.current = sendGmcp;
 
   const sendCommand = useCallback(
     (raw: string, echo: boolean) => {
