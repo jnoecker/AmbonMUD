@@ -36,4 +36,5 @@ fun createPlayerRegistry(
         raceRegistry = raceRegistry,
         statRegistry = statRegistry,
         startingGold = engineConfig.characterCreation.startingGold,
+        defaultGender = engineConfig.characterCreation.defaultGender,
     )

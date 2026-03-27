@@ -482,7 +482,37 @@ data class CraftingStationTypesConfig(
 
 data class CharacterCreationConfig(
     val startingGold: Long = 0L,
+    val defaultRace: String = "HUMAN",
+    val defaultClass: String = "WARRIOR",
+    val defaultGender: String = "enby",
 )
+
+data class EmotePresetConfig(
+    val label: String = "",
+    val emoji: String = "",
+    val action: String = "",
+)
+
+data class EmotePresetsConfig(
+    val presets: List<EmotePresetConfig> = defaultEmotePresets(),
+) {
+    companion object {
+        fun defaultEmotePresets(): List<EmotePresetConfig> = listOf(
+            EmotePresetConfig(label = "Wave", emoji = "\uD83D\uDC4B", action = "waves."),
+            EmotePresetConfig(label = "Nod", emoji = "\uD83D\uDE42", action = "nods."),
+            EmotePresetConfig(label = "Laugh", emoji = "\uD83D\uDE02", action = "laughs."),
+            EmotePresetConfig(label = "Bow", emoji = "\uD83D\uDE4F", action = "bows respectfully."),
+            EmotePresetConfig(label = "Cheer", emoji = "\uD83C\uDF89", action = "cheers!"),
+            EmotePresetConfig(label = "Shrug", emoji = "\uD83E\uDD37", action = "shrugs."),
+            EmotePresetConfig(label = "Clap", emoji = "\uD83D\uDC4F", action = "claps."),
+            EmotePresetConfig(label = "Dance", emoji = "\uD83D\uDC83", action = "dances."),
+            EmotePresetConfig(label = "Think", emoji = "\uD83E\uDD14", action = "thinks carefully."),
+            EmotePresetConfig(label = "Facepalm", emoji = "\uD83E\uDD26", action = "facepalms."),
+            EmotePresetConfig(label = "Salute", emoji = "\uD83E\uDEE1", action = "salutes."),
+            EmotePresetConfig(label = "Cry", emoji = "\uD83D\uDE22", action = "cries."),
+        )
+    }
+}
 
 data class EquipmentSlotConfig(
     val displayName: String = "",
@@ -749,6 +779,7 @@ data class EngineConfig(
     val guildRanks: GuildRanksConfig = GuildRanksConfig(),
     val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
     val commands: CommandsConfig = CommandsConfig(),
+    val emotePresets: EmotePresetsConfig = EmotePresetsConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
 )

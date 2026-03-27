@@ -477,6 +477,12 @@ export interface CommandEntry {
   staff: boolean;
 }
 
+export interface EmotePreset {
+  label: string;
+  emoji: string;
+  action: string;
+}
+
 export interface StaffWorldRoom {
   id: string;
   title: string;

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.CommandMetadata
+import dev.ambon.config.EmotePresetConfig
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -57,6 +58,7 @@ class GmcpEmitter(
     private val spriteRegistry: SpriteRegistry? = null,
     private val getMobEffects: (dev.ambon.domain.ids.MobId) -> List<ActiveEffectSnapshot> = { emptyList() },
     private val commandEntries: Map<String, CommandMetadata> = emptyMap(),
+    private val emotePresets: List<EmotePresetConfig> = emptyList(),
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -437,6 +439,15 @@ class GmcpEmitter(
         emit(sessionId, "Server.Commands", ServerCommandsPayload(commands = commands))
     }
 
+    /** Sends emote presets as `Server.EmotePresets`. */
+    suspend fun sendServerEmotePresets(sessionId: SessionId) {
+        if (emotePresets.isEmpty()) return
+        val payload = emotePresets.map { p ->
+            EmotePresetPayload(label = p.label, emoji = p.emoji, action = p.action)
+        }
+        emit(sessionId, "Server.EmotePresets", payload)
+    }
+
     /** Sends the structured who list as `Server.Who`. */
     suspend fun sendServerWho(sessionId: SessionId, entries: List<WhoEntry>) {
         val payload = ServerWhoPayload(
@@ -510,6 +521,7 @@ class GmcpEmitter(
     ) {
         sendServerAssets(sessionId)
         sendServerCommands(sessionId, player.isStaff)
+        sendServerEmotePresets(sessionId)
         sendCharStatusVars(sessionId)
         sendCharVitals(sessionId, player)
         sendCharName(sessionId, player)
@@ -1674,6 +1686,14 @@ class GmcpEmitter(
         val usage: String,
         val category: String,
         val staff: Boolean,
+    )
+
+    // ---------- emote presets payload ----------
+
+    private data class EmotePresetPayload(
+        val label: String,
+        val emoji: String,
+        val action: String,
     )
 
     // ---------- zone instances payload ----------

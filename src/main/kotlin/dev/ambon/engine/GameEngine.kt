@@ -431,6 +431,7 @@ class GameEngine(
             spriteRegistry = spriteRegistry,
             getMobEffects = { mobId -> statusEffectSystem.activeMobEffects(mobId) },
             commandEntries = engineConfig.commands.entries,
+            emotePresets = engineConfig.emotePresets.presets,
         )
 
     fun markVitalsDirty(sessionId: SessionId) {

@@ -9,6 +9,7 @@ import type {
   CombatEventData,
   CombatTarget,
   CommandEntry,
+  EmotePreset,
   CompletedAchievement,
   ContainerContents,
   CraftingNode,
@@ -96,6 +97,7 @@ interface GmcpContext {
   setLoginError: Dispatch<SetStateAction<LoginErrorState | null>>;
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
   setServerCommands: Dispatch<SetStateAction<CommandEntry[]>>;
+  setEmotePresets: Dispatch<SetStateAction<EmotePreset[]>>;
   pushUiFeedback: (feedback: UiFeedback) => void;
   setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
   setCraftingSkills: Dispatch<SetStateAction<CraftingSkill[]>>;
@@ -1035,6 +1037,19 @@ export function applyGmcpPackage(
           staff: c.staff === true,
         }));
       ctx.setServerCommands(commands);
+      break;
+    }
+
+    case "Server.EmotePresets": {
+      if (!Array.isArray(data)) break;
+      const presets: EmotePreset[] = data
+        .filter((p): p is Record<string, unknown> => typeof p === "object" && p !== null)
+        .map((p) => ({
+          label: String(p.label ?? ""),
+          emoji: String(p.emoji ?? ""),
+          action: String(p.action ?? ""),
+        }));
+      ctx.setEmotePresets(presets);
       break;
     }
 

@@ -47,6 +47,7 @@ import type {
   CraftingResult,
   CraftingSkill,
   DialogueState,
+  EmotePreset,
   EquipmentSlotDef,
   FriendEntry,
   FriendNotification,
@@ -194,6 +195,7 @@ function App() {
   const [loginError, setLoginError] = useState<LoginErrorState | null>(null);
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
   const [serverCommands, setServerCommands] = useState<CommandEntry[]>([]);
+  const [emotePresets, setEmotePresets] = useState<EmotePreset[]>([]);
   const [staffWorldInfo, setStaffWorldInfo] = useState<StaffWorldZone[]>([]);
   const [spriteList, setSpriteList] = useState<SpriteList>({ active: null, sprites: [] });
   const combatEventsRef = useRef<CombatEventData[]>([]);
@@ -350,6 +352,7 @@ function App() {
     setShowAdminPanel(false);
     setStaffWorldInfo([]);
     setServerCommands([]);
+    setEmotePresets([]);
     resetMap();
   }, [resetMap]);
 
@@ -404,6 +407,7 @@ function App() {
           setLoginError,
           setServerAssets,
           setServerCommands,
+          setEmotePresets,
           pushUiFeedback,
           setStaffWorldInfo,
           setCraftingSkills,
@@ -1020,6 +1024,7 @@ function App() {
             playerName={character.name}
             activeChannel={activeChatChannel}
             chatByChannel={chatByChannel}
+            emotePresets={emotePresets}
             whoPlayers={whoPlayers}
             groupInfo={groupInfo}
             guildInfo={guildInfo}

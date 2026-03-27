@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { CHAT_CHANNELS } from "../../constants";
 import { RefreshIcon, TellIcon } from "../Icons";
-import type { ChatChannel, ChatMessage, FriendEntry, FriendNotification, GroupInfo, GuildInfo, GuildMemberEntry, SocialTab, WhoPlayer } from "../../types";
+import type { ChatChannel, ChatMessage, EmotePreset, FriendEntry, FriendNotification, GroupInfo, GuildInfo, GuildMemberEntry, SocialTab, WhoPlayer } from "../../types";
 
 type WhoSortField = "name" | "level" | "race" | "class" | "idle";
 type SortDir = "asc" | "desc";
@@ -13,6 +13,7 @@ interface ChatPanelProps {
   playerName: string;
   activeChannel: ChatChannel;
   chatByChannel: Record<ChatChannel, ChatMessage[]>;
+  emotePresets: EmotePreset[];
   whoPlayers: WhoPlayer[];
   groupInfo: GroupInfo;
   guildInfo: GuildInfo;
@@ -49,21 +50,6 @@ function formatIdleTime(seconds: number): string {
   return `${Math.floor(seconds / 3600)}h${Math.floor((seconds % 3600) / 60)}m`;
 }
 
-const EMOTE_PRESETS: Array<{ label: string; emoji: string; action: string }> = [
-  { label: "Wave", emoji: "\uD83D\uDC4B", action: "waves." },
-  { label: "Nod", emoji: "\uD83D\uDE42", action: "nods." },
-  { label: "Laugh", emoji: "\uD83D\uDE02", action: "laughs." },
-  { label: "Bow", emoji: "\uD83D\uDE4F", action: "bows respectfully." },
-  { label: "Cheer", emoji: "\uD83C\uDF89", action: "cheers!" },
-  { label: "Shrug", emoji: "\uD83E\uDD37", action: "shrugs." },
-  { label: "Clap", emoji: "\uD83D\uDC4F", action: "claps." },
-  { label: "Dance", emoji: "\uD83D\uDC83", action: "dances." },
-  { label: "Think", emoji: "\uD83E\uDD14", action: "thinks carefully." },
-  { label: "Facepalm", emoji: "\uD83E\uDD26", action: "facepalms." },
-  { label: "Salute", emoji: "\uD83E\uDEE1", action: "salutes." },
-  { label: "Cry", emoji: "\uD83D\uDE22", action: "cries." },
-];
-
 const SOCIAL_TABS: Array<{ id: SocialTab; label: string }> = [
   { id: "chat", label: "Chat" },
   { id: "friends", label: "Friends" },
@@ -78,6 +64,7 @@ export function ChatPanel({
   playerName,
   activeChannel,
   chatByChannel,
+  emotePresets,
   whoPlayers,
   groupInfo,
   guildInfo,
@@ -311,7 +298,7 @@ export function ChatPanel({
             {emotePickerOpen && canChat && (
               <div className="emote-picker">
                 <div className="emote-presets">
-                  {EMOTE_PRESETS.map((preset) => (
+                  {emotePresets.map((preset) => (
                     <button
                       key={preset.label}
                       type="button"
