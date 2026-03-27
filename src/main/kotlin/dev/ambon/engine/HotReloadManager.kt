@@ -80,6 +80,7 @@ class HotReloadManager(
     private val questRegistry: QuestRegistry,
     private val abilityRegistry: AbilityRegistry,
     private val statusEffectRegistry: StatusEffectRegistry,
+    private val equipmentSlotRegistry: EquipmentSlotRegistry,
     private val mobSystem: MobSystem,
     private val behaviorTreeSystem: BehaviorTreeSystem,
     private val gmcpEmitter: GmcpEmitter,
@@ -222,12 +223,26 @@ class HotReloadManager(
     }
 
     /**
-     * Reloads everything: world data, abilities, and status effects.
+     * Reloads equipment slot definitions from engine config and re-sends
+     * Char.Equipment.Slots GMCP to all connected players.
+     */
+    suspend fun reloadEquipmentSlots() {
+        equipmentSlotRegistry.reload(engineConfig.equipment)
+        val count = equipmentSlotRegistry.all().size
+        log.info { "Hot reload equipment slots: $count definitions loaded" }
+        for (player in players.allPlayers()) {
+            gmcpEmitter.sendEquipmentSlots(player.sessionId)
+        }
+    }
+
+    /**
+     * Reloads everything: world data, abilities, status effects, and equipment slots.
      */
     suspend fun reloadAll(): HotReloadResult {
         val worldResult = reloadWorld()
         val abilityResult = reloadAbilities()
         val effectResult = reloadStatusEffects()
+        reloadEquipmentSlots()
         return HotReloadResult(
             zonesReloaded = worldResult.zonesReloaded,
             roomsAdded = worldResult.roomsAdded,

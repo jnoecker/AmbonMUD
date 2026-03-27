@@ -201,6 +201,7 @@ class HotReloadManagerTest {
             questRegistry = questRegistry,
             abilityRegistry = abilityRegistry,
             statusEffectRegistry = statusEffectRegistry,
+            equipmentSlotRegistry = EquipmentSlotRegistry(EngineConfig().equipment),
             mobSystem = mobSystem,
             behaviorTreeSystem = behaviorTreeSystem,
             gmcpEmitter = gmcpEmitter,
