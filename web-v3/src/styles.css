@@ -3540,6 +3540,23 @@ body {
   50% { opacity: 0.7; transform: scale(1.06); }
 }
 
+.crafting-load-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--color-accent-moonlit-silver-muted);
+  border-radius: var(--radius-sm);
+  background: rgb(255 255 255 / 5%);
+  color: var(--color-accent-moonlit-silver);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.crafting-load-btn:hover {
+  background: rgb(255 255 255 / 10%);
+  border-color: var(--color-accent-moonlit-silver);
+}
+
 .crafting-skill-list,
 .crafting-recipe-list,
 .crafting-node-list {

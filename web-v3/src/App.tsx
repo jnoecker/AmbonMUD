@@ -1110,6 +1110,7 @@ function App() {
             onGather={(keyword) => sendCommand(`gather ${keyword}`, true)}
             onCraft={(recipeKeyword) => sendCommand(`craft ${recipeKeyword}`, true)}
             onRequestRecipes={() => sendCommand("recipes", true)}
+            onLoadSkills={() => sendCommand("craftskills", true)}
           />
         )}
 

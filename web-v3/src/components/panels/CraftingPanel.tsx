@@ -10,6 +10,7 @@ interface CraftingPanelProps {
   onGather: (keyword: string) => void;
   onCraft: (recipeKeyword: string) => void;
   onRequestRecipes: () => void;
+  onLoadSkills: () => void;
 }
 
 export function CraftingPanel({
@@ -21,6 +22,7 @@ export function CraftingPanel({
   onGather,
   onCraft,
   onRequestRecipes,
+  onLoadSkills,
 }: CraftingPanelProps) {
   const [activeTab, setActiveTab] = useState<"skills" | "recipes" | "nodes">("skills");
 
@@ -69,7 +71,10 @@ export function CraftingPanel({
           {skills.length === 0 ? (
             <div className="crafting-empty-state">
               <span className="crafting-empty-icon">{"\u2692"}</span>
-              <p className="empty-note">No crafting skills yet. Type <code>craftskills</code> to load.</p>
+              <p className="empty-note">No crafting skills loaded yet.</p>
+              <button type="button" className="crafting-load-btn" onClick={onLoadSkills}>
+                Load Skills
+              </button>
             </div>
           ) : (
             <ul className="crafting-skill-list">
