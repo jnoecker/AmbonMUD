@@ -109,6 +109,9 @@ export function PopoutLayer({
                           {f.type === "container" && f.state === "open" && (
                             <button className="room-feature-btn" onClick={() => onFeatureAction(`close ${f.keyword}`)}>Close</button>
                           )}
+                          {(f.type === "door" || f.type === "container") && f.state === "closed" && f.locked === false && (
+                            <button className="room-feature-btn" onClick={() => onFeatureAction(`lock ${f.keyword}`)}>Lock</button>
+                          )}
                           {(f.type === "door" || f.type === "container") && f.state === "locked" && (
                             <button className="room-feature-btn" onClick={() => onFeatureAction(`unlock ${f.keyword}`)}>Unlock</button>
                           )}
