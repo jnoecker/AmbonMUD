@@ -1360,4 +1360,52 @@ class GmcpEmitterTest {
         e.forgetSession(sid)
         assertTrue(e.trackZoneChange(sid, "forest"), "After forget, same zone should return true again")
     }
+
+    // ---------- Server.Who ----------
+
+    @Test
+    fun `sendServerWho emits structured player list`() = runTest {
+        val e = emitter("Server.Who")
+        val entries = listOf(
+            WhoEntry(
+                name = "Alice",
+                level = 10,
+                race = "HUMAN",
+                playerClass = "WARRIOR",
+                title = "Champion",
+                guild = "KoR",
+                groupSize = 3,
+                idleSeconds = 120,
+            ),
+            WhoEntry(
+                name = "Bob",
+                level = 5,
+                race = "ELF",
+                playerClass = "MAGE",
+                title = null,
+                guild = null,
+                groupSize = 0,
+                idleSeconds = 0,
+            ),
+        )
+        e.sendServerWho(sid, entries)
+
+        val gmcp = drainGmcp()
+        assertEquals(1, gmcp.size)
+        assertEquals("Server.Who", gmcp[0].gmcpPackage)
+
+        val json = gmcp[0].jsonData
+        assertTrue(json.contains("\"Alice\""), "Should contain Alice's name")
+        assertTrue(json.contains("\"Bob\""), "Should contain Bob's name")
+        assertTrue(json.contains("\"Champion\""), "Should contain title")
+        assertTrue(json.contains("\"KoR\""), "Should contain guild tag")
+        assertTrue(json.contains("\"WARRIOR\""), "Should contain class as 'class' JSON key")
+    }
+
+    @Test
+    fun `sendServerWho not sent without support`() = runTest {
+        val e = emitter("Char.Vitals")
+        e.sendServerWho(sid, listOf())
+        assertTrue(drainGmcp().isEmpty())
+    }
 }

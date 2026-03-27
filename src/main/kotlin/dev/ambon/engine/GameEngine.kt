@@ -191,10 +191,12 @@ class GameEngine(
             maxFailedLoginAttemptsBeforeDisconnect = loginConfig.maxFailedAttemptsBeforeDisconnect,
             maxConcurrentLogins = loginConfig.maxConcurrentLogins,
             onAfterLogin = { sid ->
+                players.get(sid)?.lastActivityEpochMs = clock.millis()
                 guildSystem?.onPlayerLogin(sid)
                 friendsSystem.onPlayerLogin(sid)
                 sendQuestListGmcp(sid)
                 markStatsDirty(sid)
+                broadcastServerWho()
             },
         )
     }
@@ -225,6 +227,7 @@ class GameEngine(
                 playerLocationIndex?.unregister(player.name)
                 broadcastToRoom(players, outbound, player.roomId, "${player.name} leaves.", sid)
                 friendsSystem.onPlayerLogout(player.name)
+                broadcastServerWho()
             },
             metrics = metrics,
         )
@@ -713,6 +716,7 @@ class GameEngine(
         }
 
     private val router = CommandRouter(outbound = outbound, players = players)
+    private val communicationHandler: CommunicationHandler
     private val mailHandler: MailHandler
 
     init {
@@ -744,6 +748,16 @@ class GameEngine(
             genderRegistry = genderRegistry,
         )
 
+        communicationHandler = CommunicationHandler(
+            ctx = ctx,
+            groupSystem = groupSystem,
+            interEngineBus = interEngineBus,
+            playerLocationIndex = playerLocationIndex,
+            engineId = engineId,
+            onRemoteWho = if (interEngineBus != null) interEngineEventHandler::handleRemoteWho else null,
+            clock = clock,
+        )
+
         listOf(
             NavigationHandler(
                 ctx = ctx,
@@ -752,14 +766,7 @@ class GameEngine(
                 onCrossZoneMove = crossZoneMove,
                 recallConfig = engineConfig.navigation.recall,
             ),
-            CommunicationHandler(
-                ctx = ctx,
-                groupSystem = groupSystem,
-                interEngineBus = interEngineBus,
-                playerLocationIndex = playerLocationIndex,
-                engineId = engineId,
-                onRemoteWho = if (interEngineBus != null) interEngineEventHandler::handleRemoteWho else null,
-            ),
+            communicationHandler,
             CombatHandler(
                 ctx = ctx,
                 abilitySystem = abilitySystem,
@@ -1073,6 +1080,7 @@ class GameEngine(
         sessionId: SessionId,
         line: String,
     ) {
+        players.get(sessionId)?.lastActivityEpochMs = clock.millis()
         inputEventHandler.onLineReceived(sessionId, line)
     }
 
@@ -1110,6 +1118,15 @@ class GameEngine(
 
     private suspend fun flushDirtyGmcpStats() {
         gmcpFlushHandler.flushDirtyStats()
+    }
+
+    suspend fun broadcastServerWho() {
+        val now = clock.millis()
+        val sorted = players.allPlayers().sortedBy { it.name }
+        val entries = communicationHandler.buildWhoEntries(sorted, now)
+        for (p in sorted) {
+            gmcpEmitter.sendServerWho(p.sessionId, entries)
+        }
     }
 
     suspend fun sendQuestListGmcp(sessionId: SessionId) {

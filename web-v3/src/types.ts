@@ -2,6 +2,17 @@ export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | 
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
+export interface WhoPlayer {
+  name: string;
+  level: number;
+  race: string;
+  playerClass: string;
+  title: string | null;
+  guild: string | null;
+  groupSize: number;
+  idle: number;
+}
+
 export interface GroupMember {
   name: string;
   level: number;

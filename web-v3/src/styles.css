@@ -997,41 +997,134 @@ body {
   word-break: break-word;
 }
 
-.who-player-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
+/* ---------- Who list filter bar ---------- */
 
-.who-player-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+.who-filter-bar {
+  display: flex;
   align-items: center;
   gap: var(--space-2);
-  border: 1px solid rgb(106 96 136 / 18%);
-  border-radius: var(--radius-md);
-  background: linear-gradient(140deg, rgb(70 83 117 / 92%), rgb(60 76 111 / 88%));
-  box-shadow: inset 0 1px 0 rgb(232 239 255 / 14%);
-  padding: 7px 9px;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgb(106 96 136 / 18%);
 }
 
-.who-player-name {
+.who-filter-input {
+  flex: 1;
   min-width: 0;
+  font-size: 0.82rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgb(106 96 136 / 24%);
+  background: rgb(40 46 68 / 70%);
+  color: var(--text-primary);
+}
+
+.who-filter-input::placeholder {
+  color: var(--text-muted);
+}
+
+.who-filter-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgb(184 216 232 / 30%);
+}
+
+/* ---------- Who table ---------- */
+
+.who-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.who-th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  padding: 5px 6px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: rgb(38 43 62 / 95%);
+  border-bottom: 1px solid rgb(106 96 136 / 22%);
+  white-space: nowrap;
+}
+
+.who-th-level,
+.who-th-idle {
+  text-align: center;
+  width: 3.2em;
+}
+
+.who-th-action {
+  width: 36px;
+}
+
+.who-sort-btn {
+  all: unset;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+}
+
+.who-sort-btn:hover {
+  color: var(--text-primary);
+}
+
+.who-row {
+  border-bottom: 1px solid rgb(106 96 136 / 10%);
+  transition: background 120ms ease;
+}
+
+.who-row:hover {
+  background: rgb(70 83 117 / 30%);
+}
+
+.who-td {
+  padding: 5px 6px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.88rem;
 }
+
+.who-td-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.who-td-level,
+.who-td-idle {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.who-td-race,
+.who-td-class {
+  color: var(--text-secondary);
+}
+
+.who-td-info {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  max-width: 10em;
+}
+
+.who-td-action {
+  text-align: center;
+}
+
+/* ---------- Who tell button ---------- */
 
 .who-tell-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   border: 1px solid rgb(106 96 136 / 24%);
   background: linear-gradient(140deg, rgb(211 180 206 / 90%), rgb(191 207 226 / 88%));
@@ -1062,19 +1155,35 @@ body {
 }
 
 .who-tell-icon {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
 }
 
 .who-refresh-button {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .who-refresh-icon {
   width: 14px;
   height: 14px;
+}
+
+/* ---------- Who status bar ---------- */
+
+.who-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 8px;
+  border-top: 1px solid rgb(106 96 136 / 18%);
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 .group-member-list {
@@ -1447,11 +1556,6 @@ body {
   grid-template-columns: minmax(110px, 0.45fr) minmax(0, 1fr) auto;
 }
 
-.chat-form-who {
-  grid-template-columns: auto;
-  justify-content: end;
-  padding: 6px 3px 3px;
-}
 
 .chat-input,
 .chat-target-input {

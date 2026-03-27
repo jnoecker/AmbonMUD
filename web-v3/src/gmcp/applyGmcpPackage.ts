@@ -48,6 +48,7 @@ import type {
   StatusVarLabels,
   UiFeedback,
   Vitals,
+  WhoPlayer,
 } from "../types";
 import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
@@ -98,6 +99,7 @@ interface GmcpContext {
   setMailInbox: Dispatch<SetStateAction<MailEntry[] | null>>;
   setMailMessage: Dispatch<SetStateAction<MailMessage | null>>;
   pushMailNotification: (notification?: MailNotification) => void;
+  setWhoPlayers: Dispatch<SetStateAction<WhoPlayer[]>>;
   sendGmcp: (pkg: string, payload: unknown) => void;
 }
 
@@ -959,6 +961,24 @@ export function applyGmcpPackage(
     case "Server.Assets": {
       const packet = data as Record<string, string>;
       ctx.setServerAssets(packet);
+      break;
+    }
+
+    case "Server.Who": {
+      const packet = data as { players?: unknown[] };
+      const players: WhoPlayer[] = (packet.players ?? [])
+        .filter((p): p is Record<string, unknown> => typeof p === "object" && p !== null)
+        .map((p) => ({
+          name: String(p.name ?? ""),
+          level: safeNumber(p.level),
+          race: String(p.race ?? ""),
+          playerClass: String(p.class ?? ""),
+          title: typeof p.title === "string" ? p.title : null,
+          guild: typeof p.guild === "string" ? p.guild : null,
+          groupSize: safeNumber(p.groupSize),
+          idle: safeNumber(p.idle),
+        }));
+      ctx.setWhoPlayers(players);
       break;
     }
 
