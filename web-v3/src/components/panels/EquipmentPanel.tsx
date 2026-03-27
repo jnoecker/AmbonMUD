@@ -110,20 +110,37 @@ export function EquipmentPanel({
               );
             })}
           </ul>
-
-          {/* Item image preview when a filled slot is selected */}
-          {selectedSlot && selectedItem?.image && (
-            <div className="paperdoll-preview" key={selectedSlot}>
-              <img
-                src={selectedItem.image}
-                alt={selectedItem.name}
-                className="paperdoll-preview-img"
-              />
-              <span className="paperdoll-preview-name">{selectedItem.name}</span>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Floating item preview overlay */}
+      {selectedSlot && selectedItem?.image && (
+        <div
+          className="paperdoll-preview-overlay"
+          onClick={() => setSelectedSlot(null)}
+        >
+          <div
+            className="paperdoll-preview-card"
+            key={selectedSlot}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={selectedItem.image}
+              alt={selectedItem.name}
+              className="paperdoll-preview-img"
+            />
+            <span className="paperdoll-preview-name">{selectedItem.name}</span>
+            <button
+              type="button"
+              className="paperdoll-preview-close"
+              onClick={() => setSelectedSlot(null)}
+              aria-label="Close preview"
+            >
+              {"\u00D7"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
