@@ -6011,6 +6011,46 @@ body {
   color: var(--text-secondary);
   font-weight: 700;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.room-popout-exits-label {
+  margin-right: var(--space-1);
+}
+
+.room-popout-exits-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.room-exit-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft), border-color 150ms var(--ease-out-soft);
+}
+
+.room-exit-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-bright);
+  border-color: var(--line-subtle);
+}
+
+.room-exit-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgb(184 216 232 / 58%),
+    0 0 0 4px rgb(216 197 232 / 30%);
 }
 
 /* Room features section */
@@ -6130,7 +6170,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .room-feature-item,
-  .room-feature-btn {
+  .room-feature-btn,
+  .room-exit-btn {
     transition: none;
   }
 }
