@@ -511,6 +511,17 @@ export interface UiFeedback {
   message: string;
 }
 
+export interface LookTargetInfo {
+  type: "mob" | "player" | "item" | "feature";
+  name: string;
+  description: string;
+  image?: string | null;
+  level?: number | null;
+  race?: string | null;
+  playerClass?: string | null;
+  receivedAt: number;
+}
+
 export interface CombatLogMessage {
   id: number;
   text: string;

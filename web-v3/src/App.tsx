@@ -60,6 +60,7 @@ import type {
   ItemSummary,
   LoginErrorState,
   LoginPromptState,
+  LookTargetInfo,
   MailEntry,
   MailMessage,
   ContainerContents,
@@ -201,6 +202,7 @@ function App() {
   const [serverCommands, setServerCommands] = useState<CommandEntry[]>([]);
   const [emotePresets, setEmotePresets] = useState<EmotePreset[]>([]);
   const [staffWorldInfo, setStaffWorldInfo] = useState<StaffWorldZone[]>([]);
+  const [lookTarget, setLookTarget] = useState<LookTargetInfo | null>(null);
   const [spriteList, setSpriteList] = useState<SpriteList>({ active: null, sprites: [] });
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
@@ -418,6 +420,7 @@ function App() {
           setEmotePresets,
           pushUiFeedback,
           setStaffWorldInfo,
+          setLookTarget,
           setCraftingSkills,
           setCraftingRecipes,
           setCraftingNodes,
@@ -844,6 +847,13 @@ function App() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [connected, hasCharacterProfile, quickbar.slots, handleCastSkill]);
 
+  // Auto-dismiss look target after 6 seconds
+  useEffect(() => {
+    if (!lookTarget) return;
+    const t = setTimeout(() => setLookTarget(null), 6000);
+    return () => clearTimeout(t);
+  }, [lookTarget]);
+
   // Auto-dismiss toast after 4 seconds
   useEffect(() => {
     if (!toast) return;
@@ -1222,6 +1232,22 @@ function App() {
 
       <p className="sr-only" aria-live="polite">{liveMessage}</p>
 
+      {lookTarget && (
+        <div className="look-target-card" role="dialog" aria-label="Inspect target" onClick={() => setLookTarget(null)}>
+          <div className="look-target-header">
+            <span className="look-target-name">{lookTarget.name}</span>
+            {lookTarget.level != null && (
+              <span className="look-target-meta">
+                Lv {lookTarget.level}
+                {lookTarget.race && ` ${lookTarget.race}`}
+                {lookTarget.playerClass && ` ${lookTarget.playerClass}`}
+              </span>
+            )}
+          </div>
+          <p className="look-target-desc">{lookTarget.description}</p>
+          {lookTarget.image && <img src={lookTarget.image} alt="" className="look-target-image" />}
+        </div>
+      )}
       {toast && (
         <div className="game-toast" role="alert">
           {toast}

@@ -1149,6 +1149,34 @@ class GmcpEmitter(
         emitRaw(sessionId, "Shop.Close", "{}", supportCheck = "Shop")
     }
 
+    // ---------- look target ----------
+
+    suspend fun sendLookTarget(
+        sessionId: SessionId,
+        type: String,
+        name: String,
+        description: String,
+        image: String? = null,
+        level: Int? = null,
+        race: String? = null,
+        playerClass: String? = null,
+    ) {
+        emit(
+            sessionId,
+            "Room.LookTarget",
+            LookTargetPayload(
+                type = type,
+                name = name,
+                description = description,
+                image = image,
+                level = level,
+                race = race,
+                playerClass = playerClass,
+            ),
+            supportCheck = "Room.Info",
+        )
+    }
+
     // ---------- UI feedback ----------
 
     suspend fun sendUiFeedback(sessionId: SessionId, type: String, message: String) {
@@ -1765,6 +1793,18 @@ class GmcpEmitter(
         val shopKeeper: Boolean,
         val dialogue: Boolean,
         val aggressive: Boolean,
+    )
+
+    // ---------- look target payload ----------
+
+    private data class LookTargetPayload(
+        val type: String,
+        val name: String,
+        val description: String,
+        val image: String? = null,
+        val level: Int? = null,
+        val race: String? = null,
+        @get:JsonProperty("class") val playerClass: String? = null,
     )
 
     // ---------- shop payloads ----------
