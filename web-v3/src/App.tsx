@@ -16,6 +16,7 @@ import { PlayPanel } from "./components/panels/PlayPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { MailPanel } from "./components/panels/MailPanel";
 import { CraftingPanel } from "./components/panels/CraftingPanel";
+import { CommandPalette } from "./components/CommandPalette";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
 import { canvasEvents } from "./canvas/CanvasEventBus";
@@ -149,6 +150,7 @@ function App() {
   const [activeChatChannel, setActiveChatChannel] = useState<ChatChannel>("say");
   const [activePopout, setActivePopout] = useState<PopoutPanel>(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [composerValue, setComposerValue] = useState("");
   const [terminalVisible, setTerminalVisible] = useState(false);
   const [terminalOpaque, setTerminalOpaque] = useState(false);
@@ -649,6 +651,18 @@ function App() {
   useEffect(() => {
     canvasCallbacks.openVideo = (url: string) => setVideoUrl(url);
     return () => { canvasCallbacks.openVideo = null; };
+  }, []);
+
+  // Ctrl+K toggles the command palette
+  useEffect(() => {
+    const handler = (e: globalThis.KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setShowCommandPalette((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, []);
 
   // Play room audio when music/ambient URLs change
@@ -1224,6 +1238,22 @@ function App() {
           onClose={() => setShowAdminPanel(false)}
           worldInfo={staffWorldInfo}
           whoPlayers={whoPlayers}
+        />
+      )}
+
+      {showCommandPalette && (
+        <CommandPalette
+          commands={serverCommands}
+          isStaff={character.isStaff}
+          onExecute={(cmd) => {
+            sendCommand(cmd, true);
+            focusComposer();
+          }}
+          onPrefill={(text) => {
+            setComposerValue(text);
+            focusComposer();
+          }}
+          onClose={() => setShowCommandPalette(false)}
         />
       )}
 
