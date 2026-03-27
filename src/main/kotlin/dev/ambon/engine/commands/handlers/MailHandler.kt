@@ -18,6 +18,7 @@ class MailHandler(
 ) : CommandHandler {
     private val players = ctx.players
     private val outbound = ctx.outbound
+    private val gmcpEmitter = ctx.gmcpEmitter
 
     override fun register(router: CommandRouter) {
         router.on<Command.Mail.List> { sid, _ -> handleList(sid) }
@@ -45,6 +46,7 @@ class MailHandler(
 
     private suspend fun handleList(sessionId: SessionId) {
         players.withPlayer(sessionId) { me ->
+            gmcpEmitter?.sendMailList(sessionId, me.inbox)
             if (me.inbox.isEmpty()) {
                 outbound.send(OutboundEvent.SendInfo(sessionId, "Your inbox is empty."))
                 return@withPlayer
@@ -82,7 +84,9 @@ class MailHandler(
             if (!msg.read) {
                 me.inbox[cmd.index - 1] = msg.copy(read = true)
                 players.persistPlayer(sessionId)
+                gmcpEmitter?.sendMailList(sessionId, me.inbox)
             }
+            gmcpEmitter?.sendMailMessage(sessionId, cmd.index, me.inbox[cmd.index - 1])
         }
     }
 
@@ -98,6 +102,7 @@ class MailHandler(
             me.inbox.removeAt(cmd.index - 1)
             outbound.send(OutboundEvent.SendInfo(sessionId, "Message ${cmd.index} deleted."))
             players.persistPlayer(sessionId)
+            gmcpEmitter?.sendMailList(sessionId, me.inbox)
         }
     }
 
@@ -167,6 +172,9 @@ class MailHandler(
                         "You have new mail from ${sender.name}. Type 'mail' to read it.",
                     ),
                 )
+                val unread = recipientOnline.inbox.count { !it.read }
+                gmcpEmitter?.sendMailNotification(recipientOnline.sessionId, sender.name, unread)
+                gmcpEmitter?.sendMailList(recipientOnline.sessionId, recipientOnline.inbox)
             }
         } else {
             val delivered = players.deliverMailOffline(compose.recipientName, message)

@@ -14,6 +14,7 @@ import { InventoryPanel } from "./components/panels/InventoryPanel";
 import { EquipmentPanel } from "./components/panels/EquipmentPanel";
 import { PlayPanel } from "./components/panels/PlayPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
+import { MailPanel } from "./components/panels/MailPanel";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
 import { canvasEvents } from "./canvas/CanvasEventBus";
@@ -50,6 +51,8 @@ import type {
   ItemSummary,
   LoginErrorState,
   LoginPromptState,
+  MailEntry,
+  MailMessage,
   MobInfo,
   PopoutPanel,
   QuestAvailable,
@@ -203,6 +206,8 @@ function App() {
   const [mobInfo, setMobInfo] = useState<MobInfo[]>([]);
   const [shop, setShop] = useState<ShopState | null>(null);
   const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
+  const [mailInbox, setMailInbox] = useState<MailEntry[]>([]);
+  const [mailMessage, setMailMessage] = useState<MailMessage | null>(null);
   const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
   const [loginError, setLoginError] = useState<LoginErrorState | null>(null);
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
@@ -272,6 +277,10 @@ function App() {
     });
   }, []);
 
+  const pushMailNotification = useCallback(() => {
+    // Mail.List GMCP already updates the inbox; notification is informational.
+  }, []);
+
   const focusComposer = useCallback(() => {
     window.requestAnimationFrame(() => composerInputRef.current?.focus());
   }, []);
@@ -322,6 +331,8 @@ function App() {
     setMobInfo([]);
     setShop(null);
     setQuestNotifications([]);
+    setMailInbox([]);
+    setMailMessage(null);
     setLoginPrompt(null);
     setLoginError(null);
     combatEventsRef.current = [];
@@ -383,11 +394,14 @@ function App() {
           setServerAssets,
           pushUiFeedback,
           setStaffWorldInfo,
+          setMailInbox,
+          setMailMessage,
+          pushMailNotification,
           sendGmcp: (pkg: string, payload: unknown) => sendGmcpRef.current(pkg, payload),
         },
       );
     },
-    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, updateMap, loadZoneMap],
+    [pushFriendNotification, pushCombatEvent, pushGainEvent, pushQuestNotification, pushUiFeedback, pushMailNotification, updateMap, loadZoneMap],
   );
 
   const { connected, liveMessage, connect, disconnect, reconnect, sendLine, sendGmcp } = useMudSocket({
@@ -861,6 +875,7 @@ function App() {
           quickbarSlots={quickbar.slots}
           shop={shop}
           questCount={quests.length}
+          mailUnreadCount={mailInbox.filter((m) => !m.read).length}
           activePopout={activePopout}
           onOpenPopout={setActivePopout}
           onCastSkill={handleCastSkill}
@@ -1013,6 +1028,25 @@ function App() {
               setToast(`${skill.name} — ${skill.manaCost} MP, ${cd}, ${skill.targetType.toLowerCase()} target`);
             }}
             onAssignSlot={quickbar.assign}
+          />
+        )}
+
+        {activePopout === "mail" && (
+          <MailPanel
+            connected={connected}
+            hasCharacterProfile={hasCharacterProfile}
+            inbox={mailInbox}
+            openMessage={mailMessage}
+            onReadMessage={(index) => {
+              sendCommand(`mail read ${index}`, true);
+            }}
+            onDeleteMessage={(index) => {
+              sendCommand(`mail delete ${index}`, true);
+            }}
+            onCompose={(recipient) => {
+              sendCommand(`mail send ${recipient}`, true);
+            }}
+            onClearMessage={() => setMailMessage(null)}
           />
         )}
 
