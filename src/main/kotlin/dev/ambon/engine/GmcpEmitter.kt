@@ -447,6 +447,7 @@ class GmcpEmitter(
                     description = meta.description,
                     category = meta.category,
                     staff = meta.staff,
+                    requiresTarget = meta.requiresTarget,
                 )
             }
         emit(sessionId, "Server.Commands", ServerCommandsPayload(commands = commands))
@@ -1772,6 +1773,7 @@ class GmcpEmitter(
         val description: String,
         val category: String,
         val staff: Boolean,
+        val requiresTarget: Boolean,
     )
 
     // ---------- emote presets payload ----------
