@@ -73,9 +73,12 @@ export class EntityPopout {
       actions.push({ label: "\u2605 Turn In Quest", command: `talk ${name}`, color: 0xf0c674 });
     } else if (info?.questAvailable) {
       actions.push({ label: "\u2605 Accept Quest", command: `talk ${name}`, color: 0x5a8a6a });
+    } else if (info?.questGiver) {
+      // Quest giver with no active quest — still show talk with quest styling
+      actions.push({ label: "\u2605 Quests", command: `talk ${name}`, color: 0x8a9a6a });
     }
-    if (info?.shopKeeper) actions.push({ label: "Browse Shop", command: `list`, color: 0x81a2be });
-    if (info?.dialogue && !info?.questComplete && !info?.questAvailable) {
+    if (info?.shopKeeper) actions.push({ label: "Browse Shop", command: `__shop__:list`, color: 0x81a2be });
+    if (info?.dialogue && !info?.questComplete && !info?.questAvailable && !info?.questGiver) {
       actions.push({ label: "Talk", command: `talk ${name}`, color: 0xb9aed8 });
     }
 
@@ -94,9 +97,16 @@ export class EntityPopout {
 
     if (video) actions.push({ label: "\u25B6 Cinematic", command: `__video__:${video}`, color: 0xce93d8 });
 
+    // Build role tag and subtitle with context from MobInfo
     const roleTag = isAggressive ? " \u2620" : info?.shopKeeper ? " \uD83D\uDCB0" : info?.questGiver ? " \u2605" : "";
-    const subtitle = description || (maxHp > 0 ? `HP: ${hp}/${maxHp}` : "");
-    this.show(name + roleTag, subtitle, image ?? null, isAggressive ? 0xef5350 : 0xf0c674, actions);
+    const roleParts: string[] = [];
+    if (info?.shopKeeper) roleParts.push("Shopkeeper");
+    if (info?.questGiver) roleParts.push("Quest Giver");
+    if (info?.aggressive) roleParts.push("Hostile");
+    const roleLabel = roleParts.join(" \u00B7 ");
+    const subtitle = description || roleLabel || (maxHp > 0 ? `HP: ${hp}/${maxHp}` : "");
+    const tint = isAggressive ? 0xef5350 : info?.shopKeeper ? 0x81a2be : info?.questGiver ? 0xf0c674 : 0xf0c674;
+    this.show(name + roleTag, subtitle, image ?? null, tint, actions);
   }
 
   showPlayer(name: string, level: number) {
@@ -244,6 +254,9 @@ export class EntityPopout {
           canvasCallbacks.openVideo?.(cmd.slice("__video__:".length));
         } else if (cmd.startsWith("__prefill__:")) {
           canvasCallbacks.prefillCommand?.(cmd.slice("__prefill__:".length));
+        } else if (cmd.startsWith("__shop__:")) {
+          canvasCallbacks.sendCommand?.(cmd.slice("__shop__:".length));
+          canvasCallbacks.openShop?.();
         } else {
           canvasCallbacks.sendCommand?.(cmd);
         }
