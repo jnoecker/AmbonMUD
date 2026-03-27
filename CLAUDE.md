@@ -119,7 +119,7 @@ Sessions
 - **Communication:** Say, Tell, Whisper, Gossip, Shout, Ooc, Pose, Emote, Gtell
 - **Combat:** Kill, Flee, Cast, Dispel
 - **Items:** Get, Drop, Use, Give, Wear, Remove, Inventory, Equipment
-- **Progression:** Score, Spells, Effects, Balance, QuestLog, QuestInfo, QuestAccept, QuestAbandon, AchievementList, TitleSet, TitleClear
+- **Progression:** Score, Spells, Effects, Balance, QuestLog, QuestInfo, QuestAccept, QuestAbandon, AchievementList, TitleSet, TitleClear, SpriteList, SpriteSet, SpriteDefault
 - **NPCs:** Talk, DialogueChoice, ShopList, Buy, Sell
 - **Groups:** GroupCmd (Invite, Accept, Leave, Kick, List)
 - **Guilds:** Guild (Create, Disband, Invite, Accept, Leave, Kick, Promote, Demote, Motd, Roster, Info), Gchat
@@ -153,13 +153,14 @@ Sessions
 |---------|---------|-----------|
 | `dev.ambon` | Entry point, wiring | `Main.kt` (bootstrap), `MudServer.kt` (25K, composition root), `CoroutineExtensions.kt` |
 | `dev.ambon.config` | Configuration | `AppConfig.kt` (33K, full schema + `validated()`), `AppConfigLoader.kt` |
-| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (38K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (25K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (15K), `GroupSystem.kt` (12K), `QuestSystem.kt` (11K), `AchievementSystem.kt` (10K), `GuildSystem.kt`, `CraftingSystem.kt`, `FriendsSystem.kt`, `ThreatTable.kt`, `ShopRegistry.kt`, `EngineUtil.kt` |
-| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (17K, sealed Command hierarchy), `CommandRouter.kt` (dispatch infrastructure only); handlers in `handlers/` subpackage: `NavigationHandler`, `CommunicationHandler`, `CombatHandler`, `ItemHandler`, `WorldFeaturesHandler`, `ProgressionHandler`, `DialogueQuestHandler`, `ShopHandler`, `GroupHandler`, `GuildHandler`, `CraftingHandler`, `FriendsHandler`, `MailHandler`, `UiHandler`, `AdminHandler`, `HandlerHelpers` |
+| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (38K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (25K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (15K), `GroupSystem.kt` (12K), `QuestSystem.kt` (11K), `AchievementSystem.kt` (10K), `GuildSystem.kt`, `CraftingSystem.kt`, `FriendsSystem.kt`, `ThreatTable.kt`, `ShopRegistry.kt`, `SpriteRegistry.kt`, `SpriteLoader.kt`, `EngineUtil.kt` |
+| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (17K, sealed Command hierarchy), `CommandRouter.kt` (dispatch infrastructure only); handlers in `handlers/` subpackage: `NavigationHandler`, `CommunicationHandler`, `CombatHandler`, `ItemHandler`, `WorldFeaturesHandler`, `ProgressionHandler`, `DialogueQuestHandler`, `ShopHandler`, `GroupHandler`, `GuildHandler`, `CraftingHandler`, `FriendsHandler`, `MailHandler`, `SpriteHandler`, `UiHandler`, `AdminHandler`, `HandlerHelpers` |
 | `dev.ambon.engine.abilities` | Ability/spell system | `AbilitySystem.kt` (16K), `AbilityRegistry.kt`, `AbilityRegistryLoader.kt`, `AbilityDefinition.kt` |
 | `dev.ambon.engine.status` | Status effects | `StatusEffectSystem.kt` (13K), `StatusEffectRegistry.kt`, `StatusEffectRegistryLoader.kt`, `StatusEffectDefinition.kt`, `ActiveEffect.kt` |
 | `dev.ambon.engine.behavior` | Mob behavior trees | `BehaviorTreeSystem.kt`, `BtNode.kt`, `BtResult.kt`, `BtContext.kt`, `BehaviorTemplates.kt`, `MobBehaviorMemory.kt`; nodes/conditions/actions subdirs |
 | `dev.ambon.engine.dialogue` | NPC dialogue | `DialogueSystem.kt`, `DialogueTree.kt` |
 | `dev.ambon.engine.items` | Item management | `ItemRegistry.kt` (17K), `ItemMatching.kt` |
+| `dev.ambon.domain.sprite` | Sprite domain model | `SpriteDefinition.kt` (SpriteDefinition, SpriteVariant, SpriteCategory, SpriteUnlockCondition) |
 | `dev.ambon.engine.scheduler` | Delayed actions | `Scheduler.kt` |
 | `dev.ambon.engine.events` | Event types | `InboundEvent.kt`, `OutboundEvent.kt` |
 | `dev.ambon.bus` | Event bus abstractions | `InboundBus.kt`, `OutboundBus.kt` (interfaces); `Local*Bus.kt`, `Redis*Bus.kt`, `Grpc*Bus.kt` (impls); `DepthTrackingChannel.kt` |
@@ -298,6 +299,9 @@ Edit `GuildSystem.kt` for logic, `GuildHandler.kt` for commands. Guild persisten
 
 ### Crafting system changes
 Edit `CraftingSystem.kt` for logic, `CraftingHandler.kt` for commands (Gather, Craft, Recipes). `PlayerRecord.craftingSkills` stores per-player skill levels. Recipe definitions live in `application.yaml` under the crafting config section. Test in `CraftingSystemTest`.
+
+### Sprite system changes
+`SpriteRegistry` holds all sprite definitions. Tier and staff sprites are auto-generated in `MudServer.kt` via `SpriteLoader.generateTierSprites()` / `generateStaffSprites()`. Achievement sprites are defined in `src/main/resources/world/sprites.yaml` and loaded via `SpriteLoader.loadFromResource()`. Commands in `SpriteHandler.kt` (SpriteList, SpriteSet, SpriteDefault). `PlayerRecord.activeSprite` / `PlayerState.activeSprite` store the player's selection (null = auto). `GmcpEmitter.resolveSprite()` uses the registry; `sendCharSprites()` emits `Char.Sprites` GMCP. Tier names configured in `AppConfig.ImagesConfig.spriteTierNames`. See `docs/ARCANUM_SPRITE_INSTRUCTIONS.md` for image naming conventions. Test in `SpriteRegistryTest`, `SpriteLoaderTest`, `SpriteCommandTest`.
 
 ## Kotlin Style (ktlint)
 

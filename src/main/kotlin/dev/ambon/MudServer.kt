@@ -24,6 +24,8 @@ import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.RaceRegistryLoader
 import dev.ambon.engine.ReloadRequest
 import dev.ambon.engine.ShopRegistry
+import dev.ambon.engine.SpriteLoader
+import dev.ambon.engine.SpriteRegistry
 import dev.ambon.engine.StatRegistry
 import dev.ambon.engine.StatRegistryLoader
 import dev.ambon.engine.WorldStateRegistry
@@ -175,6 +177,20 @@ class MudServer(
     private val statRegistry =
         StatRegistry().also { reg ->
             StatRegistryLoader.load(config.engine.stats, reg)
+        }
+    private val spriteRegistry =
+        SpriteRegistry().also { reg ->
+            SpriteLoader.generateTierSprites(
+                registry = reg,
+                tierNames = config.images.spriteTierNames,
+                raceIds = raceRegistry.all().map { it.id },
+                classIds = classRegistry.all().map { it.id },
+            )
+            SpriteLoader.generateStaffSprites(
+                registry = reg,
+                raceIds = raceRegistry.all().map { it.id },
+            )
+            SpriteLoader.loadFromResource("world/sprites.yaml", reg)
         }
     private val progression = PlayerProgression(config.progression, classRegistry, config.engine.stats.bindings)
     private val shardingEnabled = config.sharding.enabled
@@ -388,7 +404,7 @@ class MudServer(
                     statRegistryOverride = statRegistry,
                     imagesBaseUrl = config.images.baseUrl,
                     globalAssets = config.images.globalAssets,
-                    spriteLevelTiers = config.images.spriteLevelTiers,
+                    spriteRegistry = spriteRegistry,
                     worldLoader = {
                         WorldFactory.demoWorld(
                             resources = config.world.resources,

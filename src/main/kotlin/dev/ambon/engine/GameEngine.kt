@@ -32,6 +32,7 @@ import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
+import dev.ambon.engine.commands.handlers.SpriteHandler
 import dev.ambon.engine.commands.handlers.UiHandler
 import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
 import dev.ambon.engine.crafting.CraftingRegistry
@@ -133,7 +134,7 @@ class GameEngine(
     statRegistryOverride: StatRegistry? = null,
     imagesBaseUrl: String = "/images/",
     globalAssets: Map<String, String> = emptyMap(),
-    spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
+    private val spriteRegistry: SpriteRegistry? = null,
     private val worldLoader: (() -> World)? = null,
     private val reloadChannel: kotlinx.coroutines.channels.Channel<ReloadRequest>? = null,
 ) {
@@ -427,7 +428,7 @@ class GameEngine(
             equipmentSlotRegistry = equipmentSlotRegistry,
             imagesBaseUrl = imagesBaseUrl,
             globalAssets = globalAssets,
-            spriteLevelTiers = spriteLevelTiers,
+            spriteRegistry = spriteRegistry,
         )
 
     fun markVitalsDirty(sessionId: SessionId) {
@@ -627,6 +628,7 @@ class GameEngine(
             outbound = outbound,
             gmcpEmitter = gmcpEmitter,
             categoryRegistry = achievementCategoryRegistry,
+            spriteRegistry = spriteRegistry,
         )
 
     init {
@@ -835,6 +837,10 @@ class GameEngine(
                 onReload = hotReloadManager?.let { mgr ->
                     { target -> handleReloadCommand(mgr, target) }
                 },
+            ),
+            SpriteHandler(
+                ctx = ctx,
+                spriteRegistry = spriteRegistry,
             ),
             UiHandler(
                 ctx = ctx,
@@ -1205,8 +1211,35 @@ class GameEngine(
                 abilitySystem.cooldownRemainingMs(sessionId, abilityId)
             }
             gmcpEmitter.sendCharGain(sessionId, "levelUp", level.toLong(), newLevel = level)
+            // Notify about new sprites if the player has a custom selection
+            if (p.activeSprite != null) {
+                notifyNewSprites(sessionId, p)
+            }
+            gmcpEmitter.sendCharSprites(sessionId, p)
         }
         achievementSystem.onLevelReached(sessionId, level)
+    }
+
+    /** Sends a text hint when a level-up or achievement unlock makes new sprites available. */
+    private suspend fun notifyNewSprites(
+        sessionId: SessionId,
+        player: PlayerState,
+    ) {
+        val reg = spriteRegistry ?: return
+        val tierDefs = reg.unlockedDefinitions(
+            level = player.level,
+            unlockedAchievementIds = player.unlockedAchievementIds,
+            isStaff = player.isStaff,
+        )
+        // Only notify if there are more sprites than just the one they have selected
+        if (tierDefs.size > 1) {
+            outbound.send(
+                OutboundEvent.SendText(
+                    sessionId,
+                    "New sprites are available! Use 'sprite list' to see your options.",
+                ),
+            )
+        }
     }
 
     private suspend fun syncRoomItemsForRoom(roomId: RoomId) {

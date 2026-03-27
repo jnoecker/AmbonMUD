@@ -1,0 +1,64 @@
+# Custom sprite definitions (achievement, special, etc.)
+#
+# Tier sprites (Novice through Legend) and Staff sprites are auto-generated
+# from application.yaml config + known races/classes. Only define achievement
+# or other non-tier sprites here.
+#
+# Each sprite definition has:
+#   displayName  — human-readable name shown to the player
+#   category     — "achievement", "tier", or "staff"
+#   sortOrder    — ordering within the sprite list (higher = later)
+#   unlock:
+#     type          — "achievement", "level", or "staff"
+#     achievementId — required when type is "achievement"
+#     minLevel      — required when type is "level"
+#   variants:      — one or more image variants
+#     - imageId      — unique identifier (also used in "sprite set <imageId>")
+#       displayName  — variant display name (defaults to definition displayName)
+#       race         — optional race filter (e.g. "ELF"); null = any race
+#       playerClass  — optional class filter (e.g. "MAGE"); null = any class
+#       gender       — optional gender filter; null = any gender
+#       imagePath    — path relative to images base URL
+#
+# Image naming convention:
+#   Generic:      player_sprites/{sprite_name}.png
+#   Race:         player_sprites/{race}_{sprite_name}.png
+#   Class:        player_sprites/{class}_{sprite_name}.png
+#   Race+Class:   player_sprites/{race}_{class}_{sprite_name}.png
+
+sprites:
+  beetle_slayer:
+    displayName: "Beetle Slayer"
+    category: achievement
+    sortOrder: 100
+    unlock:
+      type: achievement
+      achievementId: combat/beetle_exterminator
+    variants:
+      - imageId: beetle_slayer
+        displayName: "Beetle Slayer"
+        imagePath: player_sprites/beetle_slayer.png
+      - imageId: elf_beetle_slayer
+        displayName: "Beetle Slayer (Elf)"
+        race: ELF
+        imagePath: player_sprites/elf_beetle_slayer.png
+      - imageId: dwarf_beetle_slayer
+        displayName: "Beetle Slayer (Dwarf)"
+        race: DWARF
+        imagePath: player_sprites/dwarf_beetle_slayer.png
+
+  spider_hunter:
+    displayName: "Spider Hunter"
+    category: achievement
+    sortOrder: 101
+    unlock:
+      type: achievement
+      achievementId: combat/spider_hunter
+    variants:
+      - imageId: spider_hunter
+        displayName: "Spider Hunter"
+        imagePath: player_sprites/spider_hunter.png
+      - imageId: rogue_spider_hunter
+        displayName: "Spider Hunter (Rogue)"
+        playerClass: ROGUE
+        imagePath: player_sprites/rogue_spider_hunter.png
