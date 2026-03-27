@@ -19,6 +19,7 @@ class AchievementSystem(
     private val outbound: OutboundBus,
     private val gmcpEmitter: GmcpEmitter? = null,
     private val categoryRegistry: AchievementCategoryRegistry? = null,
+    private val spriteRegistry: SpriteRegistry? = null,
 ) {
     /**
      * Called when a player kills a mob. Increments KILL criteria matching [templateKey]
@@ -232,6 +233,27 @@ class AchievementSystem(
                     "A title is now available: '${def.rewards.title}' — use 'title ${def.rewards.title}' to set it.",
                 ),
             )
+        }
+
+        // Check if this achievement unlocks any sprites
+        if (spriteRegistry != null) {
+            val newSprites = spriteRegistry.unlockedDefinitions(
+                level = ps.level,
+                unlockedAchievementIds = ps.unlockedAchievementIds,
+                isStaff = ps.isStaff,
+            ).filter {
+                it.unlockCondition is dev.ambon.domain.sprite.SpriteUnlockCondition.Achievement &&
+                    (it.unlockCondition as dev.ambon.domain.sprite.SpriteUnlockCondition.Achievement).achievementId == achievementId
+            }
+            for (spriteDef in newSprites) {
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "A new sprite is now available: '${spriteDef.displayName}' — use 'sprite list' to see your options.",
+                    ),
+                )
+            }
+            gmcpEmitter?.sendCharSprites(sessionId, ps)
         }
 
         // GMCP update is sent by updateAchievementProgress after checkAndUnlock returns

@@ -53,7 +53,7 @@ class GmcpEmitter(
     private val equipmentSlotRegistry: EquipmentSlotRegistry? = null,
     imagesBaseUrl: String = "/images/",
     private val globalAssets: Map<String, String> = emptyMap(),
-    spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
+    private val spriteRegistry: SpriteRegistry? = null,
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -73,9 +73,6 @@ class GmcpEmitter(
     /** Resolved asset URLs: each value from [globalAssets] is prefixed with [imagesBase]. */
     private val resolvedAssets: Map<String, String> =
         globalAssets.mapValues { (_, path) -> "$imagesBase$path" }
-
-    /** Sorted descending so the first match is the highest tier the player qualifies for. */
-    private val sortedTiers = spriteLevelTiers.sortedDescending().toIntArray()
 
     suspend fun sendCharVitals(
         sessionId: SessionId,
@@ -500,6 +497,7 @@ class GmcpEmitter(
         }
         sendCharStatusEffects(sessionId, statusEffectSystem.activePlayerEffects(sessionId))
         sendCharAchievements(sessionId, player, achievementRegistry)
+        sendCharSprites(sessionId, player)
         sendGroupSync(sessionId, groupSystem, players)
         guildSystem?.sendGuildSync(sessionId)
     }
@@ -1694,13 +1692,92 @@ class GmcpEmitter(
         }
     }
 
-    private fun resolveSprite(player: PlayerState): String {
+    /**
+     * Resolves the sprite image URL for a player.
+     *
+     * If the player has an [activeSprite][PlayerState.activeSprite] set and the
+     * sprite registry confirms it is still valid, that variant is used. Otherwise
+     * falls back to auto-resolve (highest unlocked tier, best variant match).
+     */
+    internal fun resolveSprite(player: PlayerState): String {
+        val reg = spriteRegistry
+        if (reg != null) {
+            // Explicit selection
+            val chosen = player.activeSprite
+            if (chosen != null) {
+                val valid = reg.validateSelection(
+                    imageId = chosen,
+                    level = player.level,
+                    unlockedAchievementIds = player.unlockedAchievementIds,
+                    isStaff = player.isStaff,
+                    playerRace = player.race,
+                    playerClass = player.playerClass,
+                    playerGender = player.gender,
+                )
+                if (valid != null) return "$imagesBase${valid.imagePath}"
+            }
+            // Auto-resolve
+            val auto = reg.autoResolve(
+                level = player.level,
+                isStaff = player.isStaff,
+                playerRace = player.race,
+                playerClass = player.playerClass,
+                playerGender = player.gender,
+            )
+            if (auto != null) return "$imagesBase${auto.imagePath}"
+        }
+        // Fallback (no registry) — legacy behaviour
         val race = player.race.lowercase()
         if (player.isStaff) return "${imagesBase}player_sprites/${race}_base_tstaff.png"
         val cls = player.playerClass.lowercase()
-        val tierSuffix = "t${sortedTiers.firstOrNull { player.level >= it } ?: 1}"
-        return "${imagesBase}player_sprites/${race}_${cls}_$tierSuffix.png"
+        return "${imagesBase}player_sprites/${race}_${cls}_t1.png"
     }
+
+    /** Sends the `Char.Sprites` GMCP package listing available sprites. */
+    suspend fun sendCharSprites(
+        sessionId: SessionId,
+        player: PlayerState,
+    ) {
+        val reg = spriteRegistry ?: return
+        val available = reg.availableVariants(
+            level = player.level,
+            unlockedAchievementIds = player.unlockedAchievementIds,
+            isStaff = player.isStaff,
+            playerRace = player.race,
+            playerClass = player.playerClass,
+            playerGender = player.gender,
+        )
+        val active = player.activeSprite
+            ?: reg.autoResolve(
+                level = player.level,
+                isStaff = player.isStaff,
+                playerRace = player.race,
+                playerClass = player.playerClass,
+                playerGender = player.gender,
+            )?.imageId
+
+        val sprites = available.map { (def, v) ->
+            CharSpriteEntry(
+                imageId = v.imageId,
+                displayName = v.displayName,
+                category = def.category.name.lowercase(),
+                imagePath = "$imagesBase${v.imagePath}",
+            )
+        }
+        emit(sessionId, "Char.Sprites", CharSpritesPayload(active = active, sprites = sprites))
+    }
+
+    private data class CharSpriteEntry(
+        val imageId: String,
+        val displayName: String,
+        val category: String,
+        val imagePath: String,
+    )
+
+    private data class CharSpritesPayload(
+        val active: String?,
+        val sprites: List<CharSpriteEntry>,
+    )
 }
 
 // ---------- public data entry types for new GMCP methods ----------
