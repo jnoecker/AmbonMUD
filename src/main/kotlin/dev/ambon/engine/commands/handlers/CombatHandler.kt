@@ -34,13 +34,18 @@ class CombatHandler(
         dialogueSystem?.endConversation(sessionId)
         val error = combat.startCombat(sessionId, cmd.target)
         outbound.sendIfError(sessionId, error)
-        if (error != null) gmcpEmitter?.sendUiFeedback(sessionId, "error", error)
+        if (error != null) {
+            val code = killErrorCode(error)
+            gmcpEmitter?.sendUiFeedback(sessionId, "error", error, code = code, scope = "combat", command = "kill")
+        }
     }
 
     private suspend fun handleFlee(sessionId: SessionId) {
         val error = combat.flee(sessionId)
         outbound.sendIfError(sessionId, error)
-        if (error != null) gmcpEmitter?.sendUiFeedback(sessionId, "error", error)
+        if (error != null) {
+            gmcpEmitter?.sendUiFeedback(sessionId, "error", error, code = "NOT_IN_COMBAT", scope = "combat", command = "flee")
+        }
     }
 
     private suspend fun handleCast(
@@ -50,6 +55,15 @@ class CombatHandler(
         val abilities = requireSystemOrNull(sessionId, abilitySystem, "Abilities", outbound) ?: return
         val error = abilities.cast(sessionId, cmd.spellName, cmd.target)
         outbound.sendIfError(sessionId, error)
-        if (error != null) gmcpEmitter?.sendUiFeedback(sessionId, "error", error)
+        if (error != null) {
+            gmcpEmitter?.sendUiFeedback(sessionId, "error", error, scope = "combat", command = "cast")
+        }
+    }
+
+    private fun killErrorCode(error: String): String = when {
+        error.contains("already fighting", ignoreCase = true) -> "ALREADY_IN_COMBAT"
+        error.contains("don't see", ignoreCase = true) -> "TARGET_NOT_FOUND"
+        error.contains("Kill what", ignoreCase = true) -> "MISSING_TARGET"
+        else -> "COMBAT_ERROR"
     }
 }
