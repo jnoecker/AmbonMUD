@@ -86,6 +86,8 @@ export const COMMANDS = [
   "friend", "mail",
   // Crafting
   "gather", "craft", "recipes", "craftskills",
+  // Sprites
+  "sprite",
   // Utility
   "phase", "help", "quit", "clear", "colors",
 ];
