@@ -4,7 +4,11 @@
       <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] %logger{30} - %msg%n</pattern>
     </encoder>
   </appender>
+  <appender name="RING" class="dev.ambon.admin.LogRingBuffer">
+    <capacity>2000</capacity>
+  </appender>
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="RING"/>
   </root>
 </configuration>
