@@ -147,7 +147,7 @@ Sessions
 
 ## Project Map
 
-### Source Files (~266 Kotlin files in main, ~110 test files)
+### Source Files (~272 Kotlin files in main, ~118 test files)
 
 | Package | Purpose | Key Files |
 |---------|---------|-----------|
@@ -185,9 +185,9 @@ Sessions
 |------|-------|
 | Default config | `src/main/resources/application.yaml` |
 | Multi-instance profiles | `src/main/resources/application-{engine1,engine2,gw1,gw2}.yaml` |
-| World zones (13 YAML files) | `src/main/resources/world/` (ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth, celestial_sanctum, crafting_workshop, player_sprites) |
+| World zones (14 YAML files) | `src/main/resources/world/` (ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth, celestial_sanctum, crafting_workshop, player_sprites, sprites) |
 | Login banner + styles | `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml` |
-| Flyway migrations | `src/main/resources/db/migration/` (V1–V18: players table through guilds, crafting, friends, mail, and more) |
+| Flyway migrations | `src/main/resources/db/migration/` (V1–V19: players table through guilds, crafting, friends, mail, sprites, and more) |
 | Proto definitions | `src/main/proto/ambonmud/v1/engine_service.proto`, `events.proto` |
 | Web demo client (static) | `src/main/resources/web/` |
 | V4 canvas client (React + PixiJS) | `web-v3/` (built to `src/main/resources/web-v3/`) |
@@ -196,7 +196,7 @@ Sessions
 | World YAML format spec | `docs/WORLD_YAML_SPEC.md` |
 | Runtime player saves | `data/players/` (git-ignored, do not commit) |
 
-### Tests (~110 test files)
+### Tests (~118 test files)
 
 | Area | Files | Key Tests |
 |------|-------|-----------|
