@@ -20,13 +20,18 @@ const LABEL_PAD_X = 10;
 const LABEL_PAD_Y = 4;
 const LABEL_RADIUS = 6;
 
-/** Draw a dark rounded-rect pill behind a centered text label. */
-function drawLabelPill(bg: Graphics, label: Text, tint?: number) {
+/** Draw a dark rounded-rect pill behind a centered text label. Optionally add a glow halo. */
+function drawLabelPill(bg: Graphics, label: Text, glowColor?: number) {
   const lw = label.width + LABEL_PAD_X;
   const lh = label.height + LABEL_PAD_Y;
   bg.clear();
+  if (glowColor != null) {
+    // Faint outer glow halo
+    bg.roundRect(label.x - lw / 2 - 3, label.y - LABEL_PAD_Y / 2 - 3, lw + 6, lh + 6, LABEL_RADIUS + 3);
+    bg.fill({ color: glowColor, alpha: 0.15 });
+  }
   bg.roundRect(label.x - lw / 2, label.y - LABEL_PAD_Y / 2, lw, lh, LABEL_RADIUS);
-  bg.fill({ color: tint ?? LABEL_BG_COLOR, alpha: LABEL_BG_ALPHA });
+  bg.fill({ color: LABEL_BG_COLOR, alpha: LABEL_BG_ALPHA });
 }
 
 const PLAYER_LABEL_COLOR = "#d8dcef";
@@ -112,6 +117,7 @@ export class WorldScene {
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
   private shopLabel: Text;
+  private shopLabelBg = new Graphics();
   private shopHitArea = new Graphics();
   private shopVisible = false;
 
@@ -134,6 +140,7 @@ export class WorldScene {
   private nodeSprites: Array<{ sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
   private stationBadge: Container;
   private stationLabel: Text;
+  private stationLabelBg = new Graphics();
   private stationHitArea = new Graphics();
   private stationVisible = false;
 
@@ -188,7 +195,7 @@ export class WorldScene {
 
     this.playerLabel = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: PLAYER_LABEL_FONT_SIZE, fill: PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 0 } },
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: PLAYER_LABEL_FONT_SIZE, fill: PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
     });
     this.playerLabel.anchor.set(0.5, 0);
 
@@ -227,6 +234,8 @@ export class WorldScene {
     this.shopLabel.anchor.set(0.5, 0);
     this.shopLabel.y = hs / 2 + 2;
     this.shopLabel.eventMode = "none";
+    this.shopLabelBg.eventMode = "none";
+    this.shopBadge.addChild(this.shopLabelBg);
     this.shopBadge.addChild(this.shopLabel);
     // Asset-dependent sprites (shop, dialogue, aggro, quest) are loaded
     // lazily in update() once Server.Assets GMCP arrives, to avoid 404s
@@ -251,6 +260,8 @@ export class WorldScene {
     this.stationLabel.anchor.set(0.5, 0);
     this.stationLabel.y = hs / 2 + 2;
     this.stationLabel.eventMode = "none";
+    this.stationLabelBg.eventMode = "none";
+    this.stationBadge.addChild(this.stationLabelBg);
     this.stationBadge.addChild(this.stationLabel);
 
     // Recall button
@@ -524,20 +535,24 @@ export class WorldScene {
         label.x = mobX;
         label.y = mobY + mobSize / 2 + 6;
 
-        // Tint pill and label color based on mob role
+        // Color label text by mob role + prepend role icon
         const mid = [...this.mobSprites.entries()].find(([, v]) => v.label === label)?.[0];
         const info = mid ? mobInfo.find((m) => m.id === mid) : null;
-        const pillTint = info?.aggressive ? 0x2a1418 : info?.shopKeeper ? 0x141820 : info?.questGiver ? 0x1a1810 : LABEL_BG_COLOR;
+        const baseName = label.text.replace(/^[\u2620\u2B50]\s*/, "").replace(/^\uD83D\uDCB0\s*/, "");
         if (info?.aggressive) {
-          label.style.fill = "#d4888a"; // dusty rose
+          label.style.fill = "#d4888a";
+          label.text = "\u2620 " + baseName;
         } else if (info?.shopKeeper) {
-          label.style.fill = "#8caec9"; // pale blue
+          label.style.fill = "#8caec9";
+          label.text = "\uD83D\uDCB0 " + baseName;
         } else if (info?.questGiver) {
-          label.style.fill = "#bea873"; // soft gold
+          label.style.fill = "#bea873";
+          label.text = "\u2B50 " + baseName;
         } else {
           label.style.fill = MOB_LABEL_COLOR;
+          label.text = baseName;
         }
-        drawLabelPill(labelBg, label, pillTint);
+        drawLabelPill(labelBg, label, info?.questGiver ? 0xbea873 : undefined);
 
         hitArea.clear();
         hitArea.rect(0, 0, mobSize, mobSize);
@@ -572,7 +587,7 @@ export class WorldScene {
 
     // Layout item sprites in a horizontal row, centered
     if (itemCount > 0) {
-      const itemY = h * 0.42;
+      const itemY = h * 0.38;
       const itemSpacing = Math.min(itemSize + 16, itemAreaWidth / Math.max(1, itemCount));
       const totalItemWidth = (itemCount - 1) * itemSpacing;
       let itemX = w / 2 - totalItemWidth / 2;
@@ -596,7 +611,7 @@ export class WorldScene {
     // Layout gathering node sprites — below items
     const nodeCount = this.nodeSprites.length;
     if (nodeCount > 0) {
-      const nodeY = h * 0.50;
+      const nodeY = h * 0.52;
       const nodeSpacing = Math.min(itemSize + 16, itemAreaWidth / Math.max(1, nodeCount));
       const totalNodeWidth = (nodeCount - 1) * nodeSpacing;
       let nodeX = w / 2 - totalNodeWidth / 2;
@@ -622,12 +637,14 @@ export class WorldScene {
     if (this.shopBadge.visible) {
       this.shopBadge.x = w - 70;
       this.shopBadge.y = h * 0.35;
+      drawLabelPill(this.shopLabelBg, this.shopLabel);
     }
 
     // Station badge position — right side, below shop badge
     if (this.stationBadge.visible) {
       this.stationBadge.x = w - 70;
       this.stationBadge.y = this.shopBadge.visible ? h * 0.48 : h * 0.35;
+      drawLabelPill(this.stationLabelBg, this.stationLabel);
     }
 
     // Recall button — bottom-left
@@ -804,7 +821,7 @@ export class WorldScene {
 
       const label = new Text({
         text: mob.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: MOB_LABEL_FONT_SIZE, fill: MOB_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 0 } },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: MOB_LABEL_FONT_SIZE, fill: MOB_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
 
@@ -864,7 +881,7 @@ export class WorldScene {
 
       const label = new Text({
         text: item.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: ITEM_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 0 } },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: ITEM_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
 
@@ -918,7 +935,7 @@ export class WorldScene {
 
       const label = new Text({
         text: node.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: "#8da97b", dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 0 } },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: "#8da97b", dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
 
@@ -967,7 +984,7 @@ export class WorldScene {
 
       const label = new Text({
         text: player.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: OTHER_PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 0 } },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: OTHER_PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
 
