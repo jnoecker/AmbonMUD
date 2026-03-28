@@ -711,6 +711,8 @@ class GameEngine(
                 abilityRegistry = abilityRegistry,
                 statusEffectRegistry = statusEffectRegistry,
                 equipmentSlotRegistry = equipmentSlotRegistry,
+                achievementRegistry = achievementRegistry,
+                achievementCategoryRegistry = achievementCategoryRegistry,
                 mobSystem = mobSystem,
                 behaviorTreeSystem = behaviorTreeSystem,
                 gmcpEmitter = gmcpEmitter,
