@@ -228,7 +228,8 @@ class GmcpEmitter(
         emit(
             sessionId,
             "Room.Players",
-            players.filter { it.sessionId != sessionId }.map { RoomPlayerPayload(name = it.name, level = it.level) },
+            players.filter { it.sessionId != sessionId && !it.invisible }
+                .map { RoomPlayerPayload(name = it.name, level = it.level) },
         )
     }
 
