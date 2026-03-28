@@ -7666,6 +7666,24 @@ body {
   border-color: rgb(190 168 115 / 60%);
 }
 
+.staff-invis-button {
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 150ms ease, background 150ms ease;
+}
+
+.staff-invis-button:hover {
+  opacity: 1;
+}
+
+.staff-invis-active {
+  opacity: 1;
+  background: linear-gradient(140deg, rgb(120 100 170 / 35%), rgb(100 80 150 / 28%));
+  border-color: rgb(150 120 200 / 50%);
+}
+
 .admin-dialog {
   max-width: 460px;
 }
