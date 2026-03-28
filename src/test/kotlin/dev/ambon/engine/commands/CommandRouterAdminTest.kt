@@ -178,8 +178,8 @@ class CommandRouterAdminTest {
             val spawned = h.mobs.mobsInRoom(staffRoom)
             assertTrue(spawned.isNotEmpty(), "Expected a mob to be spawned in staff room")
             assertTrue(
-                outs.any { it is OutboundEvent.SendInfo && it.sessionId == staffSid },
-                "Expected spawn confirmation. got=$outs",
+                outs.any { it is OutboundEvent.SendText && it.sessionId == staffSid && it.text.contains("appears") },
+                "Expected spawn room announcement. got=$outs",
             )
         }
 
