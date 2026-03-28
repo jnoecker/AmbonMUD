@@ -154,6 +154,7 @@ function App() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [staffInvisible, setStaffInvisible] = useState(false);
   const [broadcast, setBroadcast] = useState<{ sender: string; message: string } | null>(null);
+  const [possessing, setPossessing] = useState<string | null>(null);
   const [composerValue, setComposerValue] = useState("");
   const [terminalVisible, setTerminalVisible] = useState(false);
   const [terminalOpaque, setTerminalOpaque] = useState(false);
@@ -365,6 +366,7 @@ function App() {
     setActiveChatChannel("say");
     setShowAdminPanel(false);
     setStaffInvisible(false);
+    setPossessing(null);
     setStaffWorldInfo([]);
     setStaffMobTemplates([]);
     setServerCommands([]);
@@ -430,6 +432,7 @@ function App() {
           setStaffWorldInfo,
           setStaffMobTemplates,
           pushBroadcast: (sender: string, message: string) => setBroadcast({ sender, message }),
+          setPossessing,
           setLookTarget,
           setCraftingSkills,
           setCraftingRecipes,
@@ -1300,6 +1303,15 @@ function App() {
           <p className="look-target-desc">{lookTarget.description}</p>
           {lookTarget.image && <img src={lookTarget.image} alt="" className="look-target-image" />}
         </div>
+      )}
+      {possessing && (
+        <>
+          <div className="possession-vignette" aria-hidden="true" />
+          <div className="possession-badge" role="status">
+            <span className="possession-badge-icon" aria-hidden="true">{"\uD83D\uDC41"}</span>
+            Possessing <strong>{possessing}</strong>
+          </div>
+        </>
       )}
       {broadcast && (
         <div className="broadcast-overlay" role="alertdialog" aria-modal="true" aria-label="Server announcement">
