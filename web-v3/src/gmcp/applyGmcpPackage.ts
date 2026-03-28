@@ -1208,6 +1208,7 @@ export function applyGmcpPackage(
             name: typeof e.name === "string" ? e.name : "",
             skill: typeof e.skill === "string" ? e.skill : "",
             skillRequired: safeNumber(e.skillRequired, 1),
+            image: typeof e.image === "string" ? e.image : null,
           })),
       );
       break;
