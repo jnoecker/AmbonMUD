@@ -5709,6 +5709,107 @@ body {
   border-radius: var(--radius-sm);
 }
 
+/* ── Broadcast announcement overlay ── */
+
+.broadcast-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 60%);
+  backdrop-filter: blur(4px);
+  animation: broadcastFadeIn 300ms ease-out;
+}
+
+@keyframes broadcastFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.broadcast-card {
+  max-width: 440px;
+  width: 90%;
+  padding: var(--space-6);
+  background: linear-gradient(145deg, rgb(40 30 55 / 96%), rgb(30 22 42 / 94%));
+  border: 1px solid rgb(180 140 220 / 35%);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 8px 32px rgb(0 0 0 / 50%),
+    0 0 60px rgb(140 100 200 / 12%);
+  animation: broadcastCardSlide 300ms ease-out;
+}
+
+@keyframes broadcastCardSlide {
+  from { opacity: 0; transform: translateY(-16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.broadcast-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.broadcast-icon {
+  font-size: 1.4rem;
+}
+
+.broadcast-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-primary-soft-gold);
+  letter-spacing: 0.02em;
+}
+
+.broadcast-message {
+  margin: 0 0 var(--space-4);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-bright);
+  white-space: pre-wrap;
+}
+
+.broadcast-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.broadcast-sender {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.broadcast-dismiss {
+  padding: var(--space-2) var(--space-5);
+  border: 1px solid rgb(180 140 220 / 40%);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(140deg, rgb(120 90 170 / 30%), rgb(100 70 150 / 25%));
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.broadcast-dismiss:hover {
+  background: linear-gradient(140deg, rgb(140 110 190 / 40%), rgb(120 90 170 / 35%));
+  border-color: rgb(180 140 220 / 60%);
+}
+
+.broadcast-dismiss:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgb(184 216 232 / 58%),
+    0 0 0 4px rgb(216 197 232 / 30%);
+}
+
 .game-toast {
   position: fixed;
   top: 60px;
