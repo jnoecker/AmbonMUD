@@ -40,7 +40,14 @@ export class EntityPopout {
 
     this.titleText = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 14, fill: TITLE_COLOR, fontWeight: "bold" },
+      style: {
+        fontFamily: "JetBrains Mono, Cascadia Mono, monospace",
+        fontSize: 14,
+        fill: TITLE_COLOR,
+        fontWeight: "bold",
+        wordWrap: true,
+        wordWrapWidth: POPOUT_WIDTH - POPOUT_PADDING * 2,
+      },
     });
     this.titleText.anchor.set(0.5, 0);
 
@@ -183,10 +190,10 @@ export class EntityPopout {
     this.titleText.text = title;
     this.subtitleText.text = subtitle;
 
-    // Calculate total height (subtitle may wrap to multiple lines)
+    // Calculate total height (title and subtitle may wrap to multiple lines)
     const contentTop = POPOUT_PADDING;
     const spriteBottom = contentTop + SPRITE_PREVIEW_SIZE;
-    const titleBottom = spriteBottom + 8 + 18;
+    const titleBottom = spriteBottom + 8 + this.titleText.height;
     const subtitleHeight = subtitle ? this.subtitleText.height : 0;
     const subtitleBottom = subtitle ? titleBottom + subtitleHeight + 4 : titleBottom;
     const buttonsTop = subtitleBottom + 8;
