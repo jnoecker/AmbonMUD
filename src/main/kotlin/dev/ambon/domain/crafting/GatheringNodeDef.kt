@@ -13,6 +13,7 @@ data class GatheringNodeDef(
     val id: String,
     val displayName: String,
     val keyword: String,
+    val image: String? = null,
     val skill: String,
     val skillRequired: Int = 1,
     val yields: List<GatheringYield>,

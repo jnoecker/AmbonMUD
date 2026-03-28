@@ -158,6 +158,7 @@ gatheringNodes:
   copper_vein:
     displayName: "a copper ore vein"
     keyword: copper
+    image: 17c339b585fb4f66b4f39c807e795e727c93b2c7c311cb6ded7a10fe84ed3eff.png
     skill: mining
     skillRequired: 1
     yields:
@@ -170,6 +171,7 @@ gatheringNodes:
   iron_vein:
     displayName: "an iron ore vein"
     keyword: iron
+    image: 4d63add4ae4a42fc5f49080445d1ef265391eb89cdf2a27451c6d828f7c41a84.png
     skill: mining
     skillRequired: 15
     yields:
@@ -182,6 +184,7 @@ gatheringNodes:
   wildflower_patch:
     displayName: "a wildflower patch"
     keyword: wildflower
+    image: d07aa2893859b016fea006ab234461c0562c4bc217dabf77557602350a279b5b.png
     skill: herbalism
     skillRequired: 1
     yields:
@@ -194,6 +197,7 @@ gatheringNodes:
   healing_herbs:
     displayName: "a cluster of healing herbs"
     keyword: herb
+    image: 7ecbb4990825b4a1961abfc986dff706fa7abdcec0e32ef7219a877234f4b680.png
     skill: herbalism
     skillRequired: 15
     yields:

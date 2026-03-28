@@ -544,6 +544,7 @@ object WorldLoader {
                         id = nodeId,
                         displayName = displayName,
                         keyword = keyword,
+                        image = nodeFile.image,
                         skill = skill,
                         skillRequired = nodeFile.skillRequired,
                         yields = yields,

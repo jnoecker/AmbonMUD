@@ -621,6 +621,7 @@ function App() {
       dialogue,
       questsAvailable,
       shop,
+      craftingNodes,
       serverAssets,
     };
   });

@@ -116,8 +116,15 @@ export class WorldScene {
   private lastRoomId: string | null = null;
   private lastRoomImage: string | null | undefined = undefined;
   private lastPlayerSpritePath: string | null = null;
+  private nodeSprites: Array<{ sprite: Sprite; label: Text; hitArea: Graphics }> = [];
+  private stationBadge: Container;
+  private stationLabel: Text;
+  private stationHitArea = new Graphics();
+  private stationVisible = false;
+
   private lastMobsKey = "";
   private lastItemsKey = "";
+  private lastNodesKey = "";
   private lastPlayersKey = "";
   private lastMobInfoKey = "";
   private assetsLoaded = false;
@@ -210,6 +217,27 @@ export class WorldScene {
     // lazily in update() once Server.Assets GMCP arrives, to avoid 404s
     // from fallback URLs when assets live on a CDN.
 
+    // Station badge — floating anvil icon when a crafting station is present
+    this.stationBadge = new Container();
+    this.stationBadge.visible = false;
+    this.stationBadge.eventMode = "static";
+    this.stationBadge.cursor = "pointer";
+    this.stationBadge.on("pointerdown", () => {
+      canvasCallbacks.sendCommand?.("recipes");
+    });
+    this.stationHitArea.rect(-hs / 2, -hs / 2, hs, hs + 20);
+    this.stationHitArea.fill({ color: 0x000000, alpha: 0.001 });
+    this.stationHitArea.eventMode = "auto";
+    this.stationBadge.addChild(this.stationHitArea);
+    this.stationLabel = new Text({
+      text: "Station",
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#8da97b", dropShadow: { color: 0x000000, alpha: 1, blur: 4, distance: 0 } },
+    });
+    this.stationLabel.anchor.set(0.5, 0);
+    this.stationLabel.y = hs / 2 + 2;
+    this.stationLabel.eventMode = "none";
+    this.stationBadge.addChild(this.stationLabel);
+
     // Recall button
     this.recallBtn = this.buildActionButton("Recall", 0xb9aed8, 0x2a2845, () => {
       canvasCallbacks.sendCommand?.("recall");
@@ -226,6 +254,7 @@ export class WorldScene {
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
+    this.container.addChild(this.stationBadge);
     this.container.addChild(this.recallBtn);
     this.container.addChild(this.backdropHit);
     this.container.addChild(this.entityPopout.container);
@@ -330,6 +359,13 @@ export class WorldScene {
       this.rebuildItems(roomItems);
     }
 
+    const nodes = state.craftingNodes;
+    const nodesKey = nodes.map((n) => n.id).join("|");
+    if (nodesKey !== this.lastNodesKey) {
+      this.lastNodesKey = nodesKey;
+      this.rebuildNodes(nodes);
+    }
+
     const playersKey = players.map((p) => p.name).join("|");
     if (playersKey !== this.lastPlayersKey) {
       this.lastPlayersKey = playersKey;
@@ -346,6 +382,17 @@ export class WorldScene {
     if (hasShop !== this.shopVisible) {
       this.shopVisible = hasShop;
       this.shopBadge.visible = hasShop;
+    }
+
+    // Station badge visibility
+    const hasStation = !!state.room.station;
+    if (hasStation !== this.stationVisible) {
+      this.stationVisible = hasStation;
+      this.stationBadge.visible = hasStation;
+      if (hasStation) {
+        const stationName = state.room.station!.split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+        this.stationLabel.text = stationName;
+      }
     }
 
     // Recall button visibility — show when logged in and not in combat
@@ -510,10 +557,39 @@ export class WorldScene {
       }
     }
 
+    // Layout gathering node sprites — below items
+    const nodeCount = this.nodeSprites.length;
+    if (nodeCount > 0) {
+      const nodeY = h * 0.50;
+      const nodeSpacing = Math.min(itemSize + 16, itemAreaWidth / Math.max(1, nodeCount));
+      const totalNodeWidth = (nodeCount - 1) * nodeSpacing;
+      let nodeX = w / 2 - totalNodeWidth / 2;
+      for (const { sprite, label, hitArea } of this.nodeSprites) {
+        sprite.x = nodeX;
+        sprite.y = nodeY;
+        sprite.width = itemSize;
+        sprite.height = itemSize;
+        label.x = nodeX;
+        label.y = nodeY + itemSize / 2 + 2;
+        hitArea.clear();
+        hitArea.rect(0, 0, itemSize, itemSize);
+        hitArea.fill({ color: 0x000000, alpha: 0.001 });
+        hitArea.x = nodeX - itemSize / 2;
+        hitArea.y = nodeY - itemSize / 2;
+        nodeX += nodeSpacing;
+      }
+    }
+
     // Shop badge position — right side, below description area
     if (this.shopBadge.visible) {
       this.shopBadge.x = w - 70;
       this.shopBadge.y = h * 0.35;
+    }
+
+    // Station badge position — right side, below shop badge
+    if (this.stationBadge.visible) {
+      this.stationBadge.x = w - 70;
+      this.stationBadge.y = this.shopBadge.visible ? h * 0.48 : h * 0.35;
     }
 
     // Recall button — bottom-left
@@ -762,6 +838,52 @@ export class WorldScene {
       this.container.addChild(label);
       this.container.addChild(hitArea);
       this.itemSprites.push({ sprite, label, hitArea });
+    }
+  }
+
+  private rebuildNodes(nodes: Array<{ id: string; name: string; skill: string; skillRequired: number; image?: string | null }>) {
+    for (const { sprite, label, hitArea } of this.nodeSprites) {
+      this.container.removeChild(sprite);
+      this.container.removeChild(label);
+      this.container.removeChild(hitArea);
+      sprite.destroy();
+      label.destroy();
+      hitArea.destroy();
+    }
+    this.nodeSprites = [];
+
+    for (const node of nodes) {
+      const sprite = new Sprite(Texture.WHITE);
+      sprite.width = BASE_ITEM_SPRITE_SIZE;
+      sprite.height = BASE_ITEM_SPRITE_SIZE;
+      sprite.anchor.set(0.5);
+      sprite.tint = 0x8da97b; // moss green
+
+      if (node.image) {
+        this.loadSpriteTexture(sprite, node.image);
+      }
+
+      const label = new Text({
+        text: node.name,
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: "#8da97b", dropShadow: { color: 0x000000, alpha: 0.5, blur: 3, distance: 1 } },
+      });
+      label.anchor.set(0.5, 0);
+
+      const hitArea = new Graphics();
+      hitArea.rect(0, 0, BASE_ITEM_SPRITE_SIZE, BASE_ITEM_SPRITE_SIZE);
+      hitArea.fill({ color: 0x000000, alpha: 0.001 });
+      hitArea.eventMode = "static";
+      hitArea.cursor = "pointer";
+
+      const nodeData = node;
+      hitArea.on("pointerdown", () => {
+        canvasCallbacks.sendCommand?.(`gather ${nodeData.name}`);
+      });
+
+      this.container.addChild(sprite);
+      this.container.addChild(label);
+      this.container.addChild(hitArea);
+      this.nodeSprites.push({ sprite, label, hitArea });
     }
   }
 

@@ -9,6 +9,7 @@ data class GatheringYieldFile(
 data class GatheringNodeFile(
     val displayName: String,
     val keyword: String? = null,
+    val image: String? = null,
     val skill: String,
     val skillRequired: Int = 1,
     val yields: List<GatheringYieldFile> = emptyList(),

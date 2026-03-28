@@ -1717,6 +1717,7 @@ class GmcpEmitter(
         val name: String,
         val skill: String,
         val skillRequired: Int,
+        val image: String? = null,
     )
 
     private data class CraftingResultPayload(

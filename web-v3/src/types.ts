@@ -344,6 +344,7 @@ export interface CraftingNode {
   name: string;
   skill: string;
   skillRequired: number;
+  image?: string | null;
 }
 
 export interface CraftingResult {
