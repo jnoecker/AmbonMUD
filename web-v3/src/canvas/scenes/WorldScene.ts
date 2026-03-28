@@ -26,7 +26,7 @@ const MINIMAP_DESKTOP = 140;
 const MINIMAP_MOBILE = 100;
 const MINIMAP_MARGIN = 16;
 const BASE_SPRITE_SIZE = 128;
-const BASE_ITEM_SPRITE_SIZE = 64;
+const BASE_ITEM_SPRITE_SIZE = 96;
 const REF_WIDTH = 1200;
 const REF_HEIGHT = 800;
 const MIN_SPRITE_SIZE = 64;
@@ -73,7 +73,7 @@ export class WorldScene {
   private playerSprite: Sprite | null = null;
   private playerLabel: Text;
   private mobSprites: Map<string, { sprite: Sprite; label: Text; hitArea: Graphics }> = new Map();
-  private itemSprites: Array<{ sprite: Sprite; label: Text; hitArea: Graphics }> = [];
+  private itemSprites: Array<{ sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
   private playerSprites: Map<string, { sprite: Sprite; label: Text; hitArea: Graphics }> = new Map();
   private roleGraphics = new Graphics();
   private statusEffects = new StatusEffectDisplay();
@@ -116,7 +116,7 @@ export class WorldScene {
   private lastRoomId: string | null = null;
   private lastRoomImage: string | null | undefined = undefined;
   private lastPlayerSpritePath: string | null = null;
-  private nodeSprites: Array<{ sprite: Sprite; label: Text; hitArea: Graphics }> = [];
+  private nodeSprites: Array<{ sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
   private stationBadge: Container;
   private stationLabel: Text;
   private stationHitArea = new Graphics();
@@ -541,13 +541,21 @@ export class WorldScene {
       const itemSpacing = Math.min(itemSize + 16, itemAreaWidth / Math.max(1, itemCount));
       const totalItemWidth = (itemCount - 1) * itemSpacing;
       let itemX = w / 2 - totalItemWidth / 2;
-      for (const { sprite, label, hitArea } of this.itemSprites) {
+      for (const { sprite, label, labelBg, hitArea } of this.itemSprites) {
         sprite.x = itemX;
         sprite.y = itemY;
         sprite.width = itemSize;
         sprite.height = itemSize;
         label.x = itemX;
-        label.y = itemY + itemSize / 2 + 2;
+        label.y = itemY + itemSize / 2 + 4;
+
+        // Dark pill behind label for readability on busy backgrounds
+        const lw = label.width + 10;
+        const lh = label.height + 4;
+        labelBg.clear();
+        labelBg.roundRect(itemX - lw / 2, label.y - 2, lw, lh, 6);
+        labelBg.fill({ color: 0x0a0c14, alpha: 0.7 });
+
         hitArea.clear();
         hitArea.rect(0, 0, itemSize, itemSize);
         hitArea.fill({ color: 0x000000, alpha: 0.001 });
@@ -564,13 +572,20 @@ export class WorldScene {
       const nodeSpacing = Math.min(itemSize + 16, itemAreaWidth / Math.max(1, nodeCount));
       const totalNodeWidth = (nodeCount - 1) * nodeSpacing;
       let nodeX = w / 2 - totalNodeWidth / 2;
-      for (const { sprite, label, hitArea } of this.nodeSprites) {
+      for (const { sprite, label, labelBg, hitArea } of this.nodeSprites) {
         sprite.x = nodeX;
         sprite.y = nodeY;
         sprite.width = itemSize;
         sprite.height = itemSize;
         label.x = nodeX;
-        label.y = nodeY + itemSize / 2 + 2;
+        label.y = nodeY + itemSize / 2 + 4;
+
+        const lw = label.width + 10;
+        const lh = label.height + 4;
+        labelBg.clear();
+        labelBg.roundRect(nodeX - lw / 2, label.y - 2, lw, lh, 6);
+        labelBg.fill({ color: 0x0a0c14, alpha: 0.7 });
+
         hitArea.clear();
         hitArea.rect(0, 0, itemSize, itemSize);
         hitArea.fill({ color: 0x000000, alpha: 0.001 });
@@ -795,11 +810,13 @@ export class WorldScene {
   }
 
   private rebuildItems(items: Array<{ id: string; name: string; description?: string; image?: string | null; video?: string | null }>) {
-    for (const { sprite, label, hitArea } of this.itemSprites) {
+    for (const { sprite, label, labelBg, hitArea } of this.itemSprites) {
       this.container.removeChild(sprite);
+      this.container.removeChild(labelBg);
       this.container.removeChild(label);
       this.container.removeChild(hitArea);
       sprite.destroy();
+      labelBg.destroy();
       label.destroy();
       hitArea.destroy();
     }
@@ -818,9 +835,13 @@ export class WorldScene {
 
       const label = new Text({
         text: item.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: ITEM_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.5, blur: 3, distance: 1 } },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: ITEM_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 0 } },
       });
       label.anchor.set(0.5, 0);
+
+      // Dark pill behind label for readability on busy backgrounds
+      const labelBg = new Graphics();
+      labelBg.eventMode = "none";
 
       const hitArea = new Graphics();
       hitArea.rect(0, 0, BASE_ITEM_SPRITE_SIZE, BASE_ITEM_SPRITE_SIZE);
@@ -835,18 +856,21 @@ export class WorldScene {
       });
 
       this.container.addChild(sprite);
+      this.container.addChild(labelBg);
       this.container.addChild(label);
       this.container.addChild(hitArea);
-      this.itemSprites.push({ sprite, label, hitArea });
+      this.itemSprites.push({ sprite, label, labelBg, hitArea });
     }
   }
 
   private rebuildNodes(nodes: Array<{ id: string; name: string; skill: string; skillRequired: number; image?: string | null }>) {
-    for (const { sprite, label, hitArea } of this.nodeSprites) {
+    for (const { sprite, label, labelBg, hitArea } of this.nodeSprites) {
       this.container.removeChild(sprite);
+      this.container.removeChild(labelBg);
       this.container.removeChild(label);
       this.container.removeChild(hitArea);
       sprite.destroy();
+      labelBg.destroy();
       label.destroy();
       hitArea.destroy();
     }
@@ -865,9 +889,12 @@ export class WorldScene {
 
       const label = new Text({
         text: node.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: "#8da97b", dropShadow: { color: 0x000000, alpha: 0.5, blur: 3, distance: 1 } },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: "#8da97b", dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 0 } },
       });
       label.anchor.set(0.5, 0);
+
+      const labelBg = new Graphics();
+      labelBg.eventMode = "none";
 
       const hitArea = new Graphics();
       hitArea.rect(0, 0, BASE_ITEM_SPRITE_SIZE, BASE_ITEM_SPRITE_SIZE);
@@ -881,9 +908,10 @@ export class WorldScene {
       });
 
       this.container.addChild(sprite);
+      this.container.addChild(labelBg);
       this.container.addChild(label);
       this.container.addChild(hitArea);
-      this.nodeSprites.push({ sprite, label, hitArea });
+      this.nodeSprites.push({ sprite, label, labelBg, hitArea });
     }
   }
 

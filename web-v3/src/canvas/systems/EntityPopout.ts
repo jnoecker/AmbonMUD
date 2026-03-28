@@ -1,7 +1,7 @@
 import { Container, Graphics, Text, Sprite, Texture, Assets, Rectangle } from "pixi.js";
 import { canvasCallbacks } from "../GameStateBridge";
 
-const POPOUT_WIDTH = 200;
+const POPOUT_WIDTH = 240;
 const POPOUT_PADDING = 12;
 const SPRITE_PREVIEW_SIZE = 80;
 const BUTTON_HEIGHT = 44;
@@ -46,7 +46,13 @@ export class EntityPopout {
 
     this.subtitleText = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 11, fill: "#8890b0" },
+      style: {
+        fontFamily: "JetBrains Mono, Cascadia Mono, monospace",
+        fontSize: 11,
+        fill: "#8890b0",
+        wordWrap: true,
+        wordWrapWidth: POPOUT_WIDTH - POPOUT_PADDING * 2,
+      },
     });
     this.subtitleText.anchor.set(0.5, 0);
 
@@ -177,11 +183,12 @@ export class EntityPopout {
     this.titleText.text = title;
     this.subtitleText.text = subtitle;
 
-    // Calculate total height
+    // Calculate total height (subtitle may wrap to multiple lines)
     const contentTop = POPOUT_PADDING;
     const spriteBottom = contentTop + SPRITE_PREVIEW_SIZE;
     const titleBottom = spriteBottom + 8 + 18;
-    const subtitleBottom = subtitle ? titleBottom + 16 : titleBottom;
+    const subtitleHeight = subtitle ? this.subtitleText.height : 0;
+    const subtitleBottom = subtitle ? titleBottom + subtitleHeight + 4 : titleBottom;
     const buttonsTop = subtitleBottom + 8;
     const totalButtonHeight = actions.length * (BUTTON_HEIGHT + BUTTON_GAP) - BUTTON_GAP;
     const popoutHeight = buttonsTop + totalButtonHeight + POPOUT_PADDING;
