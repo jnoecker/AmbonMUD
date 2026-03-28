@@ -121,6 +121,12 @@ sealed interface Command {
         val playerName: String,
     ) : Command
 
+    data class Possess(
+        val target: String,
+    ) : Command
+
+    data object Return : Command
+
     data class SetLevel(
         val playerName: String,
         val level: Int,
@@ -652,6 +658,12 @@ object CommandParser {
 
         // kick
         requiredArg(line, listOf("kick"), "kick <player>", { Command.Kick(it) })?.let { return it }
+
+        // possess
+        requiredArg(line, listOf("possess", "switch"), "possess <mob>", { Command.Possess(it) })?.let { return it }
+
+        // return (from possession)
+        matchPrefix(line, listOf("return", "unpossess")) { _ -> Command.Return }?.let { return it }
 
         // setlevel
         matchPrefix(line, listOf("setlevel")) { rest ->

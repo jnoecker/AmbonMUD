@@ -5,9 +5,11 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mob.MobState
 import dev.ambon.engine.MobRemovalCoordinator
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.broadcastToRoom
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
+import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.onStaff
 import dev.ambon.engine.events.OutboundEvent
@@ -51,6 +53,8 @@ class AdminHandler(
         router.onStaff<Command.SetLevel> { sid, cmd -> handleSetLevel(sid, cmd) }
         router.onStaff<Command.Dispel> { sid, cmd -> handleDispel(sid, cmd) }
         router.onStaff<Command.Reload> { sid, cmd -> handleReload(sid, cmd) }
+        router.onStaff<Command.Possess> { sid, cmd -> handlePossess(sid, cmd) }
+        router.onStaff<Command.Return> { sid, _ -> handleReturn(sid) }
     }
 
     private suspend fun handleGoto(
@@ -297,6 +301,195 @@ class AdminHandler(
         outbound.send(OutboundEvent.SendInfo(sessionId, "Reloading ${target ?: "all"}..."))
         val summary = onReload.invoke(target)
         outbound.send(OutboundEvent.SendInfo(sessionId, summary))
+    }
+
+    private suspend fun handlePossess(
+        sessionId: SessionId,
+        cmd: Command.Possess,
+    ) {
+        players.withPlayer(sessionId) { me ->
+            if (me.possessedMobId != null) {
+                outbound.send(OutboundEvent.SendError(sessionId, "You are already possessing a mob. Use 'return' first."))
+                return
+            }
+            if (combat.isInCombat(sessionId)) {
+                outbound.send(OutboundEvent.SendError(sessionId, "You cannot possess a mob while in combat."))
+                return
+            }
+            val mob = mobs.findInRoomByKeyword(me.roomId, cmd.target).firstOrNull()
+            if (mob == null) {
+                outbound.send(OutboundEvent.SendError(sessionId, "No mob '${cmd.target}' found in this room."))
+                return
+            }
+            me.possessedMobId = mob.id
+            me.prePossessRoomId = me.roomId
+            outbound.send(
+                OutboundEvent.SendInfo(sessionId, "You take control of ${mob.name}. Type 'return' to release."),
+            )
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+        }
+    }
+
+    private suspend fun handleReturn(sessionId: SessionId) {
+        players.withPlayer(sessionId) { me ->
+            val mobId = me.possessedMobId
+            if (mobId == null) {
+                outbound.send(OutboundEvent.SendError(sessionId, "You are not possessing a mob."))
+                return
+            }
+            val mobName = mobs.get(mobId)?.name ?: "the mob"
+            me.possessedMobId = null
+            val returnRoom = me.prePossessRoomId ?: me.roomId
+            me.prePossessRoomId = null
+            if (me.roomId != returnRoom) {
+                players.moveTo(sessionId, returnRoom)
+                ctx.sendLook(sessionId)
+            }
+            outbound.send(OutboundEvent.SendInfo(sessionId, "You release $mobName and return to your body."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+        }
+    }
+
+    /**
+     * Routes a command while the player is possessing a mob.
+     * Navigation moves the mob; say/emote speak as the mob; other staff commands pass through.
+     */
+    suspend fun handlePossessedCommand(sessionId: SessionId, line: String) {
+        val me = players.get(sessionId) ?: return
+        val mobId = me.possessedMobId ?: return
+        val mob = mobs.get(mobId)
+        if (mob == null) {
+            me.possessedMobId = null
+            me.prePossessRoomId = null
+            outbound.send(OutboundEvent.SendError(sessionId, "The mob you were possessing no longer exists."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+
+        val cmd = CommandParser.parse(line)
+        when (cmd) {
+            // Return always works
+            is Command.Return -> {
+                handleReturn(sessionId)
+                return
+            }
+            // Staff commands pass through normally
+            is Command.Goto, is Command.Transfer, is Command.Spawn, is Command.Shutdown,
+            is Command.Smite, is Command.Kick, is Command.SetLevel, is Command.Dispel,
+            is Command.Reload, is Command.Possess,
+            -> {
+                router.handle(sessionId, cmd)
+                return
+            }
+            // Navigation moves the mob
+            is Command.Move -> {
+                possessedMove(sessionId, me, mob, cmd)
+                return
+            }
+            // Look shows mob's room
+            is Command.Look -> {
+                // Ensure player's roomId is the mob's room for sendLook
+                val playerRoom = me.roomId
+                if (playerRoom != mob.roomId) {
+                    players.moveTo(sessionId, mob.roomId)
+                }
+                ctx.sendLook(sessionId)
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+                return
+            }
+            // Exits shows mob's room exits
+            is Command.Exits -> {
+                val room = world.rooms[mob.roomId]
+                if (room != null) {
+                    val exitList = if (room.exits.isEmpty()) "none" else room.exits.keys.joinToString(", ") { it.name.lowercase() }
+                    outbound.send(OutboundEvent.SendText(sessionId, "Exits: $exitList"))
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+                return
+            }
+            // Say speaks as the mob
+            is Command.Say -> {
+                broadcastToRoom(players, outbound, mob.roomId, "${mob.name} says: ${cmd.message}")
+                outbound.send(OutboundEvent.SendText(sessionId, "[${mob.name}] says: ${cmd.message}"))
+                for (p in players.playersInRoom(mob.roomId)) {
+                    gmcpEmitter?.sendCommChannel(p.sessionId, "say", mob.name, cmd.message)
+                }
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+                return
+            }
+            // Emote as the mob
+            is Command.Emote -> {
+                broadcastToRoom(players, outbound, mob.roomId, "${mob.name} ${cmd.message}")
+                outbound.send(OutboundEvent.SendText(sessionId, "[${mob.name}] ${cmd.message}"))
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+                return
+            }
+            // Score shows mob stats
+            is Command.Score -> {
+                outbound.send(
+                    OutboundEvent.SendText(
+                        sessionId,
+                        "Possessing: ${mob.name} | HP: ${mob.hp}/${mob.maxHp} | Room: ${mob.roomId.value}",
+                    ),
+                )
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+                return
+            }
+            else -> {
+                outbound.send(
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "While possessing: move, look, say, emote, score, or 'return'. Staff commands also work.",
+                    ),
+                )
+                outbound.send(OutboundEvent.SendPrompt(sessionId))
+            }
+        }
+    }
+
+    private suspend fun possessedMove(
+        sessionId: SessionId,
+        me: PlayerState,
+        mob: dev.ambon.domain.mob.MobState,
+        cmd: Command.Move,
+    ) {
+        val from = mob.roomId
+        val room = world.rooms[from]
+        if (room == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "The mob's room doesn't exist."))
+            return
+        }
+        val to = room.exits[cmd.dir]
+        if (to == null) {
+            outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+        if (!world.rooms.containsKey(to)) {
+            outbound.send(OutboundEvent.SendText(sessionId, "That exit leads to an unloaded zone."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+            return
+        }
+
+        // Announce departure
+        for (p in players.playersInRoom(from)) {
+            outbound.send(OutboundEvent.SendText(p.sessionId, "${mob.name} leaves."))
+        }
+        gmcpEmitter?.broadcastRoomRemoveMob(from, mob.id.value, players)
+
+        // Move the mob
+        mobs.moveTo(mob.id, to)
+
+        // Announce arrival
+        for (p in players.playersInRoom(to)) {
+            outbound.send(OutboundEvent.SendText(p.sessionId, "${mob.name} arrives."))
+        }
+        gmcpEmitter?.broadcastRoomAddMob(to, mob, players)
+
+        // Move player's perspective to the mob's new room
+        players.moveTo(sessionId, to)
+        ctx.sendLook(sessionId)
+        outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
     private fun findMobTemplate(arg: String): dev.ambon.domain.world.MobSpawn? {

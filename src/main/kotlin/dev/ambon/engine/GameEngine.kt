@@ -247,6 +247,8 @@ class GameEngine(
             routeCommandLine = { sid, line ->
                 if (players.get(sid)?.mailCompose != null) {
                     mailHandler.handleComposeLine(sid, line)
+                } else if (players.get(sid)?.possessedMobId != null) {
+                    adminHandler.handlePossessedCommand(sid, line)
                 } else {
                     router.handle(sid, CommandParser.parse(line))
                 }
@@ -664,6 +666,7 @@ class GameEngine(
             clock = clock,
             isMobInCombat = { mobId -> combatSystem.isMobInCombat(mobId) },
             isMobRooted = { mobId -> statusEffectSystem.hasMobEffect(mobId, "root") },
+            isMobPossessed = { mobId -> players.allPlayers().any { it.possessedMobId == mobId } },
             startMobCombat = { mobId, sessionId -> combatSystem.startMobCombat(mobId, sessionId) },
             fleeMob = { mobId -> combatSystem.fleeMob(mobId) },
             gmcpEmitter = gmcpEmitter,
@@ -723,6 +726,7 @@ class GameEngine(
 
     private val router = CommandRouter(outbound = outbound, players = players)
     private val communicationHandler: CommunicationHandler
+    private val adminHandler: AdminHandler
     private val mailHandler: MailHandler
 
     init {
@@ -762,6 +766,20 @@ class GameEngine(
             engineId = engineId,
             onRemoteWho = if (interEngineBus != null) interEngineEventHandler::handleRemoteWho else null,
             clock = clock,
+        )
+
+        adminHandler = AdminHandler(
+            ctx = ctx,
+            onShutdown = onShutdown,
+            mobRemovalCoordinator = mobRemovalCoordinator,
+            onCrossZoneMove = crossZoneMove,
+            statusEffects = statusEffectSystem,
+            interEngineBus = interEngineBus,
+            engineId = engineId,
+            metrics = metrics,
+            onReload = hotReloadManager?.let { mgr ->
+                { target -> handleReloadCommand(mgr, target) }
+            },
         )
 
         listOf(
@@ -829,19 +847,7 @@ class GameEngine(
                 friendsSystem = friendsSystem,
             ),
             WorldFeaturesHandler(ctx = ctx),
-            AdminHandler(
-                ctx = ctx,
-                onShutdown = onShutdown,
-                mobRemovalCoordinator = mobRemovalCoordinator,
-                onCrossZoneMove = crossZoneMove,
-                statusEffects = statusEffectSystem,
-                interEngineBus = interEngineBus,
-                engineId = engineId,
-                metrics = metrics,
-                onReload = hotReloadManager?.let { mgr ->
-                    { target -> handleReloadCommand(mgr, target) }
-                },
-            ),
+            adminHandler,
             SpriteHandler(
                 ctx = ctx,
                 spriteRegistry = spriteRegistry,

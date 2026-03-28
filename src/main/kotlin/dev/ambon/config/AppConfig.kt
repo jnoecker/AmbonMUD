@@ -989,6 +989,14 @@ data class CommandsConfig(
             ),
             "shutdown" to CommandMetadata("shutdown", "Shut down the server", "admin", staff = true),
             "reload" to CommandMetadata("reload [scope]", "Reload world data", "admin", staff = true),
+            "possess" to CommandMetadata(
+                usage = "possess/switch <mob>",
+                description = "Take control of a mob",
+                category = "admin",
+                staff = true,
+                requiresTarget = true,
+            ),
+            "return" to CommandMetadata("return/unpossess", "Release a possessed mob", "admin", staff = true),
         )
     }
 }
