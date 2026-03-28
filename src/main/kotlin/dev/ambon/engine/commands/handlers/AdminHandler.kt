@@ -229,6 +229,7 @@ class AdminHandler(
                 outbound.send(OutboundEvent.SendError(sessionId, "No player or mob named '${cmd.target}'."))
                 return
             }
+            releasePossessorOf(targetMob.id)
             items.removeMobItems(targetMob.id)
             mobRemovalCoordinator?.removeMobExternally(targetMob.id)
             broadcastToRoom(players, outbound, me.roomId, "${targetMob.name} is struck down by divine wrath.")
@@ -451,12 +452,24 @@ class AdminHandler(
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
                 return
             }
+            // Combat: kill starts player combat from mob's room
+            is Command.Kill -> {
+                if (me.roomId != mob.roomId) players.moveTo(sessionId, mob.roomId)
+                router.handle(sessionId, cmd)
+                return
+            }
+            // Combat: flee ends player combat
+            is Command.Flee -> {
+                router.handle(sessionId, cmd)
+                return
+            }
             // Score shows mob stats
             is Command.Score -> {
+                val combatStatus = if (combat.isInCombat(sessionId)) " | IN COMBAT" else ""
                 outbound.send(
                     OutboundEvent.SendText(
                         sessionId,
-                        "Possessing: ${mob.name} | HP: ${mob.hp}/${mob.maxHp} | Room: ${mob.roomId.value}",
+                        "Possessing: ${mob.name} | HP: ${mob.hp}/${mob.maxHp} | Room: ${mob.roomId.value}$combatStatus",
                     ),
                 )
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -466,7 +479,7 @@ class AdminHandler(
                 outbound.send(
                     OutboundEvent.SendError(
                         sessionId,
-                        "While possessing: move, look, say, emote, score, or 'return'. Staff commands also work.",
+                        "While possessing: move, look, say, emote, kill, flee, score, or 'return'. Staff commands also work.",
                     ),
                 )
                 outbound.send(OutboundEvent.SendPrompt(sessionId))
@@ -527,6 +540,26 @@ class AdminHandler(
             outbound.send(OutboundEvent.SendPrompt(sessionId))
         }
     }
+
+    /** Release any staff player possessing the given mob, returning them to their body. */
+    private suspend fun releasePossessorOf(mobId: MobId) {
+        for (p in players.allPlayers()) {
+            if (p.possessedMobId == mobId) {
+                p.possessedMobId = null
+                val returnRoom = p.prePossessRoomId ?: p.roomId
+                p.prePossessRoomId = null
+                setInvisible(p.sessionId, p, false)
+                if (p.roomId != returnRoom) players.moveTo(p.sessionId, returnRoom)
+                outbound.send(
+                    OutboundEvent.SendError(p.sessionId, "The mob you were possessing has been killed. Returning to your body."),
+                )
+                outbound.send(OutboundEvent.SendPrompt(p.sessionId))
+            }
+        }
+    }
+
+    /** Release possessor when a mob dies — called from GameEngine.onCombatMobRemoved. */
+    suspend fun releasePossessorOfPublic(mobId: MobId) = releasePossessorOf(mobId)
 
     private suspend fun setInvisible(sessionId: SessionId, me: PlayerState, invisible: Boolean) {
         if (me.invisible == invisible) return

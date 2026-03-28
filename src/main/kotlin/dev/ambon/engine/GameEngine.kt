@@ -1185,6 +1185,8 @@ class GameEngine(
         mobId: MobId,
         roomId: RoomId,
     ) {
+        // Release any staff player possessing this mob
+        adminHandler.releasePossessorOfPublic(mobId)
         mobRemovalCoordinator.onCombatKillCleanup(mobId)
         gmcpEmitter.broadcastRoomRemoveMob(roomId, mobId.value, players)
         val spawn = world.mobSpawns.find { it.id == mobId }
