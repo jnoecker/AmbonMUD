@@ -14,6 +14,20 @@ function assetUrl(key: string, fallbackFilename: string): string {
 
 const SHOP_BADGE_SIZE = 96;
 const QUEST_ICON_SIZE = 28;
+const LABEL_BG_COLOR = 0x0a0c14;
+const LABEL_BG_ALPHA = 0.7;
+const LABEL_PAD_X = 10;
+const LABEL_PAD_Y = 4;
+const LABEL_RADIUS = 6;
+
+/** Draw a dark rounded-rect pill behind a centered text label. */
+function drawLabelPill(bg: Graphics, label: Text, tint?: number) {
+  const lw = label.width + LABEL_PAD_X;
+  const lh = label.height + LABEL_PAD_Y;
+  bg.clear();
+  bg.roundRect(label.x - lw / 2, label.y - LABEL_PAD_Y / 2, lw, lh, LABEL_RADIUS);
+  bg.fill({ color: tint ?? LABEL_BG_COLOR, alpha: LABEL_BG_ALPHA });
+}
 
 const PLAYER_LABEL_COLOR = "#d8dcef";
 const OTHER_PLAYER_LABEL_COLOR = "#81a2be";
@@ -72,9 +86,10 @@ export class WorldScene {
   private descBg = new Graphics();
   private playerSprite: Sprite | null = null;
   private playerLabel: Text;
-  private mobSprites: Map<string, { sprite: Sprite; label: Text; hitArea: Graphics }> = new Map();
+  private playerLabelBg = new Graphics();
+  private mobSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
   private itemSprites: Array<{ sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
-  private playerSprites: Map<string, { sprite: Sprite; label: Text; hitArea: Graphics }> = new Map();
+  private playerSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
   private roleGraphics = new Graphics();
   private statusEffects = new StatusEffectDisplay();
   private minimap = new Minimap();
@@ -173,7 +188,7 @@ export class WorldScene {
 
     this.playerLabel = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: PLAYER_LABEL_FONT_SIZE, fill: PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.7, blur: 3, distance: 1 } },
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: PLAYER_LABEL_FONT_SIZE, fill: PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 0 } },
     });
     this.playerLabel.anchor.set(0.5, 0);
 
@@ -251,6 +266,7 @@ export class WorldScene {
     this.container.addChild(this.descBg);
     this.container.addChild(this.descText);
     this.container.addChild(this.roomExpandBtn);
+    this.container.addChild(this.playerLabelBg);
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
@@ -486,6 +502,7 @@ export class WorldScene {
     }
     this.playerLabel.x = playerX;
     this.playerLabel.y = playerY + playerSize / 2 + 6;
+    drawLabelPill(this.playerLabelBg, this.playerLabel);
 
     // Status effects above the player sprite
     this.statusEffects.update(gameStateRef.current.effects, playerX, playerY - playerSize / 2 - 32);
@@ -498,13 +515,30 @@ export class WorldScene {
         : Math.min(mobSize + 24, mobAreaWidth / mobCount);
       const totalMobWidth = (mobCount - 1) * mobSpacing;
       let mobX = mobAreaLeft + (mobAreaWidth - totalMobWidth) / 2;
-      for (const { sprite, label, hitArea } of mobEntries) {
+      const mobInfo = gameStateRef.current.mobInfo;
+      for (const { sprite, label, labelBg, hitArea } of mobEntries) {
         sprite.x = mobX;
         sprite.y = mobY;
         sprite.width = mobSize;
         sprite.height = mobSize;
         label.x = mobX;
         label.y = mobY + mobSize / 2 + 6;
+
+        // Tint pill and label color based on mob role
+        const mid = [...this.mobSprites.entries()].find(([, v]) => v.label === label)?.[0];
+        const info = mid ? mobInfo.find((m) => m.id === mid) : null;
+        const pillTint = info?.aggressive ? 0x2a1418 : info?.shopKeeper ? 0x141820 : info?.questGiver ? 0x1a1810 : LABEL_BG_COLOR;
+        if (info?.aggressive) {
+          label.style.fill = "#d4888a"; // dusty rose
+        } else if (info?.shopKeeper) {
+          label.style.fill = "#8caec9"; // pale blue
+        } else if (info?.questGiver) {
+          label.style.fill = "#bea873"; // soft gold
+        } else {
+          label.style.fill = MOB_LABEL_COLOR;
+        }
+        drawLabelPill(labelBg, label, pillTint);
+
         hitArea.clear();
         hitArea.rect(0, 0, mobSize, mobSize);
         hitArea.fill({ color: 0x000000, alpha: 0.001 });
@@ -519,13 +553,14 @@ export class WorldScene {
     if (otherPlayerEntries.length > 0) {
       const opY = h * 0.55;
       let startX = playerX + playerSize / 2 + 20;
-      for (const { sprite, label, hitArea } of otherPlayerEntries) {
+      for (const { sprite, label, labelBg, hitArea } of otherPlayerEntries) {
         sprite.x = startX;
         sprite.y = opY;
         sprite.width = otherSize;
         sprite.height = otherSize;
         label.x = startX;
         label.y = opY + otherSize / 2 + 6;
+        drawLabelPill(labelBg, label);
         hitArea.clear();
         hitArea.rect(0, 0, otherSize, otherSize);
         hitArea.fill({ color: 0x000000, alpha: 0.001 });
@@ -548,14 +583,7 @@ export class WorldScene {
         sprite.height = itemSize;
         label.x = itemX;
         label.y = itemY + itemSize / 2 + 4;
-
-        // Dark pill behind label for readability on busy backgrounds
-        const lw = label.width + 10;
-        const lh = label.height + 4;
-        labelBg.clear();
-        labelBg.roundRect(itemX - lw / 2, label.y - 2, lw, lh, 6);
-        labelBg.fill({ color: 0x0a0c14, alpha: 0.7 });
-
+        drawLabelPill(labelBg, label);
         hitArea.clear();
         hitArea.rect(0, 0, itemSize, itemSize);
         hitArea.fill({ color: 0x000000, alpha: 0.001 });
@@ -579,12 +607,7 @@ export class WorldScene {
         sprite.height = itemSize;
         label.x = nodeX;
         label.y = nodeY + itemSize / 2 + 4;
-
-        const lw = label.width + 10;
-        const lh = label.height + 4;
-        labelBg.clear();
-        labelBg.roundRect(nodeX - lw / 2, label.y - 2, lw, lh, 6);
-        labelBg.fill({ color: 0x0a0c14, alpha: 0.7 });
+        drawLabelPill(labelBg, label);
 
         hitArea.clear();
         hitArea.rect(0, 0, itemSize, itemSize);
@@ -736,11 +759,13 @@ export class WorldScene {
   }
 
   private rebuildMobs(mobs: Array<{ id: string; name: string; description?: string; hp: number; maxHp: number; image?: string | null; video?: string | null }>) {
-    for (const { sprite, label, hitArea } of this.mobSprites.values()) {
+    for (const { sprite, label, labelBg, hitArea } of this.mobSprites.values()) {
       this.container.removeChild(sprite);
+      this.container.removeChild(labelBg);
       this.container.removeChild(label);
       this.container.removeChild(hitArea);
       sprite.destroy();
+      labelBg.destroy();
       label.destroy();
       hitArea.destroy();
     }
@@ -779,9 +804,12 @@ export class WorldScene {
 
       const label = new Text({
         text: mob.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: MOB_LABEL_FONT_SIZE, fill: MOB_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 1 } },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: MOB_LABEL_FONT_SIZE, fill: MOB_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 0 } },
       });
       label.anchor.set(0.5, 0);
+
+      const labelBg = new Graphics();
+      labelBg.eventMode = "none";
 
       // Click hit area
       const hitArea = new Graphics();
@@ -803,9 +831,10 @@ export class WorldScene {
       });
 
       this.container.addChild(sprite);
+      this.container.addChild(labelBg);
       this.container.addChild(label);
       this.container.addChild(hitArea);
-      this.mobSprites.set(mob.id, { sprite, label, hitArea });
+      this.mobSprites.set(mob.id, { sprite, label, labelBg, hitArea });
     }
   }
 
@@ -916,11 +945,13 @@ export class WorldScene {
   }
 
   private rebuildPlayers(players: Array<{ name: string; level: number }>) {
-    for (const { sprite, label, hitArea } of this.playerSprites.values()) {
+    for (const { sprite, label, labelBg, hitArea } of this.playerSprites.values()) {
       this.container.removeChild(sprite);
+      this.container.removeChild(labelBg);
       this.container.removeChild(label);
       this.container.removeChild(hitArea);
       sprite.destroy();
+      labelBg.destroy();
       label.destroy();
       hitArea.destroy();
     }
@@ -936,9 +967,12 @@ export class WorldScene {
 
       const label = new Text({
         text: player.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: OTHER_PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 1 } },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: OTHER_PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 0 } },
       });
       label.anchor.set(0.5, 0);
+
+      const labelBg = new Graphics();
+      labelBg.eventMode = "none";
 
       const hitArea = new Graphics();
       hitArea.rect(0, 0, otherSize, otherSize);
@@ -957,9 +991,10 @@ export class WorldScene {
       });
 
       this.container.addChild(sprite);
+      this.container.addChild(labelBg);
       this.container.addChild(label);
       this.container.addChild(hitArea);
-      this.playerSprites.set(player.name, { sprite, label, hitArea });
+      this.playerSprites.set(player.name, { sprite, label, labelBg, hitArea });
     }
   }
 
