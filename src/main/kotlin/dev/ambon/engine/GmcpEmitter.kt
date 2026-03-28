@@ -1198,6 +1198,21 @@ class GmcpEmitter(
         )
     }
 
+    // ---------- staff possession state ----------
+
+    suspend fun sendStaffPossessionState(
+        sessionId: SessionId,
+        possessing: Boolean,
+        mobName: String?,
+    ) {
+        emit(
+            sessionId,
+            "Staff.Possession",
+            StaffPossessionPayload(active = possessing, mobName = mobName),
+            supportCheck = "Staff",
+        )
+    }
+
     // ---------- server broadcast ----------
 
     suspend fun sendServerBroadcast(
@@ -1275,6 +1290,11 @@ class GmcpEmitter(
     private data class StaffMobTemplatePayload(
         val id: String,
         val name: String,
+    )
+
+    private data class StaffPossessionPayload(
+        val active: Boolean,
+        val mobName: String?,
     )
 
     // ---------- emit helpers ----------

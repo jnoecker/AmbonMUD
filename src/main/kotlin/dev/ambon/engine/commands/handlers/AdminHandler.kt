@@ -350,6 +350,7 @@ class AdminHandler(
             me.possessedMobId = mob.id
             me.prePossessRoomId = me.roomId
             setInvisible(sessionId, me, true)
+            gmcpEmitter?.sendStaffPossessionState(sessionId, true, mob.name)
             outbound.send(
                 OutboundEvent.SendInfo(sessionId, "You take control of ${mob.name}. Type 'return' or 'recall' to release."),
             )
@@ -369,6 +370,7 @@ class AdminHandler(
             val returnRoom = me.prePossessRoomId ?: me.roomId
             me.prePossessRoomId = null
             setInvisible(sessionId, me, false)
+            gmcpEmitter?.sendStaffPossessionState(sessionId, false, null)
             if (me.roomId != returnRoom) {
                 players.moveTo(sessionId, returnRoom)
                 ctx.sendLook(sessionId)
@@ -549,6 +551,7 @@ class AdminHandler(
                 val returnRoom = p.prePossessRoomId ?: p.roomId
                 p.prePossessRoomId = null
                 setInvisible(p.sessionId, p, false)
+                gmcpEmitter?.sendStaffPossessionState(p.sessionId, false, null)
                 if (p.roomId != returnRoom) players.moveTo(p.sessionId, returnRoom)
                 outbound.send(
                     OutboundEvent.SendError(p.sessionId, "The mob you were possessing has been killed. Returning to your body."),

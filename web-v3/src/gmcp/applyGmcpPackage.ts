@@ -109,6 +109,7 @@ interface GmcpContext {
   setStaffMobTemplates: Dispatch<SetStateAction<StaffMobZone[]>>;
   setLookTarget: Dispatch<SetStateAction<LookTargetInfo | null>>;
   pushBroadcast: (sender: string, message: string) => void;
+  setPossessing: Dispatch<SetStateAction<string | null>>;
   setCraftingSkills: Dispatch<SetStateAction<CraftingSkill[]>>;
   setCraftingRecipes: Dispatch<SetStateAction<CraftingRecipe[]>>;
   setCraftingNodes: Dispatch<SetStateAction<CraftingNode[]>>;
@@ -1292,6 +1293,14 @@ export function applyGmcpPackage(
               : [],
           })),
       );
+      break;
+    }
+
+    case "Staff.Possession": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const active = packet.active === true;
+      const mobName = typeof packet.mobName === "string" ? packet.mobName : null;
+      ctx.setPossessing(active ? mobName : null);
       break;
     }
 
