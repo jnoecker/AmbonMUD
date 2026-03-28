@@ -59,6 +59,15 @@ class SessionEventHandler(
         gmcpEmitter?.forgetSession(sessionId)
 
         if (me != null) {
+            // Release mob possession on disconnect
+            if (me.possessedMobId != null) {
+                val returnRoom = me.prePossessRoomId ?: me.roomId
+                me.possessedMobId = null
+                me.prePossessRoomId = null
+                if (me.roomId != returnRoom) {
+                    players.moveTo(sessionId, returnRoom)
+                }
+            }
             onPlayerLoggedOut(me, sessionId)
         }
 

@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.domain.StatMap
 import dev.ambon.domain.achievement.AchievementState
 import dev.ambon.domain.crafting.CraftingSkillState
+import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.mail.MailMessage
@@ -64,6 +65,10 @@ data class PlayerState(
     var lastActivityEpochMs: Long = 0L,
     /** Chosen sprite variant imageId, or null for auto (highest unlocked tier). */
     var activeSprite: String? = null,
+    /** Non-null while staff is possessing a mob. Runtime-only; not persisted. */
+    var possessedMobId: MobId? = null,
+    /** The player's real room before possession began. Runtime-only; not persisted. */
+    var prePossessRoomId: RoomId? = null,
 ) {
     data class MailComposeState(
         val recipientName: String,
