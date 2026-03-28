@@ -82,7 +82,7 @@ const DEATH_DISSOLVE_FRAC = 0.55; // 15–55% = dissolve/shrink (~960ms)
 // Firework / sparkle particles
 const PARTICLE_LIFETIME_MS = 900;
 const PARTICLE_GRAVITY = 80; // pixels/s²
-const PARTICLE_COLORS = [0xf0c674, 0xffd700, 0xff6b6b, 0xb9aed8, 0x81c784, 0x64b5f6, 0xff9e44, 0xffffff];
+const PARTICLE_COLORS = [0xf0c674, 0xbea873, 0xd4888a, 0xb9aed8, 0x8abf8a, 0x8caec9, 0xd9c8a1, 0xdbe3f8];
 const BURST_COUNT = 16; // particles per burst
 const SPARKLE_TRAIL_COUNT = 3; // trail dots per particle
 
@@ -98,15 +98,15 @@ interface Particle {
 }
 
 const EVENT_COLORS: Record<string, string> = {
-  meleeHit: "#ff6b6b",
+  meleeHit: "#d4888a",
   abilityHit: "#b9aed8",
-  heal: "#81c784",
-  hotTick: "#a5d6a7",
-  dotTick: "#ce93d8",
-  dodge: "#ffd54f",
-  shieldAbsorb: "#4fc3f7",
+  heal: "#8abf8a",
+  hotTick: "#8da97b",
+  dotTick: "#b88faa",
+  dodge: "#d9c8a1",
+  shieldAbsorb: "#8caec9",
   kill: "#f0c674",
-  death: "#ef5350",
+  death: "#b88faa",
 };
 
 export class CombatAnimator {
@@ -169,7 +169,7 @@ export class CombatAnimator {
 
     if (type === "death") {
       this.spawnFloat("DEATH", EVENT_COLORS.death, playerX, playerY - 20);
-      this.addFlash("player", 0xef5350, 400);
+      this.addFlash("player", 0xd4888a, 400);
       this.addShake("player");
       return;
     }
@@ -194,7 +194,7 @@ export class CombatAnimator {
       this.addShake(defender);
 
       // Flash on hit
-      this.addFlash(defender, 0xff6b6b, 200);
+      this.addFlash(defender, 0xd4888a, 200);
 
       // Ability cast glow on caster
       if (type === "abilityHit") {
@@ -205,7 +205,7 @@ export class CombatAnimator {
     if (event.healing > 0) {
       const color = EVENT_COLORS[type] ?? EVENT_COLORS.heal;
       this.spawnFloat(`+${event.healing}`, color, playerX, playerY);
-      this.addGlow("player", 0x81c784);
+      this.addGlow("player", 0x8abf8a);
     }
 
     if (event.absorbed > 0) {
