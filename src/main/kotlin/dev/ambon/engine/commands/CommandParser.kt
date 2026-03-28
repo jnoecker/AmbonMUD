@@ -127,6 +127,8 @@ sealed interface Command {
 
     data object Return : Command
 
+    data object Invis : Command
+
     data class SetLevel(
         val playerName: String,
         val level: Int,
@@ -664,6 +666,9 @@ object CommandParser {
 
         // return (from possession)
         matchPrefix(line, listOf("return", "unpossess")) { _ -> Command.Return }?.let { return it }
+
+        // invis (staff invisibility toggle)
+        matchPrefix(line, listOf("invis", "invisibility")) { _ -> Command.Invis }?.let { return it }
 
         // setlevel
         matchPrefix(line, listOf("setlevel")) { rest ->

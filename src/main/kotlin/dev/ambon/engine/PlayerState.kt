@@ -69,6 +69,8 @@ data class PlayerState(
     var possessedMobId: MobId? = null,
     /** The player's real room before possession began. Runtime-only; not persisted. */
     var prePossessRoomId: RoomId? = null,
+    /** When true, player is hidden from room player lists, who, and movement broadcasts. Runtime-only. */
+    var invisible: Boolean = false,
 ) {
     data class MailComposeState(
         val recipientName: String,
