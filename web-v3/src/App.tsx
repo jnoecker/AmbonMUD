@@ -152,6 +152,7 @@ function App() {
   const [activePopout, setActivePopout] = useState<PopoutPanel>(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [staffInvisible, setStaffInvisible] = useState(false);
   const [composerValue, setComposerValue] = useState("");
   const [terminalVisible, setTerminalVisible] = useState(false);
   const [terminalOpaque, setTerminalOpaque] = useState(false);
@@ -362,6 +363,7 @@ function App() {
     setCombatLogMessages([]);
     setActiveChatChannel("say");
     setShowAdminPanel(false);
+    setStaffInvisible(false);
     setStaffWorldInfo([]);
     setStaffMobTemplates([]);
     setServerCommands([]);
@@ -898,15 +900,27 @@ function App() {
           </a>
           <AudioControls audio={audio} />
           {character.isStaff && (
-            <button
-              type="button"
-              className="soft-button staff-admin-button"
-              onClick={() => setShowAdminPanel(true)}
-              title="Staff Administration"
-              aria-label="Open staff administration panel"
-            >
-              Staff
-            </button>
+            <>
+              <button
+                type="button"
+                className="soft-button staff-admin-button"
+                onClick={() => setShowAdminPanel(true)}
+                title="Staff Administration"
+                aria-label="Open staff administration panel"
+              >
+                Staff
+              </button>
+              <button
+                type="button"
+                className={`soft-button staff-invis-button ${staffInvisible ? "staff-invis-active" : ""}`}
+                onClick={() => { sendCommand("invis", true); setStaffInvisible(!staffInvisible); }}
+                title={staffInvisible ? "You are invisible — click to become visible" : "Click to become invisible"}
+                aria-label="Toggle staff invisibility"
+                aria-pressed={staffInvisible}
+              >
+                {staffInvisible ? "\uD83D\uDC41\u200D\uD83D\uDDE8" : "\uD83D\uDC41"}
+              </button>
+            </>
           )}
           <span
             className={`connection-pill ${connected ? "connection-pill-online" : "connection-pill-offline"}`}
