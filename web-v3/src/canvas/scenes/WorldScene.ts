@@ -706,7 +706,8 @@ export class WorldScene {
           return;
         }
         const info = gameStateRef.current.mobInfo.find((m) => m.id === mobData.id) ?? null;
-        this.entityPopout.showMob(mobData.name, mobData.description, mobData.image, mobData.video, mobData.hp, mobData.maxHp, info);
+        const isStaff = gameStateRef.current.character.isStaff;
+        this.entityPopout.showMob(mobData.name, mobData.description, mobData.image, mobData.video, mobData.hp, mobData.maxHp, info, isStaff);
         this.showPopout();
       });
 

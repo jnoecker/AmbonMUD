@@ -368,8 +368,8 @@ class AdminHandler(
 
         val cmd = CommandParser.parse(line)
         when (cmd) {
-            // Return always works
-            is Command.Return -> {
+            // Return / recall while possessing = release mob and return to body
+            is Command.Return, is Command.Recall -> {
                 handleReturn(sessionId)
                 return
             }

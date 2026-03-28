@@ -63,7 +63,7 @@ export class EntityPopout {
     this.height = height;
   }
 
-  showMob(name: string, description: string | null | undefined, image: string | null | undefined, video: string | null | undefined, hp: number, maxHp: number, info: { questGiver?: boolean; questAvailable?: boolean; questComplete?: boolean; shopKeeper?: boolean; dialogue?: boolean; aggressive?: boolean } | null) {
+  showMob(name: string, description: string | null | undefined, image: string | null | undefined, video: string | null | undefined, hp: number, maxHp: number, info: { questGiver?: boolean; questAvailable?: boolean; questComplete?: boolean; shopKeeper?: boolean; dialogue?: boolean; aggressive?: boolean } | null, isStaff: boolean = false) {
     const actions: PopoutAction[] = [];
     const isNpc = info?.shopKeeper || info?.questGiver || info?.dialogue;
     const isAggressive = info?.aggressive === true;
@@ -96,6 +96,11 @@ export class EntityPopout {
     }
 
     if (video) actions.push({ label: "\u25B6 Cinematic", command: `__video__:${video}`, color: 0xce93d8 });
+
+    // Staff-only actions
+    if (isStaff) {
+      actions.push({ label: "\u2728 Possess", command: `possess ${name}`, color: 0xb294bb });
+    }
 
     // Build role tag and subtitle with context from MobInfo
     const roleTag = isAggressive ? " \u2620" : info?.shopKeeper ? " \uD83D\uDCB0" : info?.questGiver ? " \u2605" : "";
