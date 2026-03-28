@@ -262,6 +262,7 @@ internal suspend fun sendLook(
                     name = node.displayName,
                     skill = node.skill,
                     skillRequired = node.skillRequired,
+                    image = node.image,
                 )
             },
         )
