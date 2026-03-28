@@ -20,6 +20,7 @@ class BehaviorTreeSystem(
     private val rng: Random = Random(),
     private val isMobInCombat: (MobId) -> Boolean = { false },
     private val isMobRooted: (MobId) -> Boolean = { false },
+    private val isMobPossessed: (MobId) -> Boolean = { false },
     private val startMobCombat: suspend (MobId, SessionId) -> Boolean = { _, _ -> false },
     private val fleeMob: suspend (MobId) -> Boolean = { false },
     private val gmcpEmitter: GmcpEmitter? = null,
@@ -55,7 +56,7 @@ class BehaviorTreeSystem(
 
             if (now < dueAt) continue
 
-            if (isMobRooted(m.id)) {
+            if (isMobRooted(m.id) || isMobPossessed(m.id)) {
                 nextActAtMillis[m.id] = now + randomDelay()
                 continue
             }
