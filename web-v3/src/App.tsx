@@ -153,6 +153,7 @@ function App() {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [staffInvisible, setStaffInvisible] = useState(false);
+  const [broadcast, setBroadcast] = useState<{ sender: string; message: string } | null>(null);
   const [composerValue, setComposerValue] = useState("");
   const [terminalVisible, setTerminalVisible] = useState(false);
   const [terminalOpaque, setTerminalOpaque] = useState(false);
@@ -428,6 +429,7 @@ function App() {
           pushUiFeedback,
           setStaffWorldInfo,
           setStaffMobTemplates,
+          pushBroadcast: (sender: string, message: string) => setBroadcast({ sender, message }),
           setLookTarget,
           setCraftingSkills,
           setCraftingRecipes,
@@ -1295,6 +1297,28 @@ function App() {
           </div>
           <p className="look-target-desc">{lookTarget.description}</p>
           {lookTarget.image && <img src={lookTarget.image} alt="" className="look-target-image" />}
+        </div>
+      )}
+      {broadcast && (
+        <div className="broadcast-overlay" role="alertdialog" aria-modal="true" aria-label="Server announcement">
+          <div className="broadcast-card">
+            <div className="broadcast-header">
+              <span className="broadcast-icon" aria-hidden="true">{"\uD83D\uDCE2"}</span>
+              <span className="broadcast-title">Server Announcement</span>
+            </div>
+            <p className="broadcast-message">{broadcast.message}</p>
+            <div className="broadcast-footer">
+              <span className="broadcast-sender">— {broadcast.sender}</span>
+              <button
+                type="button"
+                className="broadcast-dismiss"
+                onClick={() => setBroadcast(null)}
+                autoFocus
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
         </div>
       )}
       {toast && (

@@ -998,6 +998,13 @@ data class CommandsConfig(
             ),
             "return" to CommandMetadata("return/unpossess", "Release a possessed mob", "admin", staff = true),
             "invis" to CommandMetadata("invis", "Toggle staff invisibility", "admin", staff = true),
+            "broadcast" to CommandMetadata(
+                usage = "broadcast <message>",
+                description = "Send a server-wide announcement",
+                category = "admin",
+                staff = true,
+                requiresTarget = true,
+            ),
         )
     }
 }

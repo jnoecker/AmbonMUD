@@ -53,6 +53,7 @@ class AdminHandler(
         router.onStaff<Command.SetLevel> { sid, cmd -> handleSetLevel(sid, cmd) }
         router.onStaff<Command.Dispel> { sid, cmd -> handleDispel(sid, cmd) }
         router.onStaff<Command.Reload> { sid, cmd -> handleReload(sid, cmd) }
+        router.onStaff<Command.Broadcast> { sid, cmd -> handleBroadcast(sid, cmd) }
         router.onStaff<Command.Possess> { sid, cmd -> handlePossess(sid, cmd) }
         router.onStaff<Command.Return> { sid, _ -> handleReturn(sid) }
         router.onStaff<Command.Invis> { sid, _ -> handleInvis(sid) }
@@ -176,6 +177,29 @@ class AdminHandler(
                 ),
             )
             onShutdown()
+        }
+    }
+
+    private suspend fun handleBroadcast(
+        sessionId: SessionId,
+        cmd: Command.Broadcast,
+    ) {
+        players.withPlayer(sessionId) { me ->
+            for (p in players.allPlayers()) {
+                outbound.send(
+                    OutboundEvent.SendText(p.sessionId, "[ANNOUNCEMENT] ${me.name}: ${cmd.message}"),
+                )
+                gmcpEmitter?.sendServerBroadcast(p.sessionId, me.name, cmd.message)
+                outbound.send(OutboundEvent.SendPrompt(p.sessionId))
+            }
+            interEngineBus?.broadcast(
+                InterEngineMessage.GlobalBroadcast(
+                    broadcastType = BroadcastType.ANNOUNCEMENT,
+                    senderName = me.name,
+                    text = cmd.message,
+                    sourceEngineId = engineId,
+                ),
+            )
         }
     }
 

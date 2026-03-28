@@ -113,6 +113,10 @@ sealed interface Command {
         val target: String?,
     ) : Command
 
+    data class Broadcast(
+        val message: String,
+    ) : Command
+
     data class Smite(
         val target: String,
     ) : Command
@@ -651,6 +655,9 @@ object CommandParser {
                 Command.Transfer(parts[0], parts[1].trim())
             }
         }?.let { return it }
+
+        // broadcast
+        requiredArg(line, listOf("broadcast"), "broadcast <message>", { Command.Broadcast(it) })?.let { return it }
 
         // spawn
         requiredArg(line, listOf("spawn"), "spawn <mob-template>", { Command.Spawn(it) })?.let { return it }

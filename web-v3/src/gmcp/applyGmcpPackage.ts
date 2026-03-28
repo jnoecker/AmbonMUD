@@ -108,6 +108,7 @@ interface GmcpContext {
   setStaffWorldInfo: Dispatch<SetStateAction<StaffWorldZone[]>>;
   setStaffMobTemplates: Dispatch<SetStateAction<StaffMobZone[]>>;
   setLookTarget: Dispatch<SetStateAction<LookTargetInfo | null>>;
+  pushBroadcast: (sender: string, message: string) => void;
   setCraftingSkills: Dispatch<SetStateAction<CraftingSkill[]>>;
   setCraftingRecipes: Dispatch<SetStateAction<CraftingRecipe[]>>;
   setCraftingNodes: Dispatch<SetStateAction<CraftingNode[]>>;
@@ -1084,6 +1085,14 @@ export function applyGmcpPackage(
           requiresTarget: c.requiresTarget === true,
         }));
       ctx.setServerCommands(commands);
+      break;
+    }
+
+    case "Server.Broadcast": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const sender = typeof packet.sender === "string" ? packet.sender : "System";
+      const message = typeof packet.message === "string" ? packet.message : "";
+      if (message.length > 0) ctx.pushBroadcast(sender, message);
       break;
     }
 
