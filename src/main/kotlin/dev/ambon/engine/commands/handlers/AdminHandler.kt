@@ -55,6 +55,7 @@ class AdminHandler(
         router.onStaff<Command.Reload> { sid, cmd -> handleReload(sid, cmd) }
         router.onStaff<Command.Possess> { sid, cmd -> handlePossess(sid, cmd) }
         router.onStaff<Command.Return> { sid, _ -> handleReturn(sid) }
+        router.onStaff<Command.Invis> { sid, _ -> handleInvis(sid) }
     }
 
     private suspend fun handleGoto(
@@ -323,8 +324,9 @@ class AdminHandler(
             }
             me.possessedMobId = mob.id
             me.prePossessRoomId = me.roomId
+            setInvisible(sessionId, me, true)
             outbound.send(
-                OutboundEvent.SendInfo(sessionId, "You take control of ${mob.name}. Type 'return' to release."),
+                OutboundEvent.SendInfo(sessionId, "You take control of ${mob.name}. Type 'return' or 'recall' to release."),
             )
             outbound.send(OutboundEvent.SendPrompt(sessionId))
         }
@@ -341,6 +343,7 @@ class AdminHandler(
             me.possessedMobId = null
             val returnRoom = me.prePossessRoomId ?: me.roomId
             me.prePossessRoomId = null
+            setInvisible(sessionId, me, false)
             if (me.roomId != returnRoom) {
                 players.moveTo(sessionId, returnRoom)
                 ctx.sendLook(sessionId)
@@ -490,6 +493,32 @@ class AdminHandler(
         players.moveTo(sessionId, to)
         ctx.sendLook(sessionId)
         outbound.send(OutboundEvent.SendPrompt(sessionId))
+    }
+
+    private suspend fun handleInvis(sessionId: SessionId) {
+        players.withPlayer(sessionId) { me ->
+            setInvisible(sessionId, me, !me.invisible)
+            val state = if (me.invisible) "invisible" else "visible"
+            outbound.send(OutboundEvent.SendInfo(sessionId, "You are now $state."))
+            outbound.send(OutboundEvent.SendPrompt(sessionId))
+        }
+    }
+
+    private suspend fun setInvisible(sessionId: SessionId, me: PlayerState, invisible: Boolean) {
+        if (me.invisible == invisible) return
+        val roomId = me.roomId
+        if (invisible) {
+            // Disappear from the room
+            for (other in players.playersInRoom(roomId).filter { it.sessionId != sessionId }) {
+                gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
+            }
+        } else {
+            // Reappear in the room
+            for (other in players.playersInRoom(roomId).filter { it.sessionId != sessionId }) {
+                gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
+            }
+        }
+        me.invisible = invisible
     }
 
     private fun findMobTemplate(arg: String): dev.ambon.domain.world.MobSpawn? {

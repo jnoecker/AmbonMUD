@@ -52,7 +52,7 @@ class WebClientParityTest {
         "ansi" -> listOf() // ANSI toggle is not exposed in the web client (no terminal)
         // Staff commands — not in client autocomplete (gated server-side)
         "goto", "transfer", "spawn", "smite", "staff_kick", "dispel",
-        "setlevel", "shutdown", "reload", "possess", "return",
+        "setlevel", "shutdown", "reload", "possess", "return", "invis",
         -> listOf()
         // Default: the key itself is the word the player types
         else -> listOf(key)
