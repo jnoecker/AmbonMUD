@@ -997,6 +997,7 @@ data class CommandsConfig(
                 requiresTarget = true,
             ),
             "return" to CommandMetadata("return/unpossess", "Release a possessed mob", "admin", staff = true),
+            "invis" to CommandMetadata("invis", "Toggle staff invisibility", "admin", staff = true),
         )
     }
 }

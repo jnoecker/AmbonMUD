@@ -59,7 +59,8 @@ class SessionEventHandler(
         gmcpEmitter?.forgetSession(sessionId)
 
         if (me != null) {
-            // Release mob possession on disconnect
+            // Release mob possession and invisibility on disconnect
+            me.invisible = false
             if (me.possessedMobId != null) {
                 val returnRoom = me.prePossessRoomId ?: me.roomId
                 me.possessedMobId = null

@@ -1138,10 +1138,12 @@ class GameEngine(
 
     suspend fun broadcastServerWho() {
         val now = clock.millis()
-        val sorted = players.allPlayers().sortedBy { it.name }
-        val entries = communicationHandler.buildWhoEntries(sorted, now)
-        for (p in sorted) {
-            gmcpEmitter.sendServerWho(p.sessionId, entries)
+        val allPlayers = players.allPlayers().sortedBy { it.name }
+        val visiblePlayers = allPlayers.filter { !it.invisible }
+        val visibleEntries = communicationHandler.buildWhoEntries(visiblePlayers, now)
+        val allEntries = communicationHandler.buildWhoEntries(allPlayers, now)
+        for (p in allPlayers) {
+            gmcpEmitter.sendServerWho(p.sessionId, if (p.isStaff) allEntries else visibleEntries)
         }
     }
 

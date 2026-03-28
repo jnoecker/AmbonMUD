@@ -196,11 +196,16 @@ internal suspend fun sendLook(
     }
 
     val rawRoomPlayers = players.playersInRoom(roomId)
+    // Staff players can see invisible players (shown with [I] tag); non-staff cannot
+    val visibleFilter: (PlayerState) -> Boolean =
+        if (me.isStaff) { _ -> true } else { p -> !p.invisible }
     val roomPlayers =
         rawRoomPlayers
+            .filter(visibleFilter)
             .map { p ->
                 val t = p.activeTitle
-                if (t != null) "[$t] ${p.name}" else p.name
+                val tag = if (p.invisible) "[I] " else ""
+                if (t != null) "$tag[$t] ${p.name}" else "$tag${p.name}"
             }.sorted()
 
     val rawRoomMobs = mobs.mobsInRoom(roomId)
@@ -399,15 +404,19 @@ internal suspend fun movePlayerWithNotify(
     dialogueSystem: dev.ambon.engine.dialogue.DialogueSystem? = null,
 ) {
     val me = players.get(sessionId) ?: return
-    for (other in players.playersInRoom(from).filter { it.sessionId != me.sessionId }) {
-        outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} $departMsg"))
-        gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
+    if (!me.invisible) {
+        for (other in players.playersInRoom(from).filter { it.sessionId != me.sessionId }) {
+            outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} $departMsg"))
+            gmcpEmitter?.sendRoomRemovePlayer(other.sessionId, me.name)
+        }
     }
     dialogueSystem?.onPlayerMoved(sessionId)
     players.moveTo(sessionId, to)
-    for (other in players.playersInRoom(to).filter { it.sessionId != me.sessionId }) {
-        outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} $arriveMsg"))
-        gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
+    if (!me.invisible) {
+        for (other in players.playersInRoom(to).filter { it.sessionId != me.sessionId }) {
+            outbound.send(OutboundEvent.SendText(other.sessionId, "${me.name} $arriveMsg"))
+            gmcpEmitter?.sendRoomAddPlayer(other.sessionId, me)
+        }
     }
 }
 
