@@ -117,6 +117,7 @@ export function InventoryPanel({
               type="button"
               className={`inventory-action-btn ${givePickerItemId === item.id ? "inventory-action-btn-active" : ""}`}
               title={`Give ${item.name}`}
+              aria-expanded={givePickerItemId === item.id}
               disabled={!canManageItems}
               onClick={() => setGivePickerItemId(givePickerItemId === item.id ? null : item.id)}
             >
