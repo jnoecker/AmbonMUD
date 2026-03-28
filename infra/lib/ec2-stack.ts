@@ -378,6 +378,11 @@ export class Ec2Stack extends Stack {
       ...(worldZonesBaseUrl
         ? [`ExecStartPre=/usr/local/bin/fetch-world-zones`]
         : []),
+      // Fetch achievements.yaml from the same R2 config directory as the lore overlay.
+      // Must run AFTER fetch-world-zones (which rm -f's /app/data/world/*.yaml).
+      ...(loreConfigUrl
+        ? [`ExecStartPre=/bin/bash -c 'mkdir -p /app/data/world && curl -fsSL -o /app/data/world/achievements.yaml ${loreConfigUrl.replace(/[^/]+$/, '')}achievements.yaml'`]
+        : []),
       // Generate htpasswd for nginx basic auth on /grafana/, /prometheus/, /admin/.
       'ExecStartPre=/usr/local/bin/generate-htpasswd',
       // JAVA_TOOL_OPTIONS is read directly by the JVM (not Hoplite), making it

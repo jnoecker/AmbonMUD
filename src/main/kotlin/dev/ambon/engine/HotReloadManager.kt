@@ -85,6 +85,8 @@ class HotReloadManager(
     private val behaviorTreeSystem: BehaviorTreeSystem,
     private val gmcpEmitter: GmcpEmitter,
     private val worldState: WorldStateRegistry,
+    private val achievementRegistry: AchievementRegistry,
+    private val achievementCategoryRegistry: AchievementCategoryRegistry,
     private val engineConfig: EngineConfig,
     private val imagesBaseUrl: String,
     private val worldLoader: () -> World,
@@ -150,6 +152,10 @@ class HotReloadManager(
 
         questRegistry.clear()
         world.questDefinitions.forEach { questRegistry.register(it) }
+
+        // Reload achievement definitions from classpath (may be shadowed by /app/data overlay).
+        achievementRegistry.clear()
+        AchievementLoader.loadFromResource("world/achievements.yaml", achievementRegistry, achievementCategoryRegistry)
 
         // Update item templates (existing items keep old stats; new templates get placed).
         val newItemSpawns = items.updateTemplates(world.itemSpawns)
