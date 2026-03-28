@@ -14,6 +14,25 @@ function assetUrl(key: string, fallbackFilename: string): string {
 
 const SHOP_BADGE_SIZE = 96;
 const QUEST_ICON_SIZE = 28;
+const LABEL_BG_COLOR = 0x0a0c14;
+const LABEL_BG_ALPHA = 0.7;
+const LABEL_PAD_X = 10;
+const LABEL_PAD_Y = 4;
+const LABEL_RADIUS = 6;
+
+/** Draw a dark rounded-rect pill behind a centered text label. Optionally add a glow halo. */
+function drawLabelPill(bg: Graphics, label: Text, glowColor?: number) {
+  const lw = label.width + LABEL_PAD_X;
+  const lh = label.height + LABEL_PAD_Y;
+  bg.clear();
+  if (glowColor != null) {
+    // Faint outer glow halo
+    bg.roundRect(label.x - lw / 2 - 3, label.y - LABEL_PAD_Y / 2 - 3, lw + 6, lh + 6, LABEL_RADIUS + 3);
+    bg.fill({ color: glowColor, alpha: 0.15 });
+  }
+  bg.roundRect(label.x - lw / 2, label.y - LABEL_PAD_Y / 2, lw, lh, LABEL_RADIUS);
+  bg.fill({ color: LABEL_BG_COLOR, alpha: LABEL_BG_ALPHA });
+}
 
 const PLAYER_LABEL_COLOR = "#d8dcef";
 const OTHER_PLAYER_LABEL_COLOR = "#81a2be";
@@ -72,9 +91,10 @@ export class WorldScene {
   private descBg = new Graphics();
   private playerSprite: Sprite | null = null;
   private playerLabel: Text;
-  private mobSprites: Map<string, { sprite: Sprite; label: Text; hitArea: Graphics }> = new Map();
+  private playerLabelBg = new Graphics();
+  private mobSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
   private itemSprites: Array<{ sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
-  private playerSprites: Map<string, { sprite: Sprite; label: Text; hitArea: Graphics }> = new Map();
+  private playerSprites: Map<string, { sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = new Map();
   private roleGraphics = new Graphics();
   private statusEffects = new StatusEffectDisplay();
   private minimap = new Minimap();
@@ -97,6 +117,7 @@ export class WorldScene {
   private shopBadge: Container;
   private shopSprite: Sprite | null = null;
   private shopLabel: Text;
+  private shopLabelBg = new Graphics();
   private shopHitArea = new Graphics();
   private shopVisible = false;
 
@@ -119,6 +140,7 @@ export class WorldScene {
   private nodeSprites: Array<{ sprite: Sprite; label: Text; labelBg: Graphics; hitArea: Graphics }> = [];
   private stationBadge: Container;
   private stationLabel: Text;
+  private stationLabelBg = new Graphics();
   private stationHitArea = new Graphics();
   private stationVisible = false;
 
@@ -173,7 +195,7 @@ export class WorldScene {
 
     this.playerLabel = new Text({
       text: "",
-      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: PLAYER_LABEL_FONT_SIZE, fill: PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.7, blur: 3, distance: 1 } },
+      style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: PLAYER_LABEL_FONT_SIZE, fill: PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
     });
     this.playerLabel.anchor.set(0.5, 0);
 
@@ -212,6 +234,8 @@ export class WorldScene {
     this.shopLabel.anchor.set(0.5, 0);
     this.shopLabel.y = hs / 2 + 2;
     this.shopLabel.eventMode = "none";
+    this.shopLabelBg.eventMode = "none";
+    this.shopBadge.addChild(this.shopLabelBg);
     this.shopBadge.addChild(this.shopLabel);
     // Asset-dependent sprites (shop, dialogue, aggro, quest) are loaded
     // lazily in update() once Server.Assets GMCP arrives, to avoid 404s
@@ -236,6 +260,8 @@ export class WorldScene {
     this.stationLabel.anchor.set(0.5, 0);
     this.stationLabel.y = hs / 2 + 2;
     this.stationLabel.eventMode = "none";
+    this.stationLabelBg.eventMode = "none";
+    this.stationBadge.addChild(this.stationLabelBg);
     this.stationBadge.addChild(this.stationLabel);
 
     // Recall button
@@ -251,6 +277,7 @@ export class WorldScene {
     this.container.addChild(this.descBg);
     this.container.addChild(this.descText);
     this.container.addChild(this.roomExpandBtn);
+    this.container.addChild(this.playerLabelBg);
     this.container.addChild(this.playerLabel);
     this.container.addChild(this.minimap.container);
     this.container.addChild(this.shopBadge);
@@ -486,6 +513,7 @@ export class WorldScene {
     }
     this.playerLabel.x = playerX;
     this.playerLabel.y = playerY + playerSize / 2 + 6;
+    drawLabelPill(this.playerLabelBg, this.playerLabel);
 
     // Status effects above the player sprite
     this.statusEffects.update(gameStateRef.current.effects, playerX, playerY - playerSize / 2 - 32);
@@ -498,13 +526,34 @@ export class WorldScene {
         : Math.min(mobSize + 24, mobAreaWidth / mobCount);
       const totalMobWidth = (mobCount - 1) * mobSpacing;
       let mobX = mobAreaLeft + (mobAreaWidth - totalMobWidth) / 2;
-      for (const { sprite, label, hitArea } of mobEntries) {
+      const mobInfo = gameStateRef.current.mobInfo;
+      for (const { sprite, label, labelBg, hitArea } of mobEntries) {
         sprite.x = mobX;
         sprite.y = mobY;
         sprite.width = mobSize;
         sprite.height = mobSize;
         label.x = mobX;
         label.y = mobY + mobSize / 2 + 6;
+
+        // Color label text by mob role + prepend role icon
+        const mid = [...this.mobSprites.entries()].find(([, v]) => v.label === label)?.[0];
+        const info = mid ? mobInfo.find((m) => m.id === mid) : null;
+        const baseName = label.text.replace(/^[\u2620\u2B50]\s*/, "").replace(/^\uD83D\uDCB0\s*/, "");
+        if (info?.aggressive) {
+          label.style.fill = "#d4888a";
+          label.text = "\u2620 " + baseName;
+        } else if (info?.shopKeeper) {
+          label.style.fill = "#8caec9";
+          label.text = "\uD83D\uDCB0 " + baseName;
+        } else if (info?.questGiver) {
+          label.style.fill = "#bea873";
+          label.text = "\u2B50 " + baseName;
+        } else {
+          label.style.fill = MOB_LABEL_COLOR;
+          label.text = baseName;
+        }
+        drawLabelPill(labelBg, label, info?.questGiver ? 0xbea873 : undefined);
+
         hitArea.clear();
         hitArea.rect(0, 0, mobSize, mobSize);
         hitArea.fill({ color: 0x000000, alpha: 0.001 });
@@ -519,13 +568,14 @@ export class WorldScene {
     if (otherPlayerEntries.length > 0) {
       const opY = h * 0.55;
       let startX = playerX + playerSize / 2 + 20;
-      for (const { sprite, label, hitArea } of otherPlayerEntries) {
+      for (const { sprite, label, labelBg, hitArea } of otherPlayerEntries) {
         sprite.x = startX;
         sprite.y = opY;
         sprite.width = otherSize;
         sprite.height = otherSize;
         label.x = startX;
         label.y = opY + otherSize / 2 + 6;
+        drawLabelPill(labelBg, label);
         hitArea.clear();
         hitArea.rect(0, 0, otherSize, otherSize);
         hitArea.fill({ color: 0x000000, alpha: 0.001 });
@@ -537,7 +587,7 @@ export class WorldScene {
 
     // Layout item sprites in a horizontal row, centered
     if (itemCount > 0) {
-      const itemY = h * 0.42;
+      const itemY = h * 0.38;
       const itemSpacing = Math.min(itemSize + 16, itemAreaWidth / Math.max(1, itemCount));
       const totalItemWidth = (itemCount - 1) * itemSpacing;
       let itemX = w / 2 - totalItemWidth / 2;
@@ -548,14 +598,7 @@ export class WorldScene {
         sprite.height = itemSize;
         label.x = itemX;
         label.y = itemY + itemSize / 2 + 4;
-
-        // Dark pill behind label for readability on busy backgrounds
-        const lw = label.width + 10;
-        const lh = label.height + 4;
-        labelBg.clear();
-        labelBg.roundRect(itemX - lw / 2, label.y - 2, lw, lh, 6);
-        labelBg.fill({ color: 0x0a0c14, alpha: 0.7 });
-
+        drawLabelPill(labelBg, label);
         hitArea.clear();
         hitArea.rect(0, 0, itemSize, itemSize);
         hitArea.fill({ color: 0x000000, alpha: 0.001 });
@@ -568,7 +611,7 @@ export class WorldScene {
     // Layout gathering node sprites — below items
     const nodeCount = this.nodeSprites.length;
     if (nodeCount > 0) {
-      const nodeY = h * 0.50;
+      const nodeY = h * 0.52;
       const nodeSpacing = Math.min(itemSize + 16, itemAreaWidth / Math.max(1, nodeCount));
       const totalNodeWidth = (nodeCount - 1) * nodeSpacing;
       let nodeX = w / 2 - totalNodeWidth / 2;
@@ -579,12 +622,7 @@ export class WorldScene {
         sprite.height = itemSize;
         label.x = nodeX;
         label.y = nodeY + itemSize / 2 + 4;
-
-        const lw = label.width + 10;
-        const lh = label.height + 4;
-        labelBg.clear();
-        labelBg.roundRect(nodeX - lw / 2, label.y - 2, lw, lh, 6);
-        labelBg.fill({ color: 0x0a0c14, alpha: 0.7 });
+        drawLabelPill(labelBg, label);
 
         hitArea.clear();
         hitArea.rect(0, 0, itemSize, itemSize);
@@ -599,12 +637,14 @@ export class WorldScene {
     if (this.shopBadge.visible) {
       this.shopBadge.x = w - 70;
       this.shopBadge.y = h * 0.35;
+      drawLabelPill(this.shopLabelBg, this.shopLabel);
     }
 
     // Station badge position — right side, below shop badge
     if (this.stationBadge.visible) {
       this.stationBadge.x = w - 70;
       this.stationBadge.y = this.shopBadge.visible ? h * 0.48 : h * 0.35;
+      drawLabelPill(this.stationLabelBg, this.stationLabel);
     }
 
     // Recall button — bottom-left
@@ -736,11 +776,13 @@ export class WorldScene {
   }
 
   private rebuildMobs(mobs: Array<{ id: string; name: string; description?: string; hp: number; maxHp: number; image?: string | null; video?: string | null }>) {
-    for (const { sprite, label, hitArea } of this.mobSprites.values()) {
+    for (const { sprite, label, labelBg, hitArea } of this.mobSprites.values()) {
       this.container.removeChild(sprite);
+      this.container.removeChild(labelBg);
       this.container.removeChild(label);
       this.container.removeChild(hitArea);
       sprite.destroy();
+      labelBg.destroy();
       label.destroy();
       hitArea.destroy();
     }
@@ -779,9 +821,12 @@ export class WorldScene {
 
       const label = new Text({
         text: mob.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: MOB_LABEL_FONT_SIZE, fill: MOB_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 1 } },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: MOB_LABEL_FONT_SIZE, fill: MOB_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
+
+      const labelBg = new Graphics();
+      labelBg.eventMode = "none";
 
       // Click hit area
       const hitArea = new Graphics();
@@ -803,9 +848,10 @@ export class WorldScene {
       });
 
       this.container.addChild(sprite);
+      this.container.addChild(labelBg);
       this.container.addChild(label);
       this.container.addChild(hitArea);
-      this.mobSprites.set(mob.id, { sprite, label, hitArea });
+      this.mobSprites.set(mob.id, { sprite, label, labelBg, hitArea });
     }
   }
 
@@ -835,7 +881,7 @@ export class WorldScene {
 
       const label = new Text({
         text: item.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: ITEM_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 0 } },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: ITEM_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
 
@@ -889,7 +935,7 @@ export class WorldScene {
 
       const label = new Text({
         text: node.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: "#8da97b", dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 0 } },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: ITEM_LABEL_FONT_SIZE, fill: "#8da97b", dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
 
@@ -916,11 +962,13 @@ export class WorldScene {
   }
 
   private rebuildPlayers(players: Array<{ name: string; level: number }>) {
-    for (const { sprite, label, hitArea } of this.playerSprites.values()) {
+    for (const { sprite, label, labelBg, hitArea } of this.playerSprites.values()) {
       this.container.removeChild(sprite);
+      this.container.removeChild(labelBg);
       this.container.removeChild(label);
       this.container.removeChild(hitArea);
       sprite.destroy();
+      labelBg.destroy();
       label.destroy();
       hitArea.destroy();
     }
@@ -936,9 +984,12 @@ export class WorldScene {
 
       const label = new Text({
         text: player.name,
-        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: OTHER_PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.6, blur: 3, distance: 1 } },
+        style: { fontFamily: "JetBrains Mono, Cascadia Mono, monospace", fontSize: 13, fill: OTHER_PLAYER_LABEL_COLOR, dropShadow: { color: 0x000000, alpha: 0.4, blur: 2, distance: 1 } },
       });
       label.anchor.set(0.5, 0);
+
+      const labelBg = new Graphics();
+      labelBg.eventMode = "none";
 
       const hitArea = new Graphics();
       hitArea.rect(0, 0, otherSize, otherSize);
@@ -957,9 +1008,10 @@ export class WorldScene {
       });
 
       this.container.addChild(sprite);
+      this.container.addChild(labelBg);
       this.container.addChild(label);
       this.container.addChild(hitArea);
-      this.playerSprites.set(player.name, { sprite, label, hitArea });
+      this.playerSprites.set(player.name, { sprite, label, labelBg, hitArea });
     }
   }
 
