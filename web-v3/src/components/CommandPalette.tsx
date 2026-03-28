@@ -193,6 +193,10 @@ export function CommandPalette({
           </div>
         </div>
 
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {query.trim().length > 0 ? `${flatItems.length} commands found` : ""}
+        </div>
+
         <div className="cmd-palette-list" ref={listRef}>
           {flatItems.length === 0 && (
             <div className="cmd-palette-empty">No commands match your search.</div>

@@ -23,6 +23,7 @@
   --text-heading: #d4ddf5;
   --text-bright: #dde6ff;
   --text-placeholder: #8f9cbe;
+  --text-white: #fff;
 
   /* ── Semantic / gameplay ─────────────────────────────── */
   --color-hp-light: #c5d8a8;
@@ -56,6 +57,12 @@
   --bg-primary: #2a3149;
   --bg-secondary: #262f47;
   --bg-elevated: #313a56;
+  --bg-deep: #141828;
+  --color-gold-bright: #d4b85c;
+  --color-gold-coin-light: #ffe580;
+  --color-gold-coin-dark: #c8a230;
+  --color-toast-text: #f0d0e0;
+  --color-accent-violet: #ce93d8;
 
   /* ── Elevation ────────────────────────────────────────── */
   --shadow-sm: 0 2px 7px rgb(8 10 18 / 30%);
@@ -218,7 +225,7 @@ body {
   font-size: clamp(1.8rem, 2.45vw, 2.45rem);
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #e0e8fb;
+  color: var(--text-primary);
   text-shadow: 0 1px 0 rgb(14 18 30 / 58%), 0 0 10px rgb(137 155 214 / 30%);
 }
 
@@ -236,7 +243,7 @@ body {
   font-size: 0.86rem;
   font-weight: 700;
   border: 1px solid var(--line-soft);
-  color: #d6def6;
+  color: var(--text-primary);
   background: linear-gradient(135deg, rgb(75 86 117 / 90%), rgb(63 77 109 / 86%));
   box-shadow: var(--shadow-sm);
   transition: color 300ms var(--ease-out-soft), background-color 300ms var(--ease-out-soft);
@@ -366,7 +373,7 @@ body {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #b9aed8, #8da2c8);
+  background: linear-gradient(135deg, var(--color-primary-lavender), var(--color-primary-pale-blue));
   border: 1px solid rgb(255 255 255 / 20%);
   cursor: pointer;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
@@ -376,7 +383,7 @@ body {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #b9aed8, #8da2c8);
+  background: linear-gradient(135deg, var(--color-primary-lavender), var(--color-primary-pale-blue));
   border: 1px solid rgb(255 255 255 / 20%);
   cursor: pointer;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
@@ -521,7 +528,7 @@ body {
 .panel-header-avatar-icon {
   width: 24px;
   height: 24px;
-  color: #c7d2ef;
+  color: var(--text-heading);
 }
 
 .panel-header-inline-label {
@@ -657,7 +664,7 @@ body {
 .map-icon-svg {
   width: 100%;
   height: 100%;
-  color: #c1cdee;
+  color: var(--text-heading);
 }
 
 .terminal-card {
@@ -691,7 +698,7 @@ body {
   font-family: var(--font-display);
   font-size: 1.08rem;
   font-weight: 700;
-  color: #d0d9f3;
+  color: var(--text-heading);
 }
 
 .prelogin-banner-text {
@@ -835,7 +842,7 @@ body {
 }
 
 .social-tab:hover {
-  color: #c7d2ef;
+  color: var(--text-heading);
 }
 
 .social-tab-active {
@@ -990,12 +997,12 @@ body {
 .chat-message-sender {
   font-size: 0.82rem;
   font-weight: 800;
-  color: #d4def8;
+  color: var(--text-heading);
 }
 
 .chat-message-time {
   font-size: 0.74rem;
-  color: #a8b5d6;
+  color: var(--text-secondary);
 }
 
 .chat-message-body {
@@ -1139,7 +1146,7 @@ body {
   border-radius: 999px;
   border: 1px solid rgb(106 96 136 / 24%);
   background: linear-gradient(140deg, rgb(211 180 206 / 90%), rgb(191 207 226 / 88%));
-  color: #d3def8;
+  color: var(--text-primary);
   cursor: pointer;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 50%), var(--shadow-sm);
   transition:
@@ -2040,7 +2047,7 @@ body {
   font-family: var(--font-display);
   font-size: 1.38rem;
   line-height: 1.2;
-  color: #d1dbf5;
+  color: var(--text-heading);
 }
 
 .prelogin-runes {
@@ -2073,7 +2080,7 @@ body {
   margin: 0 0 var(--space-1);
   font-family: var(--font-display);
   font-size: 1.12rem;
-  color: #c8d3ef;
+  color: var(--text-heading);
 }
 
 .room-title {
@@ -2081,7 +2088,7 @@ body {
   font-weight: 700;
   font-size: 1.5rem;
   font-family: var(--font-display);
-  color: #e0e8fd;
+  color: var(--text-bright);
 }
 
 .room-title-row {
@@ -2149,7 +2156,7 @@ body {
 }
 
 .room-expand-icon {
-  color: #b7c2de;
+  color: var(--text-secondary);
 }
 
 .compass-block {
@@ -2205,7 +2212,7 @@ body {
   border-radius: 999px;
   display: grid;
   place-items: center;
-  color: #a9b1c9;
+  color: var(--text-secondary);
   border: 1px solid rgb(106 96 136 / 24%);
   background: linear-gradient(145deg, rgb(41 49 72 / 92%), rgb(29 37 58 / 90%));
   box-shadow: inset 0 1px 0 rgb(236 229 255 / 18%), var(--shadow-sm);
@@ -2226,7 +2233,7 @@ body {
   border-radius: 999px;
   border: 1px solid rgb(106 96 136 / 24%);
   background: linear-gradient(140deg, rgb(38 46 69 / 92%), rgb(27 35 57 / 88%));
-  color: #9aa3be;
+  color: var(--text-tertiary);
   font-weight: 800;
   font-size: 0.8rem;
   cursor: pointer;
@@ -2240,7 +2247,7 @@ body {
 .compass-node:hover:enabled {
   transform: scale(1.06);
   background: linear-gradient(140deg, rgb(97 73 112 / 94%), rgb(66 92 124 / 90%));
-  color: #d6d9e8;
+  color: var(--text-primary);
   box-shadow: var(--shadow-md), 0 0 12px rgb(128 108 163 / 32%);
 }
 
@@ -2299,7 +2306,7 @@ body {
 .compass-caption {
   margin: 0;
   text-align: center;
-  color: #9eadcf;
+  color: var(--text-tertiary);
   font-size: 0.8rem;
   line-height: 1.35;
 }
@@ -2310,7 +2317,7 @@ body {
   height: 180px;
   border-radius: var(--radius-md);
   border: 1px solid rgb(58 64 96 / 50%);
-  background: #141828;
+  background: var(--bg-deep);
 }
 
 .split-list {
@@ -2526,7 +2533,7 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #d4b85c, #bea873);
+  background: linear-gradient(135deg, var(--color-gold-bright), var(--color-primary-soft-gold));
   box-shadow: 0 0 6px rgb(190 168 115 / 40%);
   flex-shrink: 0;
 }
@@ -3018,7 +3025,7 @@ body {
   font-size: 0.68rem;
   font-weight: 800;
   line-height: 1;
-  color: #fff;
+  color: var(--text-white);
   background: linear-gradient(140deg, rgb(168 151 210 / 90%), rgb(140 174 201 / 85%));
 }
 
@@ -3551,7 +3558,7 @@ body {
   font-size: 0.68rem;
   font-weight: 800;
   line-height: 1;
-  color: #fff;
+  color: var(--text-white);
   background: linear-gradient(140deg, rgb(141 169 123 / 90%), rgb(110 148 90 / 85%));
 }
 
@@ -4489,7 +4496,7 @@ body {
   font-size: 0.58rem;
   font-weight: 800;
   line-height: 1;
-  color: #fff;
+  color: var(--text-white);
   background: linear-gradient(140deg, var(--color-primary-lavender), var(--color-primary-pale-blue));
   box-shadow: 0 1px 4px rgb(8 10 18 / 40%);
   pointer-events: none;
@@ -5134,7 +5141,7 @@ body {
   border-radius: 999px;
   border: 1px solid rgb(106 96 136 / 24%);
   background: linear-gradient(140deg, rgb(96 81 116 / 90%), rgb(76 99 132 / 88%));
-  color: #d6e0f7;
+  color: var(--text-primary);
   cursor: pointer;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 50%), var(--shadow-sm);
   transition:
@@ -5273,13 +5280,13 @@ body {
   font-size: 1.72rem;
   font-family: var(--font-display);
   font-weight: 600;
-  color: #e7edff;
+  color: var(--text-bright);
   line-height: 1.15;
 }
 
 .identity-detail {
   margin: 2px 0 0;
-  color: #b2bfdf;
+  color: var(--text-secondary);
   line-height: 1.2;
 }
 
@@ -5534,7 +5541,7 @@ body {
   display: flex;
   justify-content: space-between;
   font-size: 0.8rem;
-  color: #a7b6d8;
+  color: var(--text-tertiary);
 }
 
 .meter-track-placeholder {
@@ -5556,7 +5563,7 @@ body {
   display: flex;
   justify-content: space-between;
   font-size: 0.8rem;
-  color: #a7b6d8;
+  color: var(--text-tertiary);
 }
 
 .meter-track {
@@ -5621,7 +5628,7 @@ body {
 .stat-grid dt {
   margin: 0;
   font-size: 0.74rem;
-  color: #a3b2d6;
+  color: var(--text-tertiary);
 }
 
 .stat-grid dd {
@@ -5711,7 +5718,7 @@ body {
   padding: 8px 20px;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #f0d0e0;
+  color: var(--color-toast-text);
   background: rgb(42 26 48 / 92%);
   border: 1px solid rgb(212 106 138 / 50%);
   border-radius: var(--radius-md);
@@ -6600,7 +6607,7 @@ body {
   border-radius: var(--radius-md);
   border: 1px solid rgb(106 96 136 / 24%);
   background: linear-gradient(140deg, rgb(96 81 116 / 90%), rgb(76 99 132 / 88%));
-  color: #d6e0f7;
+  color: var(--text-primary);
   font-size: 0.92rem;
   font-weight: 600;
   cursor: pointer;
@@ -6763,7 +6770,7 @@ body {
   height: 16px;
   border-radius: 999px;
   background: var(--color-primary-dusty-rose);
-  color: #fff;
+  color: var(--text-white);
   font-size: 0.65rem;
   font-weight: 800;
   display: flex;
@@ -6838,7 +6845,7 @@ body {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #ffe580, #c8a230);
+  background: radial-gradient(circle at 35% 35%, var(--color-gold-coin-light), var(--color-gold-coin-dark));
   border: 1px solid rgb(160 130 40 / 60%);
   flex-shrink: 0;
 }
@@ -8568,7 +8575,7 @@ body {
   border-radius: 50%;
   border: 1px solid var(--glass-edge);
   background: rgb(42 16 64 / 90%);
-  color: #ce93d8;
+  color: var(--color-accent-violet);
   font-size: 1rem;
   cursor: pointer;
   display: flex;
