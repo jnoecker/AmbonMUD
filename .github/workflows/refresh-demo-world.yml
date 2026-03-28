@@ -1,7 +1,7 @@
 name: Refresh Demo World
 
-# Re-downloads lore config and world zone YAML files onto the demo
-# instance without restarting the server or dropping player connections.
+# Re-downloads lore config, achievements, and world zone YAML files onto
+# the demo instance without restarting the server or dropping player connections.
 # After this runs, a staff `reload all` or POST /api/reload?target=all
 # is needed to apply the new data to the running engine.
 #
@@ -67,10 +67,11 @@ jobs:
           INSTANCE_ID: ${{ secrets.DEMO_INSTANCE_ID }}
           LORE_URL: ${{ secrets.LORE_CONFIG_URL }}
         run: |
+          ACHIEVEMENTS_URL="${LORE_URL%/*}/achievements.yaml"
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=[\"curl -fsSL -o /app/data/application-local.yaml $LORE_URL && /usr/local/bin/fetch-world-zones\"]" \
+            --parameters "commands=[\"curl -fsSL -o /app/data/application-local.yaml $LORE_URL && /usr/local/bin/fetch-world-zones && mkdir -p /app/data/world && curl -fsSL -o /app/data/world/achievements.yaml $ACHIEVEMENTS_URL\"]" \
             --comment "Refresh world files from Ambon lore repo" \
             --query "Command.CommandId" \
             --output text)
