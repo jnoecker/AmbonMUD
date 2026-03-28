@@ -294,6 +294,12 @@ export function HelpContent({ isStaff, serverCommands }: HelpContentProps) {
         />
       </div>
 
+      {search.trim().length > 0 && (
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {filteredCategories.reduce((n, cat) => n + cat.commands.length, 0)} commands found
+        </div>
+      )}
+
       {filteredCategories.length === 0 ? (
         <p className="empty-note">No commands match your search.</p>
       ) : (
