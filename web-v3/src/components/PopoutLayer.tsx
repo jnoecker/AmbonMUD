@@ -1,5 +1,5 @@
 import type { ReactNode, RefObject } from "react";
-import type { CommandEntry, ContainerContents, PopoutPanel, RoomFeature, RoomState } from "../types";
+import type { CommandEntry, ContainerContents, CraftingNode, PopoutPanel, RoomFeature, RoomState } from "../types";
 import { HelpContent } from "./HelpContent";
 
 const PANEL_POPOUTS = new Set<string>(["character", "chat", "shop", "spellbook", "quests", "inventory", "equipment", "mail", "crafting"]);
@@ -14,6 +14,7 @@ interface PopoutLayerProps {
   mapCanvasRef: RefObject<HTMLCanvasElement | null>;
   isStaff: boolean;
   serverCommands: CommandEntry[];
+  craftingNodes: CraftingNode[];
   onClose: () => void;
   onFeatureAction: (command: string) => void;
   children?: ReactNode;
@@ -29,6 +30,7 @@ export function PopoutLayer({
   mapCanvasRef,
   isStaff,
   serverCommands,
+  craftingNodes,
   onClose,
   onFeatureAction,
   children,
@@ -112,6 +114,34 @@ export function PopoutLayer({
                       </span>
                     </>}
               </div>
+              {(room.station || craftingNodes.length > 0) && (
+                <div className="room-resources-section">
+                  {room.station && (
+                    <p className="room-resource-line">
+                      <span className="room-resource-icon" aria-hidden="true">{"\u2692"}</span>
+                      Crafting station: <strong>{room.station.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}</strong>
+                    </p>
+                  )}
+                  {craftingNodes.length > 0 && (
+                    <div className="room-resource-nodes">
+                      <span className="room-resource-icon" aria-hidden="true">{"\uD83C\uDF3F"}</span>
+                      <span>Resources: </span>
+                      {craftingNodes.map((node) => (
+                        <button
+                          key={node.id}
+                          type="button"
+                          className="room-resource-btn"
+                          title={`Gather ${node.name} (${node.skill} ${node.skillRequired}+)`}
+                          aria-label={`Gather ${node.name}`}
+                          onClick={() => onFeatureAction(`gather ${node.name}`)}
+                        >
+                          {node.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               {roomFeatures.length > 0 && (
                 <div className="room-features-section">
                   <h4 className="room-features-title">Interactive Features</h4>

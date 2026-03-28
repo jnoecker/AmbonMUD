@@ -999,6 +999,7 @@ function App() {
         mapCanvasRef={mapCanvasRef}
         isStaff={character.isStaff}
         serverCommands={serverCommands}
+        craftingNodes={craftingNodes}
         onClose={() => setActivePopout(null)}
         onFeatureAction={(cmd) => sendCommand(cmd, true)}
       >

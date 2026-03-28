@@ -113,6 +113,7 @@ export interface RoomState {
   video?: string | null;
   music?: string | null;
   ambient?: string | null;
+  station?: string | null;
   mapX: number;
   mapY: number;
 }
