@@ -133,6 +133,16 @@ export function CommandPalette({
         setSelectedIndex((prev) => Math.max(prev - 1, 0));
         return;
       }
+      if (e.key === "Home") {
+        e.preventDefault();
+        setSelectedIndex(0);
+        return;
+      }
+      if (e.key === "End") {
+        e.preventDefault();
+        setSelectedIndex(Math.max(flatItems.length - 1, 0));
+        return;
+      }
       if (e.key === "Enter" && flatItems.length > 0) {
         e.preventDefault();
         const cmd = flatItems[selectedIndex];
