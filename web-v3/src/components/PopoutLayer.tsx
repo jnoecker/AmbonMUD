@@ -51,7 +51,7 @@ export function PopoutLayer({
       >
         <header className="popout-header">
           <h2>{popoutTitle}</h2>
-          <button type="button" className="soft-button popout-close" onClick={onClose}>
+          <button type="button" className="soft-button popout-close" aria-label={`Close ${popoutTitle}`} onClick={onClose}>
             Close
           </button>
         </header>
@@ -96,6 +96,7 @@ export function PopoutLayer({
                             type="button"
                             className="room-exit-btn"
                             title="Click to move, Shift+Click to peek"
+                            aria-label={`Move ${direction}`}
                             onClick={(e) => {
                               if (e.shiftKey) {
                                 onFeatureAction(`look ${direction}`);
@@ -120,27 +121,27 @@ export function PopoutLayer({
                         {f.state && <span className="room-feature-state">({f.state})</span>}
                         <span className="room-feature-actions">
                           {(f.type === "door" || f.type === "container") && f.state === "closed" && (
-                            <button className="room-feature-btn" onClick={() => onFeatureAction(`open ${f.keyword}`)}>Open</button>
+                            <button className="room-feature-btn" aria-label={`Open ${f.name}`} onClick={() => onFeatureAction(`open ${f.keyword}`)}>Open</button>
                           )}
                           {(f.type === "door" || f.type === "container") && f.state === "open" && (
-                            <button className="room-feature-btn" onClick={() => onFeatureAction(f.type === "container" ? `search ${f.keyword}` : `close ${f.keyword}`)}>
+                            <button className="room-feature-btn" aria-label={`${f.type === "container" ? "Search" : "Close"} ${f.name}`} onClick={() => onFeatureAction(f.type === "container" ? `search ${f.keyword}` : `close ${f.keyword}`)}>
                               {f.type === "container" ? "Search" : "Close"}
                             </button>
                           )}
                           {f.type === "container" && f.state === "open" && (
-                            <button className="room-feature-btn" onClick={() => onFeatureAction(`close ${f.keyword}`)}>Close</button>
+                            <button className="room-feature-btn" aria-label={`Close ${f.name}`} onClick={() => onFeatureAction(`close ${f.keyword}`)}>Close</button>
                           )}
                           {(f.type === "door" || f.type === "container") && f.state === "closed" && f.locked === false && (
-                            <button className="room-feature-btn" onClick={() => onFeatureAction(`lock ${f.keyword}`)}>Lock</button>
+                            <button className="room-feature-btn" aria-label={`Lock ${f.name}`} onClick={() => onFeatureAction(`lock ${f.keyword}`)}>Lock</button>
                           )}
                           {(f.type === "door" || f.type === "container") && f.state === "locked" && (
-                            <button className="room-feature-btn" onClick={() => onFeatureAction(`unlock ${f.keyword}`)}>Unlock</button>
+                            <button className="room-feature-btn" aria-label={`Unlock ${f.name}`} onClick={() => onFeatureAction(`unlock ${f.keyword}`)}>Unlock</button>
                           )}
                           {f.type === "lever" && (
-                            <button className="room-feature-btn" onClick={() => onFeatureAction(`pull ${f.keyword}`)}>Pull</button>
+                            <button className="room-feature-btn" aria-label={`Pull ${f.name}`} onClick={() => onFeatureAction(`pull ${f.keyword}`)}>Pull</button>
                           )}
                           {f.type === "sign" && (
-                            <button className="room-feature-btn" onClick={() => onFeatureAction(`read ${f.keyword}`)}>Read</button>
+                            <button className="room-feature-btn" aria-label={`Read ${f.name}`} onClick={() => onFeatureAction(`read ${f.keyword}`)}>Read</button>
                           )}
                         </span>
                         {f.type === "sign" && f.text && (
