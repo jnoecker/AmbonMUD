@@ -1,6 +1,7 @@
 import type {
   CharacterInfo,
   CombatTarget,
+  CraftingNode,
   DialogueState,
   GroupInfo,
   QuestAvailable,
@@ -29,6 +30,7 @@ export interface GameStateSnapshot {
   dialogue: DialogueState | null;
   questsAvailable: QuestAvailable[];
   shop: ShopState | null;
+  craftingNodes: CraftingNode[];
   serverAssets: Record<string, string>;
 }
 
@@ -85,6 +87,7 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     dialogue: null,
     questsAvailable: [],
     shop: null,
+    craftingNodes: [],
     serverAssets: {},
   },
 };
