@@ -3,8 +3,8 @@ import type { StatusEffect } from "../../types";
 
 const ICON_SIZE = 20;
 const ICON_GAP = 4;
-const BUFF_BORDER = 0x64b5f6;
-const DEBUFF_BORDER = 0xef5350;
+const BUFF_BORDER = 0x8caec9;
+const DEBUFF_BORDER = 0xd4888a;
 const ICON_BG = 0x2a3149;
 
 const DEBUFF_TYPES = new Set(["dot", "stun", "root", "slow", "weaken", "blind", "poison", "curse"]);

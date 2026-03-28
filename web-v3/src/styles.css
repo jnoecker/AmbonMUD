@@ -37,11 +37,11 @@
   --color-status-ready: #cde6bf;
   --color-cooldown: #d9c8a1;
   --color-error: #e8a0a0;
-  --color-damage: #ff6b6b;
-  --color-heal: #6bff8a;
-  --color-info: #90caf9;
-  --color-dodge: #fff176;
-  --color-xp: #ffd54f;
+  --color-damage: #d4888a;
+  --color-heal: #8abf8a;
+  --color-info: #8caec9;
+  --color-dodge: #d9c8a1;
+  --color-xp: #bea873;
 
   /* ── Surfaces ─────────────────────────────────────────── */
   --line-soft: rgb(151 166 204 / 36%);
@@ -8225,40 +8225,40 @@ body {
 }
 
 .combat-log-msg-damage {
-  color: var(--color-damage, #ff6b6b);
-  border-left: 2px solid var(--color-damage, #ff6b6b);
+  color: var(--color-damage, #d4888a);
+  border-left: 2px solid var(--color-damage, #d4888a);
 }
 
 .combat-log-msg-heal {
-  color: var(--color-heal, #6bff8a);
-  border-left: 2px solid var(--color-heal, #6bff8a);
+  color: var(--color-heal, #8abf8a);
+  border-left: 2px solid var(--color-heal, #8abf8a);
 }
 
 .combat-log-msg-error {
-  color: var(--color-error, #ff8a65);
-  border-left: 2px solid var(--color-error, #ff8a65);
+  color: var(--color-error, #e8a0a0);
+  border-left: 2px solid var(--color-error, #e8a0a0);
 }
 
 .combat-log-msg-info {
-  color: var(--color-info, #90caf9);
-  border-left: 2px solid var(--color-info, #90caf9);
+  color: var(--color-info, #8caec9);
+  border-left: 2px solid var(--color-info, #8caec9);
 }
 
 .combat-log-msg-kill {
-  color: var(--color-xp, #ffd54f);
-  border-left: 2px solid var(--color-xp, #ffd54f);
+  color: var(--color-xp, #bea873);
+  border-left: 2px solid var(--color-xp, #bea873);
   font-weight: 600;
 }
 
 .combat-log-msg-dodge {
-  color: var(--color-dodge, #fff176);
-  border-left: 2px solid var(--color-dodge, #fff176);
+  color: var(--color-dodge, #d9c8a1);
+  border-left: 2px solid var(--color-dodge, #d9c8a1);
   font-style: italic;
 }
 
 .combat-log-msg-xp {
-  color: var(--color-xp, #ffd54f);
-  border-left: 2px solid var(--color-xp, #ffd54f);
+  color: var(--color-xp, #bea873);
+  border-left: 2px solid var(--color-xp, #bea873);
 }
 
 @media (prefers-reduced-motion: reduce) {

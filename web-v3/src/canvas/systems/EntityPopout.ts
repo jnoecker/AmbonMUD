@@ -84,7 +84,7 @@ export class EntityPopout {
 
     // Attack — prominent for aggressive/combat mobs, available for all
     if (isAggressive || !isNpc) {
-      actions.push({ label: "Attack", command: `kill ${name}`, color: 0xef5350 });
+      actions.push({ label: "Attack", command: `kill ${name}`, color: 0xd4888a });
     }
 
     // Look is always available
@@ -110,7 +110,7 @@ export class EntityPopout {
     if (info?.aggressive) roleParts.push("Hostile");
     const roleLabel = roleParts.join(" \u00B7 ");
     const subtitle = description || roleLabel || (maxHp > 0 ? `HP: ${hp}/${maxHp}` : "");
-    const tint = isAggressive ? 0xef5350 : info?.shopKeeper ? 0x81a2be : info?.questGiver ? 0xf0c674 : 0xf0c674;
+    const tint = isAggressive ? 0xd4888a : info?.shopKeeper ? 0x81a2be : info?.questGiver ? 0xf0c674 : 0xf0c674;
     this.show(name + roleTag, subtitle, image ?? null, tint, actions);
   }
 
