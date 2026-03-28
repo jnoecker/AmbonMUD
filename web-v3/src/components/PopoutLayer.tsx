@@ -63,6 +63,7 @@ export function PopoutLayer({
               className="mini-map mini-map-popout"
               width={900}
               height={560}
+              role="img"
               aria-label="Visited room map"
             />
           </div>
