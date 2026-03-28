@@ -4,7 +4,7 @@ import { canvasCallbacks } from "../GameStateBridge";
 const POPOUT_WIDTH = 200;
 const POPOUT_PADDING = 12;
 const SPRITE_PREVIEW_SIZE = 80;
-const BUTTON_HEIGHT = 28;
+const BUTTON_HEIGHT = 44;
 const BUTTON_GAP = 6;
 const BUTTON_RADIUS = 6;
 const BG_COLOR = 0x1e2340;
@@ -280,7 +280,7 @@ export class EntityPopout {
     this.closeBtn.clear();
     const closeX = popX + POPOUT_WIDTH - 24;
     const closeY = popY + 8;
-    this.closeBtn.circle(closeX, closeY, 10);
+    this.closeBtn.circle(closeX, closeY, 16);
     this.closeBtn.fill({ color: 0x3a3a5a, alpha: 0.8 });
     // Draw X
     this.closeBtn.moveTo(closeX - 4, closeY - 4);

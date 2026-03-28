@@ -399,10 +399,15 @@ body {
 }
 
 .soft-button:hover {
-  transform: translateY(-1px);
   background: linear-gradient(135deg, rgb(96 81 116 / 92%), rgb(76 99 132 / 88%));
   border-color: rgb(126 136 171 / 54%);
   box-shadow: var(--shadow-md), var(--shadow-glow);
+}
+
+@media (hover: hover) {
+  .soft-button:hover {
+    transform: translateY(-1px);
+  }
 }
 
 .soft-button:active {
@@ -436,7 +441,7 @@ body {
 .crafting-tab:focus-visible,
 .crafting-craft-button:focus-visible,
 .crafting-gather-button:focus-visible {
-  outline: none;
+  outline: 2px solid transparent;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
     0 0 0 4px rgb(216 197 232 / 30%);
@@ -585,7 +590,7 @@ body {
 }
 
 .panel-action-button:focus-visible {
-  outline: none;
+  outline: 2px solid transparent;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
     0 0 0 4px rgb(216 197 232 / 30%);
@@ -637,7 +642,7 @@ body {
 }
 
 .map-icon-trigger:focus-visible {
-  outline: none;
+  outline: 2px solid transparent;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
     0 0 0 4px rgb(216 197 232 / 30%);
@@ -722,6 +727,7 @@ body {
   background: linear-gradient(135deg, rgb(83 99 134 / 90%), rgb(92 78 122 / 84%));
   color: var(--text-primary);
   font-weight: 700;
+  min-height: 44px;
   height: 36px;
   padding: 0 12px;
   flex: 0 0 auto;
@@ -1071,6 +1077,7 @@ body {
   font: inherit;
   text-transform: inherit;
   letter-spacing: inherit;
+  min-height: 44px;
 }
 
 .who-sort-btn:hover {
@@ -1125,6 +1132,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   width: 28px;
   height: 28px;
   border-radius: 999px;
@@ -1150,7 +1159,7 @@ body {
 }
 
 .who-tell-button:focus-visible {
-  outline: none;
+  outline: 2px solid transparent;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
     0 0 0 4px rgb(216 197 232 / 30%);
@@ -1165,6 +1174,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   width: 28px;
   height: 28px;
   padding: 0;
@@ -1578,6 +1589,7 @@ body {
 .social-action-btn {
   flex-shrink: 0;
   font-size: 0.78rem;
+  min-height: 44px;
   padding: 4px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid rgb(106 96 136 / 24%);
@@ -2237,7 +2249,7 @@ body {
 }
 
 .compass-node:focus-visible {
-  outline: none;
+  outline: 2px solid transparent;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
     0 0 0 4px rgb(216 197 232 / 30%);
@@ -4593,6 +4605,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   width: 28px;
   height: 28px;
   border: 1px solid transparent;
@@ -5140,7 +5154,7 @@ body {
 }
 
 .mob-command-button:focus-visible {
-  outline: none;
+  outline: 2px solid transparent;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
     0 0 0 4px rgb(216 197 232 / 30%);
@@ -6100,7 +6114,7 @@ body {
 }
 
 .room-exit-btn:focus-visible {
-  outline: none;
+  outline: 2px solid transparent;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
     0 0 0 4px rgb(216 197 232 / 30%);
@@ -6181,7 +6195,7 @@ body {
 }
 
 .room-feature-btn:focus-visible {
-  outline: none;
+  outline: 2px solid transparent;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
     0 0 0 4px rgb(216 197 232 / 30%);
@@ -6608,7 +6622,7 @@ body {
 }
 
 .entity-detail-action-button:focus-visible {
-  outline: none;
+  outline: 2px solid transparent;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
     0 0 0 4px rgb(216 197 232 / 30%);
@@ -8568,7 +8582,7 @@ body {
 }
 
 .video-modal-close:focus-visible {
-  outline: none;
+  outline: 2px solid transparent;
   box-shadow:
     0 0 0 2px rgb(184 216 232 / 58%),
     0 0 0 4px rgb(216 197 232 / 30%);

@@ -308,6 +308,7 @@ export function ChatPanel({
                       type="button"
                       className="emote-preset-btn"
                       title={`${playerName} ${preset.action}`}
+                      aria-label={preset.label}
                       onClick={() => { onCommand(`emote ${preset.action}`); }}
                     >
                       <span className="emote-preset-emoji">{preset.emoji}</span>
@@ -437,8 +438,8 @@ export function ChatPanel({
                               )}
                               {friendConfirmRemove === friend.name ? (
                                 <span className="social-confirm-inline">
-                                  <button type="button" className="social-confirm-yes" onClick={() => { onCommand(`friend remove ${friend.name}`); setFriendConfirmRemove(null); }}>Remove?</button>
-                                  <button type="button" className="social-confirm-no" onClick={() => setFriendConfirmRemove(null)}>&times;</button>
+                                  <button type="button" className="social-confirm-yes" aria-label="Confirm removal" onClick={() => { onCommand(`friend remove ${friend.name}`); setFriendConfirmRemove(null); }}>Remove?</button>
+                                  <button type="button" className="social-confirm-no" aria-label="Cancel removal" onClick={() => setFriendConfirmRemove(null)}>&times;</button>
                                 </span>
                               ) : (
                                 <button

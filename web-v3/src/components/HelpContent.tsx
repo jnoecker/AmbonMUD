@@ -287,6 +287,7 @@ export function HelpContent({ isStaff, serverCommands }: HelpContentProps) {
           type="text"
           className="help-search-input"
           placeholder="Search commands..."
+          aria-label="Search help commands"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           autoFocus
