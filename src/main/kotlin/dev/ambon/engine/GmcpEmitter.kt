@@ -1197,6 +1197,21 @@ class GmcpEmitter(
         )
     }
 
+    // ---------- server broadcast ----------
+
+    suspend fun sendServerBroadcast(
+        sessionId: SessionId,
+        sender: String,
+        message: String,
+    ) {
+        emit(
+            sessionId,
+            "Server.Broadcast",
+            ServerBroadcastPayload(sender = sender, message = message),
+            supportCheck = "Server",
+        )
+    }
+
     // ---------- staff world info ----------
 
     /**
@@ -1789,6 +1804,13 @@ class GmcpEmitter(
         val guild: String?,
         val groupSize: Int,
         val idle: Long,
+    )
+
+    // ---------- server broadcast payload ----------
+
+    private data class ServerBroadcastPayload(
+        val sender: String,
+        val message: String,
     )
 
     // ---------- server commands payload ----------
