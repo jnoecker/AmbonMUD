@@ -18,7 +18,7 @@ const PARTY_LABEL_FONT_SIZE = 13;
 
 const PLAYER_TINT = 0x81a2be;
 const ENEMY_TINT = 0xf0c674;
-const HP_COLOR = 0x81c784;
+const HP_COLOR = 0x8abf8a;
 const HP_BG_COLOR = 0x3a3a3a;
 const MANA_COLOR = 0x64b5f6;
 const LABEL_COLOR = "#d8dcef";
@@ -120,10 +120,10 @@ export class BattleScene {
     this.container.addChild(this.spellProjectiles.graphics);
     this.container.addChild(this.gainPopups.container);
 
-    this.fleeBtn = this.buildActionButton("Flee", 0xef5350, 0x4a1a1a, () => {
+    this.fleeBtn = this.buildActionButton("Flee", 0xd4888a, 0x4a1a1a, () => {
       canvasCallbacks.sendCommand?.("flee");
     });
-    this.smiteBtn = this.buildActionButton("Smite", 0xffd54f, 0x3a3020, () => {
+    this.smiteBtn = this.buildActionButton("Smite", 0xbea873, 0x3a3020, () => {
       const target = gameStateRef.current.combatTarget?.targetName;
       if (target) {
         canvasCallbacks.sendCommand?.(`smite ${target}`);
@@ -308,7 +308,7 @@ export class BattleScene {
       } else {
         this.smiteFlashGraphics.clear();
         this.smiteFlashGraphics.rect(0, 0, this.width, this.height);
-        this.smiteFlashGraphics.fill({ color: 0xffd54f, alpha: this.smiteFlashAlpha * 0.7 });
+        this.smiteFlashGraphics.fill({ color: 0xbea873, alpha: this.smiteFlashAlpha * 0.7 });
       }
     }
 
@@ -443,7 +443,7 @@ export class BattleScene {
       this.enemyHpBar.fill(HP_BG_COLOR);
       if (enemyHpPct > 0) {
         this.enemyHpBar.roundRect(enemyPos.x - HP_BAR_WIDTH / 2, enemyPos.y + enemySize / 2 + 24, HP_BAR_WIDTH * enemyHpPct / 100, HP_BAR_HEIGHT, 2);
-        this.enemyHpBar.fill(0xef5350);
+        this.enemyHpBar.fill(0xd4888a);
       }
       this.enemyHpText.text = `${enemyHp}/${enemyMaxHp}`;
     } else {
