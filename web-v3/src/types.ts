@@ -301,6 +301,7 @@ export interface QuestObjective {
   description: string;
   current: number;
   required: number;
+  targetRoomIds?: string[];
 }
 
 export interface QuestEntry {

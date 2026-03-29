@@ -12,6 +12,8 @@ const LINE_STROKE = "rgba(40, 35, 28, 0.6)";
 const FOG_FILL = "rgba(42, 48, 80, 0.5)";
 const FOG_STROKE = "rgba(58, 64, 96, 0.35)";
 const NODE_STROKE = "rgba(90, 106, 144, 0.5)";
+const QUEST_MARKER = "#bea873";
+const QUEST_PULSE_PERIOD = 2500; // ms for one full cycle
 const CELL = 64;
 const NODE_RADIUS = 18;
 const CURRENT_RADIUS = 24;
@@ -34,6 +36,7 @@ function renderMap(
   loadingImages: Set<string>,
   fogImage: HTMLImageElement | null,
   bgImage: HTMLImageElement | null,
+  questTargetRoomIds: Set<string>,
   scheduleRedraw: () => void,
 ) {
   const ctx = canvas.getContext("2d");
@@ -77,8 +80,8 @@ function renderMap(
   const scrollTop = height * SCROLL_INSET_TOP;
   const scrollBottom = height * (1 - SCROLL_INSET_BOTTOM);
 
-  // Pad inward by the largest node radius so nodes don't overlap the scroll edge
-  const nodePad = CURRENT_RADIUS + 6;
+  // Pad inward by the largest node radius + quest diamond height so markers don't clip
+  const nodePad = CURRENT_RADIUS + 14;
 
   // Compute bounding box of all rooms in the zone to auto-fit
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -169,6 +172,32 @@ function renderMap(
     }
     ctx.stroke();
 
+    // Quest objective marker — pulsing gold ring (static at 0.7 for reduced-motion)
+    if (!isCurrent && questTargetRoomIds.has(id)) {
+      const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const pulse = reducedMotion ? 0.7 : 0.4 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
+      ctx.save();
+      ctx.globalAlpha = pulse;
+      ctx.strokeStyle = QUEST_MARKER;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
+      ctx.stroke();
+      // Small diamond marker above the node
+      const mx = x;
+      const my = y - radius - 7;
+      ctx.fillStyle = QUEST_MARKER;
+      ctx.beginPath();
+      ctx.moveTo(mx, my - 5);
+      ctx.lineTo(mx + 4, my);
+      ctx.lineTo(mx, my + 5);
+      ctx.lineTo(mx - 4, my);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
     // Fog-of-war thumbnail for unexplored rooms
     if (!isVisited && fogImage && fogImage.complete) {
       ctx.save();
@@ -225,6 +254,52 @@ function renderMap(
     }
   }
 
+  // Off-screen quest target edge indicators — gold chevrons at the scroll
+  // parchment rim pointing toward quest rooms that are outside visible bounds.
+  const reducedMotionEdge = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const edgePulse = reducedMotionEdge ? 0.6 : 0.35 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
+  for (const targetId of questTargetRoomIds) {
+    const targetNode = visited.get(targetId);
+    if (!targetNode) continue;
+    const tx = nodeX(targetNode);
+    const ty = nodeY(targetNode);
+    if (inScrollBounds(tx, ty)) continue; // already visible
+    // Direction from center to the target
+    const ddx = tx - originX;
+    const ddy = ty - originY;
+    const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+    if (dist === 0) continue;
+    const nx = ddx / dist;
+    const ny = ddy / dist;
+    // Place on the scroll edge
+    const padIn = 14;
+    const ex = Math.max(scrollLeft + padIn, Math.min(scrollRight - padIn, originX + nx * Math.min(dist, availW / 2)));
+    const ey = Math.max(scrollTop + padIn, Math.min(scrollBottom - padIn, originY + ny * Math.min(dist, availH / 2)));
+    const angle = Math.atan2(ddy, ddx);
+    const chevLen = 7;
+    const chevSpread = 0.5;
+    const tipX = ex + Math.cos(angle) * 3;
+    const tipY = ey + Math.sin(angle) * 3;
+    ctx.save();
+    ctx.globalAlpha = edgePulse;
+    ctx.strokeStyle = QUEST_MARKER;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX - Math.cos(angle - chevSpread) * chevLen, tipY - Math.sin(angle - chevSpread) * chevLen);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX - Math.cos(angle + chevSpread) * chevLen, tipY - Math.sin(angle + chevSpread) * chevLen);
+    ctx.stroke();
+    // Glow dot
+    ctx.fillStyle = QUEST_MARKER;
+    ctx.beginPath();
+    ctx.arc(ex, ey, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   // Restore from scroll-bounds clip
   ctx.restore();
 }
@@ -237,6 +312,7 @@ export function useMiniMap() {
   const loadingImages = useRef<Set<string>>(new Set());
   const fogImageRef = useRef<HTMLImageElement | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
+  const pulseRafRef = useRef<number | null>(null);
 
   const drawMap = useCallback(() => {
     const canvas = mapCanvasRef.current;
@@ -258,6 +334,7 @@ export function useMiniMap() {
 
     const fog = fogImageRef.current?.complete ? fogImageRef.current : null;
     const bg = bgImageRef.current?.complete ? bgImageRef.current : null;
+    const questRooms = gameStateRef.current.questTargetRoomIds;
     renderMap(
       canvas,
       visitedRef.current,
@@ -266,12 +343,13 @@ export function useMiniMap() {
       loadingImages.current,
       fog,
       bg,
+      questRooms,
       () => {
         const c = mapCanvasRef.current;
         if (c) {
           const f = fogImageRef.current?.complete ? fogImageRef.current : null;
           const b = bgImageRef.current?.complete ? bgImageRef.current : null;
-          renderMap(c, visitedRef.current, currentRoomIdRef.current, imageCache.current, loadingImages.current, f, b, () => {});
+          renderMap(c, visitedRef.current, currentRoomIdRef.current, imageCache.current, loadingImages.current, f, b, questRooms, () => {});
         }
       },
     );
@@ -340,11 +418,33 @@ export function useMiniMap() {
     drawMap();
   }, [drawMap]);
 
+  /** Start a gentle animation loop for quest marker pulse (call when map is visible). */
+  const startPulse = useCallback(() => {
+    if (pulseRafRef.current != null) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) return;
+    const tick = () => {
+      drawMap();
+      pulseRafRef.current = requestAnimationFrame(tick);
+    };
+    pulseRafRef.current = requestAnimationFrame(tick);
+  }, [drawMap]);
+
+  /** Stop the animation loop (call when map is hidden). */
+  const stopPulse = useCallback(() => {
+    if (pulseRafRef.current != null) {
+      cancelAnimationFrame(pulseRafRef.current);
+      pulseRafRef.current = null;
+    }
+  }, []);
+
   return {
     mapCanvasRef,
     drawMap,
     updateMap,
     loadZoneMap,
     resetMap,
+    startPulse,
+    stopPulse,
   };
 }

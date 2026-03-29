@@ -355,6 +355,7 @@ export class WorldScene {
 
     // Update minimap
     this.minimap.updateRoom(room.id, room.exits, room.title !== "-" ? room.title : "", room.image ?? null, room.mapX, room.mapY);
+    this.minimap.tick(deltaMs);
 
     if (room.image !== this.lastRoomImage) {
       this.lastRoomImage = room.image;
