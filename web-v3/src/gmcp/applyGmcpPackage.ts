@@ -860,6 +860,9 @@ export function applyGmcpPackage(
                   description: typeof o.description === "string" ? o.description : "",
                   current: safeNumber(o.current),
                   required: safeNumber(o.required, 1),
+                  ...(Array.isArray(o.targetRoomIds) && o.targetRoomIds.length > 0 && {
+                    targetRoomIds: o.targetRoomIds.filter((r): r is string => typeof r === "string"),
+                  }),
                 }))
             : [],
         }));

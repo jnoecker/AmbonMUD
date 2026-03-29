@@ -625,6 +625,13 @@ function App() {
       questsAvailable,
       shop,
       craftingNodes,
+      questTargetRoomIds: new Set(
+        quests.flatMap((q) =>
+          q.objectives
+            .filter((o) => o.current < o.required)
+            .flatMap((o) => o.targetRoomIds ?? []),
+        ),
+      ),
       serverAssets,
     };
   });

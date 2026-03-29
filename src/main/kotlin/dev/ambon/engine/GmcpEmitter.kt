@@ -740,7 +740,12 @@ class GmcpEmitter(
                 name = q.name,
                 description = q.description,
                 objectives = q.objectives.map { o ->
-                    QuestObjectivePayload(description = o.description, current = o.current, required = o.required)
+                    QuestObjectivePayload(
+                        description = o.description,
+                        current = o.current,
+                        required = o.required,
+                        targetRoomIds = o.targetRoomIds,
+                    )
                 },
             )
         }
@@ -1664,6 +1669,7 @@ class GmcpEmitter(
         val description: String,
         val current: Int,
         val required: Int,
+        val targetRoomIds: List<String> = emptyList(),
     )
 
     private data class QuestUpdatePayload(
@@ -2041,6 +2047,7 @@ data class QuestObjectiveEntry(
     val description: String,
     val current: Int,
     val required: Int,
+    val targetRoomIds: List<String> = emptyList(),
 )
 
 data class QuestAvailableEntry(
