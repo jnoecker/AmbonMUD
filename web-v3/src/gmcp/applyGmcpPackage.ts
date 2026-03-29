@@ -749,7 +749,8 @@ export function applyGmcpPackage(
     case "Comm.Channel": {
       const packet = data as Partial<Record<string, unknown>>;
       const incomingChannel = typeof packet.channel === "string" ? packet.channel.toLowerCase() : "";
-      const mappedChannel = incomingChannel === "whisper" ? "tell" : incomingChannel;
+      const isWhisper = incomingChannel === "whisper";
+      const mappedChannel = isWhisper ? "tell" : incomingChannel;
       if (!isChatChannel(mappedChannel)) break;
 
       const sender = typeof packet.sender === "string" && packet.sender.length > 0 ? packet.sender : "Unknown";
@@ -762,6 +763,7 @@ export function applyGmcpPackage(
         sender,
         message,
         receivedAt: Date.now(),
+        ...(isWhisper && { isWhisper: true }),
       };
 
       ctx.setChatByChannel((prev) => {
