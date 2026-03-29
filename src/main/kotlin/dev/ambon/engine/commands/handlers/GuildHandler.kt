@@ -18,6 +18,7 @@ class GuildHandler(
         router.on<Command.Guild.Disband> { sid, _ -> handleGuildCmd(sid, Command.Guild.Disband) }
         router.on<Command.Guild.Invite> { sid, cmd -> handleGuildCmd(sid, cmd) }
         router.on<Command.Guild.Accept> { sid, _ -> handleGuildCmd(sid, Command.Guild.Accept) }
+        router.on<Command.Guild.Decline> { sid, _ -> handleGuildCmd(sid, Command.Guild.Decline) }
         router.on<Command.Guild.Leave> { sid, _ -> handleGuildCmd(sid, Command.Guild.Leave) }
         router.on<Command.Guild.Kick> { sid, cmd -> handleGuildCmd(sid, cmd) }
         router.on<Command.Guild.Promote> { sid, cmd -> handleGuildCmd(sid, cmd) }
@@ -39,6 +40,7 @@ class GuildHandler(
                 Command.Guild.Disband -> gs.disband(sessionId)
                 is Command.Guild.Invite -> gs.invite(sessionId, cmd.target)
                 Command.Guild.Accept -> gs.accept(sessionId)
+                Command.Guild.Decline -> gs.decline(sessionId)
                 Command.Guild.Leave -> gs.leave(sessionId)
                 is Command.Guild.Kick -> gs.kick(sessionId, cmd.target)
                 is Command.Guild.Promote -> gs.promote(sessionId, cmd.target)

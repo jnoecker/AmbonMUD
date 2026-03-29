@@ -217,6 +217,22 @@ class GuildSystem(
         return null
     }
 
+    suspend fun decline(sessionId: SessionId): String? {
+        pruneExpiredInvites()
+        val invite = pendingInvites.remove(sessionId)
+            ?: return "You have no pending guild invite."
+        outbound.send(OutboundEvent.SendInfo(sessionId, "You decline the guild invite."))
+        // Notify the inviter if online
+        val inviterSid = players.findSessionByName(invite.inviterName)
+        if (inviterSid != null) {
+            val declineName = players.get(sessionId)?.name ?: "Someone"
+            outbound.send(
+                OutboundEvent.SendInfo(inviterSid, "$declineName declined the guild invite."),
+            )
+        }
+        return null
+    }
+
     suspend fun leave(sessionId: SessionId): String? = withMembership(sessionId) { ps, guild ->
         val pid = ps.playerId ?: return@withMembership ERR_NOT_CONNECTED
         val rank = ps.guildRank ?: return@withMembership ERR_NOT_CONNECTED

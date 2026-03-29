@@ -229,6 +229,8 @@ sealed interface Command {
 
         data object Accept : GroupCmd
 
+        data object Decline : GroupCmd
+
         data object Leave : GroupCmd
 
         data class Kick(
@@ -259,6 +261,8 @@ sealed interface Command {
         ) : Guild
 
         data object Accept : Guild
+
+        data object Decline : Guild
 
         data object Leave : Guild
 
@@ -539,6 +543,7 @@ object CommandParser {
                     if (target.isEmpty()) Command.Invalid(line, "guild invite <player>") else Command.Guild.Invite(target)
                 }
                 "accept" -> Command.Guild.Accept
+                "decline", "reject" -> Command.Guild.Decline
                 "leave" -> Command.Guild.Leave
                 "kick" -> {
                     val target = parts.getOrNull(1)?.trim() ?: ""
@@ -572,6 +577,7 @@ object CommandParser {
                     if (target.isEmpty()) Command.Invalid(line, "group invite <player>") else Command.GroupCmd.Invite(target)
                 }
                 "accept", "acc" -> Command.GroupCmd.Accept
+                "decline", "reject" -> Command.GroupCmd.Decline
                 "leave" -> Command.GroupCmd.Leave
                 "kick" -> {
                     val target = parts.getOrNull(1)?.trim() ?: ""
