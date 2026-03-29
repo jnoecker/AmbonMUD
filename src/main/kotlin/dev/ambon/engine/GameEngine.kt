@@ -15,6 +15,7 @@ import dev.ambon.engine.abilities.AbilityRegistry
 import dev.ambon.engine.abilities.AbilityRegistryLoader
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.behavior.BehaviorTreeSystem
+import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
@@ -198,9 +199,17 @@ class GameEngine(
                 sendQuestListGmcp(sid)
                 markStatsDirty(sid)
                 broadcastServerWho()
+                issueResumeToken(sid)
             },
         )
     }
+
+    private val gracePeriodManager: SessionGracePeriodManager? =
+        if (engineConfig.sessionResumeGracePeriodMs > 0) {
+            SessionGracePeriodManager(engineConfig.sessionResumeGracePeriodMs, clock)
+        } else {
+            null
+        }
 
     private val sessionEventHandler by lazy {
         SessionEventHandler(
@@ -221,6 +230,7 @@ class GameEngine(
             handoffManager = handoffManager,
             removePendingWhoRequestsFor = interEngineEventHandler::removePendingWhoRequestsFor,
             sessionLifecycle = sessionLifecycleCoordinator,
+            gracePeriodManager = gracePeriodManager,
             promptForName = loginFlowHandler::promptForName,
             showLoginScreen = { sid -> outbound.send(OutboundEvent.ShowLoginScreen(sid)) },
             onPlayerLoggedOut = { player, sid ->
@@ -313,6 +323,7 @@ class GameEngine(
             groupSystem = groupSystem,
             guildSystem = guildSystem,
             gmcpEmitter = gmcpEmitter,
+            onResumeRequested = if (gracePeriodManager != null) ::handleSessionResume else null,
             logger = log,
             metrics = metrics,
         )
@@ -895,6 +906,18 @@ class GameEngine(
         coroutineScope {
             engineScope = this
 
+            // Wire grace period cancellation into the player registry so that
+            // normal logins cancel any suspended session for the same player name.
+            if (gracePeriodManager != null) {
+                players.cancelGracePeriod = { name ->
+                    val cancelled = gracePeriodManager.cancelByName(name)
+                    if (cancelled != null) {
+                        log.info { "Cancelled grace period for $name (normal login)" }
+                        sessionEventHandler.fullDisconnect(cancelled.sessionId, cancelled.playerState)
+                    }
+                }
+            }
+
             // Load guild data into memory.
             guildSystem?.initialize()
 
@@ -1001,6 +1024,12 @@ class GameEngine(
 
                     // Tick gathering node respawns
                     craftingSystem.tickNodeRespawns()
+
+                    // Expire grace period sessions
+                    gracePeriodManager?.expireSessions()?.forEach { expired ->
+                        log.info { "Running deferred disconnect for ${expired.playerState.name}" }
+                        sessionEventHandler.fullDisconnect(expired.sessionId, expired.playerState)
+                    }
 
                     metrics.recordTickPhase("simulation", simulationPhaseSample)
 
@@ -1147,6 +1176,70 @@ class GameEngine(
         for (p in allPlayers) {
             gmcpEmitter.sendServerWho(p.sessionId, if (p.isStaff) allEntries else visibleEntries)
         }
+    }
+
+    /**
+     * Handle a Session.Resume GMCP from a newly connected client attempting
+     * to resume a suspended session via token.
+     */
+    private suspend fun handleSessionResume(newSessionId: SessionId, token: String) {
+        val mgr = gracePeriodManager ?: return
+        val suspended = mgr.resume(token)
+        if (suspended == null) {
+            gmcpEmitter.sendSessionResumeResult(newSessionId, false)
+            return
+        }
+
+        val oldSessionId = suspended.sessionId
+        log.info { "Resuming session: name=${suspended.playerState.name} old=$oldSessionId new=$newSessionId" }
+
+        // Clear the pending login state for the new session (it was set in onConnected)
+        loginFlowHandler.pendingLogins.remove(newSessionId)
+        loginFlowHandler.failedLoginAttempts.remove(newSessionId)
+
+        // Reattach the PlayerState to the new session
+        players.resumeSession(oldSessionId, newSessionId, suspended.playerState)
+
+        // Remap all subsystem state (combat, group, regen, etc.)
+        sessionLifecycleCoordinator.remapSession(oldSessionId, newSessionId)
+
+        // Restore GMCP session registrations
+        gmcpSessions[newSessionId] = suspended.gmcpPackages.toMutableSet()
+
+        // Notify client of success before full sync
+        gmcpEmitter.sendSessionResumeResult(newSessionId, true)
+
+        val me = players.get(newSessionId) ?: return
+        outbound.send(OutboundEvent.SetAnsi(newSessionId, me.ansiEnabled))
+        loginFlowHandler.onAfterLogin(newSessionId)
+
+        // Full state sync (same as login)
+        gmcpEmitter.sendFullCharacterSync(
+            newSessionId,
+            me,
+            items,
+            abilitySystem,
+            statusEffectSystem,
+            achievementRegistry,
+            groupSystem,
+            players,
+            guildSystem,
+        )
+        if (me.isStaff) {
+            gmcpEmitter.sendStaffWorldInfo(newSessionId, world)
+            gmcpEmitter.sendStaffMobTemplates(newSessionId, world)
+        }
+        router.handle(newSessionId, Command.Look)
+
+        // Issue a new resume token for the next potential disconnect
+        issueResumeToken(newSessionId)
+    }
+
+    /** Issue a resume token to the client after successful login/resume. */
+    private suspend fun issueResumeToken(sessionId: SessionId) {
+        val mgr = gracePeriodManager ?: return
+        val token = mgr.issueToken(sessionId)
+        gmcpEmitter.sendSessionResumeToken(sessionId, token, mgr.gracePeriodSeconds)
     }
 
     suspend fun sendQuestListGmcp(sessionId: SessionId) {

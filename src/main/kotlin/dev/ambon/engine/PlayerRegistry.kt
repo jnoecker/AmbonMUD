@@ -102,6 +102,13 @@ class PlayerRegistry(
     var startRoom: RoomId = startRoom
         internal set
 
+    /**
+     * Optional callback to cancel a grace period by player name.
+     * Set by GameEngine after construction so that normal login clears
+     * any suspended session for the same player before binding.
+     */
+    var cancelGracePeriod: (suspend (String) -> Unit)? = null
+
     private val players = mutableMapOf<SessionId, PlayerState>()
     private val roomMembers = mutableMapOf<RoomId, MutableSet<SessionId>>()
 
@@ -146,6 +153,11 @@ class PlayerRegistry(
         defaultAnsiEnabled: Boolean,
     ): LoginResult {
         if (players.containsKey(sessionId)) return LoginResult.InvalidName
+
+        // If the player is in the grace period (suspended), cancel it and
+        // clean up the stale session mapping so bindSession works cleanly.
+        cancelGracePeriod?.invoke(record.name)
+
         val now = clock.millis()
         return if (isNameOnline(record.name, sessionId)) {
             val oldSid = findSessionByName(record.name)!!
@@ -317,6 +329,41 @@ class PlayerRegistry(
         roomMembers.removeFromSet(ps.roomId, sessionId)
         sessionByLowerName.remove(ps.name.lowercase())
         items.removePlayer(sessionId)
+    }
+
+    /**
+     * Detach a player's session binding for grace period suspension.
+     * The PlayerState is removed from the active registry but NOT persisted
+     * or evicted — it will be reattached on resume or cleaned up on expiry.
+     */
+    fun suspendSession(sessionId: SessionId): PlayerState? {
+        val ps = players.remove(sessionId) ?: return null
+        // Keep the player in roomMembers and sessionByLowerName so they
+        // remain "visible" during the grace period. The sessionId will be
+        // stale but that's fine — outbound messages to it are dropped.
+        return ps
+    }
+
+    /**
+     * Reattach a suspended PlayerState to a new session after reconnect.
+     * Uses the same remap logic as session takeover.
+     */
+    suspend fun resumeSession(
+        oldSessionId: SessionId,
+        newSessionId: SessionId,
+        playerState: PlayerState,
+    ) {
+        val resumed = playerState.copy(sessionId = newSessionId)
+        players[newSessionId] = resumed
+
+        // Remap room membership
+        roomMembers[resumed.roomId]?.let { members ->
+            members.remove(oldSessionId)
+            members.add(newSessionId)
+        }
+
+        sessionByLowerName[resumed.name.lowercase()] = newSessionId
+        items.remapPlayer(oldSessionId, newSessionId)
     }
 
     /**
