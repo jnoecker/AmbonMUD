@@ -133,7 +133,7 @@ internal class LoginFlowHandler(
     maxWrongPasswordRetries: Int,
     maxFailedLoginAttemptsBeforeDisconnect: Int,
     maxConcurrentLogins: Int,
-    private val onAfterLogin: suspend (SessionId) -> Unit = {},
+    internal val onAfterLogin: suspend (SessionId) -> Unit = {},
 ) {
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
 
