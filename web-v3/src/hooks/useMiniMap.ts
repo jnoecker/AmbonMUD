@@ -12,8 +12,8 @@ const LINE_STROKE = "rgba(40, 35, 28, 0.6)";
 const FOG_FILL = "rgba(42, 48, 80, 0.5)";
 const FOG_STROKE = "rgba(58, 64, 96, 0.35)";
 const NODE_STROKE = "rgba(90, 106, 144, 0.5)";
-const QUEST_GLOW = "rgba(190, 168, 115, 0.6)";
 const QUEST_MARKER = "#bea873";
+const QUEST_PULSE_PERIOD = 2500; // ms for one full cycle
 const CELL = 64;
 const NODE_RADIUS = 18;
 const CURRENT_RADIUS = 24;
@@ -174,8 +174,10 @@ function renderMap(
 
     // Quest objective marker — pulsing gold ring
     if (!isCurrent && questTargetRoomIds.has(id)) {
+      const pulse = 0.4 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
       ctx.save();
-      ctx.strokeStyle = QUEST_GLOW;
+      ctx.globalAlpha = pulse;
+      ctx.strokeStyle = QUEST_MARKER;
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
@@ -191,6 +193,7 @@ function renderMap(
       ctx.lineTo(mx - 4, my);
       ctx.closePath();
       ctx.fill();
+      ctx.globalAlpha = 1;
       ctx.restore();
     }
 
@@ -252,6 +255,7 @@ function renderMap(
 
   // Off-screen quest target edge indicators — gold chevrons at the scroll
   // parchment rim pointing toward quest rooms that are outside visible bounds.
+  const edgePulse = 0.35 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
   for (const targetId of questTargetRoomIds) {
     const targetNode = visited.get(targetId);
     if (!targetNode) continue;
@@ -274,6 +278,8 @@ function renderMap(
     const chevSpread = 0.5;
     const tipX = ex + Math.cos(angle) * 3;
     const tipY = ey + Math.sin(angle) * 3;
+    ctx.save();
+    ctx.globalAlpha = edgePulse;
     ctx.strokeStyle = QUEST_MARKER;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -285,10 +291,11 @@ function renderMap(
     ctx.lineTo(tipX - Math.cos(angle + chevSpread) * chevLen, tipY - Math.sin(angle + chevSpread) * chevLen);
     ctx.stroke();
     // Glow dot
-    ctx.fillStyle = QUEST_GLOW;
+    ctx.fillStyle = QUEST_MARKER;
     ctx.beginPath();
     ctx.arc(ex, ey, 3, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
   }
 
   // Restore from scroll-bounds clip
@@ -303,6 +310,7 @@ export function useMiniMap() {
   const loadingImages = useRef<Set<string>>(new Set());
   const fogImageRef = useRef<HTMLImageElement | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
+  const pulseRafRef = useRef<number | null>(null);
 
   const drawMap = useCallback(() => {
     const canvas = mapCanvasRef.current;
@@ -408,11 +416,33 @@ export function useMiniMap() {
     drawMap();
   }, [drawMap]);
 
+  /** Start a gentle animation loop for quest marker pulse (call when map is visible). */
+  const startPulse = useCallback(() => {
+    if (pulseRafRef.current != null) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) return;
+    const tick = () => {
+      drawMap();
+      pulseRafRef.current = requestAnimationFrame(tick);
+    };
+    pulseRafRef.current = requestAnimationFrame(tick);
+  }, [drawMap]);
+
+  /** Stop the animation loop (call when map is hidden). */
+  const stopPulse = useCallback(() => {
+    if (pulseRafRef.current != null) {
+      cancelAnimationFrame(pulseRafRef.current);
+      pulseRafRef.current = null;
+    }
+  }, []);
+
   return {
     mapCanvasRef,
     drawMap,
     updateMap,
     loadZoneMap,
     resetMap,
+    startPulse,
+    stopPulse,
   };
 }

@@ -25,7 +25,7 @@ const CURRENT_GLOW = 0xe8d8a8;
 const LINE_COLOR = 0x4a5070;
 const FOG_COLOR = 0x2a3050;
 const QUEST_COLOR = 0xbea873;
-const QUEST_GLOW_ALPHA = 0.6;
+const QUEST_PULSE_PERIOD = 2500; // ms
 
 export class Minimap {
   readonly container = new Container();
@@ -57,6 +57,7 @@ export class Minimap {
 
   // Click navigation
   private clickAreas: Array<{ roomId: string; area: Graphics }> = [];
+  private pulseAccum = 0;
 
   // Up/down floor buttons (drawn outside the circle)
   private upButton = new Graphics();
@@ -389,10 +390,11 @@ export class Minimap {
         this.ensureThumb(id, node.image, nx, ny, radius, isCurrent ? 1 : 0.8, null);
       }
 
-      // Quest objective marker — gold ring + diamond
+      // Quest objective marker — pulsing gold ring + diamond
       if (!isCurrent && questTargets.has(id)) {
+        const pulse = 0.4 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
         this.mapGraphics.circle(nx, ny, radius + 4);
-        this.mapGraphics.stroke({ color: QUEST_COLOR, width: 2.5, alpha: QUEST_GLOW_ALPHA });
+        this.mapGraphics.stroke({ color: QUEST_COLOR, width: 2.5, alpha: pulse });
         // Small diamond above the node
         const dy = ny - radius - 7;
         this.mapGraphics.moveTo(nx, dy - 5);
@@ -400,12 +402,13 @@ export class Minimap {
         this.mapGraphics.lineTo(nx, dy + 5);
         this.mapGraphics.lineTo(nx - 4, dy);
         this.mapGraphics.closePath();
-        this.mapGraphics.fill({ color: QUEST_COLOR, alpha: 0.85 });
+        this.mapGraphics.fill({ color: QUEST_COLOR, alpha: pulse });
       }
     }
 
-    // Off-screen quest target edge indicators — subtle gold glow at the rim
+    // Off-screen quest target edge indicators — pulsing gold chevrons at the rim
     // pointing toward quest rooms that are beyond the 2-hop local neighborhood.
+    const edgePulse = 0.35 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
     if (questTargets.size > 0) {
       for (const targetRoomId of questTargets) {
         if (localPos.has(targetRoomId)) continue; // already visible on the map
@@ -430,10 +433,10 @@ export class Minimap {
         this.mapGraphics.lineTo(tipX - Math.cos(angle - chevSpread) * chevLen, tipY - Math.sin(angle - chevSpread) * chevLen);
         this.mapGraphics.moveTo(tipX, tipY);
         this.mapGraphics.lineTo(tipX - Math.cos(angle + chevSpread) * chevLen, tipY - Math.sin(angle + chevSpread) * chevLen);
-        this.mapGraphics.stroke({ color: QUEST_COLOR, width: 2, alpha: 0.7 });
+        this.mapGraphics.stroke({ color: QUEST_COLOR, width: 2, alpha: edgePulse });
         // Small glow dot
         this.mapGraphics.circle(ex, ey, 3);
-        this.mapGraphics.fill({ color: QUEST_COLOR, alpha: 0.5 });
+        this.mapGraphics.fill({ color: QUEST_COLOR, alpha: edgePulse * 0.7 });
       }
     }
 
@@ -546,6 +549,15 @@ export class Minimap {
     const dy = y - this._radius;
     const maxR = this._radius - this._currentRadius - 6;
     return dx * dx + dy * dy <= maxR * maxR;
+  }
+
+  /** Called from the PixiJS ticker to animate quest marker pulse (~15fps). */
+  tick(deltaMs: number) {
+    if (gameStateRef.current.questTargetRoomIds.size === 0 || !this.currentRoomId) return;
+    this.pulseAccum += deltaMs;
+    if (this.pulseAccum < 67) return;
+    this.pulseAccum = 0;
+    this.redraw();
   }
 
   destroy() {
