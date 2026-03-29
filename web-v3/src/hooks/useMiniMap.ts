@@ -14,16 +14,16 @@ const FOG_STROKE = "rgba(58, 64, 96, 0.35)";
 const NODE_STROKE = "rgba(90, 106, 144, 0.5)";
 const QUEST_MARKER = "#bea873";
 const QUEST_PULSE_PERIOD = 2500; // ms for one full cycle
-const CELL = 64;
+const CELL = 80;
 const NODE_RADIUS = 18;
 const CURRENT_RADIUS = 24;
 
 // Inset fractions so map nodes stay within the visible scroll parchment area.
 // The scroll image has rollers on the sides and curled edges top/bottom.
-const SCROLL_INSET_LEFT = 0.16;
-const SCROLL_INSET_RIGHT = 0.18;
-const SCROLL_INSET_TOP = 0.16;
-const SCROLL_INSET_BOTTOM = 0.20;
+const SCROLL_INSET_LEFT = 0.08;
+const SCROLL_INSET_RIGHT = 0.10;
+const SCROLL_INSET_TOP = 0.08;
+const SCROLL_INSET_BOTTOM = 0.12;
 // How much to zoom the background image (1.0 = fill canvas, >1 = zoom in)
 const BG_ZOOM = 1.15;
 

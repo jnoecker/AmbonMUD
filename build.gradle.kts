@@ -158,18 +158,25 @@ tasks.register<JavaExec>("demo") {
 val buildWeb by tasks.registering {
     group = "build"
     description = "Builds the web client (requires bun)."
-    val webSrcDir = layout.projectDirectory.dir("web-v3/src")
     val webDir = layout.projectDirectory.dir("web-v3")
     val outputDir = layout.projectDirectory.dir("src/main/resources/web-v3")
     val isWindows = System.getProperty("os.name").lowercase().contains("win")
-    inputs.dir(webSrcDir).optional()
-    inputs.file(webDir.file("package.json")).optional()
-    inputs.file(webDir.file("bun.lock")).optional()
-    inputs.file(webDir.file("vite.config.ts")).optional()
-    inputs.file(webDir.file("index.html")).optional()
-    inputs.file(webDir.file("tsconfig.json")).optional()
+    // Only declare inputs when web-v3/ source exists (not in Docker builder stage
+    // where only the pre-built output is copied from the frontend stage).
+    if (webDir.file("package.json").asFile.exists()) {
+        inputs.dir(webDir.dir("src"))
+        inputs.file(webDir.file("package.json"))
+        inputs.file(webDir.file("bun.lock"))
+        inputs.file(webDir.file("vite.config.ts"))
+        inputs.file(webDir.file("index.html"))
+        inputs.file(webDir.file("tsconfig.json"))
+    }
     outputs.dir(outputDir)
     doLast {
+        if (!webDir.file("package.json").asFile.exists()) {
+            logger.warn("⚠ web-v3/ source not found — skipping web client build (pre-built assets expected).")
+            return@doLast
+        }
         val bun = if (isWindows) "bun.exe" else "bun"
         val bunAvailable = try {
             ProcessBuilder(bun, "--version")
