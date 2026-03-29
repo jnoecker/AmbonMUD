@@ -162,12 +162,12 @@ val buildWeb by tasks.registering {
     val webDir = layout.projectDirectory.dir("web-v3")
     val outputDir = layout.projectDirectory.dir("src/main/resources/web-v3")
     val isWindows = System.getProperty("os.name").lowercase().contains("win")
-    inputs.dir(webSrcDir)
-    inputs.file(webDir.file("package.json"))
-    inputs.file(webDir.file("bun.lock"))
-    inputs.file(webDir.file("vite.config.ts"))
-    inputs.file(webDir.file("tsconfig.json"))
-    inputs.file(webDir.file("index.html"))
+    inputs.dir(webSrcDir).optional()
+    inputs.file(webDir.file("package.json")).optional()
+    inputs.file(webDir.file("bun.lock")).optional()
+    inputs.file(webDir.file("vite.config.ts")).optional()
+    inputs.file(webDir.file("index.html")).optional()
+    inputs.file(webDir.file("tsconfig.json")).optional()
     outputs.dir(outputDir)
     doLast {
         val bun = if (isWindows) "bun.exe" else "bun"
