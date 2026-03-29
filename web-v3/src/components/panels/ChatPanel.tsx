@@ -319,7 +319,15 @@ export function ChatPanel({
                     </button>
                   ))}
                 </div>
-                <form className="emote-custom-form" onSubmit={(e) => { e.preventDefault(); const msg = customEmote.trim(); if (msg) { onCommand(`emote ${msg}`); setCustomEmote(""); } }}>
+                <form className="emote-custom-form" onSubmit={(e) => {
+                  e.preventDefault();
+                  const msg = customEmote.trim();
+                  if (!msg) return;
+                  // If text contains the player's name, send as pose (freeform); otherwise emote (third-person)
+                  const cmd = msg.toLowerCase().includes(playerName.toLowerCase()) ? "pose" : "emote";
+                  onCommand(`${cmd} ${msg}`);
+                  setCustomEmote("");
+                }}>
                   <input
                     type="text"
                     className="social-action-input"
@@ -328,6 +336,15 @@ export function ChatPanel({
                     onChange={(e) => setCustomEmote(e.target.value)}
                     aria-label="Custom emote"
                   />
+                  <button
+                    type="button"
+                    className="emote-name-btn"
+                    title="Insert your name for freeform pose"
+                    aria-label="Insert your character name"
+                    onClick={() => setCustomEmote((prev) => prev + playerName + " ")}
+                  >
+                    @me
+                  </button>
                   <button type="submit" className="social-action-btn" disabled={!customEmote.trim()}>Emote</button>
                 </form>
               </div>
