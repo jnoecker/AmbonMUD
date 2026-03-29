@@ -1163,11 +1163,28 @@ class GameEngine(
                         description = objDef.description,
                         current = prog?.current ?: 0,
                         required = prog?.required ?: objDef.count,
+                        targetRoomIds = resolveObjectiveRoomIds(objDef.targetId),
                     )
                 },
             )
         }
         gmcpEmitter.sendQuestList(sessionId, entries)
+    }
+
+    /**
+     * Resolves a quest objective targetId (mob or item) to the room IDs where
+     * that target spawns, for use as map markers on the client minimap.
+     */
+    private fun resolveObjectiveRoomIds(targetId: String): List<String> {
+        val mobRooms = world.mobSpawns
+            .filter { it.id.value == targetId }
+            .map { it.roomId.value }
+        if (mobRooms.isNotEmpty()) return mobRooms
+
+        val itemRooms = world.itemSpawns
+            .filter { it.instance.id.value == targetId }
+            .mapNotNull { it.roomId?.value }
+        return itemRooms
     }
 
     private suspend fun handleReloadCommand(

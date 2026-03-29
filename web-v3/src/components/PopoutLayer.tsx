@@ -12,6 +12,7 @@ interface PopoutLayerProps {
   roomFeatures: RoomFeature[];
   containerContents: ContainerContents | null;
   mapCanvasRef: RefObject<HTMLCanvasElement | null>;
+  questMarkerCount: number;
   isStaff: boolean;
   serverCommands: CommandEntry[];
   craftingNodes: CraftingNode[];
@@ -28,6 +29,7 @@ export function PopoutLayer({
   roomFeatures,
   containerContents,
   mapCanvasRef,
+  questMarkerCount,
   isStaff,
   serverCommands,
   craftingNodes,
@@ -66,7 +68,7 @@ export function PopoutLayer({
               width={900}
               height={560}
               role="img"
-              aria-label="Visited room map"
+              aria-label={questMarkerCount > 0 ? `Visited room map — ${questMarkerCount} quest objective${questMarkerCount !== 1 ? "s" : ""} marked` : "Visited room map"}
             />
           </div>
         )}

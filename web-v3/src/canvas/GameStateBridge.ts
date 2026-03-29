@@ -31,6 +31,7 @@ export interface GameStateSnapshot {
   questsAvailable: QuestAvailable[];
   shop: ShopState | null;
   craftingNodes: CraftingNode[];
+  questTargetRoomIds: Set<string>;
   serverAssets: Record<string, string>;
 }
 
@@ -88,6 +89,7 @@ export const gameStateRef: { current: GameStateSnapshot } = {
     questsAvailable: [],
     shop: null,
     craftingNodes: [],
+    questTargetRoomIds: new Set(),
     serverAssets: {},
   },
 };

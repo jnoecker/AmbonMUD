@@ -254,7 +254,7 @@ function App() {
     });
   }, []);
 
-  const { mapCanvasRef, drawMap, updateMap, loadZoneMap, resetMap } = useMiniMap();
+  const { mapCanvasRef, drawMap, updateMap, loadZoneMap, resetMap, startPulse, stopPulse } = useMiniMap();
   const {
     pushHistory,
     applyComposerHistoryUp,
@@ -581,8 +581,12 @@ function App() {
   useEffect(() => {
     if (activePopout !== "map") return;
     const handle = window.requestAnimationFrame(() => drawMap());
-    return () => window.cancelAnimationFrame(handle);
-  }, [activePopout, drawMap]);
+    startPulse();
+    return () => {
+      window.cancelAnimationFrame(handle);
+      stopPulse();
+    };
+  }, [activePopout, drawMap, startPulse, stopPulse]);
 
   // Reparent terminal into overlay when visible, back to hidden when not
   useEffect(() => {
@@ -625,6 +629,13 @@ function App() {
       questsAvailable,
       shop,
       craftingNodes,
+      questTargetRoomIds: new Set(
+        quests.flatMap((q) =>
+          q.objectives
+            .filter((o) => o.current < o.required)
+            .flatMap((o) => o.targetRoomIds ?? []),
+        ),
+      ),
       serverAssets,
     };
   });
@@ -1001,6 +1012,7 @@ function App() {
         roomFeatures={roomFeatures}
         containerContents={containerContents}
         mapCanvasRef={mapCanvasRef}
+        questMarkerCount={new Set(quests.flatMap((q) => q.objectives.filter((o) => o.current < o.required).flatMap((o) => o.targetRoomIds ?? []))).size}
         isStaff={character.isStaff}
         serverCommands={serverCommands}
         craftingNodes={craftingNodes}
