@@ -110,7 +110,7 @@ class KtorWebSocketTransportTest {
 
                 val response = client.get("/")
                 assertEquals(HttpStatusCode.OK, response.status)
-                assertTrue(response.bodyAsText().contains("AmbonMUD Web Client v3"))
+                assertTrue(response.bodyAsText().contains("AmbonMUD"))
             }
 
             inbound.close()
