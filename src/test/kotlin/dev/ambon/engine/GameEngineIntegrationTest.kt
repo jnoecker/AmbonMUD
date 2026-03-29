@@ -11,6 +11,7 @@ import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
 import dev.ambon.test.collectUntil
 import dev.ambon.test.drainAll
+import dev.ambon.config.EngineConfig
 import dev.ambon.test.testClassEngineConfig
 import dev.ambon.test.testRaceEngineConfig
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -152,6 +153,7 @@ class GameEngineIntegrationTest {
                     items = items,
                     classRegistryOverride = classRegistry,
                     raceRegistryOverride = raceRegistry,
+                    engineConfig = EngineConfig(sessionResumeGracePeriodMs = 0),
                 )
             val engineJob = launch { engine.run() }
 
@@ -329,6 +331,7 @@ class GameEngineIntegrationTest {
                     items = items,
                     classRegistryOverride = classRegistry,
                     raceRegistryOverride = raceRegistry,
+                    engineConfig = EngineConfig(sessionResumeGracePeriodMs = 0),
                 )
             val engineJob = launch { engine.run() }
 
