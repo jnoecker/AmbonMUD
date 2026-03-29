@@ -101,6 +101,9 @@ interface GmcpContext {
   setContainerContents: Dispatch<SetStateAction<ContainerContents | null>>;
   setLoginPrompt: Dispatch<SetStateAction<LoginPromptState | null>>;
   setLoginError: Dispatch<SetStateAction<LoginErrorState | null>>;
+  setReconnecting: Dispatch<SetStateAction<boolean>>;
+  resumeTokenRef: { current: string | null };
+  sendGmcp: (pkg: string, payload: unknown) => boolean;
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
   setServerCommands: Dispatch<SetStateAction<CommandEntry[]>>;
   setEmotePresets: Dispatch<SetStateAction<EmotePreset[]>>;
@@ -120,7 +123,6 @@ interface GmcpContext {
   setWhoPlayers: Dispatch<SetStateAction<WhoPlayer[]>>;
   setZoneInstances: Dispatch<SetStateAction<ZoneInstances>>;
   setSpriteList: Dispatch<SetStateAction<SpriteList>>;
-  sendGmcp: (pkg: string, payload: unknown) => void;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -1136,8 +1138,38 @@ export function applyGmcpPackage(
 
     case "Login.Prompt": {
       const packet = data as LoginPromptState;
-      ctx.setLoginPrompt(packet);
-      ctx.setLoginError(null);
+      // If we have a resume token, attempt session resume instead of showing login
+      if (ctx.resumeTokenRef.current) {
+        ctx.setReconnecting(true);
+        ctx.sendGmcp("Session.Resume", { token: ctx.resumeTokenRef.current });
+      } else {
+        ctx.setLoginPrompt(packet);
+        ctx.setLoginError(null);
+      }
+      break;
+    }
+
+    case "Session.ResumeToken": {
+      const packet = data as { token?: string; expiresIn?: number };
+      if (typeof packet.token === "string" && packet.token.length > 0) {
+        ctx.resumeTokenRef.current = packet.token;
+      }
+      break;
+    }
+
+    case "Session.ResumeResult": {
+      const packet = data as { success?: boolean };
+      if (packet.success) {
+        // Resume succeeded — the server will send full state sync (Char.Name clears login modal)
+        ctx.setReconnecting(false);
+        ctx.resumeTokenRef.current = null; // will be replaced by the new token from onAfterLogin
+      } else {
+        // Resume failed — fall back to normal login
+        ctx.setReconnecting(false);
+        ctx.resumeTokenRef.current = null;
+        ctx.setLoginPrompt(data as LoginPromptState);
+        ctx.setLoginError(null);
+      }
       break;
     }
 

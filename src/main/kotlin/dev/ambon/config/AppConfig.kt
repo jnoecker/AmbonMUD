@@ -782,6 +782,8 @@ data class EngineConfig(
     val emotePresets: EmotePresetsConfig = EmotePresetsConfig(),
     /** Maps class name (e.g. "WARRIOR") to a fully-qualified RoomId string for new-character placement. */
     val classStartRooms: Map<String, String> = emptyMap(),
+    /** How long to hold a disconnected player's session before full logout (ms). 0 disables. */
+    val sessionResumeGracePeriodMs: Long = 90_000,
 )
 
 data class NavigationConfig(
