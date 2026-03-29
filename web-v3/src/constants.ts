@@ -63,35 +63,6 @@ export const CHAT_CHANNELS: Array<{
 ];
 export const MAX_CHAT_MESSAGES_PER_CHANNEL = 120;
 
-export const COMMANDS = [
-  // Navigation
-  "look", "north", "south", "east", "west", "up", "down", "exits", "recall",
-  // Communication
-  "say", "tell", "whisper", "shout", "gossip", "ooc", "emote", "pose", "who",
-  // Combat & abilities
-  "kill", "flee", "cast", "spells", "abilities", "skills", "effects", "dispel",
-  // Inventory & equipment
-  "inventory", "equipment", "get", "drop", "wear", "remove", "use", "give", "put",
-  // World interaction
-  "open", "close", "lock", "unlock", "search", "pull", "read",
-  // Shops
-  "list", "buy", "sell",
-  // Progression & character
-  "score", "gold", "title", "gender", "achievements",
-  // Quests & dialogue
-  "quest", "accept", "talk",
-  // Groups & guilds
-  "group", "guild", "gtell", "gchat",
-  // Friends & mail
-  "friend", "mail",
-  // Crafting
-  "gather", "craft", "recipes", "craftskills",
-  // Sprites
-  "sprite",
-  // Utility
-  "phase", "help", "quit", "clear", "colors",
-];
-
 export const MAP_OFFSETS: Record<string, { dx: number; dy: number }> = {
   north: { dx: 0, dy: -1 },
   south: { dx: 0, dy: 1 },
