@@ -209,6 +209,7 @@ export interface ChatMessage {
   sender: string;
   message: string;
   receivedAt: number;
+  isWhisper?: boolean;
 }
 
 export interface CompletedAchievement {
