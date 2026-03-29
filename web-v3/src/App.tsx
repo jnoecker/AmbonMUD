@@ -206,6 +206,7 @@ function App() {
   const [loginError, setLoginError] = useState<LoginErrorState | null>(null);
   const [reconnecting, setReconnecting] = useState(false);
   const resumeTokenRef = useRef<string | null>(null);
+  const connectedRef = useRef(false);
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
   const [serverCommands, setServerCommands] = useState<CommandEntry[]>([]);
   const [emotePresets, setEmotePresets] = useState<EmotePreset[]>([]);
@@ -483,6 +484,7 @@ function App() {
   });
 
   sendGmcpRef.current = sendGmcp;
+  connectedRef.current = connected;
 
   const sendCommand = useCallback(
     (raw: string, echo: boolean) => {
@@ -539,9 +541,10 @@ function App() {
     };
     const onBeforeUnload = () => disconnect();
 
-    // Auto-reconnect when returning from background (mobile app switch)
+    // Auto-reconnect when returning from background (mobile app switch).
+    // Uses connectedRef to avoid re-running the effect on every state change.
     const onVisibilityChange = () => {
-      if (document.visibilityState === "visible" && !connected && resumeTokenRef.current) {
+      if (document.visibilityState === "visible" && !connectedRef.current && resumeTokenRef.current) {
         setReconnecting(true);
         reconnect();
       }
@@ -557,7 +560,7 @@ function App() {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       disconnect();
     };
-  }, [connect, connected, disconnect, drawMap, fitTerminal, reconnect]);
+  }, [connect, disconnect, drawMap, fitTerminal, reconnect]);
 
   // Refit terminal when overlay becomes visible
   useEffect(() => {
