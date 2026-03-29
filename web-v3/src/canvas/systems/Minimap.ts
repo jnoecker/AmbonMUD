@@ -547,7 +547,7 @@ export class Minimap {
   private inBounds(x: number, y: number): boolean {
     const dx = x - this._radius;
     const dy = y - this._radius;
-    const maxR = this._radius - this._currentRadius - 6;
+    const maxR = this._radius - this._currentRadius - 14;
     return dx * dx + dy * dy <= maxR * maxR;
   }
 
