@@ -280,8 +280,11 @@ class MudServer(
                 },
                 onBroadcast = { message ->
                     val online = players.allPlayers()
+                    val escaped = message.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
+                    val gmcpJson = """{"sender":"System","message":"$escaped"}"""
                     for (p in online) {
                         outbound.send(OutboundEvent.SendText(p.sessionId, message))
+                        outbound.send(OutboundEvent.GmcpData(p.sessionId, "Server.Broadcast", gmcpJson))
                         outbound.send(OutboundEvent.SendPrompt(p.sessionId))
                     }
                     online.size
