@@ -17,6 +17,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+          cache: true
+          cache-dependency-path: web-v3/bun.lock
+      - run: cd web-v3 && bun install --frozen-lockfile
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x ./gradlew
       - run: ./gradlew ktlintCheck test integrationTest

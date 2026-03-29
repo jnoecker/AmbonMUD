@@ -146,6 +146,59 @@ tasks.register<JavaExec>("demo") {
     jvmArgs("-Djava.net.preferIPv4Stack=true")
 }
 
+// ---------------------------------------------------------------------------
+// Web client build
+//
+// Runs `bun run build` in web-v3/ to produce the static assets that get
+// bundled into the fat JAR under src/main/resources/web-v3/.
+// Skips gracefully with a warning if bun is not installed, so backend-only
+// developers can still run and test the server without the web client.
+// ---------------------------------------------------------------------------
+
+val buildWeb by tasks.registering {
+    group = "build"
+    description = "Builds the web client (requires bun)."
+    val webSrcDir = layout.projectDirectory.dir("web-v3/src")
+    val webDir = layout.projectDirectory.dir("web-v3")
+    val outputDir = layout.projectDirectory.dir("src/main/resources/web-v3")
+    val isWindows = System.getProperty("os.name").lowercase().contains("win")
+    inputs.dir(webSrcDir)
+    inputs.file(webDir.file("package.json"))
+    inputs.file(webDir.file("bun.lock"))
+    inputs.file(webDir.file("vite.config.ts"))
+    inputs.file(webDir.file("tsconfig.json"))
+    inputs.file(webDir.file("index.html"))
+    outputs.dir(outputDir)
+    doLast {
+        val bun = if (isWindows) "bun.exe" else "bun"
+        val bunAvailable = try {
+            ProcessBuilder(bun, "--version")
+                .redirectErrorStream(true)
+                .start()
+                .waitFor() == 0
+        } catch (_: Exception) {
+            false
+        }
+        if (!bunAvailable) {
+            logger.warn("⚠ bun not found — skipping web client build. The web UI will not be available.")
+            logger.warn("  Install bun (https://bun.sh) to enable the web client.")
+            return@doLast
+        }
+        val result = ProcessBuilder(bun, "run", "build")
+            .directory(webDir.asFile)
+            .inheritIO()
+            .start()
+            .waitFor()
+        if (result != 0) {
+            throw GradleException("Web client build failed (exit code $result)")
+        }
+    }
+}
+
+tasks.processResources {
+    dependsOn(buildWeb)
+}
+
 // Suppress ktlint violations in protobuf/grpc generated sources.
 // The filter lambda works for ktlintCheck but not ktlintFormat (plugin quirk).
 // Writing a child .editorconfig into build/generated/ is the reliable cross-task fix.
