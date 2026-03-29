@@ -1012,6 +1012,25 @@ body {
   background: linear-gradient(140deg, rgb(78 106 84 / 88%), rgb(69 94 75 / 82%));
 }
 
+.chat-message-item-whisper {
+  border-color: rgb(137 120 175 / 24%);
+  background: linear-gradient(140deg, rgb(80 72 108 / 90%), rgb(68 63 100 / 86%));
+}
+
+.chat-message-item-whisper .chat-message-body {
+  font-style: italic;
+}
+
+.chat-whisper-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--color-primary-lavender);
+  margin-right: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .chat-message-meta {
   display: flex;
   justify-content: space-between;

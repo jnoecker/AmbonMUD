@@ -284,10 +284,13 @@ export function ChatPanel({
                       return (
                         <li
                           key={entry.id}
-                          className={`chat-message-item ${isSelf ? "chat-message-item-self" : ""}`}
+                          className={`chat-message-item ${isSelf ? "chat-message-item-self" : ""}${entry.isWhisper ? " chat-message-item-whisper" : ""}`}
                         >
                           <div className="chat-message-meta">
-                            <span className="chat-message-sender">{isSelf ? "You" : entry.sender}</span>
+                            <span className="chat-message-sender">
+                              {entry.isWhisper && <span className="chat-whisper-tag">whisper</span>}
+                              {isSelf ? "You" : entry.sender}
+                            </span>
                             <span className="chat-message-time">{time}</span>
                           </div>
                           <p className="chat-message-body">{entry.message}</p>
