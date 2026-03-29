@@ -98,10 +98,12 @@ export class Minimap {
     if (d === this._diameter) return;
     this._diameter = d;
     this._radius = d / 2;
-    // Scale cell/node sizes proportionally
-    this._cell = Math.round(d * 0.31);
-    this._nodeRadius = Math.round(d * 0.085);
-    this._currentRadius = Math.round(d * 0.11);
+    // On smaller diameters, use tighter proportions so neighbors fit.
+    // At 160px: cell=34, node=8, current=10 — one full hop of neighbors visible.
+    const compact = d <= 180;
+    this._cell = Math.round(d * (compact ? 0.21 : 0.31));
+    this._nodeRadius = Math.round(d * (compact ? 0.05 : 0.085));
+    this._currentRadius = Math.round(d * (compact ? 0.065 : 0.11));
     this.applyDiameter();
     this.lastKey = ""; // force redraw
   }
@@ -393,14 +395,16 @@ export class Minimap {
       // Quest objective marker — pulsing gold ring + diamond
       if (!isCurrent && questTargets.has(id)) {
         const pulse = 0.4 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
-        this.mapGraphics.circle(nx, ny, radius + 4);
-        this.mapGraphics.stroke({ color: QUEST_COLOR, width: 2.5, alpha: pulse });
-        // Small diamond above the node
-        const dy = ny - radius - 7;
-        this.mapGraphics.moveTo(nx, dy - 5);
-        this.mapGraphics.lineTo(nx + 4, dy);
-        this.mapGraphics.lineTo(nx, dy + 5);
-        this.mapGraphics.lineTo(nx - 4, dy);
+        this.mapGraphics.circle(nx, ny, radius + 3);
+        this.mapGraphics.stroke({ color: QUEST_COLOR, width: 2, alpha: pulse });
+        // Small diamond above the node (scaled for compact minimaps)
+        const ds = this._diameter <= 180 ? 3 : 5;
+        const dOff = this._diameter <= 180 ? 4 : 7;
+        const dy = ny - radius - dOff;
+        this.mapGraphics.moveTo(nx, dy - ds);
+        this.mapGraphics.lineTo(nx + ds - 1, dy);
+        this.mapGraphics.lineTo(nx, dy + ds);
+        this.mapGraphics.lineTo(nx - ds + 1, dy);
         this.mapGraphics.closePath();
         this.mapGraphics.fill({ color: QUEST_COLOR, alpha: pulse });
       }
@@ -547,7 +551,8 @@ export class Minimap {
   private inBounds(x: number, y: number): boolean {
     const dx = x - this._radius;
     const dy = y - this._radius;
-    const maxR = this._radius - this._currentRadius - 14;
+    const pad = this._diameter <= 180 ? 6 : 14;
+    const maxR = this._radius - this._currentRadius - pad;
     return dx * dx + dy * dy <= maxR * maxR;
   }
 
