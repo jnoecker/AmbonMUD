@@ -1012,6 +1012,7 @@ function App() {
         roomFeatures={roomFeatures}
         containerContents={containerContents}
         mapCanvasRef={mapCanvasRef}
+        questMarkerCount={new Set(quests.flatMap((q) => q.objectives.filter((o) => o.current < o.required).flatMap((o) => o.targetRoomIds ?? []))).size}
         isStaff={character.isStaff}
         serverCommands={serverCommands}
         craftingNodes={craftingNodes}
