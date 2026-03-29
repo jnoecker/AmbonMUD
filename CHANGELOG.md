@@ -2,21 +2,63 @@
 
 All notable changes to this project are documented in this file.
 
-## [2026-03] - 2026-03-01
+## [2026-03] - 2026-03-28
 
-### Added
+### Web Client Feature Parity (15 issues, #722–#736)
+Closed the full web client parity backlog from the consolidated feature report (#721). Every MUD command now has a web UI affordance; no gameplay workflow requires the terminal.
+
+- **Data-driven help panel** from `Server.Commands` GMCP — eliminates static help drift (#722, #737).
+- **Item inspection**: Examine button on inventory, ground, and container items (#723, #738).
+- **Player context menu**: Tell, Whisper, Give, Group Invite, Friend Add, Look on player sprites (#724, #739).
+- **Crafting panel refresh button** replaces "type `craftskills` to load" hint (#725, #740).
+- **Admin panel**: setlevel, dispel, reload, and broadcast commands (#726, #741).
+- **Mail compose**: full in-panel body editor with Send/Cancel — the last hybrid terminal workflow (#727, #742).
+- **Container Put action** from inventory panel (#728, #745).
+- **Lock button** on room features panel (#729, #743).
+- **Mob context enrichment**: EntityPopout adapts actions based on `Room.MobInfo` flags — shop/quest/dialogue badges (#730, #744).
+- **Group/Guild invite GMCP**: structured accept/decline cards in social panels (#731, #746).
+- **`Room.LookTarget` GMCP**: structured examine results with floating inspect card (#732, #749).
+- **`Server.Commands` enrichment + command palette** (Ctrl+K): searchable launcher populated from server metadata (#733, #751).
+- **`UI.Feedback` GMCP**: machine-readable `code`, `scope`, `command` fields on feedback payloads (#734, #750).
+- **Command-parity CI**: automated tests diffing parser commands vs web autocomplete and GMCP packages vs client handlers (#735, #748).
+- **Direction peeking**: Shift+Click on exit buttons sends `look <direction>` (#736, #747).
+
+### Staff Tools
+- **Mob possession system**: `possess <mob>` / `return` / `recall` — move mobs, speak as them, fight as them. Behavior tree paused while possessed. Disconnect auto-releases. (#754, #757, #764)
+- **Staff invisibility**: `invis` toggle hides staff from Room.Players, who list, and movement broadcasts. Auto-enabled during possession. Eye icon button in header bar. (#758)
+- **Admin broadcast**: `broadcast <message>` staff command with `Server.Broadcast` GMCP and dismissible full-screen modal on the canvas (#759).
+- **Spawn mob browser**: searchable mob template list in admin panel, grouped by zone (#752).
+- **Spawn room announcements**: spawned mobs now broadcast text + `Room.AddMob` GMCP to all players in the room (#753).
+- **Possess button**: staff-only "Possess" action in mob EntityPopout (#757).
+- **Possession combat**: `kill`/`flee` commands routed during possession; mob death auto-releases (#764).
+
+### Canvas & Visual
+- **Crafting on canvas**: gathering nodes render as clickable sprites (moss-green tint), crafting stations as a badge. Click-to-gather and click-to-recipes. Image field threaded through YAML → domain → GMCP → canvas. (#765, #767)
+- **Gameplay color remap**: replaced Material Design neon colors (damage `#ff6b6b`, heal `#6bff8a`, etc.) with jewel-tone variants matching the Surreal Gentle Magic palette — soft coral, muted sage, pale blue, warm gold. Applied across CSS, combat log, canvas CombatAnimator, BattleScene, StatusEffectDisplay, and EntityPopout. (#762)
+- **Login modal elevation**: stronger backdrop blur (12px), lavender glow border, breathing title animation (#763).
+- **Button press bloom**: radial white gradient `::after` pseudo-element on `:active` for tactile feedback (#763).
+- **Mobile vitals**: show abbreviated HP/Mana/XP numbers on <960px screens instead of hiding them (#763).
+
+### Design System & Quality
+- **Color token normalization**: 29 hard-coded hex colors extracted to CSS variables; 7 new semantic tokens added (`--text-white`, `--bg-deep`, `--color-gold-bright`, `--color-gold-coin-*`, `--color-toast-text`, `--color-accent-violet`). (#761)
+- **Button gradient tokens**: `--button-gradient-primary/secondary/tertiary` for consistent hierarchy (#763).
+- **Panel border token**: `--line-panel` replaces hard-coded `rgb(88 89 114 / 30%)` (#763).
+- **Focus indicators**: `outline: 2px solid transparent` on all `:focus-visible` selectors for Windows High Contrast Mode (#760).
+- **Touch targets**: `min-height: 44px` enforced on 6 undersized button classes; canvas EntityPopout buttons 28→44px (#760).
+- **ARIA accessibility**: labels on help search, emote buttons, feature buttons, inventory pickers, popout close buttons; `aria-live` regions for search result counts; Home/End keys in command palette (#760, #761).
+- **Hover media query**: `.soft-button:hover` transform wrapped in `@media (hover: hover)` (#760).
+
+### Infrastructure (early March)
 - **Live demo instance** at [mud.ambon.dev](https://mud.ambon.dev) — t4g.nano EC2 with YAML persistence, nginx TLS termination via Let's Encrypt, and auto-deploy on every push to `main`.
 - **EC2 CDK stack** (`infra/lib/ec2-stack.ts`): optional `hostname` context var installs nginx + certbot, opens ports 80/443, writes a `setup-tls` helper script on the instance.
 - **Auto-deploy workflow** (`.github/workflows/deploy-demo.yml`): triggers on CI success for `main`, SSMs `update-ambonmud <sha>` to pull the new image and restart the service in-place (player data untouched).
-- **`setup-tls` helper**: installed at `/usr/local/bin/setup-tls` on EC2 instances when `hostname` is set; runs certbot HTTP-01 challenge and configures nginx auto-renewal.
 
 ### Changed
-- **Default persistence backend changed from `POSTGRES` to `YAML`**. The server now starts with zero external dependencies. Users who want PostgreSQL must set `ambonMUD.persistence.backend=POSTGRES` explicitly (e.g. `-Pconfig.ambonMUD.persistence.backend=POSTGRES`).
-- **Redis disabled by default** (`redis.enabled: false`). Enable with `ambonMUD.redis.enabled=true` when running alongside the Docker Compose stack.
-- **Telnet I/O uses JVM virtual threads** (PR #313). `BlockingSocketTransport` and `NetworkSession` now accept an injectable `CoroutineContext`; `MudServer` and `GatewayServer` supply a virtual-thread executor. Replaced all `synchronized` blocks in `NetworkSession` with `ReentrantLock` to avoid carrier-thread pinning.
-- **Docker image builds on native ARM64 runner** (`ubuntu-24.04-arm`) instead of QEMU emulation — reduces CI build time from ~20 min to ~3 min. Image targets `linux/arm64` to match the t4g.nano demo instance.
-- **Container user pinned to UID/GID 1001** in the Dockerfile (`groupadd -r -g 1001 / useradd -r -u 1001`). EC2 user data `chown 1001:1001 /app/data` ensures the host volume mount is writable from the first start.
-- Removed `web-v3/` from `.dockerignore` so the Bun frontend build stage in the Dockerfile can include the web client in the image.
+- **Default persistence backend changed from `POSTGRES` to `YAML`**. The server now starts with zero external dependencies. Users who want PostgreSQL must set `ambonMUD.persistence.backend=POSTGRES` explicitly.
+- **Redis disabled by default** (`redis.enabled: false`).
+- **Telnet I/O uses JVM virtual threads** (PR #313).
+- **Docker image builds on native ARM64 runner** — reduces CI build time from ~20 min to ~3 min.
+- **Container user pinned to UID/GID 1001** in the Dockerfile.
 
 ## [2026-02] - 2026-02-28
 
