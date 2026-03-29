@@ -4,9 +4,13 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.PlayerState
+import dev.ambon.engine.SessionGracePeriodManager
 import dev.ambon.engine.SessionLifecycleCoordinator
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.sharding.HandoffManager
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val log = KotlinLogging.logger {}
 
 class SessionEventHandler(
     private val players: PlayerRegistry,
@@ -23,6 +27,7 @@ class SessionEventHandler(
     private val handoffManager: HandoffManager?,
     private val removePendingWhoRequestsFor: (SessionId) -> Unit,
     private val sessionLifecycle: SessionLifecycleCoordinator,
+    private val gracePeriodManager: SessionGracePeriodManager?,
     private val promptForName: suspend (SessionId) -> Unit,
     private val showLoginScreen: suspend (SessionId) -> Unit,
     private val onPlayerLoggedOut: suspend (PlayerState, SessionId) -> Unit,
@@ -47,29 +52,59 @@ class SessionEventHandler(
         clearLoginState(sessionId)
         failedLoginAttempts.remove(sessionId)
         sessionAnsiDefaults.remove(sessionId)
-        gmcpSessions.remove(sessionId)
-        gmcpDirtyVitals.remove(sessionId)
         handoffManager?.cancelIfPending(sessionId)
         removePendingWhoRequestsFor(sessionId)
 
-        sessionLifecycle.onPlayerDisconnected(sessionId)
+        // If the player is authenticated and grace period is enabled,
+        // suspend the session instead of running full disconnect cleanup.
+        if (me != null && me.playerId != null && gracePeriodManager != null) {
+            val gmcpPkgs = gmcpSessions.remove(sessionId)?.toSet() ?: emptySet()
+            gmcpDirtyVitals.remove(sessionId)
+            gmcpDirtyStatusEffects.remove(sessionId)
+            gmcpDirtyGroup.remove(sessionId)
+            gmcpDirtyCombat.remove(sessionId)
+            gmcpEmitter?.forgetSession(sessionId)
+
+            val ps = players.suspendSession(sessionId)
+            if (ps != null) {
+                gracePeriodManager.suspend(ps.sessionId, ps, gmcpPkgs)
+                log.info { "Player ${ps.name} entering grace period (${gracePeriodManager.gracePeriodSeconds}s)" }
+                return
+            }
+        }
+
+        // Normal disconnect (unauthenticated session or grace disabled)
+        fullDisconnect(sessionId, me)
+    }
+
+    /**
+     * Run full disconnect cleanup. Called immediately for unauthenticated
+     * sessions, or deferred until grace period expiry for authenticated ones.
+     */
+    suspend fun fullDisconnect(sessionId: SessionId, playerState: PlayerState?) {
+        // These may already have been cleared by the grace period path,
+        // but clear them again in case of direct-disconnect or grace expiry.
+        gmcpSessions.remove(sessionId)
+        gmcpDirtyVitals.remove(sessionId)
         gmcpDirtyStatusEffects.remove(sessionId)
         gmcpDirtyGroup.remove(sessionId)
         gmcpDirtyCombat.remove(sessionId)
         gmcpEmitter?.forgetSession(sessionId)
 
-        if (me != null) {
+        sessionLifecycle.onPlayerDisconnected(sessionId)
+
+        if (playerState != null) {
             // Release mob possession and invisibility on disconnect
-            me.invisible = false
-            if (me.possessedMobId != null) {
-                val returnRoom = me.prePossessRoomId ?: me.roomId
-                me.possessedMobId = null
-                me.prePossessRoomId = null
-                if (me.roomId != returnRoom) {
+            playerState.invisible = false
+            if (playerState.possessedMobId != null) {
+                val returnRoom = playerState.prePossessRoomId ?: playerState.roomId
+                playerState.possessedMobId = null
+                playerState.prePossessRoomId = null
+                if (playerState.roomId != returnRoom) {
                     players.moveTo(sessionId, returnRoom)
                 }
             }
-            onPlayerLoggedOut(me, sessionId)
+            onPlayerLoggedOut(playerState, sessionId)
         }
 
         players.disconnect(sessionId)

@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.config.EngineConfig
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
@@ -152,6 +153,7 @@ class GameEngineIntegrationTest {
                     items = items,
                     classRegistryOverride = classRegistry,
                     raceRegistryOverride = raceRegistry,
+                    engineConfig = EngineConfig(sessionResumeGracePeriodMs = 0),
                 )
             val engineJob = launch { engine.run() }
 
@@ -329,6 +331,7 @@ class GameEngineIntegrationTest {
                     items = items,
                     classRegistryOverride = classRegistry,
                     raceRegistryOverride = raceRegistry,
+                    engineConfig = EngineConfig(sessionResumeGracePeriodMs = 0),
                 )
             val engineJob = launch { engine.run() }
 
