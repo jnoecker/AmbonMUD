@@ -80,8 +80,8 @@ function renderMap(
   const scrollTop = height * SCROLL_INSET_TOP;
   const scrollBottom = height * (1 - SCROLL_INSET_BOTTOM);
 
-  // Pad inward by the largest node radius so nodes don't overlap the scroll edge
-  const nodePad = CURRENT_RADIUS + 6;
+  // Pad inward by the largest node radius + quest diamond height so markers don't clip
+  const nodePad = CURRENT_RADIUS + 14;
 
   // Compute bounding box of all rooms in the zone to auto-fit
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -172,9 +172,10 @@ function renderMap(
     }
     ctx.stroke();
 
-    // Quest objective marker — pulsing gold ring
+    // Quest objective marker — pulsing gold ring (static at 0.7 for reduced-motion)
     if (!isCurrent && questTargetRoomIds.has(id)) {
-      const pulse = 0.4 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
+      const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const pulse = reducedMotion ? 0.7 : 0.4 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
       ctx.save();
       ctx.globalAlpha = pulse;
       ctx.strokeStyle = QUEST_MARKER;
@@ -255,7 +256,8 @@ function renderMap(
 
   // Off-screen quest target edge indicators — gold chevrons at the scroll
   // parchment rim pointing toward quest rooms that are outside visible bounds.
-  const edgePulse = 0.35 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
+  const reducedMotionEdge = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const edgePulse = reducedMotionEdge ? 0.6 : 0.35 + 0.45 * (0.5 + 0.5 * Math.sin(Date.now() / QUEST_PULSE_PERIOD * Math.PI * 2));
   for (const targetId of questTargetRoomIds) {
     const targetNode = visited.get(targetId);
     if (!targetNode) continue;
