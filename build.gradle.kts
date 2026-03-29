@@ -40,7 +40,7 @@ dependencies {
     implementation("io.micrometer:micrometer-core:$micrometerVersion")
     implementation("io.micrometer:micrometer-registry-prometheus:$micrometerVersion")
 
-    implementation("io.lettuce:lettuce-core:7.4.0.RELEASE")
+    implementation("io.lettuce:lettuce-core:7.5.0.RELEASE")
 
     // Exposed (Kotlin SQL framework)
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
