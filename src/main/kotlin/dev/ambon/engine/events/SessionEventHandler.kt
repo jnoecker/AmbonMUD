@@ -107,6 +107,13 @@ class SessionEventHandler(
             onPlayerLoggedOut(playerState, sessionId)
         }
 
-        players.disconnect(sessionId)
+        // If the player is still in the active map, use normal disconnect.
+        // If they were already removed by suspendSession(), use the suspended
+        // variant that cleans up residual entries (roomMembers, name index).
+        if (players.get(sessionId) != null) {
+            players.disconnect(sessionId)
+        } else if (playerState != null) {
+            players.disconnectSuspended(sessionId, playerState)
+        }
     }
 }
