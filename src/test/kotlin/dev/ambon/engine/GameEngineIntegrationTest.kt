@@ -2,6 +2,7 @@ package dev.ambon.engine
 
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.config.EngineConfig
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
@@ -11,7 +12,6 @@ import dev.ambon.persistence.InMemoryPlayerRepository
 import dev.ambon.test.MutableClock
 import dev.ambon.test.collectUntil
 import dev.ambon.test.drainAll
-import dev.ambon.config.EngineConfig
 import dev.ambon.test.testClassEngineConfig
 import dev.ambon.test.testRaceEngineConfig
 import kotlinx.coroutines.ExperimentalCoroutinesApi
