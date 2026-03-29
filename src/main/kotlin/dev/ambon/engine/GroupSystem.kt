@@ -161,6 +161,19 @@ class GroupSystem(
         return null
     }
 
+    suspend fun decline(inviteeSid: SessionId): String? {
+        cleanExpiredInvites()
+        val invite = pendingInvites.remove(inviteeSid)
+            ?: return "You have no pending group invite."
+        val inviter = players.get(invite.inviterSid)
+        outbound.send(OutboundEvent.SendText(inviteeSid, "You decline the group invite."))
+        if (inviter != null) {
+            val inviteeName = players.get(inviteeSid)?.name ?: "Someone"
+            outbound.send(OutboundEvent.SendText(invite.inviterSid, "$inviteeName declined your group invite."))
+        }
+        return null
+    }
+
     suspend fun leave(sessionId: SessionId): String? {
         val group =
             groupBySession[sessionId]
