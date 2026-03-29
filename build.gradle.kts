@@ -61,7 +61,7 @@ dependencies {
     implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
 
     // Test: H2 in Postgres mode
-    testImplementation("com.h2database:h2:2.3.232")
+    testImplementation("com.h2database:h2:2.4.240")
 
     testImplementation("io.grpc:grpc-testing:$grpcVersion")
     testImplementation("io.grpc:grpc-inprocess:$grpcVersion")
