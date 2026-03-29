@@ -332,6 +332,20 @@ class PlayerRegistry(
     }
 
     /**
+     * Clean up a suspended session's residual entries (roomMembers, name index).
+     * Used when the grace period expires or is cancelled. The PlayerState is not
+     * in the `players` map (it was removed by [suspendSession]), so we accept it
+     * directly and persist + clean up its dangling references.
+     */
+    suspend fun disconnectSuspended(sessionId: SessionId, playerState: PlayerState) {
+        persistIfClaimed(playerState)
+        playerState.playerId?.let { repo.evict(it) }
+        roomMembers.removeFromSet(playerState.roomId, sessionId)
+        sessionByLowerName.remove(playerState.name.lowercase())
+        items.removePlayer(sessionId)
+    }
+
+    /**
      * Detach a player's session binding for grace period suspension.
      * The PlayerState is removed from the active registry but NOT persisted
      * or evicted — it will be reattached on resume or cleaned up on expiry.
