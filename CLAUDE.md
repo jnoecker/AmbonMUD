@@ -21,6 +21,7 @@ The `gh` CLI is available in cloud/remote mode (verified Feb 2026). Use it norma
 ./gradlew demo           # Start server + auto-launch browser demo
 ./gradlew ktlintCheck    # Lint (Kotlin official style) — run before every PR
 ./gradlew test           # Full test suite — run before committing
+./gradlew buildWeb       # Build web client (requires bun) — auto-runs with `run`/`demo`
 ```
 
 Run a single test class:
@@ -190,7 +191,7 @@ Sessions
 | Flyway migrations | `src/main/resources/db/migration/` (V1–V19: players table through guilds, crafting, friends, mail, sprites, and more) |
 | Proto definitions | `src/main/proto/ambonmud/v1/engine_service.proto`, `events.proto` |
 | Web demo client (static) | `src/main/resources/web/` |
-| V4 canvas client (React + PixiJS) | `web-v3/` (built to `src/main/resources/web-v3/`) |
+| V4 canvas client (React + PixiJS) | `web-v3/` (built to `src/main/resources/web-v3/` by `./gradlew buildWeb`) |
 | Ability sprites | `src/main/resources/world/images/abilities/` (102 PNGs) |
 | Compass/direction sprites | `src/main/resources/world/images/global_assets/` |
 | World YAML format spec | `docs/WORLD_YAML_SPEC.md` |
@@ -402,7 +403,8 @@ AmbonMUD's visual identity is **Surreal Gentle Magic** — cozy fantasy with gla
 - Edit design tokens in `web-v3/src/styles.css` (single file, ~5K lines)
 - Component styles are in the same file, organized by component class name
 - Canvas rendering (PixiJS scenes, particle effects) is in `web-v3/src/canvas/`
-- Run `bun run build` from `web-v3/` to write assets to `src/main/resources/web-v3/`
+- Run `./gradlew buildWeb` (or `bun run build` from `web-v3/`) to write assets to `src/main/resources/web-v3/`
+- Built assets are gitignored — never commit them. They're built on demand by Gradle, CI, and Docker.
 - Validate with `bun run lint` and visual inspection via `./gradlew demo`
 
 ### Key design rules
