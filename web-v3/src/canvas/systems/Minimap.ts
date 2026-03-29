@@ -24,6 +24,8 @@ const CURRENT_COLOR = 0xb9aed8;
 const CURRENT_GLOW = 0xe8d8a8;
 const LINE_COLOR = 0x4a5070;
 const FOG_COLOR = 0x2a3050;
+const QUEST_COLOR = 0xbea873;
+const QUEST_GLOW_ALPHA = 0.6;
 
 export class Minimap {
   readonly container = new Container();
@@ -261,6 +263,7 @@ export class Minimap {
     const CELL = this._cell;
     const NODE_R = this._nodeRadius;
     const CUR_R = this._currentRadius;
+    const questTargets = gameStateRef.current.questTargetRoomIds;
 
     // Clear click areas
     for (const { area } of this.clickAreas) {
@@ -384,6 +387,53 @@ export class Minimap {
 
       if (node.image) {
         this.ensureThumb(id, node.image, nx, ny, radius, isCurrent ? 1 : 0.8, null);
+      }
+
+      // Quest objective marker — gold ring + diamond
+      if (!isCurrent && questTargets.has(id)) {
+        this.mapGraphics.circle(nx, ny, radius + 4);
+        this.mapGraphics.stroke({ color: QUEST_COLOR, width: 2.5, alpha: QUEST_GLOW_ALPHA });
+        // Small diamond above the node
+        const dy = ny - radius - 7;
+        this.mapGraphics.moveTo(nx, dy - 5);
+        this.mapGraphics.lineTo(nx + 4, dy);
+        this.mapGraphics.lineTo(nx, dy + 5);
+        this.mapGraphics.lineTo(nx - 4, dy);
+        this.mapGraphics.closePath();
+        this.mapGraphics.fill({ color: QUEST_COLOR, alpha: 0.85 });
+      }
+    }
+
+    // Off-screen quest target edge indicators — subtle gold glow at the rim
+    // pointing toward quest rooms that are beyond the 2-hop local neighborhood.
+    if (questTargets.size > 0) {
+      for (const targetRoomId of questTargets) {
+        if (localPos.has(targetRoomId)) continue; // already visible on the map
+        const targetNode = this.visited.get(targetRoomId);
+        if (!targetNode) continue;
+        // Compute direction from current room to the target in zone coordinates
+        const ddx = targetNode.x - current.x;
+        const ddy = targetNode.y - current.y;
+        const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+        if (dist === 0) continue;
+        // Normalize and place on the circle rim (inset slightly so the glow is visible)
+        const rimR = R - 8;
+        const ex = cx + (ddx / dist) * rimR;
+        const ey = cy + (ddy / dist) * rimR;
+        // Small gold chevron pointing outward
+        const angle = Math.atan2(ddy, ddx);
+        const chevLen = 6;
+        const chevSpread = 0.5;
+        const tipX = ex + Math.cos(angle) * 3;
+        const tipY = ey + Math.sin(angle) * 3;
+        this.mapGraphics.moveTo(tipX, tipY);
+        this.mapGraphics.lineTo(tipX - Math.cos(angle - chevSpread) * chevLen, tipY - Math.sin(angle - chevSpread) * chevLen);
+        this.mapGraphics.moveTo(tipX, tipY);
+        this.mapGraphics.lineTo(tipX - Math.cos(angle + chevSpread) * chevLen, tipY - Math.sin(angle + chevSpread) * chevLen);
+        this.mapGraphics.stroke({ color: QUEST_COLOR, width: 2, alpha: 0.7 });
+        // Small glow dot
+        this.mapGraphics.circle(ex, ey, 3);
+        this.mapGraphics.fill({ color: QUEST_COLOR, alpha: 0.5 });
       }
     }
 
