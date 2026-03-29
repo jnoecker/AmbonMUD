@@ -12,6 +12,8 @@ const LINE_STROKE = "rgba(40, 35, 28, 0.6)";
 const FOG_FILL = "rgba(42, 48, 80, 0.5)";
 const FOG_STROKE = "rgba(58, 64, 96, 0.35)";
 const NODE_STROKE = "rgba(90, 106, 144, 0.5)";
+const QUEST_GLOW = "rgba(190, 168, 115, 0.6)";
+const QUEST_MARKER = "#bea873";
 const CELL = 64;
 const NODE_RADIUS = 18;
 const CURRENT_RADIUS = 24;
@@ -34,6 +36,7 @@ function renderMap(
   loadingImages: Set<string>,
   fogImage: HTMLImageElement | null,
   bgImage: HTMLImageElement | null,
+  questTargetRoomIds: Set<string>,
   scheduleRedraw: () => void,
 ) {
   const ctx = canvas.getContext("2d");
@@ -169,6 +172,28 @@ function renderMap(
     }
     ctx.stroke();
 
+    // Quest objective marker — pulsing gold ring
+    if (!isCurrent && questTargetRoomIds.has(id)) {
+      ctx.save();
+      ctx.strokeStyle = QUEST_GLOW;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
+      ctx.stroke();
+      // Small diamond marker above the node
+      const mx = x;
+      const my = y - radius - 7;
+      ctx.fillStyle = QUEST_MARKER;
+      ctx.beginPath();
+      ctx.moveTo(mx, my - 5);
+      ctx.lineTo(mx + 4, my);
+      ctx.lineTo(mx, my + 5);
+      ctx.lineTo(mx - 4, my);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
     // Fog-of-war thumbnail for unexplored rooms
     if (!isVisited && fogImage && fogImage.complete) {
       ctx.save();
@@ -258,6 +283,7 @@ export function useMiniMap() {
 
     const fog = fogImageRef.current?.complete ? fogImageRef.current : null;
     const bg = bgImageRef.current?.complete ? bgImageRef.current : null;
+    const questRooms = gameStateRef.current.questTargetRoomIds;
     renderMap(
       canvas,
       visitedRef.current,
@@ -266,12 +292,13 @@ export function useMiniMap() {
       loadingImages.current,
       fog,
       bg,
+      questRooms,
       () => {
         const c = mapCanvasRef.current;
         if (c) {
           const f = fogImageRef.current?.complete ? fogImageRef.current : null;
           const b = bgImageRef.current?.complete ? bgImageRef.current : null;
-          renderMap(c, visitedRef.current, currentRoomIdRef.current, imageCache.current, loadingImages.current, f, b, () => {});
+          renderMap(c, visitedRef.current, currentRoomIdRef.current, imageCache.current, loadingImages.current, f, b, questRooms, () => {});
         }
       },
     );
