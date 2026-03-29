@@ -204,6 +204,8 @@ function App() {
   const [mailMessage, setMailMessage] = useState<MailMessage | null>(null);
   const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
   const [loginError, setLoginError] = useState<LoginErrorState | null>(null);
+  const [reconnecting, setReconnecting] = useState(false);
+  const resumeTokenRef = useRef<string | null>(null);
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
   const [serverCommands, setServerCommands] = useState<CommandEntry[]>([]);
   const [emotePresets, setEmotePresets] = useState<EmotePreset[]>([]);
@@ -425,6 +427,8 @@ function App() {
           setContainerContents,
           setLoginPrompt,
           setLoginError,
+          setReconnecting,
+          resumeTokenRef,
           setServerAssets,
           setServerCommands,
           setEmotePresets,
@@ -444,7 +448,7 @@ function App() {
           setWhoPlayers,
           setZoneInstances,
           setSpriteList,
-          sendGmcp: (pkg: string, payload: unknown) => sendGmcpRef.current(pkg, payload),
+          sendGmcp: (pkg: string, payload: unknown) => { sendGmcpRef.current(pkg, payload); return true; },
         },
       );
     },
@@ -460,11 +464,18 @@ function App() {
     },
     onGmcpMessage: handleGmcp,
     onClose: () => {
-      setComposerValue("");
-      resetComposerTraversal();
-      resetHud();
-      audio.stopAll();
-      writeSystem("Connection closed.");
+      if (resumeTokenRef.current) {
+        // Auto-reconnect: keep game state, show reconnecting banner
+        setReconnecting(true);
+        writeSystem("Connection lost — reconnecting...");
+        window.setTimeout(() => reconnect(), 500);
+      } else {
+        setComposerValue("");
+        resetComposerTraversal();
+        resetHud();
+        audio.stopAll();
+        writeSystem("Connection closed.");
+      }
     },
     onError: () => {
       writeSystem("Connection error.");
@@ -528,15 +539,25 @@ function App() {
     };
     const onBeforeUnload = () => disconnect();
 
+    // Auto-reconnect when returning from background (mobile app switch)
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible" && !connected && resumeTokenRef.current) {
+        setReconnecting(true);
+        reconnect();
+      }
+    };
+
     window.addEventListener("resize", onResize);
     window.addEventListener("beforeunload", onBeforeUnload);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("beforeunload", onBeforeUnload);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       disconnect();
     };
-  }, [connect, disconnect, drawMap, fitTerminal]);
+  }, [connect, connected, disconnect, drawMap, fitTerminal, reconnect]);
 
   // Refit terminal when overlay becomes visible
   useEffect(() => {
@@ -1211,7 +1232,14 @@ function App() {
         )}
       </PopoutLayer>
 
-      {loginPrompt && (
+      {reconnecting && (
+        <div className="reconnect-banner" role="status" aria-live="polite">
+          <span className="reconnect-spinner" aria-hidden="true" />
+          Reconnecting...
+        </div>
+      )}
+
+      {loginPrompt && !reconnecting && (
         <LoginModal
           loginPrompt={loginPrompt}
           loginError={loginError}
