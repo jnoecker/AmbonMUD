@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { COMMANDS, EMPTY_TAB, HISTORY_KEY, MAX_HISTORY } from "../constants";
+import { EMPTY_TAB, HISTORY_KEY, MAX_HISTORY } from "../constants";
 import type { CommandEntry, TabCycle } from "../types";
 
 function readHistory(): string[] {
@@ -43,10 +43,10 @@ function nextCompletion(value: string, cycle: TabCycle, commandWords: string[]):
 
 /**
  * Derives unique autocomplete words from server command metadata.
- * Falls back to the static COMMANDS array when no server data is available.
+ * Returns empty array when no server data is available (pre-login).
  */
 function deriveCommandWords(serverCommands: CommandEntry[]): string[] {
-  if (serverCommands.length === 0) return COMMANDS;
+  if (serverCommands.length === 0) return [];
   const words = new Set<string>();
   for (const entry of serverCommands) {
     words.add(entry.name.split("_")[0]);
