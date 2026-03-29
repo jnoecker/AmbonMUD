@@ -250,6 +250,47 @@ function renderMap(
     }
   }
 
+  // Off-screen quest target edge indicators — gold chevrons at the scroll
+  // parchment rim pointing toward quest rooms that are outside visible bounds.
+  for (const targetId of questTargetRoomIds) {
+    const targetNode = visited.get(targetId);
+    if (!targetNode) continue;
+    const tx = nodeX(targetNode);
+    const ty = nodeY(targetNode);
+    if (inScrollBounds(tx, ty)) continue; // already visible
+    // Direction from center to the target
+    const ddx = tx - originX;
+    const ddy = ty - originY;
+    const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+    if (dist === 0) continue;
+    const nx = ddx / dist;
+    const ny = ddy / dist;
+    // Place on the scroll edge
+    const padIn = 14;
+    const ex = Math.max(scrollLeft + padIn, Math.min(scrollRight - padIn, originX + nx * Math.min(dist, availW / 2)));
+    const ey = Math.max(scrollTop + padIn, Math.min(scrollBottom - padIn, originY + ny * Math.min(dist, availH / 2)));
+    const angle = Math.atan2(ddy, ddx);
+    const chevLen = 7;
+    const chevSpread = 0.5;
+    const tipX = ex + Math.cos(angle) * 3;
+    const tipY = ey + Math.sin(angle) * 3;
+    ctx.strokeStyle = QUEST_MARKER;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX - Math.cos(angle - chevSpread) * chevLen, tipY - Math.sin(angle - chevSpread) * chevLen);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX - Math.cos(angle + chevSpread) * chevLen, tipY - Math.sin(angle + chevSpread) * chevLen);
+    ctx.stroke();
+    // Glow dot
+    ctx.fillStyle = QUEST_GLOW;
+    ctx.beginPath();
+    ctx.arc(ex, ey, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   // Restore from scroll-bounds clip
   ctx.restore();
 }
