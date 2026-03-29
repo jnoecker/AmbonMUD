@@ -384,6 +384,12 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses group decline`() {
+        assertEquals(Command.GroupCmd.Decline, CommandParser.parse("group decline"))
+        assertEquals(Command.GroupCmd.Decline, CommandParser.parse("group reject"))
+    }
+
+    @Test
     fun `parses group leave`() {
         assertEquals(Command.GroupCmd.Leave, CommandParser.parse("group leave"))
     }
@@ -464,6 +470,13 @@ class CommandParserTest {
     @Test
     fun `guild invite without target is Invalid`() {
         assertTrue(CommandParser.parse("guild invite") is Command.Invalid)
+    }
+
+    @Test
+    fun `parses guild accept and decline`() {
+        assertEquals(Command.Guild.Accept, CommandParser.parse("guild accept"))
+        assertEquals(Command.Guild.Decline, CommandParser.parse("guild decline"))
+        assertEquals(Command.Guild.Decline, CommandParser.parse("guild reject"))
     }
 
     // ---- Crafting & Gathering ----

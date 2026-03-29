@@ -16,6 +16,7 @@ class GroupHandler(
     override fun register(router: CommandRouter) {
         router.on<Command.GroupCmd.Invite> { sid, cmd -> handleGroupCmd(sid, cmd) }
         router.on<Command.GroupCmd.Accept> { sid, _ -> handleGroupCmd(sid, Command.GroupCmd.Accept) }
+        router.on<Command.GroupCmd.Decline> { sid, _ -> handleGroupCmd(sid, Command.GroupCmd.Decline) }
         router.on<Command.GroupCmd.Leave> { sid, _ -> handleGroupCmd(sid, Command.GroupCmd.Leave) }
         router.on<Command.GroupCmd.Kick> { sid, cmd -> handleGroupCmd(sid, cmd) }
         router.on<Command.GroupCmd.List> { sid, _ -> handleGroupCmd(sid, Command.GroupCmd.List) }
@@ -31,6 +32,7 @@ class GroupHandler(
             when (cmd) {
                 is Command.GroupCmd.Invite -> gs.invite(sessionId, cmd.target)
                 Command.GroupCmd.Accept -> gs.accept(sessionId)
+                Command.GroupCmd.Decline -> gs.decline(sessionId)
                 Command.GroupCmd.Leave -> gs.leave(sessionId)
                 is Command.GroupCmd.Kick -> gs.kick(sessionId, cmd.target)
                 Command.GroupCmd.List -> gs.list(sessionId)
