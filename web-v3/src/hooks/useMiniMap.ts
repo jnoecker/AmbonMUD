@@ -20,10 +20,10 @@ const CURRENT_RADIUS = 24;
 
 // Inset fractions so map nodes stay within the visible scroll parchment area.
 // The scroll image has rollers on the sides and curled edges top/bottom.
-const SCROLL_INSET_LEFT = 0.08;
-const SCROLL_INSET_RIGHT = 0.10;
-const SCROLL_INSET_TOP = 0.08;
-const SCROLL_INSET_BOTTOM = 0.12;
+const SCROLL_INSET_LEFT = 0.12;
+const SCROLL_INSET_RIGHT = 0.14;
+const SCROLL_INSET_TOP = 0.12;
+const SCROLL_INSET_BOTTOM = 0.16;
 // How much to zoom the background image (1.0 = fill canvas, >1 = zoom in)
 const BG_ZOOM = 1.15;
 
