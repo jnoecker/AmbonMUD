@@ -10,7 +10,7 @@ interface AdminPanelProps {
   whoPlayers: WhoPlayer[];
 }
 
-type AdminAction = "goto" | "transfer" | "spawn" | "smite" | "kick" | "setlevel" | "dispel" | "reload" | "shutdown";
+type AdminAction = "goto" | "transfer" | "spawn" | "smite" | "kick" | "setlevel" | "dispel" | "reload" | "broadcast" | "shutdown";
 
 const ACTIONS: Array<{ id: AdminAction; label: string; description: string }> = [
   { id: "goto", label: "Goto", description: "Teleport to a room or player" },
@@ -21,6 +21,7 @@ const ACTIONS: Array<{ id: AdminAction; label: string; description: string }> = 
   { id: "setlevel", label: "Set Level", description: "Set a player's level" },
   { id: "dispel", label: "Dispel", description: "Remove all effects from a target" },
   { id: "reload", label: "Reload", description: "Reload world data" },
+  { id: "broadcast", label: "Broadcast", description: "Send a server-wide announcement" },
   { id: "shutdown", label: "Shutdown", description: "Shut down the server" },
 ];
 
@@ -304,6 +305,13 @@ export function AdminPanel({ onCommand, onClose, worldInfo, mobTemplates, whoPla
         resetForm();
         break;
       }
+      case "broadcast": {
+        const msg = inputA.trim();
+        if (!msg) return;
+        onCommand(`broadcast ${msg}`);
+        resetForm();
+        break;
+      }
       case "shutdown": {
         if (!showShutdownConfirm) {
           setShowShutdownConfirm(true);
@@ -520,6 +528,20 @@ export function AdminPanel({ onCommand, onClose, worldInfo, mobTemplates, whoPla
                     type="text"
                     className="admin-input"
                     placeholder="world, abilities, effects, or blank for all"
+                    value={inputA}
+                    onChange={(e) => setInputA(e.target.value)}
+                    autoFocus
+                  />
+                </label>
+              )}
+
+              {activeAction === "broadcast" && (
+                <label className="admin-field">
+                  <span className="admin-field-label">Message</span>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    placeholder="Server-wide announcement..."
                     value={inputA}
                     onChange={(e) => setInputA(e.target.value)}
                     autoFocus
