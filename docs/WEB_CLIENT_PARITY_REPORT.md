@@ -293,44 +293,102 @@ The remaining opportunities are minor UX polish items, not functional gaps.
 
 ---
 
-## Remaining Enhancement Opportunities
+## Remaining Issues & Enhancement Opportunities (Prioritized)
 
-These are quality-of-life improvements, not functional gaps. All underlying commands work via text input.
+Synthesized from 5 independent reviews conducted 2026-03-29.
 
-### 1. Room Floor Item Pickup UI (Low Priority)
+### P0 — Functional Bug (Fix Now)
+
+#### 1. Decline Buttons Send Unsupported Commands
+
+**Files:** `web-v3/src/components/panels/ChatPanel.tsx` lines 493 and 672
+
+The guild and group invite UI exposes **Decline** buttons that send `guild decline` and `group decline`, but `CommandParser.kt` does not recognize `decline` as a subcommand for either `guild` or `group`. The commands resolve to Unknown/Invalid, so the buttons silently fail.
+
+**Options:**
+1. **(Preferred)** Implement `Command.Guild.Decline` and `Command.GroupCmd.Decline` in parser + handlers + tests, with proper invite-rejection semantics.
+2. **(Alternative)** Replace decline buttons with local-only dismiss behavior (hide the invite card) if passive timeout/ignore is the intended decline path.
+
+### P1 — Parity Hardening (Short-Term)
+
+#### 2. Command-Parity CI Test
+
+Add an automated test that:
+- Extracts user-visible commands from `CommandParser` (command variants + aliases).
+- Compares against `defaultCommandEntries()` in `AppConfig.kt` (the `Server.Commands` manifest source).
+- Compares against command strings emitted by web UI action buttons.
+- Fails CI on orphaned UI commands (like `decline`) or undocumented parser commands.
+
+Three command documentation sources exist today (parser, `defaultCommandEntries`, `HelpContent.tsx` fallback) — they are manually synchronized and can drift.
+
+#### 3. GMCP Contract CI Test
+
+Add a test that extracts GMCP package name strings from `GmcpEmitter.kt` and compares against case labels in `applyGmcpPackage.ts`. Fail on missing coverage unless explicitly allowlisted.
+
+#### 4. Reduce Fallback Command Source Drift
+
+`web-v3/src/constants.ts` maintains a static `COMMANDS` array and `HelpContent.tsx` has hardcoded fallback categories — both can drift from the server-authoritative `Server.Commands` manifest. Consider generating the fallback from server metadata at build time, or removing it entirely (showing a "connecting..." state until the manifest arrives).
+
+### P2 — UX Polish (Enhancement)
+
+#### 5. Admin Panel Completeness
+
+The AdminPanel covers `goto`, `transfer`, `spawn`, `smite`, `kick`, `setlevel`, `dispel`, `reload`, `shutdown`. Three staff commands have UI elsewhere but not in the admin panel:
+- `possess`/`return` — handled via `Staff.Possession` GMCP + possession badge in `App.tsx`, but no explicit possess/unpossess buttons in AdminPanel.
+- `broadcast` — display overlay exists in `App.tsx`, but no "send broadcast" action in AdminPanel.
+- `invis` — toggle button exists in the staff header bar.
+
+These work via text commands and have partial UI, but for strict admin-panel completeness they could be added.
+
+#### 6. Room Floor Item Pickup UI
 
 Room items are shown via `Room.Items` GMCP. Currently players use the text `get` command. Adding "Take" buttons on room item entities (similar to container items) would reduce reliance on text commands for this common action.
 
-### 2. Whisper Visual Distinction (Low Priority)
+#### 7. Whisper Visual Distinction
 
 Whisper messages appear in the Tell channel with no visual distinction. A "(whispered)" tag or subtle style difference would preserve the proximity-based flavor of whisper vs the global reach of tell.
 
-### 3. Pose Command Discoverability (Low Priority)
-
-The `pose` command (requires including your character name in the text) is less discoverable than `emote`. A tooltip or help text explaining the difference would help.
-
-### 4. Combat Log Filtering (Enhancement)
+#### 8. Combat Log Filtering
 
 Combat events display all types (melee, ability, heal, dodge, DoT, etc.). A filter toggle for busy combat scenarios would improve readability.
 
-### 5. Quest Map Markers (Enhancement)
+#### 9. Quest Map Markers
 
 Active quest objectives could be highlighted on the zone map to aid navigation.
 
-### 6. Command-Parity CI Check (Infrastructure)
+#### 10. Pose Command Discoverability
 
-A script/test that diffs parser command families vs web command palette entries would prevent future drift as new commands are added.
+The `pose` command (requires including your character name in the text) is less discoverable than `emote`. A tooltip or help text explaining the difference would help.
 
-### 7. GMCP Contract Tests (Infrastructure)
+### P3 — Future-Proofing
 
-A test comparing `GmcpEmitter` package names and field schemas against `applyGmcpPackage.ts` cases would catch field mismatches early.
+#### 11. Shared Command/GMCP Contract Generation
+
+Consider generating TypeScript types from Kotlin-side command/GMCP contracts for compile-time guarantees across the stack.
+
+#### 12. Usage Telemetry for Parity Confidence
+
+Track command usage by source (button/palette/composer/canvas) to identify commands that are theoretically supported but practically undiscoverable.
+
+---
+
+## Suggested Acceptance Criteria for "Full Parity"
+
+Declare full feature parity when all of the following are true:
+
+1. **No dead affordances:** No UI button emits an unrecognized command. ❌ *(fails: `guild decline`, `group decline`)*
+2. **Reachability parity:** Every non-staff command is executable from web (typed or UI). ✅
+3. **Discoverability parity:** Every non-staff command appears in web help/palette with correct usage/category. ✅
+4. **Affordance parity:** Every major gameplay workflow has at least one dedicated UI path. ✅
+5. **GMCP contract parity:** Every emitted package has a client handler. ✅
+6. **Parity tests in CI:** Command and GMCP contract tests gate merges. ⚪ *(not yet implemented)*
 
 ---
 
 ## Conclusion
 
-The web client has achieved full feature parity with the text-based MUD. Every command category — navigation, communication, combat, items, world interaction, shopping, dialogue, quests, crafting, guilds, groups, friends, mail, achievements, sprites, titles, and staff administration — is represented in the web UI with dedicated panels, buttons, and GMCP-driven real-time updates.
+The web client is at **near-complete feature parity** with the text-based MUD. All 108 commands across 17 categories are reachable, GMCP coverage is comprehensive with 63+ packages, and dedicated UI exists for every major gameplay workflow.
 
-The 5 terminal-specific commands (Clear, Colors, AnsiOn, AnsiOff, Quit) are correctly excluded as they have no meaningful web equivalent. The GMCP protocol layer is comprehensive with 63+ packages covering all game systems, and the WebSocket auto-opt-in ensures all packages are active without client negotiation.
+**One functional bug remains:** the guild/group decline buttons send commands the server doesn't recognize (P0 fix). After resolving that, the strongest next step is adding automated parity contracts (P1) so the current parity state is maintained as the codebase evolves. The remaining items (P2/P3) are UX polish and future-proofing.
 
-The 7 enhancement opportunities listed above are polish items — the foundational parity work is complete.
+The 5 terminal-specific commands (Clear, Colors, AnsiOn, AnsiOff, Quit) are correctly excluded as they have no meaningful web equivalent.
