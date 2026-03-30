@@ -1,5 +1,6 @@
 package dev.ambon.config
 
+import dev.ambon.domain.world.Direction
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -131,6 +132,18 @@ data class AppConfig(
         require(engine.regen.mana.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.baseIntervalMillis must be > 0" }
         require(engine.regen.mana.minIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.minIntervalMillis must be > 0" }
         require(engine.regen.mana.regenAmount > 0) { "ambonMUD.engine.regen.mana.regenAmount must be > 0" }
+
+        if (engine.housing.enabled && engine.housing.templates.isNotEmpty()) {
+            val entryTemplates = engine.housing.templates.values.count { it.isEntry }
+            require(entryTemplates == 1) {
+                "ambonMUD.engine.housing.templates must have exactly one entry template (isEntry=true), found $entryTemplates"
+            }
+            engine.housing.templates.forEach { (key, tmpl) ->
+                require(tmpl.title.isNotBlank()) { "ambonMUD.engine.housing.templates.$key.title must be non-blank" }
+                require(tmpl.cost >= 0L) { "ambonMUD.engine.housing.templates.$key.cost must be >= 0" }
+                require(tmpl.maxDroppedItems >= 0) { "ambonMUD.engine.housing.templates.$key.maxDroppedItems must be >= 0" }
+            }
+        }
 
         require(engine.characterCreation.startingGold >= 0L) {
             "ambonMUD.engine.characterCreation.startingGold must be >= 0"
@@ -777,6 +790,7 @@ data class EngineConfig(
     val achievementCriterionTypes: AchievementCriterionTypesConfig = AchievementCriterionTypesConfig(),
     val navigation: NavigationConfig = NavigationConfig(),
     val guildRanks: GuildRanksConfig = GuildRanksConfig(),
+    val housing: HousingConfig = HousingConfig(),
     val characterCreation: CharacterCreationConfig = CharacterCreationConfig(),
     val commands: CommandsConfig = CommandsConfig(),
     val emotePresets: EmotePresetsConfig = EmotePresetsConfig(),
@@ -833,6 +847,7 @@ data class CommandsConfig(
             "groups",
             "guilds",
             "crafting",
+            "housing",
             "world",
             "social",
             "utility",
@@ -920,6 +935,34 @@ data class CommandsConfig(
             "craft" to CommandMetadata("craft/make <recipe>", "Craft an item from a recipe", "crafting", requiresTarget = true),
             "recipes" to CommandMetadata("recipes [filter]", "Browse available recipes", "crafting"),
             "craftskills" to CommandMetadata("craftskills/professions", "View crafting skill levels", "crafting"),
+            "house" to CommandMetadata("house [status]", "View your house info", "housing"),
+            "house_list" to CommandMetadata("house list", "Browse room templates (at broker)", "housing"),
+            "house_buy" to CommandMetadata("house buy", "Purchase your house (at broker)", "housing"),
+            "house_expand" to CommandMetadata(
+                "house expand <template> <direction>",
+                "Add a room to your house",
+                "housing",
+                requiresTarget = true,
+            ),
+            "house_describe" to CommandMetadata(
+                "house describe [title|desc] <text>",
+                "Customize room title or description",
+                "housing",
+                requiresTarget = true,
+            ),
+            "house_invite" to CommandMetadata(
+                "house invite <player>",
+                "Invite a player to your house",
+                "housing",
+                requiresTarget = true,
+            ),
+            "house_kick" to CommandMetadata(
+                "house kick <player>",
+                "Remove a visitor from your house",
+                "housing",
+                requiresTarget = true,
+            ),
+            "house_guests" to CommandMetadata("house guests", "List visitors in your house", "housing"),
             "open" to CommandMetadata("open <door|container>", "Open a door or container", "world", requiresTarget = true),
             "close" to CommandMetadata("close <door|container>", "Close a door or container", "world", requiresTarget = true),
             "unlock" to CommandMetadata("unlock <door|container>", "Unlock with a key", "world", requiresTarget = true),
@@ -1274,6 +1317,29 @@ data class GuildConfig(
 
 data class FriendsConfig(
     val maxFriends: Int = 50,
+)
+
+data class HousingConfig(
+    /** Master toggle for the housing system. */
+    val enabled: Boolean = true,
+    /** Direction in the entry room that leads back to the world. */
+    val entryExitDirection: Direction = Direction.SOUTH,
+    /** Room template definitions keyed by template id. */
+    val templates: Map<String, RoomTemplateConfig> = emptyMap(),
+)
+
+data class RoomTemplateConfig(
+    val title: String = "",
+    val description: String = "",
+    val cost: Long = 0L,
+    val isEntry: Boolean = false,
+    val image: String? = null,
+    /** When > 0, items dropped here persist across sessions (vault room). */
+    val maxDroppedItems: Int = 0,
+    /** When true, combat cannot be initiated in this room. */
+    val safe: Boolean = false,
+    /** Optional crafting station type (e.g. "forge", "alchemy_bench"). */
+    val station: String? = null,
 )
 
 data class AbilityEngineConfig(
