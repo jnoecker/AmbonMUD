@@ -362,6 +362,27 @@ class GmcpEmitter(
         )
     }
 
+    suspend fun sendSessionAuthToken(
+        sessionId: SessionId,
+        token: String,
+        characterName: String,
+        expiresInDays: Int,
+    ) {
+        emit(
+            sessionId,
+            "Session.AuthToken",
+            SessionAuthTokenPayload(token = token, characterName = characterName, expiresInDays = expiresInDays),
+        )
+    }
+
+    suspend fun sendSessionAuthResult(
+        sessionId: SessionId,
+        success: Boolean,
+        message: String = "",
+    ) {
+        emit(sessionId, "Session.AuthResult", SessionAuthResultPayload(success = success, message = message))
+    }
+
     suspend fun sendSessionResumeToken(
         sessionId: SessionId,
         token: String,
@@ -1557,6 +1578,17 @@ class GmcpEmitter(
         val level: Int,
         val sprite: String,
         val isStaff: Boolean,
+    )
+
+    private data class SessionAuthTokenPayload(
+        val token: String,
+        val characterName: String,
+        val expiresInDays: Int,
+    )
+
+    private data class SessionAuthResultPayload(
+        val success: Boolean,
+        val message: String,
     )
 
     private data class SessionResumeTokenPayload(

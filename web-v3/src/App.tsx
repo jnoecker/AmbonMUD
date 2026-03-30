@@ -21,6 +21,7 @@ import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
 import { canvasEvents } from "./canvas/CanvasEventBus";
 import { LoginModal } from "./canvas/LoginModal";
+import { CharacterPicker } from "./components/CharacterPicker";
 import {
   DEFAULT_STATUS_VAR_LABELS,
   EMPTY_CHAR,
@@ -205,6 +206,7 @@ function App() {
   const [loginPrompt, setLoginPrompt] = useState<LoginPromptState | null>(null);
   const [loginError, setLoginError] = useState<LoginErrorState | null>(null);
   const [reconnecting, setReconnecting] = useState(false);
+  const [savedCharacters, setSavedCharacters] = useState<string[]>([]);
   const resumeTokenRef = useRef<string | null>(null);
   const connectedRef = useRef(false);
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
@@ -363,6 +365,7 @@ function App() {
     setMailMessage(null);
     setLoginPrompt(null);
     setLoginError(null);
+    setSavedCharacters([]);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setCombatLogMessages([]);
@@ -429,6 +432,7 @@ function App() {
           setLoginPrompt,
           setLoginError,
           setReconnecting,
+          setSavedCharacters,
           resumeTokenRef,
           setServerAssets,
           setServerCommands,
@@ -1077,6 +1081,18 @@ function App() {
             onOpenInventory={() => setActivePopout("inventory")}
             onOpenEquipment={() => setActivePopout("equipment")}
             onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
+            onLogout={() => {
+              // Clear auth token from localStorage for this character
+              try {
+                const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
+                delete saved[character.name];
+                localStorage.setItem("ambonmud_auth_tokens", JSON.stringify(saved));
+              } catch { /* ignore */ }
+              // Clear resume token so disconnect doesn't auto-reconnect
+              resumeTokenRef.current = null;
+              // Tell server to clear the token hash and disconnect
+              sendGmcp("Session.Logout", {});
+            }}
           />
         )}
 
@@ -1242,7 +1258,31 @@ function App() {
         </div>
       )}
 
-      {loginPrompt && !reconnecting && (
+      {savedCharacters.length > 1 && !reconnecting && (
+        <CharacterPicker
+          characters={savedCharacters}
+          onSelect={(name) => {
+            try {
+              const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
+              const token = saved[name];
+              if (token) {
+                setSavedCharacters([]);
+                setReconnecting(true);
+                sendGmcp("Session.Authenticate", { token });
+                return;
+              }
+            } catch { /* ignore */ }
+            // Token missing — fall back to login
+            setSavedCharacters([]);
+          }}
+          onNewCharacter={() => {
+            setSavedCharacters([]);
+            // Let the login prompt show naturally (it should already be pending)
+          }}
+        />
+      )}
+
+      {loginPrompt && !reconnecting && savedCharacters.length === 0 && (
         <LoginModal
           loginPrompt={loginPrompt}
           loginError={loginError}
