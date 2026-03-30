@@ -1,8 +1,10 @@
 package dev.ambon.engine.commands.handlers
 
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.AchievementSystem
+import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.QuestAvailableEntry
 import dev.ambon.engine.QuestAvailableObjectiveSummary
 import dev.ambon.engine.QuestRegistry
@@ -22,9 +24,11 @@ class DialogueQuestHandler(
     private val questRegistry: QuestRegistry = QuestRegistry(),
     private val achievementSystem: AchievementSystem? = null,
     private val achievementRegistry: AchievementRegistry = AchievementRegistry(),
+    private val housingSystem: HousingSystem? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val mobs = ctx.mobs
+    private val world = ctx.world
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
 
@@ -109,6 +113,37 @@ class DialogueQuestHandler(
                         "The innkeeper marks your name in the ledger. This inn is now your recall point.",
                     ),
                 )
+            }
+            "enter_house" -> {
+                val hs = housingSystem
+                val me = players.get(sessionId) ?: return
+                if (hs == null || !me.hasHouse) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "You don't own a house."))
+                    return
+                }
+                val origin = me.roomId
+                val result = hs.enterOwnHouse(sessionId, origin)
+                if (result is RoomId) {
+                    movePlayerWithNotify(
+                        sessionId,
+                        origin,
+                        result,
+                        "steps through a doorway and vanishes.",
+                        "appears through a shimmering doorway.",
+                        players,
+                        outbound,
+                        gmcpEmitter,
+                    )
+                    outbound.send(OutboundEvent.SendText(sessionId, "You step through the doorway into your house."))
+                    // Send look for the new room
+                    val room = players.get(sessionId)?.roomId?.let { world.rooms[it] }
+                    if (room != null) {
+                        outbound.send(OutboundEvent.SendText(sessionId, room.title))
+                        outbound.send(OutboundEvent.SendText(sessionId, room.description))
+                    }
+                } else {
+                    outbound.send(OutboundEvent.SendError(sessionId, result.toString()))
+                }
             }
         }
     }
