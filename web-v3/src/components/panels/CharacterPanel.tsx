@@ -32,6 +32,7 @@ interface CharacterPanelProps {
   onOpenInventory: () => void;
   onOpenEquipment: () => void;
   onCommand: (command: string) => void;
+  onLogout: () => void;
 }
 
 export function CharacterPanel({
@@ -62,6 +63,7 @@ export function CharacterPanel({
   onOpenInventory,
   onOpenEquipment,
   onCommand,
+  onLogout,
 }: CharacterPanelProps) {
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("vitals");
   const [expandedQuestId, setExpandedQuestId] = useState<string | null>(null);
@@ -637,6 +639,14 @@ export function CharacterPanel({
             )}
           </div>
         </article>
+
+        {hasCharacterProfile && (
+          <div className="character-logout-row">
+            <button type="button" className="soft-button character-logout-btn" onClick={onLogout}>
+              Log out
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

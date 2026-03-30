@@ -10,6 +10,11 @@ class InMemoryPlayerRepository : PlayerRepository {
 
     override suspend fun findById(id: PlayerId): PlayerRecord? = players[id]
 
+    override suspend fun findByAuthTokenHash(hash: String): PlayerRecord? {
+        if (hash.isBlank()) return null
+        return players.values.find { it.authTokenHash == hash }
+    }
+
     override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
         val trimmed = request.name.trim()
         if (players.values.any { it.name.equals(trimmed, ignoreCase = true) }) {

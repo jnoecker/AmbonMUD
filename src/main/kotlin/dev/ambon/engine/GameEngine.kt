@@ -79,6 +79,14 @@ import java.time.Clock
 
 private val log = KotlinLogging.logger {}
 
+private const val AUTH_TOKEN_EXPIRY_DAYS = 60
+
+@OptIn(ExperimentalStdlibApi::class)
+private fun sha256Hex(input: String): String =
+    java.security.MessageDigest.getInstance("SHA-256")
+        .digest(input.toByteArray())
+        .toHexString()
+
 /**
  * Groups all sharding / multi-engine parameters. Pass a non-default instance only when running
  * in ENGINE or STANDALONE mode with an active shard topology; STANDALONE single-node setups
@@ -206,6 +214,7 @@ class GameEngine(
                 markStatsDirty(sid)
                 broadcastServerWho()
                 issueResumeToken(sid)
+                issueAuthToken(sid)
             },
         )
     }
@@ -330,6 +339,8 @@ class GameEngine(
             guildSystem = guildSystem,
             gmcpEmitter = gmcpEmitter,
             onResumeRequested = if (gracePeriodManager != null) ::handleSessionResume else null,
+            onAuthenticateRequested = ::handleSessionAuthenticate,
+            onLogoutRequested = ::handleSessionLogout,
             logger = log,
             metrics = metrics,
         )
@@ -1270,6 +1281,112 @@ class GameEngine(
         val mgr = gracePeriodManager ?: return
         val token = mgr.issueToken(sessionId)
         gmcpEmitter.sendSessionResumeToken(sessionId, token, mgr.gracePeriodSeconds)
+    }
+
+    /**
+     * Handle a Session.Authenticate GMCP from a client presenting a
+     * remember-me auth token (stored in localStorage) for password-free login.
+     */
+    private suspend fun handleSessionAuthenticate(sessionId: SessionId, token: String) {
+        val hash = sha256Hex(token)
+        val record = persistence.playerRepo?.findByAuthTokenHash(hash)
+        if (record == null) {
+            gmcpEmitter.sendSessionAuthResult(sessionId, false, "Invalid or expired token")
+            return
+        }
+
+        // Enforce server-side token expiry
+        val tokenAgeMs = clock.millis() - record.authTokenIssuedAt
+        val maxAgeMs = AUTH_TOKEN_EXPIRY_DAYS.toLong() * 24 * 60 * 60 * 1000
+        if (record.authTokenIssuedAt > 0 && tokenAgeMs > maxAgeMs) {
+            // Clear the expired token
+            persistence.playerRepo?.save(record.copy(authTokenHash = "", authTokenIssuedAt = 0L))
+            gmcpEmitter.sendSessionAuthResult(sessionId, false, "Token expired — please log in again")
+            return
+        }
+
+        log.info { "Auth token login: name=${record.name} sessionId=$sessionId" }
+
+        // Clear the pending login state (set in onConnected)
+        loginFlowHandler.pendingLogins.remove(sessionId)
+        loginFlowHandler.failedLoginAttempts.remove(sessionId)
+
+        // Cancel any grace period for this player
+        gracePeriodManager?.cancelByName(record.name)?.let { cancelled ->
+            sessionEventHandler.fullDisconnect(cancelled.sessionId, cancelled.playerState)
+        }
+
+        // Bind the session (handles takeover if already online)
+        players.applyLoginCredentials(sessionId, record, record.ansiEnabled)
+
+        // Verify the session bound successfully
+        val me = players.get(sessionId)
+        if (me == null) {
+            gmcpEmitter.sendSessionAuthResult(sessionId, false, "Login failed")
+            return
+        }
+
+        // Issue a new auth token (rotation) and persist before sending to client
+        val newToken = java.util.UUID.randomUUID().toString()
+        val newHash = sha256Hex(newToken)
+        persistence.playerRepo?.save(record.copy(authTokenHash = newHash, authTokenIssuedAt = clock.millis()))
+
+        gmcpEmitter.sendSessionAuthResult(sessionId, true)
+        gmcpEmitter.sendSessionAuthToken(sessionId, newToken, record.name, AUTH_TOKEN_EXPIRY_DAYS)
+
+        // Finalize login (same as normal flow)
+        loginFlowHandler.onAfterLogin(sessionId)
+        val player = players.get(sessionId) ?: return
+        abilitySystem.syncAbilities(sessionId, player.level, player.playerClass)
+        outbound.send(OutboundEvent.SetAnsi(sessionId, player.ansiEnabled))
+        if (!world.rooms.containsKey(player.roomId)) {
+            players.moveTo(sessionId, world.startRoom)
+        }
+        broadcastToRoom(players, outbound, player.roomId, "${player.name} enters.", sessionId)
+        gmcpEmitter.sendFullCharacterSync(
+            sessionId,
+            player,
+            items,
+            abilitySystem,
+            statusEffectSystem,
+            achievementRegistry,
+            groupSystem,
+            players,
+            guildSystem,
+        )
+        if (player.isStaff) {
+            gmcpEmitter.sendStaffWorldInfo(sessionId, world)
+            gmcpEmitter.sendStaffMobTemplates(sessionId, world)
+        }
+        router.handle(sessionId, Command.Look)
+    }
+
+    /** Handle Session.Logout — clear the auth token and disconnect. */
+    private suspend fun handleSessionLogout(sessionId: SessionId) {
+        val me = players.get(sessionId) ?: return
+        val pid = me.playerId ?: return
+        val repo = persistence.playerRepo ?: return
+
+        // Clear the auth token hash so the old token can't be reused
+        val record = repo.findById(pid)
+        if (record != null && record.authTokenHash.isNotEmpty()) {
+            repo.save(record.copy(authTokenHash = "", authTokenIssuedAt = 0L))
+        }
+
+        log.info { "Player logged out (auth token cleared): name=${me.name}" }
+        outbound.send(OutboundEvent.Close(sessionId, "Logged out."))
+    }
+
+    /** Issue an auth token (remember-me) after successful login and persist the hash. */
+    private suspend fun issueAuthToken(sessionId: SessionId) {
+        val repo = persistence.playerRepo ?: return
+        val me = players.get(sessionId) ?: return
+        val pid = me.playerId ?: return
+        val token = java.util.UUID.randomUUID().toString()
+        val hash = sha256Hex(token)
+        val record = repo.findById(pid) ?: return
+        repo.save(record.copy(authTokenHash = hash, authTokenIssuedAt = clock.millis()))
+        gmcpEmitter.sendSessionAuthToken(sessionId, token, me.name, AUTH_TOKEN_EXPIRY_DAYS)
     }
 
     private suspend fun sendHousingGmcp(sessionId: SessionId) {

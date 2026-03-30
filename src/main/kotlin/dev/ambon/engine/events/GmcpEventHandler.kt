@@ -27,6 +27,8 @@ class GmcpEventHandler(
     private val guildSystem: GuildSystem? = null,
     private val gmcpEmitter: GmcpEmitter,
     private val onResumeRequested: (suspend (SessionId, String) -> Unit)? = null,
+    private val onAuthenticateRequested: (suspend (SessionId, String) -> Unit)? = null,
+    private val onLogoutRequested: (suspend (SessionId) -> Unit)? = null,
     private val logger: KLogger,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
@@ -73,19 +75,33 @@ class GmcpEventHandler(
             }
 
             "Session.Resume" -> {
-                val token = ev.jsonData.trim()
-                    .removePrefix("{").removeSuffix("}")
-                    .let { body ->
-                        val match = Regex(""""token"\s*:\s*"([^"]+)"""").find(body)
-                        match?.groupValues?.get(1)
-                    }
+                val token = parseStringField(ev.jsonData, "token")
                 if (token != null && onResumeRequested != null) {
                     onResumeRequested.invoke(sid, token)
                 } else {
                     gmcpEmitter.sendSessionResumeResult(sid, false)
                 }
             }
+
+            "Session.Authenticate" -> {
+                val token = parseStringField(ev.jsonData, "token")
+                if (token != null && onAuthenticateRequested != null) {
+                    onAuthenticateRequested.invoke(sid, token)
+                } else {
+                    gmcpEmitter.sendSessionAuthResult(sid, false, "Authentication not supported")
+                }
+            }
+
+            "Session.Logout" -> {
+                onLogoutRequested?.invoke(sid)
+            }
         }
+    }
+
+    private fun parseStringField(json: String, field: String): String? {
+        val body = json.trim().removePrefix("{").removeSuffix("}")
+        val match = Regex(""""$field"\s*:\s*"([^"]+)"""").find(body)
+        return match?.groupValues?.get(1)
     }
 
     private fun parseGmcpPackageList(json: String): List<String> {
