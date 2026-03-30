@@ -164,6 +164,14 @@ class ItemHandler(
     ) {
         players.withPlayer(sessionId) { me ->
             val roomId = me.roomId
+            // Check vault capacity in house rooms
+            if (housingSystem != null && housingSystem.isHouseRoom(roomId)) {
+                val capacity = housingSystem.vaultCapacity(sessionId)
+                if (capacity > 0 && items.itemsInRoom(roomId).size >= capacity) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "This room is full. It can hold at most $capacity items."))
+                    return
+                }
+            }
             val moved = items.dropToRoom(me.sessionId, roomId, cmd.keyword)
             if (moved == null) {
                 outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
