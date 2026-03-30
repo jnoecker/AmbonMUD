@@ -28,6 +28,7 @@ class GmcpEventHandler(
     private val gmcpEmitter: GmcpEmitter,
     private val onResumeRequested: (suspend (SessionId, String) -> Unit)? = null,
     private val onAuthenticateRequested: (suspend (SessionId, String) -> Unit)? = null,
+    private val onLogoutRequested: (suspend (SessionId) -> Unit)? = null,
     private val logger: KLogger,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
@@ -89,6 +90,10 @@ class GmcpEventHandler(
                 } else {
                     gmcpEmitter.sendSessionAuthResult(sid, false, "Authentication not supported")
                 }
+            }
+
+            "Session.Logout" -> {
+                onLogoutRequested?.invoke(sid)
             }
         }
     }

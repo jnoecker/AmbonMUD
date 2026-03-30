@@ -102,6 +102,7 @@ interface GmcpContext {
   setLoginPrompt: Dispatch<SetStateAction<LoginPromptState | null>>;
   setLoginError: Dispatch<SetStateAction<LoginErrorState | null>>;
   setReconnecting: Dispatch<SetStateAction<boolean>>;
+  setSavedCharacters: Dispatch<SetStateAction<string[]>>;
   resumeTokenRef: { current: string | null };
   sendGmcp: (pkg: string, payload: unknown) => boolean;
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
@@ -1144,23 +1145,19 @@ export function applyGmcpPackage(
         ctx.sendGmcp("Session.Resume", { token: ctx.resumeTokenRef.current });
       } else {
         // Check for saved auth tokens in localStorage
-        let authToken: string | null = null;
+        let savedTokens: Record<string, string> = {};
         try {
-          const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
-          const names = Object.keys(saved);
-          if (names.length === 1) {
-            // Single character — auto-authenticate
-            authToken = saved[names[0]];
-          } else if (names.length > 1) {
-            // Multiple characters — use the most recently played (first in object)
-            // TODO: character picker UI
-            authToken = saved[names[0]];
-          }
+          savedTokens = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
         } catch { /* localStorage unavailable */ }
+        const names = Object.keys(savedTokens);
 
-        if (authToken) {
+        if (names.length === 1) {
+          // Single character — auto-authenticate
           ctx.setReconnecting(true);
-          ctx.sendGmcp("Session.Authenticate", { token: authToken });
+          ctx.sendGmcp("Session.Authenticate", { token: savedTokens[names[0]] });
+        } else if (names.length > 1) {
+          // Multiple characters — show picker
+          ctx.setSavedCharacters(names);
         } else {
           ctx.setLoginPrompt(packet);
           ctx.setLoginError(null);

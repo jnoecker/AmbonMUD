@@ -340,6 +340,7 @@ class GameEngine(
             gmcpEmitter = gmcpEmitter,
             onResumeRequested = if (gracePeriodManager != null) ::handleSessionResume else null,
             onAuthenticateRequested = ::handleSessionAuthenticate,
+            onLogoutRequested = ::handleSessionLogout,
             logger = log,
             metrics = metrics,
         )
@@ -1344,6 +1345,22 @@ class GameEngine(
             gmcpEmitter.sendStaffMobTemplates(sessionId, world)
         }
         router.handle(sessionId, Command.Look)
+    }
+
+    /** Handle Session.Logout — clear the auth token and disconnect. */
+    private suspend fun handleSessionLogout(sessionId: SessionId) {
+        val me = players.get(sessionId) ?: return
+        val pid = me.playerId ?: return
+        val repo = persistence.playerRepo ?: return
+
+        // Clear the auth token hash so the old token can't be reused
+        val record = repo.findById(pid)
+        if (record != null) {
+            repo.save(record.copy(authTokenHash = ""))
+        }
+
+        log.info { "Player logged out (auth token cleared): name=${me.name}" }
+        outbound.send(OutboundEvent.Close(sessionId, "Logged out."))
     }
 
     /** Issue an auth token (remember-me) after successful login and persist the hash. */
