@@ -47,6 +47,16 @@ class World(
     /** Returns the set of zone names present in this world. */
     fun zones(): Set<String> = _rooms.keys.mapTo(mutableSetOf()) { it.zone }
 
+    /** Adds or replaces individual rooms (used by the housing system to inject player house rooms). */
+    fun putRooms(rooms: Map<RoomId, Room>) {
+        _rooms.putAll(rooms)
+    }
+
+    /** Removes all rooms whose [RoomId.zone] equals [zone]. */
+    fun removeZone(zone: String) {
+        _rooms.keys.removeAll { it.zone == zone }
+    }
+
     /**
      * Replaces all data for [zone] with data from [source].
      * Only data whose IDs belong to [zone] is affected; other zones are untouched.

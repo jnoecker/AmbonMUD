@@ -71,6 +71,8 @@ data class PlayerState(
     var prePossessRoomId: RoomId? = null,
     /** When true, player is hidden from room player lists, who, and movement broadcasts. Runtime-only. */
     var invisible: Boolean = false,
+    /** Cached flag indicating whether this player owns a house. Runtime-only; set on login. */
+    var hasHouse: Boolean = false,
 ) {
     data class MailComposeState(
         val recipientName: String,
