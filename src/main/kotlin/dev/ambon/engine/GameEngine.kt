@@ -1295,6 +1295,16 @@ class GameEngine(
             return
         }
 
+        // Enforce server-side token expiry
+        val tokenAgeMs = clock.millis() - record.authTokenIssuedAt
+        val maxAgeMs = AUTH_TOKEN_EXPIRY_DAYS.toLong() * 24 * 60 * 60 * 1000
+        if (record.authTokenIssuedAt > 0 && tokenAgeMs > maxAgeMs) {
+            // Clear the expired token
+            persistence.playerRepo?.save(record.copy(authTokenHash = "", authTokenIssuedAt = 0L))
+            gmcpEmitter.sendSessionAuthResult(sessionId, false, "Token expired — please log in again")
+            return
+        }
+
         log.info { "Auth token login: name=${record.name} sessionId=$sessionId" }
 
         // Clear the pending login state (set in onConnected)
@@ -1309,13 +1319,17 @@ class GameEngine(
         // Bind the session (handles takeover if already online)
         players.applyLoginCredentials(sessionId, record, record.ansiEnabled)
 
-        // Issue a new auth token (rotation) and persist
+        // Verify the session bound successfully
+        val me = players.get(sessionId)
+        if (me == null) {
+            gmcpEmitter.sendSessionAuthResult(sessionId, false, "Login failed")
+            return
+        }
+
+        // Issue a new auth token (rotation) and persist before sending to client
         val newToken = java.util.UUID.randomUUID().toString()
         val newHash = sha256Hex(newToken)
-        val me = players.get(sessionId)
-        if (me != null) {
-            persistence.playerRepo?.save(record.copy(authTokenHash = newHash))
-        }
+        persistence.playerRepo?.save(record.copy(authTokenHash = newHash, authTokenIssuedAt = clock.millis()))
 
         gmcpEmitter.sendSessionAuthResult(sessionId, true)
         gmcpEmitter.sendSessionAuthToken(sessionId, newToken, record.name, AUTH_TOKEN_EXPIRY_DAYS)
@@ -1355,8 +1369,8 @@ class GameEngine(
 
         // Clear the auth token hash so the old token can't be reused
         val record = repo.findById(pid)
-        if (record != null) {
-            repo.save(record.copy(authTokenHash = ""))
+        if (record != null && record.authTokenHash.isNotEmpty()) {
+            repo.save(record.copy(authTokenHash = "", authTokenIssuedAt = 0L))
         }
 
         log.info { "Player logged out (auth token cleared): name=${me.name}" }
@@ -1371,7 +1385,7 @@ class GameEngine(
         val token = java.util.UUID.randomUUID().toString()
         val hash = sha256Hex(token)
         val record = repo.findById(pid) ?: return
-        repo.save(record.copy(authTokenHash = hash))
+        repo.save(record.copy(authTokenHash = hash, authTokenIssuedAt = clock.millis()))
         gmcpEmitter.sendSessionAuthToken(sessionId, token, me.name, AUTH_TOKEN_EXPIRY_DAYS)
     }
 

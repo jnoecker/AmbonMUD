@@ -39,8 +39,15 @@ abstract class DelegatingPlayerRepository(
         storeOnSave(record)
     }
 
-    override suspend fun findByAuthTokenHash(hash: String): PlayerRecord? =
-        delegate.findByAuthTokenHash(hash)?.also { storeOnReadMiss(it) }
+    override suspend fun findByAuthTokenHash(hash: String): PlayerRecord? {
+        if (hash.isBlank()) return null
+        // Check cache first — freshly rotated tokens may not have flushed to the delegate yet.
+        lookupCachedByAuthTokenHash(hash)?.let { return it }
+        return delegate.findByAuthTokenHash(hash)?.also { storeOnReadMiss(it) }
+    }
+
+    /** Search the cache for a record matching the given auth token hash. Override for O(1) lookups. */
+    protected open suspend fun lookupCachedByAuthTokenHash(hash: String): PlayerRecord? = null
 
     override suspend fun evict(id: PlayerId) {
         delegate.evict(id)

@@ -67,6 +67,8 @@ class YamlPlayerRepository(
             }
         }
 
+    // Note: linear scan of all player files. Acceptable for dev/small servers
+    // using the YAML backend. Postgres uses an indexed column lookup.
     override suspend fun findByAuthTokenHash(hash: String): PlayerRecord? {
         if (hash.isBlank()) return null
         return withContext(Dispatchers.IO) {

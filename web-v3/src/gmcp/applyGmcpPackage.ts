@@ -1156,8 +1156,9 @@ export function applyGmcpPackage(
           ctx.setReconnecting(true);
           ctx.sendGmcp("Session.Authenticate", { token: savedTokens[names[0]] });
         } else if (names.length > 1) {
-          // Multiple characters — show picker
+          // Multiple characters — show picker (retain loginPrompt for fallback)
           ctx.setSavedCharacters(names);
+          ctx.setLoginPrompt(packet);
         } else {
           ctx.setLoginPrompt(packet);
           ctx.setLoginError(null);
@@ -1209,15 +1210,9 @@ export function applyGmcpPackage(
         // Auth succeeded — server will send full state sync
         ctx.setReconnecting(false);
       } else {
-        // Auth failed — show normal login
+        // Auth failed — fall back to normal login prompt
         ctx.setReconnecting(false);
-        // Remove the failed token
-        try {
-          const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
-          // We don't know which character failed — clear will happen on next explicit logout
-          localStorage.setItem("ambonmud_auth_tokens", JSON.stringify(saved));
-        } catch { /* ignore */ }
-        ctx.setLoginPrompt(data as LoginPromptState);
+        ctx.setLoginPrompt({ state: "name" } as LoginPromptState);
         ctx.setLoginError(null);
       }
       break;
