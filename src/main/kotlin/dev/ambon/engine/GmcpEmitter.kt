@@ -119,6 +119,8 @@ class GmcpEmitter(
     suspend fun sendRoomInfo(
         sessionId: SessionId,
         room: Room,
+        isHousing: Boolean = false,
+        housingOwner: String? = null,
     ) {
         emit(
             sessionId,
@@ -136,6 +138,8 @@ class GmcpEmitter(
                 station = room.station,
                 mapX = room.mapX,
                 mapY = room.mapY,
+                housing = isHousing,
+                housingOwner = housingOwner,
             ),
         )
     }
@@ -639,6 +643,33 @@ class GmcpEmitter(
     suspend fun sendFriendOffline(sessionId: SessionId, friendName: String) {
         emit(sessionId, "Friends.Offline", FriendOfflinePayload(name = friendName))
     }
+
+    // ---------- housing ----------
+
+    suspend fun sendHousingInfo(
+        sessionId: SessionId,
+        hasHouse: Boolean,
+        ownerName: String? = null,
+        rooms: List<HousingRoomPayload> = emptyList(),
+    ) {
+        emit(
+            sessionId,
+            "Housing.Info",
+            HousingInfoPayload(hasHouse = hasHouse, ownerName = ownerName, rooms = rooms),
+        )
+    }
+
+    data class HousingRoomPayload(
+        val templateId: String,
+        val title: String,
+        val description: String,
+    )
+
+    private data class HousingInfoPayload(
+        val hasHouse: Boolean,
+        val ownerName: String?,
+        val rooms: List<HousingRoomPayload>,
+    )
 
     // ---------- combat events ----------
 
@@ -1431,6 +1462,8 @@ class GmcpEmitter(
         val station: String? = null,
         val mapX: Int = 0,
         val mapY: Int = 0,
+        val housing: Boolean = false,
+        val housingOwner: String? = null,
     )
 
     private data class ItemPayload(
