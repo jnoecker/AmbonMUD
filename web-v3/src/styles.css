@@ -9376,7 +9376,7 @@ body {
 .housing-hint code {
   padding: 1px 5px;
   border-radius: 3px;
-  background: rgb(62 74 108 / 60%);
+  background: var(--bg-surface);
   font-size: 0.76rem;
 }
 
@@ -9408,7 +9408,7 @@ body {
   padding: 5px 12px;
   border: 1px solid var(--line-faint);
   border-radius: var(--radius-sm);
-  background: rgb(62 74 108 / 50%);
+  background: var(--bg-surface);
   color: var(--text-secondary);
   font-family: var(--font-body);
   font-size: 0.78rem;
@@ -9418,13 +9418,13 @@ body {
 }
 
 .housing-action-btn:hover {
-  border-color: rgb(168 151 210 / 40%);
+  border-color: var(--line-subtle);
   color: var(--text-primary);
 }
 
 .housing-save-btn {
-  background: rgb(90 70 140 / 40%);
-  border-color: rgb(168 151 210 / 40%);
+  background: var(--bg-surface-hover);
+  border-color: var(--line-subtle);
   color: var(--text-bright);
 }
 
@@ -9432,9 +9432,9 @@ body {
   margin: 0 var(--space-2);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  background: linear-gradient(140deg, rgb(100 80 60 / 40%), rgb(80 60 40 / 35%));
-  border: 1px solid rgb(200 160 120 / 25%);
-  color: rgb(230 200 170);
+  background: var(--bg-surface);
+  border: 1px solid var(--color-accent-moonlit-silver-muted);
+  color: var(--color-accent-moonlit-silver);
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -9451,13 +9451,13 @@ body {
 .housing-room-item {
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  background: linear-gradient(140deg, rgb(70 83 117 / 80%), rgb(60 76 111 / 76%));
+  background: var(--bg-surface);
   border: 1px solid var(--line-faint);
   transition: border-color 150ms var(--ease-out-soft);
 }
 
 .housing-room-item:hover {
-  border-color: rgb(168 151 210 / 30%);
+  border-color: var(--line-subtle);
 }
 
 .housing-room-header {
@@ -9523,7 +9523,7 @@ body {
   padding: 6px 10px;
   border: 1px solid var(--line-faint);
   border-radius: var(--radius-sm);
-  background: rgb(30 36 56 / 80%);
+  background: var(--bg-deep);
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 0.82rem;
@@ -9546,13 +9546,14 @@ body {
   gap: var(--space-2);
 }
 
+/* TODO: vault capacity indicator — will be used when vault room UI is added */
 .housing-vault-indicator {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
   border-radius: 3px;
-  background: rgb(168 151 210 / 25%);
+  background: var(--bg-surface-hover);
   color: var(--color-accent-lavender);
   font-size: 0.72rem;
   font-weight: 600;

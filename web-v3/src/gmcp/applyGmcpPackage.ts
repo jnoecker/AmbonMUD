@@ -90,7 +90,7 @@ interface GmcpContext {
   setCombatTarget: Dispatch<SetStateAction<CombatTarget | null>>;
   setShop: Dispatch<SetStateAction<ShopState | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
-  updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number) => void;
+  updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, housing?: boolean) => void;
   loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void;
   pushCombatEvent: (event: CombatEventData) => void;
   setCharStats: Dispatch<SetStateAction<CharStats | null>>;
@@ -264,7 +264,7 @@ export function applyGmcpPackage(
       });
 
       if (id) {
-        ctx.updateMap(id, exits, title === "-" ? "" : title, image, mapX, mapY);
+        ctx.updateMap(id, exits, title === "-" ? "" : title, image, mapX, mapY, housing);
       }
       break;
     }

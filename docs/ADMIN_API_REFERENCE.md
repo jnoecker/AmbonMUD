@@ -622,7 +622,7 @@ These were identified but not addressed in this iteration:
 1. **Health check:** `GET /api/health` — verify connectivity and auth
 2. **Read-only monitoring:** `/api/overview`, `/api/players`, `/api/world/zones`
 3. **Content inspection:** `/api/abilities`, `/api/effects`, `/api/quests`, `/api/achievements`, `/api/shops`, `/api/items` — validate world-building
-4. **Housing inspection:** `/api/housing/templates`, `/api/housing`, `/api/housing/{playerName}` — view housing config and player houses
+4. **Housing inspection:** `/api/housing/templates` (all templates), `/api/housing` (online homeowners only), `/api/housing/{playerName}` (full house record by name)
 4. **Room inspection:** `/api/world/zones/{zone}/rooms/{room}` — deep-dive into specific rooms
 5. **Hot reload:** `POST /api/reload?target=all` — apply updated world files
 6. **Broadcast:** `POST /api/broadcast` — announce reload to players

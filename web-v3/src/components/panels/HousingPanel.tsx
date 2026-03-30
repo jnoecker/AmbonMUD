@@ -28,6 +28,11 @@ export function HousingPanel({
   if (!housing?.hasHouse) {
     return (
       <div className="housing-panel">
+        {inAnyHouse && (
+          <div className="housing-visiting-banner">
+            Visiting {room.housingOwner ?? "someone"}&apos;s house
+          </div>
+        )}
         <div className="housing-empty-state">
           <span className="housing-empty-icon">{"\u{1F3E0}"}</span>
           <p className="empty-note">You don't own a house yet.</p>
@@ -78,7 +83,7 @@ export function HousingPanel({
 
       {inAnyHouse && !inOwnHouse && (
         <div className="housing-visiting-banner">
-          Visiting {room.housingOwner}&apos;s house
+          Visiting {room.housingOwner ?? "someone"}&apos;s house
         </div>
       )}
 

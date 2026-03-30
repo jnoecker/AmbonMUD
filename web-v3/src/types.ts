@@ -196,6 +196,7 @@ export interface MapRoom {
   exits: Record<string, string>;
   title: string;
   image: string | null;
+  housing?: boolean;
 }
 
 export interface TabCycle {

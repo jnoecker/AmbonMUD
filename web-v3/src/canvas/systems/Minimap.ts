@@ -12,6 +12,7 @@ interface MapNode {
   exits: Record<string, string>;
   title: string;
   image: string | null;
+  housing?: boolean;
 }
 
 const DEFAULT_DIAMETER = 140;
@@ -375,7 +376,7 @@ export class Minimap {
       }
 
       if (visited) {
-        const isHousing = id.startsWith("house_");
+        const isHousing = node.housing === true;
         const fillColor = isCurrent ? CURRENT_COLOR : isHousing ? HOUSING_COLOR : NODE_COLOR;
         this.mapGraphics.circle(nx, ny, radius);
         this.mapGraphics.fill({ color: fillColor });
