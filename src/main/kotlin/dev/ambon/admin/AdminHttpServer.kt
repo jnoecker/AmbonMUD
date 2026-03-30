@@ -3,6 +3,7 @@ package dev.ambon.admin
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.ambon.config.AdminConfig
+import dev.ambon.config.HousingConfig
 import dev.ambon.domain.achievement.AchievementDef
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -20,6 +21,7 @@ import dev.ambon.engine.abilities.AbilityRegistry
 import dev.ambon.engine.status.StatusEffectDefinition
 import dev.ambon.engine.status.StatusEffectId
 import dev.ambon.engine.status.StatusEffectRegistry
+import dev.ambon.persistence.HouseRepository
 import dev.ambon.persistence.PlayerRecord
 import dev.ambon.persistence.PlayerRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -62,6 +64,8 @@ class AdminHttpServer(
     private val questRegistry: QuestRegistry? = null,
     private val achievementRegistry: AchievementRegistry? = null,
     private val shopRegistry: ShopRegistry? = null,
+    private val houseRepo: HouseRepository? = null,
+    private val housingConfig: HousingConfig? = null,
     private val startTime: Long = System.currentTimeMillis(),
 ) {
     private var engine: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>? = null
@@ -86,6 +90,8 @@ class AdminHttpServer(
                     questRegistry = questRegistry,
                     achievementRegistry = achievementRegistry,
                     shopRegistry = shopRegistry,
+                    houseRepo = houseRepo,
+                    housingConfig = housingConfig,
                     corsOrigins = config.corsOrigins,
                     startTime = startTime,
                     basePath = config.basePath,
@@ -332,6 +338,8 @@ internal fun Application.adminModule(
     questRegistry: QuestRegistry? = null,
     achievementRegistry: AchievementRegistry? = null,
     shopRegistry: ShopRegistry? = null,
+    houseRepo: HouseRepository? = null,
+    housingConfig: HousingConfig? = null,
     corsOrigins: List<String> = emptyList(),
     startTime: Long = System.currentTimeMillis(),
     basePath: String = "/",
@@ -1023,6 +1031,76 @@ internal fun Application.adminModule(
                     )
                 }
             call.respondText(json.writeValueAsString(items), ContentType.Application.Json)
+        }
+
+        // ── Housing ─────────────────────────────────────────────────────────
+        get("/api/housing/templates") {
+            if (housingConfig == null || !housingConfig.enabled) {
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Housing not configured")
+                return@get
+            }
+            val templates = housingConfig.templates.map { (id, tmpl) ->
+                mapOf(
+                    "id" to id,
+                    "title" to tmpl.title,
+                    "description" to tmpl.description,
+                    "cost" to tmpl.cost,
+                    "isEntry" to tmpl.isEntry,
+                    "maxDroppedItems" to tmpl.maxDroppedItems,
+                    "safe" to tmpl.safe,
+                    "station" to tmpl.station,
+                    "image" to tmpl.image,
+                )
+            }
+            call.respondText(json.writeValueAsString(templates), ContentType.Application.Json)
+        }
+
+        get("/api/housing") {
+            if (houseRepo == null) {
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Housing not configured")
+                return@get
+            }
+            // List all houses by scanning online players; for a full list, the repo would need a findAll method.
+            val houses = players.allPlayers()
+                .filter { it.hasHouse }
+                .map { ps ->
+                    mapOf(
+                        "ownerName" to ps.name,
+                        "ownerId" to ps.playerId?.value,
+                        "online" to true,
+                    )
+                }
+                .sortedBy { it["ownerName"] as String }
+            call.respondText(json.writeValueAsString(houses), ContentType.Application.Json)
+        }
+
+        get("/api/housing/{playerName}") {
+            if (houseRepo == null) {
+                call.respondJsonError(HttpStatusCode.NotImplemented, "Housing not configured")
+                return@get
+            }
+            val name = call.parameters["playerName"]
+                ?: return@get call.respond(HttpStatusCode.BadRequest)
+            val house = houseRepo.findByOwnerName(name)
+            if (house == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+            val dto = mapOf(
+                "ownerId" to house.ownerId.value,
+                "ownerName" to house.ownerName,
+                "createdAtEpochMs" to house.createdAtEpochMs,
+                "rooms" to house.rooms.map { room ->
+                    mapOf(
+                        "templateId" to room.templateId,
+                        "customTitle" to room.customTitle,
+                        "customDescription" to room.customDescription,
+                        "exits" to room.exits.mapKeys { it.key.name },
+                        "storedItemCount" to room.storedItems.size,
+                    )
+                },
+            )
+            call.respondText(json.writeValueAsString(dto), ContentType.Application.Json)
         }
 
         // ── Broadcast ───────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
@@ -116,6 +116,8 @@ export interface RoomState {
   station?: string | null;
   mapX: number;
   mapY: number;
+  housing?: boolean;
+  housingOwner?: string | null;
 }
 
 export interface ItemSummary {
@@ -194,6 +196,7 @@ export interface MapRoom {
   exits: Record<string, string>;
   title: string;
   image: string | null;
+  housing?: boolean;
 }
 
 export interface TabCycle {
@@ -560,5 +563,17 @@ export interface SpriteEntry {
 export interface SpriteList {
   active: string | null;
   sprites: SpriteEntry[];
+}
+
+export interface HousingRoomInfo {
+  templateId: string;
+  title: string;
+  description: string;
+}
+
+export interface HousingInfo {
+  hasHouse: boolean;
+  ownerName: string | null;
+  rooms: HousingRoomInfo[];
 }
 
