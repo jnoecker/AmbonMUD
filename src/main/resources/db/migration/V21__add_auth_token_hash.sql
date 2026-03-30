@@ -1,0 +1,1 @@
+ALTER TABLE players ADD COLUMN auth_token_hash VARCHAR(64) NOT NULL DEFAULT '';

@@ -57,6 +57,8 @@ data class PlayerRecord(
     val inventoryItems: List<ItemInstance> = emptyList(),
     val equippedItems: Map<String, ItemInstance> = emptyMap(),
     val activeSprite: String? = null,
+    /** SHA-256 hash of the remember-me auth token. Empty string = no token issued. */
+    val authTokenHash: String = "",
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

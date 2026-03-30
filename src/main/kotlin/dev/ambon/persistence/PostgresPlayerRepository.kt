@@ -32,6 +32,19 @@ class PostgresPlayerRepository(
             }
         }
 
+    override suspend fun findByAuthTokenHash(hash: String): PlayerRecord? {
+        if (hash.isBlank()) return null
+        return metrics.timedLoad {
+            database.dbQuery {
+                PlayersTable
+                    .selectAll()
+                    .where { PlayersTable.authTokenHash eq hash }
+                    .firstOrNull()
+                    ?.let { PlayersTable.readRecord(it) }
+            }
+        }
+    }
+
     override suspend fun create(request: PlayerCreationRequest): PlayerRecord {
         val trimmed = request.name.trim()
         try {

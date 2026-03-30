@@ -1138,13 +1138,33 @@ export function applyGmcpPackage(
 
     case "Login.Prompt": {
       const packet = data as LoginPromptState;
-      // If we have a resume token, attempt session resume instead of showing login
+      // Priority: resume token (short-lived reconnect) > auth token (long-lived remember-me)
       if (ctx.resumeTokenRef.current) {
         ctx.setReconnecting(true);
         ctx.sendGmcp("Session.Resume", { token: ctx.resumeTokenRef.current });
       } else {
-        ctx.setLoginPrompt(packet);
-        ctx.setLoginError(null);
+        // Check for saved auth tokens in localStorage
+        let authToken: string | null = null;
+        try {
+          const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
+          const names = Object.keys(saved);
+          if (names.length === 1) {
+            // Single character — auto-authenticate
+            authToken = saved[names[0]];
+          } else if (names.length > 1) {
+            // Multiple characters — use the most recently played (first in object)
+            // TODO: character picker UI
+            authToken = saved[names[0]];
+          }
+        } catch { /* localStorage unavailable */ }
+
+        if (authToken) {
+          ctx.setReconnecting(true);
+          ctx.sendGmcp("Session.Authenticate", { token: authToken });
+        } else {
+          ctx.setLoginPrompt(packet);
+          ctx.setLoginError(null);
+        }
       }
       break;
     }
@@ -1167,6 +1187,39 @@ export function applyGmcpPackage(
         // Resume failed — fall back to normal login
         ctx.setReconnecting(false);
         ctx.resumeTokenRef.current = null;
+        ctx.setLoginPrompt(data as LoginPromptState);
+        ctx.setLoginError(null);
+      }
+      break;
+    }
+
+    case "Session.AuthToken": {
+      const packet = data as { token?: string; characterName?: string; expiresInDays?: number };
+      if (typeof packet.token === "string" && packet.token.length > 0 && typeof packet.characterName === "string") {
+        // Store in localStorage keyed by character name
+        try {
+          const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
+          saved[packet.characterName] = packet.token;
+          localStorage.setItem("ambonmud_auth_tokens", JSON.stringify(saved));
+        } catch { /* localStorage unavailable */ }
+      }
+      break;
+    }
+
+    case "Session.AuthResult": {
+      const packet = data as { success?: boolean; message?: string };
+      if (packet.success) {
+        // Auth succeeded — server will send full state sync
+        ctx.setReconnecting(false);
+      } else {
+        // Auth failed — show normal login
+        ctx.setReconnecting(false);
+        // Remove the failed token
+        try {
+          const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
+          // We don't know which character failed — clear will happen on next explicit logout
+          localStorage.setItem("ambonmud_auth_tokens", JSON.stringify(saved));
+        } catch { /* ignore */ }
         ctx.setLoginPrompt(data as LoginPromptState);
         ctx.setLoginError(null);
       }

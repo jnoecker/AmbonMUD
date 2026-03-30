@@ -44,6 +44,9 @@ interface PlayerRepository {
 
     suspend fun findById(id: PlayerId): PlayerRecord?
 
+    /** Look up a player by their SHA-256 auth token hash. Returns null if not found or hash is empty. */
+    suspend fun findByAuthTokenHash(hash: String): PlayerRecord? = null
+
     suspend fun create(request: PlayerCreationRequest): PlayerRecord
 
     suspend fun save(record: PlayerRecord)
