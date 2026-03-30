@@ -1,9 +1,9 @@
 package dev.ambon.engine.commands.handlers
 
-import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.AchievementRegistry
 import dev.ambon.engine.AchievementSystem
+import dev.ambon.engine.HouseEntryResult
 import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.QuestAvailableEntry
 import dev.ambon.engine.QuestAvailableObjectiveSummary
@@ -18,7 +18,7 @@ import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
 
 class DialogueQuestHandler(
-    ctx: EngineContext,
+    private val ctx: EngineContext,
     private val dialogueSystem: DialogueSystem? = null,
     private val questSystem: QuestSystem? = null,
     private val questRegistry: QuestRegistry = QuestRegistry(),
@@ -122,27 +122,24 @@ class DialogueQuestHandler(
                     return
                 }
                 val origin = me.roomId
-                val result = hs.enterOwnHouse(sessionId, origin)
-                if (result is RoomId) {
-                    movePlayerWithNotify(
-                        sessionId,
-                        origin,
-                        result,
-                        "steps through a doorway and vanishes.",
-                        "appears through a shimmering doorway.",
-                        players,
-                        outbound,
-                        gmcpEmitter,
-                    )
-                    outbound.send(OutboundEvent.SendText(sessionId, "You step through the doorway into your house."))
-                    // Send look for the new room
-                    val room = players.get(sessionId)?.roomId?.let { world.rooms[it] }
-                    if (room != null) {
-                        outbound.send(OutboundEvent.SendText(sessionId, room.title))
-                        outbound.send(OutboundEvent.SendText(sessionId, room.description))
+                when (val result = hs.enterOwnHouse(sessionId, origin)) {
+                    is HouseEntryResult.Success -> {
+                        movePlayerWithNotify(
+                            sessionId,
+                            origin,
+                            result.entryRoomId,
+                            "steps through a doorway and vanishes.",
+                            "appears through a shimmering doorway.",
+                            players,
+                            outbound,
+                            gmcpEmitter,
+                        )
+                        outbound.send(OutboundEvent.SendText(sessionId, "You step through the doorway into your house."))
+                        ctx.sendLook(sessionId)
                     }
-                } else {
-                    outbound.send(OutboundEvent.SendError(sessionId, result.toString()))
+                    is HouseEntryResult.Error -> {
+                        outbound.send(OutboundEvent.SendError(sessionId, result.message))
+                    }
                 }
             }
         }

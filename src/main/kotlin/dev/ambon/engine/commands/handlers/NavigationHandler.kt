@@ -4,6 +4,7 @@ import dev.ambon.config.RecallConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.LockableState
+import dev.ambon.engine.HouseEntryResult
 import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.ceilSeconds
 import dev.ambon.engine.commands.Command
@@ -86,6 +87,13 @@ class NavigationHandler(
             if (housingSystem != null && housingSystem.isHouseExit(to)) {
                 val origin = housingSystem.resolveHouseExit(sessionId)
                 if (origin != null) {
+                    // Origin may be on a different engine in sharded deployments
+                    if (!world.rooms.containsKey(origin)) {
+                        if (!attemptCrossZoneMove(sessionId, origin, onCrossZoneMove, router::suppressAutoPrompt)) {
+                            outbound.send(OutboundEvent.SendText(sessionId, "The exit shimmers but does not yield."))
+                        }
+                        return
+                    }
                     movePlayerWithNotify(
                         sessionId,
                         from,
@@ -153,25 +161,27 @@ class NavigationHandler(
 
             // Origin for the house exit is the player's recall inn (or start room)
             val recallInn = players.recallTarget(sessionId) ?: world.startRoom
-            val result = housingSystem.enterOwnHouse(sessionId, recallInn)
-            if (result is RoomId) {
-                outbound.send(OutboundEvent.SendText(sessionId, msgs.castBegin))
-                val from = me.roomId
-                movePlayerWithNotify(
-                    sessionId,
-                    from,
-                    result,
-                    msgs.departNotice,
-                    msgs.arriveNotice,
-                    players,
-                    outbound,
-                    gmcpEmitter,
-                    dialogueSystem,
-                )
-                outbound.send(OutboundEvent.SendText(sessionId, "You feel a familiar warmth and find yourself home."))
-                ctx.sendLook(sessionId)
-            } else {
-                outbound.send(OutboundEvent.SendError(sessionId, result.toString()))
+            when (val result = housingSystem.enterOwnHouse(sessionId, recallInn)) {
+                is HouseEntryResult.Success -> {
+                    outbound.send(OutboundEvent.SendText(sessionId, msgs.castBegin))
+                    val from = me.roomId
+                    movePlayerWithNotify(
+                        sessionId,
+                        from,
+                        result.entryRoomId,
+                        msgs.departNotice,
+                        msgs.arriveNotice,
+                        players,
+                        outbound,
+                        gmcpEmitter,
+                        dialogueSystem,
+                    )
+                    outbound.send(OutboundEvent.SendText(sessionId, "You feel a familiar warmth and find yourself home."))
+                    ctx.sendLook(sessionId)
+                }
+                is HouseEntryResult.Error -> {
+                    outbound.send(OutboundEvent.SendError(sessionId, result.message))
+                }
             }
             return
         }
