@@ -270,7 +270,12 @@ class WebClientParityTest {
 
         assertTrue(clientHandlers.isNotEmpty()) { "Parsed zero case handlers from applyGmcpPackage.ts" }
 
-        val missing = emittedPackages.sorted().filter { it !in clientHandlers }
+        // Server-only packages intentionally not yet handled by the web client.
+        val serverOnlyExclusions = setOf(
+            "Char.Sprites", // sprite picker panel not yet built
+            "Housing.Info", // housing UI deferred to follow-up PR
+        )
+        val missing = emittedPackages.sorted().filter { it !in clientHandlers && it !in serverOnlyExclusions }
 
         assertTrue(missing.isEmpty()) {
             "Server emits GMCP packages with no handler in applyGmcpPackage.ts:\n  ${missing.joinToString("\n  ")}"

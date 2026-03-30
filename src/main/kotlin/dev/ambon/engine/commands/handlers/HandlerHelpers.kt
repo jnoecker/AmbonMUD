@@ -235,7 +235,9 @@ internal suspend fun sendLook(
         gmcpEmitter.sendZoneMap(sessionId, zone, zoneRooms)
     }
 
-    gmcpEmitter?.sendRoomInfo(sessionId, room)
+    val isHousing = room.id.zone.startsWith("house_")
+    val housingOwner = if (isHousing) room.id.zone.removePrefix("house_") else null
+    gmcpEmitter?.sendRoomInfo(sessionId, room, isHousing = isHousing, housingOwner = housingOwner)
     gmcpEmitter?.sendRoomPlayers(sessionId, rawRoomPlayers)
     gmcpEmitter?.sendRoomMobs(sessionId, rawRoomMobs)
     val mobIds = rawRoomMobs.map { it.id.value }
