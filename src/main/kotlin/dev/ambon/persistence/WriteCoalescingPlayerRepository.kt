@@ -40,6 +40,10 @@ class WriteCoalescingPlayerRepository(
 
     override suspend fun lookupCachedById(id: PlayerId): PlayerRecord? = lock.withLock { cache[id] }
 
+    override suspend fun lookupCachedByAuthTokenHash(hash: String): PlayerRecord? = lock.withLock {
+        cache.values.find { it.authTokenHash == hash }
+    }
+
     override suspend fun storeInCache(record: PlayerRecord) {
         lock.withLock {
             putIntoCache(record)

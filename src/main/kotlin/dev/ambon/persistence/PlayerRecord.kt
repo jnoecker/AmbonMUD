@@ -59,6 +59,8 @@ data class PlayerRecord(
     val activeSprite: String? = null,
     /** SHA-256 hash of the remember-me auth token. Empty string = no token issued. */
     val authTokenHash: String = "",
+    /** Epoch millis when the auth token was issued. 0 = no token. */
+    val authTokenIssuedAt: Long = 0L,
 ) {
     /**
      * Applies legacy migration fixes after deserialization.
