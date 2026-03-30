@@ -13,6 +13,7 @@ const FOG_FILL = "rgba(42, 48, 80, 0.5)";
 const FOG_STROKE = "rgba(58, 64, 96, 0.35)";
 const NODE_STROKE = "rgba(90, 106, 144, 0.5)";
 const QUEST_MARKER = "#bea873";
+const HOUSING_FILL = "#c8a078";
 const QUEST_PULSE_PERIOD = 2500; // ms for one full cycle
 const CELL = 80;
 const NODE_RADIUS = 18;
@@ -158,7 +159,8 @@ function renderMap(
 
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = isVisited ? (isCurrent ? CURRENT_FILL : NODE_FILL) : FOG_FILL;
+    const normalFill = node.housing ? HOUSING_FILL : NODE_FILL;
+    ctx.fillStyle = isVisited ? (isCurrent ? CURRENT_FILL : normalFill) : FOG_FILL;
     ctx.fill();
 
     ctx.beginPath();
@@ -356,18 +358,19 @@ export function useMiniMap() {
   }, []);
 
   const updateMap = useCallback(
-    (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number) => {
+    (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, housing?: boolean) => {
       currentRoomIdRef.current = roomId;
       const rooms = visitedRef.current;
 
       if (!rooms.has(roomId)) {
         // Use server-provided coordinates directly
-        rooms.set(roomId, { x: mapX, y: mapY, exits, title, image });
+        rooms.set(roomId, { x: mapX, y: mapY, exits, title, image, housing });
       } else {
         const node = rooms.get(roomId)!;
         node.exits = exits;
         node.title = title;
         node.image = image;
+        node.housing = housing;
         // Update coordinates in case they were speculative from a neighbor pre-placement
         node.x = mapX;
         node.y = mapY;

@@ -12,6 +12,7 @@ interface MapNode {
   exits: Record<string, string>;
   title: string;
   image: string | null;
+  housing?: boolean;
 }
 
 const DEFAULT_DIAMETER = 140;
@@ -25,6 +26,7 @@ const CURRENT_GLOW = 0xe8d8a8;
 const LINE_COLOR = 0x4a5070;
 const FOG_COLOR = 0x2a3050;
 const QUEST_COLOR = 0xbea873;
+const HOUSING_COLOR = 0xc8a078;
 const QUEST_PULSE_PERIOD = 2500; // ms
 
 export class Minimap {
@@ -374,10 +376,12 @@ export class Minimap {
       }
 
       if (visited) {
+        const isHousing = node.housing === true;
+        const fillColor = isCurrent ? CURRENT_COLOR : isHousing ? HOUSING_COLOR : NODE_COLOR;
         this.mapGraphics.circle(nx, ny, radius);
-        this.mapGraphics.fill({ color: isCurrent ? CURRENT_COLOR : NODE_COLOR });
+        this.mapGraphics.fill({ color: fillColor });
         this.mapGraphics.circle(nx, ny, radius);
-        this.mapGraphics.stroke({ color: isCurrent ? CURRENT_GLOW : 0x5a6a90, width: 1, alpha: isCurrent ? 0.8 : 0.5 });
+        this.mapGraphics.stroke({ color: isCurrent ? CURRENT_GLOW : isHousing ? 0x9a7858 : 0x5a6a90, width: 1, alpha: isCurrent ? 0.8 : 0.5 });
       } else {
         this.mapGraphics.circle(nx, ny, radius);
         this.mapGraphics.fill({ color: FOG_COLOR, alpha: 0.75 });
