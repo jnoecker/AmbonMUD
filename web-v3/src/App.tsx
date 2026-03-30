@@ -16,6 +16,7 @@ import { PlayPanel } from "./components/panels/PlayPanel";
 import { AdminPanel } from "./components/panels/AdminPanel";
 import { MailPanel } from "./components/panels/MailPanel";
 import { CraftingPanel } from "./components/panels/CraftingPanel";
+import { HousingPanel } from "./components/panels/HousingPanel";
 import { CommandPalette } from "./components/CommandPalette";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
@@ -57,6 +58,7 @@ import type {
   GroupInfo,
   GuildInfo,
   GuildMemberEntry,
+  HousingInfo,
   PendingGroupInvite,
   PendingGuildInvite,
   ItemSummary,
@@ -216,6 +218,7 @@ function App() {
   const [staffMobTemplates, setStaffMobTemplates] = useState<StaffMobZone[]>([]);
   const [lookTarget, setLookTarget] = useState<LookTargetInfo | null>(null);
   const [spriteList, setSpriteList] = useState<SpriteList>({ active: null, sprites: [] });
+  const [housing, setHousing] = useState<HousingInfo | null>(null);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -366,6 +369,7 @@ function App() {
     setLoginPrompt(null);
     setLoginError(null);
     setSavedCharacters([]);
+    setHousing(null);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setCombatLogMessages([]);
@@ -453,6 +457,7 @@ function App() {
           setWhoPlayers,
           setZoneInstances,
           setSpriteList,
+          setHousing,
           sendGmcp: (pkg: string, payload: unknown) => { sendGmcpRef.current(pkg, payload); return true; },
         },
       );
@@ -774,6 +779,8 @@ function App() {
         ? "Spellbook"
       : activePopout === "quests"
         ? "Quests"
+      : activePopout === "housing"
+        ? "Housing"
         : "";
 
   const submitComposer = (event: FormEvent<HTMLFormElement>) => {
@@ -1247,6 +1254,16 @@ function App() {
               sendCommand(`accept ${questName}`, true);
               focusComposer();
             }}
+          />
+        )}
+
+        {activePopout === "housing" && (
+          <HousingPanel
+            connected={connected}
+            hasCharacterProfile={hasCharacterProfile}
+            housing={housing}
+            room={room}
+            onSendCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
       </PopoutLayer>

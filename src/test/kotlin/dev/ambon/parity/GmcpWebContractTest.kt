@@ -40,8 +40,6 @@ class GmcpWebContractTest {
             // Server emits this for the sprite selection system (#706);
             // web handler to be added when the sprite picker panel is built.
             "Char.Sprites",
-            // Housing.Info: web client housing UI deferred to follow-up PR.
-            "Housing.Info",
         )
 
         /**

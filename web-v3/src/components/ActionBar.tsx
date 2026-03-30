@@ -8,6 +8,7 @@ import {
   WearingIcon,
   ChatBubbleIcon,
   CraftingIcon,
+  HousingIcon,
   MailIcon,
   ShopIcon,
   HelpIcon,
@@ -201,6 +202,7 @@ export function ActionBar({
     { panel: "quests", label: "Quests", icon: <QuestsTabIcon className="action-bar-btn-icon" />, requiresProfile: true, badge: questCount > 0 ? questCount : undefined },
     { panel: "crafting", label: "Crafting", icon: <CraftingIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "mail", label: "Mail", icon: <MailIcon className="action-bar-btn-icon" />, requiresProfile: true, badge: mailUnreadCount > 0 ? mailUnreadCount : undefined },
+    { panel: "housing", label: "Housing", icon: <HousingIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "chat", label: "Social", icon: <ChatBubbleIcon className="action-bar-btn-icon" />, requiresProfile: true },
     { panel: "help", label: "Help", icon: <HelpIcon className="action-bar-btn-icon" />, requiresProfile: false },
   ];

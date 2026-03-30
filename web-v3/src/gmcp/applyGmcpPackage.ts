@@ -26,6 +26,8 @@ import type {
   GroupMember,
   GuildInfo,
   GuildMemberEntry,
+  HousingInfo,
+  HousingRoomInfo,
   PendingGroupInvite,
   PendingGuildInvite,
   InProgressAchievement,
@@ -88,7 +90,7 @@ interface GmcpContext {
   setCombatTarget: Dispatch<SetStateAction<CombatTarget | null>>;
   setShop: Dispatch<SetStateAction<ShopState | null>>;
   setChatByChannel: Dispatch<SetStateAction<Record<ChatChannel, ChatMessage[]>>>;
-  updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number) => void;
+  updateMap: (roomId: string, exits: Record<string, string>, title: string, image: string | null, mapX: number, mapY: number, housing?: boolean) => void;
   loadZoneMap: (zone: string, rooms: Array<{ id: string; x: number; y: number; exits: Record<string, string> }>) => void;
   pushCombatEvent: (event: CombatEventData) => void;
   setCharStats: Dispatch<SetStateAction<CharStats | null>>;
@@ -124,6 +126,7 @@ interface GmcpContext {
   setWhoPlayers: Dispatch<SetStateAction<WhoPlayer[]>>;
   setZoneInstances: Dispatch<SetStateAction<ZoneInstances>>;
   setSpriteList: Dispatch<SetStateAction<SpriteList>>;
+  setHousing: Dispatch<SetStateAction<HousingInfo | null>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -247,6 +250,8 @@ export function applyGmcpPackage(
       const music = typeof packet.music === "string" ? packet.music : null;
       const ambient = typeof packet.ambient === "string" ? packet.ambient : null;
       const station = typeof packet.station === "string" ? packet.station : null;
+      const housing = packet.housing === true;
+      const housingOwner = typeof packet.housingOwner === "string" ? packet.housingOwner : null;
 
       // Detect actual room change (not just a look/refresh of the same room)
       ctx.setRoom((prev) => {
@@ -255,11 +260,11 @@ export function applyGmcpPackage(
           ctx.setDialogue(null);
           ctx.setQuestsAvailable([]);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, mapX, mapY };
+        return { id, title, description, exits, image, video, music, ambient, station, mapX, mapY, housing, housingOwner };
       });
 
       if (id) {
-        ctx.updateMap(id, exits, title === "-" ? "" : title, image, mapX, mapY);
+        ctx.updateMap(id, exits, title === "-" ? "" : title, image, mapX, mapY, housing);
       }
       break;
     }
@@ -1350,6 +1355,23 @@ export function applyGmcpPackage(
         from: typeof packet.from === "string" ? packet.from : "",
         unreadCount: safeNumber(packet.unreadCount, 0),
       });
+      break;
+    }
+
+    case "Housing.Info": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const hasHouse = packet.hasHouse === true;
+      const ownerName = typeof packet.ownerName === "string" ? packet.ownerName : null;
+      const rooms: HousingRoomInfo[] = Array.isArray(packet.rooms)
+        ? packet.rooms
+            .filter((r): r is Record<string, unknown> => typeof r === "object" && r !== null)
+            .map((r) => ({
+              templateId: typeof r.templateId === "string" ? r.templateId : "",
+              title: typeof r.title === "string" ? r.title : "",
+              description: typeof r.description === "string" ? r.description : "",
+            }))
+        : [];
+      ctx.setHousing({ hasHouse, ownerName, rooms });
       break;
     }
 

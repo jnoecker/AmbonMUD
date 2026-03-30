@@ -300,6 +300,8 @@ class MudServer(
                 questRegistry = questRegistry,
                 achievementRegistry = achievementRegistry,
                 shopRegistry = shopRegistry,
+                houseRepo = houseRepo,
+                housingConfig = if (config.engine.housing.enabled) config.engine.housing else null,
             )
         } else {
             null

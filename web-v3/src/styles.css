@@ -9344,3 +9344,217 @@ body {
   color: var(--text-secondary);
   line-height: 1;
 }
+
+/* ─── Housing Panel ──────────────────────────────────────────────── */
+
+.housing-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.housing-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.housing-empty-icon {
+  font-size: 2.5rem;
+  opacity: 0.6;
+}
+
+.housing-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.housing-hint code {
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--bg-surface);
+  font-size: 0.76rem;
+}
+
+.housing-owner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--space-2);
+}
+
+.housing-owner-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.housing-room-count {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.housing-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+}
+
+.housing-action-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
+}
+
+.housing-action-btn:hover {
+  border-color: var(--line-subtle);
+  color: var(--text-primary);
+}
+
+.housing-save-btn {
+  background: var(--bg-surface-hover);
+  border-color: var(--line-subtle);
+  color: var(--text-bright);
+}
+
+.housing-visiting-banner {
+  margin: 0 var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--color-accent-moonlit-silver-muted);
+  color: var(--color-accent-moonlit-silver);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.housing-room-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.housing-room-item {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--line-faint);
+  transition: border-color 150ms var(--ease-out-soft);
+}
+
+.housing-room-item:hover {
+  border-color: var(--line-subtle);
+}
+
+.housing-room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.housing-room-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.housing-room-template {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.housing-room-desc {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.housing-customize-section {
+  padding: var(--space-2);
+  border-top: 1px solid var(--line-faint);
+}
+
+.housing-section-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-2);
+}
+
+.housing-edit-buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.housing-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.housing-edit-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.housing-edit-input,
+.housing-edit-textarea {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-sm);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 150ms var(--ease-out-soft);
+}
+
+.housing-edit-input:focus,
+.housing-edit-textarea:focus {
+  border-color: var(--color-primary-lavender);
+}
+
+.housing-edit-textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.housing-edit-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* TODO: vault capacity indicator — will be used when vault room UI is added */
+.housing-vault-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--bg-surface-hover);
+  color: var(--color-accent-lavender);
+  font-size: 0.72rem;
+  font-weight: 600;
+}

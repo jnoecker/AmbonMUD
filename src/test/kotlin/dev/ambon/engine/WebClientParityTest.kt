@@ -273,7 +273,6 @@ class WebClientParityTest {
         // Server-only packages intentionally not yet handled by the web client.
         val serverOnlyExclusions = setOf(
             "Char.Sprites", // sprite picker panel not yet built
-            "Housing.Info", // housing UI deferred to follow-up PR
         )
         val missing = emittedPackages.sorted().filter { it !in clientHandlers && it !in serverOnlyExclusions }
 
