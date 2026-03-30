@@ -20,6 +20,8 @@ mobs:
             action: set_recall
           - text: "What is a recall point?"
             next: explain
+          - text: "I'd like to visit my house."
+            action: enter_house
           - text: "No thanks, just passing through."
       confirm:
         text: "Excellent! Your room is ready whenever you need it. Type 'recall' at any time to return here instantly."

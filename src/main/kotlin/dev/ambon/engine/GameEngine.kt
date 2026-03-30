@@ -28,6 +28,7 @@ import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.FriendsHandler
 import dev.ambon.engine.commands.handlers.GroupHandler
 import dev.ambon.engine.commands.handlers.GuildHandler
+import dev.ambon.engine.commands.handlers.HousingHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
@@ -59,6 +60,7 @@ import dev.ambon.engine.status.StatusEffectRegistryLoader
 import dev.ambon.engine.status.StatusEffectSystem
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.GuildRepository
+import dev.ambon.persistence.HouseRepository
 import dev.ambon.persistence.PlayerRepository
 import dev.ambon.persistence.WorldStateRepository
 import dev.ambon.sharding.HandoffManager
@@ -102,6 +104,7 @@ data class PersistenceContext(
     val worldStateRepository: WorldStateRepository? = null,
     val guildRepo: GuildRepository? = null,
     val playerRepo: PlayerRepository? = null,
+    val houseRepo: HouseRepository? = null,
 )
 
 class GameEngine(
@@ -150,6 +153,7 @@ class GameEngine(
     private val worldStateRepository get() = persistence.worldStateRepository
     private val guildRepo get() = persistence.guildRepo
     private val playerRepo get() = persistence.playerRepo
+    private val houseRepo get() = persistence.houseRepo
 
     private val classRegistry = classRegistryOverride
         ?: PlayerClassRegistry().also { reg ->
@@ -194,6 +198,8 @@ class GameEngine(
             maxConcurrentLogins = loginConfig.maxConcurrentLogins,
             onAfterLogin = { sid ->
                 players.get(sid)?.lastActivityEpochMs = clock.millis()
+                housingSystem?.onPlayerLogin(sid)
+                sendHousingGmcp(sid)
                 guildSystem?.onPlayerLogin(sid)
                 friendsSystem.onPlayerLogin(sid)
                 sendQuestListGmcp(sid)
@@ -527,6 +533,21 @@ class GameEngine(
         } else {
             null
         }
+    private val housingSystem: HousingSystem? =
+        if (houseRepo != null && engineConfig.housing.enabled) {
+            HousingSystem(
+                players = players,
+                houseRepo = houseRepo!!,
+                world = world,
+                outbound = outbound,
+                items = items,
+                config = engineConfig.housing,
+                clock = clock,
+                markPlayerDirty = { sid -> players.persistPlayer(sid) },
+            )
+        } else {
+            null
+        }
     private val friendsSystem =
         FriendsSystem(
             players = players,
@@ -695,6 +716,7 @@ class GameEngine(
             dialogueSystem,
             groupSystem,
             guildSystem,
+            housingSystem,
         ),
     )
 
@@ -802,6 +824,7 @@ class GameEngine(
                 dialogueSystem = dialogueSystem,
                 onCrossZoneMove = crossZoneMove,
                 recallConfig = engineConfig.navigation.recall,
+                housingSystem = housingSystem,
             ),
             communicationHandler,
             CombatHandler(
@@ -809,6 +832,7 @@ class GameEngine(
                 abilitySystem = abilitySystem,
                 statusEffects = statusEffectSystem,
                 dialogueSystem = dialogueSystem,
+                housingSystem = housingSystem,
             ),
             ProgressionHandler(
                 ctx = ctx,
@@ -825,6 +849,7 @@ class GameEngine(
                 markStatsDirty = ::markStatsDirty,
                 metrics = metrics,
                 progression = progression,
+                housingSystem = housingSystem,
             ),
             ShopHandler(
                 ctx = ctx,
@@ -846,6 +871,7 @@ class GameEngine(
                 questRegistry = questRegistry,
                 achievementSystem = achievementSystem,
                 achievementRegistry = achievementRegistry,
+                housingSystem = housingSystem,
             ),
             GroupHandler(
                 ctx = ctx,
@@ -858,6 +884,10 @@ class GameEngine(
             FriendsHandler(
                 ctx = ctx,
                 friendsSystem = friendsSystem,
+            ),
+            HousingHandler(
+                ctx = ctx,
+                housingSystem = housingSystem,
             ),
             WorldFeaturesHandler(ctx = ctx),
             adminHandler,
@@ -1240,6 +1270,28 @@ class GameEngine(
         val mgr = gracePeriodManager ?: return
         val token = mgr.issueToken(sessionId)
         gmcpEmitter.sendSessionResumeToken(sessionId, token, mgr.gracePeriodSeconds)
+    }
+
+    private suspend fun sendHousingGmcp(sessionId: SessionId) {
+        val emitter = gmcpEmitter ?: return
+        val hs = housingSystem ?: return
+        val status = hs.houseStatus(sessionId)
+        if (status != null) {
+            emitter.sendHousingInfo(
+                sessionId,
+                hasHouse = true,
+                ownerName = status.ownerName,
+                rooms = status.rooms.map {
+                    GmcpEmitter.HousingRoomPayload(
+                        templateId = it.templateId,
+                        title = it.title,
+                        description = it.description,
+                    )
+                },
+            )
+        } else {
+            emitter.sendHousingInfo(sessionId, hasHouse = false)
+        }
     }
 
     suspend fun sendQuestListGmcp(sessionId: SessionId) {

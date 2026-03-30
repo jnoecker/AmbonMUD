@@ -4,6 +4,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.ItemSlot
 import dev.ambon.engine.EquipmentSlotRegistry
+import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.QuestSystem
 import dev.ambon.engine.abilities.AbilitySystem
@@ -24,6 +25,7 @@ class ItemHandler(
     private val markStatsDirty: (SessionId) -> Unit = {},
     private val metrics: GameMetrics = GameMetrics.noop(),
     private val progression: PlayerProgression = PlayerProgression(),
+    private val housingSystem: HousingSystem? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val items = ctx.items
@@ -139,6 +141,10 @@ class ItemHandler(
         cmd: Command.Get,
     ) {
         players.withPlayer(sessionId) { me ->
+            if (housingSystem != null && housingSystem.isHouseRoom(me.roomId) && !housingSystem.isInOwnHouse(sessionId)) {
+                outbound.send(OutboundEvent.SendError(sessionId, "You can't take items from someone else's house."))
+                return
+            }
             val roomId = me.roomId
             val moved = items.takeFromRoom(me.sessionId, roomId, cmd.keyword)
             if (moved == null) {
@@ -158,12 +164,24 @@ class ItemHandler(
     ) {
         players.withPlayer(sessionId) { me ->
             val roomId = me.roomId
+            // Check vault capacity in house rooms
+            if (housingSystem != null && housingSystem.isHouseRoom(roomId)) {
+                val capacity = housingSystem.vaultCapacity(sessionId)
+                if (capacity > 0 && items.itemsInRoom(roomId).size >= capacity) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "This room is full. It can hold at most $capacity items."))
+                    return
+                }
+            }
             val moved = items.dropToRoom(me.sessionId, roomId, cmd.keyword)
             if (moved == null) {
                 outbound.send(OutboundEvent.SendError(sessionId, "You aren't carrying '${cmd.keyword}'."))
                 return
             }
             outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${moved.item.displayName}."))
+            // Warn about non-persistent drops in house rooms without vault storage
+            if (housingSystem != null && housingSystem.isHouseRoom(roomId) && housingSystem.vaultCapacity(sessionId) == 0) {
+                outbound.send(OutboundEvent.SendInfo(sessionId, "(Items left here won't survive a restart.)"))
+            }
             gmcpEmitter?.sendCharItemsRemove(sessionId, moved)
             syncRoomItemsGmcp(roomId)
         }

@@ -37,6 +37,7 @@ import dev.ambon.engine.scheduler.Scheduler
 import dev.ambon.engine.status.StatusEffectRegistry
 import dev.ambon.metrics.GameMetrics
 import dev.ambon.persistence.GuildRepositoryFactory
+import dev.ambon.persistence.HouseRepositoryFactory
 import dev.ambon.persistence.PersistenceWorker
 import dev.ambon.persistence.PlayerRepositoryFactory
 import dev.ambon.persistence.WorldStatePersistenceWorker
@@ -120,6 +121,11 @@ class MudServer(
 
     private val guildRepo =
         GuildRepositoryFactory.create(
+            persistence = config.persistence,
+            database = databaseManager?.database,
+        )
+    private val houseRepo =
+        HouseRepositoryFactory.create(
             persistence = config.persistence,
             database = databaseManager?.database,
         )
@@ -401,6 +407,7 @@ class MudServer(
                         worldStateRepository = worldStateRepo,
                         guildRepo = guildRepo,
                         playerRepo = playerRepo,
+                        houseRepo = houseRepo,
                     ),
                     classRegistryOverride = classRegistry,
                     raceRegistryOverride = raceRegistry,
