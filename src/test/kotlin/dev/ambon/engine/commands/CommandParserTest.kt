@@ -556,4 +556,95 @@ class CommandParserTest {
     fun `friend unknown subcommand is Invalid`() {
         assertTrue(CommandParser.parse("friend xyz") is Command.Invalid)
     }
+
+    // ---- Housing commands ----
+
+    @Test
+    fun `house with no args parses as Status`() {
+        assertEquals(Command.House.Status, CommandParser.parse("house"))
+    }
+
+    @Test
+    fun `house status parses as Status`() {
+        assertEquals(Command.House.Status, CommandParser.parse("house status"))
+    }
+
+    @Test
+    fun `house list parses as ListTemplates`() {
+        assertEquals(Command.House.ListTemplates, CommandParser.parse("house list"))
+    }
+
+    @Test
+    fun `house buy parses as Buy`() {
+        assertEquals(Command.House.Buy, CommandParser.parse("house buy"))
+    }
+
+    @Test
+    fun `house expand parses template and direction`() {
+        assertEquals(
+            Command.House.Expand("vault", Direction.NORTH),
+            CommandParser.parse("house expand vault north"),
+        )
+        assertEquals(
+            Command.House.Expand("workshop", Direction.EAST),
+            CommandParser.parse("house expand workshop e"),
+        )
+    }
+
+    @Test
+    fun `house expand without args is Invalid`() {
+        assertTrue(CommandParser.parse("house expand") is Command.Invalid)
+        assertTrue(CommandParser.parse("house expand vault") is Command.Invalid)
+    }
+
+    @Test
+    fun `house expand with bad direction is Invalid`() {
+        assertTrue(CommandParser.parse("house expand vault nowhere") is Command.Invalid)
+    }
+
+    @Test
+    fun `house describe title parses`() {
+        assertEquals(
+            Command.House.SetTitle("My Cozy Cabin"),
+            CommandParser.parse("house describe title My Cozy Cabin"),
+        )
+    }
+
+    @Test
+    fun `house describe desc parses`() {
+        assertEquals(
+            Command.House.SetDescription("A warm place."),
+            CommandParser.parse("house describe desc A warm place."),
+        )
+    }
+
+    @Test
+    fun `house describe without subcommand is Invalid`() {
+        assertTrue(CommandParser.parse("house describe") is Command.Invalid)
+    }
+
+    @Test
+    fun `house invite parses player name`() {
+        assertEquals(Command.House.Invite("Bob"), CommandParser.parse("house invite Bob"))
+    }
+
+    @Test
+    fun `house invite without name is Invalid`() {
+        assertTrue(CommandParser.parse("house invite") is Command.Invalid)
+    }
+
+    @Test
+    fun `house kick parses player name`() {
+        assertEquals(Command.House.Kick("Bob"), CommandParser.parse("house kick Bob"))
+    }
+
+    @Test
+    fun `house guests parses`() {
+        assertEquals(Command.House.Guests, CommandParser.parse("house guests"))
+    }
+
+    @Test
+    fun `home alias parses as house status`() {
+        assertEquals(Command.House.Status, CommandParser.parse("home"))
+    }
 }

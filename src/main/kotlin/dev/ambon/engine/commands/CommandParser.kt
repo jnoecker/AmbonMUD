@@ -400,6 +400,48 @@ sealed interface Command {
         /** `mail abort` — cancel an in-progress compose. */
         data object Abort : Mail
     }
+
+    // ---- Housing commands ----
+
+    sealed interface House : Command {
+        /** `house` or `house status` — show house summary. */
+        data object Status : House
+
+        /** `house list` — show available room templates (at broker NPC). */
+        data object ListTemplates : House
+
+        /** `house buy` — purchase your initial house (at broker NPC). */
+        data object Buy : House
+
+        /** `house expand <template> <direction>` — add a room to your house. */
+        data class Expand(
+            val templateId: String,
+            val direction: Direction,
+        ) : House
+
+        /** `house describe title <text>` — set a custom room title. */
+        data class SetTitle(
+            val text: String,
+        ) : House
+
+        /** `house describe desc <text>` — set a custom room description. */
+        data class SetDescription(
+            val text: String,
+        ) : House
+
+        /** `house invite <player>` — invite a player to your house. */
+        data class Invite(
+            val playerName: String,
+        ) : House
+
+        /** `house kick <player>` — kick a visitor out. */
+        data class Kick(
+            val playerName: String,
+        ) : House
+
+        /** `house guests` — list current visitors. */
+        data object Guests : House
+    }
 }
 
 object CommandParser {
@@ -585,6 +627,74 @@ object CommandParser {
                 }
                 "list" -> Command.GroupCmd.List
                 else -> Command.GroupCmd.List
+            }
+        }?.let { return it }
+
+        // house subcommands
+        matchPrefix(line, listOf("house", "home")) { rest ->
+            if (rest.isEmpty()) return@matchPrefix Command.House.Status
+            val parts = rest.split(Regex("\\s+"), limit = 2)
+            when (parts[0].lowercase()) {
+                "status", "info" -> Command.House.Status
+                "list" -> Command.House.ListTemplates
+                "buy", "purchase" -> Command.House.Buy
+                "expand", "add" -> {
+                    val args = parts.getOrNull(1)?.trim() ?: ""
+                    val tokens = args.split(Regex("\\s+"), limit = 2)
+                    val templateId = tokens.getOrNull(0)?.trim() ?: ""
+                    val dirStr = tokens.getOrNull(1)?.trim() ?: ""
+                    if (templateId.isEmpty() || dirStr.isEmpty()) {
+                        Command.Invalid(line, "house expand <template> <direction>")
+                    } else {
+                        val dir = parseDirectionOrNull(dirStr)
+                        if (dir == null) {
+                            Command.Invalid(line, "house expand <template> <direction> (n/s/e/w/u/d)")
+                        } else {
+                            Command.House.Expand(templateId, dir)
+                        }
+                    }
+                }
+                "describe", "desc" -> {
+                    val sub = parts.getOrNull(1)?.trim() ?: ""
+                    val subParts = sub.split(Regex("\\s+"), limit = 2)
+                    when (subParts[0].lowercase()) {
+                        "title" -> {
+                            val text = subParts.getOrNull(1)?.trim() ?: ""
+                            if (text.isEmpty()) {
+                                Command.Invalid(line, "house describe title <text>")
+                            } else {
+                                Command.House.SetTitle(text)
+                            }
+                        }
+                        "desc", "description" -> {
+                            val text = subParts.getOrNull(1)?.trim() ?: ""
+                            if (text.isEmpty()) {
+                                Command.Invalid(line, "house describe desc <text>")
+                            } else {
+                                Command.House.SetDescription(text)
+                            }
+                        }
+                        else -> Command.Invalid(line, "house describe [title|desc] <text>")
+                    }
+                }
+                "invite", "inv" -> {
+                    val name = parts.getOrNull(1)?.trim() ?: ""
+                    if (name.isEmpty()) {
+                        Command.Invalid(line, "house invite <player>")
+                    } else {
+                        Command.House.Invite(name)
+                    }
+                }
+                "kick" -> {
+                    val name = parts.getOrNull(1)?.trim() ?: ""
+                    if (name.isEmpty()) {
+                        Command.Invalid(line, "house kick <player>")
+                    } else {
+                        Command.House.Kick(name)
+                    }
+                }
+                "guests", "visitors" -> Command.House.Guests
+                else -> Command.House.Status
             }
         }?.let { return it }
 
