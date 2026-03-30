@@ -52,7 +52,10 @@ class HousingSystem(
 
     /** The entry template id (exactly one must be marked isEntry). */
     val entryTemplateId: String = templates.values.firstOrNull { it.isEntry }?.id
-        ?: error("No entry template defined in housing config")
+        ?: run {
+            log.error { "No entry template (isEntry=true) found in housing config — housing will not function" }
+            ""
+        }
 
     /** In-memory cache of loaded houses. Populated on player login, stays until restart. */
     private val housesByOwner = mutableMapOf<PlayerId, HouseRecord>()
@@ -141,7 +144,7 @@ class HousingSystem(
 
         if (ps.hasHouse) return "You already own a house."
 
-        val entryTemplate = templates[entryTemplateId]!!
+        val entryTemplate = templates[entryTemplateId] ?: return "Housing is not configured."
         if (ps.gold < entryTemplate.cost) {
             return "You need ${entryTemplate.cost} gold to purchase a house. You have ${ps.gold}."
         }
