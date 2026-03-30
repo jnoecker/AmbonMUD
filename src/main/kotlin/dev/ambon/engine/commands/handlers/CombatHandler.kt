@@ -1,12 +1,14 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.dialogue.DialogueSystem
+import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.status.StatusEffectSystem
 
 class CombatHandler(
@@ -14,6 +16,7 @@ class CombatHandler(
     private val abilitySystem: AbilitySystem? = null,
     private val statusEffects: StatusEffectSystem? = null,
     private val dialogueSystem: DialogueSystem? = null,
+    private val housingSystem: HousingSystem? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val mobs = ctx.mobs
@@ -31,6 +34,21 @@ class CombatHandler(
         sessionId: SessionId,
         cmd: Command.Kill,
     ) {
+        // Block combat in house rooms marked as safe, or for visitors in any house
+        if (housingSystem != null) {
+            val me = players.get(sessionId)
+            if (me != null && housingSystem.isHouseRoom(me.roomId)) {
+                val template = housingSystem.currentRoomTemplate(sessionId)
+                if (template?.safe == true) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "This room is protected. Combat is not allowed here."))
+                    return
+                }
+                if (!housingSystem.isInOwnHouse(sessionId)) {
+                    outbound.send(OutboundEvent.SendError(sessionId, "You can't start fights in someone else's house."))
+                    return
+                }
+            }
+        }
         dialogueSystem?.endConversation(sessionId)
         val error = combat.startCombat(sessionId, cmd.target)
         outbound.sendIfError(sessionId, error)

@@ -2725,6 +2725,38 @@ ambonmud:
           permissions: []
     friends:
       maxFriends: 50
+    housing:
+      enabled: true
+      entryExitDirection: SOUTH
+      templates:
+        cottage_entry:
+          title: "Cottage Entryway"
+          description: "A cozy stone-walled entryway with pegs for cloaks and a worn welcome mat. Warm light spills from a hearth in the corner."
+          cost: 1000
+          isEntry: true
+          safe: true
+        bedroom:
+          title: "Bedroom"
+          description: "A quiet room with a simple bed, a nightstand, and a small window looking out on nothing in particular."
+          cost: 500
+          safe: true
+        vault:
+          title: "Storage Vault"
+          description: "A reinforced room with sturdy shelves and a heavy iron-banded chest. Items left here seem to stay put."
+          cost: 2000
+          maxDroppedItems: 50
+          safe: true
+        workshop:
+          title: "Crafting Workshop"
+          description: "A well-equipped workshop with a sturdy workbench, tools hanging on the walls, and a small forge in the corner."
+          cost: 1500
+          station: forge
+          safe: true
+        garden:
+          title: "Garden"
+          description: "A small walled garden with patches of herbs and a bubbling fountain. The air smells of lavender."
+          cost: 800
+          safe: true
     commands:
       entries:
         help:
