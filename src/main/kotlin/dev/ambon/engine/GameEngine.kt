@@ -534,7 +534,7 @@ class GameEngine(
             null
         }
     private val housingSystem: HousingSystem? =
-        if (houseRepo != null && engineConfig.housing.enabled) {
+        if (houseRepo != null && engineConfig.housing.enabled && engineConfig.housing.templates.isNotEmpty()) {
             HousingSystem(
                 players = players,
                 houseRepo = houseRepo!!,
