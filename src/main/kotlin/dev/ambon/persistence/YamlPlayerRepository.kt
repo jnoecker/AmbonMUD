@@ -67,6 +67,19 @@ class YamlPlayerRepository(
             }
         }
 
+    override suspend fun findByAuthTokenHash(hash: String): PlayerRecord? {
+        if (hash.isBlank()) return null
+        return withContext(Dispatchers.IO) {
+            metrics.timedLoad {
+                val dir = playersDir
+                if (!dir.exists()) return@timedLoad null
+                dir.listDirectoryEntries("*.yaml").firstNotNullOfOrNull { path ->
+                    readRecord(path)?.takeIf { it.authTokenHash == hash }
+                }
+            }
+        }
+    }
+
     override suspend fun create(request: PlayerCreationRequest): PlayerRecord =
         withContext(Dispatchers.IO) {
             val nm = request.name.trim()

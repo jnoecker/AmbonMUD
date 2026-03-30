@@ -39,6 +39,9 @@ abstract class DelegatingPlayerRepository(
         storeOnSave(record)
     }
 
+    override suspend fun findByAuthTokenHash(hash: String): PlayerRecord? =
+        delegate.findByAuthTokenHash(hash)?.also { storeOnReadMiss(it) }
+
     override suspend fun evict(id: PlayerId) {
         delegate.evict(id)
     }
