@@ -199,6 +199,7 @@ class GameEngine(
             onAfterLogin = { sid ->
                 players.get(sid)?.lastActivityEpochMs = clock.millis()
                 housingSystem?.onPlayerLogin(sid)
+                sendHousingGmcp(sid)
                 guildSystem?.onPlayerLogin(sid)
                 friendsSystem.onPlayerLogin(sid)
                 sendQuestListGmcp(sid)
@@ -539,6 +540,7 @@ class GameEngine(
                 houseRepo = houseRepo!!,
                 world = world,
                 outbound = outbound,
+                items = items,
                 config = engineConfig.housing,
                 clock = clock,
                 markPlayerDirty = { sid -> players.persistPlayer(sid) },
@@ -1268,6 +1270,28 @@ class GameEngine(
         val mgr = gracePeriodManager ?: return
         val token = mgr.issueToken(sessionId)
         gmcpEmitter.sendSessionResumeToken(sessionId, token, mgr.gracePeriodSeconds)
+    }
+
+    private suspend fun sendHousingGmcp(sessionId: SessionId) {
+        val emitter = gmcpEmitter ?: return
+        val hs = housingSystem ?: return
+        val status = hs.houseStatus(sessionId)
+        if (status != null) {
+            emitter.sendHousingInfo(
+                sessionId,
+                hasHouse = true,
+                ownerName = status.ownerName,
+                rooms = status.rooms.map {
+                    GmcpEmitter.HousingRoomPayload(
+                        templateId = it.templateId,
+                        title = it.title,
+                        description = it.description,
+                    )
+                },
+            )
+        } else {
+            emitter.sendHousingInfo(sessionId, hasHouse = false)
+        }
     }
 
     suspend fun sendQuestListGmcp(sessionId: SessionId) {

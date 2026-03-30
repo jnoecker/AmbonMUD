@@ -24,6 +24,9 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
+/** Helper to unwrap a successful house entry. */
+private fun HouseEntryResult.roomId(): RoomId = (this as HouseEntryResult.Success).entryRoomId
+
 class HousingSystemTest {
     private val startRoom = RoomId("zone:start")
 
@@ -79,6 +82,7 @@ class HousingSystemTest {
             houseRepo = houseRepo,
             world = world,
             outbound = outbound,
+            items = items,
             config = housingConfig,
             clock = clock,
         )
@@ -165,8 +169,8 @@ class HousingSystemTest {
             // Enter house
             val ps = h.players.get(sid)!!
             val entryResult = h.housing.enterOwnHouse(sid, startRoom)
-            assertTrue(entryResult is RoomId)
-            ps.roomId = entryResult as RoomId
+            assertTrue(entryResult is HouseEntryResult.Success)
+            ps.roomId = entryResult.roomId()
 
             val err = h.housing.expandHouse(sid, "vault", Direction.NORTH)
             assertNull(err)
@@ -210,7 +214,7 @@ class HousingSystemTest {
             h.housing.createHouse(sid)
 
             val ps = h.players.get(sid)!!
-            val entryRoomId = h.housing.enterOwnHouse(sid, startRoom) as RoomId
+            val entryRoomId = h.housing.enterOwnHouse(sid, startRoom).roomId()
             ps.roomId = entryRoomId
 
             assertNull(h.housing.expandHouse(sid, "vault", Direction.NORTH))
@@ -228,7 +232,7 @@ class HousingSystemTest {
             h.housing.createHouse(sid)
 
             val ps = h.players.get(sid)!!
-            val entryRoomId = h.housing.enterOwnHouse(sid, startRoom) as RoomId
+            val entryRoomId = h.housing.enterOwnHouse(sid, startRoom).roomId()
             ps.roomId = entryRoomId
 
             assertNull(h.housing.expandHouse(sid, "vault", Direction.NORTH))
@@ -246,7 +250,7 @@ class HousingSystemTest {
             h.housing.createHouse(sid)
 
             val ps = h.players.get(sid)!!
-            val entryRoomId = h.housing.enterOwnHouse(sid, startRoom) as RoomId
+            val entryRoomId = h.housing.enterOwnHouse(sid, startRoom).roomId()
             ps.roomId = entryRoomId
 
             val err = h.housing.expandHouse(sid, "vault", Direction.SOUTH)
@@ -265,7 +269,7 @@ class HousingSystemTest {
             h.housing.createHouse(sid)
 
             val ps = h.players.get(sid)!!
-            val entryRoomId = h.housing.enterOwnHouse(sid, startRoom) as RoomId
+            val entryRoomId = h.housing.enterOwnHouse(sid, startRoom).roomId()
             ps.roomId = entryRoomId
 
             val err = h.housing.setRoomTitle(sid, "My Cozy Cabin")
@@ -287,7 +291,7 @@ class HousingSystemTest {
             h.housing.createHouse(sid)
 
             val ps = h.players.get(sid)!!
-            val entryRoomId = h.housing.enterOwnHouse(sid, startRoom) as RoomId
+            val entryRoomId = h.housing.enterOwnHouse(sid, startRoom).roomId()
             ps.roomId = entryRoomId
 
             val err = h.housing.setRoomDescription(sid, "A warm and inviting space.")
@@ -308,8 +312,8 @@ class HousingSystemTest {
             h.housing.createHouse(sid)
 
             val result = h.housing.enterOwnHouse(sid, startRoom)
-            assertTrue(result is RoomId)
-            assertEquals(RoomId("house_Alice:room_0"), result)
+            assertTrue(result is HouseEntryResult.Success)
+            assertEquals(RoomId("house_Alice:room_0"), (result as HouseEntryResult.Success).entryRoomId)
             assertTrue(h.housing.isInAnyHouse(sid))
         }
 
@@ -348,7 +352,7 @@ class HousingSystemTest {
             h.housing.createHouse(ownerSid)
 
             val ps = h.players.get(ownerSid)!!
-            val entryRoomId = h.housing.enterOwnHouse(ownerSid, startRoom) as RoomId
+            val entryRoomId = h.housing.enterOwnHouse(ownerSid, startRoom).roomId()
             ps.roomId = entryRoomId
 
             val err = h.housing.invitePlayer(ownerSid, "Bob")
@@ -370,7 +374,7 @@ class HousingSystemTest {
             h.housing.createHouse(ownerSid)
 
             val ps = h.players.get(ownerSid)!!
-            val entryRoomId = h.housing.enterOwnHouse(ownerSid, startRoom) as RoomId
+            val entryRoomId = h.housing.enterOwnHouse(ownerSid, startRoom).roomId()
             ps.roomId = entryRoomId
 
             h.housing.invitePlayer(ownerSid, "Bob")
@@ -397,7 +401,7 @@ class HousingSystemTest {
             h.housing.createHouse(ownerSid)
 
             val ps = h.players.get(ownerSid)!!
-            val entryRoomId = h.housing.enterOwnHouse(ownerSid, startRoom) as RoomId
+            val entryRoomId = h.housing.enterOwnHouse(ownerSid, startRoom).roomId()
             ps.roomId = entryRoomId
 
             h.housing.invitePlayer(ownerSid, "Bob")
@@ -479,5 +483,54 @@ class HousingSystemTest {
 
             val room = h.world.rooms[RoomId("house_Alice:room_0")]
             assertNotNull(room)
+        }
+
+    // -------- vault round-trip --------
+
+    @Test
+    fun `vault items persist through save and reload`() =
+        runTest {
+            val h = setup()
+            val sid = SessionId(1L)
+            h.players.loginOrFail(sid, "Alice")
+            h.housing.createHouse(sid)
+
+            val ps = h.players.get(sid)!!
+            val pid = ps.playerId!!
+            val entryRoomId = h.housing.enterOwnHouse(sid, startRoom).roomId()
+            ps.roomId = entryRoomId
+
+            // Expand with vault
+            h.housing.expandHouse(sid, "vault", Direction.NORTH)
+            val vaultRoomId = RoomId("house_Alice:room_1")
+
+            // Drop an item in the vault
+            val testItem = dev.ambon.domain.items.ItemInstance(
+                id = dev.ambon.domain.ids.ItemId("test_sword"),
+                item = dev.ambon.domain.items.Item(keyword = "sword", displayName = "a test sword"),
+            )
+            h.items.addRoomItem(vaultRoomId, testItem)
+            assertEquals(1, h.items.itemsInRoom(vaultRoomId).size)
+
+            // Save vault items (simulates disconnect)
+            h.housing.saveVaultItems(pid)
+
+            // Verify items are persisted in the house record
+            val record = h.houseRepo.findByOwnerId(pid)!!
+            assertEquals(1, record.rooms[1].storedItems.size)
+            assertEquals("test_sword", record.rooms[1].storedItems[0].id.value)
+
+            // Clear runtime items (simulates server restart)
+            h.items.clearRoom(vaultRoomId)
+            assertEquals(0, h.items.itemsInRoom(vaultRoomId).size)
+
+            // Reload (simulates login)
+            ps.hasHouse = false
+            h.housing.onPlayerLogin(sid)
+
+            // Vault items should be back
+            val reloaded = h.items.itemsInRoom(vaultRoomId)
+            assertEquals(1, reloaded.size)
+            assertEquals("test_sword", reloaded[0].id.value)
         }
 }

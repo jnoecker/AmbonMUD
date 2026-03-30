@@ -178,6 +178,10 @@ class ItemHandler(
                 return
             }
             outbound.send(OutboundEvent.SendInfo(sessionId, "You drop ${moved.item.displayName}."))
+            // Warn about non-persistent drops in house rooms without vault storage
+            if (housingSystem != null && housingSystem.isHouseRoom(roomId) && housingSystem.vaultCapacity(sessionId) == 0) {
+                outbound.send(OutboundEvent.SendInfo(sessionId, "(Items left here won't survive a restart.)"))
+            }
             gmcpEmitter?.sendCharItemsRemove(sessionId, moved)
             syncRoomItemsGmcp(roomId)
         }

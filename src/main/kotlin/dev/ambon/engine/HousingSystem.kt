@@ -11,7 +11,9 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.World
+import dev.ambon.domain.world.opposite
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.persistence.HouseRepository
 import dev.ambon.persistence.PlayerId
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -22,11 +24,23 @@ private val log = KotlinLogging.logger {}
 /** Sentinel room-id local part used for the dynamic exit back to the world. */
 const val HOUSE_EXIT_LOCAL = "exit"
 
+/** Sealed result for [HousingSystem.enterOwnHouse]. */
+sealed interface HouseEntryResult {
+    data class Success(
+        val entryRoomId: RoomId,
+    ) : HouseEntryResult
+
+    data class Error(
+        val message: String,
+    ) : HouseEntryResult
+}
+
 class HousingSystem(
     private val players: PlayerRegistry,
     private val houseRepo: HouseRepository,
     private val world: World,
     private val outbound: OutboundBus,
+    private val items: ItemRegistry,
     private val config: HousingConfig,
     private val clock: Clock = Clock.systemUTC(),
     private val markPlayerDirty: suspend (SessionId) -> Unit = {},
@@ -71,6 +85,7 @@ class HousingSystem(
         ps.hasHouse = true
         housesByOwner[pid] = house
         materializeHouse(house)
+        loadVaultItems(pid)
         log.info { "Loaded house for ${ps.name} (${house.rooms.size} room(s))" }
 
         // If they reconnected in their own house, restore visitor tracking
@@ -104,8 +119,9 @@ class HousingSystem(
         val ps = players.get(sessionId) ?: return
         val pid = ps.playerId ?: return
 
-        // If owner disconnects, boot all visitors
+        // If owner disconnects, save vault items then boot all visitors
         if (housesByOwner.containsKey(pid)) {
+            saveVaultItems(pid)
             bootAllVisitors(pid, "The warmth fades as the owner departs. You find yourself back where you came from.")
         }
 
@@ -259,19 +275,18 @@ class HousingSystem(
 
     /**
      * Enters the player into their own house from [originRoomId].
-     * Returns the house entry [RoomId], or an error string.
      */
-    fun enterOwnHouse(sessionId: SessionId, originRoomId: RoomId): Any {
-        val ps = players.get(sessionId) ?: return "You are not connected."
-        val pid = ps.playerId ?: return "You are not connected."
-        if (!ps.hasHouse) return "You don't own a house."
+    fun enterOwnHouse(sessionId: SessionId, originRoomId: RoomId): HouseEntryResult {
+        val ps = players.get(sessionId) ?: return HouseEntryResult.Error("You are not connected.")
+        val pid = ps.playerId ?: return HouseEntryResult.Error("You are not connected.")
+        if (!ps.hasHouse) return HouseEntryResult.Error("You don't own a house.")
 
-        val house = housesByOwner[pid] ?: return "House data not loaded."
+        val house = housesByOwner[pid] ?: return HouseEntryResult.Error("House data not loaded.")
         val entryRoomId = houseRoomId(house.ownerName, 0)
 
         visitorOrigins[sessionId] = originRoomId
         sessionInHouse[sessionId] = pid
-        return entryRoomId
+        return HouseEntryResult.Success(entryRoomId)
     }
 
     /**
@@ -391,22 +406,19 @@ class HousingSystem(
 
     /**
      * Persists all room items from vault rooms into the house record.
-     * Called during the save/flush cycle.
+     * Called on owner disconnect and during the save/flush cycle.
      */
-    suspend fun saveVaultItems(
-        ownerId: PlayerId,
-        itemsInRoom: (RoomId) -> List<dev.ambon.domain.items.ItemInstance>,
-    ) {
+    suspend fun saveVaultItems(ownerId: PlayerId) {
         val house = housesByOwner[ownerId] ?: return
         var changed = false
         val updatedRooms = house.rooms.mapIndexed { index, room ->
             val template = templates[room.templateId]
             if (template != null && template.maxDroppedItems > 0) {
                 val roomId = houseRoomId(house.ownerName, index)
-                val items = itemsInRoom(roomId)
-                if (items != room.storedItems) {
+                val currentItems = items.itemsInRoom(roomId)
+                if (currentItems != room.storedItems) {
                     changed = true
-                    room.copy(storedItems = items)
+                    room.copy(storedItems = currentItems)
                 } else {
                     room
                 }
@@ -425,17 +437,14 @@ class HousingSystem(
      * Loads vault items from the house record into the item registry.
      * Called after house materialisation on login.
      */
-    fun loadVaultItems(
-        ownerId: PlayerId,
-        addRoomItem: (RoomId, dev.ambon.domain.items.ItemInstance) -> Unit,
-    ) {
+    private fun loadVaultItems(ownerId: PlayerId) {
         val house = housesByOwner[ownerId] ?: return
         for ((index, room) in house.rooms.withIndex()) {
             val template = templates[room.templateId] ?: continue
             if (template.maxDroppedItems > 0 && room.storedItems.isNotEmpty()) {
                 val roomId = houseRoomId(house.ownerName, index)
                 for (item in room.storedItems) {
-                    addRoomItem(roomId, item)
+                    items.addRoomItem(roomId, item)
                 }
             }
         }
@@ -554,10 +563,6 @@ class HousingSystem(
             bootVisitor(sid, message)
         }
     }
-
-    companion object {
-        private const val ERR_NOT_CONNECTED = "You are not connected."
-    }
 }
 
 data class HouseStatusInfo(
@@ -570,17 +575,6 @@ data class HouseRoomInfo(
     val title: String,
     val description: String,
 )
-
-/** Returns the opposite direction. */
-fun Direction.opposite(): Direction =
-    when (this) {
-        Direction.NORTH -> Direction.SOUTH
-        Direction.SOUTH -> Direction.NORTH
-        Direction.EAST -> Direction.WEST
-        Direction.WEST -> Direction.EAST
-        Direction.UP -> Direction.DOWN
-        Direction.DOWN -> Direction.UP
-    }
 
 private fun RoomTemplateConfig.toRoomTemplate(id: String): RoomTemplate =
     RoomTemplate(

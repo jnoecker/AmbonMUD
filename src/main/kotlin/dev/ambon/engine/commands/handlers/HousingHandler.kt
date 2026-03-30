@@ -9,7 +9,7 @@ import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
 
 class HousingHandler(
-    ctx: EngineContext,
+    private val ctx: EngineContext,
     private val housingSystem: HousingSystem? = null,
 ) : CommandHandler {
     private val outbound = ctx.outbound
@@ -45,7 +45,8 @@ class HousingHandler(
     private suspend fun handleListTemplates(sessionId: SessionId) {
         val hs = requireSystemOrNull(sessionId, housingSystem, "Housing", outbound) ?: return
         val me = players.get(sessionId) ?: return
-        val house = hs.getHouse(me.playerId!!)
+        val pid = me.playerId ?: return
+        val house = hs.getHouse(pid)
 
         outbound.send(OutboundEvent.SendText(sessionId, "Available Room Templates"))
         for ((_, template) in hs.templates) {
@@ -126,6 +127,7 @@ class HousingHandler(
 
         outbound.send(OutboundEvent.SendInfo(sessionId, "You've invited ${target.name} to your house."))
         outbound.send(OutboundEvent.SendInfo(target.sessionId, "${me.name} has invited you to their house."))
+        ctx.sendLook(target.sessionId)
         outbound.send(OutboundEvent.SendPrompt(target.sessionId))
     }
 
