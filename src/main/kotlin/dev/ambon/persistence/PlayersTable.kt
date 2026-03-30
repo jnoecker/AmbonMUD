@@ -59,6 +59,8 @@ object PlayersTable : Table("players") {
     val inventoryItems = text("inventory_items").default("[]")
     val equippedItems = text("equipped_items").default("{}")
     val activeSprite = varchar("active_sprite", 100).nullable()
+    val authTokenHash = varchar("auth_token_hash", 64).default("")
+    val authTokenIssuedAt = long("auth_token_issued_at").default(0L)
 
     override val primaryKey = PrimaryKey(id)
 
@@ -96,6 +98,8 @@ object PlayersTable : Table("players") {
             inventoryItems = safeReadJson(row[inventoryItems], inventoryItemsType, emptyList()),
             equippedItems = safeReadJson(row[equippedItems], equippedItemsType, emptyMap()),
             activeSprite = row[activeSprite],
+            authTokenHash = row[authTokenHash],
+            authTokenIssuedAt = row[authTokenIssuedAt],
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -132,5 +136,7 @@ object PlayersTable : Table("players") {
         statement[inventoryItems] = jsonMapper.writeValueAsString(record.inventoryItems)
         statement[equippedItems] = jsonMapper.writeValueAsString(record.equippedItems)
         statement[activeSprite] = record.activeSprite
+        statement[authTokenHash] = record.authTokenHash
+        statement[authTokenIssuedAt] = record.authTokenIssuedAt
     }
 }
