@@ -378,6 +378,69 @@ class HousingSystem(
         return templates[house.rooms[idx].templateId]
     }
 
+    // -------- vault items --------
+
+    /**
+     * Returns the max items allowed in the current room (vault capacity).
+     * Returns 0 for non-vault rooms (no persistent storage).
+     */
+    fun vaultCapacity(sessionId: SessionId): Int {
+        val template = currentRoomTemplate(sessionId) ?: return 0
+        return template.maxDroppedItems
+    }
+
+    /**
+     * Persists all room items from vault rooms into the house record.
+     * Called during the save/flush cycle.
+     */
+    suspend fun saveVaultItems(
+        ownerId: PlayerId,
+        itemsInRoom: (RoomId) -> List<dev.ambon.domain.items.ItemInstance>,
+    ) {
+        val house = housesByOwner[ownerId] ?: return
+        var changed = false
+        val updatedRooms = house.rooms.mapIndexed { index, room ->
+            val template = templates[room.templateId]
+            if (template != null && template.maxDroppedItems > 0) {
+                val roomId = houseRoomId(house.ownerName, index)
+                val items = itemsInRoom(roomId)
+                if (items != room.storedItems) {
+                    changed = true
+                    room.copy(storedItems = items)
+                } else {
+                    room
+                }
+            } else {
+                room
+            }
+        }
+        if (changed) {
+            val updated = house.copy(rooms = updatedRooms)
+            houseRepo.save(updated)
+            housesByOwner[ownerId] = updated
+        }
+    }
+
+    /**
+     * Loads vault items from the house record into the item registry.
+     * Called after house materialisation on login.
+     */
+    fun loadVaultItems(
+        ownerId: PlayerId,
+        addRoomItem: (RoomId, dev.ambon.domain.items.ItemInstance) -> Unit,
+    ) {
+        val house = housesByOwner[ownerId] ?: return
+        for ((index, room) in house.rooms.withIndex()) {
+            val template = templates[room.templateId] ?: continue
+            if (template.maxDroppedItems > 0 && room.storedItems.isNotEmpty()) {
+                val roomId = houseRoomId(house.ownerName, index)
+                for (item in room.storedItems) {
+                    addRoomItem(roomId, item)
+                }
+            }
+        }
+    }
+
     // -------- status --------
 
     fun houseStatus(sessionId: SessionId): HouseStatusInfo? {
