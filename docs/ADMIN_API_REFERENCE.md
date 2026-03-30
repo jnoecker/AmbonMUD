@@ -535,8 +535,73 @@ These serve server-rendered HTML pages. Listed for completeness — the Arcanum 
 | `GET` | `/api/achievements/{id}` | Content | Achievement detail |
 | `GET` | `/api/shops` | Content | Shop definitions + items |
 | `GET` | `/api/items` | Content | Item templates |
+| `GET` | `/api/housing/templates` | Housing | Room template definitions |
+| `GET` | `/api/housing` | Housing | Houses owned by online players |
+| `GET` | `/api/housing/{playerName}` | Housing | Full house record |
 | `POST` | `/api/reload` | Actions | Hot reload (`?target=`) |
 | `POST` | `/api/broadcast` | Actions | Send message to all players |
+
+---
+
+## Housing
+
+### `GET /api/housing/templates`
+
+Returns the configured room templates that players can purchase.
+
+```json
+[
+  {
+    "id": "cottage_entry",
+    "title": "Cottage Entryway",
+    "description": "A cozy stone-walled entryway...",
+    "cost": 1000,
+    "isEntry": true,
+    "maxDroppedItems": 0,
+    "safe": true,
+    "station": null,
+    "image": null
+  }
+]
+```
+
+### `GET /api/housing`
+
+Lists houses owned by currently online players.
+
+```json
+[
+  { "ownerName": "Gandalf", "ownerId": 42, "online": true }
+]
+```
+
+### `GET /api/housing/{playerName}`
+
+Returns the full house record for a player (case-insensitive lookup). Returns `404` if the player has no house.
+
+```json
+{
+  "ownerId": 42,
+  "ownerName": "Gandalf",
+  "createdAtEpochMs": 1711756800000,
+  "rooms": [
+    {
+      "templateId": "cottage_entry",
+      "customTitle": "Gandalf's Study",
+      "customDescription": "Books line every wall...",
+      "exits": { "NORTH": 1 },
+      "storedItemCount": 0
+    },
+    {
+      "templateId": "vault",
+      "customTitle": null,
+      "customDescription": null,
+      "exits": { "SOUTH": 0 },
+      "storedItemCount": 3
+    }
+  ]
+}
+```
 
 ---
 
@@ -557,6 +622,7 @@ These were identified but not addressed in this iteration:
 1. **Health check:** `GET /api/health` — verify connectivity and auth
 2. **Read-only monitoring:** `/api/overview`, `/api/players`, `/api/world/zones`
 3. **Content inspection:** `/api/abilities`, `/api/effects`, `/api/quests`, `/api/achievements`, `/api/shops`, `/api/items` — validate world-building
+4. **Housing inspection:** `/api/housing/templates`, `/api/housing`, `/api/housing/{playerName}` — view housing config and player houses
 4. **Room inspection:** `/api/world/zones/{zone}/rooms/{room}` — deep-dive into specific rooms
 5. **Hot reload:** `POST /api/reload?target=all` — apply updated world files
 6. **Broadcast:** `POST /api/broadcast` — announce reload to players
