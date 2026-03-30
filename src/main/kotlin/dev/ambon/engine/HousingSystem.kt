@@ -56,7 +56,8 @@ class HousingSystem(
 
     /**
      * Called on player login. Loads the house from persistence (if any),
-     * materialises rooms in the World, and sets the `hasHouse` flag on PlayerState.
+     * materialises rooms in the World, sets the `hasHouse` flag on PlayerState,
+     * and relocates players stranded in someone else's house after a disconnect.
      */
     suspend fun onPlayerLogin(sessionId: SessionId) {
         val ps = players.get(sessionId) ?: return
@@ -64,12 +65,34 @@ class HousingSystem(
 
         val house = houseRepo.findByOwnerId(pid) ?: run {
             ps.hasHouse = false
+            relocateIfStrandedVisitor(ps)
             return
         }
         ps.hasHouse = true
         housesByOwner[pid] = house
         materializeHouse(house)
         log.info { "Loaded house for ${ps.name} (${house.rooms.size} room(s))" }
+
+        // If they reconnected in their own house, restore visitor tracking
+        if (isHouseRoom(ps.roomId) && houseOwnerName(ps.roomId) == ps.name) {
+            val recallInn = ps.recallRoomId ?: world.startRoom
+            visitorOrigins[sessionId] = recallInn
+            sessionInHouse[sessionId] = pid
+        } else {
+            relocateIfStrandedVisitor(ps)
+        }
+    }
+
+    /**
+     * If a player reconnects in someone else's house (invite was session-only),
+     * move them to their recall room.
+     */
+    private fun relocateIfStrandedVisitor(ps: PlayerState) {
+        if (isHouseRoom(ps.roomId) && houseOwnerName(ps.roomId) != ps.name) {
+            val dest = ps.recallRoomId ?: world.startRoom
+            ps.roomId = dest
+            log.info { "${ps.name} was stranded in a house after reconnect; relocated to $dest" }
+        }
     }
 
     override fun remapSession(oldSid: SessionId, newSid: SessionId) {
