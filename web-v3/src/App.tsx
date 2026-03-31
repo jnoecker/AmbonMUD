@@ -211,6 +211,7 @@ function App() {
   const [savedCharacters, setSavedCharacters] = useState<string[]>([]);
   const resumeTokenRef = useRef<string | null>(null);
   const connectedRef = useRef(false);
+  const intentionalDisconnectRef = useRef(false);
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
   const [serverCommands, setServerCommands] = useState<CommandEntry[]>([]);
   const [emotePresets, setEmotePresets] = useState<EmotePreset[]>([]);
@@ -474,6 +475,11 @@ function App() {
     },
     onGmcpMessage: handleGmcp,
     onClose: () => {
+      if (intentionalDisconnectRef.current) {
+        // Disconnect was intentional (manual reconnect or logout) — skip auto-reconnect.
+        intentionalDisconnectRef.current = false;
+        return;
+      }
       if (resumeTokenRef.current) {
         // Auto-reconnect: keep game state, show reconnecting banner
         setReconnecting(true);
@@ -555,6 +561,7 @@ function App() {
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible" && !connectedRef.current && resumeTokenRef.current) {
         setReconnecting(true);
+        intentionalDisconnectRef.current = true;
         reconnect();
       }
     };
@@ -984,7 +991,7 @@ function App() {
           <button
             type="button"
             className={`soft-button reconnect-btn${connected ? "" : " reconnect-btn-needed"}`}
-            onClick={reconnect}
+            onClick={() => { intentionalDisconnectRef.current = true; reconnect(); }}
           >
             Reconnect
           </button>
