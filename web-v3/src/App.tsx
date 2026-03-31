@@ -210,6 +210,7 @@ function App() {
   const [reconnecting, setReconnecting] = useState(false);
   const [savedCharacters, setSavedCharacters] = useState<string[]>([]);
   const resumeTokenRef = useRef<string | null>(null);
+  const pendingAuthCharRef = useRef<string | null>(null);
   const connectedRef = useRef(false);
   const intentionalDisconnectRef = useRef(false);
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
@@ -439,6 +440,7 @@ function App() {
           setReconnecting,
           setSavedCharacters,
           resumeTokenRef,
+          pendingAuthCharRef,
           setServerAssets,
           setServerCommands,
           setEmotePresets,
@@ -1282,7 +1284,7 @@ function App() {
         </div>
       )}
 
-      {savedCharacters.length > 1 && !reconnecting && (
+      {savedCharacters.length >= 1 && !reconnecting && (
         <CharacterPicker
           characters={savedCharacters}
           onSelect={(name) => {
@@ -1290,14 +1292,33 @@ function App() {
               const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
               const token = saved[name];
               if (token) {
+                pendingAuthCharRef.current = name;
                 setSavedCharacters([]);
+                setLoginPrompt(null);
                 setReconnecting(true);
                 sendGmcp("Session.Authenticate", { token });
                 return;
               }
             } catch { /* ignore */ }
-            // Token missing — fall back to login
+            // Token missing — fall back to normal login.
+            // loginPrompt was set alongside savedCharacters in the Login.Prompt
+            // handler, so clearing savedCharacters reveals the LoginModal.
             setSavedCharacters([]);
+          }}
+          onRemoveCharacter={(name) => {
+            try {
+              const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
+              delete saved[name];
+              localStorage.setItem("ambonmud_auth_tokens", JSON.stringify(saved));
+              const remaining = Object.keys(saved);
+              if (remaining.length === 0) {
+                setSavedCharacters([]);
+              } else {
+                setSavedCharacters(remaining);
+              }
+            } catch {
+              setSavedCharacters([]);
+            }
           }}
           onNewCharacter={() => {
             setSavedCharacters([]);

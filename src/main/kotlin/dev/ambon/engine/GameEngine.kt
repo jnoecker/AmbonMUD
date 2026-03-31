@@ -1292,6 +1292,7 @@ class GameEngine(
         val record = persistence.playerRepo?.findByAuthTokenHash(hash)
         if (record == null) {
             gmcpEmitter.sendSessionAuthResult(sessionId, false, "Invalid or expired token")
+            loginFlowHandler.promptForName(sessionId)
             return
         }
 
@@ -1302,6 +1303,7 @@ class GameEngine(
             // Clear the expired token
             persistence.playerRepo?.save(record.copy(authTokenHash = "", authTokenIssuedAt = 0L))
             gmcpEmitter.sendSessionAuthResult(sessionId, false, "Token expired — please log in again")
+            loginFlowHandler.promptForName(sessionId)
             return
         }
 
