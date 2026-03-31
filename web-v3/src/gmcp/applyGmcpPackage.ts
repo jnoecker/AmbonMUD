@@ -1144,6 +1144,15 @@ export function applyGmcpPackage(
 
     case "Login.Prompt": {
       const packet = data as LoginPromptState;
+      // Only attempt auto-authentication on the initial "name" prompt.
+      // Subsequent prompts (confirmCreate, password, raceSelection, etc.) must
+      // always be shown to the user — otherwise the client intercepts every
+      // Login.Prompt mid-flow and loops back to the name screen.
+      if (packet.state !== "name") {
+        ctx.setLoginPrompt(packet);
+        ctx.setLoginError(null);
+        break;
+      }
       // Priority: resume token (short-lived reconnect) > auth token (long-lived remember-me)
       if (ctx.resumeTokenRef.current) {
         ctx.setReconnecting(true);
