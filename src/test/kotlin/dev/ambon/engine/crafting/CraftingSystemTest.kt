@@ -427,6 +427,71 @@ class CraftingSystemTest {
     }
 
     @Nested
+    inner class Specialization {
+        @Test
+        fun `specialization gives XP bonus on gather`() {
+            val node = GatheringNodeDef(
+                id = "test:copper_vein",
+                displayName = "a copper ore vein",
+                keyword = "copper",
+                skill = "mining",
+                skillRequired = 1,
+                yields = listOf(GatheringYield(itemId = copperOreId, minQuantity = 1, maxQuantity = 1)),
+                respawnSeconds = 60,
+                xpReward = 100,
+                roomId = roomId,
+            )
+            gatheringRegistry.register(listOf(node))
+
+            // Without specialization: 100 XP
+            val playerNoSpec = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            system.gather(playerNoSpec, "copper", roomId, items)
+            val xpNoSpec = playerNoSpec.craftingSkills["mining"]!!.xp
+
+            clock.advance(61_000L)
+            system.tickNodeRespawns()
+
+            // With specialization: 125 XP (100 * 1.25)
+            val playerSpec = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            playerSpec.craftingSpecialization = "mining"
+            system.gather(playerSpec, "copper", roomId, items)
+            val xpSpec = playerSpec.craftingSkills["mining"]!!.xp
+
+            // XP for level 1 = 50, so 100 XP causes level-up in both cases.
+            // Check the residual XP: no spec = 100-50=50, spec = 125-50=75
+            assertEquals(50L, xpNoSpec)
+            assertEquals(75L, xpSpec)
+        }
+
+        @Test
+        fun `non-specialized skill gets no bonus`() {
+            val node = GatheringNodeDef(
+                id = "test:copper_vein",
+                displayName = "a copper ore vein",
+                keyword = "copper",
+                skill = "mining",
+                skillRequired = 1,
+                yields = listOf(GatheringYield(itemId = copperOreId, minQuantity = 1, maxQuantity = 1)),
+                respawnSeconds = 60,
+                xpReward = 10,
+                roomId = roomId,
+            )
+            gatheringRegistry.register(listOf(node))
+
+            val player = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            player.craftingSpecialization = "smithing" // specialized in different skill
+            system.gather(player, "copper", roomId, items)
+            assertEquals(10L, player.craftingSkills["mining"]!!.xp)
+        }
+    }
+
+    @Nested
     inner class SkillProgression {
         @Test
         fun `xpForLevel calculation`() {

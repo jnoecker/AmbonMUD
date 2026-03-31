@@ -35,6 +35,7 @@ class CraftingHandler(
         router.on<Command.Craft> { sid, cmd -> handleCraft(sid, cmd) }
         router.on<Command.Recipes> { sid, cmd -> handleRecipes(sid, cmd) }
         router.on<Command.CraftSkills> { sid, _ -> handleCraftSkills(sid) }
+        router.on<Command.Specialize> { sid, cmd -> handleSpecialize(sid, cmd) }
     }
 
     private suspend fun handleGather(sessionId: SessionId, cmd: Command.Gather) {
@@ -238,11 +239,26 @@ class CraftingHandler(
                     "${state.xp}/$xpNeeded XP"
                 }
                 val label = if (skillDef.isGathering) "(Gathering)" else "(Crafting)"
+                val specTag = if (me.craftingSpecialization == skillDef.id) " [SPEC]" else ""
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sessionId,
-                        "  %-12s %3d/%d  %s  %s".format(skillDef.displayName, state.level, maxLevel, bar, label),
+                        "  %-12s %3d/%d  %s  %s%s".format(
+                            skillDef.displayName,
+                            state.level,
+                            maxLevel,
+                            bar,
+                            label,
+                            specTag,
+                        ),
                     ),
+                )
+            }
+            if (me.craftingSpecialization != null) {
+                val specName = craftingSkillRegistry?.get(me.craftingSpecialization!!)?.displayName
+                    ?: me.craftingSpecialization
+                outbound.send(
+                    OutboundEvent.SendInfo(sessionId, "  Specialization: $specName (+25% XP)"),
                 )
             }
             emitCraftingSkills(sessionId, me)
@@ -290,6 +306,53 @@ class CraftingHandler(
                 )
             },
         )
+    }
+
+    private suspend fun handleSpecialize(sessionId: SessionId, cmd: Command.Specialize) {
+        players.withPlayer(sessionId) { me ->
+            if (cmd.skill == null) {
+                // Show current specialization
+                val current = me.craftingSpecialization
+                if (current != null) {
+                    val name = craftingSkillRegistry?.get(current)?.displayName ?: current
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Your specialization: $name (+25% XP bonus)"))
+                } else {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You have no crafting specialization."))
+                }
+                outbound.send(
+                    OutboundEvent.SendInfo(sessionId, "Usage: specialize <skill> — choose a crafting skill to specialize in."),
+                )
+                val skillDefs = craftingSkillRegistry?.allDefinitions() ?: emptyList()
+                if (skillDefs.isNotEmpty()) {
+                    val names = skillDefs.joinToString(", ") { it.displayName.lowercase() }
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Available skills: $names"))
+                }
+                return
+            }
+
+            val skillId = cmd.skill.lowercase()
+            val skillDef = craftingSkillRegistry?.get(skillId)
+            if (skillDef == null) {
+                outbound.send(OutboundEvent.SendText(sessionId, "Unknown crafting skill '${cmd.skill}'."))
+                return
+            }
+
+            if (me.craftingSpecialization == skillId) {
+                outbound.send(
+                    OutboundEvent.SendText(sessionId, "You are already specialized in ${skillDef.displayName}."),
+                )
+                return
+            }
+
+            me.craftingSpecialization = skillId
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "** You are now specialized in ${skillDef.displayName}! (+25% XP bonus) **",
+                ),
+            )
+            emitCraftingSkills(sessionId, me)
+        }
     }
 
     private suspend fun notifyNewDiscoveries(sessionId: SessionId, me: PlayerState, cs: CraftingSystem) {
