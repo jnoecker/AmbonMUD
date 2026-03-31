@@ -257,12 +257,17 @@ class CraftingSystem(
     fun xpForLevel(level: Int): Long =
         (config.baseXpPerLevel * level.toDouble().pow(config.xpExponent)).toLong()
 
-    /** Adds XP to a skill. Returns true if the player leveled up. */
+    /** Adds XP to a skill, applying specialization bonus if applicable. Returns true if the player leveled up. */
     private fun addSkillXp(player: PlayerState, skill: String, xp: Long): Boolean {
         val state = player.craftingSkills.getOrPut(skill) { CraftingSkillState() }
         if (state.level >= config.maxSkillLevel) return false
 
-        val newXp = state.xp + xp
+        val effectiveXp = if (player.craftingSpecialization == skill) {
+            (xp * (1.0 + config.specializationXpBonus)).toLong()
+        } else {
+            xp
+        }
+        val newXp = state.xp + effectiveXp
         val xpNeeded = xpForLevel(state.level)
         return if (newXp >= xpNeeded) {
             val newLevel = (state.level + 1).coerceAtMost(config.maxSkillLevel)
