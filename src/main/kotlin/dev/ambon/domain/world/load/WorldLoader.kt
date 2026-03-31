@@ -11,6 +11,7 @@ import dev.ambon.domain.StatMap
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.GatheringYield
 import dev.ambon.domain.crafting.MaterialRequirement
+import dev.ambon.domain.crafting.RareGatheringYield
 import dev.ambon.domain.crafting.RecipeDef
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
@@ -537,6 +538,24 @@ object WorldLoader {
                         maxQuantity = yieldFile.maxQuantity,
                     )
                 }
+                val rareYields = nodeFile.rareYields.mapIndexed { index, rareFile ->
+                    val itemId = normalizeItemId(zone, rareFile.itemId)
+                    if (rareFile.quantity < 1) {
+                        throw WorldLoadException(
+                            "Gathering node '$nodeId' rareYield #${index + 1} quantity must be >= 1",
+                        )
+                    }
+                    if (rareFile.dropChance <= 0.0 || rareFile.dropChance > 1.0) {
+                        throw WorldLoadException(
+                            "Gathering node '$nodeId' rareYield #${index + 1} dropChance must be in (0.0, 1.0]",
+                        )
+                    }
+                    RareGatheringYield(
+                        itemId = itemId,
+                        quantity = rareFile.quantity,
+                        dropChance = rareFile.dropChance,
+                    )
+                }
                 val nodeRoomId = normalizeTarget(zone, nodeFile.room)
                 val keyword = normalizeKeyword(rawId, nodeFile.keyword)
                 mergedGatheringNodes.add(
@@ -548,6 +567,7 @@ object WorldLoader {
                         skill = skill,
                         skillRequired = nodeFile.skillRequired,
                         yields = yields,
+                        rareYields = rareYields,
                         respawnSeconds = nodeFile.respawnSeconds,
                         xpReward = nodeFile.xpReward,
                         roomId = nodeRoomId,

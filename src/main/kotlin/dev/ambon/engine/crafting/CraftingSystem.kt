@@ -18,6 +18,7 @@ private val log = KotlinLogging.logger {}
 data class GatherResult(
     val node: GatheringNodeDef,
     val itemsGathered: Map<ItemId, Int>,
+    val rareItemsGathered: Map<ItemId, Int>,
     val xpAwarded: Int,
     val leveledUp: Boolean,
     val newLevel: Int,
@@ -125,6 +126,20 @@ class CraftingSystem(
             }
         }
 
+        // Roll rare drops
+        val rareGathered = mutableMapOf<ItemId, Int>()
+        for (rare in node.rareYields) {
+            if (random.nextDouble() < rare.dropChance) {
+                repeat(rare.quantity) {
+                    val instance = items.createFromTemplate(rare.itemId)
+                    if (instance != null) {
+                        items.addToInventory(player.sessionId, instance)
+                        rareGathered[rare.itemId] = (rareGathered[rare.itemId] ?: 0) + 1
+                    }
+                }
+            }
+        }
+
         // Mark node as depleted
         nodeDepletedUntil[node.id] = now + (node.respawnSeconds * 1000L)
 
@@ -139,6 +154,7 @@ class CraftingSystem(
             GatherResult(
                 node = node,
                 itemsGathered = gathered,
+                rareItemsGathered = rareGathered,
                 xpAwarded = node.xpReward,
                 leveledUp = leveledUp,
                 newLevel = currentState.level,
