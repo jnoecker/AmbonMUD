@@ -75,6 +75,16 @@ items:
     onUse:
       healHp: 5
     basePrice: 40
+  rough_gem:
+    displayName: "a rough gem"
+    keyword: gem
+    description: "An uncut gemstone that glitters with hidden fire. Prized by skilled crafters."
+    basePrice: 50
+  arcane_essence:
+    displayName: "a wisp of arcane essence"
+    keyword: essence
+    description: "A shimmering mote of magical energy, captured from rare herbs. Used in advanced alchemy."
+    basePrice: 45
 
 mobs:
   supply_merchant:
@@ -165,6 +175,10 @@ gatheringNodes:
       - itemId: copper_ore
         minQuantity: 1
         maxQuantity: 3
+    rareYields:
+      - itemId: rough_gem
+        quantity: 1
+        dropChance: 0.08
     respawnSeconds: 30
     xpReward: 10
     room: mine_tunnel
@@ -178,6 +192,10 @@ gatheringNodes:
       - itemId: iron_ore
         minQuantity: 1
         maxQuantity: 2
+    rareYields:
+      - itemId: rough_gem
+        quantity: 1
+        dropChance: 0.15
     respawnSeconds: 60
     xpReward: 25
     room: mine_tunnel
@@ -204,6 +222,10 @@ gatheringNodes:
       - itemId: healing_herb
         minQuantity: 1
         maxQuantity: 2
+    rareYields:
+      - itemId: arcane_essence
+        quantity: 1
+        dropChance: 0.12
     respawnSeconds: 60
     xpReward: 25
     room: herb_garden

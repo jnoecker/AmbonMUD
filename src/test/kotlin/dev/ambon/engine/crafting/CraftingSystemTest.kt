@@ -5,6 +5,7 @@ import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.GatheringYield
 import dev.ambon.domain.crafting.MaterialRequirement
+import dev.ambon.domain.crafting.RareGatheringYield
 import dev.ambon.domain.crafting.RecipeDef
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
@@ -221,6 +222,61 @@ class CraftingSystemTest {
             assertTrue(r.leveledUp)
             assertEquals(2, r.newLevel)
             assertEquals(2, player.craftingSkills["mining"]?.level)
+        }
+
+        @Test
+        fun `rare yields are rolled on gather`() {
+            // Use Random(42) — seed is deterministic. We'll create a node with 100% rare drop
+            // to guarantee it triggers.
+            val nodeWithRare = node.copy(
+                rareYields = listOf(
+                    RareGatheringYield(itemId = ironOreId, quantity = 1, dropChance = 1.0),
+                ),
+            )
+            gatheringRegistry.clear()
+            gatheringRegistry.register(listOf(nodeWithRare))
+
+            val player = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            val result = system.gather(player, "copper", roomId, items)
+            assertTrue(result is Either.Right)
+            val r = (result as Either.Right).value
+            assertEquals(1, r.rareItemsGathered[ironOreId])
+            // Normal yield + rare yield both in inventory
+            assertTrue(items.inventory(sid).any { it.id == copperOreId })
+            assertTrue(items.inventory(sid).any { it.id == ironOreId })
+        }
+
+        @Test
+        fun `rare yields with very low chance usually do not drop`() {
+            val nodeWithLowRare = node.copy(
+                rareYields = listOf(
+                    RareGatheringYield(itemId = ironOreId, quantity = 1, dropChance = 0.001),
+                ),
+            )
+            gatheringRegistry.clear()
+            gatheringRegistry.register(listOf(nodeWithLowRare))
+
+            val player = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            val result = system.gather(player, "copper", roomId, items)
+            assertTrue(result is Either.Right)
+            val r = (result as Either.Right).value
+            // With Random(42) and 0.1% chance, first roll won't trigger
+            assertTrue(r.rareItemsGathered.isEmpty())
+        }
+
+        @Test
+        fun `gather with no rare yields produces empty rare map`() {
+            val player = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            val result = system.gather(player, "copper", roomId, items)
+            assertTrue(result is Either.Right)
+            val r = (result as Either.Right).value
+            assertTrue(r.rareItemsGathered.isEmpty())
         }
     }
 

@@ -72,7 +72,18 @@ class CraftingHandler(
                             "You gather from ${r.node.displayName}: $itemNames",
                         ),
                     )
+                    if (r.rareItemsGathered.isNotEmpty()) {
+                        val rareNames = r.rareItemsGathered.entries.joinToString(", ") { (id, qty) ->
+                            val template = items.getTemplate(id)
+                            val name = template?.displayName ?: id.value
+                            if (qty > 1) "$name x$qty" else name
+                        }
+                        outbound.send(
+                            OutboundEvent.SendInfo(sessionId, "** Rare find: $rareNames! **"),
+                        )
+                    }
                     sendCraftingXp(sessionId, r.node.skill, r.xpAwarded, r.leveledUp, r.newLevel)
+                    val totalQuantity = r.itemsGathered.values.sum() + r.rareItemsGathered.values.sum()
                     gmcpEmitter?.sendCraftingResult(
                         sessionId,
                         "gather",
@@ -81,7 +92,8 @@ class CraftingHandler(
                         r.leveledUp,
                         r.newLevel,
                         itemName = itemNames,
-                        quantity = r.itemsGathered.values.sum(),
+                        quantity = totalQuantity,
+                        rareFind = r.rareItemsGathered.isNotEmpty(),
                     )
                     emitCraftingSkills(sessionId, me)
                 }
