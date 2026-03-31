@@ -1294,12 +1294,15 @@ function App() {
               if (token) {
                 pendingAuthCharRef.current = name;
                 setSavedCharacters([]);
+                setLoginPrompt(null);
                 setReconnecting(true);
                 sendGmcp("Session.Authenticate", { token });
                 return;
               }
             } catch { /* ignore */ }
-            // Token missing — fall back to login
+            // Token missing — fall back to normal login.
+            // loginPrompt was set alongside savedCharacters in the Login.Prompt
+            // handler, so clearing savedCharacters reveals the LoginModal.
             setSavedCharacters([]);
           }}
           onRemoveCharacter={(name) => {
