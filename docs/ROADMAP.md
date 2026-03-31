@@ -39,7 +39,12 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 ✅ Guilds with ranks, guild chat, roster management
 ✅ Friends list + offline mail
 ✅ Crafting & gathering (recipes, crafting skills, workshop zone)
+✅ Player housing (personal rooms, furniture, vaults, access control)
 ✅ Web-based admin dashboard
+✅ Remember-me auth tokens for persistent login
+
+### Content Creation
+✅ **Ambon Arcanum** — standalone desktop creator tool with visual zone editor, room/mob/item/shop editors, class/race designer, config editor, and YAML round-trip preservation
 
 **Test coverage:** ~118 test files covering all systems.
 
@@ -79,11 +84,20 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 |---------|--------|-----------|
 | Crafting & Gathering (#7) | ✅ Done (Phase 1) | `gather`/`craft`/`recipes` commands, crafting skills, dedicated crafting_workshop zone, Flyway V13 |
 
-### Phase D — Community & Polish (Partial)
+### Phase D — Community & Polish
 
 | Project | Status | Highlights |
 |---------|--------|-----------|
 | Social Systems (#13) | ✅ Done | Guilds (create/disband/invite/accept/leave/kick/promote/demote/motd/roster/info), guild chat (`gchat`), friends (add/remove/list), offline mail (send/read/delete). Flyway V9 (mail), V11 (guilds), V16 (friends) |
+| Auto-Map & Enhanced Web Client (#10) | ✅ Done | PixiJS canvas v4 client: JRPG-style world/battle scenes, HUD panels, crafting/mail/housing UI, GMCP-driven data |
+| Player Housing (#12) | ✅ Done (Mar 2026) | Personal rooms, furniture placement, vaults with capacity limits, access control, Housing GMCP + web panel. PRs #802, #805 |
+
+### Phase E — Builder & Operator Tooling (Partial)
+
+| Project | Status | Highlights |
+|---------|--------|-----------|
+| Ambon Arcanum (Creator Tool) | ✅ Done | Standalone desktop app: visual zone map editor, room/mob/item/shop editors, class/race designer, config editor, YAML round-trip preservation. Replaces OLC (#8). |
+| Admin Dashboard (#14) | ✅ Partial | Player lookup, metrics, basic controls; enhancement opportunities remain |
 
 ---
 
@@ -94,21 +108,9 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 | # | Project | Effort | Status | Key Features |
 |---|---------|--------|--------|--------------|
 | **6** | Procedural Dungeons | Very large | ⏳ Pending | Randomized layouts, difficulty scaling, boss encounters, replayable content |
-| **7** | Crafting & Gathering | Medium-large | ✅ Done (Phase 1) | Gathering nodes, recipes, crafting skills, dedicated workshop zone |
+| **7** | Crafting & Gathering Phase 2 | Medium-large | ⏳ Pending | Advanced recipes, rare materials, crafting specializations |
 
 **Unlocks:** Infinite replayable content, non-combat progression, economic loops.
-
----
-
-### Phase D — Community & Polish
-
-| # | Project | Effort | Status | Key Features |
-|---|---------|--------|--------|--------------|
-| **10** | Auto-Map & Enhanced Web Client | Medium | 🟡 In Progress | Spatial map rendering, ability/skills actions, chat panels, mobile layout |
-| **13** | Social Systems (Guilds/Friends/Mail) | Large | ✅ Done | Guilds (create/disband/invite/promote/demote/gchat), friends list, offline mail |
-| **12** | Player Housing | Medium-large | ⏳ Pending | Personal rooms, furniture, access control, persistent storage |
-
-**Unlocks:** Player retention, community engagement, modern UX.
 
 ---
 
@@ -116,11 +118,32 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 
 | # | Project | Effort | Status | Key Features |
 |---|---------|--------|--------|--------------|
-| **8** | OLC / World Builder | Very large | ⏳ Pending | In-game room/mob/item/zone creation, real-time editing, zero-restart iteration |
 | **9** | Persistent World State & Events | Medium-large | ⏳ Pending | Doors, levers, containers, server events, seasonal content, world flags |
-| **14** | Admin Dashboard | Large | ✅ Partial | Player lookup, metrics, basic controls; enhancement opportunities remain |
+| **14** | Admin Dashboard Enhancements | Medium | 🟡 Ongoing | Live metrics, world inspector, event log, config hot-reload |
 
-**Unlocks:** Rapid content creation, dynamic world, operational visibility.
+**Unlocks:** Dynamic world, operational visibility.
+
+---
+
+### Closed / Not Planned
+
+| # | Project | Resolution |
+|---|---------|------------|
+| **8** | OLC / World Builder | Replaced by Ambon Arcanum (standalone creator tool). In-game building is not planned. |
+
+---
+
+## Web Client Parity
+
+See [WEB_CLIENT_PARITY_REPORT.md](./WEB_CLIENT_PARITY_REPORT.md) for the full audit. Summary of remaining work:
+
+**Protocol fixes:** Zone.Map support-check, Room.MobInfo missing fields, Char.Combat.Event field mismatch, Core.Ping, Char.Gain underutilized fields.
+
+**Feature gaps:** World Features (doors/containers/levers) need GMCP + UI, structured Who list needs GMCP.
+
+**UI management gaps:** Guild/group/friends management actions, title/gender controls, phase/instance selector.
+
+**UX enhancements:** Flee button, recall button, inventory context actions, emote picker, combat target selector, mob status effects.
 
 ---
 
@@ -179,17 +202,13 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 
 ### Start Here (High Impact, Medium Effort)
 
-1. **Auto-Map & Enhanced Web Client (#10)** — Highest player-visible impact. Core implementation is live in v3; continue iterating on group/achievement surfaces and polish.
-2. **Persistent World State (#9)** — Enables dynamic content (doors, levers, seasonal events). Foundation for later projects.
+1. **Persistent World State (#9)** — Enables dynamic content (doors, levers, seasonal events). Foundation for later projects.
+2. **Web Client Parity** — Protocol fixes and UI gaps are individually small but collectively high-impact for player experience.
 
-### Build Community (Medium Effort, High Retention)
+### Build Endgame (High Effort, High Retention)
 
-3. **Player Housing (#12)** — Personal investment, long-term retention. Builds on economy and persistent state.
-
-### Enable Creators (High Effort, Enables Everything Else)
-
-4. **OLC / World Builder (#8)** — Very large effort, but unlocks rapid content iteration. Builder community can exponentially expand world.
-5. **Procedural Dungeons (#6)** — Infinite replayable content. Builds on group combat and status effects.
+3. **Crafting Phase 2 (#7)** — Advanced recipes, specializations, economic depth.
+4. **Procedural Dungeons (#6)** — Infinite replayable content. Builds on group combat and status effects.
 
 ---
 
@@ -203,12 +222,12 @@ NPC Dialogue (#2) [DONE] ──→ Quest System (#3) [DONE] (quest givers)
                             ──→ Economy (#4) [DONE] (vendor NPCs)
 
 Economy (#4) [DONE] ──→ Crafting (#7) [DONE] (sell crafted items)
-                     ──→ Player Housing (#12) (purchase houses)
+                     ──→ Player Housing (#12) [DONE] (purchase houses)
                      ──→ Guilds (#13) [DONE] (guild bank)
 
 Quest System (#3) [DONE] ──→ Achievements (#11) [DONE] (quest achievements)
 
-Persistent World State (#9) ──→ Player Housing (#12) (item storage)
+Persistent World State (#9) ──→ Dynamic events, seasonal content
 
 Everything else is independent and can start in any order.
 ```
@@ -231,12 +250,12 @@ Everything else is independent and can start in any order.
 **Known scaling limiters:**
 - ~~Telnet transport thread model~~: resolved — virtual threads (PR #313) now handle telnet I/O
 - Single-zone performance: Procedural dungeons (#6) with instancing mitigates
-- Builder tooling: OLC (#8) is a prerequisite for content velocity
-- Player retention: Housing (#12) remains the main gap; guilds (#13) and crafting (#7) are now implemented
+- ~~Builder tooling~~: resolved — Ambon Arcanum creator tool is complete
+- ~~Player retention~~: resolved — Housing (#12), guilds (#13), and crafting (#7) are all implemented
 
 ---
 
-## Long-Term Vision (Beyond Phase E)
+## Long-Term Vision (Beyond Current Phases)
 
 **Not currently planned, but possible futures:**
 
@@ -257,7 +276,7 @@ See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) for setup instructions and [ARCHI
 **Quick wins for contributors:**
 - Add new abilities (config-driven, no code changes needed)
 - Create new zones (YAML world files)
-- Enhance the v3 web client UI (xterm + GMCP data)
+- Enhance the v4 web client UI (React + PixiJS + GMCP data)
 - Improve admin dashboard (expand existing panels)
 - Write tests for edge cases
 
@@ -265,4 +284,4 @@ See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) for setup instructions and [ARCHI
 
 ---
 
-**Last updated:** March 27, 2026
+**Last updated:** March 31, 2026
