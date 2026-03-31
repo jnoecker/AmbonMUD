@@ -53,6 +53,8 @@ sealed interface GatherError {
 sealed interface CraftError {
     data object RecipeNotFound : CraftError
 
+    data object NotDiscovered : CraftError
+
     data class SkillTooLow(
         val required: Int,
         val current: Int,
@@ -173,6 +175,11 @@ class CraftingSystem(
         val recipe = craftingRegistry.findRecipe(recipeKeyword)
             ?: return Either.Left(CraftError.RecipeNotFound)
 
+        // Check discovery
+        if (recipe.id !in player.discoveredRecipes) {
+            return Either.Left(CraftError.NotDiscovered)
+        }
+
         // Check player level
         if (player.level < recipe.levelRequired) {
             return Either.Left(CraftError.LevelTooLow(recipe.levelRequired, player.level))
@@ -276,7 +283,27 @@ class CraftingSystem(
 
     fun maxSkillLevel(): Int = config.maxSkillLevel
 
+    /**
+     * Auto-discovers any recipes the player qualifies for but hasn't discovered yet.
+     * Returns the list of newly discovered recipe IDs.
+     */
+    fun discoverNewRecipes(player: PlayerState): List<RecipeDef> {
+        val newlyDiscovered = mutableListOf<RecipeDef>()
+        for (recipe in craftingRegistry.allRecipes()) {
+            if (recipe.id in player.discoveredRecipes) continue
+            val skillLevel = player.craftingSkills[recipe.skill]?.level ?: 0
+            if (skillLevel >= recipe.skillRequired && player.level >= recipe.levelRequired) {
+                player.discoveredRecipes.add(recipe.id)
+                newlyDiscovered.add(recipe)
+            }
+        }
+        return newlyDiscovered
+    }
+
     fun allRecipes(): Collection<RecipeDef> = craftingRegistry.allRecipes()
+
+    fun discoveredRecipes(player: PlayerState): List<RecipeDef> =
+        craftingRegistry.allRecipes().filter { it.id in player.discoveredRecipes }
 
     fun recipesForSkill(skill: String): List<RecipeDef> = craftingRegistry.recipesForSkill(skill)
 
