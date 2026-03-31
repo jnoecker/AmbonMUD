@@ -10,6 +10,7 @@ AmbonMUD
 - 🌍 **14 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
 - ⚔️ **Real-time combat system** with attribute-based damage, dodge mechanics, and tactical status effects (DoT, HoT, STUN, ROOT, SHIELD, buffs/debuffs)
 - 🎨 **PixiJS canvas client** with JRPG-style world/battle scenes, spell targeting, customizable quickbar, and a cozy glass-morphism UI
+- 🏠 **Player housing**: personal rooms, furniture placement, vaults with capacity limits, and access control
 - 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands
 - 🔌 **Dual transports**: telnet (NAWS/TTYPE/GMCP negotiation) + browser WebSocket with GMCP-aware UI panels
 - 📊 **Structured data** (GMCP) — 25+ packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
@@ -29,6 +30,8 @@ AmbonMUD
 - ✅ Guild system with hierarchy, guild chat, MOTD
 - ✅ Friends list and in-game mail system
 - ✅ Crafting and gathering system
+- ✅ Player housing with furniture, vaults, and access control
+- ✅ Remember-me auth tokens with character picker
 - ✅ Full production test coverage and CI/CD
 - ✅ Docker image + AWS CDK infrastructure: EC2 demo (~$4-5/mo) and ECS Fargate (topology × tier) options
 - ✅ Live demo at [mud.ambon.dev](https://mud.ambon.dev) — auto-deploys on every push to `main`
@@ -40,6 +43,15 @@ Current web client (v4 — PixiJS canvas):
 ![AmbonMUD web client v4](docs/screenshots/webclient-v4.jpeg)
 
 See [docs/WEB_CLIENT.md](docs/WEB_CLIENT.md#visual-progression) for the full progression from telnet proof-of-concept to the current UI.
+
+Ambon Arcanum (Creator Tool)
+-----------------------------
+
+**Ambon Arcanum** is a standalone desktop application for building and managing AmbonMUD worlds. Point it at your AmbonMUD project directory and it becomes the single tool for creating zones, rooms, mobs, items, shops, classes, races, and server configuration — all through visual editors with full YAML round-trip preservation.
+
+![Ambon Arcanum — Worldmaker view](Arcanum.png)
+
+The Arcanum includes a visual zone map editor, entity editors with live preview, a class/race designer, and a config editor for all gameplay tuning. See [docs/CREATOR_PLAN.md](docs/CREATOR_PLAN.md) for the design document and [docs/ARCANUM_STYLE_GUIDE.md](docs/ARCANUM_STYLE_GUIDE.md) for its design system.
 
 ## Quick Start
 
@@ -111,6 +123,7 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for architectural details and [DEVEL
 - **Friends:** `friend list/add/remove`
 - **Mail:** `mail list/read/send/delete`
 - **Crafting:** `gather`, `craft`, `recipes`
+- **Housing:** `house` (info/expand/furnish/describe/invite/kick/lock/unlock)
 - **Admin:** `goto`, `transfer`, `spawn`, `smite`, `kick`, `shutdown` (requires staff flag)
 
 See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full command list and details.
