@@ -1,14 +1,14 @@
 # Web Client Feature Parity Report (Consolidated)
 
-**Date:** 2026-03-27
-**Source:** Three independent parity studies merged and deduplicated.
+**Date:** 2026-03-31 (updated)
+**Source:** Three independent parity studies merged and deduplicated, then updated against current codebase.
 **Scope:** All MUD text commands/features vs web-v3 client UI and GMCP coverage.
 
 ---
 
 ## Executive Summary
 
-The web client covers the core gameplay loop well — navigation, combat, inventory/equipment, spells, quests, dialogue, shops, and chat. However, several full feature systems have **no web UI or GMCP support** (mail, crafting, world features), many others have **partial UI requiring text-command fallback** for management actions (guilds, groups, friends, titles), and a handful of **GMCP protocol issues** prevent data from reaching the client correctly.
+The web client covers the core gameplay loop well — navigation, combat, inventory/equipment, spells, quests, dialogue, shops, chat, mail, crafting, housing, and character stats. Remaining gaps are concentrated in **management actions** for social systems (guilds, groups, friends), **world feature interactivity** (doors, containers, levers), and a handful of **GMCP protocol issues** that prevent data from reaching the client correctly.
 
 ---
 
@@ -52,11 +52,11 @@ Server emits optional `newLevel`, `hpGained`, `manaGained` fields. Web client on
 
 ### 2.1 Command autocomplete incomplete
 
-`web-v3/src/constants.ts` command completion list is narrower than the full parser surface. Missing families: mail, crafting, world features, guild/group management, friends, phase, title, gender.
+`web-v3/src/constants.ts` command completion list is narrower than the full parser surface. Missing families: world features, guild/group management, friends, phase, title, gender.
 
 ### 2.2 In-app Help underrepresents command families
 
-`HelpContent` doesn't cover mail, crafting, world-feature/container verbs, and several other supported families.
+`HelpContent` doesn't cover world-feature/container verbs and several other supported families.
 
 ---
 
@@ -64,18 +64,13 @@ Server emits optional `newLevel`, `hpGained`, `manaGained` fields. Web client on
 
 These systems work via text commands but are invisible to the web client.
 
-### 3.1 Mail System
+### ~~3.1 Mail System~~ — ✅ RESOLVED
 
-**Commands:** `mail list/read/delete/send/abort`
-**GMCP needed:** `Mail.List`, `Mail.Message`, `Mail.Notification` (and compose-state feedback).
-**Web UI needed:** Mail panel with inbox, message viewer, compose form, delete action.
-**Note:** Multi-step compose (`mail send`, line capture, `.` to finish) is especially poor UX via generic command entry.
+Mail GMCP packages (`Mail.List`, `Mail.Message`, `Mail.Notification`) are implemented and the web client handles them.
 
-### 3.2 Crafting & Gathering System
+### ~~3.2 Crafting & Gathering System~~ — ✅ RESOLVED
 
-**Commands:** `gather`, `craft`, `recipes`, `craftskills`/`professions`
-**GMCP needed:** `Crafting.Skills`, `Crafting.Recipes`, `Crafting.Nodes`, `Crafting.Result`.
-**Web UI needed:** Crafting panel with recipe browser, gather button on room nodes, skill progression display.
+Crafting GMCP packages (`Crafting.Skills`, `Crafting.Recipes`, `Crafting.Nodes`, `Crafting.Result`) are implemented with a dedicated CraftingPanel in the web client.
 
 ### 3.3 World Features (Doors, Containers, Levers, Signs)
 
@@ -122,11 +117,9 @@ These systems work via text commands but are invisible to the web client.
 **Missing:** No instance selector UI, no current-instance display, no occupancy information.
 **GMCP opportunity:** Instance list + current + occupancy + switch ack/error.
 
-### 4.6 Character Stats Tab
+### ~~4.6 Character Stats Tab~~ — ✅ RESOLVED
 
-**GMCP available:** `Char.Stats` sends full stat breakdown (STR/DEX/CON/INT/WIS/CHA base+effective, damage range, armor, dodge%).
-**State:** Stored in client (`charStats`) but no panel renders it.
-**Missing:** Stats tab in CharacterPanel showing attribute table with base vs effective values, derived combat stats.
+Stats tab exists in CharacterPanel with full attribute display (base vs effective), derived stats (damage, armor, dodge%).
 
 ### 4.7 Score View
 
@@ -201,40 +194,44 @@ A `Server.Commands` GMCP package providing command manifest (syntax, help, categ
 | Chat (all channels) | `Comm.Channel` | Chat panel with say/tell/gossip/shout/ooc/gtell/gchat |
 | Achievements | `Char.Achievements` | Character panel achievements tab with progress bars |
 | XP/Gold gains | `Char.Gain` | Floating gain notifications |
-| Login flow | `Login.Prompt/Error` | Login modal with race/class/gender selection |
+| Login flow | `Login.Prompt/Error`, `Session.*` | Login modal with race/class selection, character picker, remember-me |
 | Admin/Staff tools | `Staff.WorldInfo` | Admin panel with zone/room browser, teleport |
+| Mail | `Mail.List/Message/Notification` | Mail panel with inbox, message viewer, compose |
+| Crafting | `Crafting.Skills/Recipes/Nodes/Result` | Crafting panel with recipe browser, skill display |
+| Housing | `Housing.Info/Rooms` | Housing panel with room management |
+| Character Stats | `Char.Stats` | Stats tab with attributes, derived combat stats |
 
 ---
 
 ## 8. Summary Matrix
 
-| # | Feature | Has Text Cmd | Has GMCP | Has Web UI | Gap Type | Issue |
-|---|---------|:---:|:---:|:---:|----------|-------|
-| 1 | Zone.Map handshake | — | Broken | Ready | Protocol fix | #667 |
-| 2 | Room.MobInfo fields | — | Partial | Ready | Protocol fix | #668 |
-| 3 | Combat.Event names | — | Mismatched | Mismatched | Protocol fix | #669 |
-| 4 | Core.Ping | — | Emitted | Missing | Protocol fix | #670 |
-| 5 | Char.Gain fields | — | Emitted | Partial | Protocol fix | #671 |
-| 6 | Command autocomplete | Y | N/A | Partial | Discoverability | #672 |
-| 7 | Help coverage | Y | N/A | Partial | Discoverability | #673 |
-| 8 | Mail | Y | **N** | **N** | Full gap | #674 |
-| 9 | Crafting/Gathering | Y | **N** | **N** | Full gap | #675 |
-| 10 | World features | Y | **N** | **N** | Full gap | #676 |
-| 11 | Who (structured) | Y | **N** | Partial | Full gap | #677 |
-| 12 | Guild management | Y | Partial | **N** | UI gap | #678 |
-| 13 | Group management | Y | Y | **N** | UI gap | #679 |
-| 14 | Friends management | Y | Y | **N** | UI gap | #680 |
-| 15 | Title/gender controls | Y | Partial | **N** | UI gap | #681 |
-| 16 | Phase/instance selector | Y | **N** | **N** | UI gap | #682 |
-| 17 | Character stats tab | Y | Y | **N** | UI gap | #683 |
-| 18 | Score view | Y | Composable | **N** | UI gap | #684 |
-| 19 | Flee button | Y | N/A | **N** | UX gap | #685 |
-| 20 | Recall button | Y | N/A | **N** | UX gap | #686 |
-| 21 | Inventory use/put/search | Y | N/A | **N** | UX gap | #687 |
-| 22 | Emote picker | Y | N/A | **N** | UX gap | #688 |
-| 23 | Combat target selector | Y | N/A | **N** | UX gap | #689 |
-| 24 | Mob status effects | — | **N** | **N** | UX gap | #690 |
-| 25 | Entity action enrichment | — | Partial | Partial | UX gap | #691 |
-| 26 | Command-parity CI | — | — | — | Infra | #692 |
-| 27 | GMCP contract tests | — | — | — | Infra | #693 |
-| 28 | Server.Commands package | — | **N** | **N** | Infra | #694 |
+| # | Feature | Has Text Cmd | Has GMCP | Has Web UI | Gap Type | Status |
+|---|---------|:---:|:---:|:---:|----------|--------|
+| 1 | Zone.Map handshake | — | Broken | Ready | Protocol fix | Open |
+| 2 | Room.MobInfo fields | — | Partial | Ready | Protocol fix | Open |
+| 3 | Combat.Event names | — | Mismatched | Mismatched | Protocol fix | Open |
+| 4 | Core.Ping | — | Emitted | Missing | Protocol fix | Open |
+| 5 | Char.Gain fields | — | Emitted | Partial | Protocol fix | Open |
+| 6 | Command autocomplete | Y | N/A | Partial | Discoverability | Open |
+| 7 | Help coverage | Y | N/A | Partial | Discoverability | Open |
+| ~~8~~ | ~~Mail~~ | ~~Y~~ | ~~Y~~ | ~~Y~~ | ~~—~~ | ✅ Done |
+| ~~9~~ | ~~Crafting/Gathering~~ | ~~Y~~ | ~~Y~~ | ~~Y~~ | ~~—~~ | ✅ Done |
+| 10 | World features | Y | **N** | **N** | Full gap | Open |
+| 11 | Who (structured) | Y | **N** | Partial | Full gap | Open |
+| 12 | Guild management | Y | Partial | **N** | UI gap | Open |
+| 13 | Group management | Y | Y | **N** | UI gap | Open |
+| 14 | Friends management | Y | Y | **N** | UI gap | Open |
+| 15 | Title/gender controls | Y | Partial | **N** | UI gap | Open |
+| 16 | Phase/instance selector | Y | **N** | **N** | UI gap | Open |
+| ~~17~~ | ~~Character stats tab~~ | ~~Y~~ | ~~Y~~ | ~~Y~~ | ~~—~~ | ✅ Done |
+| 18 | Score view | Y | Composable | **N** | UI gap | Open |
+| 19 | Flee button | Y | N/A | **N** | UX gap | Open |
+| 20 | Recall button | Y | N/A | **N** | UX gap | Open |
+| 21 | Inventory use/put/search | Y | N/A | **N** | UX gap | Open |
+| 22 | Emote picker | Y | N/A | **N** | UX gap | Open |
+| 23 | Combat target selector | Y | N/A | **N** | UX gap | Open |
+| 24 | Mob status effects | — | **N** | **N** | UX gap | Open |
+| 25 | Entity action enrichment | — | Partial | Partial | UX gap | Open |
+| 26 | Command-parity CI | — | — | — | Infra | Open |
+| 27 | GMCP contract tests | — | — | — | Infra | Open |
+| 28 | Server.Commands package | — | **N** | **N** | Infra | Open |
