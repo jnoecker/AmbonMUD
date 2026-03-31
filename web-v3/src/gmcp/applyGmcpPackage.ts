@@ -106,6 +106,7 @@ interface GmcpContext {
   setReconnecting: Dispatch<SetStateAction<boolean>>;
   setSavedCharacters: Dispatch<SetStateAction<string[]>>;
   resumeTokenRef: { current: string | null };
+  pendingAuthCharRef: { current: string | null };
   sendGmcp: (pkg: string, payload: unknown) => boolean;
   setServerAssets: Dispatch<SetStateAction<Record<string, string>>>;
   setServerCommands: Dispatch<SetStateAction<CommandEntry[]>>;
@@ -1165,14 +1166,11 @@ export function applyGmcpPackage(
         } catch { /* localStorage unavailable */ }
         const names = Object.keys(savedTokens);
 
-        if (names.length === 1) {
-          // Single character — auto-authenticate
-          ctx.setReconnecting(true);
-          ctx.sendGmcp("Session.Authenticate", { token: savedTokens[names[0]] });
-        } else if (names.length > 1) {
-          // Multiple characters — show picker (retain loginPrompt for fallback)
+        if (names.length >= 1) {
+          // Show character picker with saved characters + "create new" option
           ctx.setSavedCharacters(names);
           ctx.setLoginPrompt(packet);
+          ctx.setLoginError(null);
         } else {
           ctx.setLoginPrompt(packet);
           ctx.setLoginError(null);
@@ -1223,11 +1221,22 @@ export function applyGmcpPackage(
       if (packet.success) {
         // Auth succeeded — server will send full state sync
         ctx.setReconnecting(false);
+        ctx.pendingAuthCharRef.current = null;
       } else {
-        // Auth failed — fall back to normal login prompt
+        // Auth failed — remove the stale token and fall back to login prompt.
+        // Server re-sends Login.Prompt which will drive the full state reset,
+        // but clear error eagerly in case the server response is delayed.
         ctx.setReconnecting(false);
-        ctx.setLoginPrompt({ state: "name" } as LoginPromptState);
         ctx.setLoginError(null);
+        const failedChar = ctx.pendingAuthCharRef.current;
+        ctx.pendingAuthCharRef.current = null;
+        if (failedChar) {
+          try {
+            const saved = JSON.parse(localStorage.getItem("ambonmud_auth_tokens") ?? "{}") as Record<string, string>;
+            delete saved[failedChar];
+            localStorage.setItem("ambonmud_auth_tokens", JSON.stringify(saved));
+          } catch { /* ignore */ }
+        }
       }
       break;
     }
