@@ -10,8 +10,9 @@ interface CharacterPickerProps {
 export function CharacterPicker({ characters, onSelect, onRemoveCharacter, onNewCharacter }: CharacterPickerProps) {
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
 
-  const handleRemove = useCallback((name: string, e: React.MouseEvent) => {
+  const handleRemove = useCallback((name: string, e: React.MouseEvent | React.PointerEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     if (confirmRemove === name) {
       onRemoveCharacter(name);
       setConfirmRemove(null);
@@ -40,7 +41,7 @@ export function CharacterPicker({ characters, onSelect, onRemoveCharacter, onNew
               <button
                 type="button"
                 className={`character-picker-remove${confirmRemove === name ? " character-picker-remove--confirm" : ""}`}
-                onClick={(e) => handleRemove(name, e)}
+                onPointerDown={(e) => handleRemove(name, e)}
                 onBlur={() => setConfirmRemove(null)}
                 title={confirmRemove === name ? "Click again to forget" : `Forget ${name}`}
                 aria-label={confirmRemove === name ? `Confirm forget ${name}` : `Forget ${name}`}

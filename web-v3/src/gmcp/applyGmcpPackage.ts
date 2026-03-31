@@ -1170,6 +1170,7 @@ export function applyGmcpPackage(
           // Show character picker with saved characters + "create new" option
           ctx.setSavedCharacters(names);
           ctx.setLoginPrompt(packet);
+          ctx.setLoginError(null);
         } else {
           ctx.setLoginPrompt(packet);
           ctx.setLoginError(null);
@@ -1223,8 +1224,10 @@ export function applyGmcpPackage(
         ctx.pendingAuthCharRef.current = null;
       } else {
         // Auth failed — remove the stale token and fall back to login prompt.
-        // Server re-sends Login.Prompt which will show picker or name prompt.
+        // Server re-sends Login.Prompt which will drive the full state reset,
+        // but clear error eagerly in case the server response is delayed.
         ctx.setReconnecting(false);
+        ctx.setLoginError(null);
         const failedChar = ctx.pendingAuthCharRef.current;
         ctx.pendingAuthCharRef.current = null;
         if (failedChar) {
