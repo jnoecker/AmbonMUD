@@ -645,6 +645,16 @@ class GameEngine(
         clock = clock,
     )
 
+    private val dungeonRegistry = dev.ambon.engine.dungeon.DungeonRegistry().also { reg ->
+        world.dungeonTemplates.forEach { reg.register(it) }
+    }
+
+    private val dungeonManager = dev.ambon.engine.dungeon.DungeonManager(
+        world = world,
+        mobs = mobs,
+        dungeonRegistry = dungeonRegistry,
+    )
+
     private val dialogueSystem =
         DialogueSystem(
             mobs = mobs,
@@ -902,6 +912,10 @@ class GameEngine(
             ),
             WorldFeaturesHandler(ctx = ctx),
             adminHandler,
+            dev.ambon.engine.commands.handlers.DungeonHandler(
+                ctx = ctx,
+                dungeonManager = dungeonManager,
+            ),
             SpriteHandler(
                 ctx = ctx,
                 spriteRegistry = spriteRegistry,
