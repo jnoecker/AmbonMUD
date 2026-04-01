@@ -72,6 +72,26 @@ sealed interface Command {
         val playerName: String,
     ) : Command
 
+    // ---- Trade commands ----
+
+    data class TradeRequest(
+        val playerName: String,
+    ) : Command
+
+    data class TradeOffer(
+        val itemKeyword: String,
+    ) : Command
+
+    data class TradeOfferGold(
+        val amount: Long,
+    ) : Command
+
+    data object TradeAccept : Command
+
+    data object TradeCancel : Command
+
+    data object TradeStatus : Command
+
     data object Inventory : Command
 
     data object Equipment : Command
@@ -549,6 +569,30 @@ object CommandParser {
                 val playerName = parts.last()
                 val keyword = parts.dropLast(1).joinToString(" ").trim()
                 if (keyword.isEmpty()) Command.Invalid(line, "give <item> <player>") else Command.Give(keyword, playerName)
+            }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("trade offer", "trade add")) { rest ->
+            val trimmed = rest.trim()
+            if (trimmed.isEmpty()) {
+                Command.Invalid(line, "trade offer <item> OR trade offer <amount> gold")
+            } else {
+                val goldMatch = Regex("^(\\d+)\\s+gold$", RegexOption.IGNORE_CASE).matchEntire(trimmed)
+                if (goldMatch != null) {
+                    Command.TradeOfferGold(goldMatch.groupValues[1].toLong())
+                } else {
+                    Command.TradeOffer(trimmed)
+                }
+            }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("trade")) { rest ->
+            val sub = rest.trim().lowercase()
+            when {
+                sub == "accept" || sub == "confirm" -> Command.TradeAccept
+                sub == "cancel" || sub == "decline" || sub == "abort" -> Command.TradeCancel
+                sub == "status" || sub.isEmpty() -> Command.TradeStatus
+                else -> Command.TradeRequest(rest.trim())
             }
         }?.let { return it }
 
