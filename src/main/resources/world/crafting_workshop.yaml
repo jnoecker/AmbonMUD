@@ -85,6 +85,33 @@ items:
     keyword: essence
     description: "A shimmering mote of magical energy, captured from rare herbs. Used in advanced alchemy."
     basePrice: 45
+  gem_studded_helm:
+    displayName: "a gem-studded helm"
+    keyword: "gem helm"
+    description: "A copper helm inlaid with a rough gem. It gleams with a faint inner light."
+    slot: head
+    armor: 4
+    stats:
+      WIS: 1
+    basePrice: 120
+  enchanted_blade:
+    displayName: "an enchanted blade"
+    keyword: "enchanted blade"
+    description: "An iron sword imbued with arcane essence. Faint runes glow along the fuller."
+    slot: hand
+    damage: 12
+    stats:
+      INT: 1
+      STR: 1
+    basePrice: 200
+  greater_healing_potion:
+    displayName: "a greater healing potion"
+    keyword: "greater potion"
+    description: "A large vial of potent healing liquid, infused with arcane essence."
+    consumable: true
+    onUse:
+      healHp: 40
+    basePrice: 75
 
 mobs:
   supply_merchant:
@@ -295,5 +322,44 @@ recipes:
     station: alchemy_table
     stationBonus: 1
     xpReward: 45
+  gem_studded_helm:
+    displayName: "Gem-Studded Helm"
+    skill: smithing
+    skillRequired: 15
+    materials:
+      - itemId: copper_ore
+        quantity: 4
+      - itemId: rough_gem
+        quantity: 1
+    outputItemId: gem_studded_helm
+    station: forge
+    xpReward: 60
+  enchanted_blade:
+    displayName: "Enchanted Blade"
+    skill: smithing
+    skillRequired: 30
+    materials:
+      - itemId: iron_ore
+        quantity: 4
+      - itemId: rough_gem
+        quantity: 2
+      - itemId: arcane_essence
+        quantity: 1
+    outputItemId: enchanted_blade
+    station: forge
+    xpReward: 100
+  greater_healing_potion:
+    displayName: "Greater Healing Potion"
+    skill: alchemy
+    skillRequired: 10
+    materials:
+      - itemId: healing_herb
+        quantity: 3
+      - itemId: arcane_essence
+        quantity: 1
+    outputItemId: greater_healing_potion
+    station: alchemy_table
+    stationBonus: 1
+    xpReward: 40
 audio:
   music: 5bbdd3a1101a34a4045a632075ea45cc3d29519f2560b4f8735cf09dbdc4d2fe.mp3
