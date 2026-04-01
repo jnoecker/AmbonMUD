@@ -28,6 +28,8 @@ const FOG_COLOR = 0x2a3050;
 const QUEST_COLOR = 0xbea873;
 const HOUSING_COLOR = 0xc8a078;
 const QUEST_PULSE_PERIOD = 2500; // ms
+const PATH_COLOR = 0xd4b86a;
+const PATH_SHIMMER_PERIOD = 1800; // ms
 
 export class Minimap {
   readonly container = new Container();
@@ -335,6 +337,9 @@ export class Minimap {
       return { px: cx + lp.lx * CELL, py: cy + lp.ly * CELL };
     };
 
+    // Compute shortest path to nearest quest target (BFS)
+    const pathEdges = this.computeQuestPath(questTargets);
+
     // Draw connecting lines
     for (const [id] of localPos) {
       const node = this.visited.get(id);
@@ -352,6 +357,30 @@ export class Minimap {
           this.mapGraphics.lineTo(tp.px, tp.py);
           this.mapGraphics.stroke({ color: LINE_COLOR, width: 2, alpha: 0.65 });
         }
+      }
+    }
+
+    // Draw quest path trail — gold glow over the shortest path edges
+    if (pathEdges.length > 0) {
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const shimmer = reducedMotion
+        ? 0.7
+        : 0.45 + 0.3 * (0.5 + 0.5 * Math.sin(Date.now() / PATH_SHIMMER_PERIOD * Math.PI * 2));
+
+      for (const [fromId, toId] of pathEdges) {
+        const sp = posOf(fromId);
+        const tp = posOf(toId);
+        if (!sp || !tp) continue;
+        if (!this.inBounds(sp.px, sp.py) && !this.inBounds(tp.px, tp.py)) continue;
+
+        // Outer glow
+        this.mapGraphics.moveTo(sp.px, sp.py);
+        this.mapGraphics.lineTo(tp.px, tp.py);
+        this.mapGraphics.stroke({ color: PATH_COLOR, width: 5, alpha: shimmer * 0.3 });
+        // Inner bright line
+        this.mapGraphics.moveTo(sp.px, sp.py);
+        this.mapGraphics.lineTo(tp.px, tp.py);
+        this.mapGraphics.stroke({ color: PATH_COLOR, width: 2, alpha: shimmer });
       }
     }
 
@@ -474,6 +503,60 @@ export class Minimap {
         this.clickAreas.push({ roomId: targetId, area });
       }
     }
+  }
+
+  /**
+   * BFS from the current room to the nearest quest target.
+   * Returns an array of [fromId, toId] edge pairs representing the shortest path,
+   * or an empty array if no path exists.
+   */
+  private computeQuestPath(questTargets: Set<string>): Array<[string, string]> {
+    if (questTargets.size === 0 || !this.currentRoomId) return [];
+
+    const start = this.currentRoomId;
+    if (questTargets.has(start)) return []; // already at a quest target
+
+    const visited = new Set<string>();
+    const parent = new Map<string, string>();
+    const queue: string[] = [start];
+    visited.add(start);
+
+    let target: string | null = null;
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const node = this.visited.get(current);
+      if (!node) continue;
+
+      for (const [dir, neighborId] of Object.entries(node.exits)) {
+        if (!HORIZONTAL_DIRS.has(dir)) continue;
+        if (visited.has(neighborId)) continue;
+        if (!this.visited.has(neighborId)) continue; // only traverse explored rooms
+
+        visited.add(neighborId);
+        parent.set(neighborId, current);
+
+        if (questTargets.has(neighborId)) {
+          target = neighborId;
+          break;
+        }
+        queue.push(neighborId);
+      }
+      if (target) break;
+    }
+
+    if (!target) return [];
+
+    // Reconstruct path as edge pairs
+    const edges: Array<[string, string]> = [];
+    let current = target;
+    while (parent.has(current)) {
+      const prev = parent.get(current)!;
+      edges.push([prev, current]);
+      current = prev;
+    }
+    edges.reverse();
+    return edges;
   }
 
   private ensureThumb(roomId: string, imagePath: string | null, nx: number, ny: number, radius: number, alpha: number, preloaded: Texture | null) {
