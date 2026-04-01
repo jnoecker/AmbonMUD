@@ -326,6 +326,7 @@ recipes:
     displayName: "Gem-Studded Helm"
     skill: smithing
     skillRequired: 15
+    levelRequired: 5
     materials:
       - itemId: copper_ore
         quantity: 4
@@ -338,6 +339,7 @@ recipes:
     displayName: "Enchanted Blade"
     skill: smithing
     skillRequired: 30
+    levelRequired: 15
     materials:
       - itemId: iron_ore
         quantity: 4
@@ -352,6 +354,7 @@ recipes:
     displayName: "Greater Healing Potion"
     skill: alchemy
     skillRequired: 10
+    levelRequired: 3
     materials:
       - itemId: healing_herb
         quantity: 3
@@ -361,5 +364,6 @@ recipes:
     station: alchemy_table
     stationBonus: 1
     xpReward: 40
+
 audio:
   music: 5bbdd3a1101a34a4045a632075ea45cc3d29519f2560b4f8735cf09dbdc4d2fe.mp3

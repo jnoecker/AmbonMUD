@@ -270,7 +270,10 @@ class CraftingHandler(
                 val specName = craftingSkillRegistry?.get(me.craftingSpecialization!!)?.displayName
                     ?: me.craftingSpecialization
                 outbound.send(
-                    OutboundEvent.SendInfo(sessionId, "  Specialization: $specName (+25% XP)"),
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "  Specialization: $specName (+${craftingSystem?.specializationXpBonusPct() ?: 25}% XP)",
+                    ),
                 )
             }
             emitCraftingSkills(sessionId, me)
@@ -327,7 +330,8 @@ class CraftingHandler(
                 val current = me.craftingSpecialization
                 if (current != null) {
                     val name = craftingSkillRegistry?.get(current)?.displayName ?: current
-                    outbound.send(OutboundEvent.SendInfo(sessionId, "Your specialization: $name (+25% XP bonus)"))
+                    val bonusPct = craftingSystem?.specializationXpBonusPct() ?: 25
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Your specialization: $name (+$bonusPct% XP bonus)"))
                 } else {
                     outbound.send(OutboundEvent.SendInfo(sessionId, "You have no crafting specialization."))
                 }
@@ -360,7 +364,8 @@ class CraftingHandler(
             outbound.send(
                 OutboundEvent.SendInfo(
                     sessionId,
-                    "** You are now specialized in ${skillDef.displayName}! (+25% XP bonus) **",
+                    "** You are now specialized in ${skillDef.displayName}! " +
+                        "(+${craftingSystem?.specializationXpBonusPct() ?: 25}% XP bonus) **",
                 ),
             )
             emitCraftingSkills(sessionId, me)
