@@ -921,6 +921,7 @@ class GmcpEmitter(
         itemName: String? = null,
         quantity: Int? = null,
         rareFind: Boolean = false,
+        quality: String? = null,
     ) {
         emit(
             sessionId,
@@ -934,6 +935,7 @@ class GmcpEmitter(
                 itemName = itemName,
                 quantity = quantity,
                 rareFind = rareFind,
+                quality = quality,
             ),
             supportCheck = "Crafting",
         )
@@ -1850,6 +1852,7 @@ class GmcpEmitter(
         val itemName: String?,
         val quantity: Int?,
         val rareFind: Boolean = false,
+        val quality: String? = null,
     )
 
     // ---------- room feature payloads ----------

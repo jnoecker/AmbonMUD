@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands.handlers
 
+import dev.ambon.domain.crafting.CraftingQuality
 import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.crafting.RecipeDef
 import dev.ambon.domain.ids.SessionId
@@ -140,9 +141,19 @@ class CraftingHandler(
                 }
                 is Either.Right -> {
                     val r = result.value
-                    val outputName = items.getTemplate(r.recipe.outputItemId)?.displayName ?: r.recipe.outputItemId.value
+                    val baseName = items.getTemplate(r.recipe.outputItemId)?.displayName ?: r.recipe.outputItemId.value
+                    val qualityPrefix = if (r.quality != CraftingQuality.NORMAL) "${r.quality.displayPrefix} " else ""
+                    val outputName = "$qualityPrefix$baseName"
                     val qty = if (r.quantityProduced > 1) " x${r.quantityProduced}" else ""
                     outbound.send(OutboundEvent.SendText(sessionId, "You craft $outputName$qty."))
+                    if (r.quality != CraftingQuality.NORMAL) {
+                        outbound.send(
+                            OutboundEvent.SendInfo(
+                                sessionId,
+                                "** ${r.quality.displayPrefix} quality! **",
+                            ),
+                        )
+                    }
                     if (r.stationBonusApplied) {
                         outbound.send(
                             OutboundEvent.SendInfo(
@@ -161,6 +172,7 @@ class CraftingHandler(
                         r.newLevel,
                         itemName = outputName,
                         quantity = r.quantityProduced,
+                        quality = r.quality.name.lowercase(),
                     )
                     notifyNewDiscoveries(sessionId, me, cs)
                     emitCraftingSkills(sessionId, me)
