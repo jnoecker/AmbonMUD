@@ -1,6 +1,7 @@
 package dev.ambon.engine.crafting
 
 import dev.ambon.config.CraftingConfig
+import dev.ambon.domain.crafting.CraftingQuality
 import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.GatheringYield
@@ -488,6 +489,65 @@ class CraftingSystemTest {
             player.craftingSpecialization = "smithing" // specialized in different skill
             system.gather(player, "copper", roomId, items)
             assertEquals(10L, player.craftingSkills["mining"]!!.xp)
+        }
+    }
+
+    @Nested
+    inner class QualityTiers {
+        @Test
+        fun `craft at minimum skill level produces normal quality`() {
+            // Skill level = required = 1, overshoot = 0, chance = 0
+            val quality = system.rollQuality(1, 1, false)
+            assertEquals(CraftingQuality.NORMAL, quality)
+        }
+
+        @Test
+        fun `high overshoot increases quality chance`() {
+            // With 50 overshoot: baseChance = 50*1.5/100 = 0.75
+            // Run many trials and verify we get some non-normal qualities
+            val qualities = (0 until 100).map {
+                system.rollQuality(51, 1, false)
+            }
+            assertTrue(qualities.any { it != CraftingQuality.NORMAL })
+        }
+
+        @Test
+        fun `specialization adds quality bonus`() {
+            // With 20 overshoot + spec: baseChance = 20*1.5/100 = 0.30, specBonus = 0.10, total = 0.40
+            // Run many trials — should see more non-normal with spec than without
+            val withSpec = (0 until 200).count {
+                system.rollQuality(21, 1, true) != CraftingQuality.NORMAL
+            }
+            val withoutSpec = (0 until 200).count {
+                system.rollQuality(21, 1, false) != CraftingQuality.NORMAL
+            }
+            assertTrue(withSpec >= withoutSpec, "Specialization should increase quality chance")
+        }
+
+        @Test
+        fun `craft result includes quality`() {
+            val recipe = RecipeDef(
+                id = "test:copper_sword",
+                displayName = "Copper Sword",
+                skill = "smithing",
+                skillRequired = 1,
+                materials = listOf(MaterialRequirement(itemId = copperOreId, quantity = 3)),
+                outputItemId = copperSwordId,
+            )
+            craftingRegistry.register(listOf(recipe))
+            val player = makePlayer(
+                skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
+                discovered = setOf("test:copper_sword"),
+            )
+            repeat(3) {
+                val inst = items.createFromTemplate(copperOreId)!!
+                items.addToInventory(sid, inst)
+            }
+            val result = system.craft(player, "copper sword", roomId, items, null)
+            assertTrue(result is Either.Right)
+            val r = (result as Either.Right).value
+            // At skill level 1, required 1, overshoot = 0 → always normal
+            assertEquals(CraftingQuality.NORMAL, r.quality)
         }
     }
 

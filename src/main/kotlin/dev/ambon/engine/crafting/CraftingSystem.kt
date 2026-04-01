@@ -1,6 +1,7 @@
 package dev.ambon.engine.crafting
 
 import dev.ambon.config.CraftingConfig
+import dev.ambon.domain.crafting.CraftingQuality
 import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.RecipeDef
@@ -31,6 +32,7 @@ data class CraftResult(
     val leveledUp: Boolean,
     val newLevel: Int,
     val stationBonusApplied: Boolean,
+    val quality: CraftingQuality = CraftingQuality.NORMAL,
 )
 
 sealed interface GatherError {
@@ -232,6 +234,8 @@ class CraftingSystem(
         val leveledUp = addSkillXp(player, recipe.skill, recipe.xpReward.toLong())
         val currentState = player.craftingSkills.getOrDefault(recipe.skill, CraftingSkillState())
 
+        val quality = rollQuality(skillState.level, recipe.skillRequired, player.craftingSpecialization == recipe.skill)
+
         return Either.Right(
             CraftResult(
                 recipe = recipe,
@@ -240,6 +244,7 @@ class CraftingSystem(
                 leveledUp = leveledUp,
                 newLevel = currentState.level,
                 stationBonusApplied = stationBonusApplied,
+                quality = quality,
             ),
         )
     }
@@ -252,6 +257,27 @@ class CraftingSystem(
     fun isNodeDepleted(nodeId: String): Boolean {
         val until = nodeDepletedUntil[nodeId] ?: return false
         return clock.millis() < until
+    }
+
+    /**
+     * Determines crafting quality based on skill overshoot.
+     * The more a player's skill exceeds the recipe requirement, the higher the quality chance.
+     * Specialization adds a flat bonus to the roll.
+     */
+    fun rollQuality(skillLevel: Int, skillRequired: Int, isSpecialized: Boolean): CraftingQuality {
+        val overshoot = (skillLevel - skillRequired).coerceAtLeast(0)
+        // Base chance scales with overshoot: each point above required adds ~1.5% quality chance
+        val baseChance = (overshoot * 1.5) / 100.0
+        val specBonus = if (isSpecialized) 0.10 else 0.0
+        val roll = random.nextDouble()
+        val chance = baseChance + specBonus
+
+        return when {
+            roll < chance * 0.15 -> CraftingQuality.MASTERWORK
+            roll < chance * 0.40 -> CraftingQuality.SUPERIOR
+            roll < chance -> CraftingQuality.FINE
+            else -> CraftingQuality.NORMAL
+        }
     }
 
     fun xpForLevel(level: Int): Long =
