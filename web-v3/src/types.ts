@@ -2,6 +2,22 @@ export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | 
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
+export interface TradeItem {
+  id: string;
+  name: string;
+}
+
+export interface TradeState {
+  active: boolean;
+  partner: string | null;
+  myItems: TradeItem[];
+  theirItems: TradeItem[];
+  myGold: number;
+  theirGold: number;
+  myAccepted: boolean;
+  theirAccepted: boolean;
+}
+
 export interface WhoPlayer {
   name: string;
   level: number;

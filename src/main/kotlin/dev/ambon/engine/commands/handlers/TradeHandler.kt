@@ -1,7 +1,9 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.TradeSession
+import dev.ambon.engine.TradeSide
 import dev.ambon.engine.TradeSystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
@@ -65,6 +67,7 @@ class TradeHandler(
                         "${me.name} wants to trade with you. Use 'trade offer <item>' or 'trade offer <amount> gold' to add items, 'trade accept' to confirm, or 'trade cancel' to decline.",
                     ),
                 )
+                emitTradeState(session)
             }
         }
     }
@@ -91,6 +94,7 @@ class TradeHandler(
         outbound.send(OutboundEvent.SendInfo(otherSid, "$myName offers ${item.item.displayName} in the trade."))
         gmcpEmitter?.sendCharItemsRemove(sessionId, item)
         syncItemsGmcp(sessionId, items, gmcpEmitter)
+        emitTradeState(session)
     }
 
     private suspend fun handleTradeOfferGold(sessionId: SessionId, cmd: Command.TradeOfferGold) {
@@ -116,6 +120,7 @@ class TradeHandler(
                 outbound.send(
                     OutboundEvent.SendInfo(otherSid, "${me.name} offers ${cmd.amount} gold in the trade."),
                 )
+                emitTradeState(session)
             }
         }
     }
@@ -137,6 +142,7 @@ class TradeHandler(
         } else {
             outbound.send(OutboundEvent.SendInfo(sessionId, "You accept the trade. Waiting for the other player."))
             outbound.send(OutboundEvent.SendInfo(otherSid, "$myName has accepted the trade. Type 'trade accept' to confirm."))
+            emitTradeState(session)
         }
     }
 
@@ -195,6 +201,8 @@ class TradeHandler(
             ),
         )
 
+        emitTradeClosed(initSid)
+        emitTradeClosed(targetSid)
         syncBothPlayers(initSid, targetSid)
     }
 
@@ -213,6 +221,8 @@ class TradeHandler(
         outbound.send(OutboundEvent.SendInfo(sessionId, "You cancel the trade."))
         outbound.send(OutboundEvent.SendInfo(otherSid, "$myName cancelled the trade."))
 
+        emitTradeClosed(sessionId)
+        emitTradeClosed(otherSid)
         syncBothPlayers(sessionId, otherSid)
     }
 
@@ -267,6 +277,43 @@ class TradeHandler(
         val myStatus = if (session.isAccepted(side)) "ACCEPTED" else "pending"
         val theirStatus = if (session.isAccepted(otherSide)) "ACCEPTED" else "pending"
         outbound.send(OutboundEvent.SendInfo(sessionId, "  Status: You=$myStatus, $otherName=$theirStatus"))
+    }
+
+    private suspend fun emitTradeState(session: TradeSession) {
+        for (sid in listOf(session.initiator, session.target)) {
+            val side = session.sideOf(sid) ?: continue
+            val otherSide = if (side == TradeSide.INITIATOR) TradeSide.TARGET else TradeSide.INITIATOR
+            val partnerName = players.get(session.otherSid(sid))?.name
+            gmcpEmitter?.sendTradeState(
+                sid,
+                GmcpEmitter.TradeStatePayload(
+                    active = true,
+                    partner = partnerName,
+                    myItems = session.items(side).map { GmcpEmitter.TradeItemPayload(it.id.value, it.item.displayName) },
+                    theirItems = session.items(otherSide).map { GmcpEmitter.TradeItemPayload(it.id.value, it.item.displayName) },
+                    myGold = session.gold(side),
+                    theirGold = session.gold(otherSide),
+                    myAccepted = session.isAccepted(side),
+                    theirAccepted = session.isAccepted(otherSide),
+                ),
+            )
+        }
+    }
+
+    private suspend fun emitTradeClosed(sid: SessionId) {
+        gmcpEmitter?.sendTradeState(
+            sid,
+            GmcpEmitter.TradeStatePayload(
+                active = false,
+                partner = null,
+                myItems = emptyList(),
+                theirItems = emptyList(),
+                myGold = 0,
+                theirGold = 0,
+                myAccepted = false,
+                theirAccepted = false,
+            ),
+        )
     }
 
     private suspend fun syncBothPlayers(sid1: SessionId, sid2: SessionId) {
