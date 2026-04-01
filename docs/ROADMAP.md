@@ -38,8 +38,9 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 ✅ Achievement system + titles
 ✅ Guilds with ranks, guild chat, roster management
 ✅ Friends list + offline mail
-✅ Crafting & gathering (recipes, crafting skills, workshop zone)
+✅ Crafting & gathering with specialization, recipe discovery, quality tiers, rare yields
 ✅ Player housing (personal rooms, furniture, vaults, access control)
+✅ Procedural dungeons (template-driven, instanced, 4 difficulty tiers, boss encounters)
 ✅ Web-based admin dashboard
 ✅ Remember-me auth tokens for persistent login
 
@@ -78,11 +79,12 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 | Economy & Shops (#4) | ✅ Done (core) | Gold persistence, mob drops, buy/sell/list commands |
 | Achievements & Titles (#11) | ✅ Done | Categories, hidden achievements, cosmetic titles |
 
-### Phase C — Endgame & Replayability (Partial)
+### Phase C — Endgame & Replayability
 
 | Project | Status | Highlights |
 |---------|--------|-----------|
-| Crafting & Gathering (#7) | ✅ Done (Phase 1) | `gather`/`craft`/`recipes` commands, crafting skills, dedicated crafting_workshop zone, Flyway V13 |
+| Crafting & Gathering (#7) | ✅ Done (Phase 1 + 2) | Phase 1: gather/craft/recipes, skills, workshop zone. Phase 2: rare yields, recipe discovery, specialization (+25% XP), quality tiers (Normal→Masterwork) |
+| Procedural Dungeons (#6) | ✅ Done (Mar 2026) | Template-driven instanced dungeons with 4 difficulty tiers (Lore→Heroic), BFS layout generation, party-level + difficulty scaling, boss completion rewards. First dungeon: The Sunken Crypt |
 
 ### Phase D — Community & Polish
 
@@ -102,20 +104,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 
 ---
 
-## Planned Projects
-
-### Phase C — Endgame & Replayability
-
-| # | Project | Effort | Status | Key Features |
-|---|---------|--------|--------|--------------|
-| **6** | Procedural Dungeons | Very large | ⏳ Pending | Randomized layouts, difficulty scaling, boss encounters, replayable content |
-| **7** | Crafting & Gathering Phase 2 | Medium-large | ⏳ Pending | Advanced recipes, rare materials, crafting specializations |
-
-**Unlocks:** Infinite replayable content, non-combat progression, economic loops.
-
----
-
-### Closed / Not Planned
+## Closed / Not Planned
 
 | # | Project | Resolution |
 |---|---------|------------|
@@ -180,37 +169,27 @@ See [WEB_CLIENT_PARITY_REPORT.md](./WEB_CLIENT_PARITY_REPORT.md) for the full au
 
 ---
 
-## Suggested Priority & Sequencing
+## What's Next
 
-### Near-Term (Medium Effort)
+All planned phases (A through E) are complete. Future work is driven by the enhancement opportunities above and community feedback. Good starting points for contributors:
 
-1. **Web Client Parity** — Guild/group/friends management UI. Individually small but improves social system usability.
-2. **Crafting Phase 2 (#7)** — Advanced recipes, specializations, economic depth.
-
-### Long-Term (High Effort)
-
-3. **Procedural Dungeons (#6)** — Infinite replayable content. Builds on group combat and status effects.
+- Add new dungeon templates (YAML-driven, see [DUNGEON_TEMPLATE_REFERENCE.md](./DUNGEON_TEMPLATE_REFERENCE.md))
+- Add new abilities (config-driven, no code changes needed)
+- Create new zones (YAML world files)
+- Expand crafting recipes and gathering nodes
 
 ---
 
-## Dependency Graph
+## Completed Dependency Graph
+
+All planned projects and their dependencies are complete:
 
 ```
-Status Effects (#1) [DONE] ──→ Procedural Dungeons (#6) (boss mechanics)
-                             ──→ Group Combat (#5) [DONE] (area effects)
-
-NPC Dialogue (#2) [DONE] ──→ Quest System (#3) [DONE] (quest givers)
-                            ──→ Economy (#4) [DONE] (vendor NPCs)
-
-Economy (#4) [DONE] ──→ Crafting (#7) [DONE] (sell crafted items)
-                     ──→ Player Housing (#12) [DONE] (purchase houses)
-                     ──→ Guilds (#13) [DONE] (guild bank)
-
-Quest System (#3) [DONE] ──→ Achievements (#11) [DONE] (quest achievements)
-
-Persistent World State (#9) [DONE] ──→ Dynamic events, seasonal content
-
-Everything else is independent and can start in any order.
+Status Effects → Group Combat → Procedural Dungeons (boss mechanics)
+NPC Dialogue → Quest System → Achievements
+Economy → Crafting (Phase 1 + 2) → Player Housing
+Persistent World State → World Features (doors, containers, levers)
+Ambon Arcanum (replaces OLC) — standalone creator tool
 ```
 
 ---
@@ -228,12 +207,12 @@ Everything else is independent and can start in any order.
 - Login funnel: `authThreads: 8` + cost-10 BCrypt ≈ 30–80 new logins/sec. Configurable via `login.authThreads` and `login.maxConcurrentLogins`.
 - Telnet sessions: now uses JDK 21 virtual threads (PR #313), eliminating platform-thread overhead for concurrent connections.
 
-**Known scaling limiters:**
-- ~~Telnet transport thread model~~: resolved — virtual threads (PR #313) now handle telnet I/O
-- Single-zone performance: Procedural dungeons (#6) with instancing mitigates
-- ~~Builder tooling~~: resolved — Ambon Arcanum creator tool is complete
-- ~~Player retention~~: resolved — Housing (#12), guilds (#13), and crafting (#7) are all implemented
-- ~~Persistent world state~~: resolved — WorldStateRegistry with door/lever/container state
+**All known scaling limiters have been resolved:**
+- ~~Telnet transport thread model~~: virtual threads (PR #313)
+- ~~Single-zone performance~~: Procedural dungeons (#6) with instancing
+- ~~Builder tooling~~: Ambon Arcanum creator tool
+- ~~Player retention~~: Housing, guilds, crafting, dungeons all implemented
+- ~~Persistent world state~~: WorldStateRegistry with door/lever/container state
 
 ---
 
@@ -256,14 +235,15 @@ Everything else is independent and can start in any order.
 See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) for setup instructions and [ARCHITECTURE.md](./ARCHITECTURE.md) for design principles.
 
 **Quick wins for contributors:**
+- Add new dungeon templates (YAML-driven, see [DUNGEON_TEMPLATE_REFERENCE.md](./DUNGEON_TEMPLATE_REFERENCE.md))
 - Add new abilities (config-driven, no code changes needed)
 - Create new zones (YAML world files)
+- Add crafting recipes and gathering nodes
 - Enhance the v4 web client UI (React + PixiJS + GMCP data)
-- Improve admin dashboard (expand existing panels)
 - Write tests for edge cases
 
 **Reaching out:** Open an issue on GitHub to discuss ideas or claim a project.
 
 ---
 
-**Last updated:** March 31, 2026
+**Last updated:** April 1, 2026

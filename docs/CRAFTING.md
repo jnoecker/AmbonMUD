@@ -10,6 +10,7 @@ The crafting system provides resource gathering and item creation through skill-
 | `craft <recipe>` | `make`, `create` | Craft an item from materials in your inventory |
 | `recipes [filter]` | `recipe` | List available recipes, optionally filtered by skill or name |
 | `craftskills` | `professions`, `prof` | Show your crafting skill levels and XP progress |
+| `specialize [skill]` | `spec` | Show or set your crafting specialization |
 
 ## Skills
 
@@ -108,6 +109,7 @@ All crafting config lives under `ambonmud.engine.crafting` in `application.yaml`
 | `xpExponent` | 1.5 | Exponential scaling factor for XP curve |
 | `gatherCooldownMs` | 3000 | Cooldown between gathers (ms) |
 | `stationBonusQuantity` | 1 | Default bonus items when crafting at a matching station |
+| `specializationXpBonus` | 0.25 | XP multiplier bonus for specialized skill (0.25 = +25%) |
 
 ## Persistence
 
@@ -139,6 +141,64 @@ The `crafting_workshop` zone provides a starter crafting area:
 - **Smithing:** Copper Sword (3 copper ore, skill 1), Copper Helm (4 copper ore, skill 5), Iron Sword (3 iron + 1 copper ore, skill 20)
 - **Alchemy:** Minor Healing Potion (2 wildflower, skill 1), Strength Elixir (2 healing herb + 1 wildflower, skill 20)
 
+## Specialization
+
+Players can specialize in one crafting skill for an XP bonus.
+
+| Command | Description |
+|---------|-------------|
+| `specialize` | Show current specialization and available skills |
+| `specialize <skill>` | Set your specialization (e.g., `specialize smithing`) |
+
+**Benefits:**
+- Specialized skill earns bonus XP (default +25%, configurable via `specializationXpBonus`)
+- Specialization improves quality tier chances (+10% bonus to quality rolls)
+- Shown as `[SPEC]` tag in `craftskills` output
+
+One specialization at a time, freely switchable. Persisted in `PlayerRecord.craftingSpecialization`.
+
+## Recipe Discovery
+
+Players must discover recipes before they can craft them. Recipes are auto-discovered when a skill reaches the recipe's `skillRequired` threshold.
+
+- Undiscovered recipes appear as `???` in the `recipes` list with a `?` marker, showing the skill and level needed
+- When a recipe is discovered: `** New recipe discovered: <name>! **`
+- Discovery triggers on gather, craft, and when viewing recipes or skills
+- Persisted in `PlayerRecord.discoveredRecipes` (Flyway V22)
+
+## Quality Tiers
+
+Crafted items can be produced at different quality levels:
+
+| Quality | Tier | Likelihood |
+|---------|------|------------|
+| Normal | 0 | Default when skill equals recipe requirement |
+| Fine | 1 | ~60% of quality rolls |
+| Superior | 2 | ~25% of quality rolls |
+| Masterwork | 3 | ~15% of quality rolls |
+
+Quality chance scales with **skill overshoot** — how much a player's skill level exceeds the recipe's `skillRequired`. Each point of overshoot adds ~1.5% total quality chance. Specialization in the recipe's skill adds a flat +10% bonus.
+
+Quality is displayed in the craft output (e.g., `You craft Fine a copper sword.` / `** Fine quality! **`) and sent to the web client via the `quality` field in `Crafting.Result` GMCP.
+
+## Rare Gathering Yields
+
+Gathering nodes can have `rareYields` — bonus drops with a configurable drop chance (0.0–1.0). Rare drops are rolled independently of normal yields.
+
+```yaml
+gatheringNodes:
+  copper_vein:
+    # ... normal yields ...
+    rareYields:
+      - itemId: rough_gem
+        quantity: 1
+        dropChance: 0.08    # 8% chance per gather
+```
+
+On a rare drop: `** Rare find: a rough gem! **`
+
+Rare materials are used in advanced recipes (e.g., Gem-Studded Helm requires rough gems from mining, Enchanted Blade requires both rough gems and arcane essence from herbalism).
+
 ## Key Source Files
 
 | File | Purpose |
@@ -151,7 +211,8 @@ The `crafting_workshop` zone provides a starter crafting area:
 | `engine/commands/handlers/CraftingHandler.kt` | Command routing |
 | `domain/crafting/CraftingSkillState.kt` | Skill level + XP model |
 | `domain/crafting/RecipeDef.kt` | Recipe definition |
-| `domain/crafting/GatheringNodeDef.kt` | Gathering node definition |
+| `domain/crafting/GatheringNodeDef.kt` | Gathering node + rare yield definitions |
+| `domain/crafting/CraftingQuality.kt` | Quality tier enum (Normal→Masterwork) |
 
 ## Adding Content
 
