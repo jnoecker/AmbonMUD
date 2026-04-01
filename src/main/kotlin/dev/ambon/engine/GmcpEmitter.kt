@@ -941,6 +941,31 @@ class GmcpEmitter(
         )
     }
 
+    // ---------- trade ----------
+
+    data class TradeItemPayload(
+        val id: String,
+        val name: String,
+    )
+
+    data class TradeStatePayload(
+        val active: Boolean,
+        val partner: String?,
+        val myItems: List<TradeItemPayload>,
+        val theirItems: List<TradeItemPayload>,
+        val myGold: Long,
+        val theirGold: Long,
+        val myAccepted: Boolean,
+        val theirAccepted: Boolean,
+    )
+
+    suspend fun sendTradeState(
+        sessionId: SessionId,
+        payload: TradeStatePayload,
+    ) {
+        emit(sessionId, "Trade.State", payload)
+    }
+
     // ---------- room features ----------
 
     suspend fun sendRoomFeatures(

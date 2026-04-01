@@ -56,6 +56,7 @@ import type {
   SpriteList,
   StatusEffect,
   StatusVarLabels,
+  TradeState,
   UiFeedback,
   Vitals,
   WhoPlayer,
@@ -128,6 +129,7 @@ interface GmcpContext {
   setZoneInstances: Dispatch<SetStateAction<ZoneInstances>>;
   setSpriteList: Dispatch<SetStateAction<SpriteList>>;
   setHousing: Dispatch<SetStateAction<HousingInfo | null>>;
+  setTradeState: Dispatch<SetStateAction<TradeState | null>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -1331,6 +1333,34 @@ export function applyGmcpPackage(
         itemName: typeof packet.itemName === "string" ? packet.itemName : null,
         quantity: typeof packet.quantity === "number" ? packet.quantity : null,
       });
+      break;
+    }
+
+    case "Trade.State": {
+      const packet = data as Partial<Record<string, unknown>>;
+      if (packet.active === true) {
+        const parseItems = (arr: unknown): Array<{ id: string; name: string }> => {
+          if (!Array.isArray(arr)) return [];
+          return arr
+            .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+            .map((e) => ({
+              id: typeof e.id === "string" ? e.id : "",
+              name: typeof e.name === "string" ? e.name : "",
+            }));
+        };
+        ctx.setTradeState({
+          active: true,
+          partner: typeof packet.partner === "string" ? packet.partner : null,
+          myItems: parseItems(packet.myItems),
+          theirItems: parseItems(packet.theirItems),
+          myGold: safeNumber(packet.myGold, 0),
+          theirGold: safeNumber(packet.theirGold, 0),
+          myAccepted: packet.myAccepted === true,
+          theirAccepted: packet.theirAccepted === true,
+        });
+      } else {
+        ctx.setTradeState(null);
+      }
       break;
     }
 

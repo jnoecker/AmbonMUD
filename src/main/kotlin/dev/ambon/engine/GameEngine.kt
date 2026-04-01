@@ -36,6 +36,7 @@ import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
 import dev.ambon.engine.commands.handlers.SpriteHandler
+import dev.ambon.engine.commands.handlers.TradeHandler
 import dev.ambon.engine.commands.handlers.UiHandler
 import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
 import dev.ambon.engine.crafting.CraftingRegistry
@@ -253,6 +254,7 @@ class GameEngine(
             showLoginScreen = { sid -> outbound.send(OutboundEvent.ShowLoginScreen(sid)) },
             onPlayerLoggedOut = { player, sid ->
                 log.info { "Player logged out: name=${player.name} sessionId=$sid" }
+                tradeSystem.cancelForPlayer(sid)
                 playerLocationIndex?.unregister(player.name)
                 broadcastToRoom(players, outbound, player.roomId, "${player.name} leaves.", sid)
                 friendsSystem.onPlayerLogout(player.name)
@@ -658,6 +660,8 @@ class GameEngine(
         dungeonRegistry = dungeonRegistry,
     )
 
+    private val tradeSystem = TradeSystem(items = items)
+
     private val dialogueSystem =
         DialogueSystem(
             mobs = mobs,
@@ -920,6 +924,11 @@ class GameEngine(
                 dungeonManager = dungeonManager,
                 dungeonRegistry = dungeonRegistry,
                 groupSystem = groupSystem,
+            ),
+            TradeHandler(
+                ctx = ctx,
+                tradeSystem = tradeSystem,
+                markVitalsDirty = ::markVitalsDirty,
             ),
             SpriteHandler(
                 ctx = ctx,
