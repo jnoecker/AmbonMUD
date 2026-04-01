@@ -1,5 +1,6 @@
 package dev.ambon.engine.commands.handlers
 
+import dev.ambon.domain.crafting.CraftingQuality
 import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.crafting.RecipeDef
 import dev.ambon.domain.ids.SessionId
@@ -35,6 +36,7 @@ class CraftingHandler(
         router.on<Command.Craft> { sid, cmd -> handleCraft(sid, cmd) }
         router.on<Command.Recipes> { sid, cmd -> handleRecipes(sid, cmd) }
         router.on<Command.CraftSkills> { sid, _ -> handleCraftSkills(sid) }
+        router.on<Command.Specialize> { sid, cmd -> handleSpecialize(sid, cmd) }
     }
 
     private suspend fun handleGather(sessionId: SessionId, cmd: Command.Gather) {
@@ -72,7 +74,18 @@ class CraftingHandler(
                             "You gather from ${r.node.displayName}: $itemNames",
                         ),
                     )
+                    if (r.rareItemsGathered.isNotEmpty()) {
+                        val rareNames = r.rareItemsGathered.entries.joinToString(", ") { (id, qty) ->
+                            val template = items.getTemplate(id)
+                            val name = template?.displayName ?: id.value
+                            if (qty > 1) "$name x$qty" else name
+                        }
+                        outbound.send(
+                            OutboundEvent.SendInfo(sessionId, "** Rare find: $rareNames! **"),
+                        )
+                    }
                     sendCraftingXp(sessionId, r.node.skill, r.xpAwarded, r.leveledUp, r.newLevel)
+                    val totalQuantity = r.itemsGathered.values.sum() + r.rareItemsGathered.values.sum()
                     gmcpEmitter?.sendCraftingResult(
                         sessionId,
                         "gather",
@@ -81,8 +94,10 @@ class CraftingHandler(
                         r.leveledUp,
                         r.newLevel,
                         itemName = itemNames,
-                        quantity = r.itemsGathered.values.sum(),
+                        quantity = totalQuantity,
+                        rareFind = r.rareItemsGathered.isNotEmpty(),
                     )
+                    notifyNewDiscoveries(sessionId, me, cs)
                     emitCraftingSkills(sessionId, me)
                 }
             }
@@ -100,6 +115,12 @@ class CraftingHandler(
                         OutboundEvent.SendText(
                             sessionId,
                             "Unknown recipe '${cmd.recipeKeyword}'. Type 'recipes' to see available recipes.",
+                        ),
+                    )
+                    is CraftError.NotDiscovered -> outbound.send(
+                        OutboundEvent.SendText(
+                            sessionId,
+                            "You haven't discovered that recipe yet. Keep leveling your skills!",
                         ),
                     )
                     is CraftError.SkillTooLow -> sendSkillTooLow(sessionId, err.required, err.current)
@@ -120,9 +141,19 @@ class CraftingHandler(
                 }
                 is Either.Right -> {
                     val r = result.value
-                    val outputName = items.getTemplate(r.recipe.outputItemId)?.displayName ?: r.recipe.outputItemId.value
+                    val baseName = items.getTemplate(r.recipe.outputItemId)?.displayName ?: r.recipe.outputItemId.value
+                    val qualityPrefix = if (r.quality != CraftingQuality.NORMAL) "${r.quality.displayPrefix} " else ""
+                    val outputName = "$qualityPrefix$baseName"
                     val qty = if (r.quantityProduced > 1) " x${r.quantityProduced}" else ""
                     outbound.send(OutboundEvent.SendText(sessionId, "You craft $outputName$qty."))
+                    if (r.quality != CraftingQuality.NORMAL) {
+                        outbound.send(
+                            OutboundEvent.SendInfo(
+                                sessionId,
+                                "** ${r.quality.displayPrefix} quality! **",
+                            ),
+                        )
+                    }
                     if (r.stationBonusApplied) {
                         outbound.send(
                             OutboundEvent.SendInfo(
@@ -141,7 +172,9 @@ class CraftingHandler(
                         r.newLevel,
                         itemName = outputName,
                         quantity = r.quantityProduced,
+                        quality = r.quality.name.lowercase(),
                     )
+                    notifyNewDiscoveries(sessionId, me, cs)
                     emitCraftingSkills(sessionId, me)
                 }
             }
@@ -151,6 +184,7 @@ class CraftingHandler(
     private suspend fun handleRecipes(sessionId: SessionId, cmd: Command.Recipes) {
         val cs = requireSystemOrNull(sessionId, craftingSystem, "Crafting", outbound) ?: return
         players.withPlayer(sessionId) { me ->
+            notifyNewDiscoveries(sessionId, me, cs)
             val allRecipes = if (cmd.filter != null) {
                 val filterLower = cmd.filter.lowercase()
                 val isSkill = craftingSkillRegistry?.isValid(filterLower) == true
@@ -174,15 +208,21 @@ class CraftingHandler(
             outbound.send(OutboundEvent.SendInfo(sessionId, "[ Crafting Recipes ]"))
             outbound.send(OutboundEvent.SendInfo(sessionId, "  %-25s %-12s %5s %5s".format("Recipe", "Skill", "Req", "Lvl")))
             for (recipe in allRecipes.sortedWith(compareBy({ it.skill }, { it.skillRequired }))) {
+                val discovered = recipe.id in me.discoveredRecipes
                 val skillState = cs.getSkillState(me, recipe.skill)
                 val meetsSkill = skillState.level >= recipe.skillRequired
                 val meetsLevel = me.level >= recipe.levelRequired
-                val marker = if (meetsSkill && meetsLevel) " " else "*"
+                val marker = when {
+                    !discovered -> "?"
+                    meetsSkill && meetsLevel -> " "
+                    else -> "*"
+                }
+                val displayName = if (discovered) recipe.displayName else "???"
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sessionId,
                         " $marker%-25s %-12s %5d %5d".format(
-                            recipe.displayName,
+                            displayName,
                             craftingSkillRegistry?.get(recipe.skill)?.displayName ?: recipe.skill,
                             recipe.skillRequired,
                             recipe.levelRequired,
@@ -190,13 +230,15 @@ class CraftingHandler(
                     ),
                 )
             }
-            outbound.send(OutboundEvent.SendInfo(sessionId, "  (* = requirements not met)"))
-            emitRecipes(sessionId, allRecipes)
+            outbound.send(OutboundEvent.SendInfo(sessionId, "  (* = requirements not met, ? = undiscovered)"))
+            emitRecipes(sessionId, allRecipes.filter { it.id in me.discoveredRecipes })
         }
     }
 
     private suspend fun handleCraftSkills(sessionId: SessionId) {
+        val cs = craftingSystem
         players.withPlayer(sessionId) { me ->
+            if (cs != null) notifyNewDiscoveries(sessionId, me, cs)
             outbound.send(OutboundEvent.SendInfo(sessionId, "[ Crafting Professions ]"))
             val maxLevel = craftingSystem?.maxSkillLevel() ?: 100
             val skillDefs = craftingSkillRegistry?.allDefinitions() ?: emptyList()
@@ -209,10 +251,28 @@ class CraftingHandler(
                     "${state.xp}/$xpNeeded XP"
                 }
                 val label = if (skillDef.isGathering) "(Gathering)" else "(Crafting)"
+                val specTag = if (me.craftingSpecialization == skillDef.id) " [SPEC]" else ""
                 outbound.send(
                     OutboundEvent.SendInfo(
                         sessionId,
-                        "  %-12s %3d/%d  %s  %s".format(skillDef.displayName, state.level, maxLevel, bar, label),
+                        "  %-12s %3d/%d  %s  %s%s".format(
+                            skillDef.displayName,
+                            state.level,
+                            maxLevel,
+                            bar,
+                            label,
+                            specTag,
+                        ),
+                    ),
+                )
+            }
+            if (me.craftingSpecialization != null) {
+                val specName = craftingSkillRegistry?.get(me.craftingSpecialization!!)?.displayName
+                    ?: me.craftingSpecialization
+                outbound.send(
+                    OutboundEvent.SendInfo(
+                        sessionId,
+                        "  Specialization: $specName (+${craftingSystem?.specializationXpBonusPct() ?: 25}% XP)",
                     ),
                 )
             }
@@ -261,6 +321,64 @@ class CraftingHandler(
                 )
             },
         )
+    }
+
+    private suspend fun handleSpecialize(sessionId: SessionId, cmd: Command.Specialize) {
+        players.withPlayer(sessionId) { me ->
+            if (cmd.skill == null) {
+                // Show current specialization
+                val current = me.craftingSpecialization
+                if (current != null) {
+                    val name = craftingSkillRegistry?.get(current)?.displayName ?: current
+                    val bonusPct = craftingSystem?.specializationXpBonusPct() ?: 25
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Your specialization: $name (+$bonusPct% XP bonus)"))
+                } else {
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "You have no crafting specialization."))
+                }
+                outbound.send(
+                    OutboundEvent.SendInfo(sessionId, "Usage: specialize <skill> — choose a crafting skill to specialize in."),
+                )
+                val skillDefs = craftingSkillRegistry?.allDefinitions() ?: emptyList()
+                if (skillDefs.isNotEmpty()) {
+                    val names = skillDefs.joinToString(", ") { it.displayName.lowercase() }
+                    outbound.send(OutboundEvent.SendInfo(sessionId, "Available skills: $names"))
+                }
+                return
+            }
+
+            val skillId = cmd.skill.lowercase()
+            val skillDef = craftingSkillRegistry?.get(skillId)
+            if (skillDef == null) {
+                outbound.send(OutboundEvent.SendText(sessionId, "Unknown crafting skill '${cmd.skill}'."))
+                return
+            }
+
+            if (me.craftingSpecialization == skillId) {
+                outbound.send(
+                    OutboundEvent.SendText(sessionId, "You are already specialized in ${skillDef.displayName}."),
+                )
+                return
+            }
+
+            me.craftingSpecialization = skillId
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sessionId,
+                    "** You are now specialized in ${skillDef.displayName}! " +
+                        "(+${craftingSystem?.specializationXpBonusPct() ?: 25}% XP bonus) **",
+                ),
+            )
+            emitCraftingSkills(sessionId, me)
+        }
+    }
+
+    private suspend fun notifyNewDiscoveries(sessionId: SessionId, me: PlayerState, cs: CraftingSystem) {
+        val newRecipes = cs.discoverNewRecipes(me)
+        for (recipe in newRecipes) {
+            outbound.send(
+                OutboundEvent.SendInfo(sessionId, "** New recipe discovered: ${recipe.displayName}! **"),
+            )
+        }
     }
 
     private suspend fun sendSkillTooLow(sessionId: SessionId, required: Int, current: Int) {

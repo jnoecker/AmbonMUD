@@ -18,6 +18,7 @@ private val unlockedAchievementIdsType = object : TypeReference<Set<String>>() {
 private val achievementProgressType = object : TypeReference<Map<String, AchievementState>>() {}
 private val mailInboxType = object : TypeReference<List<MailMessage>>() {}
 private val craftingSkillsType = object : TypeReference<Map<String, CraftingSkillState>>() {}
+private val discoveredRecipesType = object : TypeReference<Set<String>>() {}
 private val friendsListType = object : TypeReference<Set<String>>() {}
 private val inventoryItemsType = object : TypeReference<List<ItemInstance>>() {}
 private val equippedItemsType = object : TypeReference<Map<String, ItemInstance>>() {}
@@ -55,6 +56,8 @@ object PlayersTable : Table("players") {
     val guildId = varchar("guild_id", 64).nullable()
     val recallRoomId = varchar("recall_room_id", 128).nullable()
     val craftingSkills = text("crafting_skills").default("{}")
+    val discoveredRecipes = text("discovered_recipes").default("[]")
+    val craftingSpecialization = varchar("crafting_specialization", 64).nullable()
     val friendsList = text("friends_list").default("[]")
     val inventoryItems = text("inventory_items").default("[]")
     val equippedItems = text("equipped_items").default("{}")
@@ -94,6 +97,8 @@ object PlayersTable : Table("players") {
             guildId = row[guildId],
             recallRoomId = row[recallRoomId]?.let { RoomId(it) },
             craftingSkills = safeReadJson(row[craftingSkills], craftingSkillsType, emptyMap()),
+            discoveredRecipes = safeReadJson(row[discoveredRecipes], discoveredRecipesType, emptySet()),
+            craftingSpecialization = row[craftingSpecialization],
             friendsList = safeReadJson(row[friendsList], friendsListType, emptySet()),
             inventoryItems = safeReadJson(row[inventoryItems], inventoryItemsType, emptyList()),
             equippedItems = safeReadJson(row[equippedItems], equippedItemsType, emptyMap()),
@@ -132,6 +137,8 @@ object PlayersTable : Table("players") {
         statement[guildId] = record.guildId
         statement[recallRoomId] = record.recallRoomId?.value
         statement[craftingSkills] = jsonMapper.writeValueAsString(record.craftingSkills)
+        statement[discoveredRecipes] = jsonMapper.writeValueAsString(record.discoveredRecipes)
+        statement[craftingSpecialization] = record.craftingSpecialization
         statement[friendsList] = jsonMapper.writeValueAsString(record.friendsList)
         statement[inventoryItems] = jsonMapper.writeValueAsString(record.inventoryItems)
         statement[equippedItems] = jsonMapper.writeValueAsString(record.equippedItems)

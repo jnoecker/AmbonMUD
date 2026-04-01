@@ -438,6 +438,8 @@ data class CraftingConfig(
     val xpExponent: Double = 1.5,
     val gatherCooldownMs: Long = 3000L,
     val stationBonusQuantity: Int = 1,
+    /** XP multiplier bonus for the player's specialized skill (e.g. 0.25 = +25% XP). */
+    val specializationXpBonus: Double = 0.25,
     val recipes: Map<String, RecipeConfigEntry> = emptyMap(),
 )
 

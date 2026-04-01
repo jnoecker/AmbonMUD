@@ -1,10 +1,12 @@
 package dev.ambon.engine.crafting
 
 import dev.ambon.config.CraftingConfig
+import dev.ambon.domain.crafting.CraftingQuality
 import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.GatheringYield
 import dev.ambon.domain.crafting.MaterialRequirement
+import dev.ambon.domain.crafting.RareGatheringYield
 import dev.ambon.domain.crafting.RecipeDef
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
@@ -52,6 +54,7 @@ class CraftingSystemTest {
     private fun makePlayer(
         skills: Map<String, CraftingSkillState> = emptyMap(),
         level: Int = 1,
+        discovered: Set<String> = emptySet(),
     ): PlayerState {
         val p = PlayerState(
             sessionId = sid,
@@ -59,6 +62,7 @@ class CraftingSystemTest {
             roomId = roomId,
             level = level,
             craftingSkills = skills.toMutableMap(),
+            discoveredRecipes = discovered.toMutableSet(),
         )
         items.ensurePlayer(sid)
         return p
@@ -222,6 +226,61 @@ class CraftingSystemTest {
             assertEquals(2, r.newLevel)
             assertEquals(2, player.craftingSkills["mining"]?.level)
         }
+
+        @Test
+        fun `rare yields are rolled on gather`() {
+            // Use Random(42) — seed is deterministic. We'll create a node with 100% rare drop
+            // to guarantee it triggers.
+            val nodeWithRare = node.copy(
+                rareYields = listOf(
+                    RareGatheringYield(itemId = ironOreId, quantity = 1, dropChance = 1.0),
+                ),
+            )
+            gatheringRegistry.clear()
+            gatheringRegistry.register(listOf(nodeWithRare))
+
+            val player = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            val result = system.gather(player, "copper", roomId, items)
+            assertTrue(result is Either.Right)
+            val r = (result as Either.Right).value
+            assertEquals(1, r.rareItemsGathered[ironOreId])
+            // Normal yield + rare yield both in inventory
+            assertTrue(items.inventory(sid).any { it.id == copperOreId })
+            assertTrue(items.inventory(sid).any { it.id == ironOreId })
+        }
+
+        @Test
+        fun `rare yields with very low chance usually do not drop`() {
+            val nodeWithLowRare = node.copy(
+                rareYields = listOf(
+                    RareGatheringYield(itemId = ironOreId, quantity = 1, dropChance = 0.001),
+                ),
+            )
+            gatheringRegistry.clear()
+            gatheringRegistry.register(listOf(nodeWithLowRare))
+
+            val player = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            val result = system.gather(player, "copper", roomId, items)
+            assertTrue(result is Either.Right)
+            val r = (result as Either.Right).value
+            // With Random(42) and 0.1% chance, first roll won't trigger
+            assertTrue(r.rareItemsGathered.isEmpty())
+        }
+
+        @Test
+        fun `gather with no rare yields produces empty rare map`() {
+            val player = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            val result = system.gather(player, "copper", roomId, items)
+            assertTrue(result is Either.Right)
+            val r = (result as Either.Right).value
+            assertTrue(r.rareItemsGathered.isEmpty())
+        }
     }
 
     @Nested
@@ -256,6 +315,7 @@ class CraftingSystemTest {
         fun `craft succeeds with sufficient materials and skill`() {
             val player = makePlayer(
                 skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
+                discovered = setOf("test:copper_sword"),
             )
             giveCopper(3)
 
@@ -276,6 +336,7 @@ class CraftingSystemTest {
         fun `craft fails with missing materials`() {
             val player = makePlayer(
                 skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
+                discovered = setOf("test:copper_sword"),
             )
             giveCopper(1) // need 3
 
@@ -293,6 +354,7 @@ class CraftingSystemTest {
         fun `craft fails with insufficient skill`() {
             val player = makePlayer(
                 skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
+                discovered = setOf("test:copper_sword"),
             )
             giveCopper(3)
 
@@ -310,6 +372,7 @@ class CraftingSystemTest {
             val player = makePlayer(
                 skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
                 level = 1,
+                discovered = setOf("test:copper_sword"),
             )
             giveCopper(3)
 
@@ -326,6 +389,7 @@ class CraftingSystemTest {
         fun `craft with station bonus gives extra output`() {
             val player = makePlayer(
                 skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
+                discovered = setOf("test:copper_sword"),
             )
             giveCopper(3)
 
@@ -343,6 +407,7 @@ class CraftingSystemTest {
         fun `craft with wrong station type gives no bonus`() {
             val player = makePlayer(
                 skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
+                discovered = setOf("test:copper_sword"),
             )
             giveCopper(3)
 
@@ -359,6 +424,130 @@ class CraftingSystemTest {
             val result = system.craft(player, "mithril armor", roomId, items, null)
             assertTrue(result is Either.Left)
             assertTrue((result as Either.Left).value is CraftError.RecipeNotFound)
+        }
+    }
+
+    @Nested
+    inner class Specialization {
+        @Test
+        fun `specialization gives XP bonus on gather`() {
+            val node = GatheringNodeDef(
+                id = "test:copper_vein",
+                displayName = "a copper ore vein",
+                keyword = "copper",
+                skill = "mining",
+                skillRequired = 1,
+                yields = listOf(GatheringYield(itemId = copperOreId, minQuantity = 1, maxQuantity = 1)),
+                respawnSeconds = 60,
+                xpReward = 100,
+                roomId = roomId,
+            )
+            gatheringRegistry.register(listOf(node))
+
+            // Without specialization: 100 XP
+            val playerNoSpec = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            system.gather(playerNoSpec, "copper", roomId, items)
+            val xpNoSpec = playerNoSpec.craftingSkills["mining"]!!.xp
+
+            clock.advance(61_000L)
+            system.tickNodeRespawns()
+
+            // With specialization: 125 XP (100 * 1.25)
+            val playerSpec = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            playerSpec.craftingSpecialization = "mining"
+            system.gather(playerSpec, "copper", roomId, items)
+            val xpSpec = playerSpec.craftingSkills["mining"]!!.xp
+
+            // XP for level 1 = 50, so 100 XP causes level-up in both cases.
+            // Check the residual XP: no spec = 100-50=50, spec = 125-50=75
+            assertEquals(50L, xpNoSpec)
+            assertEquals(75L, xpSpec)
+        }
+
+        @Test
+        fun `non-specialized skill gets no bonus`() {
+            val node = GatheringNodeDef(
+                id = "test:copper_vein",
+                displayName = "a copper ore vein",
+                keyword = "copper",
+                skill = "mining",
+                skillRequired = 1,
+                yields = listOf(GatheringYield(itemId = copperOreId, minQuantity = 1, maxQuantity = 1)),
+                respawnSeconds = 60,
+                xpReward = 10,
+                roomId = roomId,
+            )
+            gatheringRegistry.register(listOf(node))
+
+            val player = makePlayer(
+                skills = mapOf("mining" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            player.craftingSpecialization = "smithing" // specialized in different skill
+            system.gather(player, "copper", roomId, items)
+            assertEquals(10L, player.craftingSkills["mining"]!!.xp)
+        }
+    }
+
+    @Nested
+    inner class QualityTiers {
+        @Test
+        fun `craft at minimum skill level produces normal quality`() {
+            // Skill level = required = 1, overshoot = 0, chance = 0
+            val quality = system.rollQuality(1, 1, false)
+            assertEquals(CraftingQuality.NORMAL, quality)
+        }
+
+        @Test
+        fun `high overshoot increases quality chance`() {
+            // With 50 overshoot: baseChance = 50*1.5/100 = 0.75
+            // Run many trials and verify we get some non-normal qualities
+            val qualities = (0 until 100).map {
+                system.rollQuality(51, 1, false)
+            }
+            assertTrue(qualities.any { it != CraftingQuality.NORMAL })
+        }
+
+        @Test
+        fun `specialization adds quality bonus`() {
+            // With 20 overshoot + spec: baseChance = 20*1.5/100 = 0.30, specBonus = 0.10, total = 0.40
+            // Run many trials — should see more non-normal with spec than without
+            val withSpec = (0 until 200).count {
+                system.rollQuality(21, 1, true) != CraftingQuality.NORMAL
+            }
+            val withoutSpec = (0 until 200).count {
+                system.rollQuality(21, 1, false) != CraftingQuality.NORMAL
+            }
+            assertTrue(withSpec >= withoutSpec, "Specialization should increase quality chance")
+        }
+
+        @Test
+        fun `craft result includes quality`() {
+            val recipe = RecipeDef(
+                id = "test:copper_sword",
+                displayName = "Copper Sword",
+                skill = "smithing",
+                skillRequired = 1,
+                materials = listOf(MaterialRequirement(itemId = copperOreId, quantity = 3)),
+                outputItemId = copperSwordId,
+            )
+            craftingRegistry.register(listOf(recipe))
+            val player = makePlayer(
+                skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
+                discovered = setOf("test:copper_sword"),
+            )
+            repeat(3) {
+                val inst = items.createFromTemplate(copperOreId)!!
+                items.addToInventory(sid, inst)
+            }
+            val result = system.craft(player, "copper sword", roomId, items, null)
+            assertTrue(result is Either.Right)
+            val r = (result as Either.Right).value
+            // At skill level 1, required 1, overshoot = 0 → always normal
+            assertEquals(CraftingQuality.NORMAL, r.quality)
         }
     }
 
@@ -397,6 +586,95 @@ class CraftingSystemTest {
             val r = (result as Either.Right).value
             assertFalse(r.leveledUp) // Already at max
             assertEquals(100, player.craftingSkills["mining"]?.level)
+        }
+    }
+
+    @Nested
+    inner class RecipeDiscovery {
+        private val recipe1 = RecipeDef(
+            id = "test:copper_sword",
+            displayName = "Copper Sword",
+            skill = "smithing",
+            skillRequired = 1,
+            materials = listOf(MaterialRequirement(itemId = copperOreId, quantity = 3)),
+            outputItemId = copperSwordId,
+        )
+        private val recipe2 = RecipeDef(
+            id = "test:iron_sword",
+            displayName = "Iron Sword",
+            skill = "smithing",
+            skillRequired = 10,
+            materials = listOf(MaterialRequirement(itemId = ironOreId, quantity = 3)),
+            outputItemId = copperSwordId,
+        )
+
+        @BeforeEach
+        fun setUpRecipes() {
+            craftingRegistry.register(listOf(recipe1, recipe2))
+        }
+
+        @Test
+        fun `discoverNewRecipes auto-discovers recipes at skill level`() {
+            val player = makePlayer(
+                skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            val discovered = system.discoverNewRecipes(player)
+            assertEquals(1, discovered.size)
+            assertEquals("test:copper_sword", discovered[0].id)
+            assertTrue("test:copper_sword" in player.discoveredRecipes)
+            assertFalse("test:iron_sword" in player.discoveredRecipes)
+        }
+
+        @Test
+        fun `discoverNewRecipes discovers more recipes as skill increases`() {
+            val player = makePlayer(
+                skills = mapOf("smithing" to CraftingSkillState(level = 10, xp = 0L)),
+            )
+            val discovered = system.discoverNewRecipes(player)
+            assertEquals(2, discovered.size)
+            assertTrue("test:copper_sword" in player.discoveredRecipes)
+            assertTrue("test:iron_sword" in player.discoveredRecipes)
+        }
+
+        @Test
+        fun `discoverNewRecipes does not re-discover already known recipes`() {
+            val player = makePlayer(
+                skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            player.discoveredRecipes.add("test:copper_sword")
+            val discovered = system.discoverNewRecipes(player)
+            assertTrue(discovered.isEmpty())
+        }
+
+        @Test
+        fun `craft fails with NotDiscovered when recipe not discovered`() {
+            val player = makePlayer(
+                skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            items.ensurePlayer(sid)
+            repeat(3) {
+                val inst = items.createFromTemplate(copperOreId)!!
+                items.addToInventory(sid, inst)
+            }
+            // Recipe exists but player hasn't discovered it
+            val result = system.craft(player, "copper sword", roomId, items, null)
+            assertTrue(result is Either.Left)
+            assertTrue((result as Either.Left).value is CraftError.NotDiscovered)
+        }
+
+        @Test
+        fun `craft succeeds after recipe is discovered`() {
+            val player = makePlayer(
+                skills = mapOf("smithing" to CraftingSkillState(level = 1, xp = 0L)),
+            )
+            player.discoveredRecipes.add("test:copper_sword")
+            items.ensurePlayer(sid)
+            repeat(3) {
+                val inst = items.createFromTemplate(copperOreId)!!
+                items.addToInventory(sid, inst)
+            }
+            val result = system.craft(player, "copper sword", roomId, items, null)
+            assertTrue(result is Either.Right)
         }
     }
 
