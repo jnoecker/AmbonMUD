@@ -6,6 +6,7 @@ import { ActionBar } from "./components/ActionBar";
 import { AudioControls } from "./components/AudioControls";
 import { PopoutLayer } from "./components/PopoutLayer";
 import { ShopPopout } from "./components/ShopPopout";
+import { TradePanel } from "./components/TradePanel";
 import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
 import { SpellbookPanel } from "./components/SpellbookPanel";
@@ -86,6 +87,7 @@ import type {
   StaffWorldZone,
   StatusEffect,
   StatusVarLabels,
+  TradeState,
   UiFeedback,
   Vitals,
   WhoPlayer,
@@ -221,6 +223,7 @@ function App() {
   const [lookTarget, setLookTarget] = useState<LookTargetInfo | null>(null);
   const [spriteList, setSpriteList] = useState<SpriteList>({ active: null, sprites: [] });
   const [housing, setHousing] = useState<HousingInfo | null>(null);
+  const [tradeState, setTradeState] = useState<TradeState | null>(null);
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -372,6 +375,7 @@ function App() {
     setLoginError(null);
     setSavedCharacters([]);
     setHousing(null);
+    setTradeState(null);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setCombatLogMessages([]);
@@ -461,6 +465,7 @@ function App() {
           setZoneInstances,
           setSpriteList,
           setHousing,
+          setTradeState,
           sendGmcp: (pkg: string, payload: unknown) => { sendGmcpRef.current(pkg, payload); return true; },
         },
       );
@@ -1191,6 +1196,13 @@ function App() {
               sendCommand(`sell ${keyword}`, true);
               focusComposer();
             }}
+          />
+        )}
+
+        {tradeState && tradeState.active && (
+          <TradePanel
+            trade={tradeState}
+            onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
 

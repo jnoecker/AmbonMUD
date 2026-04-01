@@ -9660,3 +9660,162 @@ body {
   font-size: 0.72rem;
   font-weight: 600;
 }
+
+/* ── Trade Panel ──────────────────────────── */
+
+.trade-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 500;
+  background:
+    linear-gradient(160deg, var(--surface-panel-a), var(--surface-panel-b));
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-lg, 16px);
+  padding: 20px 24px;
+  min-width: 340px;
+  max-width: 440px;
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    var(--shadow-lg),
+    var(--shadow-glow);
+  animation: dialogSlideIn 250ms var(--ease-out-soft);
+}
+
+.trade-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.trade-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.trade-cancel-btn {
+  padding: 4px 12px;
+  border: 1px solid rgb(200 80 80 / 30%);
+  border-radius: 6px;
+  background: rgb(200 80 80 / 14%);
+  color: var(--color-error);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.trade-cancel-btn:hover {
+  background: rgb(200 80 80 / 25%);
+}
+
+.trade-columns {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+}
+
+.trade-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trade-column-label {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.trade-divider {
+  width: 1px;
+  background: var(--line-soft);
+  margin: 0 12px;
+}
+
+.trade-items {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 60px;
+  padding: 6px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 15%);
+}
+
+.trade-item {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  padding: 2px 6px;
+}
+
+.trade-gold {
+  color: var(--color-soft-gold, #d4b86a);
+}
+
+.trade-empty {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.trade-status {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.trade-accepted {
+  color: var(--color-heal, #8abf8a);
+}
+
+.trade-actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.trade-accept-btn {
+  padding: 8px 28px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: linear-gradient(140deg, rgb(88 72 132 / 50%), rgb(72 62 112 / 44%));
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.trade-accept-btn:hover:not(:disabled) {
+  background: linear-gradient(140deg, rgb(108 88 152 / 60%), rgb(88 72 132 / 52%));
+  border-color: var(--color-primary-lavender);
+}
+
+.trade-accept-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.trade-hint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.trade-hint code {
+  background: rgb(0 0 0 / 20%);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+}
