@@ -2,6 +2,7 @@ package dev.ambon.domain.world
 
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.RecipeDef
+import dev.ambon.domain.dungeon.DungeonTemplateDef
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.idZone
 import dev.ambon.domain.quest.QuestDef
@@ -16,6 +17,7 @@ class World(
     questDefinitions: List<QuestDef> = emptyList(),
     gatheringNodes: List<GatheringNodeDef> = emptyList(),
     recipes: List<RecipeDef> = emptyList(),
+    dungeonTemplates: List<DungeonTemplateDef> = emptyList(),
 ) {
     private val _rooms = LinkedHashMap(rooms)
     val rooms: Map<RoomId, Room> get() = _rooms
@@ -43,6 +45,8 @@ class World(
 
     private val _recipes = recipes.toMutableList()
     val recipes: List<RecipeDef> get() = _recipes
+
+    val dungeonTemplates: List<DungeonTemplateDef> = dungeonTemplates.toList()
 
     /** Returns the set of zone names present in this world. */
     fun zones(): Set<String> = _rooms.keys.mapTo(mutableSetOf()) { it.zone }
