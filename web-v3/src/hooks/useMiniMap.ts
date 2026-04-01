@@ -13,8 +13,11 @@ const FOG_FILL = "rgba(42, 48, 80, 0.5)";
 const FOG_STROKE = "rgba(58, 64, 96, 0.35)";
 const NODE_STROKE = "rgba(90, 106, 144, 0.5)";
 const QUEST_MARKER = "#bea873";
+const PATH_GLOW = "rgba(212, 184, 106, 0.7)";
+const PATH_GLOW_OUTER = "rgba(212, 184, 106, 0.25)";
 const HOUSING_FILL = "#c8a078";
 const QUEST_PULSE_PERIOD = 2500; // ms for one full cycle
+const PATH_SHIMMER_PERIOD = 1800; // ms
 const CELL = 80;
 const NODE_RADIUS = 18;
 const CURRENT_RADIUS = 24;
@@ -136,6 +139,47 @@ function renderMap(
         ctx.lineTo(tx, ty);
         ctx.stroke();
       }
+    }
+  }
+
+  // Quest path trail — BFS from current room to nearest quest target
+  if (currentId && questTargetRoomIds.size > 0 && !questTargetRoomIds.has(currentId)) {
+    const pathEdges = bfsQuestPath(currentId, questTargetRoomIds, visited);
+    if (pathEdges.length > 0) {
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const shimmer = reducedMotion
+        ? 0.7
+        : 0.45 + 0.3 * (0.5 + 0.5 * Math.sin(Date.now() / PATH_SHIMMER_PERIOD * Math.PI * 2));
+
+      for (const [fromId, toId] of pathEdges) {
+        const fromNode = visited.get(fromId);
+        const toNode = visited.get(toId);
+        if (!fromNode || !toNode) continue;
+        const sx = nodeX(fromNode);
+        const sy = nodeY(fromNode);
+        const tx = nodeX(toNode);
+        const ty = nodeY(toNode);
+        if (!inScrollBounds(sx, sy) && !inScrollBounds(tx, ty)) continue;
+
+        // Outer glow
+        ctx.globalAlpha = shimmer * 0.35;
+        ctx.strokeStyle = PATH_GLOW_OUTER;
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+
+        // Inner bright line
+        ctx.globalAlpha = shimmer;
+        ctx.strokeStyle = PATH_GLOW;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
     }
   }
 
@@ -304,6 +348,45 @@ function renderMap(
 
   // Restore from scroll-bounds clip
   ctx.restore();
+}
+
+/** BFS from currentId to the nearest quest target. Returns edge pairs [from, to]. */
+function bfsQuestPath(
+  currentId: string,
+  targets: Set<string>,
+  visited: Map<string, MapRoom>,
+): Array<[string, string]> {
+  const seen = new Set<string>();
+  const parent = new Map<string, string>();
+  const queue: string[] = [currentId];
+  seen.add(currentId);
+  let found: string | null = null;
+
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    const node = visited.get(id);
+    if (!node) continue;
+    for (const [dir, neighborId] of Object.entries(node.exits)) {
+      if (dir === "up" || dir === "down") continue;
+      if (seen.has(neighborId) || !visited.has(neighborId)) continue;
+      seen.add(neighborId);
+      parent.set(neighborId, id);
+      if (targets.has(neighborId)) { found = neighborId; break; }
+      queue.push(neighborId);
+    }
+    if (found) break;
+  }
+
+  if (!found) return [];
+  const edges: Array<[string, string]> = [];
+  let cur = found;
+  while (parent.has(cur)) {
+    const prev = parent.get(cur)!;
+    edges.push([prev, cur]);
+    cur = prev;
+  }
+  edges.reverse();
+  return edges;
 }
 
 export function useMiniMap() {
