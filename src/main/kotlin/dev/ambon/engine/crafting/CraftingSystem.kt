@@ -1,6 +1,7 @@
 package dev.ambon.engine.crafting
 
 import dev.ambon.config.CraftingConfig
+import dev.ambon.domain.crafting.CraftingQuality
 import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.crafting.GatheringNodeDef
 import dev.ambon.domain.crafting.RecipeDef
@@ -18,6 +19,7 @@ private val log = KotlinLogging.logger {}
 data class GatherResult(
     val node: GatheringNodeDef,
     val itemsGathered: Map<ItemId, Int>,
+    val rareItemsGathered: Map<ItemId, Int>,
     val xpAwarded: Int,
     val leveledUp: Boolean,
     val newLevel: Int,
@@ -30,6 +32,7 @@ data class CraftResult(
     val leveledUp: Boolean,
     val newLevel: Int,
     val stationBonusApplied: Boolean,
+    val quality: CraftingQuality = CraftingQuality.NORMAL,
 )
 
 sealed interface GatherError {
@@ -51,6 +54,8 @@ sealed interface GatherError {
 
 sealed interface CraftError {
     data object RecipeNotFound : CraftError
+
+    data object NotDiscovered : CraftError
 
     data class SkillTooLow(
         val required: Int,
@@ -125,6 +130,20 @@ class CraftingSystem(
             }
         }
 
+        // Roll rare drops
+        val rareGathered = mutableMapOf<ItemId, Int>()
+        for (rare in node.rareYields) {
+            if (random.nextDouble() < rare.dropChance) {
+                repeat(rare.quantity) {
+                    val instance = items.createFromTemplate(rare.itemId)
+                    if (instance != null) {
+                        items.addToInventory(player.sessionId, instance)
+                        rareGathered[rare.itemId] = (rareGathered[rare.itemId] ?: 0) + 1
+                    }
+                }
+            }
+        }
+
         // Mark node as depleted
         nodeDepletedUntil[node.id] = now + (node.respawnSeconds * 1000L)
 
@@ -132,15 +151,16 @@ class CraftingSystem(
         player.gatherCooldownUntilMs = now + config.gatherCooldownMs
 
         // Award XP and check level up
-        val leveledUp = addSkillXp(player, node.skill, node.xpReward.toLong())
+        val xpResult = addSkillXp(player, node.skill, node.xpReward.toLong())
         val currentState = player.craftingSkills.getOrDefault(node.skill, CraftingSkillState())
 
         return Either.Right(
             GatherResult(
                 node = node,
                 itemsGathered = gathered,
-                xpAwarded = node.xpReward,
-                leveledUp = leveledUp,
+                rareItemsGathered = rareGathered,
+                xpAwarded = xpResult.effectiveXp,
+                leveledUp = xpResult.leveledUp,
                 newLevel = currentState.level,
             ),
         )
@@ -156,6 +176,11 @@ class CraftingSystem(
         // Find recipe
         val recipe = craftingRegistry.findRecipe(recipeKeyword)
             ?: return Either.Left(CraftError.RecipeNotFound)
+
+        // Check discovery
+        if (recipe.id !in player.discoveredRecipes) {
+            return Either.Left(CraftError.NotDiscovered)
+        }
 
         // Check player level
         if (player.level < recipe.levelRequired) {
@@ -206,17 +231,20 @@ class CraftingSystem(
         }
 
         // Award XP and check level up
-        val leveledUp = addSkillXp(player, recipe.skill, recipe.xpReward.toLong())
+        val xpResult = addSkillXp(player, recipe.skill, recipe.xpReward.toLong())
         val currentState = player.craftingSkills.getOrDefault(recipe.skill, CraftingSkillState())
+
+        val quality = rollQuality(skillState.level, recipe.skillRequired, player.craftingSpecialization == recipe.skill)
 
         return Either.Right(
             CraftResult(
                 recipe = recipe,
                 quantityProduced = totalQuantity,
-                xpAwarded = recipe.xpReward,
-                leveledUp = leveledUp,
+                xpAwarded = xpResult.effectiveXp,
+                leveledUp = xpResult.leveledUp,
                 newLevel = currentState.level,
                 stationBonusApplied = stationBonusApplied,
+                quality = quality,
             ),
         )
     }
@@ -231,17 +259,48 @@ class CraftingSystem(
         return clock.millis() < until
     }
 
+    /**
+     * Determines crafting quality based on skill overshoot.
+     * The more a player's skill exceeds the recipe requirement, the higher the quality chance.
+     * Specialization adds a flat bonus to the roll.
+     */
+    fun rollQuality(skillLevel: Int, skillRequired: Int, isSpecialized: Boolean): CraftingQuality {
+        val overshoot = (skillLevel - skillRequired).coerceAtLeast(0)
+        // Base chance scales with overshoot: each point above required adds ~1.5% quality chance
+        val baseChance = (overshoot * 1.5) / 100.0
+        val specBonus = if (isSpecialized) 0.10 else 0.0
+        val roll = random.nextDouble()
+        val chance = baseChance + specBonus
+
+        return when {
+            roll < chance * 0.15 -> CraftingQuality.MASTERWORK
+            roll < chance * 0.40 -> CraftingQuality.SUPERIOR
+            roll < chance -> CraftingQuality.FINE
+            else -> CraftingQuality.NORMAL
+        }
+    }
+
     fun xpForLevel(level: Int): Long =
         (config.baseXpPerLevel * level.toDouble().pow(config.xpExponent)).toLong()
 
-    /** Adds XP to a skill. Returns true if the player leveled up. */
-    private fun addSkillXp(player: PlayerState, skill: String, xp: Long): Boolean {
-        val state = player.craftingSkills.getOrPut(skill) { CraftingSkillState() }
-        if (state.level >= config.maxSkillLevel) return false
+    private data class XpResult(
+        val leveledUp: Boolean,
+        val effectiveXp: Int,
+    )
 
-        val newXp = state.xp + xp
+    /** Adds XP to a skill, applying specialization bonus if applicable. */
+    private fun addSkillXp(player: PlayerState, skill: String, xp: Long): XpResult {
+        val state = player.craftingSkills.getOrPut(skill) { CraftingSkillState() }
+        if (state.level >= config.maxSkillLevel) return XpResult(false, xp.toInt())
+
+        val effectiveXp = if (player.craftingSpecialization == skill) {
+            (xp * (1.0 + config.specializationXpBonus)).toLong()
+        } else {
+            xp
+        }
+        val newXp = state.xp + effectiveXp
         val xpNeeded = xpForLevel(state.level)
-        return if (newXp >= xpNeeded) {
+        val leveledUp = if (newXp >= xpNeeded) {
             val newLevel = (state.level + 1).coerceAtMost(config.maxSkillLevel)
             player.craftingSkills[skill] = CraftingSkillState(level = newLevel, xp = newXp - xpNeeded)
             log.debug { "Player ${player.name} leveled up $skill to $newLevel" }
@@ -250,6 +309,7 @@ class CraftingSystem(
             player.craftingSkills[skill] = state.copy(xp = newXp)
             false
         }
+        return XpResult(leveledUp, effectiveXp.toInt())
     }
 
     fun getSkillLevel(player: PlayerState, skill: String): Int =
@@ -260,7 +320,29 @@ class CraftingSystem(
 
     fun maxSkillLevel(): Int = config.maxSkillLevel
 
+    fun specializationXpBonusPct(): Int = (config.specializationXpBonus * 100).toInt()
+
+    /**
+     * Auto-discovers any recipes the player qualifies for but hasn't discovered yet.
+     * Returns the list of newly discovered recipe IDs.
+     */
+    fun discoverNewRecipes(player: PlayerState): List<RecipeDef> {
+        val newlyDiscovered = mutableListOf<RecipeDef>()
+        for (recipe in craftingRegistry.allRecipes()) {
+            if (recipe.id in player.discoveredRecipes) continue
+            val skillLevel = player.craftingSkills.getOrDefault(recipe.skill, CraftingSkillState()).level
+            if (skillLevel >= recipe.skillRequired && player.level >= recipe.levelRequired) {
+                player.discoveredRecipes.add(recipe.id)
+                newlyDiscovered.add(recipe)
+            }
+        }
+        return newlyDiscovered
+    }
+
     fun allRecipes(): Collection<RecipeDef> = craftingRegistry.allRecipes()
+
+    fun discoveredRecipes(player: PlayerState): List<RecipeDef> =
+        craftingRegistry.allRecipes().filter { it.id in player.discoveredRecipes }
 
     fun recipesForSkill(skill: String): List<RecipeDef> = craftingRegistry.recipesForSkill(skill)
 

@@ -9,6 +9,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import dev.ambon.domain.Progress
 import dev.ambon.domain.achievement.AchievementState
+import dev.ambon.domain.crafting.CraftingSkillState
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -106,6 +107,11 @@ class PersistenceFieldCoverageTest {
                 ),
                 guildId = "knights",
                 recallRoomId = RoomId("town:square"),
+                craftingSkills = mapOf(
+                    "smithing" to CraftingSkillState(level = 5, xp = 120L),
+                ),
+                discoveredRecipes = setOf("zone:copper_sword", "zone:iron_sword"),
+                craftingSpecialization = "smithing",
                 inventoryItems = listOf(
                     ItemInstance(ItemId("test:potion"), Item(keyword = "potion", displayName = "a healing potion")),
                 ),
