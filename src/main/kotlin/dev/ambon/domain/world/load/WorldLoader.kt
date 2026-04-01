@@ -646,6 +646,14 @@ object WorldLoader {
                 if (roomTemplates.isEmpty()) {
                     throw WorldLoadException("Dungeon '$dungeonId' must have at least one roomTemplates entry")
                 }
+                if (df.roomCountMin > df.roomCountMax) {
+                    throw WorldLoadException(
+                        "Dungeon '$dungeonId' roomCountMin (${df.roomCountMin}) must be <= roomCountMax (${df.roomCountMax})",
+                    )
+                }
+                if (df.roomCountMin < 3) {
+                    throw WorldLoadException("Dungeon '$dungeonId' roomCountMin must be >= 3 (entrance + at least 1 room + boss)")
+                }
                 val mobPools = DungeonMobPoolDef(
                     common = df.mobPools.common,
                     elite = df.mobPools.elite,

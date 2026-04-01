@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.dungeon.DungeonDifficulty
+import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.commands.Command
@@ -30,9 +31,13 @@ class DungeonHandler(
         val reg = dungeonRegistry ?: return sendUnavailable(sessionId)
 
         players.withPlayer(sessionId) { me ->
-            // Already in a dungeon?
-            if (dm.isInDungeon(sessionId)) {
-                outbound.send(OutboundEvent.SendText(sessionId, "You are already in a dungeon. Type 'dungeon leave' to exit first."))
+            // Re-entry: if the player has an active dungeon, teleport back in
+            val existingInstance = dm.getInstanceForPlayer(sessionId)
+            if (existingInstance != null) {
+                val entrance = dm.entranceRoom(existingInstance)
+                players.moveTo(sessionId, entrance)
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You re-enter ${existingInstance.template.name}."))
+                ctx.sendLook(sessionId)
                 return
             }
 
@@ -55,33 +60,35 @@ class DungeonHandler(
                 DungeonDifficulty.NORMAL
             }
 
-            // Check minimum level
-            if (me.level < template.minLevel) {
-                outbound.send(
-                    OutboundEvent.SendText(sessionId, "You must be at least level ${template.minLevel} to enter this dungeon."),
-                )
-                return
-            }
-
-            // Determine party members
+            // Check minimum level for all party members
             val group = groupSystem?.getGroup(sessionId)
             val memberSids = if (group != null) {
                 group.members.toSet()
             } else {
                 setOf(sessionId)
             }
+            for (sid in memberSids) {
+                val member = players.get(sid) ?: continue
+                if (member.level < template.minLevel) {
+                    outbound.send(
+                        OutboundEvent.SendText(
+                            sessionId,
+                            "${member.name} is level ${member.level} but this dungeon requires level ${template.minLevel}.",
+                        ),
+                    )
+                    return
+                }
+            }
 
             // Calculate average party level
             val partyLevel = memberSids.mapNotNull { sid -> players.get(sid)?.level }.average().toInt().coerceAtLeast(1)
 
-            // Check for re-entry into existing instance
-            val existingInstance = dm.getInstanceForPlayer(sessionId)
-            if (existingInstance != null) {
-                val entrance = dm.entranceRoom(existingInstance)
-                players.moveTo(sessionId, entrance)
-                outbound.send(OutboundEvent.SendInfo(sessionId, "You re-enter ${existingInstance.template.name}."))
-                ctx.sendLook(sessionId)
-                return
+            // Determine return room: prefer template's portal room, fall back to current room
+            val returnRoom = if (template.portalRoom != null) {
+                val qualifiedPortal = RoomId("${template.id.substringBefore(':')}:${template.portalRoom}")
+                if (ctx.world.rooms.containsKey(qualifiedPortal)) qualifiedPortal else me.roomId
+            } else {
+                me.roomId
             }
 
             // Create the dungeon instance
@@ -91,7 +98,7 @@ class DungeonHandler(
                 leader = sessionId,
                 members = memberSids,
                 partyLevel = partyLevel,
-                returnRoom = me.roomId,
+                returnRoom = returnRoom,
             )
 
             // Teleport all members to the entrance

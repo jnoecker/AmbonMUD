@@ -58,7 +58,8 @@ class DungeonManager(
     ): DungeonInstance {
         val instanceId = UUID.randomUUID().toString().take(8)
         val layout = generator.generate(template)
-        val zonePrefix = "dungeon_${template.id.substringAfter(':')}:i_$instanceId"
+        // Zone prefix must be unique per instance so removeZone doesn't nuke other instances.
+        val zonePrefix = "dg_$instanceId"
 
         // Create rooms in the World
         val roomIdMap = mutableMapOf<Int, RoomId>()
@@ -159,10 +160,6 @@ class DungeonManager(
             mobs.remove(mobId)
         }
 
-        // Remove rooms from world
-        for ((_, roomId) in instance.roomIds) {
-            // World doesn't have removeRoom, but we can use removeZone
-        }
         val zonePrefix = instance.roomIds.values.firstOrNull()?.zone
         if (zonePrefix != null) {
             world.removeZone(zonePrefix)
@@ -208,12 +205,14 @@ class DungeonManager(
                     damage = DamageRange(scaledMinDmg.coerceAtLeast(1), scaledMaxDmg.coerceAtLeast(1)),
                     armor = mobSpawn.armor,
                     xpReward = scaledXp,
-                    drops = mobSpawn.drops,
+                    drops = mobSpawn.drops.map { drop ->
+                        drop.copy(chance = (drop.chance * diff.dropRateMultiplier).coerceAtMost(1.0))
+                    },
                     goldMin = mobSpawn.goldMin,
                     goldMax = mobSpawn.goldMax,
                     dialogue = mobSpawn.dialogue,
                     behaviorTree = mobSpawn.behaviorTree,
-                    aggressive = mobSpawn.aggressive,
+                    aggressive = true,
                     templateKey = fullMobId,
                     spawnRoomId = roomId,
                     questIds = mobSpawn.questIds,
