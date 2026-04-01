@@ -85,11 +85,12 @@ rooms:
   hall_of_portals:
     image: 4789f1a1e68c123f14630a57aafdb891172312e7a79df19d7a606c98c843dcd0.jpg
     title: "Hall of Portals"
-    description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.' Eastern light smells of old books. Western light spills warmly from the gallery beyond. A spiral staircase leads up to a crafting workshop."
+    description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.' Eastern light smells of old books. Western light spills warmly from the gallery beyond. A spiral staircase leads up to a crafting workshop. Stone steps descend into a dimly lit portal chamber below."
     exits:
       e: noecker_resume:lobby
       w: wayfinder_gallery
       u: crafting_workshop:entrance
+      d: sunken_crypt:portal_chamber
 
   blank_arches:
     image: c5c24327e550e1493fb096e726644a4b183ca640c02ad33f8dad294bfc7af44d.jpg

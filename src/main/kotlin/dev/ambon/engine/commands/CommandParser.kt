@@ -307,6 +307,15 @@ sealed interface Command {
         val skill: String?,
     ) : Command
 
+    // ---- Dungeon commands ----
+
+    data class DungeonEnter(
+        val templateKeyword: String,
+        val difficulty: String?,
+    ) : Command
+
+    data object DungeonLeave : Command
+
     // ---- Sprite commands ----
 
     data object SpriteList : Command
@@ -925,6 +934,15 @@ object CommandParser {
             Command.Specialize(rest.takeIf { it.isNotBlank() })
         }?.let { return it }
 
+        matchPrefix(line, listOf("dungeon enter")) { rest ->
+            if (rest.isBlank()) {
+                Command.Invalid(line, "dungeon enter <name> [difficulty]")
+            } else {
+                val parts = rest.split("\\s+".toRegex(), 2)
+                Command.DungeonEnter(parts[0], parts.getOrNull(1)?.takeIf { it.isNotBlank() })
+            }
+        }?.let { return it }
+
         // reload [world|abilities|effects|all]
         matchPrefix(line, listOf("reload")) { rest ->
             Command.Reload(rest.trim().takeIf { it.isNotBlank() })
@@ -960,6 +978,7 @@ object CommandParser {
             "gold", "balance", "wealth" -> Command.Balance
             "list", "shop" -> Command.ShopList
             "craftskills", "professions", "prof" -> Command.CraftSkills
+            "dungeon leave", "dungeon exit" -> Command.DungeonLeave
             else -> Command.Unknown(line)
         }
     }
