@@ -7,7 +7,7 @@ import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 
 /** An active dungeon run bound to a party. */
-data class DungeonInstance(
+class DungeonInstance(
     val id: String,
     val template: DungeonTemplateDef,
     val difficulty: DungeonDifficulty,

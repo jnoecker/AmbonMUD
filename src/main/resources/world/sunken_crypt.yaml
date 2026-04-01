@@ -28,11 +28,10 @@ mobs:
   crypt_skeleton:
     name: "a skeletal warrior"
     description: "A rattling skeleton wielding a rusted sword. Its empty eye sockets glow with pale light."
-    room: portal_chamber
+    room: mob_templates
     tier: standard
     level: 5
-    behavior:
-      template: aggro_guard
+
     drops:
       - itemId: bone_fragment
         chance: 0.3
@@ -41,22 +40,20 @@ mobs:
   crypt_spider:
     name: "a crypt spider"
     description: "A bloated spider the size of a dog, its legs clicking against the stone floor."
-    room: portal_chamber
+    room: mob_templates
     tier: weak
     level: 4
-    behavior:
-      template: aggro_guard
+
     drops:
       - itemId: crypt_dust
         chance: 0.2
   crypt_guardian:
     name: "a crypt guardian"
     description: "An armored undead sentinel, far more formidable than the common skeletons."
-    room: portal_chamber
+    room: mob_templates
     tier: elite
     level: 8
-    behavior:
-      template: aggro_guard
+
     drops:
       - itemId: bone_fragment
         chance: 0.5
@@ -65,11 +62,10 @@ mobs:
   crypt_lord:
     name: "the Crypt Lord"
     description: "A towering undead lord wreathed in sickly green flames. Ancient armor hangs from its skeletal frame, and a massive greatsword trails ghostly fire."
-    room: portal_chamber
+    room: mob_templates
     tier: boss
     level: 10
-    behavior:
-      template: aggro_guard
+
     drops:
       - itemId: crypt_relic
         chance: 0.8
@@ -82,6 +78,9 @@ rooms:
     description: "A circular stone chamber deep beneath the Hub. Ancient runes circle a shimmering portal that pulses with otherworldly light. A hooded figure stands beside it, ready to guide adventurers into the depths."
     exits:
       u: ambon_hub:hall_of_portals
+  mob_templates:
+    title: "Dungeon Mob Templates"
+    description: "Internal room for dungeon mob template definitions."
 
 dungeon:
   name: "The Sunken Crypt"

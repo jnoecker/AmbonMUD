@@ -43,7 +43,9 @@ class DungeonGenerator(
             if (type == DungeonRoomType.CHAMBER && backboneCount < targetRoomCount - 2 && random.nextDouble() < 0.30) {
                 val branchType = if (random.nextDouble() < 0.4) DungeonRoomType.TREASURE else DungeonRoomType.CORRIDOR
                 val branchIdx = rooms.size
-                rooms.add(makeRoom(branchIdx, branchType, template))
+                val branchRoom = makeRoom(branchIdx, branchType, template)
+                branchRoom.isBackbone = false
+                rooms.add(branchRoom)
                 val branchDir = pickBranchDirection(rooms[idx], dir)
                 linkRooms(rooms, idx, branchIdx, branchDir)
                 backboneCount++ // counts toward total
@@ -56,7 +58,9 @@ class DungeonGenerator(
                     } else {
                         DungeonRoomType.TREASURE
                     }
-                    rooms.add(makeRoom(ext, extType, template))
+                    val extRoom = makeRoom(ext, extType, template)
+                    extRoom.isBackbone = false
+                    rooms.add(extRoom)
                     linkRooms(rooms, branchIdx, ext, backboneDirections[random.nextInt(backboneDirections.size)])
                     backboneCount++
                 }
