@@ -10,31 +10,11 @@
 
 The web client has **near-complete parity** with the text command interface. All core systems — navigation, combat, inventory/equipment, spells, quests, dialogue, shops, chat, mail, crafting, housing, character stats, world features, achievements, titles, emotes, groups, friends, and admin tools — have full GMCP coverage and web UI.
 
-The only remaining gap is **guild management actions** — guild info is displayed but create/invite/promote/demote/kick/leave/disband buttons are missing.
+**All gaps have been resolved.** The web client has complete feature parity with the text command interface.
 
 ---
 
-## 1. Remaining Gaps
-
-### 1.1 Guild Management Actions
-
-**GMCP available:** `Guild.Info`, `Guild.Members`, `Guild.Chat` — all handled.
-**Displayed:** Guild name/tag/rank/MOTD, member list with online status.
-**Missing actions:** Create, invite, accept invite, kick, promote, demote, set MOTD, leave, disband.
-
-**Issue:** [#814](https://github.com/jnoecker/AmbonMUD/issues/814)
-
-### ~~1.2 Group Management Actions~~ — ✅ RESOLVED
-
-All actions implemented in ChatPanel: accept/decline invite, invite form, kick (leader only), leave group.
-
-### ~~1.3 Friends Management Actions~~ — ✅ RESOLVED
-
-All actions implemented in ChatPanel: add friend form, remove with confirmation, click-to-tell.
-
----
-
-## 2. Features with Full Coverage
+## 1. Features with Full Coverage
 
 | Feature | GMCP Packages | Web UI |
 |---------|--------------|--------|
@@ -60,6 +40,7 @@ All actions implemented in ChatPanel: add friend form, remove with confirmation,
 | Who list | `Server.Who` | Structured who list with sorting and click-to-tell |
 | Mail | `Mail.List/Message/Notification` | Mail panel with inbox, message viewer, compose |
 | Crafting | `Crafting.Skills/Recipes/Nodes/Result` | Crafting panel with recipe browser, skill display |
+| Guilds | `Guild.Info/Members/Chat`, `Guild.Invite` | Guild tab with create/invite/accept/promote/demote/kick/MOTD/leave/disband |
 | Groups | `Group.Info`, `Group.Invite` | Group tab with HP/Mana bars, invite/accept/decline/kick/leave |
 | Friends | `Friends.List/Online/Offline` | Friends tab with add/remove/tell, online notifications |
 | Housing | `Housing.Info/Rooms` | Housing panel with room management |
@@ -91,6 +72,7 @@ The following items from the original parity studies have been implemented:
 - ✅ Combat target selector (entity popout)
 - ✅ Mob status effects in battle scene
 - ✅ Entity popout contextual actions (quest giver, shop, dialogue, attack)
+- ✅ Guild management actions (create, invite, accept, promote, demote, kick, MOTD, leave, disband)
 - ✅ Group management actions (accept/decline, invite, kick, leave)
 - ✅ Friends management actions (add, remove with confirmation, click-to-tell)
 - ✅ Command autocomplete and help coverage
