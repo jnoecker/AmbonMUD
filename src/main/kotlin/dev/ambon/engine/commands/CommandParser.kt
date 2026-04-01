@@ -307,6 +307,10 @@ sealed interface Command {
         val skill: String?,
     ) : Command
 
+    // ---- Dungeon commands ----
+
+    data object DungeonLeave : Command
+
     // ---- Sprite commands ----
 
     data object SpriteList : Command
@@ -960,6 +964,7 @@ object CommandParser {
             "gold", "balance", "wealth" -> Command.Balance
             "list", "shop" -> Command.ShopList
             "craftskills", "professions", "prof" -> Command.CraftSkills
+            "dungeon leave", "dungeon exit" -> Command.DungeonLeave
             else -> Command.Unknown(line)
         }
     }
