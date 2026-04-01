@@ -13,6 +13,7 @@ data class WorldFile(
     val quests: Map<String, QuestFile> = emptyMap(),
     val gatheringNodes: Map<String, GatheringNodeFile> = emptyMap(),
     val recipes: Map<String, RecipeFile> = emptyMap(),
+    val dungeon: DungeonFile? = null,
 )
 
 data class ZoneImageDefaults(

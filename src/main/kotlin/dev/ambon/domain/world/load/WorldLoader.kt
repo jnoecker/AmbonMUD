@@ -13,6 +13,12 @@ import dev.ambon.domain.crafting.GatheringYield
 import dev.ambon.domain.crafting.MaterialRequirement
 import dev.ambon.domain.crafting.RareGatheringYield
 import dev.ambon.domain.crafting.RecipeDef
+import dev.ambon.domain.dungeon.DungeonDifficulty
+import dev.ambon.domain.dungeon.DungeonLootTableDef
+import dev.ambon.domain.dungeon.DungeonMobPoolDef
+import dev.ambon.domain.dungeon.DungeonRoomTemplateDef
+import dev.ambon.domain.dungeon.DungeonRoomType
+import dev.ambon.domain.dungeon.DungeonTemplateDef
 import dev.ambon.domain.ids.ItemId
 import dev.ambon.domain.ids.MobId
 import dev.ambon.domain.ids.RoomId
@@ -112,6 +118,7 @@ object WorldLoader {
         val mergedQuests = mutableListOf<QuestDef>()
         val mergedGatheringNodes = mutableListOf<GatheringNodeDef>()
         val mergedRecipes = mutableListOf<RecipeDef>()
+        val mergedDungeonTemplates = mutableListOf<DungeonTemplateDef>()
         val zoneLifespansMinutes = LinkedHashMap<String, Long?>()
         val zoneStartRooms = LinkedHashMap<String, RoomId>()
 
@@ -620,6 +627,57 @@ object WorldLoader {
                     ),
                 )
             }
+
+            // Stage dungeon template (if present)
+            val df = file.dungeon
+            if (df != null) {
+                val dungeonId = qualifyId(zone, "dungeon")
+                val roomTemplates = df.roomTemplates.map { (typeKey, templates) ->
+                    val type = DungeonRoomType.entries.firstOrNull { it.name.equals(typeKey, ignoreCase = true) }
+                        ?: throw WorldLoadException("Dungeon '$dungeonId' unknown room type '$typeKey'")
+                    type to templates.map { rt ->
+                        DungeonRoomTemplateDef(
+                            title = requireNonBlank(rt.title) { "Dungeon '$dungeonId' room template title cannot be blank" },
+                            description = rt.description,
+                            image = rt.image,
+                        )
+                    }
+                }.toMap()
+                if (roomTemplates.isEmpty()) {
+                    throw WorldLoadException("Dungeon '$dungeonId' must have at least one roomTemplates entry")
+                }
+                val mobPools = DungeonMobPoolDef(
+                    common = df.mobPools.common,
+                    elite = df.mobPools.elite,
+                    boss = df.mobPools.boss,
+                )
+                if (mobPools.boss.isEmpty()) {
+                    throw WorldLoadException("Dungeon '$dungeonId' must have at least one boss mob in mobPools")
+                }
+                val lootTables = df.lootTables.map { (diffKey, lt) ->
+                    val diff = DungeonDifficulty.fromName(diffKey)
+                        ?: throw WorldLoadException("Dungeon '$dungeonId' unknown difficulty '$diffKey'")
+                    diff to DungeonLootTableDef(
+                        mobDrops = lt.mobDrops.map { normalizeItemId(zone, it) },
+                        completionRewards = lt.completionRewards.map { normalizeItemId(zone, it) },
+                    )
+                }.toMap()
+                mergedDungeonTemplates.add(
+                    DungeonTemplateDef(
+                        id = dungeonId,
+                        name = df.name,
+                        description = df.description,
+                        image = df.image,
+                        minLevel = df.minLevel,
+                        roomCountMin = df.roomCountMin,
+                        roomCountMax = df.roomCountMax,
+                        roomTemplates = roomTemplates,
+                        mobPools = mobPools,
+                        lootTables = lootTables,
+                        portalRoom = df.portalRoom,
+                    ),
+                )
+            }
         }
 
         // Validate exit targets. Missing targets are logged as warnings and treated
@@ -794,6 +852,7 @@ object WorldLoader {
             questDefinitions = mergedQuests.toList(),
             gatheringNodes = mergedGatheringNodes.toList(),
             recipes = mergedRecipes.toList(),
+            dungeonTemplates = mergedDungeonTemplates.toList(),
         )
     }
 
