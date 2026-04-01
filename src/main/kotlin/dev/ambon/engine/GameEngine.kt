@@ -915,6 +915,8 @@ class GameEngine(
             dev.ambon.engine.commands.handlers.DungeonHandler(
                 ctx = ctx,
                 dungeonManager = dungeonManager,
+                dungeonRegistry = dungeonRegistry,
+                groupSystem = groupSystem,
             ),
             SpriteHandler(
                 ctx = ctx,
@@ -1482,6 +1484,9 @@ class GameEngine(
         mobId: MobId,
         roomId: RoomId,
     ) {
+        // Check if this was a dungeon boss
+        checkDungeonBossKilled(mobId)
+
         // Release any staff player possessing this mob
         adminHandler.releasePossessorOfPublic(mobId)
         mobRemovalCoordinator.onCombatKillCleanup(mobId)
@@ -1563,5 +1568,34 @@ class GameEngine(
     ) {
         questSystem.onMobKilled(sessionId, templateKey)
         achievementSystem.onMobKilled(sessionId, templateKey)
+    }
+
+    private suspend fun checkDungeonBossKilled(mobId: MobId) {
+        val inst = dungeonManager.findInstanceByBossMob(mobId)
+        if (inst == null || inst.completed) return
+        dungeonManager.markComplete(inst)
+        for (sid in inst.members) {
+            outbound.send(
+                OutboundEvent.SendInfo(
+                    sid,
+                    "** The dungeon boss has been defeated! The ${inst.template.name} is complete! **",
+                ),
+            )
+            val lootTable = inst.template.lootTables[inst.difficulty]
+            if (lootTable != null) {
+                for (rewardId in lootTable.completionRewards) {
+                    val item = items.createFromTemplate(rewardId)
+                    if (item != null) {
+                        items.addToInventory(sid, item)
+                        outbound.send(
+                            OutboundEvent.SendInfo(sid, "You receive: ${item.item.displayName}"),
+                        )
+                    }
+                }
+            }
+            outbound.send(
+                OutboundEvent.SendInfo(sid, "Type 'dungeon leave' to return to the portal."),
+            )
+        }
     }
 }
