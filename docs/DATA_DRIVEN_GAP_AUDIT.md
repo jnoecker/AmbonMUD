@@ -1,5 +1,7 @@
 # Data-Driven Gap Audit
 
+> **Status:** Technical improvement backlog. These are code-level constraints that could be data-driven but currently require Kotlin changes. None are bugs or blockers — they represent future extensibility opportunities.
+
 This consolidated audit captures remaining code-level constraints that still require Kotlin changes, even after major systems were moved to configuration.
 
 ---

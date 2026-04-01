@@ -7,10 +7,11 @@ AmbonMUD
 
 **Key Features**
 - 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **102 abilities** across all classes, distributed across 50 levels
-- 🌍 **14 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
+- 🌍 **15 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
 - ⚔️ **Real-time combat system** with attribute-based damage, dodge mechanics, and tactical status effects (DoT, HoT, STUN, ROOT, SHIELD, buffs/debuffs)
 - 🎨 **PixiJS canvas client** with JRPG-style world/battle scenes, spell targeting, customizable quickbar, and a cozy glass-morphism UI
 - 🏠 **Player housing**: personal rooms, furniture placement, vaults with capacity limits, and access control
+- 🏰 **Procedural dungeons**: template-driven instanced dungeons with 4 difficulty tiers, party scaling, boss encounters, and loot tables
 - 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands
 - 🔌 **Dual transports**: telnet (NAWS/TTYPE/GMCP negotiation) + browser WebSocket with GMCP-aware UI panels
 - 📊 **Structured data** (GMCP) — 25+ packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
@@ -29,8 +30,9 @@ AmbonMUD
 - ✅ Quest system, achievement system, group/party system, dialogue trees, NPC behavior trees
 - ✅ Guild system with hierarchy, guild chat, MOTD
 - ✅ Friends list and in-game mail system
-- ✅ Crafting and gathering system
+- ✅ Crafting and gathering with specialization, recipe discovery, quality tiers, and rare yields
 - ✅ Player housing with furniture, vaults, and access control
+- ✅ Procedural dungeons with difficulty scaling and boss encounters
 - ✅ Remember-me auth tokens with character picker
 - ✅ Full production test coverage and CI/CD
 - ✅ Docker image + AWS CDK infrastructure: EC2 demo (~$4-5/mo) and ECS Fargate (topology × tier) options
@@ -124,6 +126,7 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for architectural details and [DEVEL
 - **Mail:** `mail list/read/send/delete`
 - **Crafting:** `gather`, `craft`, `recipes`
 - **Housing:** `house` (info/expand/furnish/describe/invite/kick/lock/unlock)
+- **Dungeons:** `dungeon enter <name> [difficulty]`, `dungeon leave`
 - **Admin:** `goto`, `transfer`, `spawn`, `smite`, `kick`, `shutdown` (requires staff flag)
 
 See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full command list and details.
@@ -138,7 +141,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 
 **World files** live in `src/main/resources/world/` and are loaded by `WorldLoader`. Each YAML file describes one zone; multiple zones are merged into a single world.
 
-**Current Zones (14 zone files):**
+**Current Zones (15 zone files):**
 | Zone | Description |
 |------|-------------|
 | `ambon_hub` | Central hub connecting all zones |
@@ -153,6 +156,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full co
 | `achievements` | Achievement trigger zone |
 | `celestial_sanctum` | High-level zone |
 | `crafting_workshop` | Crafting and gathering zone |
+| `sunken_crypt` | Procedural dungeon: The Sunken Crypt (portal + mob templates) |
 | `player_sprites` | Player sprite data for the canvas client |
 | `sprites` | Achievement sprite definitions |
 
@@ -336,6 +340,7 @@ AmbonMUD's visual identity is **Surreal Gentle Magic** — a cozy fantasy aesthe
 
 **Gameplay Systems**
 - [docs/CRAFTING.md](docs/CRAFTING.md) — Crafting & gathering system reference
+- [docs/DUNGEON_TEMPLATE_REFERENCE.md](docs/DUNGEON_TEMPLATE_REFERENCE.md) — Procedural dungeon template format and creation guide
 - [docs/FRIENDS_MAIL.md](docs/FRIENDS_MAIL.md) — Friends list and in-game mail
 
 **Developer Resources**

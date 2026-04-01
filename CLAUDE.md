@@ -126,7 +126,8 @@ Sessions
 - **Guilds:** Guild (Create, Disband, Invite, Accept, Leave, Kick, Promote, Demote, Motd, Roster, Info), Gchat
 - **Friends:** Friend (List, Add, Remove)
 - **Mail:** Mail (List, Read, Delete, Send, Abort)
-- **Crafting:** Gather, Craft, Recipes
+- **Crafting:** Gather, Craft, Recipes, Specialize
+- **Dungeons:** DungeonEnter, DungeonLeave
 - **Sharding:** Phase (instance switching)
 - **Staff:** Goto, Transfer, Spawn, Smite, Kick, Shutdown
 - **Utility:** Help, Clear, Colors, Who, AnsiOn, AnsiOff
@@ -160,6 +161,8 @@ Sessions
 | `dev.ambon.engine.status` | Status effects | `StatusEffectSystem.kt` (13K), `StatusEffectRegistry.kt`, `StatusEffectRegistryLoader.kt`, `StatusEffectDefinition.kt`, `ActiveEffect.kt` |
 | `dev.ambon.engine.behavior` | Mob behavior trees | `BehaviorTreeSystem.kt`, `BtNode.kt`, `BtResult.kt`, `BtContext.kt`, `BehaviorTemplates.kt`, `MobBehaviorMemory.kt`; nodes/conditions/actions subdirs |
 | `dev.ambon.engine.dialogue` | NPC dialogue | `DialogueSystem.kt`, `DialogueTree.kt` |
+| `dev.ambon.engine.dungeon` | Procedural dungeons | `DungeonManager.kt`, `DungeonGenerator.kt`, `DungeonRegistry.kt`, `DungeonLayout.kt`, `DungeonInstance.kt` |
+| `dev.ambon.domain.dungeon` | Dungeon domain model | `DungeonTemplateDef.kt`, `DungeonDifficulty.kt`, `CraftingQuality.kt` |
 | `dev.ambon.engine.items` | Item management | `ItemRegistry.kt` (17K), `ItemMatching.kt` |
 | `dev.ambon.domain.sprite` | Sprite domain model | `SpriteDefinition.kt` (SpriteDefinition, SpriteVariant, SpriteCategory, SpriteUnlockCondition) |
 | `dev.ambon.engine.scheduler` | Delayed actions | `Scheduler.kt` |
@@ -167,7 +170,7 @@ Sessions
 | `dev.ambon.bus` | Event bus abstractions | `InboundBus.kt`, `OutboundBus.kt` (interfaces); `Local*Bus.kt`, `Redis*Bus.kt`, `Grpc*Bus.kt` (impls); `DepthTrackingChannel.kt` |
 | `dev.ambon.domain` | Domain model | `PlayerClass.kt`, `Race.kt`; sub-packages: `ids/`, `items/`, `mob/`, `quest/`, `achievement/`, `world/` |
 | `dev.ambon.domain.world` | World model | `Room.kt`, `Direction.kt`, `World.kt`, `WorldFactory.kt`, `ShopDefinition.kt`, `MobSpawn.kt`, `ItemSpawn.kt`, `MobDrop.kt` |
-| `dev.ambon.domain.world.data` | YAML DTOs | `WorldFile.kt`, `RoomFile.kt`, `MobFile.kt`, `ItemFile.kt`, `ShopFile.kt`, `MobDropFile.kt`, `BehaviorFile.kt`, `DialogueNodeFile.kt`, `QuestFile.kt` |
+| `dev.ambon.domain.world.data` | YAML DTOs | `WorldFile.kt`, `RoomFile.kt`, `MobFile.kt`, `ItemFile.kt`, `ShopFile.kt`, `MobDropFile.kt`, `BehaviorFile.kt`, `DialogueNodeFile.kt`, `QuestFile.kt`, `DungeonFile.kt` |
 | `dev.ambon.domain.world.load` | World loading | `WorldLoader.kt` (30K, YAML parsing + validation) |
 | `dev.ambon.persistence` | Player + guild persistence | `PlayerRepository.kt` (interface), `PlayerRecord.kt`, `PlayerCreationRequest.kt`; `WriteCoalescingPlayerRepository.kt`, `RedisCachingPlayerRepository.kt`, `YamlPlayerRepository.kt`, `PostgresPlayerRepository.kt`, `PlayersTable.kt`, `DatabaseManager.kt`, `PersistenceWorker.kt`, `StringCache.kt`; `GuildRepository.kt` (interface), `YamlGuildRepository.kt`, `PostgresGuildRepository.kt`, `GuildsTable.kt` |
 | `dev.ambon.transport` | Network I/O | `Transport.kt`, `BlockingSocketTransport.kt` (telnet), `KtorWebSocketTransport.kt` (13K, WebSocket), `NetworkSession.kt` (12K), `OutboundRouter.kt` (9K), `AnsiRenderer.kt`, `PlainRenderer.kt`, `TelnetLineDecoder.kt` (6K) |
@@ -186,7 +189,7 @@ Sessions
 |------|-------|
 | Default config | `src/main/resources/application.yaml` |
 | Multi-instance profiles | `src/main/resources/application-{engine1,engine2,gw1,gw2}.yaml` |
-| World zones (14 YAML files) | `src/main/resources/world/` (ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth, celestial_sanctum, crafting_workshop, player_sprites, sprites) |
+| World zones (15 YAML files) | `src/main/resources/world/` (ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth, celestial_sanctum, crafting_workshop, sunken_crypt, player_sprites, sprites) |
 | Login banner + styles | `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml` |
 | Flyway migrations | `src/main/resources/db/migration/` (V1–V19: players table through guilds, crafting, friends, mail, sprites, and more) |
 | Proto definitions | `src/main/proto/ambonmud/v1/engine_service.proto`, `events.proto` |
@@ -195,6 +198,7 @@ Sessions
 | Ability sprites | `src/main/resources/world/images/abilities/` (102 PNGs) |
 | Compass/direction sprites | `src/main/resources/world/images/global_assets/` |
 | World YAML format spec | `docs/WORLD_YAML_SPEC.md` |
+| Dungeon template reference | `docs/DUNGEON_TEMPLATE_REFERENCE.md` |
 | Runtime player saves | `data/players/` (git-ignored, do not commit) |
 
 ### Tests (~118 test files)
@@ -209,7 +213,8 @@ Sessions
 | Dialogue/quests/achievements | `DialogueSystemTest` (14K), `QuestSystemTest` (13K), `AchievementSystemTest` (20K) | NPC conversations, quest tracking |
 | Groups | `GroupSystemTest` (15K) | Party invite/leave/kick, XP sharing |
 | Guilds | `GuildSystemTest` | Guild create/disband/invite/promote/demote, MOTD, roster |
-| Crafting | `CraftingSystemTest` | Gather, craft, recipe validation |
+| Crafting | `CraftingSystemTest` | Gather, craft, recipe validation, specialization, quality, discovery |
+| Dungeons | `DungeonGeneratorTest`, `DungeonManagerTest` | Layout generation, instance lifecycle, scaling, boss detection |
 | Friends/Mail | `FriendsSystemTest`, `MailHandlerTest` | Friend list management, mail send/read/delete |
 | Persistence | `YamlPlayerRepositoryTest`, `PostgresPlayerRepositoryTest`, `RedisCachingPlayerRepositoryTest`, `WriteCoalescingPlayerRepositoryTest`, `PersistenceWorkerTest` | Atomic writes, H2 Postgres mode, cache layers |
 | Bus | `LocalInboundBusTest`, `LocalOutboundBusTest`, `RedisInboundBusTest`, `RedisOutboundBusTest`, `GrpcInboundBusTest`, `GrpcOutboundBusTest` | All bus variants |

@@ -1,5 +1,7 @@
 # AmbonMUD Creator — Design Plan
 
+> **Status:** The Ambon Arcanum desktop application is complete and available as a standalone tool. This document is the original design plan, preserved as architectural reference.
+
 A desktop application that owns and manages a local AmbonMUD installation. You point it at the AmbonMUD project directory and it becomes the single tool for configuring, running, and monitoring the server.
 
 ---
