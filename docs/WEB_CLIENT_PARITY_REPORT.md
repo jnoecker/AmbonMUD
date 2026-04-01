@@ -8,9 +8,9 @@
 
 ## Executive Summary
 
-The web client has **near-complete parity** with the text command interface. All core systems — navigation, combat, inventory/equipment, spells, quests, dialogue, shops, chat, mail, crafting, housing, character stats, world features, achievements, titles, emotes, and admin tools — have full GMCP coverage and web UI.
+The web client has **near-complete parity** with the text command interface. All core systems — navigation, combat, inventory/equipment, spells, quests, dialogue, shops, chat, mail, crafting, housing, character stats, world features, achievements, titles, emotes, groups, friends, and admin tools — have full GMCP coverage and web UI.
 
-Remaining gaps are limited to **management actions** for social systems (guilds, groups, friends) where data display exists but some action buttons are missing.
+The only remaining gap is **guild management actions** — guild info is displayed but create/invite/promote/demote/kick/leave/disband buttons are missing.
 
 ---
 
@@ -24,21 +24,13 @@ Remaining gaps are limited to **management actions** for social systems (guilds,
 
 **Issue:** [#814](https://github.com/jnoecker/AmbonMUD/issues/814)
 
-### 1.2 Group Management Actions
+### ~~1.2 Group Management Actions~~ — ✅ RESOLVED
 
-**GMCP available:** `Group.Info` — shows member HP/Mana bars.
-**Displayed:** Group tab with leader + members + vitals. Invite available via entity popout.
-**Missing actions:** Accept/decline invite, leave, kick.
+All actions implemented in ChatPanel: accept/decline invite, invite form, kick (leader only), leave group.
 
-**Issue:** [#815](https://github.com/jnoecker/AmbonMUD/issues/815)
+### ~~1.3 Friends Management Actions~~ — ✅ RESOLVED
 
-### 1.3 Friends Management Actions
-
-**GMCP available:** `Friends.List`, `Friends.Online`, `Friends.Offline` — all handled.
-**Displayed:** Friends tab with online/offline status, level, zone. Add available via entity popout.
-**Missing actions:** Remove friend, click-to-tell.
-
-**Issue:** [#816](https://github.com/jnoecker/AmbonMUD/issues/816)
+All actions implemented in ChatPanel: add friend form, remove with confirmation, click-to-tell.
 
 ---
 
@@ -68,6 +60,8 @@ Remaining gaps are limited to **management actions** for social systems (guilds,
 | Who list | `Server.Who` | Structured who list with sorting and click-to-tell |
 | Mail | `Mail.List/Message/Notification` | Mail panel with inbox, message viewer, compose |
 | Crafting | `Crafting.Skills/Recipes/Nodes/Result` | Crafting panel with recipe browser, skill display |
+| Groups | `Group.Info`, `Group.Invite` | Group tab with HP/Mana bars, invite/accept/decline/kick/leave |
+| Friends | `Friends.List/Online/Offline` | Friends tab with add/remove/tell, online notifications |
 | Housing | `Housing.Info/Rooms` | Housing panel with room management |
 | Phase/instances | `Zone.Instances` | Instance selector in action bar |
 | Admin/Staff tools | `Staff.WorldInfo` | Admin panel with zone/room browser, teleport |
@@ -97,6 +91,8 @@ The following items from the original parity studies have been implemented:
 - ✅ Combat target selector (entity popout)
 - ✅ Mob status effects in battle scene
 - ✅ Entity popout contextual actions (quest giver, shop, dialogue, attack)
+- ✅ Group management actions (accept/decline, invite, kick, leave)
+- ✅ Friends management actions (add, remove with confirmation, click-to-tell)
 - ✅ Command autocomplete and help coverage
 - ✅ Command-parity CI check
 - ✅ GMCP contract tests
