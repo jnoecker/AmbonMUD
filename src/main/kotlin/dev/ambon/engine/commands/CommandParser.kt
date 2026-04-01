@@ -303,6 +303,10 @@ sealed interface Command {
 
     data object CraftSkills : Command
 
+    data class Specialize(
+        val skill: String?,
+    ) : Command
+
     // ---- Sprite commands ----
 
     data object SpriteList : Command
@@ -915,6 +919,10 @@ object CommandParser {
             ?.let { return it }
         matchPrefix(line, listOf("recipes", "recipe")) { rest ->
             Command.Recipes(rest.takeIf { it.isNotBlank() })
+        }?.let { return it }
+
+        matchPrefix(line, listOf("specialize", "specialise", "spec")) { rest ->
+            Command.Specialize(rest.takeIf { it.isNotBlank() })
         }?.let { return it }
 
         // reload [world|abilities|effects|all]
