@@ -125,9 +125,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 
 ## Web Client Parity
 
-See [WEB_CLIENT_PARITY_REPORT.md](./WEB_CLIENT_PARITY_REPORT.md) for the full audit. Nearly all gaps have been resolved. Remaining work:
-
-**UI management gaps:** Guild management actions (invite/kick/promote/demote/create/disband UI), group management actions (accept/leave/kick), friends management actions (remove, click-to-tell).
+See [WEB_CLIENT_PARITY_REPORT.md](./WEB_CLIENT_PARITY_REPORT.md) for the full audit. **All gaps have been resolved** — the web client has complete feature parity with the text command interface.
 
 ---
 
