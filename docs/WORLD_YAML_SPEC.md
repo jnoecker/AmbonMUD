@@ -8,7 +8,7 @@ It is written for code generators that need to emit valid zone files.
 - One YAML document describes one zone file.
 - Multiple zone files can be merged into one world.
 - YAML files are deserialized into:
-  - `WorldFile` (`zone`, `lifespan`, `startRoom`, `rooms`, `mobs`, `items`, `shops`, `gatheringNodes`, `recipes`)
+  - `WorldFile` (`zone`, `lifespan`, `startRoom`, `rooms`, `mobs`, `items`, `shops`, `gatheringNodes`, `recipes`, `dungeon`)
   - `RoomFile`
   - `MobFile`
   - `MobDropFile`
@@ -16,6 +16,7 @@ It is written for code generators that need to emit valid zone files.
   - `ShopFile`
   - `GatheringNodeFile`
   - `RecipeFile`
+  - `DungeonFile` (procedural dungeon template — see [DUNGEON_TEMPLATE_REFERENCE.md](DUNGEON_TEMPLATE_REFERENCE.md))
 
 ## Top-Level Schema
 
