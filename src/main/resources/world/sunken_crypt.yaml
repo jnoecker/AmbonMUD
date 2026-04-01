@@ -31,7 +31,8 @@ mobs:
     room: portal_chamber
     tier: standard
     level: 5
-    aggressive: true
+    behavior:
+      template: aggro_guard
     drops:
       - itemId: bone_fragment
         chance: 0.3
@@ -43,7 +44,8 @@ mobs:
     room: portal_chamber
     tier: weak
     level: 4
-    aggressive: true
+    behavior:
+      template: aggro_guard
     drops:
       - itemId: crypt_dust
         chance: 0.2
@@ -53,7 +55,8 @@ mobs:
     room: portal_chamber
     tier: elite
     level: 8
-    aggressive: true
+    behavior:
+      template: aggro_guard
     drops:
       - itemId: bone_fragment
         chance: 0.5
@@ -65,7 +68,8 @@ mobs:
     room: portal_chamber
     tier: boss
     level: 10
-    aggressive: true
+    behavior:
+      template: aggro_guard
     drops:
       - itemId: crypt_relic
         chance: 0.8
