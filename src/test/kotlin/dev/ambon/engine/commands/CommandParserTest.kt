@@ -316,6 +316,11 @@ class CommandParserTest {
     }
 
     @Test
+    fun `parses time command`() {
+        assertEquals(Command.Time, CommandParser.parse("time"))
+    }
+
+    @Test
     fun `parses shop list aliases`() {
         assertEquals(Command.ShopList, CommandParser.parse("list"))
         assertEquals(Command.ShopList, CommandParser.parse("shop"))
