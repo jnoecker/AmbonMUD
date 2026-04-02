@@ -12,7 +12,7 @@ import dev.ambon.engine.events.OutboundEvent
 
 class ReputationHandler(
     ctx: EngineContext,
-    private val reputationSystem: ReputationSystem? = null,
+    private val reputationSystem: ReputationSystem,
 ) : CommandHandler {
     private val players = ctx.players
     private val outbound = ctx.outbound
@@ -23,15 +23,9 @@ class ReputationHandler(
     }
 
     private suspend fun handleReputation(sessionId: SessionId) {
-        val rep = reputationSystem
-        if (rep == null) {
-            outbound.send(OutboundEvent.SendInfo(sessionId, "Factions are not available."))
-            return
-        }
-
         players.withPlayer(sessionId) { me ->
-            val standings = rep.allStandings(me)
-            val definitions = rep.factionDefinitions()
+            val standings = reputationSystem.allStandings(me)
+            val definitions = reputationSystem.factionDefinitions()
 
             if (definitions.isEmpty()) {
                 outbound.send(OutboundEvent.SendInfo(sessionId, "No factions exist in this world."))
@@ -56,17 +50,16 @@ class ReputationHandler(
                 )
             }
 
-            emitFactions(sessionId, me, rep)
+            emitFactions(sessionId, me)
         }
     }
 
     internal suspend fun emitFactions(
         sessionId: SessionId,
         player: dev.ambon.engine.PlayerState,
-        rep: ReputationSystem,
     ) {
-        val definitions = rep.factionDefinitions()
-        val standings = rep.allStandings(player)
+        val definitions = reputationSystem.factionDefinitions()
+        val standings = reputationSystem.allStandings(player)
         val payload = standings.map { (factionId, reputation) ->
             val def = definitions[factionId]
             GmcpEmitter.FactionStandingPayload(

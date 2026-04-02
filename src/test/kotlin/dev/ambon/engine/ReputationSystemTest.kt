@@ -93,12 +93,13 @@ class ReputationSystemTest {
         @Test
         fun `tier for various reputation values`() {
             assertEquals(StandingTier.NEUTRAL, StandingTier.forReputation(0))
+            assertEquals(StandingTier.NEUTRAL, StandingTier.forReputation(-100))
             assertEquals(StandingTier.FRIENDLY, StandingTier.forReputation(100))
             assertEquals(StandingTier.HONORED, StandingTier.forReputation(500))
             assertEquals(StandingTier.REVERED, StandingTier.forReputation(1000))
-            assertEquals(StandingTier.UNFRIENDLY, StandingTier.forReputation(-100))
-            assertEquals(StandingTier.HOSTILE, StandingTier.forReputation(-500))
-            assertEquals(StandingTier.HATED, StandingTier.forReputation(-1000))
+            assertEquals(StandingTier.UNFRIENDLY, StandingTier.forReputation(-500))
+            assertEquals(StandingTier.HOSTILE, StandingTier.forReputation(-1000))
+            assertEquals(StandingTier.HATED, StandingTier.forReputation(-1001))
         }
     }
 
