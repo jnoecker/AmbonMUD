@@ -41,8 +41,8 @@ class SpriteRegistry {
         level: Int,
         unlockedAchievementIds: Set<String>,
         isStaff: Boolean,
-        playerRace: String = "",
-        playerClass: String = "",
+        playerRace: String,
+        playerClass: String,
     ): List<SpriteDefinition> = definitions.values.filter {
         isUnlocked(it, level, unlockedAchievementIds, isStaff, playerRace, playerClass)
     }
@@ -154,8 +154,8 @@ class SpriteRegistry {
             level: Int,
             unlockedAchievementIds: Set<String>,
             isStaff: Boolean,
-            playerRace: String = "",
-            playerClass: String = "",
+            playerRace: String,
+            playerClass: String,
         ): Boolean {
             if (def.requirements.isNotEmpty()) {
                 return def.requirements.all { req ->

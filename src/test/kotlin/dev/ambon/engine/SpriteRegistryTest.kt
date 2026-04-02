@@ -120,52 +120,52 @@ class SpriteRegistryTest {
 
     // ── Unlock conditions ─────────────────────────────────────────────────
 
+    private fun unlocked(
+        level: Int = 1,
+        achievements: Set<String> = emptySet(),
+        isStaff: Boolean = false,
+        race: String = "HUMAN",
+        cls: String = "WARRIOR",
+    ) = registry.unlockedDefinitions(level, achievements, isStaff, race, cls)
+
     @Test
     fun `level unlock - meets threshold`() {
         registry.register(tierApprentice)
-        val unlocked = registry.unlockedDefinitions(level = 10, unlockedAchievementIds = emptySet(), isStaff = false)
-        assertEquals(1, unlocked.size)
-        assertEquals("tier_apprentice", unlocked[0].id)
+        val result = unlocked(level = 10)
+        assertEquals(1, result.size)
+        assertEquals("tier_apprentice", result[0].id)
     }
 
     @Test
     fun `level unlock - below threshold`() {
         registry.register(tierApprentice)
-        val unlocked = registry.unlockedDefinitions(level = 9, unlockedAchievementIds = emptySet(), isStaff = false)
-        assertTrue(unlocked.isEmpty())
+        assertTrue(unlocked(level = 9).isEmpty())
     }
 
     @Test
     fun `achievement unlock - has achievement`() {
         registry.register(achievementSprite)
-        val unlocked = registry.unlockedDefinitions(
-            level = 1,
-            unlockedAchievementIds = setOf("combat/beetle_exterminator"),
-            isStaff = false,
-        )
-        assertEquals(1, unlocked.size)
-        assertEquals("beetle_slayer", unlocked[0].id)
+        val result = unlocked(achievements = setOf("combat/beetle_exterminator"))
+        assertEquals(1, result.size)
+        assertEquals("beetle_slayer", result[0].id)
     }
 
     @Test
     fun `achievement unlock - missing achievement`() {
         registry.register(achievementSprite)
-        val unlocked = registry.unlockedDefinitions(level = 1, unlockedAchievementIds = emptySet(), isStaff = false)
-        assertTrue(unlocked.isEmpty())
+        assertTrue(unlocked().isEmpty())
     }
 
     @Test
     fun `staff unlock - is staff`() {
         registry.register(staffSprite)
-        val unlocked = registry.unlockedDefinitions(level = 1, unlockedAchievementIds = emptySet(), isStaff = true)
-        assertEquals(1, unlocked.size)
+        assertEquals(1, unlocked(isStaff = true).size)
     }
 
     @Test
     fun `staff unlock - not staff`() {
         registry.register(staffSprite)
-        val unlocked = registry.unlockedDefinitions(level = 1, unlockedAchievementIds = emptySet(), isStaff = false)
-        assertTrue(unlocked.isEmpty())
+        assertTrue(unlocked().isEmpty())
     }
 
     // ── Available variants (unlock + player match) ───────────────────────

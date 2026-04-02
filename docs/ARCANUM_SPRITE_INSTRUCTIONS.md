@@ -76,12 +76,12 @@ New sprites use a **requirements list** with AND logic — all requirements must
 ```yaml
   dragon_slayer:
     displayName: "Dragon Slayer"
-    description: "Slew the great wyrm."
+    description: "Defeated the ancient golem in single combat."
     category: general
     sortOrder: 300
     requirements:
       - type: achievement
-        achievementId: combat/dragon_kill
+        achievementId: combat/secret_slayer
       - type: minLevel
         level: 20
     image: player_sprites/dragon_slayer.png
@@ -174,7 +174,7 @@ New sprites should use `requirements` instead.
 | Elven Arcanist | race: ELF, class: MAGE, level 30+ | 200 |
 | Dwarven Bulwark | race: DWARF, class: WARRIOR, level 30+ | 200 |
 | Twilight Wanderer | level 40+ | 250 |
-| Dragon Slayer | achievement: combat/dragon_kill, level 20+ | 300 |
+| Dragon Slayer | achievement: combat/secret_slayer, level 20+ | 300 |
 
 ### Legacy sprites (still loaded)
 

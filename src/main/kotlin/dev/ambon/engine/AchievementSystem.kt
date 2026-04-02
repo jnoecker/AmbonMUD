@@ -241,9 +241,10 @@ class AchievementSystem(
                 level = ps.level,
                 unlockedAchievementIds = ps.unlockedAchievementIds,
                 isStaff = ps.isStaff,
-            ).filter {
-                it.unlockCondition is dev.ambon.domain.sprite.SpriteUnlockCondition.Achievement &&
-                    (it.unlockCondition as dev.ambon.domain.sprite.SpriteUnlockCondition.Achievement).achievementId == achievementId
+                playerRace = ps.race,
+                playerClass = ps.playerClass,
+            ).filter { def ->
+                def.isUnlockedByAchievement(achievementId)
             }
             for (spriteDef in newSprites) {
                 outbound.send(
