@@ -21,7 +21,16 @@ data class SpriteDefinition(
     val requirements: List<SpriteRequirement> = emptyList(),
     val sortOrder: Int = 0,
     val variants: List<SpriteVariant>,
-)
+) {
+    /** Returns true if this sprite is unlocked (in part) by the given achievement. */
+    fun isUnlockedByAchievement(achievementId: String): Boolean {
+        if (requirements.isNotEmpty()) {
+            return requirements.any { it is SpriteRequirement.Achievement && it.achievementId == achievementId }
+        }
+        return unlockCondition is SpriteUnlockCondition.Achievement &&
+            (unlockCondition as SpriteUnlockCondition.Achievement).achievementId == achievementId
+    }
+}
 
 enum class SpriteCategory {
     TIER,

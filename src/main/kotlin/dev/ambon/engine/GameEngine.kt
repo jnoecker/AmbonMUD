@@ -1692,6 +1692,8 @@ class GameEngine(
             level = player.level,
             unlockedAchievementIds = player.unlockedAchievementIds,
             isStaff = player.isStaff,
+            playerRace = player.race,
+            playerClass = player.playerClass,
         )
         // Only notify if there are more sprites than just the one they have selected
         if (tierDefs.size > 1) {
