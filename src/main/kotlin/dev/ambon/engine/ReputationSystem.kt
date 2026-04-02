@@ -6,30 +6,25 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val log = KotlinLogging.logger {}
 
-/** Standing tier for display purposes. */
+/** Standing tier for display purposes. [minRep] is the inclusive lower bound. */
 enum class StandingTier(
     val displayName: String,
     val minRep: Int,
 ) {
-    HATED("Hated", -1000),
-    HOSTILE("Hostile", -500),
-    UNFRIENDLY("Unfriendly", -100),
-    NEUTRAL("Neutral", -99),
+    HATED("Hated", Int.MIN_VALUE),
+    HOSTILE("Hostile", -1000),
+    UNFRIENDLY("Unfriendly", -500),
+    NEUTRAL("Neutral", -100),
     FRIENDLY("Friendly", 100),
     HONORED("Honored", 500),
     REVERED("Revered", 1000),
     ;
 
     companion object {
-        fun forReputation(rep: Int): StandingTier = when {
-            rep >= 1000 -> REVERED
-            rep >= 500 -> HONORED
-            rep >= 100 -> FRIENDLY
-            rep > -100 -> NEUTRAL
-            rep > -500 -> UNFRIENDLY
-            rep > -1000 -> HOSTILE
-            else -> HATED
-        }
+        private val descending = entries.sortedByDescending { it.minRep }
+
+        fun forReputation(rep: Int): StandingTier =
+            descending.first { rep >= it.minRep }
     }
 }
 

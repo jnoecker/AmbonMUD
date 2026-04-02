@@ -379,6 +379,16 @@ data class AppConfig(
             }
         }
 
+        // Validate faction enemy cross-references
+        val factionIds = engine.factions.definitions.keys
+        for ((factionId, def) in engine.factions.definitions) {
+            for (enemyId in def.enemies) {
+                if (enemyId !in factionIds) {
+                    warnConfig("faction '$factionId' references enemy '$enemyId' which is not defined in factions.definitions")
+                }
+            }
+        }
+
         return this
     }
 }
