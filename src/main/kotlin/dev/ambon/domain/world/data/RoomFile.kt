@@ -15,6 +15,8 @@ data class RoomFile(
     val features: Map<String, FeatureFile> = emptyMap(),
     /** Crafting station type available in this room (e.g. "forge", "alchemy_table", "workbench"). */
     val station: String? = null,
+    /** True if this room has a bank NPC (enables deposit/withdraw commands). */
+    val bank: Boolean = false,
     /** URL to an image representing this room. */
     val image: String? = null,
     /** URL to a video cinematic for this room. */

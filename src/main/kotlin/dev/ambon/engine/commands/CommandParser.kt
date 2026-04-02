@@ -142,6 +142,28 @@ sealed interface Command {
 
     data object Enchantments : Command
 
+    // ---- Bank commands ----
+
+    sealed interface Bank : Command {
+        data class DepositGold(
+            val amount: Long,
+        ) : Bank
+
+        data class DepositItem(
+            val keyword: String,
+        ) : Bank
+
+        data class WithdrawGold(
+            val amount: Long,
+        ) : Bank
+
+        data class WithdrawItem(
+            val keyword: String,
+        ) : Bank
+
+        data object Balance : Bank
+    }
+
     data object Inventory : Command
 
     data object Equipment : Command
@@ -731,6 +753,18 @@ object CommandParser {
             Command.Enchantments
         }?.let { return it }
 
+        matchPrefix(line, listOf("deposit")) { rest ->
+            parseDepositWithdraw(rest.trim(), isDeposit = true)
+        }?.let { return it }
+
+        matchPrefix(line, listOf("withdraw")) { rest ->
+            parseDepositWithdraw(rest.trim(), isDeposit = false)
+        }?.let { return it }
+
+        matchPrefix(line, listOf("bank")) { _ ->
+            Command.Bank.Balance
+        }?.let { return it }
+
         matchPrefix(line, listOf("whisper", "wh")) { rest ->
             val parts = rest.split(Regex("\\s+"), limit = 2)
             if (parts.size < 2) return@matchPrefix Command.Invalid(line, "whisper <target> <msg>")
@@ -1203,4 +1237,24 @@ object CommandParser {
             "d", "down" -> Direction.DOWN
             else -> null
         }
+
+    private fun parseDepositWithdraw(rest: String, isDeposit: Boolean): Command {
+        if (rest.isEmpty()) {
+            val verb = if (isDeposit) "deposit" else "withdraw"
+            return Command.Invalid("$verb", "$verb <amount> gold | $verb <item>")
+        }
+        // Check for "<amount> gold" pattern
+        val goldMatch = Regex("^(\\d+)\\s+gold$", RegexOption.IGNORE_CASE).find(rest)
+        if (goldMatch != null) {
+            val amount = goldMatch.groupValues[1].toLongOrNull() ?: 0L
+            return if (isDeposit) Command.Bank.DepositGold(amount) else Command.Bank.WithdrawGold(amount)
+        }
+        // Check for "all gold"
+        if (rest.equals("all gold", ignoreCase = true)) {
+            val amount = Long.MAX_VALUE // sentinel for "all"
+            return if (isDeposit) Command.Bank.DepositGold(amount) else Command.Bank.WithdrawGold(amount)
+        }
+        // Otherwise treat as item keyword
+        return if (isDeposit) Command.Bank.DepositItem(rest) else Command.Bank.WithdrawItem(rest)
+    }
 }

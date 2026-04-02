@@ -61,6 +61,8 @@ object PlayersTable : Table("players") {
     val craftingSpecialization = varchar("crafting_specialization", 64).nullable()
     val factionStandings = text("faction_standings").default("{}")
     val friendsList = text("friends_list").default("[]")
+    val bankGold = long("bank_gold").default(0L)
+    val bankItems = text("bank_items").default("[]")
     val inventoryItems = text("inventory_items").default("[]")
     val equippedItems = text("equipped_items").default("{}")
     val activeSprite = varchar("active_sprite", 100).nullable()
@@ -103,6 +105,8 @@ object PlayersTable : Table("players") {
             craftingSpecialization = row[craftingSpecialization],
             factionStandings = safeReadJson(row[factionStandings], factionStandingsType, emptyMap()),
             friendsList = safeReadJson(row[friendsList], friendsListType, emptySet()),
+            bankGold = row[bankGold],
+            bankItems = safeReadJson(row[bankItems], inventoryItemsType, emptyList()),
             inventoryItems = safeReadJson(row[inventoryItems], inventoryItemsType, emptyList()),
             equippedItems = safeReadJson(row[equippedItems], equippedItemsType, emptyMap()),
             activeSprite = row[activeSprite],
@@ -144,6 +148,8 @@ object PlayersTable : Table("players") {
         statement[craftingSpecialization] = record.craftingSpecialization
         statement[factionStandings] = jsonMapper.writeValueAsString(record.factionStandings)
         statement[friendsList] = jsonMapper.writeValueAsString(record.friendsList)
+        statement[bankGold] = record.bankGold
+        statement[bankItems] = jsonMapper.writeValueAsString(record.bankItems)
         statement[inventoryItems] = jsonMapper.writeValueAsString(record.inventoryItems)
         statement[equippedItems] = jsonMapper.writeValueAsString(record.equippedItems)
         statement[activeSprite] = record.activeSprite

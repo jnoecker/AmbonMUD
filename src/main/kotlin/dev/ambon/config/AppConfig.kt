@@ -389,6 +389,8 @@ data class AppConfig(
             require(tmpl.armor >= 0) { "ambonMUD.engine.pets.definitions.$key.armor must be >= 0" }
         }
 
+        require(engine.bank.maxItems > 0) { "ambonMUD.engine.bank.maxItems must be > 0" }
+
         // Validate enchantment definitions
         require(engine.enchanting.maxEnchantmentsPerItem > 0) {
             "ambonMUD.engine.enchanting.maxEnchantmentsPerItem must be > 0"
@@ -491,6 +493,10 @@ data class PetTemplateConfig(
 
 data class PetConfig(
     val definitions: Map<String, PetTemplateConfig> = emptyMap(),
+)
+
+data class BankConfig(
+    val maxItems: Int = 50,
 )
 
 data class EnchantmentDefinition(
@@ -858,6 +864,7 @@ data class EngineConfig(
     val factions: FactionConfig = FactionConfig(),
     val pets: PetConfig = PetConfig(),
     val enchanting: EnchantingConfig = EnchantingConfig(),
+    val bank: BankConfig = BankConfig(),
     val friends: FriendsConfig = FriendsConfig(),
     val debug: EngineDebugConfig = EngineDebugConfig(),
     val classes: ClassEngineConfig = ClassEngineConfig(),

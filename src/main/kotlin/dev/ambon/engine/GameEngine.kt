@@ -21,6 +21,7 @@ import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.handlers.AdminHandler
 import dev.ambon.engine.commands.handlers.AuctionHandler
+import dev.ambon.engine.commands.handlers.BankHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.CraftingHandler
@@ -970,6 +971,11 @@ class GameEngine(
             EnchantHandler(
                 ctx = ctx,
                 enchantSystem = enchantSystem,
+            ),
+            BankHandler(
+                ctx = ctx,
+                bankConfig = engineConfig.bank,
+                markVitalsDirty = ::markVitalsDirty,
             ),
             DialogueQuestHandler(
                 ctx = ctx,
