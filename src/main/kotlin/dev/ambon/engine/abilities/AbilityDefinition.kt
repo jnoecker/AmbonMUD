@@ -30,6 +30,11 @@ sealed interface AbilityEffect {
         val flatThreat: Double,
         val margin: Double,
     ) : AbilityEffect
+
+    data class SummonPet(
+        val petTemplateKey: String,
+        val durationMs: Long = 0L,
+    ) : AbilityEffect
 }
 
 fun AbilityEffect.toEffectType(): String = when (this) {
@@ -38,6 +43,7 @@ fun AbilityEffect.toEffectType(): String = when (this) {
     is AbilityEffect.ApplyStatus -> "APPLY_STATUS"
     is AbilityEffect.AreaDamage -> "AREA_DAMAGE"
     is AbilityEffect.Taunt -> "TAUNT"
+    is AbilityEffect.SummonPet -> "SUMMON_PET"
 }
 
 data class AbilityDefinition(

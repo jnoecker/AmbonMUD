@@ -4,6 +4,91 @@ This document summarizes YAML and configuration changes from recent features tha
 
 ---
 
+## Pet / Companion System (application.yaml)
+
+New config section under `ambonmud.engine.pets`:
+
+```yaml
+ambonmud:
+  engine:
+    pets:
+      definitions:
+        fire_familiar:
+          name: "a fire familiar"
+          description: "A small elemental of living flame."
+          hp: 20
+          minDamage: 2
+          maxDamage: 5
+          armor: 1
+          image: fire_familiar.png   # optional
+        stone_golem:
+          name: "a stone golem"
+          description: "A hulking construct of animate stone."
+          hp: 50
+          minDamage: 4
+          maxDamage: 8
+          armor: 5
+```
+
+### Pet Template Fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | String | `"a pet"` | Display name shown in-game |
+| `description` | String | `""` | Flavor text |
+| `hp` | Int | `20` | Base HP (scaled by owner level: +10% per level) |
+| `minDamage` | Int | `1` | Minimum damage roll (scaled by owner level) |
+| `maxDamage` | Int | `4` | Maximum damage roll (scaled by owner level) |
+| `armor` | Int | `0` | Armor value |
+| `image` | String? | `null` | Optional image asset |
+
+### SUMMON_PET Ability Type
+
+Pets are summoned via abilities with `effect.type: SUMMON_PET`:
+
+```yaml
+ambonmud:
+  engine:
+    abilities:
+      definitions:
+        summon_familiar:
+          displayName: Summon Familiar
+          manaCost: 15
+          cooldownMs: 30000
+          levelRequired: 5
+          targetType: self
+          effect:
+            type: SUMMON_PET
+            petTemplateKey: fire_familiar   # references pets.definitions key
+            durationMs: 0                   # 0 = permanent until dismissed
+          description: Summon a magical familiar to aid you in battle.
+          requiredClass: MAGE               # optional class restriction
+```
+
+### Ability Effect Fields for SUMMON_PET
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `petTemplateKey` | String | `""` | Key referencing a pet template in `pets.definitions` |
+| `durationMs` | Long | `0` | Duration in ms (0 = permanent until dismissed) |
+
+### Pet Commands
+
+| Command | Description |
+|---------|-------------|
+| `pet` / `pet status` | Show active pet stats |
+| `pet dismiss` | Dismiss active pet |
+| `pet name <name>` | Rename active pet |
+
+### Pet Behavior
+- One active pet at a time per player
+- Summoning a new pet auto-dismisses the current one
+- Pets follow the owner when moving between rooms
+- Pets are dismissed on player disconnect (session-only, no persistence)
+- Pet stats scale with owner level: +10% per level above 1
+
+---
+
 ## Faction System (application.yaml)
 
 New config section under `ambonmud.engine.factions`:

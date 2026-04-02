@@ -17,6 +17,7 @@ import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.MobRemovalCoordinator
 import dev.ambon.engine.PasswordHasher
+import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerClassRegistryLoader
 import dev.ambon.engine.PlayerProgression
@@ -226,6 +227,7 @@ class CommandRouterHarness private constructor(
             economyConfig: EconomyConfig = EconomyConfig(),
             clock: Clock = Clock.systemUTC(),
             gatheringRegistry: GatheringRegistry? = null,
+            petSystem: PetSystem? = null,
         ): CommandRouterHarness {
             val combat = CombatSystem(players, mobs, items, outbound)
             val router =
@@ -249,6 +251,7 @@ class CommandRouterHarness private constructor(
                     economyConfig = economyConfig,
                     clock = clock,
                     gatheringRegistry = gatheringRegistry,
+                    petSystem = petSystem,
                 )
             return CommandRouterHarness(world, repo, items, players, mobs, outbound, progression, groupSystem, combat, router)
         }

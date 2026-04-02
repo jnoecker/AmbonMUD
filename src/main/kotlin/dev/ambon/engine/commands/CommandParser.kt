@@ -123,6 +123,16 @@ sealed interface Command {
 
     data object Reputation : Command
 
+    // ---- Pet commands ----
+
+    data object PetStatus : Command
+
+    data object PetDismiss : Command
+
+    data class PetName(
+        val newName: String,
+    ) : Command
+
     data object Inventory : Command
 
     data object Equipment : Command
@@ -682,6 +692,19 @@ object CommandParser {
         }?.let { return it }
 
         // whisper: "whisper <target> <msg>" or "wh <target> <msg>"
+        matchPrefix(line, listOf("pet name")) { rest ->
+            val name = rest.trim()
+            if (name.isEmpty()) Command.Invalid(line, "pet name <new name>") else Command.PetName(name)
+        }?.let { return it }
+
+        matchPrefix(line, listOf("pet")) { rest ->
+            when (rest.trim().lowercase()) {
+                "", "status" -> Command.PetStatus
+                "dismiss", "unsummon", "release" -> Command.PetDismiss
+                else -> Command.PetStatus
+            }
+        }?.let { return it }
+
         matchPrefix(line, listOf("whisper", "wh")) { rest ->
             val parts = rest.split(Regex("\\s+"), limit = 2)
             if (parts.size < 2) return@matchPrefix Command.Invalid(line, "whisper <target> <msg>")
