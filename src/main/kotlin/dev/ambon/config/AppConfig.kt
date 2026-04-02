@@ -379,6 +379,16 @@ data class AppConfig(
             }
         }
 
+        // Validate faction enemy cross-references
+        val factionIds = engine.factions.definitions.keys
+        for ((factionId, def) in engine.factions.definitions) {
+            for (enemyId in def.enemies) {
+                if (enemyId !in factionIds) {
+                    warnConfig("faction '$factionId' references enemy '$enemyId' which is not defined in factions.definitions")
+                }
+            }
+        }
+
         return this
     }
 }
@@ -441,6 +451,23 @@ data class CraftingConfig(
     /** XP multiplier bonus for the player's specialized skill (e.g. 0.25 = +25% XP). */
     val specializationXpBonus: Double = 0.25,
     val recipes: Map<String, RecipeConfigEntry> = emptyMap(),
+)
+
+data class FactionDefinition(
+    val name: String = "",
+    val description: String = "",
+    val enemies: List<String> = emptyList(),
+)
+
+data class FactionConfig(
+    val definitions: Map<String, FactionDefinition> = emptyMap(),
+    val defaultReputation: Int = 0,
+    /** Reputation lost with a mob's faction when killing that mob (base, scaled by level). */
+    val killPenalty: Int = 5,
+    /** Reputation gained with enemy factions when killing a mob (base, scaled by level). */
+    val killBonus: Int = 3,
+    /** Quest-specific reputation rewards: questId → { factionId → amount }. */
+    val questRewards: Map<String, Map<String, Int>> = emptyMap(),
 )
 
 data class RecipeConfigEntry(
@@ -774,6 +801,7 @@ data class EngineConfig(
     val group: GroupConfig = GroupConfig(),
     val guild: GuildConfig = GuildConfig(),
     val crafting: CraftingConfig = CraftingConfig(),
+    val factions: FactionConfig = FactionConfig(),
     val friends: FriendsConfig = FriendsConfig(),
     val debug: EngineDebugConfig = EngineDebugConfig(),
     val classes: ClassEngineConfig = ClassEngineConfig(),

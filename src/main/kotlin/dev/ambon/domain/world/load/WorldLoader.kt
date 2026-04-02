@@ -331,6 +331,7 @@ object WorldLoader {
                         dialogue = dialogue,
                         behaviorTree = behaviorTree,
                         questIds = questIds,
+                        faction = mf.faction,
                         image = (mf.image ?: imageDefaults?.mob)?.let { "$imagesBase$it" },
                         video = mf.video?.let { "$videosBase$it" },
                         aggressive = mf.behavior?.template?.contains("aggro") == true,
