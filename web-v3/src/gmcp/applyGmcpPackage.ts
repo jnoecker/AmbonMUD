@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import type {
   AchievementData,
+  AuctionListing,
   CharStats,
   StatEntry,
   ChatChannel,
@@ -130,6 +131,7 @@ interface GmcpContext {
   setSpriteList: Dispatch<SetStateAction<SpriteList>>;
   setHousing: Dispatch<SetStateAction<HousingInfo | null>>;
   setTradeState: Dispatch<SetStateAction<TradeState | null>>;
+  setAuctionListings: Dispatch<SetStateAction<AuctionListing[]>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -1337,7 +1339,21 @@ export function applyGmcpPackage(
     }
 
     case "Auction.List": {
-      // Auction listings received via GMCP — available for future rich UI panel.
+      if (!Array.isArray(data)) {
+        ctx.setAuctionListings([]);
+        break;
+      }
+      ctx.setAuctionListings(
+        data
+          .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+          .map((e) => ({
+            id: safeNumber(e.id, 0),
+            itemName: typeof e.itemName === "string" ? e.itemName : "",
+            itemId: typeof e.itemId === "string" ? e.itemId : "",
+            price: safeNumber(e.price, 0),
+            seller: typeof e.seller === "string" ? e.seller : "",
+          })),
+      );
       break;
     }
 
