@@ -92,6 +92,25 @@ sealed interface Command {
 
     data object TradeStatus : Command
 
+    // ---- Auction commands ----
+
+    data class AuctionList(
+        val filter: String?,
+    ) : Command
+
+    data class AuctionSell(
+        val itemKeyword: String,
+        val price: Long,
+    ) : Command
+
+    data class AuctionBuy(
+        val listingId: Int,
+    ) : Command
+
+    data class AuctionCancel(
+        val listingId: Int,
+    ) : Command
+
     data object Inventory : Command
 
     data object Equipment : Command
@@ -593,6 +612,50 @@ object CommandParser {
                 sub == "cancel" || sub == "decline" || sub == "abort" -> Command.TradeCancel
                 sub == "status" || sub.isEmpty() -> Command.TradeStatus
                 else -> Command.TradeRequest(rest.trim())
+            }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("auction sell", "auction post")) { rest ->
+            val trimmed = rest.trim()
+            val lastSpace = trimmed.lastIndexOf(' ')
+            if (lastSpace < 1) {
+                Command.Invalid(line, "auction sell <item> <price>")
+            } else {
+                val priceStr = trimmed.substring(lastSpace + 1)
+                val keyword = trimmed.substring(0, lastSpace).trim()
+                val price = priceStr.toLongOrNull()
+                if (price == null || keyword.isEmpty()) {
+                    Command.Invalid(line, "auction sell <item> <price>")
+                } else {
+                    Command.AuctionSell(keyword, price)
+                }
+            }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("auction buy", "auction purchase")) { rest ->
+            val id = rest.trim().removePrefix("#").toIntOrNull()
+            if (id == null) {
+                Command.Invalid(line, "auction buy <listing #>")
+            } else {
+                Command.AuctionBuy(id)
+            }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("auction cancel", "auction remove")) { rest ->
+            val id = rest.trim().removePrefix("#").toIntOrNull()
+            if (id == null) {
+                Command.Invalid(line, "auction cancel <listing #>")
+            } else {
+                Command.AuctionCancel(id)
+            }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("auction")) { rest ->
+            val sub = rest.trim()
+            if (sub.isEmpty() || sub.equals("list", ignoreCase = true)) {
+                Command.AuctionList(null)
+            } else {
+                Command.AuctionList(sub)
             }
         }?.let { return it }
 
