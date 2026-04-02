@@ -82,6 +82,10 @@ data class PlayerState(
     var mobsKilledTotal: Long = 0L,
     /** Number of dungeon instances completed by this player. */
     var dungeonsCompleted: Int = 0,
+    /** Ability IDs explicitly learned via class trainers. */
+    var learnedAbilityIds: MutableSet<String> = mutableSetOf(),
+    /** Class names this player has unlocked (original class + any multi-class unlocks). */
+    var unlockedClasses: MutableSet<String> = mutableSetOf(),
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -183,6 +187,9 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         activeSprite = activeSprite,
         mobsKilledTotal = mobsKilledTotal,
         dungeonsCompleted = dungeonsCompleted,
+        learnedAbilityIds = learnedAbilityIds.toMutableSet(),
+        // Auto-populate original class if unlockedClasses is empty (new/migrated characters).
+        unlockedClasses = unlockedClasses.ifEmpty { setOf(playerClass) }.toMutableSet(),
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -225,6 +232,8 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         activeSprite = activeSprite,
         mobsKilledTotal = mobsKilledTotal,
         dungeonsCompleted = dungeonsCompleted,
+        learnedAbilityIds = learnedAbilityIds.toSet(),
+        unlockedClasses = unlockedClasses.toSet(),
     )
 }
 
