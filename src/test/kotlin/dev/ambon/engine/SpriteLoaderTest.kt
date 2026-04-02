@@ -159,11 +159,59 @@ class SpriteLoaderTest {
         SpriteLoader.generateStaffSprites(registry, listOf("ELF"))
         SpriteLoader.loadFromResource("world/sprites.yaml", registry)
 
-        // Should have tier + staff + 2 achievement sprites
+        // Should have tier + staff + legacy achievements + new requirements sprites
         assertTrue(registry.all().size >= 4)
         assertNotNull(registry.get("tier_novice"))
         assertNotNull(registry.get("staff"))
         assertNotNull(registry.get("beetle_slayer"))
         assertNotNull(registry.get("spider_hunter"))
+    }
+
+    // ── Requirements-based sprites ──────────────────────────────────────
+
+    @Test
+    fun `loadFromResource loads requirements-based sprites`() {
+        SpriteLoader.loadFromResource("world/sprites.yaml", registry)
+
+        val arcanist = registry.get("elven_arcanist")
+        assertNotNull(arcanist)
+        assertEquals("Elven Arcanist", arcanist!!.displayName)
+        assertEquals(SpriteCategory.GENERAL, arcanist.category)
+        assertEquals(3, arcanist.requirements.size)
+        assertEquals(200, arcanist.sortOrder)
+        assertEquals("An elf who has mastered ancient magic.", arcanist.description)
+    }
+
+    @Test
+    fun `single-image shorthand creates one variant with sprite id`() {
+        SpriteLoader.loadFromResource("world/sprites.yaml", registry)
+
+        val heritage = registry.get("elven_heritage")
+        assertNotNull(heritage)
+        assertEquals(1, heritage!!.variants.size)
+        assertEquals("elven_heritage", heritage.variants[0].imageId)
+        assertEquals("player_sprites/elven_heritage.png", heritage.variants[0].imagePath)
+    }
+
+    @Test
+    fun `requirements sprite has correct requirement types`() {
+        SpriteLoader.loadFromResource("world/sprites.yaml", registry)
+
+        val arcanist = registry.get("elven_arcanist")!!
+        assertTrue(arcanist.requirements.any { it is dev.ambon.domain.sprite.SpriteRequirement.Race })
+        assertTrue(arcanist.requirements.any { it is dev.ambon.domain.sprite.SpriteRequirement.PlayerClass })
+        assertTrue(arcanist.requirements.any { it is dev.ambon.domain.sprite.SpriteRequirement.MinLevel })
+    }
+
+    @Test
+    fun `legacy and requirements sprites coexist from same YAML`() {
+        SpriteLoader.loadFromResource("world/sprites.yaml", registry)
+
+        // Legacy achievement sprites
+        assertNotNull(registry.get("beetle_slayer"))
+        // Requirements-based sprites
+        assertNotNull(registry.get("elven_heritage"))
+        assertNotNull(registry.get("sword_saint"))
+        assertNotNull(registry.get("dragon_slayer"))
     }
 }

@@ -6,12 +6,19 @@ package dev.ambon.domain.sprite
  * Each definition has one or more [variants] with optional race/class/gender
  * qualifiers. A player sees only the variants whose qualifiers match (or are
  * null, meaning "any").
+ *
+ * Unlock logic: if [requirements] is non-empty, ALL requirements must be met.
+ * Otherwise falls back to the legacy [unlockCondition].
  */
 data class SpriteDefinition(
     val id: String,
     val displayName: String,
+    val description: String = "",
     val category: SpriteCategory,
-    val unlockCondition: SpriteUnlockCondition,
+    /** Legacy single-condition unlock. Used when [requirements] is empty. */
+    val unlockCondition: SpriteUnlockCondition = SpriteUnlockCondition.Level(1),
+    /** New requirements-based unlock (AND logic). Takes precedence over [unlockCondition]. */
+    val requirements: List<SpriteRequirement> = emptyList(),
     val sortOrder: Int = 0,
     val variants: List<SpriteVariant>,
 )
@@ -20,21 +27,65 @@ enum class SpriteCategory {
     TIER,
     ACHIEVEMENT,
     STAFF,
+
+    /** General-purpose sprites that don't fit the legacy categories. */
+    GENERAL,
 }
 
+/** Legacy single-condition unlock model (retained for backwards compatibility). */
 sealed interface SpriteUnlockCondition {
-    /** Unlocked when the player reaches [minLevel]. */
     data class Level(
         val minLevel: Int,
     ) : SpriteUnlockCondition
 
-    /** Unlocked when the player earns achievement [achievementId]. */
     data class Achievement(
         val achievementId: String,
     ) : SpriteUnlockCondition
 
-    /** Unlocked for staff members only. */
     data object Staff : SpriteUnlockCondition
+}
+
+/**
+ * A single requirement that must be met for a sprite to be unlocked.
+ * Multiple requirements on a sprite are combined with AND logic.
+ */
+sealed interface SpriteRequirement {
+    /** Player level must be >= [level]. */
+    data class MinLevel(
+        val level: Int,
+    ) : SpriteRequirement
+
+    /** Player race must match (case-insensitive). */
+    data class Race(
+        val race: String,
+    ) : SpriteRequirement
+
+    /** Player class must match (case-insensitive). */
+    data class PlayerClass(
+        val playerClass: String,
+    ) : SpriteRequirement
+
+    /** Player must have unlocked the given achievement. */
+    data class Achievement(
+        val achievementId: String,
+    ) : SpriteRequirement
+
+    /** Player must be staff. */
+    data object Staff : SpriteRequirement
+
+    fun isMet(
+        playerLevel: Int,
+        playerRace: String,
+        playerClass: String,
+        unlockedAchievementIds: Set<String>,
+        isStaff: Boolean,
+    ): Boolean = when (this) {
+        is MinLevel -> playerLevel >= level
+        is Race -> race.equals(playerRace, ignoreCase = true)
+        is PlayerClass -> this.playerClass.equals(playerClass, ignoreCase = true)
+        is Achievement -> achievementId in unlockedAchievementIds
+        is Staff -> isStaff
+    }
 }
 
 /**
