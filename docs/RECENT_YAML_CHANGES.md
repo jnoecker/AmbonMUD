@@ -250,3 +250,151 @@ ambonmud:
 ### Persistence Fields (Flyway V23)
 
 - `faction_standings TEXT` — JSON map of faction ID → reputation integer
+
+---
+
+## Item Enchanting System (application.yaml)
+
+New config section under `ambonmud.engine.enchanting`:
+
+```yaml
+ambonmud:
+  engine:
+    enchanting:
+      maxEnchantmentsPerItem: 1       # Max enchantments per item (default: 1)
+      definitions:
+        keen_edge:
+          displayName: Keen Edge
+          skill: enchanting
+          skillRequired: 1
+          materials:
+            - itemId: arcane_essence
+              quantity: 1
+          damageBonus: 2
+          targetSlots: [hand]          # Empty list = any slot
+          xpReward: 30
+        might:
+          displayName: Might
+          skill: enchanting
+          skillRequired: 10
+          materials:
+            - itemId: arcane_essence
+              quantity: 2
+            - itemId: rough_gem
+              quantity: 1
+          statBonuses:
+            STR: 2
+          targetSlots: [hand]
+          xpReward: 50
+        arcane_infusion:
+          displayName: Arcane Infusion
+          skill: enchanting
+          skillRequired: 20
+          materials:
+            - itemId: arcane_essence
+              quantity: 3
+            - itemId: rough_gem
+              quantity: 2
+          statBonuses:
+            INT: 2
+            WIS: 1
+          damageBonus: 3
+          targetSlots: []              # Empty = any equipment slot
+          xpReward: 80
+```
+
+### Enchantment Definition Fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `displayName` | String | `""` | Display name shown in-game (required, validated non-blank) |
+| `skill` | String | `"enchanting"` | Crafting skill used for this enchantment |
+| `skillRequired` | Int | `1` | Minimum skill level to apply (validated > 0) |
+| `materials` | List | `[]` | Materials consumed (validated non-empty) |
+| `statBonuses` | Map\<String, Int\> | `{}` | Stat bonuses added to item (e.g., `STR: 2`) |
+| `damageBonus` | Int | `0` | Extra damage added to item |
+| `armorBonus` | Int | `0` | Extra armor added to item |
+| `targetSlots` | List\<String\> | `[]` | Equipment slots this can be applied to (empty = any) |
+| `xpReward` | Int | `30` | Enchanting XP awarded |
+
+### Shipped Enchantments
+
+| ID | Skill | Materials | Effect | Slots |
+|----|-------|-----------|--------|-------|
+| `keen_edge` | 1 | 1 essence | +2 dmg | hand |
+| `fortify` | 1 | 1 essence | +2 armor | head, body |
+| `might` | 10 | 2 essence + 1 gem | +2 STR | hand |
+| `resilience` | 10 | 2 essence + 1 gem | +2 CON | head, body |
+| `arcane_infusion` | 20 | 3 essence + 2 gem | +2 INT, +1 WIS, +3 dmg | any |
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `enchant <item> [enchantment]` | Apply an enchantment to an inventory item (auto-selects if omitted) |
+| `enchantments` | List all available enchantments with requirements |
+
+### Enchanting Behavior
+- Items must be equippable (have a `slot`) to be enchanted
+- Materials are consumed on enchantment
+- Display name is modified with a suffix (e.g., `a copper sword (+2 dmg, +1 STR)`)
+- Enchantments are tracked per item; duplicate enchantments on the same item are rejected
+- `maxEnchantmentsPerItem` limits total enchantments per item
+- Enchanting XP uses the same skill/leveling system as crafting
+
+### New Crafting Skill and Station
+
+The `enchanting` crafting skill and `enchanting_table` station type are added to defaults:
+
+```yaml
+# These are auto-included in defaults; only override if customizing
+ambonmud:
+  engine:
+    craftingSkills:
+      skills:
+        enchanting:
+          displayName: Enchanting
+          type: crafting
+    craftingStationTypes:
+      stationTypes:
+        enchanting_table:
+          displayName: Enchanting Table
+```
+
+### World Content: Enchanting Chamber
+
+New room in `crafting_workshop` zone (accessible from alchemy lab):
+
+```yaml
+rooms:
+  enchanting_chamber:
+    title: "Enchanting Chamber"
+    description: "A dim, circular room lit by floating motes of arcane light..."
+    station: enchanting_table
+    exits:
+      w: alchemy_lab
+```
+
+### GMCP Changes
+
+`Char.Items.List`, `Char.Items.Add`, and equipment payloads now include:
+
+```json
+{
+  "id": "sword_1",
+  "name": "a copper sword (+2 dmg)",
+  "keyword": "sword",
+  "slot": "hand",
+  "damage": 6,
+  "armor": 0,
+  "stats": { "STR": 2 },
+  "enchantments": ["keen_edge"]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `stats` | Object\|null | Non-zero stat bonuses (omitted if none) |
+| `enchantments` | Array\|null | Applied enchantment IDs (omitted if none) |
+
+`Crafting.Result` now supports `type: "enchant"` alongside `"craft"` and `"gather"`.
