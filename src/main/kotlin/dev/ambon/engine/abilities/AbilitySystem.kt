@@ -41,6 +41,7 @@ class AbilitySystem(
     private val groupSystem: GroupSystem? = null,
     private val mobs: MobRegistry? = null,
     private val onCombatEvent: suspend (SessionId, CombatEvent) -> Unit = { _, _ -> },
+    val onSummonPet: suspend (SessionId, String, Long) -> Unit = { _, _, _ -> },
 ) : GameSystem {
     private val learnedAbilities = mutableMapOf<SessionId, MutableSet<AbilityId>>()
     private val cooldowns = mutableMapOf<SessionId, MutableMap<AbilityId, Long>>()
@@ -239,6 +240,10 @@ class AbilitySystem(
                         "You are empowered by ${ability.displayName}!",
                     ),
                 )
+            }
+            is AbilityEffect.SummonPet -> {
+                deductManaAndCooldown(sessionId, player, ability, now)
+                onSummonPet(sessionId, effect.petTemplateKey, effect.durationMs)
             }
             else -> return "Spell misconfigured (unexpected effect for self target)."
         }

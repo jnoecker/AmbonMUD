@@ -35,6 +35,7 @@ import dev.ambon.engine.commands.handlers.HousingHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
+import dev.ambon.engine.commands.handlers.PetHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.ReputationHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
@@ -257,6 +258,7 @@ class GameEngine(
             showLoginScreen = { sid -> outbound.send(OutboundEvent.ShowLoginScreen(sid)) },
             onPlayerLoggedOut = { player, sid ->
                 log.info { "Player logged out: name=${player.name} sessionId=$sid" }
+                petSystem.onOwnerDisconnect(sid)
                 tradeSystem.cancelForPlayer(sid)
                 val endedDuel = duelSystem.onPlayerDisconnect(sid)
                 if (endedDuel != null) {
@@ -654,6 +656,15 @@ class GameEngine(
             groupSystem = groupSystem,
             mobs = mobs,
             onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) },
+            onSummonPet = { sid, templateKey, _ ->
+                val player = players.get(sid) ?: return@AbilitySystem
+                val pet = petSystem.summon(sid, templateKey, player.roomId, player.level)
+                if (pet != null) {
+                    outbound.send(OutboundEvent.SendText(sid, "You summon ${pet.name}!"))
+                } else {
+                    outbound.send(OutboundEvent.SendText(sid, "Failed to summon pet."))
+                }
+            },
         ).also {
             it.onCooldownStarted = { sid, abilityId, cooldownMs ->
                 gmcpEmitter.sendCharCooldown(sid, abilityId, cooldownMs)
@@ -684,6 +695,12 @@ class GameEngine(
     private val duelSystem = DuelSystem(clock = clock)
 
     private val reputationSystem = ReputationSystem(config = engineConfig.factions)
+
+    private val petSystem = PetSystem(
+        config = engineConfig.pets,
+        mobs = mobs,
+        clock = clock,
+    )
     private val duelRng = java.util.Random()
 
     private val auctionSystem = AuctionSystem(
@@ -899,6 +916,7 @@ class GameEngine(
                 onCrossZoneMove = crossZoneMove,
                 recallConfig = engineConfig.navigation.recall,
                 housingSystem = housingSystem,
+                onPlayerMoved = { sid, roomId -> petSystem.followOwner(sid, roomId) },
             ),
             communicationHandler,
             CombatHandler(
@@ -992,6 +1010,10 @@ class GameEngine(
             ReputationHandler(
                 ctx = ctx,
                 reputationSystem = reputationSystem,
+            ),
+            PetHandler(
+                ctx = ctx,
+                petSystem = petSystem,
             ),
             SpriteHandler(
                 ctx = ctx,

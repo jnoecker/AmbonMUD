@@ -37,6 +37,11 @@ object AbilityRegistryLoader {
                             flatThreat = defConfig.effect.flatThreat,
                             margin = defConfig.effect.margin,
                         )
+                    "SUMMON_PET" ->
+                        AbilityEffect.SummonPet(
+                            petTemplateKey = defConfig.effect.petTemplateKey,
+                            durationMs = defConfig.effect.durationMs,
+                        )
                     else -> continue
                 }
             val requiredClass = defConfig.requiredClass.ifBlank { null }

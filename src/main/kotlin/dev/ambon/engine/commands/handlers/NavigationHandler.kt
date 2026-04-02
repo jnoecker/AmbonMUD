@@ -25,6 +25,7 @@ class NavigationHandler(
     private val clock: Clock = Clock.systemUTC(),
     private val recallConfig: RecallConfig = RecallConfig(),
     private val housingSystem: HousingSystem? = null,
+    private val onPlayerMoved: (suspend (SessionId, RoomId) -> Unit)? = null,
 ) : CommandHandler {
     private val ctx = ctx
     private val world = ctx.world
@@ -131,6 +132,7 @@ class NavigationHandler(
                 gmcpEmitter,
                 dialogueSystem,
             )
+            onPlayerMoved?.invoke(sessionId, to)
             ctx.sendLook(sessionId)
         }
     }
