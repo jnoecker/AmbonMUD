@@ -983,6 +983,22 @@ class GmcpEmitter(
         emit(sessionId, "Auction.List", listings)
     }
 
+    // ---------- reputation / factions ----------
+
+    data class FactionStandingPayload(
+        val id: String,
+        val name: String,
+        val reputation: Int,
+        val tier: String,
+    )
+
+    suspend fun sendCharFactions(
+        sessionId: SessionId,
+        standings: List<FactionStandingPayload>,
+    ) {
+        emit(sessionId, "Char.Factions", standings)
+    }
+
     // ---------- room features ----------
 
     suspend fun sendRoomFeatures(

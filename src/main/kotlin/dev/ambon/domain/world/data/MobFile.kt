@@ -18,6 +18,7 @@ data class MobFile(
     val dialogue: Map<String, DialogueNodeFile> = emptyMap(),
     val behavior: BehaviorFile? = null,
     val quests: List<String> = emptyList(),
+    val faction: String? = null,
     val image: String? = null,
     val video: String? = null,
 )

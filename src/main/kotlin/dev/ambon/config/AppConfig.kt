@@ -443,6 +443,23 @@ data class CraftingConfig(
     val recipes: Map<String, RecipeConfigEntry> = emptyMap(),
 )
 
+data class FactionDefinition(
+    val name: String = "",
+    val description: String = "",
+    val enemies: List<String> = emptyList(),
+)
+
+data class FactionConfig(
+    val definitions: Map<String, FactionDefinition> = emptyMap(),
+    val defaultReputation: Int = 0,
+    /** Reputation lost with a mob's faction when killing that mob (base, scaled by level). */
+    val killPenalty: Int = 5,
+    /** Reputation gained with enemy factions when killing a mob (base, scaled by level). */
+    val killBonus: Int = 3,
+    /** Quest-specific reputation rewards: questId → { factionId → amount }. */
+    val questRewards: Map<String, Map<String, Int>> = emptyMap(),
+)
+
 data class RecipeConfigEntry(
     val displayName: String = "",
     val skill: String = "SMITHING",
@@ -774,6 +791,7 @@ data class EngineConfig(
     val group: GroupConfig = GroupConfig(),
     val guild: GuildConfig = GuildConfig(),
     val crafting: CraftingConfig = CraftingConfig(),
+    val factions: FactionConfig = FactionConfig(),
     val friends: FriendsConfig = FriendsConfig(),
     val debug: EngineDebugConfig = EngineDebugConfig(),
     val classes: ClassEngineConfig = ClassEngineConfig(),

@@ -55,6 +55,7 @@ data class PlayerRecord(
     val craftingSkills: Map<String, CraftingSkillState> = emptyMap(),
     val discoveredRecipes: Set<String> = emptySet(),
     val craftingSpecialization: String? = null,
+    val factionStandings: Map<String, Int> = emptyMap(),
     val friendsList: Set<String> = emptySet(),
     val inventoryItems: List<ItemInstance> = emptyList(),
     val equippedItems: Map<String, ItemInstance> = emptyMap(),
