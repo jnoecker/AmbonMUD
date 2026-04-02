@@ -81,16 +81,43 @@ mobs:
           - text: "Tell me about the portals."
             next: about_portals
 
+  banker:
+    image: a27a9d8c0b5977b1fa0f7553b1b95400494a51662cb3a77c4e1079dd69c7c1fa.png
+    name: "the Banker"
+    room: vault_hall
+    dialogue:
+      root:
+        text: "Welcome to the Ambon Vault. I can safeguard your gold and valuables. Use 'deposit' and 'withdraw' to manage your account, or 'balance' to check your holdings."
+        choices:
+          - text: "How does the bank work?"
+            next: explain
+          - text: "Just checking my balance."
+            action: bank_balance
+          - text: "Thanks, I'll manage from here."
+      explain:
+        text: "You may deposit gold with 'deposit <amount> gold' or store items with 'deposit <item>'. To retrieve them, use 'withdraw <amount> gold' or 'withdraw <item>'. Your vault holds up to 50 items. Gold has no limit."
+        choices:
+          - text: "Got it, thanks."
+
 rooms:
   hall_of_portals:
     image: 4789f1a1e68c123f14630a57aafdb891172312e7a79df19d7a606c98c843dcd0.jpg
     title: "Hall of Portals"
-    description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.' Eastern light smells of old books. Western light spills warmly from the gallery beyond. A spiral staircase leads up to a crafting workshop. Stone steps descend into a dimly lit portal chamber below."
+    description: "A circular hall of pale stone and humming air. Archways ring the room like a compass rose, each inset with a different lintel carving. A placard reads: 'AMBONMUD DEMO HUB — Choose a doorway and step through.' Eastern light smells of old books. Western light spills warmly from the gallery beyond. A spiral staircase leads up to a crafting workshop. Stone steps descend into a dimly lit portal chamber below. A polished marble passage leads north."
     exits:
+      n: vault_hall
       e: noecker_resume:lobby
       w: wayfinder_gallery
       u: crafting_workshop:entrance
       d: sunken_crypt:portal_chamber
+
+  vault_hall:
+    image: 4789f1a1e68c123f14630a57aafdb891172312e7a79df19d7a606c98c843dcd0.jpg
+    title: "The Ambon Vault"
+    description: "A hushed chamber of polished granite and brass fittings. Heavy iron deposit boxes line the walls behind a long marble counter. The Banker stands at attention, ledger in hand. A sign reads: 'DEPOSIT and WITHDRAW gold or items. Type BALANCE to check your account.'"
+    bank: true
+    exits:
+      s: hall_of_portals
 
   blank_arches:
     image: c5c24327e550e1493fb096e726644a4b183ca640c02ad33f8dad294bfc7af44d.jpg

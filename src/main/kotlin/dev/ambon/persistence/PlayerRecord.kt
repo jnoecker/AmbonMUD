@@ -57,6 +57,8 @@ data class PlayerRecord(
     val craftingSpecialization: String? = null,
     val factionStandings: Map<String, Int> = emptyMap(),
     val friendsList: Set<String> = emptySet(),
+    val bankGold: Long = 0L,
+    val bankItems: List<ItemInstance> = emptyList(),
     val inventoryItems: List<ItemInstance> = emptyList(),
     val equippedItems: Map<String, ItemInstance> = emptyMap(),
     val activeSprite: String? = null,
