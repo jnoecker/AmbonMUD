@@ -379,6 +379,16 @@ data class AppConfig(
             }
         }
 
+        // Validate pet template invariants
+        engine.pets.definitions.forEach { (key, tmpl) ->
+            require(tmpl.hp > 0) { "ambonMUD.engine.pets.definitions.$key.hp must be > 0" }
+            require(tmpl.minDamage > 0) { "ambonMUD.engine.pets.definitions.$key.minDamage must be > 0" }
+            require(tmpl.maxDamage >= tmpl.minDamage) {
+                "ambonMUD.engine.pets.definitions.$key.maxDamage (${tmpl.maxDamage}) must be >= minDamage (${tmpl.minDamage})"
+            }
+            require(tmpl.armor >= 0) { "ambonMUD.engine.pets.definitions.$key.armor must be >= 0" }
+        }
+
         // Validate faction enemy cross-references
         val factionIds = engine.factions.definitions.keys
         for ((factionId, def) in engine.factions.definitions) {
@@ -457,6 +467,20 @@ data class FactionDefinition(
     val name: String = "",
     val description: String = "",
     val enemies: List<String> = emptyList(),
+)
+
+data class PetTemplateConfig(
+    val name: String = "a pet",
+    val description: String = "",
+    val hp: Int = 20,
+    val minDamage: Int = 1,
+    val maxDamage: Int = 4,
+    val armor: Int = 0,
+    val image: String? = null,
+)
+
+data class PetConfig(
+    val definitions: Map<String, PetTemplateConfig> = emptyMap(),
 )
 
 data class FactionConfig(
@@ -802,6 +826,7 @@ data class EngineConfig(
     val guild: GuildConfig = GuildConfig(),
     val crafting: CraftingConfig = CraftingConfig(),
     val factions: FactionConfig = FactionConfig(),
+    val pets: PetConfig = PetConfig(),
     val friends: FriendsConfig = FriendsConfig(),
     val debug: EngineDebugConfig = EngineDebugConfig(),
     val classes: ClassEngineConfig = ClassEngineConfig(),
@@ -1397,6 +1422,8 @@ data class AbilityEffectConfig(
     val statusEffectId: String = "",
     val flatThreat: Double = 50.0,
     val margin: Double = 10.0,
+    val petTemplateKey: String = "",
+    val durationMs: Long = 0L,
 )
 
 data class StatusEffectEngineConfig(

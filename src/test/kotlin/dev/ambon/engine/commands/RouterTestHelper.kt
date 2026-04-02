@@ -10,6 +10,7 @@ import dev.ambon.engine.GroupSystem
 import dev.ambon.engine.GuildSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.MobRemovalCoordinator
+import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.ShopRegistry
@@ -24,6 +25,7 @@ import dev.ambon.engine.commands.handlers.GuildHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
+import dev.ambon.engine.commands.handlers.PetHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
 import dev.ambon.engine.commands.handlers.UiHandler
@@ -63,6 +65,7 @@ internal fun buildTestRouter(
     shopRegistry: ShopRegistry? = null,
     economyConfig: EconomyConfig = EconomyConfig(),
     gatheringRegistry: GatheringRegistry? = null,
+    petSystem: PetSystem? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
     val ctx = EngineContext(
@@ -78,7 +81,7 @@ internal fun buildTestRouter(
         shopRegistry = shopRegistry,
         economyConfig = economyConfig,
     )
-    listOf(
+    listOfNotNull(
         UiHandler(ctx = ctx, onPhase = onPhase),
         CommunicationHandler(
             ctx = ctx,
@@ -98,6 +101,7 @@ internal fun buildTestRouter(
         GuildHandler(ctx = ctx, guildSystem = guildSystem),
         WorldFeaturesHandler(ctx = ctx),
         MailHandler(ctx = ctx),
+        petSystem?.let { PetHandler(ctx = ctx, petSystem = it) },
         AdminHandler(
             ctx = ctx,
             onShutdown = onShutdown,
