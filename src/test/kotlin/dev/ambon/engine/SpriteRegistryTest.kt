@@ -120,52 +120,52 @@ class SpriteRegistryTest {
 
     // ── Unlock conditions ─────────────────────────────────────────────────
 
+    private fun unlocked(
+        level: Int = 1,
+        achievements: Set<String> = emptySet(),
+        isStaff: Boolean = false,
+        race: String = "HUMAN",
+        cls: String = "WARRIOR",
+    ) = registry.unlockedDefinitions(level, achievements, isStaff, race, cls)
+
     @Test
     fun `level unlock - meets threshold`() {
         registry.register(tierApprentice)
-        val unlocked = registry.unlockedDefinitions(level = 10, unlockedAchievementIds = emptySet(), isStaff = false)
-        assertEquals(1, unlocked.size)
-        assertEquals("tier_apprentice", unlocked[0].id)
+        val result = unlocked(level = 10)
+        assertEquals(1, result.size)
+        assertEquals("tier_apprentice", result[0].id)
     }
 
     @Test
     fun `level unlock - below threshold`() {
         registry.register(tierApprentice)
-        val unlocked = registry.unlockedDefinitions(level = 9, unlockedAchievementIds = emptySet(), isStaff = false)
-        assertTrue(unlocked.isEmpty())
+        assertTrue(unlocked(level = 9).isEmpty())
     }
 
     @Test
     fun `achievement unlock - has achievement`() {
         registry.register(achievementSprite)
-        val unlocked = registry.unlockedDefinitions(
-            level = 1,
-            unlockedAchievementIds = setOf("combat/beetle_exterminator"),
-            isStaff = false,
-        )
-        assertEquals(1, unlocked.size)
-        assertEquals("beetle_slayer", unlocked[0].id)
+        val result = unlocked(achievements = setOf("combat/beetle_exterminator"))
+        assertEquals(1, result.size)
+        assertEquals("beetle_slayer", result[0].id)
     }
 
     @Test
     fun `achievement unlock - missing achievement`() {
         registry.register(achievementSprite)
-        val unlocked = registry.unlockedDefinitions(level = 1, unlockedAchievementIds = emptySet(), isStaff = false)
-        assertTrue(unlocked.isEmpty())
+        assertTrue(unlocked().isEmpty())
     }
 
     @Test
     fun `staff unlock - is staff`() {
         registry.register(staffSprite)
-        val unlocked = registry.unlockedDefinitions(level = 1, unlockedAchievementIds = emptySet(), isStaff = true)
-        assertEquals(1, unlocked.size)
+        assertEquals(1, unlocked(isStaff = true).size)
     }
 
     @Test
     fun `staff unlock - not staff`() {
         registry.register(staffSprite)
-        val unlocked = registry.unlockedDefinitions(level = 1, unlockedAchievementIds = emptySet(), isStaff = false)
-        assertTrue(unlocked.isEmpty())
+        assertTrue(unlocked().isEmpty())
     }
 
     // ── Available variants (unlock + player match) ───────────────────────
@@ -410,5 +410,150 @@ class SpriteRegistryTest {
         registry.clear()
         assertTrue(registry.all().isEmpty())
         assertNull(registry.findVariant("elf_mage_t1"))
+    }
+
+    // ── Requirements-based unlock ────────────────────────────────────────
+
+    private val requirementsSprite = SpriteDefinition(
+        id = "elven_arcanist",
+        displayName = "Elven Arcanist",
+        description = "An elf who has mastered ancient magic.",
+        category = SpriteCategory.GENERAL,
+        requirements = listOf(
+            dev.ambon.domain.sprite.SpriteRequirement.Race("ELF"),
+            dev.ambon.domain.sprite.SpriteRequirement.PlayerClass("MAGE"),
+            dev.ambon.domain.sprite.SpriteRequirement.MinLevel(30),
+        ),
+        sortOrder = 200,
+        variants = listOf(
+            SpriteVariant("elven_arcanist", "Elven Arcanist", imagePath = "player_sprites/elven_arcanist.png"),
+        ),
+    )
+
+    private val levelOnlyRequirement = SpriteDefinition(
+        id = "twilight_wanderer",
+        displayName = "Twilight Wanderer",
+        category = SpriteCategory.GENERAL,
+        requirements = listOf(
+            dev.ambon.domain.sprite.SpriteRequirement.MinLevel(40),
+        ),
+        sortOrder = 250,
+        variants = listOf(
+            SpriteVariant("twilight_wanderer", "Twilight Wanderer", imagePath = "player_sprites/twilight_wanderer.png"),
+        ),
+    )
+
+    @Test
+    fun `requirements - all met unlocks sprite`() {
+        registry.register(requirementsSprite)
+        val unlocked = registry.unlockedDefinitions(
+            level = 30,
+            unlockedAchievementIds = emptySet(),
+            isStaff = false,
+            playerRace = "ELF",
+            playerClass = "MAGE",
+        )
+        assertEquals(1, unlocked.size)
+        assertEquals("elven_arcanist", unlocked[0].id)
+    }
+
+    @Test
+    fun `requirements - wrong race fails`() {
+        registry.register(requirementsSprite)
+        val unlocked = registry.unlockedDefinitions(
+            level = 30,
+            unlockedAchievementIds = emptySet(),
+            isStaff = false,
+            playerRace = "HUMAN",
+            playerClass = "MAGE",
+        )
+        assertTrue(unlocked.isEmpty())
+    }
+
+    @Test
+    fun `requirements - wrong class fails`() {
+        registry.register(requirementsSprite)
+        val unlocked = registry.unlockedDefinitions(
+            level = 30,
+            unlockedAchievementIds = emptySet(),
+            isStaff = false,
+            playerRace = "ELF",
+            playerClass = "WARRIOR",
+        )
+        assertTrue(unlocked.isEmpty())
+    }
+
+    @Test
+    fun `requirements - level too low fails`() {
+        registry.register(requirementsSprite)
+        val unlocked = registry.unlockedDefinitions(
+            level = 29,
+            unlockedAchievementIds = emptySet(),
+            isStaff = false,
+            playerRace = "ELF",
+            playerClass = "MAGE",
+        )
+        assertTrue(unlocked.isEmpty())
+    }
+
+    @Test
+    fun `requirements - level-only sprite works for any race and class`() {
+        registry.register(levelOnlyRequirement)
+        val unlocked = registry.unlockedDefinitions(
+            level = 40,
+            unlockedAchievementIds = emptySet(),
+            isStaff = false,
+            playerRace = "HUMAN",
+            playerClass = "WARRIOR",
+        )
+        assertEquals(1, unlocked.size)
+    }
+
+    @Test
+    fun `legacy and requirements sprites coexist`() {
+        registry.register(tierNovice) // legacy
+        registry.register(requirementsSprite) // requirements
+        registry.register(levelOnlyRequirement) // requirements
+
+        val unlocked = registry.unlockedDefinitions(
+            level = 40,
+            unlockedAchievementIds = emptySet(),
+            isStaff = false,
+            playerRace = "ELF",
+            playerClass = "MAGE",
+        )
+        // Should include: novice tier (level 1), elven_arcanist (elf+mage+30), twilight_wanderer (40)
+        assertEquals(3, unlocked.size)
+    }
+
+    @Test
+    fun `validateSelection works with requirements sprite`() {
+        registry.register(requirementsSprite)
+        val result = registry.validateSelection(
+            imageId = "elven_arcanist",
+            level = 30,
+            unlockedAchievementIds = emptySet(),
+            isStaff = false,
+            playerRace = "ELF",
+            playerClass = "MAGE",
+            playerGender = "female",
+        )
+        assertNotNull(result)
+        assertEquals("elven_arcanist", result!!.imageId)
+    }
+
+    @Test
+    fun `validateSelection rejects requirements sprite when requirements not met`() {
+        registry.register(requirementsSprite)
+        val result = registry.validateSelection(
+            imageId = "elven_arcanist",
+            level = 30,
+            unlockedAchievementIds = emptySet(),
+            isStaff = false,
+            playerRace = "HUMAN",
+            playerClass = "MAGE",
+            playerGender = "male",
+        )
+        assertNull(result)
     }
 }

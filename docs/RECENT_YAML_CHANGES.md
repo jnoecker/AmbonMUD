@@ -491,6 +491,59 @@ New `Char.Bank` package emitted after deposit/withdraw:
 
 ---
 
+## Sprite Requirements System (sprites.yaml)
+
+Sprites now support a **requirements list** with AND logic, replacing the legacy single-condition `unlock` block. This allows sprites to depend on any combination of race, class, level, achievement, and staff status.
+
+### New YAML Format
+
+```yaml
+sprites:
+  elven_arcanist:
+    displayName: "Elven Arcanist"
+    description: "An elf who has mastered ancient magic."
+    category: general          # NEW category for requirements-based sprites
+    sortOrder: 200
+    requirements:              # NEW: AND-logic requirements list
+      - type: race
+        race: ELF
+      - type: class
+        playerClass: MAGE
+      - type: minLevel
+        level: 30
+    image: player_sprites/elven_arcanist.png    # Single-image shorthand
+```
+
+### Requirement Types
+
+| Type | Fields | Description |
+|------|--------|-------------|
+| `minLevel` | `level: Int` | Player level >= value |
+| `race` | `race: String` | Player race matches |
+| `class` | `playerClass: String` | Player class matches |
+| `achievement` | `achievementId: String` | Achievement unlocked |
+| `staff` | — | Player is staff |
+
+### New Fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `description` | String | `""` | Flavor text for the sprite |
+| `requirements` | List | `[]` | AND-logic unlock requirements (takes precedence over `unlock`) |
+| `image` | String | `""` | Single-image shorthand (creates one variant automatically) |
+
+### Legacy Tier Sprites Config
+
+New config field `images.legacyTierSprites` (default: `true`). Set to `false` to disable auto-generation of the 96 race x class x tier sprites.
+
+### Backwards Compatibility
+
+- Legacy `unlock` block still works for existing sprites
+- Legacy `variants` list still works
+- `activeSprite` persistence unchanged (imageId string)
+- Players with old sprite selections keep them
+
+See `docs/ARCANUM_SPRITE_INSTRUCTIONS.md` for full authoring guide.
 ## Day/Night Cycle (application.yaml)
 
 New config section under `ambonmud.engine.worldTime`:
