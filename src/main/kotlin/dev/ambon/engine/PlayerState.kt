@@ -61,6 +61,7 @@ data class PlayerState(
     var craftingSkills: MutableMap<String, CraftingSkillState> = mutableMapOf(),
     var discoveredRecipes: MutableSet<String> = mutableSetOf(),
     var craftingSpecialization: String? = null,
+    var factionStandings: MutableMap<String, Int> = mutableMapOf(),
     /** Epoch-ms timestamp after which gathering is available again. Runtime-only; not persisted. */
     var gatherCooldownUntilMs: Long = 0L,
     /** Epoch-ms of last command input. Runtime-only; used for idle calculation. */
@@ -169,6 +170,7 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         }.toMap().toMutableMap(),
         discoveredRecipes = discoveredRecipes.toMutableSet(),
         craftingSpecialization = craftingSpecialization,
+        factionStandings = factionStandings.toMutableMap(),
         friendsList = friendsList.toMutableSet(),
         activeSprite = activeSprite,
     )
@@ -206,6 +208,7 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         craftingSkills = craftingSkills.toMap(),
         discoveredRecipes = discoveredRecipes.toSet(),
         craftingSpecialization = craftingSpecialization,
+        factionStandings = factionStandings.toMap(),
         friendsList = friendsList.toSet(),
         activeSprite = activeSprite,
     )

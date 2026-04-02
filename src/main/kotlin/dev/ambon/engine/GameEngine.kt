@@ -36,6 +36,7 @@ import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
+import dev.ambon.engine.commands.handlers.ReputationHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
 import dev.ambon.engine.commands.handlers.SpriteHandler
 import dev.ambon.engine.commands.handlers.TradeHandler
@@ -681,6 +682,8 @@ class GameEngine(
     private val tradeSystem = TradeSystem(items = items)
 
     private val duelSystem = DuelSystem(clock = clock)
+
+    private val reputationSystem = ReputationSystem(config = engineConfig.factions)
     private val duelRng = java.util.Random()
 
     private val auctionSystem = AuctionSystem(
@@ -733,6 +736,22 @@ class GameEngine(
 
         questSystem.onQuestCompleted = { sid, questId ->
             achievementSystem.onQuestCompleted(sid, questId)
+            val player = players.get(sid)
+            if (player != null) {
+                val changes = reputationSystem.onQuestCompleted(player, questId)
+                for (change in changes) {
+                    val factionName = reputationSystem.getFaction(change.factionId)?.name ?: change.factionId
+                    val sign = if (change.amount > 0) "+" else ""
+                    outbound.send(
+                        OutboundEvent.SendInfo(
+                            sid,
+                            "[Reputation] $factionName: $sign${change.amount} " +
+                                "(${StandingTier.forReputation(change.newStanding).displayName})",
+                        ),
+                    )
+                }
+                if (changes.isNotEmpty()) emitFactions(sid, player)
+            }
         }
         questSystem.onQuestListChanged = { sid -> sendQuestListGmcp(sid) }
         questSystem.onQuestObjectiveUpdated = { sid, questId, objIndex, current, required ->
@@ -969,6 +988,10 @@ class GameEngine(
                 auctionSystem = auctionSystem,
                 markVitalsDirty = ::markVitalsDirty,
                 playerRepo = persistence.playerRepo,
+            ),
+            ReputationHandler(
+                ctx = ctx,
+                reputationSystem = reputationSystem,
             ),
             SpriteHandler(
                 ctx = ctx,
@@ -1638,6 +1661,45 @@ class GameEngine(
     ) {
         questSystem.onMobKilled(sessionId, templateKey)
         achievementSystem.onMobKilled(sessionId, templateKey)
+
+        // Faction reputation changes on mob kill
+        val mobSpawn = world.mobSpawns.firstOrNull { it.id.value == templateKey }
+        if (mobSpawn?.faction != null) {
+            val player = players.get(sessionId)
+            if (player != null) {
+                // Level proxy: maxHp/10, capped at 20 to prevent extreme swings from bosses
+                val levelProxy = (mobSpawn.maxHp / 10).coerceAtMost(20)
+                val changes = reputationSystem.onMobKilled(player, mobSpawn.faction, levelProxy)
+                for (change in changes) {
+                    val factionName = reputationSystem.getFaction(change.factionId)?.name ?: change.factionId
+                    val sign = if (change.amount > 0) "+" else ""
+                    outbound.send(
+                        OutboundEvent.SendInfo(
+                            sessionId,
+                            "[Reputation] $factionName: $sign${change.amount} " +
+                                "(${StandingTier.forReputation(change.newStanding).displayName})",
+                        ),
+                    )
+                }
+                if (changes.isNotEmpty()) emitFactions(sessionId, player)
+            }
+        }
+    }
+
+    private suspend fun emitFactions(sessionId: SessionId, player: PlayerState) {
+        val definitions = reputationSystem.factionDefinitions()
+        val standings = reputationSystem.allStandings(player)
+        gmcpEmitter.sendCharFactions(
+            sessionId,
+            standings.map { (factionId, reputation) ->
+                GmcpEmitter.FactionStandingPayload(
+                    id = factionId,
+                    name = definitions[factionId]?.name ?: factionId,
+                    reputation = reputation,
+                    tier = StandingTier.forReputation(reputation).displayName,
+                )
+            },
+        )
     }
 
     private suspend fun checkDungeonBossKilled(mobId: MobId) {

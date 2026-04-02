@@ -1338,6 +1338,11 @@ export function applyGmcpPackage(
       break;
     }
 
+    case "Char.Factions": {
+      // Faction standings received via GMCP — stored for future panel.
+      break;
+    }
+
     case "Auction.List": {
       if (!Array.isArray(data)) {
         ctx.setAuctionListings([]);
