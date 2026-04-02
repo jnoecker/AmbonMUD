@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands
 
 import dev.ambon.bus.OutboundBus
+import dev.ambon.config.BankConfig
 import dev.ambon.config.EconomyConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
@@ -16,6 +17,7 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.commands.handlers.AdminHandler
+import dev.ambon.engine.commands.handlers.BankHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
@@ -69,6 +71,7 @@ internal fun buildTestRouter(
     gatheringRegistry: GatheringRegistry? = null,
     petSystem: PetSystem? = null,
     enchantSystem: EnchantSystem? = null,
+    bankConfig: BankConfig? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
     val ctx = EngineContext(
@@ -106,6 +109,7 @@ internal fun buildTestRouter(
         MailHandler(ctx = ctx),
         petSystem?.let { PetHandler(ctx = ctx, petSystem = it) },
         enchantSystem?.let { EnchantHandler(ctx = ctx, enchantSystem = it) },
+        bankConfig?.let { BankHandler(ctx = ctx, bankConfig = it) },
         AdminHandler(
             ctx = ctx,
             onShutdown = onShutdown,

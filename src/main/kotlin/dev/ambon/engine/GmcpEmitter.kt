@@ -1000,6 +1000,38 @@ class GmcpEmitter(
         emit(sessionId, "Char.Pet", payload)
     }
 
+    // ---------- bank ----------
+
+    data class BankStatePayload(
+        val gold: Long,
+        val items: List<BankItemPayload>,
+        val maxItems: Int,
+    )
+
+    data class BankItemPayload(
+        val id: String,
+        val name: String,
+        val keyword: String,
+        val image: String? = null,
+    )
+
+    suspend fun sendBankState(
+        sessionId: SessionId,
+        gold: Long,
+        items: List<dev.ambon.domain.items.ItemInstance>,
+        maxItems: Int,
+    ) {
+        emit(
+            sessionId,
+            "Char.Bank",
+            BankStatePayload(
+                gold = gold,
+                items = items.map { BankItemPayload(it.id.value, it.item.displayName, it.item.keyword, it.item.image) },
+                maxItems = maxItems,
+            ),
+        )
+    }
+
     // ---------- reputation / factions ----------
 
     data class FactionStandingPayload(

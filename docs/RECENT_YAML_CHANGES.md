@@ -398,3 +398,93 @@ rooms:
 | `enchantments` | Array\|null | Applied enchantment IDs (omitted if none) |
 
 `Crafting.Result` now supports `type: "enchant"` alongside `"craft"` and `"gather"`.
+
+---
+
+## Bank NPC System (application.yaml + zone YAML)
+
+### Config
+
+New config section under `ambonmud.engine.bank`:
+
+```yaml
+ambonmud:
+  engine:
+    bank:
+      maxItems: 50              # Maximum items stored in bank vault (default: 50)
+```
+
+### Room Flag
+
+Rooms with a bank NPC must set `bank: true`:
+
+```yaml
+rooms:
+  vault_hall:
+    title: "The Ambon Vault"
+    description: "A hushed chamber..."
+    bank: true                  # ← enables deposit/withdraw commands
+    exits:
+      s: hall_of_portals
+```
+
+### Banker NPC (zone YAML)
+
+```yaml
+mobs:
+  banker:
+    name: "the Banker"
+    room: vault_hall
+    dialogue:
+      root:
+        text: "Welcome to the Ambon Vault..."
+        choices:
+          - text: "How does the bank work?"
+            next: explain
+          # ...
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `deposit <amount> gold` | Deposit gold into bank |
+| `deposit all gold` | Deposit all carried gold |
+| `deposit <item>` | Store an item in the vault |
+| `withdraw <amount> gold` | Withdraw gold from bank |
+| `withdraw all gold` | Withdraw all banked gold |
+| `withdraw <item>` | Retrieve an item from vault |
+| `bank` | Show bank gold and vault contents |
+
+### Behavior
+- Player must be in a room with `bank: true` for deposit/withdraw commands
+- `balance`/`bank` command works from anywhere
+- Bank gold and items persist across sessions (stored in PlayerRecord)
+- Vault has a configurable item limit (`maxItems`, default 50)
+- Gold has no limit
+
+### Persistence (Flyway V24)
+
+New columns on `players` table:
+- `bank_gold BIGINT NOT NULL DEFAULT 0` — banked gold
+- `bank_items TEXT NOT NULL DEFAULT '[]'` — JSON array of stored ItemInstance objects
+
+### GMCP
+
+New `Char.Bank` package emitted after deposit/withdraw:
+
+```json
+{
+  "gold": 500,
+  "items": [
+    { "id": "sword_1", "name": "a copper sword", "keyword": "sword", "image": null }
+  ],
+  "maxItems": 50
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `gold` | Long | Banked gold balance |
+| `items` | Array | Items in vault (id, name, keyword, image) |
+| `maxItems` | Int | Maximum vault capacity |
