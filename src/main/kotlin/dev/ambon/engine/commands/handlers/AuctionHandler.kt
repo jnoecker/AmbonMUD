@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.AuctionListing
 import dev.ambon.engine.AuctionSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.commands.Command
@@ -8,11 +9,13 @@ import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
 import dev.ambon.engine.events.OutboundEvent
+import dev.ambon.persistence.PlayerRepository
 
 class AuctionHandler(
     private val ctx: EngineContext,
     private val auctionSystem: AuctionSystem? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
+    private val playerRepo: PlayerRepository? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val items = ctx.items
@@ -107,6 +110,9 @@ class AuctionHandler(
                     ),
                 )
             }
+
+            // Push updated listings to all via GMCP
+            broadcastAuctionList(auction)
         }
     }
 
@@ -120,9 +126,12 @@ class AuctionHandler(
                 return
             }
 
-            if (listing.sellerSid == sessionId) {
+            if (listing.sellerName.equals(me.name, ignoreCase = true)) {
                 outbound.send(
-                    OutboundEvent.SendError(sessionId, "You cannot buy your own listing. Use 'auction cancel ${cmd.listingId}'."),
+                    OutboundEvent.SendError(
+                        sessionId,
+                        "You cannot buy your own listing. Use 'auction cancel ${cmd.listingId}'.",
+                    ),
                 )
                 return
             }
@@ -144,19 +153,24 @@ class AuctionHandler(
                 return
             }
 
-            // Transfer gold
+            // Transfer gold: deduct from buyer
             me.gold -= purchased.price
-            val seller = players.get(purchased.sellerSid)
+
+            // Credit seller — online or offline
+            val seller = players.getByName(purchased.sellerName)
             if (seller != null) {
                 seller.gold += purchased.price
                 outbound.send(
                     OutboundEvent.SendInfo(
-                        purchased.sellerSid,
+                        seller.sessionId,
                         "[Auction] ${me.name} purchased your ${purchased.item.item.displayName} for ${purchased.price} gold!",
                     ),
                 )
-                markVitalsDirty(purchased.sellerSid)
-                syncItemsGmcp(purchased.sellerSid, items, gmcpEmitter)
+                markVitalsDirty(seller.sessionId)
+                syncItemsGmcp(seller.sessionId, items, gmcpEmitter)
+            } else {
+                // Seller is offline — credit gold via persistence
+                creditOfflineSellerGold(purchased.sellerName, purchased.price)
             }
 
             outbound.send(
@@ -167,6 +181,19 @@ class AuctionHandler(
             )
             markVitalsDirty(sessionId)
             syncItemsGmcp(sessionId, items, gmcpEmitter)
+
+            broadcastAuctionList(auction)
+        }
+    }
+
+    private suspend fun creditOfflineSellerGold(sellerName: String, amount: Long) {
+        val repo = playerRepo ?: return
+        try {
+            val record = repo.findByName(sellerName) ?: return
+            repo.save(record.copy(gold = record.gold + amount))
+        } catch (e: Exception) {
+            io.github.oshai.kotlinlogging.KotlinLogging.logger {}
+                .warn(e) { "Failed to credit $amount gold to offline player $sellerName" }
         }
     }
 
@@ -188,25 +215,34 @@ class AuctionHandler(
             ),
         )
         syncItemsGmcp(sessionId, items, gmcpEmitter)
+
+        broadcastAuctionList(auction)
+    }
+
+    /** Broadcasts updated auction list to all online players via GMCP. */
+    private suspend fun broadcastAuctionList(auction: AuctionSystem) {
+        val allListings = auction.allListings()
+        val payload = allListings.map { toPayload(it) }
+        for (p in players.allPlayers()) {
+            gmcpEmitter?.sendAuctionList(p.sessionId, payload)
+        }
     }
 
     private suspend fun emitAuctionList(
         sessionId: SessionId,
-        listings: List<dev.ambon.engine.AuctionListing>,
+        listings: List<AuctionListing>,
     ) {
-        gmcpEmitter?.sendAuctionList(
-            sessionId,
-            listings.map { listing ->
-                GmcpEmitter.AuctionListingPayload(
-                    id = listing.id,
-                    itemName = listing.item.item.displayName,
-                    itemId = listing.item.id.value,
-                    price = listing.price,
-                    seller = listing.sellerName,
-                )
-            },
-        )
+        gmcpEmitter?.sendAuctionList(sessionId, listings.map { toPayload(it) })
     }
+
+    private fun toPayload(listing: AuctionListing): GmcpEmitter.AuctionListingPayload =
+        GmcpEmitter.AuctionListingPayload(
+            id = listing.id,
+            itemName = listing.item.item.displayName,
+            itemId = listing.item.id.value,
+            price = listing.price,
+            seller = listing.sellerName,
+        )
 
     private suspend fun sendUnavailable(sessionId: SessionId) {
         outbound.send(OutboundEvent.SendError(sessionId, "The auction house is not available."))

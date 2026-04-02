@@ -85,7 +85,7 @@ class AuctionSystemTest {
             givePotion(sid1)
             auction.postListing(sid1, "Player1", "sword", 100)
             auction.postListing(sid1, "Player1", "potion", 50)
-            assertEquals(2, auction.listingsBy(sid1).size)
+            assertEquals(2, auction.listingsBy("Player1").size)
         }
     }
 

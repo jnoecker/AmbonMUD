@@ -256,7 +256,15 @@ class GameEngine(
             onPlayerLoggedOut = { player, sid ->
                 log.info { "Player logged out: name=${player.name} sessionId=$sid" }
                 tradeSystem.cancelForPlayer(sid)
-                auctionSystem.cancelAllForPlayer(sid)
+                val cancelledAuctions = auctionSystem.cancelAllForPlayer(sid)
+                if (cancelledAuctions.isNotEmpty()) {
+                    val payload = auctionSystem.allListings().map {
+                        GmcpEmitter.AuctionListingPayload(it.id, it.item.item.displayName, it.item.id.value, it.price, it.sellerName)
+                    }
+                    for (p in players.allPlayers()) {
+                        gmcpEmitter.sendAuctionList(p.sessionId, payload)
+                    }
+                }
                 playerLocationIndex?.unregister(player.name)
                 broadcastToRoom(players, outbound, player.roomId, "${player.name} leaves.", sid)
                 friendsSystem.onPlayerLogout(player.name)
@@ -664,7 +672,11 @@ class GameEngine(
 
     private val tradeSystem = TradeSystem(items = items)
 
-    private val auctionSystem = AuctionSystem(items = items, clock = clock)
+    private val auctionSystem = AuctionSystem(
+        items = items,
+        clock = clock,
+        persistPath = java.nio.file.Path.of("data", "auction_listings.json"),
+    ).also { it.loadPersistedListings() }
 
     private val dialogueSystem =
         DialogueSystem(
@@ -938,6 +950,7 @@ class GameEngine(
                 ctx = ctx,
                 auctionSystem = auctionSystem,
                 markVitalsDirty = ::markVitalsDirty,
+                playerRepo = persistence.playerRepo,
             ),
             SpriteHandler(
                 ctx = ctx,
