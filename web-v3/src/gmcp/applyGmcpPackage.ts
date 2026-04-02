@@ -1359,6 +1359,21 @@ export function applyGmcpPackage(
       break;
     }
 
+    case "World.Time": {
+      // World time received via GMCP — available for day/night UI.
+      break;
+    }
+
+    case "World.Weather": {
+      // Zone weather received via GMCP — available for weather effects.
+      break;
+    }
+
+    case "World.Events": {
+      // Active world events received via GMCP — available for event panel.
+      break;
+    }
+
     case "Auction.List": {
       if (!Array.isArray(data)) {
         ctx.setAuctionListings([]);
