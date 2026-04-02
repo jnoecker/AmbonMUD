@@ -390,6 +390,15 @@ data class AppConfig(
         }
 
         require(engine.bank.maxItems > 0) { "ambonMUD.engine.bank.maxItems must be > 0" }
+        require(engine.worldTime.cycleLengthMs > 0L) { "ambonMUD.engine.worldTime.cycleLengthMs must be > 0" }
+        require(engine.worldTime.dawnHour in 0..23) { "ambonMUD.engine.worldTime.dawnHour must be 0..23" }
+        require(engine.worldTime.dayHour in 0..23) { "ambonMUD.engine.worldTime.dayHour must be 0..23" }
+        require(engine.worldTime.duskHour in 0..23) { "ambonMUD.engine.worldTime.duskHour must be 0..23" }
+        require(engine.worldTime.nightHour in 0..23) { "ambonMUD.engine.worldTime.nightHour must be 0..23" }
+        require(engine.weather.minTransitionMs > 0L) { "ambonMUD.engine.weather.minTransitionMs must be > 0" }
+        require(engine.weather.maxTransitionMs >= engine.weather.minTransitionMs) {
+            "ambonMUD.engine.weather.maxTransitionMs must be >= minTransitionMs"
+        }
 
         // Validate enchantment definitions
         require(engine.enchanting.maxEnchantmentsPerItem > 0) {
@@ -497,6 +506,41 @@ data class PetConfig(
 
 data class BankConfig(
     val maxItems: Int = 50,
+)
+
+data class WorldTimeConfig(
+    /** Real-time milliseconds for one full game day (24 game hours). Default: 1 hour. */
+    val cycleLengthMs: Long = 3_600_000L,
+    val dawnHour: Int = 5,
+    val dayHour: Int = 8,
+    val duskHour: Int = 18,
+    val nightHour: Int = 21,
+)
+
+data class WeatherConfig(
+    /** Minimum real-time ms between weather transitions per zone. */
+    val minTransitionMs: Long = 300_000L,
+    /** Maximum real-time ms between weather transitions per zone. */
+    val maxTransitionMs: Long = 900_000L,
+)
+
+data class WorldEventDefinition(
+    val displayName: String = "",
+    val description: String = "",
+    /** ISO date string (yyyy-MM-dd) for event start, empty = always active. */
+    val startDate: String = "",
+    /** ISO date string (yyyy-MM-dd) for event end, empty = no end. */
+    val endDate: String = "",
+    /** Flags set on the world when event is active, queryable by quests/mobs. */
+    val flags: List<String> = emptyList(),
+    /** Announcement broadcast when event activates. */
+    val startMessage: String = "",
+    /** Announcement broadcast when event ends. */
+    val endMessage: String = "",
+)
+
+data class WorldEventsConfig(
+    val definitions: Map<String, WorldEventDefinition> = emptyMap(),
 )
 
 data class EnchantmentDefinition(
@@ -865,6 +909,9 @@ data class EngineConfig(
     val pets: PetConfig = PetConfig(),
     val enchanting: EnchantingConfig = EnchantingConfig(),
     val bank: BankConfig = BankConfig(),
+    val worldTime: WorldTimeConfig = WorldTimeConfig(),
+    val weather: WeatherConfig = WeatherConfig(),
+    val worldEvents: WorldEventsConfig = WorldEventsConfig(),
     val friends: FriendsConfig = FriendsConfig(),
     val debug: EngineDebugConfig = EngineDebugConfig(),
     val classes: ClassEngineConfig = ClassEngineConfig(),

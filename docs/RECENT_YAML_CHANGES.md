@@ -544,3 +544,126 @@ New config field `images.legacyTierSprites` (default: `true`). Set to `false` to
 - Players with old sprite selections keep them
 
 See `docs/ARCANUM_SPRITE_INSTRUCTIONS.md` for full authoring guide.
+## Day/Night Cycle (application.yaml)
+
+New config section under `ambonmud.engine.worldTime`:
+
+```yaml
+ambonmud:
+  engine:
+    worldTime:
+      cycleLengthMs: 3600000     # Real ms for one game day (default: 1 hour)
+      dawnHour: 5                # Game hour when dawn begins
+      dayHour: 8                 # Game hour when day begins
+      duskHour: 18               # Game hour when dusk begins
+      nightHour: 21              # Game hour when night begins
+```
+
+### Time Periods
+
+| Period | Default Hours | Description |
+|--------|--------------|-------------|
+| NIGHT | 21:00–04:59 | Stars glitter overhead in the dark sky. |
+| DAWN | 05:00–07:59 | The sky brightens with the first light of dawn. |
+| DAY | 08:00–17:59 | Sunlight fills the world. |
+| DUSK | 18:00–20:59 | Long shadows stretch as the sun sinks low. |
+
+### Command
+
+| Command | Description |
+|---------|-------------|
+| `time` | Show current game time, weather, and active events |
+
+### GMCP: `World.Time`
+
+Broadcast to all players when the time period changes:
+
+```json
+{ "period": "DAY", "hour": 8, "minute": 0 }
+```
+
+---
+
+## Weather System (application.yaml)
+
+New config section under `ambonmud.engine.weather`:
+
+```yaml
+ambonmud:
+  engine:
+    weather:
+      minTransitionMs: 300000    # Min real ms between weather changes (5 min)
+      maxTransitionMs: 900000    # Max real ms between weather changes (15 min)
+```
+
+### Weather Types
+
+| Type | Weight | Description |
+|------|--------|-------------|
+| CLEAR | 3.0 | The sky is clear. |
+| RAIN | 2.0 | A steady rain falls. |
+| STORM | 0.5 | Thunder rumbles and lightning splits the sky. |
+| FOG | 1.0 | A thick fog blankets the area. |
+| SNOW | 0.8 | Soft snow drifts down from above. |
+| WIND | 1.0 | A fierce wind howls through the area. |
+
+Weather transitions are per-zone and weighted random. Higher weight = more likely.
+
+### GMCP: `World.Weather`
+
+Sent to players in a zone when its weather changes:
+
+```json
+{ "zone": "ambon_hub", "weather": "RAIN", "description": "A steady rain falls." }
+```
+
+---
+
+## Seasonal Events Framework (application.yaml)
+
+New config section under `ambonmud.engine.worldEvents`:
+
+```yaml
+ambonmud:
+  engine:
+    worldEvents:
+      definitions:
+        spring_festival:
+          displayName: "Spring Festival"
+          description: "Flowers bloom across the realm."
+          startDate: "2026-03-20"    # ISO date (yyyy-MM-dd)
+          endDate: "2026-04-20"
+          flags:
+            - spring_festival        # Queryable by quests, mobs, items
+            - bonus_herbalism
+          startMessage: "The Spring Festival has begun!"
+          endMessage: "The Spring Festival has ended."
+```
+
+### Event Definition Fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `displayName` | String | `""` | Display name shown to players |
+| `description` | String | `""` | Flavor text |
+| `startDate` | String | `""` | ISO date for event start (empty = always active) |
+| `endDate` | String | `""` | ISO date for event end (empty = no end) |
+| `flags` | List\<String\> | `[]` | Flags set when event is active |
+| `startMessage` | String | `""` | Broadcast when event activates |
+| `endMessage` | String | `""` | Broadcast when event deactivates |
+
+### Behavior
+- Events activate/deactivate based on real-world UTC date
+- `startMessage` and `endMessage` are broadcast to all online players
+- `flags` are queryable by other systems via `WorldEventSystem.hasFlag(flag)`
+- Empty `startDate`/`endDate` = always active (permanent event)
+
+### GMCP: `World.Events`
+
+Broadcast to all players when events change:
+
+```json
+[
+  { "id": "spring_festival", "name": "Spring Festival", "description": "Flowers bloom across the realm." }
+]
+```
