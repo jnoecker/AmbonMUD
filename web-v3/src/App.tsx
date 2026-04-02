@@ -43,6 +43,7 @@ import type {
   ChatMessage,
   CharacterInfo,
   CombatEventData,
+  AuctionListing,
   CombatLogMessage,
   CombatTarget,
   CommandEntry,
@@ -224,6 +225,8 @@ function App() {
   const [spriteList, setSpriteList] = useState<SpriteList>({ active: null, sprites: [] });
   const [housing, setHousing] = useState<HousingInfo | null>(null);
   const [tradeState, setTradeState] = useState<TradeState | null>(null);
+  const [auctionListings, setAuctionListings] = useState<AuctionListing[]>([]); // GMCP Auction.List data for future panel
+  void auctionListings; // suppress unused-var lint until auction panel is built
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -376,6 +379,7 @@ function App() {
     setSavedCharacters([]);
     setHousing(null);
     setTradeState(null);
+    setAuctionListings([]);
     combatEventsRef.current = [];
     gainEventsRef.current = [];
     setCombatLogMessages([]);
@@ -466,6 +470,7 @@ function App() {
           setSpriteList,
           setHousing,
           setTradeState,
+          setAuctionListings,
           sendGmcp: (pkg: string, payload: unknown) => { sendGmcpRef.current(pkg, payload); return true; },
         },
       );
