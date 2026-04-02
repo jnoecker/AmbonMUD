@@ -25,6 +25,7 @@ class NavigationHandler(
     private val clock: Clock = Clock.systemUTC(),
     private val recallConfig: RecallConfig = RecallConfig(),
     private val housingSystem: HousingSystem? = null,
+    private val onPlayerMoved: (suspend (SessionId, RoomId) -> Unit)? = null,
 ) : CommandHandler {
     private val ctx = ctx
     private val world = ctx.world
@@ -105,6 +106,7 @@ class NavigationHandler(
                         gmcpEmitter,
                         dialogueSystem,
                     )
+                    onPlayerMoved?.invoke(sessionId, origin)
                     outbound.send(OutboundEvent.SendText(sessionId, "You step outside and find yourself back where you came from."))
                     ctx.sendLook(sessionId)
                 } else {
@@ -131,6 +133,7 @@ class NavigationHandler(
                 gmcpEmitter,
                 dialogueSystem,
             )
+            onPlayerMoved?.invoke(sessionId, to)
             ctx.sendLook(sessionId)
         }
     }
@@ -176,6 +179,7 @@ class NavigationHandler(
                         gmcpEmitter,
                         dialogueSystem,
                     )
+                    onPlayerMoved?.invoke(sessionId, result.entryRoomId)
                     outbound.send(OutboundEvent.SendText(sessionId, "You feel a familiar warmth and find yourself home."))
                     ctx.sendLook(sessionId)
                 }
@@ -214,6 +218,7 @@ class NavigationHandler(
             gmcpEmitter,
             dialogueSystem,
         )
+        onPlayerMoved?.invoke(sessionId, target)
         outbound.send(OutboundEvent.SendText(sessionId, msgs.arrival))
         ctx.sendLook(sessionId)
     }
