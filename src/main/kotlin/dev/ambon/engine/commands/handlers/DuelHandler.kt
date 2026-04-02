@@ -71,26 +71,48 @@ class DuelHandler(
     private suspend fun handleDuelAccept(sessionId: SessionId) {
         val ds = duelSystem ?: return sendUnavailable(sessionId)
 
+        val challenge = ds.getPendingChallenge(sessionId)
+        if (challenge == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "No pending duel challenge to accept."))
+            return
+        }
+
+        // Re-validate: both players must still be in the same room and not in combat
+        val me = players.get(sessionId)
+        val challenger = players.get(challenge.challengerSid)
+        if (me == null || challenger == null) {
+            ds.decline(sessionId)
+            outbound.send(OutboundEvent.SendError(sessionId, "The challenger is no longer available."))
+            return
+        }
+        if (me.roomId != challenger.roomId) {
+            ds.decline(sessionId)
+            outbound.send(OutboundEvent.SendError(sessionId, "You must be in the same room to duel."))
+            outbound.send(OutboundEvent.SendInfo(challenge.challengerSid, "${me.name} is no longer nearby. Duel cancelled."))
+            return
+        }
+        if (combatSystem?.isInCombat(sessionId) == true || combatSystem?.isInCombat(challenge.challengerSid) == true) {
+            ds.decline(sessionId)
+            outbound.send(OutboundEvent.SendError(sessionId, "Cannot duel while in combat."))
+            return
+        }
+
         val duel = ds.accept(sessionId)
         if (duel == null) {
             outbound.send(OutboundEvent.SendError(sessionId, "No pending duel challenge to accept."))
             return
         }
 
-        val p1Name = players.get(duel.player1)?.name ?: "Unknown"
-        val p2Name = players.get(duel.player2)?.name ?: "Unknown"
-
         outbound.send(
-            OutboundEvent.SendInfo(duel.player1, "** $p2Name accepts your duel challenge! Fight! **"),
+            OutboundEvent.SendInfo(duel.player1, "** ${me.name} accepts your duel challenge! Fight! **"),
         )
         outbound.send(
-            OutboundEvent.SendInfo(duel.player2, "** You accept the duel with $p1Name! Fight! **"),
+            OutboundEvent.SendInfo(duel.player2, "** You accept the duel with ${challenger.name}! Fight! **"),
         )
 
-        val roomId = players.get(duel.player1)?.roomId ?: return
-        for (p in players.playersInRoom(roomId)) {
+        for (p in players.playersInRoom(me.roomId)) {
             if (p.sessionId != duel.player1 && p.sessionId != duel.player2) {
-                outbound.send(OutboundEvent.SendText(p.sessionId, "** $p1Name and $p2Name begin a duel! **"))
+                outbound.send(OutboundEvent.SendText(p.sessionId, "** ${challenger.name} and ${me.name} begin a duel! **"))
             }
         }
     }

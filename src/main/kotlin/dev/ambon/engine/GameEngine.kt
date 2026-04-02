@@ -681,6 +681,7 @@ class GameEngine(
     private val tradeSystem = TradeSystem(items = items)
 
     private val duelSystem = DuelSystem(clock = clock)
+    private val duelRng = java.util.Random()
 
     private val auctionSystem = AuctionSystem(
         items = items,
@@ -1675,20 +1676,11 @@ class GameEngine(
      */
     private suspend fun tickDuels() {
         val now = clock.millis()
+        val duelTickIntervalMs = 2000L
 
-        // Collect active duels (deduplicated — each duel stored under both players)
-        val processedDuels = mutableSetOf<SessionId>()
-        for (sid in duelSystem.activeDuels().map { it.player1 }) {
-            if (sid in processedDuels) continue
-            val duel = duelSystem.getDuel(sid) ?: continue
-            processedDuels.add(duel.player1)
-            processedDuels.add(duel.player2)
-
-            // Only tick every 2 seconds
-            val elapsed = now - duel.startedAtMs
-            val tickIndex = elapsed / 2000L
-            val lastTick = (elapsed - 100L) / 2000L
-            if (tickIndex <= lastTick) continue
+        for (duel in duelSystem.activeDuels()) {
+            if (now - duel.lastTickedAtMs < duelTickIntervalMs) continue
+            duel.lastTickedAtMs = now
 
             val p1 = players.get(duel.player1) ?: continue
             val p2 = players.get(duel.player2) ?: continue
@@ -1725,17 +1717,14 @@ class GameEngine(
 
         // Dodge check (same formula as mob combat)
         val dodgePct = ((defenderStats["DEX"] - 10) * 2).coerceIn(0, 30)
-        if (dodgePct > 0 && kotlin.random.Random.nextInt(100) < dodgePct) {
+        if (dodgePct > 0 && duelRng.nextInt(100) < dodgePct) {
             outbound.send(OutboundEvent.SendText(attackerSid, "${defender.name} dodges your attack!"))
             outbound.send(OutboundEvent.SendText(defenderSid, "You dodge ${attacker.name}'s attack!"))
             return
         }
 
         // Damage calculation (same formula as mob combat)
-        val baseDmg = kotlin.random.Random.nextInt(
-            engineConfig.combat.minDamage,
-            engineConfig.combat.maxDamage + 1,
-        )
+        val baseDmg = rollRange(duelRng, engineConfig.combat.minDamage, engineConfig.combat.maxDamage)
         val strBonus = (attackerStats["STR"] - 10) / 3
         val eqBonus = items.equipmentBonuses(attackerSid).attack
         val defArmor = items.equipmentBonuses(defenderSid).armor
@@ -1788,9 +1777,5 @@ class GameEngine(
                 loser,
             )
         }
-
-        // Restore loser to 1 HP (already clamped)
-        markVitalsDirty(winner)
-        markVitalsDirty(loser)
     }
 }
