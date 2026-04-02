@@ -18,6 +18,7 @@ data class ActiveDuel(
     val player1: SessionId,
     val player2: SessionId,
     val startedAtMs: Long,
+    var lastTickedAtMs: Long = 0L,
 )
 
 /**
