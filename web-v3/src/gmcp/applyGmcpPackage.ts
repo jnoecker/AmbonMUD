@@ -63,6 +63,8 @@ import type {
   WhoPlayer,
   ZoneInstances,
   ZoneInstanceItem,
+  LeaderboardData,
+  LeaderboardEntry,
 } from "../types";
 import { MAX_CHAT_MESSAGES_PER_CHANNEL } from "../constants";
 import { safeNumber } from "../utils";
@@ -132,6 +134,7 @@ interface GmcpContext {
   setHousing: Dispatch<SetStateAction<HousingInfo | null>>;
   setTradeState: Dispatch<SetStateAction<TradeState | null>>;
   setAuctionListings: Dispatch<SetStateAction<AuctionListing[]>>;
+  setLeaderboard: Dispatch<SetStateAction<Record<string, LeaderboardData>>>;
 }
 
 const CHAT_CHANNEL_SET = new Set<ChatChannel>(["say", "tell", "gossip", "shout", "ooc", "gtell", "gchat"]);
@@ -1390,6 +1393,25 @@ export function applyGmcpPackage(
             seller: typeof e.seller === "string" ? e.seller : "",
           })),
       );
+      break;
+    }
+
+    case "Leaderboard.Data": {
+      const packet = data as Partial<Record<string, unknown>>;
+      const category = typeof packet.category === "string" ? packet.category : "";
+      const label = typeof packet.label === "string" ? packet.label : category;
+      const scoreLabel = typeof packet.scoreLabel === "string" ? packet.scoreLabel : "";
+      const entries: LeaderboardEntry[] = Array.isArray(packet.entries)
+        ? packet.entries
+            .filter((e): e is Record<string, unknown> => typeof e === "object" && e !== null)
+            .map((e) => ({
+              rank: safeNumber(e.rank, 0),
+              name: typeof e.name === "string" ? e.name : "",
+              score: safeNumber(e.score, 0),
+            }))
+        : [];
+      const leaderboardData: LeaderboardData = { category, label, scoreLabel, entries };
+      ctx.setLeaderboard((prev) => ({ ...prev, [category]: leaderboardData }));
       break;
     }
 

@@ -508,6 +508,13 @@ data class BankConfig(
     val maxItems: Int = 50,
 )
 
+data class LeaderboardConfig(
+    /** How often to refresh the leaderboard cache from player data (ms). Default: 5 minutes. */
+    val refreshIntervalMs: Long = 300_000L,
+    /** Maximum number of entries per leaderboard category. */
+    val topN: Int = 10,
+)
+
 data class WorldTimeConfig(
     /** Real-time milliseconds for one full game day (24 game hours). Default: 1 hour. */
     val cycleLengthMs: Long = 3_600_000L,
@@ -938,6 +945,7 @@ data class EngineConfig(
     val classStartRooms: Map<String, String> = emptyMap(),
     /** How long to hold a disconnected player's session before full logout (ms). 0 disables. */
     val sessionResumeGracePeriodMs: Long = 90_000,
+    val leaderboard: LeaderboardConfig = LeaderboardConfig(),
 )
 
 data class NavigationConfig(

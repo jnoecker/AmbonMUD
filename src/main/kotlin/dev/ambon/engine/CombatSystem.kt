@@ -637,6 +637,9 @@ class CombatSystem(
             ),
         )
 
+        // Increment kill counter for the killing blow
+        players.get(killerSessionId)?.let { it.mobsKilledTotal += 1 }
+
         // Fire quest/achievement callbacks for all contributors
         if (mob.templateKey.isNotEmpty()) {
             for (sid in contributors) {

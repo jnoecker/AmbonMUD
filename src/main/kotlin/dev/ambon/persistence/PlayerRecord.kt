@@ -66,6 +66,10 @@ data class PlayerRecord(
     val authTokenHash: String = "",
     /** Epoch millis when the auth token was issued. 0 = no token. */
     val authTokenIssuedAt: Long = 0L,
+    /** Cumulative count of mobs killed by this player. */
+    val mobsKilledTotal: Long = 0L,
+    /** Number of dungeon instances completed by this player. */
+    val dungeonsCompleted: Int = 0,
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

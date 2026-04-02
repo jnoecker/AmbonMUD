@@ -420,6 +420,13 @@ sealed interface Command {
 
     data object SpriteDefault : Command
 
+    // ---- Leaderboard commands ----
+
+    /** Show a leaderboard. [category] is one of: level, achievements, crafting, dungeons, kills. */
+    data class Leaderboard(
+        val category: String?,
+    ) : Command
+
     // ---- World feature commands ----
 
     data class OpenFeature(
@@ -1137,6 +1144,11 @@ object CommandParser {
                 "default", "clear", "auto" -> Command.SpriteDefault
                 else -> Command.SpriteSet(rest.trim())
             }
+        }?.let { return it }
+
+        // leaderboard [category]
+        matchPrefix(line, listOf("leaderboard", "leaders", "top")) { rest ->
+            Command.Leaderboard(rest.takeIf { it.isNotBlank() })
         }?.let { return it }
 
         // Crafting & Gathering

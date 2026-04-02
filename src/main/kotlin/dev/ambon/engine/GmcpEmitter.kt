@@ -2286,6 +2286,40 @@ class GmcpEmitter(
         val active: String?,
         val sprites: List<CharSpriteEntry>,
     )
+
+    // ---------- leaderboard ----------
+
+    /** Sends the `Leaderboard.Data` GMCP package for a specific category. */
+    suspend fun sendLeaderboard(
+        sessionId: SessionId,
+        category: LeaderboardSystem.Category,
+        entries: List<LeaderboardSystem.LeaderboardEntry>,
+    ) {
+        emit(
+            sessionId,
+            "Leaderboard.Data",
+            LeaderboardPayload(
+                category = category.key,
+                label = category.displayName,
+                scoreLabel = category.scoreLabel,
+                entries = entries.map { LeaderboardEntryPayload(rank = it.rank, name = it.playerName, score = it.score) },
+            ),
+            supportCheck = "Leaderboard",
+        )
+    }
+
+    private data class LeaderboardEntryPayload(
+        val rank: Int,
+        val name: String,
+        val score: Long,
+    )
+
+    private data class LeaderboardPayload(
+        val category: String,
+        val label: String,
+        val scoreLabel: String,
+        val entries: List<LeaderboardEntryPayload>,
+    )
 }
 
 // ---------- public data entry types for new GMCP methods ----------

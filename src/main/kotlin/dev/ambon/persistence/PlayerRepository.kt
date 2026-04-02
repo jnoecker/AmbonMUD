@@ -52,6 +52,14 @@ interface PlayerRepository {
     suspend fun save(record: PlayerRecord)
 
     /**
+     * Returns all persisted player records. Intended for bulk reads (e.g., leaderboard
+     * generation). Implementations should be efficient but may be slow on large datasets;
+     * callers should avoid calling this on the hot tick path.
+     * Default implementation returns an empty list (no-op for wrappers like caching layers).
+     */
+    suspend fun findAll(): List<PlayerRecord> = emptyList()
+
+    /**
      * Hint that the given player is no longer active and any cached state
      * may be discarded.  Implementations should flush any pending writes
      * for [id] before evicting.  The next [findById]/[findByName] will
