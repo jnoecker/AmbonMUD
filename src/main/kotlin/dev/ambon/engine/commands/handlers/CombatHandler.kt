@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.DuelSystem
 import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
@@ -17,6 +18,7 @@ class CombatHandler(
     private val statusEffects: StatusEffectSystem? = null,
     private val dialogueSystem: DialogueSystem? = null,
     private val housingSystem: HousingSystem? = null,
+    private val duelSystem: DuelSystem? = null,
 ) : CommandHandler {
     private val players = ctx.players
     private val mobs = ctx.mobs
@@ -59,6 +61,18 @@ class CombatHandler(
     }
 
     private suspend fun handleFlee(sessionId: SessionId) {
+        // Check if player is in a duel first
+        if (duelSystem?.isInDuel(sessionId) == true) {
+            val duel = duelSystem.endDuel(sessionId)
+            if (duel != null) {
+                val other = if (duel.player1 == sessionId) duel.player2 else duel.player1
+                val myName = players.get(sessionId)?.name ?: "Someone"
+                outbound.send(OutboundEvent.SendInfo(sessionId, "You flee from the duel!"))
+                outbound.send(OutboundEvent.SendInfo(other, "$myName flees from the duel!"))
+            }
+            return
+        }
+
         val error = combat.flee(sessionId)
         outbound.sendIfError(sessionId, error)
         if (error != null) {
