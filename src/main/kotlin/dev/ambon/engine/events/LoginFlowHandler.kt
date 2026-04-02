@@ -516,7 +516,7 @@ internal class LoginFlowHandler(
         log.info { "Player logged in: name=${me.name} sessionId=$sessionId" }
         onAfterLogin(sessionId)
         playerLocationIndex?.register(me.name)
-        abilitySystem.syncAbilities(sessionId, me.level, me.playerClass)
+        abilitySystem.loadAbilities(sessionId, me.learnedAbilityIds)
         outbound.send(OutboundEvent.SetAnsi(sessionId, me.ansiEnabled))
         if (!ensureLoginRoomAvailable(sessionId, suppressEnterBroadcast)) return
         if (!suppressEnterBroadcast) {

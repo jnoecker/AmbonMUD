@@ -70,6 +70,10 @@ data class PlayerRecord(
     val mobsKilledTotal: Long = 0L,
     /** Number of dungeon instances completed by this player. */
     val dungeonsCompleted: Int = 0,
+    /** Ability IDs explicitly learned via class trainers. */
+    val learnedAbilityIds: Set<String> = emptySet(),
+    /** Class names this player has unlocked (original class + any multi-class unlocks). */
+    val unlockedClasses: Set<String> = emptySet(),
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

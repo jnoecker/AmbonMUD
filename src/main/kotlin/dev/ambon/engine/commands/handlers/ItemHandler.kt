@@ -292,9 +292,20 @@ class ItemHandler(
             outbound.send(OutboundEvent.SendText(sessionId, levelUpMessage))
 
             if (abilitySystem != null) {
-                val newAbilities = abilitySystem.syncAbilities(sessionId, result.newLevel, player.playerClass)
-                for (ability in newAbilities) {
-                    outbound.send(OutboundEvent.SendText(sessionId, "You have learned ${ability.displayName}!"))
+                val interval = 2 // default; trainer handler uses config-based value
+                val available = abilitySystem.availableSkillPoints(
+                    level = result.newLevel,
+                    learnedCount = player.learnedAbilityIds.size,
+                    interval = interval,
+                )
+                if (available > 0) {
+                    val pointWord = if (available == 1) "skill point" else "skill points"
+                    outbound.send(
+                        OutboundEvent.SendText(
+                            sessionId,
+                            "You have $available $pointWord available! Visit a class trainer to learn new abilities.",
+                        ),
+                    )
                 }
             }
         }

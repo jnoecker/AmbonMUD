@@ -38,6 +38,7 @@ import dev.ambon.domain.world.MobSpawn
 import dev.ambon.domain.world.Room
 import dev.ambon.domain.world.RoomFeature
 import dev.ambon.domain.world.ShopDefinition
+import dev.ambon.domain.world.TrainerDefinition
 import dev.ambon.domain.world.World
 import dev.ambon.domain.world.data.ExitValue
 import dev.ambon.domain.world.data.ExitValueDeserializer
@@ -115,6 +116,7 @@ object WorldLoader {
         val mergedMobs = LinkedHashMap<MobId, MobSpawn>()
         val mergedItems = LinkedHashMap<ItemId, ItemSpawn>()
         val mergedShops = mutableListOf<ShopDefinition>()
+        val mergedTrainers = mutableListOf<TrainerDefinition>()
         val mergedQuests = mutableListOf<QuestDef>()
         val mergedGatheringNodes = mutableListOf<GatheringNodeDef>()
         val mergedRecipes = mutableListOf<RecipeDef>()
@@ -466,6 +468,26 @@ object WorldLoader {
                 )
             }
 
+            // Stage trainers (normalized)
+            for ((rawId, trainerFile) in file.trainers) {
+                val trainerName = requireNonBlank(trainerFile.name) {
+                    "Trainer '$rawId' in zone '$zone' name cannot be blank"
+                }
+                val trainerClass = requireNonBlank(trainerFile.className) {
+                    "Trainer '$rawId' in zone '$zone' class cannot be blank"
+                }
+                val trainerRoomId = normalizeTarget(zone, trainerFile.room)
+                mergedTrainers.add(
+                    TrainerDefinition(
+                        id = qualifyId(zone, rawId),
+                        name = trainerName,
+                        className = trainerClass.uppercase(),
+                        roomId = trainerRoomId,
+                        image = trainerFile.image,
+                    ),
+                )
+            }
+
             // Stage quests (normalized)
             for ((rawId, questFile) in file.quests) {
                 val questId = qualifyId(zone, rawId)
@@ -780,6 +802,15 @@ object WorldLoader {
             }
         }
 
+        // Validate trainer room references after merge
+        for (trainer in mergedTrainers) {
+            if (!mergedRooms.containsKey(trainer.roomId)) {
+                throw WorldLoadException(
+                    "Trainer '${trainer.id}' references missing room '${trainer.roomId.value}'",
+                )
+            }
+        }
+
         // Validate gathering node references after merge
         for (node in mergedGatheringNodes) {
             if (!mergedRooms.containsKey(node.roomId)) {
@@ -859,6 +890,7 @@ object WorldLoader {
                     .mapNotNull { (zone, lifespanMinutes) -> lifespanMinutes?.let { zone to it } }
                     .toMap(),
             shopDefinitions = mergedShops.toList(),
+            trainerDefinitions = mergedTrainers.toList(),
             questDefinitions = mergedQuests.toList(),
             gatheringNodes = mergedGatheringNodes.toList(),
             recipes = mergedRecipes.toList(),
