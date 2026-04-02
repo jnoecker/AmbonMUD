@@ -4,135 +4,193 @@ This document describes the sprite system's naming conventions, file structure, 
 
 ## Overview
 
-Player sprites are images displayed in the web client to represent the player's character. Sprites are organized into three categories:
+Player sprites are images displayed in the web client to represent the player's character. Sprites are organized into four categories:
 
-- **Tier sprites** — Unlocked by reaching level thresholds (1, 10, 20, 30, 40, 50). One image per race/class combination.
-- **Achievement sprites** — Unlocked by earning specific achievements. May have race, class, and/or gender variants.
+- **General sprites** — Independent sprites with flexible unlock criteria based on any combination of race, class, level, achievement, and staff status. This is the primary format for new sprites.
+- **Tier sprites** (legacy) — Auto-generated race×class×level sprites. Controlled by `images.legacyTierSprites` config flag.
+- **Achievement sprites** (legacy) — Unlocked by a single achievement. Still supported but new sprites should use the requirements format.
 - **Staff sprites** — Available only to staff members. One image per race.
+
+## Sprite Requirements (New Format)
+
+New sprites use a **requirements list** with AND logic — all requirements must be met for the sprite to be unlocked. This replaces the legacy single-condition `unlock` block.
+
+### Requirement Types
+
+| Type | Fields | Description |
+|------|--------|-------------|
+| `minLevel` | `level: Int` | Player level >= value |
+| `race` | `race: String` | Player race matches (e.g. "ELF") |
+| `class` | `playerClass: String` | Player class matches (e.g. "MAGE") |
+| `achievement` | `achievementId: String` | Player has unlocked the achievement |
+| `staff` | — | Player is staff |
+
+### Examples
+
+**Race-only sprite** (available to all elves):
+```yaml
+  elven_heritage:
+    displayName: "Elven Heritage"
+    description: "The grace of the elder folk."
+    category: general
+    sortOrder: 50
+    requirements:
+      - type: race
+        race: ELF
+    image: player_sprites/elven_heritage.png
+```
+
+**Class + Level sprite** (level 20+ warriors):
+```yaml
+  sword_saint:
+    displayName: "Sword Saint"
+    description: "A warrior who has mastered the blade."
+    category: general
+    sortOrder: 120
+    requirements:
+      - type: class
+        playerClass: WARRIOR
+      - type: minLevel
+        level: 20
+    image: player_sprites/sword_saint.png
+```
+
+**Race + Class + Level sprite** (level 30+ elf mages):
+```yaml
+  elven_arcanist:
+    displayName: "Elven Arcanist"
+    description: "An elf who has mastered ancient magic."
+    category: general
+    sortOrder: 200
+    requirements:
+      - type: race
+        race: ELF
+      - type: class
+        playerClass: MAGE
+      - type: minLevel
+        level: 30
+    image: player_sprites/elven_arcanist.png
+```
+
+**Achievement + Level sprite**:
+```yaml
+  dragon_slayer:
+    displayName: "Dragon Slayer"
+    description: "Defeated the ancient golem in single combat."
+    category: general
+    sortOrder: 300
+    requirements:
+      - type: achievement
+        achievementId: combat/secret_slayer
+      - type: minLevel
+        level: 20
+    image: player_sprites/dragon_slayer.png
+```
+
+## Single-Image vs. Variants
+
+Most new sprites use a **single image** via the `image` shorthand field. This creates one variant with the sprite's ID as the imageId.
+
+For sprites that need **race/class/gender-specific images**, use the `variants` list instead:
+
+```yaml
+  beast_tamer:
+    displayName: "Beast Tamer"
+    category: general
+    sortOrder: 150
+    requirements:
+      - type: minLevel
+        level: 15
+    variants:
+      - imageId: beast_tamer
+        displayName: "Beast Tamer"
+        imagePath: player_sprites/beast_tamer.png
+      - imageId: elf_beast_tamer
+        displayName: "Beast Tamer (Elf)"
+        race: ELF
+        imagePath: player_sprites/elf_beast_tamer.png
+```
+
+When both `image` and `variants` are present, `variants` takes precedence.
 
 ## File Location
 
 All player sprite images go in the `player_sprites/` directory under the images asset base.
 
-## Naming Conventions
-
-### Tier Sprites (auto-generated, existing pattern)
-
-Format: `{race}_{class}_{tierSuffix}.png`
-
-| Level | Tier Suffix | Tier Name |
-|-------|-------------|-----------|
-| 1+    | `t1`        | Novice |
-| 10+   | `t10`       | Apprentice |
-| 20+   | `t20`       | Journeyman |
-| 30+   | `t30`       | Expert |
-| 40+   | `t40`       | Master |
-| 50+   | `t50`       | Legend |
-
-Races: `human`, `elf`, `dwarf`, `halfling`
-Classes: `warrior`, `mage`, `cleric`, `rogue`
-
-Examples:
-- `elf_mage_t1.png` — Elf Mage, Novice tier
-- `human_warrior_t50.png` — Human Warrior, Legend tier
-- `dwarf_cleric_t20.png` — Dwarf Cleric, Journeyman tier
-
-Total tier sprites: 4 races x 4 classes x 6 tiers = **96 images**
-
-### Staff Sprites (auto-generated, existing pattern)
-
-Format: `{race}_base_tstaff.png`
-
-Examples:
-- `elf_base_tstaff.png`
-- `human_base_tstaff.png`
-- `dwarf_base_tstaff.png`
-- `halfling_base_tstaff.png`
-
-Total staff sprites: **4 images** (one per race). Staff can choose any staff sprite regardless of their own race.
-
-### Achievement Sprites (custom, defined in sprites.yaml)
-
-Achievement sprites use a **template naming** system. Each sprite has a template name (e.g. `beetle_slayer`), and variants are created by prefixing with qualifiers:
-
-| Variant Type | Format | Example |
-|-------------|--------|---------|
-| Generic (any race/class) | `{template}.png` | `beetle_slayer.png` |
-| Race-specific | `{race}_{template}.png` | `elf_beetle_slayer.png` |
-| Class-specific | `{class}_{template}.png` | `rogue_spider_hunter.png` |
-| Race+Class | `{race}_{class}_{template}.png` | `elf_mage_beetle_slayer.png` |
-
-Players see only the variants that match their own race/class/gender, plus any generic variants.
-
-## Adding New Achievement Sprites
-
-### Step 1: Create the images
-
-Create one or more variant images following the naming convention above. At minimum, create a generic variant.
-
-### Step 2: Update sprites.yaml
-
-Add a new entry to `src/main/resources/world/sprites.yaml`:
-
-```yaml
-  golem_breaker:
-    displayName: "Golem Breaker"
-    category: achievement
-    sortOrder: 102
-    unlock:
-      type: achievement
-      achievementId: combat/secret_slayer
-    variants:
-      - imageId: golem_breaker
-        displayName: "Golem Breaker"
-        imagePath: player_sprites/golem_breaker.png
-      - imageId: dwarf_golem_breaker
-        displayName: "Golem Breaker (Dwarf)"
-        race: DWARF
-        imagePath: player_sprites/dwarf_golem_breaker.png
-```
-
-### Variant Fields
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `imageId` | Yes | Unique identifier. Also used in `sprite set <id>` command. Must match file name stem. |
-| `displayName` | No | Defaults to the parent definition's displayName. |
-| `race` | No | Race filter (uppercase). If set, only players of this race see the variant. |
-| `playerClass` | No | Class filter (uppercase). If set, only players of this class see the variant. |
-| `gender` | No | Gender filter (lowercase). If set, only players of this gender see the variant. |
-| `imagePath` | Yes | Path relative to the images base URL. Always starts with `player_sprites/`. |
-
-### Unlock Types
-
-| Type | Fields | Description |
-|------|--------|-------------|
-| `achievement` | `achievementId` | Unlocked when the player earns the specified achievement. |
-| `level` | `minLevel` | Unlocked when the player reaches the specified level. |
-| `staff` | — | Unlocked for staff members only. |
-
 ## Image Specifications
 
 - **Format:** PNG with transparency
-- **Dimensions:** 64x64 pixels (displayed at this size in the character panel)
+- **Dimensions:** 64x64 pixels
 - **Style:** Follow the Surreal Gentle Magic aesthetic (see `.impeccable.md`)
 - **Background:** Transparent
 
-## Current Placeholder Sprites
+## Legacy Tier Sprites
 
-The following achievement sprites are defined in `sprites.yaml` but need images created:
+The auto-generated tier sprites (96 images: 4 races × 4 classes × 6 tiers) are controlled by `images.legacyTierSprites` in config (default: `true`). When ready to sunset:
 
-| Template | Achievement | Variants Needed |
-|----------|-------------|-----------------|
-| `beetle_slayer` | `combat/beetle_exterminator` | generic, elf, dwarf |
-| `spider_hunter` | `combat/spider_hunter` | generic, rogue |
+1. Set `legacyTierSprites: false` in `application.yaml`
+2. Ensure replacement sprites exist using the requirements format
+3. Players with old `activeSprite` values gracefully fall back to auto-resolve
+
+### Legacy tier naming convention (for reference)
+
+Format: `{race}_{class}_{tierSuffix}.png` (e.g. `elf_mage_t20.png`)
+
+Tier suffixes: t1, t10, t20, t30, t40, t50
+
+## Legacy Achievement Format
+
+The old single-condition format is still supported:
+
+```yaml
+  beetle_slayer:
+    displayName: "Beetle Slayer"
+    category: achievement
+    sortOrder: 100
+    unlock:
+      type: achievement
+      achievementId: combat/beetle_exterminator
+    variants:
+      - imageId: beetle_slayer
+        imagePath: player_sprites/beetle_slayer.png
+```
+
+New sprites should use `requirements` instead.
+
+## Current Sprites
+
+### New-style sprites (requirements-based, in sprites.yaml)
+
+| Sprite | Requirements | Sort |
+|--------|-------------|------|
+| Elven Heritage | race: ELF | 50 |
+| Dwarven Resilience | race: DWARF | 50 |
+| Human Adaptability | race: HUMAN | 50 |
+| Halfling Luck | race: HALFLING | 50 |
+| Sword Saint | class: WARRIOR, level 20+ | 120 |
+| Arcane Adept | class: MAGE, level 20+ | 120 |
+| Divine Servant | class: CLERIC, level 20+ | 120 |
+| Shadow Dancer | class: ROGUE, level 20+ | 120 |
+| Elven Arcanist | race: ELF, class: MAGE, level 30+ | 200 |
+| Dwarven Bulwark | race: DWARF, class: WARRIOR, level 30+ | 200 |
+| Twilight Wanderer | level 40+ | 250 |
+| Dragon Slayer | achievement: combat/secret_slayer, level 20+ | 300 |
+
+### Legacy sprites (still loaded)
+
+| Category | Count | Notes |
+|----------|-------|-------|
+| Tier (auto-generated) | 96 | Gated behind `legacyTierSprites` flag |
+| Staff (auto-generated) | 4 | One per race |
+| Beetle Slayer (achievement) | 3 variants | Legacy unlock format |
+| Spider Hunter (achievement) | 2 variants | Legacy unlock format |
 
 ## Export Checklist
 
 When creating/exporting sprites for AmbonMUD:
 
-1. Verify file names exactly match the `imageId` + `.png` extension
+1. Verify file names exactly match the `imageId` + `.png` extension (or `image` field)
 2. Place all files in the `player_sprites/` directory
 3. Upload to the assets CDN at `assets.ambon.dev`
-4. If adding new achievement sprites, update `sprites.yaml` with variant definitions
+4. Update `sprites.yaml` with the sprite definition
 5. Test in-game with `sprite list` and `sprite set <id>` commands

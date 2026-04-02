@@ -62,7 +62,7 @@ class SpriteHandler(
         }
         sb.appendLine()
 
-        for (cat in listOf(SpriteCategory.TIER, SpriteCategory.ACHIEVEMENT, SpriteCategory.STAFF)) {
+        for (cat in listOf(SpriteCategory.GENERAL, SpriteCategory.TIER, SpriteCategory.ACHIEVEMENT, SpriteCategory.STAFF)) {
             val entries = grouped[cat] ?: continue
             sb.appendLine("--- ${cat.name.lowercase().replaceFirstChar { it.uppercase() }} Sprites ---")
             // Sort by definition sortOrder, then variant displayName
