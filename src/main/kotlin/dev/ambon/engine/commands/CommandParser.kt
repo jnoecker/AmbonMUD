@@ -111,6 +111,16 @@ sealed interface Command {
         val listingId: Int,
     ) : Command
 
+    // ---- Duel / PvP commands ----
+
+    data class Duel(
+        val targetPlayer: String,
+    ) : Command
+
+    data object DuelAccept : Command
+
+    data object DuelDecline : Command
+
     data object Inventory : Command
 
     data object Equipment : Command
@@ -656,6 +666,16 @@ object CommandParser {
                 Command.AuctionList(null)
             } else {
                 Command.AuctionList(sub)
+            }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("duel", "challenge", "pvp")) { rest ->
+            val sub = rest.trim()
+            when {
+                sub.equals("accept", ignoreCase = true) || sub.equals("yes", ignoreCase = true) -> Command.DuelAccept
+                sub.equals("decline", ignoreCase = true) || sub.equals("no", ignoreCase = true) -> Command.DuelDecline
+                sub.isEmpty() -> Command.Invalid(line, "duel <player> | duel accept | duel decline")
+                else -> Command.Duel(sub)
             }
         }?.let { return it }
 

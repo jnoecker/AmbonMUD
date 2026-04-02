@@ -25,6 +25,7 @@ import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.CraftingHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
+import dev.ambon.engine.commands.handlers.DuelHandler
 import dev.ambon.engine.commands.handlers.DungeonHandler
 import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.FriendsHandler
@@ -256,6 +257,13 @@ class GameEngine(
             onPlayerLoggedOut = { player, sid ->
                 log.info { "Player logged out: name=${player.name} sessionId=$sid" }
                 tradeSystem.cancelForPlayer(sid)
+                val endedDuel = duelSystem.onPlayerDisconnect(sid)
+                if (endedDuel != null) {
+                    val other = if (endedDuel.player1 == sid) endedDuel.player2 else endedDuel.player1
+                    outbound.send(
+                        OutboundEvent.SendInfo(other, "Your duel opponent disconnected. Duel ended."),
+                    )
+                }
                 val cancelledAuctions = auctionSystem.cancelAllForPlayer(sid)
                 if (cancelledAuctions.isNotEmpty()) {
                     val payload = auctionSystem.allListings().map {
@@ -672,6 +680,8 @@ class GameEngine(
 
     private val tradeSystem = TradeSystem(items = items)
 
+    private val duelSystem = DuelSystem(clock = clock)
+
     private val auctionSystem = AuctionSystem(
         items = items,
         clock = clock,
@@ -877,6 +887,7 @@ class GameEngine(
                 statusEffects = statusEffectSystem,
                 dialogueSystem = dialogueSystem,
                 housingSystem = housingSystem,
+                duelSystem = duelSystem,
             ),
             ProgressionHandler(
                 ctx = ctx,
@@ -944,6 +955,12 @@ class GameEngine(
             TradeHandler(
                 ctx = ctx,
                 tradeSystem = tradeSystem,
+                markVitalsDirty = ::markVitalsDirty,
+            ),
+            DuelHandler(
+                ctx = ctx,
+                duelSystem = duelSystem,
+                combatSystem = combatSystem,
                 markVitalsDirty = ::markVitalsDirty,
             ),
             AuctionHandler(
@@ -1112,6 +1129,9 @@ class GameEngine(
                     val regenSample = Timer.start()
                     regenSystem.tick(maxPlayersPerTick = engineConfig.regen.maxPlayersPerTick)
                     regenSample.stop(metrics.regenTickTimer)
+
+                    // Tick duel combat
+                    tickDuels()
 
                     // Tick gathering node respawns
                     craftingSystem.tickNodeRespawns()
@@ -1646,5 +1666,131 @@ class GameEngine(
                 OutboundEvent.SendInfo(sid, "Type 'dungeon leave' to return to the portal."),
             )
         }
+    }
+
+    /**
+     * Resolves one round of duel combat for all active duels.
+     * Each player attacks their opponent once per tick (2 seconds).
+     * The loser's HP is set to 1 (not killed). Duel ends immediately.
+     */
+    private suspend fun tickDuels() {
+        val now = clock.millis()
+
+        // Collect active duels (deduplicated — each duel stored under both players)
+        val processedDuels = mutableSetOf<SessionId>()
+        for (sid in duelSystem.activeDuels().map { it.player1 }) {
+            if (sid in processedDuels) continue
+            val duel = duelSystem.getDuel(sid) ?: continue
+            processedDuels.add(duel.player1)
+            processedDuels.add(duel.player2)
+
+            // Only tick every 2 seconds
+            val elapsed = now - duel.startedAtMs
+            val tickIndex = elapsed / 2000L
+            val lastTick = (elapsed - 100L) / 2000L
+            if (tickIndex <= lastTick) continue
+
+            val p1 = players.get(duel.player1) ?: continue
+            val p2 = players.get(duel.player2) ?: continue
+
+            // Player 1 attacks Player 2
+            resolveDuelAttack(p1, p2, duel.player1, duel.player2)
+
+            // Check if P2 is defeated
+            if (p2.hp <= 1) {
+                endDuelWithResult(duel, winner = duel.player1, loser = duel.player2)
+                continue
+            }
+
+            // Player 2 attacks Player 1
+            resolveDuelAttack(p2, p1, duel.player2, duel.player1)
+
+            // Check if P1 is defeated
+            if (p1.hp <= 1) {
+                endDuelWithResult(duel, winner = duel.player2, loser = duel.player1)
+            }
+        }
+
+        duelSystem.expireChallenges()
+    }
+
+    private suspend fun resolveDuelAttack(
+        attacker: PlayerState,
+        defender: PlayerState,
+        attackerSid: SessionId,
+        defenderSid: SessionId,
+    ) {
+        val attackerStats = attacker.stats
+        val defenderStats = defender.stats
+
+        // Dodge check (same formula as mob combat)
+        val dodgePct = ((defenderStats["DEX"] - 10) * 2).coerceIn(0, 30)
+        if (dodgePct > 0 && kotlin.random.Random.nextInt(100) < dodgePct) {
+            outbound.send(OutboundEvent.SendText(attackerSid, "${defender.name} dodges your attack!"))
+            outbound.send(OutboundEvent.SendText(defenderSid, "You dodge ${attacker.name}'s attack!"))
+            return
+        }
+
+        // Damage calculation (same formula as mob combat)
+        val baseDmg = kotlin.random.Random.nextInt(
+            engineConfig.combat.minDamage,
+            engineConfig.combat.maxDamage + 1,
+        )
+        val strBonus = (attackerStats["STR"] - 10) / 3
+        val eqBonus = items.equipmentBonuses(attackerSid).attack
+        val defArmor = items.equipmentBonuses(defenderSid).armor
+        val rawDamage = baseDmg + strBonus + eqBonus
+        val damage = (rawDamage - defArmor).coerceAtLeast(1)
+
+        // Apply damage (clamp to 1 HP minimum — duels don't kill)
+        defender.hp = (defender.hp - damage).coerceAtLeast(1)
+
+        outbound.send(
+            OutboundEvent.SendText(
+                attackerSid,
+                "You hit ${defender.name} for $damage damage. (${defender.hp}/${defender.maxHp} HP)",
+            ),
+        )
+        outbound.send(
+            OutboundEvent.SendText(
+                defenderSid,
+                "${attacker.name} hits you for $damage damage! (${defender.hp}/${defender.maxHp} HP)",
+            ),
+        )
+        markVitalsDirty(attackerSid)
+        markVitalsDirty(defenderSid)
+    }
+
+    private suspend fun endDuelWithResult(
+        duel: ActiveDuel,
+        winner: SessionId,
+        loser: SessionId,
+    ) {
+        duelSystem.endDuel(winner)
+        val winnerName = players.get(winner)?.name ?: "Someone"
+        val loserName = players.get(loser)?.name ?: "Someone"
+
+        outbound.send(
+            OutboundEvent.SendInfo(winner, "** You have defeated $loserName in a duel! **"),
+        )
+        outbound.send(
+            OutboundEvent.SendInfo(loser, "** You have been defeated by $winnerName! **"),
+        )
+
+        val roomId = players.get(winner)?.roomId
+        if (roomId != null) {
+            broadcastToRoom(
+                players,
+                outbound,
+                roomId,
+                "** $winnerName defeats $loserName in a duel! **",
+                winner,
+                loser,
+            )
+        }
+
+        // Restore loser to 1 HP (already clamped)
+        markVitalsDirty(winner)
+        markVitalsDirty(loser)
     }
 }
