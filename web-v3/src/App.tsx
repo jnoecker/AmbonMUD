@@ -18,6 +18,7 @@ import { AdminPanel } from "./components/panels/AdminPanel";
 import { MailPanel } from "./components/panels/MailPanel";
 import { CraftingPanel } from "./components/panels/CraftingPanel";
 import { HousingPanel } from "./components/panels/HousingPanel";
+import { LeaderboardPanel } from "./components/panels/LeaderboardPanel";
 import { CommandPalette } from "./components/CommandPalette";
 import { applyGmcpPackage } from "./gmcp/applyGmcpPackage";
 import { canvasCallbacks, gameStateRef, pendingCastRef } from "./canvas/GameStateBridge";
@@ -93,6 +94,7 @@ import type {
   Vitals,
   WhoPlayer,
   ZoneInstances,
+  LeaderboardData,
 } from "./types";
 import { sortExits, titleCaseWords } from "./utils";
 import "@xterm/xterm/css/xterm.css";
@@ -227,6 +229,7 @@ function App() {
   const [tradeState, setTradeState] = useState<TradeState | null>(null);
   const [auctionListings, setAuctionListings] = useState<AuctionListing[]>([]); // GMCP Auction.List data for future panel
   void auctionListings; // suppress unused-var lint until auction panel is built
+  const [leaderboard, setLeaderboard] = useState<Record<string, LeaderboardData>>({});
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -471,6 +474,7 @@ function App() {
           setHousing,
           setTradeState,
           setAuctionListings,
+          setLeaderboard,
           sendGmcp: (pkg: string, payload: unknown) => { sendGmcpRef.current(pkg, payload); return true; },
         },
       );
@@ -1290,6 +1294,13 @@ function App() {
             housing={housing}
             room={room}
             onSendCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
+          />
+        )}
+
+        {activePopout === "leaderboard" && (
+          <LeaderboardPanel
+            leaderboard={leaderboard}
+            onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
           />
         )}
       </PopoutLayer>
