@@ -97,6 +97,50 @@ class PetSystemTest {
             assertEquals("a fire familiar", pets.getActivePet(sid1)?.name)
             assertEquals("a stone golem", pets.getActivePet(sid2)?.name)
         }
+
+        @Test
+        fun `timed pet exists before duration expires`() {
+            val pet = pets.summon(sid1, "fire_familiar", room1, 1, durationMs = 5000L)
+            assertNotNull(pet)
+
+            clock.advance(4999L)
+            val expired = pets.tick()
+            assertTrue(expired.isEmpty())
+            assertNotNull(pets.getActivePet(sid1))
+        }
+
+        @Test
+        fun `timed pet expires after duration`() {
+            pets.summon(sid1, "fire_familiar", room1, 1, durationMs = 5000L)
+
+            clock.advance(5000L)
+            val expired = pets.tick()
+            assertEquals(1, expired.size)
+            assertEquals(sid1, expired[0].ownerSessionId)
+            assertEquals("a fire familiar", expired[0].petName)
+            assertNull(pets.getActivePet(sid1))
+        }
+
+        @Test
+        fun `permanent pet does not expire`() {
+            pets.summon(sid1, "fire_familiar", room1, 1, durationMs = 0L)
+
+            clock.advance(999_999L)
+            val expired = pets.tick()
+            assertTrue(expired.isEmpty())
+            assertNotNull(pets.getActivePet(sid1))
+        }
+
+        @Test
+        fun `dismissing a timed pet clears its expiry`() {
+            val pet = pets.summon(sid1, "fire_familiar", room1, 1, durationMs = 5000L)!!
+            pets.dismissAll(sid1)
+
+            clock.advance(6000L)
+            val expired = pets.tick()
+            assertTrue(expired.isEmpty())
+            assertNull(mobs.get(pet.id))
+        }
     }
 
     @Nested

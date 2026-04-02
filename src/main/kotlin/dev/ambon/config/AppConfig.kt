@@ -379,6 +379,16 @@ data class AppConfig(
             }
         }
 
+        // Validate pet template invariants
+        engine.pets.definitions.forEach { (key, tmpl) ->
+            require(tmpl.hp > 0) { "ambonMUD.engine.pets.definitions.$key.hp must be > 0" }
+            require(tmpl.minDamage > 0) { "ambonMUD.engine.pets.definitions.$key.minDamage must be > 0" }
+            require(tmpl.maxDamage >= tmpl.minDamage) {
+                "ambonMUD.engine.pets.definitions.$key.maxDamage (${tmpl.maxDamage}) must be >= minDamage (${tmpl.minDamage})"
+            }
+            require(tmpl.armor >= 0) { "ambonMUD.engine.pets.definitions.$key.armor must be >= 0" }
+        }
+
         // Validate faction enemy cross-references
         val factionIds = engine.factions.definitions.keys
         for ((factionId, def) in engine.factions.definitions) {

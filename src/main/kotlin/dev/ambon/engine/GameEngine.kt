@@ -642,6 +642,12 @@ class GameEngine(
         AbilityRegistryLoader.load(engineConfig.abilities, abilityRegistry, imagesBaseUrl)
     }
 
+    private val petSystem = PetSystem(
+        config = engineConfig.pets,
+        mobs = mobs,
+        clock = clock,
+    )
+
     private val abilitySystem: AbilitySystem =
         AbilitySystem(
             players = players,
@@ -656,9 +662,9 @@ class GameEngine(
             groupSystem = groupSystem,
             mobs = mobs,
             onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) },
-            onSummonPet = { sid, templateKey, _ ->
+            onSummonPet = { sid, templateKey, durationMs ->
                 val player = players.get(sid) ?: return@AbilitySystem
-                val pet = petSystem.summon(sid, templateKey, player.roomId, player.level)
+                val pet = petSystem.summon(sid, templateKey, player.roomId, player.level, durationMs)
                 if (pet != null) {
                     outbound.send(OutboundEvent.SendText(sid, "You summon ${pet.name}!"))
                     emitPetState(sid, pet)
@@ -697,11 +703,6 @@ class GameEngine(
 
     private val reputationSystem = ReputationSystem(config = engineConfig.factions)
 
-    private val petSystem = PetSystem(
-        config = engineConfig.pets,
-        mobs = mobs,
-        clock = clock,
-    )
     private val duelRng = java.util.Random()
 
     private val auctionSystem = AuctionSystem(
@@ -1179,6 +1180,17 @@ class GameEngine(
 
                     // Tick duel combat
                     tickDuels()
+
+                    // Expire timed pets
+                    for (expired in petSystem.tick()) {
+                        outbound.send(
+                            OutboundEvent.SendInfo(
+                                expired.ownerSessionId,
+                                "${expired.petName} fades away.",
+                            ),
+                        )
+                        emitPetState(expired.ownerSessionId, null)
+                    }
 
                     // Tick gathering node respawns
                     craftingSystem.tickNodeRespawns()

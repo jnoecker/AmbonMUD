@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.PetSystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
@@ -10,11 +11,11 @@ import dev.ambon.engine.events.OutboundEvent
 
 class PetHandler(
     ctx: EngineContext,
-    private val petSystem: PetSystem? = null,
+    private val petSystem: PetSystem,
 ) : CommandHandler {
     private val players = ctx.players
-    private val mobs = ctx.mobs
     private val outbound = ctx.outbound
+    private val gmcpEmitter = ctx.gmcpEmitter
 
     override fun register(router: CommandRouter) {
         router.on<Command.PetStatus> { sid, _ -> handlePetStatus(sid) }
@@ -23,13 +24,7 @@ class PetHandler(
     }
 
     private suspend fun handlePetStatus(sessionId: SessionId) {
-        val ps = petSystem
-        if (ps == null) {
-            outbound.send(OutboundEvent.SendText(sessionId, "Pets are not available."))
-            return
-        }
-
-        val pet = ps.getActivePet(sessionId)
+        val pet = petSystem.getActivePet(sessionId)
         if (pet == null) {
             outbound.send(OutboundEvent.SendInfo(sessionId, "You have no active pet. Summon one with a pet ability."))
             return
@@ -47,30 +42,23 @@ class PetHandler(
     }
 
     private suspend fun handlePetDismiss(sessionId: SessionId) {
-        val ps = petSystem
-        if (ps == null) {
-            outbound.send(OutboundEvent.SendText(sessionId, "Pets are not available."))
-            return
-        }
-
-        val pet = ps.getActivePet(sessionId)
+        val pet = petSystem.getActivePet(sessionId)
         if (pet == null) {
             outbound.send(OutboundEvent.SendText(sessionId, "You have no active pet."))
             return
         }
 
         val petName = pet.name
-        ps.dismissAll(sessionId)
+        petSystem.dismissAll(sessionId)
         outbound.send(OutboundEvent.SendInfo(sessionId, "You dismiss $petName."))
+        emitInactivePet(sessionId)
         players.withPlayer(sessionId) { me ->
             broadcastToRoom(me.roomId, "$petName vanishes.", players, outbound)
         }
     }
 
     private suspend fun handlePetName(sessionId: SessionId, cmd: Command.PetName) {
-        val ps = petSystem ?: return
-
-        val pet = ps.getActivePet(sessionId)
+        val pet = petSystem.getActivePet(sessionId)
         if (pet == null) {
             outbound.send(OutboundEvent.SendText(sessionId, "You have no active pet."))
             return
@@ -79,5 +67,38 @@ class PetHandler(
         val oldName = pet.name
         pet.name = cmd.newName
         outbound.send(OutboundEvent.SendInfo(sessionId, "You rename $oldName to ${cmd.newName}."))
+        emitPetState(sessionId, pet)
+    }
+
+    private suspend fun emitPetState(sessionId: SessionId, pet: dev.ambon.domain.mob.MobState) {
+        gmcpEmitter?.sendPetState(
+            sessionId,
+            GmcpEmitter.PetStatePayload(
+                active = true,
+                name = pet.name,
+                hp = pet.hp,
+                maxHp = pet.maxHp,
+                minDamage = pet.damage.min,
+                maxDamage = pet.damage.max,
+                armor = pet.armor,
+                image = pet.image,
+            ),
+        )
+    }
+
+    private suspend fun emitInactivePet(sessionId: SessionId) {
+        gmcpEmitter?.sendPetState(
+            sessionId,
+            GmcpEmitter.PetStatePayload(
+                active = false,
+                name = null,
+                hp = null,
+                maxHp = null,
+                minDamage = null,
+                maxDamage = null,
+                armor = null,
+                image = null,
+            ),
+        )
     }
 }
