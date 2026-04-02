@@ -41,7 +41,11 @@ class SpriteRegistry {
         level: Int,
         unlockedAchievementIds: Set<String>,
         isStaff: Boolean,
-    ): List<SpriteDefinition> = definitions.values.filter { isUnlocked(it, level, unlockedAchievementIds, isStaff) }
+        playerRace: String,
+        playerClass: String,
+    ): List<SpriteDefinition> = definitions.values.filter {
+        isUnlocked(it, level, unlockedAchievementIds, isStaff, playerRace, playerClass)
+    }
 
     /** Returns all variants the player can see (unlocked + matches race/class/gender). */
     fun availableVariants(
@@ -54,7 +58,7 @@ class SpriteRegistry {
     ): List<Pair<SpriteDefinition, SpriteVariant>> {
         val result = mutableListOf<Pair<SpriteDefinition, SpriteVariant>>()
         for (def in definitions.values) {
-            if (!isUnlocked(def, level, unlockedAchievementIds, isStaff)) continue
+            if (!isUnlocked(def, level, unlockedAchievementIds, isStaff, playerRace, playerClass)) continue
             for (v in def.variants) {
                 if (def.category == SpriteCategory.STAFF || v.matchesPlayer(playerRace, playerClass, playerGender)) {
                     result.add(def to v)
@@ -78,7 +82,7 @@ class SpriteRegistry {
         playerGender: String,
     ): SpriteVariant? {
         val (def, variant) = variantIndex[imageId] ?: return null
-        if (!isUnlocked(def, level, unlockedAchievementIds, isStaff)) return null
+        if (!isUnlocked(def, level, unlockedAchievementIds, isStaff, playerRace, playerClass)) return null
         if (def.category != SpriteCategory.STAFF && !variant.matchesPlayer(playerRace, playerClass, playerGender)) return null
         return variant
     }
@@ -98,7 +102,7 @@ class SpriteRegistry {
         val candidates = definitions.values
             .filter { def ->
                 when (def.category) {
-                    SpriteCategory.TIER -> isUnlocked(def, level, emptySet(), isStaff = false)
+                    SpriteCategory.TIER -> isUnlocked(def, level, emptySet(), isStaff = false, playerRace, playerClass)
                     SpriteCategory.STAFF -> isStaff
                     else -> false
                 }
@@ -140,16 +144,29 @@ class SpriteRegistry {
     }
 
     companion object {
+        /**
+         * Checks if a player meets the unlock criteria for a sprite.
+         * If the definition has [SpriteDefinition.requirements], all must be met (AND logic).
+         * Otherwise falls back to the legacy [SpriteDefinition.unlockCondition].
+         */
         fun isUnlocked(
             def: SpriteDefinition,
             level: Int,
             unlockedAchievementIds: Set<String>,
             isStaff: Boolean,
-        ): Boolean =
-            when (val cond = def.unlockCondition) {
+            playerRace: String,
+            playerClass: String,
+        ): Boolean {
+            if (def.requirements.isNotEmpty()) {
+                return def.requirements.all { req ->
+                    req.isMet(level, playerRace, playerClass, unlockedAchievementIds, isStaff)
+                }
+            }
+            return when (val cond = def.unlockCondition) {
                 is SpriteUnlockCondition.Level -> level >= cond.minLevel
                 is SpriteUnlockCondition.Achievement -> cond.achievementId in unlockedAchievementIds
                 is SpriteUnlockCondition.Staff -> isStaff
             }
+        }
     }
 }

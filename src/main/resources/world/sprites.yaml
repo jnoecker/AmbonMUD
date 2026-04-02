@@ -62,3 +62,145 @@ sprites:
         displayName: "Spider Hunter (Rogue)"
         playerClass: ROGUE
         imagePath: player_sprites/rogue_spider_hunter.png
+
+  # ─── New-style sprites (requirements-based) ──────────────────────
+  # These use the AND-logic requirements list instead of the legacy
+  # unlock single-condition. Most use single-image shorthand.
+
+  elven_heritage:
+    displayName: "Elven Heritage"
+    description: "The grace of the elder folk."
+    category: general
+    sortOrder: 50
+    requirements:
+      - type: race
+        race: ELF
+    image: player_sprites/elven_heritage.png
+
+  dwarven_resilience:
+    displayName: "Dwarven Resilience"
+    description: "Stone-born and unyielding."
+    category: general
+    sortOrder: 50
+    requirements:
+      - type: race
+        race: DWARF
+    image: player_sprites/dwarven_resilience.png
+
+  human_adaptability:
+    displayName: "Human Adaptability"
+    description: "The versatility of humankind."
+    category: general
+    sortOrder: 50
+    requirements:
+      - type: race
+        race: HUMAN
+    image: player_sprites/human_adaptability.png
+
+  halfling_luck:
+    displayName: "Halfling Luck"
+    description: "Fortune favors the small."
+    category: general
+    sortOrder: 50
+    requirements:
+      - type: race
+        race: HALFLING
+    image: player_sprites/halfling_luck.png
+
+  sword_saint:
+    displayName: "Sword Saint"
+    description: "A warrior who has mastered the blade."
+    category: general
+    sortOrder: 120
+    requirements:
+      - type: class
+        playerClass: WARRIOR
+      - type: minLevel
+        level: 20
+    image: player_sprites/sword_saint.png
+
+  arcane_adept:
+    displayName: "Arcane Adept"
+    description: "One who channels raw arcane power."
+    category: general
+    sortOrder: 120
+    requirements:
+      - type: class
+        playerClass: MAGE
+      - type: minLevel
+        level: 20
+    image: player_sprites/arcane_adept.png
+
+  divine_servant:
+    displayName: "Divine Servant"
+    description: "Blessed by the light itself."
+    category: general
+    sortOrder: 120
+    requirements:
+      - type: class
+        playerClass: CLERIC
+      - type: minLevel
+        level: 20
+    image: player_sprites/divine_servant.png
+
+  shadow_dancer:
+    displayName: "Shadow Dancer"
+    description: "A rogue who moves between the shadows."
+    category: general
+    sortOrder: 120
+    requirements:
+      - type: class
+        playerClass: ROGUE
+      - type: minLevel
+        level: 20
+    image: player_sprites/shadow_dancer.png
+
+  elven_arcanist:
+    displayName: "Elven Arcanist"
+    description: "An elf who has mastered ancient magic."
+    category: general
+    sortOrder: 200
+    requirements:
+      - type: race
+        race: ELF
+      - type: class
+        playerClass: MAGE
+      - type: minLevel
+        level: 30
+    image: player_sprites/elven_arcanist.png
+
+  dwarven_bulwark:
+    displayName: "Dwarven Bulwark"
+    description: "An unbreakable dwarven defender."
+    category: general
+    sortOrder: 200
+    requirements:
+      - type: race
+        race: DWARF
+      - type: class
+        playerClass: WARRIOR
+      - type: minLevel
+        level: 30
+    image: player_sprites/dwarven_bulwark.png
+
+  dragon_slayer:
+    displayName: "Dragon Slayer"
+    description: "Defeated the ancient golem in single combat."
+    category: general
+    sortOrder: 300
+    requirements:
+      - type: achievement
+        achievementId: combat/secret_slayer
+      - type: minLevel
+        level: 20
+    image: player_sprites/dragon_slayer.png
+
+  twilight_wanderer:
+    displayName: "Twilight Wanderer"
+    description: "A seasoned traveler who has walked every road."
+    category: general
+    sortOrder: 250
+    requirements:
+      - type: minLevel
+        level: 40
+    image: player_sprites/twilight_wanderer.png

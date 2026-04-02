@@ -3,6 +3,7 @@ package dev.ambon.engine
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.domain.sprite.SpriteCategory
 import dev.ambon.domain.sprite.SpriteDefinition
+import dev.ambon.domain.sprite.SpriteRequirement
 import dev.ambon.domain.sprite.SpriteUnlockCondition
 import dev.ambon.domain.sprite.SpriteVariant
 import dev.ambon.persistence.yamlMapper
@@ -15,15 +16,29 @@ internal data class SpritesFile(
 
 internal data class SpriteEntryFile(
     val displayName: String = "",
+    val description: String = "",
     val category: String = "achievement",
     val sortOrder: Int = 0,
+    /** Legacy single-condition unlock. Ignored if [requirements] is non-empty. */
     val unlock: SpriteUnlockFile = SpriteUnlockFile(),
+    /** New requirements list (AND logic). Takes precedence over [unlock]. */
+    val requirements: List<SpriteRequirementFile> = emptyList(),
+    /** Single image path (shorthand for sprites with no variants). */
+    val image: String = "",
     val variants: List<SpriteVariantFile> = emptyList(),
 )
 
 internal data class SpriteUnlockFile(
     val type: String = "",
     val minLevel: Int = 1,
+    val achievementId: String = "",
+)
+
+internal data class SpriteRequirementFile(
+    val type: String = "",
+    val level: Int = 1,
+    val race: String = "",
+    val playerClass: String = "",
     val achievementId: String = "",
 )
 
@@ -52,52 +67,95 @@ object SpriteLoader {
             val id = rawId.trim()
             require(id.isNotEmpty()) { "Sprite id cannot be blank" }
             require(entry.displayName.isNotBlank()) { "Sprite '$id' displayName cannot be blank" }
-            require(entry.variants.isNotEmpty()) { "Sprite '$id' must have at least one variant" }
 
             val category = when (entry.category.lowercase()) {
                 "tier" -> SpriteCategory.TIER
                 "achievement" -> SpriteCategory.ACHIEVEMENT
                 "staff" -> SpriteCategory.STAFF
+                "general" -> SpriteCategory.GENERAL
                 else -> error("Sprite '$id' has unknown category '${entry.category}'")
             }
 
-            val unlockCondition = when (entry.unlock.type.lowercase()) {
-                "level" -> SpriteUnlockCondition.Level(entry.unlock.minLevel)
-                "achievement" -> {
-                    require(entry.unlock.achievementId.isNotBlank()) {
-                        "Sprite '$id' achievement unlock must specify achievementId"
+            // Parse requirements (new format) or legacy unlock condition
+            val requirements = entry.requirements.map { rf -> parseRequirement(id, rf) }
+
+            val unlockCondition = if (requirements.isNotEmpty()) {
+                // Default legacy condition when using requirements (won't be checked)
+                SpriteUnlockCondition.Level(1)
+            } else {
+                when (entry.unlock.type.lowercase()) {
+                    "level" -> SpriteUnlockCondition.Level(entry.unlock.minLevel)
+                    "achievement" -> {
+                        require(entry.unlock.achievementId.isNotBlank()) {
+                            "Sprite '$id' achievement unlock must specify achievementId"
+                        }
+                        SpriteUnlockCondition.Achievement(entry.unlock.achievementId)
                     }
-                    SpriteUnlockCondition.Achievement(entry.unlock.achievementId)
+                    "staff" -> SpriteUnlockCondition.Staff
+                    else -> error("Sprite '$id' has unknown unlock type '${entry.unlock.type}'")
                 }
-                "staff" -> SpriteUnlockCondition.Staff
-                else -> error("Sprite '$id' has unknown unlock type '${entry.unlock.type}'")
             }
 
-            val variants = entry.variants.mapIndexed { i, vf ->
-                require(vf.imageId.isNotBlank()) { "Sprite '$id' variant #${i + 1} imageId cannot be blank" }
-                require(vf.imagePath.isNotBlank()) { "Sprite '$id' variant #${i + 1} imagePath cannot be blank" }
-                SpriteVariant(
-                    imageId = vf.imageId,
-                    displayName = vf.displayName.ifBlank { entry.displayName },
-                    race = vf.race?.uppercase(),
-                    playerClass = vf.playerClass?.uppercase(),
-                    gender = vf.gender?.lowercase(),
-                    imagePath = vf.imagePath,
+            // Build variants: support single-image shorthand or explicit variants list
+            val variants = if (entry.variants.isNotEmpty()) {
+                entry.variants.mapIndexed { i, vf ->
+                    require(vf.imageId.isNotBlank()) { "Sprite '$id' variant #${i + 1} imageId cannot be blank" }
+                    require(vf.imagePath.isNotBlank()) { "Sprite '$id' variant #${i + 1} imagePath cannot be blank" }
+                    SpriteVariant(
+                        imageId = vf.imageId,
+                        displayName = vf.displayName.ifBlank { entry.displayName },
+                        race = vf.race?.uppercase(),
+                        playerClass = vf.playerClass?.uppercase(),
+                        gender = vf.gender?.lowercase(),
+                        imagePath = vf.imagePath,
+                    )
+                }
+            } else if (entry.image.isNotBlank()) {
+                // Single-image shorthand: imageId = sprite id, imagePath = image field
+                listOf(
+                    SpriteVariant(
+                        imageId = id,
+                        displayName = entry.displayName,
+                        imagePath = entry.image,
+                    ),
                 )
+            } else {
+                error("Sprite '$id' must have at least one variant or an image path")
             }
 
             registry.register(
                 SpriteDefinition(
                     id = id,
                     displayName = entry.displayName,
+                    description = entry.description,
                     category = category,
                     unlockCondition = unlockCondition,
+                    requirements = requirements,
                     sortOrder = entry.sortOrder,
                     variants = variants,
                 ),
             )
         }
     }
+
+    private fun parseRequirement(spriteId: String, rf: SpriteRequirementFile): SpriteRequirement =
+        when (rf.type.lowercase()) {
+            "minlevel", "level" -> SpriteRequirement.MinLevel(rf.level)
+            "race" -> {
+                require(rf.race.isNotBlank()) { "Sprite '$spriteId' race requirement must specify race" }
+                SpriteRequirement.Race(rf.race.uppercase())
+            }
+            "class" -> {
+                require(rf.playerClass.isNotBlank()) { "Sprite '$spriteId' class requirement must specify playerClass" }
+                SpriteRequirement.PlayerClass(rf.playerClass.uppercase())
+            }
+            "achievement" -> {
+                require(rf.achievementId.isNotBlank()) { "Sprite '$spriteId' achievement requirement must specify achievementId" }
+                SpriteRequirement.Achievement(rf.achievementId)
+            }
+            "staff" -> SpriteRequirement.Staff
+            else -> error("Sprite '$spriteId' has unknown requirement type '${rf.type}'")
+        }
 
     /**
      * Auto-generates tier sprite definitions from the configured level tiers,
