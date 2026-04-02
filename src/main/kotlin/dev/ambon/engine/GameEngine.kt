@@ -20,6 +20,7 @@ import dev.ambon.engine.commands.CommandParser
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.handlers.AdminHandler
+import dev.ambon.engine.commands.handlers.AuctionHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.CraftingHandler
@@ -255,6 +256,7 @@ class GameEngine(
             onPlayerLoggedOut = { player, sid ->
                 log.info { "Player logged out: name=${player.name} sessionId=$sid" }
                 tradeSystem.cancelForPlayer(sid)
+                auctionSystem.cancelAllForPlayer(sid)
                 playerLocationIndex?.unregister(player.name)
                 broadcastToRoom(players, outbound, player.roomId, "${player.name} leaves.", sid)
                 friendsSystem.onPlayerLogout(player.name)
@@ -662,6 +664,8 @@ class GameEngine(
 
     private val tradeSystem = TradeSystem(items = items)
 
+    private val auctionSystem = AuctionSystem(items = items, clock = clock)
+
     private val dialogueSystem =
         DialogueSystem(
             mobs = mobs,
@@ -930,6 +934,11 @@ class GameEngine(
                 tradeSystem = tradeSystem,
                 markVitalsDirty = ::markVitalsDirty,
             ),
+            AuctionHandler(
+                ctx = ctx,
+                auctionSystem = auctionSystem,
+                markVitalsDirty = ::markVitalsDirty,
+            ),
             SpriteHandler(
                 ctx = ctx,
                 spriteRegistry = spriteRegistry,
@@ -1093,6 +1102,21 @@ class GameEngine(
 
                     // Tick gathering node respawns
                     craftingSystem.tickNodeRespawns()
+
+                    // Expire auction listings
+                    for (expired in auctionSystem.expireListings()) {
+                        outbound.send(
+                            OutboundEvent.SendInfo(
+                                expired.sellerSid,
+                                "[Auction] Your listing for ${expired.item.item.displayName} has expired. Item returned.",
+                            ),
+                        )
+                        gmcpEmitter.sendCharItemsList(
+                            expired.sellerSid,
+                            items.inventory(expired.sellerSid),
+                            items.equipment(expired.sellerSid),
+                        )
+                    }
 
                     // Expire grace period sessions
                     gracePeriodManager?.expireSessions()?.forEach { expired ->

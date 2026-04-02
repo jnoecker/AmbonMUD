@@ -1336,6 +1336,11 @@ export function applyGmcpPackage(
       break;
     }
 
+    case "Auction.List": {
+      // Auction listings received via GMCP — available for future rich UI panel.
+      break;
+    }
+
     case "Trade.State": {
       const packet = data as Partial<Record<string, unknown>>;
       if (packet.active === true) {

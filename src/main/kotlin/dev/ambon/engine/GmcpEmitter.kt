@@ -966,6 +966,23 @@ class GmcpEmitter(
         emit(sessionId, "Trade.State", payload)
     }
 
+    // ---------- auction ----------
+
+    data class AuctionListingPayload(
+        val id: Int,
+        val itemName: String,
+        val itemId: String,
+        val price: Long,
+        val seller: String,
+    )
+
+    suspend fun sendAuctionList(
+        sessionId: SessionId,
+        listings: List<AuctionListingPayload>,
+    ) {
+        emit(sessionId, "Auction.List", listings)
+    }
+
     // ---------- room features ----------
 
     suspend fun sendRoomFeatures(
