@@ -110,6 +110,14 @@ class YamlPlayerRepository(
             }
         }
 
+    override suspend fun findAll(): List<PlayerRecord> =
+        withContext(Dispatchers.IO) {
+            if (!playersDir.exists()) return@withContext emptyList()
+            playersDir.listDirectoryEntries("*.yaml").mapNotNull { path ->
+                runCatching { readRecord(path) }.getOrNull()
+            }
+        }
+
     // -------- internals --------
 
     /**

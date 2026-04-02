@@ -83,4 +83,9 @@ class PostgresPlayerRepository(
             }
         }
     }
+
+    override suspend fun findAll(): List<PlayerRecord> =
+        database.dbQuery {
+            PlayersTable.selectAll().map { PlayersTable.readRecord(it) }
+        }
 }
