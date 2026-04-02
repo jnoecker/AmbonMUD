@@ -255,6 +255,18 @@ class ItemRegistry {
         return removed
     }
 
+    /** Replaces an inventory item in-place (same ID, modified item data). Returns true if found. */
+    fun replaceInInventory(
+        sessionId: SessionId,
+        updated: ItemInstance,
+    ): Boolean {
+        val inv = inventoryItems[sessionId] ?: return false
+        val idx = inv.indexOfFirst { it.id == updated.id }
+        if (idx < 0) return false
+        inv[idx] = updated
+        return true
+    }
+
     fun unplacedItems(): Map<ItemId, ItemInstance> = unplacedItems.toMap()
 
     fun ensurePlayer(sessionId: SessionId) {

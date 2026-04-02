@@ -152,6 +152,8 @@ export interface ItemSummary {
   basePrice?: number;
   image?: string | null;
   video?: string | null;
+  stats?: Record<string, number>;
+  enchantments?: string[];
 }
 
 export interface EquipmentSlotDef {

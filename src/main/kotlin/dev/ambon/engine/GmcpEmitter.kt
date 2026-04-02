@@ -1492,6 +1492,8 @@ class GmcpEmitter(
             basePrice = item.item.basePrice,
             image = item.item.image,
             video = item.item.video,
+            stats = item.item.stats.nonZero().ifEmpty { null },
+            enchantments = item.enchantments.ifEmpty { null },
         )
 
     private fun toRoomMobPayload(mob: MobState): RoomMobPayload {
@@ -1576,6 +1578,8 @@ class GmcpEmitter(
         val basePrice: Int = 0,
         val image: String? = null,
         val video: String? = null,
+        val stats: Map<String, Int>? = null,
+        val enchantments: List<String>? = null,
     )
 
     private data class EquipmentSlotPayload(
