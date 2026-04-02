@@ -2411,6 +2411,71 @@ ambonmud:
       stationBonusQuantity: 1
       recipes: {}
 
+    enchanting:
+      maxEnchantmentsPerItem: 1
+      definitions:
+        keen_edge:
+          displayName: Keen Edge
+          skill: enchanting
+          skillRequired: 1
+          materials:
+            - itemId: arcane_essence
+              quantity: 1
+          damageBonus: 2
+          targetSlots: [hand]
+          xpReward: 30
+        fortify:
+          displayName: Fortify
+          skill: enchanting
+          skillRequired: 1
+          materials:
+            - itemId: arcane_essence
+              quantity: 1
+          armorBonus: 2
+          targetSlots: [head, body]
+          xpReward: 30
+        might:
+          displayName: Might
+          skill: enchanting
+          skillRequired: 10
+          materials:
+            - itemId: arcane_essence
+              quantity: 2
+            - itemId: rough_gem
+              quantity: 1
+          statBonuses:
+            STR: 2
+          targetSlots: [hand]
+          xpReward: 50
+        resilience:
+          displayName: Resilience
+          skill: enchanting
+          skillRequired: 10
+          materials:
+            - itemId: arcane_essence
+              quantity: 2
+            - itemId: rough_gem
+              quantity: 1
+          statBonuses:
+            CON: 2
+          targetSlots: [head, body]
+          xpReward: 50
+        arcane_infusion:
+          displayName: Arcane Infusion
+          skill: enchanting
+          skillRequired: 20
+          materials:
+            - itemId: arcane_essence
+              quantity: 3
+            - itemId: rough_gem
+              quantity: 2
+          statBonuses:
+            INT: 2
+            WIS: 1
+          damageBonus: 3
+          targetSlots: []
+          xpReward: 80
+
     debug:
       enableSwarmClass: false
 

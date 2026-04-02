@@ -19,6 +19,7 @@ import dev.ambon.engine.commands.handlers.AdminHandler
 import dev.ambon.engine.commands.handlers.CombatHandler
 import dev.ambon.engine.commands.handlers.CommunicationHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
+import dev.ambon.engine.commands.handlers.EnchantHandler
 import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.GroupHandler
 import dev.ambon.engine.commands.handlers.GuildHandler
@@ -30,6 +31,7 @@ import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
 import dev.ambon.engine.commands.handlers.UiHandler
 import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
+import dev.ambon.engine.crafting.EnchantSystem
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.sharding.InterEngineBus
@@ -66,6 +68,7 @@ internal fun buildTestRouter(
     economyConfig: EconomyConfig = EconomyConfig(),
     gatheringRegistry: GatheringRegistry? = null,
     petSystem: PetSystem? = null,
+    enchantSystem: EnchantSystem? = null,
 ): CommandRouter {
     val router = CommandRouter(outbound = outbound, players = players)
     val ctx = EngineContext(
@@ -102,6 +105,7 @@ internal fun buildTestRouter(
         WorldFeaturesHandler(ctx = ctx),
         MailHandler(ctx = ctx),
         petSystem?.let { PetHandler(ctx = ctx, petSystem = it) },
+        enchantSystem?.let { EnchantHandler(ctx = ctx, enchantSystem = it) },
         AdminHandler(
             ctx = ctx,
             onShutdown = onShutdown,

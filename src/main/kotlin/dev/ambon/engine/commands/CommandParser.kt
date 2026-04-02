@@ -133,6 +133,15 @@ sealed interface Command {
         val newName: String,
     ) : Command
 
+    // ---- Enchanting commands ----
+
+    data class Enchant(
+        val itemKeyword: String,
+        val enchantmentId: String? = null,
+    ) : Command
+
+    data object Enchantments : Command
+
     data object Inventory : Command
 
     data object Equipment : Command
@@ -703,6 +712,23 @@ object CommandParser {
                 "dismiss", "unsummon", "release" -> Command.PetDismiss
                 else -> Command.PetStatus
             }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("enchant")) { rest ->
+            val trimmed = rest.trim()
+            if (trimmed.isEmpty()) {
+                Command.Invalid(line, "enchant <item> [enchantment]")
+            } else {
+                val parts = trimmed.split(Regex("\\s+"), limit = 2)
+                Command.Enchant(
+                    itemKeyword = parts[0],
+                    enchantmentId = parts.getOrNull(1)?.trim(),
+                )
+            }
+        }?.let { return it }
+
+        matchPrefix(line, listOf("enchantments")) { _ ->
+            Command.Enchantments
         }?.let { return it }
 
         matchPrefix(line, listOf("whisper", "wh")) { rest ->

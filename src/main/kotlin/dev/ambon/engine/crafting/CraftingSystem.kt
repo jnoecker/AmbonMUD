@@ -318,6 +318,31 @@ class CraftingSystem(
     fun getSkillState(player: PlayerState, skill: String): CraftingSkillState =
         player.craftingSkills.getOrDefault(skill, CraftingSkillState())
 
+    /**
+     * Awards enchanting XP to a skill. Works directly with the mutable skills map
+     * so [EnchantSystem] can operate without a full [PlayerState] reference.
+     */
+    fun addEnchantingXp(
+        skills: MutableMap<String, CraftingSkillState>,
+        skill: String,
+        xp: Int,
+    ): dev.ambon.engine.crafting.EnchantXpResult {
+        val state = skills.getOrPut(skill) { CraftingSkillState() }
+        if (state.level >= config.maxSkillLevel) {
+            return dev.ambon.engine.crafting.EnchantXpResult(leveledUp = false, newLevel = state.level)
+        }
+        val newXp = state.xp + xp.toLong()
+        val xpNeeded = xpForLevel(state.level)
+        return if (newXp >= xpNeeded) {
+            val newLevel = (state.level + 1).coerceAtMost(config.maxSkillLevel)
+            skills[skill] = CraftingSkillState(level = newLevel, xp = newXp - xpNeeded)
+            dev.ambon.engine.crafting.EnchantXpResult(leveledUp = true, newLevel = newLevel)
+        } else {
+            skills[skill] = state.copy(xp = newXp)
+            dev.ambon.engine.crafting.EnchantXpResult(leveledUp = false, newLevel = state.level)
+        }
+    }
+
     fun maxSkillLevel(): Int = config.maxSkillLevel
 
     fun specializationXpBonusPct(): Int = (config.specializationXpBonus * 100).toInt()

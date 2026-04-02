@@ -389,6 +389,16 @@ data class AppConfig(
             require(tmpl.armor >= 0) { "ambonMUD.engine.pets.definitions.$key.armor must be >= 0" }
         }
 
+        // Validate enchantment definitions
+        require(engine.enchanting.maxEnchantmentsPerItem > 0) {
+            "ambonMUD.engine.enchanting.maxEnchantmentsPerItem must be > 0"
+        }
+        engine.enchanting.definitions.forEach { (key, def) ->
+            require(def.displayName.isNotBlank()) { "ambonMUD.engine.enchanting.definitions.$key.displayName must be non-blank" }
+            require(def.materials.isNotEmpty()) { "ambonMUD.engine.enchanting.definitions.$key.materials must not be empty" }
+            require(def.skillRequired > 0) { "ambonMUD.engine.enchanting.definitions.$key.skillRequired must be > 0" }
+        }
+
         // Validate faction enemy cross-references
         val factionIds = engine.factions.definitions.keys
         for ((factionId, def) in engine.factions.definitions) {
@@ -483,6 +493,24 @@ data class PetConfig(
     val definitions: Map<String, PetTemplateConfig> = emptyMap(),
 )
 
+data class EnchantmentDefinition(
+    val displayName: String = "",
+    val skill: String = "enchanting",
+    val skillRequired: Int = 1,
+    val materials: List<MaterialConfigEntry> = emptyList(),
+    val statBonuses: Map<String, Int> = emptyMap(),
+    val damageBonus: Int = 0,
+    val armorBonus: Int = 0,
+    /** Which equipment slot types this enchantment can be applied to. Empty = any slot. */
+    val targetSlots: List<String> = emptyList(),
+    val xpReward: Int = 30,
+)
+
+data class EnchantingConfig(
+    val definitions: Map<String, EnchantmentDefinition> = emptyMap(),
+    val maxEnchantmentsPerItem: Int = 1,
+)
+
 data class FactionConfig(
     val definitions: Map<String, FactionDefinition> = emptyMap(),
     val defaultReputation: Int = 0,
@@ -526,6 +554,7 @@ data class CraftingSkillsConfig(
             "herbalism" to CraftingSkillConfig(displayName = "Herbalism", type = "gathering"),
             "smithing" to CraftingSkillConfig(displayName = "Smithing", type = "crafting"),
             "alchemy" to CraftingSkillConfig(displayName = "Alchemy", type = "crafting"),
+            "enchanting" to CraftingSkillConfig(displayName = "Enchanting", type = "crafting"),
         )
     }
 }
@@ -542,6 +571,7 @@ data class CraftingStationTypesConfig(
             "forge" to CraftingStationTypeConfig(displayName = "Forge"),
             "alchemy_table" to CraftingStationTypeConfig(displayName = "Alchemy Table"),
             "workbench" to CraftingStationTypeConfig(displayName = "Workbench"),
+            "enchanting_table" to CraftingStationTypeConfig(displayName = "Enchanting Table"),
         )
     }
 }
@@ -827,6 +857,7 @@ data class EngineConfig(
     val crafting: CraftingConfig = CraftingConfig(),
     val factions: FactionConfig = FactionConfig(),
     val pets: PetConfig = PetConfig(),
+    val enchanting: EnchantingConfig = EnchantingConfig(),
     val friends: FriendsConfig = FriendsConfig(),
     val debug: EngineDebugConfig = EngineDebugConfig(),
     val classes: ClassEngineConfig = ClassEngineConfig(),
