@@ -106,6 +106,7 @@ class NavigationHandler(
                         gmcpEmitter,
                         dialogueSystem,
                     )
+                    onPlayerMoved?.invoke(sessionId, origin)
                     outbound.send(OutboundEvent.SendText(sessionId, "You step outside and find yourself back where you came from."))
                     ctx.sendLook(sessionId)
                 } else {
@@ -178,6 +179,7 @@ class NavigationHandler(
                         gmcpEmitter,
                         dialogueSystem,
                     )
+                    onPlayerMoved?.invoke(sessionId, result.entryRoomId)
                     outbound.send(OutboundEvent.SendText(sessionId, "You feel a familiar warmth and find yourself home."))
                     ctx.sendLook(sessionId)
                 }
@@ -216,6 +218,7 @@ class NavigationHandler(
             gmcpEmitter,
             dialogueSystem,
         )
+        onPlayerMoved?.invoke(sessionId, target)
         outbound.send(OutboundEvent.SendText(sessionId, msgs.arrival))
         ctx.sendLook(sessionId)
     }

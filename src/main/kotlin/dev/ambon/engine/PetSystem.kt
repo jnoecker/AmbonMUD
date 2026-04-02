@@ -26,6 +26,9 @@ class PetSystem(
     private val mobs: MobRegistry,
     private val clock: Clock,
 ) {
+    /** Tracks expiry time for timed pets. Key = MobId, value = wall-clock ms when the pet expires. */
+    private val expiryTimes = mutableMapOf<MobId, Long>()
+
     fun getTemplate(key: String): PetTemplateConfig? = config.definitions[key]
 
     fun allTemplates(): Map<String, PetTemplateConfig> = config.definitions
@@ -40,6 +43,7 @@ class PetSystem(
 
     /**
      * Summons a pet from a template. Dismisses any existing pet first.
+     * [durationMs] of 0 means permanent (no automatic expiry).
      * Returns the new pet MobState, or null if the template doesn't exist.
      */
     fun summon(
@@ -47,6 +51,7 @@ class PetSystem(
         templateKey: String,
         roomId: RoomId,
         ownerLevel: Int,
+        durationMs: Long = 0L,
     ): MobState? {
         val template = config.definitions[templateKey] ?: return null
 
@@ -76,14 +81,41 @@ class PetSystem(
         )
 
         mobs.upsert(pet)
-        log.debug { "Pet summoned: ${pet.name} (${pet.id}) for owner $ownerSid" }
+        if (durationMs > 0L) {
+            expiryTimes[petId] = clock.millis() + durationMs
+        }
+        val durationLabel = if (durationMs > 0L) "${durationMs}ms" else "permanent"
+        log.debug { "Pet summoned: ${pet.name} (${pet.id}) for owner $ownerSid, duration=$durationLabel" }
         return pet
+    }
+
+    /**
+     * Checks for pets whose duration has expired.
+     * Returns a list of (ownerSessionId, petName) pairs for expired pets so the caller can notify owners.
+     */
+    fun tick(): List<ExpiredPet> {
+        val now = clock.millis()
+        val expired = mutableListOf<ExpiredPet>()
+        val iterator = expiryTimes.iterator()
+        while (iterator.hasNext()) {
+            val (mobId, expiresAt) = iterator.next()
+            if (now >= expiresAt) {
+                val pet = mobs.get(mobId)
+                if (pet != null) {
+                    expired.add(ExpiredPet(pet.ownerSessionId!!, pet.name))
+                    mobs.remove(mobId)
+                }
+                iterator.remove()
+            }
+        }
+        return expired
     }
 
     /** Dismisses all pets owned by a player. Returns dismissed pet count. */
     fun dismissAll(ownerSid: SessionId): Int {
         val pets = getPets(ownerSid)
         for (pet in pets) {
+            expiryTimes.remove(pet.id)
             mobs.remove(pet.id)
             log.debug { "Pet dismissed: ${pet.name} (${pet.id})" }
         }
@@ -103,9 +135,14 @@ class PetSystem(
     }
 
     fun clear() {
-        // Remove all pets from the mob registry
+        expiryTimes.clear()
         for (mob in mobs.all().filter { it.isPet }) {
             mobs.remove(mob.id)
         }
     }
+
+    data class ExpiredPet(
+        val ownerSessionId: SessionId,
+        val petName: String,
+    )
 }
