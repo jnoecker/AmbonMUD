@@ -121,6 +121,8 @@ sealed interface Command {
 
     data object DuelDecline : Command
 
+    data object Reputation : Command
+
     data object Inventory : Command
 
     data object Equipment : Command
@@ -1105,6 +1107,7 @@ object CommandParser {
             "gold", "balance", "wealth" -> Command.Balance
             "list", "shop" -> Command.ShopList
             "craftskills", "professions", "prof" -> Command.CraftSkills
+            "reputation", "rep", "factions", "standing", "standings" -> Command.Reputation
             "dungeon leave", "dungeon exit" -> Command.DungeonLeave
             else -> Command.Unknown(line)
         }
