@@ -45,6 +45,7 @@ import dev.ambon.engine.commands.handlers.SpriteHandler
 import dev.ambon.engine.commands.handlers.TradeHandler
 import dev.ambon.engine.commands.handlers.UiHandler
 import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
+import dev.ambon.engine.commands.handlers.WorldInfoHandler
 import dev.ambon.engine.crafting.CraftingRegistry
 import dev.ambon.engine.crafting.CraftingSystem
 import dev.ambon.engine.crafting.EnchantSystem
@@ -651,6 +652,23 @@ class GameEngine(
         clock = clock,
     )
 
+    private val worldTimeSystem = WorldTimeSystem(
+        config = engineConfig.worldTime,
+        clock = clock,
+    )
+
+    private val weatherSystem = WeatherSystem(
+        config = engineConfig.weather,
+        clock = clock,
+    )
+
+    private val worldEventSystem = WorldEventSystem(
+        config = engineConfig.worldEvents,
+        clock = clock,
+    )
+
+    private var lastTimePeriod: TimePeriod = worldTimeSystem.period()
+
     private val abilitySystem: AbilitySystem =
         AbilitySystem(
             players = players,
@@ -977,6 +995,12 @@ class GameEngine(
                 bankConfig = engineConfig.bank,
                 markVitalsDirty = ::markVitalsDirty,
             ),
+            WorldInfoHandler(
+                ctx = ctx,
+                worldTimeSystem = worldTimeSystem,
+                weatherSystem = weatherSystem,
+                worldEventSystem = worldEventSystem,
+            ),
             DialogueQuestHandler(
                 ctx = ctx,
                 dialogueSystem = dialogueSystem,
@@ -1208,6 +1232,61 @@ class GameEngine(
                             ),
                         )
                         emitPetState(expired.ownerSessionId, null)
+                    }
+
+                    // Tick world time — broadcast on period change
+                    val newPeriod = worldTimeSystem.tick(lastTimePeriod)
+                    if (newPeriod != null) {
+                        lastTimePeriod = newPeriod
+                        gmcpEmitter.broadcastWorldTime(
+                            GmcpEmitter.WorldTimePayload(
+                                period = newPeriod.name,
+                                hour = worldTimeSystem.gameHour(),
+                                minute = worldTimeSystem.gameMinute(),
+                            ),
+                            players,
+                        )
+                    }
+
+                    // Tick weather — broadcast zone changes
+                    val activeZones = players.allPlayers().map { it.roomId.zone }.toSet()
+                    val weatherChanges = weatherSystem.tick(activeZones)
+                    for ((zone, weather) in weatherChanges) {
+                        for (p in players.playersInZone(zone)) {
+                            gmcpEmitter.sendWorldWeather(
+                                p.sessionId,
+                                GmcpEmitter.WorldWeatherPayload(
+                                    zone = zone,
+                                    weather = weather.name,
+                                    description = weather.description,
+                                ),
+                            )
+                        }
+                    }
+
+                    // Tick world events — broadcast activations/deactivations
+                    val eventResult = worldEventSystem.tick()
+                    if (eventResult.hasChanges()) {
+                        for (id in eventResult.activated) {
+                            val def = engineConfig.worldEvents.definitions[id] ?: continue
+                            if (def.startMessage.isNotEmpty()) {
+                                for (p in players.allPlayers()) {
+                                    outbound.send(OutboundEvent.SendInfo(p.sessionId, "[Event] ${def.startMessage}"))
+                                }
+                            }
+                        }
+                        for (id in eventResult.deactivated) {
+                            val def = engineConfig.worldEvents.definitions[id] ?: continue
+                            if (def.endMessage.isNotEmpty()) {
+                                for (p in players.allPlayers()) {
+                                    outbound.send(OutboundEvent.SendInfo(p.sessionId, "[Event] ${def.endMessage}"))
+                                }
+                            }
+                        }
+                        val activePayloads = worldEventSystem.activeEvents().map { (id, def) ->
+                            GmcpEmitter.WorldEventPayload(id, def.displayName, def.description)
+                        }
+                        gmcpEmitter.broadcastWorldEvents(activePayloads, players)
                     }
 
                     // Tick gathering node respawns
