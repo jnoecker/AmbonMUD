@@ -35,6 +35,7 @@ import dev.ambon.engine.commands.handlers.GroupHandler
 import dev.ambon.engine.commands.handlers.GuildHandler
 import dev.ambon.engine.commands.handlers.HousingHandler
 import dev.ambon.engine.commands.handlers.ItemHandler
+import dev.ambon.engine.commands.handlers.LeaderboardHandler
 import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
@@ -667,6 +668,15 @@ class GameEngine(
         clock = clock,
     )
 
+    private val leaderboardSystem: LeaderboardSystem? =
+        persistence.playerRepo?.let { repo ->
+            LeaderboardSystem(
+                playerRepo = repo,
+                playerRegistry = players,
+                config = engineConfig.leaderboard,
+            )
+        }
+
     private var lastTimePeriod: TimePeriod = worldTimeSystem.period()
 
     private val abilitySystem: AbilitySystem =
@@ -911,6 +921,7 @@ class GameEngine(
             statRegistry = statRegistry,
             equipmentSlotRegistry = equipmentSlotRegistry,
             genderRegistry = genderRegistry,
+            leaderboardSystem = leaderboardSystem,
         )
 
         communicationHandler = CommunicationHandler(
@@ -1063,6 +1074,7 @@ class GameEngine(
                 ctx = ctx,
                 spriteRegistry = spriteRegistry,
             ),
+            LeaderboardHandler(ctx = ctx),
             UiHandler(
                 ctx = ctx,
                 onPhase = phaseCallback,
@@ -1118,6 +1130,11 @@ class GameEngine(
 
             // Load guild data into memory.
             guildSystem?.initialize()
+
+            // Schedule initial leaderboard population and recurring refresh.
+            leaderboardSystem?.let { sys ->
+                scheduleLeaderboardRefresh(sys)
+            }
 
             // Restore persisted world state, overriding in-memory defaults.
             worldStateRepository?.load()?.let { snapshot ->
@@ -1865,11 +1882,22 @@ class GameEngine(
         )
     }
 
+    /** Schedules a leaderboard refresh, then re-schedules itself for the next interval. */
+    private suspend fun scheduleLeaderboardRefresh(sys: LeaderboardSystem) {
+        scheduler.scheduleIn(sys.refreshIntervalMs) {
+            sys.refresh()
+            scheduleLeaderboardRefresh(sys)
+        }
+        // Run the first refresh immediately on the first tick so the cache is populated at startup.
+        sys.refresh()
+    }
+
     private suspend fun checkDungeonBossKilled(mobId: MobId) {
         val inst = dungeonManager.findInstanceByBossMob(mobId)
         if (inst == null || inst.completed) return
         dungeonManager.markComplete(inst)
         for (sid in inst.members) {
+            players.get(sid)?.let { it.dungeonsCompleted += 1 }
             outbound.send(
                 OutboundEvent.SendInfo(
                     sid,

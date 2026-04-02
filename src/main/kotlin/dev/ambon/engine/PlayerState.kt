@@ -78,6 +78,10 @@ data class PlayerState(
     var invisible: Boolean = false,
     /** Cached flag indicating whether this player owns a house. Runtime-only; set on login. */
     var hasHouse: Boolean = false,
+    /** Cumulative count of mobs killed by this player. */
+    var mobsKilledTotal: Long = 0L,
+    /** Number of dungeon instances completed by this player. */
+    var dungeonsCompleted: Int = 0,
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -177,6 +181,8 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         bankGold = bankGold,
         bankItems = bankItems.toMutableList(),
         activeSprite = activeSprite,
+        mobsKilledTotal = mobsKilledTotal,
+        dungeonsCompleted = dungeonsCompleted,
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -217,6 +223,8 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         bankGold = bankGold,
         bankItems = bankItems.toList(),
         activeSprite = activeSprite,
+        mobsKilledTotal = mobsKilledTotal,
+        dungeonsCompleted = dungeonsCompleted,
     )
 }
 

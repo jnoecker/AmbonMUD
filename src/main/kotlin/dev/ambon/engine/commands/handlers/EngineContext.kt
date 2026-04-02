@@ -7,6 +7,7 @@ import dev.ambon.engine.CombatSystem
 import dev.ambon.engine.EquipmentSlotRegistry
 import dev.ambon.engine.GenderRegistry
 import dev.ambon.engine.GmcpEmitter
+import dev.ambon.engine.LeaderboardSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.PlayerClassRegistry
 import dev.ambon.engine.PlayerRegistry
@@ -45,4 +46,5 @@ data class EngineContext(
     val statRegistry: StatRegistry? = null,
     val equipmentSlotRegistry: EquipmentSlotRegistry? = null,
     val genderRegistry: GenderRegistry? = null,
+    val leaderboardSystem: LeaderboardSystem? = null,
 )

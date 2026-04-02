@@ -122,6 +122,8 @@ class PersistenceFieldCoverageTest {
                         Item(keyword = "sword", displayName = "a short sword", slot = ItemSlot.HAND),
                     ),
                 ),
+                mobsKilledTotal = 99L,
+                dungeonsCompleted = 5,
             )
 
         @BeforeAll
@@ -263,6 +265,32 @@ class PersistenceFieldCoverageTest {
         val expected = FULLY_POPULATED.copy(inventoryItems = emptyList(), equippedItems = emptyMap())
         assertEquals(expected, roundTripped)
     }
+
+    // -----------------------------------------------------------------------
+    // 6. findAll round-trip
+    // -----------------------------------------------------------------------
+
+    @Test
+    fun `Postgres findAll returns all saved records`() =
+        runTest {
+            val repo = PostgresPlayerRepository(database)
+            val seed =
+                repo.create(
+                    PlayerCreationRequest(
+                        name = FULLY_POPULATED.name,
+                        startRoomId = FULLY_POPULATED.roomId,
+                        nowEpochMs = FULLY_POPULATED.createdAtEpochMs,
+                        passwordHash = FULLY_POPULATED.passwordHash,
+                        ansiEnabled = FULLY_POPULATED.ansiEnabled,
+                    ),
+                )
+            val expected = FULLY_POPULATED.copy(id = seed.id)
+            repo.save(expected)
+
+            val all = repo.findAll()
+            assertEquals(1, all.size)
+            assertEquals(expected, all.first())
+        }
 
     // -----------------------------------------------------------------------
     // helpers

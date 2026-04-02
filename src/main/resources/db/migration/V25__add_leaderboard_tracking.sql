@@ -1,0 +1,2 @@
+ALTER TABLE players ADD COLUMN mobs_killed_total BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE players ADD COLUMN dungeons_completed INT NOT NULL DEFAULT 0;
