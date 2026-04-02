@@ -186,12 +186,14 @@ class MudServer(
         }
     private val spriteRegistry =
         SpriteRegistry().also { reg ->
-            SpriteLoader.generateTierSprites(
-                registry = reg,
-                tierNames = config.images.spriteTierNames,
-                raceIds = raceRegistry.all().map { it.id },
-                classIds = classRegistry.all().map { it.id },
-            )
+            if (config.images.legacyTierSprites) {
+                SpriteLoader.generateTierSprites(
+                    registry = reg,
+                    tierNames = config.images.spriteTierNames,
+                    raceIds = raceRegistry.all().map { it.id },
+                    classIds = classRegistry.all().map { it.id },
+                )
+            }
             SpriteLoader.generateStaffSprites(
                 registry = reg,
                 raceIds = raceRegistry.all().map { it.id },

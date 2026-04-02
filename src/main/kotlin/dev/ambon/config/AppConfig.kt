@@ -1691,6 +1691,8 @@ data class ImagesConfig(
     val spriteLevelTiers: List<Int> = listOf(50, 40, 30, 20, 10, 1),
     /** Human-readable names for each sprite tier, keyed by level threshold. */
     val spriteTierNames: Map<Int, String> = DEFAULT_SPRITE_TIER_NAMES,
+    /** When true, auto-generates race x class x tier sprite definitions (96 images). Set false to sunset. */
+    val legacyTierSprites: Boolean = true,
 ) {
     companion object {
         val DEFAULT_SPRITE_TIER_NAMES: Map<Int, String> = linkedMapOf(
