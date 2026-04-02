@@ -9819,3 +9819,102 @@ body {
   border-radius: 3px;
   font-size: 0.7rem;
 }
+
+/* ── Leaderboard Panel ──────────────────────────────────────────────────── */
+
+.leaderboard-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.leaderboard-empty {
+  padding: var(--space-4);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.leaderboard-empty p {
+  margin: 0 0 var(--space-2);
+}
+
+.leaderboard-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+.leaderboard-cat-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-2) 0 var(--space-3);
+}
+
+.leaderboard-cat-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-sm);
+  background: rgb(255 255 255 / 5%);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.leaderboard-cat-btn:hover {
+  background: var(--primary-glass);
+  color: var(--text-primary);
+  border-color: var(--primary-dim);
+}
+
+.leaderboard-category {
+  margin-bottom: var(--space-4);
+}
+
+.leaderboard-cat-header {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--line-faint);
+  margin-bottom: var(--space-2);
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaderboard-row {
+  transition: background 0.1s;
+}
+
+.leaderboard-row:hover {
+  background: rgb(255 255 255 / 3%);
+}
+
+.leaderboard-rank {
+  width: 2rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  padding: 3px 0;
+}
+
+.leaderboard-name {
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  padding: 3px var(--space-2);
+}
+
+.leaderboard-score {
+  text-align: right;
+  color: var(--accent-gold);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  padding: 3px 0;
+}

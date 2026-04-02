@@ -30,6 +30,8 @@ class InMemoryPlayerRepository : PlayerRepository {
         players[record.id] = record
     }
 
+    override suspend fun findAll(): List<PlayerRecord> = players.values.toList()
+
     fun clear() {
         players.clear()
     }

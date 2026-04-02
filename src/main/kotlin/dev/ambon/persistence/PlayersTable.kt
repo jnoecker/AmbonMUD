@@ -68,6 +68,8 @@ object PlayersTable : Table("players") {
     val activeSprite = varchar("active_sprite", 100).nullable()
     val authTokenHash = varchar("auth_token_hash", 64).default("")
     val authTokenIssuedAt = long("auth_token_issued_at").default(0L)
+    val mobsKilledTotal = long("mobs_killed_total").default(0L)
+    val dungeonsCompleted = integer("dungeons_completed").default(0)
 
     override val primaryKey = PrimaryKey(id)
 
@@ -112,6 +114,8 @@ object PlayersTable : Table("players") {
             activeSprite = row[activeSprite],
             authTokenHash = row[authTokenHash],
             authTokenIssuedAt = row[authTokenIssuedAt],
+            mobsKilledTotal = row[mobsKilledTotal],
+            dungeonsCompleted = row[dungeonsCompleted],
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -155,5 +159,7 @@ object PlayersTable : Table("players") {
         statement[activeSprite] = record.activeSprite
         statement[authTokenHash] = record.authTokenHash
         statement[authTokenIssuedAt] = record.authTokenIssuedAt
+        statement[mobsKilledTotal] = record.mobsKilledTotal
+        statement[dungeonsCompleted] = record.dungeonsCompleted
     }
 }
