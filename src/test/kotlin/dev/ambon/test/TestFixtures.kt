@@ -28,6 +28,7 @@ import dev.ambon.engine.StatRegistry
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.buildTestRouter
+import dev.ambon.engine.crafting.EnchantSystem
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
@@ -228,6 +229,7 @@ class CommandRouterHarness private constructor(
             clock: Clock = Clock.systemUTC(),
             gatheringRegistry: GatheringRegistry? = null,
             petSystem: PetSystem? = null,
+            enchantSystem: EnchantSystem? = null,
         ): CommandRouterHarness {
             val combat = CombatSystem(players, mobs, items, outbound)
             val router =
@@ -252,6 +254,7 @@ class CommandRouterHarness private constructor(
                     clock = clock,
                     gatheringRegistry = gatheringRegistry,
                     petSystem = petSystem,
+                    enchantSystem = enchantSystem,
                 )
             return CommandRouterHarness(world, repo, items, players, mobs, outbound, progression, groupSystem, combat, router)
         }

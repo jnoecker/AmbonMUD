@@ -341,6 +341,8 @@ export function applyGmcpPackage(
               basePrice: typeof entry.basePrice === "number" ? entry.basePrice : undefined,
               image: typeof entry.image === "string" ? entry.image : null,
               video: typeof entry.video === "string" ? entry.video : null,
+              stats: entry.stats && typeof entry.stats === "object" ? entry.stats as Record<string, number> : undefined,
+              enchantments: Array.isArray(entry.enchantments) ? entry.enchantments.filter((e): e is string => typeof e === "string") : undefined,
             }))
         : [];
 
@@ -356,6 +358,8 @@ export function applyGmcpPackage(
             slot,
             image: typeof item.image === "string" ? item.image : null,
             video: typeof item.video === "string" ? item.video : null,
+            stats: item.stats && typeof item.stats === "object" ? item.stats as Record<string, number> : undefined,
+            enchantments: Array.isArray(item.enchantments) ? item.enchantments.filter((e): e is string => typeof e === "string") : undefined,
           };
         }
       }
@@ -377,6 +381,8 @@ export function applyGmcpPackage(
           basePrice: typeof packet.basePrice === "number" ? packet.basePrice : undefined,
           image: typeof packet.image === "string" ? packet.image : null,
           video: typeof packet.video === "string" ? packet.video : null,
+          stats: packet.stats && typeof packet.stats === "object" ? packet.stats as Record<string, number> : undefined,
+          enchantments: Array.isArray(packet.enchantments) ? (packet.enchantments as unknown[]).filter((e): e is string => typeof e === "string") : undefined,
         },
       ]);
       break;

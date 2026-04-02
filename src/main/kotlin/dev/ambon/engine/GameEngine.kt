@@ -27,6 +27,7 @@ import dev.ambon.engine.commands.handlers.CraftingHandler
 import dev.ambon.engine.commands.handlers.DialogueQuestHandler
 import dev.ambon.engine.commands.handlers.DuelHandler
 import dev.ambon.engine.commands.handlers.DungeonHandler
+import dev.ambon.engine.commands.handlers.EnchantHandler
 import dev.ambon.engine.commands.handlers.EngineContext
 import dev.ambon.engine.commands.handlers.FriendsHandler
 import dev.ambon.engine.commands.handlers.GroupHandler
@@ -45,6 +46,7 @@ import dev.ambon.engine.commands.handlers.UiHandler
 import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
 import dev.ambon.engine.crafting.CraftingRegistry
 import dev.ambon.engine.crafting.CraftingSystem
+import dev.ambon.engine.crafting.EnchantSystem
 import dev.ambon.engine.crafting.GatheringRegistry
 import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.dungeon.DungeonManager
@@ -687,6 +689,12 @@ class GameEngine(
         clock = clock,
     )
 
+    private val enchantSystem = EnchantSystem(
+        config = engineConfig.enchanting,
+        items = items,
+        craftingSystem = craftingSystem,
+    )
+
     private val dungeonRegistry = DungeonRegistry().also { reg ->
         world.dungeonTemplates.forEach { reg.register(it) }
     }
@@ -958,6 +966,10 @@ class GameEngine(
                 craftingSkillRegistry = craftingSkillRegistry,
                 gatheringRegistry = gatheringRegistry,
                 markVitalsDirty = ::markVitalsDirty,
+            ),
+            EnchantHandler(
+                ctx = ctx,
+                enchantSystem = enchantSystem,
             ),
             DialogueQuestHandler(
                 ctx = ctx,
