@@ -661,6 +661,7 @@ class GameEngine(
                 val pet = petSystem.summon(sid, templateKey, player.roomId, player.level)
                 if (pet != null) {
                     outbound.send(OutboundEvent.SendText(sid, "You summon ${pet.name}!"))
+                    emitPetState(sid, pet)
                 } else {
                     outbound.send(OutboundEvent.SendText(sid, "Failed to summon pet."))
                 }
@@ -1706,6 +1707,35 @@ class GameEngine(
                 if (changes.isNotEmpty()) emitFactions(sessionId, player)
             }
         }
+    }
+
+    private suspend fun emitPetState(sessionId: SessionId, pet: dev.ambon.domain.mob.MobState?) {
+        gmcpEmitter.sendPetState(
+            sessionId,
+            if (pet != null) {
+                GmcpEmitter.PetStatePayload(
+                    active = true,
+                    name = pet.name,
+                    hp = pet.hp,
+                    maxHp = pet.maxHp,
+                    minDamage = pet.damage.min,
+                    maxDamage = pet.damage.max,
+                    armor = pet.armor,
+                    image = pet.image,
+                )
+            } else {
+                GmcpEmitter.PetStatePayload(
+                    active = false,
+                    name = null,
+                    hp = null,
+                    maxHp = null,
+                    minDamage = null,
+                    maxDamage = null,
+                    armor = null,
+                    image = null,
+                )
+            },
+        )
     }
 
     private suspend fun emitFactions(sessionId: SessionId, player: PlayerState) {
