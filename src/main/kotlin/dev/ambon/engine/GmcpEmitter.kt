@@ -983,6 +983,23 @@ class GmcpEmitter(
         emit(sessionId, "Auction.List", listings)
     }
 
+    // ---------- pets ----------
+
+    data class PetStatePayload(
+        val active: Boolean,
+        val name: String?,
+        val hp: Int?,
+        val maxHp: Int?,
+        val minDamage: Int?,
+        val maxDamage: Int?,
+        val armor: Int?,
+        val image: String?,
+    )
+
+    suspend fun sendPetState(sessionId: SessionId, payload: PetStatePayload) {
+        emit(sessionId, "Char.Pet", payload)
+    }
+
     // ---------- reputation / factions ----------
 
     data class FactionStandingPayload(

@@ -1338,6 +1338,11 @@ export function applyGmcpPackage(
       break;
     }
 
+    case "Char.Pet": {
+      // Pet state received via GMCP — available for future pet panel.
+      break;
+    }
+
     case "Char.Factions": {
       // Faction standings received via GMCP — stored for future panel.
       break;
