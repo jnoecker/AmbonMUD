@@ -51,6 +51,20 @@ internal suspend fun broadcastToRoom(
     }
 }
 
+internal suspend fun broadcastToRoom(
+    players: PlayerRegistry,
+    outbound: OutboundBus,
+    roomId: RoomId,
+    text: String,
+    exclude1: SessionId,
+    exclude2: SessionId,
+) {
+    for (p in players.playersInRoom(roomId)) {
+        if (p.sessionId == exclude1 || p.sessionId == exclude2) continue
+        outbound.send(OutboundEvent.SendText(p.sessionId, text))
+    }
+}
+
 /**
  * Returns a random integer in [[min], [max]] (inclusive).
  * Returns [min] when max <= min.
