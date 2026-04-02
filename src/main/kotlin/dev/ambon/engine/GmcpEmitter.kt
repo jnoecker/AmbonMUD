@@ -1032,6 +1032,50 @@ class GmcpEmitter(
         )
     }
 
+    // ---------- world atmosphere ----------
+
+    data class WorldTimePayload(
+        val period: String,
+        val hour: Int,
+        val minute: Int,
+    )
+
+    data class WorldWeatherPayload(
+        val zone: String,
+        val weather: String,
+        val description: String,
+    )
+
+    data class WorldEventPayload(
+        val id: String,
+        val name: String,
+        val description: String,
+    )
+
+    suspend fun sendWorldTime(sessionId: SessionId, payload: WorldTimePayload) {
+        emit(sessionId, "World.Time", payload)
+    }
+
+    suspend fun broadcastWorldTime(payload: WorldTimePayload, players: PlayerRegistry) {
+        for (p in players.allPlayers()) {
+            emit(p.sessionId, "World.Time", payload)
+        }
+    }
+
+    suspend fun sendWorldWeather(sessionId: SessionId, payload: WorldWeatherPayload) {
+        emit(sessionId, "World.Weather", payload)
+    }
+
+    suspend fun sendWorldEvents(sessionId: SessionId, events: List<WorldEventPayload>) {
+        emit(sessionId, "World.Events", events)
+    }
+
+    suspend fun broadcastWorldEvents(events: List<WorldEventPayload>, players: PlayerRegistry) {
+        for (p in players.allPlayers()) {
+            emit(p.sessionId, "World.Events", events)
+        }
+    }
+
     // ---------- reputation / factions ----------
 
     data class FactionStandingPayload(

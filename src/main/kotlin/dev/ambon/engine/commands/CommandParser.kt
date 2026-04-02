@@ -41,6 +41,8 @@ sealed interface Command {
 
     data object Who : Command
 
+    data object Time : Command
+
     data class Tell(
         val target: String,
         val message: String,
@@ -763,6 +765,10 @@ object CommandParser {
 
         matchPrefix(line, listOf("bank")) { _ ->
             Command.Bank.Balance
+        }?.let { return it }
+
+        matchPrefix(line, listOf("time")) { _ ->
+            Command.Time
         }?.let { return it }
 
         matchPrefix(line, listOf("whisper", "wh")) { rest ->

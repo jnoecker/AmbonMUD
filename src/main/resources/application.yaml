@@ -2476,6 +2476,39 @@ ambonmud:
           targetSlots: []
           xpReward: 80
 
+    worldTime:
+      cycleLengthMs: 3600000     # 1 real hour = 1 game day
+      dawnHour: 5
+      dayHour: 8
+      duskHour: 18
+      nightHour: 21
+
+    weather:
+      minTransitionMs: 300000    # 5 min minimum between transitions
+      maxTransitionMs: 900000    # 15 min maximum between transitions
+
+    worldEvents:
+      definitions:
+        spring_festival:
+          displayName: "Spring Festival"
+          description: "Flowers bloom across the realm and crafters find rare herbs more easily."
+          startDate: "2026-03-20"
+          endDate: "2026-04-20"
+          flags:
+            - spring_festival
+            - bonus_herbalism
+          startMessage: "The Spring Festival has begun! Flowers bloom across the realm."
+          endMessage: "The Spring Festival has ended. The flowers fade."
+        midsummer_night:
+          displayName: "Midsummer Night"
+          description: "The longest day brings warm breezes and wandering spirits."
+          startDate: "2026-06-20"
+          endDate: "2026-06-22"
+          flags:
+            - midsummer
+          startMessage: "Midsummer Night is here — the veil between worlds grows thin."
+          endMessage: "Midsummer Night has passed. The spirits retreat."
+
     debug:
       enableSwarmClass: false
 
