@@ -1349,6 +1349,11 @@ export function applyGmcpPackage(
       break;
     }
 
+    case "Char.Bank": {
+      // Bank state received via GMCP — available for future bank panel.
+      break;
+    }
+
     case "Char.Factions": {
       // Faction standings received via GMCP — stored for future panel.
       break;

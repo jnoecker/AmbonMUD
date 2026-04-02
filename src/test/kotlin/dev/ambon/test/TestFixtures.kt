@@ -2,6 +2,7 @@ package dev.ambon.test
 
 import dev.ambon.bus.LocalInboundBus
 import dev.ambon.bus.LocalOutboundBus
+import dev.ambon.config.BankConfig
 import dev.ambon.config.ClassDefinitionConfig
 import dev.ambon.config.ClassEngineConfig
 import dev.ambon.config.EconomyConfig
@@ -230,6 +231,7 @@ class CommandRouterHarness private constructor(
             gatheringRegistry: GatheringRegistry? = null,
             petSystem: PetSystem? = null,
             enchantSystem: EnchantSystem? = null,
+            bankConfig: BankConfig? = null,
         ): CommandRouterHarness {
             val combat = CombatSystem(players, mobs, items, outbound)
             val router =
@@ -255,6 +257,7 @@ class CommandRouterHarness private constructor(
                     gatheringRegistry = gatheringRegistry,
                     petSystem = petSystem,
                     enchantSystem = enchantSystem,
+                    bankConfig = bankConfig,
                 )
             return CommandRouterHarness(world, repo, items, players, mobs, outbound, progression, groupSystem, combat, router)
         }

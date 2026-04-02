@@ -56,6 +56,8 @@ data class PlayerState(
     var guildTag: String? = null,
     var recallRoomId: RoomId? = null,
     var friendsList: MutableSet<String> = mutableSetOf(),
+    var bankGold: Long = 0L,
+    var bankItems: MutableList<dev.ambon.domain.items.ItemInstance> = mutableListOf(),
     /** Epoch-ms timestamp after which recall is available again. Runtime-only; not persisted. */
     var recallCooldownUntilMs: Long = 0L,
     var craftingSkills: MutableMap<String, CraftingSkillState> = mutableMapOf(),
@@ -172,6 +174,8 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         craftingSpecialization = craftingSpecialization,
         factionStandings = factionStandings.toMutableMap(),
         friendsList = friendsList.toMutableSet(),
+        bankGold = bankGold,
+        bankItems = bankItems.toMutableList(),
         activeSprite = activeSprite,
     )
 
@@ -210,6 +214,8 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         craftingSpecialization = craftingSpecialization,
         factionStandings = factionStandings.toMap(),
         friendsList = friendsList.toSet(),
+        bankGold = bankGold,
+        bankItems = bankItems.toList(),
         activeSprite = activeSprite,
     )
 }
