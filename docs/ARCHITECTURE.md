@@ -475,5 +475,6 @@ When in doubt about a new feature, ask: "Does this honor engine isolation, singl
 
 - **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** — Complete onboarding and common tasks
 - **[WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md)** — Zone YAML format specification
-- **[ROADMAP.md](./ROADMAP.md)** — Planned features and future work
+- **[ROADMAP.md](./ROADMAP.md)** — Completed phases and future work
+- **[TRAINER_SYSTEM.md](./TRAINER_SYSTEM.md)** — Trainer-based ability learning, skill points, multi-classing
 - **[CLAUDE.md](../CLAUDE.md)** — Architectural contracts and change playbooks (DO NOT MODIFY)
