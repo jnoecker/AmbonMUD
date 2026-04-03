@@ -29,7 +29,7 @@ import java.util.Random
 
 class AbilitySystem(
     private val players: PlayerRegistry,
-    private val registry: AbilityRegistry,
+    val registry: AbilityRegistry,
     private val outbound: OutboundBus,
     private val combat: CombatSystem,
     private val clock: Clock,
@@ -631,7 +631,9 @@ class AbilitySystem(
 
     /**
      * Returns abilities available to learn at [className]'s trainer for a player at [level]
-     * who has not yet learned the IDs in [learnedIds].
+     * who has not yet learned the IDs in [learnedIds]. Abilities whose prerequisites are not
+     * met are still included (so the UI can show them as locked) but are sorted after
+     * eligible ones within the same tier.
      */
     fun trainableAbilities(
         className: String,
@@ -640,7 +642,11 @@ class AbilitySystem(
     ): List<AbilityDefinition> =
         registry.abilitiesForClass(className)
             .filter { it.levelRequired <= level && it.id.value !in learnedIds }
-            .sortedBy { it.levelRequired }
+            .sortedWith(
+                compareBy<AbilityDefinition> { it.tier }
+                    .thenBy { !registry.isPrerequisiteMet(it.id, learnedIds) }
+                    .thenBy { it.levelRequired },
+            )
 
     /**
      * Attempts to learn [abilityId] for the session. Returns null on success, or an error message.
@@ -649,6 +655,7 @@ class AbilitySystem(
      * @param unlockedClasses the set of class names the player has unlocked
      * @param level current player level (for skill point calculation)
      * @param skillPointInterval from config — points earned every N levels
+     * @param learnedIds the set of ability IDs already persisted on the player (for prereq checks)
      */
     fun learnAbility(
         sessionId: SessionId,
@@ -656,11 +663,23 @@ class AbilitySystem(
         level: Int,
         unlockedClasses: Set<String>,
         skillPointInterval: Int,
+        learnedIds: Set<String> = emptySet(),
         prestigeBonus: Int = 0,
     ): String? {
         val ability = registry.get(abilityId) ?: return "Unknown ability '${abilityId.value}'."
         val learned = learnedAbilities.getOrPut(sessionId) { mutableSetOf() }
         if (abilityId in learned) return "You already know ${ability.displayName}."
+        // Check prerequisites
+        if (ability.prerequisites.isNotEmpty()) {
+            val allLearnedIds = learned.map { it.value }.toSet() + learnedIds
+            val unmet = ability.prerequisites.filter { it.value !in allLearnedIds }
+            if (unmet.isNotEmpty()) {
+                val unmetNames = unmet.map { prereqId ->
+                    registry.get(prereqId)?.displayName ?: prereqId.value
+                }
+                return "Missing prerequisites: ${unmetNames.joinToString(", ")}."
+            }
+        }
         val requiredClass = ability.requiredClass
         if (requiredClass != null && !unlockedClasses.any { it.equals(requiredClass, ignoreCase = true) }) {
             return "You have not unlocked the ${requiredClass.lowercase().replaceFirstChar { it.uppercaseChar() }} class."

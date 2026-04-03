@@ -48,6 +48,8 @@ object AbilityRegistryLoader {
                     else -> continue
                 }
             val requiredClass = defConfig.requiredClass.ifBlank { null }
+            val prerequisites = defConfig.prerequisites.map { AbilityId(it) }.toSet()
+            val tree = defConfig.tree.ifBlank { "" }
             registry.register(
                 AbilityDefinition(
                     id = AbilityId(key),
@@ -60,8 +62,54 @@ object AbilityRegistryLoader {
                     effect = effect,
                     requiredClass = requiredClass,
                     image = defConfig.image.ifBlank { null }?.let { "$imagesBase$it" },
+                    prerequisites = prerequisites,
+                    tree = tree,
+                    tier = defConfig.tier,
                 ),
             )
+        }
+        validateNoPrerequisiteCycles(registry)
+    }
+
+    /**
+     * Validates that the prerequisite graph is a DAG (no circular chains).
+     * Throws [IllegalStateException] if a cycle is detected.
+     */
+    internal fun validateNoPrerequisiteCycles(registry: AbilityRegistry) {
+        val allAbilities = registry.all().associateBy { it.id }
+
+        // Standard DFS-based cycle detection
+        val visited = mutableSetOf<AbilityId>()
+        val inStack = mutableSetOf<AbilityId>()
+
+        fun dfs(id: AbilityId, path: MutableList<AbilityId>) {
+            if (id in inStack) {
+                val cycleStart = path.indexOf(id)
+                val cycle = path.subList(cycleStart, path.size) + id
+                val names = cycle.map { aid ->
+                    allAbilities[aid]?.displayName ?: aid.value
+                }
+                error(
+                    "Circular prerequisite chain detected: ${names.joinToString(" -> ")}",
+                )
+            }
+            if (id in visited) return
+            val ability = allAbilities[id] ?: return
+
+            inStack.add(id)
+            path.add(id)
+            for (prereq in ability.prerequisites) {
+                dfs(prereq, path)
+            }
+            path.removeAt(path.lastIndex)
+            inStack.remove(id)
+            visited.add(id)
+        }
+
+        for (id in allAbilities.keys) {
+            if (id !in visited) {
+                dfs(id, mutableListOf())
+            }
         }
     }
 }
