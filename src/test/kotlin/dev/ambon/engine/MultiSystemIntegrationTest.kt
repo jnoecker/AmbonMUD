@@ -203,7 +203,6 @@ class MultiSystemIntegrationTest {
         val players = buildTestPlayerRegistry(startRoom, repo, items, clock = clock)
         val mobs = MobRegistry()
         val tradeSystem = TradeSystem(items)
-        val duelSystem = DuelSystem(clock)
         val groupSystem = GroupSystem(players, outbound)
         val effectRegistry = StatusEffectRegistry()
         effectRegistry.register(

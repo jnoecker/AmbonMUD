@@ -3,11 +3,11 @@ package dev.ambon.engine.events
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.metrics.GameMetrics
 
-class InputEventHandler<LoginState>(
-    private val getLoginState: (SessionId) -> LoginState?,
+class InputEventHandler<S>(
+    private val getLoginState: (SessionId) -> S?,
     private val hasActivePlayer: (SessionId) -> Boolean,
     private val isInTransit: (SessionId) -> Boolean,
-    private val handleLoginLine: suspend (SessionId, String, LoginState) -> Unit,
+    private val handleLoginLine: suspend (SessionId, String, S) -> Unit,
     private val onSessionInTransit: suspend (SessionId) -> Unit,
     private val routeCommandLine: suspend (SessionId, String) -> Unit,
     private val metrics: GameMetrics = GameMetrics.noop(),

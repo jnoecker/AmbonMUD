@@ -115,7 +115,7 @@ class ShopHandler(
         cmd: Command.Sell,
     ) {
         players.withPlayer(sessionId) { me ->
-            val shop = findShop(sessionId, me, command = "sell") ?: return
+            findShop(sessionId, me, command = "sell") ?: return
             val keyword = cmd.keyword
             val inv = items.inventory(sessionId)
             val invItem = inv.firstOrNull { it.matchesKeyword(keyword) }

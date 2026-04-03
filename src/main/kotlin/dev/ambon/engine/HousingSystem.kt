@@ -350,7 +350,6 @@ class HousingSystem(
         if (target.sessionId == sessionId) return "You can't invite yourself."
 
         val targetRoom = target.roomId
-        val entryRoomId = houseRoomId(house.ownerName, 0)
 
         visitorOrigins[target.sessionId] = targetRoom
         sessionInHouse[target.sessionId] = pid

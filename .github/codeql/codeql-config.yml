@@ -1,0 +1,4 @@
+name: "AmbonMUD CodeQL config"
+
+paths-ignore:
+  - build/generated
