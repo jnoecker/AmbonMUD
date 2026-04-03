@@ -122,6 +122,7 @@ object WorldLoader {
         val mergedRecipes = mutableListOf<RecipeDef>()
         val mergedDungeonTemplates = mutableListOf<DungeonTemplateDef>()
         val zoneLifespansMinutes = LinkedHashMap<String, Long?>()
+        val pvpZones = mutableSetOf<String>()
         val zoneStartRooms = LinkedHashMap<String, RoomId>()
 
         // startRoomOverride wins; otherwise fall back to first file’s declared startRoom.
@@ -152,6 +153,7 @@ object WorldLoader {
             val imageDefaults = file.image
             val audioDefaults = file.audio
             val zoneGraphical = file.graphical
+            if (file.pvpEnabled) pvpZones.add(zone)
 
             // First pass per file: create room shells, detect collisions
             for ((rawId, rf) in file.rooms) {
@@ -844,6 +846,8 @@ object WorldLoader {
                 zoneLifespansMinutes.entries
                     .mapNotNull { (zone, lifespanMinutes) -> lifespanMinutes?.let { zone to it } }
                     .toMap(),
+            pvpZones = pvpZones.toSet(),
+            zoneStartRooms = zoneStartRooms.toMap(),
             shopDefinitions = mergedShops.toList(),
             trainerDefinitions = mergedTrainers.toList(),
             questDefinitions = mergedQuests.toList(),

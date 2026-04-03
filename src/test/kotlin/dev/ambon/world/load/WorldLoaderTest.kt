@@ -7,6 +7,7 @@ import dev.ambon.domain.items.ItemSlot
 import dev.ambon.domain.world.Direction
 import dev.ambon.domain.world.WorldFactory
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -810,5 +811,20 @@ class WorldLoaderTest {
     fun `WorldFactory loads from explicit resource list`() {
         val world = WorldFactory.demoWorld(resources = listOf("world/mz_forest.yaml", "world/mz_swamp.yaml"))
         assertTrue(world.rooms.isNotEmpty())
+    }
+
+    @Test
+    fun `pvpEnabled zone is parsed and exposed via isZonePvpEnabled`() {
+        val world = WorldLoader.loadFromResource("world/ok_pvp_zone.yaml")
+        assertTrue(world.isZonePvpEnabled("pvp_zone"), "Expected pvp_zone to have PvP enabled")
+
+        val startRoom = world.zoneStartRoom("pvp_zone")
+        assertEquals(RoomId("pvp_zone:pvp_start"), startRoom)
+    }
+
+    @Test
+    fun `non-pvp zone returns false for isZonePvpEnabled`() {
+        val world = dev.ambon.test.TestWorlds.okSmall
+        assertFalse(world.isZonePvpEnabled("ok_small"), "Expected ok_small to NOT have PvP enabled")
     }
 }

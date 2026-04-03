@@ -13,6 +13,8 @@ class World(
     mobSpawns: List<MobSpawn> = emptyList(),
     itemSpawns: List<ItemSpawn> = emptyList(),
     zoneLifespansMinutes: Map<String, Long> = emptyMap(),
+    pvpZones: Set<String> = emptySet(),
+    zoneStartRooms: Map<String, RoomId> = emptyMap(),
     shopDefinitions: List<ShopDefinition> = emptyList(),
     trainerDefinitions: List<TrainerDefinition> = emptyList(),
     questDefinitions: List<QuestDef> = emptyList(),
@@ -34,6 +36,18 @@ class World(
 
     private val _zoneLifespansMinutes = zoneLifespansMinutes.toMutableMap()
     val zoneLifespansMinutes: Map<String, Long> get() = _zoneLifespansMinutes
+
+    private val _pvpZones = pvpZones.toMutableSet()
+    val pvpZones: Set<String> get() = _pvpZones
+
+    /** Returns true if the given zone has PvP combat enabled. */
+    fun isZonePvpEnabled(zoneId: String): Boolean = zoneId in _pvpZones
+
+    private val _zoneStartRooms = zoneStartRooms.toMutableMap()
+    val zoneStartRooms: Map<String, RoomId> get() = _zoneStartRooms
+
+    /** Returns the start room for a zone, if known. */
+    fun zoneStartRoom(zoneId: String): RoomId? = _zoneStartRooms[zoneId]
 
     private val _shopDefinitions = shopDefinitions.toMutableList()
     val shopDefinitions: List<ShopDefinition> get() = _shopDefinitions
@@ -100,6 +114,11 @@ class World(
         source.zoneLifespansMinutes[zone]?.let { _zoneLifespansMinutes[zone] = it }
             ?: _zoneLifespansMinutes.remove(zone)
 
+        if (source.isZonePvpEnabled(zone)) _pvpZones.add(zone) else _pvpZones.remove(zone)
+
+        source.zoneStartRoom(zone)?.let { _zoneStartRooms[zone] = it }
+            ?: _zoneStartRooms.remove(zone)
+
         return oldRoomIds - newRooms.keys
     }
 
@@ -122,6 +141,12 @@ class World(
 
         _zoneLifespansMinutes.clear()
         _zoneLifespansMinutes.putAll(source.zoneLifespansMinutes)
+
+        _pvpZones.clear()
+        _pvpZones.addAll(source._pvpZones)
+
+        _zoneStartRooms.clear()
+        _zoneStartRooms.putAll(source._zoneStartRooms)
 
         _shopDefinitions.clear()
         _shopDefinitions.addAll(source.shopDefinitions)
