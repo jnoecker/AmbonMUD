@@ -983,6 +983,8 @@ class GameEngine(
                 ctx = ctx,
                 questSystem = questSystem,
                 abilitySystem = abilitySystem,
+                dialogueSystem = dialogueSystem,
+                tradeSystem = tradeSystem,
                 markVitalsDirty = ::markVitalsDirty,
                 markStatsDirty = ::markStatsDirty,
                 metrics = metrics,

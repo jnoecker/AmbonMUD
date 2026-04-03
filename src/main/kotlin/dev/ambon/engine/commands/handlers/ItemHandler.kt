@@ -8,11 +8,13 @@ import dev.ambon.engine.EquipmentSlotRegistry
 import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.QuestSystem
+import dev.ambon.engine.TradeSystem
 import dev.ambon.engine.abilities.AbilitySystem
 import dev.ambon.engine.commands.Command
 import dev.ambon.engine.commands.CommandHandler
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.on
+import dev.ambon.engine.dialogue.DialogueSystem
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.healHp
 import dev.ambon.engine.items.ItemRegistry
@@ -22,6 +24,8 @@ class ItemHandler(
     ctx: EngineContext,
     private val questSystem: QuestSystem? = null,
     private val abilitySystem: AbilitySystem? = null,
+    private val dialogueSystem: DialogueSystem? = null,
+    private val tradeSystem: TradeSystem? = null,
     private val markVitalsDirty: (SessionId) -> Unit = {},
     private val markStatsDirty: (SessionId) -> Unit = {},
     private val metrics: GameMetrics = GameMetrics.noop(),
@@ -45,6 +49,29 @@ class ItemHandler(
         router.on<Command.Drop> { sid, cmd -> handleDrop(sid, cmd) }
         router.on<Command.Use> { sid, cmd -> handleUse(sid, cmd) }
         router.on<Command.Give> { sid, cmd -> handleGive(sid, cmd) }
+    }
+
+    /**
+     * Returns true (and sends an error) if the player is in a state that blocks the item command.
+     * Dialogue and trade always block. Combat blocks unless [allowInCombat] is true (e.g. potions).
+     */
+    private suspend fun isBlocked(
+        sessionId: SessionId,
+        allowInCombat: Boolean = false,
+    ): Boolean {
+        if (!allowInCombat && combat.isInCombat(sessionId)) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You can't do that while in combat."))
+            return true
+        }
+        if (dialogueSystem?.isInConversation(sessionId) == true) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You can't do that while in conversation."))
+            return true
+        }
+        if (tradeSystem?.isInTrade(sessionId) == true) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You can't do that while trading."))
+            return true
+        }
+        return false
     }
 
     private suspend fun handleInventory(sessionId: SessionId) {
@@ -80,6 +107,7 @@ class ItemHandler(
         sessionId: SessionId,
         cmd: Command.Wear,
     ) {
+        if (isBlocked(sessionId)) return
         players.withPlayer(sessionId) { me ->
             when (val result = items.equipFromInventory(me.sessionId, cmd.keyword)) {
                 is ItemRegistry.EquipResult.Equipped -> {
@@ -110,6 +138,7 @@ class ItemHandler(
         sessionId: SessionId,
         cmd: Command.Remove,
     ) {
+        if (isBlocked(sessionId)) return
         val slot = ItemSlot.parse(cmd.slot)
         if (slot == null || (equipSlots != null && !equipSlots.isValid(slot))) {
             val validSlots = equipSlots?.slotNames()?.joinToString("|") ?: "head|body|hand"
@@ -142,6 +171,7 @@ class ItemHandler(
         sessionId: SessionId,
         cmd: Command.Get,
     ) {
+        if (isBlocked(sessionId)) return
         players.withPlayer(sessionId) { me ->
             if (housingSystem != null && housingSystem.isHouseRoom(me.roomId) && !housingSystem.isInOwnHouse(sessionId)) {
                 outbound.send(OutboundEvent.SendError(sessionId, "You can't take items from someone else's house."))
@@ -164,6 +194,7 @@ class ItemHandler(
         sessionId: SessionId,
         cmd: Command.Drop,
     ) {
+        if (isBlocked(sessionId)) return
         players.withPlayer(sessionId) { me ->
             val roomId = me.roomId
             // Check vault capacity in house rooms
@@ -193,6 +224,7 @@ class ItemHandler(
         sessionId: SessionId,
         cmd: Command.Use,
     ) {
+        if (isBlocked(sessionId, allowInCombat = true)) return
         players.withPlayer(sessionId) { me ->
             when (val result = items.useItem(me.sessionId, cmd.keyword)) {
                 is ItemRegistry.UseResult.Used -> {
@@ -247,6 +279,7 @@ class ItemHandler(
         sessionId: SessionId,
         cmd: Command.Give,
     ) {
+        if (isBlocked(sessionId)) return
         players.withPlayer(sessionId) { me ->
             val targetSid = requirePlayerOnline(sessionId, cmd.playerName, players, outbound) ?: return
             if (targetSid == sessionId) {
