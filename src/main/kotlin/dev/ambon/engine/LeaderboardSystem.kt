@@ -29,6 +29,7 @@ class LeaderboardSystem(
         CRAFTING("crafting", "Best Crafter", "craft lvl"),
         DUNGEONS("dungeons", "Dungeon Champion", "dungeons"),
         KILLS("kills", "Monster Slayer", "kills"),
+        PRESTIGE("prestige", "Most Prestigious", "prestige"),
         ;
 
         companion object {
@@ -69,6 +70,7 @@ class LeaderboardSystem(
                     craftingSkills = live.craftingSkills.toMap(),
                     mobsKilledTotal = live.mobsKilledTotal,
                     dungeonsCompleted = live.dungeonsCompleted,
+                    prestigeLevel = live.prestigeLevel,
                 )
             }
 
@@ -81,6 +83,7 @@ class LeaderboardSystem(
             newCache[Category.CRAFTING.key] = rank(records, topN) { maxCraftLevel(it) }
             newCache[Category.DUNGEONS.key] = rank(records, topN) { it.dungeonsCompleted.toLong() }
             newCache[Category.KILLS.key] = rank(records, topN) { it.mobsKilledTotal }
+            newCache[Category.PRESTIGE.key] = rank(records, topN) { it.prestigeLevel.toLong() }
             cache = newCache
 
             log.debug { "Leaderboard refreshed — ${records.size} records, topN=$topN" }

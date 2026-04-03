@@ -446,6 +446,14 @@ sealed interface Command {
         val category: String?,
     ) : Command
 
+    // ---- Prestige commands ----
+
+    /** Attempt to advance prestige rank. */
+    data object Prestige : Command
+
+    /** Show prestige status and perk list. */
+    data object PrestigeInfo : Command
+
     // ---- World feature commands ----
 
     data class OpenFeature(
@@ -1189,6 +1197,16 @@ object CommandParser {
         // leaderboard [category]
         matchPrefix(line, listOf("leaderboard", "leaders", "top")) { rest ->
             Command.Leaderboard(rest.takeIf { it.isNotBlank() })
+        }?.let { return it }
+
+        // prestige [info|status]
+        matchPrefix(line, listOf("prestige")) { rest ->
+            val sub = rest.trim().lowercase()
+            when {
+                sub.isEmpty() -> Command.Prestige
+                sub == "info" || sub == "status" -> Command.PrestigeInfo
+                else -> Command.PrestigeInfo
+            }
         }?.let { return it }
 
         // Crafting & Gathering

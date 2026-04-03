@@ -103,6 +103,11 @@ class ProgressionHandler(
                     ),
                 )
             }
+            if (me.prestigeLevel > 0) {
+                outbound.send(
+                    OutboundEvent.SendInfo(sessionId, "  Prestige: Rank ${me.prestigeLevel}"),
+                )
+            }
         }
     }
 

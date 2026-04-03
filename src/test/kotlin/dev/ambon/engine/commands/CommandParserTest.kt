@@ -726,4 +726,26 @@ class CommandParserTest {
     fun `petition without keyword is Invalid`() {
         assertTrue(CommandParser.parse("petition") is Command.Invalid)
     }
+
+    // ---- Prestige ----
+
+    @Test
+    fun `prestige parses to Prestige`() {
+        assertEquals(Command.Prestige, CommandParser.parse("prestige"))
+    }
+
+    @Test
+    fun `prestige info parses to PrestigeInfo`() {
+        assertEquals(Command.PrestigeInfo, CommandParser.parse("prestige info"))
+    }
+
+    @Test
+    fun `prestige status parses to PrestigeInfo`() {
+        assertEquals(Command.PrestigeInfo, CommandParser.parse("prestige status"))
+    }
+
+    @Test
+    fun `prestige with unknown subcommand defaults to PrestigeInfo`() {
+        assertEquals(Command.PrestigeInfo, CommandParser.parse("prestige perks"))
+    }
 }
