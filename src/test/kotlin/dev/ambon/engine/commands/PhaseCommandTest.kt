@@ -186,7 +186,7 @@ class PhaseCommandTest {
 
             val outs = outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && "combat" in it.text.lowercase() },
+                outs.any { it is OutboundEvent.SendError && "combat" in it.text.lowercase() },
                 "Expected combat-blocked message. got=$outs",
             )
         }

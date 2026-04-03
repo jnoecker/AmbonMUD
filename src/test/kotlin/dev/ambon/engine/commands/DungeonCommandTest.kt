@@ -132,7 +132,7 @@ class DungeonCommandTest {
         h.router.handle(sid, Command.DungeonEnter("crypt", null))
 
         val events = h.drain()
-        val texts = events.filterIsInstance<OutboundEvent.SendText>()
+        val texts = events.filterIsInstance<OutboundEvent.SendError>()
             .filter { it.sessionId == sid }
             .map { it.text }
 
@@ -151,7 +151,7 @@ class DungeonCommandTest {
         h.router.handle(sid, Command.DungeonEnter("nonexistent", null))
 
         val events = h.drain()
-        val texts = events.filterIsInstance<OutboundEvent.SendText>()
+        val texts = events.filterIsInstance<OutboundEvent.SendError>()
             .filter { it.sessionId == sid }
             .map { it.text }
 
@@ -194,7 +194,7 @@ class DungeonCommandTest {
         h.router.handle(sid, Command.DungeonLeave)
 
         val events = h.drain()
-        val texts = events.filterIsInstance<OutboundEvent.SendText>()
+        val texts = events.filterIsInstance<OutboundEvent.SendError>()
             .filter { it.sessionId == sid }
             .map { it.text }
 
@@ -254,7 +254,7 @@ class DungeonCommandTest {
         h.router.handle(sid, Command.DungeonEnter("crypt", "impossible"))
 
         val events = h.drain()
-        val texts = events.filterIsInstance<OutboundEvent.SendText>()
+        val texts = events.filterIsInstance<OutboundEvent.SendError>()
             .filter { it.sessionId == sid }
             .map { it.text }
 
@@ -275,7 +275,7 @@ class DungeonCommandTest {
         h.router.handle(sid, Command.DungeonEnter("crypt", null))
 
         val events = h.drain()
-        val texts = events.filterIsInstance<OutboundEvent.SendText>()
+        val texts = events.filterIsInstance<OutboundEvent.SendError>()
             .filter { it.sessionId == sid }
             .map { it.text }
 

@@ -34,7 +34,7 @@ class TrainerHandler(
         players.withPlayer(sessionId) { me ->
             val trainer = trainerRegistry.trainerInRoom(me.roomId)
             if (trainer == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "There is no trainer here."))
+                outbound.send(OutboundEvent.SendError(sessionId, "There is no trainer here."))
                 return
             }
             val available = abilitySystem.availableSkillPoints(
@@ -92,12 +92,12 @@ class TrainerHandler(
         players.withPlayer(sessionId) { me ->
             val trainer = trainerRegistry.trainerInRoom(me.roomId)
             if (trainer == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "There is no trainer here."))
+                outbound.send(OutboundEvent.SendError(sessionId, "There is no trainer here."))
                 return
             }
             if (!me.unlockedClasses.any { it.equals(trainer.className, ignoreCase = true) }) {
                 outbound.send(
-                    OutboundEvent.SendText(
+                    OutboundEvent.SendError(
                         sessionId,
                         "You must unlock the ${trainer.className} class first. Use 'train unlock'.",
                     ),
@@ -113,7 +113,7 @@ class TrainerHandler(
                     it.displayName.lowercase().contains(keyword.lowercase())
             }
             if (target == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "No trainable ability matching '$keyword' found here."))
+                outbound.send(OutboundEvent.SendError(sessionId, "No trainable ability matching '$keyword' found here."))
                 return
             }
 
@@ -125,7 +125,7 @@ class TrainerHandler(
                 skillPointInterval = skillPointsConfig.interval,
             )
             if (error != null) {
-                outbound.send(OutboundEvent.SendText(sessionId, error))
+                outbound.send(OutboundEvent.SendError(sessionId, error))
                 return
             }
 
@@ -158,18 +158,18 @@ class TrainerHandler(
         players.withPlayer(sessionId) { me ->
             val trainer = trainerRegistry.trainerInRoom(me.roomId)
             if (trainer == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "There is no trainer here."))
+                outbound.send(OutboundEvent.SendError(sessionId, "There is no trainer here."))
                 return
             }
             if (me.unlockedClasses.any { it.equals(trainer.className, ignoreCase = true) }) {
                 outbound.send(
-                    OutboundEvent.SendText(sessionId, "You have already unlocked the ${trainer.className} class."),
+                    OutboundEvent.SendError(sessionId, "You have already unlocked the ${trainer.className} class."),
                 )
                 return
             }
             if (me.level < multiclassConfig.minLevel) {
                 outbound.send(
-                    OutboundEvent.SendText(
+                    OutboundEvent.SendError(
                         sessionId,
                         "You must be at least level ${multiclassConfig.minLevel} to unlock a new class.",
                     ),
@@ -178,7 +178,7 @@ class TrainerHandler(
             }
             val cost = multiclassConfig.goldCost
             if (!me.isStaff && me.gold < cost) {
-                outbound.send(OutboundEvent.SendText(sessionId, "You need $cost gold to unlock the ${trainer.className} class."))
+                outbound.send(OutboundEvent.SendError(sessionId, "You need $cost gold to unlock the ${trainer.className} class."))
                 return
             }
             if (!me.isStaff) me.gold -= cost
