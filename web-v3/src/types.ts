@@ -1,4 +1,4 @@
-export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | null;
+export type PopoutPanel = "map" | "inventory" | "equipment" | "room" | "help" | "character" | "chat" | "shop" | "spellbook" | "quests" | "mail" | "crafting" | "housing" | "leaderboard" | "trainer" | null;
 export type ChatChannel = "say" | "tell" | "gossip" | "shout" | "ooc" | "gtell" | "gchat";
 export type SocialTab = "chat" | "friends" | "guild" | "group" | "who";
 
@@ -614,5 +614,29 @@ export interface HousingInfo {
   hasHouse: boolean;
   ownerName: string | null;
   rooms: HousingRoomInfo[];
+}
+
+export interface TrainerAbility {
+  id: string;
+  name: string;
+  description: string;
+  levelRequired: number;
+  manaCost: number;
+  cooldownMs: number;
+  targetType: string;
+  effectType: string;
+  image: string | null;
+}
+
+export interface TrainerData {
+  trainerId: string;
+  name: string;
+  className: string;
+  image: string | null;
+  classUnlocked: boolean;
+  availableSkillPoints: number;
+  multiclassMinLevel: number;
+  multiclassGoldCost: number;
+  abilities: TrainerAbility[];
 }
 

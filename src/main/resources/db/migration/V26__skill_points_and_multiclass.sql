@@ -1,0 +1,2 @@
+ALTER TABLE players ADD COLUMN IF NOT EXISTS learned_ability_ids TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE players ADD COLUMN IF NOT EXISTS unlocked_classes TEXT NOT NULL DEFAULT '[]';

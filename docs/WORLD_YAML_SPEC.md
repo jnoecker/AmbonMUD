@@ -8,12 +8,13 @@ It is written for code generators that need to emit valid zone files.
 - One YAML document describes one zone file.
 - Multiple zone files can be merged into one world.
 - YAML files are deserialized into:
-  - `WorldFile` (`zone`, `lifespan`, `startRoom`, `rooms`, `mobs`, `items`, `shops`, `gatheringNodes`, `recipes`, `dungeon`)
+  - `WorldFile` (`zone`, `lifespan`, `startRoom`, `rooms`, `mobs`, `items`, `shops`, `trainers`, `gatheringNodes`, `recipes`, `dungeon`)
   - `RoomFile`
   - `MobFile`
   - `MobDropFile`
   - `ItemFile`
   - `ShopFile`
+  - `TrainerFile`
   - `GatheringNodeFile`
   - `RecipeFile`
   - `DungeonFile` (procedural dungeon template — see [DUNGEON_TEMPLATE_REFERENCE.md](DUNGEON_TEMPLATE_REFERENCE.md))
@@ -35,6 +36,7 @@ rooms: <map<string, Room>, required, must be non-empty>
 mobs: <map<string, Mob>, optional, default {}>
 items: <map<string, Item>, optional, default {}>
 shops: <map<string, Shop>, optional, default {}>
+trainers: <map<string, Trainer>, optional, default {}>
 gatheringNodes: <map<string, GatheringNode>, optional, default {}>
 recipes: <map<string, Recipe>, optional, default {}>
 ```
@@ -46,7 +48,7 @@ recipes: <map<string, Recipe>, optional, default {}>
 ### Required vs optional
 
 - Required top-level fields: `zone`, `startRoom`, `rooms`
-- Optional top-level fields: `lifespan`, `mobs`, `items`, `shops`, `gatheringNodes`, `recipes`
+- Optional top-level fields: `lifespan`, `mobs`, `items`, `shops`, `trainers`, `gatheringNodes`, `recipes`
 
 ## Nested Schemas
 
@@ -248,6 +250,41 @@ Shop notes:
 Shop ID normalization:
 - `room` follows the same normalization rules as other room references (prefixed with `<zone>:` when unqualified).
 - `items` entries follow the same normalization rules as item references.
+
+### `trainers` map
+
+Each key is a trainer ID (local identifier).
+Each value:
+
+```yaml
+name:  <string, required, non-blank after trim>
+class: <string, required - one of WARRIOR|MAGE|CLERIC|ROGUE (case-insensitive)>
+room:  <room-id string, required - the room where the trainer NPC is located>
+image: <string, optional - trainer portrait image filename>
+```
+
+Trainer notes:
+- A room can have at most one trainer. If multiple trainers reference the same room, the last one wins.
+- The `class` field determines which abilities the trainer teaches. Abilities with a matching `requiredClass` in `application.yaml` are shown at this trainer.
+- Players use `train list` to see available abilities, `train learn <ability>` to spend a skill point, and `train unlock` to unlock the class via multiclassing.
+- The trainer NPC must be added separately in the `mobs:` section with a matching `room` — the `trainers:` entry is the registry binding, not the mob definition.
+
+Trainer ID normalization:
+- `room` follows the same normalization rules as other room references (prefixed with `<zone>:` when unqualified).
+
+Example:
+
+```yaml
+trainers:
+  warrior_trainer:
+    name: "Captain Varek"
+    class: WARRIOR
+    room: warrior_training_hall
+  mage_trainer:
+    name: "Archmage Solvara"
+    class: MAGE
+    room: mage_library
+```
 
 ### `gatheringNodes` map
 
@@ -501,6 +538,12 @@ shops:
     items:
       - helm
       - health_potion
+
+trainers:
+  warrior_trainer:
+    name: "Sergeant Crag"
+    class: WARRIOR
+    room: training_yard
 
 rooms:
   entry:

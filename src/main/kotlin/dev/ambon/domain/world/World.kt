@@ -14,6 +14,7 @@ class World(
     itemSpawns: List<ItemSpawn> = emptyList(),
     zoneLifespansMinutes: Map<String, Long> = emptyMap(),
     shopDefinitions: List<ShopDefinition> = emptyList(),
+    trainerDefinitions: List<TrainerDefinition> = emptyList(),
     questDefinitions: List<QuestDef> = emptyList(),
     gatheringNodes: List<GatheringNodeDef> = emptyList(),
     recipes: List<RecipeDef> = emptyList(),
@@ -36,6 +37,9 @@ class World(
 
     private val _shopDefinitions = shopDefinitions.toMutableList()
     val shopDefinitions: List<ShopDefinition> get() = _shopDefinitions
+
+    private val _trainerDefinitions = trainerDefinitions.toMutableList()
+    val trainerDefinitions: List<TrainerDefinition> get() = _trainerDefinitions
 
     private val _questDefinitions = questDefinitions.toMutableList()
     val questDefinitions: List<QuestDef> get() = _questDefinitions
@@ -81,6 +85,9 @@ class World(
         _shopDefinitions.removeAll { it.roomId.zone == zone }
         _shopDefinitions.addAll(source.shopDefinitions.filter { it.roomId.zone == zone })
 
+        _trainerDefinitions.removeAll { it.roomId.zone == zone }
+        _trainerDefinitions.addAll(source.trainerDefinitions.filter { it.roomId.zone == zone })
+
         _questDefinitions.removeAll { it.id.startsWith("$zone:") }
         _questDefinitions.addAll(source.questDefinitions.filter { it.id.startsWith("$zone:") })
 
@@ -118,6 +125,9 @@ class World(
 
         _shopDefinitions.clear()
         _shopDefinitions.addAll(source.shopDefinitions)
+
+        _trainerDefinitions.clear()
+        _trainerDefinitions.addAll(source.trainerDefinitions)
 
         _questDefinitions.clear()
         _questDefinitions.addAll(source.questDefinitions)

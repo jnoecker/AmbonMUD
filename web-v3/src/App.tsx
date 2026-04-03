@@ -6,6 +6,7 @@ import { ActionBar } from "./components/ActionBar";
 import { AudioControls } from "./components/AudioControls";
 import { PopoutLayer } from "./components/PopoutLayer";
 import { ShopPopout } from "./components/ShopPopout";
+import { TrainerPanel } from "./components/TrainerPanel";
 import { TradePanel } from "./components/TradePanel";
 import { ChatPanel } from "./components/panels/ChatPanel";
 import { CharacterPanel } from "./components/panels/CharacterPanel";
@@ -90,6 +91,7 @@ import type {
   StatusEffect,
   StatusVarLabels,
   TradeState,
+  TrainerData,
   UiFeedback,
   Vitals,
   WhoPlayer,
@@ -230,6 +232,9 @@ function App() {
   const [auctionListings, setAuctionListings] = useState<AuctionListing[]>([]); // GMCP Auction.List data for future panel
   void auctionListings; // suppress unused-var lint until auction panel is built
   const [leaderboard, setLeaderboard] = useState<Record<string, LeaderboardData>>({});
+  const [trainer, setTrainer] = useState<TrainerData | null>(null);
+  const [unlockedClasses, setUnlockedClasses] = useState<string[]>([]);
+  void unlockedClasses; // stored for future character sheet multi-class display
   const combatEventsRef = useRef<CombatEventData[]>([]);
   const gainEventsRef = useRef<GainEvent[]>([]);
 
@@ -475,6 +480,14 @@ function App() {
           setTradeState,
           setAuctionListings,
           setLeaderboard,
+          setTrainer: (value) => {
+            setTrainer(value);
+            // Auto-open trainer popout when trainer data arrives
+            if (value) {
+              setActivePopout("trainer");
+            }
+          },
+          setUnlockedClasses,
           sendGmcp: (pkg: string, payload: unknown) => { sendGmcpRef.current(pkg, payload); return true; },
         },
       );
@@ -798,6 +811,8 @@ function App() {
         ? "Social"
       : activePopout === "shop"
         ? (shop?.name ?? "Shop")
+      : activePopout === "trainer"
+        ? (trainer?.name ?? "Trainer")
       : activePopout === "spellbook"
         ? "Spellbook"
       : activePopout === "quests"
@@ -1215,12 +1230,22 @@ function App() {
           />
         )}
 
+        {activePopout === "trainer" && trainer && (
+          <TrainerPanel
+            trainer={trainer}
+            playerLevel={vitals.level ?? 1}
+            playerGold={vitals.gold}
+            onCommand={(cmd) => { sendCommand(cmd, true); focusComposer(); }}
+          />
+        )}
+
         {activePopout === "spellbook" && (
           <SpellbookPanel
             skills={skills}
             quickbarSlotIds={quickbar.slotIds}
             playerClass={displayClassName}
             playerLevel={vitals.level ?? 1}
+            availableSkillPoints={trainer?.availableSkillPoints}
             onShowSkillInfo={(skill) => {
               const cd = skill.cooldownMs > 0 ? `${skill.cooldownMs / 1000}s cooldown` : "No cooldown";
               setToast(`${skill.name} — ${skill.manaCost} MP, ${cd}, ${skill.targetType.toLowerCase()} target`);

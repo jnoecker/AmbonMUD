@@ -23,6 +23,8 @@ private val factionStandingsType = object : TypeReference<Map<String, Int>>() {}
 private val friendsListType = object : TypeReference<Set<String>>() {}
 private val inventoryItemsType = object : TypeReference<List<ItemInstance>>() {}
 private val equippedItemsType = object : TypeReference<Map<String, ItemInstance>>() {}
+private val learnedAbilityIdsType = object : TypeReference<Set<String>>() {}
+private val unlockedClassesType = object : TypeReference<Set<String>>() {}
 
 /** Deserialises JSON with a fallback to [default] on any parse failure. */
 private fun <T> safeReadJson(json: String, type: TypeReference<T>, default: T): T =
@@ -70,6 +72,8 @@ object PlayersTable : Table("players") {
     val authTokenIssuedAt = long("auth_token_issued_at").default(0L)
     val mobsKilledTotal = long("mobs_killed_total").default(0L)
     val dungeonsCompleted = integer("dungeons_completed").default(0)
+    val learnedAbilityIds = text("learned_ability_ids").default("[]")
+    val unlockedClasses = text("unlocked_classes").default("[]")
 
     override val primaryKey = PrimaryKey(id)
 
@@ -116,6 +120,8 @@ object PlayersTable : Table("players") {
             authTokenIssuedAt = row[authTokenIssuedAt],
             mobsKilledTotal = row[mobsKilledTotal],
             dungeonsCompleted = row[dungeonsCompleted],
+            learnedAbilityIds = safeReadJson(row[learnedAbilityIds], learnedAbilityIdsType, emptySet()),
+            unlockedClasses = safeReadJson(row[unlockedClasses], unlockedClassesType, emptySet()),
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -161,5 +167,7 @@ object PlayersTable : Table("players") {
         statement[authTokenIssuedAt] = record.authTokenIssuedAt
         statement[mobsKilledTotal] = record.mobsKilledTotal
         statement[dungeonsCompleted] = record.dungeonsCompleted
+        statement[learnedAbilityIds] = jsonMapper.writeValueAsString(record.learnedAbilityIds)
+        statement[unlockedClasses] = jsonMapper.writeValueAsString(record.unlockedClasses)
     }
 }

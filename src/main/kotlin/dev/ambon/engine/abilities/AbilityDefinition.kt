@@ -11,11 +11,13 @@ value class AbilityId(
 sealed interface AbilityEffect {
     data class DirectDamage(
         val damage: DamageRange,
+        val damagePerLevel: Double = 0.0,
     ) : AbilityEffect
 
     data class DirectHeal(
         val minHeal: Int,
         val maxHeal: Int,
+        val healPerLevel: Double = 0.0,
     ) : AbilityEffect
 
     data class ApplyStatus(
@@ -24,6 +26,7 @@ sealed interface AbilityEffect {
 
     data class AreaDamage(
         val damage: DamageRange,
+        val damagePerLevel: Double = 0.0,
     ) : AbilityEffect
 
     data class Taunt(

@@ -3,6 +3,7 @@ package dev.ambon.engine
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.EngineConfig
 import dev.ambon.domain.world.World
+import dev.ambon.engine.TrainerRegistry
 import dev.ambon.engine.abilities.AbilityRegistry
 import dev.ambon.engine.abilities.AbilityRegistryLoader
 import dev.ambon.engine.behavior.BehaviorTreeSystem
@@ -75,6 +76,7 @@ class HotReloadManager(
     private val players: PlayerRegistry,
     private val outbound: OutboundBus,
     private val shopRegistry: ShopRegistry,
+    private val trainerRegistry: TrainerRegistry,
     private val gatheringRegistry: GatheringRegistry,
     private val craftingRegistry: CraftingRegistry,
     private val questRegistry: QuestRegistry,
@@ -143,6 +145,9 @@ class HotReloadManager(
         // Refresh registries from updated world data.
         shopRegistry.clear()
         shopRegistry.register(world.shopDefinitions)
+
+        trainerRegistry.clear()
+        trainerRegistry.register(world.trainerDefinitions)
 
         gatheringRegistry.clear()
         gatheringRegistry.register(world.gatheringNodes)

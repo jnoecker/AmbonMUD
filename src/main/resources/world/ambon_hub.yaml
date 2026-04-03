@@ -75,11 +75,99 @@ mobs:
         choices:
           - text: "Sounds dangerous. I'll be careful."
       advice:
-        text: "Head south through the gallery to the Tutorial Glade — it's gentle enough for new adventurers. Pick up equipment as you find it, and don't be afraid to flee from fights you can't win. Leveling up makes you stronger — check your 'score' often."
+        text: "Head south through the gallery to the Tutorial Glade — it's gentle enough for new adventurers. Pick up equipment as you find it, and don't be afraid to flee from fights you can't win. Leveling up makes you stronger — check your 'score' often. Once you've gained a few levels, visit the Trainers' Corridor to the north to spend skill points on class abilities."
         choices:
           - text: "Thanks for the advice!"
           - text: "Tell me about the portals."
             next: about_portals
+
+  warrior_trainer:
+    image: a27a9d8c0b5977b1fa0f7553b1b95400494a51662cb3a77c4e1079dd69c7c1fa.png
+    name: "Captain Varek"
+    room: warrior_training_hall
+    dialogue:
+      root:
+        text: "I'm Captain Varek, warrior trainer. Use 'train list' to see abilities available at your level, or 'train learn <ability>' to spend a skill point."
+        choices:
+          - text: "Tell me about warrior training."
+            next: training_info
+          - text: "How do skill points work?"
+            next: skill_points
+          - text: "Goodbye."
+      training_info:
+        text: "Warriors excel at melee combat — high damage, strong defenses, and battlefield control. Master your strikes and you'll be unstoppable."
+        choices:
+          - text: "Let me look at the training list."
+      skill_points:
+        text: "You earn one skill point every two levels. Type 'train list' to see what's available at your level, then 'train learn <ability>' to spend a point."
+        choices:
+          - text: "Got it, thanks."
+
+  mage_trainer:
+    image: a27a9d8c0b5977b1fa0f7553b1b95400494a51662cb3a77c4e1079dd69c7c1fa.png
+    name: "Archmage Solvara"
+    room: mage_library
+    dialogue:
+      root:
+        text: "Greetings. I am Archmage Solvara. I can teach you the ways of elemental and arcane magic. Use 'train list' to see available spells."
+        choices:
+          - text: "Tell me about mage magic."
+            next: training_info
+          - text: "How do skill points work?"
+            next: skill_points
+          - text: "Goodbye."
+      training_info:
+        text: "Mages wield the destructive forces of fire, ice, and lightning. With enough skill points, you'll unlock devastating area spells and protective barriers."
+        choices:
+          - text: "I'd like to see the training list."
+      skill_points:
+        text: "Skill points are earned every two levels. Type 'train list' to see mage spells within your reach, then 'train learn <name>' to learn one."
+        choices:
+          - text: "Understood."
+
+  cleric_trainer:
+    image: a27a9d8c0b5977b1fa0f7553b1b95400494a51662cb3a77c4e1079dd69c7c1fa.png
+    name: "High Priestess Ilara"
+    room: cleric_sanctuary
+    dialogue:
+      root:
+        text: "May the light guide you, adventurer. I am High Priestess Ilara. I can teach you the sacred arts of healing and divine power."
+        choices:
+          - text: "Tell me about the cleric path."
+            next: training_info
+          - text: "How do skill points work?"
+            next: skill_points
+          - text: "Farewell."
+      training_info:
+        text: "Clerics balance offense and defense — healing wounds, shielding allies, and smiting enemies with divine wrath. A cleric is never helpless."
+        choices:
+          - text: "I'd like to see the training list."
+      skill_points:
+        text: "You earn a skill point every two levels. Type 'train list' to see available cleric abilities, then 'train learn <name>' to spend a point."
+        choices:
+          - text: "Thank you."
+
+  rogue_trainer:
+    image: a27a9d8c0b5977b1fa0f7553b1b95400494a51662cb3a77c4e1079dd69c7c1fa.png
+    name: "Shadowmaster Krix"
+    room: rogue_den
+    dialogue:
+      root:
+        text: "...you found me. Good. I'm Shadowmaster Krix. Capable rogues seek me out on their own. Type 'train list' to see what I can teach."
+        choices:
+          - text: "Tell me about rogue techniques."
+            next: training_info
+          - text: "How do skill points work?"
+            next: skill_points
+          - text: "Goodbye."
+      training_info:
+        text: "Rogues strike from the shadows — devastating burst damage, poisons, and mobility. Hit first and it's already over. Miss, and you'd better have tricks ready."
+        choices:
+          - text: "I'd like to see what you teach."
+      skill_points:
+        text: "Earn a skill point every two levels. Type 'train list' to see what I can offer at your level, then 'train learn <name>' to spend one."
+        choices:
+          - text: "Understood."
 
   banker:
     image: a27a9d8c0b5977b1fa0f7553b1b95400494a51662cb3a77c4e1079dd69c7c1fa.png
@@ -114,10 +202,11 @@ rooms:
   vault_hall:
     image: 4789f1a1e68c123f14630a57aafdb891172312e7a79df19d7a606c98c843dcd0.jpg
     title: "The Ambon Vault"
-    description: "A hushed chamber of polished granite and brass fittings. Heavy iron deposit boxes line the walls behind a long marble counter. The Banker stands at attention, ledger in hand. A sign reads: 'DEPOSIT and WITHDRAW gold or items. Type BALANCE to check your account.'"
+    description: "A hushed chamber of polished granite and brass fittings. Heavy iron deposit boxes line the walls behind a long marble counter. The Banker stands at attention, ledger in hand. A sign reads: 'DEPOSIT and WITHDRAW gold or items. Type BALANCE to check your account.' A broad archway to the north leads to the Trainers' Corridor."
     bank: true
     exits:
       s: hall_of_portals
+      n: trainers_corridor
 
   blank_arches:
     image: c5c24327e550e1493fb096e726644a4b183ca640c02ad33f8dad294bfc7af44d.jpg
@@ -148,5 +237,57 @@ rooms:
       s: wayfinder_gallery
       e: demo_ruins:caravan_gate
       d: labyrinth:cell_00_00
+  trainers_corridor:
+    title: "Trainers' Corridor"
+    description: "A broad corridor of clean stone, lit by evenly-spaced torch sconces. Four arched doorways branch off in the cardinal directions, each bearing a carved sigil for one of the four great classes. A plaque reads: 'Visit any trainer to spend skill points. Unlock new classes with gold at level 10 or above.'"
+    exits:
+      s: vault_hall
+      n: warrior_training_hall
+      e: mage_library
+      w: cleric_sanctuary
+      d: rogue_den
+
+  warrior_training_hall:
+    title: "Warrior Training Hall"
+    description: "A vaulted hall of worn flagstones, hung with trophy weapons and scratched training dummies. The crash of steel and shouts of instruction echo off the high walls. Captain Varek stands at the center, eyeing you with professional appraisal."
+    exits:
+      s: trainers_corridor
+
+  mage_library:
+    title: "Mage Library"
+    description: "Shelves of spell tomes line the walls from floor to ceiling. A hovering crystal orb casts pale blue light across several reading lecterns. Archmage Solvara looks up from an open tome, adjusting her spectacles with an arcane flourish."
+    exits:
+      w: trainers_corridor
+
+  cleric_sanctuary:
+    title: "Cleric Sanctuary"
+    description: "A calm, candle-lit chamber with a carved altar at the far wall. Soft incense drifts through the air and the faint sound of distant bells fills the space with sacred peace. High Priestess Ilara kneels before the altar, rising as you enter."
+    exits:
+      e: trainers_corridor
+
+  rogue_den:
+    title: "The Rogue Den"
+    description: "A low-ceilinged room draped in dark cloth. Hooks along the walls hold lockpicks, throwing knives, and other tools of the trade. Shadowmaster Krix emerges from the shadows — barely visible until he wants to be."
+    exits:
+      u: trainers_corridor
+
+trainers:
+  warrior_trainer:
+    name: "Captain Varek"
+    class: WARRIOR
+    room: warrior_training_hall
+  mage_trainer:
+    name: "Archmage Solvara"
+    class: MAGE
+    room: mage_library
+  cleric_trainer:
+    name: "High Priestess Ilara"
+    class: CLERIC
+    room: cleric_sanctuary
+  rogue_trainer:
+    name: "Shadowmaster Krix"
+    class: ROGUE
+    room: rogue_den
+
 audio:
   music: df12184571e63e571c6ef6a1f70534bd5fe21bbbe11a0b8a36f3ee59e6e5dad0.mp3

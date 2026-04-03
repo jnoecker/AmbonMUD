@@ -20,6 +20,7 @@ interface SpellbookPanelProps {
   onAssignSlot: (slotIndex: number, skillId: string) => void;
   playerClass: string;
   playerLevel: number;
+  availableSkillPoints?: number;
 }
 
 function cooldownLabel(ms: number): string {
@@ -119,6 +120,7 @@ export function SpellbookPanel({
   onAssignSlot,
   playerClass,
   playerLevel,
+  availableSkillPoints,
 }: SpellbookPanelProps) {
   const [activeTab, setActiveTab] = useState<TargetTab>("ALL");
 
@@ -146,7 +148,12 @@ export function SpellbookPanel({
     return (
       <div className="spellbook-empty">
         <p>No abilities learned yet.</p>
-        <p className="spellbook-empty-hint">Gain levels to unlock new abilities for your class.</p>
+        <p className="spellbook-empty-hint">Visit a class trainer and spend skill points to learn abilities.</p>
+        {availableSkillPoints !== undefined && availableSkillPoints > 0 && (
+          <p className="spellbook-empty-hint spellbook-sp-hint">
+            You have <strong>{availableSkillPoints}</strong> skill point{availableSkillPoints !== 1 ? "s" : ""} ready to spend!
+          </p>
+        )}
       </div>
     );
   }
@@ -156,6 +163,14 @@ export function SpellbookPanel({
       <div className="spellbook-header">
         <span className="spellbook-class">{playerClass} Spellbook</span>
         <span className="spellbook-level">Level {playerLevel}</span>
+        {availableSkillPoints !== undefined && (
+          <span
+            className={`spellbook-sp-badge${availableSkillPoints > 0 ? " spellbook-sp-badge-available" : ""}`}
+            title="Available skill points"
+          >
+            {availableSkillPoints} SP
+          </span>
+        )}
       </div>
       <p className="spellbook-hint">Click a spell for info. Press + to assign to quickbar (keys 1-9).</p>
       {availableTabs.length > 2 && (

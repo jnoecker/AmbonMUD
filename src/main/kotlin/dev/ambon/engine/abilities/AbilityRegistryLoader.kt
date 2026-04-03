@@ -18,11 +18,13 @@ object AbilityRegistryLoader {
                     "DIRECT_DAMAGE" ->
                         AbilityEffect.DirectDamage(
                             damage = DamageRange(defConfig.effect.minDamage, defConfig.effect.maxDamage),
+                            damagePerLevel = defConfig.effect.damagePerLevel,
                         )
                     "DIRECT_HEAL" ->
                         AbilityEffect.DirectHeal(
                             minHeal = defConfig.effect.minHeal,
                             maxHeal = defConfig.effect.maxHeal,
+                            healPerLevel = defConfig.effect.healPerLevel,
                         )
                     "APPLY_STATUS" ->
                         AbilityEffect.ApplyStatus(
@@ -31,6 +33,7 @@ object AbilityRegistryLoader {
                     "AREA_DAMAGE" ->
                         AbilityEffect.AreaDamage(
                             damage = DamageRange(defConfig.effect.minDamage, defConfig.effect.maxDamage),
+                            damagePerLevel = defConfig.effect.damagePerLevel,
                         )
                     "TAUNT" ->
                         AbilityEffect.Taunt(
