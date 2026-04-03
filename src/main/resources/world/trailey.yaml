@@ -1,4 +1,5 @@
 zone: trailey
+graphical: true
 image:
   room: trailey/default_room.png
   mob: trailey/default_mob.png
