@@ -208,6 +208,17 @@ class AdminModuleTest {
         assertTrue(body.contains("&lt;script&gt;"), "Script tag should be HTML-escaped")
     }
 
+    @Test
+    fun `json error responses are properly serialized with special characters`() {
+        // Trigger a JSON error response via /api/players/search without 'q' param.
+        // The error message is a fixed string, but verify JSON is well-formed.
+        val response = get("/api/players/search")
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        val body = bodyText(response)
+        val parsed = json.readTree(body)
+        assertEquals("Query parameter 'q' is required", parsed["error"].textValue())
+    }
+
     private fun get(
         path: String,
         auth: String? = authHeader,
