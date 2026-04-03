@@ -715,4 +715,15 @@ class CommandParserTest {
         val result = CommandParser.parse("auction sell sword ${CommandParser.MAX_AUCTION_PRICE}")
         assertEquals(Command.AuctionSell("sword", CommandParser.MAX_AUCTION_PRICE), result)
     }
+
+    @Test
+    fun `petition parses keyword`() {
+        assertEquals(Command.Petition("peanut"), CommandParser.parse("petition peanut"))
+        assertEquals(Command.Petition("noecker"), CommandParser.parse("petition Noecker"))
+    }
+
+    @Test
+    fun `petition without keyword is Invalid`() {
+        assertTrue(CommandParser.parse("petition") is Command.Invalid)
+    }
 }

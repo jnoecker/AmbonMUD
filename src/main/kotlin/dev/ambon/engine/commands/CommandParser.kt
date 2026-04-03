@@ -186,6 +186,10 @@ sealed interface Command {
 
     data object Recall : Command
 
+    data class Petition(
+        val keyword: String,
+    ) : Command
+
     data object Score : Command
 
     data class Goto(
@@ -1148,6 +1152,9 @@ object CommandParser {
 
         // gender <option>
         requiredArg(line, listOf("gender"), "gender <option>", { Command.SetGender(it) })?.let { return it }
+
+        // petition <keyword>
+        requiredArg(line, listOf("petition"), "petition <keyword>", { Command.Petition(it.lowercase()) })?.let { return it }
 
         // sprite: "sprite", "sprite list", "sprite set <id>", "sprite default", "sprite clear", "sprites"
         matchPrefix(line, listOf("sprite", "sprites")) { rest ->
