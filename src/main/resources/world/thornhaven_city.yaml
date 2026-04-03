@@ -644,12 +644,13 @@ rooms:
 
   south_square:
     title: "South Square"
-    description: "A wide open space at the southern end of the city. The arena district's stone walls and crowd noise are audible to the east. A narrow alley leads south toward the post office and Old Grimly's study. Trophy Hall's carved stone facade stands to the west."
+    description: "A wide open space at the southern end of the city. The arena district's stone walls and crowd noise are audible to the east. A narrow alley leads south toward the post office and Old Grimly's study. Trophy Hall's carved stone facade stands to the west. A rusted iron grate in the cobblestones below leads to the old tunnels beneath the city."
     exits:
       n: city_center
       e: arena_district
       s: post_office
       w: trophy_hall
+      d: lower_city_alley
 
   trade_row:
     title: "Trade Row"
@@ -801,3 +802,10 @@ rooms:
     description: "The arena's inner pit: a circular earthen floor chalked with a dueling circle and surrounded by a low wooden rail. Whatever happens here stays here — the Arena Master's rules prohibit unsanctioned violence. North leads back to the district entrance."
     exits:
       n: arena_district
+
+  lower_city_alley:
+    title: "Lower City Alley"
+    description: "A narrow service passage beneath the south square, dimly lit by a single torch mounted in a corroded bracket. The walls are old stone — much older than the buildings above — and the air smells of damp earth. A heavy iron grate in the floor has been recently forced open, revealing a rusted ladder descending into the sewer tunnels below. The south square is back above."
+    exits:
+      u: south_square
+      d: thornhaven_sewers:sewer_entrance

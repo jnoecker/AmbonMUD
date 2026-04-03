@@ -1,0 +1,371 @@
+zone: thornhaven_sewers
+startRoom: sewer_entrance
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  rat_pelt:
+    displayName: "a sewer rat pelt"
+    keyword: pelt
+    description: "A greasy, foul-smelling pelt stripped from a giant sewer rat. Has some value to tanners who don't ask questions."
+    basePrice: 8
+
+  deserter_tag:
+    displayName: "a deserter's identification tag"
+    keyword: tag
+    description: "A stamped metal tag from a city guard who went absent without leave. The city watch might pay for these."
+    basePrice: 12
+
+  troll_tooth:
+    displayName: "a sewer troll tooth"
+    keyword: tooth
+    description: "A heavy, curved tooth pried from a sewer troll. Alchemists grind these into strengthening compounds."
+    basePrice: 25
+
+  stolen_shipment:
+    displayName: "a stolen merchant shipment"
+    keyword: shipment
+    description: "A bundle of silks and spices bearing a Thornhaven merchant's seal, stolen and stashed in the sewers. Informant Nax will want this returned."
+    basePrice: 0
+
+  thieves_shiv:
+    displayName: "a thieves' shiv"
+    keyword: shiv
+    slot: hand
+    damage: 8
+    basePrice: 280
+    description: "A short, perfectly balanced stabbing blade favoured by sewer-dwelling rogues. Quick and quiet."
+
+  sewer_leathers:
+    displayName: "reinforced sewer leathers"
+    keyword: leathers
+    slot: body
+    armor: 5
+    basePrice: 310
+    description: "Hardened leather armour treated with waterproofing oils. Designed for fighting in confined, wet spaces."
+
+  lockpick_set:
+    displayName: "a lockpick set"
+    keyword: lockpick
+    consumable: true
+    onUse:
+      healHp: 0
+    basePrice: 35
+    description: "A leather roll containing picks, rakes, and tension wrenches. The Fence sells these to anyone who doesn't ask what they're for."
+
+  smoke_vial:
+    displayName: "a smoke vial"
+    keyword: smoke
+    consumable: true
+    onUse:
+      healHp: 5
+    basePrice: 40
+    description: "A small glass vial that shatters on impact, releasing a cloud of choking grey smoke. Useful for disengagement."
+
+  smuggled_blade:
+    displayName: "a smuggled blade"
+    keyword: blade
+    slot: hand
+    damage: 6
+    basePrice: 180
+    description: "A serviceable sword of foreign manufacture, smuggled past the city tariffs. No maker's mark."
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  sewer_rat:
+    name: "a sewer rat"
+    room: rat_warren
+    tier: weak
+    level: 4
+    respawnSeconds: 60
+    xpReward: 15
+    behavior:
+      template: wander_aggro
+
+  giant_sewer_rat:
+    name: "a giant sewer rat"
+    room: east_channel
+    tier: standard
+    level: 5
+    respawnSeconds: 90
+    xpReward: 30
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: rat_pelt
+        chance: 0.5
+
+  deserter_soldier:
+    name: "a deserter soldier"
+    room: deserter_camp
+    tier: standard
+    level: 5
+    respawnSeconds: 120
+    xpReward: 35
+    goldMin: 5
+    goldMax: 15
+    behavior:
+      template: wander_aggro
+    drops:
+      - itemId: deserter_tag
+        chance: 0.4
+
+  sewer_rogue:
+    name: "a sewer rogue"
+    room: rogue_run
+    tier: standard
+    level: 6
+    respawnSeconds: 120
+    xpReward: 42
+    goldMin: 8
+    goldMax: 22
+    behavior:
+      template: patrol_aggro
+      params:
+        patrolRoute:
+          - rogue_run
+          - deep_sewer
+          - rogue_run
+
+  sewer_troll:
+    name: "a sewer troll"
+    room: trolls_lair
+    tier: elite
+    level: 7
+    respawnSeconds: 600
+    xpReward: 130
+    goldMin: 40
+    goldMax: 80
+    behavior:
+      template: aggro_guard
+    drops:
+      - itemId: troll_tooth
+        chance: 0.6
+      - itemId: thieves_shiv
+        chance: 0.4
+      - itemId: sewer_leathers
+        chance: 0.35
+
+  the_fence:
+    name: "the Fence"
+    room: fences_den
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Don't say my name. Don't ask my name. I buy things that need buying and sell things that need selling. Type 'list' to see what I've got. No questions asked — on either side."
+        choices:
+          - text: "What can you tell me about the sewers?"
+            next: sewer_info
+          - text: "Goodbye."
+            next: farewell
+      sewer_info:
+        text: "These tunnels run the full length of Thornhaven — older than the city itself. Rats in the upper levels, deserters and rogues further down. A troll has set up in the deep section and nobody's keen to evict it. Beyond the troll? Smugglers' territory. Best left alone unless you've got a death wish."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "You were never here."
+
+  informant_nax:
+    name: "Informant Nax"
+    room: fences_den
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - stolen_shipment
+    dialogue:
+      root:
+        text: "Psst. Over here. Name's Nax. I've got information — good information — about a stolen merchant shipment. The goods are locked in the smugglers' vault past the troll. I can't get past the troll myself, but someone with your... capabilities... could. Recover the shipment and I'll make it worth your time."
+        choices:
+          - text: "I'll recover the shipment."
+            next: quest_accept
+          - text: "Why can't you do it yourself?"
+            next: why_me
+          - text: "Goodbye."
+            next: farewell
+      why_me:
+        text: "Have you seen the troll? It's twice my height and it eats people. I'm an informant, not a hero. The vault is past the troll's lair — bring back the shipment and you'll be well paid."
+        choices:
+          - text: "Fine, I'll do it."
+            next: quest_accept
+          - text: "Goodbye."
+            next: farewell
+      quest_accept:
+        text: "Good. Head south through the lower drain and the deep sewer. The troll guards the passage to the vault. The shipment is in an iron strongbox. Bring it back here."
+        choices:
+          - text: "I'll be back."
+            next: farewell
+      farewell:
+        text: "Keep your head down. The rogues don't like strangers."
+
+# ─── Shops ────────────────────────────────────────────────────────────────────
+
+shops:
+  fences_goods:
+    name: "The Fence's Goods"
+    room: fences_den
+    items:
+      - lockpick_set
+      - smoke_vial
+      - smuggled_blade
+
+# ─── Quests ───────────────────────────────────────────────────────────────────
+
+quests:
+  stolen_shipment:
+    name: "The Stolen Shipment"
+    description: "Informant Nax has intelligence on a stolen merchant shipment stashed in the smugglers' vault deep in the Thornhaven sewers. Get past the sewer troll and recover the goods."
+    giver: informant_nax
+    objectives:
+      - type: collect
+        targetKey: stolen_shipment
+        count: 1
+        description: "Recover the stolen shipment from the smugglers' vault"
+    rewards:
+      xp: 850
+      gold: 55
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  sewer_entrance:
+    title: "Thornhaven Sewers — Entrance"
+    description: "A rusted iron ladder descends from the grate above into a vaulted brick tunnel. The air is thick with damp and the smell of stagnant water. Torches have been mounted in crude brackets — someone uses these tunnels regularly. The main drainage channel runs south into the darkness. The grate above leads back up to the city."
+    exits:
+      u: thornhaven_city:lower_city_alley
+      s: drainage_hub
+
+  drainage_hub:
+    title: "Drainage Hub"
+    description: "A wide junction where three drainage channels converge. The brickwork here is ancient — far older than the city above — and the ceiling arches high enough to stand comfortably. Water flows sluggishly along channels cut into the floor. Tunnels branch east, west, and south. The entrance is back to the north."
+    exits:
+      n: sewer_entrance
+      e: east_channel
+      w: west_overflow
+      s: lower_drain
+
+  east_channel:
+    title: "East Channel"
+    description: "A long brick tunnel running east beneath the city. The water is deeper here and the walls are slick with green growth. Giant sewer rats have established territory along this stretch, their nests visible in gaps between the bricks. The drainage hub is back to the west; the rat warren lies to the south."
+    exits:
+      w: drainage_hub
+      s: rat_warren
+
+  rat_warren:
+    title: "Rat Warren"
+    description: "A collapsed section of tunnel that sewer rats have turned into a sprawling nest. The floor is covered in debris, droppings, and the remains of things dragged down from above. The rats are territorial and aggressive. The east channel is back to the north; a hidden alcove lies to the east."
+    exits:
+      n: east_channel
+      e: hidden_alcove
+
+  hidden_alcove:
+    title: "Hidden Alcove"
+    description: "A dry recess in the tunnel wall, partially concealed by fallen masonry. Someone has been using this as a stash point — there are scuff marks on the stone and a reinforced chest wedged into the corner. The rat warren is back to the west."
+    features:
+      smuggled_chest:
+        type: CONTAINER
+        displayName: "a reinforced chest"
+        keyword: chest
+        initialState: closed
+        resetWithZone: true
+        items:
+          - lockpick_set
+    exits:
+      w: rat_warren
+
+  west_overflow:
+    title: "West Overflow"
+    description: "An overflow channel where excess rainwater is diverted during storms. The tunnel is wider and drier than the east side, and the brickwork shows signs of repair — someone maintains this section. A passage continues west toward what smells like habitation. The drainage hub is back to the east."
+    exits:
+      e: drainage_hub
+      w: fence_passage
+
+  fence_passage:
+    title: "Fence's Passage"
+    description: "A narrow tunnel marked with subtle chalk symbols on the walls — directional markers for those who know the code. The passage has been swept clean and a curtain of sacking hangs over the entrance ahead to the west. Someone has gone to some trouble to make this section discreet. The overflow channel is back to the east."
+    exits:
+      e: west_overflow
+      w: fences_den
+
+  fences_den:
+    title: "The Fence's Den"
+    description: "A surprisingly well-appointed chamber carved out of the old sewer infrastructure. Wooden shelving lines the walls, stocked with an eclectic inventory. A brazier provides heat and light. The Fence conducts business from behind a makeshift counter, and Informant Nax lurks in the shadows nearby. Type 'list' to browse the Fence's goods."
+    exits:
+      e: fence_passage
+
+  lower_drain:
+    title: "Lower Drain"
+    description: "The main drainage channel descends here, the ceiling dropping and the air growing heavier. The brickwork transitions from maintained to neglected — whatever municipal attention the upper levels receive doesn't extend this deep. A deserter camp is visible through a breach in the east wall. The passage continues south into darkness."
+    exits:
+      n: drainage_hub
+      e: deserter_camp
+      s: deep_sewer
+
+  deserter_camp:
+    title: "Deserter Camp"
+    description: "A makeshift camp in a disused cistern, occupied by soldiers who deserted the city guard and went underground rather than face tribunal. Bedrolls, stolen provisions, and guard-issue equipment litter the floor. The deserters are hostile to anyone who might report their location. The lower drain is back to the west."
+    exits:
+      w: lower_drain
+
+  deep_sewer:
+    title: "Deep Sewer"
+    description: "The deepest level of the accessible sewer system. The tunnel walls are damp and the air is foul. Sewer rogues have claimed this territory, patrolling between here and their hideout to the east. The troll's domain lies to the south — the smell alone warns you. The lower drain is back to the north."
+    exits:
+      n: lower_drain
+      e: rogue_run
+      s: troll_tunnel
+
+  rogue_run:
+    title: "Rogue Run"
+    description: "A stretch of tunnel controlled by sewer rogues who operate outside the Thieves' Guild's jurisdiction. They've set up trip-wires, observation points, and escape routes through the brickwork. Anyone entering without their knowledge is treated as a target. The deep sewer is back to the west."
+    exits:
+      w: deep_sewer
+
+  troll_tunnel:
+    title: "Troll Tunnel"
+    description: "A wide, low-ceilinged passage that reeks of carrion and something worse. Deep claw marks score the walls, and the bones of unfortunate adventurers crunch underfoot. The troll's lair opens up ahead to the south. The deep sewer is back to the north."
+    exits:
+      n: deep_sewer
+      s: trolls_lair
+
+  trolls_lair:
+    title: "Troll's Lair"
+    description: "A large natural cavern that the sewer system was built around — or perhaps broke into by accident. A massive sewer troll has made this space its own, surrounding itself with a nest of filth, bones, and collected refuse. Despite its brutishness, the troll is an effective guardian — nothing passes without its permission. A reinforced passage leads east to the smugglers' vault."
+    exits:
+      n: troll_tunnel
+      e: smugglers_vault
+
+  smugglers_vault:
+    title: "Smugglers' Vault"
+    description: "A sealed chamber at the far end of the sewer system, retrofitted with iron doors and heavy locks by whoever runs the smuggling operation. Crates and barrels fill the space, most bearing merchant marks that have been crudely scraped off. An iron strongbox against the far wall contains goods awaiting redistribution. The troll's lair is back to the west."
+    features:
+      iron_strongbox:
+        type: CONTAINER
+        displayName: "an iron strongbox"
+        keyword: strongbox
+        initialState: closed
+        resetWithZone: false
+        items:
+          - stolen_shipment
+    exits:
+      w: trolls_lair
