@@ -37,6 +37,10 @@ class RedisCachingPlayerRepository(
         cacheRecord(record)
     }
 
+    override suspend fun storeOnSave(record: PlayerRecord) {
+        cacheRecord(record)
+    }
+
     private suspend fun withCacheReadFallback(
         warningContext: String,
         lookup: suspend () -> PlayerRecord?,
