@@ -8,9 +8,19 @@
 
 ## Executive Summary
 
-The web client has **near-complete parity** with the text command interface. All core systems — navigation, combat, inventory/equipment, spells, quests, dialogue, shops, chat, mail, crafting, housing, character stats, world features, achievements, titles, emotes, groups, friends, and admin tools — have full GMCP coverage and web UI.
+The web client has **near-complete parity** with the text command interface. All core systems from the initial v4 release — navigation, combat, inventory/equipment, spells, quests, dialogue, shops, chat, mail, crafting, housing, character stats, world features, achievements, titles, emotes, groups, friends, and admin tools — have full GMCP coverage and web UI.
 
-**All gaps have been resolved.** The web client has complete feature parity with the text command interface.
+**The following systems were added after the v4 parity study and require web UI coverage review:**
+- Trainer system (skill points, class learning, multi-classing)
+- Pet/companion system
+- Faction & reputation system
+- Auction house / player marketplace
+- Player-to-player trading
+- PvP dueling
+- Item enchanting
+- Bank NPC system
+- Day/night cycle, weather, and seasonal events
+- Leaderboard system and hall of fame
 
 ---
 

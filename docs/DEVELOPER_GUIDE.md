@@ -332,7 +332,7 @@ Pure function `parse(line: String): Command` that returns a sealed `Command` var
 
 Thin dispatch layer (~62 lines) that routes each `Command` variant to the appropriate handler. All gameplay logic lives in handler classes under `commands/handlers/`, each implementing the `CommandHandler` interface:
 
-- `NavigationHandler` — movement, look, exits
+- `NavigationHandler` — movement, look, exits, recall
 - `CombatHandler` — kill, flee, cast
 - `CommunicationHandler` — say, tell, gossip, emote
 - `ItemHandler` — get, drop, wear, remove, inventory, equipment
@@ -340,12 +340,24 @@ Thin dispatch layer (~62 lines) that routes each `Command` variant to the approp
 - `DialogueQuestHandler` — talk, choice, quest commands
 - `GroupHandler` — party invite/accept/leave/kick
 - `ProgressionHandler` — score, spells, effects, achievements
-- `WorldFeaturesHandler` — zone-specific interactions
+- `WorldFeaturesHandler` — zone-specific interactions (doors, levers, containers)
 - `GuildHandler` — guild management, guild chat
 - `CraftingHandler` — gather, craft, recipes
+- `EnchantHandler` — enchant, enchantments
 - `FriendsHandler` — friends list management
 - `MailHandler` — in-game mail send/read/delete
 - `SpriteHandler` — sprite list, set, default
+- `TrainerHandler` — train list/learn/unlock, multi-classing
+- `PetHandler` — pet status/dismiss/rename
+- `AuctionHandler` — auction browse/sell/buy/cancel
+- `BankHandler` — deposit/withdraw/bank
+- `TradeHandler` — player-to-player trading
+- `DuelHandler` — PvP duel challenge/accept/decline
+- `ReputationHandler` — faction standing display
+- `LeaderboardHandler` — leaderboard, hall of fame
+- `DungeonHandler` — dungeon enter/leave
+- `HousingHandler` — house info/expand/furnish/describe/invite/kick/lock/unlock
+- `WorldInfoHandler` — time, weather, seasonal events
 - `AdminHandler` — goto, transfer, spawn, smite, kick, shutdown (staff only)
 - `UiHandler` — help, clear, colors, ansi, phase
 
@@ -504,6 +516,79 @@ Key operations: `takeFromRoom`, `dropToRoom`, `equipFromInventory`, `unequip`, `
 - Online status tracking for friends
 - `friend list`, `friend add <name>`, `friend remove <name>`
 
+### TrainerRegistry
+
+**File:** `src/main/kotlin/dev/ambon/engine/TrainerRegistry.kt`
+
+- Class trainers defined in zone YAML under `trainers:` section
+- Players earn 1 skill point per 2 levels (`skillPoints.interval` config)
+- `train list` shows available abilities; `train learn <ability>` spends one point
+- `train unlock` pays gold to unlock additional classes (multi-classing, from level 10)
+- Trainer hot-reload via `HotReloadManager` when zone YAML changes
+
+### PetSystem
+
+**File:** `src/main/kotlin/dev/ambon/engine/PetSystem.kt`
+
+- Summoned via `SUMMON_PET` ability type referencing `pets.definitions` in config
+- One active pet per player; summoning replaces current pet
+- Pets follow the owner between rooms and participate in combat
+- Stats scale with owner level (+10% per level); session-only (no persistence on logout)
+
+### ReputationSystem
+
+**File:** `src/main/kotlin/dev/ambon/engine/ReputationSystem.kt`
+
+- Faction standings tracked per player (7 tiers: Hated → Revered)
+- Killing mobs with `faction:` YAML field gains/loses standing with relevant factions
+- Quest rewards can include faction reputation changes
+- `reputation` command shows current standings
+
+### AuctionSystem
+
+**File:** `src/main/kotlin/dev/ambon/engine/AuctionSystem.kt`
+
+- Player-driven marketplace; listings stored in `data/auction_listings.json`
+- `auction [filter]` browse, `auction sell <item> <price>`, `auction buy <#>`, `auction cancel <#>`
+- Listings persist across server restarts
+
+### TradeSystem
+
+**File:** `src/main/kotlin/dev/ambon/engine/TradeSystem.kt`
+
+- Interactive bilateral trade window; both players must accept before items transfer
+- `trade <player>` initiates; `trade offer <item/gold>`, `trade accept`, `trade cancel`
+
+### DuelSystem
+
+**File:** `src/main/kotlin/dev/ambon/engine/DuelSystem.kt`
+
+- Consent-based PvP: both players must accept before the duel begins
+- `duel <player>` challenge, `duel accept`/`duel decline`
+- Normal combat mechanics; no item loss on death
+
+### WeatherSystem / WorldTimeSystem / WorldEventSystem
+
+**Files:** `src/main/kotlin/dev/ambon/engine/WeatherSystem.kt`, `WorldTimeSystem.kt`, `WorldEventSystem.kt`
+
+- **WorldTimeSystem:** 24-hour cycle (configurable `worldTime.cycleLengthMs`); four periods (NIGHT/DAWN/DAY/DUSK)
+- **WeatherSystem:** per-zone weather transitions (6 types, weighted random); `World.Weather` GMCP on change
+- **WorldEventSystem:** date-triggered events with flag system; activates/deactivates by real-world UTC date; `World.Events` GMCP
+- `time` command shows current period, weather, and active events
+
+### HousingSystem
+
+**File:** `src/main/kotlin/dev/ambon/engine/HousingSystem.kt`
+
+- Personal rooms with furniture placement, vaults, and access control
+- `house` command family; `Housing.Info`/`Housing.Rooms` GMCP
+
+### LeaderboardSystem
+
+**File:** `src/main/kotlin/dev/ambon/engine/LeaderboardSystem.kt`
+
+- `leaderboard`/`lb` — live rankings; `halloffame` — historical top records
+
 ### PlayerProgression
 
 **File:** `src/main/kotlin/dev/ambon/engine/PlayerProgression.kt`
@@ -526,7 +611,7 @@ XP curve: `totalXpForLevel(L) = baseXp * (L-1)^exponent + linearXp * (L-1)`
 - IDs allocated in `data/players/next_player_id.txt`
 
 **PostgreSQL** (optional, bring up Docker Compose first):
-- Schema managed by Flyway migrations (`src/main/resources/db/migration/`, V1–V19)
+- Schema managed by Flyway migrations (`src/main/resources/db/migration/`, V1–V24+)
 - Connection defaults: `localhost:5432/ambonmud`, user `ambon`, password `ambon` (matches docker compose)
 
 ### Persistence Stack
@@ -962,8 +1047,9 @@ gh pr create --title "..." --body "..."
 - Read [ARCHITECTURE.md](./ARCHITECTURE.md) for design rationale
 - Read [WORLD_YAML_SPEC.md](./WORLD_YAML_SPEC.md) to understand zone creation
 - Read [GMCP_PROTOCOL.md](./GMCP_PROTOCOL.md) to understand the structured data channel
-- Read [CRAFTING.md](./CRAFTING.md) for the crafting & gathering system
+- Read [CRAFTING.md](./CRAFTING.md) for the crafting, gathering, and enchanting system
 - Read [FRIENDS_MAIL.md](./FRIENDS_MAIL.md) for friends and mail systems
+- Read [TRAINER_SYSTEM.md](./TRAINER_SYSTEM.md) for ability learning, skill points, and multi-classing
 - Read [CREATOR_CONFIG_REFERENCE.md](./CREATOR_CONFIG_REFERENCE.md) to understand all tunable config
 - Read [CLAUDE.md](../CLAUDE.md) for architectural contracts and change playbooks
 - Explore `src/main/kotlin/dev/ambon/engine/` to understand the engine

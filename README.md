@@ -6,13 +6,18 @@ AmbonMUD
 **Live demo:** [https://mud.ambon.dev](https://mud.ambon.dev) — or `telnet mud.ambon.dev 4000`
 
 **Key Features**
-- 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **102 abilities** across all classes, distributed across 50 levels
+- 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **102 abilities** — learned via class trainers using skill points; multi-classing lets players unlock additional class ability lists
 - 🌍 **15 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
-- ⚔️ **Real-time combat system** with attribute-based damage, dodge mechanics, and tactical status effects (DoT, HoT, STUN, ROOT, SHIELD, buffs/debuffs)
+- ⚔️ **Real-time combat system** with attribute-based damage, dodge mechanics, tactical status effects (DoT, HoT, STUN, ROOT, SHIELD, buffs/debuffs), and consent-based PvP dueling
 - 🎨 **PixiJS canvas client** with JRPG-style world/battle scenes, spell targeting, customizable quickbar, and a cozy glass-morphism UI
+- 🐾 **Pet/companion system**: summon familiars and companions via abilities; pets follow the owner between rooms and assist in combat
+- 🏆 **Faction & reputation system**: standing with factions (Hated → Revered) changes based on kills and quest rewards; enemy faction relationships auto-apply
+- 🛒 **Auction house**: player-driven marketplace for listing, browsing, and purchasing items; listings persist to `data/auction_listings.json`
+- 🤝 **Player trading**: direct item and gold transfers with an interactive confirmation flow
 - 🏠 **Player housing**: personal rooms, furniture placement, vaults with capacity limits, and access control
 - 🏰 **Procedural dungeons**: template-driven instanced dungeons with 4 difficulty tiers, party scaling, boss encounters, and loot tables
-- 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands
+- 💰 **Economy system**: gold drops, item pricing, shops, `buy`/`sell` commands, bank NPCs for gold/item storage, item enchanting for stat bonuses
+- 🌤️ **Living world**: day/night cycle, dynamic per-zone weather (6 types), and date-based seasonal events with world flag support
 - 🔌 **Dual transports**: telnet (NAWS/TTYPE/GMCP negotiation) + browser WebSocket with GMCP-aware UI panels
 - 📊 **Structured data** (GMCP) — 25+ packages over telnet and WebSocket; see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
 - 💾 **Flexible persistence**: YAML files by default (zero-dependency), PostgreSQL with optional Redis L2 caching available
@@ -22,17 +27,25 @@ AmbonMUD
 - 📈 **Prometheus metrics** for monitoring and load testing integration
 - ✅ **~118 test files** covering all systems; CI validates against Java 21 with ktlint
 
-**Current State** (Mar 2026)
+**Current State** (Apr 2026)
 - ✅ All 6 scalability phases complete (bus abstraction, async persistence, Redis, gRPC gateway, zone sharding, production AWS infrastructure)
-- ✅ 102 abilities across 4 classes (levels 1–50)
+- ✅ 102 abilities across 4 classes — trainer-based learning via skill points (1 point per 2 levels); multi-classing unlockable at level 10
 - ✅ PixiJS canvas game client with JRPG-style world/battle scenes
 - ✅ GMCP support with 25+ outbound packages (telnet + WebSocket); see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
 - ✅ Quest system, achievement system, group/party system, dialogue trees, NPC behavior trees
 - ✅ Guild system with hierarchy, guild chat, MOTD
 - ✅ Friends list and in-game mail system
-- ✅ Crafting and gathering with specialization, recipe discovery, quality tiers, and rare yields
+- ✅ Crafting and gathering with specialization, recipe discovery, quality tiers, rare yields, and item enchanting
 - ✅ Player housing with furniture, vaults, and access control
 - ✅ Procedural dungeons with difficulty scaling and boss encounters
+- ✅ Pet/companion system with level-scaled familiar summoning
+- ✅ Faction & reputation system with 7 standing tiers
+- ✅ Auction house / player marketplace with persistent listings
+- ✅ Player-to-player trading with confirmation flow
+- ✅ Consent-based PvP dueling
+- ✅ Bank NPC system for gold and item storage
+- ✅ Day/night cycle, dynamic per-zone weather, seasonal events
+- ✅ Leaderboard system and hall of fame
 - ✅ Remember-me auth tokens with character picker
 - ✅ Full production test coverage and CI/CD
 - ✅ Docker image + AWS CDK infrastructure: EC2 demo (~$4-5/mo) and ECS Fargate (topology × tier) options
@@ -119,23 +132,33 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for architectural details and [DEVEL
 - **Items:** `inventory`, `equipment`, `get`, `drop`, `wear`, `remove`, `use`, `give`
 - **Communication:** `say`, `tell`, `gossip`, `whisper`, `shout`, `emote`, `ooc`, `pose`
 - **Character:** `score`, `gold`, `help`, `who`, `quit`
-- **Economy:** `buy`, `sell`, `list` (in shops)
+- **Economy:** `buy`, `sell`, `list` (in shops); `auction [filter]`, `auction sell <item> <price>`, `auction buy <#>`, `auction cancel <#>`
+- **Bank:** `deposit`, `withdraw`, `bank` (in bank rooms)
+- **Trading:** `trade <player>`, `trade offer <item/gold>`, `trade accept`, `trade cancel`
 - **Zones:** `phase` (switch zone instances)
 - **Guilds:** `guild create/disband/invite/accept/leave/kick/promote/demote/motd/roster/info`, `gchat`
 - **Friends:** `friend list/add/remove`
 - **Mail:** `mail list/read/send/delete`
-- **Crafting:** `gather`, `craft`, `recipes`
+- **Crafting:** `gather`, `craft`, `recipes`, `enchant <item>`, `enchantments`
 - **Housing:** `house` (info/expand/furnish/describe/invite/kick/lock/unlock)
 - **Dungeons:** `dungeon enter <name> [difficulty]`, `dungeon leave`
+- **Pets:** `pet`, `pet dismiss`, `pet name <name>`
+- **Reputation:** `reputation` (view faction standings)
+- **Dueling:** `duel <player>`, `duel accept`, `duel decline`
+- **Training:** `train list`, `train learn <ability>`, `train unlock` (multi-class)
+- **World:** `time` (day/night period and weather)
+- **Leaderboards:** `leaderboard`, `halloffame`
 - **Admin:** `goto`, `transfer`, `spawn`, `smite`, `kick`, `shutdown` (requires staff flag)
 
 See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md#gameplay-reference) for full command list and details.
 
-**Abilities & Combat**
-- **102 total abilities** distributed across 4 classes (levels 1–50)
+**Abilities, Training & Combat**
+- **102 total abilities** across 4 classes (levels 1–50), learned at **class trainers** using skill points (1 point per 2 levels)
+- **Multi-classing:** unlock additional class ability lists at level 10 for a gold cost — spend skill points across multiple classes
 - **Status effects:** DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD with configurable stacking
 - **Attributes:** STR (melee damage), DEX (dodge), CON (HP regen), INT (spell damage), WIS (mana regen), CHA
 - **Real-time combat** with attribute-based damage scaling, dodge mechanics, and tactical depth
+- **Consent-based PvP dueling:** challenge other players to duels; outcomes have no item loss
 
 ## World Content
 
@@ -342,6 +365,7 @@ AmbonMUD's visual identity is **Surreal Gentle Magic** — a cozy fantasy aesthe
 - [docs/CRAFTING.md](docs/CRAFTING.md) — Crafting & gathering system reference
 - [docs/DUNGEON_TEMPLATE_REFERENCE.md](docs/DUNGEON_TEMPLATE_REFERENCE.md) — Procedural dungeon template format and creation guide
 - [docs/FRIENDS_MAIL.md](docs/FRIENDS_MAIL.md) — Friends list and in-game mail
+- [docs/TRAINER_SYSTEM.md](docs/TRAINER_SYSTEM.md) — Trainer-based ability learning, skill points, and multi-classing
 
 **Developer Resources**
 - [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) — Complete onboarding from zero to productive
