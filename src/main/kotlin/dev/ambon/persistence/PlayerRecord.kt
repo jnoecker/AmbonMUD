@@ -92,17 +92,20 @@ data class PlayerRecord(
         if (coercedStats != record.stats) record = record.copy(stats = coercedStats)
 
         // Normalize factionStandings keys to lowercase
-        val normalizedFactions = record.factionStandings.mapKeys { (k, _) -> k.trim().lowercase() }
+        val normalizedFactions = record.factionStandings.normalizeKeys()
         if (normalizedFactions != record.factionStandings) record = record.copy(factionStandings = normalizedFactions)
 
         // Normalize craftingSkills keys to lowercase
-        val normalizedCrafting = record.craftingSkills.mapKeys { (k, _) -> k.trim().lowercase() }
+        val normalizedCrafting = record.craftingSkills.normalizeKeys()
         if (normalizedCrafting != record.craftingSkills) record = record.copy(craftingSkills = normalizedCrafting)
 
         // Normalize equippedItems keys to lowercase
-        val normalizedEquipped = record.equippedItems.mapKeys { (k, _) -> k.trim().lowercase() }
+        val normalizedEquipped = record.equippedItems.normalizeKeys()
         if (normalizedEquipped != record.equippedItems) record = record.copy(equippedItems = normalizedEquipped)
 
         return record
     }
 }
+
+private fun <V> Map<String, V>.normalizeKeys(): Map<String, V> =
+    mapKeys { (k, _) -> k.trim().lowercase() }
