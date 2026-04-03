@@ -74,6 +74,10 @@ data class PlayerRecord(
     val learnedAbilityIds: Set<String> = emptySet(),
     /** Class names this player has unlocked (original class + any multi-class unlocks). */
     val unlockedClasses: Set<String> = emptySet(),
+    /** Current prestige rank (0 = not yet prestiged). */
+    val prestigeLevel: Int = 0,
+    /** Cumulative XP spent on prestige ranks. */
+    val prestigeXpSpent: Long = 0L,
     /** Cumulative PvP kills. */
     val pvpKills: Int = 0,
     /** Cumulative PvP deaths. */

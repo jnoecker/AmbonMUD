@@ -74,6 +74,8 @@ object PlayersTable : Table("players") {
     val dungeonsCompleted = integer("dungeons_completed").default(0)
     val learnedAbilityIds = text("learned_ability_ids").default("[]")
     val unlockedClasses = text("unlocked_classes").default("[]")
+    val prestigeLevel = integer("prestige_level").default(0)
+    val prestigeXpSpent = long("prestige_xp_spent").default(0L)
     val pvpKills = integer("pvp_kills").default(0)
     val pvpDeaths = integer("pvp_deaths").default(0)
 
@@ -124,6 +126,8 @@ object PlayersTable : Table("players") {
             dungeonsCompleted = row[dungeonsCompleted],
             learnedAbilityIds = safeReadJson(row[learnedAbilityIds], learnedAbilityIdsType, emptySet()),
             unlockedClasses = safeReadJson(row[unlockedClasses], unlockedClassesType, emptySet()),
+            prestigeLevel = row[prestigeLevel],
+            prestigeXpSpent = row[prestigeXpSpent],
             pvpKills = row[pvpKills],
             pvpDeaths = row[pvpDeaths],
         ).migrateDefaults()
@@ -173,6 +177,8 @@ object PlayersTable : Table("players") {
         statement[dungeonsCompleted] = record.dungeonsCompleted
         statement[learnedAbilityIds] = jsonMapper.writeValueAsString(record.learnedAbilityIds)
         statement[unlockedClasses] = jsonMapper.writeValueAsString(record.unlockedClasses)
+        statement[prestigeLevel] = record.prestigeLevel
+        statement[prestigeXpSpent] = record.prestigeXpSpent
         statement[pvpKills] = record.pvpKills
         statement[pvpDeaths] = record.pvpDeaths
     }

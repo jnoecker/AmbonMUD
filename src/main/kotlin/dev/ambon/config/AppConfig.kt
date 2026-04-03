@@ -682,6 +682,32 @@ data class LeaderboardConfig(
     val topN: Int = 10,
 )
 
+data class PrestigeConfig(
+    /** Whether the prestige system is enabled. */
+    val enabled: Boolean = true,
+    /** Base XP cost for the first prestige rank. */
+    val xpCostBase: Long = 500_000,
+    /** Multiplicative factor applied to the cost for each subsequent rank. */
+    val xpCostMultiplier: Double = 1.5,
+    /** Maximum prestige rank a player can achieve. */
+    val maxRank: Int = 20,
+    /** Per-rank perk definitions keyed by rank number. */
+    val perks: Map<Int, PrestigePerkConfig> = emptyMap(),
+)
+
+data class PrestigePerkConfig(
+    /** Perk type: STAT_BONUS, SKILL_POINT, TITLE, MAX_HP, MAX_MANA. */
+    val type: String = "",
+    /** Which stat for STAT_BONUS (STR, DEX, CON, INT, WIS, CHA, ALL). */
+    val stat: String? = null,
+    /** Numeric amount for the perk (stat points, skill points, HP, mana). */
+    val amount: Int = 0,
+    /** Title string for TITLE perks. */
+    val title: String? = null,
+    /** Human-readable description of the perk. */
+    val description: String = "",
+)
+
 data class WorldTimeConfig(
     /** Real-time milliseconds for one full game day (24 game hours). Default: 1 hour. */
     val cycleLengthMs: Long = 3_600_000L,
@@ -1115,6 +1141,7 @@ data class EngineConfig(
     val leaderboard: LeaderboardConfig = LeaderboardConfig(),
     val skillPoints: SkillPointsConfig = SkillPointsConfig(),
     val multiclass: MulticlassConfig = MulticlassConfig(),
+    val prestige: PrestigeConfig = PrestigeConfig(),
 )
 
 data class NavigationConfig(

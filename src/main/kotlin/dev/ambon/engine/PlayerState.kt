@@ -86,6 +86,10 @@ data class PlayerState(
     var learnedAbilityIds: MutableSet<String> = mutableSetOf(),
     /** Class names this player has unlocked (original class + any multi-class unlocks). */
     var unlockedClasses: MutableSet<String> = mutableSetOf(),
+    /** Current prestige rank (0 = not yet prestiged). */
+    var prestigeLevel: Int = 0,
+    /** Cumulative XP spent on prestige ranks. */
+    var prestigeXpSpent: Long = 0L,
     /** Cumulative PvP kills. */
     var pvpKills: Int = 0,
     /** Cumulative PvP deaths. */
@@ -194,6 +198,8 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         learnedAbilityIds = learnedAbilityIds.toMutableSet(),
         // Auto-populate original class if unlockedClasses is empty (new/migrated characters).
         unlockedClasses = unlockedClasses.ifEmpty { setOf(playerClass) }.toMutableSet(),
+        prestigeLevel = prestigeLevel,
+        prestigeXpSpent = prestigeXpSpent,
         pvpKills = pvpKills,
         pvpDeaths = pvpDeaths,
     )
@@ -240,6 +246,8 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         dungeonsCompleted = dungeonsCompleted,
         learnedAbilityIds = learnedAbilityIds.toSet(),
         unlockedClasses = unlockedClasses.toSet(),
+        prestigeLevel = prestigeLevel,
+        prestigeXpSpent = prestigeXpSpent,
         pvpKills = pvpKills,
         pvpDeaths = pvpDeaths,
     )

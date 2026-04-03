@@ -3,6 +3,7 @@ package dev.ambon.engine.commands
 import dev.ambon.bus.OutboundBus
 import dev.ambon.config.BankConfig
 import dev.ambon.config.EconomyConfig
+import dev.ambon.config.PrestigeConfig
 import dev.ambon.domain.ids.RoomId
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
@@ -16,6 +17,7 @@ import dev.ambon.engine.MobRemovalCoordinator
 import dev.ambon.engine.PetSystem
 import dev.ambon.engine.PlayerProgression
 import dev.ambon.engine.PlayerRegistry
+import dev.ambon.engine.PrestigeSystem
 import dev.ambon.engine.ShopRegistry
 import dev.ambon.engine.TradeSystem
 import dev.ambon.engine.WorldStateRegistry
@@ -35,6 +37,7 @@ import dev.ambon.engine.commands.handlers.ItemHandler
 import dev.ambon.engine.commands.handlers.MailHandler
 import dev.ambon.engine.commands.handlers.NavigationHandler
 import dev.ambon.engine.commands.handlers.PetHandler
+import dev.ambon.engine.commands.handlers.PrestigeHandler
 import dev.ambon.engine.commands.handlers.ProgressionHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
 import dev.ambon.engine.commands.handlers.TradeHandler
@@ -128,6 +131,11 @@ internal fun buildTestRouter(
         tradeSystem?.let { TradeHandler(ctx = ctx, tradeSystem = it) },
         DungeonHandler(ctx = ctx, dungeonManager = dungeonManager, dungeonRegistry = dungeonRegistry, groupSystem = groupSystem),
         housingSystem?.let { HousingHandler(ctx = ctx, housingSystem = it) },
+        PrestigeHandler(
+            ctx = ctx,
+            prestigeSystem = PrestigeSystem(PrestigeConfig(), progression),
+            progression = progression,
+        ),
         AdminHandler(
             ctx = ctx,
             onShutdown = onShutdown,
