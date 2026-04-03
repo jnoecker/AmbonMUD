@@ -124,6 +124,8 @@ class PersistenceFieldCoverageTest {
                 ),
                 mobsKilledTotal = 99L,
                 dungeonsCompleted = 5,
+                learnedAbilityIds = setOf("fireball", "ice_shard"),
+                unlockedClasses = setOf("MAGE"),
             )
 
         @BeforeAll

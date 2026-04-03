@@ -870,6 +870,7 @@ class GameEngine(
                 players = players,
                 outbound = outbound,
                 shopRegistry = shopRegistry,
+                trainerRegistry = trainerRegistry,
                 gatheringRegistry = gatheringRegistry,
                 craftingRegistry = craftingRegistry,
                 questRegistry = questRegistry,
@@ -986,6 +987,7 @@ class GameEngine(
                 metrics = metrics,
                 progression = progression,
                 housingSystem = housingSystem,
+                skillPointsConfig = engineConfig.skillPoints,
             ),
             ShopHandler(
                 ctx = ctx,

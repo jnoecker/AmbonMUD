@@ -1526,9 +1526,13 @@ data class AbilityEffectConfig(
 )
 
 data class SkillPointsConfig(
-    /** Player gains 1 skill point every this many levels. */
+    /** Player gains 1 skill point every this many levels. Must be >= 1. */
     val interval: Int = 2,
-)
+) {
+    init {
+        require(interval >= 1) { "skillPoints.interval must be >= 1, got $interval" }
+    }
+}
 
 data class MulticlassConfig(
     /** Minimum player level required to unlock an additional class. */
