@@ -13,8 +13,10 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.world.World
 import dev.ambon.domain.world.load.WorldLoader
 import dev.ambon.engine.CombatSystem
+import dev.ambon.engine.DuelSystem
 import dev.ambon.engine.GameEngine
 import dev.ambon.engine.GroupSystem
+import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.MobRegistry
 import dev.ambon.engine.MobRemovalCoordinator
 import dev.ambon.engine.PasswordHasher
@@ -26,11 +28,14 @@ import dev.ambon.engine.PlayerRegistry
 import dev.ambon.engine.RaceRegistry
 import dev.ambon.engine.RaceRegistryLoader
 import dev.ambon.engine.StatRegistry
+import dev.ambon.engine.TradeSystem
 import dev.ambon.engine.commands.CommandRouter
 import dev.ambon.engine.commands.PhaseResult
 import dev.ambon.engine.commands.buildTestRouter
 import dev.ambon.engine.crafting.EnchantSystem
 import dev.ambon.engine.crafting.GatheringRegistry
+import dev.ambon.engine.dungeon.DungeonManager
+import dev.ambon.engine.dungeon.DungeonRegistry
 import dev.ambon.engine.events.InboundEvent
 import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
@@ -188,6 +193,8 @@ class CommandRouterHarness private constructor(
     val groupSystem: GroupSystem?,
     val combat: CombatSystem,
     val router: CommandRouter,
+    val duelSystem: DuelSystem? = null,
+    val tradeSystem: TradeSystem? = null,
 ) {
     suspend fun loginPlayer(
         sessionId: SessionId,
@@ -232,6 +239,11 @@ class CommandRouterHarness private constructor(
             petSystem: PetSystem? = null,
             enchantSystem: EnchantSystem? = null,
             bankConfig: BankConfig? = null,
+            duelSystem: DuelSystem? = null,
+            tradeSystem: TradeSystem? = null,
+            dungeonManager: DungeonManager? = null,
+            dungeonRegistry: DungeonRegistry? = null,
+            housingSystem: HousingSystem? = null,
         ): CommandRouterHarness {
             val combat = CombatSystem(players, mobs, items, outbound)
             val router =
@@ -258,8 +270,26 @@ class CommandRouterHarness private constructor(
                     petSystem = petSystem,
                     enchantSystem = enchantSystem,
                     bankConfig = bankConfig,
+                    duelSystem = duelSystem,
+                    tradeSystem = tradeSystem,
+                    dungeonManager = dungeonManager,
+                    dungeonRegistry = dungeonRegistry,
+                    housingSystem = housingSystem,
                 )
-            return CommandRouterHarness(world, repo, items, players, mobs, outbound, progression, groupSystem, combat, router)
+            return CommandRouterHarness(
+                world = world,
+                repo = repo,
+                items = items,
+                players = players,
+                mobs = mobs,
+                outbound = outbound,
+                progression = progression,
+                groupSystem = groupSystem,
+                combat = combat,
+                router = router,
+                duelSystem = duelSystem,
+                tradeSystem = tradeSystem,
+            )
         }
     }
 }
