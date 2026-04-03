@@ -40,4 +40,29 @@ class AbilityRegistry : DefinitionRegistry<AbilityId, AbilityDefinition>({ it.id
         all()
             .filter { it.requiredClass.equals(className, ignoreCase = true) }
             .sortedBy { it.levelRequired }
+
+    /** Returns all abilities in the given [tree], sorted by tier then level required. */
+    fun abilitiesInTree(tree: String): List<AbilityDefinition> =
+        all()
+            .filter { it.tree.equals(tree, ignoreCase = true) }
+            .sortedWith(compareBy({ it.tier }, { it.levelRequired }))
+
+    /** Returns the distinct tree names for abilities belonging to [className]. */
+    fun treesForClass(className: String): Set<String> =
+        all()
+            .filter { it.requiredClass.equals(className, ignoreCase = true) && it.tree.isNotBlank() }
+            .map { it.tree }
+            .toSet()
+
+    /**
+     * Returns true if all prerequisites for [abilityId] are present in [learnedIds].
+     * Returns true if the ability has no prerequisites or is not found.
+     */
+    fun isPrerequisiteMet(
+        abilityId: AbilityId,
+        learnedIds: Set<String>,
+    ): Boolean {
+        val ability = get(abilityId) ?: return true
+        return ability.prerequisites.all { it.value in learnedIds }
+    }
 }

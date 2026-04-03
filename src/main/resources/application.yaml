@@ -694,6 +694,102 @@ ambonmud:
           intMod: 0
           wisMod: 0
           chaMod: 0
+        rend_bleed:
+          displayName: Rend
+          effectType: DOT
+          durationMs: 12000
+          tickIntervalMs: 2000
+          stackBehavior: REFRESH
+          tickMinValue: 0
+          tickMaxValue: 0
+          shieldAmount: 0
+          maxStacks: 1
+          strMod: 0
+          dexMod: 0
+          conMod: 0
+          intMod: 0
+          wisMod: 0
+          chaMod: 0
+        ice_barrier:
+          displayName: Ice Barrier
+          effectType: SHIELD
+          durationMs: 15000
+          shieldAmount: 35
+          stackBehavior: REFRESH
+          tickMinValue: 0
+          tickMaxValue: 0
+          maxStacks: 1
+          tickIntervalMs: 0
+          strMod: 0
+          dexMod: 0
+          conMod: 0
+          intMod: 0
+          wisMod: 0
+          chaMod: 0
+        rallying_cry_buff:
+          displayName: Rallying Cry
+          effectType: STAT_BUFF
+          durationMs: 15000
+          stackBehavior: REFRESH
+          tickMinValue: 0
+          tickMaxValue: 0
+          shieldAmount: 0
+          maxStacks: 1
+          tickIntervalMs: 0
+          strMod: 3
+          dexMod: 0
+          conMod: 3
+          intMod: 0
+          wisMod: 0
+          chaMod: 0
+        shield_wall_buff:
+          displayName: Shield Wall
+          effectType: SHIELD
+          durationMs: 10000
+          shieldAmount: 50
+          stackBehavior: REFRESH
+          tickMinValue: 0
+          tickMaxValue: 0
+          maxStacks: 1
+          tickIntervalMs: 0
+          strMod: 0
+          dexMod: 0
+          conMod: 0
+          intMod: 0
+          wisMod: 0
+          chaMod: 0
+        last_stand_buff:
+          displayName: Last Stand
+          effectType: SHIELD
+          durationMs: 8000
+          shieldAmount: 80
+          stackBehavior: REFRESH
+          tickMinValue: 0
+          tickMaxValue: 0
+          maxStacks: 1
+          tickIntervalMs: 0
+          strMod: 0
+          dexMod: 0
+          conMod: 0
+          intMod: 0
+          wisMod: 0
+          chaMod: 0
+        frozen_orb_dot:
+          displayName: Frozen Orb
+          effectType: DOT
+          durationMs: 8000
+          tickIntervalMs: 2000
+          stackBehavior: REFRESH
+          tickMinValue: 0
+          tickMaxValue: 0
+          shieldAmount: 0
+          maxStacks: 1
+          strMod: 0
+          dexMod: 0
+          conMod: 0
+          intMod: 0
+          wisMod: 0
+          chaMod: 0
     economy:
       buyMultiplier: 1.0
       sellMultiplier: 0.5
@@ -721,6 +817,8 @@ ambonmud:
           description: A powerful melee strike.
           image: ab2a08730f7da555c1b9ccbb47186e09e91d3a8e653fa9288f6be6f0c5f3b483.png
           requiredClass: "WARRIOR"
+          tree: "warrior_arms"
+          tier: 0
         taunt:
           displayName: Taunt
           manaCost: 5
@@ -738,6 +836,8 @@ ambonmud:
           description: Force a mob to attack you by generating massive threat.
           image: de886c19deef56b43fa74e64ad3a5b796b31dde3335cc31a2850759752b36adf.png
           requiredClass: "WARRIOR"
+          tree: "warrior_shield"
+          tier: 0
         battle_shout:
           displayName: Battle Shout
           manaCost: 10
@@ -756,6 +856,8 @@ ambonmud:
           description: A war cry that increases your strength.
           image: f7e770ac54807bb4d865243d78d301c874497d511954b32c6c3b100c22140150.png
           requiredClass: "WARRIOR"
+          tree: "warrior_shield"
+          tier: 0
         shield_bash:
           displayName: Shield Bash
           manaCost: 10
@@ -850,20 +952,24 @@ ambonmud:
           displayName: Cleave
           manaCost: 14
           cooldownMs: 6000
-          levelRequired: 16
+          levelRequired: 5
           targetType: ENEMY
           effect:
             type: DIRECT_DAMAGE
-            minDamage: 3
-            maxDamage: 8
+            minDamage: 6
+            maxDamage: 14
             minHeal: 0
             maxHeal: 0
             flatThreat: 50.0
             margin: 10.0
-            damagePerLevel: 1.5
-          description: Split your enemy with a heavy overhead strike.
+            damagePerLevel: 2.0
+          description: A wide sweeping attack that hits with devastating force.
           image: 97046af4e29e9557e3f5c281864efe543e8cffb31d33990bb906912a7f3ac491.png
           requiredClass: "WARRIOR"
+          tree: "warrior_arms"
+          tier: 1
+          prerequisites:
+            - "power_strike"
         counter_attack:
           displayName: Counter Attack
           manaCost: 6
@@ -975,21 +1081,26 @@ ambonmud:
         last_stand:
           displayName: Last Stand
           manaCost: 25
-          cooldownMs: 12000
+          cooldownMs: 30000
           levelRequired: 30
           targetType: SELF
           effect:
             type: APPLY_STATUS
-            statusEffectId: thornhide_armor
+            statusEffectId: last_stand_buff
             minDamage: 0
             maxDamage: 0
             minHeal: 0
             maxHeal: 0
             flatThreat: 50.0
             margin: 10.0
-          description: Make a final desperate defense against all attacks.
+          description: Become nearly invulnerable for a short time. A last resort.
           image: 5338cbdd361c64edaad86606dcc5b10327d35596479553ed0f7b949cc9a3ed3c.png
           requiredClass: "WARRIOR"
+          tree: "warrior_shield"
+          tier: 3
+          prerequisites:
+            - "shield_wall"
+            - "rallying_cry"
         execution:
           displayName: Execution
           manaCost: 16
@@ -1151,6 +1262,161 @@ ambonmud:
           description: The ultimate warrior ability—strike with glory.
           image: 02194440d0be6aeee2a14b40638c224289292ffc9f0edf47c50fbb4c8e6e402b.png
           requiredClass: "WARRIOR"
+        rend:
+          displayName: Rend
+          manaCost: 10
+          cooldownMs: 12000
+          levelRequired: 5
+          targetType: ENEMY
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: rend_bleed
+            minDamage: 0
+            maxDamage: 0
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+          description: A vicious wound that bleeds over time.
+          image: demo/DefaultAbility.png
+          requiredClass: "WARRIOR"
+          tree: "warrior_arms"
+          tier: 1
+          prerequisites:
+            - "power_strike"
+        whirlwind:
+          displayName: Whirlwind
+          manaCost: 25
+          cooldownMs: 15000
+          levelRequired: 15
+          targetType: ALL_ENEMIES
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 8
+            maxDamage: 18
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+            damagePerLevel: 2.5
+          description: Spin in a deadly arc, striking all nearby enemies.
+          image: demo/DefaultAbility.png
+          requiredClass: "WARRIOR"
+          tree: "warrior_arms"
+          tier: 2
+          prerequisites:
+            - "cleave"
+        execute:
+          displayName: Execute
+          manaCost: 20
+          cooldownMs: 10000
+          levelRequired: 15
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 15
+            maxDamage: 30
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+            damagePerLevel: 3.0
+          description: A finishing blow against wounded foes, dealing massive damage.
+          image: demo/DefaultAbility.png
+          requiredClass: "WARRIOR"
+          tree: "warrior_arms"
+          tier: 2
+          prerequisites:
+            - "rend"
+        bladestorm:
+          displayName: Bladestorm
+          manaCost: 40
+          cooldownMs: 30000
+          levelRequired: 30
+          targetType: ALL_ENEMIES
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 20
+            maxDamage: 40
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+            damagePerLevel: 4.0
+          description: Become a whirlwind of steel, unleashing devastating attacks on all enemies.
+          image: demo/DefaultAbility.png
+          requiredClass: "WARRIOR"
+          tree: "warrior_arms"
+          tier: 3
+          prerequisites:
+            - "whirlwind"
+            - "execute"
+        shield_block:
+          displayName: Shield Block
+          manaCost: 10
+          cooldownMs: 15000
+          levelRequired: 5
+          targetType: SELF
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: shield_wall_buff
+            minDamage: 0
+            maxDamage: 0
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+          description: Raise your shield to absorb incoming attacks.
+          image: demo/DefaultAbility.png
+          requiredClass: "WARRIOR"
+          tree: "warrior_shield"
+          tier: 1
+          prerequisites:
+            - "taunt"
+        shield_wall:
+          displayName: Shield Wall
+          manaCost: 20
+          cooldownMs: 25000
+          levelRequired: 15
+          targetType: SELF
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: shield_wall_buff
+            minDamage: 0
+            maxDamage: 0
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+          description: Brace behind your shield, greatly reducing all incoming damage.
+          image: demo/DefaultAbility.png
+          requiredClass: "WARRIOR"
+          tree: "warrior_shield"
+          tier: 2
+          prerequisites:
+            - "shield_block"
+        rallying_cry:
+          displayName: Rallying Cry
+          manaCost: 15
+          cooldownMs: 20000
+          levelRequired: 15
+          targetType: SELF
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: rallying_cry_buff
+            minDamage: 0
+            maxDamage: 0
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+          description: Inspire your allies with a mighty shout, boosting strength and constitution.
+          image: demo/DefaultAbility.png
+          requiredClass: "WARRIOR"
+          tree: "warrior_shield"
+          tier: 2
+          prerequisites:
+            - "battle_shout"
         arcane_bolt:
           displayName: Arcane Bolt
           manaCost: 6
@@ -1205,6 +1471,8 @@ ambonmud:
           description: Blast your enemy with freezing cold.
           image: d5225446bd44011072af8b0c06ba9b9ab88e77e8e5fa7466cf39ed7d472a6893.png
           requiredClass: "MAGE"
+          tree: "mage_frost"
+          tier: 0
         fireball:
           displayName: Fireball
           manaCost: 25
@@ -1223,6 +1491,8 @@ ambonmud:
           description: Hurl a ball of fire that hits all enemies in combat with your group.
           image: 32958d24276dc69e58bad11827905288ded2858b00477d3888bff3e6f07acc54.png
           requiredClass: "MAGE"
+          tree: "mage_fire"
+          tier: 0
         mana_bolt:
           displayName: Mana Bolt
           manaCost: 10
@@ -1601,6 +1871,161 @@ ambonmud:
           description: The apex of magical power—absolute arcane dominion.
           image: a39e356d9b113562902dc60d687eaa003b709cda9daca28ac891a11c08f83d3a.png
           requiredClass: "MAGE"
+        scorch:
+          displayName: Scorch
+          manaCost: 14
+          cooldownMs: 6000
+          levelRequired: 10
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 5
+            maxDamage: 12
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+            damagePerLevel: 2.0
+          description: Sear an enemy with intense focused flame.
+          image: demo/DefaultAbility.png
+          requiredClass: "MAGE"
+          tree: "mage_fire"
+          tier: 1
+          prerequisites:
+            - "fireball"
+        ignite_burst:
+          displayName: Ignite Burst
+          manaCost: 16
+          cooldownMs: 10000
+          levelRequired: 10
+          targetType: ENEMY
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: ignite
+            minDamage: 0
+            maxDamage: 0
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+          description: Set an enemy ablaze with an explosive burst of fire.
+          image: demo/DefaultAbility.png
+          requiredClass: "MAGE"
+          tree: "mage_fire"
+          tier: 1
+          prerequisites:
+            - "fireball"
+        meteor:
+          displayName: Meteor
+          manaCost: 35
+          cooldownMs: 20000
+          levelRequired: 20
+          targetType: ALL_ENEMIES
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 15
+            maxDamage: 30
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+            damagePerLevel: 3.5
+          description: Call down a massive meteor from the sky, devastating all nearby enemies.
+          image: demo/DefaultAbility.png
+          requiredClass: "MAGE"
+          tree: "mage_fire"
+          tier: 2
+          prerequisites:
+            - "scorch"
+        inferno_capstone:
+          displayName: Inferno
+          manaCost: 50
+          cooldownMs: 30000
+          levelRequired: 30
+          targetType: ALL_ENEMIES
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 25
+            maxDamage: 50
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+            damagePerLevel: 5.0
+          description: Engulf the battlefield in a cataclysmic inferno. The pinnacle of fire magic.
+          image: demo/DefaultAbility.png
+          requiredClass: "MAGE"
+          tree: "mage_fire"
+          tier: 3
+          prerequisites:
+            - "meteor"
+            - "ignite_burst"
+        ice_barrier_ability:
+          displayName: Ice Barrier
+          manaCost: 14
+          cooldownMs: 20000
+          levelRequired: 10
+          targetType: SELF
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: ice_barrier
+            minDamage: 0
+            maxDamage: 0
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+          description: Surround yourself with a barrier of ice that absorbs damage.
+          image: demo/DefaultAbility.png
+          requiredClass: "MAGE"
+          tree: "mage_frost"
+          tier: 1
+          prerequisites:
+            - "frost_nova"
+        blizzard_ability:
+          displayName: Blizzard
+          manaCost: 30
+          cooldownMs: 15000
+          levelRequired: 20
+          targetType: ALL_ENEMIES
+          effect:
+            type: AREA_DAMAGE
+            minDamage: 10
+            maxDamage: 22
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+            damagePerLevel: 2.5
+          description: Summon a devastating blizzard that strikes all nearby enemies.
+          image: demo/DefaultAbility.png
+          requiredClass: "MAGE"
+          tree: "mage_frost"
+          tier: 2
+          prerequisites:
+            - "ice_barrier_ability"
+        frozen_orb:
+          displayName: Frozen Orb
+          manaCost: 40
+          cooldownMs: 25000
+          levelRequired: 30
+          targetType: ENEMY
+          effect:
+            type: APPLY_STATUS
+            statusEffectId: frozen_orb_dot
+            minDamage: 0
+            maxDamage: 0
+            minHeal: 0
+            maxHeal: 0
+            flatThreat: 50.0
+            margin: 10.0
+          description: Launch an orb of pure frost that devastates a single target. The pinnacle of frost magic.
+          image: demo/DefaultAbility.png
+          requiredClass: "MAGE"
+          tree: "mage_frost"
+          tier: 3
+          prerequisites:
+            - "blizzard_ability"
         minor_heal:
           displayName: Minor Heal
           manaCost: 8

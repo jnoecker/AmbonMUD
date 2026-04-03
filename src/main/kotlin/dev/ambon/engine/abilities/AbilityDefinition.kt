@@ -60,4 +60,7 @@ data class AbilityDefinition(
     val effect: AbilityEffect,
     val requiredClass: String? = null,
     val image: String? = null,
+    val prerequisites: Set<AbilityId> = emptySet(),
+    val tree: String = "",
+    val tier: Int = 0,
 )

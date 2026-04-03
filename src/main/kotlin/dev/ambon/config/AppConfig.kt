@@ -1700,6 +1700,9 @@ data class AbilityDefinitionConfig(
     val effect: AbilityEffectConfig = AbilityEffectConfig(),
     val requiredClass: String = "",
     val image: String = "",
+    val prerequisites: List<String> = emptyList(),
+    val tree: String = "",
+    val tier: Int = 0,
 )
 
 data class AbilityEffectConfig(
