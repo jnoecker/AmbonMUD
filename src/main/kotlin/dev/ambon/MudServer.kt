@@ -77,7 +77,7 @@ class MudServer(
             .newFixedThreadPool(config.login.authThreads) { r ->
                 Thread(r, "ambon-auth").also { it.isDaemon = true }
             }.asCoroutineDispatcher()
-    private val telnetDispatcher = Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()
+    private val telnetDispatcher = ServerInfrastructure.createTelnetDispatcher()
     private val sessionIdFactory = AtomicSessionIdFactory()
 
     private lateinit var outboundRouter: OutboundRouter
@@ -439,7 +439,7 @@ class MudServer(
                 ).run()
             }
 
-        telnetTransport = ServerInfrastructure.createTelnetTransport(
+        val transports = ServerInfrastructure.createAndStartTransports(
             config = config,
             inbound = inbound,
             outboundRouter = outboundRouter,
@@ -447,19 +447,11 @@ class MudServer(
             scope = scope,
             metrics = gameMetrics,
             sessionDispatcher = telnetDispatcher,
-        )
-        telnetTransport.start()
-        log.info { "Telnet transport bound on port ${config.server.telnetPort}" }
-
-        webTransport = ServerInfrastructure.createWebTransport(
-            config = config,
-            inbound = inbound,
-            outboundRouter = outboundRouter,
-            sessionIdFactory = sessionIdFactory::allocate,
             prometheusRegistry = prometheusRegistry,
-            metrics = gameMetrics,
         )
-        webTransport.start()
+        telnetTransport = transports.telnet
+        webTransport = transports.web
+        log.info { "Telnet transport bound on port ${config.server.telnetPort}" }
         log.info { "WebSocket transport bound on ${config.transport.websocket.host}:${config.server.webPort}" }
         if (config.observability.metricsEnabled) {
             log.info { "Metrics enabled at ${config.observability.metricsEndpoint}" }
