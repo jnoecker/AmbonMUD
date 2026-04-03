@@ -3,6 +3,8 @@ package dev.ambon.engine.commands.handlers
 import dev.ambon.config.MulticlassConfig
 import dev.ambon.config.SkillPointsConfig
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.world.TrainerDefinition
+import dev.ambon.engine.PlayerState
 import dev.ambon.engine.TrainerRegistry
 import dev.ambon.engine.abilities.AbilityId
 import dev.ambon.engine.abilities.AbilitySystem
@@ -30,13 +32,18 @@ class TrainerHandler(
         router.on<Command.Train.Unlock> { sid, _ -> handleTrainUnlock(sid) }
     }
 
+    /** Returns the trainer at [me]'s current room, or null (sending an error) if there is none. */
+    private suspend fun findTrainer(sessionId: SessionId, me: PlayerState): TrainerDefinition? {
+        val trainer = trainerRegistry.trainerInRoom(me.roomId)
+        if (trainer == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "There is no trainer here."))
+        }
+        return trainer
+    }
+
     private suspend fun handleTrainList(sessionId: SessionId) {
         players.withPlayer(sessionId) { me ->
-            val trainer = trainerRegistry.trainerInRoom(me.roomId)
-            if (trainer == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "There is no trainer here."))
-                return
-            }
+            val trainer = findTrainer(sessionId, me) ?: return
             val available = abilitySystem.availableSkillPoints(
                 level = me.level,
                 learnedCount = me.learnedAbilityIds.size,
@@ -90,11 +97,7 @@ class TrainerHandler(
         keyword: String,
     ) {
         players.withPlayer(sessionId) { me ->
-            val trainer = trainerRegistry.trainerInRoom(me.roomId)
-            if (trainer == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "There is no trainer here."))
-                return
-            }
+            val trainer = findTrainer(sessionId, me) ?: return
             if (!me.unlockedClasses.any { it.equals(trainer.className, ignoreCase = true) }) {
                 outbound.send(
                     OutboundEvent.SendError(
@@ -156,11 +159,7 @@ class TrainerHandler(
 
     private suspend fun handleTrainUnlock(sessionId: SessionId) {
         players.withPlayer(sessionId) { me ->
-            val trainer = trainerRegistry.trainerInRoom(me.roomId)
-            if (trainer == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "There is no trainer here."))
-                return
-            }
+            val trainer = findTrainer(sessionId, me) ?: return
             if (me.unlockedClasses.any { it.equals(trainer.className, ignoreCase = true) }) {
                 outbound.send(
                     OutboundEvent.SendError(sessionId, "You have already unlocked the ${trainer.className} class."),
