@@ -110,7 +110,7 @@ ambonmud:
   database:
     jdbcUrl: "jdbc:postgresql://localhost:5432/ambonmud"
     username: ambon
-    password: ambon
+    password: changeme  # Override via AMBONMUD_DATABASE_PASSWORD env var in production
     maxPoolSize: 5
     minimumIdle: 1
 
