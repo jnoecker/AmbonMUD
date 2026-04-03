@@ -44,7 +44,7 @@ class PetHandler(
     private suspend fun handlePetDismiss(sessionId: SessionId) {
         val pet = petSystem.getActivePet(sessionId)
         if (pet == null) {
-            outbound.send(OutboundEvent.SendText(sessionId, "You have no active pet."))
+            outbound.send(OutboundEvent.SendError(sessionId, "You have no active pet."))
             return
         }
 
@@ -60,7 +60,7 @@ class PetHandler(
     private suspend fun handlePetName(sessionId: SessionId, cmd: Command.PetName) {
         val pet = petSystem.getActivePet(sessionId)
         if (pet == null) {
-            outbound.send(OutboundEvent.SendText(sessionId, "You have no active pet."))
+            outbound.send(OutboundEvent.SendError(sessionId, "You have no active pet."))
             return
         }
 

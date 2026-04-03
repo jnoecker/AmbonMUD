@@ -23,14 +23,14 @@ class UiHandler(
     override fun register(router: CommandRouter) {
         router.on<Command.Noop> { _, _ -> }
         router.on<Command.Unknown> { sid, _ ->
-            outbound.send(OutboundEvent.SendText(sid, "Huh?"))
+            outbound.send(OutboundEvent.SendError(sid, "Huh?"))
         }
         router.on<Command.Invalid> { sid, cmd ->
-            outbound.send(OutboundEvent.SendText(sid, "Invalid command: ${cmd.command}"))
+            outbound.send(OutboundEvent.SendError(sid, "Invalid command: ${cmd.command}"))
             if (cmd.usage != null) {
-                outbound.send(OutboundEvent.SendText(sid, "Usage: ${cmd.usage}"))
+                outbound.send(OutboundEvent.SendError(sid, "Usage: ${cmd.usage}"))
             } else {
-                outbound.send(OutboundEvent.SendText(sid, "Try 'help' for a list of commands."))
+                outbound.send(OutboundEvent.SendError(sid, "Try 'help' for a list of commands."))
             }
         }
         router.on<Command.Help> { sid, _ -> handleHelp(sid) }
@@ -70,7 +70,7 @@ class UiHandler(
         cmd: Command.Phase,
     ) {
         if (combat.isInCombat(sessionId)) {
-            outbound.send(OutboundEvent.SendText(sessionId, "You can't switch layers while in combat!"))
+            outbound.send(OutboundEvent.SendError(sessionId, "You can't switch layers while in combat!"))
             return
         }
         if (onPhase == null) {

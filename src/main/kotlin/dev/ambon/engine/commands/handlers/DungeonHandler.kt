@@ -44,7 +44,7 @@ class DungeonHandler(
             // Find the template
             val template = reg.findByKeyword(cmd.templateKeyword)
             if (template == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "Unknown dungeon '${cmd.templateKeyword}'."))
+                outbound.send(OutboundEvent.SendError(sessionId, "Unknown dungeon '${cmd.templateKeyword}'."))
                 return
             }
 
@@ -53,7 +53,7 @@ class DungeonHandler(
                 DungeonDifficulty.fromName(cmd.difficulty)
                     ?: run {
                         val valid = DungeonDifficulty.entries.joinToString(", ") { it.displayName.lowercase() }
-                        outbound.send(OutboundEvent.SendText(sessionId, "Unknown difficulty '${cmd.difficulty}'. Options: $valid"))
+                        outbound.send(OutboundEvent.SendError(sessionId, "Unknown difficulty '${cmd.difficulty}'. Options: $valid"))
                         return
                     }
             } else {
@@ -71,7 +71,7 @@ class DungeonHandler(
                 val member = players.get(sid) ?: continue
                 if (member.level < template.minLevel) {
                     outbound.send(
-                        OutboundEvent.SendText(
+                        OutboundEvent.SendError(
                             sessionId,
                             "${member.name} is level ${member.level} but this dungeon requires level ${template.minLevel}.",
                         ),
@@ -122,7 +122,7 @@ class DungeonHandler(
         players.withPlayer(sessionId) { me ->
             val returnRoom = dm.removePlayer(sessionId)
             if (returnRoom == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "You are not in a dungeon."))
+                outbound.send(OutboundEvent.SendError(sessionId, "You are not in a dungeon."))
                 return
             }
             outbound.send(OutboundEvent.SendInfo(sessionId, "You leave the dungeon."))
@@ -132,6 +132,6 @@ class DungeonHandler(
     }
 
     private suspend fun sendUnavailable(sessionId: SessionId) {
-        outbound.send(OutboundEvent.SendText(sessionId, "Dungeons are not available."))
+        outbound.send(OutboundEvent.SendError(sessionId, "Dungeons are not available."))
     }
 }

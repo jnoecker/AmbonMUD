@@ -30,7 +30,7 @@ class BankHandler(
     private suspend fun requireBank(sessionId: SessionId, me: dev.ambon.engine.PlayerState): Boolean {
         val room = world.rooms[me.roomId]
         if (room == null || !room.bank) {
-            outbound.send(OutboundEvent.SendText(sessionId, "You need to be at a bank to do that."))
+            outbound.send(OutboundEvent.SendError(sessionId, "You need to be at a bank to do that."))
             return false
         }
         return true
@@ -42,11 +42,11 @@ class BankHandler(
 
         val amount = if (cmd.amount == Long.MAX_VALUE) me.gold else cmd.amount
         if (amount <= 0) {
-            outbound.send(OutboundEvent.SendText(sessionId, "Deposit how much?"))
+            outbound.send(OutboundEvent.SendError(sessionId, "Deposit how much?"))
             return
         }
         if (me.gold < amount) {
-            outbound.send(OutboundEvent.SendText(sessionId, "You only have ${me.gold} gold."))
+            outbound.send(OutboundEvent.SendError(sessionId, "You only have ${me.gold} gold."))
             return
         }
         me.gold -= amount
@@ -62,11 +62,11 @@ class BankHandler(
 
         val amount = if (cmd.amount == Long.MAX_VALUE) me.bankGold else cmd.amount
         if (amount <= 0) {
-            outbound.send(OutboundEvent.SendText(sessionId, "Withdraw how much?"))
+            outbound.send(OutboundEvent.SendError(sessionId, "Withdraw how much?"))
             return
         }
         if (me.bankGold < amount) {
-            outbound.send(OutboundEvent.SendText(sessionId, "Your bank only has ${me.bankGold} gold."))
+            outbound.send(OutboundEvent.SendError(sessionId, "Your bank only has ${me.bankGold} gold."))
             return
         }
         me.bankGold -= amount
@@ -81,13 +81,13 @@ class BankHandler(
         if (!requireBank(sessionId, me)) return
 
         if (me.bankItems.size >= bankConfig.maxItems) {
-            outbound.send(OutboundEvent.SendText(sessionId, "Your bank vault is full (${bankConfig.maxItems} items)."))
+            outbound.send(OutboundEvent.SendError(sessionId, "Your bank vault is full (${bankConfig.maxItems} items)."))
             return
         }
 
         val removed = items.removeFromInventory(sessionId, cmd.keyword)
         if (removed == null) {
-            outbound.send(OutboundEvent.SendText(sessionId, "You don't have '${cmd.keyword}'."))
+            outbound.send(OutboundEvent.SendError(sessionId, "You don't have '${cmd.keyword}'."))
             return
         }
 
@@ -106,7 +106,7 @@ class BankHandler(
                 (cmd.keyword.length >= 3 && it.item.displayName.contains(cmd.keyword, ignoreCase = true))
         }
         if (idx < 0) {
-            outbound.send(OutboundEvent.SendText(sessionId, "Your bank vault doesn't contain '${cmd.keyword}'."))
+            outbound.send(OutboundEvent.SendError(sessionId, "Your bank vault doesn't contain '${cmd.keyword}'."))
             return
         }
 
