@@ -252,6 +252,12 @@ class GameMetrics(
     private val sessionIdClockRollbackCounter =
         Counter.builder("session_id_clock_rollback_total").register(registry)
 
+    private val handoffTimeoutCounter =
+        Counter.builder("handoff_timeout_total").register(registry)
+
+    private val redisUnavailableCounter =
+        Counter.builder("redis_unavailable_total").register(registry)
+
     private val gatewayReconnectAttemptsCounter =
         Counter.builder("gateway_reconnect_attempts_total").register(registry)
     private val gatewayReconnectSuccessCounter =
@@ -412,6 +418,10 @@ class GameMetrics(
     fun onSessionIdSequenceOverflow() = sessionIdSequenceOverflowCounter.increment()
 
     fun onSessionIdClockRollback() = sessionIdClockRollbackCounter.increment()
+
+    fun onHandoffTimeout() = handoffTimeoutCounter.increment()
+
+    fun onRedisUnavailable() = redisUnavailableCounter.increment()
 
     fun onGatewayReconnectAttempt() = gatewayReconnectAttemptsCounter.increment()
 

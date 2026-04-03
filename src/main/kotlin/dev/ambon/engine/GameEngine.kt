@@ -81,6 +81,7 @@ import dev.ambon.sharding.HandoffManager
 import dev.ambon.sharding.InterEngineBus
 import dev.ambon.sharding.InterEngineMessage
 import dev.ambon.sharding.PlayerLocationIndex
+import dev.ambon.sharding.TimedOutHandoff
 import dev.ambon.sharding.ZoneRegistry
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Timer
@@ -1213,7 +1214,7 @@ class GameEngine(
 
                     if (handoffManager != null) {
                         for (timedOut in handoffManager!!.expireTimedOut()) {
-                            handleHandoffTimeout(timedOut.sessionId)
+                            handleHandoffTimeout(timedOut)
                         }
                     }
                     interEngineEventHandler.flushDueWhoResponses()
@@ -1412,20 +1413,29 @@ class GameEngine(
     ): PhaseResult =
         phaseEventHandler.handlePhase(sessionId, targetHint)
 
-    private suspend fun handleHandoffTimeout(sessionId: SessionId) {
-        val player = players.get(sessionId)
+    private suspend fun handleHandoffTimeout(timedOut: TimedOutHandoff) {
+        metrics.onHandoffTimeout()
+        val player = players.get(timedOut.sessionId)
         if (player == null) {
-            log.warn { "Handoff timeout for session=${sessionId.value} but player already disconnected; state cleaned up." }
+            log.warn {
+                "Handoff timeout for session=${timedOut.sessionId.value} but player already " +
+                    "disconnected; state cleaned up."
+            }
             return
         }
-        log.warn { "Handoff timeout for session=${sessionId.value} player=${player.name}; notifying player." }
+        log.warn {
+            "Handoff timeout for session=${timedOut.sessionId.value} player=${timedOut.playerName} " +
+                "targetZone=${timedOut.targetRoomId.zone}; restoring player to ${timedOut.fromRoomId.value}"
+        }
+        // Restore the player's room to the original source room in case it was changed.
+        player.roomId = timedOut.fromRoomId
         outbound.send(
             OutboundEvent.SendError(
-                sessionId,
+                timedOut.sessionId,
                 "Cross-zone move timed out. You remain where you are.",
             ),
         )
-        outbound.send(OutboundEvent.SendPrompt(sessionId))
+        outbound.send(OutboundEvent.SendPrompt(timedOut.sessionId))
     }
 
     private suspend fun handleInterEngineMessage(msg: InterEngineMessage) {

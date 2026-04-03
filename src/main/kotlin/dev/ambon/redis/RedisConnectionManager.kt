@@ -63,6 +63,12 @@ class RedisConnectionManager(
     }
 
     /**
+     * Returns `true` when a Redis connection has been successfully established
+     * and neither [close] nor a reconnection failure has cleared the command handles.
+     */
+    fun isConnected(): Boolean = commands != null
+
+    /**
      * Executes [block] with the sync [RedisCommands] handle if Redis is connected,
      * returning the block's result.  Returns `null` when the connection is absent.
      *

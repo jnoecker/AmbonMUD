@@ -24,8 +24,13 @@ class InstancedRedisZoneRegistry(
     private val instanceHashPrefix = "zone:instances:"
     private val leasePrefix = "zone:lease:"
 
-    override fun ownerOf(zone: String): EngineAddress? =
-        instancesOf(zone).firstOrNull()?.address
+    override fun ownerOf(zone: String): EngineAddress? {
+        if (!redis.isConnected()) {
+            log.warn { "Redis unavailable when looking up owner for zone=$zone" }
+            return null
+        }
+        return instancesOf(zone).firstOrNull()?.address
+    }
 
     override fun claimZones(
         engineId: String,
@@ -80,6 +85,10 @@ class InstancedRedisZoneRegistry(
                     if (commands.exists(leaseKey) > 0) {
                         val instance = mapper.readValueOrNull<ZoneInstance>(json) ?: continue
                         result.putIfAbsent(zone, instance.address)
+                    } else {
+                        // Lease expired — remove stale hash entry.
+                        commands.hdel(key, engineId)
+                        log.debug { "Removed stale instance entry for zone=$zone engineId=$engineId" }
                     }
                 }
             }
@@ -92,7 +101,12 @@ class InstancedRedisZoneRegistry(
             entries
                 .mapNotNull { (engineId, json) ->
                     val leaseKey = "$leasePrefix$zone:$engineId"
-                    if (commands.exists(leaseKey) <= 0) return@mapNotNull null
+                    if (commands.exists(leaseKey) <= 0) {
+                        // Lease expired — remove stale hash entry to prevent accumulation.
+                        commands.hdel("$instanceHashPrefix$zone", engineId)
+                        log.debug { "Removed stale instance entry for zone=$zone engineId=$engineId" }
+                        return@mapNotNull null
+                    }
                     mapper.readValueOrNull<ZoneInstance>(json)
                 }.sortedBy { it.engineId }
         } ?: emptyList()

@@ -43,6 +43,8 @@ sealed interface HandoffAckResult {
 
 data class TimedOutHandoff(
     val sessionId: SessionId,
+    val playerName: String,
+    val fromRoomId: RoomId,
     val targetRoomId: RoomId,
     val targetEngine: EngineAddress,
 )
@@ -192,9 +194,15 @@ class HandoffManager(
             timedOut +=
                 TimedOutHandoff(
                     sessionId = sessionId,
+                    playerName = pending.playerName,
+                    fromRoomId = pending.fromRoomId,
                     targetRoomId = pending.targetRoomId,
                     targetEngine = pending.targetEngine,
                 )
+            log.warn {
+                "Handoff timed out: session=${sessionId.value} player=${pending.playerName} " +
+                    "targetZone=${pending.targetRoomId.zone} targetEngine=${pending.targetEngine.engineId}"
+            }
             itr.remove()
         }
         return timedOut

@@ -88,6 +88,7 @@ class EngineServer(
             outbound = outbound,
             scope = scope,
             metrics = gameMetrics,
+            controlPlaneSendTimeoutMs = config.grpc.server.controlPlaneSendTimeoutMs,
         )
 
     private val items = ItemRegistry()
