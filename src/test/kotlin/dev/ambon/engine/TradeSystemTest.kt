@@ -198,6 +198,25 @@ class TradeSystemTest {
 
     @Nested
     inner class Completion {
+        private var initGold = 0L
+        private var targetGold = 0L
+
+        private fun completeWith(
+            session: TradeSession,
+            iGold: Long = 500L,
+            tGold: Long = 500L,
+        ): TradeResult {
+            initGold = iGold
+            targetGold = tGold
+            return trade.complete(
+                session = session,
+                initiatorGold = initGold,
+                targetGold = targetGold,
+                deductInitiatorGold = { delta -> initGold = (initGold + delta).coerceAtLeast(0) },
+                deductTargetGold = { delta -> targetGold = (targetGold + delta).coerceAtLeast(0) },
+            )
+        }
+
         @Test
         fun `complete transfers items between players`() {
             giveSword(sid1)
@@ -209,8 +228,9 @@ class TradeSystemTest {
             trade.accept(sid1)
             trade.accept(sid2)
 
-            trade.complete(session)
+            val result = completeWith(session)
 
+            assertEquals(TradeResult.Success, result)
             // sword went to sid2, potion went to sid1
             assertEquals(1, items.inventory(sid1).count { it.id == potionId })
             assertEquals(1, items.inventory(sid2).count { it.id == swordId })
@@ -227,11 +247,94 @@ class TradeSystemTest {
             trade.accept(sid1)
             trade.accept(sid2)
 
-            trade.complete(session)
+            val result = completeWith(session)
 
+            assertEquals(TradeResult.Success, result)
             // sword went to sid2, sid1 gets nothing (gift trade)
             assertEquals(0, items.inventory(sid1).size)
             assertEquals(1, items.inventory(sid2).count { it.id == swordId })
+        }
+
+        @Test
+        fun `complete transfers gold between players`() {
+            val session = trade.createSession(sid1, sid2)!!
+            trade.offerGold(sid1, 100L, 500L)
+            trade.offerGold(sid2, 50L, 500L)
+            trade.accept(sid1)
+            trade.accept(sid2)
+
+            val result = completeWith(session, iGold = 500L, tGold = 500L)
+
+            assertEquals(TradeResult.Success, result)
+            // initiator: 500 - 100 + 50 = 450
+            assertEquals(450L, initGold)
+            // target: 500 - 50 + 100 = 550
+            assertEquals(550L, targetGold)
+        }
+
+        @Test
+        fun `complete re-validates initiator gold and fails if insufficient`() {
+            giveSword(sid1)
+            val session = trade.createSession(sid1, sid2)!!
+            trade.offerGold(sid1, 200L, 500L) // offered 200 when they had 500
+            trade.accept(sid1)
+            trade.accept(sid2)
+
+            // At completion time, initiator only has 50 gold
+            val result = completeWith(session, iGold = 50L, tGold = 500L)
+
+            assertTrue(result is TradeResult.InsufficientInitiatorGold)
+            val err = result as TradeResult.InsufficientInitiatorGold
+            assertEquals(50L, err.have)
+            assertEquals(200L, err.need)
+        }
+
+        @Test
+        fun `complete re-validates target gold and fails if insufficient`() {
+            val session = trade.createSession(sid1, sid2)!!
+            trade.offerGold(sid2, 300L, 500L) // offered 300 when they had 500
+            trade.accept(sid1)
+            trade.accept(sid2)
+
+            // At completion time, target only has 100 gold
+            val result = completeWith(session, iGold = 500L, tGold = 100L)
+
+            assertTrue(result is TradeResult.InsufficientTargetGold)
+            val err = result as TradeResult.InsufficientTargetGold
+            assertEquals(100L, err.have)
+            assertEquals(300L, err.need)
+        }
+
+        @Test
+        fun `gold never goes negative via coerceAtLeast`() {
+            val session = trade.createSession(sid1, sid2)!!
+            trade.offerGold(sid1, 100L, 100L) // all their gold
+            trade.accept(sid1)
+            trade.accept(sid2)
+
+            val result = completeWith(session, iGold = 100L, tGold = 0L)
+
+            assertEquals(TradeResult.Success, result)
+            // initiator: 100 - 100 + 0 = 0 (not negative)
+            assertEquals(0L, initGold)
+            // target: 0 - 0 + 100 = 100
+            assertEquals(100L, targetGold)
+        }
+
+        @Test
+        fun `zero gold offers succeed without validation issues`() {
+            giveSword(sid1)
+            val session = trade.createSession(sid1, sid2)!!
+            trade.offerItem(sid1, "sword")
+            // No gold offered
+            trade.accept(sid1)
+            trade.accept(sid2)
+
+            val result = completeWith(session, iGold = 0L, tGold = 0L)
+
+            assertEquals(TradeResult.Success, result)
+            assertEquals(0L, initGold)
+            assertEquals(0L, targetGold)
         }
     }
 }
