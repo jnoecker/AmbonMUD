@@ -36,6 +36,20 @@ class NavigationHandler(
     private val gmcpEmitter = ctx.gmcpEmitter
     private lateinit var router: CommandRouter
 
+    /** Easter-egg petition keywords → zone:startRoom targets. */
+    private val petitionTargets: Map<String, RoomId> = mapOf(
+        "pbrae" to RoomId("pbrae:gravel_road"),
+        "peanut" to RoomId("pbrae:gravel_road"),
+        "braelynn" to RoomId("pbrae:gravel_road"),
+        "wesley" to RoomId("wesleyalis:gravel_road_2"),
+        "aurora" to RoomId("wesleyalis:gravel_road_2"),
+        "wesleyalis" to RoomId("wesleyalis:gravel_road_2"),
+        "trevor" to RoomId("trailey:cul_de_sac"),
+        "hailey" to RoomId("trailey:cul_de_sac"),
+        "trailey" to RoomId("trailey:cul_de_sac"),
+        "noecker" to RoomId("noecker_resume:lobby"),
+    )
+
     override fun register(router: CommandRouter) {
         this.router = router
         router.on<Command.Look> { sid, _ -> handleLook(sid) }
@@ -44,6 +58,7 @@ class NavigationHandler(
         router.on<Command.LookDir> { sid, cmd -> handleLookDir(sid, cmd) }
         router.on<Command.LookAt> { sid, cmd -> handleLookAt(sid, cmd) }
         router.on<Command.Recall> { sid, _ -> handleRecall(sid) }
+        router.on<Command.Petition> { sid, cmd -> handlePetition(sid, cmd) }
     }
 
     private suspend fun handleLook(sessionId: SessionId) {
@@ -220,6 +235,38 @@ class NavigationHandler(
         )
         onPlayerMoved?.invoke(sessionId, target)
         outbound.send(OutboundEvent.SendText(sessionId, msgs.arrival))
+        ctx.sendLook(sessionId)
+    }
+
+    private suspend fun handlePetition(sessionId: SessionId, cmd: Command.Petition) {
+        val target = petitionTargets[cmd.keyword]
+        if (target == null) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Your petition goes unanswered."))
+            return
+        }
+        if (combat.isInCombat(sessionId)) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You can't petition while in combat!"))
+            return
+        }
+        val me = players.get(sessionId) ?: return
+        if (!world.rooms.containsKey(target)) {
+            outbound.send(OutboundEvent.SendError(sessionId, "Your petition goes unanswered."))
+            return
+        }
+        val from = me.roomId
+        outbound.send(OutboundEvent.SendText(sessionId, "You whisper a name into the void... and the world shifts around you."))
+        movePlayerWithNotify(
+            sessionId,
+            from,
+            target,
+            "vanishes in a shimmer of light",
+            "appears in a shimmer of light",
+            players,
+            outbound,
+            gmcpEmitter,
+            dialogueSystem,
+        )
+        onPlayerMoved?.invoke(sessionId, target)
         ctx.sendLook(sessionId)
     }
 
