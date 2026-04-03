@@ -20,6 +20,7 @@ import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
@@ -416,5 +417,124 @@ class YamlPlayerRepositoryTest {
             assertEquals(1, loaded.equippedItems.size)
             assertEquals("sword", loaded.equippedItems["hand"]?.item?.keyword)
             assertEquals(ItemId("test:sword"), loaded.equippedItems["hand"]?.id)
+        }
+
+    // -------- auth token index tests --------
+
+    @Test
+    fun `findByAuthTokenHash returns player after save sets token`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val r = repo.create(PlayerCreationRequest("TokenUser", RoomId("test:a"), 1000L, testHash, ansiEnabled = false))
+            assertEquals("", r.authTokenHash)
+
+            val tokenHash = "sha256-abc123"
+            repo.save(r.copy(authTokenHash = tokenHash, authTokenIssuedAt = 5000L))
+
+            val found = repo.findByAuthTokenHash(tokenHash)
+            assertNotNull(found)
+            assertEquals(r.id, found!!.id)
+            assertEquals("TokenUser", found.name)
+            assertEquals(tokenHash, found.authTokenHash)
+        }
+
+    @Test
+    fun `findByAuthTokenHash returns null for blank or unknown hash`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            repo.create(PlayerCreationRequest("NoToken", RoomId("test:a"), 1000L, testHash, ansiEnabled = false))
+
+            assertNull(repo.findByAuthTokenHash(""))
+            assertNull(repo.findByAuthTokenHash("   "))
+            assertNull(repo.findByAuthTokenHash("nonexistent-hash"))
+        }
+
+    @Test
+    fun `findByAuthTokenHash picks up token from existing file on first call`() =
+        runTest {
+            // Write a player file with an auth token hash directly to disk,
+            // then verify a fresh repo instance finds it via the index scan.
+            val playersDir = tmp.resolve("players")
+            playersDir.toFile().mkdirs()
+
+            val tokenHash = "sha256-preexisting"
+            playersDir.resolve("00000000000000000001.yaml").writeText(
+                """
+                id: 1
+                name: PreToken
+                roomId: test:a
+                createdAtEpochMs: 100
+                lastSeenEpochMs: 200
+                passwordHash: some-hash
+                ansiEnabled: false
+                authTokenHash: "$tokenHash"
+                authTokenIssuedAt: 3000
+                """.trimIndent(),
+            )
+            tmp.resolve("next_player_id.txt").writeText("2")
+
+            val repo = YamlPlayerRepository(tmp)
+            val found = repo.findByAuthTokenHash(tokenHash)
+            assertNotNull(found)
+            assertEquals(1L, found!!.id.value)
+            assertEquals("PreToken", found.name)
+        }
+
+    @Test
+    fun `auth token index updates when token is rotated`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val r = repo.create(PlayerCreationRequest("Rotater", RoomId("test:a"), 1000L, testHash, ansiEnabled = false))
+
+            val oldHash = "sha256-old-token"
+            repo.save(r.copy(authTokenHash = oldHash, authTokenIssuedAt = 2000L))
+            assertNotNull(repo.findByAuthTokenHash(oldHash))
+
+            // Rotate the token
+            val newHash = "sha256-new-token"
+            repo.save(r.copy(authTokenHash = newHash, authTokenIssuedAt = 3000L))
+
+            // Old token should no longer resolve
+            assertNull(repo.findByAuthTokenHash(oldHash))
+            // New token should work
+            val found = repo.findByAuthTokenHash(newHash)
+            assertNotNull(found)
+            assertEquals(r.id, found!!.id)
+        }
+
+    @Test
+    fun `auth token index clears when token is revoked`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val r = repo.create(PlayerCreationRequest("Revoker", RoomId("test:a"), 1000L, testHash, ansiEnabled = false))
+
+            val tokenHash = "sha256-revokable"
+            repo.save(r.copy(authTokenHash = tokenHash, authTokenIssuedAt = 2000L))
+            assertNotNull(repo.findByAuthTokenHash(tokenHash))
+
+            // Revoke by clearing the hash
+            repo.save(r.copy(authTokenHash = "", authTokenIssuedAt = 0L))
+            assertNull(repo.findByAuthTokenHash(tokenHash))
+        }
+
+    @Test
+    fun `findByAuthTokenHash distinguishes between multiple players with tokens`() =
+        runTest {
+            val repo = YamlPlayerRepository(tmp)
+            val alice = repo.create(PlayerCreationRequest("Alice", RoomId("test:a"), 1000L, testHash, ansiEnabled = false))
+            val bob = repo.create(PlayerCreationRequest("Bob", RoomId("test:a"), 1000L, testHash, ansiEnabled = false))
+
+            val aliceHash = "sha256-alice-token"
+            val bobHash = "sha256-bob-token"
+            repo.save(alice.copy(authTokenHash = aliceHash, authTokenIssuedAt = 2000L))
+            repo.save(bob.copy(authTokenHash = bobHash, authTokenIssuedAt = 2000L))
+
+            val foundAlice = repo.findByAuthTokenHash(aliceHash)
+            assertNotNull(foundAlice)
+            assertEquals("Alice", foundAlice!!.name)
+
+            val foundBob = repo.findByAuthTokenHash(bobHash)
+            assertNotNull(foundBob)
+            assertEquals("Bob", foundBob!!.name)
         }
 }
