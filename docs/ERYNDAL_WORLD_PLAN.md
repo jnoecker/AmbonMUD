@@ -20,13 +20,17 @@ All zones use images from the `demo/` directory at the project root. Before the 
 written, these images must be copied to `src/main/resources/world/images/demo/` so they are served
 at `/images/demo/` by the web transport.
 
-| File | Usage | Background removed? |
-|------|-------|---------------------|
-| `demo/DefaultMob.png` | Default mob image for all zones | Yes — ready to use |
-| `demo/DefaultRoom.png` | Default room image for all zones | No — needs removal before final demo |
-| `demo/DefaultObject.png` | Default item image for all zones | No — needs removal before final demo |
-| `demo/DefaultPlayer.png` | Player sprite fallback | No — needs removal before final demo |
-| `demo/DefaultAbility.png` | Default ability icon | No — needs removal before final demo |
+| File | Usage |
+|------|-------|
+| `demo/DefaultMob.png` | Default mob image for all zones (already transparent) |
+| `demo/DefaultRoom.png` | Default room image for all zones |
+| `demo/DefaultObject.png` | Default item image for all zones |
+| `demo/DefaultPlayer.png` | Player sprite fallback |
+| `demo/DefaultAbility.png` | Default ability icon |
+
+All five images are used as-is. Background removal and per-entity art will happen in a separate
+Arcanum pass once the world structure is stable and approved. The entire image library will be
+regenerated at that point — no existing hash-named PNGs from old zones are reused at all.
 
 Every zone YAML header will reference these defaults:
 
@@ -37,11 +41,9 @@ image:
   item: demo/DefaultObject.png
 ```
 
-Individual mob, item, and NPC entries will **not** override the `image:` field in the initial
-implementation — they inherit the zone default. Per-entity images will be sourced from Arcanum
-in a later pass once the world structure is stable.
-
-No images from existing zones (the hash-named PNGs in `world/images/`) will be reused.
+Individual mob, item, and NPC entries will **not** include an `image:` field — they all inherit
+the zone default. This applies uniformly to every entity in every zone, including named NPCs,
+boss mobs, and quest items.
 
 ---
 
@@ -680,7 +682,38 @@ All existing world zone files will be deleted as part of Phase 1. None of their 
 4. Update `classStartRooms` — all five classes point to `thornhaven_city:new_arrivals_hall`
 5. Remove all references to deleted zone names from config
 6. Add `dungeon_of_echoes` dungeon templates to the dungeon config section
-7. Add faction definitions for Iron Order, Free Swords, Shadowmere Cult, Order of the Silver Flame
+7. Add faction definitions to `application.yaml` under `engine.factions.definitions`. The system
+   is already implemented (`ReputationSystem.kt`); it just needs entries. Mobs reference a faction
+   via `faction: <id>` in the zone YAML. On kill the player loses rep with the mob's faction and
+   gains rep with all of its listed enemies. Standing tiers (Hated → Neutral → Revered) are
+   hardcoded at thresholds -1000/–500/–100/+100/+500/+1000. Faction enemy relationships and
+   quest reputation rewards can also be configured here. Example:
+
+   ```yaml
+   engine:
+     factions:
+       killPenalty: 5
+       killBonus: 3
+       definitions:
+         iron_order:
+           name: "The Iron Order"
+           description: "A ruthless mercenary company holding the Ruined Fortress."
+           enemies: [free_swords]
+         free_swords:
+           name: "The Free Swords"
+           description: "Rebel fighters opposing the Iron Order's occupation."
+           enemies: [iron_order]
+         shadowmere_cult:
+           name: "The Shadowmere Cult"
+           description: "Devotees of the shadow consuming the eastern fens."
+           enemies: [silver_flame]
+         silver_flame:
+           name: "Order of the Silver Flame"
+           description: "Paladins dedicated to purifying the Shadowmere curse."
+           enemies: [shadowmere_cult]
+       questRewards: {}
+   ```
+
 8. Copy `demo/Default*.png` files to `src/main/resources/world/images/demo/`
 
 ---
@@ -701,7 +734,10 @@ Deliverables:
 - Add dungeon template stubs for `dungeon_of_echoes`
 - Delete all old zone files listed above
 - Copy `demo/Default*.png` to `src/main/resources/world/images/demo/`
-- Update `achievements.yaml` with the 15 Eryndal achievement IDs (stubs; triggers filled in per zone)
+- Rewrite `achievements.yaml` with the 15 Eryndal achievement IDs as stubs. Fields that reference
+  not-yet-written zone content (mob IDs, quest IDs, item IDs) use empty strings `""` — the engine
+  will log warnings for unresolved references but continue running, which is acceptable during
+  development. Each subsequent phase PR wires up the achievements for that phase's zones.
 
 **Demo checkpoint:** All 5 classes and 6 races can be selected. All trainers accessible. Inn, bank,
 shop, mail, guild, crafting quarter, arena, and dungeon finder all reachable and functional.
