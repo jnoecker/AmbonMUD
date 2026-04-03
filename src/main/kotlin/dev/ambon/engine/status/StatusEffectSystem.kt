@@ -70,6 +70,7 @@ class StatusEffectSystem(
         sourceSessionId: SessionId?,
     ): Boolean {
         val existing = list.filter { it.definitionId == def.id }
+        val effectiveMaxStacks = def.maxStacks.coerceAtLeast(1)
         when (def.stackBehavior) {
             "refresh" -> {
                 val active = existing.firstOrNull()
@@ -80,7 +81,7 @@ class StatusEffectSystem(
                 }
             }
             "stack" -> {
-                if (existing.size >= def.maxStacks) {
+                if (existing.size >= effectiveMaxStacks) {
                     // Refresh the oldest stack's duration instead of adding a new one
                     val oldest = existing.minByOrNull { it.appliedAtMs }
                     oldest?.expiresAtMs = now + def.durationMs
