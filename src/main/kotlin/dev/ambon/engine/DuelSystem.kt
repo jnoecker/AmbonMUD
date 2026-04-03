@@ -112,10 +112,7 @@ class DuelSystem(
 
     /** Expires old challenges. Called periodically. */
     fun expireChallenges() {
-        val now = clock.millis()
-        pendingChallenges.entries.removeIf { (_, c) ->
-            now - c.createdAtMs > challengeTimeoutMs
-        }
+        pendingChallenges.removeExpired(clock.millis()) { it.createdAtMs + challengeTimeoutMs }
     }
 
     /** Returns all active duels (may contain duplicates — each duel stored under both players). */
