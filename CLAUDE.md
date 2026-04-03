@@ -54,7 +54,7 @@ On Windows use `.\gradlew.bat` instead of `./gradlew`.
 
 ## Architecture
 
-AmbonMUD is a Kotlin MUD server with a tick-based event loop, telnet + WebSocket transports (with GMCP structured data), YAML world loading, class-based character progression with spell/ability and status-effect systems, shop/economy, NPC behavior trees, dialogue trees, quests, achievements, group play, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching/pub-sub.
+AmbonMUD is a Kotlin MUD server with a tick-based event loop, telnet + WebSocket transports (with GMCP structured data), YAML world loading, class-based character progression with trainer-based ability learning/multi-classing, spell/ability and status-effect systems, shop/economy, NPC behavior trees, dialogue trees, quests, achievements, group play, guilds, crafting/enchanting, player housing, procedural dungeons, pets, factions, auction house, player trading, PvP dueling, bank system, day/night/weather/seasonal events, leaderboards, and a layered persistence stack with selectable YAML or PostgreSQL backends and optional Redis caching/pub-sub.
 
 ### Deployment Modes
 
@@ -77,7 +77,10 @@ GameEngine  (single-threaded coroutine dispatcher, 100ms tick)
     │  CommandRouter, CombatSystem, AbilitySystem, StatusEffectSystem,
     │  MobSystem, BehaviorTreeSystem, RegenSystem, DialogueSystem,
     │  QuestSystem, AchievementSystem, GroupSystem, GuildSystem,
-    │  CraftingSystem, FriendsSystem, Scheduler,
+    │  CraftingSystem, FriendsSystem, HousingSystem, PetSystem,
+    │  ReputationSystem, AuctionSystem, TradeSystem, DuelSystem,
+    │  WeatherSystem, WorldTimeSystem, WorldEventSystem,
+    │  LeaderboardSystem, TrainerRegistry, Scheduler,
     │  PlayerProgression, GmcpEmitter, Registries
     ▼
 OutboundRouter  (per-session queues, backpressure, prompt coalescing)
@@ -120,14 +123,20 @@ Sessions
 - **Communication:** Say, Tell, Whisper, Gossip, Shout, Ooc, Pose, Emote, Gtell
 - **Combat:** Kill, Flee, Cast, Dispel
 - **Items:** Get, Drop, Use, Give, Wear, Remove, Inventory, Equipment
-- **Progression:** Score, Spells, Effects, Balance, QuestLog, QuestInfo, QuestAccept, QuestAbandon, AchievementList, TitleSet, TitleClear, SpriteList, SpriteSet, SpriteDefault
+- **Progression:** Score, Spells, Effects, Balance, QuestLog, QuestInfo, QuestAccept, QuestAbandon, AchievementList, TitleSet, TitleClear, SpriteList, SpriteSet, SpriteDefault, Leaderboard, HallOfFame
 - **NPCs:** Talk, DialogueChoice, ShopList, Buy, Sell
 - **Groups:** GroupCmd (Invite, Accept, Leave, Kick, List)
 - **Guilds:** Guild (Create, Disband, Invite, Accept, Leave, Kick, Promote, Demote, Motd, Roster, Info), Gchat
 - **Friends:** Friend (List, Add, Remove)
 - **Mail:** Mail (List, Read, Delete, Send, Abort)
-- **Crafting:** Gather, Craft, Recipes, Specialize
+- **Crafting:** Gather, Craft, Recipes, Specialize, Enchant, Enchantments
+- **Economy:** Auction (List, Sell, Buy, Cancel), Bank (Balance, Deposit, Withdraw), Trade (Initiate, Offer, Accept, Cancel)
+- **Social:** Duel (Challenge, Accept, Decline), Reputation
+- **Training:** Train (List, Learn, Unlock)
+- **Pets:** Pet (Status, Dismiss, Name)
+- **World:** Time
 - **Dungeons:** DungeonEnter, DungeonLeave
+- **Housing:** House (Info, Expand, Furnish, Describe, Invite, Kick, Lock, Unlock)
 - **Sharding:** Phase (instance switching)
 - **Staff:** Goto, Transfer, Spawn, Smite, Kick, Shutdown
 - **Utility:** Help, Clear, Colors, Who, AnsiOn, AnsiOff
@@ -135,7 +144,7 @@ Sessions
 
 ### Persistence Model
 
-`PlayerRecord` (in `persistence/PlayerRecord.kt`) is the persistence DTO. Key fields: `id` (PlayerId), `name`, `roomId`, `level`, `xpTotal`, `hp`/`maxHp`, `mana`/`maxMana`, `strength`/`dexterity`/`constitution`/`intelligence`/`wisdom`/`charisma`, `race`, `playerClass`, `gold`, `isStaff`, `activeQuests`, `completedQuestIds`, `unlockedAchievementIds`, `achievementProgress`, `activeTitle`, `passwordHash`, `ansiEnabled`, `guildId`, `recallRoom`, `friends`, `craftingSkills`, `mail`, `gender`, `stats` (JSON map).
+`PlayerRecord` (in `persistence/PlayerRecord.kt`) is the persistence DTO. Key fields: `id` (PlayerId), `name`, `roomId`, `level`, `xpTotal`, `hp`/`maxHp`, `mana`/`maxMana`, `race`, `playerClass`, `gold`, `isStaff`, `activeQuests`, `completedQuestIds`, `unlockedAchievementIds`, `achievementProgress`, `activeTitle`, `passwordHash`, `ansiEnabled`, `guildId`, `recallRoom`, `friends`, `craftingSkills`, `discoveredRecipes`, `craftingSpecialization`, `mail`, `gender`, `stats` (JSON map), `bankGold`, `bankItems`, `factionStandings` (JSON map), `learnedAbilityIds`, `unlockedClasses`, `skillPoints`.
 
 `PlayerState` (in `engine/PlayerState.kt`) is the runtime in-memory version, maintained by the engine and periodically flushed back to `PlayerRecord` via the repository chain.
 
@@ -155,8 +164,8 @@ Sessions
 |---------|---------|-----------|
 | `dev.ambon` | Entry point, wiring | `Main.kt` (bootstrap), `MudServer.kt` (25K, composition root), `CoroutineExtensions.kt` |
 | `dev.ambon.config` | Configuration | `AppConfig.kt` (33K, full schema + `validated()`), `AppConfigLoader.kt` |
-| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (38K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (25K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (15K), `GroupSystem.kt` (12K), `QuestSystem.kt` (11K), `AchievementSystem.kt` (10K), `GuildSystem.kt`, `CraftingSystem.kt`, `FriendsSystem.kt`, `ThreatTable.kt`, `ShopRegistry.kt`, `SpriteRegistry.kt`, `SpriteLoader.kt`, `EngineUtil.kt` |
-| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (17K, sealed Command hierarchy), `CommandRouter.kt` (dispatch infrastructure only); handlers in `handlers/` subpackage: `NavigationHandler`, `CommunicationHandler`, `CombatHandler`, `ItemHandler`, `WorldFeaturesHandler`, `ProgressionHandler`, `DialogueQuestHandler`, `ShopHandler`, `GroupHandler`, `GuildHandler`, `CraftingHandler`, `FriendsHandler`, `MailHandler`, `SpriteHandler`, `UiHandler`, `AdminHandler`, `HandlerHelpers` |
+| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (38K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (25K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (15K), `GroupSystem.kt` (12K), `QuestSystem.kt` (11K), `AchievementSystem.kt` (10K), `GuildSystem.kt`, `CraftingSystem.kt`, `FriendsSystem.kt`, `HousingSystem.kt`, `PetSystem.kt`, `ReputationSystem.kt`, `AuctionSystem.kt`, `TradeSystem.kt`, `DuelSystem.kt`, `WeatherSystem.kt`, `WorldTimeSystem.kt`, `WorldEventSystem.kt`, `LeaderboardSystem.kt`, `TrainerRegistry.kt`, `ThreatTable.kt`, `ShopRegistry.kt`, `SpriteRegistry.kt`, `SpriteLoader.kt`, `EngineUtil.kt` |
+| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (17K, sealed Command hierarchy), `CommandRouter.kt` (dispatch infrastructure only); handlers in `handlers/` subpackage: `NavigationHandler`, `CommunicationHandler`, `CombatHandler`, `ItemHandler`, `WorldFeaturesHandler`, `ProgressionHandler`, `DialogueQuestHandler`, `ShopHandler`, `GroupHandler`, `GuildHandler`, `CraftingHandler`, `EnchantHandler`, `FriendsHandler`, `MailHandler`, `SpriteHandler`, `TrainerHandler`, `PetHandler`, `AuctionHandler`, `BankHandler`, `TradeHandler`, `DuelHandler`, `ReputationHandler`, `LeaderboardHandler`, `DungeonHandler`, `HousingHandler`, `WorldInfoHandler`, `UiHandler`, `AdminHandler`, `HandlerHelpers` |
 | `dev.ambon.engine.abilities` | Ability/spell system | `AbilitySystem.kt` (16K), `AbilityRegistry.kt`, `AbilityRegistryLoader.kt`, `AbilityDefinition.kt` |
 | `dev.ambon.engine.status` | Status effects | `StatusEffectSystem.kt` (13K), `StatusEffectRegistry.kt`, `StatusEffectRegistryLoader.kt`, `StatusEffectDefinition.kt`, `ActiveEffect.kt` |
 | `dev.ambon.engine.behavior` | Mob behavior trees | `BehaviorTreeSystem.kt`, `BtNode.kt`, `BtResult.kt`, `BtContext.kt`, `BehaviorTemplates.kt`, `MobBehaviorMemory.kt`; nodes/conditions/actions subdirs |
@@ -191,7 +200,7 @@ Sessions
 | Multi-instance profiles | `src/main/resources/application-{engine1,engine2,gw1,gw2}.yaml` |
 | World zones (15 YAML files) | `src/main/resources/world/` (ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth, celestial_sanctum, crafting_workshop, sunken_crypt, player_sprites, sprites) |
 | Login banner + styles | `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml` |
-| Flyway migrations | `src/main/resources/db/migration/` (V1–V19: players table through guilds, crafting, friends, mail, sprites, and more) |
+| Flyway migrations | `src/main/resources/db/migration/` (V1–V24+: players table through guilds, crafting, friends, mail, sprites, stats JSON, discovered recipes, faction standings, bank) |
 | Proto definitions | `src/main/proto/ambonmud/v1/engine_service.proto`, `events.proto` |
 | Web demo client (static) | `src/main/resources/web/` |
 | V4 canvas client (React + PixiJS) | `web-v3/` (built to `src/main/resources/web-v3/` by `./gradlew buildWeb`) |
@@ -308,6 +317,27 @@ Edit `CraftingSystem.kt` for logic, `CraftingHandler.kt` for commands (Gather, C
 
 ### Sprite system changes
 `SpriteRegistry` holds all sprite definitions. Tier and staff sprites are auto-generated in `MudServer.kt` via `SpriteLoader.generateTierSprites()` / `generateStaffSprites()`. Achievement sprites are defined in `src/main/resources/world/sprites.yaml` and loaded via `SpriteLoader.loadFromResource()`. Commands in `SpriteHandler.kt` (SpriteList, SpriteSet, SpriteDefault). `PlayerRecord.activeSprite` / `PlayerState.activeSprite` store the player's selection (null = auto). `GmcpEmitter.resolveSprite()` uses the registry; `sendCharSprites()` emits `Char.Sprites` GMCP. Tier names configured in `AppConfig.ImagesConfig.spriteTierNames`. See `docs/ARCANUM_SPRITE_INSTRUCTIONS.md` for image naming conventions. Test in `SpriteRegistryTest`, `SpriteLoaderTest`, `SpriteCommandTest`.
+
+### Trainer system changes
+Edit `TrainerRegistry.kt` for trainer loading, `TrainerHandler.kt` for commands (Train List/Learn/Unlock). Trainer definitions live in zone YAML under `trainers:` section — no code change needed to add trainers. `PlayerRecord.learnedAbilityIds`, `unlockedClasses`, and `skillPoints` store progression. Skill point interval configured via `engine.skillPoints.interval`. Multi-class unlock requires `engine.multiclass.minLevel` and `engine.multiclass.goldCost`. `GmcpEmitter` emits `Trainer.List` and `Char.Classes` GMCP packages. Hot-reload via `HotReloadManager`. See `docs/TRAINER_SYSTEM.md`.
+
+### Pet system changes
+Edit `PetSystem.kt` for logic, `PetHandler.kt` for commands (Pet Status/Dismiss/Name). Pet templates defined in `application.yaml` under `engine.pets.definitions`. Referenced by abilities using `SUMMON_PET` effect type with `petTemplateKey`. Pets are session-only (no persistence). See `docs/RECENT_YAML_CHANGES.md` for YAML schema.
+
+### Faction/reputation changes
+Edit `ReputationSystem.kt` for logic, `ReputationHandler.kt` for display. Faction definitions in `application.yaml` under `engine.factions.definitions`. Mob faction affiliation via `faction:` field in zone YAML mob definitions. `PlayerRecord.factionStandings` persisted as JSON map; Flyway V23. Quest reward integration in `QuestSystem.kt`. See `docs/RECENT_YAML_CHANGES.md` for YAML schema.
+
+### Auction house changes
+Edit `AuctionSystem.kt` for logic, `AuctionHandler.kt` for commands. Listings persist to `data/auction_listings.json`. No YAML config section — runtime-only. GMCP package: `Auction.*`. See `docs/RECENT_YAML_CHANGES.md`.
+
+### Enchanting system changes
+Edit enchanting logic in the crafting subsystem, `EnchantHandler.kt` for commands. Enchantment definitions in `application.yaml` under `engine.enchanting.definitions`. Enchanting is a crafting skill requiring `enchanting_table` station. Item `enchantments` field persisted on `ItemInstance`. `GMCP Crafting.Result` includes `type: "enchant"`. See `docs/RECENT_YAML_CHANGES.md` for YAML schema.
+
+### Bank system changes
+Edit bank logic in the bank handler, `BankHandler.kt` for commands. Rooms with `bank: true` in zone YAML enable bank commands. `PlayerRecord.bankGold` and `bankItems` persisted; Flyway V24. `Char.Bank` GMCP package. See `docs/RECENT_YAML_CHANGES.md` for YAML schema.
+
+### Day/night, weather, seasonal events
+Edit `WorldTimeSystem.kt` (clock/period), `WeatherSystem.kt` (transitions), `WorldEventSystem.kt` (date-triggered events). Config in `application.yaml` under `engine.worldTime`, `engine.weather`, `engine.worldEvents.definitions`. GMCP: `World.Time`, `World.Weather`, `World.Events`. `time` command handled in `WorldInfoHandler.kt`. See `docs/RECENT_YAML_CHANGES.md` for YAML schema.
 
 ## Kotlin Style (ktlint)
 
