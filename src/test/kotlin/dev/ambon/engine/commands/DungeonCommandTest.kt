@@ -212,7 +212,7 @@ class DungeonCommandTest {
         // Enter dungeon
         h.router.handle(sid, Command.DungeonEnter("crypt", null))
         h.drain()
-        val instanceRoom = h.players.get(sid)!!.roomId
+        h.players.get(sid)!!.roomId
 
         // Manually move player out (simulating something like death teleport)
         h.players.moveTo(sid, portalRoom)
