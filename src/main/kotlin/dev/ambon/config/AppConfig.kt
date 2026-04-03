@@ -5,6 +5,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
+/** Maximum allowed value for per-session outbound queue capacity to prevent OOM from misconfiguration. */
+private const val MAX_SESSION_OUTBOUND_QUEUE_CAPACITY = 100_000
+
 /** Selects the player persistence backend. */
 enum class PersistenceBackend { YAML, POSTGRES }
 
@@ -55,7 +58,9 @@ data class AppConfig(
         server.webPort.requireValidPort("ambonMUD.server.webPort")
         require(server.inboundChannelCapacity > 0) { "ambonMUD.server.inboundChannelCapacity must be > 0" }
         require(server.outboundChannelCapacity > 0) { "ambonMUD.server.outboundChannelCapacity must be > 0" }
-        require(server.sessionOutboundQueueCapacity > 0) { "ambonMUD.server.sessionOutboundQueueCapacity must be > 0" }
+        require(server.sessionOutboundQueueCapacity in 1..MAX_SESSION_OUTBOUND_QUEUE_CAPACITY) {
+            "ambonMUD.server.sessionOutboundQueueCapacity must be in 1..$MAX_SESSION_OUTBOUND_QUEUE_CAPACITY, got ${server.sessionOutboundQueueCapacity}"
+        }
         require(server.maxInboundEventsPerTick > 0) { "ambonMUD.server.maxInboundEventsPerTick must be > 0" }
         require(server.tickMillis > 0L) { "ambonMUD.server.tickMillis must be > 0" }
         require(server.inboundBudgetMs > 0L) { "ambonMUD.server.inboundBudgetMs must be > 0" }

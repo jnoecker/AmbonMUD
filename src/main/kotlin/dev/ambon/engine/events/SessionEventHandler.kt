@@ -33,11 +33,17 @@ class SessionEventHandler(
     private val onPlayerLoggedOut: suspend (PlayerState, SessionId) -> Unit,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
+    /** Sessions for which [fullDisconnect] has already run, guarding against double-cleanup. */
+    private val fullyDisconnected = mutableSetOf<SessionId>()
+
     suspend fun onConnected(
         sessionId: SessionId,
         defaultAnsiEnabled: Boolean,
     ) {
         metrics.onSessionHandlerEvent()
+        // A new connection resets the idempotency guard so the session ID
+        // can go through a full disconnect cycle if it disconnects again.
+        fullyDisconnected.remove(sessionId)
         markAwaitingName(sessionId)
         failedLoginAttempts[sessionId] = 0
         sessionAnsiDefaults[sessionId] = defaultAnsiEnabled
@@ -80,8 +86,17 @@ class SessionEventHandler(
     /**
      * Run full disconnect cleanup. Called immediately for unauthenticated
      * sessions, or deferred until grace period expiry for authenticated ones.
+     *
+     * This method is idempotent: if cleanup has already run for [sessionId],
+     * the call is a no-op.  This guards against double-disconnect when a
+     * grace-period cancellation and expiry race within the same tick.
      */
     suspend fun fullDisconnect(sessionId: SessionId, playerState: PlayerState?) {
+        if (!fullyDisconnected.add(sessionId)) {
+            log.debug { "fullDisconnect already ran for $sessionId — skipping" }
+            return
+        }
+
         // These may already have been cleared by the grace period path,
         // but clear them again in case of direct-disconnect or grace expiry.
         gmcpSessions.remove(sessionId)

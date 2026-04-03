@@ -152,4 +152,45 @@ class ThreatTableTest {
 
         assertFalse(tt.hasMobEntry(mob))
     }
+
+    @Test
+    fun `removeStaleEntries removes mobs that no longer exist`() {
+        val tt = ThreatTable()
+        val aliveMob = MobId("zone:alive_rat")
+        val deadMob = MobId("zone:dead_rat")
+        val sid1 = SessionId(1L)
+
+        tt.addThreat(aliveMob, sid1, 10.0)
+        tt.addThreat(deadMob, sid1, 5.0)
+
+        val removed = tt.removeStaleEntries { mobId -> mobId == aliveMob }
+
+        assertEquals(1, removed)
+        assert(tt.hasMobEntry(aliveMob))
+        assertFalse(tt.hasMobEntry(deadMob))
+    }
+
+    @Test
+    fun `removeStaleEntries returns zero when all mobs are alive`() {
+        val tt = ThreatTable()
+        val mob1 = MobId("zone:rat1")
+        val mob2 = MobId("zone:rat2")
+        val sid1 = SessionId(1L)
+
+        tt.addThreat(mob1, sid1, 10.0)
+        tt.addThreat(mob2, sid1, 5.0)
+
+        val removed = tt.removeStaleEntries { true }
+
+        assertEquals(0, removed)
+    }
+
+    @Test
+    fun `removeStaleEntries handles empty table`() {
+        val tt = ThreatTable()
+
+        val removed = tt.removeStaleEntries { false }
+
+        assertEquals(0, removed)
+    }
 }
