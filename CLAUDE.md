@@ -198,7 +198,7 @@ Sessions
 |------|-------|
 | Default config | `src/main/resources/application.yaml` |
 | Multi-instance profiles | `src/main/resources/application-{engine1,engine2,gw1,gw2}.yaml` |
-| World zones (15 YAML files) | `src/main/resources/world/` (ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth, celestial_sanctum, crafting_workshop, sunken_crypt, player_sprites, sprites) |
+| World zones (23 YAML files) | `src/main/resources/world/` — 20 zones: crossroads_path, thornhaven_city, thornwood_forest, farmer_fields, cobblestone_road, highland_trails, old_mines, marsh_of_fog, goblin_warrens, dark_barrows, sea_cliffs, sunken_temple, ruined_fortress, shadowmere_fen, thornhaven_sewers, haunted_manor, barrens_wastes, frost_caverns, celestial_peak, dungeon_of_echoes; plus achievements, player_sprites, sprites |
 | Login banner + styles | `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml` |
 | Flyway migrations | `src/main/resources/db/migration/` (V1–V24+: players table through guilds, crafting, friends, mail, sprites, stats JSON, discovered recipes, faction standings, bank) |
 | Proto definitions | `src/main/proto/ambonmud/v1/engine_service.proto`, `events.proto` |

@@ -95,8 +95,8 @@ achievements:
     category: combat
     hidden: false
     criteria:
-      - type: quest_complete
-        targetId: ""
+      - type: dungeon_complete
+        targetId: "dungeon_of_echoes"
         count: 1
         description: "Complete a Dungeon of Echoes run"
     rewards:
@@ -111,10 +111,10 @@ achievements:
     category: class
     hidden: false
     criteria:
-      - type: quest_complete
+      - type: craft
         targetId: ""
-        count: 1
-        description: "Craft 20 items (stub — wired in a later phase)"
+        count: 20
+        description: "Craft 20 items"
     rewards:
       xp: 400
       title: "Artisan"
@@ -125,10 +125,10 @@ achievements:
     category: class
     hidden: false
     criteria:
-      - type: quest_complete
-        targetId: ""
-        count: 1
-        description: "Gather 10 herbs (stub — wired in a later phase)"
+      - type: gather
+        targetId: "herbalism"
+        count: 10
+        description: "Gather 10 herbs"
     rewards:
       xp: 200
       gold: 30
@@ -139,10 +139,10 @@ achievements:
     category: class
     hidden: false
     criteria:
-      - type: quest_complete
-        targetId: ""
-        count: 1
-        description: "Gather 10 ore (stub — wired in a later phase)"
+      - type: gather
+        targetId: "mining"
+        count: 10
+        description: "Mine 10 ore"
     rewards:
       xp: 200
       gold: 30
@@ -155,24 +155,24 @@ achievements:
     category: social
     hidden: false
     criteria:
-      - type: quest_complete
+      - type: dungeon_complete
         targetId: ""
         count: 1
-        description: "Complete a dungeon with a full group (stub — wired in a later phase)"
+        description: "Complete a dungeon with a full group"
     rewards:
       xp: 600
       title: "Party Leader"
 
   bounty_hunter:
     displayName: "Bounty Hunter"
-    description: "Complete 5 bounty quests from the Barrens notice board."
+    description: "Complete the wasteland bounty from the Barrens notice board."
     category: social
     hidden: false
     criteria:
       - type: quest_complete
-        targetId: ""
+        targetId: "wasteland_bounty"
         count: 1
-        description: "Complete 5 bounty quests (stub — wired in Phase 7)"
+        description: "Complete the wasteland bounty"
     rewards:
       xp: 800
       gold: 200
@@ -185,9 +185,9 @@ achievements:
     hidden: true
     criteria:
       - type: quest_complete
-        targetId: ""
+        targetId: "the_restless_dead"
         count: 1
-        description: "Unlock the spectral wisp pet (stub — wired in Phase 7)"
+        description: "Complete The Restless Dead quest"
     rewards:
       xp: 700
       title: "Ghost Friend"
@@ -198,10 +198,10 @@ achievements:
     category: social
     hidden: false
     criteria:
-      - type: quest_complete
+      - type: guild_create
         targetId: ""
         count: 1
-        description: "Create a guild (stub — wired in a later phase)"
+        description: "Create a guild"
     rewards:
       xp: 300
       title: "Founder"

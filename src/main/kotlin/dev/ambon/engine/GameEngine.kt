@@ -819,6 +819,7 @@ class GameEngine(
             gmcpEmitter.sendQuestComplete(sid, questId, questName)
             sendQuestListGmcp(sid)
         }
+        guildSystem?.onGuildCreated = { sid -> achievementSystem.onGuildCreated(sid) }
     }
 
     private val behaviorTreeSystem: BehaviorTreeSystem =
@@ -1001,6 +1002,8 @@ class GameEngine(
                 craftingSkillRegistry = craftingSkillRegistry,
                 gatheringRegistry = gatheringRegistry,
                 markVitalsDirty = ::markVitalsDirty,
+                onItemCrafted = { sid -> achievementSystem.onItemCrafted(sid) },
+                onItemGathered = { sid, skill -> achievementSystem.onItemGathered(sid, skill) },
             ),
             EnchantHandler(
                 ctx = ctx,
@@ -1922,6 +1925,7 @@ class GameEngine(
         dungeonManager.markComplete(inst)
         for (sid in inst.members) {
             players.get(sid)?.let { it.dungeonsCompleted += 1 }
+            achievementSystem.onDungeonCompleted(sid, inst.template.name)
             outbound.send(
                 OutboundEvent.SendInfo(
                     sid,
