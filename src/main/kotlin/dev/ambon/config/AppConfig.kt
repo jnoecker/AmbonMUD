@@ -232,6 +232,7 @@ data class AppConfig(
             "ambonMUD.transport.telnet.maxNonPrintablePerLine must be >= 0"
         }
         require(transport.telnet.socketBacklog > 0) { "ambonMUD.transport.telnet.socketBacklog must be > 0" }
+        require(transport.telnet.maxConnections > 0) { "ambonMUD.transport.telnet.maxConnections must be > 0" }
         require(transport.maxInboundBackpressureFailures > 0) {
             "ambonMUD.transport.maxInboundBackpressureFailures must be > 0"
         }
@@ -1602,6 +1603,8 @@ data class TelnetTransportConfig(
     val maxNonPrintablePerLine: Int = 32,
     /** OS-level TCP accept backlog for the telnet ServerSocket (default 256 vs JVM default of 50). */
     val socketBacklog: Int = 256,
+    /** Maximum number of concurrent telnet connections before new connections are rejected. */
+    val maxConnections: Int = 5000,
 )
 
 data class WebSocketTransportConfig(
