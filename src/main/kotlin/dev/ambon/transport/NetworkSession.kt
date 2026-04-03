@@ -37,7 +37,7 @@ class NetworkSession(
     private val dispatcher: CoroutineContext = Dispatchers.IO,
 ) {
     private val disconnected = AtomicBoolean(false)
-    private var inboundBackpressureFailures = 0
+    private val backpressureTracker = InboundBackpressureTracker(maxInboundBackpressureFailures)
 
     @Volatile
     var gmcpEnabled = false
@@ -308,20 +308,9 @@ class NetworkSession(
     }
 
     private fun sendInboundLineOrThrow(line: String) {
-        val result = inbound.trySend(InboundEvent.LineReceived(sessionId, line))
-        if (result.isSuccess) {
-            inboundBackpressureFailures = 0
+        backpressureTracker.sendLineOrThrow(inbound, sessionId, line, metrics) {
             metrics.onInboundLineTelnet()
-            return
         }
-
-        inboundBackpressureFailures++
-        metrics.onInboundBackpressureFailure()
-        log.debug { "Inbound line dropped due to backpressure: sessionId=$sessionId failures=$inboundBackpressureFailures" }
-        if (inboundBackpressureFailures >= maxInboundBackpressureFailures) {
-            throw InboundBackpressure("inbound backpressure")
-        }
-        // Drop the line and keep the session open until the threshold is exceeded.
     }
 }
 
