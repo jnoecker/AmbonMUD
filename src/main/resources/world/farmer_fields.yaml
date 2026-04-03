@@ -1,0 +1,262 @@
+zone: farmer_fields
+startRoom: north_fields
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  slime_residue:
+    displayName: "a lump of slime residue"
+    keyword: slime
+    description: "A glutinous, faintly luminous blob left behind after slaying a giant slime. Alchemists find uses for it."
+    basePrice: 8
+
+  sprite_dust:
+    displayName: "a pinch of sprite dust"
+    keyword: dust
+    description: "Fine iridescent powder that sparkles in sunlight. A byproduct of harvest sprites."
+    basePrice: 15
+
+  rusty_farm_tool:
+    displayName: "a rusty farm tool"
+    keyword: tool
+    description: "A corroded billhook propped in the corner. Not worth much, but someone might buy it for scrap."
+    basePrice: 3
+
+  healing_herbs:
+    displayName: "a bundle of healing herbs"
+    keyword: herbs
+    description: "A tied bundle of dried meadow herbs: yarrow, clover, and something with a sharp smell. Any herbalist could make something of these."
+    basePrice: 15
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  field_crow:
+    name: "a field crow"
+    room: harvest_fields
+    tier: weak
+    level: 1
+    respawnSeconds: 60
+    xpReward: 5
+
+  giant_slime:
+    name: "a giant slime"
+    room: south_meadow
+    tier: standard
+    level: 2
+    respawnSeconds: 90
+    xpReward: 12
+    drops:
+      - itemId: slime_residue
+        chance: 0.7
+
+  barn_rat:
+    name: "a barn rat"
+    room: eastern_paddock
+    tier: weak
+    level: 1
+    respawnSeconds: 60
+    xpReward: 5
+
+  harvest_sprite:
+    name: "a harvest sprite"
+    room: harvest_fields
+    tier: standard
+    level: 2
+    respawnSeconds: 300
+    xpReward: 15
+    drops:
+      - itemId: sprite_dust
+        chance: 0.4
+
+  farmer_aldous:
+    name: "Farmer Aldous"
+    room: aldous_farm
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - slime_infestation
+    dialogue:
+      root:
+        text: "Hoy there! Good to see a capable-looking traveller. Those blasted slimes have been multiplying in the south meadow — they ruin the crops and stink something awful. Can you help?"
+        choices:
+          - text: "I'll deal with the slimes."
+            next: quest_accept
+          - text: "Tell me about this place."
+            next: about_fields
+          - text: "Goodbye."
+            next: farewell
+      quest_accept:
+        text: "Thank the stars. Kill enough of them in the south meadow and the rest should clear out. I'll have something for you when it's done."
+        choices:
+          - text: "I'll see to it."
+            next: farewell
+      about_fields:
+        text: "This is the Farmer Fields — the breadbasket of Thornhaven. Families have worked this land for generations. The city's just north through the trade row gate. South of here the fields give way to the coastal cliffs eventually."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Good luck out there. Watch your boots in the slime patches."
+
+  goodwife_petha:
+    name: "Goodwife Petha"
+    room: barn
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    quests:
+      - missing_chickens
+    dialogue:
+      root:
+        text: "Oh dear, you startled me! I've been worried sick — the chickens keep disappearing and I found rat holes all along the paddock fence. Would you be a dear and deal with those rats?"
+        choices:
+          - text: "I'll clear out the rats."
+            next: quest_accept
+          - text: "What's in the chest there?"
+            next: about_chest
+          - text: "Goodbye."
+            next: farewell
+      quest_accept:
+        text: "Bless you! Three or four should be enough to sort the problem. The paddock's just south of the barn — that's where they're worst."
+        choices:
+          - text: "I'll take care of it."
+            next: farewell
+      about_chest:
+        text: "That old thing? Just some odds and ends left by the last farmhand. Help yourself if there's anything useful in there."
+        choices:
+          - text: "I'll deal with the rats."
+            next: quest_accept
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Thank you, dear. Mind you don't step in anything."
+
+# ─── Quests ───────────────────────────────────────────────────────────────────
+
+quests:
+  slime_infestation:
+    name: "The Slime Infestation"
+    description: "Farmer Aldous needs you to clear the giant slimes that have overrun the south meadow and are ruining the crops."
+    giver: farmer_aldous
+    objectives:
+      - type: kill
+        targetKey: giant_slime
+        count: 5
+        description: "Kill 5 giant slimes in the south meadow"
+    rewards:
+      xp: 300
+      gold: 15
+
+  missing_chickens:
+    name: "The Missing Chickens"
+    description: "Goodwife Petha suspects barn rats are responsible for her missing chickens. Deal with the rats in the eastern paddock."
+    giver: goodwife_petha
+    objectives:
+      - type: kill
+        targetKey: barn_rat
+        count: 4
+        description: "Kill 4 barn rats in the eastern paddock"
+    rewards:
+      xp: 200
+      gold: 10
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  north_fields:
+    title: "Farmer Fields — North Approach"
+    description: "The trade row gate of Thornhaven stands behind you to the north, and a well-worn cart track leads south through open farmland. The sky here is wide and blue, the air smells of soil and distant sea, and the sounds of the city fade quickly. Harvest fields stretch to the east; the farmhouse track leads south."
+    exits:
+      n: thornhaven_city:trade_row
+      s: farmhouse_path
+      e: harvest_fields
+
+  harvest_fields:
+    title: "Harvest Fields"
+    description: "Long furrows of crops stretch in orderly rows under the open sky. Field crows strut between the rows picking at whatever takes their fancy, ignoring your presence entirely. Harvest sprites dart at the field margins, trailing glints of light. The north approach is back to the west."
+    exits:
+      w: north_fields
+
+  farmhouse_path:
+    title: "Farmhouse Path"
+    description: "A cart track between old stone walls that connects the fields to the farmhouse compound. The smell of wood smoke and cooked food drifts from the farmhouse to the east. A barn with a sagging roof stands to the west."
+    exits:
+      n: north_fields
+      e: aldous_farm
+      w: barn
+
+  aldous_farm:
+    title: "Aldous Farm — Yard"
+    description: "A packed-earth yard before a solid farmhouse of dressed stone. Chickens peck around a water trough. Farmer Aldous can usually be found here, keeping an eye on the south meadow from the yard gate. The farmhouse path leads west; the well is to the south."
+    exits:
+      w: farmhouse_path
+      s: farmstead_well
+
+  farmstead_well:
+    title: "Farmstead Well"
+    description: "A stone well with a wooden cover, standing in the middle of the farm's central yard. The water is cold and clean. From here you can see the south meadow spreading away to the east, dotted with suspicious glinting patches where the slimes have been."
+    exits:
+      n: aldous_farm
+      e: south_meadow
+
+  south_meadow:
+    title: "South Meadow"
+    description: "A broad field that used to grow barley before something started disturbing the soil. Giant slimes have colonized the wetter patches, leaving trails of shimmering residue. The smell is unpleasant. The well is back to the west; the field road leads further south; fallow ground lies to the north."
+    exits:
+      w: farmstead_well
+      s: field_road_south
+      n: fallow_ground
+
+  fallow_ground:
+    title: "Fallow Ground"
+    description: "A section of field left to rest for the season: rough grass, self-seeded weeds, and a few crows investigating the disturbed earth. The barn is to the west and the south meadow lies below to the south."
+    exits:
+      s: south_meadow
+      w: barn
+
+  barn:
+    title: "The Old Barn"
+    description: "A high-roofed barn that has seen better decades. Straw and old farm equipment litter the floor. Goodwife Petha tends to the animals here most mornings. The farmhouse path is to the east; the eastern paddock where the rats are worst is through the back door to the south."
+    features:
+      old_farm_chest:
+        type: CONTAINER
+        displayName: "an old farm chest"
+        keyword: chest
+        initialState: closed
+        resetWithZone: true
+        items:
+          - rusty_farm_tool
+          - healing_herbs
+    exits:
+      e: farmhouse_path
+      s: eastern_paddock
+
+  eastern_paddock:
+    title: "Eastern Paddock"
+    description: "A fenced enclosure behind the barn where livestock are kept. Rat holes pepper the fence line, and the animals have been skittish lately. Barn rats scurry between the fence posts and under the troughs. The barn is back to the north."
+    exits:
+      n: barn
+
+  field_road_south:
+    title: "Field Road — South End"
+    description: "The cart track narrows here as the farmland gives way to rougher scrub. The smell of salt is faint but unmistakable on the southern breeze — the sea cliffs are out that way, though the road is not yet maintained this far. The south meadow is back to the north."
+    exits:
+      n: south_meadow
