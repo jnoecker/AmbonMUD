@@ -1,4 +1,5 @@
 zone: pbrae
+graphical: true
 image:
   room: 37d00e7f3bd0f92f319e437f77d70c36eadd3631cccb3c09708b00c83446d947.png
   mob: b89204647cf6c2b25e18228f392366ae745cc6fe84ba7e533904ecbc9f019e04.png
