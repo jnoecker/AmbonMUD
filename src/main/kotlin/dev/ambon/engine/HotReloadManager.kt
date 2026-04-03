@@ -100,8 +100,6 @@ class HotReloadManager(
      * new spawns take effect on next respawn.
      */
     suspend fun reloadWorld(): HotReloadResult {
-        val errors = mutableListOf<String>()
-
         val freshWorld: World
         try {
             freshWorld = worldLoader()

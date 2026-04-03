@@ -4,32 +4,32 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.metrics.GameMetrics
 
 class LoginEventHandler<
-    LoginState,
-    AwaitingName,
-    AwaitingCreateConfirmation,
-    AwaitingExistingPassword,
-    AwaitingNewPassword,
-    AwaitingRaceSelection,
-    AwaitingClassSelection,
+    S,
+    AN,
+    CC,
+    EP,
+    NP,
+    RS,
+    CS,
 >(
     private val onAwaitingName: suspend (SessionId, String) -> Unit,
-    private val onAwaitingCreateConfirmation: suspend (SessionId, String, AwaitingCreateConfirmation) -> Unit,
-    private val onAwaitingExistingPassword: suspend (SessionId, String, AwaitingExistingPassword) -> Unit,
-    private val onAwaitingNewPassword: suspend (SessionId, String, AwaitingNewPassword) -> Unit,
-    private val onAwaitingRaceSelection: suspend (SessionId, String, AwaitingRaceSelection) -> Unit,
-    private val onAwaitingClassSelection: suspend (SessionId, String, AwaitingClassSelection) -> Unit,
-    private val asAwaitingCreateConfirmation: (LoginState) -> AwaitingCreateConfirmation?,
-    private val asAwaitingExistingPassword: (LoginState) -> AwaitingExistingPassword?,
-    private val asAwaitingNewPassword: (LoginState) -> AwaitingNewPassword?,
-    private val asAwaitingRaceSelection: (LoginState) -> AwaitingRaceSelection?,
-    private val asAwaitingClassSelection: (LoginState) -> AwaitingClassSelection?,
-    private val isAwaitingName: (LoginState) -> Boolean,
+    private val onAwaitingCreateConfirmation: suspend (SessionId, String, CC) -> Unit,
+    private val onAwaitingExistingPassword: suspend (SessionId, String, EP) -> Unit,
+    private val onAwaitingNewPassword: suspend (SessionId, String, NP) -> Unit,
+    private val onAwaitingRaceSelection: suspend (SessionId, String, RS) -> Unit,
+    private val onAwaitingClassSelection: suspend (SessionId, String, CS) -> Unit,
+    private val asAwaitingCreateConfirmation: (S) -> CC?,
+    private val asAwaitingExistingPassword: (S) -> EP?,
+    private val asAwaitingNewPassword: (S) -> NP?,
+    private val asAwaitingRaceSelection: (S) -> RS?,
+    private val asAwaitingClassSelection: (S) -> CS?,
+    private val isAwaitingName: (S) -> Boolean,
     private val metrics: GameMetrics = GameMetrics.noop(),
 ) {
     suspend fun onLoginLine(
         sessionId: SessionId,
         line: String,
-        state: LoginState,
+        state: S,
     ) {
         metrics.onLoginHandlerEvent()
         if (isAwaitingName(state)) {
