@@ -294,6 +294,7 @@ rooms:
 
   ice_passage:
     title: "Ice Passage"
-    description: "Beyond the frozen vault, a narrow passage continues deeper into the mountain. The ward-glyphs carved into the walls glow faintly blue — still active after all this time. The passage is blocked by a wall of ancient ice that no ordinary force could penetrate. Whatever lies beyond will require more than brute strength to reach. The vault is back to the south."
+    description: "Beyond the frozen vault, the passage continues deeper into the mountain. The ward-glyphs carved into the walls glow with increasing intensity — blue shifting to white — and the air grows warmer despite the ice. Something powerful lies ahead. The ancient ice that once sealed this passage has cracked and fallen away, leaving the way north open for the first time in centuries. The vault is back to the south."
     exits:
       s: frozen_vault
+      n: celestial_peak:mountain_passage
