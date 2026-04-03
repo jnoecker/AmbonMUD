@@ -33,6 +33,7 @@ import io.grpc.ManagedChannelBuilder
 import io.lettuce.core.SetArgs
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -89,6 +90,9 @@ class GatewayServer(
             onSequenceOverflow = gameMetrics::onSessionIdSequenceOverflow,
             onClockRollback = gameMetrics::onSessionIdClockRollback,
         )
+
+    private val stopped = AtomicBoolean(false)
+    private val shutdownSignal = CompletableDeferred<Unit>()
 
     // ── Single-engine mode state ────────────────────────────────────────────────
     private val reconnecting = AtomicBoolean(false)
@@ -412,7 +416,21 @@ class GatewayServer(
             }
         }
 
+    /**
+     * Suspends until the shutdown hook (or another caller) completes the signal.
+     */
+    suspend fun awaitShutdown() = shutdownSignal.await()
+
+    /**
+     * Triggers the shutdown signal so [awaitShutdown] returns.
+     * Called by the JVM shutdown hook.
+     */
+    fun triggerShutdown() {
+        shutdownSignal.complete(Unit)
+    }
+
     suspend fun stop() {
+        if (!stopped.compareAndSet(false, true)) return
         runCatching { telnetTransport.stop() }
         runCatching { webTransport.stop() }
 
