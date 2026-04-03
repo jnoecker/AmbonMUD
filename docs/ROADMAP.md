@@ -24,7 +24,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 
 ### Gameplay
 ✅ 4 races, 4 classes + 1 debug class (Swarm), 6 primary attributes
-✅ **102 class-specific abilities** — trainer-based learning with skill points; multi-classing available at level 10
+✅ **112 class-specific abilities** — trainer-based learning with skill points; multi-classing available at level 10
 ✅ Status effects (DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD)
 ✅ Group/party system with N:M threat tables
 ✅ Items (equippable + consumable) + item enchanting
@@ -65,7 +65,7 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 |---------|--------|-----------|
 | Status Effects (#1) | ✅ Done | DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD; configurable stacking |
 | Group/Party Combat (#5) | ✅ Done | N:M combat, threat tables, group XP/loot distribution |
-| 102 Abilities (Feb 2026) | ✅ Done | 25+ per class, levels 1–50, config-driven |
+| 112 Abilities (Feb 2026) | ✅ Done | 25+ per class, levels 1–50, config-driven |
 
 ### Phase A.5 — Engine Internals
 

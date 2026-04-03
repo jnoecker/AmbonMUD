@@ -2,7 +2,82 @@
 
 All notable changes to this project are documented in this file.
 
-## [2026-03] - 2026-03-28
+## [2026-04] - 2026-04-03
+
+### Pre-Release Architecture Review & Hardening (20 PRs, #863–#887)
+Comprehensive architectural review across 8 domains (engine, persistence, transport, commands, game systems, config, sharding, tests) followed by systematic remediation.
+
+**Critical fixes:**
+- **Player death cleanup**: 8 game systems now cleaned up on death — groups, trades, duels, pets, status effects, cooldowns, dialogue, dungeons (#865).
+- **Economy atomicity**: Trade and auction gold/item transfers are now atomic; gold re-validated at completion time to prevent duplication exploits (#864).
+- **Engine concurrency**: GMCP dirty sets wrapped in try/finally to prevent leak on flush exceptions; room member map cleanup for empty rooms (#863).
+- **Redis cache coherence**: Cache now updated on save (was only on read); write-coalescing eviction race fixed with lock (#866).
+
+**Security hardening:**
+- **gRPC HMAC authentication**: Shared-secret auth interceptor with timestamp-based replay protection for ENGINE↔GATEWAY trust boundary (#887).
+- **Admin JSON injection fix**: Error responses now use Jackson serialization instead of string interpolation (#869).
+- **Constant-time auth comparison** via `MessageDigest.isEqual()` (#869).
+- **WebSocket origin validation** checks Origin against Host header (#869).
+- **GMCP JSON parsing** replaced string splitting with Jackson for input validation (#869).
+- **Connection limits** on telnet transport with configurable maximum (default 5000) (#868).
+- **Snowflake session ID overflow** prevention — spin-waits instead of returning duplicates (#868).
+
+**Operational hardening:**
+- **Production mode** (`server.productionMode`): Rejects placeholder secrets (`changeme`, `CHANGE_ME`) at startup (#885).
+- **ENGINE port conflict fixed**: Metrics HTTP default changed from 9090 to 9099; validation rejects gRPC/metrics port collision (#885).
+- **Shutdown idempotency**: `stop()` guarded with `AtomicBoolean` in MudServer, EngineServer, GatewayServer (#885).
+- **Gateway structured shutdown**: Replaced `Thread.join()` with `CompletableDeferred`-based signal (#885).
+- **Metrics bind address**: Configurable `metricsHttpHost` with warning when exposed in ENGINE/GATEWAY mode (#885).
+- **Admin rate limiting**: Staff toggle (5s), broadcast (10s), reload (30s) cooldowns; concurrent reload guard (#879).
+- **Hot-reload guard**: Prevents overlapping reloads with 409 Conflict response (#879).
+
+**Config & metrics:**
+- **Metric cardinality fix**: `DisconnectReason` and `GrpcDropReason` enums normalize arbitrary strings to fixed tag values (#867).
+- **Config validation additions**: startRoom required, world time hours ordered, faction cross-refs fail on undefined, sharding requires Redis, equipment slot orders unique, XP exponent ≥ 1.0, outbound queue capacity capped (#867).
+- **gRPC control plane timeout** increased from 250ms to 2000ms (configurable) (#871).
+- **Redis failure handling**: `isConnected()` method, WARN logging, `redis_unavailable_total` metric (#871).
+
+**Command system:**
+- **Item handler state validation**: wear/remove/get/drop/give blocked during combat, dialogue, and trade (#870).
+- **Input length limit** of 2000 characters in CommandParser (#870).
+- **Broadcast rate limiting**: Gossip/shout/OOC limited to 1 per 2 seconds, staff exempt (#870).
+- **Error message standardization**: ~60 error paths changed from `SendText` to `SendError` across 13 handlers (#879).
+- **Dialogue choice range** extended from 1–9 to 1–99 (#879).
+
+**Game system edge cases:**
+- Status effect `maxStacks=0` treated as 1 to prevent infinite stacking (#878).
+- Quest/achievement callbacks skip when player HP ≤ 0 (same-tick death) (#878).
+- Dungeon failed creation cleanup removes partial rooms/mappings (#878).
+
+**Persistence polish:**
+- Flyway V27: Index on `auth_token_hash` column (#875).
+- Stat key normalization on load; stat values coerced to ≥ 1 (#875).
+- `FlushResult` data class reports success + failure counts (#875).
+- Auction file persistence uses atomic write (temp + rename) (#866).
+- HikariCP timeouts configured (maxLifetime 30m, connection 30s, idle 10m) (#866).
+- YAML auth-token in-memory index for O(1) lookup (#884).
+
+**Memory leak prevention:**
+- GmcpEmitter `lastZoneBySession` bounded with LRU cap (10,000) (#874).
+- Threat table periodic stale entry sweep every 60 seconds (#874).
+- Grace period `fullDisconnect()` made idempotent with guard set (#874).
+- Handoff timeout recovery restores player to source room (#871).
+
+**Protocol & engine polish:**
+- `allPlayers()` cached once per tick instead of allocating 3+ times (#876).
+- ProtoMapper logs WARN on unknown event types (#876).
+- GrpcOutboundDispatcher drains pending events on shutdown (2s timeout) (#876).
+- Round-robin session assignment uses `Math.floorMod()` to handle integer overflow (#876).
+
+**Test coverage:**
+- 6 new test files: MultiSystemIntegrationTest, ShutdownCleanupTest, DuelCommandTest, TradeCommandTest, DungeonCommandTest, HousingCommandTest (#873).
+- MobSystemTest expanded from 1 to 8 tests (#873).
+- ~130 new tests total across all PRs; test file count now ~144.
+
+### Web Client UX
+- **Auth token relogin**: When saved auth token expires, character name is auto-sent to skip straight to password prompt instead of showing "Enter your character name" (#886).
+
+
 
 ### Web Client Feature Parity (15 issues, #722–#736)
 Closed the full web client parity backlog from the consolidated feature report (#721). Every MUD command now has a web UI affordance; no gameplay workflow requires the terminal.

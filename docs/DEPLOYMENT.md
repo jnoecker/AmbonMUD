@@ -300,6 +300,31 @@ The app reads configuration from `AMBONMUD_*` environment variables at startup (
 | `AMBONMUD_GRPC_CLIENT_ENGINEPORT` | `ambonmud.grpc.client.enginePort` | `9090` |
 | `AMBONMUD_SERVER_TELNETPORT` | `ambonmud.server.telnetPort` | `4000` |
 | `AMBONMUD_SERVER_WEBPORT` | `ambonmud.server.webPort` | `8080` |
+| `AMBONMUD_SERVER_PRODUCTIONMODE` | `ambonmud.server.productionMode` | `true` in production — rejects placeholder secrets |
+| `AMBONMUD_GRPC_SHAREDSECRET` | `ambonmud.grpc.sharedSecret` | HMAC shared secret for ENGINE↔GATEWAY auth |
+| `AMBONMUD_GRPC_ALLOWPLAINTEXT` | `ambonmud.grpc.allowPlaintext` | `false` to require TLS on gRPC channels |
+| `AMBONMUD_OBSERVABILITY_METRICSHTTPHOST` | `ambonmud.observability.metricsHttpHost` | `127.0.0.1` recommended in production |
+| `AMBONMUD_OBSERVABILITY_METRICSHTTPPORT` | `ambonmud.observability.metricsHttpPort` | `9099` (default; was 9090 prior to April 2026) |
+| `AMBONMUD_ADMIN_TOKEN` | `ambonmud.admin.token` | Admin API auth token — must not be a placeholder in production mode |
+| `AMBONMUD_REDIS_BUS_SHAREDSECRET` | `ambonmud.redis.bus.sharedSecret` | Redis bus HMAC secret — must not be a placeholder in production mode |
+
+### Production Mode
+
+When `server.productionMode = true`, startup validation rejects known placeholder values for security-sensitive config:
+- `database.password` must not be `changeme`, `ambon`, `password`, or blank
+- `redis.bus.sharedSecret` must not be `CHANGE_ME` or `changeme` (when Redis bus enabled)
+- `admin.token` must not be `changeme` or `admin` (when admin enabled)
+- `grpc.sharedSecret` must be non-blank in ENGINE/GATEWAY mode
+
+Set `AMBONMUD_SERVER_PRODUCTIONMODE=true` in all production deployments.
+
+### gRPC Authentication
+
+ENGINE↔GATEWAY communication is authenticated via HMAC-SHA256 shared secret. Each gRPC call includes:
+- `x-auth-hmac` header: `HMAC-SHA256(secret, timestamp)`
+- `x-auth-timestamp` header: Unix epoch milliseconds
+
+The server validates the HMAC and rejects requests with timestamps older than `grpc.timestampToleranceMs` (default 30 seconds). Both ENGINE and GATEWAY must share the same `grpc.sharedSecret`.
 
 ---
 

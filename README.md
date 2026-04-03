@@ -1,13 +1,13 @@
 AmbonMUD
 ========
 
-**AmbonMUD** is a cozy, magical MUD (Multi-User Dungeon) server built in Kotlin — a personal bucket-list project, portfolio showcase, and a game for family. It features a tick-based event loop, dual transports (telnet + WebSocket with a PixiJS canvas client), YAML-defined multi-zone worlds, class-based character progression with 102 abilities, real-time combat, and three deployment modes for horizontal scaling.
+**AmbonMUD** is a cozy, magical MUD (Multi-User Dungeon) server built in Kotlin — a personal bucket-list project, portfolio showcase, and a game for family. It features a tick-based event loop, dual transports (telnet + WebSocket with a PixiJS canvas client), YAML-defined multi-zone worlds, class-based character progression with 112 abilities, real-time combat, and three deployment modes for horizontal scaling.
 
 **Live demo:** [https://mud.ambon.dev](https://mud.ambon.dev) — or `telnet mud.ambon.dev 4000`
 
 **Key Features**
-- 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **102 abilities** — learned via class trainers using skill points; multi-classing lets players unlock additional class ability lists
-- 🌍 **15 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
+- 🎮 **4 playable classes** (Warrior, Mage, Cleric, Rogue) with **112 abilities** — learned via class trainers using skill points; multi-classing lets players unlock additional class ability lists
+- 🌍 **20 YAML-defined zones** with multi-zone support, cross-zone exits, and zone instancing for load distribution
 - ⚔️ **Real-time combat system** with attribute-based damage, dodge mechanics, tactical status effects (DoT, HoT, STUN, ROOT, SHIELD, buffs/debuffs), and consent-based PvP dueling
 - 🎨 **PixiJS canvas client** with JRPG-style world/battle scenes, spell targeting, customizable quickbar, and a cozy glass-morphism UI
 - 🐾 **Pet/companion system**: summon familiars and companions via abilities; pets follow the owner between rooms and assist in combat
@@ -23,13 +23,15 @@ AmbonMUD
 - 💾 **Flexible persistence**: YAML files by default (zero-dependency), PostgreSQL with optional Redis L2 caching available
 - 🌐 **Three deployment modes**: STANDALONE (single-process), ENGINE (game logic + gRPC), GATEWAY (transports + gRPC) for horizontal scaling
 - 🗺️ **Zone-based sharding** with inter-engine messaging, player handoff, and O(1) cross-engine `tell` routing
+- 🔒 **gRPC HMAC authentication** with replay-protected shared-secret interceptor for ENGINE↔GATEWAY trust boundary
+- 🛡️ **Production mode** with fail-fast validation rejecting placeholder secrets, configurable metrics bind address, and admin rate limiting
 - 🧵 **JVM virtual threads** for telnet I/O (JDK 21) — eliminates carrier-thread pinning under load
 - 📈 **Prometheus metrics** for monitoring and load testing integration
-- ✅ **~118 test files** covering all systems; CI validates against Java 21 with ktlint
+- ✅ **~144 test files** covering all systems; CI validates against Java 21 with ktlint and JaCoCo coverage
 
 **Current State** (Apr 2026)
 - ✅ All 6 scalability phases complete (bus abstraction, async persistence, Redis, gRPC gateway, zone sharding, production AWS infrastructure)
-- ✅ 102 abilities across 4 classes — trainer-based learning via skill points (1 point per 2 levels); multi-classing unlockable at level 10
+- ✅ 112 abilities across 4 classes — trainer-based learning via skill points (1 point per 2 levels); multi-classing unlockable at level 10
 - ✅ PixiJS canvas game client with JRPG-style world/battle scenes
 - ✅ GMCP support with 25+ outbound packages (telnet + WebSocket); see [GMCP_PROTOCOL.md](docs/GMCP_PROTOCOL.md)
 - ✅ Quest system, achievement system, group/party system, dialogue trees, NPC behavior trees
@@ -242,7 +244,7 @@ See [WORLD_YAML_SPEC.md](docs/WORLD_YAML_SPEC.md) for full schema documentation 
 
 **Backends** (selectable via `ambonmud.persistence.backend`):
 - **YAML** (default): File-backed, zero dependencies, player files in `data/players/`
-- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V19); requires `ambonmud.database.jdbcUrl`
+- **PostgreSQL**: Database-backed (schema via Flyway migrations V1–V27); requires `ambonmud.database.jdbcUrl`
 
 Redis L2 caching is disabled by default. Enable it with `ambonmud.redis.enabled=true` when running alongside the Docker Compose stack.
 
