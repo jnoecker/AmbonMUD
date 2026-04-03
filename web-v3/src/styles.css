@@ -6023,6 +6023,16 @@ body {
     min-height: 0;
   }
 
+  /* Text mode on mobile: smaller canvas strip */
+  .panel-play.text-mode .canvas-strip {
+    height: 80px;
+  }
+
+  .panel-play.text-mode .terminal-card-text-mode {
+    flex: 1;
+    min-height: 0;
+  }
+
   .action-bar {
     /* Keep action bar above iPhone home indicator */
     padding-bottom: max(0px, env(safe-area-inset-bottom));
@@ -6150,6 +6160,18 @@ body {
     height: 100%;
     min-height: 0;
     max-height: none;
+  }
+
+  /* Text mode: terminal fills panel, canvas becomes a strip */
+  .panel-play.text-mode .terminal-card-text-mode {
+    flex: 1;
+    min-height: 0;
+    padding: var(--space-2);
+  }
+
+  .panel-play.text-mode .canvas-strip {
+    height: 120px;
+    flex-shrink: 0;
   }
 
   .world-stack,
@@ -9065,6 +9087,88 @@ body {
   background: transparent !important;
 }
 
+/* ── Text-mode layout ──────────────────────────────────────── */
+
+/* In text mode the panel stacks: canvas strip (top) + terminal (fills rest) */
+.panel-play.text-mode {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Canvas strip: thin bar at the top showing room scene + minimap */
+.canvas-strip {
+  position: relative;
+  flex-shrink: 0;
+  height: 120px;
+  min-height: 80px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--line-panel);
+  background: rgb(47 52 70);
+  opacity: 0.85;
+  transition: height 300ms var(--ease-in-out-smooth), opacity 300ms var(--ease-in-out-smooth);
+}
+
+/* Terminal card fills remaining space in text mode */
+.terminal-card-text-mode {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Terminal primary: always visible, opaque, fills its parent */
+.terminal-primary {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  opacity: 1;
+  pointer-events: auto;
+  background: rgb(18 22 34 / 94%);
+}
+
+.terminal-primary .xterm,
+.terminal-primary .xterm-screen,
+.terminal-primary .xterm-viewport {
+  border-radius: 0;
+  height: 100% !important;
+}
+
+.terminal-primary .xterm-viewport {
+  background: transparent !important;
+}
+
+/* Layout mode button in top banner */
+.layout-mode-button {
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+/* Smooth layout transitions */
+@media (prefers-reduced-motion: no-preference) {
+  .panel-play,
+  .terminal-card,
+  .canvas-strip,
+  .terminal-primary,
+  .terminal-overlay {
+    transition-duration: 300ms;
+    transition-timing-function: var(--ease-in-out-smooth);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-strip,
+  .terminal-primary,
+  .terminal-overlay {
+    transition: none;
+  }
+}
+
 /* Login modal */
 .login-modal-backdrop {
   position: fixed;
@@ -9474,19 +9578,6 @@ body {
   width: 100%;
   border-radius: 8px;
   outline: none;
-}
-
-.client-switch-link {
-  text-decoration: none;
-  font-size: 0.78rem;
-  color: var(--color-primary-pale-blue);
-  opacity: 0.85;
-  transition: opacity 0.15s var(--ease-in-soft);
-}
-
-.client-switch-link:hover {
-  opacity: 1;
-  text-decoration: underline;
 }
 
 /* ── Command Palette (Ctrl+K) ──────────────────────────────── */

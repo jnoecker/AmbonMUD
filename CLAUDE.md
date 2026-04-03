@@ -202,7 +202,6 @@ Sessions
 | Login banner + styles | `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml` |
 | Flyway migrations | `src/main/resources/db/migration/` (V1–V26: players table through guilds, crafting, friends, mail, sprites, stats JSON, discovered recipes, faction standings, bank, leaderboards, skill points/multiclass) |
 | Proto definitions | `src/main/proto/ambonmud/v1/engine_service.proto`, `events.proto` |
-| Web terminal client (static) | `src/main/resources/web-terminal/` (served at `/terminal`) |
 | V4 canvas client (React + PixiJS) | `web-v3/` (built to `src/main/resources/web-v3/` by `./gradlew buildWeb`) |
 | Demo placeholder sprites | `src/main/resources/world/images/demo/` (default PNGs) |
 | World YAML format spec | `docs/WORLD_YAML_SPEC.md` |

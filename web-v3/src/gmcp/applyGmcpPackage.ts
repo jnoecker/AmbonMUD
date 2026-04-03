@@ -265,6 +265,7 @@ export function applyGmcpPackage(
       const station = typeof packet.station === "string" ? packet.station : null;
       const housing = packet.housing === true;
       const housingOwner = typeof packet.housingOwner === "string" ? packet.housingOwner : null;
+      const graphical = packet.graphical === true;
 
       // Detect actual room change (not just a look/refresh of the same room)
       ctx.setRoom((prev) => {
@@ -273,7 +274,7 @@ export function applyGmcpPackage(
           ctx.setDialogue(null);
           ctx.setQuestsAvailable([]);
         }
-        return { id, title, description, exits, image, video, music, ambient, station, mapX, mapY, housing, housingOwner };
+        return { id, title, description, exits, image, video, music, ambient, station, mapX, mapY, housing, housingOwner, graphical };
       });
 
       if (id) {

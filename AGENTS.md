@@ -33,7 +33,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Redis connection management + JSON: `src/main/kotlin/dev/ambon/redis`
 - Session ID allocation + gateway lease: `src/main/kotlin/dev/ambon/session` (`AtomicSessionIdFactory`, `SnowflakeSessionIdFactory`, `GatewayIdLeaseManager`)
 - Metrics (Micrometer / Prometheus): `src/main/kotlin/dev/ambon/metrics` (`GameMetrics`, `MetricsHttpServer`)
-- Web client v3 (static, current): `src/main/resources/web-v3` (built from `web-v3/` with `bun run build`); web terminal UI at `src/main/resources/web-terminal` (served at `/terminal`)
+- Web client v3 (static, current): `src/main/resources/web-v3` (built from `web-v3/` with `bun run build`)
 - Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
 - World content: `src/main/resources/world` (23 YAML files: 20 zones — crossroads_path, thornhaven_city, thornwood_forest, farmer_fields, cobblestone_road, highland_trails, old_mines, marsh_of_fog, goblin_warrens, dark_barrows, sea_cliffs, sunken_temple, ruined_fortress, shadowmere_fen, thornhaven_sewers, haunted_manor, barrens_wastes, frost_caverns, celestial_peak, dungeon_of_echoes; plus achievements, player_sprites, sprites)

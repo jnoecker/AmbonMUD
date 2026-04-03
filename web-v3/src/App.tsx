@@ -39,6 +39,7 @@ import { useMudSocket } from "./hooks/useMudSocket";
 import { useAudioEngine } from "./hooks/useAudioEngine";
 import { useQuickbar } from "./hooks/useQuickbar";
 import type {
+  LayoutMode,
   AchievementData,
   CharStats,
   ChatChannel,
@@ -168,6 +169,15 @@ function App() {
   const [composerValue, setComposerValue] = useState("");
   const [terminalVisible, setTerminalVisible] = useState(false);
   const [terminalOpaque, setTerminalOpaque] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>(() => {
+    try { return (localStorage.getItem("ambonmud_layout_mode") as LayoutMode) ?? "auto"; } catch { return "auto"; }
+  });
+
+  // Persist layout mode to localStorage
+  useEffect(() => {
+    try { localStorage.setItem("ambonmud_layout_mode", layoutMode); } catch { /* ignore */ }
+  }, [layoutMode]);
+
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoClosing, setVideoClosing] = useState(false);
 
@@ -175,6 +185,8 @@ function App() {
   const [statusVarLabels, setStatusVarLabels] = useState<StatusVarLabels>(DEFAULT_STATUS_VAR_LABELS);
   const [character, setCharacter] = useState<CharacterInfo>(EMPTY_CHAR);
   const [room, setRoom] = useState<RoomState>(EMPTY_ROOM);
+  // Derive the effective text-mode flag from user preference + zone data
+  const textMode = layoutMode === "text" || (layoutMode === "auto" && !room.graphical);
   const [players, setPlayers] = useState<RoomPlayer[]>([]);
   const [mobs, setMobs] = useState<RoomMob[]>([]);
   const [roomItems, setRoomItems] = useState<RoomItem[]>([]);
@@ -670,14 +682,14 @@ function App() {
     };
   }, [activePopout, drawMap, startPulse, stopPulse]);
 
-  // Reparent terminal into overlay when visible, back to hidden when not
+  // Reparent terminal into overlay when visible (or always in text mode), back to hidden when not
   useEffect(() => {
     const term = terminalRef.current;
     if (!term) return;
     const termEl = term.element;
     if (!termEl) return;
 
-    if (terminalVisible && terminalOverlayRef.current) {
+    if ((terminalVisible || textMode) && terminalOverlayRef.current) {
       terminalOverlayRef.current.appendChild(termEl);
       window.requestAnimationFrame(() => {
         fitTerminal();
@@ -691,7 +703,7 @@ function App() {
     } else if (terminalHiddenRef.current && termEl.parentElement !== terminalHiddenRef.current) {
       terminalHiddenRef.current.appendChild(termEl);
     }
-  }, [terminalVisible, fitTerminal]);
+  }, [terminalVisible, textMode, fitTerminal]);
 
   // Sync React state into the game state bridge for PixiJS
   useEffect(() => {
@@ -998,9 +1010,15 @@ function App() {
         </div>
 
         <div className="connection-cluster">
-          <a href="/terminal/" className="soft-button client-switch-link" title="Switch to Terminal client">
-            Terminal View
-          </a>
+          <button
+            type="button"
+            className="soft-button layout-mode-button"
+            onClick={() => setLayoutMode((m) => m === "auto" ? "text" : m === "text" ? "canvas" : "auto")}
+            title={`Layout: ${layoutMode === "auto" ? "Auto" : layoutMode === "text" ? "Text" : "Canvas"} — click to cycle`}
+            aria-label={`Layout mode: ${layoutMode}. Click to change.`}
+          >
+            {layoutMode === "auto" ? "\u2728 Auto" : layoutMode === "text" ? "\uD83D\uDCDC Text" : "\uD83C\uDFA8 Canvas"}
+          </button>
           <AudioControls audio={audio} />
           {character.isStaff && (
             <>
@@ -1048,6 +1066,7 @@ function App() {
           terminalOverlayRef={terminalOverlayRef}
           terminalVisible={terminalVisible}
           terminalOpaque={terminalOpaque}
+          textMode={textMode}
           combatLogMessages={combatLogMessages}
         />
 
