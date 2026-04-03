@@ -48,8 +48,9 @@ class WriteCoalescingPlayerRepositoryTest {
             val updated = record.copy(roomId = RoomId("zone:room2"))
             repo.save(updated)
 
-            val flushed = repo.flushDirty()
-            assertEquals(1, flushed)
+            val result = repo.flushDirty()
+            assertEquals(1, result.flushed)
+            assertEquals(0, result.failed)
             assertEquals(0, repo.dirtyCount())
 
             val fromDelegate = delegate.findById(record.id)
@@ -178,7 +179,7 @@ class WriteCoalescingPlayerRepositoryTest {
             val delegate = InMemoryPlayerRepository()
             val repo = WriteCoalescingPlayerRepository(delegate)
 
-            assertEquals(0, repo.flushDirty())
+            assertEquals(FlushResult(flushed = 0, failed = 0), repo.flushDirty())
         }
 
     @Test
@@ -190,8 +191,9 @@ class WriteCoalescingPlayerRepositoryTest {
             val record = delegate.create(PlayerCreationRequest("Eve", startRoom, 1000L, "hash", false))
             repo.save(record.copy(roomId = RoomId("zone:new")))
 
-            val flushed = repo.flushAll()
-            assertEquals(1, flushed)
+            val result = repo.flushAll()
+            assertEquals(1, result.flushed)
+            assertEquals(0, result.failed)
             assertEquals(0, repo.dirtyCount())
         }
 

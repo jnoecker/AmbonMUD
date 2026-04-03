@@ -246,8 +246,9 @@ class ShutdownCleanupTest {
         assertEquals(1, repo.dirtyCount())
 
         // Flush all (as shutdown does)
-        val flushed = repo.flushAll()
-        assertEquals(1, flushed)
+        val result = repo.flushAll()
+        assertEquals(1, result.flushed)
+        assertEquals(0, result.failed)
 
         // The final state should be the one persisted
         val persisted = delegate.findById(record.id)!!

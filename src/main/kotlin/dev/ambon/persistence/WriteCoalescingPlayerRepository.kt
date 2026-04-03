@@ -7,6 +7,12 @@ import kotlin.concurrent.withLock
 
 private val log = KotlinLogging.logger {}
 
+/** Result of a [WriteCoalescingPlayerRepository.flushDirty] or [WriteCoalescingPlayerRepository.flushAll] call. */
+data class FlushResult(
+    val flushed: Int,
+    val failed: Int,
+)
+
 /**
  * Wraps a [PlayerRepository] delegate, intercepting [save] to mark records dirty
  * in an in-memory cache instead of writing immediately.
@@ -89,10 +95,11 @@ class WriteCoalescingPlayerRepository(
         nameIndex[record.name.lowercase()] = record.id
     }
 
-    suspend fun flushDirty(): Int {
+    suspend fun flushDirty(): FlushResult {
         val toFlush = snapshotDirty()
-        if (toFlush.isEmpty()) return 0
+        if (toFlush.isEmpty()) return FlushResult(flushed = 0, failed = 0)
         var flushed = 0
+        var failed = 0
         for (pending in toFlush) {
             try {
                 delegate.save(pending.record)
@@ -103,19 +110,27 @@ class WriteCoalescingPlayerRepository(
                 }
                 flushed++
             } catch (e: Exception) {
+                failed++
                 log.error(e) { "Failed to flush player record: id=${pending.id} name=${pending.record.name}" }
             }
         }
-        return flushed
+        if (failed > 0) {
+            log.warn { "Flush completed with $failed failure(s) out of ${toFlush.size} record(s)" }
+        }
+        return FlushResult(flushed = flushed, failed = failed)
     }
 
-    suspend fun flushAll(): Int {
-        var total = 0
+    suspend fun flushAll(): FlushResult {
+        var totalFlushed = 0
+        var totalFailed = 0
         while (true) {
-            val flushed = flushDirty()
-            total += flushed
+            val result = flushDirty()
+            totalFlushed += result.flushed
+            totalFailed += result.failed
             val hasDirty = lock.withLock { dirtyVersions.isNotEmpty() }
-            if (!hasDirty || flushed == 0) return total
+            if (!hasDirty || result.flushed == 0) {
+                return FlushResult(flushed = totalFlushed, failed = totalFailed)
+            }
         }
     }
 
