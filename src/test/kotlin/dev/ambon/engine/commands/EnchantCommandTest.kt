@@ -133,8 +133,8 @@ class EnchantCommandTest {
 
             h.router.handle(sid, Command.Enchant("sword", "keen_edge"))
 
-            val texts = h.drain().filterIsInstance<OutboundEvent.SendText>().map { it.text }
-            assertTrue(texts.any { it.contains("don't have", ignoreCase = true) }, "got=$texts")
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+            assertTrue(errors.any { it.contains("don't have", ignoreCase = true) }, "got=$errors")
         }
 
         @Test

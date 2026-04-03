@@ -48,20 +48,20 @@ class CraftingHandler(
             when (result) {
                 is Either.Left -> when (val err = result.value) {
                     is GatherError.NoNodeFound -> outbound.send(
-                        OutboundEvent.SendText(
+                        OutboundEvent.SendError(
                             sessionId,
                             "There is nothing to gather here matching '${cmd.keyword}'.",
                         ),
                     )
                     is GatherError.SkillTooLow -> sendSkillTooLow(sessionId, err.required, err.current)
                     is GatherError.NodeDepleted -> outbound.send(
-                        OutboundEvent.SendText(
+                        OutboundEvent.SendError(
                             sessionId,
                             "That resource is depleted. It will respawn in ${err.respawnInSeconds}s.",
                         ),
                     )
                     is GatherError.OnCooldown ->
-                        outbound.send(OutboundEvent.SendText(sessionId, "You must wait before gathering again."))
+                        outbound.send(OutboundEvent.SendError(sessionId, "You must wait before gathering again."))
                 }
                 is Either.Right -> {
                     val r = result.value
@@ -115,30 +115,30 @@ class CraftingHandler(
             when (result) {
                 is Either.Left -> when (val err = result.value) {
                     is CraftError.RecipeNotFound -> outbound.send(
-                        OutboundEvent.SendText(
+                        OutboundEvent.SendError(
                             sessionId,
                             "Unknown recipe '${cmd.recipeKeyword}'. Type 'recipes' to see available recipes.",
                         ),
                     )
                     is CraftError.NotDiscovered -> outbound.send(
-                        OutboundEvent.SendText(
+                        OutboundEvent.SendError(
                             sessionId,
                             "You haven't discovered that recipe yet. Keep leveling your skills!",
                         ),
                     )
                     is CraftError.SkillTooLow -> sendSkillTooLow(sessionId, err.required, err.current)
                     is CraftError.LevelTooLow -> outbound.send(
-                        OutboundEvent.SendText(
+                        OutboundEvent.SendError(
                             sessionId,
                             "You need to be level ${err.required} to craft this (you are level ${err.current}).",
                         ),
                     )
                     is CraftError.MissingMaterials -> {
-                        outbound.send(OutboundEvent.SendText(sessionId, "You are missing materials:"))
+                        outbound.send(OutboundEvent.SendError(sessionId, "You are missing materials:"))
                         for ((itemId, qty) in err.missing) {
                             val template = items.getTemplate(itemId)
                             val name = template?.displayName ?: itemId.value
-                            outbound.send(OutboundEvent.SendText(sessionId, "  - $name x$qty"))
+                            outbound.send(OutboundEvent.SendError(sessionId, "  - $name x$qty"))
                         }
                     }
                 }
@@ -353,13 +353,13 @@ class CraftingHandler(
             val skillId = cmd.skill.lowercase()
             val skillDef = craftingSkillRegistry?.get(skillId)
             if (skillDef == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "Unknown crafting skill '${cmd.skill}'."))
+                outbound.send(OutboundEvent.SendError(sessionId, "Unknown crafting skill '${cmd.skill}'."))
                 return
             }
 
             if (me.craftingSpecialization == skillId) {
                 outbound.send(
-                    OutboundEvent.SendText(sessionId, "You are already specialized in ${skillDef.displayName}."),
+                    OutboundEvent.SendError(sessionId, "You are already specialized in ${skillDef.displayName}."),
                 )
                 return
             }
@@ -386,7 +386,7 @@ class CraftingHandler(
     }
 
     private suspend fun sendSkillTooLow(sessionId: SessionId, required: Int, current: Int) {
-        outbound.send(OutboundEvent.SendText(sessionId, "Your skill is too low (need $required, have $current)."))
+        outbound.send(OutboundEvent.SendError(sessionId, "Your skill is too low (need $required, have $current)."))
     }
 
     private suspend fun sendCraftingXp(

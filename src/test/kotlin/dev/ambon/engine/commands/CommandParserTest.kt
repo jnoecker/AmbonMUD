@@ -370,10 +370,16 @@ class CommandParserTest {
     }
 
     @Test
-    fun `numbers outside 1-9 are Unknown`() {
+    fun `numbers 10-99 parse as DialogueChoice`() {
+        assertEquals(Command.DialogueChoice(10), CommandParser.parse("10"))
+        assertEquals(Command.DialogueChoice(99), CommandParser.parse("99"))
+    }
+
+    @Test
+    fun `numbers outside 1-99 are Unknown`() {
         assertTrue(CommandParser.parse("0") is Command.Unknown)
-        assertTrue(CommandParser.parse("10") is Command.Unknown)
-        assertTrue(CommandParser.parse("99") is Command.Unknown)
+        assertTrue(CommandParser.parse("100") is Command.Unknown)
+        assertTrue(CommandParser.parse("-1") is Command.Unknown)
     }
 
     @Test

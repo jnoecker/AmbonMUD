@@ -55,11 +55,11 @@ class NavigationHandler(
         cmd: Command.Move,
     ) {
         if (combat.isInCombat(sessionId)) {
-            outbound.send(OutboundEvent.SendText(sessionId, "You are in combat. Try 'flee'."))
+            outbound.send(OutboundEvent.SendError(sessionId, "You are in combat. Try 'flee'."))
             return
         }
         if (statusEffects?.hasPlayerEffect(sessionId, "root") == true) {
-            outbound.send(OutboundEvent.SendText(sessionId, "You are rooted and cannot move!"))
+            outbound.send(OutboundEvent.SendError(sessionId, "You are rooted and cannot move!"))
             return
         }
         players.withPlayer(sessionId) { me ->
@@ -68,7 +68,7 @@ class NavigationHandler(
             val to = room.exits[cmd.dir]
 
             if (to == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "You can't go that way."))
+                outbound.send(OutboundEvent.SendError(sessionId, "You can't go that way."))
                 return
             }
 
@@ -141,7 +141,7 @@ class NavigationHandler(
     private suspend fun handleRecall(sessionId: SessionId) {
         val msgs = recallConfig.messages
         if (combat.isInCombat(sessionId)) {
-            outbound.send(OutboundEvent.SendText(sessionId, msgs.combatBlocked))
+            outbound.send(OutboundEvent.SendError(sessionId, msgs.combatBlocked))
             return
         }
         val me = players.get(sessionId) ?: return

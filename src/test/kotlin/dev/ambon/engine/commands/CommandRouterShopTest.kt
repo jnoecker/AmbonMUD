@@ -73,7 +73,7 @@ class CommandRouterShopTest {
 
             val outs = env.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text.contains("no shop") },
+                outs.any { it is OutboundEvent.SendError && it.text.contains("no shop") },
                 "Expected 'no shop' message. got=$outs",
             )
         }
@@ -111,7 +111,7 @@ class CommandRouterShopTest {
 
             val outs = env.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text.contains("afford") },
+                outs.any { it is OutboundEvent.SendError && it.text.contains("afford") },
                 "Expected 'cannot afford' message. got=$outs",
             )
         }
@@ -130,7 +130,7 @@ class CommandRouterShopTest {
 
             val outs = env.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text.contains("no shop") },
+                outs.any { it is OutboundEvent.SendError && it.text.contains("no shop") },
                 "Expected 'no shop' message. got=$outs",
             )
         }
@@ -147,7 +147,7 @@ class CommandRouterShopTest {
 
             val outs = env.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text.contains("doesn't sell") },
+                outs.any { it is OutboundEvent.SendError && it.text.contains("doesn't sell") },
                 "Expected 'doesn't sell' message. got=$outs",
             )
         }
@@ -191,7 +191,7 @@ class CommandRouterShopTest {
 
             val outs = env.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text.contains("worthless") },
+                outs.any { it is OutboundEvent.SendError && it.text.contains("worthless") },
                 "Expected 'worthless' message. got=$outs",
             )
         }
@@ -214,7 +214,7 @@ class CommandRouterShopTest {
 
             val outs = env.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text.contains("no shop") },
+                outs.any { it is OutboundEvent.SendError && it.text.contains("no shop") },
                 "Expected 'no shop' message. got=$outs",
             )
         }
@@ -231,7 +231,7 @@ class CommandRouterShopTest {
 
             val outs = env.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text.contains("don't have") },
+                outs.any { it is OutboundEvent.SendError && it.text.contains("don't have") },
                 "Expected 'don't have' message. got=$outs",
             )
         }
@@ -258,7 +258,7 @@ class CommandRouterShopTest {
 
             val outs = env.outbound.drainAll()
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text.contains("worthless") },
+                outs.any { it is OutboundEvent.SendError && it.text.contains("worthless") },
                 "Expected 'worthless' message for 0-value sell. got=$outs",
             )
         }

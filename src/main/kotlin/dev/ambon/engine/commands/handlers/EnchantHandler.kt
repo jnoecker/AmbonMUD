@@ -54,39 +54,39 @@ class EnchantHandler(
                 )
             }
             is EnchantResult.ItemNotFound ->
-                outbound.send(OutboundEvent.SendText(sessionId, "You don't have that item."))
+                outbound.send(OutboundEvent.SendError(sessionId, "You don't have that item."))
             is EnchantResult.NotEquippable ->
-                outbound.send(OutboundEvent.SendText(sessionId, "You can only enchant equipment."))
+                outbound.send(OutboundEvent.SendError(sessionId, "You can only enchant equipment."))
             is EnchantResult.AlreadyEnchanted ->
-                outbound.send(OutboundEvent.SendText(sessionId, "That item already has the maximum number of enchantments."))
+                outbound.send(OutboundEvent.SendError(sessionId, "That item already has the maximum number of enchantments."))
             is EnchantResult.EnchantmentNotFound ->
-                outbound.send(OutboundEvent.SendText(sessionId, "Unknown enchantment. Use 'enchantments' to list available."))
+                outbound.send(OutboundEvent.SendError(sessionId, "Unknown enchantment. Use 'enchantments' to list available."))
             is EnchantResult.NoEnchantmentAvailable ->
                 outbound.send(
-                    OutboundEvent.SendText(
+                    OutboundEvent.SendError(
                         sessionId,
                         "No enchantments available for that item with your current skill and materials.",
                     ),
                 )
             is EnchantResult.AlreadyHasEnchantment ->
-                outbound.send(OutboundEvent.SendText(sessionId, "That item already has ${result.name}."))
+                outbound.send(OutboundEvent.SendError(sessionId, "That item already has ${result.name}."))
             is EnchantResult.WrongSlot ->
                 outbound.send(
-                    OutboundEvent.SendText(
+                    OutboundEvent.SendError(
                         sessionId,
                         "${result.enchantName} can only be applied to: ${result.validSlots.joinToString(", ")}.",
                     ),
                 )
             is EnchantResult.SkillTooLow ->
                 outbound.send(
-                    OutboundEvent.SendText(
+                    OutboundEvent.SendError(
                         sessionId,
                         "You need ${result.skill} level ${result.required} (you have ${result.current}).",
                     ),
                 )
             is EnchantResult.MissingMaterials ->
                 outbound.send(
-                    OutboundEvent.SendText(
+                    OutboundEvent.SendError(
                         sessionId,
                         "You need: ${result.missing.joinToString(", ")}.",
                     ),

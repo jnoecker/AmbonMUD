@@ -48,6 +48,8 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import java.security.MessageDigest
 import java.util.Base64
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 private val log = KotlinLogging.logger {}
 
@@ -345,6 +347,25 @@ internal fun Application.adminModule(
     startTime: Long = System.currentTimeMillis(),
     basePath: String = "/",
 ) {
+    // Guard: prevents concurrent hot-reload operations
+    val reloadInProgress = AtomicBoolean(false)
+
+    // Simple rate limiter: tracks last execution time per operation type.
+    // Uses System.currentTimeMillis() since this is admin HTTP code, not engine code.
+    val rateLimitTimestamps = ConcurrentHashMap<String, Long>()
+
+    /**
+     * Returns true if the operation should be rejected due to rate limiting.
+     * [operationKey] identifies the operation type, [cooldownMs] is the minimum interval.
+     */
+    fun isRateLimited(operationKey: String, cooldownMs: Long): Boolean {
+        val now = System.currentTimeMillis()
+        val last = rateLimitTimestamps[operationKey]
+        if (last != null && (now - last) < cooldownMs) return true
+        rateLimitTimestamps[operationKey] = now
+        return false
+    }
+
     routing {
         intercept(ApplicationCallPipeline.Plugins) {
             // CORS preflight requests skip auth
@@ -709,21 +730,35 @@ internal fun Application.adminModule(
         }
 
         // ── Hot Reload API ─────────────────────────────────────────────────
+        // Reloads world definitions, ability definitions, and/or status-effect definitions
+        // from their source YAML/config. The reload is NOT atomic across subsystems: if the
+        // abilities reload succeeds but the world reload fails, the engine may be left with
+        // a partially updated state. On failure, the previously loaded state for that
+        // subsystem remains intact (each subsystem reload is individually atomic). A
+        // concurrent-reload guard prevents overlapping reloads.
         post("/api/reload") {
             if (onReload == null) {
                 call.respondJsonError(HttpStatusCode.NotImplemented, "Hot reload not configured")
                 return@post
             }
-            val target = call.request.queryParameters["target"] // world, abilities, effects, all
-            val validTargets = setOf("world", "abilities", "effects", "all")
-            if (target != null && target !in validTargets) {
-                call.respondJsonError(
-                    HttpStatusCode.BadRequest,
-                    "Invalid target. Use: ${validTargets.joinToString(", ")}",
-                )
+            if (isRateLimited("reload", 30_000L)) {
+                call.respondJsonError(HttpStatusCode.TooManyRequests, "Reload rate limited (max 1 per 30 seconds)")
+                return@post
+            }
+            if (!reloadInProgress.compareAndSet(false, true)) {
+                call.respondJsonError(HttpStatusCode.Conflict, "Reload already in progress")
                 return@post
             }
             try {
+                val target = call.request.queryParameters["target"] // world, abilities, effects, all
+                val validTargets = setOf("world", "abilities", "effects", "all")
+                if (target != null && target !in validTargets) {
+                    call.respondJsonError(
+                        HttpStatusCode.BadRequest,
+                        "Invalid target. Use: ${validTargets.joinToString(", ")}",
+                    )
+                    return@post
+                }
                 val summary = onReload.invoke(target)
                 call.respondText(
                     json.writeValueAsString(mapOf("status" to "ok", "summary" to summary)),
@@ -736,6 +771,8 @@ internal fun Application.adminModule(
                     ContentType.Application.Json,
                     HttpStatusCode.InternalServerError,
                 )
+            } finally {
+                reloadInProgress.set(false)
             }
         }
 
@@ -781,6 +818,10 @@ internal fun Application.adminModule(
 
         // ── Staff toggle (JSON) ─────────────────────────────────────────────
         post("/api/players/{name}/staff") {
+            if (isRateLimited("staff_toggle", 5_000L)) {
+                call.respondJsonError(HttpStatusCode.TooManyRequests, "Staff toggle rate limited (max 1 per 5 seconds)")
+                return@post
+            }
             val name = call.parameters["name"] ?: return@post call.respond(HttpStatusCode.BadRequest)
             val record = playerRepo.findByName(name)
             if (record == null) {
@@ -1106,6 +1147,10 @@ internal fun Application.adminModule(
 
         // ── Broadcast ───────────────────────────────────────────────────────
         post("/api/broadcast") {
+            if (isRateLimited("broadcast", 10_000L)) {
+                call.respondJsonError(HttpStatusCode.TooManyRequests, "Broadcast rate limited (max 1 per 10 seconds)")
+                return@post
+            }
             if (onBroadcast == null) {
                 call.respondJsonError(HttpStatusCode.NotImplemented, "Broadcast not configured")
                 return@post

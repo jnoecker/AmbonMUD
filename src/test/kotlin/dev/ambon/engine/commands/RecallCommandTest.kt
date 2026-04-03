@@ -37,7 +37,7 @@ class RecallCommandTest {
             val outs = h.drain()
 
             assertTrue(
-                outs.any { it is OutboundEvent.SendText && it.text.contains("cannot recall") },
+                outs.any { it is OutboundEvent.SendError && it.text.contains("cannot recall") },
                 "Expected combat-block message. got=$outs",
             )
             // Player should not have moved

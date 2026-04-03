@@ -90,7 +90,7 @@ class DialogueQuestHandler(
         cmd: Command.DialogueChoice,
     ) {
         if (dialogueSystem?.isInConversation(sessionId) != true) {
-            outbound.send(OutboundEvent.SendText(sessionId, "Huh?"))
+            outbound.send(OutboundEvent.SendError(sessionId, "Huh?"))
             return
         }
         when (val outcome = dialogueSystem.selectChoice(sessionId, cmd.optionNumber)) {

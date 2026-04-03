@@ -1222,7 +1222,7 @@ object CommandParser {
 
         // Bare number → dialogue choice (CommandRouter decides if applicable)
         lower.toIntOrNull()?.let { n ->
-            if (n in 1..9) return Command.DialogueChoice(n)
+            if (n in 1..99) return Command.DialogueChoice(n)
         }
 
         return when (lower) {

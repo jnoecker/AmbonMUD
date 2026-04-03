@@ -34,7 +34,7 @@ class ShopHandler(
     private suspend fun findShop(sessionId: SessionId, me: PlayerState, command: String? = null): ShopDefinition? {
         val shop = shopRegistry?.shopInRoom(me.roomId)
         if (shop == null) {
-            outbound.send(OutboundEvent.SendText(sessionId, "There is no shop here."))
+            outbound.send(OutboundEvent.SendError(sessionId, "There is no shop here."))
             gmcpEmitter?.sendUiFeedback(
                 sessionId,
                 "error",
@@ -82,7 +82,7 @@ class ShopHandler(
                 shopItems.firstOrNull { (_, item) -> item.matchesKeyword(cmd.keyword) }
             if (match == null) {
                 val msg = "The shop doesn't sell '${cmd.keyword}'."
-                outbound.send(OutboundEvent.SendText(sessionId, msg))
+                outbound.send(OutboundEvent.SendError(sessionId, msg))
                 gmcpEmitter?.sendUiFeedback(sessionId, "error", msg, code = "ITEM_NOT_FOUND", scope = "shop", command = "buy")
                 return
             }
@@ -90,14 +90,14 @@ class ShopHandler(
             val buyPrice = (item.basePrice * economyConfig.buyMultiplier).roundToInt().toLong()
             if (!me.isStaff && me.gold < buyPrice) {
                 val msg = "You can't afford ${item.displayName} ($buyPrice gold)."
-                outbound.send(OutboundEvent.SendText(sessionId, msg))
+                outbound.send(OutboundEvent.SendError(sessionId, msg))
                 gmcpEmitter?.sendUiFeedback(sessionId, "error", msg, code = "INSUFFICIENT_GOLD", scope = "shop", command = "buy")
                 return
             }
             val newItem = items.createFromTemplate(itemId)
             if (newItem == null) {
                 val msg = "That item is out of stock."
-                outbound.send(OutboundEvent.SendText(sessionId, msg))
+                outbound.send(OutboundEvent.SendError(sessionId, msg))
                 gmcpEmitter?.sendUiFeedback(sessionId, "error", msg, code = "OUT_OF_STOCK", scope = "shop", command = "buy")
                 return
             }
@@ -120,17 +120,17 @@ class ShopHandler(
             val inv = items.inventory(sessionId)
             val invItem = inv.firstOrNull { it.matchesKeyword(keyword) }
             if (invItem == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "You don't have '$keyword'."))
+                outbound.send(OutboundEvent.SendError(sessionId, "You don't have '$keyword'."))
                 return
             }
             val sellPrice = (invItem.item.basePrice * economyConfig.sellMultiplier).roundToInt().toLong()
             if (sellPrice <= 0L) {
-                outbound.send(OutboundEvent.SendText(sessionId, "${invItem.item.displayName} is worthless."))
+                outbound.send(OutboundEvent.SendError(sessionId, "${invItem.item.displayName} is worthless."))
                 return
             }
             val removed = items.removeFromInventory(sessionId, invItem.item.keyword)
             if (removed == null) {
-                outbound.send(OutboundEvent.SendText(sessionId, "You don't have '$keyword'."))
+                outbound.send(OutboundEvent.SendError(sessionId, "You don't have '$keyword'."))
                 return
             }
             me.gold += sellPrice

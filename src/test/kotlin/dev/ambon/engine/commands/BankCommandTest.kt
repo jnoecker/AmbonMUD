@@ -144,8 +144,8 @@ class BankCommandTest {
 
             h.router.handle(sid, Command.Bank.DepositGold(50))
 
-            val texts = h.drain().filterIsInstance<OutboundEvent.SendText>().map { it.text }
-            assertTrue(texts.any { it.contains("only have") }, "got=$texts")
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+            assertTrue(errors.any { it.contains("only have") }, "got=$errors")
         }
 
         @Test
@@ -207,8 +207,8 @@ class BankCommandTest {
 
             h.router.handle(sid, Command.Bank.DepositGold(50))
 
-            val texts = h.drain().filterIsInstance<OutboundEvent.SendText>().map { it.text }
-            assertTrue(texts.any { it.contains("bank") }, "got=$texts")
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+            assertTrue(errors.any { it.contains("bank") }, "got=$errors")
             assertEquals(100L, h.players.get(sid)!!.gold)
         }
 
@@ -244,8 +244,8 @@ class BankCommandTest {
 
             h.router.handle(sid, Command.Bank.DepositItem("sword"))
 
-            val texts = h.drain().filterIsInstance<OutboundEvent.SendText>().map { it.text }
-            assertTrue(texts.any { it.contains("full") }, "got=$texts")
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+            assertTrue(errors.any { it.contains("full") }, "got=$errors")
         }
     }
 }

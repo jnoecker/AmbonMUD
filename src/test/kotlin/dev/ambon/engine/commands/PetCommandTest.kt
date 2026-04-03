@@ -145,8 +145,8 @@ class PetCommandTest {
 
             h.router.handle(sid, Command.PetDismiss)
 
-            val texts = h.drain().filterIsInstance<OutboundEvent.SendText>().map { it.text }
-            assertTrue(texts.any { it.contains("no active pet", ignoreCase = true) }, "got=$texts")
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+            assertTrue(errors.any { it.contains("no active pet", ignoreCase = true) }, "got=$errors")
         }
 
         @Test
@@ -174,8 +174,8 @@ class PetCommandTest {
 
             h.router.handle(sid, Command.PetName("Sparky"))
 
-            val texts = h.drain().filterIsInstance<OutboundEvent.SendText>().map { it.text }
-            assertTrue(texts.any { it.contains("no active pet", ignoreCase = true) }, "got=$texts")
+            val errors = h.drain().filterIsInstance<OutboundEvent.SendError>().map { it.text }
+            assertTrue(errors.any { it.contains("no active pet", ignoreCase = true) }, "got=$errors")
         }
     }
 }
