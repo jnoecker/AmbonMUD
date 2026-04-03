@@ -181,7 +181,8 @@ class NetworkSession(
 
     private fun parseTerminalType(payload: ByteArray) {
         if (payload.isEmpty()) return
-        if ((payload[0].toInt() and 0xFF) != TelnetProtocol.TTYPE_IS) return
+        val firstByte = (payload[0].toInt()) and 0xFF
+        if (firstByte != TelnetProtocol.TTYPE_IS) return
 
         val term =
             payload

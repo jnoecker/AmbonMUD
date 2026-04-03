@@ -288,8 +288,8 @@ class NavigationHandler(
                 p.name,
                 playerDesc,
                 level = p.level,
-                race = p.race.toString(),
-                playerClass = p.playerClass.toString(),
+                race = p.race,
+                playerClass = p.playerClass,
             )
             return
         }

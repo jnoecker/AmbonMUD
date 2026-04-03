@@ -62,7 +62,7 @@ class QuestSystemTest {
     @Test
     fun `acceptQuest adds quest to active quests`() =
         runTest {
-            val (qs, players, outbound) = setup()
+            val (qs, players, _) = setup()
             val sid = SessionId(1L)
             players.loginOrFail(sid, "Hero")
 
@@ -272,7 +272,7 @@ class QuestSystemTest {
     @Test
     fun `formatQuestLog shows multiple quests on separate lines`() =
         runTest {
-            val (qs, players, _) = setup()
+            val (_, players, _) = setup()
             val sid = SessionId(1L)
             players.loginOrFail(sid, "Hero")
 
