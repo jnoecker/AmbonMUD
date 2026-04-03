@@ -1,6 +1,7 @@
 package dev.ambon.metrics
 
 import dev.ambon.domain.ids.SessionId
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.DistributionSummary
 import io.micrometer.core.instrument.Gauge
@@ -16,6 +17,78 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+
+private val log = KotlinLogging.logger {}
+
+/**
+ * Normalised disconnect reason for bounded metric cardinality.
+ * Every raw reason string is mapped to one of these known values.
+ */
+enum class DisconnectReason(
+    val tag: String,
+) {
+    EOF("EOF"),
+    BACKPRESSURE("backpressure"),
+    TIMEOUT("timeout"),
+    KICKED("kicked"),
+    ERROR("error"),
+    CONNECTION_RESET("connection_reset"),
+    PROTOCOL_VIOLATION("protocol_violation"),
+    INBOUND_CLOSED("inbound_closed"),
+    UNKNOWN("unknown"),
+    ;
+
+    companion object {
+        /** Map an arbitrary reason string to the closest known enum value. */
+        fun fromString(reason: String): DisconnectReason {
+            val lower = reason.lowercase()
+            return when {
+                lower == "eof" -> EOF
+                lower.contains("backpressure") -> BACKPRESSURE
+                lower.contains("timeout") -> TIMEOUT
+                lower.contains("kicked") || lower.contains("kick") -> KICKED
+                lower.contains("connection reset") || lower.contains("connection_reset") -> CONNECTION_RESET
+                lower.contains("protocol violation") || lower.contains("protocol_violation") -> PROTOCOL_VIOLATION
+                lower.contains("inbound closed") || lower.contains("inbound_closed") -> INBOUND_CLOSED
+                lower.contains("error") -> ERROR
+                else -> UNKNOWN
+            }
+        }
+    }
+}
+
+/**
+ * Normalised gRPC drop reason for bounded metric cardinality.
+ * Every raw reason string is mapped to one of these known values.
+ */
+enum class GrpcDropReason(
+    val tag: String,
+) {
+    NO_STREAM("no_stream"),
+    STREAM_CLOSED("stream_closed"),
+    STREAM_FULL("stream_full"),
+    STREAM_FULL_TIMEOUT("stream_full_timeout"),
+    GATEWAY_LOCAL_QUEUE_FULL("gateway_local_queue_full"),
+    GATEWAY_LOCAL_QUEUE_FULL_TIMEOUT("gateway_local_queue_full_timeout"),
+    UNKNOWN("unknown"),
+    ;
+
+    companion object {
+        /** Map an arbitrary reason string to the closest known enum value. */
+        fun fromString(reason: String): GrpcDropReason {
+            val lower = reason.lowercase()
+            return when {
+                lower == "no_stream" -> NO_STREAM
+                lower == "stream_closed" -> STREAM_CLOSED
+                lower == "stream_full_timeout" -> STREAM_FULL_TIMEOUT
+                lower == "stream_full" -> STREAM_FULL
+                lower == "gateway_local_queue_full_timeout" -> GATEWAY_LOCAL_QUEUE_FULL_TIMEOUT
+                lower == "gateway_local_queue_full" -> GATEWAY_LOCAL_QUEUE_FULL
+                else -> UNKNOWN
+            }
+        }
+    }
+}
 
 class GameMetrics(
     private val registry: MeterRegistry,
@@ -124,6 +197,16 @@ class GameMetrics(
             .publishPercentileHistogram()
             .register(registry)
 
+    /** Pre-registered tick phase timers — bounded cardinality, one per known phase name. */
+    private val tickPhaseTimers: Map<String, Timer> =
+        KNOWN_TICK_PHASES.associateWith { phase ->
+            Timer
+                .builder("engine_tick_phase_duration_seconds")
+                .tag("phase", phase)
+                .publishPercentileHistogram()
+                .register(registry)
+        }
+
     val mobSystemTickTimer: Timer =
         Timer
             .builder("mob_system_tick_duration_seconds")
@@ -183,7 +266,8 @@ class GameMetrics(
     }
 
     fun onTelnetDisconnected(reason: String) {
-        registry.counter("sessions_disconnected_total", "transport", "telnet", "reason", reason).increment()
+        val normalized = DisconnectReason.fromString(reason).tag
+        registry.counter("sessions_disconnected_total", "transport", "telnet", "reason", normalized).increment()
         sessionsOnlineCount.decrementAndGet()
         telnetOnlineCount.decrementAndGet()
     }
@@ -195,7 +279,8 @@ class GameMetrics(
     }
 
     fun onWsDisconnected(reason: String) {
-        registry.counter("sessions_disconnected_total", "transport", "ws", "reason", reason).increment()
+        val normalized = DisconnectReason.fromString(reason).tag
+        registry.counter("sessions_disconnected_total", "transport", "ws", "reason", normalized).increment()
         sessionsOnlineCount.decrementAndGet()
         wsOnlineCount.decrementAndGet()
     }
@@ -213,17 +298,20 @@ class GameMetrics(
     fun onOutboundEnqueueFailed() = outboundEnqueueFailedCounter.increment()
 
     fun onGrpcControlPlaneDrop(reason: String) {
-        registry.counter("grpc_outbound_control_plane_dropped_total", "reason", reason).increment()
+        val normalized = GrpcDropReason.fromString(reason).tag
+        registry.counter("grpc_outbound_control_plane_dropped_total", "reason", normalized).increment()
     }
 
     fun onGrpcDataPlaneDrop(reason: String) {
-        registry.counter("grpc_outbound_data_plane_dropped_total", "reason", reason).increment()
+        val normalized = GrpcDropReason.fromString(reason).tag
+        registry.counter("grpc_outbound_data_plane_dropped_total", "reason", normalized).increment()
     }
 
     fun onGrpcControlPlaneFallbackSend() = grpcControlPlaneFallbackCounter.increment()
 
     fun onGrpcForcedDisconnectDueToControlDeliveryFailure(reason: String) {
-        registry.counter("grpc_forced_disconnect_control_plane_total", "reason", reason).increment()
+        val normalized = GrpcDropReason.fromString(reason).tag
+        registry.counter("grpc_forced_disconnect_control_plane_total", "reason", normalized).increment()
     }
 
     fun onEngineTick() = engineTicksCounter.increment()
@@ -334,18 +422,19 @@ class GameMetrics(
     /**
      * Records the duration of a named tick phase (inbound_drain, simulation, gmcp_flush, outbound_flush).
      * Emits a histogram under `engine_tick_phase_duration_seconds{phase=<phase>}`.
+     *
+     * Only known phase names are accepted to prevent metric cardinality explosion.
+     * Unknown phases are logged and dropped.
      */
     fun recordTickPhase(
         phase: String,
         sample: Timer.Sample,
     ) {
-        sample.stop(
-            Timer
-                .builder("engine_tick_phase_duration_seconds")
-                .tag("phase", phase)
-                .publishPercentileHistogram()
-                .register(registry),
-        )
+        if (phase !in KNOWN_TICK_PHASES) {
+            log.warn { "Unknown tick phase '$phase' — dropping metric sample to prevent cardinality explosion" }
+            return
+        }
+        sample.stop(tickPhaseTimers.getValue(phase))
     }
 
     fun bindPlayerRegistry(supplier: () -> Int) {
@@ -407,6 +496,14 @@ class GameMetrics(
     }
 
     companion object {
+        /** Pre-registered tick phase names. Only these values are accepted by [recordTickPhase]. */
+        val KNOWN_TICK_PHASES: Set<String> = setOf(
+            "inbound_drain",
+            "simulation",
+            "gmcp_flush",
+            "outbound_flush",
+        )
+
         fun noop(): GameMetrics = GameMetrics(SimpleMeterRegistry(), bindJvmMetrics = false)
     }
 }
