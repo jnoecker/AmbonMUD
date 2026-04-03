@@ -679,6 +679,11 @@ class AbilitySystem(
         return (expiresAt - clock.millis()).coerceAtLeast(0L)
     }
 
+    /** Clears all ability cooldowns for a player (e.g. on death). Learned abilities are preserved. */
+    fun clearCooldowns(sessionId: SessionId) {
+        cooldowns.remove(sessionId)
+    }
+
     override suspend fun onPlayerDisconnected(sessionId: SessionId) {
         learnedAbilities.remove(sessionId)
         cooldowns.remove(sessionId)

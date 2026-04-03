@@ -57,6 +57,9 @@ class CombatSystem(
     /** Callback for gold gain events; wired by GameEngine after construction. */
     var onGoldGained: suspend (SessionId, Long, String) -> Unit = { _, _, _ -> }
 
+    /** Callback for player death cleanup; wired by GameEngine after construction. */
+    var onPlayerDeath: suspend (SessionId) -> Unit = { _ -> }
+
     // Per-mob combat state (tracks tick timing)
     private data class MobCombatState(
         val mobId: MobId,
@@ -524,6 +527,10 @@ class CombatSystem(
         outbound.send(OutboundEvent.SendText(sessionId, deathMessage))
         outbound.send(OutboundEvent.SendText(sessionId, "You are safe now — rest and your wounds will mend."))
         broadcastToRoom(players, outbound, roomId, roomMessage, exclude = sessionId)
+
+        // Clean up cross-system state that should not persist through death
+        onPlayerDeath(sessionId)
+
         outbound.send(OutboundEvent.SendPrompt(sessionId))
     }
 
