@@ -20,7 +20,5 @@ if [ -z "$AMBONMUD_SHARDING_ADVERTISEHOST" ]; then
   export AMBONMUD_SHARDING_ADVERTISEHOST="$PRIVATE_IP"
 fi
 
-# -cp instead of -jar so that /app/data sits on the classpath *before* the
-# fat JAR.  Zone YAML files placed in /app/data/world/ (e.g. curled from an
-# assets bucket at startup) shadow the built-in versions inside app.jar.
-exec java -Djava.net.preferIPv4Stack=true -cp /app/data:/app/app.jar dev.ambon.MainKt "$@"
+# All world zones are built into the fat JAR — no external YAML fetching needed.
+exec java -Djava.net.preferIPv4Stack=true -jar /app/app.jar "$@"

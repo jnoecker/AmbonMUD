@@ -158,21 +158,21 @@ Sessions
 
 ## Project Map
 
-### Source Files (~272 Kotlin files in main, ~118 test files)
+### Source Files (~314 Kotlin files in main, ~137 test files)
 
 | Package | Purpose | Key Files |
 |---------|---------|-----------|
-| `dev.ambon` | Entry point, wiring | `Main.kt` (bootstrap), `MudServer.kt` (25K, composition root), `CoroutineExtensions.kt` |
-| `dev.ambon.config` | Configuration | `AppConfig.kt` (33K, full schema + `validated()`), `AppConfigLoader.kt` |
-| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (38K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (25K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (15K), `GroupSystem.kt` (12K), `QuestSystem.kt` (11K), `AchievementSystem.kt` (10K), `GuildSystem.kt`, `CraftingSystem.kt`, `FriendsSystem.kt`, `HousingSystem.kt`, `PetSystem.kt`, `ReputationSystem.kt`, `AuctionSystem.kt`, `TradeSystem.kt`, `DuelSystem.kt`, `WeatherSystem.kt`, `WorldTimeSystem.kt`, `WorldEventSystem.kt`, `LeaderboardSystem.kt`, `TrainerRegistry.kt`, `ThreatTable.kt`, `ShopRegistry.kt`, `SpriteRegistry.kt`, `SpriteLoader.kt`, `EngineUtil.kt` |
-| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (17K, sealed Command hierarchy), `CommandRouter.kt` (dispatch infrastructure only); handlers in `handlers/` subpackage: `NavigationHandler`, `CommunicationHandler`, `CombatHandler`, `ItemHandler`, `WorldFeaturesHandler`, `ProgressionHandler`, `DialogueQuestHandler`, `ShopHandler`, `GroupHandler`, `GuildHandler`, `CraftingHandler`, `EnchantHandler`, `FriendsHandler`, `MailHandler`, `SpriteHandler`, `TrainerHandler`, `PetHandler`, `AuctionHandler`, `BankHandler`, `TradeHandler`, `DuelHandler`, `ReputationHandler`, `LeaderboardHandler`, `DungeonHandler`, `HousingHandler`, `WorldInfoHandler`, `UiHandler`, `AdminHandler`, `HandlerHelpers` |
-| `dev.ambon.engine.abilities` | Ability/spell system | `AbilitySystem.kt` (16K), `AbilityRegistry.kt`, `AbilityRegistryLoader.kt`, `AbilityDefinition.kt` |
-| `dev.ambon.engine.status` | Status effects | `StatusEffectSystem.kt` (13K), `StatusEffectRegistry.kt`, `StatusEffectRegistryLoader.kt`, `StatusEffectDefinition.kt`, `ActiveEffect.kt` |
+| `dev.ambon` | Entry point, wiring | `Main.kt` (bootstrap), `MudServer.kt` (21K, composition root), `CoroutineExtensions.kt` |
+| `dev.ambon.config` | Configuration | `AppConfig.kt` (84K, full schema + `validated()`), `AppConfigLoader.kt` |
+| `dev.ambon.engine` | Core game logic | `GameEngine.kt` (87K, tick loop), `PlayerRegistry.kt`, `PlayerState.kt`, `CombatSystem.kt` (29K), `MobSystem.kt`, `MobRegistry.kt`, `RegenSystem.kt`, `PlayerProgression.kt`, `GmcpEmitter.kt` (77K), `GroupSystem.kt` (13K), `QuestSystem.kt` (12K), `AchievementSystem.kt` (13K), `GuildSystem.kt`, `CraftingSystem.kt`, `FriendsSystem.kt`, `HousingSystem.kt`, `PetSystem.kt`, `ReputationSystem.kt`, `AuctionSystem.kt`, `TradeSystem.kt`, `DuelSystem.kt`, `WeatherSystem.kt`, `WorldTimeSystem.kt`, `WorldEventSystem.kt`, `LeaderboardSystem.kt`, `TrainerRegistry.kt`, `ThreatTable.kt`, `ShopRegistry.kt`, `SpriteRegistry.kt`, `SpriteLoader.kt`, `EngineUtil.kt` |
+| `dev.ambon.engine.commands` | Command parsing/routing | `CommandParser.kt` (47K, sealed Command hierarchy), `CommandRouter.kt` (dispatch infrastructure only); handlers in `handlers/` subpackage: `NavigationHandler`, `CommunicationHandler`, `CombatHandler`, `ItemHandler`, `WorldFeaturesHandler`, `ProgressionHandler`, `DialogueQuestHandler`, `ShopHandler`, `GroupHandler`, `GuildHandler`, `CraftingHandler`, `EnchantHandler`, `FriendsHandler`, `MailHandler`, `SpriteHandler`, `TrainerHandler`, `PetHandler`, `AuctionHandler`, `BankHandler`, `TradeHandler`, `DuelHandler`, `ReputationHandler`, `LeaderboardHandler`, `DungeonHandler`, `HousingHandler`, `WorldInfoHandler`, `UiHandler`, `AdminHandler`, `HandlerHelpers` |
+| `dev.ambon.engine.abilities` | Ability/spell system | `AbilitySystem.kt` (29K), `AbilityRegistry.kt`, `AbilityRegistryLoader.kt`, `AbilityDefinition.kt` |
+| `dev.ambon.engine.status` | Status effects | `StatusEffectSystem.kt` (16K), `StatusEffectRegistry.kt`, `StatusEffectRegistryLoader.kt`, `StatusEffectDefinition.kt`, `ActiveEffect.kt` |
 | `dev.ambon.engine.behavior` | Mob behavior trees | `BehaviorTreeSystem.kt`, `BtNode.kt`, `BtResult.kt`, `BtContext.kt`, `BehaviorTemplates.kt`, `MobBehaviorMemory.kt`; nodes/conditions/actions subdirs |
 | `dev.ambon.engine.dialogue` | NPC dialogue | `DialogueSystem.kt`, `DialogueTree.kt` |
 | `dev.ambon.engine.dungeon` | Procedural dungeons | `DungeonManager.kt`, `DungeonGenerator.kt`, `DungeonRegistry.kt`, `DungeonLayout.kt`, `DungeonInstance.kt` |
 | `dev.ambon.domain.dungeon` | Dungeon domain model | `DungeonTemplateDef.kt`, `DungeonDifficulty.kt`, `CraftingQuality.kt` |
-| `dev.ambon.engine.items` | Item management | `ItemRegistry.kt` (17K), `ItemMatching.kt` |
+| `dev.ambon.engine.items` | Item management | `ItemRegistry.kt` (20K), `ItemMatching.kt` |
 | `dev.ambon.domain.sprite` | Sprite domain model | `SpriteDefinition.kt` (SpriteDefinition, SpriteVariant, SpriteCategory, SpriteUnlockCondition) |
 | `dev.ambon.engine.scheduler` | Delayed actions | `Scheduler.kt` |
 | `dev.ambon.engine.events` | Event types | `InboundEvent.kt`, `OutboundEvent.kt` |
@@ -180,16 +180,16 @@ Sessions
 | `dev.ambon.domain` | Domain model | `PlayerClass.kt`, `Race.kt`; sub-packages: `ids/`, `items/`, `mob/`, `quest/`, `achievement/`, `world/` |
 | `dev.ambon.domain.world` | World model | `Room.kt`, `Direction.kt`, `World.kt`, `WorldFactory.kt`, `ShopDefinition.kt`, `MobSpawn.kt`, `ItemSpawn.kt`, `MobDrop.kt` |
 | `dev.ambon.domain.world.data` | YAML DTOs | `WorldFile.kt`, `RoomFile.kt`, `MobFile.kt`, `ItemFile.kt`, `ShopFile.kt`, `MobDropFile.kt`, `BehaviorFile.kt`, `DialogueNodeFile.kt`, `QuestFile.kt`, `DungeonFile.kt` |
-| `dev.ambon.domain.world.load` | World loading | `WorldLoader.kt` (30K, YAML parsing + validation) |
+| `dev.ambon.domain.world.load` | World loading | `WorldLoader.kt` (61K, YAML parsing + validation) |
 | `dev.ambon.persistence` | Player + guild persistence | `PlayerRepository.kt` (interface), `PlayerRecord.kt`, `PlayerCreationRequest.kt`; `WriteCoalescingPlayerRepository.kt`, `RedisCachingPlayerRepository.kt`, `YamlPlayerRepository.kt`, `PostgresPlayerRepository.kt`, `PlayersTable.kt`, `DatabaseManager.kt`, `PersistenceWorker.kt`, `StringCache.kt`; `GuildRepository.kt` (interface), `YamlGuildRepository.kt`, `PostgresGuildRepository.kt`, `GuildsTable.kt` |
-| `dev.ambon.transport` | Network I/O | `Transport.kt`, `BlockingSocketTransport.kt` (telnet), `KtorWebSocketTransport.kt` (13K, WebSocket), `NetworkSession.kt` (12K), `OutboundRouter.kt` (9K), `AnsiRenderer.kt`, `PlainRenderer.kt`, `TelnetLineDecoder.kt` (6K) |
-| `dev.ambon.grpc` | gRPC engine/gateway | `EngineGrpcServer.kt`, `EngineServer.kt` (21K), `EngineServiceImpl.kt`, `GrpcOutboundDispatcher.kt`, `ProtoMapper.kt` (8.6K), `OutboundEventPlane.kt` |
+| `dev.ambon.transport` | Network I/O | `Transport.kt`, `BlockingSocketTransport.kt` (telnet), `KtorWebSocketTransport.kt` (14K, WebSocket), `NetworkSession.kt` (12K), `OutboundRouter.kt` (10K), `AnsiRenderer.kt`, `PlainRenderer.kt`, `TelnetLineDecoder.kt` (6K) |
+| `dev.ambon.grpc` | gRPC engine/gateway | `EngineGrpcServer.kt`, `EngineServer.kt` (10K), `EngineServiceImpl.kt`, `GrpcOutboundDispatcher.kt`, `ProtoMapper.kt` (8K), `OutboundEventPlane.kt` |
 | `dev.ambon.gateway` | Gateway-mode root | `GatewayServer.kt` (23K), `SessionRouter.kt` |
-| `dev.ambon.sharding` | Zone sharding | `ZoneRegistry.kt`, `StaticZoneRegistry.kt`, `RedisZoneRegistry.kt`, `InterEngineBus.kt`, `LocalInterEngineBus.kt`, `RedisInterEngineBus.kt`, `InterEngineMessage.kt`, `HandoffManager.kt` (16K), `PlayerLocationIndex.kt`, `RedisPlayerLocationIndex.kt`, `InstanceSelector.kt`, `LoadBalancedInstanceSelector.kt`, `InstanceScaler.kt`, `ThresholdInstanceScaler.kt`, `ScaleDecisionPublisher.kt`, `ZoneInstance.kt` |
+| `dev.ambon.sharding` | Zone sharding | `ZoneRegistry.kt`, `StaticZoneRegistry.kt`, `RedisZoneRegistry.kt`, `InterEngineBus.kt`, `LocalInterEngineBus.kt`, `RedisInterEngineBus.kt`, `InterEngineMessage.kt`, `HandoffManager.kt` (12K), `PlayerLocationIndex.kt`, `RedisPlayerLocationIndex.kt`, `InstanceSelector.kt`, `LoadBalancedInstanceSelector.kt`, `InstanceScaler.kt`, `ThresholdInstanceScaler.kt`, `ScaleDecisionPublisher.kt`, `ZoneInstance.kt` |
 | `dev.ambon.session` | Session IDs | `SessionIdFactory.kt`, `AtomicSessionIdFactory.kt`, `SnowflakeSessionIdFactory.kt`, `GatewayIdLeaseManager.kt` |
 | `dev.ambon.redis` | Redis infra | `RedisConnectionManager.kt`, `JsonSupport.kt` |
-| `dev.ambon.metrics` | Observability | `GameMetrics.kt` (13K), `MetricsHttpServer.kt` |
-| `dev.ambon.admin` | Admin dashboard | `AdminHttpServer.kt` (34K) |
+| `dev.ambon.metrics` | Observability | `GameMetrics.kt` (18K), `MetricsHttpServer.kt` |
+| `dev.ambon.admin` | Admin dashboard | `AdminHttpServer.kt` (63K) |
 | `dev.ambon.ui.login` | Login screen | `LoginScreen.kt`, `LoginScreenLoader.kt`, `LoginScreenRenderer.kt` |
 
 ### Resources
@@ -200,26 +200,25 @@ Sessions
 | Multi-instance profiles | `src/main/resources/application-{engine1,engine2,gw1,gw2}.yaml` |
 | World zones (23 YAML files) | `src/main/resources/world/` — 20 zones: crossroads_path, thornhaven_city, thornwood_forest, farmer_fields, cobblestone_road, highland_trails, old_mines, marsh_of_fog, goblin_warrens, dark_barrows, sea_cliffs, sunken_temple, ruined_fortress, shadowmere_fen, thornhaven_sewers, haunted_manor, barrens_wastes, frost_caverns, celestial_peak, dungeon_of_echoes; plus achievements, player_sprites, sprites |
 | Login banner + styles | `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml` |
-| Flyway migrations | `src/main/resources/db/migration/` (V1–V24+: players table through guilds, crafting, friends, mail, sprites, stats JSON, discovered recipes, faction standings, bank) |
+| Flyway migrations | `src/main/resources/db/migration/` (V1–V26: players table through guilds, crafting, friends, mail, sprites, stats JSON, discovered recipes, faction standings, bank, leaderboards, skill points/multiclass) |
 | Proto definitions | `src/main/proto/ambonmud/v1/engine_service.proto`, `events.proto` |
-| Web demo client (static) | `src/main/resources/web/` |
+| Web terminal client (static) | `src/main/resources/web-terminal/` (served at `/terminal`) |
 | V4 canvas client (React + PixiJS) | `web-v3/` (built to `src/main/resources/web-v3/` by `./gradlew buildWeb`) |
-| Ability sprites | `src/main/resources/world/images/abilities/` (102 PNGs) |
-| Compass/direction sprites | `src/main/resources/world/images/global_assets/` |
+| Demo placeholder sprites | `src/main/resources/world/images/demo/` (default PNGs) |
 | World YAML format spec | `docs/WORLD_YAML_SPEC.md` |
 | Dungeon template reference | `docs/DUNGEON_TEMPLATE_REFERENCE.md` |
 | Runtime player saves | `data/players/` (git-ignored, do not commit) |
 
-### Tests (~118 test files)
+### Tests (~137 test files)
 
 | Area | Files | Key Tests |
 |------|-------|-----------|
-| Engine core | `GameEngineIntegrationTest`, `GameEngineLoginFlowTest` (29K), `GameEngineAnsiBehaviorTest` | Full login/play/quit flows, ANSI |
-| Commands | `CommandParserTest` (15K), `CommandRouterTest` (19K), `CommandRouterAdminTest` (23K), `CommandRouterItemsTest` (21K), `CommandRouterShopTest`, `CommandRouterBroadcastTest`, `CommandRouterScoreTest`, `CrossEngineCommandsTest`, `NamesTellGossipTest`, `SocialChannelCommandsTest`, `PhaseCommandTest` | Every command category |
-| Combat/mobs | `CombatSystemTest` (42K), `MobRespawnTest`, `MobRegistryTest`, `MobSystemTest`, `ThreatTableTest` | Damage, threat, death, respawn |
-| Abilities/status | `AbilitySystemTest` (20K), `StatusEffectSystemTest` (23K) | Cast, cooldown, DOT/HOT/stun/root |
-| Behavior trees | `BehaviorTreeSystemTest` (18K), `BehaviorYamlParsingTest` | Mob AI, YAML-driven behaviors |
-| Dialogue/quests/achievements | `DialogueSystemTest` (14K), `QuestSystemTest` (13K), `AchievementSystemTest` (20K) | NPC conversations, quest tracking |
+| Engine core | `GameEngineIntegrationTest`, `GameEngineLoginFlowTest` (36K), `GameEngineAnsiBehaviorTest` | Full login/play/quit flows, ANSI |
+| Commands | `CommandParserTest` (24K), `CommandRouterTest` (20K), `CommandRouterAdminTest` (20K), `CommandRouterItemsTest` (16K), `CommandRouterShopTest`, `CommandRouterBroadcastTest`, `CommandRouterScoreTest`, `CrossEngineCommandsTest`, `NamesTellGossipTest`, `SocialChannelCommandsTest`, `PhaseCommandTest` | Every command category |
+| Combat/mobs | `CombatSystemTest` (32K), `MobRespawnTest`, `MobRegistryTest`, `MobSystemTest`, `ThreatTableTest` | Damage, threat, death, respawn |
+| Abilities/status | `AbilitySystemTest` (19K), `StatusEffectSystemTest` (21K) | Cast, cooldown, DOT/HOT/stun/root |
+| Behavior trees | `BehaviorTreeSystemTest` (23K), `BehaviorYamlParsingTest` | Mob AI, YAML-driven behaviors |
+| Dialogue/quests/achievements | `DialogueSystemTest`, `QuestSystemTest` (12K), `AchievementSystemTest` (23K) | NPC conversations, quest tracking |
 | Groups | `GroupSystemTest` (15K) | Party invite/leave/kick, XP sharing |
 | Guilds | `GuildSystemTest` | Guild create/disband/invite/promote/demote, MOTD, roster |
 | Crafting | `CraftingSystemTest` | Gather, craft, recipe validation, specialization, quality, discovery |
@@ -230,7 +229,7 @@ Sessions
 | Transport | `OutboundRouterTest` (11K), `OutboundRouterAnsiControlsTest`, `OutboundRouterPromptCoalescingTest`, `AnsiRendererTest`, `PlainRendererTest`, `TelnetLineDecoderTest`, `KtorWebSocketTransportTest` | Backpressure, ANSI, protocol |
 | Sharding | `HandoffManagerTest` (18K), `StaticZoneRegistryTest`, `LoadBalancedInstanceSelectorTest`, `ThresholdInstanceScalerTest`, `InterEngineMessageSerializationTest`, `LocalInterEngineBusTest` | Zone handoff, scaling |
 | gRPC | `EngineGrpcServerTest`, `EngineServiceImplTest`, `GatewayEngineIntegrationTest` (16K), `GrpcOutboundDispatcherTest`, `ProtoMapperTest` | End-to-end gateway-engine |
-| Other | `AppConfigLoaderTest`, `GameMetricsTest`, `MetricsHttpServerTest`, `AdminModuleTest` (15K), `GmcpEmitterTest` (20K), `PlayerProgressionTest`, `SchedulerTest`, `SchedulerDropsTest`, `LoginScreenLoaderTest`, `LoginScreenRendererTest`, `WorldLoaderTest` (26K), `SessionIdFactory` tests | Config, metrics, admin, world loading |
+| Other | `AppConfigLoaderTest`, `GameMetricsTest`, `MetricsHttpServerTest`, `AdminModuleTest` (10K), `GmcpEmitterTest` (57K), `PlayerProgressionTest`, `SchedulerTest`, `SchedulerDropsTest`, `LoginScreenLoaderTest`, `LoginScreenRendererTest`, `WorldLoaderTest` (33K), `SessionIdFactory` tests | Config, metrics, admin, world loading |
 
 ### Test Utilities
 
@@ -254,8 +253,8 @@ Sessions
 
 - **Kotlin:** 2.3.10, JVM toolchain 21
 - **Gradle:** wrapper with `-Xmx2g`, daemon idle timeout 10 minutes
-- **Key dependencies:** Ktor 3.4.0 (WebSocket server), kotlinx-coroutines 1.10.2, Jackson 2.21.0 (YAML), Hoplite 2.9.0 (config), Logback 1.5.18, BCrypt 0.4, Micrometer 1.16.3 (Prometheus), Lettuce 7.4.0 (Redis), Exposed 0.58.0 (SQL), HikariCP 6.2.1, PostgreSQL 42.7.5, Flyway 11.3.0, gRPC 1.79.0, Protobuf 3.25.5
-- **Test deps:** JUnit Jupiter 6.0.3, kotlinx-coroutines-test, H2 2.3.232 (Postgres compat mode), Ktor test host, gRPC testing/in-process
+- **Key dependencies:** Ktor 3.4.2 (WebSocket server), kotlinx-coroutines 1.10.2, Jackson 2.21.1 (YAML), Hoplite 2.9.0 (config), Logback 1.5.32, BCrypt 0.4, Micrometer 1.16.4 (Prometheus), Lettuce 7.5.0.RELEASE (Redis), Exposed 0.58.0 (SQL), HikariCP 7.0.2, PostgreSQL 42.7.10, Flyway 12.2.0, gRPC 1.80.0, Protobuf 4.34.1
+- **Test deps:** JUnit Jupiter 6.0.3, kotlinx-coroutines-test, H2 2.4.240 (Postgres compat mode), Ktor test host, gRPC testing/in-process
 
 ## Change Playbooks
 
@@ -452,7 +451,7 @@ AmbonMUD's visual identity is **Surreal Gentle Magic** — cozy fantasy with gla
 ## Known Quirks
 
 - **Compiler warnings in tests:** Several test files produce "No cast needed" warnings (e.g. `InterEngineMessageHandlingTest.kt`, `CrossEngineCommandsTest.kt`). These are harmless and do not affect test results.
-- **Largest files:** `GameEngine.kt` (38K, tick loop) and `WorldLoader.kt` (30K) are the largest remaining files. Command handlers are split across `handlers/` subpackage — navigate by handler class name. `CommandRouter.kt` itself is now just 62 lines of dispatch infrastructure.
+- **Largest files:** `GameEngine.kt` (87K, tick loop), `AppConfig.kt` (84K), `GmcpEmitter.kt` (77K), `AdminHttpServer.kt` (63K), and `WorldLoader.kt` (61K) are the largest files. Command handlers are split across `handlers/` subpackage — navigate by handler class name. `CommandRouter.kt` itself is just 109 lines of dispatch infrastructure.
 - **Generated sources:** Protobuf/gRPC generates code under `build/generated/`. A child `.editorconfig` suppresses ktlint for these files.
 - **Gradle daemon idle timeout:** Set to 10 minutes (`gradle.properties`) to reclaim stale daemons faster than the 3-hour default.
 - **Staff access:** Granted by editing `isStaff: true` in the player YAML file (or `is_staff` column in Postgres) — there is no in-game promotion command.

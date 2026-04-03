@@ -33,13 +33,13 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - Redis connection management + JSON: `src/main/kotlin/dev/ambon/redis`
 - Session ID allocation + gateway lease: `src/main/kotlin/dev/ambon/session` (`AtomicSessionIdFactory`, `SnowflakeSessionIdFactory`, `GatewayIdLeaseManager`)
 - Metrics (Micrometer / Prometheus): `src/main/kotlin/dev/ambon/metrics` (`GameMetrics`, `MetricsHttpServer`)
-- Web client v3 (static, current): `src/main/resources/web-v3` (built from `web-v3/` with `bun run build`); legacy assets remain in `src/main/resources/web` but are no longer served
+- Web client v3 (static, current): `src/main/resources/web-v3` (built from `web-v3/` with `bun run build`); web terminal UI at `src/main/resources/web-terminal` (served at `/terminal`)
 - Login banner UI: `src/main/kotlin/dev/ambon/ui/login`, `src/main/resources/login.txt`, `src/main/resources/login.styles.yaml`
 - World loading and validation: `src/main/kotlin/dev/ambon/domain/world/load/WorldLoader.kt`
-- World content: `src/main/resources/world` (15 YAML files: ambon_hub, tutorial_glade, demo_ruins, noecker_resume, 4 training zones, achievements, labyrinth, celestial_sanctum, crafting_workshop, sunken_crypt, player_sprites, sprites)
+- World content: `src/main/resources/world` (23 YAML files: 20 zones — crossroads_path, thornhaven_city, thornwood_forest, farmer_fields, cobblestone_road, highland_trails, old_mines, marsh_of_fog, goblin_warrens, dark_barrows, sea_cliffs, sunken_temple, ruined_fortress, shadowmere_fen, thornhaven_sewers, haunted_manor, barrens_wastes, frost_caverns, celestial_peak, dungeon_of_echoes; plus achievements, player_sprites, sprites)
 - World format contract: `docs/WORLD_YAML_SPEC.md`
 - Persistence abstractions/impl: `src/main/kotlin/dev/ambon/persistence` (`PlayerRepository`, `YamlPlayerRepository`, `PostgresPlayerRepository`, `DatabaseManager`, `PlayersTable`)
-- Flyway schema migrations: `src/main/resources/db/migration` (V1–V18: players table through latest schema additions)
+- Flyway schema migrations: `src/main/resources/db/migration` (V1–V26: players table through leaderboards, skill points, and multiclass)
 - Tests: `src/test/kotlin` (~118 test files), fixtures in `src/test/resources/world`
 - Runtime player data (git-ignored): `data/players`
 
@@ -143,7 +143,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 
 ### Crafting
 - `CraftingSystem.kt` handles gathering and crafting; `CraftingHandler.kt` routes `Command.Gather` and `Command.Craft`/`Command.Recipes`.
-- Recipe definitions live in config; crafting zone content is in `src/main/resources/world/crafting_workshop.yaml`.
+- Recipe definitions live in config; crafting content (gathering nodes and crafting benches) is distributed across world zones.
 - When adding new recipes or gathering nodes, update the world YAML and/or config definitions.
 
 ### Friends and mail
@@ -159,7 +159,7 @@ By default the server listens on telnet port `4000` and web port `8080` (configu
 - When adding new `InterEngineMessage` variants, update serialization in `InterEngineMessage.kt` and add tests.
 
 ### GMCP
-- `GmcpEmitter.kt` sends structured JSON data via GMCP subnegotiation (25 packages: Char.Vitals, Char.Name, Char.Stats, Char.Skills, Char.Combat, Char.Combat.Event, Char.Cooldown, Char.Gain, Char.Items.Add, Char.Items.Remove, Char.Achievements, Room.Info, Room.AddMob, Room.AddPlayer, Room.RemoveMob, Room.RemovePlayer, Room.UpdateMob, Room.MobInfo, etc.).
+- `GmcpEmitter.kt` sends structured JSON data via GMCP subnegotiation (49+ packages across Char.*, Room.*, Comm.*, Core.*, Crafting.*, Dialogue.*, Friends.*, Guild.*, Quest.*, Server.*, Session.*, Shop.*, Staff.*, Trade.*, World.*, Auction.* families).
 - Telnet GMCP negotiation is handled in `NetworkSession.kt` (WILL GMCP) and `TelnetLineDecoder.kt` (subnegotiation parsing).
 - WebSocket sessions auto-opt into all GMCP packages via `KtorWebSocketTransport.kt`.
 - When adding new GMCP packages, update `GmcpEmitter` and the v3 client's GMCP handler at `web-v3/src/gmcp/applyGmcpPackage.ts`.
