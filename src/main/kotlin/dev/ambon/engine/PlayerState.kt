@@ -90,6 +90,10 @@ data class PlayerState(
     var prestigeLevel: Int = 0,
     /** Cumulative XP spent on prestige ranks. */
     var prestigeXpSpent: Long = 0L,
+    /** Cumulative PvP kills. */
+    var pvpKills: Int = 0,
+    /** Cumulative PvP deaths. */
+    var pvpDeaths: Int = 0,
 ) {
     data class MailComposeState(
         val recipientName: String,
@@ -196,6 +200,8 @@ fun PlayerRecord.toPlayerState(sessionId: SessionId): PlayerState =
         unlockedClasses = unlockedClasses.ifEmpty { setOf(playerClass) }.toMutableSet(),
         prestigeLevel = prestigeLevel,
         prestigeXpSpent = prestigeXpSpent,
+        pvpKills = pvpKills,
+        pvpDeaths = pvpDeaths,
     )
 
 /** Converts this runtime state to a [PlayerRecord] for persistence. */
@@ -242,6 +248,8 @@ fun PlayerState.toPlayerRecord(lastSeenEpochMs: Long): PlayerRecord {
         unlockedClasses = unlockedClasses.toSet(),
         prestigeLevel = prestigeLevel,
         prestigeXpSpent = prestigeXpSpent,
+        pvpKills = pvpKills,
+        pvpDeaths = pvpDeaths,
     )
 }
 

@@ -808,6 +808,7 @@ class GameEngine(
         combatSystem.onXpGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "xp", amount, source) }
         combatSystem.onGoldGained = { sid, amount, source -> gmcpEmitter.sendCharGain(sid, "gold", amount, source) }
         combatSystem.onPlayerDeath = { sid -> cleanupOnPlayerDeath(sid) }
+        combatSystem.zoneStartRoomLookup = { zoneId -> world.zoneStartRoom(zoneId) }
         statusEffectSystem.onCombatEvent = { sid, event -> gmcpEmitter.sendCombatEvent(sid, event) }
 
         questSystem.onQuestCompleted = { sid, questId ->
@@ -1289,6 +1290,9 @@ class GameEngine(
 
                     // Tick duel combat
                     tickDuels()
+
+                    // Tick PvP zone combat
+                    combatSystem.tickPvpCombat()
 
                     // Expire timed pets
                     for (expired in petSystem.tick()) {

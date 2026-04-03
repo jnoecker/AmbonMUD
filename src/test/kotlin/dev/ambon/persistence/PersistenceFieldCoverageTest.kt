@@ -128,6 +128,8 @@ class PersistenceFieldCoverageTest {
                 unlockedClasses = setOf("MAGE"),
                 prestigeLevel = 3,
                 prestigeXpSpent = 1_750_000L,
+                pvpKills = 12,
+                pvpDeaths = 3,
             )
 
         @BeforeAll

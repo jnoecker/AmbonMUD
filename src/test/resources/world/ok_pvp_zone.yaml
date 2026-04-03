@@ -1,0 +1,20 @@
+zone: pvp_zone
+startRoom: pvp_start
+pvpEnabled: true
+lifespan: 0
+
+rooms:
+  pvp_start:
+    title: "PvP Arena"
+    description: "A combat arena."
+    exits:
+      n: pvp_pit
+
+  pvp_pit:
+    title: "The Pit"
+    description: "The fighting pit."
+    exits:
+      s: pvp_start
+
+mobs: {}
+items: {}
