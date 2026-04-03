@@ -55,5 +55,6 @@ ambonmud:
   grpc:
     server:
       port: 9091
+    sharedSecret: "local-dev-secret-change-in-production"
   observability:
     metricsHttpPort: 9191
