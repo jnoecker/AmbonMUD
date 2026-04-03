@@ -95,6 +95,8 @@ ambonmud:
     maxInboundEventsPerTick: 1000
     tickMillis: 100
     inboundBudgetMs: 30
+    # Set to true in production to reject placeholder secrets at startup.
+    productionMode: false
 
   world:
     startRoom: "thornhaven_city:new_arrivals_hall"
@@ -3649,7 +3651,8 @@ ambonmud:
   observability:
     metricsEnabled: true
     metricsEndpoint: "/metrics"
-    metricsHttpPort: 9090
+    metricsHttpPort: 9099
+    metricsHttpHost: "0.0.0.0"
     staticTags: {}
 
   admin:

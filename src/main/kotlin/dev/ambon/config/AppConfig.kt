@@ -253,6 +253,24 @@ data class AppConfig(
         }
         observability.metricsHttpPort.requireValidPort("ambonMUD.observability.metricsHttpPort")
 
+        if (mode == DeploymentMode.ENGINE && observability.metricsEnabled) {
+            require(grpc.server.port != observability.metricsHttpPort) {
+                "ambonMUD.grpc.server.port (${grpc.server.port}) and " +
+                    "ambonMUD.observability.metricsHttpPort (${observability.metricsHttpPort}) " +
+                    "must not be the same in ENGINE mode — both listeners would bind to the same port"
+            }
+        }
+
+        if (observability.metricsEnabled &&
+            observability.metricsHttpHost == "0.0.0.0" &&
+            mode != DeploymentMode.STANDALONE
+        ) {
+            warnConfig(
+                "ambonMUD.observability.metricsHttpHost is 0.0.0.0 (all interfaces) in ${mode.name} mode. " +
+                    "Consider binding to 127.0.0.1 to restrict access.",
+            )
+        }
+
         if (admin.enabled) {
             admin.port.requireValidPort("ambonMUD.admin.port")
             require(admin.token.isNotBlank()) { "ambonMUD.admin.token must be non-blank when admin.enabled=true" }
@@ -458,6 +476,29 @@ data class AppConfig(
             warnConfig("admin.corsOrigins contains wildcard '*' — this allows any origin and should not be used in production")
         }
 
+        // Production mode: reject placeholder secrets
+        if (server.productionMode) {
+            val forbiddenPasswords = setOf("changeme", "ambon", "password", "")
+            require(database.password.lowercase() !in forbiddenPasswords) {
+                "ambonMUD.database.password must not be a placeholder value ('${database.password}') " +
+                    "when server.productionMode=true"
+            }
+            if (redis.enabled && redis.bus.enabled) {
+                val forbiddenSecrets = setOf("CHANGE_ME", "changeme", "")
+                require(redis.bus.sharedSecret !in forbiddenSecrets) {
+                    "ambonMUD.redis.bus.sharedSecret must not be a placeholder value " +
+                        "when server.productionMode=true and redis.bus.enabled=true"
+                }
+            }
+            if (admin.enabled) {
+                val forbiddenTokens = setOf("changeme", "admin", "")
+                require(admin.token.lowercase() !in forbiddenTokens) {
+                    "ambonMUD.admin.token must not be a placeholder value ('${admin.token}') " +
+                        "when server.productionMode=true and admin.enabled=true"
+                }
+            }
+        }
+
         return this
     }
 }
@@ -471,6 +512,8 @@ data class ServerConfig(
     val maxInboundEventsPerTick: Int = 1_000,
     val tickMillis: Long = 100L,
     val inboundBudgetMs: Long = 30L,
+    /** When true, placeholder/default secrets are rejected at startup. */
+    val productionMode: Boolean = false,
 )
 
 data class WorldConfig(
@@ -1631,7 +1674,9 @@ data class DemoConfig(
 data class ObservabilityConfig(
     val metricsEnabled: Boolean = true,
     val metricsEndpoint: String = "/metrics",
-    val metricsHttpPort: Int = 9090,
+    val metricsHttpPort: Int = 9099,
+    /** Bind address for the metrics HTTP listener. Default is 0.0.0.0 (all interfaces). */
+    val metricsHttpHost: String = "0.0.0.0",
     val staticTags: Map<String, String> = emptyMap(),
 )
 

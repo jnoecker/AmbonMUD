@@ -55,11 +55,14 @@ fun main() =
             DeploymentMode.GATEWAY -> {
                 val server = GatewayServer(config)
                 server.start()
-                installShutdownHook { server.stop() }
+                installShutdownHook {
+                    server.triggerShutdown()
+                    server.stop()
+                }
                 log.info { "Gateway running. Press Ctrl+C to stop." }
-                // Gateway has no shutdown signal — block until JVM shutdown hook fires.
-                // This simple approach is acceptable for v1; reconnect logic is tracked separately.
-                Thread.currentThread().join()
+                server.awaitShutdown()
+                log.info { "Shutdown signal received. Stopping gateway server..." }
+                server.stop()
             }
         }
     }

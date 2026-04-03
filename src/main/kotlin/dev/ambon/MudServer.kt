@@ -63,6 +63,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import java.time.Clock
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 private val log = KotlinLogging.logger {}
 
@@ -85,6 +86,7 @@ class MudServer(
     private var engineJob: Job? = null
     private var routerJob: Job? = null
     private val shutdownSignal = CompletableDeferred<Unit>()
+    private val stopped = AtomicBoolean(false)
 
     private val clock = Clock.systemUTC()
 
@@ -480,6 +482,7 @@ class MudServer(
     suspend fun awaitShutdown() = shutdownSignal.await()
 
     suspend fun stop() {
+        if (!stopped.compareAndSet(false, true)) return
         runCatching { adminServer?.stop() }
         runCatching { telnetTransport.stop() }
         runCatching { webTransport.stop() }

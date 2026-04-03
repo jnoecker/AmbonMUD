@@ -30,6 +30,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import java.time.Clock
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 private val log = KotlinLogging.logger {}
 
@@ -154,6 +155,7 @@ class EngineServer(
     private var engineJob: Job? = null
     private var metricsHttpServer: MetricsHttpServer? = null
     private var shardingJobs = ServerInfrastructure.ShardingJobs()
+    private val stopped = AtomicBoolean(false)
 
     suspend fun start() {
         redisManager?.connect()
@@ -220,6 +222,7 @@ class EngineServer(
                     port = config.observability.metricsHttpPort,
                     registry = prometheusRegistry,
                     endpoint = config.observability.metricsEndpoint,
+                    host = config.observability.metricsHttpHost,
                 )
             server.start()
             metricsHttpServer = server
@@ -230,6 +233,7 @@ class EngineServer(
     suspend fun awaitShutdown() = shutdownSignal.await()
 
     suspend fun stop() {
+        if (!stopped.compareAndSet(false, true)) return
         runCatching { metricsHttpServer?.stop() }
         runCatching { grpcServer.stop() }
         shardingJobs.stopAll()
