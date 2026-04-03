@@ -78,6 +78,10 @@ data class PlayerRecord(
     val prestigeLevel: Int = 0,
     /** Cumulative XP spent on prestige ranks. */
     val prestigeXpSpent: Long = 0L,
+    /** Cumulative PvP kills. */
+    val pvpKills: Int = 0,
+    /** Cumulative PvP deaths. */
+    val pvpDeaths: Int = 0,
 ) {
     /**
      * Applies legacy migration fixes after deserialization.

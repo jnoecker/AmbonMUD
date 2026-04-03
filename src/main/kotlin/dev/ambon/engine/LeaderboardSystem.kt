@@ -30,6 +30,7 @@ class LeaderboardSystem(
         DUNGEONS("dungeons", "Dungeon Champion", "dungeons"),
         KILLS("kills", "Monster Slayer", "kills"),
         PRESTIGE("prestige", "Most Prestigious", "prestige"),
+        PVP_KILLS("pvp", "PvP Champion", "pvp kills"),
         ;
 
         companion object {
@@ -71,6 +72,7 @@ class LeaderboardSystem(
                     mobsKilledTotal = live.mobsKilledTotal,
                     dungeonsCompleted = live.dungeonsCompleted,
                     prestigeLevel = live.prestigeLevel,
+                    pvpKills = live.pvpKills,
                 )
             }
 
@@ -84,6 +86,7 @@ class LeaderboardSystem(
             newCache[Category.DUNGEONS.key] = rank(records, topN) { it.dungeonsCompleted.toLong() }
             newCache[Category.KILLS.key] = rank(records, topN) { it.mobsKilledTotal }
             newCache[Category.PRESTIGE.key] = rank(records, topN) { it.prestigeLevel.toLong() }
+            newCache[Category.PVP_KILLS.key] = rank(records, topN) { it.pvpKills.toLong() }
             cache = newCache
 
             log.debug { "Leaderboard refreshed — ${records.size} records, topN=$topN" }

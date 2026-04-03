@@ -1,0 +1,48 @@
+zone: blood_arena
+startRoom: arena_gates
+pvpEnabled: true
+graphical: false
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+rooms:
+  arena_gates:
+    title: "The Arena Gates"
+    description: "Massive iron gates mark the entrance to the Blood Arena. The roar of combat echoes from within. Crimson banners hang from the stone walls, and the air carries the metallic scent of old battles. A sign reads: 'All who enter beyond this point accept the risk of combat.'"
+    exits:
+      n: arena_pit
+      s: crossroads_path:signpost_junction
+
+  arena_pit:
+    title: "The Fighting Pit"
+    description: "A circular arena of packed sand, stained dark from countless battles. Stone walls rise on all sides, too high to climb. The crowd's ghostly cheers seem to echo from the empty stone seats above. This is where warriors prove their worth against each other."
+    exits:
+      s: arena_gates
+      e: eastern_alcove
+      w: western_alcove
+      n: arena_overlook
+
+  eastern_alcove:
+    title: "Eastern Alcove"
+    description: "A shadowed alcove carved into the arena wall. Weapon racks line the stone, though most are empty now. A small fountain provides water for weary combatants. The sounds of the pit echo through the narrow entrance."
+    exits:
+      w: arena_pit
+
+  western_alcove:
+    title: "Western Alcove"
+    description: "A mirrored alcove on the western wall of the arena. Old bloodstains mark the stone floor. A bench provides rest between bouts, and torches cast flickering light across the rough-hewn walls."
+    exits:
+      e: arena_pit
+
+  arena_overlook:
+    title: "Arena Overlook"
+    description: "A raised platform overlooking the fighting pit below. From here, the entire arena is visible. Stone railings prevent falls, and a few old chairs suggest this was once a place of honor for spectators."
+    exits:
+      s: arena_pit
+
+mobs: {}
+items: {}

@@ -115,6 +115,8 @@ class GmcpEmitter(
                 prestigeLevel = player.prestigeLevel,
                 prestigeXpAvailable = prestigeAvailableXp(player),
                 prestigeNextCost = prestigeNextCost(player.prestigeLevel),
+                pvpKills = player.pvpKills,
+                pvpDeaths = player.pvpDeaths,
             ),
         )
     }
@@ -139,6 +141,7 @@ class GmcpEmitter(
         room: Room,
         isHousing: Boolean = false,
         housingOwner: String? = null,
+        pvpEnabled: Boolean = false,
     ) {
         emit(
             sessionId,
@@ -159,6 +162,7 @@ class GmcpEmitter(
                 housing = isHousing,
                 housingOwner = housingOwner,
                 graphical = room.graphical,
+                pvpEnabled = pvpEnabled,
             ),
         )
     }
@@ -1701,6 +1705,8 @@ class GmcpEmitter(
         val prestigeLevel: Int = 0,
         val prestigeXpAvailable: Long? = null,
         val prestigeNextCost: Long? = null,
+        val pvpKills: Int = 0,
+        val pvpDeaths: Int = 0,
     )
 
     private data class CharCombatPayload(
@@ -1739,6 +1745,7 @@ class GmcpEmitter(
         val housing: Boolean = false,
         val housingOwner: String? = null,
         val graphical: Boolean = false,
+        val pvpEnabled: Boolean = false,
     )
 
     private data class ItemPayload(

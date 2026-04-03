@@ -76,6 +76,8 @@ object PlayersTable : Table("players") {
     val unlockedClasses = text("unlocked_classes").default("[]")
     val prestigeLevel = integer("prestige_level").default(0)
     val prestigeXpSpent = long("prestige_xp_spent").default(0L)
+    val pvpKills = integer("pvp_kills").default(0)
+    val pvpDeaths = integer("pvp_deaths").default(0)
 
     override val primaryKey = PrimaryKey(id)
 
@@ -126,6 +128,8 @@ object PlayersTable : Table("players") {
             unlockedClasses = safeReadJson(row[unlockedClasses], unlockedClassesType, emptySet()),
             prestigeLevel = row[prestigeLevel],
             prestigeXpSpent = row[prestigeXpSpent],
+            pvpKills = row[pvpKills],
+            pvpDeaths = row[pvpDeaths],
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -175,5 +179,7 @@ object PlayersTable : Table("players") {
         statement[unlockedClasses] = jsonMapper.writeValueAsString(record.unlockedClasses)
         statement[prestigeLevel] = record.prestigeLevel
         statement[prestigeXpSpent] = record.prestigeXpSpent
+        statement[pvpKills] = record.pvpKills
+        statement[pvpDeaths] = record.pvpDeaths
     }
 }

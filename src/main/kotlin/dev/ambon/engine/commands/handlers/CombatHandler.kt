@@ -1,6 +1,7 @@
 package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
+import dev.ambon.domain.world.World
 import dev.ambon.engine.DuelSystem
 import dev.ambon.engine.HousingSystem
 import dev.ambon.engine.abilities.AbilitySystem
@@ -25,6 +26,7 @@ class CombatHandler(
     private val combat = ctx.combat
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
+    private val world: World = ctx.world
 
     override fun register(router: CommandRouter) {
         router.on<Command.Kill> { sid, cmd -> handleKill(sid, cmd) }
@@ -52,6 +54,32 @@ class CombatHandler(
             }
         }
         dialogueSystem?.endConversation(sessionId)
+
+        // In PvP zones, try targeting a player first
+        val me = players.get(sessionId) ?: return
+        val zone = me.roomId.zone
+        if (world.isZonePvpEnabled(zone)) {
+            val targetSid = players.findSessionByName(cmd.target)
+            if (targetSid != null) {
+                val target = players.get(targetSid)
+                if (target != null && target.roomId == me.roomId) {
+                    val pvpError = combat.startPvpCombat(sessionId, targetSid)
+                    if (pvpError != null) {
+                        outbound.send(OutboundEvent.SendError(sessionId, pvpError))
+                        gmcpEmitter?.sendUiFeedback(
+                            sessionId,
+                            "error",
+                            pvpError,
+                            code = "PVP_ERROR",
+                            scope = "combat",
+                            command = "kill",
+                        )
+                    }
+                    return
+                }
+            }
+        }
+
         val error = combat.startCombat(sessionId, cmd.target)
         outbound.sendIfError(sessionId, error)
         if (error != null) {
@@ -72,6 +100,13 @@ class CombatHandler(
                 outbound.send(OutboundEvent.SendInfo(sessionId, "You flee from the duel!"))
                 outbound.send(OutboundEvent.SendInfo(other, "$myName flees from the duel!"))
             }
+            return
+        }
+
+        // Check PvP combat
+        if (combat.isInPvpCombat(sessionId)) {
+            val pvpError = combat.fleePvp(sessionId)
+            outbound.sendIfError(sessionId, pvpError)
             return
         }
 
@@ -96,6 +131,7 @@ class CombatHandler(
 
     private fun killErrorCode(error: String): String = when {
         error.contains("already fighting", ignoreCase = true) -> "ALREADY_IN_COMBAT"
+        error.contains("already in PvP", ignoreCase = true) -> "ALREADY_IN_COMBAT"
         error.contains("don't see", ignoreCase = true) -> "TARGET_NOT_FOUND"
         error.contains("Kill what", ignoreCase = true) -> "MISSING_TARGET"
         else -> "COMBAT_ERROR"
