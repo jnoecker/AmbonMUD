@@ -609,10 +609,11 @@ rooms:
 
   north_gate:
     title: "Thornhaven — North Gate"
-    description: "The north gate of Thornhaven stands open day and night, its ironwood doors worn smooth by centuries of traffic. The road north winds uphill through rolling country before disappearing into the distance. A bored-looking guard leans against the arch. The city lies to the south."
+    description: "The north gate of Thornhaven stands open day and night, its ironwood doors worn smooth by centuries of traffic. The road north winds uphill through rolling country before disappearing into the distance. A bored-looking guard leans against the arch. A beaten footpath curves east toward the Thornwood treeline. The city lies to the south."
     exits:
       s: new_arrivals_hall
       n: crossroads_path:world_road_south
+      e: thornwood_forest:forest_road
 
   city_center:
     title: "City Center"
@@ -652,11 +653,12 @@ rooms:
 
   trade_row:
     title: "Trade Row"
-    description: "A bustling commercial street south of the east district. Stalls and storefronts compete for attention: the general store's open front glows warmly to the north, and the auction hall's bright lanterns draw a steady crowd to the east."
+    description: "A bustling commercial street south of the east district. Stalls and storefronts compete for attention: the general store's open front glows warmly to the north, and the auction hall's bright lanterns draw a steady crowd to the east. The south gate arch leads out to the farming fields beyond the city wall."
     exits:
       n: east_district
       w: general_store
       e: auction_hall
+      s: farmer_fields:north_fields
 
   tarnished_flagon_inn:
     title: "The Tarnished Flagon Inn"
@@ -686,9 +688,10 @@ rooms:
 
   auction_hall:
     title: "Thornhaven Auction Hall"
-    description: "A high-vaulted hall with tiered benches and a raised podium where Auctioneer Brant holds court. Chalk boards list current lots. The clamour of competitive bidding fills the room. Type 'auction list' to browse current listings."
+    description: "A high-vaulted hall with tiered benches and a raised podium where Auctioneer Brant holds court. Chalk boards list current lots. The clamour of competitive bidding fills the room. The east arch opens onto the cobblestone road that runs away from the city. Type 'auction list' to browse current listings."
     exits:
       w: trade_row
+      e: cobblestone_road:west_junction
 
   post_office:
     title: "Post Office"

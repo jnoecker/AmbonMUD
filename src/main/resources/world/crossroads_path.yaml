@@ -22,6 +22,8 @@ mobs:
   waypost_guard:
     name: "Waypost Guard Edmon"
     room: world_road_south
+    quests:
+      - travelers_welcome
     tier: weak
     level: 1
     hp: 999
@@ -87,6 +89,22 @@ mobs:
     respawnSeconds: 60
     behavior:
       template: wander_aggro
+
+# ─── Quests ───────────────────────────────────────────────────────────────────
+
+quests:
+  travelers_welcome:
+    name: "A Traveler's Welcome"
+    description: "Waypost Guard Edmon has asked you to prove yourself in Eryndal. Head to Thornwood Forest east of Thornhaven and kill three stray wolves. It is a simple task, but it marks you as someone who takes initiative."
+    giver: waypost_guard
+    objectives:
+      - type: kill
+        targetKey: thornwood_forest:stray_wolf
+        count: 3
+        description: "Kill 3 stray wolves in Thornwood Forest"
+    rewards:
+      xp: 650
+      gold: 20
 
 # ─── Rooms ────────────────────────────────────────────────────────────────────
 

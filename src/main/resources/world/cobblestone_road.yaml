@@ -1,0 +1,183 @@
+zone: cobblestone_road
+startRoom: west_junction
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  road_ration:
+    displayName: "a road ration"
+    keyword: ration
+    consumable: true
+    onUse:
+      healHp: 10
+    basePrice: 25
+    description: "Hard tack, dried meat, and a small square of cheese. Not delicious but reliably filling."
+
+  travel_cloak:
+    displayName: "a travel cloak"
+    keyword: cloak
+    slot: body
+    armor: 2
+    basePrice: 90
+    description: "A sturdy wool cloak with a deep hood, built for long roads in rough weather."
+
+  brigand_badge:
+    displayName: "a brigand's badge"
+    keyword: badge
+    description: "A crude tin badge pressed with a skull and crossed swords. Brigands use these as gang markers. Worth something to the city guard."
+    basePrice: 12
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  road_bandit:
+    name: "a road bandit"
+    room: road_crossing
+    tier: standard
+    level: 3
+    respawnSeconds: 120
+    xpReward: 20
+    goldMin: 3
+    goldMax: 12
+    behavior:
+      template: wander_aggro
+
+  rabid_dog:
+    name: "a rabid dog"
+    room: open_road
+    tier: standard
+    level: 2
+    respawnSeconds: 90
+    xpReward: 12
+    behavior:
+      template: wander_aggro
+
+  ambush_brigand:
+    name: "an ambush brigand"
+    room: ruined_southroad
+    tier: standard
+    level: 4
+    respawnSeconds: 180
+    xpReward: 30
+    goldMin: 5
+    goldMax: 20
+    behavior:
+      template: aggro_guard
+    drops:
+      - itemId: brigand_badge
+        chance: 0.6
+
+  traveling_merchant_pell:
+    name: "Merchant Pell"
+    room: roadside_inn
+    tier: weak
+    level: 1
+    hp: 999
+    minDamage: 1
+    maxDamage: 1
+    xpReward: 0
+    goldMin: 0
+    goldMax: 0
+    dialogue:
+      root:
+        text: "Ho, traveller! Pell's the name, road trade's the game. I carry supplies for those who don't want to lug everything from Thornhaven. Type 'list' to see my wares."
+        choices:
+          - text: "Tell me about the road ahead."
+            next: road_info
+          - text: "Goodbye."
+            next: farewell
+      road_info:
+        text: "The road crosses through bandit country — be sharp. North fork leads up toward the highland trails. East fork eventually reaches the marshy fens if you follow it. South fork runs toward some old ruined fortress, last I checked. None of it's safe, but all of it's interesting."
+        choices:
+          - text: "Goodbye."
+            next: farewell
+      farewell:
+        text: "Safe roads. Watch your back around the crossing."
+
+# ─── Shops ────────────────────────────────────────────────────────────────────
+
+shops:
+  pells_road_supplies:
+    name: "Pell's Road Supplies"
+    room: roadside_inn
+    items:
+      - road_ration
+      - travel_cloak
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  west_junction:
+    title: "Cobblestone Road — West Junction"
+    description: "The cobblestone road begins where Thornhaven's east arch empties onto the open land beyond the city walls. Auction hall lanterns glow behind you to the west. The road east is well-maintained here, paved with flat stones and bordered by low walls. The evening wind smells of rain."
+    exits:
+      w: thornhaven_city:auction_hall
+      e: open_road
+
+  open_road:
+    title: "Open Road"
+    description: "A long straight stretch of cobblestones flanked by sparse trees and old pasture walls. The views are wide in every direction: Thornhaven's towers behind you to the west, grey hills rolling north, and a hint of darker country to the south. The road narrows slightly to the east toward the road milestone. A camp is visible north of the road."
+    exits:
+      w: west_junction
+      e: road_milestone
+      n: roadside_camp
+
+  roadside_camp:
+    title: "Roadside Camp"
+    description: "A cleared area just north of the main road where travellers have stopped for generations. A ring of stones marks an old fire site, and a wooden lean-to keeps off the worst of the rain. The road leads south; the roadside inn is a short walk east."
+    exits:
+      s: open_road
+      e: roadside_inn
+
+  roadside_inn:
+    title: "The Milestone Inn"
+    description: "A squat stone building that has been receiving road-weary travellers for a century. The common room is low and smoky but the fire is warm and Merchant Pell keeps a good supply of road provisions. A carved milestone beside the door reads: 'THORNHAVEN — 2 LEAGUES'. Type 'list' to browse Pell's wares."
+    exits:
+      w: roadside_camp
+
+  road_milestone:
+    title: "Road Milestone"
+    description: "A tall carved stone marker at a widening in the road. One face reads 'THORNHAVEN — 3 LEAGUES'; the others point toward the highlands, the marsh, and the ruins. The sky here seems especially open, and weather rolls in fast from the west. Rain clouds are stacking on the horizon. The road continues east toward the crossing; a side path dips south to a viewpoint."
+    exits:
+      w: open_road
+      e: road_crossing
+      s: wayfarers_stone
+
+  wayfarers_stone:
+    title: "Wayfarers' Stone"
+    description: "A flat granite slab beside the road, worn smooth by centuries of tired travellers sitting on it. Carvings on the face record travellers who passed this way — names, dates, destinations. The oldest are barely legible. The milestone is back to the north."
+    exits:
+      n: road_milestone
+
+  road_crossing:
+    title: "Road Crossing"
+    description: "The cobblestone road meets three others at a wide, muddy crossing. Signposts lean at angles, their lettering half-washed by years of rain: north toward the highland trails, east toward the fens, south toward the old fortress road. Road bandits have been working this crossing and the ground shows evidence of recent struggle. The road back to Thornhaven is west."
+    exits:
+      w: road_milestone
+      n: highland_trailhead
+      e: fog_threshold
+      s: ruined_southroad
+
+  highland_trailhead:
+    title: "Highland Trailhead"
+    description: "The road begins to climb here, the cobblestones giving way to packed earth and exposed rock. The highlands are visible ahead: grey stone ridges draped in heather, with a narrow trail winding up between them. The road crossing is back to the south."
+    exits:
+      s: road_crossing
+
+  fog_threshold:
+    title: "Fog Threshold"
+    description: "The road east deteriorates from cobblestone to clay, and low-lying mist begins to pool between the trees on either side. The air smells of mud and still water. Experienced travellers know this is where the road to the Marsh of Fog begins. The crossing is back to the west."
+    exits:
+      w: road_crossing
+
+  ruined_southroad:
+    title: "Ruined South Road"
+    description: "The road south is older and in poor repair — sections have subsided, and weeds push between the stones. Ambush brigands have taken advantage of the isolation here, lurking in the collapsed section of wall to the east. The road ahead leads toward a ruined fortress on the horizon. The crossing is back north."
+    exits:
+      n: road_crossing
