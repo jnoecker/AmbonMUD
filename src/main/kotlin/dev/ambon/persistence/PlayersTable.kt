@@ -74,6 +74,8 @@ object PlayersTable : Table("players") {
     val dungeonsCompleted = integer("dungeons_completed").default(0)
     val learnedAbilityIds = text("learned_ability_ids").default("[]")
     val unlockedClasses = text("unlocked_classes").default("[]")
+    val prestigeLevel = integer("prestige_level").default(0)
+    val prestigeXpSpent = long("prestige_xp_spent").default(0L)
 
     override val primaryKey = PrimaryKey(id)
 
@@ -122,6 +124,8 @@ object PlayersTable : Table("players") {
             dungeonsCompleted = row[dungeonsCompleted],
             learnedAbilityIds = safeReadJson(row[learnedAbilityIds], learnedAbilityIdsType, emptySet()),
             unlockedClasses = safeReadJson(row[unlockedClasses], unlockedClassesType, emptySet()),
+            prestigeLevel = row[prestigeLevel],
+            prestigeXpSpent = row[prestigeXpSpent],
         ).migrateDefaults()
 
     /** Writes all [PlayerRecord] fields into an insert or upsert [statement]. */
@@ -169,5 +173,7 @@ object PlayersTable : Table("players") {
         statement[dungeonsCompleted] = record.dungeonsCompleted
         statement[learnedAbilityIds] = jsonMapper.writeValueAsString(record.learnedAbilityIds)
         statement[unlockedClasses] = jsonMapper.writeValueAsString(record.unlockedClasses)
+        statement[prestigeLevel] = record.prestigeLevel
+        statement[prestigeXpSpent] = record.prestigeXpSpent
     }
 }
