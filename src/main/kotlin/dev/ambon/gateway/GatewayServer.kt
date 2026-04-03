@@ -39,14 +39,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.random.Random
 
@@ -70,7 +68,7 @@ class GatewayServer(
     private val config: AppConfig,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val telnetDispatcher = Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()
+    private val telnetDispatcher = dev.ambon.ServerInfrastructure.createTelnetDispatcher()
     private val multiEngine = config.gateway.engines.isNotEmpty()
 
     private val prometheusRegistry: PrometheusMeterRegistry? =
@@ -171,7 +169,7 @@ class GatewayServer(
         outboundRouter = OutboundRouter(engineOutbound = activeOutbound, scope = scope, metrics = gameMetrics)
         scope.launch { outboundRouter.start() }
 
-        telnetTransport = dev.ambon.ServerInfrastructure.createTelnetTransport(
+        val transports = dev.ambon.ServerInfrastructure.createAndStartTransports(
             config = config,
             inbound = activeInbound,
             outboundRouter = outboundRouter,
@@ -179,19 +177,11 @@ class GatewayServer(
             scope = scope,
             metrics = gameMetrics,
             sessionDispatcher = telnetDispatcher,
-        )
-        telnetTransport.start()
-        log.info { "Gateway telnet transport bound on port ${config.server.telnetPort}" }
-
-        webTransport = dev.ambon.ServerInfrastructure.createWebTransport(
-            config = config,
-            inbound = activeInbound,
-            outboundRouter = outboundRouter,
-            sessionIdFactory = sessionIdFactory::allocate,
             prometheusRegistry = prometheusRegistry,
-            metrics = gameMetrics,
         )
-        webTransport.start()
+        telnetTransport = transports.telnet
+        webTransport = transports.web
+        log.info { "Gateway telnet transport bound on port ${config.server.telnetPort}" }
 
         bindQueueMetrics()
 

@@ -39,10 +39,13 @@ import dev.ambon.transport.OutboundRouter
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancelAndJoin
 import java.time.Clock
 import java.util.UUID
+import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -123,6 +126,60 @@ object ServerInfrastructure {
             metricsEndpoint = config.observability.metricsEndpoint,
             metrics = metrics,
         )
+
+    /**
+     * Bundle of started transports returned by [createAndStartTransports].
+     */
+    data class TransportBundle(
+        val telnet: BlockingSocketTransport,
+        val web: KtorWebSocketTransport,
+    )
+
+    /**
+     * Creates the virtual-thread dispatcher used for telnet session I/O.
+     * Both [MudServer] and [dev.ambon.gateway.GatewayServer] need this.
+     */
+    fun createTelnetDispatcher(): ExecutorCoroutineDispatcher =
+        Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()
+
+    /**
+     * Creates and starts both transports (telnet + WebSocket).
+     * This encapsulates the duplicated create-start sequence shared by
+     * [MudServer] and [dev.ambon.gateway.GatewayServer].
+     */
+    suspend fun createAndStartTransports(
+        config: AppConfig,
+        inbound: InboundBus,
+        outboundRouter: OutboundRouter,
+        sessionIdFactory: () -> dev.ambon.domain.ids.SessionId,
+        scope: CoroutineScope,
+        metrics: GameMetrics,
+        sessionDispatcher: CoroutineContext,
+        prometheusRegistry: PrometheusMeterRegistry?,
+    ): TransportBundle {
+        val telnet = createTelnetTransport(
+            config = config,
+            inbound = inbound,
+            outboundRouter = outboundRouter,
+            sessionIdFactory = sessionIdFactory,
+            scope = scope,
+            metrics = metrics,
+            sessionDispatcher = sessionDispatcher,
+        )
+        telnet.start()
+
+        val web = createWebTransport(
+            config = config,
+            inbound = inbound,
+            outboundRouter = outboundRouter,
+            sessionIdFactory = sessionIdFactory,
+            prometheusRegistry = prometheusRegistry,
+            metrics = metrics,
+        )
+        web.start()
+
+        return TransportBundle(telnet = telnet, web = web)
+    }
 
     fun bindQueueMetrics(
         inbound: InboundBus,
