@@ -166,6 +166,38 @@ class RedisCachingPlayerRepositoryTest {
         }
 
     @Test
+    fun `save updates redis cache so stale reads do not occur`() =
+        runBlocking {
+            val record =
+                repo.create(
+                    PlayerCreationRequest(
+                        name = "Boromir",
+                        startRoomId = RoomId("demo:start"),
+                        nowEpochMs = 9000L,
+                        passwordHash = "hash9",
+                        ansiEnabled = false,
+                    ),
+                )
+            // Mutate and save — cache must reflect the updated record
+            val updated = record.copy(level = 10, gold = 250L, roomId = RoomId("demo:tavern"))
+            repo.save(updated)
+
+            // Clear delegate so lookups can only succeed from cache
+            delegate.clear()
+
+            val byId = repo.findById(record.id)
+            assertNotNull(byId)
+            assertEquals(10, byId!!.level)
+            assertEquals(250L, byId.gold)
+            assertEquals(RoomId("demo:tavern"), byId.roomId)
+
+            val byName = repo.findByName("Boromir")
+            assertNotNull(byName)
+            assertEquals(10, byName!!.level)
+            assertEquals(250L, byName.gold)
+        }
+
+    @Test
     fun `all fields survive round-trip including isStaff`() =
         runBlocking {
             val created =

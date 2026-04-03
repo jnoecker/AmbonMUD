@@ -1,6 +1,7 @@
 package dev.ambon.persistence
 
 import dev.ambon.metrics.GameMetrics
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -65,9 +66,10 @@ class PostgresPlayerRepository(
 
                 request.toNewPlayerRecord(PlayerId(result[PlayersTable.id]))
             }
-        } catch (e: Exception) {
-            // Unique-index violation on name_lower → treat as duplicate name
-            if (e.message?.contains("idx_players_name_lower", ignoreCase = true) == true) {
+        } catch (e: ExposedSQLException) {
+            // SQL state 23505 = unique_violation (works across Postgres versions)
+            val sqlState = e.sqlState
+            if (sqlState == "23505") {
                 throw PersistenceException("Name already taken: '$trimmed'", e)
             }
             throw e

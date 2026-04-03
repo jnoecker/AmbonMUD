@@ -22,11 +22,21 @@ internal fun atomicWriteText(
     try {
         path.parent?.createDirectories()
         val tmp = Files.createTempFile(path.parent, path.fileName.toString(), ".tmp")
-        Files.writeString(tmp, contents, StandardOpenOption.TRUNCATE_EXISTING)
         try {
-            Files.move(tmp, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
-        } catch (_: AtomicMoveNotSupportedException) {
-            Files.move(tmp, path, StandardCopyOption.REPLACE_EXISTING)
+            Files.writeString(tmp, contents, StandardOpenOption.TRUNCATE_EXISTING)
+            try {
+                Files.move(tmp, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+            } catch (_: AtomicMoveNotSupportedException) {
+                Files.move(tmp, path, StandardCopyOption.REPLACE_EXISTING)
+            }
+        } catch (e: Exception) {
+            // Clean up temp file on any failure (disk full, permission denied, etc.)
+            try {
+                Files.deleteIfExists(tmp)
+            } catch (_: IOException) {
+                // Best-effort cleanup
+            }
+            throw e
         }
     } catch (e: IOException) {
         throw PersistenceException("Failed to write file atomically: $path", e)

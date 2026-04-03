@@ -128,6 +128,10 @@ class WriteCoalescingPlayerRepository(
      * in-memory cache so the next lookup reads fresh from the delegate
      * (e.g. YAML on disk).  This lets external edits to player files
      * take effect on the next login.
+     *
+     * Uses a single lock acquisition for the flush-check and eviction to
+     * prevent a TOCTOU race where another thread could mark the player
+     * dirty again between the version check and the cache removal.
      */
     override suspend fun evict(id: PlayerId) {
         val pending = lock.withLock {
@@ -137,13 +141,13 @@ class WriteCoalescingPlayerRepository(
         }
         if (pending != null) {
             delegate.save(pending.record)
-            lock.withLock {
-                if (dirtyVersions[id] == pending.version) {
-                    dirtyVersions.remove(id)
-                }
-            }
         }
         lock.withLock {
+            // Clear dirty flag only if the version hasn't changed since our flush
+            if (pending != null && dirtyVersions[id] == pending.version) {
+                dirtyVersions.remove(id)
+            }
+            // Only evict if no new dirty writes arrived
             if (dirtyVersions.containsKey(id)) return
             val removed = cache.remove(id) ?: return
             nameIndex.remove(removed.name.lowercase())

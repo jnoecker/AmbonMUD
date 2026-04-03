@@ -8,6 +8,7 @@ import dev.ambon.domain.ids.SessionId
 import dev.ambon.domain.items.Item
 import dev.ambon.domain.items.ItemInstance
 import dev.ambon.engine.items.ItemRegistry
+import dev.ambon.persistence.atomicWriteText
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.nio.file.Files
 import java.nio.file.Path
@@ -213,8 +214,7 @@ class AuctionSystem(
                     expiresAtMs = listing.expiresAtMs,
                 )
             }
-            Files.createDirectories(path.parent)
-            Files.writeString(path, mapper.writeValueAsString(persisted))
+            atomicWriteText(path, mapper.writeValueAsString(persisted))
         } catch (e: Exception) {
             log.warn(e) { "Failed to persist auction listings to $path" }
         }
