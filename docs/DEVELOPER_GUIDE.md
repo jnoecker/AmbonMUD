@@ -2,7 +2,7 @@
 
 Welcome! This guide takes you from zero to productive on the AmbonMUD codebase in minimal time.
 
-**What is AmbonMUD?** A production-grade, tick-based MUD (Multi-User Dungeon) server in Kotlin with telnet + WebSocket transports, YAML-defined world content, class-based character progression, 121 class-specific abilities, real-time combat, and three deployment modes (STANDALONE, ENGINE, GATEWAY) for horizontal scaling.
+**What is AmbonMUD?** A production-grade, tick-based MUD (Multi-User Dungeon) server in Kotlin with telnet + WebSocket transports, YAML-defined world content, class-based character progression, 112 class-specific abilities, real-time combat, and three deployment modes (STANDALONE, ENGINE, GATEWAY) for horizontal scaling.
 
 ---
 
@@ -444,7 +444,7 @@ Serializable DTO; same fields as `PlayerState` plus timestamps.
 
 **File:** `src/main/kotlin/dev/ambon/engine/abilities/AbilitySystem.kt`
 
-- **121 abilities** across 4 classes (25+ per class, levels 1–50)
+- **112 abilities** across 4 classes (25+ per class, levels 1–50)
 - Mana pool; mana cost deducted on cast
 - Per-ability cooldowns (tracked per-session)
 - Auto-learned on level-up (based on class and level)
@@ -611,7 +611,7 @@ XP curve: `totalXpForLevel(L) = baseXp * (L-1)^exponent + linearXp * (L-1)`
 - IDs allocated in `data/players/next_player_id.txt`
 
 **PostgreSQL** (optional, bring up Docker Compose first):
-- Schema managed by Flyway migrations (`src/main/resources/db/migration/`, V1–V24+)
+- Schema managed by Flyway migrations (`src/main/resources/db/migration/`, V1–V27)
 - Connection defaults: `localhost:5432/ambonmud`, user `ambon`, password `ambon` (matches docker compose)
 
 ### Persistence Stack
@@ -659,7 +659,15 @@ ambonmud:
   database:
     jdbcUrl: jdbc:postgresql://localhost:5432/ambonmud
     username: ambon
-    password: ambon
+    password: changeme            # Override in production (see productionMode)
+  server:
+    productionMode: false         # true = reject placeholder secrets at startup
+  grpc:
+    sharedSecret: ""              # HMAC secret for ENGINE↔GATEWAY auth
+    allowPlaintext: true          # false to require TLS
+  observability:
+    metricsHttpPort: 9099         # Metrics HTTP (was 9090 — changed to avoid gRPC conflict)
+    metricsHttpHost: "0.0.0.0"   # 127.0.0.1 recommended in production
   redis:
     enabled: false              # false by default; enable with Docker Compose
     uri: redis://localhost:6379
@@ -703,6 +711,11 @@ Hoplite lowercases env var names and replaces `_` with `.`, so `AMBONMUD_PERSIST
 | `AMBONMUD_GRPC_CLIENT_ENGINEHOST` | `ambonmud.grpc.client.engineHost` | `engine.internal.ambonmud` |
 | `AMBONMUD_SERVER_TELNETPORT` | `ambonmud.server.telnetPort` | `4000` |
 | `AMBONMUD_SERVER_WEBPORT` | `ambonmud.server.webPort` | `8080` |
+| `AMBONMUD_SERVER_PRODUCTIONMODE` | `ambonmud.server.productionMode` | `true` in production |
+| `AMBONMUD_GRPC_SHAREDSECRET` | `ambonmud.grpc.sharedSecret` | HMAC shared secret for ENGINE↔GATEWAY |
+| `AMBONMUD_GRPC_ALLOWPLAINTEXT` | `ambonmud.grpc.allowPlaintext` | `false` for TLS-only |
+| `AMBONMUD_OBSERVABILITY_METRICSHTTPHOST` | `ambonmud.observability.metricsHttpHost` | `127.0.0.1` recommended |
+| `AMBONMUD_OBSERVABILITY_METRICSHTTPPORT` | `ambonmud.observability.metricsHttpPort` | `9099` |
 
 ---
 
