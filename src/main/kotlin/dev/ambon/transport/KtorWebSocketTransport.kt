@@ -234,6 +234,10 @@ private suspend fun DefaultWebSocketServerSession.bridgeWebSocketSession(
         for (frame in incoming) {
             when (frame) {
                 is Frame.Text -> {
+                    if (frame.data.size > MAX_WS_FRAME_SIZE) {
+                        log.warn { "WebSocket frame too large (${frame.data.size} bytes), disconnecting: sessionId=$sessionId" }
+                        throw ProtocolViolation("Frame too large (${frame.data.size} > $MAX_WS_FRAME_SIZE)")
+                    }
                     val text = frame.readText()
                     // Detect GMCP JSON envelope: {"gmcp":"Package","data":<anything>}
                     val gmcpPair = tryParseGmcpEnvelope(text)
@@ -353,11 +357,7 @@ internal fun sanitizeIncomingLines(
 }
 
 private fun sanitizeCloseReason(reason: String): String {
-    val cleaned =
-        reason
-            .replace('\r', ' ')
-            .replace('\n', ' ')
-            .trim()
+    val cleaned = reason.filter { it.code in 0x20..0x7E }.trim()
     return when {
         cleaned.isEmpty() -> "closed"
         cleaned.length <= MAX_CLOSE_REASON_LENGTH -> cleaned
@@ -384,3 +384,4 @@ internal fun tryParseGmcpEnvelope(text: String): Pair<String, String>? {
 }
 
 private const val MAX_CLOSE_REASON_LENGTH = 123
+private const val MAX_WS_FRAME_SIZE = 65_536
