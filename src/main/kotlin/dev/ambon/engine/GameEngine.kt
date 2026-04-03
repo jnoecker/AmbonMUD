@@ -1907,6 +1907,11 @@ class GameEngine(
         sessionId: SessionId,
         templateKey: String,
     ) {
+        // Skip quest/achievement callbacks for dead players (HP <= 0) — they may have
+        // died in the same tick from a different mob.  Rewards should not fire posthumously.
+        val player = players.get(sessionId)
+        if (player == null || player.hp <= 0) return
+
         questSystem.onMobKilled(sessionId, templateKey)
         achievementSystem.onMobKilled(sessionId, templateKey)
 
