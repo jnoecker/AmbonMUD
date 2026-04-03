@@ -1,0 +1,196 @@
+zone: highland_trails
+startRoom: trail_entrance
+lifespan: 0
+
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+
+# ─── Items ────────────────────────────────────────────────────────────────────
+
+items:
+  mountain_herb:
+    displayName: "a sprig of mountain herb"
+    keyword: herb
+    description: "A hardy plant that grows in rocky soil above the treeline. Valued by herbalists for its resilience."
+    basePrice: 12
+
+  iron_ore:
+    displayName: "a chunk of iron ore"
+    keyword: ore
+    description: "A heavy lump of raw iron ore pried from the hillside rock. Needs smelting before it is useful."
+    basePrice: 15
+
+  troll_hide:
+    displayName: "a troll hide"
+    keyword: hide
+    description: "Thick, greenish hide from a cave troll. Leatherworkers prize it for its unusual durability."
+    basePrice: 25
+
+  eagle_feather:
+    displayName: "a stone eagle feather"
+    keyword: feather
+    description: "A large primary feather from a stone eagle, stiff and grey-streaked. Fletchers pay well for these."
+    basePrice: 15
+
+# ─── Gathering Nodes ──────────────────────────────────────────────────────────
+
+gatheringNodes:
+  mountain_herb_patch:
+    displayName: "a mountain herb patch"
+    keyword: herbs
+    skill: herbalism
+    skillRequired: 2
+    room: goat_meadow
+    respawnSeconds: 180
+    xpReward: 15
+    yields:
+      - itemId: mountain_herb
+        minQuantity: 1
+        maxQuantity: 2
+
+  iron_ore_vein:
+    displayName: "an iron ore vein"
+    keyword: vein
+    skill: mining
+    skillRequired: 1
+    room: ore_shelf
+    respawnSeconds: 240
+    xpReward: 18
+    yields:
+      - itemId: iron_ore
+        minQuantity: 1
+        maxQuantity: 2
+
+# ─── Mobs ─────────────────────────────────────────────────────────────────────
+
+mobs:
+  mountain_goat:
+    name: "a mountain goat"
+    room: lower_trail
+    tier: weak
+    level: 2
+    respawnSeconds: 120
+    xpReward: 10
+
+  highland_bandit:
+    name: "a highland bandit"
+    room: trail_crossing
+    tier: standard
+    level: 4
+    respawnSeconds: 120
+    xpReward: 30
+    goldMin: 5
+    goldMax: 20
+    behavior:
+      template: wander_aggro
+
+  cave_troll:
+    name: "a cave troll"
+    room: highland_pass
+    tier: elite
+    level: 5
+    respawnSeconds: 300
+    xpReward: 60
+    drops:
+      - itemId: troll_hide
+        chance: 0.7
+
+  stone_eagle:
+    name: "a stone eagle"
+    room: summit_approach
+    tier: standard
+    level: 3
+    respawnSeconds: 180
+    xpReward: 20
+    drops:
+      - itemId: eagle_feather
+        chance: 0.6
+
+# ─── Rooms ────────────────────────────────────────────────────────────────────
+
+rooms:
+  trail_entrance:
+    title: "Highland Trailhead — Entrance"
+    description: "The cobblestone road ends here where a well-worn dirt track begins winding uphill. Stone cairns mark the way into the highlands — a tradition maintained by travellers for generations. The air is noticeably cooler than the lowland road to the south. The highlands begin in earnest to the north."
+    exits:
+      s: cobblestone_road:highland_trailhead
+      n: lower_trail
+
+  lower_trail:
+    title: "Lower Highland Trail"
+    description: "A firm trail of exposed shale and heather that climbs steadily through the lower slopes. Mountain goats pick their way along the ridgeline with bored confidence, watching your progress. The trail entrance is back downhill to the south; the trail crossing is further north. A side path dips east toward an open meadow."
+    exits:
+      s: trail_entrance
+      n: trail_crossing
+      e: eastern_outlook
+
+  eastern_outlook:
+    title: "Eastern Outlook"
+    description: "A flat-topped boulder from which you can see the whole sweep of the land to the east and south: the cobblestone road threading back toward Thornhaven, the dark smear of the Marsh of Fog on the distant horizon, and the glint of what might be the sea far to the southeast. The trail is back to the west."
+    exits:
+      w: lower_trail
+
+  trail_crossing:
+    title: "Trail Crossing"
+    description: "A wide spot in the trail where a cross-path joins from the sides: east toward an iron-rich ridge, west into open meadowlands. Highland bandits have been working this junction, drawn by the traffic between the mines and the road below. The trail continues north toward the highland pass; the trailhead is back south."
+    exits:
+      s: lower_trail
+      n: highland_pass
+      e: iron_ridge
+      w: goat_meadow
+
+  goat_meadow:
+    title: "Goat Meadow"
+    description: "A sheltered bowl of scrubby grassland just west of the main trail. Mountain goats crop the short grass with practiced efficiency. Hardy mountain herbs grow in dense patches among the rocks — a herbalist's delight. The trail crossing is back to the east."
+    exits:
+      e: trail_crossing
+
+  iron_ridge:
+    title: "Iron Ridge"
+    description: "A sharp ridge of dark stone where iron minerals colour the rock with rust-red streaks. The ore seam is clearly visible in the cliff face. The air up here has a metallic smell after rain. The trail crossing is back to the west; a rough ore shelf runs along the ridge to the north."
+    exits:
+      w: trail_crossing
+      n: ore_shelf
+
+  ore_shelf:
+    title: "Ore Shelf"
+    description: "A narrow shelf of exposed rock where an iron ore vein runs openly along the cliff face. Chunks of ore have worked loose over the centuries and litter the shelf floor. This is clearly where the mines once sourced surface iron before they went underground. The iron ridge trail is back to the south."
+    exits:
+      s: iron_ridge
+
+  highland_pass:
+    title: "Highland Pass"
+    description: "A narrow passage between two sheer rock walls where the trail squeezes through the first of the highland ridges. The wind funnels through here with enough force to make footing uncertain. A cave troll has made its lair in a widening of the crack to one side. The pass opens onto the upper trail ahead to the north; the crossing is back south."
+    exits:
+      s: trail_crossing
+      n: upper_trail
+
+  upper_trail:
+    title: "Upper Highland Trail"
+    description: "The trail levels briefly here before rising again toward the summit. The vegetation is sparse: lichen, stunted heather, and nothing else. The stone circle is visible as a dark ring on a flat area to the east. The air is sharp and cold. The pass is back to the south; the summit approach lies ahead north."
+    exits:
+      s: highland_pass
+      n: summit_approach
+      e: stone_circle
+
+  stone_circle:
+    title: "The Stone Circle"
+    description: "A ring of seven standing stones on a flat hilltop, each about head height, with no inscription or decoration. Whoever placed them chose a site with an extraordinary view in every direction. The air inside the circle is uncannily still regardless of the wind outside. The upper trail is back to the west."
+    exits:
+      w: upper_trail
+
+  summit_approach:
+    title: "Summit Approach"
+    description: "The highest navigable ground on the highland trail before the true summit becomes impassable. Stone eagles ride thermals overhead, diving occasionally at things on the slope. A cleft in the rock to the east leads to a lookout perch. A dark cave mouth descends into the mountain to the south — the entrance to the Old Mines."
+    exits:
+      s: upper_trail
+      e: eagles_perch
+      d: old_mines:mine_entrance
+
+  eagles_perch:
+    title: "Eagle's Perch"
+    description: "A dramatic rocky shelf jutting from the summit face. Stone eagles nest in the crevices here and do not welcome visitors. The view is extraordinary: the full arc of the realm spread out below, from Thornhaven's rooftops to the dark line of the eastern fens and, on a clear day, the silver thread of the sea to the south. The summit approach is back to the west."
+    exits:
+      w: summit_approach
