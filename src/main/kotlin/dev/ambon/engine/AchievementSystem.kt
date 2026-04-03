@@ -118,6 +118,21 @@ class AchievementSystem(
     }
 
     /**
+     * Called when a player completes a dungeon with a full party.
+     * Checks DUNGEON_COMPLETE_FULL_PARTY criteria separately from regular dungeon completions.
+     */
+    suspend fun onDungeonCompletedWithFullParty(sessionId: SessionId, dungeonName: String) {
+        updateAchievementProgress(
+            sessionId,
+            criterionAdvancer(
+                type = "dungeon_complete_full_party",
+                matches = { it.targetId.isBlank() || it.targetId == dungeonName },
+                newValue = { _, _ -> 1 },
+            ),
+        )
+    }
+
+    /**
      * Called when a player creates a guild. Checks GUILD_CREATE criteria.
      */
     suspend fun onGuildCreated(sessionId: SessionId) {

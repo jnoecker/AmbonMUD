@@ -1926,6 +1926,9 @@ class GameEngine(
         for (sid in inst.members) {
             players.get(sid)?.let { it.dungeonsCompleted += 1 }
             achievementSystem.onDungeonCompleted(sid, inst.template.name)
+            if (inst.members.size >= engineConfig.group.maxSize) {
+                achievementSystem.onDungeonCompletedWithFullParty(sid, inst.template.name)
+            }
             outbound.send(
                 OutboundEvent.SendInfo(
                     sid,

@@ -270,10 +270,14 @@ protobuf {
 //
 // These tasks wire up a two-engine / two-gateway topology on localhost:
 //
-//   runEngine1   ENGINE  gRPC :9091  zones: tutorial_glade, ambon_hub, demo_ruins,
-//                                          low_training_marsh, low_training_highlands
-//   runEngine2   ENGINE  gRPC :9092  zones: noecker_resume, low_training_mines,
-//                                          low_training_barrens
+//   runEngine1   ENGINE  gRPC :9091  zones: crossroads_path, thornhaven_city,
+//                                          thornwood_forest, farmer_fields, cobblestone_road,
+//                                          highland_trails, old_mines, marsh_of_fog,
+//                                          goblin_warrens, dark_barrows
+//   runEngine2   ENGINE  gRPC :9092  zones: sea_cliffs, sunken_temple, ruined_fortress,
+//                                          shadowmere_fen, thornhaven_sewers, haunted_manor,
+//                                          barrens_wastes, frost_caverns, celestial_peak,
+//                                          dungeon_of_echoes
 //   runGateway1  GATEWAY telnet :4000  web :8080  connects to engine-1 + engine-2
 //   runGateway2  GATEWAY telnet :4001  web :8081  connects to engine-1 + engine-2
 //

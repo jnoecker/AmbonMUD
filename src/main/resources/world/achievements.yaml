@@ -155,7 +155,7 @@ achievements:
     category: social
     hidden: false
     criteria:
-      - type: dungeon_complete
+      - type: dungeon_complete_full_party
         targetId: ""
         count: 1
         description: "Complete a dungeon with a full group"

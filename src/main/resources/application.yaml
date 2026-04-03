@@ -29,11 +29,11 @@ ambonmud:
       #  - engineId: engine-1
       #    host: localhost
       #    port: 9091
-      #    zones: [ambon_hub, demo_ruins]
+      #    zones: [crossroads_path, thornhaven_city, thornwood_forest]
       #  - engineId: engine-2
       #    host: localhost
       #    port: 9092
-      #    zones: [noecker_resume]
+      #    zones: [sea_cliffs, sunken_temple, ruined_fortress]
     handoff:
       ackTimeoutMs: 2000
     # Redis player-location index for O(1) cross-engine tell routing.
