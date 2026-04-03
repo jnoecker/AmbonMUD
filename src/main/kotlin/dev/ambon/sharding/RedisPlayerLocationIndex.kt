@@ -44,7 +44,13 @@ class RedisPlayerLocationIndex(
         val lower = playerName.lowercase()
         try {
             // asyncCommands returns immediately without blocking.
-            redis.withAsyncCommands { it.setex(key(playerName), keyTtlSeconds, engineId) }
+            redis.withAsyncCommands { cmds ->
+                cmds.setex(key(playerName), keyTtlSeconds, engineId)
+                    .exceptionally { t ->
+                        log.warn(t) { "Async PlayerLocationIndex.register failed for player=$playerName" }
+                        null
+                    }
+            }
             registeredNames.add(lower)
         } catch (e: Exception) {
             log.warn(e) { "PlayerLocationIndex.register failed for player=$playerName" }
@@ -56,13 +62,16 @@ class RedisPlayerLocationIndex(
         try {
             // Conditional delete: only removes the key when this engine is the current owner.
             // Prevents overwriting a registration written by the target engine during handoff.
-            redis.withAsyncCommands {
-                it.eval<Long>(
+            redis.withAsyncCommands { cmds ->
+                cmds.eval<Long>(
                     conditionalDeleteScript,
                     ScriptOutputType.INTEGER,
                     arrayOf(key(playerName)),
                     engineId,
-                )
+                ).exceptionally { t ->
+                    log.warn(t) { "Async PlayerLocationIndex.unregister failed for player=$playerName" }
+                    0L
+                }
             }
             registeredNames.remove(lower)
         } catch (e: Exception) {
@@ -72,6 +81,10 @@ class RedisPlayerLocationIndex(
 
     override suspend fun lookupEngineId(playerName: String): String? =
         withContext(Dispatchers.IO) {
+            if (!redis.isConnected()) {
+                log.warn { "Redis unavailable for PlayerLocationIndex.lookup player=$playerName" }
+                return@withContext null
+            }
             try {
                 redis.withCommands { it.get(key(playerName)) }
             } catch (e: Exception) {
@@ -86,6 +99,10 @@ class RedisPlayerLocationIndex(
             redis.withAsyncCommands { cmds ->
                 for (name in registeredNames) {
                     cmds.expire(key(name), keyTtlSeconds)
+                        .exceptionally { t ->
+                            log.warn(t) { "Async PlayerLocationIndex.refreshTtl failed for player=$name" }
+                            false
+                        }
                 }
             }
         } catch (e: Exception) {

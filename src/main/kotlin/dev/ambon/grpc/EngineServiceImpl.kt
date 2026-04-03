@@ -69,7 +69,11 @@ class EngineServiceImpl(
             } finally {
                 // Gateway stream ended — generate synthetic Disconnected for any orphaned sessions
                 // that never sent an explicit Disconnected (e.g. gateway crash).
-                val orphans = sessionToStream.keys().toList().filter { sessionToStream[it] === streamChannel }
+                // Snapshot the entry set first, then only disconnect sessions that still map to
+                // THIS specific dead stream channel (identity check). This prevents a race where
+                // a reconnecting gateway has already registered new sessions in sessionToStream.
+                val snapshot = sessionToStream.entries.toList()
+                val orphans = snapshot.filter { it.value === streamChannel }.map { it.key }
                 orphans.forEach { sid ->
                     runCatching { forceDisconnectSession(sid, reason = "gateway-disconnect") }
                         .onFailure { t -> log.warn(t) { "Failed to synthesize disconnect for orphaned session $sid" } }

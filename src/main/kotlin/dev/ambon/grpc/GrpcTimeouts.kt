@@ -28,7 +28,8 @@ object GrpcTimeouts {
      * backpressured channel before declaring delivery failure.
      *
      * Used as the default for the `controlPlaneSendTimeoutMs` parameter in both
-     * [GrpcOutboundDispatcher] and `GrpcOutboundBus`.
+     * [GrpcOutboundDispatcher] and `GrpcOutboundBus`. Increased from 250ms to 2000ms
+     * for WAN/VPN scenarios.
      */
-    const val DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS: Long = 250L
+    const val DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS: Long = 2_000L
 }
