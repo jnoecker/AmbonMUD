@@ -183,3 +183,4 @@ rooms:
     description: "The road south is older and in poor repair — sections have subsided, and weeds push between the stones. Ambush brigands have taken advantage of the isolation here, lurking in the collapsed section of wall to the east. The road ahead leads toward a ruined fortress on the horizon. The crossing is back north."
     exits:
       n: road_crossing
+      s: ruined_fortress:fortress_approach
