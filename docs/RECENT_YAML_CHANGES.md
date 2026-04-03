@@ -4,6 +4,87 @@ This document summarizes YAML and configuration changes from recent features tha
 
 ---
 
+## Trainer System & Multi-Classing (application.yaml + zone YAML)
+
+### Skill Points Config
+
+```yaml
+ambonmud:
+  engine:
+    skillPoints:
+      interval: 2     # 1 skill point earned per N levels (default: 2)
+```
+
+### Multi-Classing Config
+
+```yaml
+ambonmud:
+  engine:
+    multiclass:
+      minLevel: 10    # minimum level to unlock a second class
+      goldCost: 500   # gold cost per additional class unlock
+```
+
+### Ability Level Scaling Fields
+
+Each ability in `engine.abilities.definitions` now supports two optional scaling fields:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `damagePerLevel` | Float | `0.0` | Additional min/max damage per player level |
+| `healPerLevel` | Float | `0.0` | Additional healing per player level |
+
+```yaml
+ambonmud:
+  engine:
+    abilities:
+      definitions:
+        fireball:
+          displayName: Fireball
+          requiredClass: MAGE
+          levelRequired: 5
+          manaCost: 22
+          cooldownMs: 6000
+          targetType: ENEMY
+          effect:
+            type: DIRECT_DAMAGE
+            minDamage: 3
+            maxDamage: 8
+            damagePerLevel: 1.5    # +1.5 damage per player level
+```
+
+### Trainer Zone YAML (trainers: section)
+
+New top-level `trainers:` section in zone YAML files. Each key is a trainer ID matching a mob defined in `mobs:`.
+
+```yaml
+trainers:
+  warrior_trainer:
+    name: "Sergeant Crag"
+    class: WARRIOR          # class ID this trainer teaches (uppercase)
+    room: training_yard     # room ID where the trainer is located
+    image: null             # optional portrait image filename
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `<key>` | string | yes | Trainer ID — must match a mob key in `mobs:` |
+| `name` | string | yes | Display name in GMCP output |
+| `class` | string | yes | Class ID — all abilities with `requiredClass` matching this value are shown |
+| `room` | string | yes | Room ID where the trainer stands |
+| `image` | string? | no | Portrait image filename for web client |
+
+### GMCP Packages (new)
+
+| Package | Subscribe via | When Sent |
+|---------|---------------|-----------|
+| `Trainer.List` | `Trainer 1` | On `train` or `train list` in a trainer room |
+| `Char.Classes` | `Char.Classes 1` | On login and whenever a new class is unlocked |
+
+See `docs/TRAINER_SYSTEM.md` for full details and `Trainer.List` payload schema.
+
+---
+
 ## Pet / Companion System (application.yaml)
 
 New config section under `ambonmud.engine.pets`:

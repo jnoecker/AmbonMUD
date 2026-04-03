@@ -4,7 +4,7 @@ This document outlines planned features, completed work, and strategic next step
 
 ---
 
-## Current State (March 2026)
+## Current State (April 2026)
 
 AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 
@@ -24,23 +24,29 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 
 ### Gameplay
 ✅ 4 races, 4 classes + 1 debug class (Swarm), 6 primary attributes
-✅ **102 class-specific abilities** (25+ per class across 50 levels)
+✅ **102 class-specific abilities** — trainer-based learning with skill points; multi-classing available at level 10
 ✅ Status effects (DoT, HoT, STAT_BUFF/DEBUFF, STUN, ROOT, SHIELD)
 ✅ Group/party system with N:M threat tables
-✅ Items (equippable + consumable)
-✅ Gold currency + mob drops + shops
+✅ Items (equippable + consumable) + item enchanting
+✅ Gold currency + mob drops + shops + bank NPC + auction house
+✅ Player-to-player trading with confirmation flow
+✅ Consent-based PvP dueling
 ✅ Rich communication (say/tell/gossip/emote/etc.)
 ✅ NPC dialogue trees + behavior tree AI
 ✅ Individual mob respawn timers
 ✅ HP/mana regen
 ✅ Zone resets
-✅ Quest system (Phase 1: basic tracking)
+✅ Quest system (objectives, rewards, tracking)
 ✅ Achievement system + titles
 ✅ Guilds with ranks, guild chat, roster management
 ✅ Friends list + offline mail
 ✅ Crafting & gathering with specialization, recipe discovery, quality tiers, rare yields
 ✅ Player housing (personal rooms, furniture, vaults, access control)
 ✅ Procedural dungeons (template-driven, instanced, 4 difficulty tiers, boss encounters)
+✅ Pet/companion system (SUMMON_PET ability type, level-scaled stats)
+✅ Faction & reputation system (7 standing tiers, quest/kill integration)
+✅ Day/night cycle, dynamic per-zone weather, seasonal events
+✅ Leaderboard system and hall of fame
 ✅ Web-based admin dashboard
 ✅ Remember-me auth tokens for persistent login
 
@@ -102,6 +108,21 @@ AmbonMUD has a **mature infrastructure** and **solid gameplay foundation**:
 | Persistent World State (#9) | ✅ Done | WorldStateRegistry, persistent door/lever/container state, world features handler |
 | Admin Dashboard (#14) | ✅ Done | Player lookup, metrics, admin controls, JSON API |
 
+### Phase F — Economy, Social Depth & World Systems
+
+| Project | Status | Highlights |
+|---------|--------|-----------|
+| Player-to-Player Trading (#849) | ✅ Done (Apr 2026) | Interactive item and gold transfers with confirmation flow; `trade` command family |
+| Auction House (#850) | ✅ Done (Apr 2026) | Player-driven marketplace; persistent listings in `data/auction_listings.json`; `auction` command family |
+| PvP Dueling (#851) | ✅ Done (Apr 2026) | Consent-based dueling (`duel` challenge/accept/decline); no item loss |
+| Faction & Reputation System (#852) | ✅ Done (Apr 2026) | 7 standing tiers (Hated → Revered); affected by mob kills and quest rewards; enemy faction relationships; Flyway V23 |
+| Pet / Companion System (#853) | ✅ Done (Apr 2026) | SUMMON_PET ability type; level-scaled stats; one active pet per player; `pet` command family |
+| Item Enchanting (#854) | ✅ Done (Apr 2026) | `enchant`/`enchanting_table` crafting station; stat and damage bonuses; `maxEnchantmentsPerItem` config; Flyway V? |
+| Bank NPC System (#855) | ✅ Done (Apr 2026) | Gold and item vault via bank rooms; `deposit`/`withdraw`/`bank`; Flyway V24 |
+| Day/Night Cycle, Weather & Seasonal Events (#856) | ✅ Done (Apr 2026) | 24-hour world clock; 6 weather types with per-zone transitions; date-triggered events with flag system; `time` command; `World.Time`/`World.Weather`/`World.Events` GMCP |
+| Leaderboards & Hall of Fame (#858) | ✅ Done (Apr 2026) | `leaderboard`/`lb` command; `halloffame` for top historical rankings |
+| Trainer-Based Abilities & Multi-Classing | ✅ Done (Apr 2026) | Skill points (1 per 2 levels) spent at class trainers; `train`/`train learn`/`train unlock`; multi-classing from level 10; `Trainer.List` + `Char.Classes` GMCP |
+
 ---
 
 ## Closed / Not Planned
@@ -139,7 +160,7 @@ See [WEB_CLIENT_PARITY_REPORT.md](./WEB_CLIENT_PARITY_REPORT.md) for the full au
 - Dynamic quest scaling by party level
 
 ### Economy
-- Player-to-player trading with confirmation flow
+- ~~Player-to-player trading with confirmation flow~~ — implemented (PR #849)
 - Gold sinks (ability training fees, fast-travel costs, item repair)
 - Vendor inventory refresh on zone reset
 - Gold balance in GMCP `Char.Vitals`
@@ -154,9 +175,9 @@ See [WEB_CLIENT_PARITY_REPORT.md](./WEB_CLIENT_PARITY_REPORT.md) for the full au
 - ~~Guild chat~~ — implemented as `gchat` command
 - ~~Offline mail~~ — implemented with send/read/delete/list commands
 - ~~Friends list~~ — implemented with add/remove/list commands
-- Guild bank / shared storage
+- ~~Guild bank / shared storage~~ — implemented as bank NPC system (PR #855)
 - Mail attachments (items, gold)
-- Friend online/offline notifications via GMCP
+- ~~Friend online/offline notifications via GMCP~~ — implemented (`Friends.Online`/`Friends.Offline`)
 
 ### Admin Dashboard
 - Live metrics visualization (Grafana integration or custom charts)
@@ -171,12 +192,14 @@ See [WEB_CLIENT_PARITY_REPORT.md](./WEB_CLIENT_PARITY_REPORT.md) for the full au
 
 ## What's Next
 
-All planned phases (A through E) are complete. Future work is driven by the enhancement opportunities above and community feedback. Good starting points for contributors:
+All planned phases (A through F) are complete. Future work is driven by the enhancement opportunities above and community feedback. Good starting points for contributors:
 
 - Add new dungeon templates (YAML-driven, see [DUNGEON_TEMPLATE_REFERENCE.md](./DUNGEON_TEMPLATE_REFERENCE.md))
 - Add new abilities (config-driven, no code changes needed)
 - Create new zones (YAML world files)
-- Expand crafting recipes and gathering nodes
+- Expand crafting recipes, enchantments, and gathering nodes
+- Add new faction definitions and faction-locked content
+- Add new seasonal event definitions
 
 ---
 
@@ -220,10 +243,10 @@ Ambon Arcanum (replaces OLC) — standalone creator tool
 
 **Not currently planned, but possible futures:**
 
-- **PvP systems:** Arena, guild wars, faction conflict
 - **Endgame raids:** Multi-group challenges with loot tiers
-- **Reputation & faction systems:** Karma tracks, faction-locked content
-- **Creature tamers / pets system:** Capture and train companion mobs
+- ~~**PvP systems:** Arena, guild wars, faction conflict~~ — consent-based dueling implemented (PR #851); arena/guild wars remain future
+- ~~**Reputation & faction systems:** Karma tracks, faction-locked content~~ — reputation system implemented (PR #852)
+- ~~**Creature tamers / pets system:** Capture and train companion mobs~~ — companion pets implemented via SUMMON_PET (PR #853)
 - **Permadeath/hardcore mode:** High-risk, high-reward progression
 - **Web-based character builder:** Optimize builds before creation
 - **Mobile companion app:** Check mail, browse achievements, manage housing
@@ -246,4 +269,4 @@ See [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) for setup instructions and [ARCHI
 
 ---
 
-**Last updated:** April 1, 2026
+**Last updated:** April 2, 2026
