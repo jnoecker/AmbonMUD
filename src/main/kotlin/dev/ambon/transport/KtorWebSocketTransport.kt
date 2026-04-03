@@ -6,6 +6,7 @@ import dev.ambon.engine.events.InboundEvent
 import dev.ambon.metrics.GameMetrics
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.install
@@ -101,6 +102,15 @@ internal fun Application.ambonMUDWebModule(
         }
 
         webSocket("/ws") {
+            val origin = call.request.headers[HttpHeaders.Origin]
+            if (origin != null) {
+                val host = call.request.headers[HttpHeaders.Host]
+                if (!isOriginAllowedForHost(origin, host)) {
+                    log.warn { "WebSocket rejected: origin=$origin host=$host" }
+                    close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Origin not allowed"))
+                    return@webSocket
+                }
+            }
             bridgeWebSocketSession(
                 inbound = inbound,
                 outboundRouter = outboundRouter,
@@ -385,3 +395,21 @@ internal fun tryParseGmcpEnvelope(text: String): Pair<String, String>? {
 
 private const val MAX_CLOSE_REASON_LENGTH = 123
 private const val MAX_WS_FRAME_SIZE = 65_536
+
+/**
+ * Validates that an Origin header is consistent with the request Host.
+ * Extracts the hostname from the Origin URL and compares it against
+ * the Host header (ignoring port). Returns true if they match or if
+ * the Host header is absent (non-browser clients).
+ */
+internal fun isOriginAllowedForHost(origin: String, host: String?): Boolean {
+    if (host.isNullOrBlank()) return true
+    val originHost = try {
+        val afterScheme = origin.substringAfter("://")
+        afterScheme.substringBefore("/").substringBefore(":")
+    } catch (_: Exception) {
+        return false
+    }
+    val requestHost = host.substringBefore(":")
+    return originHost.equals(requestHost, ignoreCase = true)
+}
