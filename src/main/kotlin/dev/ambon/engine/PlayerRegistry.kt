@@ -361,6 +361,8 @@ class PlayerRegistry(
     /**
      * Reattach a suspended PlayerState to a new session after reconnect.
      * Uses the same remap logic as session takeover.
+     * All map mutations are non-suspending to prevent interleaved coroutine
+     * access on the single-threaded engine dispatcher.
      */
     suspend fun resumeSession(
         oldSessionId: SessionId,
@@ -368,16 +370,17 @@ class PlayerRegistry(
         playerState: PlayerState,
     ) {
         val resumed = playerState.copy(sessionId = newSessionId)
+
+        // --- begin atomic map mutations (no suspend points) ---
         players[newSessionId] = resumed
 
-        // Remap room membership
-        roomMembers[resumed.roomId]?.let { members ->
-            members.remove(oldSessionId)
-            members.add(newSessionId)
-        }
+        // Remap room membership, cleaning up empty sets
+        roomMembers.removeFromSet(resumed.roomId, oldSessionId)
+        roomMembers.getOrPut(resumed.roomId) { mutableSetOf() }.add(newSessionId)
 
         sessionByLowerName[resumed.name.lowercase()] = newSessionId
         items.remapPlayer(oldSessionId, newSessionId)
+        // --- end atomic map mutations ---
     }
 
     /**
@@ -577,6 +580,12 @@ class PlayerRegistry(
         return true
     }
 
+    /**
+     * Remap a player from [oldSid] to [newSid] atomically.
+     * All map mutations are non-suspending to prevent interleaved coroutine
+     * access on the single-threaded engine dispatcher.
+     * The only suspend call ([persistIfClaimed]) happens after all maps are consistent.
+     */
     private suspend fun takeoverSession(
         oldSid: SessionId,
         newSid: SessionId,
@@ -586,17 +595,17 @@ class PlayerRegistry(
         val oldPs = players[oldSid] ?: return
         val newPs = oldPs.copy(sessionId = newSid, ansiEnabled = boundRecord.ansiEnabled)
 
+        // --- begin atomic map mutations (no suspend points) ---
         players.remove(oldSid)
         players[newSid] = newPs
 
-        roomMembers[oldPs.roomId]?.let { members ->
-            members.remove(oldSid)
-            members.add(newSid)
-        }
+        roomMembers.removeFromSet(oldPs.roomId, oldSid)
+        roomMembers.getOrPut(newPs.roomId) { mutableSetOf() }.add(newSid)
 
         sessionByLowerName[newPs.name.lowercase()] = newSid
 
         items.remapPlayer(oldSid, newSid)
+        // --- end atomic map mutations ---
 
         persistIfClaimed(newPs)
     }

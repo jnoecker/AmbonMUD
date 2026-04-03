@@ -445,7 +445,14 @@ class GameEngine(
         )
     }
 
-    /** GMCP packages each session has opted into (e.g. "Char.Vitals", "Room.Info"). */
+    /**
+     * GMCP packages each session has opted into (e.g. "Char.Vitals", "Room.Info").
+     *
+     * Thread safety: all reads and writes happen on the single-threaded engine
+     * dispatcher (via [GmcpEventHandler], [SessionEventHandler], and the
+     * [GmcpEmitter.supportsPackage] lambda), so a plain [MutableMap] is safe.
+     * If any access ever moves off the engine thread, switch to ConcurrentHashMap.
+     */
     private val gmcpSessions = mutableMapOf<SessionId, MutableSet<String>>()
 
     /** Sessions whose vitals changed this tick and need a Char.Vitals push. */
@@ -1403,7 +1410,12 @@ class GameEngine(
         phaseEventHandler.handlePhase(sessionId, targetHint)
 
     private suspend fun handleHandoffTimeout(sessionId: SessionId) {
-        if (players.get(sessionId) == null) return
+        val player = players.get(sessionId)
+        if (player == null) {
+            log.warn { "Handoff timeout for session=${sessionId.value} but player already disconnected; state cleaned up." }
+            return
+        }
+        log.warn { "Handoff timeout for session=${sessionId.value} player=${player.name}; notifying player." }
         outbound.send(
             OutboundEvent.SendError(
                 sessionId,
