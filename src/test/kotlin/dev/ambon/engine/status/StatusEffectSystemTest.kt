@@ -498,7 +498,7 @@ class StatusEffectSystemTest {
         runTest {
             val h = buildSystem()
             h.loginPlayer()
-            val mob = h.spawnMob(id = mobId, name = "Goblin", hp = 3)
+            h.spawnMob(id = mobId, name = "Goblin", hp = 3)
             h.registerDot(durationMs = 6000, tickIntervalMs = 2000, minVal = 5, maxVal = 5)
 
             h.system.applyToMob(mobId, StatusEffectId("ignite"), sid)
