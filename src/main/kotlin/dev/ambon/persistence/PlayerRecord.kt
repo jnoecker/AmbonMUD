@@ -84,11 +84,25 @@ data class PlayerRecord(
      */
     fun migrateDefaults(): PlayerRecord {
         var record = this
-        // Fix any zero-valued stats from legacy saves
-        val fixedStats = record.stats.mapValues { (_, v) -> if (v == 0) DEFAULT_STAT else v }
-        if (fixedStats != record.stats) record = record.copy(stats = fixedStats)
-        val normalized = record.equippedItems.mapKeys { (k, _) -> k.trim().lowercase() }
-        if (normalized != record.equippedItems) record = record.copy(equippedItems = normalized)
+
+        // Normalize stat keys to uppercase (canonical format) and ensure all values are at least 1.
+        // Legacy saves may have lowercase keys ("str") or zero values from old migration bugs.
+        val mergedStats = DEFAULT_STATS + record.stats.mapKeys { (k, _) -> k.trim().uppercase() }
+        val coercedStats = mergedStats.mapValues { (_, v) -> v.coerceAtLeast(1) }
+        if (coercedStats != record.stats) record = record.copy(stats = coercedStats)
+
+        // Normalize factionStandings keys to lowercase
+        val normalizedFactions = record.factionStandings.mapKeys { (k, _) -> k.trim().lowercase() }
+        if (normalizedFactions != record.factionStandings) record = record.copy(factionStandings = normalizedFactions)
+
+        // Normalize craftingSkills keys to lowercase
+        val normalizedCrafting = record.craftingSkills.mapKeys { (k, _) -> k.trim().lowercase() }
+        if (normalizedCrafting != record.craftingSkills) record = record.copy(craftingSkills = normalizedCrafting)
+
+        // Normalize equippedItems keys to lowercase
+        val normalizedEquipped = record.equippedItems.mapKeys { (k, _) -> k.trim().lowercase() }
+        if (normalizedEquipped != record.equippedItems) record = record.copy(equippedItems = normalizedEquipped)
+
         return record
     }
 }

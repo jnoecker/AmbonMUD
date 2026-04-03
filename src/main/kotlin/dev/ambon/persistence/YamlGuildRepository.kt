@@ -2,6 +2,7 @@ package dev.ambon.persistence
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import dev.ambon.domain.guild.GuildRecord
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.nio.file.Path
@@ -10,6 +11,8 @@ import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readText
+
+private val log = KotlinLogging.logger {}
 
 class YamlGuildRepository(
     private val rootDir: Path,
@@ -67,7 +70,14 @@ class YamlGuildRepository(
 
     private fun pathFor(id: String): Path = guildsDir.resolve("${sanitizeId(id)}.yaml")
 
-    private fun sanitizeId(id: String): String = id.replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
+    private val safeIdPattern = Regex("^[a-zA-Z0-9_\\-]+$")
+
+    private fun sanitizeId(id: String): String {
+        if (safeIdPattern.matches(id)) return id
+        val sanitized = id.replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
+        log.warn { "Guild ID '$id' contains unsafe characters; sanitized to '$sanitized'. Potential file-path collision risk." }
+        return sanitized
+    }
 
     private fun readDto(path: Path): GuildDto? {
         if (!path.exists()) return null

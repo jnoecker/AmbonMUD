@@ -16,14 +16,20 @@ class PersistenceWorker(
     override val workerName = "PersistenceWorker"
 
     override suspend fun flush() {
-        val flushed = repo.flushDirty()
-        if (flushed > 0) {
-            log.debug { "PersistenceWorker flushed $flushed dirty record(s)" }
+        val result = repo.flushDirty()
+        if (result.flushed > 0 || result.failed > 0) {
+            log.debug { "PersistenceWorker flushed ${result.flushed} dirty record(s)" }
+        }
+        if (result.failed > 0) {
+            log.warn { "PersistenceWorker flush: ${result.failed} record(s) failed to persist" }
         }
     }
 
     override suspend fun shutdownFlush() {
-        val flushed = repo.flushAll()
-        log.info { "PersistenceWorker shutdown: flushed $flushed record(s)" }
+        val result = repo.flushAll()
+        log.info { "PersistenceWorker shutdown: flushed ${result.flushed} record(s)" }
+        if (result.failed > 0) {
+            log.error { "PersistenceWorker shutdown: ${result.failed} record(s) failed to persist!" }
+        }
     }
 }
