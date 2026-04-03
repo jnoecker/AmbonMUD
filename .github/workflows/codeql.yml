@@ -29,8 +29,7 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: java-kotlin
-          # Queries: use the default set; add extras below if desired.
-          # queries: security-extended
+          queries: security-and-quality
 
       - name: Build (custom — required for JVM languages)
         run: |

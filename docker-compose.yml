@@ -31,7 +31,7 @@ services:
     environment:
       POSTGRES_DB: ambonmud
       POSTGRES_USER: ambon
-      POSTGRES_PASSWORD: ambon
+      POSTGRES_PASSWORD: changeme
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

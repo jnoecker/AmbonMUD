@@ -454,6 +454,10 @@ data class AppConfig(
             }
         }
 
+        if ("*" in admin.corsOrigins) {
+            warnConfig("admin.corsOrigins contains wildcard '*' — this allows any origin and should not be used in production")
+        }
+
         return this
     }
 }
