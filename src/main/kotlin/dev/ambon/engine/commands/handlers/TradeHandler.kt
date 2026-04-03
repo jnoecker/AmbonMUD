@@ -2,6 +2,7 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.GmcpEmitter
+import dev.ambon.engine.TradeResult
 import dev.ambon.engine.TradeSession
 import dev.ambon.engine.TradeSide
 import dev.ambon.engine.TradeSystem
@@ -150,7 +151,6 @@ class TradeHandler(
         val initSid = session.initiator
         val targetSid = session.target
 
-        // Validate gold before completing
         val initPlayer = players.get(initSid)
         val targetPlayer = players.get(targetSid)
         if (initPlayer == null || targetPlayer == null) {
@@ -158,29 +158,36 @@ class TradeHandler(
             return
         }
 
-        if (initPlayer.gold < session.initiatorGold) {
-            outbound.send(OutboundEvent.SendError(initSid, "You no longer have enough gold. Trade cancelled."))
-            outbound.send(OutboundEvent.SendError(targetSid, "Trade cancelled — ${initPlayer.name} doesn't have enough gold."))
-            ts.cancel(session)
-            syncBothPlayers(initSid, targetSid)
-            return
-        }
-        if (targetPlayer.gold < session.targetGold) {
-            outbound.send(OutboundEvent.SendError(targetSid, "You no longer have enough gold. Trade cancelled."))
-            outbound.send(OutboundEvent.SendError(initSid, "Trade cancelled — ${targetPlayer.name} doesn't have enough gold."))
-            ts.cancel(session)
-            syncBothPlayers(initSid, targetSid)
-            return
-        }
+        // Atomic completion: gold re-validation + transfer + item transfer all inside TradeSystem
+        val result = ts.complete(
+            session = session,
+            initiatorGold = initPlayer.gold,
+            targetGold = targetPlayer.gold,
+            deductInitiatorGold = { delta ->
+                initPlayer.gold = (initPlayer.gold + delta).coerceAtLeast(0)
+            },
+            deductTargetGold = { delta ->
+                targetPlayer.gold = (targetPlayer.gold + delta).coerceAtLeast(0)
+            },
+        )
 
-        // Transfer gold
-        initPlayer.gold -= session.initiatorGold
-        initPlayer.gold += session.targetGold
-        targetPlayer.gold -= session.targetGold
-        targetPlayer.gold += session.initiatorGold
-
-        // Transfer items (handled by TradeSystem.complete)
-        ts.complete(session)
+        when (result) {
+            is TradeResult.InsufficientInitiatorGold -> {
+                outbound.send(OutboundEvent.SendError(initSid, "You no longer have enough gold. Trade cancelled."))
+                outbound.send(OutboundEvent.SendError(targetSid, "Trade cancelled — ${initPlayer.name} doesn't have enough gold."))
+                ts.cancel(session)
+                syncBothPlayers(initSid, targetSid)
+                return
+            }
+            is TradeResult.InsufficientTargetGold -> {
+                outbound.send(OutboundEvent.SendError(targetSid, "You no longer have enough gold. Trade cancelled."))
+                outbound.send(OutboundEvent.SendError(initSid, "Trade cancelled — ${targetPlayer.name} doesn't have enough gold."))
+                ts.cancel(session)
+                syncBothPlayers(initSid, targetSid)
+                return
+            }
+            is TradeResult.Success -> { /* fall through to summary */ }
+        }
 
         // Build summary
         val initItemNames = session.initiatorItems.joinToString(", ") { it.item.displayName }.ifEmpty { "nothing" }
