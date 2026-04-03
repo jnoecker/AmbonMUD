@@ -6,6 +6,7 @@ import dev.ambon.metrics.GameMetrics
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.grpc.Server
 import io.grpc.ServerBuilder
+import io.grpc.ServerInterceptor
 import kotlinx.coroutines.CoroutineScope
 import java.util.concurrent.TimeUnit
 
@@ -26,6 +27,7 @@ class EngineGrpcServer(
     controlPlaneSendTimeoutMs: Long = GrpcTimeouts.DEFAULT_CONTROL_PLANE_SEND_TIMEOUT_MS,
     private val gracefulShutdownTimeoutMs: Long = DEFAULT_GRACEFUL_SHUTDOWN_TIMEOUT_MS,
     private val forceShutdownTimeoutMs: Long = DEFAULT_FORCE_SHUTDOWN_TIMEOUT_MS,
+    serverAuthInterceptor: ServerInterceptor? = null,
 ) {
     init {
         require(gracefulShutdownTimeoutMs > 0L) { "gracefulShutdownTimeoutMs must be > 0" }
@@ -45,6 +47,11 @@ class EngineGrpcServer(
         ServerBuilder
             .forPort(port)
             .addService(serviceImpl)
+            .apply {
+                if (serverAuthInterceptor != null) {
+                    intercept(serverAuthInterceptor)
+                }
+            }
             // Keep idle gRPC streams alive through NAT/firewall timeouts.
             .keepAliveTime(30, TimeUnit.SECONDS)
             .keepAliveTimeout(10, TimeUnit.SECONDS)

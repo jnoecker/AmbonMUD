@@ -62,6 +62,9 @@ ambonmud:
     client:
       engineHost: localhost
       enginePort: 9090
+    sharedSecret: ""
+    allowPlaintext: true
+    timestampToleranceMs: 30000
 
   gateway:
     id: 0

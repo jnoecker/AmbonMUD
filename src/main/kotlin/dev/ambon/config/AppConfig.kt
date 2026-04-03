@@ -294,6 +294,12 @@ data class AppConfig(
 
         if (mode == DeploymentMode.ENGINE || mode == DeploymentMode.GATEWAY) {
             grpc.server.port.requireValidPort("ambonMUD.grpc.server.port")
+            require(grpc.sharedSecret.isNotBlank()) {
+                "ambonMUD.grpc.sharedSecret must be non-blank in ENGINE/GATEWAY mode"
+            }
+            require(grpc.timestampToleranceMs > 0L) {
+                "ambonMUD.grpc.timestampToleranceMs must be > 0"
+            }
         }
 
         if (mode == DeploymentMode.GATEWAY) {
@@ -1714,6 +1720,12 @@ data class GrpcClientConfig(
 data class GrpcConfig(
     val server: GrpcServerConfig = GrpcServerConfig(),
     val client: GrpcClientConfig = GrpcClientConfig(),
+    /** Shared secret for HMAC-based gRPC authentication between engine and gateway. */
+    val sharedSecret: String = "",
+    /** Allow plaintext gRPC transport (no TLS). Auth interceptor still applies when true. */
+    val allowPlaintext: Boolean = true,
+    /** Maximum clock skew tolerance in milliseconds for HMAC timestamp validation. */
+    val timestampToleranceMs: Long = 30_000L,
 )
 
 /** Snowflake session-ID hardening settings (used by GATEWAY mode). */

@@ -4,6 +4,8 @@
 # Connects to engine-1 (:9091) and engine-2 (:9092)
 ambonmud:
   mode: GATEWAY
+  grpc:
+    sharedSecret: "local-dev-secret-change-in-production"
   gateway:
     id: 1
     engines:
