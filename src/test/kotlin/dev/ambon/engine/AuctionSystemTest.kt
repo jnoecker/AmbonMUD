@@ -10,6 +10,7 @@ import dev.ambon.test.MutableClock
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -91,20 +92,93 @@ class AuctionSystemTest {
 
     @Nested
     inner class Purchasing {
-        @Test
-        fun `purchase transfers item to buyer`() {
-            giveSword(sid1)
-            val listing = auction.postListing(sid1, "Player1", "sword", 100)!!
+        private var buyerGold = 0L
 
-            val purchased = auction.completePurchase(listing.id, sid2)
-            assertNotNull(purchased)
-            assertEquals(1, items.inventory(sid2).count { it.id == swordId })
-            assertEquals(0, auction.allListings().size)
+        private fun purchaseWith(
+            listingId: Int,
+            buyerSid: SessionId = sid2,
+            gold: Long = 500L,
+        ): AuctionPurchaseResult {
+            buyerGold = gold
+            return auction.completePurchase(
+                listingId = listingId,
+                buyerSid = buyerSid,
+                buyerGold = buyerGold,
+                deductBuyerGold = { delta -> buyerGold = (buyerGold + delta).coerceAtLeast(0) },
+            )
         }
 
         @Test
-        fun `purchase nonexistent listing returns null`() {
-            assertNull(auction.completePurchase(999, sid2))
+        fun `purchase transfers item to buyer and deducts gold`() {
+            giveSword(sid1)
+            val listing = auction.postListing(sid1, "Player1", "sword", 100)!!
+
+            val result = purchaseWith(listing.id, gold = 500L)
+
+            assertTrue(result is AuctionPurchaseResult.Success)
+            val purchased = (result as AuctionPurchaseResult.Success).listing
+            assertEquals(100L, purchased.price)
+            assertEquals(1, items.inventory(sid2).count { it.id == swordId })
+            assertEquals(0, auction.allListings().size)
+            assertEquals(400L, buyerGold) // 500 - 100
+        }
+
+        @Test
+        fun `purchase nonexistent listing returns ListingNotFound`() {
+            val result = purchaseWith(999)
+            assertTrue(result is AuctionPurchaseResult.ListingNotFound)
+        }
+
+        @Test
+        fun `purchase with insufficient gold returns InsufficientGold`() {
+            giveSword(sid1)
+            val listing = auction.postListing(sid1, "Player1", "sword", 100)!!
+
+            val result = purchaseWith(listing.id, gold = 50L)
+
+            assertTrue(result is AuctionPurchaseResult.InsufficientGold)
+            val err = result as AuctionPurchaseResult.InsufficientGold
+            assertEquals(50L, err.have)
+            assertEquals(100L, err.need)
+            // Listing should still exist (purchase failed)
+            assertEquals(1, auction.allListings().size)
+            // Buyer's gold should not have been deducted
+            assertEquals(50L, buyerGold)
+            // Item should NOT be in buyer's inventory
+            assertEquals(0, items.inventory(sid2).size)
+        }
+
+        @Test
+        fun `purchase deducts exact price - gold never goes negative`() {
+            giveSword(sid1)
+            val listing = auction.postListing(sid1, "Player1", "sword", 100)!!
+
+            val result = purchaseWith(listing.id, gold = 100L)
+
+            assertTrue(result is AuctionPurchaseResult.Success)
+            assertEquals(0L, buyerGold) // 100 - 100 = 0, not negative
+        }
+
+        @Test
+        fun `concurrent purchase attempts - second returns ListingNotFound`() {
+            giveSword(sid1)
+            items.ensurePlayer(SessionId(3L))
+            val listing = auction.postListing(sid1, "Player1", "sword", 100)!!
+
+            val result1 = purchaseWith(listing.id, buyerSid = sid2, gold = 500L)
+            assertTrue(result1 is AuctionPurchaseResult.Success)
+
+            // Second buyer tries the same listing
+            var buyer2Gold = 500L
+            val result2 = auction.completePurchase(
+                listingId = listing.id,
+                buyerSid = SessionId(3L),
+                buyerGold = buyer2Gold,
+                deductBuyerGold = { delta -> buyer2Gold = (buyer2Gold + delta).coerceAtLeast(0) },
+            )
+            assertTrue(result2 is AuctionPurchaseResult.ListingNotFound)
+            // Second buyer's gold should not have been touched
+            assertEquals(500L, buyer2Gold)
         }
     }
 

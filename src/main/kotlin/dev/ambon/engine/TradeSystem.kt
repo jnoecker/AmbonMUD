@@ -86,6 +86,21 @@ sealed interface TradeError {
     ) : TradeError
 }
 
+/** Result of completing a trade atomically (items + gold). */
+sealed interface TradeResult {
+    data object Success : TradeResult
+
+    data class InsufficientInitiatorGold(
+        val have: Long,
+        val need: Long,
+    ) : TradeResult
+
+    data class InsufficientTargetGold(
+        val have: Long,
+        val need: Long,
+    ) : TradeResult
+}
+
 /** Manages active trade sessions between players. */
 class TradeSystem(
     private val items: ItemRegistry,
@@ -145,10 +160,37 @@ class TradeSystem(
     }
 
     /**
-     * Completes the trade: transfers items and gold between players.
+     * Completes the trade atomically: re-validates gold, then transfers items and gold
+     * between players in a single method call.
      * Only call when bothAccepted() is true.
+     *
+     * @param initiatorGold current gold of the initiator (for re-validation)
+     * @param targetGold current gold of the target (for re-validation)
+     * @param deductInitiatorGold callback to mutate the initiator's gold by a delta
+     * @param deductTargetGold callback to mutate the target's gold by a delta
+     * @return [TradeResult] indicating success or which party lacked gold
      */
-    fun complete(session: TradeSession) {
+    fun complete(
+        session: TradeSession,
+        initiatorGold: Long,
+        targetGold: Long,
+        deductInitiatorGold: (Long) -> Unit,
+        deductTargetGold: (Long) -> Unit,
+    ): TradeResult {
+        // Re-validate gold at completion time (player may have spent gold after offering)
+        if (session.initiatorGold > 0 && initiatorGold < session.initiatorGold) {
+            return TradeResult.InsufficientInitiatorGold(initiatorGold, session.initiatorGold)
+        }
+        if (session.targetGold > 0 && targetGold < session.targetGold) {
+            return TradeResult.InsufficientTargetGold(targetGold, session.targetGold)
+        }
+
+        // Transfer gold atomically: deduct offered, add received
+        val initiatorNet = session.targetGold - session.initiatorGold
+        val targetNet = session.initiatorGold - session.targetGold
+        deductInitiatorGold(initiatorNet)
+        deductTargetGold(targetNet)
+
         // Transfer items: initiator's offered items → target's inventory
         for (item in session.initiatorItems) {
             items.addToInventory(session.target, item)
@@ -157,9 +199,10 @@ class TradeSystem(
         for (item in session.targetItems) {
             items.addToInventory(session.initiator, item)
         }
-        // Gold is handled by the caller (PlayerState mutation)
+
         cleanup(session)
         log.debug { "Trade completed: ${session.initiator} <-> ${session.target}" }
+        return TradeResult.Success
     }
 
     /**

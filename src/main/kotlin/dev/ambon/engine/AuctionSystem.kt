@@ -25,6 +25,20 @@ class AuctionListing(
     val expiresAtMs: Long,
 )
 
+/** Result of an auction purchase attempt. */
+sealed interface AuctionPurchaseResult {
+    data class Success(
+        val listing: AuctionListing,
+    ) : AuctionPurchaseResult
+
+    data object ListingNotFound : AuctionPurchaseResult
+
+    data class InsufficientGold(
+        val have: Long,
+        val need: Long,
+    ) : AuctionPurchaseResult
+}
+
 /** JSON DTO for persisting auction listings. */
 private data class PersistedListing(
     val id: Int = 0,
@@ -82,14 +96,32 @@ class AuctionSystem(
     }
 
     /**
-     * Completes a purchase: transfers item to buyer. Gold must be handled by caller.
+     * Completes a purchase atomically: verifies buyer has enough gold, deducts gold,
+     * and transfers the item to the buyer's inventory in one operation.
+     *
+     * @param listingId the listing to purchase
+     * @param buyerSid the buyer's session
+     * @param buyerGold the buyer's current gold (for validation)
+     * @param deductBuyerGold callback to mutate the buyer's gold by a delta (negative = deduction)
+     * @return [AuctionPurchaseResult] indicating success, listing not found, or insufficient gold
      */
-    fun completePurchase(listingId: Int, buyerSid: SessionId): AuctionListing? {
-        val listing = listings.remove(listingId) ?: return null
+    fun completePurchase(
+        listingId: Int,
+        buyerSid: SessionId,
+        buyerGold: Long,
+        deductBuyerGold: (Long) -> Unit,
+    ): AuctionPurchaseResult {
+        val listing = listings[listingId] ?: return AuctionPurchaseResult.ListingNotFound
+        if (buyerGold < listing.price) {
+            return AuctionPurchaseResult.InsufficientGold(buyerGold, listing.price)
+        }
+        // Gold is sufficient — commit the purchase atomically
+        listings.remove(listingId)
+        deductBuyerGold(-listing.price)
         items.addToInventory(buyerSid, listing.item)
         log.debug { "Auction listing #$listingId purchased by $buyerSid" }
         persist()
-        return listing
+        return AuctionPurchaseResult.Success(listing)
     }
 
     /**
