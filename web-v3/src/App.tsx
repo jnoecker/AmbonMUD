@@ -218,6 +218,7 @@ function App() {
   const [savedCharacters, setSavedCharacters] = useState<string[]>([]);
   const resumeTokenRef = useRef<string | null>(null);
   const pendingAuthCharRef = useRef<string | null>(null);
+  const failedAuthCharRef = useRef<string | null>(null);
   const connectedRef = useRef(false);
   const intentionalDisconnectRef = useRef(false);
   const [serverAssets, setServerAssets] = useState<Record<string, string>>({});
@@ -457,6 +458,7 @@ function App() {
           setSavedCharacters,
           resumeTokenRef,
           pendingAuthCharRef,
+          failedAuthCharRef,
           setServerAssets,
           setServerCommands,
           setEmotePresets,
@@ -529,6 +531,17 @@ function App() {
 
   sendGmcpRef.current = sendGmcp;
   connectedRef.current = connected;
+
+  // When a token-based login fails, the server re-sends Login.Prompt(state:"name").
+  // Since we already know the character name, auto-send it so the user goes
+  // straight to the password prompt instead of seeing "Enter your character name".
+  useEffect(() => {
+    const charName = failedAuthCharRef.current;
+    if (loginPrompt?.state === "name" && charName) {
+      failedAuthCharRef.current = null;
+      sendLine(charName);
+    }
+  }, [loginPrompt, sendLine]);
 
   const sendCommand = useCallback(
     (raw: string, echo: boolean) => {
