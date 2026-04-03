@@ -149,9 +149,10 @@ mobs:
 rooms:
   barrow_approach:
     title: "Dark Barrows — Approach"
-    description: "The eastern fen gives way here to firmer, darker ground. The fog thins and reveals a landscape of low earthen mounds stretching north as far as you can see — ancient burial sites, old enough that no one remembers who or what was buried in them. The marsh is back to the west. The outer mounds lie ahead to the north."
+    description: "The eastern fen gives way here to firmer, darker ground. The fog thins and reveals a landscape of low earthen mounds stretching north as far as you can see — ancient burial sites, old enough that no one remembers who or what was buried in them. The marsh is back to the west, and a narrow track winds south through the marsh fringe. The outer mounds lie ahead to the north."
     exits:
       w: marsh_of_fog:eastern_fen_edge
+      s: marsh_of_fog:dark_barrows_path
       n: outer_mounds
 
   outer_mounds:

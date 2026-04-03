@@ -309,10 +309,10 @@ rooms:
 
   dark_barrows_path:
     title: "Dark Barrows Path"
-    description: "A barely-visible track through the eastern margin of the marsh, heading toward the Dark Barrows. The ground is firmer here but the fog clings. The twisted trees are back to the west."
+    description: "A barely-visible track through the eastern margin of the marsh, heading north toward the Dark Barrows. The ground is firmer here but the fog clings. The twisted trees are back to the west."
     exits:
       w: twisted_trees
-      e: dark_barrows:barrow_approach
+      n: dark_barrows:barrow_approach
 
   fungal_dell:
     title: "Fungal Dell"
