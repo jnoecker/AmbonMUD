@@ -61,6 +61,8 @@ class CombatHandler(
     }
 
     private suspend fun handleFlee(sessionId: SessionId) {
+        dialogueSystem?.endConversation(sessionId)
+
         // Check if player is in a duel first
         if (duelSystem?.isInDuel(sessionId) == true) {
             val duel = duelSystem.endDuel(sessionId)
