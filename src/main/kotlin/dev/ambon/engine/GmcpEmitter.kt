@@ -62,6 +62,8 @@ class GmcpEmitter(
     private val getMobEffects: (dev.ambon.domain.ids.MobId) -> List<ActiveEffectSnapshot> = { emptyList() },
     private val commandEntries: Map<String, CommandMetadata> = emptyMap(),
     private val emotePresets: List<EmotePresetConfig> = emptyList(),
+    private val prestigeAvailableXp: (PlayerState) -> Long? = { null },
+    private val prestigeNextCost: (Int) -> Long? = { null },
 ) {
     private val json = jacksonObjectMapper()
     private val imagesBase = if (imagesBaseUrl.endsWith("/")) imagesBaseUrl else "$imagesBaseUrl/"
@@ -110,6 +112,9 @@ class GmcpEmitter(
                 xpToNextLevel = progression?.xpToNextLevel(player.xpTotal),
                 gold = player.gold,
                 inCombat = isInCombat(sessionId),
+                prestigeLevel = player.prestigeLevel,
+                prestigeXpAvailable = prestigeAvailableXp(player),
+                prestigeNextCost = prestigeNextCost(player.prestigeLevel),
             ),
         )
     }
@@ -1693,6 +1698,9 @@ class GmcpEmitter(
         val xpToNextLevel: Long?,
         val gold: Long,
         val inCombat: Boolean,
+        val prestigeLevel: Int = 0,
+        val prestigeXpAvailable: Long? = null,
+        val prestigeNextCost: Long? = null,
     )
 
     private data class CharCombatPayload(

@@ -3279,6 +3279,101 @@ ambonmud:
       minLevel: 10
       goldCost: 500
 
+    prestige:
+      enabled: true
+      xpCostBase: 500000
+      xpCostMultiplier: 1.5
+      maxRank: 20
+      perks:
+        1:
+          type: STAT_BONUS
+          stat: STR
+          amount: 1
+          description: "+1 Strength"
+        2:
+          type: SKILL_POINT
+          amount: 2
+          description: "+2 Skill Points"
+        3:
+          type: TITLE
+          title: "the Reborn"
+          description: "Unlock prestige title"
+        4:
+          type: MAX_HP
+          amount: 10
+          description: "+10 Maximum HP"
+        5:
+          type: STAT_BONUS
+          stat: DEX
+          amount: 1
+          description: "+1 Dexterity"
+        6:
+          type: MAX_MANA
+          amount: 15
+          description: "+15 Maximum Mana"
+        7:
+          type: STAT_BONUS
+          stat: CON
+          amount: 1
+          description: "+1 Constitution"
+        8:
+          type: SKILL_POINT
+          amount: 3
+          description: "+3 Skill Points"
+        9:
+          type: STAT_BONUS
+          stat: INT
+          amount: 1
+          description: "+1 Intelligence"
+        10:
+          type: TITLE
+          title: "the Ascended"
+          description: "Unlock prestige title"
+        11:
+          type: MAX_HP
+          amount: 15
+          description: "+15 Maximum HP"
+        12:
+          type: STAT_BONUS
+          stat: WIS
+          amount: 1
+          description: "+1 Wisdom"
+        13:
+          type: MAX_MANA
+          amount: 20
+          description: "+20 Maximum Mana"
+        14:
+          type: STAT_BONUS
+          stat: CHA
+          amount: 1
+          description: "+1 Charisma"
+        15:
+          type: TITLE
+          title: "the Transcendent"
+          description: "Unlock prestige title"
+        16:
+          type: SKILL_POINT
+          amount: 4
+          description: "+4 Skill Points"
+        17:
+          type: STAT_BONUS
+          stat: ALL
+          amount: 1
+          description: "+1 All Stats"
+        18:
+          type: MAX_HP
+          amount: 20
+          description: "+20 Maximum HP"
+        19:
+          type: MAX_MANA
+          amount: 25
+          description: "+25 Maximum Mana"
+        20:
+          type: STAT_BONUS
+          stat: ALL
+          amount: 2
+          description: "+2 All Stats"
+
     classes:
       definitions:
         WARRIOR:

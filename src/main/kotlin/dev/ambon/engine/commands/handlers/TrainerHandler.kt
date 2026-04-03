@@ -21,6 +21,7 @@ class TrainerHandler(
     private val skillPointsConfig: SkillPointsConfig = SkillPointsConfig(),
     private val multiclassConfig: MulticlassConfig = MulticlassConfig(),
     private val markVitalsDirty: (SessionId) -> Unit = {},
+    private val prestigeSkillPointBonus: (Int) -> Int = { 0 },
 ) : CommandHandler {
     private val players = ctx.players
     private val outbound = ctx.outbound
@@ -48,6 +49,7 @@ class TrainerHandler(
                 level = me.level,
                 learnedCount = me.learnedAbilityIds.size,
                 interval = skillPointsConfig.interval,
+                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
             )
             val classUnlocked = me.unlockedClasses.any { it.equals(trainer.className, ignoreCase = true) }
 
@@ -193,6 +195,7 @@ class TrainerHandler(
                 unlockedClasses = me.unlockedClasses,
                 skillPointInterval = skillPointsConfig.interval,
                 learnedIds = me.learnedAbilityIds,
+                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
             )
             if (error != null) {
                 outbound.send(OutboundEvent.SendError(sessionId, error))
@@ -207,6 +210,7 @@ class TrainerHandler(
                 level = me.level,
                 learnedCount = me.learnedAbilityIds.size,
                 interval = skillPointsConfig.interval,
+                prestigeBonus = prestigeSkillPointBonus(me.prestigeLevel),
             )
             outbound.send(
                 OutboundEvent.SendText(
