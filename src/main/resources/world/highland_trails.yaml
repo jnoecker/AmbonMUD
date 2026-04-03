@@ -188,6 +188,7 @@ rooms:
       s: upper_trail
       e: eagles_perch
       d: old_mines:mine_entrance
+      n: frost_caverns:frozen_pass
 
   eagles_perch:
     title: "Eagle's Perch"

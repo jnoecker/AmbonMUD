@@ -111,9 +111,10 @@ quests:
 rooms:
   world_gate:
     title: "World Gate — Crossroads Path"
-    description: "A tall stone arch marks the northern end of the Crossroads Path. Carved runes read: 'Beyond this gate the road to Thornhaven begins.' The sky is wide and open here, and the air carries the smell of fresh earth and distant woodsmoke. The path winds south toward the city."
+    description: "A tall stone arch marks the northern end of the Crossroads Path. Carved runes read: 'Beyond this gate the road to Thornhaven begins.' The sky is wide and open here, and the air carries the smell of fresh earth and distant woodsmoke. The path winds south toward the city. Beyond the gate to the north, the green countryside gives way to dry, sun-blasted scrubland."
     exits:
       s: world_road_north
+      n: barrens_wastes:wastes_edge
 
   world_road_north:
     title: "Crossroads Path — Northern Stretch"

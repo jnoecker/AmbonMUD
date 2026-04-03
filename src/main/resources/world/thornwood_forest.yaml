@@ -300,9 +300,10 @@ rooms:
 
   moonlit_glade:
     title: "Moonlit Glade"
-    description: "A perfect circular clearing that the locals say glows faintly on full-moon nights. The grass here is shorter and finer than elsewhere in the forest, and deer tracks cross it in every direction. At night the air is exceptionally still. The deep woods are back to the west."
+    description: "A perfect circular clearing that the locals say glows faintly on full-moon nights. The grass here is shorter and finer than elsewhere in the forest, and deer tracks cross it in every direction. At night the air is exceptionally still. A dark track leads east into a part of the forest that feels wrong. The deep woods are back to the west."
     exits:
       w: deep_woods
+      e: haunted_manor:manor_road
 
   bandit_trail:
     title: "Bandit Trail"
