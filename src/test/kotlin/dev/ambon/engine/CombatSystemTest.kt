@@ -861,4 +861,95 @@ class CombatSystemTest {
                     .map { it.text }
             assertTrue(messages.none { it.contains("gold") && it.contains("find") }, "Expected no gold message, got: $messages")
         }
+
+    @Test
+    fun `player death invokes onPlayerDeath callback`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val mob =
+                MobState(
+                    MobId("demo:ogre"),
+                    "an ogre",
+                    fixture.roomId,
+                    hp = 100,
+                    maxHp = 100,
+                    damage = DamageRange(50, 50),
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(rng = Random(1), minDamage = 1, maxDamage = 1)
+
+            val deathCallbackSessions = mutableListOf<SessionId>()
+            combat.onPlayerDeath = { sid -> deathCallbackSessions.add(sid) }
+
+            val sid = SessionId(30L)
+            fixture.players.loginOrFail(sid, "Doomed")
+            combat.startCombat(sid, "ogre")
+            fixture.outbound.drainAll()
+
+            fixture.tickCombat(combat)
+
+            assertEquals(
+                listOf(sid),
+                deathCallbackSessions,
+                "Expected onPlayerDeath callback to fire exactly once for the dying player",
+            )
+        }
+
+    @Test
+    fun `player death clears status effects via onPlayerDeath`() =
+        runTest {
+            val fixture = CombatTestFixture()
+            val poison =
+                StatusEffectDefinition(
+                    id = StatusEffectId("poison"),
+                    displayName = "Poison",
+                    effectType = "damage",
+                    durationMs = 60_000L,
+                    tickIntervalMs = 5_000L,
+                    tickMinValue = 5,
+                    tickMaxValue = 5,
+                )
+            val statusEffects = fixture.buildStatusEffects(poison)
+            val mob =
+                MobState(
+                    MobId("demo:ogre"),
+                    "an ogre",
+                    fixture.roomId,
+                    hp = 100,
+                    maxHp = 100,
+                    damage = DamageRange(50, 50),
+                )
+            fixture.mobs.upsert(mob)
+
+            val combat = fixture.buildCombat(
+                rng = Random(1),
+                minDamage = 1,
+                maxDamage = 1,
+                statusEffects = statusEffects,
+            )
+
+            val sid = SessionId(31L)
+            fixture.players.loginOrFail(sid, "Poisoned")
+
+            // Apply poison before combat
+            statusEffects.applyToPlayer(sid, StatusEffectId("poison"))
+            assertTrue(
+                statusEffects.hasPlayerEffect(sid, "damage"),
+                "Precondition: player should have damage effect",
+            )
+
+            // Wire onPlayerDeath to clear effects
+            combat.onPlayerDeath = { s -> statusEffects.removeAllFromPlayer(s) }
+
+            combat.startCombat(sid, "ogre")
+            fixture.outbound.drainAll()
+
+            fixture.tickCombat(combat)
+
+            assertTrue(
+                !statusEffects.hasPlayerEffect(sid, "damage"),
+                "Expected damage effect to be cleared on death",
+            )
+        }
 }
