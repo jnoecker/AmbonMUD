@@ -574,7 +574,15 @@ sealed interface Command {
 }
 
 object CommandParser {
+    /** Maximum allowed input length — protects against oversized payloads. */
+    const val MAX_INPUT_LENGTH = 2000
+
+    /** Maximum price that can be set on an auction listing. */
+    const val MAX_AUCTION_PRICE = 1_000_000_000L
+
     fun parse(input: String): Command {
+        if (input.length > MAX_INPUT_LENGTH) return Command.Invalid("input", "Input too long (max $MAX_INPUT_LENGTH characters).")
+
         val line = input.trim()
         if (line.isEmpty()) return Command.Noop
 
@@ -703,6 +711,10 @@ object CommandParser {
                 val price = priceStr.toLongOrNull()
                 if (price == null || keyword.isEmpty()) {
                     Command.Invalid(line, "auction sell <item> <price>")
+                } else if (price <= 0) {
+                    Command.Invalid(line, "Price must be greater than zero.")
+                } else if (price > MAX_AUCTION_PRICE) {
+                    Command.Invalid(line, "Price cannot exceed $MAX_AUCTION_PRICE gold.")
                 } else {
                     Command.AuctionSell(keyword, price)
                 }

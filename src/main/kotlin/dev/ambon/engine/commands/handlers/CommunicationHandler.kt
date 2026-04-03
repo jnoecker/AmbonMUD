@@ -27,6 +27,9 @@ class CommunicationHandler(
     private val outbound = ctx.outbound
     private val gmcpEmitter = ctx.gmcpEmitter
 
+    /** Tracks the last time each session sent a global broadcast (gossip/ooc/shout). */
+    private val lastBroadcastTime = mutableMapOf<SessionId, Long>()
+
     override fun register(router: CommandRouter) {
         router.on<Command.Say> { sid, cmd -> handleSay(sid, cmd) }
         router.on<Command.Emote> { sid, cmd -> handleEmote(sid, cmd) }
@@ -124,10 +127,28 @@ class CommunicationHandler(
         }
     }
 
+    /**
+     * Returns true and sends an error if the session is broadcasting too quickly.
+     * Staff players are exempt from rate limiting.
+     */
+    private suspend fun isBroadcastRateLimited(sessionId: SessionId): Boolean {
+        val me = players.get(sessionId) ?: return false
+        if (me.isStaff) return false
+        val now = clock.millis()
+        val last = lastBroadcastTime[sessionId]
+        if (last != null && (now - last) < BROADCAST_COOLDOWN_MS) {
+            outbound.send(OutboundEvent.SendError(sessionId, "You are sending messages too quickly. Please wait a moment."))
+            return true
+        }
+        lastBroadcastTime[sessionId] = now
+        return false
+    }
+
     private suspend fun handleGossip(
         sessionId: SessionId,
         cmd: Command.Gossip,
     ) {
+        if (isBroadcastRateLimited(sessionId)) return
         broadcastGlobalChannel(
             sessionId = sessionId,
             channelName = "gossip",
@@ -142,6 +163,7 @@ class CommunicationHandler(
         sessionId: SessionId,
         cmd: Command.Shout,
     ) {
+        if (isBroadcastRateLimited(sessionId)) return
         players.withPlayer(sessionId) { me ->
             val zone = me.roomId.zone
             outbound.send(OutboundEvent.SendText(sessionId, "You shout: ${cmd.message}"))
@@ -158,6 +180,7 @@ class CommunicationHandler(
         sessionId: SessionId,
         cmd: Command.Ooc,
     ) {
+        if (isBroadcastRateLimited(sessionId)) return
         broadcastGlobalChannel(
             sessionId = sessionId,
             channelName = "ooc",
@@ -251,5 +274,10 @@ class CommunicationHandler(
             groupSize = group?.members?.size ?: 0,
             idleSeconds = if (p.lastActivityEpochMs > 0) (nowMs - p.lastActivityEpochMs) / 1000 else 0,
         )
+    }
+
+    companion object {
+        /** Minimum interval between global broadcast commands, in milliseconds. */
+        const val BROADCAST_COOLDOWN_MS = 2_000L
     }
 }
