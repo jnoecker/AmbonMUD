@@ -54,39 +54,88 @@ data class AppConfig(
     }
 
     fun validated(): AppConfig {
+        validateServer()
+        validateWorld()
+        validatePersistence()
+        validateLogin()
+        validateEngine()
+        validateProgression()
+        validateTransport()
+        validateDemo()
+        validateObservability()
+        validateAdmin()
+        validateRedis()
+        validateGrpc()
+        validateGateway()
+        validateSharding()
+        validateCrossCuttingDependencies()
+        validateProductionMode()
+        return this
+    }
+
+    private fun validateServer() {
         server.telnetPort.requireValidPort("ambonMUD.server.telnetPort")
         server.webPort.requireValidPort("ambonMUD.server.webPort")
-        require(server.inboundChannelCapacity > 0) { "ambonMUD.server.inboundChannelCapacity must be > 0" }
-        require(server.outboundChannelCapacity > 0) { "ambonMUD.server.outboundChannelCapacity must be > 0" }
+        server.inboundChannelCapacity.requirePositive("ambonMUD.server.inboundChannelCapacity")
+        server.outboundChannelCapacity.requirePositive("ambonMUD.server.outboundChannelCapacity")
         require(server.sessionOutboundQueueCapacity in 1..MAX_SESSION_OUTBOUND_QUEUE_CAPACITY) {
             "ambonMUD.server.sessionOutboundQueueCapacity must be in 1..$MAX_SESSION_OUTBOUND_QUEUE_CAPACITY, got ${server.sessionOutboundQueueCapacity}"
         }
-        require(server.maxInboundEventsPerTick > 0) { "ambonMUD.server.maxInboundEventsPerTick must be > 0" }
-        require(server.tickMillis > 0L) { "ambonMUD.server.tickMillis must be > 0" }
-        require(server.inboundBudgetMs > 0L) { "ambonMUD.server.inboundBudgetMs must be > 0" }
+        server.maxInboundEventsPerTick.requirePositive("ambonMUD.server.maxInboundEventsPerTick")
+        server.tickMillis.requirePositive("ambonMUD.server.tickMillis")
+        server.inboundBudgetMs.requirePositive("ambonMUD.server.inboundBudgetMs")
         require(server.inboundBudgetMs < server.tickMillis) { "ambonMUD.server.inboundBudgetMs must be < tickMillis" }
+    }
 
+    private fun validateWorld() {
         require(world.resources.all { it.isNotBlank() }) { "ambonMUD.world.resources entries must be non-blank" }
         require(world.startRoom != null) { "ambonMUD.world.startRoom must be configured" }
         world.startRoom.let { sr ->
             require(sr.contains(':')) { "ambonMUD.world.startRoom must be in 'zone:room' format, got '$sr'" }
         }
+    }
 
+    private fun validatePersistence() {
         require(persistence.rootDir.isNotBlank()) { "ambonMUD.persistence.rootDir must be non-blank" }
-        require(persistence.worker.flushIntervalMs > 0L) { "ambonMUD.persistence.worker.flushIntervalMs must be > 0" }
+        persistence.worker.flushIntervalMs.requirePositive("ambonMUD.persistence.worker.flushIntervalMs")
 
         if (persistence.backend == PersistenceBackend.POSTGRES) {
             require(database.jdbcUrl.isNotBlank()) { "ambonMUD.database.jdbcUrl required when backend=POSTGRES" }
-            require(database.maxPoolSize > 0) { "ambonMUD.database.maxPoolSize must be > 0" }
+            database.maxPoolSize.requirePositive("ambonMUD.database.maxPoolSize")
         }
+    }
 
+    private fun validateLogin() {
         require(login.maxWrongPasswordRetries >= 0) { "ambonMUD.login.maxWrongPasswordRetries must be >= 0" }
-        require(login.maxFailedAttemptsBeforeDisconnect > 0) {
-            "ambonMUD.login.maxFailedAttemptsBeforeDisconnect must be > 0"
-        }
-        require(login.maxConcurrentLogins > 0) { "ambonMUD.login.maxConcurrentLogins must be > 0" }
-        require(login.authThreads > 0) { "ambonMUD.login.authThreads must be > 0" }
+        login.maxFailedAttemptsBeforeDisconnect.requirePositive("ambonMUD.login.maxFailedAttemptsBeforeDisconnect")
+        login.maxConcurrentLogins.requirePositive("ambonMUD.login.maxConcurrentLogins")
+        login.authThreads.requirePositive("ambonMUD.login.authThreads")
+    }
 
+    private fun validateEngine() {
+        validateEngineMob()
+        validateEngineCombat()
+        validateEngineRegen()
+        validateEngineEquipment()
+        validateEngineScheduler()
+        validateEngineGroup()
+        validateEngineEconomy()
+        validateEngineCrafting()
+        validateEngineHousing()
+        validateEngineCharacterCreation()
+        validateEngineClasses()
+        validateEngineStats()
+        validateEngineAbilities()
+        validateEngineStatusEffects()
+        validateEnginePets()
+        validateEngineBank()
+        validateEngineWorldTime()
+        validateEngineWeather()
+        validateEngineEnchanting()
+        validateEngineFactions()
+    }
+
+    private fun validateEngineMob() {
         require(engine.mob.minActionDelayMillis >= 0L) { "ambonMUD.engine.mob.minActionDelayMillis must be >= 0" }
         require(engine.mob.maxActionDelayMillis >= engine.mob.minActionDelayMillis) {
             "ambonMUD.engine.mob.maxActionDelayMillis must be >= minActionDelayMillis"
@@ -98,21 +147,31 @@ data class AppConfig(
         validateMobTier("standard", engine.mob.tiers.standard)
         validateMobTier("elite", engine.mob.tiers.elite)
         validateMobTier("boss", engine.mob.tiers.boss)
+    }
 
-        require(engine.combat.maxCombatsPerTick > 0) { "ambonMUD.engine.combat.maxCombatsPerTick must be > 0" }
-        require(engine.combat.tickMillis > 0L) { "ambonMUD.engine.combat.tickMillis must be > 0" }
-        require(engine.combat.minDamage > 0) { "ambonMUD.engine.combat.minDamage must be > 0" }
+    private fun validateEngineCombat() {
+        engine.combat.maxCombatsPerTick.requirePositive("ambonMUD.engine.combat.maxCombatsPerTick")
+        engine.combat.tickMillis.requirePositive("ambonMUD.engine.combat.tickMillis")
+        engine.combat.minDamage.requirePositive("ambonMUD.engine.combat.minDamage")
         require(engine.combat.maxDamage >= engine.combat.minDamage) {
             "ambonMUD.engine.combat.maxDamage must be >= minDamage"
         }
         require(!engine.combat.feedback.roomBroadcastEnabled || engine.combat.feedback.enabled) {
             "ambonMUD.engine.combat.feedback.roomBroadcastEnabled requires feedback.enabled=true"
         }
-        require(engine.regen.maxPlayersPerTick > 0) { "ambonMUD.engine.regen.maxPlayersPerTick must be > 0" }
-        require(engine.regen.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.baseIntervalMillis must be > 0" }
-        require(engine.regen.minIntervalMillis > 0L) { "ambonMUD.engine.regen.minIntervalMillis must be > 0" }
-        require(engine.regen.regenAmount > 0) { "ambonMUD.engine.regen.regenAmount must be > 0" }
+    }
 
+    private fun validateEngineRegen() {
+        engine.regen.maxPlayersPerTick.requirePositive("ambonMUD.engine.regen.maxPlayersPerTick")
+        engine.regen.baseIntervalMillis.requirePositive("ambonMUD.engine.regen.baseIntervalMillis")
+        engine.regen.minIntervalMillis.requirePositive("ambonMUD.engine.regen.minIntervalMillis")
+        engine.regen.regenAmount.requirePositive("ambonMUD.engine.regen.regenAmount")
+        engine.regen.mana.baseIntervalMillis.requirePositive("ambonMUD.engine.regen.mana.baseIntervalMillis")
+        engine.regen.mana.minIntervalMillis.requirePositive("ambonMUD.engine.regen.mana.minIntervalMillis")
+        engine.regen.mana.regenAmount.requirePositive("ambonMUD.engine.regen.mana.regenAmount")
+    }
+
+    private fun validateEngineEquipment() {
         require(engine.equipment.slots.isNotEmpty()) { "ambonMUD.engine.equipment.slots must not be empty" }
         val slotOrders = mutableSetOf<Int>()
         for ((id, slot) in engine.equipment.slots) {
@@ -123,26 +182,32 @@ data class AppConfig(
                 "ambonMUD.engine.equipment.slots: duplicate order ${slot.order} for slot '$id'"
             }
         }
+    }
 
-        require(engine.scheduler.maxActionsPerTick > 0) { "ambonMUD.engine.scheduler.maxActionsPerTick must be > 0" }
+    private fun validateEngineScheduler() {
+        engine.scheduler.maxActionsPerTick.requirePositive("ambonMUD.engine.scheduler.maxActionsPerTick")
+    }
 
+    private fun validateEngineGroup() {
         require(engine.group.maxSize in 2..20) { "ambonMUD.engine.group.maxSize must be in 2..20" }
-        require(engine.group.inviteTimeoutMs > 0L) { "ambonMUD.engine.group.inviteTimeoutMs must be > 0" }
+        engine.group.inviteTimeoutMs.requirePositive("ambonMUD.engine.group.inviteTimeoutMs")
         require(engine.group.xpBonusPerMember >= 0.0) { "ambonMUD.engine.group.xpBonusPerMember must be >= 0" }
+    }
 
+    private fun validateEngineEconomy() {
         require(engine.economy.buyMultiplier > 0.0) { "ambonMUD.engine.economy.buyMultiplier must be > 0" }
         require(engine.economy.sellMultiplier > 0.0) { "ambonMUD.engine.economy.sellMultiplier must be > 0" }
+    }
 
+    private fun validateEngineCrafting() {
         require(engine.crafting.maxSkillLevel >= 1) { "ambonMUD.engine.crafting.maxSkillLevel must be >= 1" }
-        require(engine.crafting.baseXpPerLevel > 0L) { "ambonMUD.engine.crafting.baseXpPerLevel must be > 0" }
+        engine.crafting.baseXpPerLevel.requirePositive("ambonMUD.engine.crafting.baseXpPerLevel")
         require(engine.crafting.xpExponent > 0.0) { "ambonMUD.engine.crafting.xpExponent must be > 0" }
         require(engine.crafting.gatherCooldownMs >= 0L) { "ambonMUD.engine.crafting.gatherCooldownMs must be >= 0" }
         require(engine.crafting.stationBonusQuantity >= 0) { "ambonMUD.engine.crafting.stationBonusQuantity must be >= 0" }
+    }
 
-        require(engine.regen.mana.baseIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.baseIntervalMillis must be > 0" }
-        require(engine.regen.mana.minIntervalMillis > 0L) { "ambonMUD.engine.regen.mana.minIntervalMillis must be > 0" }
-        require(engine.regen.mana.regenAmount > 0) { "ambonMUD.engine.regen.mana.regenAmount must be > 0" }
-
+    private fun validateEngineHousing() {
         if (engine.housing.enabled && engine.housing.templates.isNotEmpty()) {
             val entryTemplates = engine.housing.templates.values.count { it.isEntry }
             require(entryTemplates == 1) {
@@ -154,17 +219,23 @@ data class AppConfig(
                 require(tmpl.maxDroppedItems >= 0) { "ambonMUD.engine.housing.templates.$key.maxDroppedItems must be >= 0" }
             }
         }
+    }
 
+    private fun validateEngineCharacterCreation() {
         require(engine.characterCreation.startingGold >= 0L) {
             "ambonMUD.engine.characterCreation.startingGold must be >= 0"
         }
+    }
 
+    private fun validateEngineClasses() {
         engine.classes.definitions.forEach { (key, def) ->
             if (def.threatMultiplier < 0.0) {
                 warnConfig("engine.classes.definitions.$key.threatMultiplier is ${def.threatMultiplier}, expected >= 0")
             }
         }
+    }
 
+    private fun validateEngineStats() {
         engine.stats.definitions.forEach { (key, def) ->
             if (def.baseStat < 0) warnConfig("engine.stats.definitions.$key.baseStat is ${def.baseStat}, expected >= 0")
         }
@@ -185,16 +256,18 @@ data class AppConfig(
                 warnConfig("engine.stats.bindings.$bindingName references unknown stat '${statId.uppercase()}'")
             }
         }
-        require(b.meleeDamageDivisor > 0) { "ambonMUD.engine.stats.bindings.meleeDamageDivisor must be > 0" }
+        b.meleeDamageDivisor.requirePositive("ambonMUD.engine.stats.bindings.meleeDamageDivisor")
         require(b.dodgePerPoint >= 0) { "ambonMUD.engine.stats.bindings.dodgePerPoint must be >= 0" }
         require(b.maxDodgePercent in 0..100) { "ambonMUD.engine.stats.bindings.maxDodgePercent must be in 0..100" }
-        require(b.spellDamageDivisor > 0) { "ambonMUD.engine.stats.bindings.spellDamageDivisor must be > 0" }
-        require(b.hpScalingDivisor > 0) { "ambonMUD.engine.stats.bindings.hpScalingDivisor must be > 0" }
-        require(b.manaScalingDivisor > 0) { "ambonMUD.engine.stats.bindings.manaScalingDivisor must be > 0" }
+        b.spellDamageDivisor.requirePositive("ambonMUD.engine.stats.bindings.spellDamageDivisor")
+        b.hpScalingDivisor.requirePositive("ambonMUD.engine.stats.bindings.hpScalingDivisor")
+        b.manaScalingDivisor.requirePositive("ambonMUD.engine.stats.bindings.manaScalingDivisor")
         require(b.hpRegenMsPerPoint >= 0L) { "ambonMUD.engine.stats.bindings.hpRegenMsPerPoint must be >= 0" }
         require(b.manaRegenMsPerPoint >= 0L) { "ambonMUD.engine.stats.bindings.manaRegenMsPerPoint must be >= 0" }
         require(b.xpBonusPerPoint >= 0.0) { "ambonMUD.engine.stats.bindings.xpBonusPerPoint must be >= 0" }
+    }
 
+    private fun validateEngineAbilities() {
         engine.abilities.definitions.forEach { (key, def) ->
             if (def.displayName.isBlank()) warnConfig("ability '$key' displayName is blank")
             if (def.manaCost < 0) warnConfig("ability '$key' manaCost is ${def.manaCost}, expected >= 0")
@@ -210,7 +283,9 @@ data class AppConfig(
                 }
             }
         }
+    }
 
+    private fun validateEngineStatusEffects() {
         engine.statusEffects.definitions.forEach { (key, def) ->
             if (def.displayName.isBlank()) warnConfig("statusEffect '$key' displayName is blank")
             if (def.effectType.isBlank()) warnConfig("statusEffect '$key' effectType is blank")
@@ -218,9 +293,70 @@ data class AppConfig(
             if (def.tickIntervalMs < 0L) warnConfig("statusEffect '$key' tickIntervalMs is ${def.tickIntervalMs}, expected >= 0")
             require(def.maxStacks >= 1) { "statusEffect '$key' maxStacks is ${def.maxStacks}, must be >= 1" }
         }
+    }
 
-        require(progression.maxLevel > 0) { "ambonMUD.progression.maxLevel must be > 0" }
-        require(progression.xp.baseXp > 0L) { "ambonMUD.progression.xp.baseXp must be > 0" }
+    private fun validateEnginePets() {
+        engine.pets.definitions.forEach { (key, tmpl) ->
+            require(tmpl.hp > 0) { "ambonMUD.engine.pets.definitions.$key.hp must be > 0" }
+            require(tmpl.minDamage > 0) { "ambonMUD.engine.pets.definitions.$key.minDamage must be > 0" }
+            require(tmpl.maxDamage >= tmpl.minDamage) {
+                "ambonMUD.engine.pets.definitions.$key.maxDamage (${tmpl.maxDamage}) must be >= minDamage (${tmpl.minDamage})"
+            }
+            require(tmpl.armor >= 0) { "ambonMUD.engine.pets.definitions.$key.armor must be >= 0" }
+        }
+    }
+
+    private fun validateEngineBank() {
+        engine.bank.maxItems.requirePositive("ambonMUD.engine.bank.maxItems")
+    }
+
+    private fun validateEngineWorldTime() {
+        engine.worldTime.cycleLengthMs.requirePositive("ambonMUD.engine.worldTime.cycleLengthMs")
+        require(engine.worldTime.dawnHour in 0..23) { "ambonMUD.engine.worldTime.dawnHour must be 0..23" }
+        require(engine.worldTime.dayHour in 0..23) { "ambonMUD.engine.worldTime.dayHour must be 0..23" }
+        require(engine.worldTime.duskHour in 0..23) { "ambonMUD.engine.worldTime.duskHour must be 0..23" }
+        require(engine.worldTime.nightHour in 0..23) { "ambonMUD.engine.worldTime.nightHour must be 0..23" }
+        require(engine.worldTime.dawnHour < engine.worldTime.dayHour) {
+            "ambonMUD.engine.worldTime.dawnHour (${engine.worldTime.dawnHour}) must be < dayHour (${engine.worldTime.dayHour})"
+        }
+        require(engine.worldTime.dayHour < engine.worldTime.duskHour) {
+            "ambonMUD.engine.worldTime.dayHour (${engine.worldTime.dayHour}) must be < duskHour (${engine.worldTime.duskHour})"
+        }
+        require(engine.worldTime.duskHour < engine.worldTime.nightHour) {
+            "ambonMUD.engine.worldTime.duskHour (${engine.worldTime.duskHour}) must be < nightHour (${engine.worldTime.nightHour})"
+        }
+    }
+
+    private fun validateEngineWeather() {
+        engine.weather.minTransitionMs.requirePositive("ambonMUD.engine.weather.minTransitionMs")
+        require(engine.weather.maxTransitionMs >= engine.weather.minTransitionMs) {
+            "ambonMUD.engine.weather.maxTransitionMs must be >= minTransitionMs"
+        }
+    }
+
+    private fun validateEngineEnchanting() {
+        engine.enchanting.maxEnchantmentsPerItem.requirePositive("ambonMUD.engine.enchanting.maxEnchantmentsPerItem")
+        engine.enchanting.definitions.forEach { (key, def) ->
+            require(def.displayName.isNotBlank()) { "ambonMUD.engine.enchanting.definitions.$key.displayName must be non-blank" }
+            require(def.materials.isNotEmpty()) { "ambonMUD.engine.enchanting.definitions.$key.materials must not be empty" }
+            require(def.skillRequired > 0) { "ambonMUD.engine.enchanting.definitions.$key.skillRequired must be > 0" }
+        }
+    }
+
+    private fun validateEngineFactions() {
+        val factionIds = engine.factions.definitions.keys
+        for ((factionId, def) in engine.factions.definitions) {
+            for (enemyId in def.enemies) {
+                require(enemyId in factionIds) {
+                    "faction '$factionId' references enemy '$enemyId' which is not defined in factions.definitions"
+                }
+            }
+        }
+    }
+
+    private fun validateProgression() {
+        progression.maxLevel.requirePositive("ambonMUD.progression.maxLevel")
+        progression.xp.baseXp.requirePositive("ambonMUD.progression.xp.baseXp")
         require(progression.xp.exponent >= 1.0) {
             "ambonMUD.progression.xp.exponent must be >= 1.0 to ensure XP requirements increase with level"
         }
@@ -231,23 +367,27 @@ data class AppConfig(
         require(progression.rewards.manaPerLevel >= 0) { "ambonMUD.progression.rewards.manaPerLevel must be >= 0" }
         require(progression.rewards.baseHp >= 1) { "ambonMUD.progression.rewards.baseHp must be >= 1" }
         require(progression.rewards.baseMana >= 0) { "ambonMUD.progression.rewards.baseMana must be >= 0" }
+    }
 
-        require(transport.telnet.maxLineLen > 0) { "ambonMUD.transport.telnet.maxLineLen must be > 0" }
+    private fun validateTransport() {
+        transport.telnet.maxLineLen.requirePositive("ambonMUD.transport.telnet.maxLineLen")
         require(transport.telnet.maxNonPrintablePerLine >= 0) {
             "ambonMUD.transport.telnet.maxNonPrintablePerLine must be >= 0"
         }
-        require(transport.telnet.socketBacklog > 0) { "ambonMUD.transport.telnet.socketBacklog must be > 0" }
-        require(transport.telnet.maxConnections > 0) { "ambonMUD.transport.telnet.maxConnections must be > 0" }
-        require(transport.maxInboundBackpressureFailures > 0) {
-            "ambonMUD.transport.maxInboundBackpressureFailures must be > 0"
-        }
+        transport.telnet.socketBacklog.requirePositive("ambonMUD.transport.telnet.socketBacklog")
+        transport.telnet.maxConnections.requirePositive("ambonMUD.transport.telnet.maxConnections")
+        transport.maxInboundBackpressureFailures.requirePositive("ambonMUD.transport.maxInboundBackpressureFailures")
 
         require(transport.websocket.host.isNotBlank()) { "ambonMUD.transport.websocket.host must be non-blank" }
         require(transport.websocket.stopGraceMillis >= 0L) { "ambonMUD.transport.websocket.stopGraceMillis must be >= 0" }
         require(transport.websocket.stopTimeoutMillis >= 0L) { "ambonMUD.transport.websocket.stopTimeoutMillis must be >= 0" }
+    }
 
+    private fun validateDemo() {
         require(demo.webClientHost.isNotBlank()) { "ambonMUD.demo.webClientHost must be non-blank" }
+    }
 
+    private fun validateObservability() {
         require(observability.metricsEndpoint.startsWith("/")) {
             "ambonMUD.observability.metricsEndpoint must start with '/'"
         }
@@ -270,15 +410,23 @@ data class AppConfig(
                     "Consider binding to 127.0.0.1 to restrict access.",
             )
         }
+    }
 
+    private fun validateAdmin() {
         if (admin.enabled) {
             admin.port.requireValidPort("ambonMUD.admin.port")
             require(admin.token.isNotBlank()) { "ambonMUD.admin.token must be non-blank when admin.enabled=true" }
         }
 
+        if ("*" in admin.corsOrigins) {
+            warnConfig("admin.corsOrigins contains wildcard '*' — this allows any origin and should not be used in production")
+        }
+    }
+
+    private fun validateRedis() {
         if (redis.enabled) {
             require(redis.uri.isNotBlank()) { "ambonMUD.redis.uri must be non-blank when redis.enabled=true" }
-            require(redis.cacheTtlSeconds > 0L) { "ambonMUD.redis.cacheTtlSeconds must be > 0" }
+            redis.cacheTtlSeconds.requirePositive("ambonMUD.redis.cacheTtlSeconds")
             if (redis.bus.enabled) {
                 require(redis.bus.inboundChannel.isNotBlank()) {
                     "ambonMUD.redis.bus.inboundChannel must be non-blank when redis.bus.enabled=true"
@@ -291,39 +439,33 @@ data class AppConfig(
                 }
             }
         }
+    }
 
+    private fun validateGrpc() {
         if (mode == DeploymentMode.ENGINE || mode == DeploymentMode.GATEWAY) {
             grpc.server.port.requireValidPort("ambonMUD.grpc.server.port")
             require(grpc.sharedSecret.isNotBlank()) {
                 "ambonMUD.grpc.sharedSecret must be non-blank in ENGINE/GATEWAY mode"
             }
-            require(grpc.timestampToleranceMs > 0L) {
-                "ambonMUD.grpc.timestampToleranceMs must be > 0"
-            }
+            grpc.timestampToleranceMs.requirePositive("ambonMUD.grpc.timestampToleranceMs")
         }
+    }
 
+    private fun validateGateway() {
         if (mode == DeploymentMode.GATEWAY) {
             require(grpc.client.engineHost.isNotBlank()) { "ambonMUD.grpc.client.engineHost must be non-blank in gateway mode" }
             grpc.client.enginePort.requireValidPort("ambonMUD.grpc.client.enginePort")
             require(gateway.id in 0..0xFFFF) { "ambonMUD.gateway.id must be between 0 and 65535" }
-            require(gateway.snowflake.idLeaseTtlSeconds > 0L) {
-                "ambonMUD.gateway.snowflake.idLeaseTtlSeconds must be > 0"
-            }
-            require(gateway.reconnect.maxAttempts > 0) {
-                "ambonMUD.gateway.reconnect.maxAttempts must be > 0"
-            }
-            require(gateway.reconnect.initialDelayMs > 0) {
-                "ambonMUD.gateway.reconnect.initialDelayMs must be > 0"
-            }
+            gateway.snowflake.idLeaseTtlSeconds.requirePositive("ambonMUD.gateway.snowflake.idLeaseTtlSeconds")
+            gateway.reconnect.maxAttempts.requirePositive("ambonMUD.gateway.reconnect.maxAttempts")
+            gateway.reconnect.initialDelayMs.requirePositive("ambonMUD.gateway.reconnect.initialDelayMs")
             require(gateway.reconnect.maxDelayMs >= gateway.reconnect.initialDelayMs) {
                 "ambonMUD.gateway.reconnect.maxDelayMs must be >= initialDelayMs"
             }
             require(gateway.reconnect.jitterFactor in 0.0..1.0) {
                 "ambonMUD.gateway.reconnect.jitterFactor must be in 0.0..1.0"
             }
-            require(gateway.reconnect.streamVerifyMs > 0) {
-                "ambonMUD.gateway.reconnect.streamVerifyMs must be > 0"
-            }
+            gateway.reconnect.streamVerifyMs.requirePositive("ambonMUD.gateway.reconnect.streamVerifyMs")
 
             val seenGatewayEngineIds = mutableSetOf<String>()
             gateway.engines.forEachIndexed { idx, entry ->
@@ -335,13 +477,13 @@ data class AppConfig(
                 }
             }
         }
+    }
 
+    private fun validateSharding() {
         if (sharding.enabled) {
             require(sharding.engineId.isNotBlank()) { "ambonMUD.sharding.engineId must be non-blank when sharding.enabled=true" }
-            require(sharding.handoff.ackTimeoutMs > 0L) { "ambonMUD.sharding.handoff.ackTimeoutMs must be > 0" }
-            require(sharding.registry.leaseTtlSeconds > 0L) {
-                "ambonMUD.sharding.registry.leaseTtlSeconds must be > 0"
-            }
+            sharding.handoff.ackTimeoutMs.requirePositive("ambonMUD.sharding.handoff.ackTimeoutMs")
+            sharding.registry.leaseTtlSeconds.requirePositive("ambonMUD.sharding.registry.leaseTtlSeconds")
             require(sharding.advertiseHost.isNotBlank()) {
                 "ambonMUD.sharding.advertiseHost must be non-blank when sharding.enabled=true"
             }
@@ -378,25 +520,19 @@ data class AppConfig(
             }
 
             if (sharding.playerIndex.enabled) {
-                require(sharding.playerIndex.heartbeatMs > 0L) {
-                    "ambonMUD.sharding.playerIndex.heartbeatMs must be > 0"
-                }
+                sharding.playerIndex.heartbeatMs.requirePositive("ambonMUD.sharding.playerIndex.heartbeatMs")
             }
 
             if (sharding.instancing.enabled) {
-                require(sharding.instancing.defaultCapacity > 0) {
-                    "ambonMUD.sharding.instancing.defaultCapacity must be > 0"
-                }
-                require(sharding.instancing.loadReportIntervalMs > 0L) {
-                    "ambonMUD.sharding.instancing.loadReportIntervalMs must be > 0"
-                }
+                sharding.instancing.defaultCapacity.requirePositive("ambonMUD.sharding.instancing.defaultCapacity")
+                sharding.instancing.loadReportIntervalMs.requirePositive("ambonMUD.sharding.instancing.loadReportIntervalMs")
                 require(sharding.instancing.startZoneMinInstances >= 1) {
                     "ambonMUD.sharding.instancing.startZoneMinInstances must be >= 1"
                 }
                 if (sharding.instancing.autoScale.enabled) {
-                    require(sharding.instancing.autoScale.evaluationIntervalMs > 0L) {
-                        "ambonMUD.sharding.instancing.autoScale.evaluationIntervalMs must be > 0"
-                    }
+                    sharding.instancing.autoScale.evaluationIntervalMs.requirePositive(
+                        "ambonMUD.sharding.instancing.autoScale.evaluationIntervalMs",
+                    )
                     require(sharding.instancing.autoScale.scaleUpThreshold in 0.0..1.0) {
                         "ambonMUD.sharding.instancing.autoScale.scaleUpThreshold must be in 0.0..1.0"
                     }
@@ -409,64 +545,13 @@ data class AppConfig(
                     ) {
                         "ambonMUD.sharding.instancing.autoScale.scaleDownThreshold must be < scaleUpThreshold"
                     }
-                    require(sharding.instancing.autoScale.cooldownMs > 0L) {
-                        "ambonMUD.sharding.instancing.autoScale.cooldownMs must be > 0"
-                    }
+                    sharding.instancing.autoScale.cooldownMs.requirePositive("ambonMUD.sharding.instancing.autoScale.cooldownMs")
                 }
             }
         }
+    }
 
-        // Validate pet template invariants
-        engine.pets.definitions.forEach { (key, tmpl) ->
-            require(tmpl.hp > 0) { "ambonMUD.engine.pets.definitions.$key.hp must be > 0" }
-            require(tmpl.minDamage > 0) { "ambonMUD.engine.pets.definitions.$key.minDamage must be > 0" }
-            require(tmpl.maxDamage >= tmpl.minDamage) {
-                "ambonMUD.engine.pets.definitions.$key.maxDamage (${tmpl.maxDamage}) must be >= minDamage (${tmpl.minDamage})"
-            }
-            require(tmpl.armor >= 0) { "ambonMUD.engine.pets.definitions.$key.armor must be >= 0" }
-        }
-
-        require(engine.bank.maxItems > 0) { "ambonMUD.engine.bank.maxItems must be > 0" }
-        require(engine.worldTime.cycleLengthMs > 0L) { "ambonMUD.engine.worldTime.cycleLengthMs must be > 0" }
-        require(engine.worldTime.dawnHour in 0..23) { "ambonMUD.engine.worldTime.dawnHour must be 0..23" }
-        require(engine.worldTime.dayHour in 0..23) { "ambonMUD.engine.worldTime.dayHour must be 0..23" }
-        require(engine.worldTime.duskHour in 0..23) { "ambonMUD.engine.worldTime.duskHour must be 0..23" }
-        require(engine.worldTime.nightHour in 0..23) { "ambonMUD.engine.worldTime.nightHour must be 0..23" }
-        require(engine.worldTime.dawnHour < engine.worldTime.dayHour) {
-            "ambonMUD.engine.worldTime.dawnHour (${engine.worldTime.dawnHour}) must be < dayHour (${engine.worldTime.dayHour})"
-        }
-        require(engine.worldTime.dayHour < engine.worldTime.duskHour) {
-            "ambonMUD.engine.worldTime.dayHour (${engine.worldTime.dayHour}) must be < duskHour (${engine.worldTime.duskHour})"
-        }
-        require(engine.worldTime.duskHour < engine.worldTime.nightHour) {
-            "ambonMUD.engine.worldTime.duskHour (${engine.worldTime.duskHour}) must be < nightHour (${engine.worldTime.nightHour})"
-        }
-        require(engine.weather.minTransitionMs > 0L) { "ambonMUD.engine.weather.minTransitionMs must be > 0" }
-        require(engine.weather.maxTransitionMs >= engine.weather.minTransitionMs) {
-            "ambonMUD.engine.weather.maxTransitionMs must be >= minTransitionMs"
-        }
-
-        // Validate enchantment definitions
-        require(engine.enchanting.maxEnchantmentsPerItem > 0) {
-            "ambonMUD.engine.enchanting.maxEnchantmentsPerItem must be > 0"
-        }
-        engine.enchanting.definitions.forEach { (key, def) ->
-            require(def.displayName.isNotBlank()) { "ambonMUD.engine.enchanting.definitions.$key.displayName must be non-blank" }
-            require(def.materials.isNotEmpty()) { "ambonMUD.engine.enchanting.definitions.$key.materials must not be empty" }
-            require(def.skillRequired > 0) { "ambonMUD.engine.enchanting.definitions.$key.skillRequired must be > 0" }
-        }
-
-        // Validate faction enemy cross-references
-        val factionIds = engine.factions.definitions.keys
-        for ((factionId, def) in engine.factions.definitions) {
-            for (enemyId in def.enemies) {
-                require(enemyId in factionIds) {
-                    "faction '$factionId' references enemy '$enemyId' which is not defined in factions.definitions"
-                }
-            }
-        }
-
-        // Sharding / instancing interdependency checks
+    private fun validateCrossCuttingDependencies() {
         if (sharding.enabled) {
             require(redis.enabled) {
                 "ambonMUD.redis.enabled must be true when sharding.enabled=true (sharding requires Redis)"
@@ -477,12 +562,9 @@ data class AppConfig(
                 "ambonMUD.sharding.enabled must be true when sharding.instancing.enabled=true"
             }
         }
+    }
 
-        if ("*" in admin.corsOrigins) {
-            warnConfig("admin.corsOrigins contains wildcard '*' — this allows any origin and should not be used in production")
-        }
-
-        // Production mode: reject placeholder secrets
+    private fun validateProductionMode() {
         if (server.productionMode) {
             val forbiddenPasswords = setOf("changeme", "ambon", "password", "")
             require(database.password.lowercase() !in forbiddenPasswords) {
@@ -504,8 +586,6 @@ data class AppConfig(
                 }
             }
         }
-
-        return this
     }
 }
 
@@ -1906,6 +1986,14 @@ data class AudioConfig(
 
 private fun Int.requireValidPort(fieldName: String) {
     require(this in 1..65535) { "$fieldName must be between 1 and 65535" }
+}
+
+private fun Int.requirePositive(field: String) {
+    require(this > 0) { "$field must be > 0 (got $this)" }
+}
+
+private fun Long.requirePositive(field: String) {
+    require(this > 0L) { "$field must be > 0 (got $this)" }
 }
 
 private fun validateMobTier(
