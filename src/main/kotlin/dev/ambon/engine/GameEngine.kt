@@ -1301,8 +1301,12 @@ class GameEngine(
                         )
                     }
 
+                    // Snapshot all players once for the remainder of this tick to avoid
+                    // repeated list copies in weather / event / broadcast phases.
+                    val allPlayersSnapshot = players.allPlayers()
+
                     // Tick weather — broadcast zone changes
-                    val activeZones = players.allPlayers().map { it.roomId.zone }.toSet()
+                    val activeZones = allPlayersSnapshot.map { it.roomId.zone }.toSet()
                     val weatherChanges = weatherSystem.tick(activeZones)
                     for ((zone, weather) in weatherChanges) {
                         for (p in players.playersInZone(zone)) {
@@ -1323,7 +1327,7 @@ class GameEngine(
                         for (id in eventResult.activated) {
                             val def = engineConfig.worldEvents.definitions[id] ?: continue
                             if (def.startMessage.isNotEmpty()) {
-                                for (p in players.allPlayers()) {
+                                for (p in allPlayersSnapshot) {
                                     outbound.send(OutboundEvent.SendInfo(p.sessionId, "[Event] ${def.startMessage}"))
                                 }
                             }
@@ -1331,7 +1335,7 @@ class GameEngine(
                         for (id in eventResult.deactivated) {
                             val def = engineConfig.worldEvents.definitions[id] ?: continue
                             if (def.endMessage.isNotEmpty()) {
-                                for (p in players.allPlayers()) {
+                                for (p in allPlayersSnapshot) {
                                     outbound.send(OutboundEvent.SendInfo(p.sessionId, "[Event] ${def.endMessage}"))
                                 }
                             }
