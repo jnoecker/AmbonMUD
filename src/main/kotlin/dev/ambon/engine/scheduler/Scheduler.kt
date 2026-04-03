@@ -86,7 +86,9 @@ class Scheduler(
 
         // O(1): remaining dueQueue entries are all overdue but unrun this tick.
         val dropped = dueQueue.size
-        if (dropped > 0) log.warn { "Scheduler dropped $dropped overdue actions (cap=$maxActions)" }
+        if (dropped > 0) {
+            log.warn { "Scheduler cap reached: $ran actions ran, $dropped due actions deferred to next tick (maxActions=$maxActions)" }
+        }
         return Pair(ran, dropped)
     }
 

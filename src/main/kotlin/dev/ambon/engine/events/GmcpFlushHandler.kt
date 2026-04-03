@@ -96,9 +96,12 @@ class GmcpFlushHandler(
 
     private inline fun <T> drainDirty(set: MutableSet<T>, action: (T) -> Unit) {
         if (set.isEmpty()) return
-        for (item in set) {
-            action(item)
+        try {
+            for (item in set) {
+                action(item)
+            }
+        } finally {
+            set.clear()
         }
-        set.clear()
     }
 }
