@@ -3,6 +3,7 @@ import java.time.Duration
 plugins {
     kotlin("jvm") version "2.3.10"
     application
+    jacoco
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     id("com.google.protobuf") version "0.9.6"
     id("com.gradleup.shadow") version "9.4.1"
@@ -99,6 +100,15 @@ tasks.test {
     // leaks or gRPC streams that never close). Individual test timeouts are configured
     // in junit-platform.properties; this is a backstop for the Gradle process itself.
     timeout = Duration.ofMinutes(5)
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
 }
 
 val integrationTest by tasks.registering(Test::class) {
