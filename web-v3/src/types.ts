@@ -155,7 +155,12 @@ export interface RoomState {
   mapY: number;
   housing?: boolean;
   housingOwner?: string | null;
+  /** Whether the current zone has custom graphical assets. */
+  graphical?: boolean;
 }
+
+/** User layout preference: auto follows zone flag, text/canvas force a mode. */
+export type LayoutMode = "auto" | "text" | "canvas";
 
 export interface ItemSummary {
   id: string;

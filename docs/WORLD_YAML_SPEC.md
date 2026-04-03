@@ -25,6 +25,7 @@ It is written for code generators that need to emit valid zone files.
 zone: <string, required, non-blank after trim>
 lifespan: <integer minutes >= 0, optional>
 startRoom: <room-id string, required>
+graphical: <boolean, optional, default false>  # true if the zone has custom graphical assets
 image:                  # zone-wide image defaults
   room: <string, optional>
   mob: <string, optional>
