@@ -28,6 +28,7 @@ import dev.ambon.engine.SpriteLoader
 import dev.ambon.engine.SpriteRegistry
 import dev.ambon.engine.StatRegistry
 import dev.ambon.engine.StatRegistryLoader
+import dev.ambon.engine.TrainerRegistry
 import dev.ambon.engine.WorldStateRegistry
 import dev.ambon.engine.abilities.AbilityRegistry
 import dev.ambon.engine.createPlayerRegistry
@@ -170,6 +171,7 @@ class MudServer(
     private val abilityRegistry = AbilityRegistry()
     private val statusEffectRegistry = StatusEffectRegistry()
     private val shopRegistry = ShopRegistry(items)
+    private val trainerRegistry = TrainerRegistry()
     private val questRegistry = QuestRegistry()
     private val achievementRegistry = AchievementRegistry()
     private val classRegistry =
@@ -400,6 +402,7 @@ class MudServer(
                     abilityRegistry = abilityRegistry,
                     statusEffectRegistry = statusEffectRegistry,
                     shopRegistry = shopRegistry,
+                    trainerRegistry = trainerRegistry,
                     sharding = ServerInfrastructure.buildShardingContext(
                         config = config,
                         handoffManager = handoffManager,

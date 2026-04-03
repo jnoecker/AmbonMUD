@@ -420,6 +420,21 @@ sealed interface Command {
 
     data object SpriteDefault : Command
 
+    // ---- Trainer commands ----
+
+    sealed interface Train : Command {
+        /** `train` or `train list` — list available abilities at the trainer in this room. */
+        data object List : Train
+
+        /** `train learn <keyword>` — spend a skill point to learn an ability. */
+        data class Learn(
+            val keyword: String,
+        ) : Train
+
+        /** `train unlock` — pay gold to unlock the class taught by this trainer. */
+        data object Unlock : Train
+    }
+
     // ---- Leaderboard commands ----
 
     /** Show a leaderboard. [category] is one of: level, achievements, crafting, dungeons, kills. */
@@ -1143,6 +1158,21 @@ object CommandParser {
                 }
                 "default", "clear", "auto" -> Command.SpriteDefault
                 else -> Command.SpriteSet(rest.trim())
+            }
+        }?.let { return it }
+
+        // train [list|learn <keyword>|unlock]
+        matchPrefix(line, listOf("train", "trainer")) { rest ->
+            if (rest.isBlank()) return@matchPrefix Command.Train.List
+            val parts = rest.split(Regex("\\s+"), limit = 2)
+            when (parts[0].lowercase()) {
+                "list" -> Command.Train.List
+                "learn" -> {
+                    val kw = parts.getOrNull(1)?.trim() ?: ""
+                    if (kw.isEmpty()) Command.Invalid(line, "train learn <ability>") else Command.Train.Learn(kw)
+                }
+                "unlock" -> Command.Train.Unlock
+                else -> Command.Train.Learn(rest.trim())
             }
         }?.let { return it }
 

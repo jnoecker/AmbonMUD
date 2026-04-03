@@ -44,6 +44,7 @@ import dev.ambon.engine.commands.handlers.ReputationHandler
 import dev.ambon.engine.commands.handlers.ShopHandler
 import dev.ambon.engine.commands.handlers.SpriteHandler
 import dev.ambon.engine.commands.handlers.TradeHandler
+import dev.ambon.engine.commands.handlers.TrainerHandler
 import dev.ambon.engine.commands.handlers.UiHandler
 import dev.ambon.engine.commands.handlers.WorldFeaturesHandler
 import dev.ambon.engine.commands.handlers.WorldInfoHandler
@@ -154,6 +155,7 @@ class GameEngine(
     private val abilityRegistry: AbilityRegistry = AbilityRegistry(),
     private val statusEffectRegistry: StatusEffectRegistry = StatusEffectRegistry(),
     private val shopRegistry: ShopRegistry = ShopRegistry(items),
+    private val trainerRegistry: TrainerRegistry = TrainerRegistry(),
     classRegistryOverride: PlayerClassRegistry? = null,
     raceRegistryOverride: RaceRegistry? = null,
     statRegistryOverride: StatRegistry? = null,
@@ -868,6 +870,7 @@ class GameEngine(
                 players = players,
                 outbound = outbound,
                 shopRegistry = shopRegistry,
+                trainerRegistry = trainerRegistry,
                 gatheringRegistry = gatheringRegistry,
                 craftingRegistry = craftingRegistry,
                 questRegistry = questRegistry,
@@ -922,6 +925,7 @@ class GameEngine(
             equipmentSlotRegistry = equipmentSlotRegistry,
             genderRegistry = genderRegistry,
             leaderboardSystem = leaderboardSystem,
+            trainerRegistry = trainerRegistry,
         )
 
         communicationHandler = CommunicationHandler(
@@ -983,6 +987,7 @@ class GameEngine(
                 metrics = metrics,
                 progression = progression,
                 housingSystem = housingSystem,
+                skillPointsConfig = engineConfig.skillPoints,
             ),
             ShopHandler(
                 ctx = ctx,
@@ -1074,6 +1079,14 @@ class GameEngine(
                 ctx = ctx,
                 spriteRegistry = spriteRegistry,
             ),
+            TrainerHandler(
+                ctx = ctx,
+                abilitySystem = abilitySystem,
+                trainerRegistry = trainerRegistry,
+                skillPointsConfig = engineConfig.skillPoints,
+                multiclassConfig = engineConfig.multiclass,
+                markVitalsDirty = ::markVitalsDirty,
+            ),
             LeaderboardHandler(ctx = ctx),
             UiHandler(
                 ctx = ctx,
@@ -1098,6 +1111,7 @@ class GameEngine(
         }
         items.loadSpawns(world.itemSpawns)
         shopRegistry.register(world.shopDefinitions)
+        trainerRegistry.register(world.trainerDefinitions)
         gatheringRegistry.register(world.gatheringNodes)
         craftingRegistry.register(world.recipes)
         // Seed container initial items from feature definitions (snapshot may override below in run()).
@@ -1597,7 +1611,7 @@ class GameEngine(
         // Finalize login (same as normal flow)
         loginFlowHandler.onAfterLogin(sessionId)
         val player = players.get(sessionId) ?: return
-        abilitySystem.syncAbilities(sessionId, player.level, player.playerClass)
+        abilitySystem.loadAbilities(sessionId, player.learnedAbilityIds)
         outbound.send(OutboundEvent.SetAnsi(sessionId, player.ansiEnabled))
         if (!world.rooms.containsKey(player.roomId)) {
             players.moveTo(sessionId, world.startRoom)
@@ -1757,12 +1771,22 @@ class GameEngine(
     ) {
         markVitalsDirty(sessionId)
         markStatsDirty(sessionId)
-        val pc = players.get(sessionId)?.playerClass
-        val newAbilities = abilitySystem.syncAbilities(sessionId, level, pc)
-        for (ability in newAbilities) {
-            outbound.send(OutboundEvent.SendText(sessionId, "You have learned ${ability.displayName}!"))
-        }
         val p = players.get(sessionId)
+        val interval = engineConfig.skillPoints.interval
+        val available = abilitySystem.availableSkillPoints(
+            level = level,
+            learnedCount = p?.learnedAbilityIds?.size ?: 0,
+            interval = interval,
+        )
+        if (available > 0) {
+            val pointWord = if (available == 1) "skill point" else "skill points"
+            outbound.send(
+                OutboundEvent.SendText(
+                    sessionId,
+                    "You have $available $pointWord available! Visit a class trainer to learn new abilities.",
+                ),
+            )
+        }
         if (p != null) {
             gmcpEmitter.sendCharName(sessionId, p)
             gmcpEmitter.sendCharSkills(sessionId, abilitySystem.knownAbilities(sessionId)) { abilityId ->

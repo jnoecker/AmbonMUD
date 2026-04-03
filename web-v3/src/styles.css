@@ -6748,6 +6748,27 @@ body {
   margin-top: var(--space-2);
 }
 
+.spellbook-sp-hint {
+  color: var(--accent-gold);
+}
+
+.spellbook-sp-badge {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgb(255 255 255 / 8%);
+  color: var(--text-secondary);
+  border: 1px solid rgb(255 255 255 / 12%);
+}
+
+.spellbook-sp-badge-available {
+  background: rgb(255 210 100 / 18%);
+  color: var(--accent-gold);
+  border-color: rgb(255 210 100 / 30%);
+}
+
 .spellbook-card-wrapper {
   position: relative;
 }
@@ -6813,6 +6834,232 @@ body {
 .spellbook-slot-pick:hover {
   background: rgb(168 151 210 / 30%);
   color: var(--text-primary);
+}
+
+/* ─── Trainer Panel ──────────────────────────────────────────────── */
+
+.trainer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.trainer-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.trainer-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.trainer-class {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-left: auto;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.trainer-skill-points {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: rgb(255 255 255 / 4%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.trainer-sp-label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.trainer-sp-value {
+  margin-left: auto;
+  font-size: 1.1rem;
+  font-weight: 700;
+  min-width: 1.5ch;
+  text-align: right;
+}
+
+.trainer-sp-available {
+  color: var(--accent-gold);
+}
+
+.trainer-sp-empty {
+  color: var(--text-tertiary);
+}
+
+.trainer-empty {
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.trainer-ability-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.trainer-ability-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: rgb(255 255 255 / 3%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  transition: background 120ms;
+}
+
+.trainer-ability-row:hover {
+  background: rgb(255 255 255 / 6%);
+}
+
+.trainer-ability-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: rgb(255 255 255 / 6%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trainer-ability-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.trainer-ability-placeholder {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 12%);
+}
+
+.trainer-ability-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trainer-ability-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trainer-ability-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.trainer-ability-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.trainer-meta-tag {
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: rgb(255 255 255 / 8%);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.trainer-learn-btn {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 5px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--accent-lavender);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 120ms, opacity 120ms;
+}
+
+.trainer-learn-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent-lavender) 80%, white);
+}
+
+.trainer-learn-btn-disabled {
+  background: rgb(255 255 255 / 8%);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Class-locked state */
+
+.trainer-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+}
+
+.trainer-locked-msg {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.trainer-locked-req {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.trainer-unlock-btn {
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--accent-gold) 70%, transparent);
+  color: #fff;
+  border: 1px solid rgb(255 210 100 / 40%);
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.trainer-unlock-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent-gold) 85%, transparent);
+}
+
+.trainer-unlock-btn-disabled {
+  background: rgb(255 255 255 / 8%);
+  color: var(--text-tertiary);
+  border-color: rgb(255 255 255 / 12%);
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .entity-detail-dialog {
