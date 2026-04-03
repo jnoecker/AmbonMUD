@@ -1502,4 +1502,17 @@ class GmcpEmitterTest {
         assertEquals(1, gmcp.size)
         assertTrue(gmcp[0].jsonData.contains("\"instances\":[]"), "Should have empty instances")
     }
+
+    @Test
+    fun `emit sends normal-sized payload`() = runTest {
+        val e = emitter("Char.Name")
+        e.sendCharName(sid, player())
+        val gmcp = drainGmcp()
+        assertEquals(1, gmcp.size, "Normal-sized payload should be emitted")
+    }
+
+    @Test
+    fun `MAX_GMCP_PAYLOAD_BYTES is 64KB`() {
+        assertEquals(65_536, GmcpEmitter.MAX_GMCP_PAYLOAD_BYTES)
+    }
 }

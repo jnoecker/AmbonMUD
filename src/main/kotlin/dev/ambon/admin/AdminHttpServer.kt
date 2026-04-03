@@ -46,6 +46,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.options
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import java.security.MessageDigest
 import java.util.Base64
 
 private val log = KotlinLogging.logger {}
@@ -1149,7 +1150,7 @@ private suspend fun ApplicationCall.requireBasicAuth(token: String): Boolean {
             }
         val colonIdx = decoded.indexOf(':')
         val password = if (colonIdx >= 0) decoded.substring(colonIdx + 1) else decoded
-        if (password == token) return true
+        if (MessageDigest.isEqual(password.toByteArray(), token.toByteArray())) return true
     }
     response.headers.append(HttpHeaders.WWWAuthenticate, "Basic realm=\"AmbonMUD Admin\", charset=\"UTF-8\"")
     respond(HttpStatusCode.Unauthorized)
@@ -1282,11 +1283,13 @@ private fun String.esc(): String =
 
 // --- JSON error helper ---
 
+private val errorJson = jacksonObjectMapper()
+
 private suspend fun ApplicationCall.respondJsonError(
     status: HttpStatusCode,
     error: String,
 ) {
-    respondText("""{"error":"$error"}""", ContentType.Application.Json, status)
+    respondText(errorJson.writeValueAsString(mapOf("error" to error)), ContentType.Application.Json, status)
 }
 
 // --- CORS helper ---

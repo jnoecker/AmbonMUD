@@ -23,7 +23,10 @@ import dev.ambon.engine.events.OutboundEvent
 import dev.ambon.engine.items.ItemRegistry
 import dev.ambon.engine.status.ActiveEffectSnapshot
 import dev.ambon.engine.status.StatusEffectSystem
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.math.roundToInt
+
+private val log = KotlinLogging.logger {}
 
 data class CombatTargetInfo(
     val id: String,
@@ -1596,7 +1599,12 @@ class GmcpEmitter(
         supportCheck: String = packageName,
     ) {
         if (!supportsPackage(sessionId, supportCheck)) return
-        outbound.send(OutboundEvent.GmcpData(sessionId, packageName, json.writeValueAsString(payload)))
+        val serialized = json.writeValueAsString(payload)
+        if (serialized.length > MAX_GMCP_PAYLOAD_BYTES) {
+            log.warn { "GMCP payload exceeds ${MAX_GMCP_PAYLOAD_BYTES}B limit for $packageName (${serialized.length}B), skipping" }
+            return
+        }
+        outbound.send(OutboundEvent.GmcpData(sessionId, packageName, serialized))
     }
 
     private suspend fun emitRaw(
@@ -1606,6 +1614,10 @@ class GmcpEmitter(
         supportCheck: String = packageName,
     ) {
         if (!supportsPackage(sessionId, supportCheck)) return
+        if (rawJson.length > MAX_GMCP_PAYLOAD_BYTES) {
+            log.warn { "GMCP payload exceeds ${MAX_GMCP_PAYLOAD_BYTES}B limit for $packageName (${rawJson.length}B), skipping" }
+            return
+        }
         outbound.send(OutboundEvent.GmcpData(sessionId, packageName, rawJson))
     }
 
@@ -2271,7 +2283,9 @@ class GmcpEmitter(
         val video: String? = null,
     )
 
-    private companion object {
+    internal companion object {
+        /** Maximum serialized GMCP JSON payload size in bytes (64 KB). */
+        const val MAX_GMCP_PAYLOAD_BYTES = 65_536
         const val CHAR_STATUS_VARS_JSON =
             """{"hp":"HP","maxHp":"Max HP","mana":"Mana","maxMana":"Max Mana","level":"Level","xp":"XP"}"""
         const val CORE_PING_JSON = "{}"

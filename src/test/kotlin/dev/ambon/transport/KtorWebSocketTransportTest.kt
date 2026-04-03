@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -145,6 +146,25 @@ class KtorWebSocketTransportTest {
             inbound.close()
             engineOutbound.close()
         }
+
+    @Test
+    fun `origin matching allows same host`() {
+        assertTrue(isOriginAllowedForHost("http://localhost:8080", "localhost:4000"))
+        assertTrue(isOriginAllowedForHost("https://example.com", "example.com:443"))
+        assertTrue(isOriginAllowedForHost("http://Example.Com", "example.com"))
+    }
+
+    @Test
+    fun `origin matching rejects different host`() {
+        assertFalse(isOriginAllowedForHost("http://evil.com", "localhost:4000"))
+        assertFalse(isOriginAllowedForHost("http://attacker.example.com", "example.com"))
+    }
+
+    @Test
+    fun `origin matching allows when Host header is absent`() {
+        assertTrue(isOriginAllowedForHost("http://anything.com", null))
+        assertTrue(isOriginAllowedForHost("http://anything.com", ""))
+    }
 
     private suspend fun InboundBus.awaitReceive(): InboundEvent {
         while (true) {
