@@ -2,3 +2,4 @@ ambonmud:
   world:
     resources:
       - world/test_world.yaml
+    startRoom: "test_zone:hub"
