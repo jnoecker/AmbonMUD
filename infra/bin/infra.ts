@@ -28,9 +28,6 @@ const app = new App();
 const topology = (app.node.tryGetContext('topology') as string | undefined) ?? 'standalone';
 const domain = app.node.tryGetContext('domain') as string | undefined;
 const hostname = app.node.tryGetContext('hostname') as string | undefined;
-const loreConfigUrl = app.node.tryGetContext('loreConfigUrl') as string | undefined;
-const worldZonesBaseUrl = app.node.tryGetContext('worldZonesBaseUrl') as string | undefined;
-
 // AWS account + region resolved from environment or CDK_DEFAULT_* env vars.
 const env: Environment = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
@@ -51,8 +48,6 @@ if (topology === 'ec2') {
     ecrRepoName,
     domain,
     hostname,
-    loreConfigUrl,
-    worldZonesBaseUrl,
   });
 } else {
   // -------------------------------------------------------------------------

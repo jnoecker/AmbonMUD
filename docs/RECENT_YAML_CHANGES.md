@@ -444,7 +444,7 @@ ambonmud:
 
 ### World Content: Enchanting Chamber
 
-New room in `crafting_workshop` zone (accessible from alchemy lab):
+Enchanting tables can be placed in any zone room. For example, in `thornhaven_city`:
 
 ```yaml
 rooms:
@@ -453,7 +453,7 @@ rooms:
     description: "A dim, circular room lit by floating motes of arcane light..."
     station: enchanting_table
     exits:
-      w: alchemy_lab
+      w: market_square
 ```
 
 ### GMCP Changes
@@ -695,7 +695,7 @@ Weather transitions are per-zone and weighted random. Higher weight = more likel
 Sent to players in a zone when its weather changes:
 
 ```json
-{ "zone": "ambon_hub", "weather": "RAIN", "description": "A steady rain falls." }
+{ "zone": "crossroads_path", "weather": "RAIN", "description": "A steady rain falls." }
 ```
 
 ---

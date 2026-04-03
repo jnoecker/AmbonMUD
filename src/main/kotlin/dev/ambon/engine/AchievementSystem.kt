@@ -76,6 +76,76 @@ class AchievementSystem(
     }
 
     /**
+     * Called when a player crafts an item. Increments CRAFT criteria.
+     */
+    suspend fun onItemCrafted(sessionId: SessionId) {
+        updateAchievementProgress(
+            sessionId,
+            criterionAdvancer(
+                type = "craft",
+                newValue = { _, prog -> prog.current + 1 },
+            ),
+        )
+    }
+
+    /**
+     * Called when a player gathers a resource. Increments GATHER criteria matching [skill]
+     * (or any gathering when targetId is blank).
+     */
+    suspend fun onItemGathered(sessionId: SessionId, skill: String) {
+        updateAchievementProgress(
+            sessionId,
+            criterionAdvancer(
+                type = "gather",
+                matches = { it.targetId.isBlank() || it.targetId == skill },
+                newValue = { _, prog -> prog.current + 1 },
+            ),
+        )
+    }
+
+    /**
+     * Called when a player completes a dungeon run. Checks DUNGEON_COMPLETE criteria.
+     */
+    suspend fun onDungeonCompleted(sessionId: SessionId, dungeonName: String) {
+        updateAchievementProgress(
+            sessionId,
+            criterionAdvancer(
+                type = "dungeon_complete",
+                matches = { it.targetId.isBlank() || it.targetId == dungeonName },
+                newValue = { _, _ -> 1 },
+            ),
+        )
+    }
+
+    /**
+     * Called when a player completes a dungeon with a full party.
+     * Checks DUNGEON_COMPLETE_FULL_PARTY criteria separately from regular dungeon completions.
+     */
+    suspend fun onDungeonCompletedWithFullParty(sessionId: SessionId, dungeonName: String) {
+        updateAchievementProgress(
+            sessionId,
+            criterionAdvancer(
+                type = "dungeon_complete_full_party",
+                matches = { it.targetId.isBlank() || it.targetId == dungeonName },
+                newValue = { _, _ -> 1 },
+            ),
+        )
+    }
+
+    /**
+     * Called when a player creates a guild. Checks GUILD_CREATE criteria.
+     */
+    suspend fun onGuildCreated(sessionId: SessionId) {
+        updateAchievementProgress(
+            sessionId,
+            criterionAdvancer(
+                type = "guild_create",
+                newValue = { _, _ -> 1 },
+            ),
+        )
+    }
+
+    /**
      * Builds a lambda that iterates an achievement's criteria, filters by [type] and [matches],
      * then computes a new progress value via [newValue]. Returns `true` if any criterion was
      * updated. [newValue] may return `null` to skip a criterion without modifying it.
