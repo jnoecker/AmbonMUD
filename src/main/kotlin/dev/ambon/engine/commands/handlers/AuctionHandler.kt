@@ -2,6 +2,7 @@ package dev.ambon.engine.commands.handlers
 
 import dev.ambon.domain.ids.SessionId
 import dev.ambon.engine.AuctionListing
+import dev.ambon.engine.AuctionPurchaseResult
 import dev.ambon.engine.AuctionSystem
 import dev.ambon.engine.GmcpEmitter
 import dev.ambon.engine.commands.Command
@@ -136,25 +137,32 @@ class AuctionHandler(
                 return
             }
 
-            if (me.gold < listing.price) {
-                outbound.send(
-                    OutboundEvent.SendError(
-                        sessionId,
-                        "You need ${listing.price} gold but only have ${me.gold}.",
-                    ),
-                )
-                return
+            // Atomic purchase: gold validation + deduction + item transfer inside AuctionSystem
+            val result = auction.completePurchase(
+                listingId = cmd.listingId,
+                buyerSid = sessionId,
+                buyerGold = me.gold,
+                deductBuyerGold = { delta -> me.gold = (me.gold + delta).coerceAtLeast(0) },
+            )
+
+            when (result) {
+                is AuctionPurchaseResult.ListingNotFound -> {
+                    outbound.send(OutboundEvent.SendError(sessionId, "That listing is no longer available."))
+                    return
+                }
+                is AuctionPurchaseResult.InsufficientGold -> {
+                    outbound.send(
+                        OutboundEvent.SendError(
+                            sessionId,
+                            "You need ${result.need} gold but only have ${result.have}.",
+                        ),
+                    )
+                    return
+                }
+                is AuctionPurchaseResult.Success -> { /* fall through */ }
             }
 
-            // Complete the purchase
-            val purchased = auction.completePurchase(cmd.listingId, sessionId)
-            if (purchased == null) {
-                outbound.send(OutboundEvent.SendError(sessionId, "That listing is no longer available."))
-                return
-            }
-
-            // Transfer gold: deduct from buyer
-            me.gold -= purchased.price
+            val purchased = (result as AuctionPurchaseResult.Success).listing
 
             // Credit seller — online or offline
             val seller = players.getByName(purchased.sellerName)
