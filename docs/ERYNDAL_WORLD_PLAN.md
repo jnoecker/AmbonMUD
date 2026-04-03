@@ -1,12 +1,47 @@
 # Eryndal: A Base World Plan
 
-This document is the design plan for **Eryndal**, a new base world for AmbonMUD that replaces
-the current Ambon-lore-specific zones with a self-contained, D&D-inspired, Diku-style world.
-The goal is a showcase demo: every major engine feature is touched by at least one zone, the
-world is fully playable at levels 1–10, and it is small and approachable for first-time visitors.
+This document is the design plan for **Eryndal**, a new base world for AmbonMUD. All existing
+Ambon-lore-specific zones (ambon_hub, noecker_resume, tutorial_glade, low_training_*, celestial_sanctum,
+sunken_crypt, demo_ruins, crafting_workshop, labyrinth) will be **deleted entirely** and replaced
+with a clean set of 20 new zone files. Nothing is adapted from the old zones — every file starts
+from scratch. This avoids carrying forward any lore artifacts, naming quirks, or geographic
+incoherence from the previous world.
 
-Ambon-specific lore (ambon_hub, noecker_resume) will migrate to a separate lore repository so
-the engine itself ships a neutral, genre-standard world.
+The goal is a showcase demo: every major engine feature is touched by at least one zone, the world
+is fully playable at levels 1–10, and it is small and approachable for first-time visitors.
+Ambon's Surreal Gentle Magic aesthetic still applies to art and UI; the lore is reset to genre
+convention (D&D-inspired, Diku-style heroic fantasy).
+
+---
+
+## Image Assets
+
+All zones use images from the `demo/` directory at the project root. Before the world files are
+written, these images must be copied to `src/main/resources/world/images/demo/` so they are served
+at `/images/demo/` by the web transport.
+
+| File | Usage | Background removed? |
+|------|-------|---------------------|
+| `demo/DefaultMob.png` | Default mob image for all zones | Yes — ready to use |
+| `demo/DefaultRoom.png` | Default room image for all zones | No — needs removal before final demo |
+| `demo/DefaultObject.png` | Default item image for all zones | No — needs removal before final demo |
+| `demo/DefaultPlayer.png` | Player sprite fallback | No — needs removal before final demo |
+| `demo/DefaultAbility.png` | Default ability icon | No — needs removal before final demo |
+
+Every zone YAML header will reference these defaults:
+
+```yaml
+image:
+  room: demo/DefaultRoom.png
+  mob: demo/DefaultMob.png
+  item: demo/DefaultObject.png
+```
+
+Individual mob, item, and NPC entries will **not** override the `image:` field in the initial
+implementation — they inherit the zone default. Per-entity images will be sourced from Arcanum
+in a later pass once the world structure is stable.
+
+No images from existing zones (the hash-named PNGs in `world/images/`) will be reused.
 
 ---
 
@@ -24,10 +59,59 @@ Peak — all in under two hours for a first playthrough.
 
 ---
 
+## World Geography
+
+The world is designed so that every zone has a logical physical location. A player walking in one
+direction from Thornhaven always ends up somewhere that makes sense relative to where they started.
+
+```
+                              [Celestial Peak]
+                                    |
+                              [Frost Caverns]
+                                    |
+                    [Barrens Wastes]---[Highland Trails]
+                          |                   |
+      [Haunted Manor]   [Ruined]        [Old Mines]
+            |          [Fortress]             |
+  [Thornhaven City]------[Cobblestone Road]---+
+       /    |    \
+[Cross-] [Sewer] [Thornwood Forest]
+[roads]           |             \
+  Path          [Goblin Warrens] [Dark Barrows]
+                                      |
+[Farmer Fields]                 [Shadowmere Fen]
+      |
+  [Sea Cliffs]
+      |
+  [Sunken Temple] (offshore ruins, accessible via cliff path)
+```
+
+**Compass orientation from Thornhaven:**
+- **North**: Crossroads Path (arrivals from the wider world) → eventually Celestial Peak via mountain route
+- **Northeast**: Thornwood Forest → Goblin Warrens (beneath)
+- **East**: Cobblestone Road → Highland Trails → Old Mines → Frost Caverns → Celestial Peak
+- **Southeast**: Farmer Fields → Sea Cliffs → Sunken Temple (coastal ruins)
+- **South/West**: Cobblestone Road → Ruined Fortress / Barrens Wastes
+- **Northwest**: Haunted Manor (isolated estate, roughly northwest)
+- **Far East (deep fens)**: Marsh of Fog → Dark Barrows → Shadowmere Fen
+- **Underground**: Thornhaven Sewers beneath the city; Goblin Warrens beneath Thornwood
+- **Instanced**: Dungeon of Echoes (entrance portal in Thornhaven; generates on demand)
+
+**Geographic design rules:**
+1. Every zone exit leads to an adjacent zone on the map above.
+2. No zone is a dead end — at minimum two exits per zone.
+3. Zone descriptions reference the surrounding landscape (mountains visible to the north from low-level
+   zones; the sea visible from Sea Cliffs and Farmer Fields looking south).
+4. Underground zones connect to the surface zone directly above them.
+
+---
+
 ## Classes (5 total)
 
 All classes are config-driven (no code changes required). The four existing classes are kept and
-**Ranger** is added as a fifth.
+**Ranger** is added as a fifth. All five classes will have complete ability definitions in
+`application.yaml` — no engine fallbacks are relied upon. The Ranger's full ability set will be
+defined in Phase 1 alongside the hub zone, so the trainer has something to offer from day one.
 
 | Key      | Display Name | Primary Stat | HP/lvl | Mana/lvl | Identity |
 |----------|-------------|-------------|--------|---------|---------|
@@ -37,18 +121,34 @@ All classes are config-driven (no code changes required). The four existing clas
 | ROGUE    | Rogue       | DEX         | 5      | 8       | Stealth striker; poisons, backstab, mobility abilities |
 | RANGER   | Ranger      | DEX         | 6      | 8       | Nature hybrid; ranged damage, animal companion, tracking |
 
-**Starting rooms** need one entry per class in `classStartRooms` config, all pointing to rooms
-inside `thornhaven_city` (the new hub). Ranger's start room is the `ranger_lodge` room.
+**Ranger ability set (to define in application.yaml):**
+
+| Ability Key | Level | Type | Description |
+|-------------|-------|------|-------------|
+| `arrow_shot` | 1 | DirectDamage | Ranged single-target attack |
+| `hunters_mark` | 2 | StatusEffect (WEAKEN on target) | Mark an enemy; increases all damage they take |
+| `camouflage` | 3 | StatusEffect (DODGE_BOOST on self) | Blend into surroundings; increased dodge for 2 ticks |
+| `volley` | 4 | AoeDamage | Fire a volley of arrows; hits all enemies in the room |
+| `track` | 5 | Utility | Reveal hidden mobs in the current room |
+| `natures_grasp` | 6 | StatusEffect (ROOT on target) | Roots an enemy in place; they cannot flee for 2 ticks |
+| `summon_hawk` | 7 | SummonPet | Summons a hawk companion that fights alongside the ranger |
+| `eagle_eye` | 8 | DirectDamage | Precision shot with high crit multiplier |
+| `rain_of_arrows` | 9 | AoeDamage | Heavy AoE; long cooldown |
+| `nature_bond` | 10 | Heal (AllAllies) | Channel nature magic to heal the entire party |
+
+**Starting rooms:** All five classes start in `thornhaven_city:new_arrivals_hall`. Class-specific
+flavor is conveyed via the character creation screen and trainer descriptions, not separate start rooms.
 
 **Trainer locations:** All five class trainers live in a dedicated **Trainers' Hall** wing of
-Thornhaven City. The trainer YAML blocks are already working in the engine; we just need new NPC
-definitions and rooms.
+Thornhaven City. Forester Lenna (Ranger trainer) is also present in `thornwood_forest` for players
+who find her in the wild.
 
 ---
 
 ## Races (6 total)
 
-The four existing races are kept; **Half-Orc** and **Gnome** are added.
+The four existing races are kept; **Half-Orc** and **Gnome** are added. Both are config-only
+additions (no code changes).
 
 | Key       | Display Name | Flavor           | Stat Mods (net 0) |
 |-----------|-------------|-----------------|------------------|
@@ -59,325 +159,318 @@ The four existing races are kept; **Half-Orc** and **Gnome** are added.
 | HALF_ORC  | Half-Orc    | Fierce, resilient| STR+3, CON+2, CHA-2, INT-1, WIS-1 |
 | GNOME     | Gnome       | Clever, tiny     | INT+2, DEX+1, WIS+1, STR-2, CON-1 |
 
-Half-Orc and Gnome are config-only additions (no code changes).
-
 ---
 
 ## Zone Overview (20 Zones)
 
-Zones are divided into five tiers by target level range. The hub is safe at all levels.
+Zones are divided into five tiers by target level range. The hub is safe at all levels. Every zone
+is written entirely from scratch — no YAML content is reused from existing files.
 
 ### Tier 0 — The Hub (safe, all levels)
 
 #### 1. `thornhaven_city`
-**Replaces:** `ambon_hub`, `crafting_workshop`  
 **Rooms:** ~40  
 **Purpose:** Central hub; every non-combat engine feature lives here.
 
 Key areas and features showcased:
+- **New Arrivals Hall** — where all characters begin; notice board with world overview
 - **Market Square** — general shop (gear/potions), auction house NPC
-- **The Tarnished Flagon Inn** — Innkeeper Mira, recall point, set_recall dialogue action
-- **Trainers' Hall** — five class trainers (train list / train learn), skill points
+- **The Tarnished Flagon Inn** — Innkeeper Mira, recall point, `set_recall` dialogue action
+- **Trainers' Hall** — five class trainers (train list / train learn), skill points, multi-class unlock at level 10
 - **Thornhaven Bank** — Bank NPC (deposit/withdraw gold and items)
 - **Guild Registry** — Guild creation/management NPC, guild roster board
 - **Crafting Quarter** — forge, alchemist bench, tailor's table (all crafting station types); recipe merchants
-- **Arena District** — PvP dueling zone, scoreboard NPC (leaderboards display), spectator seats
-- **Dungeon Finder** — NPC "Old Grimly" who gives lore on instanced dungeons and hands out the entrance key item
-- **Post Office** — Mail NPC (list/read/send mail, full dialogue)
+- **Arena District** — PvP dueling zone, Arena Master NPC (leaderboards display), spectator seats
+- **Old Grimly's Study** — Dungeon Finder NPC who gives lore and hands out dungeon entrance
+- **Post Office** — Mail NPC (list/read/send mail)
 - **Trophy Hall** — Hall of Fame display tied to leaderboard data; achievement plaques
 
-The starting hub should feel like a living town: day/night cycle affects which NPCs are present
-(innkeeper visible at night, market vendors during day via `active_hours` in mob definitions when
-that feature exists, or approximated with descriptive text).
-
 #### 2. `thornhaven_sewers`
-**New zone**  
 **Level range:** 5–8  
 **Rooms:** ~15  
-**Purpose:** Secret area beneath the city accessible only once the player has a sewer key (reward from a rogue quest).
+**Purpose:** Secret area beneath the city; accessible after completing the Rogue trainer's quest.
 
 Features:
 - Hidden doors, container chests with rare items
-- Rogue-class flavor; mob `sewer_rat`, `deserter_rogue`, `bloated_toad`
-- One shop NPC ("the Fence") for selling stolen goods at a premium
-- Connection back to thornhaven_city via `thornhaven_city:sewer_grate`
+- Rogue-class flavor: mobs `sewer_rat`, `deserter_rogue`, `bloated_toad`
+- One shop NPC ("the Fence") selling stolen goods at a premium
+- Connection back to `thornhaven_city:sewer_grate`
 
 ---
 
 ### Tier 1 — Tutorial & First Steps (levels 1–3)
 
 #### 3. `crossroads_path`
-**Replaces:** `tutorial_glade` (concept)  
 **Rooms:** ~12  
-**Purpose:** The first zone a new character enters. A gently guided tutorial experience.
+**Purpose:** The first zone a new character can enter. Gently guided tutorial experience.
 
-Layout: A winding road from the world-gate into Thornhaven. Characters start at `crossroads_path:world_gate` and walk toward town, with quest-giving NPCs placed at natural decision points.
+Layout: A winding road approaching Thornhaven from the north. Characters land at
+`crossroads_path:world_gate` and walk south toward town, with quest-giving NPCs at decision points.
 
-Tutorial features:
-- **Tutorial quest chain "A Traveler's Welcome"** — four steps: (1) read the signpost, (2) speak to the waypost guard, (3) fight a `stray_dog` (first combat), (4) arrive at Thornhaven and set recall
-- Rooms have rich atmospheric descriptions showing the day/night sky, weather effects
-- Signpost with world lore blurb (introduces the player to Eryndal's setting without walls of text)
+Features:
+- **Tutorial quest "A Traveler's Welcome"** — four steps leading to Thornhaven and the first trainer visit
+- Rich atmospheric room descriptions showcasing the day/night sky and weather descriptions
+- Signpost with brief Eryndal lore (one paragraph; no walls of text)
 - No mobs harder than tier: weak
 
-Class start rooms: all five classes start in different flavor rooms in thornhaven_city; `crossroads_path` is for players who want to experience the tutorial intro (linked from a signpost in thornhaven_city).
-
 #### 4. `thornwood_forest`
-**Partly replaces:** `tutorial_glade` (content/mobs, new lore)  
 **Level range:** 1–4  
 **Rooms:** ~18  
 **Purpose:** First open-world exploration zone. Nature, wildlife, early combat.
 
 Mobs: `stray_wolf`, `territorial_hare`, `scrappy_fox`, `forest_bandit`, `cave_spider`, `mother_bear`  
-Items: `wolf_pelt`, `rabbit_fur`, `spider_silk`, `wildflower` (gathering nodes for herbs)  
-Shops: none; items feed the crafting system  
-NPCs: Forester Lenna (Ranger trainer also located here; gives quest "The Bandit Problem")  
-Features:
-- **Gathering nodes** for herbalism (wildflowers, mushrooms, bark)
-- Behavior trees: wolves patrol in packs; mother bear charges when young are nearby
-- Day/night: owls and foxes spawn at night; deer visible only at dawn
+Gathering nodes: `wildflower`, `forest_mushroom`, `birch_bark` (herbs)  
+NPCs: Forester Lenna (Ranger trainer outpost; gives quest "The Bandit Problem")
 
-Quest: **"The Bandit Problem"** (levels 1–3) — Forester Lenna asks the player to clear out a bandit
-camp in `thornwood_forest:bandit_camp`. Rewards: 200 XP, basic armor piece.
+Features:
+- Behavior trees: wolves patrol in packs and call allies; mother_bear charges when young are present
+- Day/night: owls spawn at night; deer visible only at dawn
+- Herb gathering nodes feeding the crafting system
+- Quest: **"The Bandit Problem"** — clear the bandit camp in `thornwood_forest:bandit_camp`
 
 #### 5. `farmer_fields`
-**New zone**  
 **Level range:** 1–3  
 **Rooms:** ~10  
-**Purpose:** A gentle quest hub for fresh characters. Low-threat, high narrative density.
+**Purpose:** Gentle quest hub for fresh characters. Low-threat, high narrative density.
 
 Mobs: `field_crow`, `giant_slime`, `barn_rat`, `harvest_sprite`  
-NPCs: Farmer Aldous (quest giver), Goodwife Petha (quest giver)  
+NPCs: Farmer Aldous (quest giver), Goodwife Petha (quest giver)
+
 Features:
-- **Two quest chains**: (1) "The Slime Infestation" — clear slimes from the barn; (2) "The Missing Chickens" — find the fox den in thornwood_forest
-- First introduction to `talk` command via Aldous's dialogue tree
-- Simple container (chest in the barn) showcasing the container/search mechanic
+- Two quest chains: "The Slime Infestation" and "The Missing Chickens"
+- First introduction to the `talk` command via Aldous's dialogue tree
+- Container chest in the barn showcasing container/search mechanic
+- Southern exits lead toward `sea_cliffs`
 
 ---
 
 ### Tier 2 — Low-Level Wilderness (levels 2–5)
 
 #### 6. `cobblestone_road`
-**New zone**  
 **Level range:** 2–5  
 **Rooms:** ~10  
-**Purpose:** The open trade road between Thornhaven and the wider world. Weather and atmosphere showcase.
+**Purpose:** The trade road west of Thornhaven. Weather and atmosphere showcase.
 
-Mobs: `road_bandit`, `travelling_merchant` (non-hostile, gives lore), `rabid_dog`, `ambush_brigand`  
+Mobs: `road_bandit`, `rabid_dog`, `ambush_brigand`  
+NPCs: Traveling Merchant Pell (non-hostile; small road-supplies shop, brief dialogue)
+
 Features:
-- **Weather showcase** — this zone cycles through rain, fog, and clear skies, with description text changes
-- Traveling merchant NPC with brief dialogue and a small shop (road supplies)
-- One roadside inn room with a short-rest NPC
-- Connection point to `highland_trails` (north) and `marsh_of_fog` (east)
+- **Weather showcase** — zone cycles through rain, fog, and clear skies; room descriptions update accordingly
+- Roadside inn room with a rest NPC
+- Junction rooms connecting to `highland_trails` (north), `marsh_of_fog` (east), and `ruined_fortress` (southwest)
 
 #### 7. `marsh_of_fog`
-**Replaces:** `low_training_marsh`  
 **Level range:** 3–6  
 **Rooms:** ~15  
 **Purpose:** Atmosphere-heavy zone with status effects and herbalism.
 
 Mobs: `bog_leech`, `marsh_wraith`, `will_o_wisp`, `fungal_hulk`, `swamp_serpent`  
 Gathering nodes: `bog_root`, `nightshade_flower`, `muck_crystal`  
-NPCs: Hedge Witch Mossfoot (quest giver, herbalism recipes)  
+NPCs: Hedge Witch Mossfoot (quest giver, herb buyer, teaches crafting recipes)
+
 Features:
-- **Status effects showcase** — bog_leech applies `POISON`; will_o_wisp applies `SLOW`; marsh_wraith applies `BLIND`
-- **Herbalism gathering** — Mossfoot buys gathered herbs for gold and teaches crafting recipes
-- Weather: persistent fog aesthetic in room descriptions
-- Quest: **"The Witch's Request"** (levels 3–5) — gather three rare herbs; rewards a craftable antidote recipe
+- **Status effects** — bog_leech applies POISON; will_o_wisp applies SLOW; marsh_wraith applies BLIND
+- Herbalism gathering; Mossfoot buys herbs and teaches antidote recipe
+- Persistent fog in room descriptions (weather flavor)
+- Eastern exits lead toward `dark_barrows`
+- Quest: **"The Witch's Request"** — gather three rare herbs
 
 #### 8. `highland_trails`
-**Replaces:** `low_training_highlands`  
 **Level range:** 3–6  
 **Rooms:** ~12  
-**Purpose:** Scenic mountain foothills with weather variety and straightforward melee content.
+**Purpose:** Scenic mountain foothills with weather variety and melee content.
 
 Mobs: `mountain_goat`, `highland_bandit`, `cave_troll`, `stone_eagle`  
+Gathering nodes: `mountain_herb`, `iron_ore`
+
 Features:
-- **Snow weather** — room descriptions shift with weather system (blizzard condition)
-- Gathering nodes: `mountain_herb`, `iron_ore` (shared with old_mines type)
-- A short sub-dungeon (cave entrance) that links into `old_mines`
-- Scenic overlook room with a flavor description of the whole world map
+- Snow weather in room descriptions at higher elevation rooms
+- Gathering nodes for iron ore (shared material type with `old_mines`)
+- Cave entrance room linking down into `old_mines`
+- Scenic overlook room describing the surrounding landscape (farm fields south, sea glint southeast, mountains north)
 
 #### 9. `old_mines`
-**Replaces:** `low_training_mines`  
 **Level range:** 3–6  
 **Rooms:** ~15  
-**Purpose:** Abandoned silver mine. Crafting resources and the start of the mid-level quest chain.
+**Purpose:** Abandoned silver mine. Primary crafting resource zone; quest chain start.
 
-Mobs: `mine_goblin`, `kobold_digger`, `giant_rat`, `stone_lurker`, `mine_foreman` (mini-boss)  
+Mobs: `mine_goblin`, `kobold_digger`, `giant_rat`, `stone_lurker`, `Mine Foreman` (mini-boss)  
 Gathering nodes: `silver_ore`, `copper_ore`, `iron_ore`, `raw_gemstone`  
-NPCs: Survivor Hadrik (quest giver, survived a goblin attack)  
+NPCs: Survivor Hadrik (found injured deep in the mine; quest giver)
+
 Features:
-- **Crafting resources** — largest concentration of ore gathering nodes in the world
-- **Quest chain start**: "The Lost Expedition" (levels 3–6) — four-step chain leading through old_mines into goblin_warrens
-- Container chests with random gear drops (uses container/search mechanic)
-- Partially collapsed rooms (flavor; some exits blocked, others require finding a lever to open)
+- Largest concentration of ore gathering nodes in the world
+- Container chests with random gear drops
+- Lever-operated collapsed passage (lever opens blocked shortcut room)
+- Quest chain start: **"The Lost Expedition"**
+- Northern cave exit connects to `highland_trails`; deeper tunnel leads to `goblin_warrens`
 
 ---
 
 ### Tier 3 — Mid-Level Dungeons (levels 4–7)
 
 #### 10. `goblin_warrens`
-**New zone**  
 **Level range:** 4–7  
 **Rooms:** ~18  
-**Purpose:** Classic dungeon crawl. Behavior trees, traps, boss encounter.
+**Purpose:** Classic dungeon crawl. Behavior trees, boss encounter.
 
-Mobs: `goblin_scout`, `goblin_warrior`, `goblin_shaman`, `kobold_trapper`, `dire_rat`, `Chieftain Grak` (boss)  
+Mobs: `goblin_scout`, `goblin_warrior`, `goblin_shaman`, `kobold_trapper`, `dire_rat`, `Chieftain Grak` (boss)
+
 Features:
-- **Behavior tree showcase** — goblin_scout patrols and calls allies if it spots a player; goblin_shaman casts buffs on nearby goblins; Chieftain Grak flees at 20% HP then returns with reinforcements
-- **Trap mechanic** — kobold_trapper rooms have floor traps that deal damage when moving through (described in room descriptions; skill check to avoid via future mechanic or just flavor text for now)
-- **Boss achievement** — killing Chieftain Grak awards the achievement "Chieftain Slayer"
-- Connects to `old_mines` (upper level) and `dark_barrows` (secret tunnel)
-- Quest: completes step 3 of "The Lost Expedition" (find the expedition notes in the chief's room)
+- **Behavior tree showcase**: goblin_scout patrols and calls allies; goblin_shaman buffs nearby goblins; Chieftain Grak flees at 20% HP then returns with reinforcements
+- Boss achievement: "Chieftain Slayer" — kill Chieftain Grak
+- Connects to `old_mines` (upper tunnels) and `dark_barrows` (secret eastern tunnel)
+- Quest step 3 of "The Lost Expedition" — find expedition notes in the chief's chamber
 
 #### 11. `sunken_temple`
-**Replaces/adapts:** `sunken_crypt`  
 **Level range:** 5–7  
 **Rooms:** ~15  
-**Purpose:** Partially flooded ancient temple. Puzzle mechanics, undead, artifact quest.
+**Purpose:** Partially flooded coastal ruins. Puzzle mechanics, undead, artifact quest.
 
-Mobs: `temple_skeleton`, `dark_cultist`, `drowned_acolyte`, `stone_guardian`, `Elder Revenant` (boss)  
+Mobs: `temple_skeleton`, `dark_cultist`, `drowned_acolyte`, `stone_guardian`, `Elder Revenant` (boss)
+
 Features:
-- **Lever/door puzzles** — three levers must be pulled in correct order to open the inner sanctum (described via room text, uses the door/lever world feature system)
-- **Containers** — ancient chests and urns with lore items and gear
-- **Status effects** — drowned_acolyte applies `WEAKEN`; stone_guardian applies `STUN`
-- Quest: **"The Stolen Relic"** (levels 5–7) — recover a stolen artifact from the Elder Revenant; rewards a class-specific weapon piece
+- **Lever/door puzzles** — three levers must be pulled to open the inner sanctum (uses door/lever world feature system)
+- Container urns and chests with lore items and gear
+- Status effects: drowned_acolyte applies WEAKEN; stone_guardian applies STUN
+- Accessed via cliff path from `sea_cliffs` — geographically offshore ruins reachable at low tide
+- Quest: **"The Stolen Relic"** — recover an artifact from the Elder Revenant
 
 #### 12. `dark_barrows`
-**New zone**  
 **Level range:** 5–8  
 **Rooms:** ~15  
-**Purpose:** Ancient burial mounds. Powerful undead, necromancer boss, main quest chapter two.
+**Purpose:** Ancient burial mounds in the deep fens. Powerful undead, necromancer boss.
 
-Mobs: `barrow_wight`, `grave_hound`, `spectral_knight`, `banshee`, `Necromancer Vaelthos` (boss)  
+Mobs: `barrow_wight`, `grave_hound`, `spectral_knight`, `banshee`, `Necromancer Vaelthos` (boss)
+
 Features:
-- **Boss encounter with dialogue** — Vaelthos has a short pre-combat dialogue tree ("You dare disturb my work?") before triggering combat
-- **Group content** — Vaelthos is elite-tier and intended for 2–3 players, but soloable with good gear
-- **Achievement**: "Barrow Breaker" — kill Necromancer Vaelthos
-- **Leaderboard**: Vaelthos kill time logged to the Hall of Fame board in thornhaven_city
-- Connects to `goblin_warrens` (secret tunnel) and `shadowmere_fen` (eastern passage)
-- Quest: Step 3 of "The Curse of Shadowmere" chain (find Vaelthos's research notes)
+- Pre-combat dialogue on Vaelthos — brief exchange before he attacks
+- Group-friendly content: Vaelthos is elite-tier, soloable with good gear or easy with two players
+- Achievement: "Barrow Breaker" — kill Necromancer Vaelthos
+- Leaderboard: Vaelthos kill time logged to the Trophy Hall
+- Connects west to `marsh_of_fog` and east to `shadowmere_fen`
+- Quest step 3 of "The Curse of Shadowmere"
 
 #### 13. `ruined_fortress`
-**Replaces/adapts:** `demo_ruins`  
 **Level range:** 5–8  
 **Rooms:** ~18  
-**Purpose:** Crumbling keep with mixed enemy factions. Introduces the reputation system.
+**Purpose:** Crumbling keep southwest of Thornhaven. Introduces the reputation/faction system.
 
-Mobs: `fortress_guard` (faction: Iron Order), `rebel_soldier` (faction: Free Swords), `gargoyle`, `iron_golem`, `Commander Thane` (boss, Iron Order)  
+Mobs: `iron_order_guard` (faction: Iron Order), `free_sword_rebel` (faction: Free Swords), `gargoyle`, `iron_golem`, `Commander Thane` (boss, Iron Order)
+
 Features:
-- **Reputation system showcase** — Iron Order and Free Swords are opposing factions. Killing Iron Order guards raises Free Swords rep and vice versa. NPCs react differently based on rep tier.
-- **World features** — iron portcullis doors operated by levers; secret room behind a bookshelf container
-- Quest: Step 1 of "The Celestial Reckoning" — find the ancient order's seal in the commander's vault
+- **Reputation showcase** — Iron Order and Free Swords are opposing factions. Killing one raises rep with the other. Zone NPCs react to rep tier.
+- Iron portcullis doors operated by levers; secret room behind a bookshelf container
+- Quest step 1 of "The Celestial Reckoning" — find the ancient seal in Thane's vault
 
 ---
 
 ### Tier 4 — Higher-Level Content (levels 6–9)
 
-#### 14. `shadowmere_fen`
-**New zone**  
+#### 14. `sea_cliffs`
+**Level range:** 5–8  
+**Rooms:** ~12  
+**Purpose:** Dramatic coastal cliffs south of Farmer Fields. Nautical mobs, sea atmosphere, bridge to Sunken Temple.
+
+Mobs: `cliff_harpy`, `sea_raider`, `giant_crab`, `tide_elemental`, `Corsair Captain` (mini-boss)  
+Gathering nodes: `sea_kelp`, `pearl_shard`, `salt_crystal` (reagents for alchemist recipes)
+
+Features:
+- Dramatic weather: coastal storms (fog + rain combined)
+- Sea kelp and pearl shards for mid-tier crafting recipes
+- Clifftop overlook room describing the ocean and distant silhouette of Sunken Temple
+- Low-tide path exit connecting to `sunken_temple:tidal_approach`
+- Quest: **"The Corsair's Bounty"** — defeat the Corsair Captain and recover stolen cargo; reward is a nautical-themed item set
+
+#### 15. `shadowmere_fen`
 **Level range:** 6–9  
 **Rooms:** ~12  
-**Purpose:** Cursed fenland. Faction reputation, rare drops, dark atmosphere.
+**Purpose:** Cursed fenland. Faction resolution zone for the Shadowmere quest chain.
 
-Mobs: `shadow_stalker` (faction: Shadowmere Cult), `silver_flame_paladin` (faction: Order of the Silver Flame), `shadow_hulk`, `nightshade_wisp`  
+Mobs: `shadow_stalker` (faction: Shadowmere Cult), `silver_flame_paladin` (faction: Order of the Silver Flame), `shadow_hulk`, `nightshade_wisp`
+
 Features:
-- **Dual factions** — this is the resolution zone for the "Curse of Shadowmere" quest; player must choose side by killing enough mobs of one faction to unlock the final boss route
-- Rare item drops: `shadowmere_crystal` used in high-tier crafting recipes
-- Quest: Final step of "The Curse of Shadowmere" — purify or embrace the shadow depending on faction choice
+- Dual-faction zone: player's previous kill balance from dark_barrows determines which faction is hostile
+- Rare drops: `shadowmere_crystal` used in high-tier crafting
+- Quest: final step of "The Curse of Shadowmere" — purify or embrace the shadow
 
-#### 15. `frost_caverns`
-**New zone**  
+#### 16. `frost_caverns`
 **Level range:** 7–9  
 **Rooms:** ~14  
-**Purpose:** Ice caves in the mountains. Group-oriented, rare crafting materials.
+**Purpose:** Ice caves deep in the mountains above the Highland Trails.
 
 Mobs: `frost_imp`, `ice_golem`, `yeti`, `frozen_revenant`, `Ice Wyrm` (boss)  
-Gathering nodes: `frost_crystal` (tier-3 crafting material), `glacial_ore`  
-Features:
-- **Group content** — Ice Wyrm is scaled for a full group; uses multi-target AoE ability type
-- **Rare crafting** — frost_crystal is required for the highest-tier weapon and armor recipes
-- Weather: permanent blizzard (day/night cycle still applies; "the blizzard rages" vs "the blizzard calms slightly at dawn")
-- Quest: Step 3 of "The Celestial Reckoning" — gather three frost_crystals for the ancient ritual
+Gathering nodes: `frost_crystal` (tier-3 crafting material), `glacial_ore`
 
-#### 16. `haunted_manor`
-**New zone**  
+Features:
+- Group content: Ice Wyrm is a multi-target AoE encounter intended for 2–3 players
+- Rare crafting: frost_crystal required for endgame weapon/armor recipes
+- Weather: permanent blizzard condition
+- Quest step 3 of "The Celestial Reckoning" — gather frost_crystals
+
+#### 17. `haunted_manor`
 **Level range:** 7–9  
 **Rooms:** ~14  
-**Purpose:** Cursed noble manor. Ghost NPCs, full dialogue trees, pet companion unlock.
+**Purpose:** Cursed noble estate northwest of Thornhaven. Ghost NPCs, full dialogue trees, pet companion unlock.
 
 Mobs: `poltergeist`, `manor_specter`, `animated_armor`, `howling_shade`, `Warden of the Manor` (boss)  
-NPCs: **Ghost of Lady Veyra** — full multi-branch dialogue tree; she is not hostile and gives lore about the manor's curse, the Celestial Peak, and the final quest
-Features:
-- **Ghost companion unlock** — completing Lady Veyra's dialogue tree and defeating the Warden unlocks the `spectral_wisp` pet via a SUMMON_PET ability
-- **NPC dialogue showcase** — Lady Veyra has 6+ dialogue nodes with branching choices; she provides exposition for the end-game quest
-- **Status effect**: animated_armor applies `SLOW`; howling_shade applies `FEAR` (new effect, or mapped to existing STUN)
-- Quest: Step 2 of "The Celestial Reckoning" — learn the ancient rite from Lady Veyra
+NPCs: **Ghost of Lady Veyra** — non-hostile; 6+ node dialogue tree providing end-game exposition
 
-#### 17. `barrens_wastes`
-**Replaces:** `low_training_barrens`  
+Features:
+- Multi-branch dialogue with Lady Veyra; her story explains the Celestial Peak threat
+- Ghost companion: defeating the Warden after completing Veyra's dialogue awards a SUMMON_PET ability (`spectral_wisp`)
+- Status effects: animated_armor applies SLOW; howling_shade applies STUN (representing fear)
+- Quest step 2 of "The Celestial Reckoning"
+
+#### 18. `barrens_wastes`
 **Level range:** 7–10  
 **Rooms:** ~12  
-**Purpose:** Blasted wasteland. High-level open-world combat, bounty hunts, PvP flavor.
+**Purpose:** Blasted wasteland far west of the road. High-level overworld, bounty hunts, PvP flavor.
 
-Mobs: `wasteland_raider`, `dust_elemental`, `scavenging_wyvern`, `marauder_captain` (elite)  
+Mobs: `wasteland_raider`, `dust_elemental`, `scavenging_wyvern`, `marauder_captain` (elite)
+
 Features:
-- **Bounty quest board** — a board in one room that offers rotating kill-count quests (kill 10 raiders for gold/XP); these feed the achievement system ("Bounty Hunter" achievement)
-- **PvP-adjacent flavor** — the Barrens is flagged in room descriptions as a "dangerous frontier where travelers sometimes duel for sport"; the in-game duel system works anywhere so this is just narrative
-- Connects to `frost_caverns` (northern pass) and `celestial_peak` (via a mountain trail)
+- Bounty quest board (rotating kill-count quests for gold/XP → feeds "Bounty Hunter" achievement)
+- Open PvP narrative: room descriptions note the Barrens are lawless; the duel system works here like anywhere
+- Connects north to `frost_caverns` approach and east toward `celestial_peak` via mountain trail
 
 ---
 
 ### Tier 5 — End-Game (levels 8–10)
 
-#### 18. `celestial_peak`
-**Replaces:** `celestial_sanctum`  
+#### 19. `celestial_peak`
 **Level range:** 8–10  
 **Rooms:** ~16  
-**Purpose:** Summit of the highest mountain. End-game combat, legendary gear, final boss.
+**Purpose:** Summit of Eryndal's highest mountain. End-game combat, legendary gear, final boss.
 
-Mobs: `celestial_guardian`, `storm_elemental`, `divine_construct`, `fallen_angel`, `Elder Dragon Auranthos` (final boss)  
+Mobs: `celestial_guardian`, `storm_elemental`, `divine_construct`, `fallen_angel`, `Elder Dragon Auranthos` (final boss)
+
 Features:
-- **Final boss encounter** — Auranthos has a full pre-combat dialogue and multiple combat phases (phase 2 triggered at 50% HP via behavior tree)
-- **Achievement**: "Dragonslayer" — kill Elder Dragon Auranthos; also awards a title
-- **Leaderboard**: Auranthos kill time and party composition logged to thornhaven_city Trophy Hall
-- Rare gear drops: best-in-slot items at level 10
-- Quest: Final step of "The Celestial Reckoning"
-
-#### 19. `the_labyrinth`
-**Keeps:** `labyrinth.yaml` concept, new lore wrapper  
-**Level range:** 5–10 (scales)  
-**Rooms:** ~20  
-**Purpose:** Endless navigational challenge. Leaderboard and achievement showcase.
-
-Mobs: Labyrinth sentinels at levels 2–9 (already exist in labyrinth.yaml; relabel with Eryndal names)  
-Features:
-- **Navigation challenge** — the labyrinth exists to test spatial awareness and map-reading
-- **Achievement**: "Maze Runner" — reach the center of the labyrinth without dying
-- **Leaderboard**: fastest labyrinth solve time
-- Accessed via a hidden door in thornhaven_sewers (flavor: "the city was built over an older structure")
+- Final boss: Auranthos has pre-combat dialogue and a two-phase behavior tree (phase 2 triggers at 50% HP)
+- Achievement: "Dragonslayer" — kill Auranthos; also awards a title
+- Leaderboard: Auranthos kill time logged to Trophy Hall
+- Best-in-slot gear drops
+- Quest: final step of "The Celestial Reckoning"
 
 #### 20. `dungeon_of_echoes`
-**New zone (instanced)**  
 **Level range:** 3–10 (scales to party)  
 **Rooms:** generated  
-**Purpose:** The procedural instanced dungeon. Showcases all dungeon system features.
+**Purpose:** Procedural instanced dungeon. Showcases the entire dungeon system.
 
 Features:
-- Uses the existing `DungeonManager` / `DungeonGenerator` engine systems
-- Template: `echoes_standard` (standard difficulty template) and `echoes_hard` (hard mode)
-- Scales mob level to the initiating player's level (±1)
-- Entrance via the Dungeon Finder NPC ("Old Grimly") in thornhaven_city
-- Completion achievement: "Echo Diver" — complete a dungeon run
-- Contains a boss room at the end with a randomized boss from a pool of 4 templates
-- Drops include crafting materials and level-appropriate gear
+- Uses `DungeonManager` / `DungeonGenerator` engine systems
+- Two templates: `echoes_standard` and `echoes_hard`
+- Mob level scales to initiating player's level ±1
+- Entrance via Old Grimly in `thornhaven_city`
+- Achievement: "Echo Diver" — complete a run
+- Boss room at end with a pool of 4 randomized boss templates
+- Crafting material and level-appropriate gear drops
 
 ---
 
 ## Quest Chains
 
 ### Chain 1: "A Traveler's Welcome" (levels 1–3, tutorial)
-A hand-holding introduction for brand-new players.
 
 | Step | Zone | Objective | Reward |
 |------|------|-----------|--------|
@@ -393,27 +486,27 @@ A group of scholars went into the Old Mines and never returned.
 |------|------|-----------|--------|
 | 1 | old_mines | Find Survivor Hadrik | 300 XP |
 | 2 | old_mines | Retrieve the expedition's supply chest | 400 XP + crafting recipe |
-| 3 | goblin_warrens | Recover the lead scholar's journal from the Chieftain's room | 600 XP + Chieftain Slayer achievement |
+| 3 | goblin_warrens | Recover the lead scholar's journal from Chieftain Grak's chamber | 600 XP + Chieftain Slayer achievement |
 | 4 | thornhaven_city | Return journal to the scholar's guild contact | 800 XP + rare item |
 
 ### Chain 3: "The Curse of Shadowmere" (levels 5–8)
-The fens to the east grow darker. An ancient darkness is stirring in the barrows.
+The fens grow darker. Something in the barrows is stirring.
 
 | Step | Zone | Objective | Reward |
 |------|------|-----------|--------|
 | 1 | marsh_of_fog | Speak to Hedge Witch Mossfoot; gather three rare herbs | 400 XP + antidote recipe |
 | 2 | dark_barrows | Find Vaelthos's research notes | 600 XP |
 | 3 | dark_barrows | Kill Necromancer Vaelthos | 1000 XP + Barrow Breaker achievement |
-| 4 | shadowmere_fen | Choose a faction and complete the purification/corruption ritual | 1500 XP + faction title |
+| 4 | shadowmere_fen | Choose a faction and complete the ritual | 1500 XP + faction title |
 
-### Chain 4: "The Celestial Reckoning" (levels 8–10, main story arc)
+### Chain 4: "The Celestial Reckoning" (levels 8–10)
 An ancient evil at the summit threatens to consume the realm.
 
 | Step | Zone | Objective | Reward |
 |------|------|-----------|--------|
-| 1 | ruined_fortress | Find the ancient order's seal in Commander Thane's vault | 800 XP |
-| 2 | haunted_manor | Learn the ancient rite from Ghost of Lady Veyra | 1000 XP + ghost companion pet |
-| 3 | frost_caverns | Gather 3 frost_crystals for the sealing ritual | 1200 XP |
+| 1 | ruined_fortress | Find the ancient order's seal in Thane's vault | 800 XP |
+| 2 | haunted_manor | Learn the ancient rite from Ghost of Lady Veyra | 1000 XP + spectral_wisp pet |
+| 3 | frost_caverns | Gather 3 frost_crystals | 1200 XP |
 | 4 | celestial_peak | Kill Elder Dragon Auranthos | 3000 XP + Dragonslayer achievement + title |
 
 ---
@@ -422,89 +515,92 @@ An ancient evil at the summit threatens to consume the realm.
 
 | Name | Zone | Purpose | Engine Feature |
 |------|------|---------|---------------|
-| Innkeeper Mira | thornhaven_city | Recall point, inn lore, housing stub | set_recall dialogue action |
+| Innkeeper Mira | thornhaven_city | Recall point, inn lore | set_recall dialogue action |
 | Captain Varek | thornhaven_city | Warrior trainer, lost expedition quest | train list/learn, quest give |
-| Archmage Solen | thornhaven_city | Mage trainer, world lore | train list/learn |
-| High Priest Aldric | thornhaven_city | Cleric trainer, hints at growing darkness | train list/learn |
+| Archmage Solen | thornhaven_city | Mage trainer | train list/learn |
+| High Priest Aldric | thornhaven_city | Cleric trainer | train list/learn |
 | Shadow "Shade" | thornhaven_city | Rogue trainer, sewer key quest | train list/learn, gate content |
-| Forester Lenna | thornwood_forest | Ranger trainer, bandit quest | train list/learn, quest give |
+| Forester Lenna | thornwood_forest + thornhaven_city | Ranger trainer, bandit quest | train list/learn, quest give |
 | Banker Theron | thornhaven_city | Bank deposits/withdrawals | bank dialogue actions |
-| Old Grimly | thornhaven_city | Dungeon finder, lore guide | dungeon_enter trigger |
-| Mail Clerk Oswin | thornhaven_city | Mail send/read | mail command context |
+| Old Grimly | thornhaven_city | Dungeon finder | dungeon_enter trigger |
+| Mail Clerk Oswin | thornhaven_city | Mail send/read | mail commands |
 | Hedge Witch Mossfoot | marsh_of_fog | Herb buyer, curse quest giver | shop, quest give |
 | Survivor Hadrik | old_mines | Expedition quest giver | quest give |
+| Traveling Merchant Pell | cobblestone_road | Road supplies shop, lore | shop, dialogue |
+| Corsair Captain | sea_cliffs | Mini-boss, bounty quest target | combat, achievement trigger |
 | Ghost of Lady Veyra | haunted_manor | End-game lore, ghost pet unlock | multi-branch dialogue tree |
 | Necromancer Vaelthos | dark_barrows | Boss; pre-combat dialogue | dialogue then combat |
-| Elder Dragon Auranthos | celestial_peak | Final boss; multi-phase combat | behavior tree (phase trigger) |
-| Arena Master | thornhaven_city | PvP duel rules, leaderboard query | leaderboard display |
+| Commander Thane | ruined_fortress | Faction boss | faction kill, achievement |
+| Elder Dragon Auranthos | celestial_peak | Final boss; multi-phase | behavior tree phase trigger |
+| Arena Master | thornhaven_city | PvP duel rules, leaderboard | leaderboard display |
 | Guild Registrar | thornhaven_city | Guild creation/management | guild dialogue actions |
 
 ---
 
 ## Feature Showcase Matrix
 
-The table below maps each major engine feature to the zone(s) that demonstrate it.
-
 | Feature | Primary Zone(s) |
 |---------|----------------|
 | Basic combat | thornwood_forest, farmer_fields |
 | NPC dialogue trees | thornhaven_city (all trainers + innkeeper + banker) |
-| Multi-branch dialogue with actions | thornhaven_city (Mira's recall), haunted_manor (Lady Veyra) |
+| Multi-branch dialogue with actions | thornhaven_city (Mira recall), haunted_manor (Lady Veyra) |
 | Quest system | all zones; full chain in each tier |
-| Class trainers (skill points) | thornhaven_city |
+| Class trainers (skill points) | thornhaven_city, thornwood_forest (Ranger) |
 | Bank NPC | thornhaven_city |
 | Inn / recall point | thornhaven_city |
-| Shops (gear + potions) | thornhaven_city, marsh_of_fog (herb shop) |
+| Shops (gear + potions) | thornhaven_city, cobblestone_road, marsh_of_fog |
 | Auction house | thornhaven_city |
 | Mail system | thornhaven_city |
 | Crafting stations | thornhaven_city (crafting quarter) |
-| Gathering nodes (herbs) | thornwood_forest, marsh_of_fog |
-| Gathering nodes (ore) | old_mines, frost_caverns, highland_trails |
-| Crafting recipes | thornhaven_city (learned from NPCs and drops) |
-| Recipe discovery | old_mines (drop), marsh_of_fog (NPC) |
+| Gathering nodes (herbs) | thornwood_forest, marsh_of_fog, sea_cliffs |
+| Gathering nodes (ore) | old_mines, highland_trails, frost_caverns |
+| Crafting recipes | thornhaven_city (NPCs/drops); marsh_of_fog (Mossfoot) |
+| Recipe discovery | old_mines (drop), sea_cliffs (NPC) |
 | Status effects (poison/slow/blind) | marsh_of_fog |
 | Status effects (stun/weaken) | sunken_temple |
-| Status effects (fear/slow) | haunted_manor |
-| Weather system | cobblestone_road (rain/fog), highland_trails (snow), frost_caverns (blizzard) |
-| Day/night cycle | thornwood_forest, thornhaven_city (NPC schedules via description text) |
+| Status effects (stun/slow) | haunted_manor |
+| Weather system (rain/fog) | cobblestone_road, sea_cliffs |
+| Weather system (snow/blizzard) | highland_trails, frost_caverns |
+| Day/night cycle | thornwood_forest, crossroads_path, thornhaven_city |
 | Behavior trees (patrol/call allies) | goblin_warrens |
 | Behavior trees (flee + return) | goblin_warrens (Chieftain Grak) |
 | Behavior trees (multi-phase boss) | celestial_peak (Auranthos phase 2) |
+| Pre-combat dialogue | dark_barrows (Vaelthos), celestial_peak (Auranthos) |
 | Door/lever puzzles | sunken_temple, ruined_fortress |
 | Container / search mechanic | farmer_fields, old_mines, thornhaven_sewers |
 | Group content | goblin_warrens, dark_barrows, frost_caverns, dungeon_of_echoes |
 | Instanced dungeons | dungeon_of_echoes |
-| Pet / companion system | haunted_manor (ghost pet unlock) |
+| Pet / companion system | haunted_manor (ghost pet), thornwood_forest (Ranger hawk) |
 | PvP dueling | thornhaven_city (arena district) |
 | Guild system | thornhaven_city (guild registry) |
 | Reputation / faction system | ruined_fortress + shadowmere_fen |
-| Achievements | all zones (10+ distinct achievements) |
-| Leaderboards / Hall of Fame | thornhaven_city (Trophy Hall), celestial_peak, the_labyrinth |
-| Titles | chains 1 and 4 (First Steps, Dragonslayer) |
-| Sprite progression | earned through tier advancement (automatic) |
-| GMCP / minimap | all zones (room descriptions drive map generation) |
-| Seasonal events (day/night/weather) | all outdoor zones |
-| Multi-classing | thornhaven_city (trainer, level 10+ unlock) |
+| Achievements | all zones (15 distinct achievements) |
+| Leaderboards / Hall of Fame | thornhaven_city (Trophy Hall), celestial_peak, dark_barrows |
+| Titles | chains 1 and 4; faction choice in chain 3 |
+| Sprite progression | tier advancement (automatic) |
+| GMCP / minimap | all zones |
+| Day/night/weather atmosphere | all outdoor zones |
+| Multi-classing | thornhaven_city (trainer, level 10+) |
 
 ---
 
-## Achievement List (Initial Set)
+## Achievement List
 
 | ID | Name | Trigger | Zone |
 |----|------|---------|------|
 | first_blood | First Blood | Kill any mob for the first time | any |
 | wolf_hunter | Wolf Hunter | Kill 10 stray_wolves | thornwood_forest |
 | chieftain_slayer | Chieftain Slayer | Kill Chieftain Grak | goblin_warrens |
+| corsair_hunter | Corsair Hunter | Kill the Corsair Captain | sea_cliffs |
 | barrow_breaker | Barrow Breaker | Kill Necromancer Vaelthos | dark_barrows |
 | dragon_slayer | Dragonslayer | Kill Elder Dragon Auranthos | celestial_peak |
-| maze_runner | Maze Runner | Reach the labyrinth center without dying | the_labyrinth |
 | echo_diver | Echo Diver | Complete a dungeon_of_echoes run | dungeon_of_echoes |
 | master_crafter | Master Crafter | Craft 20 items | any |
 | herb_collector | Hedge Witch's Friend | Gather 10 herbs | marsh_of_fog |
 | ore_miner | Deep Delver | Gather 10 ore | old_mines |
 | full_party | Strength in Numbers | Complete a dungeon with a full group | dungeon_of_echoes |
 | bounty_hunter | Bounty Hunter | Complete 5 bounty quests | barrens_wastes |
-| loyal_friend | Loyal Companion | Unlock the ghost pet | haunted_manor |
+| loyal_companion | Loyal Companion | Unlock the ghost pet | haunted_manor |
 | guild_founder | Guild Founder | Create a guild | thornhaven_city |
 | max_level | Level Ten | Reach level 10 | any |
 
@@ -516,14 +612,14 @@ The table below maps each major engine feature to the zone(s) that demonstrate i
 |-------|-------------|---------------|
 | 1 | crossroads_path, thornhaven_city, thornwood_forest | Tutorial, set recall, first combat |
 | 2 | thornwood_forest, farmer_fields | Quest completion, first gear |
-| 3 | cobblestone_road, old_mines (entrance) | Road travel, first mine mobs, Lost Expedition start |
+| 3 | cobblestone_road, old_mines (entrance) | Road travel, mine mobs, Lost Expedition start |
 | 4 | old_mines, marsh_of_fog, highland_trails | Full mine, status effects, herbs |
-| 5 | goblin_warrens, sunken_temple | Boss fight, puzzle dungeon |
-| 6 | dark_barrows, ruined_fortress | Group content, reputation intro |
+| 5 | goblin_warrens, sea_cliffs, sunken_temple (approach) | Boss fight, coastal content |
+| 6 | dark_barrows, ruined_fortress, sunken_temple | Group content, puzzles, faction intro |
 | 7 | shadowmere_fen, thornhaven_sewers, haunted_manor (entrance) | Faction choice, secret area |
 | 8 | haunted_manor, barrens_wastes | Ghost dialogue, bounty hunts |
 | 9 | frost_caverns, celestial_peak (approach) | Rare crafting, group boss |
-| 10 | celestial_peak, dungeon_of_echoes, the_labyrinth | Final boss, endgame content |
+| 10 | celestial_peak, dungeon_of_echoes | Final boss, endgame content |
 
 ---
 
@@ -531,20 +627,21 @@ The table below maps each major engine feature to the zone(s) that demonstrate i
 
 ### Starter Gear (Levels 1–2)
 Dropped in thornwood_forest and farmer_fields; no gold required:
-- `worn_sword`, `battered_staff`, `hunting_bow`, `rusty_dagger` (class-appropriate)
+- `worn_sword`, `battered_staff`, `hunting_bow`, `rusty_dagger` (class-appropriate; Ranger uses bow)
 - `leather_cap`, `padded_vest`
 
 ### Purchased Gear (Levels 2–5)
 Thornhaven Market; affordable with quest rewards:
 - `iron_sword`, `oak_staff`, `short_bow`, `silver_dagger`
 - `iron_helm`, `chainmail_vest`, `leather_bracers`
-- Potions: `minor_healing_potion` (50 gold), `clarity_potion` (75 gold)
+- `minor_healing_potion` (50 gold), `clarity_potion` (75 gold)
 
 ### Crafted Gear (Levels 3–8)
-Recipes available through NPCs and drops; materials from gathering:
+Materials from gathering; recipes from NPCs and drops:
 - `steel_sword` (iron_ore ×3 + coal ×1)
 - `mage_focus` (silver_ore ×2 + wildflower ×1)
-- `healing_salve` (bog_root ×1 + wildflower ×2) — consumable, equivalent to minor_healing_potion
+- `healing_salve` (bog_root ×1 + wildflower ×2) — consumable, same tier as minor_healing_potion
+- `pearl_ring` (pearl_shard ×2 + silver_ore ×1) — accessory with CHA bonus
 
 ### Rare/Endgame Gear (Levels 7–10)
 Boss drops and frost_caverns materials:
@@ -554,129 +651,105 @@ Boss drops and frost_caverns materials:
 
 ---
 
-## Migration Plan
+## Old Zone Cleanup
 
-### Files to Replace
-| Old File | Action | New File |
-|----------|--------|---------|
-| `ambon_hub.yaml` | Replace | `thornhaven_city.yaml` |
-| `tutorial_glade.yaml` | Replace | `crossroads_path.yaml` + (content absorbed into `thornwood_forest.yaml`) |
-| `crafting_workshop.yaml` | Merge into hub | (crafting section of `thornhaven_city.yaml`) |
-| `demo_ruins.yaml` | Adapt | `ruined_fortress.yaml` (strip Ambon lore, add Iron Order/Free Swords faction mobs) |
-| `sunken_crypt.yaml` | Adapt | `sunken_temple.yaml` (lore rewrite + add lever puzzle rooms) |
-| `low_training_marsh.yaml` | Adapt | `marsh_of_fog.yaml` |
-| `low_training_highlands.yaml` | Adapt | `highland_trails.yaml` |
-| `low_training_mines.yaml` | Adapt | `old_mines.yaml` |
-| `low_training_barrens.yaml` | Adapt | `barrens_wastes.yaml` |
-| `labyrinth.yaml` | Keep + rename | `the_labyrinth.yaml` (update zone key, update lore text) |
-| `celestial_sanctum.yaml` | Replace | `celestial_peak.yaml` |
-| `noecker_resume.yaml` | Remove | (move to Ambon lore repository; not part of base world) |
+All existing world zone files will be deleted as part of Phase 1. None of their content is reused.
 
-### Files to Keep Unchanged
-- `achievements.yaml` — update achievement IDs to match new zone names
-- `sprites.yaml`, `player_sprites.yaml` — no changes needed
+**Files to delete:**
+- `ambon_hub.yaml`
+- `tutorial_glade.yaml`
+- `crafting_workshop.yaml`
+- `demo_ruins.yaml`
+- `sunken_crypt.yaml`
+- `low_training_marsh.yaml`
+- `low_training_highlands.yaml`
+- `low_training_mines.yaml`
+- `low_training_barrens.yaml`
+- `labyrinth.yaml`
+- `celestial_sanctum.yaml`
+- `noecker_resume.yaml`
 
-### Config Changes Required
-1. **Add RANGER class** to `application.yaml` classes block (same format as existing classes)
-2. **Add HALF_ORC and GNOME races** to `application.yaml` races block
-3. **Update `classStartRooms`** to point all five classes to rooms in `thornhaven_city`
-4. **Update `startRoom`** for zones that are renamed/replaced
-5. **Update zone list** in any config that enumerates zones (search for `worldZones` or `zoneFiles`)
-6. **Update abilities config** to reference new trainer NPC IDs for RANGER class abilities
+**Files to keep (data definitions, not world zones):**
+- `achievements.yaml` — will be rewritten for Eryndal achievement IDs
+- `sprites.yaml`, `player_sprites.yaml` — unchanged; sprite system is world-agnostic
 
-### New Dungeon Template Required
-Add a `dungeon_of_echoes` entry to the dungeon templates section of `application.yaml`.
+**Config changes required:**
+1. Add `RANGER` class block to `application.yaml` with full ability definitions (see above)
+2. Add `HALF_ORC` and `GNOME` race blocks to `application.yaml`
+3. Add full Ranger ability set to `application.yaml` abilities section
+4. Update `classStartRooms` — all five classes point to `thornhaven_city:new_arrivals_hall`
+5. Remove all references to deleted zone names from config
+6. Add `dungeon_of_echoes` dungeon templates to the dungeon config section
+7. Add faction definitions for Iron Order, Free Swords, Shadowmere Cult, Order of the Silver Flame
+8. Copy `demo/Default*.png` files to `src/main/resources/world/images/demo/`
 
 ---
 
 ## Implementation Order
 
-Suggested phase-by-phase order that lets the demo be testable early:
+One GitHub issue and one PR per phase. Each phase is self-contained and leaves the server in a
+runnable state with a testable demo checkpoint.
 
-### Phase 1: Hub + Tutorial (MVP demo)
-1. `thornhaven_city.yaml` — hub with all trainers, inn, bank, shops, guild, crafting quarter
-2. `crossroads_path.yaml` — tutorial path
-3. Config: add RANGER class, HALF_ORC + GNOME races, update classStartRooms
+### Phase 1: Hub + Config Foundation
+**Scope:** `thornhaven_city.yaml` + `crossroads_path.yaml` + all config changes
 
-**Demo checkpoint:** All 5 classes can log in, visit trainers, set recall, visit the shop. Every trainer-related feature works.
+Deliverables:
+- Write both zone YAML files from scratch
+- Add RANGER class + all 10 ranger abilities to `application.yaml`
+- Add HALF_ORC and GNOME to `application.yaml`
+- Update classStartRooms
+- Add dungeon template stubs for `dungeon_of_echoes`
+- Delete all old zone files listed above
+- Copy `demo/Default*.png` to `src/main/resources/world/images/demo/`
+- Update `achievements.yaml` with the 15 Eryndal achievement IDs (stubs; triggers filled in per zone)
+
+**Demo checkpoint:** All 5 classes and 6 races can be selected. All trainers accessible. Inn, bank,
+shop, mail, guild, crafting quarter, arena, and dungeon finder all reachable and functional.
 
 ### Phase 2: Early Wilderness
-4. `thornwood_forest.yaml` — levels 1–4, gathering nodes, Ranger trainer here
-5. `farmer_fields.yaml` — levels 1–3, two quest chains
-6. `cobblestone_road.yaml` — levels 2–5, weather showcase
+**Scope:** `thornwood_forest.yaml` + `farmer_fields.yaml` + `cobblestone_road.yaml`
 
-**Demo checkpoint:** Tutorial chain "A Traveler's Welcome" fully completable.
+**Demo checkpoint:** Tutorial chain "A Traveler's Welcome" fully completable. Levels 1–3 playable.
 
-### Phase 3: Low-Level Dungeons (adapt existing)
-7. `old_mines.yaml` — adapt from `low_training_mines`
-8. `marsh_of_fog.yaml` — adapt from `low_training_marsh`
-9. `highland_trails.yaml` — adapt from `low_training_highlands`
-10. `barrens_wastes.yaml` — adapt from `low_training_barrens`
+### Phase 3: Low-Level Wilderness
+**Scope:** `highland_trails.yaml` + `old_mines.yaml` + `marsh_of_fog.yaml`
 
-**Demo checkpoint:** Levels 1–5 fully playable; "The Lost Expedition" chain completable.
+**Demo checkpoint:** Levels 3–5 playable. "The Lost Expedition" chain steps 1–2 completable.
+Status effects (poison, slow, blind) working. Herb and ore gathering nodes functional.
 
 ### Phase 4: Mid-Level Dungeons
-11. `goblin_warrens.yaml` — new
-12. `sunken_temple.yaml` — adapt from `sunken_crypt`
-13. `dark_barrows.yaml` — new
+**Scope:** `goblin_warrens.yaml` + `dark_barrows.yaml`
 
-**Demo checkpoint:** Levels 4–7 content; "The Curse of Shadowmere" chain completable.
+**Demo checkpoint:** Levels 4–7 content. "The Lost Expedition" fully completable. Behavior trees
+(patrol, call allies, flee-return) demonstrated. Chieftain Grak and Vaelthos boss fights working.
 
-### Phase 5: Factions + Secret Areas
-14. `ruined_fortress.yaml` — adapt from `demo_ruins`
-15. `shadowmere_fen.yaml` — new
-16. `thornhaven_sewers.yaml` — new
+### Phase 5: Coastal + Temple Content
+**Scope:** `sea_cliffs.yaml` + `sunken_temple.yaml`
 
-**Demo checkpoint:** Reputation system showcase fully working.
+**Demo checkpoint:** Levels 5–8 coastal content. Lever/door puzzle in sunken_temple working.
+Coastal weather (storm) and tidal path mechanic functional.
 
-### Phase 6: High-Level Content
-17. `frost_caverns.yaml` — new
-18. `haunted_manor.yaml` — new
+### Phase 6: Factions + Secret Areas
+**Scope:** `ruined_fortress.yaml` + `shadowmere_fen.yaml` + `thornhaven_sewers.yaml`
 
-**Demo checkpoint:** Levels 7–9 content; ghost pet, rare crafting.
+**Demo checkpoint:** Reputation/faction system fully demonstrated. "The Curse of Shadowmere"
+chain completable. Sewer secret area accessible after Rogue quest.
 
-### Phase 7: End-Game + Config Cleanup
-19. `celestial_peak.yaml` — replace `celestial_sanctum`
-20. `the_labyrinth.yaml` — adapt from `labyrinth`
-21. Dungeon template: `dungeon_of_echoes` (config + new template YAML)
-22. Update `achievements.yaml` for new zone names/IDs
-23. Remove `ambon_hub.yaml`, `noecker_resume.yaml`, `tutorial_glade.yaml`
+### Phase 7: High-Level Content
+**Scope:** `haunted_manor.yaml` + `barrens_wastes.yaml` + `frost_caverns.yaml`
 
-**Demo checkpoint:** Full levels 1–10 playable; all four quest chains completable; every feature showcased.
+**Demo checkpoint:** Levels 7–9 content. Ghost pet unlock working. Bounty board functional.
+Rare crafting materials (frost_crystal) available.
 
-### Phase 8: Polish + Demo Integration
-- Update `application.yaml` `classStartRooms` and default start zone
-- Update the web demo's landing copy to reference Eryndal
-- Update `README.md` demo section with new world overview and features list
-- Smoke-test the full new player experience end-to-end
-- Archive/link old Ambon-lore zones in a comment or separate branch
+### Phase 8: End-Game + Polish
+**Scope:** `celestial_peak.yaml` + `dungeon_of_echoes` dungeon template
 
----
+Deliverables:
+- `celestial_peak.yaml` with two-phase Auranthos boss
+- Full dungeon template YAML for `dungeon_of_echoes`
+- Final `achievements.yaml` with all 15 achievement triggers wired to correct zone/mob IDs
+- Update README demo section with Eryndal world overview
+- Smoke-test full levels 1–10 playthrough
 
-## Open Questions for Discussion
-
-1. **Ranger class image** — Does an appropriate sprite already exist in the ability images? If not,
-   is the placeholder pattern (reuse an existing image hash) acceptable for the initial PR?
-
-2. **Faction system integration** — The reputation/faction system exists in config
-   (`ambonMUD.engine.reputation`?). Do we need to verify the faction keys used in ruined_fortress
-   and shadowmere_fen match the config format, or define them fresh?
-
-3. **Zone file naming** — Should the new zone files use the same snake_case convention as existing
-   files? (Yes, assumed above.) Should the zone YAML `zone:` key match the filename exactly?
-   (Yes, convention from all existing zones.)
-
-4. **Ranger abilities** — The ability definitions are in `application.yaml`. Should Ranger's
-   initial ability set be defined as part of Phase 1 (so the trainer has something to offer
-   immediately), or as a follow-up task?
-
-5. **Mob images** — New zones will initially use zone default images (set in zone YAML header).
-   Is there a preferred placeholder image hash to use for new mobs without dedicated sprites,
-   or should we source new images from the existing `src/main/resources/world/images/` directory?
-
-6. **Keep labyrinth as-is?** — The current `labyrinth.yaml` has 20×20 grid rooms. Should we
-   keep that structure and just update lore text, or rework it to be a smaller, more curated maze?
-
-7. **Phase scope per task** — Should each Phase above become one GitHub issue + one PR, or should
-   individual zones within a phase be separate tasks? For large zones like thornhaven_city (~40 rooms),
-   a single-zone PR might be most reviewable.
+**Demo checkpoint:** Complete world playable end-to-end. All four quest chains completable.
+Every feature in the showcase matrix demonstrated. Demo live.
